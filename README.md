@@ -1,5 +1,5 @@
 # Introduction
-PaddleScience is a toolkits based on the PaddlePaddle framework, it aims to solve problems in the field of scientific computing.
+PaddleScience is a toolkit that facilitates the development of AI-Science applications based on the PaddlePaddle framework.
 
 # Install and run examples
 
