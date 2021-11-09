@@ -10,7 +10,7 @@ You can refer to https://github.com/PaddlePaddle/Paddle
 step2: Download PaddleScience and set PYTHONPATH
 
 ```
-git colne git@github.com:PaddlePaddle/PaddleScience.git
+git clone git@github.com:PaddlePaddle/PaddleScience.git
 cd PaddleScience
 export PYTHONPATH=$PWD:$PYTHONPATH
 ```
