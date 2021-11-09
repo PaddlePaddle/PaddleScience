@@ -20,11 +20,12 @@ from .loss_base import LossBase
 
 
 class L2(LossBase):
-    def __init__(self, pdes, geo):
+    def __init__(self, pdes, geo, aux_func=None):
         super(L2, self).__init__(pdes, geo)
 
         self.pdes = pdes
         self.geo = geo
+        self.aux_func = aux_func
         self.d_records = dict()
         # TODO(lml): support batch run when batch_jacobian and batch_hessian is ok
         self.can_batch_run = False
@@ -80,6 +81,8 @@ class L2(LossBase):
                     tmp = tmp * self.d_records[de]
                 eq_loss += tmp
         self.d_records.clear()
+        if self.aux_func is not None:
+            eq_loss += self.aux_func(ins)
         return eq_loss
 
     def bc_loss(self, u, batch_id):

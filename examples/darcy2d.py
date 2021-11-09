@@ -17,7 +17,7 @@ import numpy as np
 import paddle
 
 # Random Seed
-paddle.seed(999)
+paddle.seed(1234)
 
 
 # Analytical solution
@@ -53,13 +53,11 @@ geo = psci.geometry.Rectangular(
 pdes = psci.pde.Laplace2D()
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_steps=(6, 6))
+pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
 
 # bc value
 golden, bc_value = GenSolution(geo.steps, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
-
-psci.visu.Rectangular2D(geo, golden)
 
 # Network
 net = psci.network.FCNet(
@@ -68,21 +66,22 @@ net = psci.network.FCNet(
     num_layers=3,
     hidden_size=10,
     dtype="float32",
-    activation="sigmoid")
+    activation="tanh")
 
 # Loss, TO rename
-loss = psci.loss.L2(pdes=pdes, geo=geo)
+loss = psci.loss.L2(pdes=pdes, geo=geo, aux_func=Righthand)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-opt = psci.optimizer.Adam(learning_rate=0.01, parameters=net.parameters())
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=10, batch_size=None)
+solution = solver.solve(num_epoch=1000, batch_size=None)
 
 # Use solution
 rslt = solution(geo)
-print("rslt: ", rslt)
+psci.visu.Rectangular2D(geo, rslt, 'rslt_darcy_2d')
+# print("rslt: ", rslt)
