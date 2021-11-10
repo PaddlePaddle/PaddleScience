@@ -27,7 +27,7 @@ def GenBC(xy, bc_index):
         id = bc_index[i]
         if abs(xy[id][1] - 0.05) < 1e-4:
             bc_value[i][0] = 1.0 - 20.0 * abs(xy[id][0])
-            bc_value[i][1] = 0.0
+            bc_value[i][1] = 1.0
         else:
             bc_value[i][0] = 0.0
             bc_value[i][1] = 0.0
