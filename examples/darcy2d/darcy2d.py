@@ -20,46 +20,56 @@ import paddle
 paddle.seed(1234)
 
 
-# Generate BC value
-def GenBC(xy, bc_index):
-    bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
+# Analytical solution
+def DarcyRecSolution(x, y):
+    return np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
+
+
+# Generate analytical Solution using Geometry points
+def GenSolution(txy, bc_index):
+    sol = np.zeros(len(txy)).astype(np.float32)
+    bc_value = np.zeros((len(bc_index), 1)).astype(np.float32)
+
+    for i in range(len(txy)):
+        sol[i] = DarcyRecSolution(txy[i][0], txy[i][1])
+
     for i in range(len(bc_index)):
-        id = bc_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
-            bc_value[i][0] = 1.0 - 20.0 * abs(xy[id][0])
-            bc_value[i][1] = 1.0
-        else:
-            bc_value[i][0] = 0.0
-            bc_value[i][1] = 0.0
-    return bc_value
+        bc_value[i][0] = sol[bc_index[i]]
+
+    return [sol, bc_value]
+
+
+# right-hand side
+def Righthand(xy):
+    return 8.0 * 3.1415926 * 3.1415926 * paddle.sin(
+        2.0 * np.pi * xy[0]) * paddle.cos(2.0 * np.pi * xy[1])
 
 
 # Geometry
 geo = psci.geometry.Rectangular(
-    space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
+    space_origin=(0.0, 0.0), space_extent=(1.0, 1.0))
 
 # PDE Laplace
-pdes = psci.pde.NavierStokes2D(nu=0.01, rho=1.0)
+pdes = psci.pde.Laplace2D()
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
+pdes, geo = psci.discretize(pdes, geo, space_steps=(21, 21))
 
 # bc value
-bc_value = GenBC(geo.steps, geo.bc_index)
-# print("bc_v,shape: ", bc_value.shape)
-pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
+golden, bc_value = GenSolution(geo.steps, geo.bc_index)
+pdes.set_bc_value(bc_value=bc_value)
 
 # Network
 net = psci.network.FCNet(
     num_ins=2,
-    num_outs=3,
-    num_layers=5,
-    hidden_size=20,
+    num_outs=1,
+    num_layers=3,
+    hidden_size=10,
     dtype="float32",
-    activation='tanh')
+    activation="tanh")
 
 # Loss, TO rename
-loss = psci.loss.L2(pdes=pdes, geo=geo)
+loss = psci.loss.L2(pdes=pdes, geo=geo, aux_func=Righthand)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -72,7 +82,7 @@ solver = psci.solver.Solver(algo=algo, opt=opt)
 solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
-rslt = solution(geo).numpy()
-psci.visu.Rectangular2D(geo, rslt[:, 0], filename="rslt_u")
-psci.visu.Rectangular2D(geo, rslt[:, 1], filename="rslt_v")
+rslt = solution(geo)
+psci.visu.Rectangular2D(geo, rslt, 'rslt_darcy_2d')
+np.save('./rslt_darcy_2d.npy', rslt)
 # print("rslt: ", rslt)
