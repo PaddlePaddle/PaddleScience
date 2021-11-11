@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import wraps
+
 import paddle
 import paddle.nn.functional as F
 from paddle.autograd import jacobian, hessian
@@ -110,7 +112,8 @@ class L2(LossBase):
     def batch_run(self, net, batch_id):
         b_datas = self.geo.get_step()
         u = net.nn_func(b_datas)
-
+        for i, weight in enumerate(net.weights):
+            print(f'layer {i} weight {net.weights[i]}')
         eq_loss = 0
         if self.can_batch_run:
             ins = paddle.stack(b_datas, axis=0)
@@ -124,3 +127,5 @@ class L2(LossBase):
         bc_loss = self.bc_loss(u, batch_id)
         ic_loss = self.ic_loss(u, batch_id)
         return eq_loss, bc_loss, ic_loss
+
+        
