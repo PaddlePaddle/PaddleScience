@@ -34,6 +34,20 @@ def GenBC(xy, bc_index):
     return bc_value
 
 
+# Generate BC weight
+def GenBCWeight(xy, bc_index):
+    bc_weight = np.zeros((len(bc_index), 2)).astype(np.float32)
+    for i in range(len(bc_index)):
+        id = bc_index[i]
+        if abs(xy[id][1] - 0.05) < 1e-4:
+            bc_weight[i][0] = 1.0 - 20.0 * abs(xy[id][0])
+            bc_weight[i][1] = 1.0
+        else:
+            bc_weight[i][0] = 1.0
+            bc_weight[i][1] = 1.0
+    return bc_weight
+
+
 # Geometry
 geo = psci.geometry.Rectangular(
     space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
@@ -46,7 +60,6 @@ pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
 
 # bc value
 bc_value = GenBC(geo.steps, geo.bc_index)
-# print("bc_v,shape: ", bc_value.shape)
 pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
 
 # Network
@@ -59,7 +72,8 @@ net = psci.network.FCNet(
     activation='tanh')
 
 # Loss, TO rename
-loss = psci.loss.L2(pdes=pdes, geo=geo)
+bc_weight = GenBCWeight(geo.steps, geo.bc_index)
+loss = psci.loss.L2(pdes=pdes, geo=geo, bc_weight=bc_weight)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -69,10 +83,10 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=2000, batch_size=None)
+solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
 rslt = solution(geo).numpy()
 psci.visu.Rectangular2D(geo, rslt[:, 0], filename="rslt_u")
 psci.visu.Rectangular2D(geo, rslt[:, 1], filename="rslt_v")
-# print("rslt: ", rslt)
+np.save('./rslt_ldc_2d.npy', rslt)
