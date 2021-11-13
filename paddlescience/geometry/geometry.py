@@ -14,7 +14,7 @@
 
 from .geometry_discrete import GeometryDiscrete
 import numpy as np
-
+import vtk
 
 # Geometry
 class Geometry:
@@ -24,9 +24,6 @@ class Geometry:
                  time_extent=None,
                  space_origin=None,
                  space_extent=None):
-
-        # TODO
-        # 1D input could be integer or list of integer, need to check and transform
 
         # TODO check inputs  
 
@@ -160,8 +157,22 @@ class Rectangular(Geometry):
         if self.time_dependent == True:
             geo_disc.set_time_nsteps(time_nsteps)
             geo_disc.set_time_steps(time_steps)
-        geo_disc.set_space_nsteps(space_nsteps)
-        geo_disc.set_steps(domain, self.space_origin, self.space_extent)
+        geo_disc.set_domain(space_domain=domain, origin=self.space_origin, extent=self.space_extent)
         geo_disc.set_bc_index(bc_index)
 
+        self.visu_vtk()
+
         return geo_disc
+
+    # visu vtk
+    def visu_vtk(self): 
+        # prepare plane obj 2d
+        if self.space_ndims == 2:
+            self.plane = vtk.vtkPlaneSource()
+            self.plane.SetResolution(self.space_nsteps[0] - 1, self.space_nsteps[1] - 1)
+            self.plane.SetOrigin([self.space_origin[0], self.space_origin[1], 0])
+            self.plane.SetPoint1([self.space_extent[0], self.space_origin[1], 0])
+            self.plane.SetPoint2([self.space_origin[0], self.space_extent[1], 0])
+            self.plane.Update()
+            num_points = plane.GetOutput().GetNumberOfPoints()
+        return num_points, self.plane

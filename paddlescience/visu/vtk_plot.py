@@ -14,34 +14,16 @@
 
 import vtk
 
-
 def Rectangular2D(geo, data, filename="output"):
-
-    n = geo.space_nsteps[0]
-    m = geo.space_nsteps[1]
-
-    xl = geo.space_origin[0]
-    yd = geo.space_origin[1]
-    xr = geo.space_extent[0]
-    yu = geo.space_extent[1]
-
-    plane = vtk.vtkPlaneSource()
-    plane.SetResolution(n - 1, m - 1)
-    plane.SetOrigin([xl, yd, 0])
-    plane.SetPoint1([xr, yd, 0])
-    plane.SetPoint2([xl, yu, 0])
-    plane.Update()
-
-    nPoints = plane.GetOutput().GetNumberOfPoints()
-    assert (nPoints == len(data))
-
+    # plane obj
+    nPoints, plane = geo.visu_vtk()
+    # set data
     data_vtk = vtk.vtkFloatArray()
     data_vtk.SetNumberOfValues(nPoints)
     for i in range(nPoints):
         data_vtk.SetValue(i, data[i])
-
     plane.GetOutput().GetPointData().SetScalars(data_vtk)
-
+    # writer
     writer = vtk.vtkXMLPolyDataWriter()
     writer.SetFileName(filename + '.vtp')
     writer.SetInputConnection(plane.GetOutputPort())
