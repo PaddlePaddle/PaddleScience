@@ -30,7 +30,7 @@ def LaplaceRecSolution(x, y, k=1.0):
 
 # Generate analytical Solution using Geometry points
 def GenSolution(txy, bc_index):
-    sol = np.zeros(len(txy)).astype(np.float32)
+    sol = np.zeros((len(txy), 1)).astype(np.float32)
     bc_value = np.zeros((len(bc_index), 1)).astype(np.float32)
 
     for i in range(len(txy)):
