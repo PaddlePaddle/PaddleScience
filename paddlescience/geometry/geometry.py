@@ -36,11 +36,11 @@ class Geometry:
         self.time_extent = time_extent
 
         # space information
-        self.space_shape = ""
-        self.space_ndims = len(space_origin)
-        self.space_origin = space_origin
-        self.space_extent = space_extent
-        self.space_radius = space_extent
+        self.space_shape = None
+        self.space_origin = None
+        self.space_extent = None
+
+        # self.space_radius = (space_radius, ) if (np.isscalar(space_radius)) else space_radius
 
     def discretize(self, time_nsteps, space_nsteps):
         geo_disc = GeometryDiscrete()
@@ -60,25 +60,39 @@ class Rectangular(Geometry):
         super(Rectangular,
               self).__init__(time_dependent, time_origin, time_extent,
                              space_origin, space_extent)
-        self.space_shape = "rectangular"
+
+        # check inputs and set dimension
+        self.space_origin = (space_origin, ) if (np.isscalar(space_origin)) else space_origin
+        self.space_extent = (space_extent, ) if (np.isscalar(space_extent)) else space_extent
+
+        lso = len(self.space_origin)
+        lse = len(self.space_extent)
+        self.space_ndims = lso
+        if (lso != lse):
+            print("ERROR: Please check dimention of space_origin and space_extent.")
+            exit()
+        elif lso == 1:
+            self.space_shape = "rectangular_1d"
+        elif lso == 2:
+            self.space_shape = "rectangular_2d"
+        elif lso == 3:
+            self.space_shape = "rectangular_3d"
+        else:
+            print("ERROR: Rectangular supported is should be 1d/2d/3d.")
 
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
 
-        geo_disc = GeometryDiscrete()
+        # check input
+        space_nsteps = (space_nsteps, ) if (np.isscalar(space_nsteps)) else space_nsteps
 
-        # domain discretize
+        # discretization time space with linspace
         steps = []
-
-        # time discretization
         if self.time_dependent == True:
-            geo_disc.set_time_nsteps(time_nsteps)
-            ts = np.linspace(
+            time_steps = np.linspace(
                 self.time_origin, self.time_extent, time_nsteps, endpoint=True)
-            geo_disc.set_time_steps(ts)
-            steps.append(ts)
 
-        # space discretization
+        # discretization each space dimention with linspace
         for i in range(self.space_ndims):
             steps.append(
                 np.linspace(
@@ -87,56 +101,67 @@ class Rectangular(Geometry):
                     space_nsteps[i],
                     endpoint=True))
 
-#       # meshgrid
-#       mesh = np.meshgrid(steps[0], steps[1], sparse=False, indexing='xy')
-#       steps = []
-#       for ms in mesh:
-#           steps.append(ms.flatten())
-
-# TODO: better code for the discretization
-# 2D is supported for the moment
-
+        # meshgrid and stack to cordinates
         if self.time_dependent == True:
             nsteps = time_nsteps
-            for i in space_nsteps:
-                nsteps *= i
             ndims = self.space_ndims + 1
         else:
             nsteps = 1
-            for i in space_nsteps:
-                nsteps *= i
             ndims = self.space_ndims
+        for i in space_nsteps:
+            nsteps *= i
 
-        domain = np.zeros((nsteps, ndims))  # domain
-        for i in range(space_nsteps[1]):
-            for j in range(space_nsteps[0]):
-                domain[i * space_nsteps[0] + j][0] = steps[0][j]
-                domain[i * space_nsteps[0] + j][1] = steps[1][i]
-
-        geo_disc.set_space_nsteps(space_nsteps)
-        geo_disc.set_steps(domain, self.space_origin, self.space_extent)
+        if (self.space_ndims == 1):
+            domain = steps[0]
+        if (self.space_ndims == 2):
+            mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
+            domain = np.stack((mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
+        elif (self.space_ndims == 3):
+            mesh = np.meshgrid(steps[2], steps[1], steps[0], sparse=False, indexing='ij')
+            domain = np.stack((mesh[2].reshape(-1), mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
 
         # bc_index TODO optimize
-        nbc = 0
-        for i in range(space_nsteps[1]):
-            for j in range(space_nsteps[0]):
-                if (i == 0) or (i == space_nsteps[1] - 1) or (j == 0) or (
-                        j == space_nsteps[0] - 1):
-                    nbc += 1
+        if (self.space_ndims == 1):
+            bc_index = np.ndarray(2, dtype=int)
+            bc_index[0] = 0
+            bc_index[1] = space_nsteps[-1]
+        elif (self.space_ndims == 2):
+            nx = space_nsteps[0]
+            ny = space_nsteps[1]
+            nbc = nx * ny - (nx-2)*(ny-2)
+            bc_index = np.ndarray(nbc, dtype=int)
+            nbc = 0
+            for j in range(ny):
+                for i in range(nx):
+                    if (j==0 or j==ny-1 or i==0 or i==nx-1):
+                        bc_index[nbc] = j * nx + i
+                        nbc += 1
+        elif (self.space_ndims == 3):
+            nx = space_nsteps[0]
+            ny = space_nsteps[1]
+            nz = space_nsteps[2]
+            nbc = nx * ny * nz - (nx-2) *(ny-2)*(nz-2)
+            bc_index = np.ndarray(nbc, dtype=int)
+            nbc = 0
+            for k in range(nz):
+                for j in range(ny):
+                    for i in range(nx):
+                        if (k==0 or k == nz-1 or j==0 or j==ny-1 or i==0 or i==nx-1):
+                            bc_index[nbc] = k * nx * ny + j * nx + i
+                            nbc += 1
 
-        bc_index = np.zeros(nbc, dtype=int)  # BC index
-        nbc = 0
-        for i in range(space_nsteps[1]):
-            for j in range(space_nsteps[0]):
-                if (i == 0) or (i == space_nsteps[1] - 1) or (j == 0) or (
-                        j == space_nsteps[0] - 1):
-                    bc_index[nbc] = i * space_nsteps[0] + j
-                    nbc += 1
-        geo_disc.set_bc_index(bc_index)
-
-        # print(domain)
-        # print(bc_index)
+        #print(domain)
+        #print(bc_index)
 
         # IC index TODO
+
+        # return discrete geometry
+        geo_disc = GeometryDiscrete()
+        if self.time_dependent == True:
+            geo_disc.set_time_nsteps(time_nsteps)
+            geo_disc.set_time_steps(time_steps)
+        geo_disc.set_space_nsteps(space_nsteps)
+        geo_disc.set_steps(domain, self.space_origin, self.space_extent)
+        geo_disc.set_bc_index(bc_index)
 
         return geo_disc
