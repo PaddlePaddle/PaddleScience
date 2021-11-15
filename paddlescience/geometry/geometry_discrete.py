@@ -125,9 +125,9 @@ class GeometryDiscrete:
     def get_vtk_obj(self):
         return self.vtk_obj, self.vtk_data_size
 
-    def set_mpl_obj(self, mpl_obj, mpl_data_shape):
-        self.mpl_obj = mpl_obj
-        self.mpl_data_shape = mpl_data_shape
+    # def set_mpl_obj(self, mpl_obj, mpl_data_shape):
+    #     self.mpl_obj = mpl_obj
+    #     self.mpl_data_shape = mpl_data_shape
 
-    def get_mpl_obj(self):
-        return self.mpl_obj, self.vtk_data_shape
+    # def get_mpl_obj(self):
+    #     return self.mpl_obj, self.space_domain self.vtk_data_shape

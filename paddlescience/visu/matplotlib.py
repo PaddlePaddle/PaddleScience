@@ -16,11 +16,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+def draw2D(geo_disc, data):
 
-def draw2D(geo_disc, u):
-
-    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    # mZ = np.reshape(solution,(len(mX), len(mX[0])))
-    # surf = ax.plot_surface(mX, mY, mZ, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    # plt.show()
-    pass
+    ax, shape = get_mpl_obj()
+    data = np.reshape(data,(len(data), len(data[0])))
+    surf = ax.plot_surface(mX, mY, mZ, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    plt.show()

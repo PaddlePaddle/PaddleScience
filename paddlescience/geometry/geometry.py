@@ -164,8 +164,8 @@ class Rectangular(Geometry):
         vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj, vtk_data_size)
 
-        mpl_obj, mpl_data_shape = self.obj_mpl()
-        geo_disc.set_mpl_obj(mpl_obj, mpl_data_shape)
+        # mpl_obj, mpl_data_shape = self.obj_mpl()
+        # geo_disc.set_mpl_obj(mpl_obj, mpl_data_shape)
 
         return geo_disc
 
@@ -182,9 +182,9 @@ class Rectangular(Geometry):
             vtk_data_size = self.plane.GetOutput().GetNumberOfPoints()
         return self.plane, vtk_data_size
 
-    # visu matplotlib
-    def obj_mpl(self):
-        # prepare plan obj 2d
-        if self.space_ndims == 2:
-            fig, self.ax = plt.subplots(subplot_kw={"projection": "3d"})
-        return self.ax, (self.space_nsteps[0], self.space_nsteps[1])
+    # # visu matplotlib
+    # def obj_mpl(self):
+    #     # prepare plan obj 2d
+    #     if self.space_ndims == 2:
+    #         fig, self.ax = plt.subplots(subplot_kw={"projection": "3d"})
+    #     return self.ax, (self.space_nsteps[0], self.space_nsteps[1])
