@@ -28,3 +28,19 @@ def Rectangular2D(geo, data, filename="output"):
     writer.SetFileName(filename + '.vtp')
     writer.SetInputConnection(plane.GetOutputPort())
     writer.Write()
+
+
+def save_visu_vtk(geo, data, filename="output"):
+    # plane obj
+    plane, nPoints = geo.get_vtk_obj()
+    # set data
+    data_vtk = vtk.vtkFloatArray()
+    data_vtk.SetNumberOfValues(nPoints)
+    for i in range(nPoints):
+        data_vtk.SetValue(i, data[i])
+    plane.GetOutput().GetPointData().SetScalars(data_vtk)
+    # writer
+    writer = vtk.vtkXMLPolyDataWriter()
+    writer.SetFileName(filename + '.vtp')
+    writer.SetInputConnection(plane.GetOutputPort())
+    writer.Write()
