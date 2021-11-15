@@ -50,7 +50,7 @@ pdes, geo = psci.discretize(pdes, geo, space_steps=(41, 41))
 golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
 
-psci.visu.save_visu_vtk(geo, golden, 'golden_laplace_2d')
+psci.visu.save_vtk(geo, golden, 'golden_laplace_2d')
 psci.data.save_data(golden, "golden_laplace_2d.npy")
 
 # Network
@@ -77,12 +77,12 @@ solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
 rslt = solution(geo).numpy()
-psci.visu.save_visu_vtk(geo, rslt, 'rslt_laplace_2d')
+psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
 psci.data.save_data(rslt, './rslt_laplace_2d.npy')
 
 # Calculate diff and l2 relative error
 diff = rslt - golden
-psci.visu.save_visu_vtk(geo, diff, 'diff_laplace_2d')
+psci.visu.save_vtk(geo, diff, 'diff_laplace_2d')
 psci.data.save_data(diff, './diff_laplace_2d.npy')
 
 l2_relative_error = np.linalg.norm(diff, ord=2) / geo.get_nsteps()
