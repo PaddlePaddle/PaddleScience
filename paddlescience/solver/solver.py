@@ -73,7 +73,7 @@ class Solver(object):
             
             net.reconstruct(x)
             eq_loss, bc_loss, ic_loss = loss.batch_run(net, batch_id)
-            total_loss = eq_loss + bc_loss + ic_loss
+            total_loss = eq_loss + bc_loss
             batch_id += 1
             print(f'eq_loss: {eq_loss.numpy()[0]:20}  bc_loss: {bc_loss.numpy()[0]:20}')
             return total_loss

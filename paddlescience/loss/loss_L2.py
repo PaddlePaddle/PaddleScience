@@ -112,8 +112,8 @@ class L2(LossBase):
     def batch_run(self, net, batch_id):
         b_datas = self.geo.get_step()
         u = net.nn_func(b_datas)
-        for i, weight in enumerate(net.weights):
-            print(f'layer {i} weight {net.weights[i]}')
+        # for i, weight in enumerate(net.weights):
+        #     print(f'layer {i} weight {net.weights[i]}')
         eq_loss = 0
         if self.can_batch_run:
             ins = paddle.stack(b_datas, axis=0)

@@ -61,7 +61,7 @@ net = psci.network.FCNet(
     num_ins=2,
     num_outs=1,
     num_layers=5,
-    hidden_size=5, #20,
+    hidden_size=10, #20,
     dtype="float32",
     activation="tanh")
 
