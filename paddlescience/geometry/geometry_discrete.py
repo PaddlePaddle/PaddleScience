@@ -84,6 +84,14 @@ class GeometryDiscrete:
     def get_domain(self):
         return self.space_domain
 
+    # set time steps
+    def set_time_steps(self, time_steps):
+        self.time_steps = time_steps
+
+    # set space steps
+    def set_space_steps(self, space_steps):
+        self.space_steps = space_steps
+
     def to_tensor(self):
         self.space_domain = paddle.to_tensor(self.space_domain, dtype="float32")
         self.space_domain.stop_gradient = False

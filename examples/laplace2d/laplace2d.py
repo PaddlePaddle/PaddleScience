@@ -46,6 +46,9 @@ pdes = psci.pde.Laplace2D()
 # Discretization
 pdes, geo = psci.discretize(pdes, geo, space_steps=(41, 41))
 
+# psci.visu.save_mpl(geo, np.ones(41*41))
+# psci.visu.plot_mpl("output.npy")
+
 # bc value
 golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
