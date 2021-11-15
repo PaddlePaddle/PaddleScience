@@ -16,7 +16,7 @@ import vtk
 
 def Rectangular2D(geo, data, filename="output"):
     # plane obj
-    nPoints, plane = geo.visu_vtk()
+    plane, nPoints = geo.get_vtk_obj()
     # set data
     data_vtk = vtk.vtkFloatArray()
     data_vtk.SetNumberOfValues(nPoints)

@@ -19,7 +19,6 @@ import paddle
 # Random Seed
 paddle.seed(1234)
 
-
 # Analytical solution
 def LaplaceRecSolution(x, y, k=1.0):
     if (k == 0.0):
@@ -27,20 +26,15 @@ def LaplaceRecSolution(x, y, k=1.0):
     else:
         return np.cos(k * x) * np.cosh(k * y)
 
-
-# Generate analytical Solution using Geometry points
-def GenSolution(txy, bc_index):
-    sol = np.zeros(len(txy)).astype(np.float32)
+# Generate analytical solution using geometry points
+def GenSolution(xy, bc_index):
+    sol = np.zeros(len(xy)).astype(np.float32)
     bc_value = np.zeros((len(bc_index), 1)).astype(np.float32)
-
-    for i in range(len(txy)):
-        sol[i][0] = LaplaceRecSolution(txy[i][0], txy[i][1])
-
+    for i in range(len(xy)):
+        sol[i] = LaplaceRecSolution(xy[i][0], xy[i][1])
     for i in range(len(bc_index)):
         bc_value[i][0] = sol[bc_index[i]]
-
     return [sol, bc_value]
-
 
 # Geometry
 geo = psci.geometry.Rectangular(
@@ -53,8 +47,9 @@ pdes = psci.pde.Laplace2D()
 pdes, geo = psci.discretize(pdes, geo, space_steps=(41, 41))
 
 # bc value
-golden, bc_value = GenSolution(geo.steps, geo.bc_index)
+golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
+
 psci.visu.Rectangular2D(geo, golden, 'golden_laplace_2d')
 np.save('./golden_laplace_2d.npy', golden)
 

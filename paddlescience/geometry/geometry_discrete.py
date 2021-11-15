@@ -19,16 +19,19 @@ class GeometryDiscrete:
     def __init__(self):
         # time discretization
         self.time_dependent = False
-        self.time_domain_size = 0
+        self.time_domain_size = -1
         self.time_domain = None 
         # space discretization
         self.space_dims = 2
-        self.space_domain_size = 0
+        self.space_domain_size = -1
         self.space_domain = None
         # time IC index
         self.ic_index = None
         # space BC index
         self.bc_index = None
+        # visu vtk obj
+        self.vtk_obj = None
+        self.vtk_num_points = -1
 
     # set time domain
     def set_time_domain(self, time_domain):
@@ -115,5 +118,16 @@ class GeometryDiscrete:
     def get_num_batch(self):
         return self.num_batch
 
-    def visu_vtk(self):
-        return self.num_points, self.vtk_obj
+    def set_vtk_obj(self, vtk_obj, vtk_data_size):
+        self.vtk_obj = vtk_obj
+        self.vtk_data_size = vtk_data_size
+
+    def get_vtk_obj(self):
+        return self.vtk_obj, self.vtk_data_size
+
+    def set_mpl_obj(self, mpl_obj, mpl_data_shape):
+        self.mpl_obj = mpl_obj
+        self.mpl_data_shape = mpl_data_shape
+
+    def get_mpl_obj(self):
+        return self.mpl_obj, self.vtk_data_shape

@@ -15,6 +15,7 @@
 from .geometry_discrete import GeometryDiscrete
 import numpy as np
 import vtk
+import matplotlib.pyplot as plt
 
 # Geometry
 class Geometry:
@@ -81,7 +82,7 @@ class Rectangular(Geometry):
     def discretize(self, time_nsteps=None, space_nsteps=None):
 
         # check input
-        space_nsteps = (space_nsteps, ) if (np.isscalar(space_nsteps)) else space_nsteps
+        self.space_nsteps = (space_nsteps, ) if (np.isscalar(space_nsteps)) else space_nsteps
 
         # discretization time space with linspace
         steps = []
@@ -95,7 +96,7 @@ class Rectangular(Geometry):
                 np.linspace(
                     self.space_origin[i],
                     self.space_extent[i],
-                    space_nsteps[i],
+                    self.space_nsteps[i],
                     endpoint=True))
 
         # meshgrid and stack to cordinates
@@ -105,7 +106,7 @@ class Rectangular(Geometry):
         else:
             nsteps = 1
             ndims = self.space_ndims
-        for i in space_nsteps:
+        for i in self.space_nsteps:
             nsteps *= i
 
         if (self.space_ndims == 1):
@@ -121,10 +122,10 @@ class Rectangular(Geometry):
         if (self.space_ndims == 1):
             bc_index = np.ndarray(2, dtype=int)
             bc_index[0] = 0
-            bc_index[1] = space_nsteps[-1]
+            bc_index[1] = self.space_nsteps[-1]
         elif (self.space_ndims == 2):
-            nx = space_nsteps[0]
-            ny = space_nsteps[1]
+            nx = self.space_nsteps[0]
+            ny = self.space_nsteps[1]
             nbc = nx * ny - (nx-2)*(ny-2)
             bc_index = np.ndarray(nbc, dtype=int)
             nbc = 0
@@ -134,9 +135,9 @@ class Rectangular(Geometry):
                         bc_index[nbc] = j * nx + i
                         nbc += 1
         elif (self.space_ndims == 3):
-            nx = space_nsteps[0]
-            ny = space_nsteps[1]
-            nz = space_nsteps[2]
+            nx = self.space_nsteps[0]
+            ny = self.space_nsteps[1]
+            nz = self.space_nsteps[2]
             nbc = nx * ny * nz - (nx-2) *(ny-2)*(nz-2)
             bc_index = np.ndarray(nbc, dtype=int)
             nbc = 0
@@ -160,12 +161,16 @@ class Rectangular(Geometry):
         geo_disc.set_domain(space_domain=domain, origin=self.space_origin, extent=self.space_extent)
         geo_disc.set_bc_index(bc_index)
 
-        self.visu_vtk()
+        vtk_obj, vtk_data_size = self.obj_vtk()
+        geo_disc.set_vtk_obj(vtk_obj, vtk_data_size)
+
+        mpl_obj, mpl_data_shape = self.obj_mpl()
+        geo_disc.set_mpl_obj(mpl_obj, mpl_data_shape)
 
         return geo_disc
 
     # visu vtk
-    def visu_vtk(self): 
+    def obj_vtk(self): 
         # prepare plane obj 2d
         if self.space_ndims == 2:
             self.plane = vtk.vtkPlaneSource()
@@ -174,5 +179,12 @@ class Rectangular(Geometry):
             self.plane.SetPoint1([self.space_extent[0], self.space_origin[1], 0])
             self.plane.SetPoint2([self.space_origin[0], self.space_extent[1], 0])
             self.plane.Update()
-            num_points = plane.GetOutput().GetNumberOfPoints()
-        return num_points, self.plane
+            vtk_data_size = self.plane.GetOutput().GetNumberOfPoints()
+        return self.plane, vtk_data_size
+
+    # visu matplotlib
+    def obj_mpl(self):
+        # prepare plan obj 2d
+        if self.space_ndims == 2:
+            fig, self.ax = plt.subplots(subplot_kw={"projection": "3d"})
+        return self.ax, (self.space_nsteps[0], self.space_nsteps[1])
