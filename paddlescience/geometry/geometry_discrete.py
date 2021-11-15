@@ -68,17 +68,9 @@ class GeometryDiscrete:
     def get_bc_index(self):
         return self.bc_index
 
-    # get num of steps
-    def get_nsteps(self):
-        if self.time_dependent == True:
-            nsteps = self.time_nsteps
-            for i in space_nsteps:
-                nsteps *= i
-        else:
-            nsteps = 1
-            for i in self.space_nsteps:
-                nsteps *= i
-        return nsteps
+    # get domain size
+    def get_domain_size(self):
+        return self.space_domain_size
 
     # get time domain
     def get_time_domain(self):
@@ -88,9 +80,13 @@ class GeometryDiscrete:
     def get_space_domain(self):
         return self.space_domain
 
+    # get domain
+    def get_domain(self):
+        return self.space_domain
+
     def to_tensor(self):
-        self.domain = paddle.to_tensor(self.domain, dtype="float32")
-        self.domain.stop_gradient = False
+        self.space_domain = paddle.to_tensor(self.space_domain, dtype="float32")
+        self.space_domain.stop_gradient = False
         for batch_id in range(self.num_batch):
             self.bc_index[batch_id] = paddle.to_tensor(
                 self.bc_index[batch_id], dtype='int64')
@@ -100,8 +96,8 @@ class GeometryDiscrete:
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
-        self.num_batch = self.get_nsteps() // batch_size
-        if self.get_nsteps() % batch_size != 0:
+        self.num_batch = self.get_domain_size() // batch_size
+        if self.get_domain_size() % batch_size != 0:
             self.num_batch = self.num_batch + 1
 
         new_bc_index = [[] for _ in range(self.num_batch)]

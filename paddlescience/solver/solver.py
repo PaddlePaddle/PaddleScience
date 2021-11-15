@@ -13,7 +13,6 @@
 # limitations under the License.
 import numpy as np
 
-
 class Solver(object):
     def __init__(self, algo, opt):
         super(Solver, self).__init__()
@@ -22,7 +21,7 @@ class Solver(object):
         self.opt = opt
 
     def solve(self, num_epoch=1, batch_size=None, checkpoint_freq=1000):
-        batch_size = self.algo.loss.geo.get_nsteps(
+        batch_size = self.algo.loss.geo.get_domain_size(
         ) if batch_size is None else batch_size
         self.algo.loss.set_batch_size(batch_size)
         self.algo.loss.pdes.to_tensor()
@@ -42,7 +41,7 @@ class Solver(object):
                       eq_loss.numpy()[0], "bc_loss: ", bc_loss.numpy()[0])
             if epoch_id % checkpoint_freq == 0:
                 np.save('./checkpoint_' + str(epoch_id) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.steps))
+                        self.algo.net.nn_func(self.algo.loss.geo.get_domain()))
 
         def solution_fn(geo):
             return self.algo.net.nn_func(geo.steps)
