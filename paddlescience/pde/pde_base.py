@@ -20,7 +20,7 @@ import paddle
 # derivative_item = Enum("derivative_item", ("du_dt", "du_dx", "du_dy", "du_dxx", "du_dyy"))
 
 #NOTE(lml): do not change this list
-first_order_rslts = ['u', 'v', 'p']
+first_order_rslts = ['u', 'v', 'w', 'p']
 first_order_derivatives = [['du/dt', 'du/dx', 'du/dy', 'du/dz'],
                            ['dv/dt', 'dv/dx', 'dv/dy', 'dv/dz'],
                            ['dw/dt', 'dw/dx', 'dw/dy', 'dw/dz'],
