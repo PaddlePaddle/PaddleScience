@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .visu_vtk import Rectangular2D, save_vtk
+from .visu_vtk import save_vtk
 from .visu_matplotlib import save_mpl, plot_mpl
