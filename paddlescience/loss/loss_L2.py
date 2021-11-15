@@ -22,12 +22,13 @@ from .loss_base import LossBase
 
 
 class L2(LossBase):
-    def __init__(self, pdes, geo, aux_func=None):
+    def __init__(self, pdes, geo, aux_func=None, bc_weight=None):
         super(L2, self).__init__(pdes, geo)
 
         self.pdes = pdes
         self.geo = geo
         self.aux_func = aux_func
+        self.bc_weight = bc_weight
         self.d_records = dict()
         # TODO(lml): support batch run when batch_jacobian and batch_hessian is ok
         self.can_batch_run = False
@@ -97,7 +98,11 @@ class L2(LossBase):
         # print("bc_u.shape: ", bc_u.shape)
         # print("bc_value.shape: ", bc_value.shape)
         bc_diff = bc_u - bc_value
-        return paddle.norm(bc_diff, p=2)
+        if self.bc_weight is None:
+            return paddle.norm(bc_diff, p=2)
+        else:
+            bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
+            return paddle.sum(bc_diff * bc_diff * bc_weight)
 
     def ic_loss(self, u, batch_id):
         if self.pdes.time_dependent:

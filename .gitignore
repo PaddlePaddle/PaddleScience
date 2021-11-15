@@ -121,3 +121,9 @@ FETCH_HEAD
 
 # vscode
 .vscode
+
+# numpy
+.npy
+
+# vtk
+.vtk

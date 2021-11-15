@@ -18,8 +18,12 @@ export PYTHONPATH=$PWD:$PYTHONPATH
 step3: Run examples
 
 ```
-cd examples
+cd examples/laplace2d
 python3.7 laplace2d.py
+
+cd examples/darcy2d
 python3.7 darcy2d.py
+
+cd examples/ldc2d
 python3.7 ldc2d.py
 ```

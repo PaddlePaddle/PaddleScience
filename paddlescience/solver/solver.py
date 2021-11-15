@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import numpy as np
 
 import paddle
 from paddle.optimizer.functional import bfgs_iterates
@@ -22,7 +23,7 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-    def solve(self, num_epoch=1, batch_size=None):
+    def solve(self, num_epoch=1, batch_size=None, checkpoint_freq=1000):
         if isinstance(self.opt, paddle.optimizer.Adam):
             return self.solve_Adam(num_epoch, batch_size)
         elif self.opt is paddle.optimizer.functional.bfgs_iterates:
@@ -47,6 +48,9 @@ class Solver(object):
                       "batch/num_batch: ", batch_id + 1, "/", num_batch,
                       "loss: ", loss.numpy()[0], "eq_loss: ",
                       eq_loss.numpy()[0], "bc_loss: ", bc_loss.numpy()[0])
+            if epoch_id % checkpoint_freq == 0:
+                np.save('./checkpoint_' + str(epoch_id) + '.npy',
+                        self.algo.net.nn_func(self.algo.loss.geo.steps))
 
         def solution_fn(geo):
             return self.algo.net.nn_func(geo.steps)

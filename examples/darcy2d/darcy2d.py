@@ -21,25 +21,28 @@ paddle.seed(1234)
 
 
 # Analytical solution
-def LaplaceRecSolution(x, y, k=1.0):
-    if (k == 0.0):
-        return x * y
-    else:
-        return np.cos(k * x) * np.cosh(k * y)
+def DarcyRecSolution(x, y):
+    return np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
 
 
 # Generate analytical Solution using Geometry points
 def GenSolution(txy, bc_index):
-    sol = np.zeros(len(txy)).astype(np.float32)
+    sol = np.zeros((len(txy), 1)).astype(np.float32)
     bc_value = np.zeros((len(bc_index), 1)).astype(np.float32)
 
     for i in range(len(txy)):
-        sol[i] = LaplaceRecSolution(txy[i][0], txy[i][1])
+        sol[i][0] = DarcyRecSolution(txy[i][0], txy[i][1])
 
     for i in range(len(bc_index)):
-        bc_value[i, 0] = sol[bc_index[i]]
+        bc_value[i][0] = sol[bc_index[i]]
 
     return [sol, bc_value]
+
+
+# right-hand side
+def Righthand(xy):
+    return 8.0 * 3.1415926 * 3.1415926 * paddle.sin(
+        2.0 * np.pi * xy[0]) * paddle.cos(2.0 * np.pi * xy[1])
 
 
 # Geometry
@@ -50,11 +53,13 @@ geo = psci.geometry.Rectangular(
 pdes = psci.pde.Laplace2D()
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
+pdes, geo = psci.discretize(pdes, geo, space_steps=(41, 41))
 
 # bc value
 golden, bc_value = GenSolution(geo.steps, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
+psci.visu.Rectangular2D(geo, golden, 'golden_darcy_2d')
+np.save('./golden_darcy_2d.npy', golden)
 
 # Network
 net = psci.network.FCNet(
@@ -66,7 +71,7 @@ net = psci.network.FCNet(
     activation="tanh")
 
 # Loss, TO rename
-loss = psci.loss.L2(pdes=pdes, geo=geo)
+loss = psci.loss.L2(pdes=pdes, geo=geo, aux_func=Righthand)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -79,5 +84,13 @@ solver = psci.solver.Solver(algo=algo, opt=opt)
 solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
-rslt = solution(geo)
-psci.visu.Rectangular2D(geo, rslt.numpy(), filename="rslt_laplace")
+rslt = solution(geo).numpy()
+psci.visu.Rectangular2D(geo, rslt, 'rslt_darcy_2d')
+np.save('./rslt_darcy_2d.npy', rslt)
+
+# Calculate diff and l2 relative error
+diff = rslt - golden
+psci.visu.Rectangular2D(geo, diff, 'diff_darcy_2d')
+np.save('./diff_darcy_2d.npy', diff)
+l2_relative_error = np.linalg.norm(diff, ord=2) / geo.get_nsteps()
+print("l2_relative_error: ", l2_relative_error)
