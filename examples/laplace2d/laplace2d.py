@@ -51,7 +51,7 @@ golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
 
 psci.visu.Rectangular2D(geo, golden, 'golden_laplace_2d')
-np.save('./golden_laplace_2d.npy', golden)
+psci.data.save_data("golden_laplace_2d.npy", golden)
 
 # Network
 net = psci.network.FCNet(
@@ -78,11 +78,12 @@ solution = solver.solve(num_epoch=30000, batch_size=None)
 # Use solution
 rslt = solution(geo).numpy()
 psci.visu.Rectangular2D(geo, rslt, 'rslt_laplace_2d')
-np.save('./rslt_laplace_2d.npy', rslt)
+psci.data.save_data('./rslt_laplace_2d.npy', rslt)
 
 # Calculate diff and l2 relative error
 diff = rslt - golden
 psci.visu.Rectangular2D(geo, diff, 'diff_laplace_2d')
-np.save('./diff_laplace_2d.npy', diff)
+psci.data.save_data('./diff_laplace_2d.npy', diff)
+
 l2_relative_error = np.linalg.norm(diff, ord=2) / geo.get_nsteps()
 print("l2_relative_error: ", l2_relative_error)
