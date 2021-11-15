@@ -17,7 +17,7 @@ from .pde_base import PDE
 
 class NavierStokes2D(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2):
-        super(NavierStokes2D, self).__init__(3)
+        super(NavierStokes2D, self).__init__(dim+1)
 
         #self.set_input_variable("x", "y")
         #self.set_output_variable("u", "v")
@@ -52,18 +52,18 @@ class NavierStokes2D(PDE):
             self.add_item(1, -nu / rho, "d2u/dz2")            
             self.add_item(1, 1.0 / rho, "dp/dx")
             # momentum y
-            self.add_item(1, 1.0, "u", "dv/dx")
-            self.add_item(1, 1.0, "v", "dv/dy")
-            self.add_item(1, 1.0, "w", "dv/dz")
-            self.add_item(1, -nu / rho, "d2v/dx2")
-            self.add_item(1, -nu / rho, "d2v/dy2")
-            self.add_item(1, -nu / rho, "d2v/dz2")            
-            self.add_item(1, 1.0 / rho, "dp/dy")
+            self.add_item(2, 1.0, "u", "dv/dx")
+            self.add_item(2, 1.0, "v", "dv/dy")
+            self.add_item(2, 1.0, "w", "dv/dz")
+            self.add_item(2, -nu / rho, "d2v/dx2")
+            self.add_item(2, -nu / rho, "d2v/dy2")
+            self.add_item(2, -nu / rho, "d2v/dz2")            
+            self.add_item(2, 1.0 / rho, "dp/dy")
             # momentum z
-            self.add_item(1, 1.0, "u", "dw/dx")
-            self.add_item(1, 1.0, "v", "dw/dy")
-            self.add_item(1, 1.0, "w", "dw/dz")
-            self.add_item(1, -nu / rho, "d2w/dx2")
-            self.add_item(1, -nu / rho, "d2w/dy2")
-            self.add_item(1, -nu / rho, "d2w/dz2")            
-            self.add_item(1, 1.0 / rho, "dp/dz")
+            self.add_item(3, 1.0, "u", "dw/dx")
+            self.add_item(3, 1.0, "v", "dw/dy")
+            self.add_item(3, 1.0, "w", "dw/dz")
+            self.add_item(3, -nu / rho, "d2w/dx2")
+            self.add_item(3, -nu / rho, "d2w/dy2")
+            self.add_item(3, -nu / rho, "d2w/dz2")            
+            self.add_item(3, 1.0 / rho, "dp/dz")
