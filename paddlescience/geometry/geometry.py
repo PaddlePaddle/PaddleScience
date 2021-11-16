@@ -199,6 +199,9 @@ class Rectangular(Geometry):
                 [self.space_origin[0], self.space_extent[1], 0])
             self.plane.Update()
             vtk_data_size = self.plane.GetOutput().GetNumberOfPoints()
+        elif self.space_ndims == 3:
+            return None, None
+
         return self.plane, vtk_data_size
 
     # # visu matplotlib
