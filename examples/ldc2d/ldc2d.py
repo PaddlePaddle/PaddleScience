@@ -59,7 +59,7 @@ pdes = psci.pde.NavierStokes2D(nu=0.01, rho=1.0)
 pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
 
 # bc value
-bc_value = GenBC(geo.steps, geo.bc_index)
+bc_value = GenBC(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
 
 # Network
@@ -72,7 +72,7 @@ net = psci.network.FCNet(
     activation='tanh')
 
 # Loss, TO rename
-bc_weight = GenBCWeight(geo.steps, geo.bc_index)
+bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
 loss = psci.loss.L2(pdes=pdes, geo=geo, bc_weight=bc_weight)
 
 # Algorithm
@@ -87,6 +87,6 @@ solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
 rslt = solution(geo).numpy()
-psci.visu.Rectangular2D(geo, rslt[:, 0], filename="rslt_u")
-psci.visu.Rectangular2D(geo, rslt[:, 1], filename="rslt_v")
+psci.visu.save_vtk(geo, rslt[:, 0], filename="rslt_u")
+psci.visu.save_vtk(geo, rslt[:, 1], filename="rslt_v")
 np.save('./rslt_ldc_2d.npy', rslt)
