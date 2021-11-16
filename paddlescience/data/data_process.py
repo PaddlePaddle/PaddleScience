@@ -14,9 +14,11 @@
 
 import numpy as np
 
+
 # save data to file
 def save_data(data, filename="output.npy"):
     np.save(filename, data)
+
 
 def load_data(filename):
     return np.load(filename)

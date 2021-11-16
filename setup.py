@@ -55,8 +55,8 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where='.', exclude=('examples*', 'tests*')),
     package_data={
-        'paddlescience': get_package_data_files('paddlescience', [
-            'README.md'])
+        'paddlescience': get_package_data_files('paddlescience',
+                                                ['README.md'])
     },
     setup_requires=['cython', 'numpy'],
     install_requires=REQUIRED_PACKAGES,

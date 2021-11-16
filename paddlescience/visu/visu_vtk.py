@@ -14,6 +14,7 @@
 
 import vtk
 
+
 def save_vtk(geo, data, filename="output"):
     # plane obj
     plane, nPoints = geo.get_vtk_obj()

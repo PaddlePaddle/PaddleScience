@@ -15,7 +15,6 @@
 import paddlescience as psci
 import numpy as np
 
-geo = psci.geometry.Rectangular(
-    space_origin=(0.0), space_extent=(1.0))
+geo = psci.geometry.Rectangular(space_origin=(0.0), space_extent=(1.0))
 
 geo_disc = geo.discretize(space_nsteps=(3))

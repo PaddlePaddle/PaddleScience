@@ -19,12 +19,14 @@ import paddle
 # Random Seed
 paddle.seed(1234)
 
+
 # Analytical solution
 def LaplaceRecSolution(x, y, k=1.0):
     if (k == 0.0):
         return x * y
     else:
         return np.cos(k * x) * np.cosh(k * y)
+
 
 # Generate analytical solution using geometry points
 def GenSolution(xy, bc_index):
@@ -35,6 +37,7 @@ def GenSolution(xy, bc_index):
     for i in range(len(bc_index)):
         bc_value[i][0] = sol[bc_index[i]]
     return [sol, bc_value]
+
 
 # Geometry
 geo = psci.geometry.Rectangular(

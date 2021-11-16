@@ -19,9 +19,11 @@ import paddle
 # Random Seed
 paddle.seed(1234)
 
+
 # Analytical solution
 def DarcyRecSolution(x, y):
     return np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
+
 
 # Generate analytical Solution using Geometry points
 def GenSolution(xy, bc_index):
@@ -35,10 +37,12 @@ def GenSolution(xy, bc_index):
 
     return [sol, bc_value]
 
+
 # right-hand side
 def Righthand(xy):
     return 8.0 * 3.1415926 * 3.1415926 * paddle.sin(
         2.0 * np.pi * xy[0]) * paddle.cos(2.0 * np.pi * xy[1])
+
 
 # Geometry
 geo = psci.geometry.Rectangular(

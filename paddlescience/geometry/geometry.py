@@ -17,6 +17,7 @@ import numpy as np
 import vtk
 import matplotlib.pyplot as plt
 
+
 # Geometry
 class Geometry:
     def __init__(self,
@@ -60,14 +61,18 @@ class Rectangular(Geometry):
                              space_origin, space_extent)
 
         # check inputs and set dimension
-        self.space_origin = (space_origin, ) if (np.isscalar(space_origin)) else space_origin
-        self.space_extent = (space_extent, ) if (np.isscalar(space_extent)) else space_extent
+        self.space_origin = (space_origin, ) if (
+            np.isscalar(space_origin)) else space_origin
+        self.space_extent = (space_extent, ) if (
+            np.isscalar(space_extent)) else space_extent
 
         lso = len(self.space_origin)
         lse = len(self.space_extent)
         self.space_ndims = lso
         if (lso != lse):
-            print("ERROR: Please check dimention of space_origin and space_extent.")
+            print(
+                "ERROR: Please check dimention of space_origin and space_extent."
+            )
             exit()
         elif lso == 1:
             self.space_shape = "rectangular_1d"
@@ -82,7 +87,8 @@ class Rectangular(Geometry):
     def discretize(self, time_nsteps=None, space_nsteps=None):
 
         # check input
-        self.space_nsteps = (space_nsteps, ) if (np.isscalar(space_nsteps)) else space_nsteps
+        self.space_nsteps = (space_nsteps, ) if (
+            np.isscalar(space_nsteps)) else space_nsteps
 
         # discretization time space with linspace
         steps = []
@@ -113,10 +119,15 @@ class Rectangular(Geometry):
             domain = steps[0]
         if (self.space_ndims == 2):
             mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
-            domain = np.stack((mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
+            domain = np.stack(
+                (mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
         elif (self.space_ndims == 3):
-            mesh = np.meshgrid(steps[2], steps[1], steps[0], sparse=False, indexing='ij')
-            domain = np.stack((mesh[2].reshape(-1), mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
+            mesh = np.meshgrid(
+                steps[2], steps[1], steps[0], sparse=False, indexing='ij')
+            domain = np.stack(
+                (mesh[2].reshape(-1), mesh[1].reshape(-1),
+                 mesh[0].reshape(-1)),
+                axis=-1)
 
         # bc_index TODO optimize
         if (self.space_ndims == 1):
@@ -126,25 +137,26 @@ class Rectangular(Geometry):
         elif (self.space_ndims == 2):
             nx = self.space_nsteps[0]
             ny = self.space_nsteps[1]
-            nbc = nx * ny - (nx-2)*(ny-2)
+            nbc = nx * ny - (nx - 2) * (ny - 2)
             bc_index = np.ndarray(nbc, dtype=int)
             nbc = 0
             for j in range(ny):
                 for i in range(nx):
-                    if (j==0 or j==ny-1 or i==0 or i==nx-1):
+                    if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
                         bc_index[nbc] = j * nx + i
                         nbc += 1
         elif (self.space_ndims == 3):
             nx = self.space_nsteps[0]
             ny = self.space_nsteps[1]
             nz = self.space_nsteps[2]
-            nbc = nx * ny * nz - (nx-2) *(ny-2)*(nz-2)
+            nbc = nx * ny * nz - (nx - 2) * (ny - 2) * (nz - 2)
             bc_index = np.ndarray(nbc, dtype=int)
             nbc = 0
             for k in range(nz):
                 for j in range(ny):
                     for i in range(nx):
-                        if (k==0 or k == nz-1 or j==0 or j==ny-1 or i==0 or i==nx-1):
+                        if (k == 0 or k == nz - 1 or j == 0 or j == ny - 1 or
+                                i == 0 or i == nx - 1):
                             bc_index[nbc] = k * nx * ny + j * nx + i
                             nbc += 1
 
@@ -158,7 +170,10 @@ class Rectangular(Geometry):
         if self.time_dependent == True:
             geo_disc.set_time_nsteps(time_nsteps)
             geo_disc.set_time_steps(time_steps)
-        geo_disc.set_domain(space_domain=domain, origin=self.space_origin, extent=self.space_extent)
+        geo_disc.set_domain(
+            space_domain=domain,
+            origin=self.space_origin,
+            extent=self.space_extent)
         geo_disc.set_bc_index(bc_index)
 
         vtk_obj, vtk_data_size = self.obj_vtk()
@@ -170,14 +185,18 @@ class Rectangular(Geometry):
         return geo_disc
 
     # visu vtk
-    def obj_vtk(self): 
+    def obj_vtk(self):
         # prepare plane obj 2d
         if self.space_ndims == 2:
             self.plane = vtk.vtkPlaneSource()
-            self.plane.SetResolution(self.space_nsteps[0] - 1, self.space_nsteps[1] - 1)
-            self.plane.SetOrigin([self.space_origin[0], self.space_origin[1], 0])
-            self.plane.SetPoint1([self.space_extent[0], self.space_origin[1], 0])
-            self.plane.SetPoint2([self.space_origin[0], self.space_extent[1], 0])
+            self.plane.SetResolution(self.space_nsteps[0] - 1,
+                                     self.space_nsteps[1] - 1)
+            self.plane.SetOrigin(
+                [self.space_origin[0], self.space_origin[1], 0])
+            self.plane.SetPoint1(
+                [self.space_extent[0], self.space_origin[1], 0])
+            self.plane.SetPoint2(
+                [self.space_origin[0], self.space_extent[1], 0])
             self.plane.Update()
             vtk_data_size = self.plane.GetOutput().GetNumberOfPoints()
         return self.plane, vtk_data_size

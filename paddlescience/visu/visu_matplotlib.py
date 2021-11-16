@@ -16,20 +16,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+
 def save_mpl(geo_disc, data, filename="output.npy"):
     with open(filename, "wb") as fp:
         np.save(fp, geo_disc.space_domain)
         np.save(fp, geo_disc.space_steps)
         np.save(fp, data)
 
+
 def plot_mpl(filename):
     with open(filename, "rb") as fp:
         space_domain = np.load(fp)
         space_steps = np.load(fp)
         data = np.load(fp)
-    xx = np.reshape(space_domain[:,0], space_steps)
-    yy = np.reshape(space_domain[:,1], space_steps)
+    xx = np.reshape(space_domain[:, 0], space_steps)
+    yy = np.reshape(space_domain[:, 1], space_steps)
     zz = np.reshape(data, space_steps)
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    surf = ax.plot_surface(
+        xx, yy, zz, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     # plt.show()

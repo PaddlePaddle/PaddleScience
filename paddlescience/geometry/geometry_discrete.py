@@ -15,12 +15,13 @@
 import numpy as np
 import paddle
 
+
 class GeometryDiscrete:
     def __init__(self):
         # time discretization
         self.time_dependent = False
         self.time_domain_size = -1
-        self.time_domain = None 
+        self.time_domain = None
         # space discretization
         self.space_dims = 2
         self.space_domain_size = -1
@@ -46,7 +47,11 @@ class GeometryDiscrete:
         self.space_dims = len(space_domain[0])
 
     # set domain
-    def set_domain(self, time_domain=None, space_domain=None, origin=None, extent=None):
+    def set_domain(self,
+                   time_domain=None,
+                   space_domain=None,
+                   origin=None,
+                   extent=None):
         # time domain
         if time_domain is not None:
             self.set_time_domain(time_domain)
@@ -93,7 +98,8 @@ class GeometryDiscrete:
         self.space_steps = space_steps
 
     def to_tensor(self):
-        self.space_domain = paddle.to_tensor(self.space_domain, dtype="float32")
+        self.space_domain = paddle.to_tensor(
+            self.space_domain, dtype="float32")
         self.space_domain.stop_gradient = False
         for batch_id in range(self.num_batch):
             self.bc_index[batch_id] = paddle.to_tensor(

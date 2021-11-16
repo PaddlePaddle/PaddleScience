@@ -13,6 +13,7 @@
 # limitations under the License.
 import numpy as np
 
+
 class Solver(object):
     def __init__(self, algo, opt):
         super(Solver, self).__init__()
