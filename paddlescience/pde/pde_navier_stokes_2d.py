@@ -31,13 +31,13 @@ class NavierStokes2D(PDE):
             self.add_item(1, 1.0, "v", "du/dy")
             self.add_item(1, -nu / rho, "d2u/dx2")
             self.add_item(1, -nu / rho, "d2u/dy2")
-            self.add_item(1, 1.0 / rho, "dp/dx")
+            self.add_item(1, 1.0 / rho, "dw/dx")
             # momentum y
             self.add_item(2, 1.0, "u", "dv/dx")
             self.add_item(2, 1.0, "v", "dv/dy")
             self.add_item(2, -nu / rho, "d2v/dx2")
             self.add_item(2, -nu / rho, "d2v/dy2")
-            self.add_item(2, 1.0 / rho, "dp/dy")
+            self.add_item(2, 1.0 / rho, "dw/dy")
         elif dim == 3:
             # continuty 
             self.add_item(0, 1.0, "du/dx")
