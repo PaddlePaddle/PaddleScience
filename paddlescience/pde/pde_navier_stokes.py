@@ -15,9 +15,9 @@
 from .pde_base import PDE
 
 
-class NavierStokes2D(PDE):
+class NavierStokes(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2):
-        super(NavierStokes2D, self).__init__(dim + 1)
+        super(NavierStokes, self).__init__(dim + 1)
 
         #self.set_input_variable("x", "y")
         #self.set_output_variable("u", "v")
