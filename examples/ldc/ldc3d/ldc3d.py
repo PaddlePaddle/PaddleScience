@@ -69,7 +69,7 @@ pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1, 2])
 # Network
 net = psci.network.FCNet(
     num_ins=3,
-    num_outs=3,
+    num_outs=4,
     num_layers=5,
     hidden_size=20,
     dtype="float32",
