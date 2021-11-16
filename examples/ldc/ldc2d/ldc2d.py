@@ -21,55 +21,51 @@ paddle.seed(1234)
 
 
 # Generate BC value
-def GenBC(xyz, bc_index):
-    bc_value = np.zeros((len(bc_index), 3)).astype(np.float32)
+def GenBC(xy, bc_index):
+    bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xyz[id][2] - 0.05) < 1e-4:
+        if abs(xy[id][1] - 0.05) < 1e-4:
             bc_value[i][0] = 1.0
             bc_value[i][1] = 0.0
-            bc_value[i][2] = 0.0
         else:
             bc_value[i][0] = 0.0
             bc_value[i][1] = 0.0
-            bc_value[i][2] = 0.0
     return bc_value
 
 
 # Generate BC weight
-def GenBCWeight(xyz, bc_index):
-    bc_weight = np.zeros((len(bc_index), 3)).astype(np.float32)
+def GenBCWeight(xy, bc_index):
+    bc_weight = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xyz[id][1] - 0.05) < 1e-4:
-            bc_weight[i][0] = 1.0 - 20.0 * abs(xyz[id][0])
+        if abs(xy[id][1] - 0.05) < 1e-4:
+            bc_weight[i][0] = 1.0 - 20.0 * abs(xy[id][0])
             bc_weight[i][1] = 1.0
-            bc_weight[i][2] = 1.0
         else:
             bc_weight[i][0] = 1.0
             bc_weight[i][1] = 1.0
-            bc_weight[i][2] = 1.0
     return bc_weight
 
 
 # Geometry
 geo = psci.geometry.Rectangular(
-    space_origin=(-0.05, -0.05, -0.05), space_extent=(0.05, 0.05, 0.05))
+    space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
 
 # PDE Laplace
-pdes = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=3)
+pdes = psci.pde.NavierStokes(nu=0.01, rho=1.0)
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11, 11))
+pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
 
 # bc value
 bc_value = GenBC(geo.space_domain, geo.bc_index)
-pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1, 2])
+pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
 
 # Network
 net = psci.network.FCNet(
-    num_ins=3,
-    num_outs=4,
+    num_ins=2,
+    num_outs=3,
     num_layers=5,
     hidden_size=20,
     dtype="float32",
@@ -91,6 +87,6 @@ solution = solver.solve(num_epoch=30000, batch_size=None)
 
 # Use solution
 rslt = solution(geo).numpy()
-#psci.visu.save_vtk(geo, rslt[:, 0], filename="rslt_u")
-#psci.visu.save_vtk(geo, rslt[:, 1], filename="rslt_v")
-#psci.data.save_data(rstl, './rslt_ldc_2d.npy')
+psci.visu.save_vtk(geo, rslt[:, 0], filename="rslt_u")
+psci.visu.save_vtk(geo, rslt[:, 1], filename="rslt_v")
+pcsi.data.save_data(rstl, './rslt_ldc_2d.npy')
