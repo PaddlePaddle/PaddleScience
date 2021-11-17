@@ -25,8 +25,8 @@ def GenBC(xy, bc_index):
     bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
-            bc_value[i][0] = 1.0
+        if abs(xy[id][1] - 5) < 1e-4:
+            bc_value[i][0] = 0.1
             bc_value[i][1] = 0.0
         else:
             bc_value[i][0] = 0.0
@@ -39,8 +39,8 @@ def GenBCWeight(xy, bc_index):
     bc_weight = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
-            bc_weight[i][0] = 1.0 - 20.0 * abs(xy[id][0])
+        if abs(xy[id][1] - 5) < 1e-4:
+            bc_weight[i][0] = 1.0 - 0.2 * abs(xy[id][0])
             bc_weight[i][1] = 1.0
         else:
             bc_weight[i][0] = 1.0
@@ -49,11 +49,10 @@ def GenBCWeight(xy, bc_index):
 
 
 # Geometry
-geo = psci.geometry.Rectangular(
-    space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
+geo = psci.geometry.Rectangular(space_origin=(-5, -5), space_extent=(5, 5))
 
 # PDE Laplace
-pdes = psci.pde.NavierStokes2D(nu=0.01, rho=1.0)
+pdes = psci.pde.NavierStokes2D(nu=0.1, rho=1.0)
 
 # Discretization
 pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
@@ -70,6 +69,8 @@ net = psci.network.FCNet(
     hidden_size=20,
     dtype="float32",
     activation='tanh')
+# load params from checkpoint
+# net.set_state_dict(paddle.load('./checkpoint/net_params_100'))
 
 # Loss, TO rename
 bc_weight = GenBCWeight(geo.steps, geo.bc_index)
@@ -80,10 +81,12 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+# load params from checkpoint
+# opt.set_state_dict(paddle.load('./checkpoint/opt_params_100'))
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000, batch_size=None)
+solution = solver.solve(num_epoch=30000, batch_size=None, checkpoint_freq=100)
 
 # Use solution
 rslt = solution(geo).numpy()

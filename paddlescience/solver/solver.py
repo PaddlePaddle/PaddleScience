@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
+import paddle
 
 
 class Solver(object):
@@ -38,10 +39,15 @@ class Solver(object):
                 self.opt.clear_grad()
                 print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
                       "batch/num_batch: ", batch_id + 1, "/", num_batch,
-                      "loss: ", loss.numpy()[0], "eq_loss: ",
+                      "loss: ",
+                      loss.numpy()[0], "eq_loss: ",
                       eq_loss.numpy()[0], "bc_loss: ", bc_loss.numpy()[0])
-            if epoch_id % checkpoint_freq == 0:
-                np.save('./checkpoint_' + str(epoch_id) + '.npy',
+            if (epoch_id + 1) % checkpoint_freq == 0:
+                paddle.save(self.algo.net.state_dict(),
+                            './checkpoint/net_params_' + str(epoch_id + 1))
+                paddle.save(self.opt.state_dict(),
+                            './checkpoint/opt_params_' + str(epoch_id + 1))
+                np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                         self.algo.net.nn_func(self.algo.loss.geo.steps))
 
         def solution_fn(geo):
