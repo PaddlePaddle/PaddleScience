@@ -21,6 +21,9 @@ PaddleScience currently focuses on the PINNs model. The core components are as f
     the L2 loss is applied. In the current design, the total loss is a weighted sum of
     three parts, the equation loss, the boundary condition loss and the initial condition loss.
 
+- Optimizer, specifying which optimizer to use for training. Adam is the default option. More
+    optimizers, such as BFGS, will be added in the future.
+
 - Solver, managing the training process given the training data in a batchly fashion.
 
 - Visualization, an easy access to the graph drawing utilities. 
@@ -36,7 +39,7 @@ The component organization is illustrated in the following figure.
 
 Package dependencies: paddle, matplotlib, vtk. 
 
-To install the PaddlePaddle framework, please refer to the offical [PaddlePaddle repository][https://github.com/PaddlePaddle/Paddle].
+To install the PaddlePaddle framework, please refer to the offical [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle).
 
 ## Download and setup environment
 
