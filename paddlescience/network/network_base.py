@@ -24,9 +24,3 @@ class NetworkBase(paddle.nn.Layer):
 
     def nn_func(self):
         pass
-
-    def flatten_params(self):
-        pass
-
-    def reconstruct(self, flat_input):
-        pass

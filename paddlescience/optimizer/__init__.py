@@ -13,12 +13,9 @@
 # limitations under the License.
 
 import paddle
-import paddle.optimizer.functional
 
 # TODO: import all paddle optimizer, i.e. psci.optimizer = paddle.optimizer
 
+
 def Adam(**kargs):
     return paddle.optimizer.Adam(**kargs)
-
-def BFGS():
-    return paddle.optimizer.functional.bfgs_iterates
