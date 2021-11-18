@@ -1,5 +1,5 @@
 # Introduction
-PaddleScience extends the PaddlePaddle framework with new functionalities and reusable
+PaddleScience extends the PaddlePaddle framework with reusable
 software components for developing novel scientific computing applications. Such new
 applications include Physics-informed Machine Learning, neural network based PDE solvers,
 machine learning for CFD, and so on. PaddleScience is currently under active development.
