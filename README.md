@@ -27,6 +27,7 @@ PaddleScience currently focuses on the PINNs model. The core components are as f
 
 The component organization is illustrated in the following figure. 
 
+![image](https://user-images.githubusercontent.com/3903722/142380670-32d49736-aa4a-4e42-ae66-22a8320a235d.png)
 
 
 # Getting started
