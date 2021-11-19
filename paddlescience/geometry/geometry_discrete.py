@@ -18,83 +18,89 @@ import paddle
 
 class GeometryDiscrete:
     def __init__(self):
-
         # time discretization
         self.time_dependent = False
-        self.time_nsteps = 0
-        # self.time_steps 
-
+        self.time_domain_size = -1
+        self.time_domain = None
         # space discretization
         self.space_dims = 2
-        # self.space_nsteps
-        # self.space_steps 
-
+        self.space_domain_size = -1
+        self.space_domain = None
         # time IC index
         self.ic_index = None
-
         # space BC index
         self.bc_index = None
+        # visu vtk obj
+        self.vtk_obj = None
+        self.vtk_num_points = -1
 
-    # set num of time steps
-    def set_time_nsteps(self, time_nsteps):
-        self.time_nsteps = time_nsteps
-
-    # set time steps
-    def set_time_steps(self, time_steps):
+    # set time domain
+    def set_time_domain(self, time_domain):
         self.time_dependent = True
-        self.time_steps = time_steps
-        self.time_nsteps = len(time_steps)
+        self.time_domain = time_domain
+        self.time_domain_size = len(time_domain)
 
-    # set num of space steps
-    def set_space_nsteps(self, space_nsteps):
-        self.space_nsteps = space_nsteps
+    # set space domain
+    def set_space_domain(self, space_domain):
+        self.space_domain = space_domain
+        self.space_domain_size = len(space_domain)
+        self.space_dims = len(space_domain[0])
 
-    # set space steps
-    def set_space_steps(self, space_steps):
-        self.space_steps = space_steps
-        self.space_dims = len(space_steps[0])
-        # self.space_nsteps = len(space_steps)
-
-    # set steps
-
-    def set_steps(self, steps, origin=None, extent=None):
-        self.steps = steps
-        self.mesh = np.copy(steps)
+    # set domain
+    def set_domain(self,
+                   time_domain=None,
+                   space_domain=None,
+                   origin=None,
+                   extent=None):
+        # time domain
+        if time_domain is not None:
+            self.set_time_domain(time_domain)
+        # space domain
+        if space_domain is not None:
+            self.set_space_domain(space_domain)
         self.space_origin = origin
         self.space_extent = extent
-
-    # set ic index
-
-    def set_ic_index(self, ic_index):
-        self.ic_index = ic_index
 
     # set bc index
     def set_bc_index(self, bc_index):
         self.bc_index = bc_index
 
+    # set ic index
+    def set_ic_index(self, ic_index):
+        self.ic_index = ic_index
+
     # get bc index
     def get_bc_index(self):
         return self.bc_index
 
-    # get num of steps
-    def get_nsteps(self):
-        if self.time_dependent == True:
-            nsteps = self.time_nsteps
-            for i in space_nsteps:
-                nsteps *= i
-        else:
-            nsteps = 1
-            for i in self.space_nsteps:
-                nsteps *= i
-        return nsteps
+    # get domain size
+    def get_domain_size(self):
+        return self.space_domain_size
 
-    # get steps
-    def get_step(self):
-        return self.steps
+    # get time domain
+    def get_time_domain(self):
+        return self.time_domain
+
+    # get space domain
+    def get_space_domain(self):
+        return self.space_domain
+
+    # get domain
+    def get_domain(self):
+        return self.space_domain
+
+    # set time steps
+    def set_time_steps(self, time_steps):
+        self.time_steps = time_steps
+
+    # set space steps
+    def set_space_steps(self, space_steps):
+        self.space_steps = space_steps
 
     def to_tensor(self):
-        self.steps = paddle.to_tensor(self.steps, dtype="float32")
-        self.steps.stop_gradient = False
+        self.space_domain = paddle.to_tensor(
+            self.space_domain, dtype="float32")
+        self.space_domain.stop_gradient = False
         for batch_id in range(self.num_batch):
             self.bc_index[batch_id] = paddle.to_tensor(
                 self.bc_index[batch_id], dtype='int64')
@@ -104,8 +110,8 @@ class GeometryDiscrete:
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
-        self.num_batch = self.get_nsteps() // batch_size
-        if self.get_nsteps() % batch_size != 0:
+        self.num_batch = self.get_domain_size() // batch_size
+        if self.get_domain_size() % batch_size != 0:
             self.num_batch = self.num_batch + 1
 
         new_bc_index = [[] for _ in range(self.num_batch)]
@@ -121,3 +127,17 @@ class GeometryDiscrete:
 
     def get_num_batch(self):
         return self.num_batch
+
+    def set_vtk_obj(self, vtk_obj, vtk_data_size):
+        self.vtk_obj = vtk_obj
+        self.vtk_data_size = vtk_data_size
+
+    def get_vtk_obj(self):
+        return self.vtk_obj, self.vtk_data_size
+
+    # def set_mpl_obj(self, mpl_obj, mpl_data_shape):
+    #     self.mpl_obj = mpl_obj
+    #     self.mpl_data_shape = mpl_data_shape
+
+    # def get_mpl_obj(self):
+    #     return self.mpl_obj, self.space_domain self.vtk_data_shape

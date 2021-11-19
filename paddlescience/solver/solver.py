@@ -23,7 +23,7 @@ class Solver(object):
         self.opt = opt
 
     def solve(self, num_epoch=1, batch_size=None, checkpoint_freq=1000):
-        batch_size = self.algo.loss.geo.get_nsteps(
+        batch_size = self.algo.loss.geo.get_domain_size(
         ) if batch_size is None else batch_size
         self.algo.loss.set_batch_size(batch_size)
         self.algo.loss.pdes.to_tensor()

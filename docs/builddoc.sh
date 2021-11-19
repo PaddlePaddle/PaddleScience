@@ -12,5 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .visu_vtk import save_vtk
-from .visu_matplotlib import save_mpl, plot_mpl
+# pip install sphinx-quickstart
+
+# export PROJECT_DIR=../
+sphinx-quickstart -p PaddleScience -a PaddlePaddle -v 0.1 -l en
+
+make html

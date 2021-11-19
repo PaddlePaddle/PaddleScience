@@ -32,13 +32,10 @@ def LaplaceRecSolution(x, y, k=1.0):
 def GenSolution(txy, bc_index):
     sol = np.zeros((len(txy), 1)).astype(np.float32)
     bc_value = np.zeros((len(bc_index), 1)).astype(np.float32)
-
-    for i in range(len(txy)):
-        sol[i][0] = LaplaceRecSolution(txy[i][0], txy[i][1])
-
+    for i in range(len(xy)):
+        sol[i] = LaplaceRecSolution(xy[i][0], xy[i][1])
     for i in range(len(bc_index)):
         bc_value[i][0] = sol[bc_index[i]]
-
     return [sol, bc_value]
 
 
@@ -52,11 +49,15 @@ pdes = psci.pde.Laplace2D()
 # Discretization
 pdes, geo = psci.discretize(pdes, geo, space_steps=(41, 41))
 
+# psci.visu.save_mpl(geo, np.ones(41*41))
+# psci.visu.plot_mpl("output.npy")
+
 # bc value
-golden, bc_value = GenSolution(geo.steps, geo.bc_index)
+golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
-psci.visu.Rectangular2D(geo, golden, 'golden_laplace_2d')
-np.save('./golden_laplace_2d.npy', golden)
+
+psci.visu.save_vtk(geo, golden, 'golden_laplace_2d')
+psci.data.save_data(golden, "golden_laplace_2d.npy")
 
 # Network
 net = psci.network.FCNet(
@@ -78,16 +79,17 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000, batch_size=None)
+solution = solver.solve(num_epoch=30000)
 
 # Use solution
 rslt = solution(geo).numpy()
-psci.visu.Rectangular2D(geo, rslt, 'rslt_laplace_2d')
-np.save('./rslt_laplace_2d.npy', rslt)
+psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
+psci.data.save_data(rslt, './rslt_laplace_2d.npy')
 
 # Calculate diff and l2 relative error
 diff = rslt - golden
-psci.visu.Rectangular2D(geo, diff, 'diff_laplace_2d')
-np.save('./diff_laplace_2d.npy', diff)
+psci.visu.save_vtk(geo, diff, 'diff_laplace_2d')
+psci.data.save_data(diff, './diff_laplace_2d.npy')
+
 l2_relative_error = np.linalg.norm(diff, ord=2) / geo.get_nsteps()
 print("l2_relative_error: ", l2_relative_error)

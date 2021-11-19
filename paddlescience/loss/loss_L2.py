@@ -113,7 +113,7 @@ class L2(LossBase):
             return 0
 
     def batch_run(self, net, batch_id):
-        b_datas = self.geo.get_step()
+        b_datas = self.geo.get_space_domain()
         u = net.nn_func(b_datas)
         eq_loss = 0
         if self.can_batch_run:

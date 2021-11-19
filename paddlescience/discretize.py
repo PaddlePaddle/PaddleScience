@@ -19,6 +19,9 @@ def discretize(pde, geo, time_steps=None, space_steps=None):
     geo_disc = geo.discretize(time_steps, space_steps)
     # geo_disc.to_tensor()
 
+    geo_disc.set_time_steps(time_steps)
+    geo_disc.set_space_steps(space_steps)
+
     # PDE
     # pde = pde.discretize()
     # pde.to_tensor()

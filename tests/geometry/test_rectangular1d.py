@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddlescience as psci
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
+geo = psci.geometry.Rectangular(space_origin=(0.0), space_extent=(1.0))
 
-def draw2D(geo_disc, u):
-
-    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    # mZ = np.reshape(solution,(len(mX), len(mX[0])))
-    # surf = ax.plot_surface(mX, mY, mZ, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    # plt.show()
-    pass
+geo_disc = geo.discretize(space_nsteps=(3))
