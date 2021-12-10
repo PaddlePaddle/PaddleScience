@@ -29,7 +29,7 @@ PaddleScience is currently under active development. Its design is evolving and 
 
 .. image:: img/pscicode.png
 
-* Projet GitHub: https://github.com/PaddlePaddle/PaddleScience
+* Project GitHub: https://github.com/PaddlePaddle/PaddleScience
 
 
 .. toctree::
