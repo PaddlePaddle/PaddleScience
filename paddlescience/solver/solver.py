@@ -41,7 +41,9 @@ class Solver(object):
         Train the network with respect to num_epoch.
  
         Parameters:
-            num_epoch(int): Optional, default 1000. Number epochs.
+            num_epoch(int): Optional, default 1000. Number of epochs.
+            batch_size(int|None): Under develop. Optional, default None. How many sample points are used as a batch during training.
+            checkpoint_freq(int): Under develop. Optional, default 1000. How many epochs to store the training status once.
 
         Return:
             solution(Callable): A python func functhion that takes a GeometryDiscrete as input and a numpy array as outputs.
