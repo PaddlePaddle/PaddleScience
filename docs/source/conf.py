@@ -100,4 +100,11 @@ html_logo = 'img/paddle.png'
 
 imgmath_latex = 'latex'
 
-html_show_sourcelink = False
+html_context = {
+    'display_github': True,
+    'show_source': False,
+    'github_user': 'PaddlePaddle',
+    'github_repo': project,
+    'github_version': 'develop',
+    'conf_py_path': '/docs/source/',
+}
