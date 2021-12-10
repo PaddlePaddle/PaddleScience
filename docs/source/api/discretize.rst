@@ -1,0 +1,4 @@
+Discretization
+===================================
+
+.. autofunction:: paddlescience.discretize
