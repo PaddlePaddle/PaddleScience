@@ -26,7 +26,7 @@ class FCNet(NetworkBase):
         num_outs(int): Number of outputs.
         num_layers(int): Number of layers.
         hidden_size(int): Hiden size in each layer.
-        dtype(string): Optional, default 'float32'. The data type of the weights and bias, could be 'float32' or 'float64'.
+        dtype(string): Optional, default 'float32'. The data type of the weights and bias, we only support 'float32' now.
         activation(string): Optional, default 'tanh'. The type of activation function used in each layer, could be 'tanh' or 'sigmoid'.
 
     Example:
