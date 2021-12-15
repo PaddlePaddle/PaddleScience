@@ -1,3 +1,6 @@
+[//]: <> (title: LDC use case tutorial, author: Tongxin Bai @baitongxin at baidu.com)
+
+
 # Lid Driven Cavity Flow
 
 This guide introduces to how to build a PINN model for simulating the 2d Lid Driven Cavity (LDC) flow in PaddleScience.
