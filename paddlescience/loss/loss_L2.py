@@ -174,6 +174,7 @@ class L2(LossBase):
         if self.bc_weight is not None:
             bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
             bc_diff = bc_diff * paddle.sqrt(bc_weight)
+        bc_diff = paddle.reshape(bc_diff, shape=[-1])
         return paddle.norm(bc_diff, p=2)
 
     # TODO: calculate ic loss
