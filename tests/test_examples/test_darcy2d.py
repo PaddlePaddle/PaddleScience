@@ -112,25 +112,9 @@ def test_darcy2D():
     """
     test darcy2d
     """
-    expect = np.array([
-        [-0.02001287],
-        [0.29630685],
-        [0.5558747],
-        [0.73548657],
-        [0.2963115],
-        [0.5558783],
-        [0.7354888],
-        [0.84560883],
-        [0.55588174],
-        [0.7354911],
-        [0.84561014],
-        [0.9081895],
-        [0.7354933],
-        [0.8456115],
-        [0.90819025],
-        [0.94222784],
-    ])
-    diff_expect = 0.750401496887207
+    golden = np.load("./golden/darcy2D.npz")
+    expect = golden['expect']
+    diff_expect = golden['diff_expect']
     assert np.allclose(rslt, expect), "the rslt was changed"
     assert np.isclose(diff_expect,
                       mean_square_error), "the mean_square_error was changed"
