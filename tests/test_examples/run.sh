@@ -17,16 +17,22 @@
 
 cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
+bug=0
 
 for file in ${cases}
 do
 echo ${file}
 if [[ ${ignore} =~ ${file##*/} ]]; then
-
     echo "skip"
-
 else
-
-    python -m pytest ${file}
+    python3.7 -m pytest ${file}
+    if [ $? -ne 0 ]; then
+        echo ${file} >> result.txt
+        bug=`expr ${bug} + 1`
+    fi
 fi
 done
+
+echo "total bugs: "${bug} > result.txt
+cat result.txt
+exit ${bug}
