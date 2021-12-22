@@ -102,25 +102,9 @@ def test_Laplace2D():
     """
     test Laplace2D
     """
-    expect = np.array([
-        [0.05890241],
-        [0.35906678],
-        [0.6016844],
-        [0.7688305],
-        [0.359073],
-        [0.6016891],
-        [0.76883334],
-        [0.87170523],
-        [0.60169375],
-        [0.7688364],
-        [0.871707],
-        [0.9306878],
-        [0.76883936],
-        [0.8717088],
-        [0.93068886],
-        [0.9631383],
-    ])
-    diff_expect = 0.23265139758586884
+    golden = np.load("./golden/laplace2d.npz")
+    expect = golden['expect']
+    diff_expect = golden['diff_expect']
     assert np.allclose(rslt, expect), "the rslt was changed"
     assert np.isclose(diff_expect,
                       mean_square_error), "the mean_square_error was changed"
