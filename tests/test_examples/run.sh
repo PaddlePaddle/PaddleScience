@@ -23,10 +23,10 @@ do
 echo ${file}
 if [[ ${ignore} =~ ${file##*/} ]]; then
 
-    echo "跳过"
+    echo "skip"
 
 else
 
-    python3.7 -m pytest ${file}
+    python -m pytest ${file}
 fi
 done
