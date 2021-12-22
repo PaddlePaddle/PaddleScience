@@ -58,15 +58,9 @@ pdes = psci.pde.Laplace2D()
 # Discretization
 pdes, geo = psci.discretize(pdes, geo, space_nsteps=(4, 4))
 
-# psci.visu.save_mpl(geo, np.ones(41*41))
-# psci.visu.plot_mpl("output.npy")
-
 # bc value
 golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
-
-# psci.visu.save_vtk(geo, golden, 'golden_laplace_2d')
-# np.save("./golden_laplace_2d.npy", golden)
 
 # Network
 net = psci.network.FCNet(
@@ -79,7 +73,6 @@ net = psci.network.FCNet(
 net._parameters["w_0"].set_value(
     paddle.to_tensor([[1], [1]]).astype("float32"))
 net._parameters["w_1"].set_value(paddle.to_tensor([[1]]).astype("float32"))
-# print(net._parameters)
 
 # Loss, TO rename
 loss = psci.loss.L2(pdes=pdes, geo=geo)
@@ -96,18 +89,12 @@ solution = solver.solve(num_epoch=30)
 
 # Use solution
 rslt = solution(geo)
-# print(rslt)
-# psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
-# np.save('./rslt_laplace_2d.npy', rslt)
 
 # Calculate diff and l2 relative error
 diff = rslt - golden
-# psci.visu.save_vtk(geo, diff, 'diff_laplace_2d')
-# np.save('./diff_laplace_2d.npy', diff)
 root_square_error = np.linalg.norm(diff, ord=2)
 mean_square_error = root_square_error * root_square_error / geo.get_domain_size(
 )
-# print("mean_sqeare_error: ", mean_square_error)
 
 
 @pytest.mark.laplace2d
@@ -134,5 +121,6 @@ def test_Laplace2D():
         [0.9631383],
     ])
     diff_expect = 0.23265139758586884
-    assert np.allclose(rslt, expect)
-    assert np.isclose(diff_expect, mean_square_error)
+    assert np.allclose(rslt, expect), "the rslt was changed"
+    assert np.isclose(diff_expect,
+                      mean_square_error), "the mean_square_error was changed"

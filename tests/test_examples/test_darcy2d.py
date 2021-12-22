@@ -70,8 +70,6 @@ pdes, geo = psci.discretize(pdes, geo, space_nsteps=(4, 4))
 # bc value
 golden, bc_value = GenSolution(geo.space_domain, geo.bc_index)
 pdes.set_bc_value(bc_value=bc_value)
-# psci.visu.save_vtk(geo, golden, 'golden_darcy_2d')
-# np.save('./golden_darcy_2d.npy', golden)
 
 # Network
 net = psci.network.FCNet(
@@ -85,8 +83,6 @@ net = psci.network.FCNet(
 net._parameters["w_0"].set_value(
     paddle.to_tensor([[1], [1]]).astype("float32"))
 net._parameters["w_1"].set_value(paddle.to_tensor([[1]]).astype("float32"))
-# print(net.w_0)
-# print(net._parameters)
 
 # Loss, TO rename
 loss = psci.loss.L2(pdes=pdes, geo=geo, aux_func=RighthandBatch)
@@ -103,18 +99,12 @@ solution = solver.solve(num_epoch=10)
 
 # Use solution
 rslt = solution(geo)
-# print(rslt)
-# psci.visu.save_vtk(geo, rslt, 'rslt_darcy_2d')
-# np.save('./rslt_darcy_2d.npy', rslt)
 
 # Calculate diff and l2 relative error
 diff = rslt - golden
-# psci.visu.save_vtk(geo, diff, 'diff_darcy_2d')
-# np.save('./diff_darcy_2d.npy', diff)
 root_square_error = np.linalg.norm(diff, ord=2)
 mean_square_error = root_square_error * root_square_error / geo.get_domain_size(
 )
-# print("mean_sqeare_error: ", mean_square_error)
 
 
 @pytest.mark.ldc2d
@@ -141,5 +131,6 @@ def test_darcy2D():
         [0.94222784],
     ])
     diff_expect = 0.750401496887207
-    assert np.allclose(rslt, expect)
-    assert np.isclose(diff_expect, mean_square_error)
+    assert np.allclose(rslt, expect), "the rslt was changed"
+    assert np.isclose(diff_expect,
+                      mean_square_error), "the mean_square_error was changed"
