@@ -36,4 +36,5 @@ done
 
 echo "total bugs: "${bug} >> result.txt
 cat result.txt
+
 exit ${bug}
