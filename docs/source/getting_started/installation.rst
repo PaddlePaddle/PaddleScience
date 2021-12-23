@@ -3,7 +3,9 @@ Installation
 
 - **Prerequisites**
 
-    Package dependencies: paddle, numpy, matplotlib, vtk.
+    Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
+
+    Package dependencies: paddle, numpy, matplotlib, vtk
 
 - **Installation**
 
