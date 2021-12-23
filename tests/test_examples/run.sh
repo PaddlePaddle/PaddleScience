@@ -19,6 +19,7 @@ cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
 bug=0
 
+echo "" >  result.txt
 for file in ${cases}
 do
 echo ${file}
@@ -33,6 +34,6 @@ else
 fi
 done
 
-echo "total bugs: "${bug} > result.txt
+echo "total bugs: "${bug} >> result.txt
 cat result.txt
 exit ${bug}
