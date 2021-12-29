@@ -15,8 +15,8 @@ Following graphs show the results generated from training a 100 by 100 grid. The
 
 
 <div align="center">
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/ldc2d_u_100x100.png" width = "500" align=center />
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/ldc2d_v_100x100.png" width = "500" align=center />
+<img src="../../docs/source/img/ldc2d_u_100x100.png" width = "500" align=center />
+<img src="../../docs/source/img/ldc2d_v_100x100.png" width = "500" align=center />
 </div>
 
 
