@@ -8,12 +8,12 @@ Darcy flow in PaddleScience.
 The Darcy flow example simulate solution (pressure) of following problem
 
 <div align="center">    
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/darcyeq.png" width = "400" align=center />
+<img src="../../docs/source/img/darcyeq.png" width = "400" align=center />
 </div>
 
-with <img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/script/source/img/darcyeqf.png" width = "260" align=center /> and the Dirichlet boundary condition is set to be 
+with <img src="../../source/img/darcyeqf.png" width = "260" align=center /> and the Dirichlet boundary condition is set to be 
 <div align="center">
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/darcyeqbc.png" width = "400" align=center />
+<img src="../../docs/source/img/darcyeqbc.png" width = "400" align=center />
 </div>
 
 
@@ -21,7 +21,7 @@ Following graphs plot the pressure from training the model on a 100 by 100 grid.
 
 
 <div align="center">    
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/darcy_rslt_100x100.png" width = "700" align=center />
+<img src="../../docs/source/img/darcy_rslt_100x100.png" width = "700" align=center />
 </div>
 
 ## How to construct a PINN model

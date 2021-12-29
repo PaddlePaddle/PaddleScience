@@ -1,7 +1,7 @@
 Welcome to PaddleScience’s documentation
 =========================================
 
-`PaddleScience <https://github.com/PaddlePaddle/PaddleScience>`_ is SDK and library for developing AI-driven scientific computing applications based on PaddlePaddle. Current version is pre-release v0.1.
+PaddleScience is SDK and library for developing AI-driven scientific computing applications based on PaddlePaddle. Current version is pre-release v0.1.
 
 PaddleScience extends the PaddlePaddle framework with reusable software components for developing novel scientific computing applications. Such new applications include Physics-informed Machine Learning, neural network based PDE solvers, machine learning for CFD, and so on.
 
@@ -29,7 +29,8 @@ PaddleScience is currently under active development. Its design is evolving and 
 
 .. image:: img/pscicode.png
 
-* Project GitHub: https://github.com/PaddlePaddle/PaddleScience
+* Project on GitHub: https://github.com/PaddlePaddle/PaddleScience
+* Project on Gitee:  https://gitee.com/paddlepaddle/PaddleScience
 
 
 .. toctree::
