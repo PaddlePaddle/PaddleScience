@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .network_fc import FCNet
+from .network_fc_static import FCNetStatic
