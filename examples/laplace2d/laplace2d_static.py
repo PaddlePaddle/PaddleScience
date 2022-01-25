@@ -63,6 +63,7 @@ train_program = paddle.static.Program()
 startup_program = paddle.static.Program()
 with paddle.static.program_guard(train_program, startup_program):
     inputs = paddle.static.data(name='x', shape=[None, 2], dtype='float32')
+    inputs.stop_gradient = False
     # Network
     net = psci.network.FCNetStatic(
         num_ins=2,
@@ -73,11 +74,20 @@ with paddle.static.program_guard(train_program, startup_program):
         activation="tanh")
 
     outputs = net.nn_func(inputs)
-    loss = paddle.mean(outputs)
+    du = paddle.static.gradients(outputs, inputs)[0]
+    # d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)[0][:, 0]
+    # import pdb; pdb.set_trace()
+    d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)
+    # d2u_dx2_copy = paddle.static.gradients(du[:, 0], inputs)
+    d2u_dy2 = paddle.static.gradients(du[:, 1], inputs)
+    print(d2u_dx2)
+    # print(d2u_dx2_copy)
+    print(d2u_dy2)
+    loss = paddle.sum(d2u_dx2[0][:, 0])
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
-print("startup_program: ", startup_program)
-print("train_program: ", train_program)
+# print("startup_program: ", startup_program)
+# print("train_program: ", train_program)
 
 exe.run(startup_program)
 num_epoch = 10
