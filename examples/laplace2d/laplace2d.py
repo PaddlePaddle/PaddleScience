@@ -14,6 +14,9 @@
 
 import paddlescience as psci
 import numpy as np
+import paddle
+
+paddle.seed(1234)
 
 
 # Analytical solution
@@ -75,7 +78,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000)
+solution = solver.solve(num_epoch=10)
 
 # Use solution
 rslt = solution(geo)

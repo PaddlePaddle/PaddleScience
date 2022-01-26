@@ -18,6 +18,7 @@ import numpy as np
 import paddle
 
 paddle.enable_static()
+paddle.seed(1234)
 
 
 # Analytical solution
@@ -62,7 +63,8 @@ exe = paddle.static.Executor(place)
 train_program = paddle.static.Program()
 startup_program = paddle.static.Program()
 with paddle.static.program_guard(train_program, startup_program):
-    inputs = paddle.static.data(name='x', shape=[None, 2], dtype='float32')
+    inputs = paddle.static.data(
+        name='x', shape=[geo.get_domain_size(), 2], dtype='float32')
     inputs.stop_gradient = False
     # Network
     net = psci.network.FCNetStatic(
@@ -74,16 +76,19 @@ with paddle.static.program_guard(train_program, startup_program):
         activation="tanh")
 
     outputs = net.nn_func(inputs)
+
+    # eq_loss
     du = paddle.static.gradients(outputs, inputs)[0]
-    # d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)[0][:, 0]
-    # import pdb; pdb.set_trace()
-    d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)
-    # d2u_dx2_copy = paddle.static.gradients(du[:, 0], inputs)
-    d2u_dy2 = paddle.static.gradients(du[:, 1], inputs)
-    print(d2u_dx2)
-    # print(d2u_dx2_copy)
-    print(d2u_dy2)
-    loss = paddle.sum(d2u_dx2[0][:, 0])
+    d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)[0][:, 0]
+    d2u_dy2 = paddle.static.gradients(du[:, 1], inputs)[0][:, 1]
+    eq_loss = paddle.norm(d2u_dx2 + d2u_dy2, p=2)
+    # bc_loss
+    bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int64')
+    bc_value = paddle.static.data(name='bc_v', shape=[40, 1], dtype='float32')
+    bc_u = paddle.index_select(outputs, bc_index)
+    bc_diff = bc_u - bc_value
+    bc_loss = paddle.norm(bc_diff, p=2)
+    loss = eq_loss + bc_loss
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
 # print("startup_program: ", startup_program)
@@ -91,8 +96,16 @@ with paddle.static.program_guard(train_program, startup_program):
 
 exe.run(startup_program)
 num_epoch = 10
+print()
+
 for i in range(num_epoch):
-    loss_data = exe.run(train_program,
-                        feed={"x": geo.get_space_domain().astype(np.float32)},
-                        fetch_list=[loss.name])
-    print("num_epoch: ", i, "/10, loss_data: ", loss_data)
+    loss_d, eq_loss_d, bc_loss_d = exe.run(
+        train_program,
+        feed={
+            "x": geo.get_space_domain().astype(np.float32),
+            "bc_idx": geo.bc_index,
+            "bc_v": pdes.bc_value
+        },
+        fetch_list=[loss.name, eq_loss.name, bc_loss.name])
+    print("num_epoch: ", i, "/", num_epoch, " loss: ", loss_d[0], " eq_loss: ",
+          eq_loss_d[0], " bc_loss: ", bc_loss_d[0])
