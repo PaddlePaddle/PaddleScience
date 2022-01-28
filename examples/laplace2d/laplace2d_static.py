@@ -16,6 +16,7 @@ import paddlescience as psci
 import numpy as np
 
 import paddle
+from paddle.autograd.functional import Hessian
 
 paddle.enable_static()
 paddle.seed(1234)
@@ -78,10 +79,9 @@ with paddle.static.program_guard(train_program, startup_program):
     outputs = net.nn_func(inputs)
 
     # eq_loss
-    du = paddle.static.gradients(outputs, inputs)[0]
-    d2u_dx2 = paddle.static.gradients(du[:, 0], inputs)[0][:, 0]
-    d2u_dy2 = paddle.static.gradients(du[:, 1], inputs)[0][:, 1]
-    eq_loss = paddle.norm(d2u_dx2 + d2u_dy2, p=2)
+    hes = Hessian(net.nn_func, inputs, batch=True)
+    eq_loss = paddle.norm(hes[0, 0] + hes[1, 1], p=2)
+
     # bc_loss
     bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int64')
     bc_value = paddle.static.data(name='bc_v', shape=[40, 1], dtype='float32')
@@ -91,12 +91,11 @@ with paddle.static.program_guard(train_program, startup_program):
     loss = eq_loss + bc_loss
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
-# print("startup_program: ", startup_program)
-# print("train_program: ", train_program)
+print("startup_program: ", startup_program)
+print("train_program: ", train_program)
 
 exe.run(startup_program)
 num_epoch = 10
-print()
 
 for i in range(num_epoch):
     loss_d, eq_loss_d, bc_loss_d = exe.run(
@@ -109,3 +108,22 @@ for i in range(num_epoch):
         fetch_list=[loss.name, eq_loss.name, bc_loss.name])
     print("num_epoch: ", i, "/", num_epoch, " loss: ", loss_d[0], " eq_loss: ",
           eq_loss_d[0], " bc_loss: ", bc_loss_d[0])
+
+rslt = exe.run(train_program,
+               feed={
+                   "x": geo.get_space_domain().astype(np.float32),
+                   "bc_idx": geo.bc_index,
+                   "bc_v": pdes.bc_value
+               },
+               fetch_list=[outputs.name, ])[0]
+psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
+np.save('./rslt_laplace_2d.npy', rslt)
+
+# Calculate diff and l2 relative error
+diff = rslt - golden
+psci.visu.save_vtk(geo, diff, 'diff_laplace_2d')
+np.save('./diff_laplace_2d.npy', diff)
+root_square_error = np.linalg.norm(diff, ord=2)
+mean_square_error = root_square_error * root_square_error / geo.get_domain_size(
+)
+print("mean_sqeare_error: ", mean_square_error)
