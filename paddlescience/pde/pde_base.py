@@ -56,6 +56,9 @@ class PDE:
         # time dependent / independent
         self.time_dependent = False
 
+        # time step
+        self.dt = None
+
         # whether or not need 2nd order derivate
         self.need_2nd_derivatives = True
 

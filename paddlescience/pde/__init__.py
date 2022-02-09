@@ -14,4 +14,4 @@
 
 from .pde_base import first_order_rslts, first_order_derivatives, second_order_derivatives
 from .pde_laplace_2d import Laplace2D
-from .pde_navier_stokes import NavierStokes
+from .pde_navier_stokes import NavierStokes, NavierStokesUnSteady

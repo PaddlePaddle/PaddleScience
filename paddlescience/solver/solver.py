@@ -36,7 +36,7 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-    def solve(self, num_epoch=1000, batch_size=None, checkpoint_freq=1000):
+    def solve(self, num_epoch=1000, batch_size=None, checkpoint_freq=1000, ins=None):
         """
         Train the network with respect to num_epoch.
  
@@ -63,7 +63,7 @@ class Solver(object):
 
         for epoch_id in range(num_epoch):
             for batch_id in range(num_batch):
-                loss, losses = self.algo.batch_run(batch_id)
+                loss, losses = self.algo.batch_run(batch_id, ins)
                 loss.backward()
                 self.opt.step()
                 self.opt.clear_grad()

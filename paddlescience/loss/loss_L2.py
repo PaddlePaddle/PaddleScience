@@ -17,6 +17,7 @@ import paddle.nn.functional as F
 from paddle.autograd import jacobian, hessian, batch_jacobian, batch_hessian
 from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
 from .loss_base import LossBase
+import numpy as np
 
 
 class L2(LossBase):
@@ -135,15 +136,24 @@ class L2(LossBase):
         self.batch_cal_first_order_derivatives(net, ins)
         if self.pdes.need_2nd_derivatives:
             self.batch_cal_second_order_derivatives(net, ins)
+
+        dt = self.pdes.dt # time
+
         eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
+
         if self.aux_func is not None:
             eq_loss_l = self.aux_func(ins)
+
         for idx in range(self.pdes.num_pdes):
             for item in self.pdes.get_pde(idx):
                 tmp = item.coefficient
                 for de in item.derivative:
                     tmp = tmp * self.d_records[de]
                 eq_loss_l[idx] += tmp
+            
+            # for item - u^n / dt
+            eq_loss_l[idx] -= ins[:,idx+2] / dt # idx+2 is workaround
+
         self.d_records.clear()
         eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
         return paddle.norm(eq_loss, p=2)
@@ -181,9 +191,17 @@ class L2(LossBase):
     def ic_loss(self, u, batch_id):
         return paddle.to_tensor([0], dtype="float32")
 
-    def batch_run(self, net, batch_id):
-        b_datas = self.geo.get_space_domain()
+    def batch_run(self, net, batch_id, ins=None):
+
+        # if ins==None:
+        #     b_datas = self.geo.get_space_domain()
+        # else:
+        #     b_datas = ins
+
+        b_datas = ins
+
         u = net.nn_func(b_datas)
+
         eq_loss = 0
         if self.run_in_batch:
             eq_loss = self.batch_eq_loss(net, b_datas)
@@ -193,6 +211,7 @@ class L2(LossBase):
                 eq_loss_l += self.eq_loss(net, data)
             eq_loss = paddle.stack(eq_loss_l, axis=0)
             eq_loss = paddle.norm(eq_loss, p=2)
+
         eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
         bc_loss = self.bc_loss(u, batch_id)
         ic_loss = self.ic_loss(u, batch_id)
