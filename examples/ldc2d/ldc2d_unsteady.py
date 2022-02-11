@@ -70,15 +70,17 @@ pdes, geo = psci.discretize(pdes, geo, space_nsteps=(5, 5))
 
 ######
 
+hole = 0.0
+
 sd = geo.get_space_domain()
 n = 0
 nbc = 0
 for i in range(len(sd)):
     x = sd[i][0]
     y = sd[i][1]
-    if (abs(x)>=0.02 or abs(y)>=0.02): # Space Hole 0.2 
+    if (abs(x)>=hole or abs(y)>=hole): # Space Hole 0.2 
         n += 1
-    if (abs(x)==0.02 or abs(y)==0.02 or abs(x)==0.05 or abs(y)==0.05): # Space Hole 0.2 
+    if (abs(x)==hole or abs(y)==hole or abs(x)==0.05 or abs(y)==0.05): # Space Hole 0.2 
         nbc += 1
 
 sdnew = np.ndarray((n,2), dtype='float32')
@@ -91,7 +93,7 @@ n = 0
 for i in range(len(sd)):
     x = sd[i][0]
     y = sd[i][1]
-    if (abs(x)>=0.02 or abs(y)>=0.02): # Space Hole 0.2
+    if (abs(x)>=hole or abs(y)>=hole): # Space Hole 0.2
         sdnew[n][0] = sd[i][0]
         sdnew[n][1] = sd[i][1]
         n += 1
@@ -102,7 +104,7 @@ nbc = 0
 for i in range(len(sdnew)):
     x = abs(sdnew[i][0])
     y = abs(sdnew[i][1])
-    if (abs(x)==0.02 or abs(y)==0.02 or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole 0.2 
+    if (abs(x)==hole or abs(y)==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole 0.2 
         bcidxnew[nbc] = i
         nbc += 1
      

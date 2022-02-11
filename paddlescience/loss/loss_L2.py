@@ -107,17 +107,20 @@ class L2(LossBase):
 
         d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
 
+        # print(d_values)
+        # print(net.num_outs)
+        # print(self.batch_size)
+
         d_values = paddle.reshape(
             d_values, shape=[net.num_outs, self.batch_size, net.num_ins])
 
         for i in range(net.num_outs):
-            for j in range(net.num_ins):
+            # for j in range(net.num_ins): # workaround
+            for j in range(2):    
                 if self.pdes.time_dependent:
-                    self.d_records[first_order_derivatives[i][j]] = d_values[
-                        i, :, j]
+                    self.d_records[first_order_derivatives[i][j]] = d_values[i, :, j]
                 else:
-                    self.d_records[first_order_derivatives[i][
-                        j + 1]] = d_values[i, :, j]
+                    self.d_records[first_order_derivatives[i][j + 1]] = d_values[i, :, j]
 
     def batch_cal_second_order_derivatives(self, net, ins):
         for i in range(net.num_outs):
@@ -126,11 +129,13 @@ class L2(LossBase):
                 return net.nn_func(ins)[:, i:i + 1]
 
             d_values = batch_hessian(func, ins, create_graph=True)
-            
+
             d_values = paddle.reshape(
                 d_values, shape=[net.num_ins, self.batch_size, net.num_ins])
-            for j in range(net.num_ins):
-                for k in range(net.num_ins):
+            # for j in range(net.num_ins):
+                # for k in range(net.num_ins): # workaround
+            for j in range(2):
+                for k in range(2):    
                     if self.pdes.time_dependent:
                         self.d_records[second_order_derivatives[i][j][
                             k]] = d_values[j, :, k]
@@ -142,11 +147,11 @@ class L2(LossBase):
         
         self.batch_cal_first_order_rslts(net, ins)
 
-        print("1st Derivative Start")
+        #print("1st Derivative Start")
 
         self.batch_cal_first_order_derivatives(net, ins)
 
-        print("2nd Derivative Start")
+        #print("2nd Derivative Start")
 
         if self.pdes.need_2nd_derivatives:
             self.batch_cal_second_order_derivatives(net, ins)
@@ -154,19 +159,28 @@ class L2(LossBase):
         dt = self.pdes.dt # time
 
         eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
+        # print(eq_loss_l)
 
         if self.aux_func is not None:
             eq_loss_l = self.aux_func(ins)
 
         for idx in range(self.pdes.num_pdes):
             for item in self.pdes.get_pde(idx):
+
                 tmp = item.coefficient
+
                 for de in item.derivative:
                     tmp = tmp * self.d_records[de]
+
+                # print(eq_loss_l)
+                # print(tmp)    
                 eq_loss_l[idx] += tmp
             
             # for item - u^n / dt
-            eq_loss_l[idx] -= ins[:,idx+2] / dt # idx+2 is workaround
+            #print(eq_loss_l[idx])
+            #print(ins[:,0])
+            # print(eq_loss_l[idx])
+            eq_loss_l[idx] -= ins[:, idx] / dt # idx is workaround
 
         self.d_records.clear()
         eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
@@ -213,12 +227,12 @@ class L2(LossBase):
         #     b_datas = ins
 
         b_datas = ins
-        print(ins)
+        # print(ins)
         # print(ins.shape)
 
         u = net.nn_func(b_datas)
 
-        print(u)
+        # print(u)
 
         # equation loss
         eq_loss = 0
