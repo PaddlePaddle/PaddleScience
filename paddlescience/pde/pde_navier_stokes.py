@@ -108,7 +108,7 @@ class NavierStokesUnSteady(PDE):
             self.add_item(1, -nu / rho, "d2u/dy2")
             self.add_item(1, 1.0 / rho, "dw/dx")
             # momentum y
-            self.add_item(1, 1.0 / dt, "v")
+            self.add_item(2, 1.0 / dt, "v")
             self.add_item(2, 1.0, "u", "dv/dx")
             self.add_item(2, 1.0, "v", "dv/dy")
             self.add_item(2, -nu / rho, "d2v/dx2")
