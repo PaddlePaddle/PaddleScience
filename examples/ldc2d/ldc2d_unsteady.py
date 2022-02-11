@@ -66,39 +66,37 @@ geo = psci.geometry.Rectangular(
 pdes = psci.pde.NavierStokesUnSteady(dt=dt, nu=0.01, rho=1.0)
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_nsteps=(5, 5))
+pdes, geo = psci.discretize(pdes, geo, space_nsteps=(11, 11))
 
 ######
 
-hole = -1.0
+hole = 0.02
 
 sd = geo.get_space_domain()
 n = 0
 nbc = 0
 for i in range(len(sd)):
-    x = sd[i][0]
-    y = sd[i][1]
-    if (abs(x)>=hole or abs(y)>=hole): # Space Hole
+    x = abs(sd[i][0])
+    y = abs(sd[i][1])
+    if (x>=hole or y>=hole): # Space Hole
         n += 1
-    if (abs(x)==hole or abs(y)==hole or abs(x)==0.05 or abs(y)==0.05): # Space Hole 
+    if (x==hole or y==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole 
         nbc += 1
 
 sdnew = np.ndarray((n,2), dtype='float32')
 bcidxnew = np.ndarray(nbc, dtype='int64')
 
-print(n)
+# print(n)
 # print(nbc)
 
 n = 0
 for i in range(len(sd)):
-    x = sd[i][0]
-    y = sd[i][1]
-    if (abs(x)>=hole or abs(y)>=hole): # Space Hole
+    x = abs(sd[i][0])
+    y = abs(sd[i][1])
+    if (x>=hole or y>=hole): # Space Hole
         sdnew[n][0] = sd[i][0]
         sdnew[n][1] = sd[i][1]
         n += 1
-
-geo.space_domain = sdnew
 
 nbc = 0
 for i in range(len(sdnew)):
@@ -108,7 +106,9 @@ for i in range(len(sdnew)):
         bcidxnew[nbc] = i
         nbc += 1
      
-geo.bc_index = bcidxnew
+
+# geo.space_domain = sdnew
+# geo.bc_index = bcidxnew
 
 # print(geo.space_domain)
 # print(sdnew.shape)
