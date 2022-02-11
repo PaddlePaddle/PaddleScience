@@ -116,7 +116,7 @@ geo.bc_index = bcidxnew
 
 # ins = [x,y,u^n,v^n]
 ins = GenIns(geo.get_space_domain())
-ins = paddle.to_tensor(ins)
+ins = paddle.to_tensor(ins, stop_gradient=False)
 
 # bc value
 bc_value = GenBC(geo.get_space_domain(), geo.get_bc_index())
