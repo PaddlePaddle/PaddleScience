@@ -182,6 +182,8 @@ class L2(LossBase):
             # print(eq_loss_l[idx])
             eq_loss_l[idx] -= ins[:, idx] / dt # idx is workaround
 
+        #print(eq_loss_l)
+
         self.d_records.clear()
         eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
         return paddle.norm(eq_loss, p=2)
@@ -205,13 +207,19 @@ class L2(LossBase):
 
     def bc_loss(self, u, batch_id):
         bc_u = paddle.index_select(u, self.geo.bc_index[batch_id])
+
+        # print(bc_u)
+
         bc_value = self.pdes.bc_value
         if self.pdes.bc_check_dim is not None:
             bc_u = paddle.index_select(bc_u, self.pdes.bc_check_dim, axis=1)
         bc_diff = bc_u - bc_value
-        if self.bc_weight is not None:
-            bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
-            bc_diff = bc_diff * paddle.sqrt(bc_weight)
+
+        # workaround
+        # if self.bc_weight is not None: 
+        #     bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
+        #     bc_diff = bc_diff * paddle.sqrt(bc_weight)
+        
         bc_diff = paddle.reshape(bc_diff, shape=[-1])
         return paddle.norm(bc_diff, p=2)
 
@@ -238,6 +246,7 @@ class L2(LossBase):
         eq_loss = 0
         if self.run_in_batch:
             eq_loss = self.batch_eq_loss(net, b_datas)
+            # print("eqloss:  " + str(eq_loss))
         else:
             eq_loss_l = []
             for data in b_datas:
@@ -247,6 +256,8 @@ class L2(LossBase):
 
         eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
         bc_loss = self.bc_loss(u, batch_id)
+
+
         ic_loss = self.ic_loss(u, batch_id)
         if self.synthesis_method == 'add':
             loss = eq_loss + bc_loss + ic_loss

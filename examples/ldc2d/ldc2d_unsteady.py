@@ -37,7 +37,7 @@ def GenBCWeight(xy, bc_index):
     for i in range(len(bc_index)):
         id = bc_index[i]
         if abs(xy[id][1] - 0.05) < 1e-4:
-            bc_weight[i][0] = 1.0 - 20 * abs(xy[id][0])
+            bc_weight[i][0] = abs(1.0 - 20 * abs(xy[id][0]))
             bc_weight[i][1] = 1.0
         else:
             bc_weight[i][0] = 1.0
@@ -70,7 +70,7 @@ pdes, geo = psci.discretize(pdes, geo, space_nsteps=(5, 5))
 
 ######
 
-hole = 0.0
+hole = -1.0
 
 sd = geo.get_space_domain()
 n = 0
@@ -78,22 +78,22 @@ nbc = 0
 for i in range(len(sd)):
     x = sd[i][0]
     y = sd[i][1]
-    if (abs(x)>=hole or abs(y)>=hole): # Space Hole 0.2 
+    if (abs(x)>=hole or abs(y)>=hole): # Space Hole
         n += 1
-    if (abs(x)==hole or abs(y)==hole or abs(x)==0.05 or abs(y)==0.05): # Space Hole 0.2 
+    if (abs(x)==hole or abs(y)==hole or abs(x)==0.05 or abs(y)==0.05): # Space Hole 
         nbc += 1
 
 sdnew = np.ndarray((n,2), dtype='float32')
-bcidxnew = np.ndarray(nbc, dtype='int')
+bcidxnew = np.ndarray(nbc, dtype='int64')
 
 print(n)
-print(nbc)
+# print(nbc)
 
 n = 0
 for i in range(len(sd)):
     x = sd[i][0]
     y = sd[i][1]
-    if (abs(x)>=hole or abs(y)>=hole): # Space Hole 0.2
+    if (abs(x)>=hole or abs(y)>=hole): # Space Hole
         sdnew[n][0] = sd[i][0]
         sdnew[n][1] = sd[i][1]
         n += 1
@@ -104,11 +104,17 @@ nbc = 0
 for i in range(len(sdnew)):
     x = abs(sdnew[i][0])
     y = abs(sdnew[i][1])
-    if (abs(x)==hole or abs(y)==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole 0.2 
+    if (abs(x)==hole or abs(y)==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole
         bcidxnew[nbc] = i
         nbc += 1
      
 geo.bc_index = bcidxnew
+
+# print(geo.space_domain)
+# print(sdnew.shape)
+
+
+# print(geo.bc_index)
 
 # print(sdnew)
 # print(bcidxnew)
@@ -118,7 +124,7 @@ geo.bc_index = bcidxnew
 
 # ins = [x,y,u^n,v^n]
 ins = GenIns(geo.get_space_domain())
-ins = paddle.to_tensor(ins, stop_gradient=False)
+ins = paddle.to_tensor(ins, stop_gradient=False, dtype="float32")
 
 # bc value
 bc_value = GenBC(geo.get_space_domain(), geo.get_bc_index())
