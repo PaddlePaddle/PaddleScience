@@ -101,12 +101,20 @@ class Rectangular(Geometry):
             domain = np.stack(
                 (mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
         elif (self.space_ndims == 3):
+            print('lxd_debug: the space is as follow:')
+            print("x")
+            print(steps[0])
+            print("y")
+            print(steps[1])
+            print("z")
+            print(steps[2])
             mesh = np.meshgrid(
                 steps[2], steps[1], steps[0], sparse=False, indexing='ij')
             domain = np.stack(
                 (mesh[2].reshape(-1), mesh[1].reshape(-1),
                  mesh[0].reshape(-1)),
                 axis=-1)
+            print(domain.size)
 
         # bc_index TODO optimize
         if (self.space_ndims == 1):

@@ -60,7 +60,12 @@ class Solver(object):
         self.algo.loss.pdes.to_tensor()
         self.algo.loss.geo.to_tensor()
         num_batch = self.algo.loss.num_batch
+        print("lxd_debug: num_batch")
+        print(num_batch)
+        print("lxd_debug: batch_size")
+        print(batch_size)
 
+        # train the model
         for epoch_id in range(num_epoch):
             for batch_id in range(num_batch):
                 loss, losses = self.algo.batch_run(batch_id)
@@ -72,6 +77,7 @@ class Solver(object):
                       "loss: ",
                       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
                       "bc_loss: ", losses[1].numpy()[0])
+            # save the model
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
                             './checkpoint/net_params_' + str(epoch_id + 1))

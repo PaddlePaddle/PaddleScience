@@ -62,11 +62,16 @@ class L2(LossBase):
         self.batch_size = batch_size
         self.num_batch = self.geo.get_num_batch()
 
+    # u,v,w,p
     def cal_first_order_rslts(self, net, ins):
         outs = net.nn_func(ins)
         for i in range(net.num_outs):
             self.d_records[first_order_rslts[i]] = outs[i]
 
+    # du/dx du/dy du/dz
+    # dv/dx dv/dy dv/dz
+    # dw/dx dw/dy dw/dz
+    # dp/dx dp/dy dp/dz
     def cal_first_order_derivatives(self, net, ins):
         d_values = jacobian(net.nn_func, ins, create_graph=True)
         for i in range(net.num_outs):
@@ -78,6 +83,7 @@ class L2(LossBase):
                     self.d_records[first_order_derivatives[i][
                         j + 1]] = d_values[i][j]
 
+    # 'd2u/dx2', 'd2u/dxdy', 'd2u/dxdz'
     def cal_second_order_derivatives(self, net, ins):
         for i in range(net.num_outs):
 
@@ -130,6 +136,8 @@ class L2(LossBase):
                         self.d_records[second_order_derivatives[i][j + 1][
                             k + 1]] = d_values[j, :, k]
 
+    # equation loss of NS
+    # ins is (x,y,z)
     def batch_eq_loss(self, net, ins):
         self.batch_cal_first_order_rslts(net, ins)
         self.batch_cal_first_order_derivatives(net, ins)
@@ -165,6 +173,7 @@ class L2(LossBase):
         self.d_records.clear()
         return eq_loss_l
 
+    # boundry loss
     def bc_loss(self, u, batch_id):
         bc_u = paddle.index_select(u, self.geo.bc_index[batch_id])
         bc_value = self.pdes.bc_value
@@ -178,12 +187,17 @@ class L2(LossBase):
         return paddle.norm(bc_diff, p=2)
 
     # TODO: calculate ic loss
+    # init loss
     def ic_loss(self, u, batch_id):
         return paddle.to_tensor([0], dtype="float32")
 
+    # function entry
     def batch_run(self, net, batch_id):
+        # (x,y)
         b_datas = self.geo.get_space_domain()
+        # predict u
         u = net.nn_func(b_datas)
+        # compute the eq_loss
         eq_loss = 0
         if self.run_in_batch:
             eq_loss = self.batch_eq_loss(net, b_datas)
@@ -194,7 +208,9 @@ class L2(LossBase):
             eq_loss = paddle.stack(eq_loss_l, axis=0)
             eq_loss = paddle.norm(eq_loss, p=2)
         eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
+        # compute the bc_loss
         bc_loss = self.bc_loss(u, batch_id)
+        # compute the ic_loss
         ic_loss = self.ic_loss(u, batch_id)
         if self.synthesis_method == 'add':
             loss = eq_loss + bc_loss + ic_loss
