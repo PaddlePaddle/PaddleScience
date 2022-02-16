@@ -35,11 +35,27 @@ class Rectangular(Geometry):
     """
 
     # init function
-    def __init__(self, space_origin=None, space_extent=None):
-        super(Rectangular, self).__init__(False, None, None, space_origin,
+    def __init__(self, time_dependent=False, time_origin=None, time_extent=None, space_origin=None, space_extent=None):
+        super(Rectangular, self).__init__(time_dependent, time_origin, time_extent, space_origin,
                                           space_extent)
 
-        # check inputs and set dimension
+        # check time inputs 
+        if(time_dependent==True):
+            if(time_origin==None or not np.isscalar(time_origin)):
+                print("ERROR: Please check the time_origin")
+                exit()
+            if(time_extent==None or not np.isscalar(time_extent)):
+                print("ERROR: Please check the time_extent")
+                exit()
+        else:
+            if(time_origin != None):
+                print("Errror: The time_origin need to be None when time_dependent is false")
+                exit()
+            if(time_extent != None):
+                print("Errror: The time_extent need to be None when time_dependent is false")
+                exit()
+
+        # check space inputs and set dimension
         self.space_origin = (space_origin, ) if (
             np.isscalar(space_origin)) else space_origin
         self.space_extent = (space_extent, ) if (
@@ -61,6 +77,7 @@ class Rectangular(Geometry):
             self.space_shape = "rectangular_3d"
         else:
             print("ERROR: Rectangular supported is should be 1d/2d/3d.")
+
 
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
@@ -95,15 +112,15 @@ class Rectangular(Geometry):
             nsteps *= i
 
         if (self.space_ndims == 1):
-            domain = steps[0]
+            space_domain = steps[0]
         if (self.space_ndims == 2):
             mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
-            domain = np.stack(
+            space_domain = np.stack(
                 (mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
         elif (self.space_ndims == 3):
             mesh = np.meshgrid(
                 steps[2], steps[1], steps[0], sparse=False, indexing='ij')
-            domain = np.stack(
+            space_domain = np.stack(
                 (mesh[2].reshape(-1), mesh[1].reshape(-1),
                  mesh[0].reshape(-1)),
                 axis=-1)
@@ -139,21 +156,38 @@ class Rectangular(Geometry):
                             bc_index[nbc] = k * nx * ny + j * nx + i
                             nbc += 1
 
-        #print(domain)
-        #print(bc_index)
+        # bc_index with time-domain
+        if self.time_dependent == True:
+            bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
+            bc_offset = bc_offset * len(space_domain)
+            bc_index = np.tile(bc_index, time_nsteps) 
+            bc_index = bc_index + bc_offset
 
-        # IC index TODO
+        # IC index
+        if self.time_dependent == True:
+            ic_index = bc_index[0 : time_nsteps]
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
+        domain = []
         if self.time_dependent == True:
-            geo_disc.set_time_nsteps(time_nsteps)
-            geo_disc.set_time_steps(time_steps)
+            # Get the time-space domain which combine the time domain and space domain
+            for time in time_steps:
+                current_time = time * np.ones((len(space_domain),1), dtype=np.float32 )
+                current_domain = np.concatenate((current_time, space_domain), axis=-1)
+                domain.append(current_domain.tolist())
+            time_size = len(time_steps)
+            space_domain_size = space_domain.shape[0]
+            domain_dim = len(space_domain[0]) + 1
+            domain = np.array(domain).reshape((time_size*space_domain_size, domain_dim))
         geo_disc.set_domain(
-            space_domain=domain,
-            origin=self.space_origin,
-            extent=self.space_extent)
+            time_domain=time_steps,
+            space_domain=space_domain,
+            space_origin=self.space_origin,
+            space_extent=self.space_extent,
+            time_space_domain = domain)
         geo_disc.set_bc_index(bc_index)
+        geo_disc.set_ic_index(ic_index)
 
         vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)

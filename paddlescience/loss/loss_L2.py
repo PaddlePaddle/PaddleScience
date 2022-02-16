@@ -93,12 +93,14 @@ class L2(LossBase):
                     else:
                         self.d_records[second_order_derivatives[i][j + 1][
                             k + 1]] = d_values[j][k]
-
+    
+    # Record the first order rslt which contains [u,v,w,p]
     def batch_cal_first_order_rslts(self, net, ins):
         outs = net.nn_func(ins)
         for i in range(net.num_outs):
             self.d_records[first_order_rslts[i]] = outs[:, i]
 
+    # Record the first order derivatives which contains [['du/dt', 'du/dx', 'du/dy', 'du/dz'],......]
     def batch_cal_first_order_derivatives(self, net, ins):
         d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
         d_values = paddle.reshape(
@@ -111,7 +113,8 @@ class L2(LossBase):
                 else:
                     self.d_records[first_order_derivatives[i][
                         j + 1]] = d_values[i, :, j]
-
+    
+    # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
     def batch_cal_second_order_derivatives(self, net, ins):
         for i in range(net.num_outs):
 
@@ -131,6 +134,7 @@ class L2(LossBase):
                             k + 1]] = d_values[j, :, k]
 
     def batch_eq_loss(self, net, ins):
+        # record the PDE message
         self.batch_cal_first_order_rslts(net, ins)
         self.batch_cal_first_order_derivatives(net, ins)
         if self.pdes.need_2nd_derivatives:
@@ -177,12 +181,17 @@ class L2(LossBase):
         bc_diff = paddle.reshape(bc_diff, shape=[-1])
         return paddle.norm(bc_diff, p=2)
 
-    # TODO: calculate ic loss
     def ic_loss(self, u, batch_id):
-        return paddle.to_tensor([0], dtype="float32")
+        ic_u = paddle.index_select(u, self.geo.ic_index[batch_id])
+        ic_value = self.pdes.ic_value
+        if self.pdes.ic_check_dim is not None:
+            ic_u = paddle.index_select(ic_u, self.pdes.ic_check_dim, axis=1)
+        ic_diff = ic_u - ic_value
+        ic_diff = paddle.reshape(ic_diff, shape=[-1])
+        return paddle.norm(ic_diff, p=2)
 
     def batch_run(self, net, batch_id):
-        b_datas = self.geo.get_space_domain()
+        b_datas = self.geo.get_domain()
         u = net.nn_func(b_datas)
         eq_loss = 0
         if self.run_in_batch:
