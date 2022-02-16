@@ -41,7 +41,8 @@ class NavierStokes(PDE):
     """
 
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
-        super(NavierStokes, self).__init__(dim + 1, time_dependent=time_dependent)
+        super(NavierStokes, self).__init__(
+            dim + 1, time_dependent=time_dependent)
         if dim == 2 and time_dependent == False:
             # continuty 
             self.add_item(0, 1.0, "du/dx")

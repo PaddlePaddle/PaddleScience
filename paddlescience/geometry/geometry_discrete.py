@@ -110,7 +110,7 @@ class GeometryDiscrete:
 
     # get domain size
     def get_domain_size(self):
-        if(self.domain_size != -1):
+        if (self.domain_size != -1):
             return self.domain_size
         else:
             return self.space_domain_size
@@ -133,7 +133,7 @@ class GeometryDiscrete:
 
     # get domain
     def get_domain(self):
-        if(self.domain is not None):
+        if (self.domain is not None):
             return self.domain
         else:
             return self.space_domain
@@ -156,8 +156,7 @@ class GeometryDiscrete:
             if self.ic_index is not None:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
-        self.domain = paddle.to_tensor(
-            self.domain, dtype="float32")
+        self.domain = paddle.to_tensor(self.domain, dtype="float32")
         self.domain.stop_gradient = False
 
     def set_batch_size(self, batch_size):
@@ -174,7 +173,7 @@ class GeometryDiscrete:
         if self.ic_index is not None:
             new_ic_index = [[] for _ in range(self.num_batch)]
             for idx in self.ic_index:
-                new_ic_index[idx // batch_size].append(idx) 
+                new_ic_index[idx // batch_size].append(idx)
             self.ic_index = [np.array(el) for el in new_ic_index]
 
     def get_num_batch(self):
