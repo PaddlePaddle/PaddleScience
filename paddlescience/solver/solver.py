@@ -71,8 +71,8 @@ class Solver(object):
                       "batch/num_batch: ", batch_id + 1, "/", num_batch,
                       "loss: ",
                       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                      "bc_loss: ", losses[1].numpy()[0], 
-                      "ic_loss: ", losses[2].numpy()[0])
+                      "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
+                      losses[2].numpy()[0])
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
                             './checkpoint/net_params_' + str(epoch_id + 1))

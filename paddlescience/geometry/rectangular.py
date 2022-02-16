@@ -35,24 +35,34 @@ class Rectangular(Geometry):
     """
 
     # init function
-    def __init__(self, time_dependent=False, time_origin=None, time_extent=None, space_origin=None, space_extent=None):
-        super(Rectangular, self).__init__(time_dependent, time_origin, time_extent, space_origin,
+    def __init__(self,
+                 time_dependent=False,
+                 time_origin=None,
+                 time_extent=None,
+                 space_origin=None,
+                 space_extent=None):
+        super(Rectangular, self).__init__(time_dependent, time_origin,
+                                          time_extent, space_origin,
                                           space_extent)
 
         # check time inputs 
-        if(time_dependent==True):
-            if(time_origin==None or not np.isscalar(time_origin)):
+        if (time_dependent == True):
+            if (time_origin == None or not np.isscalar(time_origin)):
                 print("ERROR: Please check the time_origin")
                 exit()
-            if(time_extent==None or not np.isscalar(time_extent)):
+            if (time_extent == None or not np.isscalar(time_extent)):
                 print("ERROR: Please check the time_extent")
                 exit()
         else:
-            if(time_origin != None):
-                print("Errror: The time_origin need to be None when time_dependent is false")
+            if (time_origin != None):
+                print(
+                    "Errror: The time_origin need to be None when time_dependent is false"
+                )
                 exit()
-            if(time_extent != None):
-                print("Errror: The time_extent need to be None when time_dependent is false")
+            if (time_extent != None):
+                print(
+                    "Errror: The time_extent need to be None when time_dependent is false"
+                )
                 exit()
 
         # check space inputs and set dimension
@@ -77,7 +87,6 @@ class Rectangular(Geometry):
             self.space_shape = "rectangular_3d"
         else:
             print("ERROR: Rectangular supported is should be 1d/2d/3d.")
-
 
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
@@ -160,12 +169,12 @@ class Rectangular(Geometry):
         if self.time_dependent == True:
             bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
             bc_offset = bc_offset * len(space_domain)
-            bc_index = np.tile(bc_index, time_nsteps) 
+            bc_index = np.tile(bc_index, time_nsteps)
             bc_index = bc_index + bc_offset
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0 : time_nsteps]
+            ic_index = bc_index[0:time_nsteps]
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
@@ -173,19 +182,22 @@ class Rectangular(Geometry):
         if self.time_dependent == True:
             # Get the time-space domain which combine the time domain and space domain
             for time in time_steps:
-                current_time = time * np.ones((len(space_domain),1), dtype=np.float32 )
-                current_domain = np.concatenate((current_time, space_domain), axis=-1)
+                current_time = time * np.ones(
+                    (len(space_domain), 1), dtype=np.float32)
+                current_domain = np.concatenate(
+                    (current_time, space_domain), axis=-1)
                 domain.append(current_domain.tolist())
             time_size = len(time_steps)
             space_domain_size = space_domain.shape[0]
             domain_dim = len(space_domain[0]) + 1
-            domain = np.array(domain).reshape((time_size*space_domain_size, domain_dim))
+            domain = np.array(domain).reshape(
+                (time_size * space_domain_size, domain_dim))
         geo_disc.set_domain(
             time_domain=time_steps,
             space_domain=space_domain,
             space_origin=self.space_origin,
             space_extent=self.space_extent,
-            time_space_domain = domain)
+            time_space_domain=domain)
         geo_disc.set_bc_index(bc_index)
         geo_disc.set_ic_index(ic_index)
 

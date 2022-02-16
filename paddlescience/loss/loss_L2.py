@@ -93,7 +93,7 @@ class L2(LossBase):
                     else:
                         self.d_records[second_order_derivatives[i][j + 1][
                             k + 1]] = d_values[j][k]
-    
+
     # Record the first order rslt which contains [u,v,w,p]
     def batch_cal_first_order_rslts(self, net, ins):
         outs = net.nn_func(ins)
@@ -113,7 +113,7 @@ class L2(LossBase):
                 else:
                     self.d_records[first_order_derivatives[i][
                         j + 1]] = d_values[i, :, j]
-    
+
     # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
     def batch_cal_second_order_derivatives(self, net, ins):
         for i in range(net.num_outs):
