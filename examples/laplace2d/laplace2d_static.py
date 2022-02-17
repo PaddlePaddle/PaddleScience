@@ -17,6 +17,7 @@ import numpy as np
 
 import paddle
 from paddle.autograd.functional import Hessian
+from transform import program_transform
 
 paddle.enable_static()
 paddle.seed(1234)
@@ -56,7 +57,7 @@ golden, bc_value = GenSolution(geo.get_space_domain(), geo.get_bc_index())
 pdes.set_bc_value(bc_value=bc_value)
 
 psci.visu.save_vtk(geo, golden, 'golden_laplace_2d')
-np.save("./golden_laplace_2d.npy", golden)
+np.save('./golden_laplace_2d.npy', golden)
 
 place = paddle.CUDAPlace(0)
 exe = paddle.static.Executor(place)
@@ -73,8 +74,8 @@ with paddle.static.program_guard(train_program, startup_program):
         num_outs=1,
         num_layers=5,
         hidden_size=20,
-        dtype="float32",
-        activation="tanh")
+        dtype='float32',
+        activation='tanh')
 
     outputs = net.nn_func(inputs)
 
@@ -91,8 +92,9 @@ with paddle.static.program_guard(train_program, startup_program):
     loss = eq_loss + bc_loss
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
-print("startup_program: ", startup_program)
-print("train_program: ", train_program)
+# print('startup_program: ', startup_program)
+# print('train_program: ', train_program)
+new_program = program_transform(train_program)
 
 exe.run(startup_program)
 num_epoch = 10
@@ -101,19 +103,19 @@ for i in range(num_epoch):
     loss_d, eq_loss_d, bc_loss_d = exe.run(
         train_program,
         feed={
-            "x": geo.get_space_domain().astype(np.float32),
-            "bc_idx": geo.bc_index,
-            "bc_v": pdes.bc_value
+            'x': geo.get_space_domain().astype(np.float32),
+            'bc_idx': geo.bc_index,
+            'bc_v': pdes.bc_value
         },
         fetch_list=[loss.name, eq_loss.name, bc_loss.name])
-    print("num_epoch: ", i, "/", num_epoch, " loss: ", loss_d[0], " eq_loss: ",
-          eq_loss_d[0], " bc_loss: ", bc_loss_d[0])
+    print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0], ' eq_loss: ',
+          eq_loss_d[0], ' bc_loss: ', bc_loss_d[0])
 
 rslt = exe.run(train_program,
                feed={
-                   "x": geo.get_space_domain().astype(np.float32),
-                   "bc_idx": geo.bc_index,
-                   "bc_v": pdes.bc_value
+                   'x': geo.get_space_domain().astype(np.float32),
+                   'bc_idx': geo.bc_index,
+                   'bc_v': pdes.bc_value
                },
                fetch_list=[outputs.name, ])[0]
 psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
@@ -126,4 +128,4 @@ np.save('./diff_laplace_2d.npy', diff)
 root_square_error = np.linalg.norm(diff, ord=2)
 mean_square_error = root_square_error * root_square_error / geo.get_domain_size(
 )
-print("mean_sqeare_error: ", mean_square_error)
+print('mean_sqeare_error: ', mean_square_error)
