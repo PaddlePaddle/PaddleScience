@@ -50,7 +50,6 @@ class GeometryDiscrete:
 
     # set space domain
     def set_space_domain(self, space_domain):
-
         self.space_domain = space_domain
         self.space_domain_size = len(space_domain)
         self.space_dims = len(space_domain[0])
