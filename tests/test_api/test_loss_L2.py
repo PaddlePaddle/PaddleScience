@@ -33,9 +33,6 @@ class TestLossL2(DifferenceAppro):
         self.debug = False
 
 
-obj = TestLossL2(cal_lossL2)
-
-
 def cal_lossL2(pdes, geo, net, **kwargs):
     """
     calculate loss_L2 api
@@ -46,6 +43,9 @@ def cal_lossL2(pdes, geo, net, **kwargs):
     pdes.to_tensor()
     r = loss.batch_run(net, 0)
     return r[0]
+
+
+obj = TestLossL2(cal_lossL2)
 
 
 @pytest.mark.api_loss_L2
