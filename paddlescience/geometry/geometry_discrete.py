@@ -50,6 +50,7 @@ class GeometryDiscrete:
 
     # set space domain
     def set_space_domain(self, space_domain):
+
         self.space_domain = space_domain
         self.space_domain_size = len(space_domain)
         self.space_dims = len(space_domain[0])
@@ -156,8 +157,9 @@ class GeometryDiscrete:
             if self.ic_index is not None:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
-        self.domain = paddle.to_tensor(self.domain, dtype="float32")
-        self.domain.stop_gradient = False
+        if self.domain is not None:
+            self.domain = paddle.to_tensor(self.domain, dtype="float32")
+            self.domain.stop_gradient = False
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
