@@ -182,13 +182,17 @@ class L2(LossBase):
         return paddle.norm(bc_diff, p=2)
 
     def ic_loss(self, u, batch_id):
-        ic_u = paddle.index_select(u, self.geo.ic_index[batch_id])
-        ic_value = self.pdes.ic_value
-        if self.pdes.ic_check_dim is not None:
-            ic_u = paddle.index_select(ic_u, self.pdes.ic_check_dim, axis=1)
-        ic_diff = ic_u - ic_value
-        ic_diff = paddle.reshape(ic_diff, shape=[-1])
-        return paddle.norm(ic_diff, p=2)
+        if self.geo.time_dependent == True:
+            ic_u = paddle.index_select(u, self.geo.ic_index[batch_id])
+            ic_value = self.pdes.ic_value
+            if self.pdes.ic_check_dim is not None:
+                ic_u = paddle.index_select(
+                    ic_u, self.pdes.ic_check_dim, axis=1)
+            ic_diff = ic_u - ic_value
+            ic_diff = paddle.reshape(ic_diff, shape=[-1])
+            return paddle.norm(ic_diff, p=2)
+        else:
+            return paddle.to_tensor([0], dtype="float32")
 
     def batch_run(self, net, batch_id):
         b_datas = self.geo.get_domain()

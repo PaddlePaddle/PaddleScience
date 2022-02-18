@@ -192,14 +192,22 @@ class Rectangular(Geometry):
             domain_dim = len(space_domain[0]) + 1
             domain = np.array(domain).reshape(
                 (time_size * space_domain_size, domain_dim))
-        geo_disc.set_domain(
-            time_domain=time_steps,
-            space_domain=space_domain,
-            space_origin=self.space_origin,
-            space_extent=self.space_extent,
-            time_space_domain=domain)
-        geo_disc.set_bc_index(bc_index)
-        geo_disc.set_ic_index(ic_index)
+
+        if self.time_dependent == True:
+            geo_disc.set_domain(
+                time_domain=time_steps,
+                space_domain=space_domain,
+                space_origin=self.space_origin,
+                space_extent=self.space_extent,
+                time_space_domain=domain)
+            geo_disc.set_bc_index(bc_index)
+            geo_disc.set_ic_index(ic_index)
+        else:
+            geo_disc.set_domain(
+                space_domain=space_domain,
+                space_origin=self.space_origin,
+                space_extent=self.space_extent)
+            geo_disc.set_bc_index(bc_index)
 
         vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
