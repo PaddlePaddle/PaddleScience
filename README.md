@@ -1,4 +1,4 @@
-*Current version of PaddleScience is Pre-release v0.1.*
+*Current version of PaddleScience is v0.1.*
 
 # Introduction
 PaddleScience extends the PaddlePaddle framework with reusable
