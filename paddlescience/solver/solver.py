@@ -78,7 +78,8 @@ class Solver(object):
                 paddle.save(self.opt.state_dict(),
                             './checkpoint/opt_params_' + str(epoch_id + 1))
                 np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.space_domain))
+                        self.algo.net.nn_func(ins))
+                        # self.algo.net.nn_func(self.algo.loss.geo.space_domain))
 
         def solution_fn(geo):
             if not isinstance(geo.space_domain, paddle.Tensor):
@@ -86,4 +87,9 @@ class Solver(object):
                 geo.to_tensor()
             return self.algo.net.nn_func(geo.space_domain).numpy()
 
-        return solution_fn
+        # return solution_fn
+
+        def solution_ins(ins):
+            return self.algo.net.nn_func(ins)
+
+        return solution_ins
