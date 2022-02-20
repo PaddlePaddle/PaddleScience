@@ -50,8 +50,8 @@ def GenIns(xy):
     for i in range(len(xy)):
         ins[i][0] = xy[i][0]
         ins[i][1] = xy[i][1]
-        ins[i][2] = 1.0 # TODO
-        ins[i][3] = 1.0 # TODO
+        ins[i][2] = 1.0  # TODO
+        ins[i][3] = 1.0  # TODO
     return ins
 
 
@@ -78,12 +78,13 @@ nbc = 0
 for i in range(len(sd)):
     x = abs(sd[i][0])
     y = abs(sd[i][1])
-    if (x>=hole or y>=hole): # Space Hole
+    if (x >= hole or y >= hole):  # Space Hole
         n += 1
-    if (x==hole or y==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole 
+    if (x == hole or y == hole or abs(x - 0.05) < 1e-4 or
+            abs(y - 0.05) < 1e-4):  # Space Hole 
         nbc += 1
 
-sdnew = np.ndarray((n,2), dtype='float32')
+sdnew = np.ndarray((n, 2), dtype='float32')
 bcidxnew = np.ndarray(nbc, dtype='int64')
 
 # print(n)
@@ -93,7 +94,7 @@ n = 0
 for i in range(len(sd)):
     x = abs(sd[i][0])
     y = abs(sd[i][1])
-    if (x>=hole or y>=hole): # Space Hole
+    if (x >= hole or y >= hole):  # Space Hole
         sdnew[n][0] = sd[i][0]
         sdnew[n][1] = sd[i][1]
         n += 1
@@ -102,10 +103,10 @@ nbc = 0
 for i in range(len(sdnew)):
     x = abs(sdnew[i][0])
     y = abs(sdnew[i][1])
-    if (abs(x)==hole or abs(y)==hole or abs(x-0.05)<1e-4 or abs(y-0.05)<1e-4): # Space Hole
+    if (abs(x) == hole or abs(y) == hole or abs(x - 0.05) < 1e-4 or
+            abs(y - 0.05) < 1e-4):  # Space Hole
         bcidxnew[nbc] = i
         nbc += 1
-     
 
 # geo.space_domain = sdnew
 # geo.bc_index = bcidxnew
@@ -113,14 +114,12 @@ for i in range(len(sdnew)):
 # print(geo.space_domain)
 # print(sdnew.shape)
 
-
 # print(geo.bc_index)
 
 # print(sdnew)
 # print(bcidxnew)
 
 ##### 
-
 
 # ins = [x,y,u^n,v^n]
 ins = GenIns(geo.get_space_domain())
@@ -153,13 +152,12 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
 solution = solver.solve(num_epoch=30000, ins=ins)
 
 # Use solution
-rslt = solution(geo)
+rslt = solution(ins)
 u = rslt[:, 0]
 v = rslt[:, 1]
 u_and_v = np.sqrt(u * u + v * v)

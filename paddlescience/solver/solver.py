@@ -90,6 +90,6 @@ class Solver(object):
         # return solution_fn
 
         def solution_ins(ins):
-            return self.algo.net.nn_func(ins)
+            return self.algo.net.nn_func(ins).numpy()
 
         return solution_ins
