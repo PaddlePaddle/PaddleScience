@@ -30,18 +30,25 @@ class NameGen(object):
         self.cnt = self.cnt + 1
         return name
 
+    def get_var(self, block=None, ref_var=None, shape=None):
+        name = self.get_name()
+        new_shape = ref_var.shape if shape is None else shape
+        block.create_var(
+            name=name,
+            shape=new_shape,
+            dtype=ref_var.dtype,
+            type=ref_var.type,
+            persistable=False,
+            stop_gradient=False)
+        return name
+
 
 name_gen = NameGen()
 
 
-def append_var(var_name, block, ref_var):
-    block.create_var(
-        name=var_name,
-        shape=ref_var.shape,
-        dtype=ref_var.dtype,
-        type=ref_var.type,
-        persistable=False,
-        stop_gradient=False)
+def transhape(ref_shape):
+    assert len(ref_shape) == 2
+    return [ref_shape[1], ref_shape[0]]
 
 
 def program_transform(program):
@@ -88,12 +95,14 @@ def program_transform(program):
             if block.var(in_names[0]).shape != block.var(in_names[1]).shape:
                 # print(block.var(in_names[0]).shape)
                 # print(block.var(in_names[1]).shape)
-                tmp_0 = name_gen.get_name()
-                append_var(tmp_0, new_block, block.var(in_names[1]))
+                tmp_0 = name_gen.get_var(
+                    new_block,
+                    block.var(in_names[0]),
+                    shape=[len(block.var(in_names[0]).shape)])
                 to_insert.append(
                     _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                      {'Y': [tmp_0]}, {}))
-                tmp_1 = name_gen.get_name()
+                tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {
                         'X': [in_names[1]],
@@ -140,11 +149,14 @@ def program_transform(program):
                                  {'Y': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'slice_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
@@ -161,7 +173,10 @@ def program_transform(program):
                                   }))
 
         elif op_desc.type() == 'concat_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[1]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[1]]},
                                  {'Y': [tmp_0]}, {}))
@@ -179,11 +194,14 @@ def program_transform(program):
                 }, {'Y': [out_names[0]]}, {'shape': None}))
 
         elif op_desc.type() == 'elementwise_add_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
@@ -191,7 +209,7 @@ def program_transform(program):
                     'value': 0.0}))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
                 # print(block.var(in_names[1]).shape)
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[0]],
@@ -208,7 +226,7 @@ def program_transform(program):
                                   'Y': [tmp_1]}, {'Z': [out_names[0]]}, {}))
             if block.var(in_names[2]).shape != block.var(in_names[0]).shape:
                 # print(block.var(in_names[2]).shape)
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[0]],
@@ -225,7 +243,10 @@ def program_transform(program):
                                   'Y': [tmp_1]}, {'Z': [out_names[1]]}, {}))
 
         elif op_desc.type() == 'matmul_v2_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[2]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[2]]},
                                  {'Y': [tmp_0]}, {}))
@@ -233,7 +254,10 @@ def program_transform(program):
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[0]],
                                   'Y': [tmp_0]}, {'Z': [out_names[0]]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[1]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[1]]},
                                  {'Y': [tmp_1]}, {}))
@@ -244,22 +268,25 @@ def program_transform(program):
                 }, {'Z': [out_names[1]]}, {}))
 
         elif op_desc.type() == 'tanh_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
                 }, {'shape': None,
                     'value': 1.0}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[0]],
                                   'Y': [in_names[0]]}, {'Z': [tmp_2]}, {}))
-            tmp_3 = name_gen.get_name()
+            tmp_3 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('sub_p', {'X': [tmp_1],
                                            'Y': [tmp_2]}, {'Z': [tmp_3]}, {}))
@@ -269,11 +296,14 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'fill_zeros_like':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [out_names[0]]
@@ -281,12 +311,12 @@ def program_transform(program):
                     'value': 0.0}))
 
         elif op_desc.type() == 'matmul_v2_grad_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(new_block, block.var(out_names[0]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[0]],
                                   'Y': [in_names[4]]}, {'Z': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(out_names[0]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[3]],
@@ -295,7 +325,10 @@ def program_transform(program):
                 _create_op_desc_('add_p', {'X': [tmp_0],
                                            'Y': [tmp_1]},
                                  {'Z': [out_names[0]]}, {}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[1]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[1]]},
                                  {'Y': [tmp_2]}, {}))
@@ -303,7 +336,10 @@ def program_transform(program):
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[2]],
                                   'Y': [tmp_2]}, {'Z': [out_names[1]]}, {}))
-            tmp_3 = name_gen.get_name()
+            tmp_3 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[0]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_3]}, {}))
@@ -317,11 +353,14 @@ def program_transform(program):
             if block.var(in_names[0]).shape != block.var(in_names[1]).shape:
                 # print(block.var(in_names[0]).shape)
                 # print(block.var(in_names[1]).shape)
-                tmp_0 = name_gen.get_name()
+                tmp_0 = name_gen.get_var(
+                    new_block,
+                    block.var(out_names[0]),
+                    shape=[len(block.var(in_names[0]).shape)])
                 to_insert.append(
                     _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                      {'Y': [tmp_0]}, {}))
-                tmp_1 = name_gen.get_name()
+                tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {
                         'X': [in_names[1]],
@@ -333,22 +372,25 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'tanh_grad_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[2]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[2]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
                 }, {'shape': None,
                     'value': 1.0}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[2]],
                                   'Y': [in_names[2]]}, {'Z': [tmp_2]}, {}))
-            tmp_3 = name_gen.get_name()
+            tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('sub_p', {'X': [tmp_1],
                                            'Y': [tmp_2]}, {'Z': [tmp_3]}, {}))
@@ -356,18 +398,18 @@ def program_transform(program):
                 _create_op_desc_('mul_p', {'X': [tmp_3],
                                            'Y': [in_names[0]]},
                                  {'Z': [out_names[0]]}, {}))
-            tmp_4 = name_gen.get_name()
+            tmp_4 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_4]
                 }, {'shape': None,
                     'value': -2.0}))
-            tmp_5 = name_gen.get_name()
+            tmp_5 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_4],
                                            'Y': [in_names[1]]},
                                  {'Z': [tmp_5]}, {}))
-            tmp_6 = name_gen.get_name()
+            tmp_6 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_5],
                                            'Y': [in_names[2]]},
@@ -378,7 +420,10 @@ def program_transform(program):
                                  {'Z': [out_names[1]]}, {}))
 
         elif op_desc.type() == 'reshape2_grad_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[1]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[1]]},
                                  {'Y': [tmp_0]}, {}))
@@ -397,13 +442,14 @@ def program_transform(program):
                         'Y': [in_names[1]]
                     }, {'Z': [out_names[0]]}, {}))
             else:
-                tmp = name_gen.get_name()
+                tmp = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[0]],
                                       'Y': [in_names[1]]}, {'Z': [tmp]}, {}))
                 for i in range(len(in_names) - 3):
-                    new_tmp = name_gen.get_name()
+                    new_tmp = name_gen.get_var(new_block,
+                                               block.var(in_names[0]))
                     to_insert.append(
                         _create_op_desc_('add_p', {
                             'X': [tmp],
@@ -417,12 +463,12 @@ def program_transform(program):
                     }, {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'p_norm':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[0]],
                                   'Y': [in_names[0]]}, {'Z': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(out_names[0]))
             to_insert.append(
                 _create_op_desc_('reduce_p', {'X': [tmp_0]}, {'Y': [tmp_1]},
                                  {'axis': 0,
@@ -442,11 +488,14 @@ def program_transform(program):
             if block.var(in_names[0]).shape != block.var(in_names[1]).shape:
                 # print(block.var(in_names[0]).shape)
                 # print(block.var(in_names[1]).shape)
-                tmp_0 = name_gen.get_name()
+                tmp_0 = name_gen.get_var(
+                    new_block,
+                    block.var(out_names[0]),
+                    shape=[len(block.var(in_names[0]).shape)])
                 to_insert.append(
                     _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                      {'Y': [tmp_0]}, {}))
-                tmp_1 = name_gen.get_name()
+                tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {
                         'X': [in_names[1]],
@@ -458,32 +507,38 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'p_norm_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[2]).shape)])
             to_insert.append(
-                _create_op_desc_('shape_p', {'X': [in_names[0]]},
+                _create_op_desc_('shape_p', {'X': [in_names[2]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('div_p',
                                  {'X': [in_names[1]],
                                   'Y': [in_names[0]]}, {'Z': [tmp_1]}, {}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('broadcast_p', {
                     'X': [tmp_1],
                     'ShapeTensor': [tmp_0]
                 }, {'Y': [tmp_2]}, {'shape': None}))
             to_insert.append(
-                _create_op_desc_('mul_p', {'X': [in_names[0]],
+                _create_op_desc_('mul_p', {'X': [in_names[2]],
                                            'Y': [tmp_2]},
                                  {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'elementwise_sub_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
@@ -491,7 +546,7 @@ def program_transform(program):
                     'value': 0.0}))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
                 # print(block.var(in_names[1]).shape)
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[0]],
@@ -509,7 +564,7 @@ def program_transform(program):
             # The stop_graddients for Y is True, thus we don't need this part
             # If block.var(in_names[2]).shape != block.var(in_names[0]).shape:
             #     # print(block.var(in_names[2]).shape)
-            #     tmp_2 = name_gen.get_name()
+            #     tmp_2 = name_gen.get_var(new_block, block.var(out_names[0]))
             #     to_insert.append(
             #         _create_op_desc_('sub_p',
             #                          {'X': [tmp_1],
@@ -530,9 +585,13 @@ def program_transform(program):
             y_grad_names = []
             num_index = block.var(in_names[0]).shape[0]
             for _ in range(num_index):
-                index_names.append(name_gen.get_name())
+                index_names.append(
+                    name_gen.get_var(
+                        new_block, block.var(out_names[0]), shape=[1]))
             for _ in range(num_index):
-                y_grad_names.append(name_gen.get_name())
+                y_grad_names.append(
+                    name_gen.get_var(
+                        new_block, block.var(out_names[0]), shape=[1, 1]))
 
             to_insert.append(
                 _create_op_desc_('split_p', {'X': [in_names[0]], },
@@ -540,37 +599,40 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('split_p', {'X': [in_names[1]], },
                                  {'Y': y_grad_names}, {'axis': 0}))
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[2]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[2]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
                 }, {'shape': None,
                     'value': 0.0}))
             assert num_index > 2
-            grad_tmp = name_gen.get_name()
+            grad_tmp = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[0]],
                     'X': [tmp_1]
                 }, {'Y': [grad_tmp]}, {'indexes': None}))
             for idx in range(num_index - 2):
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('index_assign_p', {
                         'IndexTensor': [index_names[idx]],
                         'X': [tmp_1]
                     }, {'Y': [tmp_2]}, {'indexes': None}))
-                tmp_3 = name_gen.get_name()
+                tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('add_p', {'X': [grad_tmp],
                                                'Y': [tmp_2]}, {'Z': [tmp_3]},
                                      {}))
                 grad_tmp = tmp_3
-            tmp_4 = name_gen.get_name()
+            tmp_4 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[-1]],
@@ -582,11 +644,14 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'scale':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[0]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
@@ -599,20 +664,26 @@ def program_transform(program):
 
         elif op_desc.type() == 'matmul_v2_triple_grad':
             # x_grad_grad_grad
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[7]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[7]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(out_names[0]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[3]],
                                   'Y': [tmp_0]}, {'Z': [tmp_1]}, {}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[5]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[5]]},
                                  {'Y': [tmp_2]}, {}))
-            tmp_3 = name_gen.get_name()
+            tmp_3 = name_gen.get_var(new_block, block.var(out_names[0]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[2]],
@@ -623,20 +694,26 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
             # y_grad_grad_grad
-            tmp_4 = name_gen.get_name()
+            tmp_4 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[6]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[6]]},
                                  {'Y': [tmp_4]}, {}))
-            tmp_5 = name_gen.get_name()
+            tmp_5 = name_gen.get_var(new_block, block.var(out_names[1]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [tmp_4],
                                   'Y': [in_names[3]]}, {'Z': [tmp_1]}, {}))
-            tmp_6 = name_gen.get_name()
+            tmp_6 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[4]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[4]]},
                                  {'Y': [tmp_6]}, {}))
-            tmp_7 = name_gen.get_name()
+            tmp_7 = name_gen.get_var(new_block, block.var(out_names[1]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [tmp_6],
@@ -647,12 +724,12 @@ def program_transform(program):
                                  {'Z': [out_names[1]]}, {}))
 
             # z_grad_grad_new
-            tmp_8 = name_gen.get_name()
+            tmp_8 = name_gen.get_var(new_block, block.var(out_names[2]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[4]],
                                   'Y': [in_names[1]]}, {'Z': [tmp_8]}, {}))
-            tmp_9 = name_gen.get_name()
+            tmp_9 = name_gen.get_var(new_block, block.var(out_names[2]))
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [in_names[0]],
@@ -663,7 +740,10 @@ def program_transform(program):
                                  {'Z': [out_names[2]]}, {}))
 
             # x_grad_new_new
-            tmp_10 = name_gen.get_name()
+            tmp_10 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[1]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[1]]},
                                  {'Y': [tmp_10]}, {}))
@@ -673,7 +753,10 @@ def program_transform(program):
                                   'Y': [tmp_10]}, {'Z': [out_names[3]]}, {}))
 
             # y_grad_new_new
-            tmp_11 = name_gen.get_name()
+            tmp_11 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=transhape(block.var(in_names[0]).shape))
             to_insert.append(
                 _create_op_desc_('transpose_p', {'X': [in_names[0]]},
                                  {'Y': [tmp_11]}, {}))
@@ -685,47 +768,50 @@ def program_transform(program):
 
         elif op_desc.type() == 'tanh_triple_grad':
             # x_grad_grad_grad
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[4]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[4]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
                 }, {'shape': None,
                     'value': -2.0}))
-            tmp_2 = name_gen.get_name()
+            tmp_2 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_1],
                                            'Y': [in_names[4]]},
                                  {'Z': [tmp_2]}, {}))
-            tmp_3 = name_gen.get_name()
+            tmp_3 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_2],
                                            'Y': [in_names[1]]},
                                  {'Z': [tmp_3]}, {}))
-            tmp_4 = name_gen.get_name()
+            tmp_4 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_3],
                                            'Y': [in_names[3]]},
                                  {'Z': [tmp_4]}, {}))
-            tmp_5 = name_gen.get_name()
+            tmp_5 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_5]
                 }, {'shape': None,
                     'value': 1.0}))
-            tmp_6 = name_gen.get_name()
+            tmp_6 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[4]],
                                   'Y': [in_names[4]]}, {'Z': [tmp_6]}, {}))
-            tmp_7 = name_gen.get_name()
+            tmp_7 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('sub_p', {'X': [tmp_5],
                                            'Y': [tmp_6]}, {'Z': [tmp_7]}, {}))
-            tmp_8 = name_gen.get_name()
+            tmp_8 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_7],
                                            'Y': [in_names[2]]},
@@ -736,7 +822,7 @@ def program_transform(program):
                                  {'Z': [out_names[0]]}, {}))
 
             # y_grad_grad_new
-            tmp_9 = name_gen.get_name()
+            tmp_9 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_2],
                                            'Y': [in_names[0]]},
@@ -747,22 +833,22 @@ def program_transform(program):
                                  {'Z': [out_names[1]]}, {}))
 
             # y_grad_new_new
-            tmp_10 = name_gen.get_name()
+            tmp_10 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[1]],
                                   'Y': [in_names[3]]}, {'Z': [tmp_10]}, {}))
-            tmp_11 = name_gen.get_name()
+            tmp_11 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p',
                                  {'X': [in_names[2]],
                                   'Y': [in_names[4]]}, {'Z': [tmp_11]}, {}))
-            tmp_12 = name_gen.get_name()
+            tmp_12 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [tmp_10],
                                            'Y': [tmp_11]}, {'Z': [tmp_12]},
                                  {}))
-            tmp_13 = name_gen.get_name()
+            tmp_13 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [tmp_1],
                                            'Y': [tmp_12]}, {'Z': [tmp_13]},
@@ -773,11 +859,14 @@ def program_transform(program):
                                  {'Z': [out_names[2]]}, {}))
 
         elif op_desc.type() == 'elementwise_add_triple_grad':
-            tmp_0 = name_gen.get_name()
+            tmp_0 = name_gen.get_var(
+                new_block,
+                block.var(out_names[0]),
+                shape=[len(block.var(in_names[2]).shape)])
             to_insert.append(
                 _create_op_desc_('shape_p', {'X': [in_names[2]]},
                                  {'Y': [tmp_0]}, {}))
-            tmp_1 = name_gen.get_name()
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {'ShapeTensor': [tmp_0]}, {
                     'Y': [tmp_1]
@@ -785,7 +874,7 @@ def program_transform(program):
                     'value': 0.0}))
             if block.var(in_names[0]).shape != block.var(in_names[2]).shape:
                 # print(block.var(in_names[0]).shape)
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[2]],
@@ -802,7 +891,7 @@ def program_transform(program):
                                   'Y': [tmp_1]}, {'Z': [out_names[0]]}, {}))
             if block.var(in_names[1]).shape != block.var(in_names[2]).shape:
                 # print(block.var(in_names[1]).shape)
-                tmp_2 = name_gen.get_name()
+                tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('add_p',
                                      {'X': [in_names[2]],
@@ -822,7 +911,12 @@ def program_transform(program):
             to_insert.append(op_desc)
 
         for new_op_desc in to_insert:
-            op = Operator(block=new_block, desc=new_op_desc)
+            _new_op_desc = new_block.desc.append_op()
+            _new_op_desc.copy_from(new_op_desc)
+            op = Operator(block=new_block, desc=_new_op_desc)
             new_block.ops.append(op)
-    print(new_program)
+    # print(new_program)
+    # for op_idx in six.moves.range(new_block.desc.op_size()):
+    #     op_desc = new_block.desc.op(op_idx)
+    #     print(op_desc.type())
     return new_program
