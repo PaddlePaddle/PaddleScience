@@ -17,7 +17,7 @@ import numpy as np
 
 import paddle
 from paddle.autograd.functional import Hessian
-from transform import program_transform
+from transform_v2 import program_transform
 
 paddle.enable_static()
 paddle.seed(1234)
