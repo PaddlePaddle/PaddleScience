@@ -168,6 +168,8 @@ class GeometryDiscrete:
 
         new_bc_index = [[] for _ in range(self.num_batch)]
         for idx in self.bc_index:
+            print("lxd_debug: idx shape")
+            print(idx.shape)
             new_bc_index[idx // batch_size].append(idx)
         self.bc_index = [np.array(el) for el in new_bc_index]
 
