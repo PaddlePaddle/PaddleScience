@@ -50,7 +50,7 @@ if __name__ == "__main__":
     geo = psci.geometry.Rectangular(
         time_dependent=True,
         time_origin=0,
-        time_extent=60,
+        time_extent=0.5,
         space_origin=(-0.05, -0.05),
         space_extent=(0.05, 0.05))
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     # Discretization
     pdes, geo = psci.discretize(
-        pdes, geo, time_nsteps=61, space_nsteps=(21, 21))
+        pdes, geo, time_nsteps=6, space_nsteps=(21, 21))
 
     # bc value
     bc_value = GenBC(geo.get_domain(), geo.get_bc_index())
@@ -93,3 +93,23 @@ if __name__ == "__main__":
     # Solver
     solver = psci.solver.Solver(algo=algo, opt=opt)
     solution = solver.solve(num_epoch=30000)
+
+    # Use solution
+    rslt = solution(geo)
+    u = rslt[:, 0]
+    v = rslt[:, 1]
+    u_and_v = np.sqrt(u * u + v * v)
+    psci.visu.save_vtk(geo, u, filename="rslt_u")
+    psci.visu.save_vtk(geo, v, filename="rslt_v")
+    psci.visu.save_vtk(geo, u_and_v, filename="u_and_v")
+
+    openfoam_u = np.load("./openfoam/openfoam_u_100.npy")
+    diff_u = u - openfoam_u
+    RSE_u = np.linalg.norm(diff_u, ord=2)
+    MSE_u = RSE_u * RSE_u / geo.get_domain_size()
+    print("MSE_u: ", MSE_u)
+    openfoam_v = np.load("./openfoam/openfoam_v_100.npy")
+    diff_v = v - openfoam_v
+    RSE_v = np.linalg.norm(diff_v, ord=2)
+    MSE_v = RSE_v * RSE_v / geo.get_domain_size()
+    print("MSE_v: ", MSE_v)
