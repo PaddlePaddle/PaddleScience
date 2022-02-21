@@ -92,9 +92,10 @@ with paddle.static.program_guard(train_program, startup_program):
     loss = eq_loss + bc_loss
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
+new_program = program_transform(train_program)
 # print('startup_program: ', startup_program)
 # print('train_program: ', train_program)
-train_program = program_transform(train_program)
+# print('new_program: ', new_program)
 
 exe.run(startup_program)
 num_epoch = 10
