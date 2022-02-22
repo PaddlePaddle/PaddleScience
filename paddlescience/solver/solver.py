@@ -82,9 +82,15 @@ class Solver(object):
                         self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo):
-            if not isinstance(geo.domain, paddle.Tensor):
-                geo.set_batch_size(geo.get_domain_size())
-                geo.to_tensor()
-            return self.algo.net.nn_func(geo.domain).numpy()
+            if geo.time_dependent == False:
+                if not isinstance(geo.space_domain, paddle.Tensor):
+                    geo.set_batch_size(geo.get_domain_size())
+                    geo.to_tensor()
+                return self.algo.net.nn_func(geo.space_domain).numpy()
+            else:
+                if not isinstance(geo.domain, paddle.Tensor):
+                    geo.set_batch_size(geo.get_domain_size())
+                    geo.to_tensor()
+                return self.algo.net.nn_func(geo.domain).numpy()
 
         return solution_fn
