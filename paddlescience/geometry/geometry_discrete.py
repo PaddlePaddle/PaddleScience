@@ -30,6 +30,10 @@ class GeometryDiscrete:
         self.space_dims = 2
         self.space_domain_size = -1
         self.space_domain = None
+        # time-space domain after discretization
+        self.domain_dims = None
+        self.domain_size = -1
+        self.domain = None
         # time IC index
         self.ic_index = None
         # space BC index
@@ -53,17 +57,25 @@ class GeometryDiscrete:
     # set domain
     def set_domain(self,
                    time_domain=None,
+                   time_origin=None,
+                   time_extent=None,
                    space_domain=None,
-                   origin=None,
-                   extent=None):
+                   space_origin=None,
+                   space_extent=None,
+                   time_space_domain=None):
         # time domain
         if time_domain is not None:
             self.set_time_domain(time_domain)
         # space domain
         if space_domain is not None:
             self.set_space_domain(space_domain)
-        self.space_origin = origin
-        self.space_extent = extent
+        # time-space domain
+        if time_space_domain is not None:
+            self.domain = time_space_domain
+            self.domain_size = len(time_space_domain)
+            self.domain_dims = len(time_space_domain[0])
+        self.space_origin = space_origin
+        self.space_extent = space_extent
 
     # set bc index
     def set_bc_index(self, bc_index):
@@ -85,9 +97,23 @@ class GeometryDiscrete:
         """
         return self.bc_index
 
+    # get bc index
+    def get_ic_index(self):
+        """
+        Get init index 
+
+        Returns
+        -------
+        ic_index: numpy array
+        """
+        return self.ic_index
+
     # get domain size
     def get_domain_size(self):
-        return self.space_domain_size
+        if (self.domain_size != -1):
+            return self.domain_size
+        else:
+            return self.space_domain_size
 
     # get time domain
     def get_time_domain(self):
@@ -107,7 +133,10 @@ class GeometryDiscrete:
 
     # get domain
     def get_domain(self):
-        return self.space_domain
+        if (self.domain is not None):
+            return self.domain
+        else:
+            return self.space_domain
 
     # set time steps
     def set_time_steps(self, time_steps):
@@ -127,6 +156,9 @@ class GeometryDiscrete:
             if self.ic_index is not None:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
+        if self.domain is not None:
+            self.domain = paddle.to_tensor(self.domain, dtype="float32")
+            self.domain.stop_gradient = False
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
@@ -142,7 +174,7 @@ class GeometryDiscrete:
         if self.ic_index is not None:
             new_ic_index = [[] for _ in range(self.num_batch)]
             for idx in self.ic_index:
-                new_ic_index[idx % batch_size].append(idx)
+                new_ic_index[idx // batch_size].append(idx)
             self.ic_index = [np.array(el) for el in new_ic_index]
 
     def get_num_batch(self):

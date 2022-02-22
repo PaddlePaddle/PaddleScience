@@ -71,19 +71,26 @@ class Solver(object):
                       "batch/num_batch: ", batch_id + 1, "/", num_batch,
                       "loss: ",
                       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                      "bc_loss: ", losses[1].numpy()[0])
+                      "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
+                      losses[2].numpy()[0])
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
                             './checkpoint/net_params_' + str(epoch_id + 1))
                 paddle.save(self.opt.state_dict(),
                             './checkpoint/opt_params_' + str(epoch_id + 1))
                 np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.space_domain))
+                        self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo):
-            if not isinstance(geo.space_domain, paddle.Tensor):
-                geo.set_batch_size(geo.get_domain_size())
-                geo.to_tensor()
-            return self.algo.net.nn_func(geo.space_domain).numpy()
+            if geo.time_dependent == False:
+                if not isinstance(geo.space_domain, paddle.Tensor):
+                    geo.set_batch_size(geo.get_domain_size())
+                    geo.to_tensor()
+                return self.algo.net.nn_func(geo.space_domain).numpy()
+            else:
+                if not isinstance(geo.domain, paddle.Tensor):
+                    geo.set_batch_size(geo.get_domain_size())
+                    geo.to_tensor()
+                return self.algo.net.nn_func(geo.domain).numpy()
 
         return solution_fn

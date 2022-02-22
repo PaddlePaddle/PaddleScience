@@ -50,11 +50,11 @@ class PDEItem:
 
 
 class PDE:
-    def __init__(self, num_pdes=1):
+    def __init__(self, num_pdes=1, time_dependent=False):
         # super(MathOperator, self).__init__()
 
         # time dependent / independent
-        self.time_dependent = False
+        self.time_dependent = time_dependent
 
         # whether or not need 2nd order derivate
         self.need_2nd_derivatives = True
@@ -73,8 +73,9 @@ class PDE:
     def get_pde(self, idx):
         return self.pdes[idx]
 
-    def set_ic_value(self, ic_value):
+    def set_ic_value(self, ic_value, ic_check_dim=None):
         self.ic_value = ic_value
+        self.ic_check_dim = ic_check_dim
 
     def set_bc_value(self, bc_value, bc_check_dim=None):
         """
@@ -95,6 +96,9 @@ class PDE:
         # time
         if self.time_dependent == True:
             self.ic_value = paddle.to_tensor(self.ic_value, dtype='float32')
+            self.ic_check_dim = paddle.to_tensor(
+                self.ic_check_dim,
+                dtype='int64') if self.ic_check_dim is not None else None
         # space
         self.bc_value = paddle.to_tensor(self.bc_value, dtype='float32')
         self.bc_check_dim = paddle.to_tensor(
