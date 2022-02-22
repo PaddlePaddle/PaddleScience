@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     # Discretization
     pdes, geo = psci.discretize(
-        pdes, geo, time_nsteps=6, space_nsteps=(21, 21))
+        pdes, geo, time_nsteps=6, space_nsteps=(101, 101))
 
     # bc value
     bc_value = GenBC(geo.get_domain(), geo.get_bc_index())
@@ -96,6 +96,8 @@ if __name__ == "__main__":
 
     # Use solution
     rslt = solution(geo)
+    # Get the result of last moment
+    rslt = rslt[(-geo.space_domain_size):, :]
     u = rslt[:, 0]
     v = rslt[:, 1]
     u_and_v = np.sqrt(u * u + v * v)
