@@ -62,6 +62,16 @@ class Rectangular(Geometry):
         else:
             print("ERROR: Rectangular supported is should be 1d/2d/3d.")
 
+    def sampling_discretize(self, space_origin=None, space_extent=None, space_point_size=None):
+        space_points=[]
+        for i in space_point_size:
+            current_point = []
+            for j in range(self.space_ndims):
+                current_point.append(np.random.randint(
+                    space_origin[j], high = space_extent[j], size = 1, dtype = 'float32'))
+            space_points.append(current_point)
+        return space_points
+
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
 
@@ -76,13 +86,15 @@ class Rectangular(Geometry):
                 self.time_origin, self.time_extent, time_nsteps, endpoint=True)
 
         # discretization each space dimention with linspace
-        for i in range(self.space_ndims):
-            steps.append(
-                np.linspace(
-                    self.space_origin[i],
-                    self.space_extent[i],
-                    self.space_nsteps[i],
-                    endpoint=True))
+        # for i in range(self.space_ndims):
+        #     steps.append(
+        #         np.linspace(
+        #             self.space_origin[i],
+        #             self.space_extent[i],
+        #             self.space_nsteps[i],
+        #             endpoint=True))
+        steps = sampling_discretize(self, space_origin=self.space_origin, 
+            space_extent=self.space_extent, space_point_size=100)
 
         # meshgrid and stack to cordinates
         if self.time_dependent == True:
