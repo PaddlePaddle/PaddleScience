@@ -88,6 +88,71 @@ class Rectangular(Geometry):
         else:
             print("ERROR: Rectangular supported is should be 1d/2d/3d.")
 
+    # domain sampling discretize
+    def sampling_discretize(self, time_nsteps=None, space_point_size=None):
+        # TODO
+        # check input
+        self.space_point_size = (space_point_size, ) if (
+            np.isscalar(space_point_size)) else space_point_size
+
+        # discretization time space with linspace
+        steps = []
+        if self.time_dependent == True:
+            time_steps = np.linspace(
+                self.time_origin, self.time_extent, time_nsteps, endpoint=True)
+
+        # sampling in space discretization which need add boundry value
+        space_points = []
+        for i in space_point_size:
+            current_point = []
+            for j in range(self.space_ndims):
+                # get a random value in [space_origin[j], space_extent[j]]
+                random_value = self.space_origin[j] + (
+                    self.space_extent[j] - self.space_origin[j]) * np.random()
+                current_point.append(random_value)
+            space_points.append(current_point)
+        space_domain = np.array(space_points)
+
+        # bc_index (TODO)
+
+        # ic_index (TODO)
+
+        # return discrete geometry
+        geo_disc = GeometryDiscrete()
+        domain = []
+        if self.time_dependent == True:
+            # Get the time-space domain which combine the time domain and space domain
+            for time in time_steps:
+                current_time = time * np.ones(
+                    (len(space_domain), 1), dtype=np.float32)
+                current_domain = np.concatenate(
+                    (current_time, space_domain), axis=-1)
+                domain.append(current_domain.tolist())
+            time_size = len(time_steps)
+            space_domain_size = space_domain.shape[0]
+            domain_dim = len(space_domain[0]) + 1
+            domain = np.array(domain).reshape(
+                (time_size * space_domain_size, domain_dim))
+
+        if self.time_dependent == True:
+            geo_disc.set_domain(
+                time_domain=time_steps,
+                space_domain=space_domain,
+                space_origin=self.space_origin,
+                space_extent=self.space_extent,
+                time_space_domain=domain)
+            #geo_disc.set_bc_index(bc_index)
+            #geo_disc.set_ic_index(ic_index)
+        else:
+            geo_disc.set_domain(
+                space_domain=space_domain,
+                space_origin=self.space_origin,
+                space_extent=self.space_extent)
+            #geo_disc.set_bc_index(bc_index)
+
+        vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
+        geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
+
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
 
@@ -134,7 +199,7 @@ class Rectangular(Geometry):
                  mesh[0].reshape(-1)),
                 axis=-1)
 
-        # bc_index TODO optimize
+        # bc_index
         if (self.space_ndims == 1):
             bc_index = np.ndarray(2, dtype=int)
             bc_index[0] = 0
