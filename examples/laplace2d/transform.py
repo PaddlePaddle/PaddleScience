@@ -407,7 +407,8 @@ def program_transform(program):
                 _create_op_desc_('index_select_p', {
                     'IndexTensor': [in_names[0]],
                     'X': [in_names[1]]
-                }, {'Y': [out_names[0]]}, {'indexes': None}))
+                }, {'Y': [out_names[0]]}, {'indexes': None,
+                                           'axis': str(0)}))
 
         elif op_desc.type() == 'elementwise_sub':
             if block.var(in_names[0]).shape != block.var(in_names[1]).shape:
@@ -517,14 +518,16 @@ def program_transform(program):
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[0]],
                     'X': [tmp_1]
-                }, {'Y': [grad_tmp]}, {'indexes': None}))
+                }, {'Y': [grad_tmp]}, {'indexes': None,
+                                       'axis': str(0)}))
             for idx in range(num_index - 2):
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('index_assign_p', {
                         'IndexTensor': [index_names[idx]],
                         'X': [tmp_1]
-                    }, {'Y': [tmp_2]}, {'indexes': None}))
+                    }, {'Y': [tmp_2]}, {'indexes': None,
+                                        'axis': str(0)}))
                 tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('add_p', {'X': [grad_tmp],
@@ -536,7 +539,8 @@ def program_transform(program):
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[-1]],
                     'X': [tmp_1]
-                }, {'Y': [tmp_4]}, {'indexes': None}))
+                }, {'Y': [tmp_4]}, {'indexes': None,
+                                    'axis': str(0)}))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [grad_tmp],
                                            'Y': [tmp_4]},
