@@ -166,6 +166,7 @@ class Rectangular(Geometry):
                             nbc += 1
 
         # bc_index with time-domain
+        nbc = len(bc_index)
         if self.time_dependent == True:
             bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
             bc_offset = bc_offset * len(space_domain)
@@ -174,7 +175,18 @@ class Rectangular(Geometry):
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0:time_nsteps]
+            ic_index = bc_index[0:nbc]
+
+        # print("lxd_debug: domain")
+        # print("space_domain")
+        # print(len(space_domain))
+        # print(space_domain)
+        # print("bc_index")
+        # print(bc_index.shape)
+        # print(bc_index)
+        # print("ic_index")
+        # print(ic_index.shape)
+        # print(ic_index)
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
@@ -192,6 +204,10 @@ class Rectangular(Geometry):
             domain_dim = len(space_domain[0]) + 1
             domain = np.array(domain).reshape(
                 (time_size * space_domain_size, domain_dim))
+
+        # print("domain")
+        # print(domain.shape)
+        # print(domain)
 
         if self.time_dependent == True:
             geo_disc.set_domain(
