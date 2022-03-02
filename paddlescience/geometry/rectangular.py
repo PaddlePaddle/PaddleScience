@@ -166,6 +166,7 @@ class Rectangular(Geometry):
                             nbc += 1
 
         # bc_index with time-domain
+        nbc = len(bc_index)
         if self.time_dependent == True:
             bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
             bc_offset = bc_offset * len(space_domain)
@@ -174,7 +175,7 @@ class Rectangular(Geometry):
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0:time_nsteps]
+            ic_index = bc_index[0:nbc]
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()

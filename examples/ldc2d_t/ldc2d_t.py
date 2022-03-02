@@ -18,11 +18,11 @@ import numpy as np
 
 # Generate BC value
 # Every row have 2 elements which means u,v of one point in one moment
-def GenBC(xy, bc_index):
+def GenBC(txy, bc_index):
     bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
+        if abs(txy[id][2] - 0.05) < 1e-4:
             bc_value[i][0] = 1.0
             bc_value[i][1] = 0.0
         else:
@@ -31,18 +31,46 @@ def GenBC(xy, bc_index):
     return bc_value
 
 
+# Generate BC weight
+def GenBCWeight(txy, bc_index):
+    bc_weight = np.zeros((len(bc_index), 2)).astype(np.float32)
+    for i in range(len(bc_index)):
+        id = bc_index[i]
+        if abs(txy[id][2] - 0.05) < 1e-4:
+            bc_weight[i][0] = 1.0 - 20 * abs(txy[id][1])
+            bc_weight[i][1] = 1.0
+        else:
+            bc_weight[i][0] = 1.0
+            bc_weight[i][1] = 1.0
+    return bc_weight
+
+
 # Generate IC value
-def GenIC(xy, ic_index):
+def GenIC(txy, ic_index):
     ic_value = np.zeros((len(ic_index), 2)).astype(np.float32)
     for i in range(len(ic_index)):
         id = ic_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
+        if abs(txy[id][2] - 0.05) < 1e-4:
             ic_value[i][0] = 1.0
             ic_value[i][1] = 0.0
         else:
             ic_value[i][0] = 0.0
             ic_value[i][1] = 0.0
     return ic_value
+
+
+# Generate IC weight
+def GenICWeight(txy, ic_index):
+    ic_weight = np.zeros((len(ic_index), 2)).astype(np.float32)
+    for i in range(len(ic_index)):
+        id = ic_index[i]
+        if abs(txy[id][2] - 0.05) < 1e-4:
+            ic_weight[i][0] = 1.0 - 20 * abs(txy[id][1])
+            ic_weight[i][1] = 1.0
+        else:
+            ic_weight[i][0] = 1.0
+            ic_weight[i][1] = 1.0
+    return ic_weight
 
 
 if __name__ == "__main__":
@@ -66,7 +94,7 @@ if __name__ == "__main__":
     pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
 
     # ic value
-    ic_value = GenIC(geo.get_space_domain(), geo.get_ic_index())
+    ic_value = GenIC(geo.get_domain(), geo.get_ic_index())
     pdes.set_ic_value(ic_value=ic_value, ic_check_dim=[0, 1])
 
     # Network
@@ -79,9 +107,13 @@ if __name__ == "__main__":
         activation='tanh')
 
     # Loss, TO rename
+    bc_weight = GenBCWeight(geo.domain, geo.bc_index)
+    ic_weight = GenICWeight(geo.domain, geo.ic_index)
     loss = psci.loss.L2(pdes=pdes,
                         geo=geo,
                         eq_weight=0.01,
+                        bc_weight=bc_weight,
+                        ic_weight=ic_weight,
                         synthesis_method='norm')
 
     # Algorithm
@@ -92,7 +124,7 @@ if __name__ == "__main__":
 
     # Solver
     solver = psci.solver.Solver(algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=30000)
+    solution = solver.solve(num_epoch=10000)
 
     # Use solution
     rslt = solution(geo)
