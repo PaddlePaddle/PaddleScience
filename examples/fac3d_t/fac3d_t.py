@@ -22,7 +22,7 @@ def GenBC(xyz, bc_index):
     bc_value = np.zeros((len(bc_index), 3)).astype(np.float32)
     for i in range(len(bc_index)):
         id = bc_index[i]
-        if abs(xyz[id][1] - 0.05) < 1e-4:
+        if abs(xyz[id][2] - 0.05) < 1e-4:
             bc_value[i][0] = 1.0
             bc_value[i][1] = 0.0
             bc_value[i][2] = 0.0
@@ -38,7 +38,7 @@ def GenIC(xyz, ic_index):
     ic_value = np.zeros((len(ic_index), 3)).astype(np.float32)
     for i in range(len(ic_index)):
         id = ic_index[i]
-        if abs(xyz[id][1] - 0.05) < 1e-4:
+        if abs(xyz[id][2] - 0.05) < 1e-4:
             ic_value[i][0] = 1.0
             ic_value[i][1] = 0.0
             ic_value[i][2] = 0.0
