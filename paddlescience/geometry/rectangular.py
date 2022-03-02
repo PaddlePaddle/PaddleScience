@@ -89,11 +89,17 @@ class Rectangular(Geometry):
             print("ERROR: Rectangular supported is should be 1d/2d/3d.")
 
     # domain sampling discretize
-    def sampling_discretize(self, time_nsteps=None, space_point_size=None):
+    def sampling_discretize(self,
+                            time_nsteps=None,
+                            space_point_size=None,
+                            space_nsteps=None):
         # TODO
         # check input
         self.space_point_size = (space_point_size, ) if (
             np.isscalar(space_point_size)) else space_point_size
+
+        self.space_nsteps = (space_nsteps, ) if (
+            np.isscalar(space_nsteps)) else space_nsteps
 
         # discretization time space with linspace
         steps = []
@@ -101,21 +107,81 @@ class Rectangular(Geometry):
             time_steps = np.linspace(
                 self.time_origin, self.time_extent, time_nsteps, endpoint=True)
 
-        # sampling in space discretization which need add boundry value
+        # sampling in space discretization
         space_points = []
-        for i in space_point_size:
+        for i in range(space_point_size):
             current_point = []
             for j in range(self.space_ndims):
                 # get a random value in [space_origin[j], space_extent[j]]
                 random_value = self.space_origin[j] + (
-                    self.space_extent[j] - self.space_origin[j]) * np.random()
+                    self.space_extent[j] - self.space_origin[j]
+                ) * np.random.random_sample()
                 current_point.append(random_value)
             space_points.append(current_point)
+
+        # add boundry value
+        if (self.space_ndims == 1):
+            nbc = 2
+            space_points.append(self.space_origin[-1])
+            space_points.append(self.space_extent[-1])
+            bc_index = np.ndarray(2, dtype=int)
+            bc_index[0] = space_point_size
+            bc_index[1] = space_point_size + 1
+        elif (self.space_ndims == 2):
+            nx = self.space_nsteps[0]
+            ny = self.space_nsteps[1]
+            nbc = nx * ny - (nx - 2) * (ny - 2)
+            bc_index = np.ndarray(nbc, dtype=int)
+            nbc = 0
+            x_start = self.space_origin[0]
+            delta_x = (self.space_extent[0] - self.space_origin[0]) / (nx - 1)
+            y_start = self.space_origin[1]
+            delta_y = (self.space_extent[1] - self.space_origin[1]) / (ny - 1)
+            for j in range(ny):
+                for i in range(nx):
+                    if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
+                        x = x_start + i * delta_x
+                        y = y_start + j * delta_y
+                        space_points.append([x, y])
+                        bc_index[nbc] = space_point_size + nbc
+                        nbc += 1
+        elif (self.space_ndims == 3):
+            nx = self.space_nsteps[0]
+            ny = self.space_nsteps[1]
+            nz = self.space_nsteps[2]
+            nbc = nx * ny * nz - (nx - 2) * (ny - 2) * (nz - 2)
+            bc_index = np.ndarray(nbc, dtype=int)
+            nbc = 0
+            x_start = self.space_origin[0]
+            delta_x = (self.space_extent[0] - self.space_origin[0]) / (nx - 1)
+            y_start = self.space_origin[1]
+            delta_y = (self.space_extent[1] - self.space_origin[1]) / (ny - 1)
+            z_start = self.space_origin[2]
+            delta_z = (self.space_extent[2] - self.space_origin[2]) / (nz - 1)
+            for k in range(nz):
+                for j in range(ny):
+                    for i in range(nx):
+                        if (k == 0 or k == nz - 1 or j == 0 or j == ny - 1 or
+                                i == 0 or i == nx - 1):
+                            x = x_start + i * delta_x
+                            y = y_start + j * delta_y
+                            z = z_start + k * delta_z
+                            space_points.append([x, y, z])
+                            bc_index[nbc] = space_point_size + nbc
+                            nbc += 1
         space_domain = np.array(space_points)
 
-        # bc_index (TODO)
+        # bc_index with time-domain
+        nbc = len(bc_index)
+        if self.time_dependent == True:
+            bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
+            bc_offset = bc_offset * len(space_domain)
+            bc_index = np.tile(bc_index, time_nsteps)
+            bc_index = bc_index + bc_offset
 
-        # ic_index (TODO)
+        # IC index
+        if self.time_dependent == True:
+            ic_index = bc_index[0:nbc]
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
@@ -141,17 +207,19 @@ class Rectangular(Geometry):
                 space_origin=self.space_origin,
                 space_extent=self.space_extent,
                 time_space_domain=domain)
-            #geo_disc.set_bc_index(bc_index)
-            #geo_disc.set_ic_index(ic_index)
+            geo_disc.set_bc_index(bc_index)
+            geo_disc.set_ic_index(ic_index)
         else:
             geo_disc.set_domain(
                 space_domain=space_domain,
                 space_origin=self.space_origin,
                 space_extent=self.space_extent)
-            #geo_disc.set_bc_index(bc_index)
+            geo_disc.set_bc_index(bc_index)
 
         vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
+
+        return geo_disc
 
     # domain discretize
     def discretize(self, time_nsteps=None, space_nsteps=None):
@@ -231,6 +299,7 @@ class Rectangular(Geometry):
                             nbc += 1
 
         # bc_index with time-domain
+        nbc = len(bc_index)
         if self.time_dependent == True:
             bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
             bc_offset = bc_offset * len(space_domain)
@@ -239,7 +308,7 @@ class Rectangular(Geometry):
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0:time_nsteps]
+            ic_index = bc_index[0:nbc]
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
