@@ -105,7 +105,7 @@ class DifferenceAppro(object):
         """
         api_grad = self.cal_backward().numpy()
         # print(api_grad)
-        for atol in [1e-4, 1e-3, 1e-2]:
+        for atol in [1e-4, 1e-3, 1e-2, 1e-1]:
             while self.gap <= 1e-2:
                 if not isinstance(self.kwargs["geo"].bc_index, np.ndarray):
                     self.kwargs["geo"].bc_index = self.kwargs["geo"].bc_index[
