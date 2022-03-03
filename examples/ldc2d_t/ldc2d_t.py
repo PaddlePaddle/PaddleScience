@@ -137,12 +137,12 @@ if __name__ == "__main__":
     psci.visu.save_vtk(geo, v, filename="rslt_v")
     psci.visu.save_vtk(geo, u_and_v, filename="u_and_v")
 
-    openfoam_u = np.load("./openfoam/openfoam_u_100.npy")
+    openfoam_u = np.load("../ldc2d/openfoam/openfoam_u_100.npy")
     diff_u = u - openfoam_u
     RSE_u = np.linalg.norm(diff_u, ord=2)
     MSE_u = RSE_u * RSE_u / geo.get_domain_size()
     print("MSE_u: ", MSE_u)
-    openfoam_v = np.load("./openfoam/openfoam_v_100.npy")
+    openfoam_v = np.load("../ldc2d/openfoam/openfoam_v_100.npy")
     diff_v = v - openfoam_v
     RSE_v = np.linalg.norm(diff_v, ord=2)
     MSE_v = RSE_v * RSE_v / geo.get_domain_size()
