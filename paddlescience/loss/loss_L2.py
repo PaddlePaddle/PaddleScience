@@ -43,6 +43,7 @@ class L2(LossBase):
                  aux_func=None,
                  eq_weight=None,
                  bc_weight=None,
+                 ic_weight=None,
                  synthesis_method="add",
                  run_in_batch=True):
         super(L2, self).__init__(pdes, geo)
@@ -52,6 +53,7 @@ class L2(LossBase):
         self.aux_func = aux_func
         self.eq_weight = eq_weight
         self.bc_weight = bc_weight
+        self.ic_weight = ic_weight
         self.synthesis_method = synthesis_method
         self.d_records = dict()
         self.run_in_batch = run_in_batch
@@ -189,6 +191,9 @@ class L2(LossBase):
                 ic_u = paddle.index_select(
                     ic_u, self.pdes.ic_check_dim, axis=1)
             ic_diff = ic_u - ic_value
+            if self.ic_weight is not None:
+                ic_weight = paddle.to_tensor(self.ic_weight, dtype="float32")
+                ic_diff = ic_diff * paddle.sqrt(ic_weight)
             ic_diff = paddle.reshape(ic_diff, shape=[-1])
             return paddle.norm(ic_diff, p=2)
         else:

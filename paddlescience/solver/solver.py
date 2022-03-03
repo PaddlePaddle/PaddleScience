@@ -78,8 +78,13 @@ class Solver(object):
                             './checkpoint/net_params_' + str(epoch_id + 1))
                 paddle.save(self.opt.state_dict(),
                             './checkpoint/opt_params_' + str(epoch_id + 1))
-                np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.domain))
+                if self.algo.loss.geo.time_dependent == False:
+                    np.save(
+                        './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                        self.algo.net.nn_func(self.algo.loss.geo.space_domain))
+                else:
+                    np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                            self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo):
             if geo.time_dependent == False:
