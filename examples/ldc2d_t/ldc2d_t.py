@@ -59,20 +59,6 @@ def GenIC(txy, ic_index):
     return ic_value
 
 
-# Generate IC weight
-def GenICWeight(txy, ic_index):
-    ic_weight = np.zeros((len(ic_index), 2)).astype(np.float32)
-    for i in range(len(ic_index)):
-        id = ic_index[i]
-        if abs(txy[id][2] - 0.05) < 1e-4:
-            ic_weight[i][0] = 1.0 - 20 * abs(txy[id][1])
-            ic_weight[i][1] = 1.0
-        else:
-            ic_weight[i][0] = 1.0
-            ic_weight[i][1] = 1.0
-    return ic_weight
-
-
 if __name__ == "__main__":
     # Geometry
     geo = psci.geometry.Rectangular(
@@ -108,12 +94,10 @@ if __name__ == "__main__":
 
     # Loss, TO rename
     bc_weight = GenBCWeight(geo.domain, geo.bc_index)
-    ic_weight = GenICWeight(geo.domain, geo.ic_index)
     loss = psci.loss.L2(pdes=pdes,
                         geo=geo,
                         eq_weight=0.01,
                         bc_weight=bc_weight,
-                        ic_weight=ic_weight,
                         synthesis_method='norm')
 
     # Algorithm

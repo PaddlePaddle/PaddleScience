@@ -181,7 +181,7 @@ class Rectangular(Geometry):
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0:nbc]
+            ic_index = np.arange(len(space_domain))
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
@@ -308,7 +308,7 @@ class Rectangular(Geometry):
 
         # IC index
         if self.time_dependent == True:
-            ic_index = bc_index[0:nbc]
+            ic_index = np.arange(len(space_domain))
 
         # return discrete geometry
         geo_disc = GeometryDiscrete()
