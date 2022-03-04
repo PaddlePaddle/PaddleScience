@@ -16,7 +16,7 @@
 
 
 cases=`find . -maxdepth 1 -name "test_*.py" | sort `
-ignore=""
+ignore="test_ldc2d_t.py"
 bug=0
 
 echo "examples bug list:" >  result.txt
