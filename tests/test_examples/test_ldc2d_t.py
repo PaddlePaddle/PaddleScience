@@ -18,8 +18,6 @@ import paddlescience as psci
 import numpy as np
 
 
-# Generate BC value
-# Every row have 2 elements which means u,v of one point in one moment
 def GenBC(txy, bc_index):
     bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
     for i in range(len(bc_index)):
@@ -61,20 +59,6 @@ def GenIC(txy, ic_index):
     return ic_value
 
 
-# Generate IC weight
-def GenICWeight(txy, ic_index):
-    ic_weight = np.zeros((len(ic_index), 2)).astype(np.float32)
-    for i in range(len(ic_index)):
-        id = ic_index[i]
-        if abs(txy[id][2] - 0.05) < 1e-4:
-            ic_weight[i][0] = 1.0 - 20 * abs(txy[id][1])
-            ic_weight[i][1] = 1.0
-        else:
-            ic_weight[i][0] = 1.0
-            ic_weight[i][1] = 1.0
-    return ic_weight
-
-
 # Geometry
 geo = psci.geometry.Rectangular(
     time_dependent=True,
@@ -111,12 +95,10 @@ for i in range(10):
 
 # Loss, TO rename
 bc_weight = GenBCWeight(geo.domain, geo.bc_index)
-ic_weight = GenICWeight(geo.domain, geo.ic_index)
 loss = psci.loss.L2(pdes=pdes,
                     geo=geo,
                     eq_weight=0.01,
                     bc_weight=bc_weight,
-                    ic_weight=ic_weight,
                     synthesis_method='norm')
 
 # Algorithm
@@ -131,7 +113,7 @@ solution = solver.solve(num_epoch=1)
 
 # Use solution
 rslt_t = solution(geo)
-
+# print(rslt_t)
 # Get the result of last moment
 rslt = rslt_t[(-geo.space_domain_size):, :]
 
