@@ -12,7 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import vtk
+from pyevtk.hl import pointsToVTK
+
+
+# Save geometry pointwise
+def save_vtk_points(geo, data, filename="output"):
+    if geo.space_dims == 3:
+        pointsToVTK(
+            filename,
+            geo.space_domain[:, 0].copy(),
+            geo.space_domain[:, 1].copy(),
+            geo.space_domain[:, 2].copy(),
+            data={"data": data})
+    elif geo.space_dims == 2:
+        pointsToVTK(
+            filename,
+            geo.space_domain[:, 0].copy(),
+            geo.space_domain[:, 1].copy(),
+            np.zeros(len(geo.space_domain)),
+            data={"data": data})
 
 
 def save_vtk(geo, data, filename="output"):
