@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .pde_base import PDE
+# from .pde_base import PDE
+
+import sympy
 
 
-class NavierStokes(PDE):
+class NavierStokes:
+    #class NavierStokes(PDE):
     """
     Two dimentional time-independent Navier-Stokes equation  
 
@@ -41,100 +44,194 @@ class NavierStokes(PDE):
     """
 
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
-        super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent)
+        # super(NavierStokes, self).__init__(
+        #     dim + 1, time_dependent=time_dependent)
+
         if dim == 2 and time_dependent == False:
-            # continuty 
-            self.add_item(0, 1.0, "du/dx")
-            self.add_item(0, 1.0, "dv/dy")
-            # momentum x
-            self.add_item(1, 1.0, "u", "du/dx")
-            self.add_item(1, 1.0, "v", "du/dy")
-            self.add_item(1, -nu / rho, "d2u/dx2")
-            self.add_item(1, -nu / rho, "d2u/dy2")
-            self.add_item(1, 1.0 / rho, "dw/dx")
-            # momentum y
-            self.add_item(2, 1.0, "u", "dv/dx")
-            self.add_item(2, 1.0, "v", "dv/dy")
-            self.add_item(2, -nu / rho, "d2v/dx2")
-            self.add_item(2, -nu / rho, "d2v/dy2")
-            self.add_item(2, 1.0 / rho, "dw/dy")
-        elif dim == 2 and time_dependent == True:
-            # continuty 
-            self.add_item(0, 1.0, "du/dx")
-            self.add_item(0, 1.0, "dv/dy")
-            # momentum x
-            self.add_item(1, 1.0, "du/dt")
-            self.add_item(1, 1.0, "u", "du/dx")
-            self.add_item(1, 1.0, "v", "du/dy")
-            self.add_item(1, -nu / rho, "d2u/dx2")
-            self.add_item(1, -nu / rho, "d2u/dy2")
-            self.add_item(1, 1.0 / rho, "dw/dx")
-            # momentum y
-            self.add_item(2, 1.0, "dv/dt")
-            self.add_item(2, 1.0, "u", "dv/dx")
-            self.add_item(2, 1.0, "v", "dv/dy")
-            self.add_item(2, -nu / rho, "d2v/dx2")
-            self.add_item(2, -nu / rho, "d2v/dy2")
-            self.add_item(2, 1.0 / rho, "dw/dy")
-        elif dim == 3 and time_dependent == False:
-            # continuty 
-            self.add_item(0, 1.0, "du/dx")
-            self.add_item(0, 1.0, "dv/dy")
-            self.add_item(0, 1.0, "dw/dz")
-            # momentum x
-            self.add_item(1, 1.0, "u", "du/dx")
-            self.add_item(1, 1.0, "v", "du/dy")
-            self.add_item(1, 1.0, "w", "du/dz")
-            self.add_item(1, -nu / rho, "d2u/dx2")
-            self.add_item(1, -nu / rho, "d2u/dy2")
-            self.add_item(1, -nu / rho, "d2u/dz2")
-            self.add_item(1, 1.0 / rho, "dp/dx")
-            # momentum y
-            self.add_item(2, 1.0, "u", "dv/dx")
-            self.add_item(2, 1.0, "v", "dv/dy")
-            self.add_item(2, 1.0, "w", "dv/dz")
-            self.add_item(2, -nu / rho, "d2v/dx2")
-            self.add_item(2, -nu / rho, "d2v/dy2")
-            self.add_item(2, -nu / rho, "d2v/dz2")
-            self.add_item(2, 1.0 / rho, "dp/dy")
-            # momentum z
-            self.add_item(3, 1.0, "u", "dw/dx")
-            self.add_item(3, 1.0, "v", "dw/dy")
-            self.add_item(3, 1.0, "w", "dw/dz")
-            self.add_item(3, -nu / rho, "d2w/dx2")
-            self.add_item(3, -nu / rho, "d2w/dy2")
-            self.add_item(3, -nu / rho, "d2w/dz2")
-            self.add_item(3, 1.0 / rho, "dp/dz")
-        elif dim == 3 and time_dependent == True:
-            # continuty 
-            self.add_item(0, 1.0, "du/dx")
-            self.add_item(0, 1.0, "dv/dy")
-            self.add_item(0, 1.0, "dw/dz")
-            # momentum x
-            self.add_item(1, 1.0, "du/dt")
-            self.add_item(1, 1.0, "u", "du/dx")
-            self.add_item(1, 1.0, "v", "du/dy")
-            self.add_item(1, 1.0, "w", "du/dz")
-            self.add_item(1, -nu / rho, "d2u/dx2")
-            self.add_item(1, -nu / rho, "d2u/dy2")
-            self.add_item(1, -nu / rho, "d2u/dz2")
-            self.add_item(1, 1.0 / rho, "dp/dx")
-            # momentum y
-            self.add_item(2, 1.0, "dv/dt")
-            self.add_item(2, 1.0, "u", "dv/dx")
-            self.add_item(2, 1.0, "v", "dv/dy")
-            self.add_item(2, 1.0, "w", "dv/dz")
-            self.add_item(2, -nu / rho, "d2v/dx2")
-            self.add_item(2, -nu / rho, "d2v/dy2")
-            self.add_item(2, -nu / rho, "d2v/dz2")
-            self.add_item(2, 1.0 / rho, "dp/dy")
-            # momentum z
-            self.add_item(3, 1.0, "dw/dt")
-            self.add_item(3, 1.0, "u", "dw/dx")
-            self.add_item(3, 1.0, "v", "dw/dy")
-            self.add_item(3, 1.0, "w", "dw/dz")
-            self.add_item(3, -nu / rho, "d2w/dx2")
-            self.add_item(3, -nu / rho, "d2w/dy2")
-            self.add_item(3, -nu / rho, "d2w/dz2")
-            self.add_item(3, 1.0 / rho, "dp/dz")
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+            u = sympy.Function('u')(x, y)
+            v = sympy.Function('v')(x, y)
+            p = sympy.Function('p')(x, y)
+
+            # continuty equation
+            continuty = u.diff(x).diff(x) * v + v.diff(x).diff(y)
+            # momentum x equation
+            momentum_x = u * u.diff(x) + u * v.diff(y)
+
+            # variables in order
+            self.independent_variable = [x, y]
+            self.dependent_variable = [u, v, p]
+
+            # equations
+            self.equations = list()
+            self.equations.append(continuty)
+            # self.pdes.append(momentum_x)
+
+
+def parser(pde, ins, outs, jacobian, hessian):
+
+    for eq in pde.equations:
+        # print(eq)
+        # number of items seperated by add
+        if eq.is_Add:
+            num_item = len(eq.args)
+        else:
+            num_item = 1
+        # parser each item
+        for item in eq.args:
+            #print(item)
+            parser_item(pde, item, ins, outs, jacobian, hessian)
+
+
+def parser_item(pde, item, ins, outs, jacobian, hessian):
+
+    #print(item)
+    if item.is_Mul:
+        for it in item.args:
+            parser_item(pde, it, ins, outs, jacobian, hessian)
+    elif item.is_Number:
+        print(item)
+        pass
+    elif item.is_Symbol:
+        print(item)
+        pass
+    elif item.is_Function:
+        print(item)
+        pass
+    elif item.is_Derivative:
+        print(item)
+        parser_derivative(pde, item, jacobian, hessian)
+        pass
+    else:
+        pass
+
+
+def parser_derivative(pde, item, jacobian, hessian):
+
+    #
+    f_idx = pde.dependent_variable.index(item.args[0])
+
+    # derivative order
+    order = 0
+    for it in item.args[1:]:
+        order += it[1]
+
+    # parser jacobin for order 1
+    if order == 1:
+        var_idx = pde.independent_variable.index(item.args[1][0])
+        pass
+    # parser hessian for order 2
+    elif order == 2:
+        if (len(item.args[1:]) == 1):
+            var_idx = pde.independent_variable.index(item.args[1][0])
+            #print(var_idx)
+        else:
+            var_idx1 = pde.independent_variable.index(item.args[1][0])
+            var_idx2 = pde.independent_variable.index(item.args[2][0])
+            #print(var_idx1, var_idx2)
+
+
+if __name__ == "__main__":
+    ns = NavierStokes()
+    parser(ns, None, None, None, None)
+    #parser(ns.pdes[0])
+
+    # def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
+    #     super(NavierStokes, self).__init__(
+    #         dim + 1, time_dependent=time_dependent)
+    #     if dim == 2 and time_dependent == False:
+    #         # continuty 
+    #         self.add_item(0, 1.0, "du/dx")
+    #         self.add_item(0, 1.0, "dv/dy")
+    #         # momentum x
+    #         self.add_item(1, 1.0, "u", "du/dx")
+    #         self.add_item(1, 1.0, "v", "du/dy")
+    #         self.add_item(1, -nu / rho, "d2u/dx2")
+    #         self.add_item(1, -nu / rho, "d2u/dy2")
+    #         self.add_item(1, 1.0 / rho, "dw/dx")
+    #         # momentum y
+    #         self.add_item(2, 1.0, "u", "dv/dx")
+    #         self.add_item(2, 1.0, "v", "dv/dy")
+    #         self.add_item(2, -nu / rho, "d2v/dx2")
+    #         self.add_item(2, -nu / rho, "d2v/dy2")
+    #         self.add_item(2, 1.0 / rho, "dw/dy")
+    #     elif dim == 2 and time_dependent == True:
+    #         # continuty 
+    #         self.add_item(0, 1.0, "du/dx")
+    #         self.add_item(0, 1.0, "dv/dy")
+    #         # momentum x
+    #         self.add_item(1, 1.0, "du/dt")
+    #         self.add_item(1, 1.0, "u", "du/dx")
+    #         self.add_item(1, 1.0, "v", "du/dy")
+    #         self.add_item(1, -nu / rho, "d2u/dx2")
+    #         self.add_item(1, -nu / rho, "d2u/dy2")
+    #         self.add_item(1, 1.0 / rho, "dw/dx")
+    #         # momentum y
+    #         self.add_item(2, 1.0, "dv/dt")
+    #         self.add_item(2, 1.0, "u", "dv/dx")
+    #         self.add_item(2, 1.0, "v", "dv/dy")
+    #         self.add_item(2, -nu / rho, "d2v/dx2")
+    #         self.add_item(2, -nu / rho, "d2v/dy2")
+    #         self.add_item(2, 1.0 / rho, "dw/dy")
+    #     elif dim == 3 and time_dependent == False:
+    #         # continuty 
+    #         self.add_item(0, 1.0, "du/dx")
+    #         self.add_item(0, 1.0, "dv/dy")
+    #         self.add_item(0, 1.0, "dw/dz")
+    #         # momentum x
+    #         self.add_item(1, 1.0, "u", "du/dx")
+    #         self.add_item(1, 1.0, "v", "du/dy")
+    #         self.add_item(1, 1.0, "w", "du/dz")
+    #         self.add_item(1, -nu / rho, "d2u/dx2")
+    #         self.add_item(1, -nu / rho, "d2u/dy2")
+    #         self.add_item(1, -nu / rho, "d2u/dz2")
+    #         self.add_item(1, 1.0 / rho, "dp/dx")
+    #         # momentum y
+    #         self.add_item(2, 1.0, "u", "dv/dx")
+    #         self.add_item(2, 1.0, "v", "dv/dy")
+    #         self.add_item(2, 1.0, "w", "dv/dz")
+    #         self.add_item(2, -nu / rho, "d2v/dx2")
+    #         self.add_item(2, -nu / rho, "d2v/dy2")
+    #         self.add_item(2, -nu / rho, "d2v/dz2")
+    #         self.add_item(2, 1.0 / rho, "dp/dy")
+    #         # momentum z
+    #         self.add_item(3, 1.0, "u", "dw/dx")
+    #         self.add_item(3, 1.0, "v", "dw/dy")
+    #         self.add_item(3, 1.0, "w", "dw/dz")
+    #         self.add_item(3, -nu / rho, "d2w/dx2")
+    #         self.add_item(3, -nu / rho, "d2w/dy2")
+    #         self.add_item(3, -nu / rho, "d2w/dz2")
+    #         self.add_item(3, 1.0 / rho, "dp/dz")
+    #     elif dim == 3 and time_dependent == True:
+    #         # continuty 
+    #         self.add_item(0, 1.0, "du/dx")
+    #         self.add_item(0, 1.0, "dv/dy")
+    #         self.add_item(0, 1.0, "dw/dz")
+    #         # momentum x
+    #         self.add_item(1, 1.0, "du/dt")
+    #         self.add_item(1, 1.0, "u", "du/dx")
+    #         self.add_item(1, 1.0, "v", "du/dy")
+    #         self.add_item(1, 1.0, "w", "du/dz")
+    #         self.add_item(1, -nu / rho, "d2u/dx2")
+    #         self.add_item(1, -nu / rho, "d2u/dy2")
+    #         self.add_item(1, -nu / rho, "d2u/dz2")
+    #         self.add_item(1, 1.0 / rho, "dp/dx")
+    #         # momentum y
+    #         self.add_item(2, 1.0, "dv/dt")
+    #         self.add_item(2, 1.0, "u", "dv/dx")
+    #         self.add_item(2, 1.0, "v", "dv/dy")
+    #         self.add_item(2, 1.0, "w", "dv/dz")
+    #         self.add_item(2, -nu / rho, "d2v/dx2")
+    #         self.add_item(2, -nu / rho, "d2v/dy2")
+    #         self.add_item(2, -nu / rho, "d2v/dz2")
+    #         self.add_item(2, 1.0 / rho, "dp/dy")
+    #         # momentum z
+    #         self.add_item(3, 1.0, "dw/dt")
+    #         self.add_item(3, 1.0, "u", "dw/dx")
+    #         self.add_item(3, 1.0, "v", "dw/dy")
+    #         self.add_item(3, 1.0, "w", "dw/dz")
+    #         self.add_item(3, -nu / rho, "d2w/dx2")
+    #         self.add_item(3, -nu / rho, "d2w/dy2")
+    #         self.add_item(3, -nu / rho, "d2w/dz2")
+    #         self.add_item(3, 1.0 / rho, "dp/dz")
