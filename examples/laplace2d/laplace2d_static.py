@@ -23,6 +23,21 @@ paddle.enable_static()
 paddle.seed(1234)
 
 
+def compile(program, loss_name=None):
+    build_strategy = paddle.static.BuildStrategy()
+    exec_strategy = paddle.static.ExecutionStrategy()
+
+    exec_strategy.num_threads = 1
+
+    compiled_program = paddle.static.CompiledProgram(
+        program).with_data_parallel(
+            loss_name=loss_name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
+
+    return compiled_program
+
+
 # Analytical solution
 def LaplaceRecSolution(x, y, k=1.0):
     if (k == 0.0):
@@ -99,6 +114,8 @@ new_program = program_transform(train_program)
 
 exe.run(startup_program)
 num_epoch = 10
+
+compiled_program = compile(new_program, loss.name)
 
 for i in range(num_epoch):
     loss_d, eq_loss_d, bc_loss_d = exe.run(
