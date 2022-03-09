@@ -69,20 +69,22 @@ def program_transform(program):
         dtype_f32 = block_desc.find_var(cpt.to_bytes(out_names[0])).dtype()
         to_insert = []
         if op_desc.type() == 'fill_constant':
-            if len(in_names) > 0:
-                to_insert.append(
-                    _create_op_desc_('fill_constant_p', {
-                        'ShapeTensor': [in_names[0]]
-                    }, {'Y': [out_names[0]]
-                        }, {'shape': None,
-                            'value': op_desc.attr('value')}))
-            else:
-                to_insert.append(
-                    _create_op_desc_('fill_constant_p', {},
-                                     {'Y': [out_names[0]]}, {
-                                         'shape': op_desc.attr('shape'),
-                                         'value': op_desc.attr('value')
-                                     }))
+            # TODO(jiangcheng05): CINN not support no-input subgraph now, retaining paddle.fill_constant temporarily.
+            # if len(in_names) > 0:
+            #     to_insert.append(
+            #         _create_op_desc_('fill_constant_p', {
+            #             'ShapeTensor': [in_names[0]]
+            #         }, {'Y': [out_names[0]]
+            #             }, {'shape': None,
+            #                 'value': op_desc.attr('value')}))
+            # else:
+            #     to_insert.append(
+            #         _create_op_desc_('fill_constant_p', {},
+            #                          {'Y': [out_names[0]]}, {
+            #                              'shape': op_desc.attr('shape'),
+            #                              'value': op_desc.attr('value')
+            #                          }))
+            pass
 
         elif op_desc.type() == 'matmul_v2':
             to_insert.append(
@@ -99,7 +101,7 @@ def program_transform(program):
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {'X': [in_names[1]], }, {
                         'Y': [tmp_1]
-                    }, {'shape': str(block.var(in_names[0]).shape)}))
+                    }, {'shape': block.var(in_names[0]).shape}))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [in_names[0]],
                                            'Y': [tmp_1]},
@@ -136,7 +138,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[0]).shape),
+                    'shape': block.var(in_names[0]).shape,
                     'value': 0.0
                 }))
             to_insert.append(
@@ -160,13 +162,13 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('reshape_p', {'X': [in_names[0]], }, {
                     'Y': [out_names[0]]
-                }, {'shape': str(block.var(out_names[0]).shape)}))
+                }, {'shape': block.var(out_names[0]).shape}))
 
         elif op_desc.type() == 'elementwise_add_grad':
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[0]).shape),
+                    'shape': block.var(in_names[0]).shape,
                     'value': 0.0
                 }))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
@@ -233,7 +235,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[0]).shape),
+                    'shape': block.var(in_names[0]).shape,
                     'value': 1.0
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
@@ -255,7 +257,7 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {
                     'Y': [out_names[0]]
-                }, {'shape': str(block.var(in_names[0]).shape),
+                }, {'shape': block.var(in_names[0]).shape,
                     'value': 0.0}))
 
         elif op_desc.type() == 'matmul_v2_grad_grad':
@@ -305,7 +307,7 @@ def program_transform(program):
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {'X': [in_names[1]], }, {
                         'Y': [tmp_1]
-                    }, {'shape': str(block.var(in_names[0]).shape)}))
+                    }, {'shape': block.var(in_names[0]).shape}))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [in_names[0]],
                                            'Y': [tmp_1]},
@@ -315,7 +317,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[2]).shape),
+                    'shape': block.var(in_names[2]).shape,
                     'value': 1.0
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
@@ -334,7 +336,7 @@ def program_transform(program):
             tmp_4 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_4]}, {
-                    'shape': str(block.var(in_names[2]).shape),
+                    'shape': block.var(in_names[2]).shape,
                     'value': -2.0
                 }))
             tmp_5 = name_gen.get_var(new_block, block.var(in_names[2]))
@@ -356,7 +358,7 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('reshape_p', {'X': [in_names[0]], }, {
                     'Y': [out_names[0]]
-                }, {'shape': str(block.var(in_names[1]).shape)}))
+                }, {'shape': block.var(in_names[1]).shape}))
 
         elif op_desc.type() == 'sum':
             assert len(in_names) > 1
@@ -418,7 +420,7 @@ def program_transform(program):
                 to_insert.append(
                     _create_op_desc_('broadcast_p', {'X': [in_names[1]], }, {
                         'Y': [tmp_1]
-                    }, {'shape': str(block.var(in_names[0]).shape)}))
+                    }, {'shape': block.var(in_names[0]).shape}))
             to_insert.append(
                 _create_op_desc_('sub_p', {'X': [in_names[0]],
                                            'Y': [tmp_1]},
@@ -434,7 +436,7 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('broadcast_p', {'X': [tmp_1], }, {
                     'Y': [tmp_2]
-                }, {'shape': str(block.var(in_names[2]).shape)}))
+                }, {'shape': block.var(in_names[2]).shape}))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [in_names[2]],
                                            'Y': [tmp_2]},
@@ -444,7 +446,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[0]).shape),
+                    'shape': block.var(in_names[0]).shape,
                     'value': 0.0
                 }))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
@@ -509,7 +511,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[2]).shape),
+                    'shape': block.var(in_names[2]).shape,
                     'value': 0.0
                 }))
             assert num_index > 2
@@ -550,7 +552,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[0]).shape),
+                    'shape': block.var(in_names[0]).shape,
                     'value': op_desc.attr('scale')
                 }))
             to_insert.append(
@@ -667,7 +669,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[4]).shape),
+                    'shape': block.var(in_names[4]).shape,
                     'value': -2.0
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[4]))
@@ -688,7 +690,7 @@ def program_transform(program):
             tmp_5 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_5]}, {
-                    'shape': str(block.var(in_names[4]).shape),
+                    'shape': block.var(in_names[4]).shape,
                     'value': 1.0
                 }))
             tmp_6 = name_gen.get_var(new_block, block.var(in_names[4]))
@@ -751,7 +753,7 @@ def program_transform(program):
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': str(block.var(in_names[2]).shape),
+                    'shape': block.var(in_names[2]).shape,
                     'value': 0.0
                 }))
             if block.var(in_names[0]).shape != block.var(in_names[2]).shape:
