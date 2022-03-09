@@ -19,20 +19,24 @@ from pyevtk.hl import pointsToVTK
 
 # Save geometry pointwise
 def save_vtk_points(geo, data, filename="output"):
+
+    geonp = geo.space_domain.numpy()
+
     if geo.space_dims == 3:
         pointsToVTK(
             filename,
-            geo.space_domain[:, 0].copy(),
-            geo.space_domain[:, 1].copy(),
-            geo.space_domain[:, 2].copy(),
-            data={"data": data})
+            geonp[:, 0].copy(),
+            geonp[:, 1].copy(),
+            geonp[:, 2].copy(),
+            data={"data": data.copy()})
     elif geo.space_dims == 2:
         pointsToVTK(
             filename,
-            geo.space_domain[:, 0].copy(),
-            geo.space_domain[:, 1].copy(),
-            np.zeros(len(geo.space_domain)),
-            data={"data": data})
+            geonp[:, 0].copy(),
+            geonp[:, 1].copy(),
+            np.zeros(
+                len(geonp), dtype="float32"),
+            data={"data": data.copy()})
 
 
 def save_vtk(geo, data, filename="output"):
