@@ -15,28 +15,30 @@
 import numpy as np
 import vtk
 from pyevtk.hl import pointsToVTK
+import copy
 
 
 # Save geometry pointwise
-def save_vtk_points(geo, data, filename="output"):
+def save_vtk_points(filename="output", geo=None, data=None):
 
+    # geo to numpy
     geonp = geo.space_domain.numpy()
 
+    # copy for vtk
+    for key in data:
+        data[key] = data[key].copy()
+
     if geo.space_dims == 3:
-        pointsToVTK(
-            filename,
-            geonp[:, 0].copy(),
-            geonp[:, 1].copy(),
-            geonp[:, 2].copy(),
-            data={"data": data.copy()})
+        # pointsToVTK requires continuity in memory
+        axis_x = geonp[:, 0].copy()
+        axis_y = geonp[:, 1].copy()
+        axis_z = geonp[:, 2].copy()
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
     elif geo.space_dims == 2:
-        pointsToVTK(
-            filename,
-            geonp[:, 0].copy(),
-            geonp[:, 1].copy(),
-            np.zeros(
-                len(geonp), dtype="float32"),
-            data={"data": data.copy()})
+        axis_x = geonp[:, 0].copy()
+        axis_y = geonp[:, 1].copy()
+        axis_z = np.zeros(len(geonp), dtype="float32")
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
 
 
 def save_vtk(geo, data, filename="output"):
