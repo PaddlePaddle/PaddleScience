@@ -61,29 +61,47 @@ def program_transform(program):
 
     block = program.block(0)
     block_desc = block.desc
+
+    for old_var in block_desc.all_vars():
+        if old_var.has_is_parameter() and old_var.is_parameter():
+            new_block.create_parameter(
+                name=old_var.name(),
+                shape=old_var.shape(),
+                dtype=old_var.dtype(),
+                type=old_var.type())
+        else:
+            new_block.create_var(
+                name=old_var.name(),
+                shape=old_var.shape(),
+                dtype=old_var.dtype(),
+                type=old_var.type(),
+                persistable=old_var.persistable(),
+                stop_gradient=old_var.stop_gradient())
+
     for op_idx in six.moves.range(block_desc.op_size()):
         op_desc = block_desc.op(op_idx)
         # print(op_desc.type())
         in_names = op_desc.input_arg_names()
         out_names = op_desc.output_arg_names()
+
         dtype_f32 = block_desc.find_var(cpt.to_bytes(out_names[0])).dtype()
         to_insert = []
         if op_desc.type() == 'fill_constant':
             # TODO(jiangcheng05): CINN not support no-input subgraph now, retaining paddle.fill_constant temporarily.
-            # if len(in_names) > 0:
-            #     to_insert.append(
-            #         _create_op_desc_('fill_constant_p', {
-            #             'ShapeTensor': [in_names[0]]
-            #         }, {'Y': [out_names[0]]
-            #             }, {'shape': None,
-            #                 'value': op_desc.attr('value')}))
-            # else:
-            #     to_insert.append(
-            #         _create_op_desc_('fill_constant_p', {},
-            #                          {'Y': [out_names[0]]}, {
-            #                              'shape': op_desc.attr('shape'),
-            #                              'value': op_desc.attr('value')
-            #                          }))
+            if len(in_names) > 0:
+                to_insert.append(
+                    _create_op_desc_('fill_constant_p', {
+                        'ShapeTensor': [in_names[0]]
+                    }, {'Y': [out_names[0]]
+                        }, {'shape': None,
+                            'value': op_desc.attr('value')}))
+            else:
+                to_insert.append(
+                    _create_op_desc_('fill_constant_p', {},
+                                     {'Y': [out_names[0]]}, {
+                                         'shape': op_desc.attr('shape'),
+                                         'value': op_desc.attr('value')
+                                     }))
             pass
 
         elif op_desc.type() == 'matmul_v2':
