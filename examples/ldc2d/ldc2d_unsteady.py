@@ -46,12 +46,13 @@ def GenBCWeight(xy, bc_index):
 
 
 def GenIns(xy):
-    ins = np.zeros((len(xy), 4)).astype(np.float32)
+    ins = np.zeros((len(xy), 5)).astype(np.float32)
     for i in range(len(xy)):
         ins[i][0] = xy[i][0]
         ins[i][1] = xy[i][1]
         ins[i][2] = 1.0  # TODO
         ins[i][3] = 1.0  # TODO
+        ins[i][4] = 1.0  # TODO
     return ins
 
 
@@ -121,7 +122,7 @@ for i in range(len(sdnew)):
 
 ##### 
 
-# ins = [x,y,u^n,v^n]
+# ins = [x,y,u^n,v^n,p^n]
 ins = GenIns(geo.get_space_domain())
 ins = paddle.to_tensor(ins, stop_gradient=False, dtype="float32")
 
@@ -131,7 +132,7 @@ pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
 
 # Network
 net = psci.network.FCNet(
-    num_ins=4,
+    num_ins=5,
     num_outs=3,
     num_layers=10,
     hidden_size=50,
