@@ -34,6 +34,8 @@ class GeometryDiscrete:
         self.ic_index = None
         # space BC index
         self.bc_index = None
+        # bc normal direction
+        self.bc_normal = None
         # visu vtk obj
         self.vtk_obj = None
         self.vtk_num_points = -1
@@ -68,6 +70,11 @@ class GeometryDiscrete:
     # set bc index
     def set_bc_index(self, bc_index):
         self.bc_index = bc_index
+
+    # set bc normal direction
+    def set_bc_normal(self, bc_normal, bc_dirichlet):
+        self.bc_normal = bc_normal
+        self.bc_dirichlet = bc_dirichlet
 
     # set ic index
     def set_ic_index(self, ic_index):
@@ -127,6 +134,10 @@ class GeometryDiscrete:
             if self.ic_index is not None:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
+
+        if self.bc_normal != None:
+            self.bc_normal = paddle.to_tensor(self.bc_normal, dtype="float32")
+            self.bc_normal.stop_gradient = False
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size

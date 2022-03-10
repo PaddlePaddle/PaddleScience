@@ -124,6 +124,54 @@ class Rectangular(Geometry):
                     if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
                         bc_index[nbc] = j * nx + i
                         nbc += 1
+
+            bc_normal = np.ndarray((2, nbc, 2), dtype="float32")
+            bc_dirichlet = np.ndarray((nbc, 2), dtype="float32")
+
+            nbc = 0
+            for j in range(ny):
+                for i in range(nx):
+                    if ((j == 0 or j == ny - 1) and (i == 0 or i == nx - 1)):
+                        bc_normal[0][nbc][0] = 0.0  # du/dx
+                        bc_normal[0][nbc][1] = 0.0  # du/dy
+                        bc_normal[1][nbc][0] = 0.0  # dv/dx
+                        bc_normal[1][nbc][1] = 0.0  # dv/dy
+                        bc_dirichlet[nbc][0] = 0.0  # u
+                        bc_dirichlet[nbc][1] = 0.0  # v
+                        nbc += 1
+                    elif (j == 0):
+                        bc_normal[0][nbc][0] = 0.0
+                        bc_normal[0][nbc][1] = -1.0
+                        bc_normal[1][nbc][0] = 0.0
+                        bc_normal[1][nbc][1] = 0.0
+                        bc_dirichlet[nbc][0] = 0.0  # u
+                        bc_dirichlet[nbc][1] = 0.0  # v  
+                        nbc += 1
+                    elif (j == ny - 1):
+                        bc_normal[0][nbc][0] = 0.0
+                        bc_normal[0][nbc][1] = 1.0
+                        bc_normal[1][nbc][0] = 0.0
+                        bc_normal[1][nbc][1] = 0.0
+                        bc_dirichlet[nbc][0] = 0.0  # u
+                        bc_dirichlet[nbc][1] = 0.0  # v
+                        nbc += 1
+                    elif (i == 0):
+                        bc_normal[0][nbc][0] = -1.0
+                        bc_normal[0][nbc][1] = 0.0
+                        bc_normal[1][nbc][0] = 0.0
+                        bc_normal[1][nbc][1] = 0.0
+                        bc_dirichlet[nbc][0] = 0.0  # u
+                        bc_dirichlet[nbc][1] = 0.0  # v                        
+                        nbc += 1
+                    elif (i == nx - 1):
+                        bc_normal[0][nbc][0] = 1.0
+                        bc_normal[0][nbc][1] = 0.0
+                        bc_normal[1][nbc][0] = 0.0
+                        bc_normal[1][nbc][1] = 0.0
+                        bc_dirichlet[nbc][0] = 0.0  # u
+                        bc_dirichlet[nbc][1] = 0.0  # v
+                        nbc += 1
+
         elif (self.space_ndims == 3):
             nx = self.space_nsteps[0]
             ny = self.space_nsteps[1]
@@ -154,6 +202,7 @@ class Rectangular(Geometry):
             origin=self.space_origin,
             extent=self.space_extent)
         geo_disc.set_bc_index(bc_index)
+        geo_disc.set_bc_normal(bc_normal, bc_dirichlet)
 
         vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
