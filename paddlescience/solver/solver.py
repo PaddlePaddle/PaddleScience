@@ -86,12 +86,19 @@ class Solver(object):
                     np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                             self.algo.net.nn_func(self.algo.loss.geo.domain))
 
-        def solution_fn(geo):
+        def solution_fn(geo, physic_info=None):
             if geo.time_dependent == False:
                 if not isinstance(geo.space_domain, paddle.Tensor):
                     geo.set_batch_size(geo.get_domain_size())
                     geo.to_tensor()
-                return self.algo.net.nn_func(geo.space_domain).numpy()
+                if physic_info is None:
+                    return self.algo.net.nn_func(geo.space_domain).numpy()
+                else:
+                    physic_data = paddle.to_tensor(
+                        physic_info, dtype="float32")
+                    input_data = paddle.concat(
+                        x=[geo.space_domain, physic_data], axis=-1)
+                    return self.algo.net.nn_func(input_data).numpy()
             else:
                 if not isinstance(geo.domain, paddle.Tensor):
                     geo.set_batch_size(geo.get_domain_size())

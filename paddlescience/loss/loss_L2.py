@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle
+import numpy as np
 import paddle.nn.functional as F
 from paddle.autograd import jacobian, hessian, batch_jacobian, batch_hessian
 from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
@@ -40,6 +41,7 @@ class L2(LossBase):
     def __init__(self,
                  pdes,
                  geo,
+                 physic_info=None,
                  aux_func=None,
                  eq_weight=None,
                  bc_weight=None,
@@ -49,12 +51,20 @@ class L2(LossBase):
 
         self.pdes = pdes
         self.geo = geo
+        self.physic_info = physic_info
         self.aux_func = aux_func
         self.eq_weight = eq_weight
         self.bc_weight = bc_weight
         self.synthesis_method = synthesis_method
         self.d_records = dict()
         self.run_in_batch = run_in_batch
+
+        #check the input
+        if self.physic_info is None and self.geo.time_integration == False:
+            print(
+                "Error: When using the discrete time method, the physical information of the current moment must be entered"
+            )
+            exit()
 
     def set_batch_size(self, batch_size):
         self.pdes.set_batch_size(batch_size)
@@ -102,11 +112,14 @@ class L2(LossBase):
 
     # Record the first order derivatives which contains [['du/dt', 'du/dx', 'du/dy', 'du/dz'],......]
     def batch_cal_first_order_derivatives(self, net, ins):
+        num_ins_mask = net.num_ins
+        if self.pdes.time_integration is True:
+            num_ins_mask = self.geo.space_dims
         d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
         d_values = paddle.reshape(
             d_values, shape=[net.num_outs, self.batch_size, net.num_ins])
         for i in range(net.num_outs):
-            for j in range(net.num_ins):
+            for j in range(num_ins_mask):
                 if self.pdes.time_dependent:
                     self.d_records[first_order_derivatives[i][j]] = d_values[
                         i, :, j]
@@ -116,6 +129,9 @@ class L2(LossBase):
 
     # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
     def batch_cal_second_order_derivatives(self, net, ins):
+        num_ins_mask = net.num_ins
+        if self.pdes.time_integration is True:
+            num_ins_mask = self.geo.space_dims
         for i in range(net.num_outs):
 
             def func(ins):
@@ -124,8 +140,8 @@ class L2(LossBase):
             d_values = batch_hessian(func, ins, create_graph=True)
             d_values = paddle.reshape(
                 d_values, shape=[net.num_ins, self.batch_size, net.num_ins])
-            for j in range(net.num_ins):
-                for k in range(net.num_ins):
+            for j in range(num_ins_mask):
+                for k in range(num_ins_mask):
                     if self.pdes.time_dependent:
                         self.d_records[second_order_derivatives[i][j][
                             k]] = d_values[j, :, k]
@@ -196,6 +212,13 @@ class L2(LossBase):
 
     def batch_run(self, net, batch_id):
         b_datas = self.geo.get_domain()
+        # if use time_integration method
+        if self.pdes.time_integration == True:
+            physic_data = paddle.to_tensor(self.physic_info, dtype="float32")
+            physic_data.stop_gradient = False
+            b_datas_with_physic = paddle.concat(
+                x=[b_datas, physic_data], axis=-1)
+            b_datas = b_datas_with_physic
         u = net.nn_func(b_datas)
         eq_loss = 0
         if self.run_in_batch:

@@ -53,8 +53,16 @@ class NavierStokes(PDE):
                 "Error: the dt must be initinized when time_integration is True"
             )
             exit()
+        if time_dependent == True and time_integration == True:
+            print(
+                "Error: Between the continuous-time method and the discrete-time method, only one can be selected"
+            )
+            exit()
+
         super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent)
+            dim + 1,
+            time_dependent=time_dependent,
+            time_integration=time_integration)
         if dim == 2:
             # continuty 
             self.add_item(0, 1.0, "du/dx")

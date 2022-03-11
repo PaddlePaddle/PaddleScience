@@ -50,11 +50,17 @@ class PDEItem:
 
 
 class PDE:
-    def __init__(self, num_pdes=1, time_dependent=False):
+    def __init__(self,
+                 num_pdes=1,
+                 time_dependent=False,
+                 time_integration=False):
         # super(MathOperator, self).__init__()
 
         # time dependent / independent
         self.time_dependent = time_dependent
+
+        # whether or not use time integration method
+        self.time_integration = time_integration
 
         # whether or not need 2nd order derivate
         self.need_2nd_derivatives = True
