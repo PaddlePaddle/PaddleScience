@@ -41,7 +41,7 @@ class Geometry:
 
         # self.space_radius = (space_radius, ) if (np.isscalar(space_radius)) else space_radius
 
-    def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):
+    def sampling_discretize(self, time_nsteps, space_npoints, space_nsteps):
         geo_disc = GeometryDiscrete()
         return GeometryDiscrete()
 
