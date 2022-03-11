@@ -24,15 +24,27 @@ import math
 # CylinderInRectangular
 class CylinderInRectangular(Rectangular):
     """
-    Two dimentional rectangular
+    Three dimentional cylinder in a cube, the height of the circle is the same as that of the cube
 
     Parameters:
+        time_dependent: does it depend on time
+        time_origin: start time
+        time_extent: finish time
         space_origin: cordinate of left-bottom point of rectangular
         space_extent: extent of rectangular
+        circle_center: coordinate point of the center of the circle
+        circle_radius: circle radius
 
     Example:
         >>> import paddlescience as psci
-        >>> geo = psci.geometry.Rectangular(space_origin=(0.0,0.0), space_extent=(1.0,1.0))
+        >>> geo = psci.geometry.CylinderInRectangular(
+                time_dependent=True,
+                time_origin=0,
+                time_extent=0.5,
+                space_origin=(-0.05, -0.05, -0.05),
+                space_extent=(0.05, 0.05, 0.05),
+                circle_center=(0, 0),
+                circle_radius=0.02)
 
     """
 
@@ -100,13 +112,12 @@ class CylinderInRectangular(Rectangular):
     # domain sampling discretize
     def sampling_discretize(self,
                             time_nsteps=None,
-                            space_point_size=None,
+                            space_npoints=None,
                             space_nsteps=None,
                             circle_bc_size=None):
-        # TODO
         # check input
-        self.space_point_size = (space_point_size, ) if (
-            np.isscalar(space_point_size)) else space_point_size
+        self.space_npoints = (space_npoints, ) if (
+            np.isscalar(space_npoints)) else space_npoints
 
         self.space_nsteps = (space_nsteps, ) if (
             np.isscalar(space_nsteps)) else space_nsteps
@@ -120,13 +131,13 @@ class CylinderInRectangular(Rectangular):
         # sampling in space discretization
         space_points = []
         current_gen_num = 0
-        while current_gen_num < space_point_size:
+        while current_gen_num < space_npoints:
             current_point = []
             for j in range(self.space_ndims):
                 # get a random value in [space_origin[j], space_extent[j]]
-                random_value = self.space_origin[j] + (
-                    self.space_extent[j] - self.space_origin[j]
-                ) * np.random.random_sample()
+                random_value = self.space_origin[j] + (self.space_extent[j] -
+                                                       self.space_origin[j]
+                                                       ) * np.random.rand()
                 current_point.append(random_value)
             # if the point is in circle, do not use it
             x_x0 = current_point[0] - self.circle_center[0]
@@ -151,9 +162,13 @@ class CylinderInRectangular(Rectangular):
                     if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
                         x = x_start + i * delta_x
                         y = y_start + j * delta_y
-                        space_points.append([x, y])
-                        bc_index.append(space_point_size + nbc)
-                        nbc += 1
+                        # if the point is in circle, do not use it
+                        x_x0 = x - self.circle_center[0]
+                        y_y0 = y - self.circle_center[1]
+                        if (x_x0**2 + y_y0**2 > self.circle_radius**2):
+                            space_points.append([x, y])
+                            bc_index.append(space_npoints + nbc)
+                            nbc += 1
         elif (self.space_ndims == 3):
             nx = self.space_nsteps[0]
             ny = self.space_nsteps[1]
@@ -175,22 +190,26 @@ class CylinderInRectangular(Rectangular):
                             x = x_start + i * delta_x
                             y = y_start + j * delta_y
                             z = z_start + k * delta_z
-                            space_points.append([x, y, z])
-                            bc_index.append(space_point_size + nbc)
-                            nbc += 1
+                            # if the point is in circle, do not use it
+                            x_x0 = x - self.circle_center[0]
+                            y_y0 = y - self.circle_center[1]
+                            if (x_x0**2 + y_y0**2 > self.circle_radius**2):
+                                space_points.append([x, y, z])
+                                bc_index.append(space_npoints + nbc)
+                                nbc += 1
 
         # add boundry value in cylinder
         current_gen_circle_num = 0
-        bc_start = space_point_size + len(bc_index)
+        bc_start = space_npoints + len(bc_index)
         if (self.space_ndims == 3):
             circle_bc_size *= self.space_nsteps[2]
         while current_gen_circle_num < circle_bc_size:
             # generate a random x in [x0-r,x0+r]
             x = (self.circle_center[0] - self.circle_radius
-                 ) + np.random.random_sample() * self.circle_radius
-            y1 = self.circle_center[1] - math.sqrt(self.circle_radius - (
+                 ) + np.random.rand() * self.circle_radius * 2
+            y1 = self.circle_center[1] - math.sqrt(self.circle_radius**2 - (
                 x - self.circle_center[0])**2)
-            y2 = self.circle_center[1] + math.sqrt(self.circle_radius - (
+            y2 = self.circle_center[1] + math.sqrt(self.circle_radius**2 - (
                 x - self.circle_center[0])**2)
             if (self.space_ndims == 2):
                 space_points.append([x, y1])
