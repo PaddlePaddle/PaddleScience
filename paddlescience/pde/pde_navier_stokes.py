@@ -63,6 +63,8 @@ class NavierStokes(PDE):
             dim + 1,
             time_dependent=time_dependent,
             time_integration=time_integration)
+        self.dt = dt
+
         if dim == 2:
             # continuty 
             self.add_item(0, 1.0, "du/dx")

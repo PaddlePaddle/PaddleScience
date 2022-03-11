@@ -164,6 +164,10 @@ class L2(LossBase):
                 for de in item.derivative:
                     tmp = tmp * self.d_records[de]
                 eq_loss_l[idx] += tmp
+            # modify the eq_loss when using time integration method
+            if self.pdes.time_integration is True and idx > 0:
+                eq_loss_l[idx] -= ins[:, self.geo.space_dims + idx -
+                                      1] / self.pdes.dt
         self.d_records.clear()
         eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
         return paddle.norm(eq_loss, p=2)
