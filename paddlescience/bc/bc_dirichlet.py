@@ -19,6 +19,15 @@ class BC:
         self.name = name
 
 
+class Free(BC):
+    def __init__(self, name):
+        super(Free, self).__init__(anme)
+        self.category = "Free"
+
+    def compute(self, u, du=None, dn=None, value=None):
+        return 0.0
+
+
 class Dirichlet(BC):
     def __init__(self, name):
         super(Dirichlet, self).__init__(name)
