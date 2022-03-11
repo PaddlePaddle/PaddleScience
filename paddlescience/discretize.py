@@ -40,14 +40,10 @@ def discretize(pde, geo, time_nsteps=None, space_nsteps=None):
 def sampling_discretize(pde,
                         geo,
                         time_nsteps=None,
-                        space_point_size=None,
-                        space_nsteps=None,
-                        circle_bc_size=None):
+                        space_npoints=None,
+                        space_nsteps=None):
     # Geometry
-    geo_disc = geo.sampling_discretize(
-        time_nsteps,
-        space_point_size,
-        space_nsteps,
-        circle_bc_size=circle_bc_size)
+    geo_disc = geo.sampling_discretize(time_nsteps, space_npoints,
+                                       space_nsteps)
 
     return pde, geo_disc
