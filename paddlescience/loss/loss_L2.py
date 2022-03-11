@@ -123,6 +123,7 @@ class L2(LossBase):
                 else:
                     self.d_records[first_order_derivatives[i][
                         j + 1]] = d_values[i, :, j]
+        # print(self.d_records)
 
     def batch_cal_second_order_derivatives(self, net, ins):
         for i in range(net.num_outs):
@@ -175,7 +176,6 @@ class L2(LossBase):
 
         #print(eq_loss_l)
 
-        self.d_records.clear()
         eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
         return paddle.norm(eq_loss, p=2)
 
@@ -205,30 +205,28 @@ class L2(LossBase):
         if self.pdes.bc_check_dim is not None:
             bc_u = paddle.index_select(bc_u, self.pdes.bc_check_dim, axis=1)
 
-        bc_diff = (bc_u - bc_value) * self.geo.bc_dirichlet
+        # print(self.d_records)
 
-        bc_dudx = paddle.index_select(d_records["du/dx"],
+        bc_dudx = paddle.index_select(self.d_records["du/dx"],
                                       self.geo.bc_index[batch_id])
-        bc_dudy = paddle.index_select(d_records["du/dy"],
+        bc_dudy = paddle.index_select(self.d_records["du/dy"],
                                       self.geo.bc_index[batch_id])
-        bc_dvdx = paddle.index_select(d_records["dv/dx"],
+        bc_dvdx = paddle.index_select(self.d_records["dv/dx"],
                                       self.geo.bc_index[batch_id])
-        bc_dvdy = paddle.index_select(d_records["dv/dy"],
+        bc_dvdy = paddle.index_select(self.d_records["dv/dy"],
                                       self.geo.bc_index[batch_id])
 
-        du_dn = self.geo.bc_normal[0][:][0] * bc_dudx + self.geo.bc_normal[
-            0][:][1] * bc_dudy
+        du_dn = self.geo.bc_normal[0, :, 0] * bc_dudx + self.geo.bc_normal[
+            0, :, 1] * bc_dudy
+        dv_dn = self.geo.bc_normal[1, :, 0] * bc_dvdx + self.geo.bc_normal[
+            1, :, 1] * bc_dvdy
 
-        dv_dn = self.geo.bc_normal[1][:][0] * bc_dvdx + self.geo.bc_normal[
-            1][:][1] * bc_dvdy
+        bc_diff = bc_u * self.geo.bc_dirichlet - bc_value
+        bc_diff[:, 0] += du_dn
+        bc_diff[:, 1] += dv_dn
+        bc_diff = paddle.reshape(bc_diff, shape=[-1])
 
-        return paddle.reshape(
-            bc_diff, shape=[-1]) + paddle.norm(
-                paddle.reshape(
-                    bc_value_du_dn - du_dn, shape=[-1]), p=2) + paddle.norm(
-                        paddle.reshape(
-                            bc_value_dv_dn - dv_dn, shape=[-1]),
-                        p=2)
+        return paddle.norm(bc_diff, p=2)
 
         # workaround
         # if self.bc_weight is not None: 
@@ -264,6 +262,9 @@ class L2(LossBase):
         if self.pdes.need_2nd_derivatives:
             self.batch_cal_second_order_derivatives(net, ins)
 
+        # print(self.d_records)
+        # print(self.run_in_batch)
+
         # equation loss
         eq_loss = 0
         if self.run_in_batch:
@@ -278,6 +279,9 @@ class L2(LossBase):
 
         eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
         bc_loss = self.bc_loss(u, batch_id)
+
+        self.d_records.clear()
+        # print(self.d_records)
 
         ic_loss = self.ic_loss(u, batch_id)
         if self.synthesis_method == 'add':

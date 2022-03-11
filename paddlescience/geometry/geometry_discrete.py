@@ -135,9 +135,13 @@ class GeometryDiscrete:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
 
-        if self.bc_normal != None:
-            self.bc_normal = paddle.to_tensor(self.bc_normal, dtype="float32")
-            self.bc_normal.stop_gradient = False
+        #if self.bc_normal != None:
+        self.bc_normal = paddle.to_tensor(self.bc_normal, dtype="float32")
+        self.bc_normal.stop_gradient = False
+
+        self.bc_dirichlet = paddle.to_tensor(
+            self.bc_dirichlet, dtype="float32")
+        self.bc_dirichlet.stop_gradient = False
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size

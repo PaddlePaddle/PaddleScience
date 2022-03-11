@@ -155,7 +155,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000, ins=ins)
+solution = solver.solve(num_epoch=1, ins=ins)
 
 # Use solution
 rslt = solution(ins)
