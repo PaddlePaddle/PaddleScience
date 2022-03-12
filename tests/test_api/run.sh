@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,5 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .visu_vtk import save_vtk, save_vtk_points
-from .visu_matplotlib import save_mpl, plot_mpl
+cases=`find . -maxdepth 1 -name "test_*.py" | sort `
+ignore=""
+bug=0
+
+echo "api bug list:" >  result.txt
+for file in ${cases}
+do
+echo ${file}
+if [[ ${ignore} =~ ${file##*/} ]]; then
+    echo "skip"
+else
+    python3.7 -m pytest ${file}
+    if [ $? -ne 0 ]; then
+        echo ${file} >> result.txt
+        bug=`expr ${bug} + 1`
+    fi
+fi
+done
+
+echo "total bugs: "${bug} >> result.txt
+cat result.txt
+exit ${bug}
