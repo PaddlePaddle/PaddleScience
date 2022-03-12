@@ -1,4 +1,4 @@
-*Current version of PaddleScience is Pre-release v0.1.*
+*Current version of PaddleScience is v0.1.*
 
 # Introduction
 PaddleScience extends the PaddlePaddle framework with reusable
@@ -32,23 +32,27 @@ PaddleScience currently focuses on the PINNs model. The core components are as f
 
 The component organization is illustrated in the following figure. 
 
-![image](https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/pscicode.png)
+![image](./docs/source/img/pscicode.png)
 
 
 # Getting started
 
 ## Prerequisites: 
 
+Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
+
 Package dependencies: paddle, matplotlib, vtk. 
 
-PaddleScience currently relies on new features of the Paddle framework so please be advised to download the latest version of Paddle on github. 
+PaddleScience currently relies on new features of the Paddle framework so please be advised to download the latest version of Paddle on GitHub or on Gitee. 
 
-For more details on installation, please refer to the offical [PaddlePaddle repository](https://github.com/PaddlePaddle/Paddle).
+For more details on installation, please refer to the offical [PaddlePaddle repository on GitHub](https://github.com/PaddlePaddle/Paddle) or [PaddlePaddle repository on Gitee](https://gitee.com/paddlepaddle/Paddle).
 
 ## Download and environment setup
 
 ```
-git clone git@github.com:PaddlePaddle/PaddleScience.git
+Download from GitHub: git clone git@github.com:PaddlePaddle/PaddleScience.git
+Download from Gitee:  git clone git@gitee.com:paddlepaddle/PaddleScience.git
+
 cd PaddleScience
 export PYTHONPATH=$PWD:$PYTHONPATH
 ```
@@ -70,6 +74,6 @@ python3.7 ldc2d.py
 
 ## Short tutorials on how to construct and solve a PINN model
 
-[A tutorial on Lid Driven Cavity flow](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/ldc2d/README.md)
+[A tutorial on Lid Driven Cavity flow](./examples/ldc2d/README.md)
 
-[A tutorial on Darcy flow in porous medium](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/darcy2d/README.md)
+[A tutorial on Darcy flow in porous medium](./examples/darcy2d/README.md)
