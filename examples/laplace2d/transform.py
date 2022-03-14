@@ -86,23 +86,13 @@ def program_transform(program):
 
         dtype_f32 = block_desc.find_var(cpt.to_bytes(out_names[0])).dtype()
         to_insert = []
-        if op_desc.type() == 'fill_constant':
-            if len(in_names) > 0:
-                # TODO(jiangcheng05): CINN not support no-input subgraph and dynamic-shape now, retaining paddle.fill_constant temporarily.
-                # to_insert.append(
-                #     _create_op_desc_('fill_constant_p', {
-                #         'ShapeTensor': [in_names[0]]
-                #     }, {'Y': [out_names[0]]
-                #         }, {'shape': None,
-                #             'value': op_desc.attr('value')}))
-                pass
-            else:
-                to_insert.append(
-                    _create_op_desc_('fill_constant_p', {},
-                                     {'Y': [out_names[0]]}, {
-                                         'shape': op_desc.attr('shape'),
-                                         'value': op_desc.attr('value')
-                                     }))
+        if op_desc.type() == 'fill_constant' and len(in_names) == 0:
+            to_insert.append(
+                _create_op_desc_('fill_constant_p', {}, {'Y': [out_names[0]]},
+                                 {
+                                     'shape': op_desc.attr('shape'),
+                                     'value': op_desc.attr('value')
+                                 }))
 
         elif op_desc.type() == 'matmul_v2':
             to_insert.append(
@@ -537,16 +527,18 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[0]],
-                    'X': [tmp_1]
-                }, {'Y': [grad_tmp]}, {'indexes': None,
+                    'X': [tmp_1],
+                    'Y': [y_grad_names[0]]
+                }, {'Z': [grad_tmp]}, {'indexes': None,
                                        'axis': 0}))
             for idx in range(num_index - 2):
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('index_assign_p', {
-                        'IndexTensor': [index_names[idx]],
-                        'X': [tmp_1]
-                    }, {'Y': [tmp_2]}, {'indexes': None,
+                        'IndexTensor': [index_names[idx + 1]],
+                        'X': [tmp_1],
+                        'Y': [y_grad_names[idx + 1]]
+                    }, {'Z': [tmp_2]}, {'indexes': None,
                                         'axis': 0}))
                 tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
@@ -558,8 +550,9 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [index_names[-1]],
-                    'X': [tmp_1]
-                }, {'Y': [tmp_4]}, {'indexes': None,
+                    'X': [tmp_1],
+                    'Y': [y_grad_names[-1]]
+                }, {'Z': [tmp_4]}, {'indexes': None,
                                     'axis': 0}))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [grad_tmp],
@@ -809,7 +802,7 @@ def program_transform(program):
                         'add_p', {'X': [in_names[2]],
                                   'Y': [tmp_1]}, {'Z': [out_names[1]]}, {}))
         else:
-            assert op_desc.type() in {'adam', 'shape'}
+            assert op_desc.type() in {'adam', 'shape', 'fill_constant'}
             to_insert.append(op_desc)
 
         for new_op_desc in to_insert:
