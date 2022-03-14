@@ -37,7 +37,7 @@ class Dirichlet(BC):
     def compute(self, u, du=None, dn=None, value=None):
         return paddle.norm(u - value, p=2)
 
-    def equation(self, us, rh):
+    def equation(self, us, rhs):
         return us
 
 

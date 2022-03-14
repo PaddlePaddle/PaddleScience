@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-def discretize(pde, geo, time_nsteps=None, space_nsteps=None):
+def discretize(pde, time_nsteps=None, space_npoints=None):
     """
         Discretize PDE and Geometry
 
@@ -31,10 +31,13 @@ def discretize(pde, geo, time_nsteps=None, space_nsteps=None):
             Discrte Geometry
     """
 
-    # Geometry
-    geo_disc = geo.discretize(time_nsteps, space_nsteps)
+    # PDE
+    pde_disc = pde.discretize(time_nsteps)
 
-    return pde, geo_disc
+    # Geometry
+    geo_disc = pde.geometry.discretize(space_npoints)
+
+    return pde_disc, geo_disc
 
 
 def sampling_discretize(pde,

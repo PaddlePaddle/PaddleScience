@@ -22,27 +22,33 @@ class GeometryDiscrete:
     """
 
     def __init__(self):
-        # time discretization
-        self.time_dependent = False
-        self.time_domain_size = -1
-        self.time_domain = None
-        # space discretization
-        self.space_dims = 2
-        self.space_domain_size = -1
-        self.space_domain = None
-        # time-space domain after discretization
-        self.domain_dims = None
-        self.domain_size = -1
-        self.domain = None
-        # time IC index
-        self.ic_index = None
-        # space BC index
-        self.bc_index = None
-        # visu vtk obj
-        self.vtk_obj = None
-        self.vtk_num_points = -1
 
-    # set time domain
+        domain = None
+        boundary = dict()
+        normal = dict()
+
+# # time discretization
+# self.time_dependent = False
+# self.time_domain_size = -1
+# self.time_domain = None
+# # space discretization
+# self.space_dims = 2
+# self.space_domain_size = -1
+# self.space_domain = None
+# # time-space domain after discretization
+# self.domain_dims = None
+# self.domain_size = -1
+# self.domain = None
+# # time IC index
+# self.ic_index = None
+# # space BC index
+# self.bc_index = None
+# # visu vtk obj
+# self.vtk_obj = None
+# self.vtk_num_points = -1
+
+# set time domain
+
     def set_time_domain(self, time_domain):
         self.time_dependent = True
         self.time_domain = time_domain

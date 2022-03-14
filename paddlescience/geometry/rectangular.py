@@ -20,11 +20,27 @@ import matplotlib.pyplot as plt
 
 
 class Rectangular(Geometry):
+    #     """
+    #     Two dimentional rectangular
+
+    #     Parameters:
+    #         origin: cordinate of left-bottom point of rectangular
+    #         extent: extent of rectangular
+
+    #     Example:
+    #         >>> import paddlescience as psci
+    #         >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+
+    #     """
+
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
 
-    def discretize(self, method):
-        pass
+    def discretize(self, space_npoints):
+
+        geo_disc = GeometryDiscrete()
+
+        return geo_disc
 
 
 # # Rectangular

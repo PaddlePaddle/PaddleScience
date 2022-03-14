@@ -63,10 +63,20 @@ class NavierStokes(PDE):
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
 
+            self.independent_variable_str = ['x', 'y']
+            self.dependent_variable_str = ['u', 'v', 'p']
+
             # equations
             self.equations = list()
             self.equations.append(continuty)
             # self.pdes.append(momentum_x)
+
+    def discretize(self, time_nsteps=None):
+
+        if self.time_dependent == False:
+            return self
+        else:
+            pass
 
 
 def parser(pde, ins, outs, jacobian, hessian):

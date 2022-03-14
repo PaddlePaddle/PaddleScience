@@ -65,7 +65,13 @@ class PDE:
         for i in range(self.num_pdes):
             self.pdes.append([])
 
+        # Geometry and boundary condition
+        self.geometry = None
         self.bc = dict()
+
+    def add_geometry(self, geo):
+
+        self.geometry = geo
 
     def add_bc(self, name, *args):
 
@@ -74,6 +80,9 @@ class PDE:
 
         for arg in args:
             self.bc[name].append(arg)
+
+    def discretize(self, method):
+        pass
 
     def add_item(self, pde_index, coefficient, *args):
         # if derivative not in first_order_derivatives:

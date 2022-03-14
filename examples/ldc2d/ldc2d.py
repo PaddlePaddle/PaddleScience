@@ -17,6 +17,7 @@ import numpy as np
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+
 geo.add_boundary(
     name="top", condition=lambda x, y: y == 1.0, normal=(0.0, 1.0))
 geo.add_boundary(
@@ -26,15 +27,20 @@ geo.add_boundary(
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
 # set bounday condition
-bctop_u = psci.bc.Dirichlet('u', 0)
-bctop_v = psci.bc.Dirichlet('v', 0)
+bctop_u = psci.bc.Dirichlet('u', rhs=0.0)
+bctop_v = psci.bc.Dirichlet('v', rhs=0.0)
 
-bcdown_u = psci.bc.Neumann('u', 0)
+# bcdown_u = psci.bc.Neumann('u', rhs=0.0)
+
+pde.add_geometry(geo)
 
 # bounday and bondary condition to pde
 pde.add_bc("top", bctop_u, bctop_v)
 
-print(pde.bc)
+# print(pde.bc)
+
+# Discretization
+pde_disc = psci.discretize(pde, space_npoints=(11, 11))
 
 # # Generate BC value
 # def GenBC(xy, bc_index):
