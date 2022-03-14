@@ -28,6 +28,36 @@ class LossBase(object):
     def ic_loss(self, net):
         pass
 
+
+class LossDerivative(LossBase):
+    def compute_rst(pde, net, ins, bs):
+
+        # outs
+        outs = net.nn_func(ins)
+
+        # jacobian
+        if pde.order >= 1:
+            jacobian = batch_jacobian(net.nn_func, ins, create_graph=True)
+            jacobian = paddle.reshape(
+                jacobian, shape=[net.num_outs, bs, net.num_ins])
+        else:
+            jacobian = None
+
+        # hessian
+        if pde.order >= 2:
+            for i in range(net.num_outs):
+
+                def func(ins):
+                    return net.nn_func(ins)[:, i:i + 1]
+
+                hessian = batch_hessian(func, ins, create_graph=True)
+                hessian = paddle.reshape(
+                    hessian, shape=[net.num_ins, bs, net.num_ins])
+        else:
+            hessian = None
+
+        return outs, jacobian, hessian
+
     def parser_eq(pde, ins, outs, jacobian, hessian):
 
         for eq in pde.equations:

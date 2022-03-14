@@ -19,7 +19,7 @@ from ..pde import first_order_rslts, first_order_derivatives, second_order_deriv
 from .loss_base import LossBase
 
 
-class L2(LossBase):
+class L2(LossDerivative):
     """
     L2 loss which is synthesized by three part: the equation loss, the boundary condition loss, and the initial condition loss.
 
@@ -139,6 +139,7 @@ class L2(LossBase):
         self.batch_cal_first_order_derivatives(net, ins)
         if self.pdes.need_2nd_derivatives:
             self.batch_cal_second_order_derivatives(net, ins)
+
         eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
         if self.aux_func is not None:
             eq_loss_l = self.aux_func(ins)
@@ -153,20 +154,23 @@ class L2(LossBase):
         return paddle.norm(eq_loss, p=2)
 
     def eq_loss(self, net, ins):
-        self.cal_first_order_rslts(net, ins)
-        self.cal_first_order_derivatives(net, ins)
-        if self.pdes.need_2nd_derivatives:
-            self.cal_second_order_derivatives(net, ins)
-        eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
-        if self.aux_func is not None:
-            eq_loss_l = self.aux_func(ins)
-        for idx in range(self.pdes.num_pdes):
-            for item in self.pdes.get_pde(idx):
-                tmp = item.coefficient
-                for de in item.derivative:
-                    tmp = tmp * self.d_records[de]
-                eq_loss_l[idx] += tmp
-        self.d_records.clear()
+
+        outs, jacobian, hessian = compute_rst(self.pde, net, ins)
+        parser_eq(self.pde, ins, outs, jacobian, hessian)
+
+        # if self.pdes.need_2nd_derivatives:
+        #     self.cal_second_order_derivatives(net, ins)
+        # eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
+        # if self.aux_func is not None:
+        #     eq_loss_l = self.aux_func(ins)
+        # for idx in range(self.pdes.num_pdes):
+        #     for item in self.pdes.get_pde(idx):
+        #         tmp = item.coefficient
+        #         for de in item.derivative:
+        #             tmp = tmp * self.d_records[de]
+        #         eq_loss_l[idx] += tmp
+        # self.d_records.clear()
+
         return eq_loss_l
 
     def bc_loss(self, u, batch_id):
