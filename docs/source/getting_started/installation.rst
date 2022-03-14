@@ -3,7 +3,9 @@ Installation
 
 - **Prerequisites**
 
-    Package dependencies: paddle, numpy, matplotlib, vtk.
+    Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
+
+    Package dependencies: paddle, numpy, matplotlib, vtk
 
 - **Installation**
 
@@ -11,7 +13,9 @@ Installation
 
         .. code-block::
 
-            git clone https://github.com/PaddlePaddle/PaddleScience.git
+            From GitHub: git clone https://github.com/PaddlePaddle/PaddleScience.git
+            From Gitee:  git clone https://gitee.com/paddlepaddle/PaddleScience.git
+
             cd PaddleScience
             export PYTHONPATH=$PWD:$PYTHONPATH
 

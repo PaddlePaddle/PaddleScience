@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .rectangular import Rectangular
+from .cylinder_in_cube import CylinderInRectangular

@@ -7,13 +7,13 @@ This guide introduces how to build a PINN model for a simple Laplace equation in
 We consider following Laplace equation with Dirichlet bounday condition.
 
 <div align="center">    
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/laplaceeq.png" width = "400" align=center />
+<img src="../../docs/source/img/laplaceeq.png" width = "400" align=center />
 </div>
 
 
 The analytical solution is 
 <div align="center">
-<img src="https://github.com/PaddlePaddle/PaddleScience/blob/develop/docs/source/img/laplacesolution.png" width = "300" align=center />
+<img src="../../docs/source/img/laplacesolution.png" width = "300" align=center />
 </div>
 
 
