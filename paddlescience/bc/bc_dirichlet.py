@@ -36,6 +36,9 @@ class Dirichlet(BC):
     def compute(self, u, du=None, dn=None, value=None):
         return paddle.norm(u - value, p=2)
 
+    def equation(self, us, rh):
+        return us
+
 
 class Neumann(BC):
     def __init__(self, name):
@@ -45,6 +48,9 @@ class Neumann(BC):
     # dn: normal direction
     def compute(self, u, du=None, dn=None, value=None):
         return paddle.norm(du * dn - value, p=2)
+
+    def equation(self, us):
+        return us.diff(n)
 
 
 class Robin(BC):
@@ -56,13 +62,23 @@ class Robin(BC):
         diff = u + du * dn - value
         return paddle.norm(diff, p=2)
 
+    def equation(self, us):
+        return us + us.diff(n)
+
 
 if __name__ == "__main__":
 
-    pde = psci.pde.NavierStokes()
+    # set geometry and boundary
+    geo = pcsi.geometry.Rectangular(origine=(0.0, 0.0), extent=(1.0, 1.0))
+    top = geo.add_boundary(name="top", lambda x, y: y == 1.0)
+    dow = geo.add_boundary(name="down", lambda x, y: y == 0.0)
 
-    bc1 = psci.bc.Dirichlet(name="bc1")
-    bc2 = psci.bc.Dirichlet(name="bc2")
-    bc3 = psci.bc.Neumann(name="bc3")
+    # define N-S
+    pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
-    pde.add_bc(bc1, bc2, bc3)
+    # set bounday condition
+    bctop_u = psci.bc.Dirichlet('u', 0)
+    bctop_v = psci.bc.Dirichlet('v', 0)
+
+    # bounday and bondary condition to pde
+    pde.add_bc(top, bctop_u, bctop_v)

@@ -54,6 +54,11 @@ class GeometryDiscrete:
         self.space_domain_size = len(space_domain)
         self.space_dims = len(space_domain[0])
 
+        self.space_domain_in = None
+        self.space_domain_bc = dict()
+        self.space_domain_bc["bc1"] = None
+        self.space_domain_bc["bc2"] = None
+
     # set domain
     def set_domain(self,
                    time_domain=None,
