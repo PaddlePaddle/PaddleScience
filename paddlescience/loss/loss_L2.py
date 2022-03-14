@@ -60,7 +60,7 @@ class L2(LossBase):
         self.run_in_batch = run_in_batch
 
         #check the input
-        if self.physic_info is None and self.geo.time_integration == False:
+        if self.physic_info is None and self.pdes.time_integration == True:
             print(
                 "Error: When using the discrete time method, the physical information of the current moment must be entered"
             )
