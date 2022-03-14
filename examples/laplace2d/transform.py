@@ -87,14 +87,15 @@ def program_transform(program):
         dtype_f32 = block_desc.find_var(cpt.to_bytes(out_names[0])).dtype()
         to_insert = []
         if op_desc.type() == 'fill_constant':
-            # TODO(jiangcheng05): CINN not support no-input subgraph now, retaining paddle.fill_constant temporarily.
             if len(in_names) > 0:
-                to_insert.append(
-                    _create_op_desc_('fill_constant_p', {
-                        'ShapeTensor': [in_names[0]]
-                    }, {'Y': [out_names[0]]
-                        }, {'shape': None,
-                            'value': op_desc.attr('value')}))
+                # TODO(jiangcheng05): CINN not support no-input subgraph and dynamic-shape now, retaining paddle.fill_constant temporarily.
+                # to_insert.append(
+                #     _create_op_desc_('fill_constant_p', {
+                #         'ShapeTensor': [in_names[0]]
+                #     }, {'Y': [out_names[0]]
+                #         }, {'shape': None,
+                #             'value': op_desc.attr('value')}))
+                pass
             else:
                 to_insert.append(
                     _create_op_desc_('fill_constant_p', {},
@@ -102,7 +103,6 @@ def program_transform(program):
                                          'shape': op_desc.attr('shape'),
                                          'value': op_desc.attr('value')
                                      }))
-            pass
 
         elif op_desc.type() == 'matmul_v2':
             to_insert.append(
@@ -174,7 +174,7 @@ def program_transform(program):
                 _create_op_desc_('split_p', {'X': [in_names[0]], }, {
                     'Y': [out_names[0]]
                 }, {'axis': op_desc.attr('axis'),
-                    'num_or_sections': str(1)}))
+                    'num_or_sections': [1]}))
 
         elif op_desc.type() == 'reshape2_grad':
             to_insert.append(
@@ -428,7 +428,7 @@ def program_transform(program):
                     'IndexTensor': [in_names[0]],
                     'X': [in_names[1]]
                 }, {'Y': [out_names[0]]}, {'indexes': None,
-                                           'axis': str(0)}))
+                                           'axis': 0}))
 
         elif op_desc.type() == 'elementwise_sub':
             if block.var(in_names[0]).shape != block.var(in_names[1]).shape:
@@ -520,12 +520,12 @@ def program_transform(program):
                 _create_op_desc_('split_p', {'X': [in_names[0]], }, {
                     'Y': index_names
                 }, {'axis': 0,
-                    'num_or_sections': str(num_index)}))
+                    'num_or_sections': [num_index]}))
             to_insert.append(
                 _create_op_desc_('split_p', {'X': [in_names[1]], }, {
                     'Y': y_grad_names
                 }, {'axis': 0,
-                    'num_or_sections': str(num_index)}))
+                    'num_or_sections': [num_index]}))
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
@@ -539,7 +539,7 @@ def program_transform(program):
                     'IndexTensor': [index_names[0]],
                     'X': [tmp_1]
                 }, {'Y': [grad_tmp]}, {'indexes': None,
-                                       'axis': str(0)}))
+                                       'axis': 0}))
             for idx in range(num_index - 2):
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
@@ -547,7 +547,7 @@ def program_transform(program):
                         'IndexTensor': [index_names[idx]],
                         'X': [tmp_1]
                     }, {'Y': [tmp_2]}, {'indexes': None,
-                                        'axis': str(0)}))
+                                        'axis': 0}))
                 tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
                 to_insert.append(
                     _create_op_desc_('add_p', {'X': [grad_tmp],
@@ -560,7 +560,7 @@ def program_transform(program):
                     'IndexTensor': [index_names[-1]],
                     'X': [tmp_1]
                 }, {'Y': [tmp_4]}, {'indexes': None,
-                                    'axis': str(0)}))
+                                    'axis': 0}))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [grad_tmp],
                                            'Y': [tmp_4]},
