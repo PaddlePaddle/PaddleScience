@@ -30,9 +30,9 @@ class LossBase(object):
 
 
 class LossDerivative(LossBase):
-    def compute_rst(pde, net, ins, bs):
+    def compute_out_der(pde, net, ins, bs):
 
-        # outs
+        # outputs of net
         outs = net.nn_func(ins)
 
         # jacobian
@@ -58,7 +58,7 @@ class LossDerivative(LossBase):
 
         return outs, jacobian, hessian
 
-    def parser_eq(pde, ins, outs, jacobian, hessian):
+    def compute_eq(pde, ins, outs, jacobian, hessian):
 
         for eq in pde.equations:
             # print(eq)
@@ -71,41 +71,41 @@ class LossDerivative(LossBase):
             for item in eq.args:
                 #print(item)
                 rst = 1.0
-                parser_item(pde, item, ins, outs, jacobian, hessian, rst)
+                compute_item(pde, item, ins, outs, jacobian, hessian, rst)
 
-    def parser_item(pde, item, ins, outs, jacobian, hessian, rst):
+    def compute_item(pde, item, ins, outs, jacobian, hessian, rst):
 
         #print(item)
         if item.is_Mul:
             for it in item.args:
-                rst = parser_item(pde, it, ins, outs, jacobian, hessian, rst)
+                rst = compute_item(pde, it, ins, outs, jacobian, hessian, rst)
         elif item.is_Number:
             print(item, "number")
             rst = item * rst
         elif item.is_Symbol:
             print(item, "symbol")
-            rst = rst * parser_function(pde, item, ins)
+            rst = rst * compute_function(pde, item, ins)
         elif item.is_Function:
             print(item, "function")
-            rst = rst * parser_function(pde, item, outs)
+            rst = rst * compute_function(pde, item, outs)
         elif item.is_Derivative:
             print(item, "der")
-            rst = rst * parser_derivative(pde, item, jacobian, hessian)
+            rst = rst * compute_der(pde, item, jacobian, hessian)
             pass
         else:
             pass
 
         return rst
 
-    def parser_symbol(pde, item, ins):
+    def compute_symbol(pde, item, ins):
         var_idx = pde.independent_variable.index(item)
         return ins[:, var_idx]
 
-    def parser_function(pde, item, outs):
+    def compute_function(pde, item, outs):
         f_idx = pde.dependent_variable.index(item)
         return outs[:, f_idx]
 
-    def parser_derivative(pde, item, jacobian, hessian, rst):
+    def compute_der(pde, item, jacobian, hessian, rst):
 
         # dependent variable
         f_idx = pde.dependent_variable.index(item.args[0])

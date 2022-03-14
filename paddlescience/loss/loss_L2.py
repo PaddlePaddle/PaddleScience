@@ -56,134 +56,130 @@ class L2(LossDerivative):
         self.d_records = dict()
         self.run_in_batch = run_in_batch
 
-    def set_batch_size(self, batch_size):
-        self.pdes.set_batch_size(batch_size)
-        self.geo.set_batch_size(batch_size)
-        self.batch_size = batch_size
-        self.num_batch = self.geo.get_num_batch()
+    # def set_batch_size(self, batch_size):
+    #     self.pdes.set_batch_size(batch_size)
+    #     self.geo.set_batch_size(batch_size)
+    #     self.batch_size = batch_size
+    #     self.num_batch = self.geo.get_num_batch()
 
-    def cal_first_order_rslts(self, net, ins):
-        outs = net.nn_func(ins)
-        for i in range(net.num_outs):
-            self.d_records[first_order_rslts[i]] = outs[i]
+    # def cal_first_order_rslts(self, net, ins):
+    #     outs = net.nn_func(ins)
+    #     for i in range(net.num_outs):
+    #         self.d_records[first_order_rslts[i]] = outs[i]
 
-    def cal_first_order_derivatives(self, net, ins):
-        d_values = jacobian(net.nn_func, ins, create_graph=True)
-        for i in range(net.num_outs):
-            for j in range(net.num_ins):
-                if self.pdes.time_dependent:
-                    self.d_records[first_order_derivatives[i][j]] = d_values[
-                        i][j]
-                else:
-                    self.d_records[first_order_derivatives[i][
-                        j + 1]] = d_values[i][j]
+    # def cal_first_order_derivatives(self, net, ins):
+    #     d_values = jacobian(net.nn_func, ins, create_graph=True)
+    #     for i in range(net.num_outs):
+    #         for j in range(net.num_ins):
+    #             if self.pdes.time_dependent:
+    #                 self.d_records[first_order_derivatives[i][j]] = d_values[
+    #                     i][j]
+    #             else:
+    #                 self.d_records[first_order_derivatives[i][
+    #                     j + 1]] = d_values[i][j]
 
-    def cal_second_order_derivatives(self, net, ins):
-        for i in range(net.num_outs):
+    # def cal_second_order_derivatives(self, net, ins):
+    #     for i in range(net.num_outs):
 
-            def func(ins):
-                return net.nn_func(ins)[i]
+    #         def func(ins):
+    #             return net.nn_func(ins)[i]
 
-            d_values = hessian(func, ins, create_graph=True)
-            for j in range(net.num_ins):
-                for k in range(net.num_ins):
-                    if self.pdes.time_dependent:
-                        self.d_records[second_order_derivatives[i][j][
-                            k]] = d_values[j][k]
-                    else:
-                        self.d_records[second_order_derivatives[i][j + 1][
-                            k + 1]] = d_values[j][k]
+    #         d_values = hessian(func, ins, create_graph=True)
+    #         for j in range(net.num_ins):
+    #             for k in range(net.num_ins):
+    #                 if self.pdes.time_dependent:
+    #                     self.d_records[second_order_derivatives[i][j][
+    #                         k]] = d_values[j][k]
+    #                 else:
+    #                     self.d_records[second_order_derivatives[i][j + 1][
+    #                         k + 1]] = d_values[j][k]
 
-    # Record the first order rslt which contains [u,v,w,p]
-    def batch_cal_first_order_rslts(self, net, ins):
-        outs = net.nn_func(ins)
-        for i in range(net.num_outs):
-            self.d_records[first_order_rslts[i]] = outs[:, i]
+    # # Record the first order rslt which contains [u,v,w,p]
+    # def batch_cal_first_order_rslts(self, net, ins):
+    #     outs = net.nn_func(ins)
+    #     for i in range(net.num_outs):
+    #         self.d_records[first_order_rslts[i]] = outs[:, i]
 
-    # Record the first order derivatives which contains [['du/dt', 'du/dx', 'du/dy', 'du/dz'],......]
-    def batch_cal_first_order_derivatives(self, net, ins):
-        d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
-        d_values = paddle.reshape(
-            d_values, shape=[net.num_outs, self.batch_size, net.num_ins])
-        for i in range(net.num_outs):
-            for j in range(net.num_ins):
-                if self.pdes.time_dependent:
-                    self.d_records[first_order_derivatives[i][j]] = d_values[
-                        i, :, j]
-                else:
-                    self.d_records[first_order_derivatives[i][
-                        j + 1]] = d_values[i, :, j]
+    # # Record the first order derivatives which contains [['du/dt', 'du/dx', 'du/dy', 'du/dz'],......]
+    # def batch_cal_first_order_derivatives(self, net, ins):
+    #     d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
+    #     d_values = paddle.reshape(
+    #         d_values, shape=[net.num_outs, self.batch_size, net.num_ins])
+    #     for i in range(net.num_outs):
+    #         for j in range(net.num_ins):
+    #             if self.pdes.time_dependent:
+    #                 self.d_records[first_order_derivatives[i][j]] = d_values[
+    #                     i, :, j]
+    #             else:
+    #                 self.d_records[first_order_derivatives[i][
+    #                     j + 1]] = d_values[i, :, j]
 
-    # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
-    def batch_cal_second_order_derivatives(self, net, ins):
-        for i in range(net.num_outs):
+    # # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
+    # def batch_cal_second_order_derivatives(self, net, ins):
+    #     for i in range(net.num_outs):
 
-            def func(ins):
-                return net.nn_func(ins)[:, i:i + 1]
+    #         def func(ins):
+    #             return net.nn_func(ins)[:, i:i + 1]
 
-            d_values = batch_hessian(func, ins, create_graph=True)
-            d_values = paddle.reshape(
-                d_values, shape=[net.num_ins, self.batch_size, net.num_ins])
-            for j in range(net.num_ins):
-                for k in range(net.num_ins):
-                    if self.pdes.time_dependent:
-                        self.d_records[second_order_derivatives[i][j][
-                            k]] = d_values[j, :, k]
-                    else:
-                        self.d_records[second_order_derivatives[i][j + 1][
-                            k + 1]] = d_values[j, :, k]
+    #         d_values = batch_hessian(func, ins, create_graph=True)
+    #         d_values = paddle.reshape(
+    #             d_values, shape=[net.num_ins, self.batch_size, net.num_ins])
+    #         for j in range(net.num_ins):
+    #             for k in range(net.num_ins):
+    #                 if self.pdes.time_dependent:
+    #                     self.d_records[second_order_derivatives[i][j][
+    #                         k]] = d_values[j, :, k]
+    #                 else:
+    #                     self.d_records[second_order_derivatives[i][j + 1][
+    #                         k + 1]] = d_values[j, :, k]
 
-    def batch_eq_loss(self, net, ins):
-        # record the PDE message
-        self.batch_cal_first_order_rslts(net, ins)
-        self.batch_cal_first_order_derivatives(net, ins)
-        if self.pdes.need_2nd_derivatives:
-            self.batch_cal_second_order_derivatives(net, ins)
+    # def batch_eq_loss(self, net, ins):
+    #     # record the PDE message
+    #     self.batch_cal_first_order_rslts(net, ins)
+    #     self.batch_cal_first_order_derivatives(net, ins)
+    #     if self.pdes.need_2nd_derivatives:
+    #         self.batch_cal_second_order_derivatives(net, ins)
 
-        eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
-        if self.aux_func is not None:
-            eq_loss_l = self.aux_func(ins)
-        for idx in range(self.pdes.num_pdes):
-            for item in self.pdes.get_pde(idx):
-                tmp = item.coefficient
-                for de in item.derivative:
-                    tmp = tmp * self.d_records[de]
-                eq_loss_l[idx] += tmp
-        self.d_records.clear()
-        eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
-        return paddle.norm(eq_loss, p=2)
+    #     eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
+    #     if self.aux_func is not None:
+    #         eq_loss_l = self.aux_func(ins)
+    #     for idx in range(self.pdes.num_pdes):
+    #         for item in self.pdes.get_pde(idx):
+    #             tmp = item.coefficient
+    #             for de in item.derivative:
+    #                 tmp = tmp * self.d_records[de]
+    #             eq_loss_l[idx] += tmp
+    #     self.d_records.clear()
+    #     eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
+    #     return paddle.norm(eq_loss, p=2)
 
-    def eq_loss(self, net, ins):
+    def eq_loss(self, net, ins, bs):
 
-        outs, jacobian, hessian = compute_rst(self.pde, net, ins)
-        parser_eq(self.pde, ins, outs, jacobian, hessian)
+        outs, jacobian, hessian = compute_out_der(self.pde, net, ins, bs)
 
-        # if self.pdes.need_2nd_derivatives:
-        #     self.cal_second_order_derivatives(net, ins)
-        # eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
-        # if self.aux_func is not None:
-        #     eq_loss_l = self.aux_func(ins)
-        # for idx in range(self.pdes.num_pdes):
-        #     for item in self.pdes.get_pde(idx):
-        #         tmp = item.coefficient
-        #         for de in item.derivative:
-        #             tmp = tmp * self.d_records[de]
-        #         eq_loss_l[idx] += tmp
-        # self.d_records.clear()
+        rst = compute_eq(self.pde, ins, outs, jacobian, hessian)
 
-        return eq_loss_l
+        return loss
 
-    def bc_loss(self, u, batch_id):
-        bc_u = paddle.index_select(u, self.geo.bc_index[batch_id])
-        bc_value = self.pdes.bc_value
-        if self.pdes.bc_check_dim is not None:
-            bc_u = paddle.index_select(bc_u, self.pdes.bc_check_dim, axis=1)
-        bc_diff = bc_u - bc_value
-        if self.bc_weight is not None:
-            bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
-            bc_diff = bc_diff * paddle.sqrt(bc_weight)
-        bc_diff = paddle.reshape(bc_diff, shape=[-1])
-        return paddle.norm(bc_diff, p=2)
+    def bc_loss(self, net, ins, bs):
+
+        outs, jacobian, hessian = compute_out_der(self.pde, net, ins, bs)
+
+        rst = compute_bc(self.pde, ins, outs, jacobian, hessian)
+
+        return loss
+
+    # def bc_loss(self, u, batch_id):
+    #     bc_u = paddle.index_select(u, self.geo.bc_index[batch_id])
+    #     bc_value = self.pdes.bc_value
+    #     if self.pdes.bc_check_dim is not None:
+    #         bc_u = paddle.index_select(bc_u, self.pdes.bc_check_dim, axis=1)
+    #     bc_diff = bc_u - bc_value
+    #     if self.bc_weight is not None:
+    #         bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
+    #         bc_diff = bc_diff * paddle.sqrt(bc_weight)
+    #     bc_diff = paddle.reshape(bc_diff, shape=[-1])
+    #     return paddle.norm(bc_diff, p=2)
 
     def ic_loss(self, u, batch_id):
         if self.geo.time_dependent == True:
