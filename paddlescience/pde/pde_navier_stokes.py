@@ -79,69 +79,6 @@ class NavierStokes(PDE):
             pass
 
 
-def parser(pde, ins, outs, jacobian, hessian):
-
-    for eq in pde.equations:
-        # print(eq)
-        # number of items seperated by add
-        if eq.is_Add:
-            num_item = len(eq.args)
-        else:
-            num_item = 1
-        # parser each item
-        for item in eq.args:
-            #print(item)
-            parser_item(pde, item, ins, outs, jacobian, hessian)
-
-
-def parser_item(pde, item, ins, outs, jacobian, hessian):
-
-    #print(item)
-    if item.is_Mul:
-        for it in item.args:
-            parser_item(pde, it, ins, outs, jacobian, hessian)
-    elif item.is_Number:
-        print(item)
-        pass
-    elif item.is_Symbol:
-        print(item)
-        pass
-    elif item.is_Function:
-        print(item)
-        pass
-    elif item.is_Derivative:
-        print(item)
-        parser_derivative(pde, item, jacobian, hessian)
-        pass
-    else:
-        pass
-
-
-def parser_derivative(pde, item, jacobian, hessian):
-
-    #
-    f_idx = pde.dependent_variable.index(item.args[0])
-
-    # derivative order
-    order = 0
-    for it in item.args[1:]:
-        order += it[1]
-
-    # parser jacobin for order 1
-    if order == 1:
-        var_idx = pde.independent_variable.index(item.args[1][0])
-        pass
-    # parser hessian for order 2
-    elif order == 2:
-        if (len(item.args[1:]) == 1):
-            var_idx = pde.independent_variable.index(item.args[1][0])
-            #print(var_idx)
-        else:
-            var_idx1 = pde.independent_variable.index(item.args[1][0])
-            var_idx2 = pde.independent_variable.index(item.args[2][0])
-            #print(var_idx1, var_idx2)
-
-
 if __name__ == "__main__":
     ns = NavierStokes()
     parser(ns, None, None, None, None)

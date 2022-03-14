@@ -84,45 +84,108 @@ class PDE:
     def discretize(self, method):
         pass
 
-    def add_item(self, pde_index, coefficient, *args):
-        # if derivative not in first_order_derivatives:
-        #     self.need_2nd_derivatives = True
-        self.pdes[pde_index].append(PDEItem(coefficient, args))
+    # def add_item(self, pde_index, coefficient, *args):
+    #     # if derivative not in first_order_derivatives:
+    #     #     self.need_2nd_derivatives = True
+    #     self.pdes[pde_index].append(PDEItem(coefficient, args))
 
-    def get_pde(self, idx):
-        return self.pdes[idx]
+    # def get_pde(self, idx):
+    #     return self.pdes[idx]
 
-    def set_ic_value(self, ic_value, ic_check_dim=None):
-        self.ic_value = ic_value
-        self.ic_check_dim = ic_check_dim
+    # def set_ic_value(self, ic_value, ic_check_dim=None):
+    #     self.ic_value = ic_value
+    #     self.ic_check_dim = ic_check_dim
 
-    def set_bc_value(self, bc_value, bc_check_dim=None):
-        """
-            Set boudary value (Dirichlet boundary condition) to PDE
+    # def set_bc_value(self, bc_value, bc_check_dim=None):
+    #     """
+    #         Set boudary value (Dirichlet boundary condition) to PDE
 
-            Parameters:
-                bc_value: array of values
-                bc_check_dim (list):  Optional, default None. If is not None, this list contains the dimensions to set boundary condition values on. If is None, boundary condition values are set on all dimentions of network output. 
-        """
-        self.bc_value = bc_value
-        self.bc_check_dim = bc_check_dim
-        # print(self.bc_value)
+    #         Parameters:
+    #             bc_value: array of values
+    #             bc_check_dim (list):  Optional, default None. If is not None, this list contains the dimensions to set boundary condition values on. If is None, boundary condition values are set on all dimentions of network output. 
+    #     """
+    #     self.bc_value = bc_value
+    #     self.bc_check_dim = bc_check_dim
+    #     # print(self.bc_value)
 
-    def discretize(self):
-        pass  # TODO
+    # def discretize(self):
+    #     pass  # TODO
 
-    def to_tensor(self):
-        # time
-        if self.time_dependent == True:
-            self.ic_value = paddle.to_tensor(self.ic_value, dtype='float32')
-            self.ic_check_dim = paddle.to_tensor(
-                self.ic_check_dim,
-                dtype='int64') if self.ic_check_dim is not None else None
-        # space
-        self.bc_value = paddle.to_tensor(self.bc_value, dtype='float32')
-        self.bc_check_dim = paddle.to_tensor(
-            self.bc_check_dim,
-            dtype='int64') if self.bc_check_dim is not None else None
+    # def to_tensor(self):
+    #     # time
+    #     if self.time_dependent == True:
+    #         self.ic_value = paddle.to_tensor(self.ic_value, dtype='float32')
+    #         self.ic_check_dim = paddle.to_tensor(
+    #             self.ic_check_dim,
+    #             dtype='int64') if self.ic_check_dim is not None else None
+    #     # space
+    #     self.bc_value = paddle.to_tensor(self.bc_value, dtype='float32')
+    #     self.bc_check_dim = paddle.to_tensor(
+    #         self.bc_check_dim,
+    #         dtype='int64') if self.bc_check_dim is not None else None
 
-    def set_batch_size(self, batch_size):
-        self.batch_size = batch_size
+    # def set_batch_size(self, batch_size):
+    #     self.batch_size = batch_size
+
+
+def parser(pde, ins, outs, jacobian, hessian):
+
+    for eq in pde.equations:
+        # print(eq)
+        # number of items seperated by add
+        if eq.is_Add:
+            num_item = len(eq.args)
+        else:
+            num_item = 1
+        # parser each item
+        for item in eq.args:
+            #print(item)
+            parser_item(pde, item, ins, outs, jacobian, hessian)
+
+
+def parser_item(pde, item, ins, outs, jacobian, hessian):
+
+    #print(item)
+    if item.is_Mul:
+        for it in item.args:
+            parser_item(pde, it, ins, outs, jacobian, hessian)
+    elif item.is_Number:
+        print(item)
+        pass
+    elif item.is_Symbol:
+        print(item)
+        pass
+    elif item.is_Function:
+        print(item)
+        pass
+    elif item.is_Derivative:
+        print(item)
+        parser_derivative(pde, item, jacobian, hessian)
+        pass
+    else:
+        pass
+
+
+def parser_derivative(pde, item, jacobian, hessian):
+
+    #
+    f_idx = pde.dependent_variable.index(item.args[0])
+
+    # derivative order
+    order = 0
+    for it in item.args[1:]:
+        order += it[1]
+
+    # parser jacobin for order 1
+    if order == 1:
+        var_idx = pde.independent_variable.index(item.args[1][0])
+        pass
+    # parser hessian for order 2
+    elif order == 2:
+        if (len(item.args[1:]) == 1):
+            var_idx = pde.independent_variable.index(item.args[1][0])
+            #print(var_idx)
+        else:
+            var_idx1 = pde.independent_variable.index(item.args[1][0])
+            var_idx2 = pde.independent_variable.index(item.args[2][0])
+            #print(var_idx1, var_idx2)
