@@ -110,7 +110,7 @@ with paddle.static.program_guard(train_program, startup_program):
 new_program = program_transform(train_program)
 # print('startup_program: ', startup_program)
 # print('train_program: ', train_program)
-# print('new_program: ', new_program)
+print('new_program: ', new_program)
 
 exe.run(startup_program)
 num_epoch = 10
