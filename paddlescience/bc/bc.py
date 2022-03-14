@@ -29,9 +29,10 @@ class Free(BC):
 
 
 class Dirichlet(BC):
-    def __init__(self, name):
+    def __init__(self, name, rhs):
         super(Dirichlet, self).__init__(name)
         self.category = "Dirichlet"
+        self.rhs = rhs
 
     def compute(self, u, du=None, dn=None, value=None):
         return paddle.norm(u - value, p=2)
@@ -41,9 +42,10 @@ class Dirichlet(BC):
 
 
 class Neumann(BC):
-    def __init__(self, name):
+    def __init__(self, name, rhs):
         super(Neumann, self).__init__(name)
         self.category = "Neumann"
+        self.rhs = rhs
 
     # dn: normal direction
     def compute(self, u, du=None, dn=None, value=None):
@@ -54,9 +56,10 @@ class Neumann(BC):
 
 
 class Robin(BC):
-    def __init__(self, name):
+    def __init__(self, name, rhs):
         super(Robin, self).__init__(name)
         self.category = "Robin"
+        self.rhs = rhs
 
     def compute(self, u, du=None, dn=None, value=None):
         diff = u + du * dn - value
@@ -66,19 +69,21 @@ class Robin(BC):
         return us + us.diff(n)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # set geometry and boundary
-    geo = pcsi.geometry.Rectangular(origine=(0.0, 0.0), extent=(1.0, 1.0))
-    top = geo.add_boundary(name="top", lambda x, y: y == 1.0)
-    dow = geo.add_boundary(name="down", lambda x, y: y == 0.0)
+#     # set geometry and boundary
+#     geo = pcsi.geometry.Rectangular(origine=(0.0, 0.0), extent=(1.0, 1.0))
+#     geo.add_boundary(name="top", condition=lambda x, y: y == 1.0, normal=(0.0, 1.0))
+#     geo.add_boundary(name="down", condition=lambda x, y: y == 0.0, normal=(0.0, -1.0))
 
-    # define N-S
-    pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
+#     # define N-S
+#     pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
-    # set bounday condition
-    bctop_u = psci.bc.Dirichlet('u', 0)
-    bctop_v = psci.bc.Dirichlet('v', 0)
+#     # set bounday condition
+#     bctop_u = psci.bc.Dirichlet('u', 0)
+#     bctop_v = psci.bc.Dirichlet('v', 0)
 
-    # bounday and bondary condition to pde
-    pde.add_bc(top, bctop_u, bctop_v)
+#     bcdown_u = psci.bc.Newmann('u', 0)
+
+#     # bounday and bondary condition to pde
+#     pde.add_bc("top", bctop_u, bctop_v)

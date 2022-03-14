@@ -65,6 +65,16 @@ class PDE:
         for i in range(self.num_pdes):
             self.pdes.append([])
 
+        self.bc = dict()
+
+    def add_bc(self, name, *args):
+
+        if name not in self.bc:
+            self.bc[name] = list()
+
+        for arg in args:
+            self.bc[name].append(arg)
+
     def add_item(self, pde_index, coefficient, *args):
         # if derivative not in first_order_derivatives:
         #     self.need_2nd_derivatives = True

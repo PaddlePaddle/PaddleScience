@@ -15,6 +15,7 @@
 __version__ = '0.1'
 
 from . import geometry
+from . import bc
 from . import pde
 from . import network
 from . import algorithm

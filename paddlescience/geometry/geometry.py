@@ -20,31 +20,32 @@ import matplotlib.pyplot as plt
 
 # Geometry
 class Geometry:
-    def __init__(self,
-                 time_dependent=False,
-                 time_origin=None,
-                 time_extent=None,
-                 space_origin=None,
-                 space_extent=None):
+    def __init__(self):
+        self.condition = dict()
+        self.normal = dict()
 
-        # TODO check inputs  
+    def add_boundary(self, name, condition, normal):
 
-        # time information
-        self.time_dependent = time_dependent
-        self.time_origin = time_origin
-        self.time_extent = time_extent
+        self.condition[name] = condition
+        self.normal[name] = normal
 
-        # space information
-        self.space_shape = None
-        self.space_origin = None
-        self.space_extent = None
+    def delete_boundary(self, name):
 
-        # self.space_radius = (space_radius, ) if (np.isscalar(space_radius)) else space_radius
+        if name in self.condition:
+            del self.condition[name]
 
-    def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):
-        geo_disc = GeometryDiscrete()
-        return GeometryDiscrete()
+        if name in self.normal:
+            del self.normal[name]
 
-    def discretize(self, time_nsteps, space_nsteps):
-        geo_disc = GeometryDiscrete()
-        return GeometryDiscrete()
+    def clear_boundary(self):
+
+        self.condition.clear()
+        self.normal.clear()
+
+    # def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):
+    #     geo_disc = GeometryDiscrete()
+    #     return GeometryDiscrete()
+
+    # def discretize(self, time_nsteps, space_nsteps):
+    #     geo_disc = GeometryDiscrete()
+    #     return GeometryDiscrete()
