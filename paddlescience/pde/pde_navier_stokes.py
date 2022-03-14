@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .pde_base import PDE
+#from .pde_base import PDE
 
 import sympy
+import numpy as np
 
 
 #class NavierStokes:
-class NavierStokes(PDE):
+class NavierStokes:
     """
     Two dimentional time-independent Navier-Stokes equation  
 
@@ -44,8 +45,8 @@ class NavierStokes(PDE):
     """
 
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
-        super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent)
+        # super(NavierStokes, self).__init__(
+        #     dim + 1, time_dependent=time_dependent)
 
         if dim == 2 and time_dependent == False:
             x = sympy.Symbol('x')
@@ -55,7 +56,7 @@ class NavierStokes(PDE):
             p = sympy.Function('p')(x, y)
 
             # continuty equation
-            continuty = u.diff(x).diff(x) * v + v.diff(x).diff(y)
+            continuty = u.diff(x) * v + v.diff(x).diff(y)
             # momentum x equation
             momentum_x = u * u.diff(x) + u * v.diff(y)
 
@@ -81,7 +82,12 @@ class NavierStokes(PDE):
 
 if __name__ == "__main__":
     ns = NavierStokes()
-    parser(ns, None, None, None, None)
+
+    outs = np.zeros((10, 3))
+    outs[:, 1] = 1.0
+    outs[:, 2] = 2.0
+
+    parser(ns, None, outs, None, None)
     #parser(ns.pdes[0])
 
     # def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
