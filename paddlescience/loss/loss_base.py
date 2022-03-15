@@ -58,57 +58,59 @@ class LossDerivative(LossBase):
 
         return outs, jacobian, hessian
 
-    def compute_eq(pde, ins, outs, jacobian, hessian):
+    def compute_formula(formula, indvar, dvar, ins, outs, jacobian, hessian,
+                        normal):
 
-        for eq in pde.equations:
-            # print(eq)
-            # number of items seperated by add
-            if eq.is_Add:
-                num_item = len(eq.args)
-            else:
-                num_item = 1
-            # parser each item
-            for item in eq.args:
-                #print(item)
-                rst = 1.0
-                compute_item(pde, item, ins, outs, jacobian, hessian, rst)
+        # number of items seperated by add
+        if formula.is_Add:
+            num_item = len(formula.args)
+        else:
+            num_item = 1
+        # parser each item
+        for item in formula.args:
+            #print(item)
+            rst = 1.0
+            compute_item(indvar, dvar, item, ins, outs, jacobian, hessian, rst)
 
-    def compute_item(pde, item, ins, outs, jacobian, hessian, rst):
+    def compute_item(indvar, dvar, item, ins, outs, jacobian, hessian, normal,
+                     rst):
 
         #print(item)
         if item.is_Mul:
             for it in item.args:
-                rst = compute_item(pde, it, ins, outs, jacobian, hessian, rst)
+                rst = compute_item(indvar, dvar, it, ins, outs, jacobian,
+                                   hessian, rst)
         elif item.is_Number:
             print(item, "number")
             rst = item * rst
         elif item.is_Symbol:
             print(item, "symbol")
-            rst = rst * compute_function(pde, item, ins)
+            rst = rst * compute_function(indvar, item, ins)
         elif item.is_Function:
             print(item, "function")
-            rst = rst * compute_function(pde, item, outs)
+            rst = rst * compute_function(dvar, item, outs)
         elif item.is_Derivative:
             print(item, "der")
-            rst = rst * compute_der(pde, item, jacobian, hessian)
+            rst = rst * compute_der(indvar, dvar, item, jacobian, hessian,
+                                    normal)
             pass
         else:
             pass
 
         return rst
 
-    def compute_symbol(pde, item, ins):
-        var_idx = pde.independent_variable.index(item)
+    def compute_symbol(indvar, item, ins):
+        var_idx = indvar.index(item)
         return ins[:, var_idx]
 
-    def compute_function(pde, item, outs):
-        f_idx = pde.dependent_variable.index(item)
+    def compute_function(dvar, item, outs):
+        f_idx = dvar.index(item)
         return outs[:, f_idx]
 
-    def compute_der(pde, item, jacobian, hessian, rst):
+    def compute_der(indvar, dvar, item, jacobian, hessian, normal, rst):
 
         # dependent variable
-        f_idx = pde.dependent_variable.index(item.args[0])
+        f_idx = dvar.index(item.args[0])
 
         # derivative order
         order = 0
@@ -117,16 +119,21 @@ class LossDerivative(LossBase):
 
         # parser jacobin for order 1
         if order == 1:
-            var_idx = pde.independent_variable.index(item.args[1][0])
-            pass
+
+            v = item.args[1][0]
+            if v == sympy.Symbol('n'):
+                rst = rst * normal * jacobian[f_idx, :]
+            else:
+                var_idx = indvar.index(v)
+                rst = rst * jacobian[f_idx, var_idx]
         # parser hessian for order 2
         elif order == 2:
             if (len(item.args[1:]) == 1):
-                var_idx = pde.independent_variable.index(item.args[1][0])
+                var_idx = indvar.index(item.args[1][0])
                 rst = rst * jacobian[f_idx, var_idx]
             else:
-                var_idx1 = pde.independent_variable.index(item.args[1][0])
-                var_idx2 = pde.independent_variable.index(item.args[2][0])
+                var_idx1 = indvar.index(item.args[1][0])
+                var_idx2 = indvar.index(item.args[2][0])
                 rst = rst * hessian[f_idx, var_idx1, :, var_idx2]
 
         return rst

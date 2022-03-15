@@ -16,7 +16,7 @@ import paddle
 import paddle.nn.functional as F
 from paddle.autograd import jacobian, hessian, batch_jacobian, batch_hessian
 from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
-from .loss_base import LossBase
+from .loss_base import LossBase, LossDerivative
 
 
 class L2(LossDerivative):
@@ -155,17 +155,25 @@ class L2(LossDerivative):
 
     def eq_loss(self, net, ins, bs):
 
-        outs, jacobian, hessian = compute_out_der(self.pde, net, ins, bs)
+        outs, jacobian, hessian = self.compute_out_der(self.pde, net, ins, bs)
 
-        rst = compute_eq(self.pde, ins, outs, jacobian, hessian)
+        for formula in pde.equations:
+            rst = self.compute_formula(formula, pde.independent_variable,
+                                       pde.dependent_variable, ins, outs,
+                                       jacobian, hessian, None)
 
         return loss
 
     def bc_loss(self, net, ins, bs):
 
-        outs, jacobian, hessian = compute_out_der(self.pde, net, ins, bs)
+        for name, bc in self.bc:
+            outs, jacobian, hessian = self.compute_out_der(self.pde, net, ins,
+                                                           bs)
 
-        rst = compute_bc(self.pde, ins, outs, jacobian, hessian)
+            for formula in bc:
+                rst = self.compute_formula(formula, pde.independent_variable,
+                                           pde.dependent_variable, ins, outs,
+                                           jacobian, hessian, normal)
 
         return loss
 

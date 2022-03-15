@@ -32,7 +32,7 @@ bctop_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
 
-pde.add_geometry(geo)
+# pde.add_geometry(geo)
 
 # bounday and bondary condition to pde
 pde.add_bc("top", bctop_u, bctop_v)
@@ -40,7 +40,7 @@ pde.add_bc("top", bctop_u, bctop_v)
 # print(pde.bc)
 
 # Discretization
-pde_disc = psci.discretize(pde, space_npoints=(11, 11))
+# pde_disc = psci.discretize(pde, space_npoints=(11, 11))
 
 # # Generate BC value
 # def GenBC(xy, bc_index):

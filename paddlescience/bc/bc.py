@@ -24,7 +24,7 @@ class Free(BC):
         super(Free, self).__init__(anme)
         self.category = "Free"
 
-    def compute(self, u, du=None, dn=None, value=None):
+    def formula(self):
         return 0.0
 
 
@@ -34,11 +34,8 @@ class Dirichlet(BC):
         self.category = "Dirichlet"
         self.rhs = rhs
 
-    def compute(self, u, du=None, dn=None, value=None):
-        return paddle.norm(u - value, p=2)
-
-    def equation(self, us, rhs):
-        return us
+    def formula(self):
+        return sympy.Function(self.name)
 
 
 class Neumann(BC):
@@ -51,8 +48,9 @@ class Neumann(BC):
     def compute(self, u, du=None, dn=None, value=None):
         return paddle.norm(du * dn - value, p=2)
 
-    def equation(self, us):
-        return us.diff(n)
+    def formula(self):
+        n = sympy.Symbol('n')
+        return sympy.Function(self.name).diff(n)
 
 
 class Robin(BC):
@@ -65,8 +63,9 @@ class Robin(BC):
         diff = u + du * dn - value
         return paddle.norm(diff, p=2)
 
-    def equation(self, us):
-        return us + us.diff(n)
+    def formula(self):
+        n = sympy.Symbol('n')
+        return sympy.Function(self.name) + sympy.Function(self.name).diff(n)
 
 
 # if __name__ == "__main__":

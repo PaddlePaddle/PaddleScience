@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#from .pde_base import PDE
+from .pde_base import PDE
 
 import sympy
 import numpy as np
 
 
 #class NavierStokes:
-class NavierStokes:
+class NavierStokes(PDE):
     """
     Two dimentional time-independent Navier-Stokes equation  
 
@@ -45,15 +45,22 @@ class NavierStokes:
     """
 
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
-        # super(NavierStokes, self).__init__(
-        #     dim + 1, time_dependent=time_dependent)
+        super(NavierStokes, self).__init__(
+            dim + 1, time_dependent=time_dependent)
 
         if dim == 2 and time_dependent == False:
+
+            # independent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
+
+            # dependent variable
             u = sympy.Function('u')(x, y)
             v = sympy.Function('v')(x, y)
             p = sympy.Function('p')(x, y)
+
+            # normal direction
+            n = sympy.Symbol('n')
 
             # continuty equation
             continuty = u.diff(x) * v + v.diff(x).diff(y)
@@ -63,6 +70,7 @@ class NavierStokes:
             # variables in order
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
+            self.normal = n
 
             self.independent_variable_str = ['x', 'y']
             self.dependent_variable_str = ['u', 'v', 'p']

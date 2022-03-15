@@ -56,17 +56,16 @@ class PDE:
         # time dependent / independent
         self.time_dependent = time_dependent
 
-        # whether or not need 2nd order derivate
-        self.need_2nd_derivatives = True
+        # Equation definition
+        self.num_equation = num_equation
+        self.equation = list()
+        for i in range(self.num_equation):
+            self.equation.append([])
 
-        # pde definition
-        self.num_pdes = num_pdes
-        self.pdes = []
-        for i in range(self.num_pdes):
-            self.pdes.append([])
-
-        # Geometry and boundary condition
+        # Geometry
         self.geometry = None
+
+        # Boundary condition
         self.bc = dict()
 
     def add_geometry(self, geo):
@@ -79,7 +78,7 @@ class PDE:
             self.bc[name] = list()
 
         for arg in args:
-            self.bc[name].append(arg)
+            self.bc[name].append(arg.formula())
 
     def discretize(self, method):
         pass
