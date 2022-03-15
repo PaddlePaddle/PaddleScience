@@ -108,8 +108,10 @@ class L2(LossBase):
 
         loss = 0.0
         for formula in self.pde.equations:
+            # print(formula)
             rst = cmploss.compute_formula(formula, ins, None)
             loss += paddle.norm(rst, p=2)
+            # print(rst)
 
         return loss
 
