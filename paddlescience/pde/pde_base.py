@@ -56,16 +56,13 @@ class PDE:
         # time dependent / independent
         self.time_dependent = time_dependent
 
-        # Equation definition
-        self.num_equation = num_equation
-        self.equation = list()
-        for i in range(self.num_equation):
-            self.equation.append([])
+        # Equation list
+        self.equations = list()
 
         # Geometry
         self.geometry = None
 
-        # Boundary condition
+        # Boundary condition list
         self.bc = dict()
 
     def add_geometry(self, geo):
@@ -78,6 +75,7 @@ class PDE:
             self.bc[name] = list()
 
         for arg in args:
+            print(arg.formula())
             self.bc[name].append(arg.formula())
 
     def discretize(self, method):

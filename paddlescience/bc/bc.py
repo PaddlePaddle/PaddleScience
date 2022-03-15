@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sympy
+
 
 class BC:
     def __init__(self, name):
@@ -29,7 +31,7 @@ class Free(BC):
 
 
 class Dirichlet(BC):
-    def __init__(self, name, rhs):
+    def __init__(self, name, rhs=None):
         super(Dirichlet, self).__init__(name)
         self.category = "Dirichlet"
         self.rhs = rhs
@@ -39,7 +41,7 @@ class Dirichlet(BC):
 
 
 class Neumann(BC):
-    def __init__(self, name, rhs):
+    def __init__(self, name, rhs=None):
         super(Neumann, self).__init__(name)
         self.category = "Neumann"
         self.rhs = rhs
@@ -50,11 +52,12 @@ class Neumann(BC):
 
     def formula(self):
         n = sympy.Symbol('n')
-        return sympy.Function(self.name).diff(n)
+        u = sympy.Function(self.name)(n)
+        return u.diff(n)
 
 
 class Robin(BC):
-    def __init__(self, name, rhs):
+    def __init__(self, name, rhs=None):
         super(Robin, self).__init__(name)
         self.category = "Robin"
         self.rhs = rhs
@@ -65,7 +68,8 @@ class Robin(BC):
 
     def formula(self):
         n = sympy.Symbol('n')
-        return sympy.Function(self.name) + sympy.Function(self.name).diff(n)
+        u = sympy.Function(self.name)(n)
+        return u + u.diff(n)
 
 
 # if __name__ == "__main__":

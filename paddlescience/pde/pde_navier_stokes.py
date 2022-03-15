@@ -60,7 +60,7 @@ class NavierStokes(PDE):
             p = sympy.Function('p')(x, y)
 
             # normal direction
-            n = sympy.Symbol('n')
+            self.normal = sympy.Symbol('n')
 
             # continuty equation
             continuty = u.diff(x) * v + v.diff(x).diff(y)
@@ -70,10 +70,6 @@ class NavierStokes(PDE):
             # variables in order
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
-            self.normal = n
-
-            self.independent_variable_str = ['x', 'y']
-            self.dependent_variable_str = ['u', 'v', 'p']
 
             # equations
             self.equations = list()
