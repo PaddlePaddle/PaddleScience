@@ -62,6 +62,7 @@ ins = paddle.to_tensor(ins, stop_gradient=False)
 # net.nn_func(ins)
 
 loss.eq_loss(net, ins, 10)
+loss.bc_loss(net, ins, 10)
 
 # print(pde.bc)
 
