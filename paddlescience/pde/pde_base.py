@@ -75,7 +75,7 @@ class PDE:
             self.bc[name] = list()
 
         for arg in args:
-            print(arg.formula())
+            # print(arg.formula())
             self.bc[name].append(arg.formula())
 
     def discretize(self, method):

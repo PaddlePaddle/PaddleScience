@@ -37,24 +37,28 @@ class L2(LossDerivative):
         >>> net = psci.loss.L2(pdes=pdes, geo=geo)
     """
 
-    def __init__(self,
-                 pdes,
-                 geo,
-                 aux_func=None,
-                 eq_weight=None,
-                 bc_weight=None,
-                 synthesis_method="add",
-                 run_in_batch=True):
-        super(L2, self).__init__(pdes, geo)
+    def __init__(self, pde):
+        self.pde = pde
 
-        self.pdes = pdes
-        self.geo = geo
-        self.aux_func = aux_func
-        self.eq_weight = eq_weight
-        self.bc_weight = bc_weight
-        self.synthesis_method = synthesis_method
-        self.d_records = dict()
-        self.run_in_batch = run_in_batch
+    # def __init__(self,
+    #              pdes,
+    #              geo,
+    #              aux_func=None,
+    #              eq_weight=None,
+    #              bc_weight=None,
+    #              synthesis_method="add",
+    #              run_in_batch=True):
+
+    #super(L2, self).__init__(pdes, geo)
+
+    # self.pdes = pdes
+    # self.geo = geo
+    # self.aux_func = aux_func
+    # self.eq_weight = eq_weight
+    # self.bc_weight = bc_weight
+    # self.synthesis_method = synthesis_method
+    # self.d_records = dict()
+    # self.run_in_batch = run_in_batch
 
     # def set_batch_size(self, batch_size):
     #     self.pdes.set_batch_size(batch_size)
@@ -155,25 +159,27 @@ class L2(LossDerivative):
 
     def eq_loss(self, net, ins, bs):
 
-        outs, jacobian, hessian = self.compute_out_der(self.pde, net, ins, bs)
+        cmploss = LossDerivative(self.pde, net)
 
-        for formula in pde.equations:
-            rst = self.compute_formula(formula, pde.independent_variable,
-                                       pde.dependent_variable, ins, outs,
-                                       jacobian, hessian, None)
+        # compute outs, jacobian and hessian
+        cmploss.compute_out_der(ins, bs)
+
+        for formula in self.pde.equations:
+            rst = cmploss.compute_formula(formula, ins, None)
 
         return loss
 
     def bc_loss(self, net, ins, bs):
 
         for name, bc in self.bc:
-            outs, jacobian, hessian = self.compute_out_der(self.pde, net, ins,
-                                                           bs)
+
+            cmploss = LossDerivative(self.pde, net)
+
+            # compute outs, jacobian and hessian
+            cmploss.compute_out_der(ins, bs)
 
             for formula in bc:
-                rst = self.compute_formula(formula, pde.independent_variable,
-                                           pde.dependent_variable, ins, outs,
-                                           jacobian, hessian, normal)
+                rst = cmploss.compute_formula(formula, ins, normal)
 
         return loss
 

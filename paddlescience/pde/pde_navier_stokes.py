@@ -71,6 +71,9 @@ class NavierStokes(PDE):
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
 
+            # order
+            self.order = 2
+
             # equations
             self.equations = list()
             self.equations.append(continuty)

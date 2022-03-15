@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import paddle
+from paddle.autograd import batch_jacobian, batch_hessian
+import sympy
 
 
 class LossBase(object):
@@ -29,14 +31,28 @@ class LossBase(object):
         pass
 
 
-class LossDerivative(LossBase):
-    def compute_out_der(pde, net, ins, bs):
+class LossDerivative:
+    def __init__(self, pde, net):
+        self.pde = pde
+        self.net = net
+        self.order = pde.order
+        self.indvar = pde.independent_variable
+        self.dvar = pde.dependent_variable
+
+        self.outs = None
+        self.jacobian = None
+        self.hessian = None
+
+    def compute_out_der(self, ins, bs):
+
+        pde = self.pde
+        net = self.net
 
         # outputs of net
         outs = net.nn_func(ins)
 
         # jacobian
-        if pde.order >= 1:
+        if self.order >= 1:
             jacobian = batch_jacobian(net.nn_func, ins, create_graph=True)
             jacobian = paddle.reshape(
                 jacobian, shape=[net.num_outs, bs, net.num_ins])
@@ -44,7 +60,7 @@ class LossDerivative(LossBase):
             jacobian = None
 
         # hessian
-        if pde.order >= 2:
+        if self.order >= 2:
             for i in range(net.num_outs):
 
                 def func(ins):
@@ -56,10 +72,11 @@ class LossDerivative(LossBase):
         else:
             hessian = None
 
-        return outs, jacobian, hessian
+        self.outs = outs
+        self.jacobian = jacobian
+        self.hessian = hessian
 
-    def compute_formula(formula, indvar, dvar, ins, outs, jacobian, hessian,
-                        normal):
+    def compute_formula(self, formula, ins, normal):
 
         # number of items seperated by add
         if formula.is_Add:
@@ -69,48 +86,50 @@ class LossDerivative(LossBase):
         # parser each item
         for item in formula.args:
             #print(item)
-            rst = 1.0
-            compute_item(indvar, dvar, item, ins, outs, jacobian, hessian, rst)
+            self.rst = 0.0
+            self.compute_item(item, ins, normal)
 
-    def compute_item(indvar, dvar, item, ins, outs, jacobian, hessian, normal,
-                     rst):
+    def compute_item(self, item, ins, normal):
+
+        rst = self.rst
 
         #print(item)
         if item.is_Mul:
             for it in item.args:
-                rst = compute_item(indvar, dvar, it, ins, outs, jacobian,
-                                   hessian, rst)
+                rst = self.compute_item(it, ins, normal)
         elif item.is_Number:
             print(item, "number")
             rst = item * rst
         elif item.is_Symbol:
             print(item, "symbol")
-            rst = rst * compute_function(indvar, item, ins)
+            rst = rst * self.compute_function(item, ins)
         elif item.is_Function:
             print(item, "function")
-            rst = rst * compute_function(dvar, item, outs)
+            rst = rst * self.compute_function(item)
         elif item.is_Derivative:
             print(item, "der")
-            rst = rst * compute_der(indvar, dvar, item, jacobian, hessian,
-                                    normal)
+            rst = rst * self.compute_der(item, normal)
             pass
         else:
             pass
 
-        return rst
-
-    def compute_symbol(indvar, item, ins):
-        var_idx = indvar.index(item)
+    def compute_symbol(self, item, ins):
+        var_idx = self.indvar.index(item)
         return ins[:, var_idx]
 
-    def compute_function(dvar, item, outs):
-        f_idx = dvar.index(item)
-        return outs[:, f_idx]
+    def compute_function(self, item):
+        f_idx = self.dvar.index(item)
+        return self.outs[:, f_idx]
 
-    def compute_der(indvar, dvar, item, jacobian, hessian, normal, rst):
+    def compute_der(self, item, normal):
+
+        jacobian = self.jacobian
+        hessian = self.hessian
+
+        rst = self.rst
 
         # dependent variable
-        f_idx = dvar.index(item.args[0])
+        f_idx = self.dvar.index(item.args[0])
 
         # derivative order
         order = 0
@@ -124,16 +143,16 @@ class LossDerivative(LossBase):
             if v == sympy.Symbol('n'):
                 rst = rst * normal * jacobian[f_idx, :]
             else:
-                var_idx = indvar.index(v)
+                var_idx = self.indvar.index(v)
                 rst = rst * jacobian[f_idx, var_idx]
         # parser hessian for order 2
         elif order == 2:
             if (len(item.args[1:]) == 1):
-                var_idx = indvar.index(item.args[1][0])
+                var_idx = self.indvar.index(item.args[1][0])
                 rst = rst * jacobian[f_idx, var_idx]
             else:
-                var_idx1 = indvar.index(item.args[1][0])
-                var_idx2 = indvar.index(item.args[2][0])
+                var_idx1 = self.indvar.index(item.args[1][0])
+                var_idx2 = self.indvar.index(item.args[2][0])
                 rst = rst * hessian[f_idx, var_idx1, :, var_idx2]
 
         return rst

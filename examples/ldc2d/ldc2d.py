@@ -14,6 +14,7 @@
 
 import paddlescience as psci
 import numpy as np
+import paddle
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
@@ -33,14 +34,34 @@ bcdow_u = psci.bc.Neumann('u', rhs=0.0)
 
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
 
-# pde.add_geometry(geo)
+pde.add_geometry(geo)
 
 # bounday and bondary condition to pde
 pde.add_bc("top", bctop_u, bctop_v)
 # pde.add_bc("down", bcdow_u)
 
-print(pde.equations[0])
-print(pde.bc)
+# print(pde.equations[0])
+# print(pde.bc)
+
+# Network
+net = psci.network.FCNet(
+    num_ins=2,
+    num_outs=3,
+    num_layers=10,
+    hidden_size=50,
+    dtype="float32",
+    activation='tanh')
+
+# Loss, TO rename
+# bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
+loss = psci.loss.L2(pde=pde)
+
+ins = np.ones((10, 2), dtype='float32')
+ins = paddle.to_tensor(ins, stop_gradient=False)
+
+# net.nn_func(ins)
+
+loss.eq_loss(net, ins, 10)
 
 # print(pde.bc)
 
