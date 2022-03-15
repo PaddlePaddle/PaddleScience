@@ -79,9 +79,20 @@ class Solver(object):
                 paddle.save(self.opt.state_dict(),
                             './checkpoint/opt_params_' + str(epoch_id + 1))
                 if self.algo.loss.geo.time_dependent == False:
-                    np.save(
-                        './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.space_domain))
+                    if self.algo.loss.physic_info is False:
+                        np.save(
+                            './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                            self.algo.net.nn_func(
+                                self.algo.loss.geo.space_domain))
+                    else:
+                        physic_data = paddle.to_tensor(
+                            self.algo.loss.physic_info, dtype="float32")
+                        input_data = paddle.concat(
+                            x=[self.algo.loss.geo.space_domain, physic_data],
+                            axis=-1)
+                        np.save(
+                            './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                            self.algo.net.nn_func(input_data))
                 else:
                     np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                             self.algo.net.nn_func(self.algo.loss.geo.domain))
