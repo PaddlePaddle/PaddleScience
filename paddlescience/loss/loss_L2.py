@@ -14,12 +14,12 @@
 
 import paddle
 import paddle.nn.functional as F
-from paddle.autograd import jacobian, hessian, batch_jacobian, batch_hessian
-from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
-from .loss_base import LossBase, LossDerivative
+# from paddle.autograd import batch_jacobian, batch_hessian
+# from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
+from .loss_base import LossBase, CompFormula
 
 
-class L2(LossDerivative):
+class L2(LossBase):
     """
     L2 loss which is synthesized by three part: the equation loss, the boundary condition loss, and the initial condition loss.
 
@@ -60,44 +60,6 @@ class L2(LossDerivative):
     # self.d_records = dict()
     # self.run_in_batch = run_in_batch
 
-    # def set_batch_size(self, batch_size):
-    #     self.pdes.set_batch_size(batch_size)
-    #     self.geo.set_batch_size(batch_size)
-    #     self.batch_size = batch_size
-    #     self.num_batch = self.geo.get_num_batch()
-
-    # def cal_first_order_rslts(self, net, ins):
-    #     outs = net.nn_func(ins)
-    #     for i in range(net.num_outs):
-    #         self.d_records[first_order_rslts[i]] = outs[i]
-
-    # def cal_first_order_derivatives(self, net, ins):
-    #     d_values = jacobian(net.nn_func, ins, create_graph=True)
-    #     for i in range(net.num_outs):
-    #         for j in range(net.num_ins):
-    #             if self.pdes.time_dependent:
-    #                 self.d_records[first_order_derivatives[i][j]] = d_values[
-    #                     i][j]
-    #             else:
-    #                 self.d_records[first_order_derivatives[i][
-    #                     j + 1]] = d_values[i][j]
-
-    # def cal_second_order_derivatives(self, net, ins):
-    #     for i in range(net.num_outs):
-
-    #         def func(ins):
-    #             return net.nn_func(ins)[i]
-
-    #         d_values = hessian(func, ins, create_graph=True)
-    #         for j in range(net.num_ins):
-    #             for k in range(net.num_ins):
-    #                 if self.pdes.time_dependent:
-    #                     self.d_records[second_order_derivatives[i][j][
-    #                         k]] = d_values[j][k]
-    #                 else:
-    #                     self.d_records[second_order_derivatives[i][j + 1][
-    #                         k + 1]] = d_values[j][k]
-
     # # Record the first order rslt which contains [u,v,w,p]
     # def batch_cal_first_order_rslts(self, net, ins):
     #     outs = net.nn_func(ins)
@@ -137,35 +99,17 @@ class L2(LossDerivative):
     #                     self.d_records[second_order_derivatives[i][j + 1][
     #                         k + 1]] = d_values[j, :, k]
 
-    # def batch_eq_loss(self, net, ins):
-    #     # record the PDE message
-    #     self.batch_cal_first_order_rslts(net, ins)
-    #     self.batch_cal_first_order_derivatives(net, ins)
-    #     if self.pdes.need_2nd_derivatives:
-    #         self.batch_cal_second_order_derivatives(net, ins)
-
-    #     eq_loss_l = [0.0 for _ in range(self.pdes.num_pdes)]
-    #     if self.aux_func is not None:
-    #         eq_loss_l = self.aux_func(ins)
-    #     for idx in range(self.pdes.num_pdes):
-    #         for item in self.pdes.get_pde(idx):
-    #             tmp = item.coefficient
-    #             for de in item.derivative:
-    #                 tmp = tmp * self.d_records[de]
-    #             eq_loss_l[idx] += tmp
-    #     self.d_records.clear()
-    #     eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
-    #     return paddle.norm(eq_loss, p=2)
-
     def eq_loss(self, net, ins, bs):
 
-        cmploss = LossDerivative(self.pde, net)
+        cmploss = CompFormula(self.pde, net)
 
         # compute outs, jacobian and hessian
         cmploss.compute_out_der(ins, bs)
 
+        loss = 0.0
         for formula in self.pde.equations:
             rst = cmploss.compute_formula(formula, ins, None)
+            loss += paddle.norm(rst, p=2)
 
         return loss
 
@@ -173,7 +117,7 @@ class L2(LossDerivative):
 
         for name, bc in self.bc:
 
-            cmploss = LossDerivative(self.pde, net)
+            cmploss = CompFormula(self.pde, net)
 
             # compute outs, jacobian and hessian
             cmploss.compute_out_der(ins, bs)

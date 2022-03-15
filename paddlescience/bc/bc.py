@@ -46,10 +46,6 @@ class Neumann(BC):
         self.category = "Neumann"
         self.rhs = rhs
 
-    # dn: normal direction
-    def compute(self, u, du=None, dn=None, value=None):
-        return paddle.norm(du * dn - value, p=2)
-
     def formula(self):
         n = sympy.Symbol('n')
         u = sympy.Function(self.name)(n)
@@ -61,10 +57,6 @@ class Robin(BC):
         super(Robin, self).__init__(name)
         self.category = "Robin"
         self.rhs = rhs
-
-    def compute(self, u, du=None, dn=None, value=None):
-        diff = u + du * dn - value
-        return paddle.norm(diff, p=2)
 
     def formula(self):
         n = sympy.Symbol('n')

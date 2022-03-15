@@ -31,7 +31,7 @@ class LossBase(object):
         pass
 
 
-class LossDerivative:
+class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
         self.net = net
