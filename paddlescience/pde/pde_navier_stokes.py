@@ -84,7 +84,54 @@ class NavierStokes(PDE):
         if self.time_dependent == False:
             return self
         else:
-            pass
+            return NavierStokesImplicit(self)
+
+
+class NavierStokesImplicit(PDE):
+    def __init__(self, ns):
+        super(NavierStokesImplicit, self).__init__(dim + 1)
+        self.time_dependent = False
+        self.nu = ns.nu
+        self.rho = ns.rho
+        self.bc = ns.bc
+
+        if dim == 2:
+            # independent variable
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+
+            # dependent variable
+            u = sympy.Function('u')(x, y)
+            v = sympy.Function('v')(x, y)
+            p = sympy.Function('p')(x, y)
+
+            # normal direction
+            self.normal = sympy.Symbol('n')
+
+            # dt
+            self.dt = sympy.Symbol('dt')
+
+            # continuty equation
+            continuty = u.diff(x) + v.diff(x).diff(x)
+            continuty_rhs = 0
+
+            # momentum
+            momentum_x_rhs = u / dt
+
+            # variables in order
+            self.independent_variable = [x, y]
+            self.dependent_variable = [u, v, p]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = list()
+            self.equations.append(continuty)
+
+            self.rhs = list()
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
 
 
 if __name__ == "__main__":
