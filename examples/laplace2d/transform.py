@@ -614,7 +614,7 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('matmul_p',
                                  {'X': [tmp_4],
-                                  'Y': [in_names[3]]}, {'Z': [tmp_1]}, {}))
+                                  'Y': [in_names[3]]}, {'Z': [tmp_5]}, {}))
             tmp_6 = name_gen.get_var(
                 new_block,
                 block.var(out_names[0]),

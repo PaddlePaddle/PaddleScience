@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import paddlescience as psci
 import numpy as np
 
@@ -117,17 +118,28 @@ num_epoch = 10
 
 compiled_program = compile(new_program, loss.name)
 
-for i in range(num_epoch):
-    loss_d, eq_loss_d, bc_loss_d = exe.run(
-        train_program,
-        feed={
-            'x': geo.get_space_domain().astype(np.float32),
-            'bc_idx': geo.bc_index,
-            'bc_v': pdes.bc_value
-        },
-        fetch_list=[loss.name, eq_loss.name, bc_loss.name])
-    print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0], ' eq_loss: ',
-          eq_loss_d[0], ' bc_loss: ', bc_loss_d[0])
+if os.getenv('FLAGS_use_cinn') == "1":
+    for i in range(num_epoch):
+        loss_d = exe.run(compiled_program,
+                         feed={
+                             'x': geo.get_space_domain().astype(np.float32),
+                             'bc_idx': geo.bc_index,
+                             'bc_v': pdes.bc_value
+                         },
+                         fetch_list=[loss.name])
+        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0])
+else:
+    for i in range(num_epoch):
+        loss_d, eq_loss_d, bc_loss_d = exe.run(
+            train_program,
+            feed={
+                'x': geo.get_space_domain().astype(np.float32),
+                'bc_idx': geo.bc_index,
+                'bc_v': pdes.bc_value
+            },
+            fetch_list=[loss.name, eq_loss.name, bc_loss.name])
+        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0],
+              ' eq_loss: ', eq_loss_d[0], ' bc_loss: ', bc_loss_d[0])
 
 rslt = exe.run(train_program,
                feed={
