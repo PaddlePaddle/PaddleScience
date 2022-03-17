@@ -199,7 +199,8 @@ class L2(LossBase):
             bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
             bc_diff = bc_diff * paddle.sqrt(bc_weight)
         bc_diff = paddle.reshape(bc_diff, shape=[-1])
-        return paddle.norm(bc_diff, p=2)
+        #return paddle.norm(bc_diff, p=2)
+        return paddle.to_tensor([0], dtype="float32")
 
     def ic_loss(self, u, batch_id):
         if self.geo.time_dependent == True:
