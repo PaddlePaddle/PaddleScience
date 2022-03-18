@@ -1,20 +1,17 @@
-"""
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
-#
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
-import copy
 import logging
 import numpy as np
 import paddle
@@ -31,6 +28,8 @@ class DifferenceAppro(object):
         self.kwargs = None
         self.var = None
         self.debug = False
+        self.time_dependent = False
+
         self.hook()
 
         if self.debug:
@@ -57,31 +56,39 @@ class DifferenceAppro(object):
         """
         res = self.cal_rslt(**self.kwargs)
         res.backward()
-        return self.kwargs["geo"].space_domain.grad
+        return self.kwargs["geo"].get_domain().grad
 
     # 计算一阶导数的差分结果
     def cal_first_derivative(self, **kwargs):
         """
         calculate numerical gradient
         """
-        tmp_ins = copy.deepcopy(kwargs["geo"].space_domain)
-        bc_index = kwargs["geo"].bc_index
-        shape = tmp_ins.shape
+        shape = self.var.shape
         first_numeric_grad = []
-        for i in range(len(tmp_ins.flatten())):
+        for i in range(len(self.var.flatten())):
             # kwargs = self.kwargs
-            tmp1 = tmp_ins.flatten()
-            tmp2 = tmp_ins.flatten()
+            tmp1, tmp2 = self.var.flatten(), self.var.flatten()
             tmp1[i] += (self.gap / 2)
             tmp2[i] -= (self.gap / 2)
-            tmp1 = tmp1.reshape(shape)
-            tmp2 = tmp2.reshape(shape)
-            kwargs["geo"].space_domain = tmp1
+            tmp1, tmp2 = tmp1.reshape(shape), tmp2.reshape(shape)
+            if not self.time_dependent:
+                kwargs["geo"].space_domain = tmp1
+            else:
+                kwargs["geo"].domain = tmp1
             loss1 = paddle.mean(self.cal_rslt(**kwargs)).numpy()
-            kwargs["geo"].bc_index = bc_index
-            kwargs["geo"].space_domain = tmp2
+            self.kwargs["geo"].set_bc_index(self.bc_index)
+            if self.time_dependent:
+                self.kwargs["geo"].set_ic_index(self.ic_index)
+
+            if not self.time_dependent:
+                kwargs["geo"].space_domain = tmp2
+            else:
+                kwargs["geo"].domain = tmp2
             loss2 = paddle.mean(self.cal_rslt(**kwargs)).numpy()
-            kwargs["geo"].bc_index = bc_index
+            self.kwargs["geo"].set_bc_index(self.bc_index)
+            if self.time_dependent:
+                self.kwargs["geo"].set_ic_index(self.ic_index)
+
             grad = (loss1 - loss2) / self.gap
             first_numeric_grad.append(grad)
         return np.array(first_numeric_grad).reshape(shape)
@@ -92,7 +99,9 @@ class DifferenceAppro(object):
         """
         logging.info("**************")
         self.kwargs = kwargs
-        self.var = kwargs["geo"].space_domain
+        self.var = kwargs["geo"].get_domain()
+        self.bc_index = kwargs["geo"].bc_index
+        self.ic_index = kwargs["geo"].ic_index
         if res:
             api_res = self.cal_rslt(**kwargs)
             assert np.allclose(res, api_res), "前向计算错误"
@@ -104,12 +113,11 @@ class DifferenceAppro(object):
         compare backward result
         """
         api_grad = self.cal_backward().numpy()
-        # print(api_grad)
-        for atol in [1e-4, 1e-3, 1e-2, 1e-1]:
+        for atol in [1e-3, 1e-2, 1e-1]:
             while self.gap <= 1e-2:
-                if not isinstance(self.kwargs["geo"].bc_index, np.ndarray):
-                    self.kwargs["geo"].bc_index = self.kwargs["geo"].bc_index[
-                        0].numpy()
+                self.kwargs["geo"].set_bc_index(self.bc_index)
+                if self.time_dependent:
+                    self.kwargs["geo"].set_ic_index(self.ic_index)
                 self.kwargs["geo"].space_domain = self.var
                 numerical_grad = self.cal_first_derivative(**self.kwargs)
                 if np.allclose(api_grad, numerical_grad, atol=atol):
