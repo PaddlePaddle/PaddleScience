@@ -494,70 +494,77 @@ def program_transform(program):
             #                       'Y': [in_names[0]]}, {'Z': [out_names[1]]}, {}))
 
         elif op_desc.type() == 'index_select_grad':
-            index_names = []
-            y_grad_names = []
-            num_index = block.var(in_names[0]).shape[0]
-            for _ in range(num_index):
-                index_names.append(
-                    name_gen.get_var(
-                        new_block, block.var(out_names[0]), shape=[1]))
-            for _ in range(num_index):
-                y_grad_names.append(
-                    name_gen.get_var(
-                        new_block, block.var(out_names[0]), shape=[1, 1]))
+            to_insert.append(
+                _create_op_desc_('index_assign_p', {
+                    'IndexTensor': [in_names[0]],
+                    'X': [in_names[2]],
+                    'Y': [in_names[1]]
+                }, {'Z': [out_names[0]]}, {'indexes': None,
+                                           'axis': 0}))
+            # index_names = []
+            # y_grad_names = []
+            # num_index = block.var(in_names[0]).shape[0]
+            # for _ in range(num_index):
+            #     index_names.append(
+            #         name_gen.get_var(
+            #             new_block, block.var(out_names[0]), shape=[1]))
+            # for _ in range(num_index):
+            #     y_grad_names.append(
+            #         name_gen.get_var(
+            #             new_block, block.var(out_names[0]), shape=[1, 1]))
 
-            to_insert.append(
-                _create_op_desc_('split_p', {'X': [in_names[0]], }, {
-                    'Y': index_names
-                }, {'axis': 0,
-                    'num_or_sections': [num_index]}))
-            to_insert.append(
-                _create_op_desc_('split_p', {'X': [in_names[1]], }, {
-                    'Y': y_grad_names
-                }, {'axis': 0,
-                    'num_or_sections': [num_index]}))
-            tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
-            to_insert.append(
-                _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': block.var(in_names[2]).shape,
-                    'value': 0.0
-                }))
-            assert num_index > 2
-            grad_tmp = name_gen.get_var(new_block, block.var(in_names[2]))
-            to_insert.append(
-                _create_op_desc_('index_assign_p', {
-                    'IndexTensor': [index_names[0]],
-                    'X': [tmp_1],
-                    'Y': [y_grad_names[0]]
-                }, {'Z': [grad_tmp]}, {'indexes': None,
-                                       'axis': 0}))
-            for idx in range(num_index - 2):
-                tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
-                to_insert.append(
-                    _create_op_desc_('index_assign_p', {
-                        'IndexTensor': [index_names[idx + 1]],
-                        'X': [tmp_1],
-                        'Y': [y_grad_names[idx + 1]]
-                    }, {'Z': [tmp_2]}, {'indexes': None,
-                                        'axis': 0}))
-                tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
-                to_insert.append(
-                    _create_op_desc_('add_p', {'X': [grad_tmp],
-                                               'Y': [tmp_2]}, {'Z': [tmp_3]},
-                                     {}))
-                grad_tmp = tmp_3
-            tmp_4 = name_gen.get_var(new_block, block.var(in_names[2]))
-            to_insert.append(
-                _create_op_desc_('index_assign_p', {
-                    'IndexTensor': [index_names[-1]],
-                    'X': [tmp_1],
-                    'Y': [y_grad_names[-1]]
-                }, {'Z': [tmp_4]}, {'indexes': None,
-                                    'axis': 0}))
-            to_insert.append(
-                _create_op_desc_('add_p', {'X': [grad_tmp],
-                                           'Y': [tmp_4]},
-                                 {'Z': [out_names[0]]}, {}))
+            # to_insert.append(
+            #     _create_op_desc_('split_p', {'X': [in_names[0]], }, {
+            #         'Y': index_names
+            #     }, {'axis': 0,
+            #         'num_or_sections': [num_index]}))
+            # to_insert.append(
+            #     _create_op_desc_('split_p', {'X': [in_names[1]], }, {
+            #         'Y': y_grad_names
+            #     }, {'axis': 0,
+            #         'num_or_sections': [num_index]}))
+            # tmp_1 = name_gen.get_var(new_block, block.var(in_names[2]))
+            # to_insert.append(
+            #     _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
+            #         'shape': block.var(in_names[2]).shape,
+            #         'value': 0.0
+            #     }))
+            # assert num_index > 2
+            # grad_tmp = name_gen.get_var(new_block, block.var(in_names[2]))
+            # to_insert.append(
+            #     _create_op_desc_('index_assign_p', {
+            #         'IndexTensor': [index_names[0]],
+            #         'X': [tmp_1],
+            #         'Y': [y_grad_names[0]]
+            #     }, {'Z': [grad_tmp]}, {'indexes': None,
+            #                            'axis': 0}))
+            # for idx in range(num_index - 2):
+            #     tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
+            #     to_insert.append(
+            #         _create_op_desc_('index_assign_p', {
+            #             'IndexTensor': [index_names[idx + 1]],
+            #             'X': [tmp_1],
+            #             'Y': [y_grad_names[idx + 1]]
+            #         }, {'Z': [tmp_2]}, {'indexes': None,
+            #                             'axis': 0}))
+            #     tmp_3 = name_gen.get_var(new_block, block.var(in_names[2]))
+            #     to_insert.append(
+            #         _create_op_desc_('add_p', {'X': [grad_tmp],
+            #                                    'Y': [tmp_2]}, {'Z': [tmp_3]},
+            #                          {}))
+            #     grad_tmp = tmp_3
+            # tmp_4 = name_gen.get_var(new_block, block.var(in_names[2]))
+            # to_insert.append(
+            #     _create_op_desc_('index_assign_p', {
+            #         'IndexTensor': [index_names[-1]],
+            #         'X': [tmp_1],
+            #         'Y': [y_grad_names[-1]]
+            #     }, {'Z': [tmp_4]}, {'indexes': None,
+            #                         'axis': 0}))
+            # to_insert.append(
+            #     _create_op_desc_('add_p', {'X': [grad_tmp],
+            #                                'Y': [tmp_4]},
+            #                      {'Z': [out_names[0]]}, {}))
 
         elif op_desc.type() == 'scale':
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
