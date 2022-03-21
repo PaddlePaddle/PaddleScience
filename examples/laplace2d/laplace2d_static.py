@@ -123,7 +123,7 @@ if os.getenv('FLAGS_use_cinn') == "1":
         loss_d = exe.run(compiled_program,
                          feed={
                              'x': geo.get_space_domain().astype(np.float32),
-                             'bc_idx': geo.bc_index,
+                             'bc_idx': geo.bc_index.astype(np.float32),
                              'bc_v': pdes.bc_value
                          },
                          fetch_list=[loss.name])
