@@ -23,30 +23,34 @@ geo.add_boundary(
     name="top", condition=lambda x, y: y == 1.0, normal=(0.0, 1.0))
 geo.add_boundary(
     name="down", condition=lambda x, y: y == 0.0, normal=(0.0, -1.0))
+geo.add_boundary(
+    name="left", condition=lambda x, y: x == 0.0, normal=(-1.0, 0.0))
+geo.add_boundary(
+    name="right", condition=lambda x, y: x == 1.0, normal=(1.0, 0.0))
 
-# define N-S
+# N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
 # set bounday condition
-bctop_u = psci.bc.Dirichlet('u', rhs=1.0)
-bctop_v = psci.bc.Dirichlet('v', rhs=0.0)
-bcdown_u = psci.bc.Dirichlet('u', rhs=0.0)
-bcdown_v = psci.bc.Dirichlet('v', rhs=0.0)
-bcleft_u = psci.bc.Dirichlet('u', rhs=0.0)
-bcleft_v = psci.bc.Dirichlet('v', rhs=0.0)
-bcright_u = psci.bc.Dirichlet('u', rhs=0.0)
-bcright_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)
+bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 # bcdow_u = psci.bc.Neumann('u', rhs=0.0)
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
 
 pde.add_geometry(geo)
 
-# bounday and bondary condition to pde
-pde.add_bc("top", bctop_u, bctop_v)
-pde.add_bc("down", bcdown_u, bcdown_v)
-pde.add_bc("left", bcleft_u, bcleft_v)
-pde.add_bc("right", bcright_u, bcright_v)
+# add bounday and bondary condition
+pde.add_bc("top", bc_top_u, bc_top_v)
+pde.add_bc("down", bc_down_u, bc_down_v)
+pde.add_bc("left", bc_left_u, bc_left_v)
+pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Network
 net = psci.network.FCNet(
@@ -59,15 +63,10 @@ net = psci.network.FCNet(
 
 # Loss, TO rename
 # bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
-loss = psci.loss.L2(pde=pde)
+loss = psci.loss.L2()
 
-ins = np.ones((10, 2), dtype='float32')
-ins = paddle.to_tensor(ins, stop_gradient=False)
-
-# net.nn_func(ins)
-
-# loss.eq_loss(net, ins, 10)
-# loss.bc_loss(net, ins, 10)
+# ins = np.ones((10, 2), dtype='float32')
+# ins = paddle.to_tensor(ins, stop_gradient=False)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -76,7 +75,7 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
-solver = psci.solver.Solver(algo=algo, opt=opt)
+solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=1)
 
 # print(pde.bc)

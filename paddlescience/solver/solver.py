@@ -57,19 +57,19 @@ class Solver(object):
 
         for epoch_id in range(num_epoch):
 
-            for batch_id in range(num_batch):
+            #for batch_id in range(num_batch):
 
-                loss, losses = self.algo.compute()
-                loss.backward()
-                self.opt.step()
-                self.opt.clear_grad()
+            loss, losses = self.algo.compute()
+            loss.backward()
+            self.opt.step()
+            self.opt.clear_grad()
 
-                print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
-                      "batch/num_batch: ", batch_id + 1, "/", num_batch,
-                      "loss: ",
-                      loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                      "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
-                      losses[2].numpy()[0])
+            # print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
+            #       "batch/num_batch: ", batch_id + 1, "/", num_batch,
+            #       "loss: ",
+            #       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
+            #       "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
+            #       losses[2].numpy()[0])
 
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),

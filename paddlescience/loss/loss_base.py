@@ -32,24 +32,16 @@ class LossBase(object):
 
 
 class CompFormula:
-    def __init__(self, pde, net):
+    def __init__(self, pde):
         self.pde = pde
-        self.net = net
         self.order = pde.order
         self.indvar = pde.independent_variable
         self.dvar = pde.dependent_variable
 
-        self.outs = None
         self.jacobian = None
         self.hessian = None
 
-    def compute_out_der(self, ins, bs):
-
-        pde = self.pde
-        net = self.net
-
-        # outputs of net
-        outs = net.nn_func(ins)
+    def compute_der(self, ins, outs, bs):
 
         # jacobian
         if self.order >= 1:
