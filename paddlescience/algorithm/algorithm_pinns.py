@@ -34,5 +34,7 @@ class PINNs(AlgorithmBase):
         self.net = net
         self.loss = loss
 
-    def batch_run(self, batch_id):
-        return self.loss.batch_run(self.net, batch_id)
+    def compute(self):
+        ins = self.ins()
+        outs = self.net(ins)
+        loss = self.loss.total_loss(ins, outs)

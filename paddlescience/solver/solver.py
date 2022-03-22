@@ -55,25 +55,22 @@ class Solver(object):
             >>> rslt = solution(geo)
         """
 
-        batch_size = self.algo.loss.geo.get_domain_size(
-        ) if batch_size is None else batch_size
-        self.algo.loss.set_batch_size(batch_size)
-        self.algo.loss.pdes.to_tensor()
-        self.algo.loss.geo.to_tensor()
-        num_batch = self.algo.loss.num_batch
-
         for epoch_id in range(num_epoch):
+
             for batch_id in range(num_batch):
-                loss, losses = self.algo.batch_run(batch_id)
+
+                loss, losses = self.algo.compute()
                 loss.backward()
                 self.opt.step()
                 self.opt.clear_grad()
+
                 print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
                       "batch/num_batch: ", batch_id + 1, "/", num_batch,
                       "loss: ",
                       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
                       "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
                       losses[2].numpy()[0])
+
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
                             './checkpoint/net_params_' + str(epoch_id + 1))

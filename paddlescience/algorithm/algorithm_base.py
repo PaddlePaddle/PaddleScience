@@ -18,3 +18,6 @@ import paddle
 class AlgorithmBase(object):
     def __init__(self):
         pass
+
+    def gen_ins():
+        pass
