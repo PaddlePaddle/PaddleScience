@@ -36,7 +36,7 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-    def solve(self, num_epoch=1000, batch_size=None, checkpoint_freq=1000):
+    def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
         """
         Train the network with respect to num_epoch.
  
@@ -54,6 +54,7 @@ class Solver(object):
             >>> solution = solver.solve(num_epoch=10000)
             >>> rslt = solution(geo)
         """
+
         batch_size = self.algo.loss.geo.get_domain_size(
         ) if batch_size is None else batch_size
         self.algo.loss.set_batch_size(batch_size)

@@ -24,3 +24,13 @@ class NetworkBase(paddle.nn.Layer):
 
     def nn_func(self):
         pass
+
+
+class GenNetworkIns:
+    def __init__(self):
+        self.time = False
+        self.space = False
+        self.un = False
+
+    def ins():
+        pass

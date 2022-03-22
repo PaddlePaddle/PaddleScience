@@ -90,6 +90,7 @@ class NavierStokes(PDE):
 class NavierStokesImplicit(PDE):
     def __init__(self, ns):
         super(NavierStokesImplicit, self).__init__(dim + 1)
+
         self.time_dependent = False
         self.nu = ns.nu
         self.rho = ns.rho

@@ -28,20 +28,25 @@ geo.add_boundary(
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
 # set bounday condition
-bctop_u = psci.bc.Dirichlet('u', rhs=0.0)
-bctop_v = psci.bc.Neumann('v', rhs=0.0)
-bcdow_u = psci.bc.Neumann('u', rhs=0.0)
+bctop_u = psci.bc.Dirichlet('u', rhs=1.0)
+bctop_v = psci.bc.Dirichlet('v', rhs=0.0)
+bcdown_u = psci.bc.Dirichlet('u', rhs=0.0)
+bcdown_v = psci.bc.Dirichlet('v', rhs=0.0)
+bcleft_u = psci.bc.Dirichlet('u', rhs=0.0)
+bcleft_v = psci.bc.Dirichlet('v', rhs=0.0)
+bcright_u = psci.bc.Dirichlet('u', rhs=0.0)
+bcright_v = psci.bc.Dirichlet('v', rhs=0.0)
 
+# bcdow_u = psci.bc.Neumann('u', rhs=0.0)
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
 
 pde.add_geometry(geo)
 
 # bounday and bondary condition to pde
 pde.add_bc("top", bctop_u, bctop_v)
-# pde.add_bc("down", bcdow_u)
-
-# print(pde.equations[0])
-# print(pde.bc)
+pde.add_bc("down", bcdown_u, bcdown_v)
+pde.add_bc("left", bcleft_u, bcleft_v)
+pde.add_bc("right", bcright_u, bcright_v)
 
 # Network
 net = psci.network.FCNet(
@@ -61,26 +66,23 @@ ins = paddle.to_tensor(ins, stop_gradient=False)
 
 # net.nn_func(ins)
 
-loss.eq_loss(net, ins, 10)
+# loss.eq_loss(net, ins, 10)
 # loss.bc_loss(net, ins, 10)
+
+# Algorithm
+algo = psci.algorithm.PINNs(net=net, loss=loss)
+
+# Optimizer
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+
+# Solver
+solver = psci.solver.Solver(algo=algo, opt=opt)
+solution = solver.solve(num_epoch=1)
 
 # print(pde.bc)
 
 # Discretization
 # pde_disc = psci.discretize(pde, space_npoints=(11, 11))
-
-# # Generate BC value
-# def GenBC(xy, bc_index):
-#     bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
-#     for i in range(len(bc_index)):
-#         id = bc_index[i]
-#         if abs(xy[id][1] - 0.05) < 1e-4:
-#             bc_value[i][0] = 1.0
-#             bc_value[i][1] = 0.0
-#         else:
-#             bc_value[i][0] = 0.0
-#             bc_value[i][1] = 0.0
-#     return bc_value
 
 # # Generate BC weight
 # def GenBCWeight(xy, bc_index):
@@ -95,49 +97,12 @@ loss.eq_loss(net, ins, 10)
 #             bc_weight[i][1] = 1.0
 #     return bc_weight
 
-# # Geometry
-# geo = psci.geometry.Rectangular(
-#     space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
-
-# # PDE Laplace
-# pdes = psci.pde.NavierStokes(nu=0.01, rho=1.0)
-
-# bcd = psci.bc.Dirichlet()
-# pdes.set_bc(bcd)
-
 # # Discretization
 # pdes, geo = psci.discretize(pdes, geo, space_nsteps=(101, 101))
 
 # # bc value
 # bc_value = GenBC(geo.get_space_domain(), geo.get_bc_index())
 # pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
-
-# # Network
-# net = psci.network.FCNet(
-#     num_ins=2,
-#     num_outs=3,
-#     num_layers=10,
-#     hidden_size=50,
-#     dtype="float32",
-#     activation='tanh')
-
-# # Loss, TO rename
-# bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
-# loss = psci.loss.L2(pdes=pdes,
-#                     geo=geo,
-#                     eq_weight=0.01,
-#                     bc_weight=bc_weight,
-#                     synthesis_method='norm')
-
-# # Algorithm
-# algo = psci.algorithm.PINNs(net=net, loss=loss)
-
-# # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-
-# # Solver
-# solver = psci.solver.Solver(algo=algo, opt=opt)
-# solution = solver.solve(num_epoch=30000)
 
 # # Use solution
 # rslt = solution(geo)

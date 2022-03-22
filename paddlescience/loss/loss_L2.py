@@ -70,6 +70,7 @@ class L2(LossBase):
         return loss
 
     def ic_loss(self, u, batch_id):
+
         if self.geo.time_dependent == True:
             ic_u = paddle.index_select(u, self.geo.ic_index[batch_id])
             ic_value = self.pdes.ic_value
@@ -82,27 +83,39 @@ class L2(LossBase):
         else:
             return paddle.to_tensor([0], dtype="float32")
 
-    def batch_run(self, net, batch_id):
-        b_datas = self.geo.get_domain()
-        u = net.nn_func(b_datas)
-        eq_loss = 0
-        if self.run_in_batch:
-            eq_loss = self.batch_eq_loss(net, b_datas)
-        else:
-            eq_loss_l = []
-            for data in b_datas:
-                eq_loss_l += self.eq_loss(net, data)
-            eq_loss = paddle.stack(eq_loss_l, axis=0)
-            eq_loss = paddle.norm(eq_loss, p=2)
-        eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
-        bc_loss = self.bc_loss(u, batch_id)
-        ic_loss = self.ic_loss(u, batch_id)
-        if self.synthesis_method == 'add':
-            loss = eq_loss + bc_loss + ic_loss
-            return loss, [eq_loss, bc_loss, ic_loss]
-        elif self.synthesis_method == 'norm':
-            losses = [eq_loss, bc_loss, ic_loss]
-            loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
-            return loss, losses
-        else:
-            assert 0, "Unsupported synthesis_method"
+    def total_loss(self, net, ins, bs):
+
+        insin = ins["int"]
+        insbc = ins["bc"]
+
+        lossbc = self.bc_loss(net, insbc, bs)
+        losseq = self.eq_loss(net, insin, bs)
+
+        losstotal = lossbc + losseq
+
+        return losstotal
+
+        # b_datas = self.geo.get_domain()
+        # u = net.nn_func(b_datas)
+        # eq_loss = 0
+        # if self.run_in_batch:
+        #     eq_loss = self.batch_eq_loss(net, b_datas)
+        # else:
+        #     eq_loss_l = []
+        #     for data in b_datas:
+        #         eq_loss_l += self.eq_loss(net, data)
+        #     eq_loss = paddle.stack(eq_loss_l, axis=0)
+        #     eq_loss = paddle.norm(eq_loss, p=2)
+
+        # eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
+        # bc_loss = self.bc_loss(u, batch_id)
+        # ic_loss = self.ic_loss(u, batch_id)
+        # if self.synthesis_method == 'add':
+        #     loss = eq_loss + bc_loss + ic_loss
+        #     return loss, [eq_loss, bc_loss, ic_loss]
+        # elif self.synthesis_method == 'norm':
+        #     losses = [eq_loss, bc_loss, ic_loss]
+        #     loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
+        #     return loss, losses
+        # else:
+        #     assert 0, "Unsupported synthesis_method"
