@@ -52,6 +52,9 @@ pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
+# Discretization
+pde = psci.discretize(pde, space_nsteps=(11, 11))
+
 # Network
 net = psci.network.FCNet(
     num_ins=2,
