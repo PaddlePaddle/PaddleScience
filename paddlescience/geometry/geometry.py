@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR boundaryS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 # Geometry
 class Geometry:
     def __init__(self):
-        self.condition = dict()
-        self.normal = dict()
+        self.condition = dict()  # condition (lambda) defining boundary
+        self.normal = dict()  # boundary normal direction
 
     def add_boundary(self, name, condition, normal):
 

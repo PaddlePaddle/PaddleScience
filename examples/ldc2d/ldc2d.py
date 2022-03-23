@@ -28,6 +28,10 @@ geo.add_boundary(
 geo.add_boundary(
     name="right", condition=lambda x, y: x == 1.0, normal=(1.0, 0.0))
 
+#geo.discretize(10)
+
+#exit()
+
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 

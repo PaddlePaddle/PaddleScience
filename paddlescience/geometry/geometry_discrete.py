@@ -23,9 +23,9 @@ class GeometryDiscrete:
 
     def __init__(self):
 
-        domain = None
-        boundary = dict()
-        normal = dict()
+        self.domain = None
+        self.boundary = dict()
+        self.normal = dict()
 
 # # time discretization
 # self.time_dependent = False

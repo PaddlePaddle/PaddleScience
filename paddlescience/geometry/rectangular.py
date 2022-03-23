@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR boundaryS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -38,7 +38,24 @@ class Rectangular(Geometry):
 
     def discretize(self, space_npoints):
 
+        # discrete geometry
         geo_disc = GeometryDiscrete()
+
+        domain = np.zeros((3, 2), dtype='float32')
+
+        # internal points (domain)
+        geo_disc.domain = domain
+
+        # boundary points
+        for name in self.condition.keys():
+            condition = self.condition[name]
+            normal = self.normal[name]
+
+            boundary_disc = np.zeros((2, 2), dtype='float32')
+            normal_disc = None
+
+            geo_disc.boundary[name] = boundary_disc
+            geo_disc.normal[name] = normal_disc
 
         return geo_disc
 
