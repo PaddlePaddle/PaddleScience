@@ -48,6 +48,7 @@ class Rectangular(Geometry):
 
         # boundary points
         for name in self.condition.keys():
+
             condition = self.condition[name]
             normal = self.normal[name]
 

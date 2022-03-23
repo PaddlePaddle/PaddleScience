@@ -24,7 +24,7 @@ class Geometry:
         self.condition = dict()  # condition (lambda) defining boundary
         self.normal = dict()  # boundary normal direction
 
-    def add_boundary(self, name, condition, normal):
+    def add_boundary(self, name, condition, normal=None):
 
         self.condition[name] = condition
         self.normal[name] = normal

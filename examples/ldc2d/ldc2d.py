@@ -38,10 +38,13 @@ pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 # set bounday condition
 bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
+
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
+
 bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
+
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
