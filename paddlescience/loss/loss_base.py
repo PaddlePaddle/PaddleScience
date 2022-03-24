@@ -107,7 +107,7 @@ class CompFormula:
             rst = rst * self.compute_function(item)
         elif item.is_Derivative:
             print(item, "der")
-            rst = rst * self.compute_der(item, normal)
+            rst = rst * self.compute_derivative(item, normal)
             pass
         else:
             pass
@@ -123,7 +123,7 @@ class CompFormula:
         f_idx = self.dvar.index(item)
         return self.outs[:, f_idx]
 
-    def compute_der(self, item, normal):
+    def compute_derivative(self, item, normal):
 
         jacobian = self.jacobian
         hessian = self.hessian

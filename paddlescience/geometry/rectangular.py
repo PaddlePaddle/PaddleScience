@@ -44,7 +44,8 @@ class Rectangular(Geometry):
         # discrete geometry
         geo_disc = GeometryDiscrete()
 
-        interior = np.zeros((3, 2), dtype='float32')
+        # TODO
+        interior = np.ones((4, 2), dtype='float32')
 
         # internal points (interior)
         geo_disc.interior = interior
@@ -55,6 +56,7 @@ class Rectangular(Geometry):
             condition = self.condition[name]
             normal = self.normal[name]
 
+            # TODO
             boundary_disc = np.zeros((2, 2), dtype='float32')
             normal_disc = None
 

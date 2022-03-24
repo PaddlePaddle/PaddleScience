@@ -85,13 +85,13 @@ class L2(LossBase):
 
     def total_loss(self, ins, outs, pde, bs=None):
 
-        ins_in = ins["internal"]
-        ins_bc = ins["bc"]
+        # ins_in = ins["interior"]
+        # ins_bc = ins["boundary"]
 
-        lossbc = self.bc_loss(pde, insbc, outsbc, bs)
-        losseq = self.eq_loss(pde, insin, outsin, bs)
+        # lossbc = self.bc_loss(pde, insbc, outsbc, bs)
+        # losseq = self.eq_loss(pde, insin, outsin, bs)
 
-        losstotal = lossbc + losseq
+        # losstotal = lossbc + losseq
 
         return losstotal
 
