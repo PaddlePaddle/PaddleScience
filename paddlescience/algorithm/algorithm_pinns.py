@@ -47,6 +47,8 @@ class PINNs(AlgorithmBase):
 
     def compute(self, ins, pde):
 
-        # interior loss
-        outs = self.net.nn_func(ins["interior"])
-        loss = self.loss.eq_loss(pde, ins["interior"], outs, bs=None)
+        # interior out and loss
+        outs, loss = self.loss.eq_loss(
+            pde, self.net, ins["interior"], bs=4)  # TODO bs
+
+        return loss  # TODO: return more

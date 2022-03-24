@@ -40,26 +40,26 @@ class L2(LossBase):
     def __init__(self):
         pass
 
-    def eq_loss(self, pde, ins, outs, bs):
+    def eq_loss(self, pde, net, ins, bs):
 
-        cmploss = CompFormula(pde)
+        cmploss = CompFormula(pde, net)
 
-        # compute outs, jacobian and hessian
-        cmploss.compute_der(ins, outs, bs)
+        # compute jacobian and hessian
+        cmploss.compute_der(ins, bs)
 
         loss = 0.0
         for formula in pde.equations:
             rst = cmploss.compute_formula(formula, ins, None)
             loss += paddle.norm(rst, p=2)
 
-        return loss
+        return cmploss.outs, loss
 
-    def bc_loss(self, pde, ins, outs, bs):
+    def bc_loss(self, pde, net, ins, bs):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian and hessian
-        cmploss.compute_der(ins, outs, bs)
+        cmploss.compute_der(ins, bs)
 
         loss = 0.0
         for name, bc in pde.bc.items():
@@ -67,7 +67,7 @@ class L2(LossBase):
                 rst = cmploss.compute_formula(formula, ins, normal)
                 loss += paddle.norm(rst, p=2)
 
-        return loss
+        return cmploss.outs, loss
 
     def ic_loss(self, u, batch_id):
         pass

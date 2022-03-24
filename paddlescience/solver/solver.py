@@ -63,7 +63,7 @@ class Solver(object):
 
             #for batch_id in range(num_batch):
 
-            loss, losses = self.algo.compute(ins, self.pde)
+            loss = self.algo.compute(ins, self.pde)
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()
