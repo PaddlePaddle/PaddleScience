@@ -33,13 +33,12 @@ class PINNs(AlgorithmBase):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
-        self.ins = self.create_ins(pde)  # dict
+        # self.ins = self.create_ins(pde)  # dict
 
     def create_ins(self, pde):
         ins = dict()
-
         return ins
 
-    def compute(self):
-        outs = self.net(self.ins)
+    def compute(self, ins):
+        outs = self.net(ins)
         loss = self.loss.total_loss(ins, outs, pde)

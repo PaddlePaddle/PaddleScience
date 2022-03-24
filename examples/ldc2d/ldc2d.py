@@ -28,9 +28,9 @@ geo.add_boundary(
 geo.add_boundary(
     name="right", condition=lambda x, y: x == 1.0, normal=(1.0, 0.0))
 
-#geo.discretize(10)
-
-#exit()
+# geo_disc = geo.discretize(10)
+# print(geo_disc)
+# exit()
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
@@ -60,7 +60,7 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Discretization
-pde = psci.discretize(pde, space_nsteps=(11, 11))
+pde = psci.discretize(pde, space_npoints=11)
 
 # Network
 net = psci.network.FCNet(

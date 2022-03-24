@@ -30,9 +30,10 @@ class Solver(object):
         >>> solver = psci.solver.Solver(algo=algo, opt=opt)
     """
 
-    def __init__(self, algo, opt):
+    def __init__(self, pde, algo, opt):
         super(Solver, self).__init__()
 
+        self.pde = pde
         self.algo = algo
         self.opt = opt
 
@@ -55,11 +56,13 @@ class Solver(object):
             >>> rslt = solution(geo)
         """
 
+        ins = self.algo.create_ins(self.pde)
+
         for epoch_id in range(num_epoch):
 
             #for batch_id in range(num_batch):
 
-            loss, losses = self.algo.compute()
+            loss, losses = self.algo.compute(ins)
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()
