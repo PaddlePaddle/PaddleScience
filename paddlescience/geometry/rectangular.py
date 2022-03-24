@@ -36,15 +36,18 @@ class Rectangular(Geometry):
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
 
-    def discretize(self, space_npoints):
+    def discretize(self,
+                   method="sampling",
+                   interior_npoints=None,
+                   boundary_npoints=None):
 
         # discrete geometry
         geo_disc = GeometryDiscrete()
 
-        domain = np.zeros((3, 2), dtype='float32')
+        interior = np.zeros((3, 2), dtype='float32')
 
-        # internal points (domain)
-        geo_disc.domain = domain
+        # internal points (interior)
+        geo_disc.interior = interior
 
         # boundary points
         for name in self.condition.keys():

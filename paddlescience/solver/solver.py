@@ -57,12 +57,13 @@ class Solver(object):
         """
 
         ins = self.algo.create_ins(self.pde)
+        # print(ins)
 
         for epoch_id in range(num_epoch):
 
             #for batch_id in range(num_batch):
 
-            loss, losses = self.algo.compute(ins)
+            loss, losses = self.algo.compute(ins, self.pde)
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()

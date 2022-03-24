@@ -23,7 +23,7 @@ class GeometryDiscrete:
 
     def __init__(self):
 
-        self.domain = None
+        self.interior = None
         self.boundary = dict()
         self.normal = dict()
 

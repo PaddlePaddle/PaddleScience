@@ -37,8 +37,16 @@ class PINNs(AlgorithmBase):
 
     def create_ins(self, pde):
         ins = dict()
+
+        import numpy as np
+        ins["interior"] = paddle.to_tensor(
+            np.ones(
+                (3, 2), dtype='float32'), stop_gradient=False)
+
         return ins
 
-    def compute(self, ins):
-        outs = self.net(ins)
-        loss = self.loss.total_loss(ins, outs, pde)
+    def compute(self, ins, pde):
+
+        # interior loss
+        outs_i = self.net.nn_func(ins["interior"])
+        loss_i = self.loss.total_loss(ins["interior"], outs_i, pde)

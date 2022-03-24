@@ -75,9 +75,6 @@ net = psci.network.FCNet(
 # bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
 loss = psci.loss.L2()
 
-# ins = np.ones((10, 2), dtype='float32')
-# ins = paddle.to_tensor(ins, stop_gradient=False)
-
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 

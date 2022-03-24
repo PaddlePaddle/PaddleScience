@@ -83,7 +83,7 @@ class L2(LossBase):
         # else:
         #     return paddle.to_tensor([0], dtype="float32")
 
-    def total_loss(self, ins, outs, pde, bs):
+    def total_loss(self, ins, outs, pde, bs=None):
 
         ins_in = ins["internal"]
         ins_bc = ins["bc"]
