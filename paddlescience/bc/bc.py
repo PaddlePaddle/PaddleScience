@@ -31,17 +31,18 @@ class Free(BC):
 
 
 class Dirichlet(BC):
-    def __init__(self, name, rhs=None):
+    def __init__(self, name, rhs=0.0):
         super(Dirichlet, self).__init__(name)
         self.category = "Dirichlet"
+        self.formula = None
         self.rhs = rhs
 
-    def formula(self, indvar):
-        return sympy.Function(self.name)(*indvar)
+    def to_formula(self, indvar):
+        self.formula = sympy.Function(self.name)(*indvar)
 
 
 class Neumann(BC):
-    def __init__(self, name, rhs=None):
+    def __init__(self, name, rhs=0.0):
         super(Neumann, self).__init__(name)
         self.category = "Neumann"
         self.rhs = rhs
@@ -53,7 +54,7 @@ class Neumann(BC):
 
 
 class Robin(BC):
-    def __init__(self, name, rhs=None):
+    def __init__(self, name, rhs=0.0):
         super(Robin, self).__init__(name)
         self.category = "Robin"
         self.rhs = rhs

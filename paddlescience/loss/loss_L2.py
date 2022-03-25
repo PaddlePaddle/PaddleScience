@@ -62,11 +62,12 @@ class L2(LossBase):
         cmploss.compute_outs_der(ins, bs)
 
         loss = 0.0
-        for name, bc in pde.bc.items():
-            for formula in bc:
-                rst = cmploss.compute_formula(formula, ins,
+        for name, bclist in pde.bc.items():
+            for b in bclist:
+                lhs = cmploss.compute_formula(b.formula, ins,
                                               None)  # TODO: hard code
-                loss += paddle.norm(rst, p=2)
+                rhs = b.rhs  # TODO: to support lambda
+                loss += paddle.norm(lhs - rhs, p=2)
 
         return loss, cmploss.outs
 
