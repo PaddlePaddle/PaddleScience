@@ -43,12 +43,28 @@ class PINNs(AlgorithmBase):
         ins["interior"] = paddle.to_tensor(
             points, dtype='float32', stop_gradient=False)
 
+        ins_b = dict()
+        for name, points in pde.geometry.boundary.items():
+            ins_b[name] = paddle.to_tensor(
+                points, dtype='float32', stop_gradient=False)
+        ins["boundary"] = ins_b
+
         return ins
 
     def compute(self, ins, pde):
 
         # interior out and loss
-        loss, outs = self.loss.eq_loss(
-            pde, self.net, ins["interior"], bs=4)  # TODO bs
+        # input = ins["interior"]
+        # loss_i, outs = self.loss.eq_loss(
+        #     pde, self.net, input, bs=4)  # TODO bs
+        # loss = loss_i
+
+        loss = 0.0
+
+        # boundary out ond loss
+        for input in ins["boundary"].values():
+            loss_b, outs = self.loss.bc_loss(
+                pde, self.net, input, bs=2)  # TODO bs
+            loss += loss_b
 
         return loss  # TODO: return more

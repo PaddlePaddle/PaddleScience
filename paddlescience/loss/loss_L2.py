@@ -64,7 +64,8 @@ class L2(LossBase):
         loss = 0.0
         for name, bc in pde.bc.items():
             for formula in bc:
-                rst = cmploss.compute_formula(formula, ins, normal)
+                rst = cmploss.compute_formula(formula, ins,
+                                              None)  # TODO: hard code
                 loss += paddle.norm(rst, p=2)
 
         return loss, cmploss.outs

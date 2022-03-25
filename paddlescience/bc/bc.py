@@ -26,7 +26,7 @@ class Free(BC):
         super(Free, self).__init__(anme)
         self.category = "Free"
 
-    def formula(self):
+    def formula(self, indvar):
         return 0.0
 
 
@@ -36,8 +36,8 @@ class Dirichlet(BC):
         self.category = "Dirichlet"
         self.rhs = rhs
 
-    def formula(self):
-        return sympy.Function(self.name)
+    def formula(self, indvar):
+        return sympy.Function(self.name)(*indvar)
 
 
 class Neumann(BC):
@@ -46,9 +46,9 @@ class Neumann(BC):
         self.category = "Neumann"
         self.rhs = rhs
 
-    def formula(self):
+    def formula(self, indvar):
         n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(n)
+        u = sympy.Function(self.name)(n)(*indvar)
         return u.diff(n)
 
 
@@ -58,9 +58,9 @@ class Robin(BC):
         self.category = "Robin"
         self.rhs = rhs
 
-    def formula(self):
+    def formula(self, indvar):
         n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(n)
+        u = sympy.Function(self.name)(n)(*indvar)
         return u + u.diff(n)
 
 
