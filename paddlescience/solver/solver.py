@@ -59,7 +59,7 @@ class Solver(object):
         ins = self.algo.create_ins(self.pde)
         # print(ins)
 
-        for epoch_id in range(num_epoch):
+        for epoch in range(num_epoch):
 
             #for batch_id in range(num_batch):
 
@@ -68,24 +68,26 @@ class Solver(object):
             self.opt.step()
             self.opt.clear_grad()
 
-            # print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
+            print("epoque: " + str(epoch + 1))
+
+            # print("epoch/num_epoch: ", epoch + 1, "/", num_epoch,
             #       "batch/num_batch: ", batch_id + 1, "/", num_batch,
             #       "loss: ",
             #       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
             #       "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
             #       losses[2].numpy()[0])
 
-            if (epoch_id + 1) % checkpoint_freq == 0:
+            if (epoch + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
-                            './checkpoint/net_params_' + str(epoch_id + 1))
+                            './checkpoint/net_params_' + str(epoch + 1))
                 paddle.save(self.opt.state_dict(),
-                            './checkpoint/opt_params_' + str(epoch_id + 1))
+                            './checkpoint/opt_params_' + str(epoch + 1))
                 if self.algo.loss.geo.time_dependent == False:
                     np.save(
-                        './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                        './checkpoint/rslt_' + str(epoch + 1) + '.npy',
                         self.algo.net.nn_func(self.algo.loss.geo.space_domain))
                 else:
-                    np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                    np.save('./checkpoint/rslt_' + str(epoch + 1) + '.npy',
                             self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo):

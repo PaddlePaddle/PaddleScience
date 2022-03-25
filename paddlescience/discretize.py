@@ -38,15 +38,3 @@ def discretize(pde, time_nsteps=None, space_npoints=None):
         return pde_disc
     else:
         return None
-
-
-# def sampling_discretize(pde,
-#                         geo,
-#                         time_nsteps=None,
-#                         space_point_size=None,
-#                         space_nsteps=None):
-#     # Geometry
-#     geo_disc = geo.sampling_discretize(time_nsteps, space_point_size,
-#                                        space_nsteps)
-
-#     return pde, geo_disc

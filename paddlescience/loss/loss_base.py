@@ -39,10 +39,11 @@ class CompFormula:
         self.indvar = pde.independent_variable
         self.dvar = pde.dependent_variable
 
+        self.outs = None
         self.jacobian = None
         self.hessian = None
 
-    def compute_der(self, ins, bs):
+    def compute_outs_der(self, ins, bs):
 
         net = self.net
 
@@ -78,42 +79,38 @@ class CompFormula:
 
         rst = 0.0
 
-        # print(formula)
-        # print(formula.args)
-        # print(formula.is_Add)
-
         # number of items seperated by add
         if formula.is_Add:
             num_item = len(formula.args)
             # parser each item
             for item in formula.args:
-                rst += self.compute_item(item, ins, normal)
+                rst += self.__compute_formula_item(item, ins, normal)
         else:
             num_item = 1
-            rst += self.compute_item(formula, ins, normal)
+            rst += self.__compute_formula_item(formula, ins, normal)
 
         return rst
 
-    def compute_item(self, item, ins, normal):
+    def __compute_formula_item(self, item, ins, normal):
 
         rst = 1.0
 
         print(item)
         if item.is_Mul:
             for it in item.args:
-                rst = rst * self.compute_item(it, ins, normal)
+                rst = rst * self.__compute_formula_item(it, ins, normal)
         elif item.is_Number:
             print(item, "number")
             rst = item * rst
         elif item.is_Symbol:
             print(item, "symbol")
-            rst = rst * self.compute_function(item, ins)
+            rst = rst * self.__compute_function_symbol(item, ins)
         elif item.is_Function:
             print(item, "function")
-            rst = rst * self.compute_function(item)
+            rst = rst * self.__compute_function_symbol(item)
         elif item.is_Derivative:
             print(item, "der")
-            rst = rst * self.compute_derivative(item, normal)
+            rst = rst * self.__compute_formula_der(item, normal)
             pass
         else:
             pass
@@ -121,15 +118,15 @@ class CompFormula:
         # print(rst)
         return rst
 
-    def compute_symbol(self, item, ins):
+    def __compute_formula_symbol(self, item, ins):
         var_idx = self.indvar.index(item)
         return ins[:, var_idx]
 
-    def compute_function(self, item):
+    def __compute_function_symbol(self, item):
         f_idx = self.dvar.index(item)
         return self.outs[:, f_idx]
 
-    def compute_derivative(self, item, normal):
+    def __compute_formula_der(self, item, normal):
 
         jacobian = self.jacobian
         hessian = self.hessian

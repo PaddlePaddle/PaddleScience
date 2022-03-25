@@ -58,6 +58,9 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 # Discretization
 pde = psci.discretize(pde, space_npoints=11)
 
+# print(pde.geometry.interior)
+# print(pde.geometry.boundary["top"])
+
 # Network
 net = psci.network.FCNet(
     num_ins=2,
@@ -79,7 +82,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=2)
 
 # print(pde.bc)
 
