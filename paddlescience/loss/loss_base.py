@@ -95,21 +95,21 @@ class CompFormula:
 
         rst = 1.0
 
-        print(item)
+        # print(item)
         if item.is_Mul:
             for it in item.args:
                 rst = rst * self.__compute_formula_item(it, ins, normal)
         elif item.is_Number:
-            print(item, "number")
+            #print(item, "number")
             rst = item * rst
         elif item.is_Symbol:
-            print(item, "symbol")
+            #print(item, "symbol")
             rst = rst * self.__compute_function_symbol(item, ins)
         elif item.is_Function:
-            print(item, "function")
+            #print(item, "function")
             rst = rst * self.__compute_function_symbol(item)
         elif item.is_Derivative:
-            print(item, "der")
+            #print(item, "der")
             rst = rst * self.__compute_formula_der(item, normal)
             pass
         else:

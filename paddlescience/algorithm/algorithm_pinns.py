@@ -54,12 +54,9 @@ class PINNs(AlgorithmBase):
     def compute(self, ins, pde):
 
         # interior out and loss
-        # input = ins["interior"]
-        # loss_i, outs = self.loss.eq_loss(
-        #     pde, self.net, input, bs=4)  # TODO bs
-        # loss = loss_i
-
-        loss = 0.0
+        input = ins["interior"]
+        loss_i, outs = self.loss.eq_loss(pde, self.net, input, bs=4)  # TODO bs
+        loss = loss_i
 
         # boundary out ond loss
         for input in ins["boundary"].values():
