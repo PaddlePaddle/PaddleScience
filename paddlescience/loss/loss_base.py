@@ -79,6 +79,8 @@ class CompFormula:
 
     def compute_formula(self, formula, ins, normal):
 
+        # print(formula.args[0])
+
         rst = 0.0
 
         # number of items seperated by add
@@ -95,15 +97,13 @@ class CompFormula:
 
     def __compute_formula_item(self, item, ins, normal):
 
-        rst = 1.0
+        rst = 1.0  # TODO: float / double / float16
 
-        # print(item)
         if item.is_Mul:
             for it in item.args:
                 rst = rst * self.__compute_formula_item(it, ins, normal)
         elif item.is_Number:
-            #print(item, "number")
-            rst = item * rst
+            rst = float(item) * rst
         elif item.is_Symbol:
             #print(item, "symbol")
             rst = rst * self.__compute_function_symbol(item, ins)
@@ -111,9 +111,9 @@ class CompFormula:
             #print(item, "function")
             rst = rst * self.__compute_function_symbol(item)
         elif item.is_Derivative:
-            #print(item, "der")
+            # print(item, "der start")
             rst = rst * self.__compute_formula_der(item, normal)
-            pass
+            # print(item, "der end")
         else:
             pass
 
