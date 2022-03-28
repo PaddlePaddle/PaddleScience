@@ -24,6 +24,9 @@ class PDE:
         # time dependent / independent
         self.time_dependent = time_dependent
 
+        # discretize method (work for time-dependent equation)
+        self.time_discretize_method = None
+
         self.independent_variable = list()
         self.dependent_variable = list()
         self.dependent_variable_1 = list()

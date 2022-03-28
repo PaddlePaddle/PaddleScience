@@ -34,7 +34,6 @@ class PINNs(AlgorithmBase):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
-        # self.ins = self.create_ins(pde)  # dict
 
     def create_ins(self, pde):
         ins = dict()
@@ -63,7 +62,7 @@ class PINNs(AlgorithmBase):
                 pde, self.net, input, bs=4)  # TODO bs
             loss = loss_i  # TODO: += 1
 
-        # boundary out ond loss
+        # boundary out and loss
         for input in ins["boundary"].values():
             loss_b, outs = self.loss.bc_loss(
                 pde, self.net, input, bs=2)  # TODO bs
