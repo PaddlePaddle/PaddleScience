@@ -63,9 +63,18 @@ class NavierStokes(PDE):
             self.normal = sympy.Symbol('n')
 
             # continuty equation
-            continuty = u.diff(x) + v.diff(x)
+            continuty = u.diff(x) + v.diff(y)
+            continuty_rhs = 0
+
             # momentum x equation
-            momentum_x = u * u.diff(x) + u * v.diff(y)
+            momentum_x = u * u.diff(x) + v * u.diff(y) - nu / rho * u.diff(
+                x).diff(x) - nu / rho * u.diff(y).diff(y) + 1.0 / rho * p.diff(
+                    x)
+            momentum_y = u * v.diff(x) + v * v.diff(y) - nu / rho * v.diff(
+                y).diff(y) - nu / rho * v.diff(y).diff(y) + 1.0 / rho * p.diff(
+                    y)
+            momentum_x_rhs = 0
+            momentum_y_rhs = 0
 
             # variables in order
             self.independent_variable = [x, y]
@@ -74,10 +83,171 @@ class NavierStokes(PDE):
             # order
             self.order = 2
 
-            # equations
+            # equations and rhs
             self.equations = list()
+            self.rhs = list()
             self.equations.append(continuty)
-            # self.pdes.append(momentum_x)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+
+        elif dim == 2 and time_dependent == True:
+
+            # independent variable
+            t = sympy.Symbol('t')
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+
+            # dependent variable
+            u = sympy.Function('u')(t, x, y)
+            v = sympy.Function('v')(t, x, y)
+            p = sympy.Function('p')(t, x, y)
+
+            # normal direction
+            self.normal = sympy.Symbol('n')
+
+            # continuty equation
+            continuty = u.diff(x) + v.diff(y)
+            continuty_rhs = 0
+
+            # momentum x equation
+            momentum_x = u.diff(t) + u * u.diff(x) + v * u.diff(
+                y) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
+                    y) + 1.0 / rho * p.diff(x)
+            momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
+                y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                    y) + 1.0 / rho * p.diff(y)
+            momentum_x_rhs = 0
+            momentum_y_rhs = 0
+
+            # variables in order
+            self.independent_variable = [t, x, y]
+            self.dependent_variable = [u, v, p]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = list()
+            self.rhs = list()
+            self.equations.append(continuty)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+
+        elif dim == 3 and time_dependent == False:
+
+            # independent variable
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+            z = sympy.Symbol('z')
+
+            # dependent variable
+            u = sympy.Function('u')(x, y, z)
+            v = sympy.Function('v')(x, y, z)
+            w = sympy.Function('w')(x, y, z)
+            p = sympy.Function('p')(x, y, z)
+
+            # normal direction
+            self.normal = sympy.Symbol('n')
+
+            # continuty equation
+            continuty = u.diff(x) + v.diff(y) + w.diff(z)
+            continuty_rhs = 0
+
+            # momentum x equation
+            momentum_x = u * u.diff(x) + v * u.diff(y) + w * u.diff(
+                z) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
+                    y) - nu / rho * u.diff(z).diff(z) + 1.0 / rho * p.diff(x)
+            momentum_y = u * v.diff(x) + v * v.diff(y) + w * v.diff(
+                z) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                    y) - nu / rho * v.diff(z).diff(z) + 1.0 / rho * p.diff(y)
+            momentum_z = u * w.diff(x) + v * w.diff(y) + w * w.diff(
+                z) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(y).diff(
+                    y) - nu / rho * w.diff(z).diff(z) + 1.0 / rho * p.diff(z)
+            momentum_x_rhs = 0
+            momentum_y_rhs = 0
+            momentum_z_rhs = 0
+
+            # variables in order
+            self.independent_variable = [x, y, z]
+            self.dependent_variable = [u, v, w, p]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = list()
+            self.rhs = list()
+            self.equations.append(continuty)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
+            self.equations.append(momentum_z)
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+            self.rhs.append(momentum_z_rhs)
+
+        elif dim == 3 and time_dependent == True:
+
+            # independent variable
+            t = sympy.Symbol('t')
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+            z = sympy.Symbol('z')
+
+            # dependent variable
+            u = sympy.Function('u')(t, x, y, z)
+            v = sympy.Function('v')(t, x, y, z)
+            w = sympy.Function('w')(t, x, y, z)
+            p = sympy.Function('p')(t, x, y, z)
+
+            # normal direction
+            self.normal = sympy.Symbol('n')
+
+            # continuty equation
+            continuty = u.diff(x) + v.diff(y) + w.diff(z)
+            continuty_rhs = 0
+
+            # momentum x equation
+            momentum_x = u.diff(t) + u * u.diff(x) + v * u.diff(
+                y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
+                    x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(x)
+            momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
+                y) + w * v.diff(z) - nu / rho * v.diff(y).diff(
+                    y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(y)
+            momentum_z = w.diff(t) + u * w.diff(x) + v * w.diff(
+                y) + w * w.diff(z) - nu / rho * w.diff(y).diff(
+                    y) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(z)
+            momentum_x_rhs = 0
+            momentum_y_rhs = 0
+            momentum_z_rhs = 0
+
+            # variables in order
+            self.independent_variable = [t, x, y, z]
+            self.dependent_variable = [u, v, w, p]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = list()
+            self.rhs = list()
+            self.equations.append(continuty)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
+            self.equations.append(momentum_z)
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+            self.rhs.append(momentum_z_rhs)
 
     def discretize(self, time_nsteps=None):
 
@@ -123,7 +293,14 @@ class NavierStokesImplicit(PDE):
             continuty_rhs = 0
 
             # momentum
+            momentum_x = u / dt - u_1 / dt + u * u.diff(x) + v * u.diff(
+                y) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
+                    y) + 1.0 / rho * p.diff(x)
+            momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
+                y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                    y) + 1.0 / rho * p.diff(y)
             momentum_x_rhs = 0
+            momentum_y_rhs = 0
 
             # variables in order
             self.independent_variable = [x, y]
@@ -135,11 +312,78 @@ class NavierStokesImplicit(PDE):
 
             # equations and rhs
             self.equations = list()
-            self.equations.append(continuty)
-
             self.rhs = list()
+            self.equations.append(continuty)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
             self.rhs.append(continuty_rhs)
             self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+
+        elif dim == 3:
+            # independent variable
+            x = sympy.Symbol('x')
+            y = sympy.Symbol('y')
+            z = sympy.Symbol('z')
+
+            # dependent variable current time step: u^{n}, v^{n}, p^{n}
+            u = sympy.Function('u')(x, y, z)
+            v = sympy.Function('v')(x, y, z)
+            2 = sympy.Function('w')(x, y, z)
+            p = sympy.Function('p')(x, y, z)
+
+            # dependent variable previous time step: u^{n-1}, v^{n-1}, p^{n-1}
+            u_1 = sympy.Function('u_1')(x, y, z)
+            v_1 = sympy.Function('v_1')(x, y, z)
+            w_1 = sympy.Function('w_1')(x, y, z)
+            p_1 = sympy.Function('p_1')(x, y, z)
+
+            # normal direction
+            self.normal = sympy.Symbol('n')
+
+            # dt
+            self.dt = sympy.Symbol('dt')
+
+            # continuty equation
+            continuty = u.diff(x) + v.diff(x) + w.diff(z)
+            continuty_rhs = 0
+
+            # momentum
+            momentum_x = u / dt - u_1 / dt + u * u.diff(x) + v * u.diff(
+                y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
+                    x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(x)
+            momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
+                y) + w * v.diff(z) - nu / rho * v.diff(y).diff(
+                    y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(y)
+            momentum_z = w / dt - w_1 / dt + u * w.diff(x) + v * w.diff(
+                y) + w * w.diff(z) - nu / rho * w.diff(y).diff(
+                    y) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(z)
+            momentum_x_rhs = 0
+            momentum_y_rhs = 0
+            momentum_z_rhs = 0
+
+            # variables in order
+            self.independent_variable = [x, y, z]
+            self.dependent_variable = [u, v, w, p]
+            self.dependent_variable_1 = [u_1, v_1, w_1, p_1]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = list()
+            self.rhs = list()
+            self.equations.append(continuty)
+            self.equations.append(momentum_x)
+            self.equations.append(momentum_y)
+            self.equations.append(momentum_z)
+            self.rhs.append(continuty_rhs)
+            self.rhs.append(momentum_x_rhs)
+            self.rhs.append(momentum_y_rhs)
+            self.rhs.append(momentum_z_rhs)
 
 
 if __name__ == "__main__":
