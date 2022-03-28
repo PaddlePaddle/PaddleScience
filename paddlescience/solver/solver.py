@@ -68,7 +68,7 @@ class Solver(object):
             self.opt.step()
             self.opt.clear_grad()
 
-            print("epoque: " + str(epoch + 1))
+            print("epoch: " + str(epoch + 1))
 
             # print("epoch/num_epoch: ", epoch + 1, "/", num_epoch,
             #       "batch/num_batch: ", batch_id + 1, "/", num_batch,

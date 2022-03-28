@@ -15,6 +15,7 @@
 import paddle
 from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
+from ..ins import InsDataWithAttr
 
 
 class LossBase(object):
@@ -38,6 +39,7 @@ class CompFormula:
         self.order = pde.order
         self.indvar = pde.independent_variable
         self.dvar = pde.dependent_variable
+        self.dvar_1 = pde.dependent_variable_1
 
         self.outs = None
         self.jacobian = None
@@ -48,11 +50,11 @@ class CompFormula:
         net = self.net
 
         # outs
-        outs = net.nn_func(ins)
+        outs = net.nn_func(ins.data)
 
         # jacobian
         if self.order >= 1:
-            jacobian = batch_jacobian(net.nn_func, ins, create_graph=True)
+            jacobian = batch_jacobian(net.nn_func, ins.data, create_graph=True)
             jacobian = paddle.reshape(
                 jacobian, shape=[net.num_outs, bs, net.num_ins])
         else:
@@ -65,7 +67,7 @@ class CompFormula:
                 def func(ins):
                     return net.nn_func(ins)[:, i:i + 1]
 
-                hessian = batch_hessian(func, ins, create_graph=True)
+                hessian = batch_hessian(func, ins.data, create_graph=True)
                 hessian = paddle.reshape(
                     hessian, shape=[net.num_ins, bs, net.num_ins])
         else:
@@ -120,11 +122,16 @@ class CompFormula:
 
     def __compute_formula_symbol(self, item, ins):
         var_idx = self.indvar.index(item)
-        return ins[:, var_idx]
+        return self.ins.data[:, var_idx + self.ins.indvar_start]  # TODO
 
     def __compute_function_symbol(self, item):
-        f_idx = self.dvar.index(item)
-        return self.outs[:, f_idx]
+        if item in self.dvar:
+            f_idx = self.dvar.index(item)
+            return self.outs[:, f_idx]
+
+        if item in self.dvar_1:
+            f_idx = self.dvar_1.index(item)
+            return self.ins.data[:, f_idx + self.ins.dvar_1_start]  # TODO
 
     def __compute_formula_der(self, item, normal):
 

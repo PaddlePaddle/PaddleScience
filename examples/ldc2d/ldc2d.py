@@ -84,6 +84,8 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=2)
 
+# Predict
+
 # print(pde.bc)
 
 # Discretization
