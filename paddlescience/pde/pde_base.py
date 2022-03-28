@@ -31,6 +31,8 @@ class PDE:
         self.dependent_variable = list()
         self.dependent_variable_1 = list()
 
+        self.parameters = list()
+
         # Equation list
         self.equations = list()
 

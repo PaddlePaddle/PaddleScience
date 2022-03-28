@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from .pde_base import PDE
+from ..parameter import Parameter, is_parameter
 
 import sympy
 import numpy as np
@@ -47,6 +48,12 @@ class NavierStokes(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
         super(NavierStokes, self).__init__(
             dim + 1, time_dependent=time_dependent)
+
+        # parameter list
+        if is_parameter(nu):
+            parameter.append(nu)
+        if is_parameter(rho):
+            parameter.append(rho)
 
         if dim == 2 and time_dependent == False:
 
@@ -329,7 +336,7 @@ class NavierStokesImplicit(PDE):
             # dependent variable current time step: u^{n}, v^{n}, w^{n}, p^{n}
             u = sympy.Function('u')(x, y, z)
             v = sympy.Function('v')(x, y, z)
-            2 = sympy.Function('w')(x, y, z)
+            w = sympy.Function('w')(x, y, z)
             p = sympy.Function('p')(x, y, z)
 
             # dependent variable previous time step: u^{n-1}, v^{n-1}, w^{n-1}, p^{n-1}
