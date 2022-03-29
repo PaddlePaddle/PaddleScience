@@ -22,6 +22,7 @@ from transform import program_transform
 
 paddle.enable_static()
 paddle.seed(1234)
+np.random.seed(1234)
 
 
 def compile(program, loss_name=None):
@@ -100,7 +101,7 @@ with paddle.static.program_guard(train_program, startup_program):
     eq_loss = paddle.norm(hes[0, 0] + hes[1, 1], p=2)
 
     # bc_loss
-    bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int64')
+    bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int32')
     bc_value = paddle.static.data(name='bc_v', shape=[40, 1], dtype='float32')
     bc_u = paddle.index_select(outputs, bc_index)
     bc_diff = bc_u - bc_value
@@ -123,7 +124,7 @@ if os.getenv('FLAGS_use_cinn') == "1":
         loss_d = exe.run(compiled_program,
                          feed={
                              'x': geo.get_space_domain().astype(np.float32),
-                             'bc_idx': geo.bc_index.astype(np.float32),
+                             'bc_idx': geo.bc_index.astype(np.int32),
                              'bc_v': pdes.bc_value
                          },
                          fetch_list=[loss.name])
@@ -134,7 +135,7 @@ else:
             train_program,
             feed={
                 'x': geo.get_space_domain().astype(np.float32),
-                'bc_idx': geo.bc_index,
+                'bc_idx': geo.bc_index.astype(np.int32),
                 'bc_v': pdes.bc_value
             },
             fetch_list=[loss.name, eq_loss.name, bc_loss.name])
@@ -144,7 +145,7 @@ else:
 rslt = exe.run(train_program,
                feed={
                    'x': geo.get_space_domain().astype(np.float32),
-                   'bc_idx': geo.bc_index,
+                   'bc_idx': geo.bc_index.astype(np.int32),
                    'bc_v': pdes.bc_value
                },
                fetch_list=[outputs.name, ])[0]
