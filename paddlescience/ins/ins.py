@@ -14,7 +14,8 @@
 
 
 class InsDataWithAttr:
-    def __init__(self, data, istart=0, dstart=0):
+    def __init__(self, data, istart=0, dstart=0, pstart=0):
         self.indvar_start = istart
         self.dvar_1_start = dstart
+        self.parameter_pde_start = pstart
         self.data = data

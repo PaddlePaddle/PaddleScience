@@ -51,9 +51,9 @@ class NavierStokes(PDE):
 
         # parameter list
         if is_parameter(nu):
-            parameter.append(nu)
+            self.parameter.append(nu)
         if is_parameter(rho):
-            parameter.append(rho)
+            self.parameter.append(rho)
 
         if dim == 2 and time_dependent == False:
 

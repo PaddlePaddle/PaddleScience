@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sympy
 
-class Parameter:
-    def __init__(self, name):
-        self.name = name
+Parameter = sympy.Function
+
+# class Parameter(sympy.Function):
+#     def __init__(self, args):
+#         sympy.Function(name)
 
 
 def is_parameter(param):
-    return isinstance(param, Parameter)
+    return isinstance(param, sympy.Function)
+    # return param.is_Function
 
 
 # if __name__ == "__main__":

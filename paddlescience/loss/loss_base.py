@@ -103,13 +103,13 @@ class CompFormula:
             for it in item.args:
                 rst = rst * self.__compute_formula_item(it, ins, normal)
         elif item.is_Number:
-            rst = float(item) * rst
+            rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
             #print(item, "symbol")
-            rst = rst * self.__compute_function_symbol(item, ins)
+            rst = rst * self.__compute_formula_symbol(item, ins)
         elif item.is_Function:
             #print(item, "function")
-            rst = rst * self.__compute_function_symbol(item)
+            rst = rst * self.__compute_formula_function(item)
         elif item.is_Derivative:
             # print(item, "der start")
             rst = rst * self.__compute_formula_der(item, normal)
@@ -117,21 +117,29 @@ class CompFormula:
         else:
             pass
 
-        # print(rst)
         return rst
 
     def __compute_formula_symbol(self, item, ins):
         var_idx = self.indvar.index(item)
         return self.ins.data[:, var_idx + self.ins.indvar_start]  # TODO
 
-    def __compute_function_symbol(self, item):
+    def __compute_formula_function(self, item):
+
+        # output function value
         if item in self.dvar:
             f_idx = self.dvar.index(item)
             return self.outs[:, f_idx]
 
+        # input function value (for time-dependent previous time)
         if item in self.dvar_1:
             f_idx = self.dvar_1.index(item)
             return self.ins.data[:, f_idx + self.ins.dvar_1_start]  # TODO
+
+        # parameter pde
+        if item in self.parameter_pde:
+            f_idx = self.parameter_pde.index(item)
+            return self.ins.data[:,
+                                 f_idx + self.ins.parameter_pde_start]  # TODO
 
     def __compute_formula_der(self, item, normal):
 

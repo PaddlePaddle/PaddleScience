@@ -16,6 +16,8 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
+nup = psci.parameter.Parameter('nu')
+
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 
