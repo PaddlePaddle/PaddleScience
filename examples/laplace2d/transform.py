@@ -504,10 +504,16 @@ def program_transform(program):
             #                       'Y': [in_names[0]]}, {'Z': [out_names[1]]}, {}))
 
         elif op_desc.type() == 'index_select_grad':
+            tmp_0 = name_gen.get_var(new_block, block.var(in_names[2]))
+            to_insert.append(
+                _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_0]}, {
+                    'shape': block.var(in_names[2]).shape,
+                    'value': 0.0
+                }))
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
                     'IndexTensor': [in_names[0]],
-                    'X': [in_names[2]],
+                    'X': [tmp_0],
                     'Y': [in_names[1]]
                 }, {'Z': [out_names[0]]}, {'indexes': None,
                                            'axis': 0}))
