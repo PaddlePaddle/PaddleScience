@@ -17,6 +17,35 @@ import paddle
 __all__ = ["Solver"]
 
 
+class DataSetStatic:
+    def __init__(self, nsamples, data):
+        self.data = data
+        self.nsamples = nsamples
+
+    def __getitem__(self, idx):
+        pass
+
+    def __len__(self):
+        return self.nsamples
+
+
+class ModelStatic(nn.Layer):
+    def __init__(self, pde, net):
+        super(ModelStatic, self).__init__(self)
+        self.pde = pde
+        self.net = net
+
+    def forward(self, inputs):
+        auto.shard_tensor(
+            inputs,
+            dist_attr={
+                "process_mesh": _global_process_mesh,
+                "dims_mapping": [0, -1]
+            })
+        loss = self.algo.compute(ins, self.pde)
+        return loss
+
+
 class Solver(object):
     """
     Solver

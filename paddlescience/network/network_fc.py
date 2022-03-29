@@ -57,7 +57,7 @@ class FCNet(NetworkBase):
             self.activation = paddle.tanh
         else:
             assert 0, "Unsupported activation type."
-        self.make_network()
+        self.make_network_static()
 
     def make_network(self):
         for i in range(self.num_layers):
@@ -75,6 +75,28 @@ class FCNet(NetworkBase):
                 shape=[lsize, rsize], dtype=self.dtype, is_bias=False)
             b = self.create_parameter(
                 shape=[rsize], dtype=self.dtype, is_bias=True)
+            self.weights.append(w)
+            self.biases.append(b)
+            self.add_parameter("w_" + str(i), w)
+            self.add_parameter("b_" + str(i), b)
+
+    def make_network_static(self):
+        for i in range(self.num_layers):
+            if i == 0:
+                lsize = self.num_ins
+                rsize = self.hidden_size
+            elif i == (self.num_layers - 1):
+                lsize = self.hidden_size
+                rsize = self.num_outs
+            else:
+                lsize = self.hidden_size
+                rsize = self.hidden_size
+
+            w = paddle.static.create_parameter(
+                shape=[lsize, rsize], dtype=self.dtype, is_bias=False)
+            b = paddle.static.create_parameter(
+                shape=[rsize], dtype=self.dtype, is_bias=True)
+
             self.weights.append(w)
             self.biases.append(b)
             self.add_parameter("w_" + str(i), w)
