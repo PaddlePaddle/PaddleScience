@@ -13,6 +13,8 @@
 # limitations under the License.
 import numpy as np
 import paddle
+from paddle.static import InputSpec
+from paddle.distributed import fleet
 
 __all__ = ["Solver"]
 
@@ -70,9 +72,9 @@ class Solver(object):
     def __init_auto_dist():
 
         # strategy
-        self.dist_strategy = fleet.DistributedStrategy()
-        self.dist_strategy.semi_auto = True
-        fleet.init(is_collective=True, strategy=self.dist_strategy)
+        dist_strategy = fleet.DistributedStrategy()
+        dist_strategy.semi_auto = True
+        fleet.init(is_collective=True, strategy=dist_strategy)
 
     def solve_static():
 
@@ -87,6 +89,7 @@ class Solver(object):
             labels_spec=labels_spec,
             strategy=self.dist_strategy)
         engine.prepare(optimizer=self.opt, loss=loss_func)
+
         res = engine.fit(train_dataset)
 
     def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
