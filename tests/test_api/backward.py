@@ -104,8 +104,8 @@ class DifferenceAppro(object):
         self.ic_index = kwargs["geo"].ic_index
         if res:
             api_res = self.cal_rslt(**kwargs)
-            assert np.allclose(res, api_res), "前向计算错误"
-            logging.info("前向计算正确")
+            assert np.allclose(res, api_res), "forward check failed"
+            logging.info("forward check success")
         self.compare()
 
     def compare(self):
@@ -121,8 +121,9 @@ class DifferenceAppro(object):
                 self.kwargs["geo"].space_domain = self.var
                 numerical_grad = self.cal_first_derivative(**self.kwargs)
                 if np.allclose(api_grad, numerical_grad, atol=atol):
-                    logging.info("数值梯度精度可模拟，反向计算测试通过")
+                    logging.info(
+                        "numerical simulation passed，backward check success")
                     return
                 self.gap += 0.001
             self.gap = 1e-3
-        assert False, "数值梯度精度不可模拟或反向计算错误"
+        assert False, "numerical simulation failed or backward error!"
