@@ -118,6 +118,7 @@ exe.run(startup_program)
 num_epoch = 10
 
 compiled_program = compile(new_program, loss.name)
+train_program = compile(train_program, loss.name)
 
 if os.getenv('FLAGS_use_cinn') == "1":
     for i in range(num_epoch):
