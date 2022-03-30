@@ -15,6 +15,7 @@
 import os
 import paddlescience as psci
 import numpy as np
+import time
 
 import paddle
 from paddle.autograd.functional import Hessian
@@ -115,13 +116,20 @@ new_program = program_transform(train_program)
 # print('new_program: ', new_program)
 
 exe.run(startup_program)
-num_epoch = 10
+num_epoch = 2010
 
 compiled_program = compile(new_program, loss.name)
 train_program = compile(train_program, loss.name)
 
+begin = time.time()
+
 if os.getenv('FLAGS_use_cinn') == "1":
     for i in range(num_epoch):
+        if i == 10:
+            paddle.device.cuda.synchronize()
+            begin = time.time()
+            print("begin With CINN at ", begin)
+
         loss_d = exe.run(compiled_program,
                          feed={
                              'x': geo.get_space_domain().astype(np.float32),
@@ -129,9 +137,17 @@ if os.getenv('FLAGS_use_cinn') == "1":
                              'bc_v': pdes.bc_value
                          },
                          fetch_list=[loss.name])
-        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0])
+        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0][0])
+
+    end = time.time()
+    print("[With CINN] 2000 epoch(10~2010) time: ", end - begin, " s")
 else:
     for i in range(num_epoch):
+        if i == 10:
+            paddle.device.cuda.synchronize()
+            begin = time.time()
+            print("begin Without CINN at ", begin)
+
         loss_d, eq_loss_d, bc_loss_d = exe.run(
             train_program,
             feed={
@@ -140,8 +156,10 @@ else:
                 'bc_v': pdes.bc_value
             },
             fetch_list=[loss.name, eq_loss.name, bc_loss.name])
-        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0],
-              ' eq_loss: ', eq_loss_d[0], ' bc_loss: ', bc_loss_d[0])
+        print('num_epoch: ', i, '/', num_epoch, ' loss: ', loss_d[0])
+
+    end = time.time()
+    print("[Without CINN] 2000 epoch(10~2010) time: ", end - begin, " s")
 
 rslt = exe.run(train_program,
                feed={
