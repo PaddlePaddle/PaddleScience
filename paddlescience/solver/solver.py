@@ -15,17 +15,18 @@ import numpy as np
 import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
+import paddle.distributed.auto_parallel as auto
 
 __all__ = ["Solver"]
 
 
 class DataSetStatic:
-    def __init__(self, nsamples, data):
-        self.data = data
+    def __init__(self, nsamples, ins):
+        self.ins = ins
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.data["interior"][0]
+        return self.ins
 
     def __len__(self):
         return self.nsamples
@@ -37,13 +38,26 @@ class ModelStatic(paddle.nn.Layer):
         self.pde = pde
         self.net = net
 
-    def forward(self, inputs):
-        auto.shard_tensor(
-            inputs,
-            dist_attr={
-                "process_mesh": _global_process_mesh,
-                "dims_mapping": [0, -1]
-            })
+    def forward(self, ins):
+
+        _global_process_mesh = auto.ProcessMesh([0, 1])
+
+        for input in ins["interior"].values():
+            auto.shard_tensor(
+                input.data,
+                dist_attr={
+                    "process_mesh": _global_process_mesh,
+                    "dims_mapping": [0, -1]
+                })
+
+        for input in ins["boundary"].values():
+            auto.shard_tensor(
+                input.data,
+                dist_attr={
+                    "process_mesh": _global_process_mesh,
+                    "dims_mapping": [0, -1]
+                })
+
         loss = self.algo.compute(ins, self.pde)
         return loss
 
@@ -88,6 +102,7 @@ class Solver(object):
             inputs_spec=inputs_spec,
             labels_spec=labels_spec,
             strategy=self.dist_strategy)
+
         engine.prepare(optimizer=self.opt, loss=loss_func)
 
         res = engine.fit(train_dataset)
