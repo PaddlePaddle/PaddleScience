@@ -23,13 +23,13 @@ class DataSetStatic:
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        pass
+        return self.data["interior"][0]
 
     def __len__(self):
         return self.nsamples
 
 
-class ModelStatic(nn.Layer):
+class ModelStatic(paddle.nn.Layer):
     def __init__(self, pde, net):
         super(ModelStatic, self).__init__(self)
         self.pde = pde
@@ -65,6 +65,29 @@ class Solver(object):
         self.pde = pde
         self.algo = algo
         self.opt = opt
+
+    # init auto dist data structure
+    def __init_auto_dist():
+
+        # strategy
+        self.dist_strategy = fleet.DistributedStrategy()
+        self.dist_strategy.semi_auto = True
+        fleet.init(is_collective=True, strategy=self.dist_strategy)
+
+    def solve_static():
+
+        model = ModelStatic()
+
+        inputs_spec = [InputSpec([4, 2], 'float32', 'x')]
+        #labels_spec = InputSpec([36, 1], 'float32', 'bc_v')
+
+        engine = Engine(
+            model,
+            inputs_spec=inputs_spec,
+            labels_spec=labels_spec,
+            strategy=self.dist_strategy)
+        engine.prepare(optimizer=self.opt, loss=loss_func)
+        res = engine.fit(train_dataset)
 
     def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
         """

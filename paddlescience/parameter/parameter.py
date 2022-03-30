@@ -14,6 +14,8 @@
 
 import sympy
 
+# TODO: inrerite sympy.Function
+
 Parameter = sympy.Function
 
 # class Parameter(sympy.Function):
