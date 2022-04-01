@@ -36,36 +36,45 @@ class PINNs(AlgorithmBase):
         self.loss = loss
 
     def create_ins(self, pde):
-        ins = dict()
+
+        ins = list()
+        ins_attr = dict()
 
         # TODO: hard code
-        ins_i = dict()
+        ins_attr_i = dict()
         points = pde.geometry.interior
         data = points  # paddle.to_tensor(points, dtype='float32', stop_gradient=False)
-        ins_i["0"] = InsDataWithAttr(data, 0, 0)
-        ins["interior"] = ins_i
+        ins.append(data)
+        ins_attr_i["0"] = InsAttr(0, 0)
+        ins_attr["interior"] = ins_attr_i
 
-        ins_b = dict()
+        ins_attr_b = dict()
         for name, points in pde.geometry.boundary.items():
             data = points  #paddle.to_tensor(
             # points, dtype='float32', stop_gradient=False)
-            ins_b[name] = InsDataWithAttr(data, 0, 0)
-        ins["boundary"] = ins_b
+            ins.append(attr)
+            ins_attr_b[name] = InsAttr(0, 0)
+        ins_attr["boundary"] = ins_attr_b
 
-        return ins
+        return ins, ins_attr
 
-    def compute(self, ins, pde):
+    def compute(self, ins, ins_attr, pde):
 
         # interior out and loss
-        for input in ins["interior"].values():
+        n = 0
+        for attr in ins_attr["interior"].values():
+            input = ins[n]
             loss_i, outs = self.loss.eq_loss(
-                pde, self.net, input, bs=4)  # TODO bs
+                pde, self.net, input, attr, bs=4)  # TODO bs
             loss = loss_i  # TODO: += 1
+            n += 1
 
         # boundary out and loss
-        for input in ins["boundary"].values():
+        for attr in ins_attr["boundary"].values():
+            input = ins[n]
             loss_b, outs = self.loss.bc_loss(
-                pde, self.net, input, bs=2)  # TODO bs
+                pde, self.net, input, attr, bs=2)  # TODO bs
             loss += loss_b
+            n += 1
 
         return loss  # TODO: return more

@@ -40,7 +40,7 @@ class L2(LossBase):
     def __init__(self):
         pass
 
-    def eq_loss(self, pde, net, ins, bs):
+    def eq_loss(self, pde, net, ins, ins_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -49,12 +49,12 @@ class L2(LossBase):
 
         loss = 0.0
         for formula in pde.equations:
-            rst = cmploss.compute_formula(formula, ins, None)
+            rst = cmploss.compute_formula(formula, ins, ins_attr, None)
             loss += paddle.norm(rst, p=2)
 
         return loss, cmploss.outs
 
-    def bc_loss(self, pde, net, ins, bs):
+    def bc_loss(self, pde, net, ins, ins_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -64,7 +64,7 @@ class L2(LossBase):
         loss = 0.0
         for name, bclist in pde.bc.items():
             for b in bclist:
-                lhs = cmploss.compute_formula(b.formula, ins,
+                lhs = cmploss.compute_formula(b.formula, ins, ins_attr,
                                               None)  # TODO: hard code
                 rhs = b.rhs  # TODO: to support lambda
                 loss += paddle.norm(lhs - rhs, p=2)

@@ -50,11 +50,11 @@ class CompFormula:
         net = self.net
 
         # outs
-        outs = net.nn_func(ins.data)
+        outs = net.nn_func(ins)
 
         # jacobian
         if self.order >= 1:
-            jacobian = batch_jacobian(net.nn_func, ins.data, create_graph=True)
+            jacobian = batch_jacobian(net.nn_func, ins, create_graph=True)
             jacobian = paddle.reshape(
                 jacobian, shape=[net.num_outs, bs, net.num_ins])
         else:
@@ -67,7 +67,7 @@ class CompFormula:
                 def func(ins):
                     return net.nn_func(ins)[:, i:i + 1]
 
-                hessian = batch_hessian(func, ins.data, create_graph=True)
+                hessian = batch_hessian(func, ins, create_graph=True)
                 hessian = paddle.reshape(
                     hessian, shape=[net.num_ins, bs, net.num_ins])
         else:
@@ -77,7 +77,7 @@ class CompFormula:
         self.jacobian = jacobian
         self.hessian = hessian
 
-    def compute_formula(self, formula, ins, normal):
+    def compute_formula(self, formula, ins, ins_attr, normal):
 
         # print(formula.args[0])
 
@@ -88,28 +88,29 @@ class CompFormula:
             num_item = len(formula.args)
             # parser each item
             for item in formula.args:
-                rst += self.__compute_formula_item(item, ins, normal)
+                rst += self.__compute_formula_item(item, ins, ins_attr, normal)
         else:
             num_item = 1
-            rst += self.__compute_formula_item(formula, ins, normal)
+            rst += self.__compute_formula_item(formula, ins, ins_attr, normal)
 
         return rst
 
-    def __compute_formula_item(self, item, ins, normal):
+    def __compute_formula_item(self, item, ins, ins_attr, normal):
 
         rst = 1.0  # TODO: float / double / float16
 
         if item.is_Mul:
             for it in item.args:
-                rst = rst * self.__compute_formula_item(it, ins, normal)
+                rst = rst * self.__compute_formula_item(it, ins, ins_attr,
+                                                        normal)
         elif item.is_Number:
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
             #print(item, "symbol")
-            rst = rst * self.__compute_formula_symbol(item, ins)
+            rst = rst * self.__compute_formula_symbol(item, ins, ins_attr)
         elif item.is_Function:
             #print(item, "function")
-            rst = rst * self.__compute_formula_function(item)
+            rst = rst * self.__compute_formula_function(item, ins_attr)
         elif item.is_Derivative:
             # print(item, "der start")
             rst = rst * self.__compute_formula_der(item, normal)
@@ -119,11 +120,11 @@ class CompFormula:
 
         return rst
 
-    def __compute_formula_symbol(self, item, ins):
+    def __compute_formula_symbol(self, item, ins, ins_attr):
         var_idx = self.indvar.index(item)
-        return self.ins.data[:, var_idx + self.ins.indvar_start]  # TODO
+        return self.ins[:, var_idx + ins_attr.indvar_start]  # TODO
 
-    def __compute_formula_function(self, item):
+    def __compute_formula_function(self, item, ins_attr):
 
         # output function value
         if item in self.dvar:
@@ -133,13 +134,12 @@ class CompFormula:
         # input function value (for time-dependent previous time)
         if item in self.dvar_1:
             f_idx = self.dvar_1.index(item)
-            return self.ins.data[:, f_idx + self.ins.dvar_1_start]  # TODO
+            return self.ins[:, f_idx + ins_attr.dvar_1_start]  # TODO
 
         # parameter pde
         if item in self.parameter_pde:
             f_idx = self.parameter_pde.index(item)
-            return self.ins.data[:,
-                                 f_idx + self.ins.parameter_pde_start]  # TODO
+            return self.ins[:, f_idx + ins_attr.parameter_pde_start]  # TODO
 
     def __compute_formula_der(self, item, normal):
 

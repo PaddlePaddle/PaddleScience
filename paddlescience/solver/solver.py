@@ -21,12 +21,13 @@ __all__ = ["Solver"]
 
 
 class DataSetStatic:
-    def __init__(self, nsamples, ins):
+    def __init__(self, nsamples, ins, ins_attr):
         self.ins = ins
+        self.ins_attr = ins_attr
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.ins
+        return self.ins, self.ins_attr
 
     def __len__(self):
         return self.nsamples
@@ -38,27 +39,32 @@ class ModelStatic(paddle.nn.Layer):
         self.pde = pde
         self.net = net
 
-    def forward(self, ins):
+    def forward(self, ins, ins_attr):
 
         _global_process_mesh = auto.ProcessMesh([0, 1])
 
-        for input in ins["interior"].values():
+        n = 0
+        for attr in ins_attr["interior"].values():
+            input = ins[n]
             auto.shard_tensor(
-                input.data,
+                input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
                     "dims_mapping": [0, -1]
                 })
+            n += 1
 
-        for input in ins["boundary"].values():
+        for attr in ins_attr["boundary"].values():
+            input = ins[n]
             auto.shard_tensor(
-                input.data,
+                input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
                     "dims_mapping": [0, -1]
                 })
+            n += 1
 
-        loss = self.algo.compute(ins, self.pde)
+        loss = self.algo.compute(ins, ins_attr, self.pde)
         return loss
 
 
