@@ -14,7 +14,7 @@
 
 import paddle
 from .algorithm_base import AlgorithmBase
-from ..ins import InsDataWithAttr
+from ..ins import InsAttr
 
 
 class PINNs(AlgorithmBase):
@@ -52,7 +52,7 @@ class PINNs(AlgorithmBase):
         for name, points in pde.geometry.boundary.items():
             data = points  #paddle.to_tensor(
             # points, dtype='float32', stop_gradient=False)
-            ins.append(attr)
+            ins.append(data)
             ins_attr_b[name] = InsAttr(0, 0)
         ins_attr["boundary"] = ins_attr_b
 

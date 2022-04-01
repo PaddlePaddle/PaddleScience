@@ -15,7 +15,7 @@
 import paddle
 from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
-from ..ins import InsDataWithAttr
+from ..ins import InsAttr
 
 
 class LossBase(object):

@@ -132,14 +132,14 @@ class Solver(object):
             >>> rslt = solution(geo)
         """
 
-        ins = self.algo.create_ins(self.pde)
+        ins, ins_attr = self.algo.create_ins(self.pde)
         # print(ins)
 
         for epoch in range(num_epoch):
 
             #for batch_id in range(num_batch):
 
-            loss = self.algo.compute(ins, self.pde)
+            loss = self.algo.compute(ins, ins_attr, self.pde)
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()
