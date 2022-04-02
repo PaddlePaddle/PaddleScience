@@ -16,6 +16,7 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 import paddle.distributed.auto_parallel as auto
+from paddle.distributed.auto_parallel.engine import Engine
 
 __all__ = ["Solver"]
 
@@ -35,7 +36,7 @@ class DataSetStatic:
 
 class ModelStatic(paddle.nn.Layer):
     def __init__(self, pde, net):
-        super(ModelStatic, self).__init__(self)
+        super(ModelStatic, self).__init__()
         self.pde = pde
         self.net = net
 
@@ -89,14 +90,16 @@ class Solver(object):
         self.opt = opt
 
     # init auto dist data structure
-    def __init_auto_dist():
+    def __init_auto_dist(self):
 
         # strategy
-        dist_strategy = fleet.DistributedStrategy()
-        dist_strategy.semi_auto = True
-        fleet.init(is_collective=True, strategy=dist_strategy)
+        self.dist_strategy = fleet.DistributedStrategy()
+        self.dist_strategy.semi_auto = True
+        fleet.init(is_collective=True, strategy=self.dist_strategy)
 
     def solve_static(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
+
+        self.__init_auto_dist()
 
         model = ModelStatic(self.pde, self.algo.net)
 
@@ -104,8 +107,10 @@ class Solver(object):
         inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
         inputs_spec.append(InputSpec([4, 2], 'float32', 'b1'))
         inputs_spec.append(InputSpec([4, 2], 'float32', 'b2'))
+        inputs_spec.append(InputSpec([4, 2], 'float32', 'b3'))
+        inputs_spec.append(InputSpec([4, 2], 'float32', 'b4'))
 
-        #labels_spec = InputSpec([36, 1], 'float32', 'bc_v')
+        labels_spec = None
 
         engine = Engine(
             model,
