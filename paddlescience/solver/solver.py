@@ -35,38 +35,45 @@ class DataSetStatic:
 
 
 class ModelStatic(paddle.nn.Layer):
-    def __init__(self, pde, net):
+    def __init__(self, pde, algo, ins_attr):
         super(ModelStatic, self).__init__()
         self.pde = pde
-        self.net = net
+        self.algo = algo
+        self.ins_attr = ins_attr
 
-    def forward(self, ins, ins_attr):
+    def forward(self, *args):
 
-        _global_process_mesh = auto.ProcessMesh([0, 1])
+        ins_attr = self.ins_attr
+
+        _global_process_mesh = auto.ProcessMesh([0])
 
         n = 0
         for attr in ins_attr["interior"].values():
-            input = ins[n]
+            input = args[n]
             auto.shard_tensor(
                 input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
-                    "dims_mapping": [0, -1]
+                    "dims_mapping": [-1, -1]
                 })
             n += 1
 
         for attr in ins_attr["boundary"].values():
-            input = ins[n]
+            input = args[n]
             auto.shard_tensor(
                 input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
-                    "dims_mapping": [0, -1]
+                    "dims_mapping": [-1, -1]
                 })
             n += 1
 
         loss = self.algo.compute(ins, ins_attr, self.pde)
         return loss
+
+
+def loss_func(x):
+    return x
 
 
 class Solver(object):
@@ -99,9 +106,11 @@ class Solver(object):
 
     def solve_static(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
 
+        ins, ins_attr = self.algo.create_ins(self.pde)
+
         self.__init_auto_dist()
 
-        model = ModelStatic(self.pde, self.algo.net)
+        model = ModelStatic(self.pde, self.algo.algo, ins_attr)
 
         inputs_spec = list()
         inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
