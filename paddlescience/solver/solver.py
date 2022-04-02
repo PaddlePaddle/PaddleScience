@@ -96,11 +96,15 @@ class Solver(object):
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-    def solve_static():
+    def solve_static(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
 
-        model = ModelStatic()
+        model = ModelStatic(self.pde, self.algo.net)
 
-        inputs_spec = [InputSpec([4, 2], 'float32', 'x')]
+        inputs_spec = list()
+        inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
+        inputs_spec.append(InputSpec([4, 2], 'float32', 'b1'))
+        inputs_spec.append(InputSpec([4, 2], 'float32', 'b2'))
+
         #labels_spec = InputSpec([36, 1], 'float32', 'bc_v')
 
         engine = Engine(
