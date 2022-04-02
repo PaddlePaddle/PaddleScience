@@ -68,7 +68,7 @@ class ModelStatic(paddle.nn.Layer):
                 })
             n += 1
 
-        loss = self.algo.compute(ins, ins_attr, self.pde)
+        loss = self.algo.compute(args, ins_attr, self.pde)
         return loss
 
 
@@ -110,7 +110,7 @@ class Solver(object):
 
         self.__init_auto_dist()
 
-        model = ModelStatic(self.pde, self.algo.algo, ins_attr)
+        model = ModelStatic(self.pde, self.algo, ins_attr)
 
         inputs_spec = list()
         inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
