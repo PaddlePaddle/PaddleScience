@@ -144,7 +144,7 @@ def program_transform(program):
                                      'axis': op_desc.attr('axes'),
                                      'starts': op_desc.attr('starts'),
                                      'ends': op_desc.attr('ends'),
-                                     'strides': op_desc.attr('decrease_axis')
+                                     'strides': 1,
                                  }))
 
         elif op_desc.type() == 'slice_grad':
@@ -161,7 +161,7 @@ def program_transform(program):
                                       'axis': op_desc.attr('axes'),
                                       'starts': op_desc.attr('starts'),
                                       'ends': op_desc.attr('ends'),
-                                      'strides': op_desc.attr('decrease_axis')
+                                      'strides': 1
                                   }))
 
         elif op_desc.type() == 'concat_grad':
@@ -759,7 +759,8 @@ def program_transform(program):
                         'add_p', {'X': [in_names[2]],
                                   'Y': [tmp_1]}, {'Z': [out_names[1]]}, {}))
         else:
-            assert op_desc.type() in {'adam', 'shape', 'fill_constant'}
+            print(op_desc.type())
+            # assert op_desc.type() in {'adam', 'shape', 'fill_constant'}
             to_insert.append(op_desc)
 
         for new_op_desc in to_insert:
