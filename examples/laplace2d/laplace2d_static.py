@@ -18,7 +18,7 @@ import numpy as np
 import time
 
 import paddle
-from paddle.autograd.functional import Hessian
+from paddle.incubate.autograd import Hessian
 from transform import program_transform
 
 paddle.enable_static()
@@ -98,8 +98,8 @@ with paddle.static.program_guard(train_program, startup_program):
     outputs = net.nn_func(inputs)
 
     # eq_loss
-    hes = Hessian(net.nn_func, inputs, batch=True)
-    eq_loss = paddle.norm(hes[0, 0] + hes[1, 1], p=2)
+    hes = Hessian(net.nn_func, inputs, is_batched=True)
+    eq_loss = paddle.norm(hes[:, 0, 0] + hes[:, 1, 1], p=2)
 
     # bc_loss
     bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int32')

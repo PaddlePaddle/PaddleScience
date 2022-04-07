@@ -125,6 +125,18 @@ def program_transform(program):
                 _create_op_desc_('tanh_p', {'X': [in_names[0]]},
                                  {'Y': [out_names[0]]}, {}))
 
+        elif op_desc.type() == 'assign':
+            tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
+            to_insert.append(
+                _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
+                    'shape': block.var(in_names[0]).shape,
+                    'value': 0.0
+                }))
+            to_insert.append(
+                _create_op_desc_('add_p', {'X': [in_names[0]],
+                                           'Y': [tmp_1]},
+                                 {'Z': [out_names[0]]}, {}))
+
         elif op_desc.type() == 'reshape2':
             to_insert.append(
                 _create_op_desc_('reshape_p', {'X': [in_names[0]]}, {
@@ -138,14 +150,33 @@ def program_transform(program):
                 }, {'axis': op_desc.attr('axis')}))
 
         elif op_desc.type() == 'slice':
-            to_insert.append(
-                _create_op_desc_('slice_select_p', {'X': [in_names[0]]},
-                                 {'Y': [out_names[0]]}, {
-                                     'axis': op_desc.attr('axes'),
-                                     'starts': op_desc.attr('starts'),
-                                     'ends': op_desc.attr('ends'),
-                                     'strides': op_desc.attr('decrease_axis')
-                                 }))
+            if op_desc.attr('decrease_axis') is None:
+                to_insert.append(
+                    _create_op_desc_('slice_select_p', {'X': [in_names[0]]},
+                                     {'Y': [out_names[0]]}, {
+                                         'axis': op_desc.attr('axes'),
+                                         'starts': op_desc.attr('starts'),
+                                         'ends': op_desc.attr('ends'),
+                                         'strides': 1,
+                                     }))
+            else:
+                tmp_shape = list(block.var(in_names[0]).shape)
+                for axis in op_desc.attr('decrease_axis'):
+                    tmp_shape[axis] = 1
+                tmp_0 = name_gen.get_var(
+                    new_block, block.var(in_names[0]), shape=tuple(tmp_shape))
+                to_insert.append(
+                    _create_op_desc_('slice_select_p', {'X': [in_names[0]]},
+                                     {'Y': [tmp_0]}, {
+                                         'axis': op_desc.attr('axes'),
+                                         'starts': op_desc.attr('starts'),
+                                         'ends': op_desc.attr('ends'),
+                                         'strides': 1,
+                                     }))
+                to_insert.append(
+                    _create_op_desc_('reshape_p', {'X': [tmp_0]}, {
+                        'Y': [out_names[0]]
+                    }, {'shape': block.var(out_names[0]).shape}))
 
         elif op_desc.type() == 'slice_grad':
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
@@ -154,15 +185,36 @@ def program_transform(program):
                     'shape': block.var(in_names[0]).shape,
                     'value': 0.0
                 }))
-            to_insert.append(
-                _create_op_desc_('slice_assign_p',
-                                 {'X': [tmp_1],
-                                  'Y': [in_names[1]]}, {'Z': [out_names[0]]}, {
-                                      'axis': op_desc.attr('axes'),
-                                      'starts': op_desc.attr('starts'),
-                                      'ends': op_desc.attr('ends'),
-                                      'strides': op_desc.attr('decrease_axis')
-                                  }))
+            if op_desc.attr('decrease_axis') is None:
+                to_insert.append(
+                    _create_op_desc_('slice_assign_p', {
+                        'X': [tmp_1],
+                        'Y': [in_names[1]]
+                    }, {'Z': [out_names[0]]}, {
+                        'axis': op_desc.attr('axes'),
+                        'starts': op_desc.attr('starts'),
+                        'ends': op_desc.attr('ends'),
+                        'strides': 1
+                    }))
+            else:
+                tmp_shape = list(block.var(in_names[1]).shape)
+                for axis in op_desc.attr('decrease_axis'):
+                    assert axis == 1
+                tmp_shape.append(1)
+                tmp_2 = name_gen.get_var(
+                    new_block, block.var(in_names[1]), shape=tuple(tmp_shape))
+                to_insert.append(
+                    _create_op_desc_('reshape_p', {'X': [in_names[1]]},
+                                     {'Y': [tmp_2]}, {'shape': tmp_shape}))
+                to_insert.append(
+                    _create_op_desc_('slice_assign_p',
+                                     {'X': [tmp_1],
+                                      'Y': [tmp_2]}, {'Z': [out_names[0]]}, {
+                                          'axis': op_desc.attr('axes'),
+                                          'starts': op_desc.attr('starts'),
+                                          'ends': op_desc.attr('ends'),
+                                          'strides': 1
+                                      }))
 
         elif op_desc.type() == 'concat_grad':
             to_insert.append(
@@ -759,6 +811,7 @@ def program_transform(program):
                         'add_p', {'X': [in_names[2]],
                                   'Y': [tmp_1]}, {'Z': [out_names[1]]}, {}))
         else:
+            # print(op_desc.type())
             assert op_desc.type() in {'adam', 'shape', 'fill_constant'}
             to_insert.append(op_desc)
 
