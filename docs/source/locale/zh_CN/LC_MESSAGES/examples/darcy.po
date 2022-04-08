@@ -1,0 +1,206 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, PaddleScience
+# This file is distributed under the same license as the PaddleScience
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PaddleScience \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-06 11:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/examples/darcy.rst:2 d8ec343fddec478ea659977aa3264241
+msgid "Darcy Flow in Porous Medium"
+msgstr "多孔介质中的达西流"
+
+#: ../../source/examples/darcy.rst:4 fc53b9796b3f4b74bc5c88a2eee35ca0
+msgid ""
+"This guide introduces how to build a PINN model for simulating two-"
+"dimentional Darcy flow in PaddleScience."
+msgstr "本指南介绍如何使用 PaddleScience 构建用于模拟二维达西流的 PINN 模型。"
+
+#: ../../source/examples/darcy.rst:6 04a5172a52fb425ca8090cb1dcb1ab4c
+msgid "**Use case introduction**"
+msgstr "**用例介绍**"
+
+#: ../../source/examples/darcy.rst:8 6af2740736ee4cfc96d3ae71e006d96d
+msgid "The Darcy flow example simulate solution (pressure) of following problem"
+msgstr "达西流示例模拟以下问题的求解（压力）"
+
+#: ../../source/examples/darcy.rst:10 22565010ee594923ac24dcf07f25bb38
+msgid ""
+"u + \\nabla p & =  0, \\ (x,y) \\in (0,1) \\times (0,1),  \\\\\n"
+"\\nabla \\cdot u & =  f, \\ (x,y) \\in (0,1) \\times (0,1),"
+msgstr ""
+
+#: ../../source/examples/darcy.rst:15 e7c9f0f0ed1446f8a19572d5566a33db
+msgid "which is equivalent to"
+msgstr "这相当于"
+
+#: ../../source/examples/darcy.rst:17 662ebf9f9d174d7687ad4fe1ed29d54d
+msgid ""
+"\\Delta u = -f, \\ (x,y) \\in (0,1) \\times (0,1).\n"
+"\n"
+msgstr ""
+
+#: ../../source/examples/darcy.rst:20 379dc84cc89c4ab8976cf7deb461dccb
+msgid "The function f(x,y) is"
+msgstr "函数 f(x,y) 是"
+
+#: ../../source/examples/darcy.rst:22 df629dd66a824825aa72d46571f10316
+msgid ""
+"f(x,y) = 8 \\pi^2 sin(2\\pi x) cos(2 \\pi y).\n"
+"\n"
+msgstr ""
+
+#: ../../source/examples/darcy.rst:25 2cf733717db44a288fbdc2719890c000
+msgid "The Dirichlet boundary condition is set to be"
+msgstr "Dirichlet 边界条件设置为"
+
+#: ../../source/examples/darcy.rst:27 567566a9561d435ab410eb55774eba08
+msgid ""
+"p(x,y) & =  sin(2\\pi x) cos(2\\pi y), \\  x=1 \\ \\text{or} \\ y=1.\n"
+"\n"
+msgstr ""
+
+#: ../../source/examples/darcy.rst:32 e1e9a0ce7bfe442ab3afe8a92de269ec
+msgid ""
+"Following graphs plot the pressure from training the model on a 100 by "
+"100 grid."
+msgstr "下图在 100 x 100 网格上绘制了训练模型的压力值。"
+
+#: ../../source/examples/darcy.rst:39 489fb6d17a2f4e2d8b8389de835e9ce5
+msgid "**How to construct a PINN model**"
+msgstr "**如何构建 PINN 模型**"
+
+#: ../../source/examples/darcy.rst:41 051ce8f6a74e4cfe915efb6c3471df89
+msgid ""
+"A PINN model is jointly composed using what used to be a traditional PDE "
+"setup and a neural net approximating the solution. The PDE part includes "
+"specific differential equations enforcing the physical law, a geometry "
+"that bounds the problem domain and the initial and boundary value "
+"conditions which make it possible to find a solution. The neural net part"
+" can take variants of a typical feed forward network widely found in deep"
+" learning toolkits."
+msgstr "PINN 模型由过去的传统 PDE 设置和近似解的神经网络共同组成。PDE 部分包括执行物理定律的特定微分方程、限定问题域的几何形状以及可以找到解决方案的初始值和边界值条件。神经网络部分可以采用深度学习工具包中广泛存在的典型前馈网络的变体。"
+
+#: ../../source/examples/darcy.rst:48 dfba9507ff78455394780da77a13551a
+msgid ""
+"To obtain the PINN model requires training the neural net. It's in this "
+"phase that the information of the PDE gets instilled into the neural net "
+"through back propagation. The loss function plays a crucial role in "
+"controlling how this information gets dispensed emphasizing different "
+"aspects of the PDE, for instance, by adjusting the weights for the "
+"equation residues and the boundary values."
+msgstr "要获得 PINN 模型，需要训练神经网络。在训练阶段，PDE 的信息通过反向传播被输入到神经网络中。损失函数在控制如何分配这些信息方面起着关键作用，从而强调了PDE的不同方面，例如，通过调整方程残差和边界值的权重。"
+
+#: ../../source/examples/darcy.rst:54 c053950970a94527b518f45b5bedee2e
+msgid ""
+"Once the concept is clear, next let's take a look at how this translates "
+"into the dacy2d example."
+msgstr "概念明确后，接下来让我们看看如何将其转化为 dacy2d 示例。"
+
+#: ../../source/examples/darcy.rst:57 c7f2406f2d764a3ca61b2a5c3e3bd0c0
+msgid "**Constructing PDE**"
+msgstr "**构建偏微分方程**"
+
+#: ../../source/examples/darcy.rst:59 207f8dc0b94f40658c7b8a3117eef56d
+msgid ""
+"First, define the problem geometry using the `psci.geometry` module "
+"interface. In this example, the geometry is a rectangle with the origin "
+"at coordinates (0.0, 0.0) and the extent set to (1.0, 1.0)."
+msgstr "首先，使用 `psci.geometry` 接口 定义问题几何体。在本例中，几何图形是一个矩形，其原点位于坐标 (0.0, 0.0)，范围设置为 (1.0, 1.0)。"
+
+#: ../../source/examples/darcy.rst:68 1096f9497fb7454f99fc7e35d76c1d78
+msgid ""
+"Next, define the PDE equations to solve. In this example, the equations "
+"are a 2d Laplace. This equation is present in the package, and one only "
+"needs to create a `psci.pde.Laplace2D` object to set up the equation."
+msgstr "接下来，定义要求解的 PDE 方程。在本例中，方程是二维拉普拉斯方程。这个方程存在于包中，只需要创建一个 `psci.pde.Laplace2D` 对象来建立方程。"
+
+#: ../../source/examples/darcy.rst:76 a46e8652367441a48094135bebf2ce33
+msgid ""
+"Once the equation and the problem domain are prepared, a discretization "
+"recipe should be given. This recipe will be used to generate the training"
+" data before training starts. Currently, the 2d space can be discretized "
+"into a N by M grid, 101 by 101 in this example specifically."
+msgstr "方程和问题定义好后，需要给出一个离散化方法。此操作将用于在训练开始前生成训练数据。可以将二维空间离散化为 N×M 网格，在本例中具体是 101×101。"
+
+#: ../../source/examples/darcy.rst:85 a51ef78cc9d84dcba5df801593ba7501
+msgid ""
+"As mentioned above, a valid problem setup relies on sufficient "
+"constraints on the boundary and initial values. In this example, `GenBC` "
+"is the procedure that generates the actual boundary values, and by "
+"calling `pdes.set_bc_value()` the values are then passed to the PDE "
+"solver. It's worth noting however that in general the boundary and "
+"initial value conditions can be passed as a function to the solver rather"
+" than actual values. That feature will be addressed in the future."
+msgstr "如上所述，有效的问题设置依赖于对边界和初始值的充分约束。在本例中， `GenBC` 是通过调用PDE生成实际边界值的过程，接着 `pdes.set_bc_value()` 将值传递给PDE求解器。然而，值得注意的是，通常情况下，边界和初始值条件可以作为函数传递给求解器，而不是实际值。 该功能将在未来得到解决。"
+
+#: ../../source/examples/darcy.rst:98 547e89a414dd4ecdbd98fa460c88a146
+msgid "**Constructing the neural net**"
+msgstr "**构建神经网络**"
+
+#: ../../source/examples/darcy.rst:100 ac018974e916470a8f9dbeaa0df76c36
+msgid ""
+"Now the PDE part is almost done, we move on to constructing the neural "
+"net. It's straightforward to define a fully connected network by creating"
+" a `psci.network.FCNet` object. Following is how we create an FFN of 5 "
+"hidden layers with 20 neurons on each, using hyperbolic tangent as the "
+"activation function."
+msgstr "现在 PDE 部分几乎完成了，我们继续构建神经网络。通过创建 `psci.network.FCNet` 对象来定义完全连接的网络很简单。以下是我们如何使用双曲正切作为激活函数创建一个由 5 个隐藏层组成的 FFN，其中每个隐藏层有 20 个神经元。"
+
+#: ../../source/examples/darcy.rst:116 dea8701f4d07475482d7346ff29a0fc2
+msgid ""
+"Next, one of the most important steps is define the loss function. Here "
+"we use L2 loss with custom weights assigned to the boundary values."
+msgstr "接下来，最重要的步骤之一是定义损失函数。在这里，我们使用L2损失，其边界值采用自定义权重。"
+
+#: ../../source/examples/darcy.rst:127 c30aa2895a554cf3bfb0b57a40cec30a
+msgid ""
+"By design, the `loss` object conveys complete information of the PDE and "
+"hence the latter is eclipsed in further steps. Now combine the neural net"
+" and the loss and we create the `psci.algorithm.PINNs` model algorithm."
+msgstr "通过设计， `loss` 对象传递了PDE的完整信息，因此后者在进一步的步骤中被掩盖。现在结合神经网络和损失，我们创建 `psci.algorithm.PINNs` 算法模型。"
+
+#: ../../source/examples/darcy.rst:136 e91819f459124133ae6560cb29dca9bc
+msgid ""
+"Next, by plugging in an Adam optimizer, a solver is contructed and you "
+"are ready to kick off training. In this example, the Adam optimizer is "
+"used and is given a learning rate of 0.001."
+msgstr "接下来，通过插入Adam优化器，构建一个求解器，就可以开始训练了。在本例中，使用了Adam优化器，其学习率为0.001。"
+
+#: ../../source/examples/darcy.rst:140 9401db84dfa442cb842e26f5f3d3d25f
+msgid ""
+"The `psci.solver.Solver` class bundles the PINNs model, which is called "
+"`algo` here, and the optimizer, into a solver object that exposes the "
+"`solve` interface. `solver.solve` accepts three key word arguments. "
+"`num_epoch` specicifies how many epoches for each batch."
+msgstr " `psci.solver.Solver` 类将PINNs模型 `（algo）` 和优化器绑定到一个solver对象中，该对象公开了 `solve` 接口。 `solver.solve` 接受三个关键字参数： `num_epoch` 指定每批有多少个epoch。 `batch_size` 指定每个训练步处理数据的批量大小。"
+
+#: ../../source/examples/darcy.rst:152 50081c9e493d47b38b215e3818e96aa1
+msgid ""
+"Finally, `solver.solve` returns a function that calculates the solution "
+"value for given points in the geometry. Apply the function to the "
+"geometry, convert the outputs to Numpy and then you can verify the "
+"results."
+msgstr "最后， `solver.solve` 返回一个函数，用于计算几何体中给定点的求解值。将该函数应用于几何，将输出转换为 Numpy，然后可以验证结果。"
+
+#: ../../source/examples/darcy.rst:156 f1dc03a2b2594e868052c3e50b83e5cd
+msgid ""
+"`psci.visu.save_vtk` is a helper utility for quick visualization. It "
+"saves the graphs in vtp file which one can play using `Paraview "
+"<https://www.paraview.org/>`_."
+msgstr ""
+"`psci.visu.save_vtk` 是一个快速可视化的辅助工具. 它将图形保存在 vtp 文件中， "
+"播放可以使用 `Paraview "
+"<https://www.paraview.org/>`_."

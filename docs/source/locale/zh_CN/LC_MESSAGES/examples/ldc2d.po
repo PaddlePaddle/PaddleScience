@@ -1,0 +1,177 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, PaddleScience
+# This file is distributed under the same license as the PaddleScience
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PaddleScience \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-06 11:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/examples/ldc2d.rst:2 a8e332c326a24f419999621cc3e2e55e
+msgid "Lid Driven Cavity Flow"
+msgstr "顶盖驱动方腔流"
+
+#: ../../source/examples/ldc2d.rst:4 85ed9c1d0f424489b8fb615cbcd2cfeb
+msgid ""
+"This guide introduces to how to build a PINN model for simulating the 2d "
+"Lid Driven Cavity (LDC) flow in PaddleScience."
+msgstr "本指南介绍如何建立 PINN 模型，以在 PaddleScience 中模拟二维顶盖驱动方腔（LDC）流。"
+
+#: ../../source/examples/ldc2d.rst:6 4fa0396de263497c9fefcd02266a6514
+msgid "**Use case introduction**"
+msgstr "**用例介绍**"
+
+#: ../../source/examples/ldc2d.rst:8 8fc758b3bc2a42148456c8e57c3252f8
+msgid ""
+"The LDC problem mimicks a liquid-filled container with the lid moving in "
+"the horizontal direction at a constant speed. The goal is to calculate "
+"the velocity of the liquid at each interior point in the container when "
+"the system is in the steady state."
+msgstr "LDC问题模拟了一个充满液体的容器，容器盖在水平方向上以恒定速度移动。目标是计算系统处于稳定状态时，容器内每个点的液体速度。"
+
+#: ../../source/examples/ldc2d.rst:10 ab239e0802bb4a609d22e6b68760b668
+msgid ""
+"Following graphs show the results generated from training a 100 by 100 "
+"grid. The vertical and horizontal components of velocity are displayed "
+"separately."
+msgstr "下图在100×100网格上展示了训练生成的结果。分别是速度的垂直和水平分量"
+
+#: ../../source/examples/ldc2d.rst:22 1546dbaae6c646cc92f4d31dbcbccfef
+msgid "**How to construct a PINN model**"
+msgstr "**如何构建 PINN 模型**"
+
+#: ../../source/examples/ldc2d.rst:24 c011fb0334e944d986746cddd6b38571
+msgid ""
+"A PINN model is jointly composed using what used to be a traditional PDE "
+"setup and a neural net approximating the solution. The PDE part includes "
+"specific differential equations enforcing the physical law, a geometry "
+"that bounds the problem domain and the initial and boundary value "
+"conditions which make it possible to find a solution. The neural net part"
+" can take variants of a typical feed forward network widely found in deep"
+" learning toolkits."
+msgstr "PINN模型由传统的PDE设置和近似解的神经网络共同组成。PDE部分包括执行物理定律的特定微分方程、限制问题域的几何结构，以及使找到解决方案成为可能的初始和边界值条件。神经网络部分可以采用深度学习工具包中广泛存在的典型前馈网络的变体。"
+
+#: ../../source/examples/ldc2d.rst:26 441561b2e78f421cbb7470f112ac76b0
+msgid ""
+"To obtain the PINN model requires training the neural net. It's in this "
+"phase that the information of the PDE gets instilled into the neural net "
+"through back propagation. The loss function plays a crucial role in "
+"controling how this information gets dispensed emphasizing different "
+"aspects of the PDE, for instance, by adjusting the weights for the "
+"equation residues and the boundary values."
+msgstr "为了获得PINN模型，需要训练神经网络。在训练阶段，PDE的信息通过反向传播被输入到神经网络中。损失函数在控制如何分配这些信息方面起着关键作用，从而强调了PDE的不同方面，例如，通过调整方程残差和边界值的权重。"
+
+#: ../../source/examples/ldc2d.rst:28 bbf9744f2332442a898090c14fc513ac
+msgid ""
+"Once the concept is clear, next let's take a look at how this translates "
+"into the ldc2d example."
+msgstr "概念明确后，接下来让我们看看这是如何转化为ldc2d示例的。"
+
+#: ../../source/examples/ldc2d.rst:31 3ee5fc5c11e34fc6934e91c4a9853b4e
+msgid "**Constructing PDE**"
+msgstr "**构造偏微分方程PDE**"
+
+#: ../../source/examples/ldc2d.rst:34 24271160377c4d93a01014f64b1e0061
+msgid ""
+"First, define the problem geometry using the `psci.geometry` module "
+"interface. In this example, the geometry is a rectangle with the origin "
+"at coordinates (-0.05, -0.05) and the extent set to (0.05, 0.05)."
+msgstr "首先，使用 `psci.geometry` 接口 定义问题几何体。在本例中，几何图形是一个矩形，其原点位于坐标（-0.05，-0.05），范围设置为（0.05,0.05）。"
+
+#: ../../source/examples/ldc2d.rst:43 5969c27131cf47efbda6ee3cf92f2e8c
+msgid ""
+"Next, define the PDE equations to solve. In this example, the equations "
+"are a 2d Navier Stokes. This equation is present in the package, and one "
+"only needs to create a `psci.pde.NavierStokes2D` object to set up the "
+"equation."
+msgstr "接下来，定义要求解的PDE方程。本例是二维纳维尔－斯托克斯方程。这个方程出现在包中，只需要创建一个 `psci.pde.NavierStokes2D` 对象来建立方程。"
+
+#: ../../source/examples/ldc2d.rst:52 0ba2a4e5c2374f8bae1f3147397e25ce
+msgid ""
+"Once the equation and the problem domain are prepared, a discretization "
+"recipe should be given. This recipe will be used to generate the training"
+" data before training starts. Currently, the 2d space can be discretized "
+"into a N by M grid, 101 by 101 in this example specifically."
+msgstr "方程和问题定义好后，需要给出一个离散化方法。此操作将用于在训练开始前生成训练数据。可以将二维空间离散化为 N×M 网格，在本示例中具体是101×101。"
+
+#: ../../source/examples/ldc2d.rst:62 1ae80d5dad4f4702a7e201a571c6f19d
+msgid ""
+"As mentioned above, a valid problem setup relies on sufficient "
+"constraints on the boundary and initial values. In this example, `GenBC` "
+"is the procedure that generates the actual boundary values, and by "
+"calling `pdes.set_bc_value()` the values are then passed to the PDE "
+"solver. It's worth noting however that in general the boundary and "
+"initial value conditions can be passed as a function to the solver rather"
+" than actual values. That feature will be addressed in the future."
+msgstr "如上所述，有效的问题设置依赖于对边界和初始值的充分约束。在本例中，`GenBC` 是通过调用PDE生成实际边界值的过程，接着 `pdes.set_bc_value()` 将值传递给PDE求解器。然而，值得注意的是，通常情况下，边界和初始值条件可以作为函数传递给求解器，而不是实际值。 该功能将在未来得到解决。"
+
+#: ../../source/examples/ldc2d.rst:88 54319fb3d83247649a186960667eab1e
+msgid "**Constructing the neural net**"
+msgstr "**构建神经网络**"
+
+#: ../../source/examples/ldc2d.rst:91 39ed7badb4f1496a9c12d263ad6eebe6
+msgid ""
+"Now the PDE part is almost done, we move on to constructing the neural "
+"net. It's straightforward to define a fully connected network by creating"
+" a `psci.network.FCNet` object. Following is how we create an FFN of 5 "
+"hidden layers with 20 neurons on each, using hyperbolic tangent as the "
+"activation function."
+msgstr "现在PDE部分几乎完成了，我们继续构建神经网络。通过创建 `psci.network.FCNet` 对象来定义全连接网络很简单。下面展示了我们如何使用双曲正切作为激活函数，创建一个由 5 个隐藏层组成的 FFN，其中每个隐藏层有 20 个神经元。"
+
+#: ../../source/examples/ldc2d.rst:106 1721ab3f7bcc4faebea0067c42b166e5
+msgid ""
+"Next, one of the most important steps is define the loss function. Here "
+"we use L2 loss with custom weights assigned to the boundary values."
+msgstr "接下来，最重要的步骤之一是定义损失函数。在这里，我们使用L2损失，其边界值采用自定义权重。"
+
+#: ../../source/examples/ldc2d.rst:119 cccbe44e6a3c40f8a3363865366c099f
+msgid ""
+"By design, the `loss` object conveys complete information of the PDE and "
+"hence the latter is eclipsed in further steps. Now combine the neural net"
+" and the loss and we create the `psci.algorithm.PINNs` model algorithm."
+msgstr "通过设计， `loss` 对象传递了PDE的完整信息，因此后者在进一步的步骤中被掩盖。现在结合神经网络和损失，我们创建 `psci.algorithm.PINNs` 算法模型。"
+
+#: ../../source/examples/ldc2d.rst:128 e45e3d59ea014c9fafb5118af94a481d
+msgid ""
+"Next, by plugging in an Adam optimizer, a solver is contructed and you "
+"are ready to kick off training. In this example, the Adam optimizer is "
+"used and is given a learning rate of 0.001."
+msgstr "接下来，通过插入Adam优化器，构建一个求解器，就可以开始训练了。在本例中，使用了Adam优化器，其学习率为0.001。"
+
+#: ../../source/examples/ldc2d.rst:132 3f46b9d531544a338246902735440709
+msgid ""
+"The `psci.solver.Solver` class bundles the PINNs model, which is called "
+"`algo` here, and the optimizer, into a solver object that exposes the "
+"`solve` interface. `solver.solve` accepts three key word arguments. "
+"`num_epoch` specicifies how many epoches for each batch. `batch_size` "
+"specifies the batch size of data that each train step works on."
+msgstr " `psci.solver.Solver` 类将PINNs模型 `（algo）` 和优化器绑定到一个solver对象中，该对象公开了 `solve` 接口。 `solver.solve` 接受三个关键字参数： `num_epoch` 指定每批有多少个epoch。 `batch_size` 指定每个训练步处理数据的批量大小。"
+
+#: ../../source/examples/ldc2d.rst:146 97392337331b4146b69a6a6c9b271c46
+msgid ""
+"Finally, `solver.solve` returns a function that calculates the solution "
+"value for given points in the geometry. Apply the function to the "
+"geometry, convert the outputs to Numpy and then you can verify the "
+"results."
+msgstr "最后， `solver.solve` 返回一个函数，用于计算几何体中给定点的求解值。将该函数应用于几何，将输出转换为 Numpy，然后可以验证结果。"
+
+#: ../../source/examples/ldc2d.rst:150 3d7119358b6948bd9ae7436858007452
+msgid ""
+"`psci.visu.save_vtk` is a helper utility for quick visualization. It "
+"saves the graphs in vtp file which one can play using `Paraview "
+"<https://www.paraview.org/>`_."
+msgstr ""
+"`psci.visu.save_vtk` 是一个快速可视化的辅助工具. 它将图形保存在 vtp 文件中， "
+"播放可以使用 `Paraview "
+"<https://www.paraview.org/>`_."
