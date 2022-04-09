@@ -77,7 +77,7 @@ class ModelStatic(paddle.nn.Layer):
 
 def loss_func(x):
 
-    print("\n ********** loss_func done ****  \n", x.to_numpy())
+    print("\n ********** loss_func done ****  \n")
     return x
 
 
@@ -110,6 +110,15 @@ class Solver(object):
         fleet.init(is_collective=True, strategy=self.dist_strategy)
 
     def solve_static(self, num_epoch=1, bs=None, checkpoint_freq=1000):
+
+        ins, ins_attr = self.algo.create_ins(self.pde)
+
+        shape = ins[0].shape
+        shape[0] = -1
+        inputs = paddle.static.data(
+            name='in', shape=shape, dtype='float32', stop_gradient=False)
+
+    def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
