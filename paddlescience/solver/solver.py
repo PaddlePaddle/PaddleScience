@@ -68,7 +68,7 @@ class ModelStatic(paddle.nn.Layer):
                 })
             n += 1
 
-        loss = self.algo.compute(args, ins_attr, self.pde)
+        loss = self.algo.compute(*args, ins_attr=ins_attr, pde=self.pde)
         return loss
 
 

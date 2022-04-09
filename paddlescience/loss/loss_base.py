@@ -14,6 +14,7 @@
 
 import paddle
 from paddle.autograd import batch_jacobian, batch_hessian
+from paddle.autograd.functional import Hessian, Jacobian
 import sympy
 from ..ins import InsAttr
 
@@ -54,9 +55,9 @@ class CompFormula:
 
         # jacobian
         if self.order >= 1:
-            jacobian = batch_jacobian(net.nn_func, ins, create_graph=True)
-            jacobian = paddle.reshape(
-                jacobian, shape=[net.num_outs, bs, net.num_ins])
+            jacobian = Jacobian(net.nn_func, ins, batch=True)
+            # jacobian = paddle.reshape(
+            #     jacobian, shape=[net.num_outs, bs, net.num_ins])
         else:
             jacobian = None
 
@@ -67,9 +68,9 @@ class CompFormula:
                 def func(ins):
                     return net.nn_func(ins)[:, i:i + 1]
 
-                hessian = batch_hessian(func, ins, create_graph=True)
-                hessian = paddle.reshape(
-                    hessian, shape=[net.num_ins, bs, net.num_ins])
+                hessian = Hessian(func, ins, batch=True)
+                # hessian = paddle.reshape(
+                #     hessian, shape=[net.num_ins, bs, net.num_ins])
         else:
             hessian = None
 
@@ -159,15 +160,15 @@ class CompFormula:
 
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
-                rst = normal * jacobian[f_idx, :]
+                rst = normal * jacobian[f_idx, 0]
             else:
                 var_idx = self.indvar.index(v)
-                rst = jacobian[f_idx, :, var_idx]
+                rst = jacobian[f_idx, var_idx]
         # parser hessian for order 2
         elif order == 2:
             if (len(item.args[1:]) == 1):
                 var_idx = self.indvar.index(item.args[1][0])
-                rst = jacobian[f_idx, :, var_idx]
+                rst = jacobian[f_idx, var_idx]
             else:
                 var_idx1 = self.indvar.index(item.args[1][0])
                 var_idx2 = self.indvar.index(item.args[2][0])
