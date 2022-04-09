@@ -69,10 +69,15 @@ class ModelStatic(paddle.nn.Layer):
             n += 1
 
         loss = self.algo.compute(*args, ins_attr=ins_attr, pde=self.pde)
+
+        print("\n ********** compute done ****  \n")
+
         return loss
 
 
 def loss_func(x):
+
+    print("\n ********** loss_func done ****  \n", x.to_numpy())
     return x
 
 
@@ -104,7 +109,7 @@ class Solver(object):
         self.dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=self.dist_strategy)
 
-    def solve_static(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
+    def solve_static(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
@@ -114,10 +119,10 @@ class Solver(object):
 
         inputs_spec = list()
         inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
-        inputs_spec.append(InputSpec([4, 2], 'float32', 'b1'))
-        inputs_spec.append(InputSpec([4, 2], 'float32', 'b2'))
-        inputs_spec.append(InputSpec([4, 2], 'float32', 'b3'))
-        inputs_spec.append(InputSpec([4, 2], 'float32', 'b4'))
+        inputs_spec.append(InputSpec([2, 2], 'float32', 'b1'))
+        inputs_spec.append(InputSpec([2, 2], 'float32', 'b2'))
+        inputs_spec.append(InputSpec([2, 2], 'float32', 'b3'))
+        inputs_spec.append(InputSpec([2, 2], 'float32', 'b4'))
 
         labels_spec = None
 
@@ -127,7 +132,11 @@ class Solver(object):
             labels_spec=labels_spec,
             strategy=self.dist_strategy)
 
+        print("\n ********** engine prepare start ****  \n")
+
         engine.prepare(optimizer=self.opt, loss=loss_func)
+
+        print("\n ********** engine prepare done ****  \n")
 
         res = engine.fit(train_dataset)
 
