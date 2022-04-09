@@ -113,10 +113,32 @@ class Solver(object):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
-        shape = ins[0].shape
-        shape[0] = -1
-        inputs = paddle.static.data(
-            name='in', shape=shape, dtype='float32', stop_gradient=False)
+        inputs = list()
+        feeds = dict()
+
+        train_program = paddle.static.Program()
+        startup_program = paddle.static.Program()
+
+        with paddle.static.program_guard(train_program, startup_program):
+
+            for i in range(len(ins)):
+                #inputs
+                input = paddle.static.data(
+                    name='input-' + str(i),
+                    shape=ins[i].shape,
+                    dtype='float32')
+                input.stop_gradient = False
+                inputs.append(input)
+
+                # feeds
+                feeds['input-' + str(i)] = ins[i]
+
+            loss = self.algo.compute(*inputs, ins_attr=ins_attr, pde=self.pde)
+
+            self.opt.minimize(loss)
+
+        rslt = exe.run(train_program, feed=feeds,
+                       fetch_list=[outputs.name, ])[0]
 
     def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
