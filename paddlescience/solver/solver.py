@@ -40,6 +40,7 @@ class ModelStatic(paddle.nn.Layer):
         self.pde = pde
         self.algo = algo
         self.ins_attr = ins_attr
+        self.algo.net.make_network_static()
 
     def forward(self, *args):
 
@@ -135,7 +136,7 @@ class Solver(object):
                     dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
-                print(ins[i].shape)
+                # print(ins[i].shape)
 
                 # feeds
                 feeds['input-' + str(i)] = ins[i]
@@ -157,13 +158,14 @@ class Solver(object):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetchs)
             print("loss: ", rslt)
 
-    def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
+    def solve_static_auto(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
-        self.__init_auto_dist()
+        # print(ins)
+        # print(ins_attr)
 
-        self.algo.net.make_network_static()
+        self.__init_auto_dist()
 
         model = ModelStatic(self.pde, self.algo, ins_attr)
 
@@ -189,6 +191,8 @@ class Solver(object):
         print("\n ********** engine prepare done ****  \n")
 
         res = engine.fit(train_dataset)
+
+        print("\n ********** engine res done ****  \n")
 
     def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
         """
