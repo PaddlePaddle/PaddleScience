@@ -171,11 +171,14 @@ class Solver(object):
         model = ModelStatic(self.pde, self.algo, ins_attr)
 
         inputs_spec = list()
-        inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
-        inputs_spec.append(InputSpec([2, 2], 'float32', 'b1'))
-        inputs_spec.append(InputSpec([2, 2], 'float32', 'b2'))
-        inputs_spec.append(InputSpec([2, 2], 'float32', 'b3'))
-        inputs_spec.append(InputSpec([2, 2], 'float32', 'b4'))
+        # inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
+        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b1'))
+        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b2'))
+        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b3'))
+        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b4'))
+
+        for i in ins:
+            inputs_spec.append(InputSpec(i.shape, 'float32', 'input' + str(i)))
 
         labels_spec = None
 
