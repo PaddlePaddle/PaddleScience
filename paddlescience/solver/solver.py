@@ -22,13 +22,12 @@ __all__ = ["Solver"]
 
 
 class DataSetStatic:
-    def __init__(self, nsamples, ins, ins_attr):
+    def __init__(self, nsamples, ins):
         self.ins = ins
-        self.ins_attr = ins_attr
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.ins, self.ins_attr
+        return self.ins
 
     def __len__(self):
         return self.nsamples
@@ -190,6 +189,7 @@ class Solver(object):
 
         print("\n ********** engine prepare done ****  \n")
 
+        train_dataset = DataSetStatic(num_epoch, ins)
         res = engine.fit(train_dataset)
 
         print("\n ********** engine res done ****  \n")
