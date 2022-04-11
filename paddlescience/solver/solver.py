@@ -122,6 +122,7 @@ class Solver(object):
         main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
+        # 
         with paddle.static.program_guard(main_program, startup_program):
 
             self.algo.net.make_network_static()
@@ -145,8 +146,16 @@ class Solver(object):
 
             self.opt.minimize(loss)
 
+        fetchs = [loss.name]
+
+        # start up program
         exe.run(startup_program)
-        rslt = exe.run(main_program, feed=feeds, fetch_list=[loss.name, ])[0]
+
+        # main loop
+        for i in range(num_epoch):
+
+            rslt = exe.run(main_program, feed=feeds, fetch_list=fetchs)
+            print("loss: ", rslt)
 
     def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
