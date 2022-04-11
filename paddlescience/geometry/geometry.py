@@ -21,25 +21,25 @@ import matplotlib.pyplot as plt
 # Geometry
 class Geometry:
     def __init__(self):
-        self.condition = dict()  # condition (lambda) defining boundary
+        self.criteria = dict()  # criteria (lambda) defining boundary
         self.normal = dict()  # boundary normal direction
 
-    def add_boundary(self, name, condition, normal=None):
+    def add_boundary(self, name, criteria, normal=None):
 
-        self.condition[name] = condition
+        self.criteria[name] = criteria
         self.normal[name] = normal
 
     def delete_boundary(self, name):
 
-        if name in self.condition:
-            del self.condition[name]
+        if name in self.criteria:
+            del self.criteria[name]
 
         if name in self.normal:
             del self.normal[name]
 
     def clear_boundary(self):
 
-        self.condition.clear()
+        self.criteria.clear()
         self.normal.clear()
 
     # def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):

@@ -51,9 +51,9 @@ class Rectangular(Geometry):
         geo_disc.interior = interior
 
         # boundary points
-        for name in self.condition.keys():
+        for name in self.criteria.keys():
 
-            condition = self.condition[name]
+            criteria = self.criteria[name]
             normal = self.normal[name]
 
             # TODO

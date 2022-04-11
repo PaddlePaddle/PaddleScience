@@ -23,14 +23,13 @@ nup = psci.parameter.Parameter('nu')
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 
+geo.add_boundary(name="top", criteria=lambda x, y: y == 1.0, normal=(0.0, 1.0))
 geo.add_boundary(
-    name="top", condition=lambda x, y: y == 1.0, normal=(0.0, 1.0))
+    name="down", criteria=lambda x, y: y == 0.0, normal=(0.0, -1.0))
 geo.add_boundary(
-    name="down", condition=lambda x, y: y == 0.0, normal=(0.0, -1.0))
+    name="left", criteria=lambda x, y: x == 0.0, normal=(-1.0, 0.0))
 geo.add_boundary(
-    name="left", condition=lambda x, y: x == 0.0, normal=(-1.0, 0.0))
-geo.add_boundary(
-    name="right", condition=lambda x, y: x == 1.0, normal=(1.0, 0.0))
+    name="right", criteria=lambda x, y: x == 1.0, normal=(1.0, 0.0))
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
@@ -86,7 +85,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve_static_auto(num_epoch=2)
+solution = solver.solve_static(num_epoch=2)
 
 # Predict
 
