@@ -68,16 +68,16 @@ class ModelStatic(paddle.nn.Layer):
                 })
             n += 1
 
-        loss = self.algo.compute(*args, ins_attr=ins_attr, pde=self.pde)
+        loss, outs = self.algo.compute(*args, ins_attr=ins_attr, pde=self.pde)
 
-        print("\n ********** compute done ****  \n")
+        # print("\n ********** compute done ****  \n")
 
-        return loss
+        return loss  #, outs # TODO: add outs
 
 
 def loss_func(x):
 
-    print("\n ********** loss_func done ****  \n")
+    # print("\n ********** loss_func done ****  \n")
     return x
 
 
@@ -135,27 +135,29 @@ class Solver(object):
                     dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
-                # print(ins[i].shape)
 
                 # feeds
                 feeds['input-' + str(i)] = ins[i]
 
                 # print(ins[i])
 
-            loss = self.algo.compute(*inputs, ins_attr=ins_attr, pde=self.pde)
+            loss, outs = self.algo.compute(
+                *inputs, ins_attr=ins_attr, pde=self.pde)
 
             self.opt.minimize(loss)
 
-        fetchs = [loss.name]
+        # fetch loss and net's output
+        fetches = [loss.name]
+        for out in outs:
+            fetches.append(out.name)
 
         # start up program
         exe.run(startup_program)
 
         # main loop
         for i in range(num_epoch):
-
-            rslt = exe.run(main_program, feed=feeds, fetch_list=fetchs)
-            print("loss: ", rslt)
+            rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
+            print("loss: ", rslt[0])
 
     def solve_static_auto(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
@@ -190,9 +192,9 @@ class Solver(object):
         print("\n ********** engine prepare done ****  \n")
 
         train_dataset = DataSetStatic(num_epoch, ins)
-        res = engine.fit(train_dataset)
+        rslt = engine.fit(train_dataset)
 
-        print("\n ********** engine res done ****  \n")
+        print("\n ********** engine rslt done ****  \n")
 
     def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
         """
