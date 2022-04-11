@@ -51,6 +51,18 @@ def transhape(ref_shape):
     return [ref_shape[1], ref_shape[0]]
 
 
+def slice_assign_shape(old_shape, decrease_axis):
+    new_shape = []
+    j = 0
+    for i in range(len(old_shape) + len(decrease_axis)):
+        if i in decrease_axis:
+            new_shape.append(1)
+        else:
+            new_shape.append(old_shape[j])
+            j += 1
+    return new_shape
+
+
 def program_transform(program):
     assert program.num_blocks == 1
 
@@ -145,20 +157,20 @@ def program_transform(program):
 
         elif op_desc.type() == 'concat':
             to_insert.append(
-                _create_op_desc_('concat_p', {'X': [in_names[0]]}, {
+                _create_op_desc_('concat_p', {'X': in_names}, {
                     'Y': [out_names[0]]
                 }, {'axis': op_desc.attr('axis')}))
 
         elif op_desc.type() == 'slice':
             if op_desc.attr('decrease_axis') is None:
                 to_insert.append(
-                    _create_op_desc_('slice_select_p', {'X': [in_names[0]]},
-                                     {'Y': [out_names[0]]}, {
-                                         'axis': op_desc.attr('axes'),
-                                         'starts': op_desc.attr('starts'),
-                                         'ends': op_desc.attr('ends'),
-                                         'strides': 1,
-                                     }))
+                    _create_op_desc_('slice_select_p', {'X': [in_names[
+                        0]]}, {'Y': [out_names[0]]}, {
+                            'axis': op_desc.attr('axes'),
+                            'starts': op_desc.attr('starts'),
+                            'ends': op_desc.attr('ends'),
+                            'strides': [1] * len(op_desc.attr('axes')),
+                        }))
             else:
                 tmp_shape = list(block.var(in_names[0]).shape)
                 for axis in op_desc.attr('decrease_axis'):
@@ -166,13 +178,13 @@ def program_transform(program):
                 tmp_0 = name_gen.get_var(
                     new_block, block.var(in_names[0]), shape=tuple(tmp_shape))
                 to_insert.append(
-                    _create_op_desc_('slice_select_p', {'X': [in_names[0]]},
-                                     {'Y': [tmp_0]}, {
-                                         'axis': op_desc.attr('axes'),
-                                         'starts': op_desc.attr('starts'),
-                                         'ends': op_desc.attr('ends'),
-                                         'strides': 1,
-                                     }))
+                    _create_op_desc_('slice_select_p', {'X': [in_names[
+                        0]]}, {'Y': [tmp_0]}, {
+                            'axis': op_desc.attr('axes'),
+                            'starts': op_desc.attr('starts'),
+                            'ends': op_desc.attr('ends'),
+                            'strides': [1] * len(op_desc.attr('axes')),
+                        }))
                 to_insert.append(
                     _create_op_desc_('reshape_p', {'X': [tmp_0]}, {
                         'Y': [out_names[0]]
@@ -194,34 +206,35 @@ def program_transform(program):
                         'axis': op_desc.attr('axes'),
                         'starts': op_desc.attr('starts'),
                         'ends': op_desc.attr('ends'),
-                        'strides': 1
+                        'strides': [1] * len(op_desc.attr('axes'))
                     }))
             else:
-                tmp_shape = list(block.var(in_names[1]).shape)
-                for axis in op_desc.attr('decrease_axis'):
-                    assert axis == 1
-                tmp_shape.append(1)
+                tmp_shape = slice_assign_shape(
+                    block.var(in_names[1]).shape,
+                    op_desc.attr('decrease_axis'))
                 tmp_2 = name_gen.get_var(
                     new_block, block.var(in_names[1]), shape=tuple(tmp_shape))
                 to_insert.append(
                     _create_op_desc_('reshape_p', {'X': [in_names[1]]},
                                      {'Y': [tmp_2]}, {'shape': tmp_shape}))
                 to_insert.append(
-                    _create_op_desc_('slice_assign_p',
-                                     {'X': [tmp_1],
-                                      'Y': [tmp_2]}, {'Z': [out_names[0]]}, {
-                                          'axis': op_desc.attr('axes'),
-                                          'starts': op_desc.attr('starts'),
-                                          'ends': op_desc.attr('ends'),
-                                          'strides': 1
-                                      }))
+                    _create_op_desc_('slice_assign_p', {
+                        'X': [tmp_1],
+                        'Y': [tmp_2]
+                    }, {'Z': [out_names[0]]}, {
+                        'axis': op_desc.attr('axes'),
+                        'starts': op_desc.attr('starts'),
+                        'ends': op_desc.attr('ends'),
+                        'strides': [1] * len(op_desc.attr('axes'))
+                    }))
 
         elif op_desc.type() == 'concat_grad':
             to_insert.append(
-                _create_op_desc_('split_p', {'X': [in_names[0]], }, {
-                    'Y': [out_names[0]]
-                }, {'axis': op_desc.attr('axis'),
-                    'num_or_sections': [1]}))
+                _create_op_desc_('split_p', {'X': [in_names[0]], },
+                                 {'Y': out_names}, {
+                                     'axis': op_desc.attr('axis'),
+                                     'num_or_sections': [len(out_names)]
+                                 }))
 
         elif op_desc.type() == 'reshape2_grad':
             to_insert.append(
