@@ -163,6 +163,8 @@ class Solver(object):
 
         self.__init_auto_dist()
 
+        self.algo.net.make_network_static()
+
         model = ModelStatic(self.pde, self.algo, ins_attr)
 
         inputs_spec = list()
