@@ -119,10 +119,10 @@ class Solver(object):
         inputs = list()
         feeds = dict()
 
-        train_program = paddle.static.Program()
+        main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
-        with paddle.static.program_guard(train_program, startup_program):
+        with paddle.static.program_guard(main_program, startup_program):
 
             self.algo.net.make_network_static()
 
@@ -139,11 +139,14 @@ class Solver(object):
                 # feeds
                 feeds['input-' + str(i)] = ins[i]
 
+                # print(ins[i])
+
             loss = self.algo.compute(*inputs, ins_attr=ins_attr, pde=self.pde)
 
             self.opt.minimize(loss)
 
-        rslt = exe.run(train_program, feed=feeds, fetch_list=[loss.name, ])[0]
+        exe.run(startup_program)
+        rslt = exe.run(main_program, feed=feeds, fetch_list=[loss.name, ])[0]
 
     def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 

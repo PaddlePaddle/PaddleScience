@@ -70,12 +70,12 @@ class PINNs(AlgorithmBase):
             loss = loss_i  # TODO: += 1
             n += 1
 
-        # # boundary out and loss
-        # for attr in ins_attr["boundary"].values():
-        #     input = args[n]
-        #     loss_b, outs = self.loss.bc_loss(
-        #         pde, self.net, input, attr, bs=2)  # TODO bs
-        #     loss += loss_b
-        #     n += 1
+        # boundary out and loss
+        for attr in ins_attr["boundary"].values():
+            input = args[n]
+            loss_b, outs = self.loss.bc_loss(
+                pde, self.net, input, attr, bs=2)  # TODO bs
+            loss += loss_b
+            n += 1
 
         return loss  # TODO: return more
