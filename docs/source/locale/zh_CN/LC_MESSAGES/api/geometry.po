@@ -20,17 +20,17 @@ msgstr ""
 
 #: ../../source/api/geometry.rst:2 dce36555c0734a168b931122e4574407
 msgid "Geometry"
-msgstr "几何学"
+msgstr "几何"
 
 #: f2aa03b53bc54d18afe416e6840cec4a of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete:1
 msgid "Geometry Discrete"
-msgstr "离散几何学"
+msgstr "几何离散"
 
 #: 4e3de615c02c4d4cadfb43533bc83e69 of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_bc_index:1
 msgid "Get bounday index"
-msgstr "获取边界索引"
+msgstr "获取边界条件"
 
 #: 120805e653074f03898c84b9751618c4 7b1b21e233e1482083df884da3b11c67
 #: a92c5ec7861f4f888f2783cc004ff40d of
@@ -38,12 +38,12 @@ msgstr "获取边界索引"
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_ic_index
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_space_domain
 msgid "Returns"
-msgstr "返会"
+msgstr "返回"
 
 #: cb66d83424b9419dbba0f1f6448451bc of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_bc_index:3
 msgid "**bc_index** -- Bounday index indicating which points are on the boundary."
-msgstr "**bc_index** -- 边界索引指示哪些点在边界上"
+msgstr "**bc_index** -- 边界条件"
 
 #: 15d46c62ab004690a1f8b226890e1c45 45ab7f3452c8417e92faa4473a49c269
 #: ef4c2509e19f48b582763938add6f002 of
@@ -56,12 +56,12 @@ msgstr "返回类型"
 #: 605190b77cec48c593111aafe49628af of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_ic_index:1
 msgid "Get init index"
-msgstr "得到整数索引"
+msgstr "获取初值条件"
 
 #: 93d8118a95b64500ba7616fed02a7fff of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_ic_index:3
 msgid "**ic_index**"
-msgstr "**ic_index**"
+msgstr "**ic_index** -- 初值条件"
 
 #: a2fb4304f3154d11b17a0e281baa0166 of
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_space_domain:1
@@ -72,4 +72,3 @@ msgstr "获取空间域坐标"
 #: paddlescience.geometry.geometry_discrete.GeometryDiscrete.get_space_domain:3
 msgid "**space_domain** -- Space domain cordinates"
 msgstr "**space_domain** -- 空间域坐标"
-

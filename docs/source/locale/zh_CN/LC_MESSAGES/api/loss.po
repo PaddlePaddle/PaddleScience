@@ -20,5 +20,4 @@ msgstr ""
 
 #: ../../source/api/loss.rst:2 deec147f68594cc3a3b60e142b7f40d2
 msgid "Loss"
-msgstr "损失"
-
+msgstr "损失函数"

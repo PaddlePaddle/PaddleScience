@@ -107,7 +107,7 @@ msgstr "要获得 PINN 模型，需要训练神经网络。在训练阶段，PDE
 msgid ""
 "Once the concept is clear, next let's take a look at how this translates "
 "into the dacy2d example."
-msgstr "概念明确后，接下来让我们看看如何将其转化为 dacy2d 示例。"
+msgstr "概念明确后，接下来让我们看看如何将其转化为 darcy2d 示例。"
 
 #: ../../source/examples/darcy.rst:57 c7f2406f2d764a3ca61b2a5c3e3bd0c0
 msgid "**Constructing PDE**"
@@ -202,5 +202,5 @@ msgid ""
 "<https://www.paraview.org/>`_."
 msgstr ""
 "`psci.visu.save_vtk` 是一个快速可视化的辅助工具. 它将图形保存在 vtp 文件中， "
-"播放可以使用 `Paraview "
-"<https://www.paraview.org/>`_."
+"可应用在 `Paraview "
+"<https://www.paraview.org/>`_ 中。"
