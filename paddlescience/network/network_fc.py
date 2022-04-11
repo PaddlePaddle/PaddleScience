@@ -57,7 +57,8 @@ class FCNet(NetworkBase):
             self.activation = paddle.tanh
         else:
             assert 0, "Unsupported activation type."
-        self.make_network_static()
+
+        # self.make_network_static()
 
     def make_network(self):
         for i in range(self.num_layers):

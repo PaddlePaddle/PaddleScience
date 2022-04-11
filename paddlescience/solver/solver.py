@@ -113,6 +113,9 @@ class Solver(object):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
+        place = paddle.CUDAPlace(0)
+        exe = paddle.static.Executor(place)
+
         inputs = list()
         feeds = dict()
 
@@ -120,6 +123,8 @@ class Solver(object):
         startup_program = paddle.static.Program()
 
         with paddle.static.program_guard(train_program, startup_program):
+
+            self.algo.net.make_network_static()
 
             for i in range(len(ins)):
                 #inputs
@@ -129,6 +134,7 @@ class Solver(object):
                     dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
+                print(ins[i].shape)
 
                 # feeds
                 feeds['input-' + str(i)] = ins[i]
@@ -137,8 +143,7 @@ class Solver(object):
 
             self.opt.minimize(loss)
 
-        rslt = exe.run(train_program, feed=feeds,
-                       fetch_list=[outputs.name, ])[0]
+        rslt = exe.run(train_program, feed=feeds, fetch_list=[loss.name, ])[0]
 
     def solve_static_auto(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
