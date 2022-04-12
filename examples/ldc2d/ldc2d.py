@@ -31,6 +31,12 @@ geo.add_boundary(
 geo.add_boundary(
     name="right", criteria=lambda x, y: x == 1.0, normal=(1.0, 0.0))
 
+# geo_disc = geo.discretize_uniform((6,6))
+
+# print(geo_disc.boundary["top"])
+
+# exit()
+
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 

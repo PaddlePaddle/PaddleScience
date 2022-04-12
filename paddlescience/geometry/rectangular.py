@@ -36,6 +36,13 @@ class Rectangular(Geometry):
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
 
+        self.origin = origin
+        self.extent = extent
+        if len(origin) == len(extent):
+            self.ndims = len(origin)
+        else:
+            pass  # TODO: error out
+
     def discretize(self,
                    method="sampling",
                    interior_npoints=None,
@@ -43,12 +50,6 @@ class Rectangular(Geometry):
 
         # discrete geometry
         geo_disc = GeometryDiscrete()
-
-        # TODO
-        interior = np.ones((4, 2), dtype='float32')
-
-        # internal points (interior)
-        geo_disc.interior = interior
 
         # boundary points
         for name in self.criteria.keys():
@@ -63,7 +64,75 @@ class Rectangular(Geometry):
             geo_disc.boundary[name] = boundary_disc
             geo_disc.normal[name] = normal_disc
 
+        # TODO
+        interior = np.ones((4, 2), dtype='float32')
+
+        # internal points (interior)
+        geo_disc.interior = interior
+
         return geo_disc
+
+    def discretize_uniform(self, nsteps):
+
+        geo_disc = GeometryDiscrete()
+
+        points = self.__discretize_uniform_mesh(nsteps)
+        npoints = len(points)
+
+        # list of point's columns, used as input of criterial (lambda)
+        data = list()
+        for n in range(self.ndims):
+            data.append(points[:, n])
+
+        # init as True
+        flag_i = np.full(npoints, True, dtype='bool')
+
+        # boundary points
+        for name in self.criteria.keys():
+
+            # flag bounday points
+            flag_b = self.criteria[name](*data)
+
+            # extract
+            geo_disc.boundary[name] = points[flag_b, :]
+
+            # set extracted points as False
+            flag_i[flag_i & flag_b] = False
+
+            # TODO: normal
+            normal = self.normal[name]
+            normal_disc = None
+            geo_disc.normal[name] = normal_disc
+
+        # extract remain points, i.e. interior points
+        geo_disc.interior = points[flag_i, :]
+
+        return geo_disc
+
+    def __discretize_uniform_mesh(self, nsteps):
+
+        steps = list()
+        for i in range(self.ndims):
+            steps.append(
+                np.linspace(
+                    self.origin[i], self.extent[i], nsteps[i], endpoint=True))
+
+        # meshgrid and stack to cordinates
+        if (self.ndims == 1):
+            points = steps[0]
+        if (self.ndims == 2):
+            mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
+            points = np.stack(
+                (mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
+        elif (self.ndims == 3):
+            mesh = np.meshgrid(
+                steps[2], steps[1], steps[0], sparse=False, indexing='ij')
+            points = np.stack(
+                (mesh[2].reshape(-1), mesh[1].reshape(-1),
+                 mesh[0].reshape(-1)),
+                axis=-1)
+
+        return points
 
 
 # # Rectangular
