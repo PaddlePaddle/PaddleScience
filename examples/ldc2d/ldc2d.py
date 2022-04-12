@@ -16,7 +16,8 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-paddle.enable_static()
+# paddle.enable_static()
+paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -61,10 +62,7 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 # Discretization
 # pde = psci.discretize(pde, space_npoints=11)
 
-pde = psci.discretize(pde, space_nsteps=(11, 11))
-
-# print(pde.geometry.interior)
-# print(pde.geometry.boundary["top"])
+pde = psci.discretize(pde, space_nsteps=(3, 3))
 
 # Network
 net = psci.network.FCNet(
@@ -87,7 +85,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve_static(num_epoch=2)
+solution = solver.solve_dynamic(num_epoch=2)
 
 # Predict
 

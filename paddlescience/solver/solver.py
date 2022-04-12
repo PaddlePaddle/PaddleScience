@@ -101,14 +101,7 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-    # init auto dist data structure
-    def __init_auto_dist(self):
-
-        # strategy
-        self.dist_strategy = fleet.DistributedStrategy()
-        self.dist_strategy.semi_auto = True
-        fleet.init(is_collective=True, strategy=self.dist_strategy)
-
+    # solver in static mode
     def solve_static(self, num_epoch=1, bs=None, checkpoint_freq=1000):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
@@ -154,29 +147,85 @@ class Solver(object):
         # start up program
         exe.run(startup_program)
 
+        # print(feeds)
+
         # main loop
         for i in range(num_epoch):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
             print("loss: ", rslt[0])
 
-    def solve_static_auto(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def solve_static_dist(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+
+        # init dist environment
+        strategy = fleet.DistributedStrategy()
+        fleet.init(is_collective=True, strategy=strategy)
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
-        # print(ins)
-        # print(ins_attr)
+        place = paddle.CUDAPlace(0)
+        exe = paddle.static.Executor(place)
 
-        self.__init_auto_dist()
+        # dist optimizer
+        opt_dist = fleet.distributed_optimizer(self.opt)
+
+        inputs = list()
+        feeds = dict()
+
+        main_program = paddle.static.Program()
+        startup_program = paddle.static.Program()
+
+        # 
+        with paddle.static.program_guard(main_program, startup_program):
+
+            self.algo.net.make_network_static()
+
+            for i in range(len(ins)):
+                #inputs
+                input = paddle.static.data(
+                    name='input-' + str(i),
+                    shape=ins[i].shape,
+                    dtype='float32')
+                input.stop_gradient = False
+                inputs.append(input)
+
+                # feeds
+                feeds['input-' + str(i)] = ins[i]
+
+            loss, outs = self.algo.compute(
+                *inputs, ins_attr=ins_attr, pde=self.pde)
+
+            opt_dist.minimize(loss)
+
+        # fetch loss and net's output
+        fetches = [loss.name]
+        for out in outs:
+            fetches.append(out.name)
+
+        # start up program
+        exe.run(startup_program)
+
+        # main loop
+        for i in range(num_epoch):
+            rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
+            print("loss: ", rslt[0])
+
+    # solve in static mode with auto dist
+    def solve_static_auto_dist(self,
+                               num_epoch=2,
+                               bs=None,
+                               checkpoint_freq=1000):
+
+        # inputs and its attributes
+        ins, ins_attr = self.algo.create_ins(self.pde)
+
+        # strategy
+        dist_strategy = fleet.DistributedStrategy()
+        dist_strategy.semi_auto = True
+        fleet.init(is_collective=True, strategy=dist_strategy)
 
         model = ModelStatic(self.pde, self.algo, ins_attr)
 
         inputs_spec = list()
-        # inputs_spec.append(InputSpec([4, 2], 'float32', 'in'))
-        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b1'))
-        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b2'))
-        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b3'))
-        # inputs_spec.append(InputSpec([2, 2], 'float32', 'b4'))
-
         for i in ins:
             inputs_spec.append(InputSpec(i.shape, 'float32', 'input' + str(i)))
 
@@ -186,7 +235,7 @@ class Solver(object):
             model,
             inputs_spec=inputs_spec,
             labels_spec=labels_spec,
-            strategy=self.dist_strategy)
+            strategy=dist_strategy)
 
         print("\n ********** engine prepare start ****  \n")
 
@@ -199,7 +248,8 @@ class Solver(object):
 
         print("\n ********** engine rslt done ****  \n")
 
-    def solve(self, num_epoch=1000, bs=None, checkpoint_freq=1000):
+    # solve in dynamic mode
+    def solve_dynamic(self, num_epoch=2, bs=None, checkpoint_freq=1000):
         """
         Train the network with respect to num_epoch.
  
@@ -219,13 +269,18 @@ class Solver(object):
         """
 
         ins, ins_attr = self.algo.create_ins(self.pde)
-        # print(ins)
+
+        # convert ins to tensor
+        for i in range(len(ins)):
+            ins[i] = paddle.to_tensor(
+                ins[i], dtype='float32', stop_gradient=False)
+
+        # make network
+        self.algo.net.make_network()
 
         for epoch in range(num_epoch):
 
-            #for batch_id in range(num_batch):
-
-            loss = self.algo.compute(ins, ins_attr, self.pde)
+            loss = self.algo.compute(*ins, ins_attr=ins_attr, pde=self.pde)
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()
@@ -239,18 +294,18 @@ class Solver(object):
             #       "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
             #       losses[2].numpy()[0])
 
-            if (epoch + 1) % checkpoint_freq == 0:
-                paddle.save(self.algo.net.state_dict(),
-                            './checkpoint/net_params_' + str(epoch + 1))
-                paddle.save(self.opt.state_dict(),
-                            './checkpoint/opt_params_' + str(epoch + 1))
-                if self.algo.loss.geo.time_dependent == False:
-                    np.save(
-                        './checkpoint/rslt_' + str(epoch + 1) + '.npy',
-                        self.algo.net.nn_func(self.algo.loss.geo.space_domain))
-                else:
-                    np.save('./checkpoint/rslt_' + str(epoch + 1) + '.npy',
-                            self.algo.net.nn_func(self.algo.loss.geo.domain))
+            # if (epoch + 1) % checkpoint_freq == 0:
+            #     paddle.save(self.algo.net.state_dict(),
+            #                 './checkpoint/net_params_' + str(epoch + 1))
+            #     paddle.save(self.opt.state_dict(),
+            #                 './checkpoint/opt_params_' + str(epoch + 1))
+            #     if self.algo.loss.geo.time_dependent == False:
+            #         np.save(
+            #             './checkpoint/rslt_' + str(epoch + 1) + '.npy',
+            #             self.algo.net.nn_func(self.algo.loss.geo.space_domain))
+            #     else:
+            #         np.save('./checkpoint/rslt_' + str(epoch + 1) + '.npy',
+            #                 self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo):
             if geo.time_dependent == False:

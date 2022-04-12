@@ -56,21 +56,18 @@ class CompFormula:
         # jacobian
         if self.order >= 1:
             jacobian = Jacobian(net.nn_func, ins, batch=True)
-            # jacobian = paddle.reshape(
-            #     jacobian, shape=[net.num_outs, bs, net.num_ins])
         else:
             jacobian = None
 
         # hessian
         if self.order >= 2:
+            hessian = list()
             for i in range(net.num_outs):
 
                 def func(ins):
                     return net.nn_func(ins)[:, i:i + 1]
 
-                hessian = Hessian(func, ins, batch=True)
-                # hessian = paddle.reshape(
-                #     hessian, shape=[net.num_ins, bs, net.num_ins])
+                hessian.append(Hessian(func, ins, batch=True))
         else:
             hessian = None
 
