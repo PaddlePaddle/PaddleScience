@@ -44,35 +44,16 @@ class Rectangular(Geometry):
             pass  # TODO: error out
 
     def discretize(self,
-                   method="sampling",
-                   interior_npoints=None,
-                   boundary_npoints=None):
+                   space_method="uniform",
+                   space_interior_npoints=None,
+                   space_boundary_npoints=None,
+                   space_nsteps=None):
 
-        # discrete geometry
-        geo_disc = GeometryDiscrete()
+        if space_method == "uniform":
+            return self.__discretize_uniform(space_nsteps)
 
-        # boundary points
-        for name in self.criteria.keys():
-
-            criteria = self.criteria[name]
-            normal = self.normal[name]
-
-            # TODO
-            boundary_disc = np.zeros((2, 2), dtype='float32')
-            normal_disc = None
-
-            geo_disc.boundary[name] = boundary_disc
-            geo_disc.normal[name] = normal_disc
-
-        # TODO
-        interior = np.ones((4, 2), dtype='float32')
-
-        # internal points (interior)
-        geo_disc.interior = interior
-
-        return geo_disc
-
-    def discretize_uniform(self, nsteps):
+    # uniform discretization method
+    def __discretize_uniform(self, nsteps):
 
         geo_disc = GeometryDiscrete()
 
@@ -115,7 +96,11 @@ class Rectangular(Geometry):
         for i in range(self.ndims):
             steps.append(
                 np.linspace(
-                    self.origin[i], self.extent[i], nsteps[i], endpoint=True))
+                    self.origin[i],
+                    self.extent[i],
+                    nsteps[i],
+                    endpoint=True,
+                    dtype='float32'))
 
         # meshgrid and stack to cordinates
         if (self.ndims == 1):

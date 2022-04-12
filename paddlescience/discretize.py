@@ -13,7 +13,12 @@
 # limitations under the License.
 
 
-def discretize(pde, time_nsteps=None, space_npoints=None):
+def discretize(pde,
+               time_nsteps=None,
+               space_method="uniform",
+               space_interior_npoints=None,
+               space_boundary_npoints=None,
+               space_nsteps=None):
     """
         Discretize PDE and Geometry
 
@@ -34,7 +39,9 @@ def discretize(pde, time_nsteps=None, space_npoints=None):
     # PDE
     if pde is not None:
         pde_disc = pde.discretize(time_nsteps)
-        pde_disc.geometry = pde.geometry.discretize(space_npoints)
+        pde_disc.geometry = pde.geometry.discretize(
+            space_method, space_interior_npoints, space_boundary_npoints,
+            space_nsteps)
         return pde_disc
     else:
         return None
