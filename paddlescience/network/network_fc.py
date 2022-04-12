@@ -58,9 +58,12 @@ class FCNet(NetworkBase):
         else:
             assert 0, "Unsupported activation type."
 
-        # self.make_network_static()
+        # dynamic mode: make network here
+        # static  mode: make network in solver
+        if paddle.in_dynamic_mode():
+            self.make_network_dynamic()
 
-    def make_network(self):
+    def make_network_dynamic(self):
         for i in range(self.num_layers):
             if i == 0:
                 lsize = self.num_ins

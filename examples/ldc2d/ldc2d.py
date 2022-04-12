@@ -16,6 +16,9 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
+paddle.seed(1)
+np.random.seed(1)
+
 # paddle.enable_static()
 paddle.disable_static()
 
@@ -85,7 +88,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve_static(num_epoch=2)
+solution = solver.solve_dynamic(num_epoch=2)
 
 # Predict
 

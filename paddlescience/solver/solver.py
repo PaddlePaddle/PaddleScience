@@ -272,16 +272,18 @@ class Solver(object):
                 ins[i], dtype='float32', stop_gradient=False)
 
         # make network
-        self.algo.net.make_network()
+        # self.algo.net.make_network()
 
         for epoch in range(num_epoch):
 
-            loss = self.algo.compute(*ins, ins_attr=ins_attr, pde=self.pde)
+            loss, outs = self.algo.compute(
+                *ins, ins_attr=ins_attr, pde=self.pde)
+
             loss.backward()
             self.opt.step()
             self.opt.clear_grad()
 
-            print("epoch: " + str(epoch + 1))
+            print("epoch: " + str(epoch + 1), "    loss:", loss.numpy()[0])
 
             # print("epoch/num_epoch: ", epoch + 1, "/", num_epoch,
             #       "batch/num_batch: ", batch_id + 1, "/", num_batch,
