@@ -123,14 +123,12 @@ class Solver(object):
             for i in range(len(ins)):
                 #inputs
                 input = paddle.static.data(
-                    name='input-' + str(i),
-                    shape=ins[i].shape,
-                    dtype='float32')
+                    name='input' + str(i), shape=ins[i].shape, dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
 
                 # feeds
-                feeds['input-' + str(i)] = ins[i]
+                feeds['input' + str(i)] = ins[i]
 
                 # print(ins[i])
 
@@ -182,14 +180,12 @@ class Solver(object):
             for i in range(len(ins)):
                 #inputs
                 input = paddle.static.data(
-                    name='input-' + str(i),
-                    shape=ins[i].shape,
-                    dtype='float32')
+                    name='input' + str(i), shape=ins[i].shape, dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
 
                 # feeds
-                feeds['input-' + str(i)] = ins[i]
+                feeds['input' + str(i)] = ins[i]
 
             loss, outs = self.algo.compute(
                 *inputs, ins_attr=ins_attr, pde=self.pde)
