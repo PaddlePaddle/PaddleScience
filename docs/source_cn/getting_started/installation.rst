@@ -19,7 +19,7 @@
             cd PaddleScience
             export PYTHONPATH=$PWD:$PYTHONPATH
 
-    - 请参考`PaddlePaddle <https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip/linux-pip.html>`_来安装paddle， 并且选择"develop"版本。
+    - 请参考 `PaddlePaddle <https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip/linux-pip.html>`_ 来安装paddle， 并且选择"develop"版本。
 
 
     - 通过pip安装相关依赖

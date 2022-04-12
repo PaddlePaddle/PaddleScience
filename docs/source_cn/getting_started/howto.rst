@@ -23,8 +23,6 @@
 
 - **example**
 
-    Solving a 2-dimensional Lid Driven Cavity problem in rectangular domain.
-
     求解矩形域中二维顶盖驱动方腔流问题。
 
     .. code-block::

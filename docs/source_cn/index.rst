@@ -9,7 +9,7 @@ PaddleScience目前正在积极开发中。其设计和API也在不断发展演�
 
 - **核心特征和组织**
 
-    PaddleScience目前专注于PINNs模型。其核心组成如下。
+  PaddleScience目前专注于PINNs模型。其核心组成如下。
 
   - Geometry，一个声明性接口。用于定义几何学结构，支持自动离散化。
 
@@ -24,23 +24,22 @@ PaddleScience目前正在积极开发中。其设计和API也在不断发展演�
   - Visualization，用于简单可视化几何图形和数据。
 
   - 各组件组织情况如下图所示。
+
 .. image:: img/pscicode.png
 
 * GitHub: https://github.com/PaddlePaddle/PaddleScience
 * Gitee:  https://gitee.com/paddlepaddle/PaddleScience
 
-
 .. toctree::
    :maxdepth: 2
-
    :caption: 快速开始
+
    安装 <getting_started/installation>
    运行样例 <getting_started/howto>
-   
-.. toctree::
 
+.. toctree::
    :maxdepth: 2
-   :caption: API 参考
+   :caption: API参考
 
    paddlescience.pde <api/pde>
    paddlescience.geometry <api/geometry>
@@ -52,7 +51,6 @@ PaddleScience目前正在积极开发中。其设计和API也在不断发展演�
    paddlescience.solver <api/solver>
    paddlescience.visu <api/visu>
 
-   
 .. toctree::
    :maxdepth: 2
    :caption: 样例 / 演示
@@ -60,7 +58,7 @@ PaddleScience目前正在积极开发中。其设计和API也在不断发展演�
    顶盖驱动方腔流  <examples/ldc2d>
    多孔介质中的达西渗流 <examples/darcy>
 
-	     
+
 索引和表格
 ====================
 * :ref:`genindex`
