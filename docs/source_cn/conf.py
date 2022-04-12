@@ -45,9 +45,9 @@ extensions = [
     'sphinx_rtd_theme', 'recommonmark', 'sphinx.ext.autodoc',
     'sphinx.ext.autosummary', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath',
     'sphinx.ext.todo', 'sphinx_copybutton', 'sphinx_markdown_tables',
-    'sphinx.ext.viewcode', 'sphinx.ext.coverage', 'sphinx.ext.extlinks',    'recommonmark',
-    'sphinx_markdown_tables'
+    'sphinx.ext.viewcode', 'sphinx.ext.coverage', 'sphinx.ext.extlinks'
 ]
+
 Autodoc_default_options = {
     'member-order': 'bysource',
     'undoc-members': False,
@@ -106,5 +106,5 @@ html_context = {
     'github_user': 'PaddlePaddle',
     'github_repo': project,
     'github_version': 'develop',
-    'conf_py_path': '/docs/source/',
+    'conf_py_path': '/docs/source_cn/',
 }
