@@ -78,7 +78,7 @@ class NavierStokes(PDE):
                 x).diff(x) - nu / rho * u.diff(y).diff(y) + 1.0 / rho * p.diff(
                     x)
             momentum_y = u * v.diff(x) + v * v.diff(y) - nu / rho * v.diff(
-                y).diff(y) - nu / rho * v.diff(y).diff(y) + 1.0 / rho * p.diff(
+                x).diff(x) - nu / rho * v.diff(y).diff(y) + 1.0 / rho * p.diff(
                     y)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
@@ -124,7 +124,7 @@ class NavierStokes(PDE):
                 y) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
                     y) + 1.0 / rho * p.diff(x)
             momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
-                y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                y) - nu / rho * v.diff(x).diff(x) - nu / rho * v.diff(y).diff(
                     y) + 1.0 / rho * p.diff(y)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
@@ -171,10 +171,10 @@ class NavierStokes(PDE):
                 z) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
                     y) - nu / rho * u.diff(z).diff(z) + 1.0 / rho * p.diff(x)
             momentum_y = u * v.diff(x) + v * v.diff(y) + w * v.diff(
-                z) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                z) - nu / rho * v.diff(x).diff(x) - nu / rho * v.diff(y).diff(
                     y) - nu / rho * v.diff(z).diff(z) + 1.0 / rho * p.diff(y)
             momentum_z = u * w.diff(x) + v * w.diff(y) + w * w.diff(
-                z) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(y).diff(
+                z) - nu / rho * w.diff(x).diff(x) - nu / rho * w.diff(y).diff(
                     y) - nu / rho * w.diff(z).diff(z) + 1.0 / rho * p.diff(z)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
@@ -226,12 +226,12 @@ class NavierStokes(PDE):
                     x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
                         z).diff(z) + 1.0 / rho * p.diff(x)
             momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
-                y) + w * v.diff(z) - nu / rho * v.diff(y).diff(
-                    y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
+                    x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
                         z).diff(z) + 1.0 / rho * p.diff(y)
             momentum_z = w.diff(t) + u * w.diff(x) + v * w.diff(
-                y) + w * w.diff(z) - nu / rho * w.diff(y).diff(
-                    y) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
+                    x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
                         z).diff(z) + 1.0 / rho * p.diff(z)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
@@ -304,7 +304,7 @@ class NavierStokesImplicit(PDE):
                 y) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
                     y) + 1.0 / rho * p.diff(x)
             momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
-                y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(y).diff(
+                y) - nu / rho * v.diff(x).diff(x) - nu / rho * v.diff(y).diff(
                     y) + 1.0 / rho * p.diff(y)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
@@ -361,12 +361,12 @@ class NavierStokesImplicit(PDE):
                     x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
                         z).diff(z) + 1.0 / rho * p.diff(x)
             momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
-                y) + w * v.diff(z) - nu / rho * v.diff(y).diff(
-                    y) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
+                    x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
                         z).diff(z) + 1.0 / rho * p.diff(y)
             momentum_z = w / dt - w_1 / dt + u * w.diff(x) + v * w.diff(
-                y) + w * w.diff(z) - nu / rho * w.diff(y).diff(
-                    y) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
+                    x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
                         z).diff(z) + 1.0 / rho * p.diff(z)
             momentum_x_rhs = 0
             momentum_y_rhs = 0

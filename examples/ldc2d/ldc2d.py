@@ -25,15 +25,16 @@ paddle.disable_static()
 nup = psci.parameter.Parameter('nu')
 
 # set geometry and boundary
-geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
-geo.add_boundary(name="top", criteria=lambda x, y: y == 1.0, normal=(0.0, 1.0))
 geo.add_boundary(
-    name="down", criteria=lambda x, y: y == 0.0, normal=(0.0, -1.0))
+    name="top", criteria=lambda x, y: y == 0.05, normal=(0.0, 1.0))
 geo.add_boundary(
-    name="left", criteria=lambda x, y: x == 0.0, normal=(-1.0, 0.0))
+    name="down", criteria=lambda x, y: y == -0.05, normal=(0.0, -1.0))
 geo.add_boundary(
-    name="right", criteria=lambda x, y: x == 1.0, normal=(1.0, 0.0))
+    name="left", criteria=lambda x, y: x == -0.05, normal=(-1.0, 0.0))
+geo.add_boundary(
+    name="right", criteria=lambda x, y: x == 0.05, normal=(1.0, 0.0))
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
@@ -68,6 +69,7 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 pde = psci.discretize(pde, space_nsteps=(3, 3))
 
 # Network
+# TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
     num_ins=2,
     num_outs=3,
@@ -88,7 +90,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve_dynamic(num_epoch=2)
+solution = solver.solve_dynamic(num_epoch=1)
 
 # Predict
 

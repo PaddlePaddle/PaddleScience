@@ -48,8 +48,16 @@ class L2(LossBase):
         cmploss.compute_outs_der(ins, bs)
 
         loss = 0.0
+
+        m = 0
         for formula in pde.equations:
+
+            # print("\n", formula, "\n")
+
             rst = cmploss.compute_formula(formula, ins, ins_attr, None)
+
+            # print(rst)
+
             loss += paddle.norm(rst, p=2)
 
         return loss, cmploss.outs

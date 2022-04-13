@@ -75,10 +75,11 @@ class Rectangular(Geometry):
             flag_b = self.criteria[name](*data)
 
             # extract
-            geo_disc.boundary[name] = points[flag_b, :]
+            flag_ib = flag_i & flag_b
+            geo_disc.boundary[name] = points[flag_ib, :]
 
             # set extracted points as False
-            flag_i[flag_i & flag_b] = False
+            flag_i[flag_ib] = False
 
             # TODO: normal
             normal = self.normal[name]

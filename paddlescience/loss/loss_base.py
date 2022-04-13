@@ -84,6 +84,9 @@ class CompFormula:
         else:
             hessian = None
 
+        # print(jacobian[:])
+        # print(hessian[2][:])
+
         self.outs = outs
         self.jacobian = jacobian
         self.hessian = hessian
@@ -117,15 +120,14 @@ class CompFormula:
         elif item.is_Number:
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
-            #print(item, "symbol")
+            # print("*** symbol:", item)
             rst = rst * self.__compute_formula_symbol(item, ins, ins_attr)
         elif item.is_Function:
-            #print(item, "function")
+            # print("*** function:", item)
             rst = rst * self.__compute_formula_function(item, ins_attr)
         elif item.is_Derivative:
-            # print(item, "der start")
+            # print("*** der:", item)
             rst = rst * self.__compute_formula_der(item, normal)
-            # print(item, "der end")
         else:
             pass
 
@@ -140,6 +142,7 @@ class CompFormula:
         # output function value
         if item in self.dvar:
             f_idx = self.dvar.index(item)
+            # print("  -f_idx: ", f_idx)
             return self.outs[:, f_idx]
 
         # input function value (for time-dependent previous time)
@@ -165,35 +168,44 @@ class CompFormula:
         for it in item.args[1:]:
             order += it[1]
 
+        # print("  -order: ", order)
+        # print("  -f_idx: ", f_idx)
+
         # parser jacobin for order 1
         if order == 1:
 
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
                 if api_new:
-                    rst = normal * jacobian[:, f_idx, 0]
+                    rst = normal * jacobian[:, f_idx, :]  # TODO
                 else:
-                    rst = normal * jacobian[f_idx, 0]
+                    rst = normal * jacobian[f_idx, :]
             else:
                 var_idx = self.indvar.index(v)
-                if api_new:
-                    rst = jacobian[:, f_idx, 0]
-                else:
-                    rst = jacobian[f_idx, 0]
 
-        # parser hessian for order 2
-        elif order == 2:
-            if (len(item.args[1:]) == 1):
-                var_idx = self.indvar.index(item.args[1][0])
+                # print("  -var_idx: ", var_idx)
+
                 if api_new:
                     rst = jacobian[:, f_idx, var_idx]
                 else:
                     rst = jacobian[f_idx, var_idx]
+
+        # parser hessian for order 2
+        elif order == 2:
+
+            if (len(item.args[1:]) == 1):
+                var_idx = self.indvar.index(item.args[1][0])
+                # print("  -var_idx: ", var_idx)
+                if api_new:
+                    rst = hessian[f_idx][:, var_idx, var_idx]
+                else:
+                    rst = hessian[f_idx, var_idx, :, var_idx]
             else:
                 var_idx1 = self.indvar.index(item.args[1][0])
                 var_idx2 = self.indvar.index(item.args[2][0])
+
                 if api_new:
-                    rst = hessian[f_idx][var_idx1, var_idx2]
+                    rst = hessian[f_idx][:, var_idx1, var_idx2]
                 else:
                     rst = hessian[f_idx, var_idx1, :, var_idx2]
 

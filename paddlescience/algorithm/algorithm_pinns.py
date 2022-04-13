@@ -61,6 +61,8 @@ class PINNs(AlgorithmBase):
 
     def compute(self, *args, ins_attr, pde):
 
+        # print(args[1])
+
         outs = list()
 
         # interior out and loss
