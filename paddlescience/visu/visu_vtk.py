@@ -21,24 +21,24 @@ import copy
 # Save geometry pointwise
 def save_vtk(filename="output", geo_disc=None, data=None):
 
-    # geo to numpy
-    geonp = geo.space_domain.numpy()
+    # concatenate data and cordiante 
+    points_vtk = __concatenate_geo(geo_disc)
+    data_vtk = __concatenate_data(data)
 
-    # copy for vtk
-    for key in data:
-        data[key] = data[key].copy()
+    # points's shape is [ndims][npoints]
+    npoints = len(points_vtk[0])
+    ndims = len(points_vtk)
 
-    if geo.space_dims == 3:
-        # pointsToVTK requires continuity in memory
-        axis_x = geonp[:, 0].copy()
-        axis_y = geonp[:, 1].copy()
-        axis_z = geonp[:, 2].copy()
-        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
-    elif geo.space_dims == 2:
-        axis_x = geonp[:, 0].copy()
-        axis_y = geonp[:, 1].copy()
-        axis_z = np.zeros(len(geonp), dtype="float32")
-        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
+    if ndims == 3:
+        axis_x = points_vtk[0]
+        axis_y = points_vtk[1]
+        axis_z = points_vtk[2]
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+    elif ndims == 2:
+        axis_x = points_vtk[0]
+        axis_y = points_vtk[1]
+        axis_z = np.zeros(npoints, dtype="float32")
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
 
 
 # concatenate cordinates of interior points and boundary points
@@ -49,59 +49,73 @@ def __concatenate_geo(geo_disc):
         x.append(value)
     points = np.concatenate(x, axis=0)
 
-    return points
+    ndims = len(points[0])
+
+    points_vtk = list()
+    for i in range(ndims):
+        points_vtk.append(points[:, i].copy())
+
+    return points_vtk
 
 
+# concatenate data
 def __concatenate_data(outs):
 
-    vname = ["u", "v", "w"]
+    varname = ["u", "v", "w", "p"]
 
     data = dict()
+
+    # to numpy
+    outsnp = list()
+    for out in outs:
+        outsnp.append(out.numpy())
+
+    # concatenate data
     ndata = outs[0].shape[1]
     for i in range(ndata):
         x = list()
-        for out in outs:
+        for out in outsnp:
             x.append(out[:, i])
-        data[vname[i]] = np.concatenate(x, axis=0)
+        data[varname[i]] = np.concatenate(x, axis=0)
 
     return data
 
 
-def save_vtk(geo, data, filename="output"):
-    """
-    Save geometry and data to vtk file for visualisation
+# def save_vtk(geo, data, filename="output"):
+#     """
+#     Save geometry and data to vtk file for visualisation
 
-    Parameters:
-        geo: geometry
-        
-        data: data to save
+#     Parameters:
+#         geo: geometry
 
-    Example:
-        >>> import paddlescience as psci
-        >>> pde = psci.visu.save_vtk(geo, data, filename="output")
+#         data: data to save
 
-    """
-    # plane obj
-    vtkobjname, vtkobj, nPoints = geo.get_vtk_obj()
-    # data
-    data_vtk = vtk.vtkFloatArray()
-    data_vtk.SetNumberOfValues(nPoints)
-    for i in range(nPoints):
-        data_vtk.SetValue(i, data[i])
+#     Example:
+#         >>> import paddlescience as psci
+#         >>> pde = psci.visu.save_vtk(geo, data, filename="output")
 
-    if vtkobjname == "vtkPlanceSource":
-        # set data
-        vtkobj.GetOutput().GetPointData().SetScalars(data_vtk)
-        # writer
-        writer = vtk.vtkXMLPolyDataWriter()
-        writer.SetFileName(filename + '.vtp')
-        writer.SetInputConnection(vtkobj.GetOutputPort())
-        writer.Write()
-    elif vtkobjname == "vtkImageData":
-        # set data
-        vtkobj.GetPointData().SetScalars(data_vtk)
-        # writer
-        writer = vtk.vtkXMLImageDataWriter()
-        writer.SetFileName(filename + ".vti")
-        writer.SetInputData(vtkobj)
-        writer.Write()
+#     """
+#     # plane obj
+#     vtkobjname, vtkobj, nPoints = geo.get_vtk_obj()
+#     # data
+#     data_vtk = vtk.vtkFloatArray()
+#     data_vtk.SetNumberOfValues(nPoints)
+#     for i in range(nPoints):
+#         data_vtk.SetValue(i, data[i])
+
+#     if vtkobjname == "vtkPlanceSource":
+#         # set data
+#         vtkobj.GetOutput().GetPointData().SetScalars(data_vtk)
+#         # writer
+#         writer = vtk.vtkXMLPolyDataWriter()
+#         writer.SetFileName(filename + '.vtp')
+#         writer.SetInputConnection(vtkobj.GetOutputPort())
+#         writer.Write()
+#     elif vtkobjname == "vtkImageData":
+#         # set data
+#         vtkobj.GetPointData().SetScalars(data_vtk)
+#         # writer
+#         writer = vtk.vtkXMLImageDataWriter()
+#         writer.SetFileName(filename + ".vti")
+#         writer.SetInputData(vtkobj)
+#         writer.Write()
