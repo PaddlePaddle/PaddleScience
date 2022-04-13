@@ -12,7 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import vtk
+from pyevtk.hl import pointsToVTK
+import copy
+
+
+# Save geometry pointwise
+def save_vtk(filename="output", geo_disc=None, data=None):
+
+    # geo to numpy
+    geonp = geo.space_domain.numpy()
+
+    # copy for vtk
+    for key in data:
+        data[key] = data[key].copy()
+
+    if geo.space_dims == 3:
+        # pointsToVTK requires continuity in memory
+        axis_x = geonp[:, 0].copy()
+        axis_y = geonp[:, 1].copy()
+        axis_z = geonp[:, 2].copy()
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
+    elif geo.space_dims == 2:
+        axis_x = geonp[:, 0].copy()
+        axis_y = geonp[:, 1].copy()
+        axis_z = np.zeros(len(geonp), dtype="float32")
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
+
+
+# concatenate cordinates of interior points and boundary points
+def __concatenate_geo(geo_disc):
+
+    x = [geo_disc.interior]
+    for value in geo_disc.boundary.values():
+        x.append(value)
+    points = np.concatenate(x, axis=0)
+
+    return points
+
+
+def __concatenate_data(outs):
+
+    vname = ["u", "v", "w"]
+
+    data = dict()
+    ndata = outs[0].shape[1]
+    for i in range(ndata):
+        x = list()
+        for out in outs:
+            x.append(out[:, i])
+        data[vname[i]] = np.concatenate(x, axis=0)
+
+    return data
 
 
 def save_vtk(geo, data, filename="output"):
