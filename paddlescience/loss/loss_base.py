@@ -84,8 +84,9 @@ class CompFormula:
         else:
             hessian = None
 
+        # print("*** Jacobian")
         # print(jacobian[:])
-        # print(hessian[2][:])
+        # print(hessian[0][:])
 
         self.outs = outs
         self.jacobian = jacobian
