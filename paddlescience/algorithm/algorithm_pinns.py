@@ -70,16 +70,18 @@ class PINNs(AlgorithmBase):
         for attr in ins_attr["interior"].values():
             input = args[n]
             loss_i, out_i = self.loss.eq_loss(
-                pde, self.net, input, attr, bs=4)  # TODO bs
+                pde, self.net, input, attr, bs=-1)  # TODO: bs is not used
             loss = loss_i  # TODO: += 1
             outs.append(out_i)
             n += 1
+
+        # print("\n *********************** \n")
 
         # boundary out and loss
         for attr in ins_attr["boundary"].values():
             input = args[n]
             loss_b, out_b = self.loss.bc_loss(
-                pde, self.net, input, attr, bs=2)  # TODO bs
+                pde, self.net, input, attr, bs=-1)  # TODO: bs is not used
             loss += loss_b
             outs.append(out_b)
             n += 1
