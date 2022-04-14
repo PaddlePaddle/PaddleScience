@@ -254,7 +254,7 @@ class Solver(object):
         main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
-        # 
+        # construct program
         with paddle.static.program_guard(main_program, startup_program):
 
             self.algo.net.make_network_static()
@@ -285,7 +285,9 @@ class Solver(object):
         # main loop
         for i in range(num_epoch):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
-            print("loss: ", rslt[0])
+            print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
+
+            return rslt[1:]
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
