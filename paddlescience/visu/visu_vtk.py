@@ -63,7 +63,7 @@ def __concatenate_geo(geo_disc):
 # concatenate data
 def __concatenate_data(outs):
 
-    varname = ["u", "v", "w", "p"]
+    vtkname = ["u", "v", "p", "w"]
 
     data = dict()
 
@@ -81,7 +81,7 @@ def __concatenate_data(outs):
         x = list()
         for out in npouts:
             x.append(out[:, i])
-        data[varname[i]] = np.concatenate(x, axis=0)
+        data[vtkname[i]] = np.concatenate(x, axis=0)
 
     return data
 

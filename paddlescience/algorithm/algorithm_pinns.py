@@ -59,31 +59,33 @@ class PINNs(AlgorithmBase):
 
         return ins, ins_attr
 
-    def compute(self, *args, ins_attr, pde):
+    def compute(self, *ins, ins_attr, pde):
 
         # print(args[1])
 
         outs = list()
 
-        # interior out and loss
+        # interior outputs and loss
         n = 0
-        for attr in ins_attr["interior"].values():
-            input = args[n]
+        loss = 0.0
+        for name_i, input_attr in ins_attr["interior"].items():
+            input = ins[n]
             loss_i, out_i = self.loss.eq_loss(
-                pde, self.net, input, attr, bs=-1)  # TODO: bs is not used
-            loss = loss_i  # TODO: += 1
+                pde, self.net, name_i, input, input_attr,
+                bs=-1)  # TODO: bs is not used
+            loss += loss_i
             outs.append(out_i)
             n += 1
 
-        # print("\n *********************** \n")
-
-        # boundary out and loss
-        for attr in ins_attr["boundary"].values():
-            input = args[n]
+        # boundary outputs and loss
+        for name_b, input_attr in ins_attr["boundary"].items():
+            input = ins[n]
             loss_b, out_b = self.loss.bc_loss(
-                pde, self.net, input, attr, bs=-1)  # TODO: bs is not used
+                pde, self.net, name_b, input, input_attr,
+                bs=-1)  # TODO: bs is not used
             loss += loss_b
             outs.append(out_b)
             n += 1
 
+        loss = paddle.sqrt(loss)
         return loss, outs  # TODO: return more

@@ -40,40 +40,32 @@ class L2(LossBase):
     def __init__(self):
         pass
 
-    def eq_loss(self, pde, net, ins, ins_attr, bs):
+    def eq_loss(self, pde, net, name_i, input, input_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(ins, bs)
+        cmploss.compute_outs_der(input, bs)
 
         loss = 0.0
         for formula in pde.equations:
-
-            # print("\n", formula, "\n")
-
-            rst = cmploss.compute_formula(formula, ins, ins_attr, None)
-
-            # print(rst)
-
-            loss += paddle.norm(rst, p=2)
-
+            rst = cmploss.compute_formula(formula, input, input_attr, None)
+            loss += paddle.norm(rst, p=2)**2
         return loss, cmploss.outs
 
-    def bc_loss(self, pde, net, ins, ins_attr, bs):
+    def bc_loss(self, pde, net, name_b, input, input_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(ins, bs)
+        cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
 
         loss = 0.0
-        for name, bclist in pde.bc.items():
-            for b in bclist:
-                lhs = cmploss.compute_formula(b.formula, ins, ins_attr,
-                                              None)  # TODO: hard code
-                rhs = b.rhs  # TODO: to support lambda
-                loss += paddle.norm(lhs - rhs, p=2)
+        for b in pde.bc[name_b]:
+            lhs = cmploss.compute_formula(b.formula, input, input_attr,
+                                          None)  # TODO: hard code
+            rhs = b.rhs  # TODO: to support lambda
+            loss += paddle.norm(lhs - rhs, p=2)**2
 
         return loss, cmploss.outs
 
@@ -91,7 +83,7 @@ class L2(LossBase):
         # else:
         #     return paddle.to_tensor([0], dtype="float32")
 
-    def total_loss(self, ins, outs, pde, bs=None):
+    def total_loss(self, input, outs, pde, bs=None):
 
         # ins_in = ins["interior"]
         # ins_bc = ins["boundary"]

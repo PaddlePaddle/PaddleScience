@@ -260,7 +260,7 @@ class Solver(object):
             self.algo.net.make_network_static()
 
             for i in range(len(ins)):
-                #inputs
+                # inputs
                 input = paddle.static.data(
                     name='input' + str(i), shape=ins[i].shape, dtype='float32')
                 input.stop_gradient = False

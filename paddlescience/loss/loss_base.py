@@ -52,19 +52,19 @@ class CompFormula:
         self.jacobian = None
         self.hessian = None
 
-    def compute_outs_der(self, ins, bs):
+    def compute_outs_der(self, input, bs):
 
         net = self.net
 
         # outs
-        outs = net.nn_func(ins)
+        outs = net.nn_func(input)
 
         # jacobian
         if self.order >= 1:
             if api_new:
-                jacobian = Jacobian(net.nn_func, ins, is_batched=True)
+                jacobian = Jacobian(net.nn_func, input, is_batched=True)
             else:
-                jacobian = Jacobian(net.nn_func, ins, batch=True)
+                jacobian = Jacobian(net.nn_func, input, batch=True)
         else:
             jacobian = None
 
@@ -73,13 +73,13 @@ class CompFormula:
             hessian = list()
             for i in range(net.num_outs):
 
-                def func(ins):
-                    return net.nn_func(ins)[:, i:i + 1]
+                def func(input):
+                    return net.nn_func(input)[:, i:i + 1]
 
                 if api_new:
-                    hessian.append(Hessian(func, ins, is_batched=True))
+                    hessian.append(Hessian(func, input, is_batched=True))
                 else:
-                    hessian.append(Hessian(func, ins, batch=True))
+                    hessian.append(Hessian(func, input, batch=True))
 
         else:
             hessian = None
@@ -92,7 +92,7 @@ class CompFormula:
         self.jacobian = jacobian
         self.hessian = hessian
 
-    def compute_formula(self, formula, ins, ins_attr, normal):
+    def compute_formula(self, formula, input, input_attr, normal):
 
         # print(formula.args[0])
 
@@ -103,29 +103,31 @@ class CompFormula:
             num_item = len(formula.args)
             # parser each item
             for item in formula.args:
-                rst += self.__compute_formula_item(item, ins, ins_attr, normal)
+                rst += self.__compute_formula_item(item, input, input_attr,
+                                                   normal)
         else:
             num_item = 1
-            rst += self.__compute_formula_item(formula, ins, ins_attr, normal)
+            rst += self.__compute_formula_item(formula, input, input_attr,
+                                               normal)
 
         return rst
 
-    def __compute_formula_item(self, item, ins, ins_attr, normal):
+    def __compute_formula_item(self, item, input, input_attr, normal):
 
         rst = 1.0  # TODO: float / double / float16
 
         if item.is_Mul:
             for it in item.args:
-                rst = rst * self.__compute_formula_item(it, ins, ins_attr,
+                rst = rst * self.__compute_formula_item(it, input, input_attr,
                                                         normal)
         elif item.is_Number:
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
             # print("*** symbol:", item)
-            rst = rst * self.__compute_formula_symbol(item, ins, ins_attr)
+            rst = rst * self.__compute_formula_symbol(item, input, input_attr)
         elif item.is_Function:
             # print("*** function:", item)
-            rst = rst * self.__compute_formula_function(item, ins_attr)
+            rst = rst * self.__compute_formula_function(item, input_attr)
         elif item.is_Derivative:
             # print("*** der:", item)
             rst = rst * self.__compute_formula_der(item, normal)
@@ -134,11 +136,11 @@ class CompFormula:
 
         return rst
 
-    def __compute_formula_symbol(self, item, ins, ins_attr):
+    def __compute_formula_symbol(self, item, input, input_attr):
         var_idx = self.indvar.index(item)
-        return self.ins[:, var_idx + ins_attr.indvar_start]  # TODO
+        return self.input[:, var_idx + input_attr.indvar_start]  # TODO
 
-    def __compute_formula_function(self, item, ins_attr):
+    def __compute_formula_function(self, item, input_attr):
 
         # output function value
         if item in self.dvar:
@@ -149,12 +151,13 @@ class CompFormula:
         # input function value (for time-dependent previous time)
         if item in self.dvar_1:
             f_idx = self.dvar_1.index(item)
-            return self.ins[:, f_idx + ins_attr.dvar_1_start]  # TODO
+            return self.input[:, f_idx + input_attr.dvar_1_start]  # TODO
 
         # parameter pde
         if item in self.parameter_pde:
             f_idx = self.parameter_pde.index(item)
-            return self.ins[:, f_idx + ins_attr.parameter_pde_start]  # TODO
+            return self.input[:,
+                              f_idx + input_attr.parameter_pde_start]  # TODO
 
     def __compute_formula_der(self, item, normal):
 

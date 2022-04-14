@@ -20,7 +20,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 # paddle.enable_static()
-# paddle.disable_static()
+paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -66,7 +66,7 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 # Discretization
 # pde = psci.discretize(pde, space_npoints=11)
 
-pde = psci.discretize(pde, space_nsteps=(21, 21))
+pde = psci.discretize(pde, space_nsteps=(3, 3))
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -90,7 +90,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=1)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 
