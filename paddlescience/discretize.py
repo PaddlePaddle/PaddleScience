@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import types
+
 
 def discretize(pde,
                time_nsteps=None,
@@ -42,6 +44,22 @@ def discretize(pde,
         pde_disc.geometry = pde.geometry.discretize(
             space_method, space_interior_npoints, space_boundary_npoints,
             space_nsteps)
+
+        # compute weight
+        for name_b, bc in pde_disc.bc.items():
+            points_b = pde_disc.geometry.boundary[name_b]
+
+            data = list()
+            for n in range(len(points_b[0])):
+                data.append(points_b[:, n])
+
+            for b in bc:
+                # compute weight lambda with cordinates
+                if type(b.weight) == types.LambdaType:
+                    b.weight_disc = b.weight(*data)
+                else:
+                    b.weight_disc = b.weight
+
         return pde_disc
     else:
         return None

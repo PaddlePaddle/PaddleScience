@@ -16,14 +16,16 @@ import sympy
 
 
 class BC:
-    def __init__(self, name):
+    def __init__(self, name, weight=1.0):
         self.category = None
         self.name = name
+        self.weight = weight  # scale or lambda
+        self.weight_disc = 1.0
 
 
 class Free(BC):
-    def __init__(self, name):
-        super(Free, self).__init__(anme)
+    def __init__(self, name, weight):
+        super(Free, self).__init__(name, weight)
         self.category = "Free"
 
     def formula(self, indvar):
@@ -31,8 +33,8 @@ class Free(BC):
 
 
 class Dirichlet(BC):
-    def __init__(self, name, rhs=0.0):
-        super(Dirichlet, self).__init__(name)
+    def __init__(self, name, rhs=0.0, weight=1.0):
+        super(Dirichlet, self).__init__(name, weight)
         self.category = "Dirichlet"
         self.formula = None
         self.rhs = rhs
@@ -42,8 +44,8 @@ class Dirichlet(BC):
 
 
 class Neumann(BC):
-    def __init__(self, name, rhs=0.0):
-        super(Neumann, self).__init__(name)
+    def __init__(self, name, rhs=0.0, weight=1.0):
+        super(Neumann, self).__init__(name, weight)
         self.category = "Neumann"
         self.rhs = rhs
 
@@ -54,8 +56,8 @@ class Neumann(BC):
 
 
 class Robin(BC):
-    def __init__(self, name, rhs=0.0):
-        super(Robin, self).__init__(name)
+    def __init__(self, name, rhs=0.0, weight=1.0):
+        super(Robin, self).__init__(name, weight)
         self.category = "Robin"
         self.rhs = rhs
 

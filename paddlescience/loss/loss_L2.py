@@ -65,6 +65,7 @@ class L2(LossBase):
             lhs = cmploss.compute_formula(b.formula, input, input_attr,
                                           None)  # TODO: hard code
             rhs = b.rhs  # TODO: to support lambda
+            weight = b.weight_disc
             loss += paddle.norm(lhs - rhs, p=2)**2
 
         return loss, cmploss.outs
