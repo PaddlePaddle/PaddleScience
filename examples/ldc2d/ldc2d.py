@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+# paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -90,7 +90,8 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve_dynamic(num_epoch=1)
+#solution = solver.solve_dynamic(num_epoch=1)
+solution = solver.solve_static(num_epoch=1)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 

@@ -44,6 +44,7 @@ def save_vtk(filename="output", geo_disc=None, data=None):
 # concatenate cordinates of interior points and boundary points
 def __concatenate_geo(geo_disc):
 
+    # concatenate interior and bounday points
     x = [geo_disc.interior]
     for value in geo_disc.boundary.values():
         x.append(value)
@@ -51,6 +52,7 @@ def __concatenate_geo(geo_disc):
 
     ndims = len(points[0])
 
+    # to pointsToVTK input format
     points_vtk = list()
     for i in range(ndims):
         points_vtk.append(points[:, i].copy())
@@ -66,15 +68,18 @@ def __concatenate_data(outs):
     data = dict()
 
     # to numpy
-    outsnp = list()
+    npouts = list()
     for out in outs:
-        outsnp.append(out.numpy())
+        if type(out) != np.ndarray:
+            npouts.append(out.numpy())  # tenor to array
+        else:
+            npouts.append(out)
 
     # concatenate data
     ndata = outs[0].shape[1]
     for i in range(ndata):
         x = list()
-        for out in outsnp:
+        for out in npouts:
             x.append(out[:, i])
         data[varname[i]] = np.concatenate(x, axis=0)
 
