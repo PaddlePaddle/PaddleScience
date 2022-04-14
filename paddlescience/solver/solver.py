@@ -101,9 +101,15 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-# solve in dynamic mode
+    def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
-    def solve_dynamic(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+        if paddle.in_dynamic_mode():
+            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+        else:
+            return self.__solve_static(num_epoch, bs, checkpoint_freq)
+
+    # solve in dynamic mode
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
         """
         Train the network with respect to num_epoch.
  
@@ -143,7 +149,8 @@ class Solver(object):
             self.opt.step()
             self.opt.clear_grad()
 
-            print("epoch: " + str(epoch + 1), "    loss:", loss.numpy()[0])
+            print("dynamic epoch: " + str(epoch + 1), "    loss:",
+                  loss.numpy()[0])
 
             # print("epoch/num_epoch: ", epoch + 1, "/", num_epoch,
             #       "batch/num_batch: ", batch_id + 1, "/", num_batch,
@@ -182,7 +189,7 @@ class Solver(object):
 
     # solver in static mode
 
-    def solve_static(self, num_epoch=1, bs=None, checkpoint_freq=1000):
+    def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
@@ -210,8 +217,6 @@ class Solver(object):
                 # feeds
                 feeds['input' + str(i)] = ins[i]
 
-                # print(ins[i])
-
             loss, outs = self.algo.compute(
                 *inputs, ins_attr=ins_attr, pde=self.pde)
 
@@ -228,13 +233,13 @@ class Solver(object):
         # print(feeds)
 
         # main loop
-        for i in range(num_epoch):
+        for epoch in range(num_epoch):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
-            print("loss: ", rslt[0])
+            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
         return rslt[1:]
 
-    def solve_static_dist(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def __solve_static_dist(self, num_epoch, bs, checkpoint_freq):
 
         # init dist environment
         strategy = fleet.DistributedStrategy()
@@ -288,10 +293,7 @@ class Solver(object):
             print("loss: ", rslt[0])
 
     # solve in static mode with auto dist
-    def solve_static_auto_dist(self,
-                               num_epoch=2,
-                               bs=None,
-                               checkpoint_freq=1000):
+    def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
 
         # inputs and its attributes
         ins, ins_attr = self.algo.create_ins(self.pde)
