@@ -287,7 +287,7 @@ class Solver(object):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
             print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
-            return rslt[1:]
+        return rslt[1:]
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
