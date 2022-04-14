@@ -130,15 +130,10 @@ class Solver(object):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
-        # print(ins)
-
         # convert ins to tensor
         for i in range(len(ins)):
             ins[i] = paddle.to_tensor(
                 ins[i], dtype='float32', stop_gradient=False)
-
-        # make network
-        # self.algo.net.make_network()
 
         for epoch in range(num_epoch):
 
@@ -202,9 +197,11 @@ class Solver(object):
         main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
-        # 
+        # construct program
         with paddle.static.program_guard(main_program, startup_program):
 
+            # dynamic mode: make network in net's constructor
+            # static  mode: make network here 
             self.algo.net.make_network_static()
 
             for i in range(len(ins)):
@@ -222,15 +219,13 @@ class Solver(object):
 
             self.opt.minimize(loss)
 
-        # fetch loss and net's output
+        # fetch loss and net's outputs
         fetches = [loss.name]
         for out in outs:
             fetches.append(out.name)
 
         # start up program
         exe.run(startup_program)
-
-        # print(feeds)
 
         # main loop
         for epoch in range(num_epoch):

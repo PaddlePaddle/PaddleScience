@@ -63,6 +63,14 @@ class FCNet(NetworkBase):
         if paddle.in_dynamic_mode():
             self.make_network_dynamic()
 
+        # self.make_network_static()
+
+    def parameters(self):
+        if paddle.in_dynamic_mode():
+            return super(FCNet, self).parameters()
+        else:
+            return None
+
     def make_network_dynamic(self):
         for i in range(self.num_layers):
             if i == 0:
