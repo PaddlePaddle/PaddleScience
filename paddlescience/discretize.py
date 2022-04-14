@@ -45,7 +45,7 @@ def discretize(pde,
             space_method, space_interior_npoints, space_boundary_npoints,
             space_nsteps)
 
-        # compute weight
+        # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
             points_b = pde_disc.geometry.boundary[name_b]
 
@@ -53,12 +53,20 @@ def discretize(pde,
             for n in range(len(points_b[0])):
                 data.append(points_b[:, n])
 
+            # boundary weight
             for b in bc:
                 # compute weight lambda with cordinates
                 if type(b.weight) == types.LambdaType:
                     b.weight_disc = b.weight(*data)
                 else:
                     b.weight_disc = b.weight
+
+            # boundary rhs
+            for b in bc:
+                if type(b.rhs) == types.LambdaType:
+                    b.rhs_disc = b.rhs(*data)
+                else:
+                    b.rhs_disc = b.rhs
 
         return pde_disc
     else:

@@ -21,6 +21,8 @@ class BC:
         self.name = name
         self.weight = weight  # scale or lambda
         self.weight_disc = 1.0
+        self.rhs = 0.0
+        self.rhs_disc = 0.0
 
 
 class Free(BC):
