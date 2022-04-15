@@ -45,6 +45,10 @@ def discretize(pde,
             space_method, space_interior_npoints, space_boundary_npoints,
             space_nsteps)
 
+        # TODO: discretize apis
+
+        # pde_disc.discretize_bc(pde_disc.geometry_disc)
+
         # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
             points_b = pde_disc.geometry.boundary[name_b]

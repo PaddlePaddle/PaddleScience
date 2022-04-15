@@ -45,9 +45,14 @@ class NavierStokes(PDE):
         >>> pde = psci.pde.NavierStokes(0.01, 1.0)
     """
 
-    def __init__(self, nu=0.01, rho=1.0, dim=2, time_dependent=False):
+    def __init__(self,
+                 nu=0.01,
+                 rho=1.0,
+                 dim=2,
+                 time_dependent=False,
+                 weight=1.0):
         super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent)
+            dim + 1, time_dependent=time_dependent, weight=1.0)
 
         # parameter list
         if is_parameter(nu):
@@ -262,6 +267,34 @@ class NavierStokes(PDE):
             return self
         else:
             return NavierStokesImplicit(self)
+
+    def discretize_bc(self, geometry):
+
+        # discritize weight and rhs in boundary condition
+        for name_b, bc in self.bc.items():
+            points_b = geometry.boundary[name_b]
+
+            data = list()
+            for n in range(len(points_b[0])):
+                data.append(points_b[:, n])
+
+            # boundary weight
+            for b in bc:
+                # compute weight lambda with cordinates
+                if type(b.weight) == types.LambdaType:
+                    b.weight_disc = b.weight(*data)
+                else:
+                    b.weight_disc = b.weight
+
+            # boundary rhs
+            for b in bc:
+                if type(b.rhs) == types.LambdaType:
+                    b.rhs_disc = b.rhs(*data)
+                else:
+                    b.rhs_disc = b.rhs
+
+    def discretize_geometry(self):
+        pass
 
 
 class NavierStokesImplicit(PDE):

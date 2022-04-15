@@ -15,10 +15,11 @@
 # from ..formula import MathOperator
 
 import paddle
+import numpy as np
 
 
 class PDE:
-    def __init__(self, num_pdes=1, time_dependent=False):
+    def __init__(self, num_pdes=1, time_dependent=False, weight=1.0):
         # super(MathOperator, self).__init__()
 
         # time dependent / independent
@@ -44,6 +45,12 @@ class PDE:
 
         # Boundary condition list
         self.bc = dict()
+
+        # weight
+        if np.isscalar(weight):
+            self.weight = [weight for i in range(num_pdes)]
+        else:
+            pass  # TODO
 
     def add_geometry(self, geo):
 
