@@ -103,6 +103,8 @@ class Solver(object):
 
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
+        # return self.__solve_static_dist(num_epoch, bs, checkpoint_freq)
+
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
         else:
@@ -283,7 +285,7 @@ class Solver(object):
         exe.run(startup_program)
 
         # main loop
-        for i in range(num_epoch):
+        for epoch in range(num_epoch):
             rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
             print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
 

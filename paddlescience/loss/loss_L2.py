@@ -40,6 +40,8 @@ class L2(LossBase):
     def __init__(self):
         pass
 
+    # compute loss on one interior 
+    # there are multiple pde
     def eq_loss(self, pde, net, name_i, input, input_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -48,11 +50,15 @@ class L2(LossBase):
         cmploss.compute_outs_der(input, bs)
 
         loss = 0.0
-        for formula in pde.equations:
+        for i in range(len(pde.equations)):
+            formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, None)
-            loss += paddle.norm(rst, p=2)**2
+            weight = pde.weight[i]
+            loss += paddle.norm(rst, p=2)**2 * weight
         return loss, cmploss.outs
 
+    # compute loss on one boundary
+    # there are multiple bc on one boundary
     def bc_loss(self, pde, net, name_b, input, input_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -66,7 +72,7 @@ class L2(LossBase):
                                           None)  # TODO: hard code
             rhs = b.rhs  # TODO: to support lambda
             weight = b.weight_disc
-            loss += paddle.norm(lhs - rhs, p=2)**2
+            loss += paddle.norm(lhs - rhs, p=2)**2 * weight
 
         return loss, cmploss.outs
 

@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+# paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -29,18 +29,15 @@ geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
 geo.add_boundary(
     name="top", criteria=lambda x, y: y == 0.05, normal=(0.0, 1.0))
-geo.add_boundary(
-    name="down", criteria=lambda x, y: y == -0.05, normal=(0.0, -1.0))
-geo.add_boundary(
-    name="left", criteria=lambda x, y: x == -0.05, normal=(-1.0, 0.0))
-geo.add_boundary(
-    name="right", criteria=lambda x, y: x == 0.05, normal=(1.0, 0.0))
+geo.add_boundary(name="down", criteria=lambda x, y: y == -0.05)
+geo.add_boundary(name="left", criteria=lambda x, y: x == -0.05)
+geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
 # set bounday condition
-bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y: 2.0)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y: 1.0)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
@@ -54,6 +51,10 @@ bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 # bcdow_u = psci.bc.Neumann('u', rhs=0.0)
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
+
+print(geo.discretize_sampling_mesh(9))
+
+exit()
 
 pde.add_geometry(geo)
 
@@ -90,7 +91,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=3)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 

@@ -15,8 +15,6 @@
 from .geometry_discrete import GeometryDiscrete
 from .geometry import Geometry
 import numpy as np
-import vtk
-import matplotlib.pyplot as plt
 
 
 class Rectangular(Geometry):
@@ -90,6 +88,66 @@ class Rectangular(Geometry):
         geo_disc.interior = points[flag_i, :]
 
         return geo_disc
+
+    def discretize_sampling_mesh(self, npoints):
+
+        steps = list()
+
+        if self.ndims == 2:
+
+            # TODO: npoint should be larger than 9
+
+            nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
+            ni = npoints - 4 * nb - 4  # number of points in each boundary
+
+            # interior
+            steps.append(
+                self.__discretize_sampling_mesh_interior(self.origin,
+                                                         self.extent, ni))
+
+            # down boundary
+            origin = [self.origin[0], self.origin[1]]
+            extent = [self.extent[0], self.origin[1]]
+            steps.append(
+                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+
+            # top boundary
+            origin = [self.origin[0], self.extent[1]]
+            extent = [self.extent[0], self.extent[1]]
+            steps.append(
+                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+
+            # left bounday
+            origin = [self.origin[0], self.origin[1]]
+            extent = [self.origin[0], self.extent[1]]
+            steps.append(
+                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+
+            # right boundary
+            origin = [self.extent[0], self.origin[1]]
+            extent = [self.extent[0], self.extent[1]]
+            steps.append(
+                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+
+            # four points
+            steps.append(np.array([self.origin[0], self.origin[1]]))
+            steps.append(np.array([self.origin[0], self.extent[1]]))
+            steps.append(np.array([self.extent[0], self.origin[1]]))
+            steps.append(np.array([self.extent[0], self.extent[1]]))
+
+        return np.vstack(steps).reshape(npoints, self.ndims)
+
+    def __discretize_sampling_mesh_interior(self, origin, extent, n):
+
+        steps = list()
+        for i in range(self.ndims):
+            if origin[i] == extent[i]:
+                steps.append(np.full(n, origin[i]))
+            else:
+                # print(np.random.uniform(origin[i], extent[i], n))
+                steps.append(np.random.uniform(origin[i], extent[i], n))
+
+        return np.dstack(steps).reshape((n, self.ndims))
 
     def __discretize_uniform_mesh(self, nsteps):
 
