@@ -81,11 +81,3 @@ class Geometry:
         # print(geo_disc.boundary)
 
         return geo_disc
-
-    # def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):
-    #     geo_disc = GeometryDiscrete()
-    #     return GeometryDiscrete()
-
-    # def discretize(self, time_nsteps, space_nsteps):
-    #     geo_disc = GeometryDiscrete()
-    #     return GeometryDiscrete()
