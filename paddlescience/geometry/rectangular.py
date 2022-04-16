@@ -212,8 +212,9 @@ class CircleInRectangular(Rectangular):
         if method == "sampling":
 
             # TODO: better nc and nr
-            nc = int(np.sqrt(npoints))
-            nr = npoints - nc
+            # TODO: exact nr using area info
+            nc = int(np.sqrt(npoints))  # npoints in circle
+            nr = npoints - nc  # npoints in rectangular
 
             center = np.array(self.circle_center)
             radius = self.circle_radius
@@ -230,7 +231,8 @@ class CircleInRectangular(Rectangular):
             x = np.sin(angle).reshape((nc, 1))
             y = np.cos(angle).reshape((nc, 1))
             cir_b = np.concatenate([x, y], axis=1)
-            points = np.vstack([rec_cir, cir_b]).reshape(npoints, self.ndims)
+            ncr = len(rec_cir) + len(cir_b)
+            points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
 
             return super(Rectangular, self)._mesh_to_geo_disc(points)
         else:

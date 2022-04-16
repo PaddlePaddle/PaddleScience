@@ -29,6 +29,13 @@ def save_vtk(filename="output", geo_disc=None, data=None):
     npoints = len(points_vtk[0])
     ndims = len(points_vtk)
 
+    # print(len(points_vtk[0]))
+    # print(len(points_vtk[1]))
+    # print(len(data_vtk["v"]))
+
+    print(points_vtk[0].shape)
+    print(data_vtk["u"].shape)
+
     if ndims == 3:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]

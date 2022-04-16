@@ -17,7 +17,7 @@ import types
 
 def discretize(pde,
                time_nsteps=None,
-               space_method="uniform",
+               space_method="sampling",
                space_npoints=None):
     """
         Discretize PDE and Geometry

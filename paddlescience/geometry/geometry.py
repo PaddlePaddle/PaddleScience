@@ -78,6 +78,4 @@ class Geometry:
         # extract remain points, i.e. interior points
         geo_disc.interior = points[flag_i, :]
 
-        # print(geo_disc.boundary)
-
         return geo_disc

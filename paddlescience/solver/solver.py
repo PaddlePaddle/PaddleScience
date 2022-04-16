@@ -139,6 +139,8 @@ class Solver(object):
 
         for epoch in range(num_epoch):
 
+            # TODO: error out num_epoch==0
+
             loss, outs = self.algo.compute(
                 *ins, ins_attr=ins_attr, pde=self.pde)
 
