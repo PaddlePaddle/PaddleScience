@@ -221,16 +221,64 @@ class CircleInRectangular(Rectangular):
             # rectangular points
             rec = super(CircleInRectangular, self)._sampling_mesh(nr)
 
-            # remove disk points
+            # remove circle points
             flag = np.linalg.norm((rec - center), axis=1) >= radius
-            rec_disk = rec[flag, :]
+            rec_cir = rec[flag, :]
 
-            # add circle points
+            # add circle boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
             x = np.sin(angle).reshape((nc, 1))
             y = np.cos(angle).reshape((nc, 1))
-            circle = np.concatenate([x, y], axis=1)
-            points = np.vstack([rec_disk, circle]).reshape(npoints, self.ndims)
+            cir_b = np.concatenate([x, y], axis=1)
+            points = np.vstack([rec_cir, cir_b]).reshape(npoints, self.ndims)
+
+            return super(Rectangular, self)._mesh_to_geo_disc(points)
+        else:
+            pass
+            # TODO: error out uniform method
+
+
+class CylinderInCube(Rectangular):
+    def __init__(self, origin, extent, circle_center, circle_radius):
+        super(CircleInRectangular, self).__init__(origin, extent)
+
+        self.origin = origin
+        self.extent = extent
+        self.circle_center = circle_center
+        self.circle_radius = circle_radius
+        if len(origin) == len(extent):
+            self.ndims = len(origin)
+        else:
+            pass  # TODO: error out
+
+    def discretize(self, method="sampling", npoints=20):
+
+        if method == "sampling":
+
+            # TODO: better nc and nr
+            nc = int(np.sqrt(npoints))
+            nr = npoints - nc
+
+            center = np.array(self.circle_center)
+            radius = self.circle_radius
+
+            # cube points
+            rec = super(CircleInRectangular, self)._sampling_mesh(nr)
+
+            # remove cylinder points
+            flag = np.linalg.norm((rec - center), axis=1) >= radius
+            rec_cyl = rec[flag, :]
+
+            # add cylinder boundary points
+            angle = np.arange(nc) * (2.0 * np.pi / nc)
+            x = np.sin(angle).reshape((nc, 1))
+            y = np.cos(angle).reshape((nc, 1))
+            z = np.random.uniform(origin[2], extent[2], nz)
+            cir_b = np.concatenate([x, y], axis=1)
+
+            # TODO: stack x, y, z
+
+            points = np.vstack([rec_cyl, cyl_b]).reshape(npoints, self.ndims)
 
             return super(Rectangular, self)._mesh_to_geo_disc(points)
         else:
