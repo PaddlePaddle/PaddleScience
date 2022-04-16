@@ -42,6 +42,46 @@ class Geometry:
         self.criteria.clear()
         self.normal.clear()
 
+    # select boundaries from all points and construct disc geometry
+    def _mesh_to_geo_disc(self, points):
+
+        geo_disc = GeometryDiscrete()
+
+        npoints = len(points)
+
+        # list of point's columns, used as input of criterial (lambda)
+        data = list()
+        for n in range(self.ndims):
+            data.append(points[:, n])
+
+        # init as True
+        flag_i = np.full(npoints, True, dtype='bool')
+
+        # boundary points
+        for name in self.criteria.keys():
+
+            # flag bounday points
+            flag_b = self.criteria[name](*data)
+
+            # extract
+            flag_ib = flag_i & flag_b
+            geo_disc.boundary[name] = points[flag_ib, :]
+
+            # set extracted points as False
+            flag_i[flag_ib] = False
+
+            # TODO: normal
+            normal = self.normal[name]
+            normal_disc = None
+            geo_disc.normal[name] = normal_disc
+
+        # extract remain points, i.e. interior points
+        geo_disc.interior = points[flag_i, :]
+
+        # print(geo_disc.boundary)
+
+        return geo_disc
+
     # def sampling_discretize(self, time_nsteps, space_point_size, space_nsteps):
     #     geo_disc = GeometryDiscrete()
     #     return GeometryDiscrete()

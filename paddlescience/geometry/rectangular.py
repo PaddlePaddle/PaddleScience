@@ -15,6 +15,7 @@
 from .geometry_discrete import GeometryDiscrete
 from .geometry import Geometry
 import numpy as np
+import math
 
 
 class Rectangular(Geometry):
@@ -41,55 +42,25 @@ class Rectangular(Geometry):
         else:
             pass  # TODO: error out
 
-    def discretize(self,
-                   space_method="uniform",
-                   space_interior_npoints=None,
-                   space_boundary_npoints=None,
-                   space_nsteps=None):
+    def discretize(self, method="uniform", npoints=10):
 
-        if space_method == "uniform":
-            return self.__discretize_uniform(space_nsteps)
+        # TODO: scalar / list
 
-    # uniform discretization method
-    def __discretize_uniform(self, nsteps):
+        if method == "uniform":
+            if np.isscalar(npoints):
+                # npoints^{1/ndims}
+                n = int(math.pow(npoints, 1.0 / self.ndims))
+                nl = [n for i in range(self.ndims)]
+            else:
+                nl = npoints
+            points = self.__uniform_mesh(nl)
+        elif method == "sampling":
+            points = self.__sampling_mesh(npoints)
+            # TODO: npoints as list
 
-        geo_disc = GeometryDiscrete()
+        return super(Rectangular, self)._mesh_to_geo_disc(points)
 
-        points = self.__discretize_uniform_mesh(nsteps)
-        npoints = len(points)
-
-        # list of point's columns, used as input of criterial (lambda)
-        data = list()
-        for n in range(self.ndims):
-            data.append(points[:, n])
-
-        # init as True
-        flag_i = np.full(npoints, True, dtype='bool')
-
-        # boundary points
-        for name in self.criteria.keys():
-
-            # flag bounday points
-            flag_b = self.criteria[name](*data)
-
-            # extract
-            flag_ib = flag_i & flag_b
-            geo_disc.boundary[name] = points[flag_ib, :]
-
-            # set extracted points as False
-            flag_i[flag_ib] = False
-
-            # TODO: normal
-            normal = self.normal[name]
-            normal_disc = None
-            geo_disc.normal[name] = normal_disc
-
-        # extract remain points, i.e. interior points
-        geo_disc.interior = points[flag_i, :]
-
-        return geo_disc
-
-    def discretize_sampling_mesh(self, npoints):
+    def __sampling_mesh(self, npoints):
 
         steps = list()
 
@@ -102,34 +73,29 @@ class Rectangular(Geometry):
 
             # interior
             steps.append(
-                self.__discretize_sampling_mesh_interior(self.origin,
-                                                         self.extent, ni))
+                self.__sampling_mesh_interior(self.origin, self.extent, ni))
 
             # down boundary
             origin = [self.origin[0], self.origin[1]]
             extent = [self.extent[0], self.origin[1]]
-            steps.append(
-                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+            steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
             # top boundary
             origin = [self.origin[0], self.extent[1]]
             extent = [self.extent[0], self.extent[1]]
-            steps.append(
-                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+            steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
             # left bounday
             origin = [self.origin[0], self.origin[1]]
             extent = [self.origin[0], self.extent[1]]
-            steps.append(
-                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+            steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
             # right boundary
             origin = [self.extent[0], self.origin[1]]
             extent = [self.extent[0], self.extent[1]]
-            steps.append(
-                self.__discretize_sampling_mesh_interior(origin, extent, nb))
+            steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
-            # four points
+            # four vertex
             steps.append(np.array([self.origin[0], self.origin[1]]))
             steps.append(np.array([self.origin[0], self.extent[1]]))
             steps.append(np.array([self.extent[0], self.origin[1]]))
@@ -137,7 +103,7 @@ class Rectangular(Geometry):
 
         return np.vstack(steps).reshape(npoints, self.ndims)
 
-    def __discretize_sampling_mesh_interior(self, origin, extent, n):
+    def __sampling_mesh_interior(self, origin, extent, n):
 
         steps = list()
         for i in range(self.ndims):
@@ -149,7 +115,7 @@ class Rectangular(Geometry):
 
         return np.dstack(steps).reshape((n, self.ndims))
 
-    def __discretize_uniform_mesh(self, nsteps):
+    def __uniform_mesh(self, npoints):
 
         steps = list()
         for i in range(self.ndims):
@@ -157,7 +123,7 @@ class Rectangular(Geometry):
                 np.linspace(
                     self.origin[i],
                     self.extent[i],
-                    nsteps[i],
+                    npoints[i],
                     endpoint=True,
                     dtype='float32'))
 

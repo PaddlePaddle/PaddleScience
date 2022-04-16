@@ -18,9 +18,7 @@ import types
 def discretize(pde,
                time_nsteps=None,
                space_method="uniform",
-               space_interior_npoints=None,
-               space_boundary_npoints=None,
-               space_nsteps=None):
+               space_npoints=None):
     """
         Discretize PDE and Geometry
 
@@ -41,9 +39,8 @@ def discretize(pde,
     # PDE
     if pde is not None:
         pde_disc = pde.discretize(time_nsteps)
-        pde_disc.geometry = pde.geometry.discretize(
-            space_method, space_interior_npoints, space_boundary_npoints,
-            space_nsteps)
+        pde_disc.geometry = pde.geometry.discretize(space_method,
+                                                    space_npoints)
 
         # TODO: discretize apis
 

@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-# paddle.disable_static()
+#paddle.enable_static()
+paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -52,9 +52,9 @@ bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 # bcdow_u = psci.bc.Neumann('u', rhs=0.0)
 # bcdown_u = psci.bc.Neumann('u', rhs=0.0)
 
-print(geo.discretize_sampling_mesh(9))
+#geo.discretize(method="uniform", npoints=100)
 
-exit()
+#exit()
 
 pde.add_geometry(geo)
 
@@ -67,7 +67,7 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 # Discretization
 # pde = psci.discretize(pde, space_npoints=11)
 
-pde = psci.discretize(pde, space_nsteps=(3, 3))
+pde = psci.discretize(pde, space_npoints=(3, 3))
 
 # Network
 # TODO: remove num_ins and num_outs
