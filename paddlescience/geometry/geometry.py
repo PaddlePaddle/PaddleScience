@@ -54,6 +54,8 @@ class Geometry:
         for n in range(self.ndims):
             data.append(points[:, n])
 
+        print(type(points[0, 0]))
+
         # init as True
         flag_i = np.full(npoints, True, dtype='bool')
 

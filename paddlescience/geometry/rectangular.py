@@ -96,10 +96,18 @@ class Rectangular(Geometry):
             steps.append(self._sampling_mesh_interior(origin, extent, nb))
 
             # four vertex
-            steps.append(np.array([self.origin[0], self.origin[1]]))
-            steps.append(np.array([self.origin[0], self.extent[1]]))
-            steps.append(np.array([self.extent[0], self.origin[1]]))
-            steps.append(np.array([self.extent[0], self.extent[1]]))
+            steps.append(
+                np.array(
+                    [self.origin[0], self.origin[1]], dtype="float32"))
+            steps.append(
+                np.array(
+                    [self.origin[0], self.extent[1]], dtype="float32"))
+            steps.append(
+                np.array(
+                    [self.extent[0], self.origin[1]], dtype="float32"))
+            steps.append(
+                np.array(
+                    [self.extent[0], self.extent[1]], dtype="float32"))
 
         elif self.ndims == 3:
 
@@ -157,10 +165,11 @@ class Rectangular(Geometry):
         steps = list()
         for i in range(self.ndims):
             if origin[i] == extent[i]:
-                steps.append(np.full(n, origin[i]))
+                steps.append(np.full(n, origin[i], dtype="float32"))
             else:
-                # print(np.random.uniform(origin[i], extent[i], n))
-                steps.append(np.random.uniform(origin[i], extent[i], n))
+                steps.append(
+                    np.random.uniform(origin[i], extent[i], n).astype(
+                        "float32"))
 
         return np.dstack(steps).reshape((n, self.ndims))
 
@@ -216,7 +225,7 @@ class CircleInRectangular(Rectangular):
             nc = int(np.sqrt(npoints))  # npoints in circle
             nr = npoints - nc  # npoints in rectangular
 
-            center = np.array(self.circle_center)
+            center = np.array(self.circle_center, dtype="float32")
             radius = self.circle_radius
 
             # rectangular points
@@ -228,8 +237,8 @@ class CircleInRectangular(Rectangular):
 
             # add circle boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = np.sin(angle).reshape((nc, 1))
-            y = np.cos(angle).reshape((nc, 1))
+            x = np.sin(angle).astype("float32").reshape((nc, 1))
+            y = np.cos(angle).astype("float32").reshape((nc, 1))
             cir_b = np.concatenate([x, y], axis=1)
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
