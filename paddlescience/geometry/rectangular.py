@@ -64,7 +64,10 @@ class Rectangular(Geometry):
 
         steps = list()
 
-        if self.ndims == 2:
+        if self.ndims == 1:
+            pass  # TODO
+
+        elif self.ndims == 2:
 
             # TODO: npoint should be larger than 9
 
@@ -75,22 +78,19 @@ class Rectangular(Geometry):
             steps.append(
                 self.__sampling_mesh_interior(self.origin, self.extent, ni))
 
-            # down boundary
+            # four boundary: down, top, left, right
             origin = [self.origin[0], self.origin[1]]
             extent = [self.extent[0], self.origin[1]]
             steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
-            # top boundary
             origin = [self.origin[0], self.extent[1]]
             extent = [self.extent[0], self.extent[1]]
             steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
-            # left bounday
             origin = [self.origin[0], self.origin[1]]
             extent = [self.origin[0], self.extent[1]]
             steps.append(self.__sampling_mesh_interior(origin, extent, nb))
 
-            # right boundary
             origin = [self.extent[0], self.origin[1]]
             extent = [self.extent[0], self.extent[1]]
             steps.append(self.__sampling_mesh_interior(origin, extent, nb))
@@ -100,6 +100,55 @@ class Rectangular(Geometry):
             steps.append(np.array([self.origin[0], self.extent[1]]))
             steps.append(np.array([self.extent[0], self.origin[1]]))
             steps.append(np.array([self.extent[0], self.extent[1]]))
+
+        elif self.ndims == 3:
+
+            nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
+            ni = npoints - 4 * nb - 4  # number of points in each boundary
+
+            # interior
+            steps.append(
+                self.__sampling_mesh_interior(self.origin, self.extent, ni))
+
+            # six faces: down, top, left, right, front, back
+            origin = [self.origin[0], self.origin[1], self.origin[2]]
+            extent = [self.extent[0], self.extent[1], self.origin[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            origin = [self.origin[0], self.origin[1], self.extent[2]]
+            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            origin = [self.origin[0], self.origin[1], self.origin[2]]
+            extent = [self.origin[0], self.extent[1], self.extent[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            origin = [self.extent[0], self.origin[1], self.origin[2]]
+            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            origin = [self.origin[0], self.origin[1], self.origin[2]]
+            extent = [self.origin[0], self.extent[1], self.extent[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            origin = [self.origin[0], self.extent[1], self.origin[2]]
+            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, nf))
+
+            # twelve edges
+            origin = [self.origin[0], self.origin[1], self.origin[2]]
+            extent = [self.extent[0], self.origin[1], self.origin[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, ne))
+
+            origin = [self.extent[0], self.origin[1], self.origin[2]]
+            extent = [self.extent[0], self.extent[1], self.origin[2]]
+            steps.append(self.__sampling_mesh_interior(origin, extent, ne))
+
+            # eight vertex
+
+        else:
+            pass
+            # TODO: error out
 
         return np.vstack(steps).reshape(npoints, self.ndims)
 
