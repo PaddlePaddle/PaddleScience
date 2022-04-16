@@ -237,9 +237,12 @@ class CircleInRectangular(Rectangular):
 
             # add circle boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = np.sin(angle).astype("float32").reshape((nc, 1))
-            y = np.cos(angle).astype("float32").reshape((nc, 1))
-            cir_b = np.concatenate([x, y], axis=1)
+
+            # TODO: circle is larger than rec
+            x = np.sin(angle).reshape((nc, 1)) * radius
+            y = np.cos(angle).reshape((nc, 1)) * radius
+            cir_b = np.concatenate(
+                [x.astype("float32"), y.astype("float32")], axis=1)
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
 
