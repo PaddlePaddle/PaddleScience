@@ -192,3 +192,47 @@ class Rectangular(Geometry):
                 axis=-1)
 
         return points
+
+
+class CircleInRectangular(Rectangular):
+    def __init__(self, origin, extent, circle_center, circle_radius):
+        super(CircleInRectangular, self).__init__(origin, extent)
+
+        self.origin = origin
+        self.extent = extent
+        self.circle_center = circle_center
+        self.circle_radius = circle_radius
+        if len(origin) == len(extent):
+            self.ndims = len(origin)
+        else:
+            pass  # TODO: error out
+
+    def discretize(self, method="sampling", npoints=20):
+
+        if method == "sampling":
+
+            # TODO: better nc and nr
+            nc = int(np.sqrt(npoints))
+            nr = npoints - nc
+
+            center = np.array(self.circle_center)
+            radius = self.circle_radius
+
+            # rectangular points
+            rec = super(CircleInRectangular, self)._sampling_mesh(nr)
+
+            # remove disk points
+            flag = np.linalg.norm((rec - center), axis=1) >= radius
+            rec_disk = rec[flag, :]
+
+            # add circle points
+            angle = np.arange(nc) * (2.0 * np.pi / nc)
+            x = np.sin(angle).reshape((nc, 1))
+            y = np.cos(angle).reshape((nc, 1))
+            circle = np.concatenate([x, y], axis=1)
+            points = np.vstack([rec_disk, circle]).reshape(npoints, self.ndims)
+
+            return super(Rectangular, self)._mesh_to_geo_disc(points)
+        else:
+            pass
+            # TODO: error out uniform method
