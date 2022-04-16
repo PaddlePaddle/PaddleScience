@@ -74,86 +74,153 @@ class Rectangular(Geometry):
             nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
             ni = npoints - 4 * nb - 4  # number of points in each boundary
 
+            x1 = self.origin[0]
+            y1 = self.origin[1]
+            x2 = self.extent[0]
+            y2 = self.extent[1]
+
             # interior
             steps.append(
                 self._sampling_mesh_interior(self.origin, self.extent, ni))
 
             # four boundary: down, top, left, right
-            origin = [self.origin[0], self.origin[1]]
-            extent = [self.extent[0], self.origin[1]]
+            origin = [x1, y1]
+            extent = [x2, y1]
             steps.append(self._sampling_mesh_interior(origin, extent, nb))
 
-            origin = [self.origin[0], self.extent[1]]
-            extent = [self.extent[0], self.extent[1]]
+            origin = [x1, y2]
+            extent = [x2, y2]
             steps.append(self._sampling_mesh_interior(origin, extent, nb))
 
-            origin = [self.origin[0], self.origin[1]]
-            extent = [self.origin[0], self.extent[1]]
+            origin = [x1, y1]
+            extent = [x1, y2]
             steps.append(self._sampling_mesh_interior(origin, extent, nb))
 
-            origin = [self.extent[0], self.origin[1]]
-            extent = [self.extent[0], self.extent[1]]
+            origin = [x2, y1]
+            extent = [x2, y2]
             steps.append(self._sampling_mesh_interior(origin, extent, nb))
 
             # four vertex
-            steps.append(
-                np.array(
-                    [self.origin[0], self.origin[1]], dtype="float32"))
-            steps.append(
-                np.array(
-                    [self.origin[0], self.extent[1]], dtype="float32"))
-            steps.append(
-                np.array(
-                    [self.extent[0], self.origin[1]], dtype="float32"))
-            steps.append(
-                np.array(
-                    [self.extent[0], self.extent[1]], dtype="float32"))
+            steps.append(np.array([x1, y1], dtype="float32"))
+            steps.append(np.array([x1, y2], dtype="float32"))
+            steps.append(np.array([x2, y1], dtype="float32"))
+            steps.append(np.array([x2, y2], dtype="float32"))
 
         elif self.ndims == 3:
 
             nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
             ni = npoints - 4 * nb - 4  # number of points in each boundary
 
+            x1 = self.origin[0]
+            y1 = self.origin[1]
+            z1 = self.origin[2]
+            x2 = self.extent[0]
+            y2 = self.extent[1]
+            z2 = self.extent[2]
+
             # interior
             steps.append(
                 self._sampling_mesh_interior(self.origin, self.extent, ni))
 
             # six faces: down, top, left, right, front, back
-            origin = [self.origin[0], self.origin[1], self.origin[2]]
-            extent = [self.extent[0], self.extent[1], self.origin[2]]
+            origin = [x1, y1, z1]
+            extent = [x2, y2, z1]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
-            origin = [self.origin[0], self.origin[1], self.extent[2]]
-            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            origin = [x1, y1, z2]
+            extent = [x2, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
-            origin = [self.origin[0], self.origin[1], self.origin[2]]
-            extent = [self.origin[0], self.extent[1], self.extent[2]]
+            origin = [x1, y1, z1]
+            extent = [x1, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
-            origin = [self.extent[0], self.origin[1], self.origin[2]]
-            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
-            origin = [self.origin[0], self.origin[1], self.origin[2]]
-            extent = [self.origin[0], self.extent[1], self.extent[2]]
+            origin = [x1, y1, z1]
+            extent = [x1, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
-            origin = [self.origin[0], self.extent[1], self.origin[2]]
-            extent = [self.extent[0], self.extent[1], self.extent[2]]
+            origin = [x1, y2, z1]
+            extent = [x2, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
             # twelve edges
-            origin = [self.origin[0], self.origin[1], self.origin[2]]
-            extent = [self.extent[0], self.origin[1], self.origin[2]]
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z1]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
-            origin = [self.extent[0], self.origin[1], self.origin[2]]
-            extent = [self.extent[0], self.extent[1], self.origin[2]]
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y2, z1]
+            extent = [x1, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y2, z1]
+            extent = [x1, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y1, z2]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y2, z2]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y2, z2]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y2, z1]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y2, z2]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x1, y1, z2]
+            extent = [x1, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y2, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y2, z2]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+
+            origin = [x2, y1, z2]
+            extent = [x2, y1, z1]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             # eight vertex
-
+            steps.append(np.array([x1, y1, z1], dtype="float32"))
+            steps.append(np.array([x2, y1, z1], dtype="float32"))
+            steps.append(np.array([x2, y2, z1], dtype="float32"))
+            steps.append(np.array([x1, y2, z1], dtype="float32"))
+            steps.append(np.array([x1, y1, z2], dtype="float32"))
+            steps.append(np.array([x2, y1, z2], dtype="float32"))
+            steps.append(np.array([x2, y2, z2], dtype="float32"))
+            steps.append(np.array([x1, y2, z2], dtype="float32"))
         else:
             pass
             # TODO: error out
@@ -238,7 +305,7 @@ class CircleInRectangular(Rectangular):
             # add circle boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
 
-            # TODO: circle is larger than rec
+            # TODO: when circle is larger than rec
             x = np.sin(angle).reshape((nc, 1)) * radius
             y = np.cos(angle).reshape((nc, 1)) * radius
             cir_b = np.concatenate(
