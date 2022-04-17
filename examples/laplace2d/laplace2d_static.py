@@ -20,6 +20,8 @@ import time
 import paddle
 from paddle.incubate.autograd import Hessian
 from transform import program_transform
+from transform import dead_code_elimination
+from transform import fuse_shape_fill_constant
 
 paddle.enable_static()
 paddle.seed(1234)
@@ -111,6 +113,8 @@ with paddle.static.program_guard(train_program, startup_program):
     paddle.optimizer.Adam(learning_rate=0.001).minimize(loss)
 
 new_program = program_transform(train_program)
+dead_code_elimination(new_program)
+fuse_shape_fill_constant(new_program)
 # print('startup_program: ', startup_program)
 # print('train_program: ', train_program)
 # print('new_program: ', new_program)

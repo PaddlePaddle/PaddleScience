@@ -62,6 +62,101 @@ def slice_assign_shape(old_shape, decrease_axis):
             j += 1
     return new_shape
 
+def _remove_unused_var(program):
+    all_remove_vars = []
+    for block in program.blocks:
+        args = []
+        for op in block.ops:
+            args += op.input_arg_names
+            args += op.output_arg_names
+        args = list(set(args))  #vals of all left ops
+        var_names = block.vars.keys()  # all vals
+        sub_block_remove_vars = []
+        for var in var_names:
+            if var not in args:
+                sub_block_remove_vars.append(var)
+        all_remove_vars.append(sub_block_remove_vars)
+
+    remove_vars = [list(set(v)) for v in all_remove_vars]
+    for i, block in enumerate(program.blocks):
+        for v in remove_vars[i]:
+            block._remove_var(v)
+
+def dead_code_elimination(program):
+    program._sync_with_cpp()
+    all_input_arg_names = set()
+    for block in program.blocks:
+        ops = list(block.ops)
+        for op in ops:
+            for name in op.input_arg_names:
+                all_input_arg_names.add(name)
+
+    for block in program.blocks:
+        ops = list(block.ops)
+        for op in ops:
+            if op.type == "fill_constant_p" and (op.output('Y')[0] not in all_input_arg_names):
+                idx = block.ops.index(op)
+                block._remove_op(idx)
+
+    _remove_unused_var(program)
+    program._sync_with_cpp()
+
+def _adjust_input(block, input_map):
+    for i in range(len(block.ops)):
+        current_op = block.ops[i]
+        for input_arg in current_op.input_arg_names:
+            if input_arg in input_map:
+                current_op._rename_input(input_arg, input_map[input_arg])
+
+def _insert_fill_any_like_op(block, index, shape_op, fill_constant_op):
+    fill_any_like_inputs = {}
+    fill_any_like_inputs['X'] = block.var(shape_op.input('Input')[0])
+    fill_any_like_outputs = {}
+    fill_any_like_outputs['Out'] = block.var(fill_constant_op.output('Out')[0])
+    fill_any_like_attrs = {}
+    fill_any_like_attrs['value'] = fill_constant_op.attr('value')
+    fill_any_like_attrs['dtype'] = fill_constant_op.attr('dtype')
+    fill_any_like_attrs['op_role'] = fill_constant_op.attr('op_role')
+
+    fill_any_like_op = block._insert_op(
+        index,
+        type='fill_any_like',
+        inputs=fill_any_like_inputs,
+        outputs=fill_any_like_outputs,
+        attrs=fill_any_like_attrs)
+    return fill_any_like_op
+
+def fuse_shape_fill_constant(program):
+    program._sync_with_cpp()
+    block = program.block(0)
+    i = 0
+    while i < len(block.ops):
+        # find a fill_constant op
+        if block.ops[i].type == 'fill_constant':
+            fill_constant_op = block.ops[i]
+            fill_constant_idx = i
+            shape_idx = -1
+            # find the preceding shape op
+            for j in reversed(range(fill_constant_idx)):
+                if block.ops[j].type == 'shape':
+                    shape_out_name = block.ops[j].output_arg_names[0]
+                    if shape_out_name in fill_constant_op.input_arg_names:
+                        shape_op = block.ops[j]
+                        shape_idx = j
+                        break
+            if shape_idx < 0:
+                i += 1
+                continue
+            # create and insert a new fill_any_like op
+            _insert_fill_any_like_op(block, fill_constant_idx + 1, shape_op, fill_constant_op)
+            # remove the old operators
+            block._remove_op(fill_constant_idx)
+            block._remove_op(shape_idx)
+            # restart scanning for elementwise add from the deleted shape's index
+            i = shape_idx
+        i += 1
+    _remove_unused_var(program)
+    program._sync_with_cpp()
 
 def program_transform(program):
     assert program.num_blocks == 1
