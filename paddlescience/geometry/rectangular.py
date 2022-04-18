@@ -334,7 +334,7 @@ class CylinderInCube(Rectangular):
             cube = super(CylinderInCube, self)._sampling_mesh(nr)
 
             # remove cylinder points
-            flag = np.linalg.norm((cube[:, 0:1] - center), axis=1) >= radius
+            flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
             cube_cyl = cube[flag, :]
 
             # TODO : points inside / outside cube
