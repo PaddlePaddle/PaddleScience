@@ -24,14 +24,14 @@ paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
-# geo = psci.geometry.CircleInRectangular(
-#     origin=(-0.05, -0.05),
-#     extent=(0.05, 0.05),
-#     circle_center=(0.0, 0.0),
-#     circle_radius=0.01)
+geo = psci.geometry.CircleInRectangular(
+    origin=(-0.05, -0.05),
+    extent=(0.05, 0.05),
+    circle_center=(0.0, 0.0),
+    circle_radius=0.01)
 
 # set geometry and boundary
-geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
+# geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
 geo.add_boundary(
     name="top", criteria=lambda x, y: y == 0.05, normal=(0.0, 1.0))
@@ -71,7 +71,7 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Discretization
-pde = psci.discretize(pde, space_npoints=1000, space_method="sampling")
+pde = psci.discretize(pde, space_npoints=10000, space_method="sampling")
 
 # pde = psci.discretize(pde, space_npoints=(3, 3))
 

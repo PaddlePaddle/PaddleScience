@@ -77,11 +77,6 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 # Discretization
 pde_disc = psci.discretize(pde, space_npoints=10000, space_method="sampling")
 
-# print(pde_disc.geometry.interior)
-
-psci.visu.save_vtk(geo_disc=pde_disc.geometry)
-exit()
-
 # pde = psci.discretize(pde, space_npoints=(3, 3))
 
 # Network
