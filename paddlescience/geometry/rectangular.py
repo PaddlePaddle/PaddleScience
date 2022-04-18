@@ -18,6 +18,7 @@ import numpy as np
 import math
 
 
+# Rectangular
 class Rectangular(Geometry):
     #     """
     #     Two dimentional rectangular
@@ -257,6 +258,11 @@ class Rectangular(Geometry):
         return points
 
 
+# cube 
+Cube = Rectangular
+
+
+# CircleInRectangular
 class CircleInRectangular(Rectangular):
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CircleInRectangular, self).__init__(origin, extent)
@@ -305,6 +311,7 @@ class CircleInRectangular(Rectangular):
             # TODO: error out uniform method
 
 
+        # CylinderInCube
 class CylinderInCube(Rectangular):
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CylinderInCube, self).__init__(origin, extent)
