@@ -24,11 +24,20 @@ paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
-geo = psci.geometry.CircleInRectangular(
-    origin=(-0.05, -0.05),
-    extent=(0.05, 0.05),
+# geo = psci.geometry.CircleInRectangular(
+#     origin=(-0.05, -0.05),
+#     extent=(0.05, 0.05),
+#     circle_center=(0.0, 0.0),
+#     circle_radius=0.01)
+
+geo = psci.geometry.CylinderInCube(
+    origin=(-0.5, -0.5, -0.5),
+    extent=(0.5, 0.5, 0.5),
     circle_center=(0.0, 0.0),
-    circle_radius=0.01)
+    circle_radius=0.1)
+geo.discretize()
+
+exit()
 
 # # set geometry and boundary
 # geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))

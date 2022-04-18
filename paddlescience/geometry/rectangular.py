@@ -42,7 +42,7 @@ class Rectangular(Geometry):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="uniform", npoints=10):
+    def discretize(self, method="uniform", npoints=100):
 
         # TODO: scalar / list
 
@@ -71,8 +71,8 @@ class Rectangular(Geometry):
 
             # TODO: npoint should be larger than 9
 
-            nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
-            ni = npoints - 4 * nb - 4  # number of points in each boundary
+            ne = int(np.sqrt(npoints - 4 - 4))  # number of points in edge
+            ni = npoints - 4 * ne - 4  # number of internal points 
 
             x1 = self.origin[0]
             y1 = self.origin[1]
@@ -86,19 +86,19 @@ class Rectangular(Geometry):
             # four boundary: down, top, left, right
             origin = [x1, y1]
             extent = [x2, y1]
-            steps.append(self._sampling_mesh_interior(origin, extent, nb))
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x1, y2]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nb))
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x1, y1]
             extent = [x1, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nb))
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x2, y1]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nb))
+            steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             # four vertex
             steps.append(np.array([x1, y1], dtype="float32"))
@@ -108,15 +108,18 @@ class Rectangular(Geometry):
 
         elif self.ndims == 3:
 
-            nb = int(np.sqrt(npoints - 4 - 4))  # number of internal points
-            ni = npoints - 4 * nb - 4  # number of points in each boundary
+            # TODO: exact number of points
 
-            x1 = self.origin[0]
-            y1 = self.origin[1]
-            z1 = self.origin[2]
-            x2 = self.extent[0]
-            y2 = self.extent[1]
-            z2 = self.extent[2]
+            n = int(math.pow(npoints, 1.0 / 3.0))
+
+            nf = n * n  # number of points in face
+            ne = n - 2  # number of points in edge
+            ni = npoints - 6 * nf - 12 * ne - 8  # number of points internal
+
+            print(npoints, n, nf, ne, ni)
+
+            x1, y1, z1 = self.origin
+            x2, y2, z2 = self.extent
 
             # interior
             steps.append(
@@ -164,8 +167,8 @@ class Rectangular(Geometry):
             extent = [x1, y1, z1]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
-            origin = [x1, y1, z1]
-            extent = [x2, y1, z1]
+            origin = [x1, y1, z2]
+            extent = [x2, y1, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x2, y1, z2]
@@ -181,35 +184,19 @@ class Rectangular(Geometry):
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x1, y1, z1]
-            extent = [x1, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
-
-            origin = [x1, y2, z1]
-            extent = [x1, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
-
-            origin = [x1, y2, z2]
             extent = [x1, y1, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
-            origin = [x1, y1, z2]
-            extent = [x1, y1, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
-
             origin = [x2, y1, z1]
-            extent = [x2, y2, z1]
+            extent = [x2, y1, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             origin = [x2, y2, z1]
             extent = [x2, y2, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
-            origin = [x2, y2, z2]
-            extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
-
-            origin = [x2, y1, z2]
-            extent = [x2, y1, z1]
+            origin = [x1, y1, z1]
+            extent = [x1, y1, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             # eight vertex
@@ -321,7 +308,7 @@ class CircleInRectangular(Rectangular):
 
 class CylinderInCube(Rectangular):
     def __init__(self, origin, extent, circle_center, circle_radius):
-        super(CircleInRectangular, self).__init__(origin, extent)
+        super(CylinderInCube, self).__init__(origin, extent)
 
         self.origin = origin
         self.extent = extent
@@ -332,7 +319,7 @@ class CylinderInCube(Rectangular):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="sampling", npoints=20):
+    def discretize(self, method="sampling", npoints=1000):
 
         if method == "sampling":
 
@@ -344,7 +331,7 @@ class CylinderInCube(Rectangular):
             radius = self.circle_radius
 
             # cube points
-            rec = super(CircleInRectangular, self)._sampling_mesh(nr)
+            rec = super(CylinderInCube, self)._sampling_mesh(nr)
 
             # remove cylinder points
             flag = np.linalg.norm((rec - center), axis=1) >= radius
@@ -352,13 +339,13 @@ class CylinderInCube(Rectangular):
 
             # add cylinder boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = np.sin(angle).reshape((nc, 1))
-            y = np.cos(angle).reshape((nc, 1))
+            x = np.sin(angle).reshape((1, nc))
+            y = np.cos(angle).reshape((1, nc))
             z = np.random.uniform(origin[2], extent[2], nz)
-            cir_b = np.concatenate([x, y], axis=1)
-
-            # TODO: stack x, y, z
-
+            x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
+            y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
+            z_rpt = np.repeat(z, nz).reshape((nc * nz, 1))  # repeat z
+            cly_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
             points = np.vstack([rec_cyl, cyl_b]).reshape(npoints, self.ndims)
 
             return super(Rectangular, self)._mesh_to_geo_disc(points)
