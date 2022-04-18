@@ -23,11 +23,16 @@ def save_vtk(filename="output", geo_disc=None, data=None):
 
     # concatenate data and cordiante 
     points_vtk = __concatenate_geo(geo_disc)
-    data_vtk = __concatenate_data(data)
 
     # points's shape is [ndims][npoints]
     npoints = len(points_vtk[0])
     ndims = len(points_vtk)
+
+    # data
+    if data == None:
+        data_vtk = {"placeholder": np.ones(npoints, dtype="float32")}
+    else:
+        data_vtk = __concatenate_data(data)
 
     if ndims == 3:
         axis_x = points_vtk[0]

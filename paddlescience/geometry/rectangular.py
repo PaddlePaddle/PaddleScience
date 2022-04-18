@@ -339,8 +339,6 @@ class CylinderInCube(Rectangular):
 
             # TODO : points inside / outside cube
 
-            print(cube_cyl)
-
             # add cylinder boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
             x = (np.sin(angle).reshape((1, nc)) * radius).astype("float32")
@@ -353,9 +351,6 @@ class CylinderInCube(Rectangular):
             cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
 
             points = np.vstack([cube_cyl, cyl_b])
-
-            # print(points)
-            # points = cube
 
             return super(CylinderInCube, self)._mesh_to_geo_disc(points)
         else:

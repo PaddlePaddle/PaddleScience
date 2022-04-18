@@ -75,7 +75,12 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Discretization
-pde = psci.discretize(pde, space_npoints=400, space_method="sampling")
+pde_disc = psci.discretize(pde, space_npoints=10000, space_method="sampling")
+
+# print(pde_disc.geometry.interior)
+
+psci.visu.save_vtk(geo_disc=pde_disc.geometry)
+exit()
 
 # pde = psci.discretize(pde, space_npoints=(3, 3))
 
