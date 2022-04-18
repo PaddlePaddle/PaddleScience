@@ -30,20 +30,24 @@ nup = psci.parameter.Parameter('nu')
 #     circle_center=(0.0, 0.0),
 #     circle_radius=0.01)
 
-# set geometry and boundary
-geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
+geo = psci.geometry.CylinderInCube(
+    origin=(-0.05, -0.05, -0.05),
+    extent=(0.05, 0.05, 0.05),
+    circle_center=(0.0, 0.0),
+    circle_radius=0.01)
 
-geo.add_boundary(
-    name="top", criteria=lambda x, y: y == 0.05, normal=(0.0, 1.0))
-geo.add_boundary(name="down", criteria=lambda x, y: y == -0.05)
-geo.add_boundary(name="left", criteria=lambda x, y: x == -0.05)
-geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
+geo.add_boundary(name="top", criteria=lambda x, y, z: z == 0.05)
+geo.add_boundary(name="down", criteria=lambda x, y, z: z == -0.05)
+geo.add_boundary(name="left", criteria=lambda x, y, z: x == -0.05)
+geo.add_boundary(name="right", criteria=lambda x, y, z: x == 0.05)
+geo.add_boundary(name="face", criteria=lambda x, y, z: y == -0.05)
+geo.add_boundary(name="back", criteria=lambda x, y, z: y == 0.05)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
+pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=False)
 
 # set bounday condition
-bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y: 1.0)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y, z: 1.0)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
@@ -71,15 +75,15 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Discretization
-pde = psci.discretize(pde, space_npoints=1000, space_method="sampling")
+pde = psci.discretize(pde, space_npoints=400, space_method="sampling")
 
 # pde = psci.discretize(pde, space_npoints=(3, 3))
 
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2,
-    num_outs=3,
+    num_ins=3,
+    num_outs=4,
     num_layers=10,
     hidden_size=50,
     dtype="float32",

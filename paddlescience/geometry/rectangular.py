@@ -116,7 +116,7 @@ class Rectangular(Geometry):
             ne = n - 2  # number of points in edge
             ni = npoints - 6 * nf - 12 * ne - 8  # number of points internal
 
-            print(npoints, n, nf, ne, ni)
+            # print(npoints, n, nf, ne, ni)
 
             x1, y1, z1 = self.origin
             x2, y2, z2 = self.extent
@@ -280,7 +280,7 @@ class CircleInRectangular(Rectangular):
             nr = npoints - nc  # npoints in rectangular
 
             center = np.array(self.circle_center, dtype="float32")
-            radius = self.circle_radius
+            radius = np.array(self.circle_radius, dtype="float32")
 
             # rectangular points
             rec = super(CircleInRectangular, self)._sampling_mesh(nr)
@@ -293,14 +293,13 @@ class CircleInRectangular(Rectangular):
             angle = np.arange(nc) * (2.0 * np.pi / nc)
 
             # TODO: when circle is larger than rec
-            x = np.sin(angle).reshape((nc, 1)) * radius
-            y = np.cos(angle).reshape((nc, 1)) * radius
-            cir_b = np.concatenate(
-                [x.astype("float32"), y.astype("float32")], axis=1)
+            x = (np.sin(angle).reshape((nc, 1)) * radius).astype("float32")
+            y = (np.cos(angle).reshape((nc, 1)) * radius).astype("float32")
+            cir_b = np.concatenate([x, y], axis=1)
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
 
-            return super(Rectangular, self)._mesh_to_geo_disc(points)
+            return super(CircleInRectangular, self)._mesh_to_geo_disc(points)
         else:
             pass
             # TODO: error out uniform method
@@ -326,29 +325,39 @@ class CylinderInCube(Rectangular):
             # TODO: better nc and nr
             nc = int(np.sqrt(npoints))
             nr = npoints - nc
+            nz = int(math.pow(npoints, 1.0 / 3.0))
 
-            center = np.array(self.circle_center)
-            radius = self.circle_radius
+            center = np.array(self.circle_center, dtype="float32")
+            radius = np.array(self.circle_radius, dtype="float32")
 
             # cube points
-            rec = super(CylinderInCube, self)._sampling_mesh(nr)
+            cube = super(CylinderInCube, self)._sampling_mesh(nr)
 
             # remove cylinder points
-            flag = np.linalg.norm((rec - center), axis=1) >= radius
-            rec_cyl = rec[flag, :]
+            flag = np.linalg.norm((cube[:, 0:1] - center), axis=1) >= radius
+            cube_cyl = cube[flag, :]
+
+            # TODO : points inside / outside cube
+
+            print(cube_cyl)
 
             # add cylinder boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = np.sin(angle).reshape((1, nc))
-            y = np.cos(angle).reshape((1, nc))
-            z = np.random.uniform(origin[2], extent[2], nz)
+            x = (np.sin(angle).reshape((1, nc)) * radius).astype("float32")
+            y = (np.cos(angle).reshape((1, nc)) * radius).astype("float32")
+            z = np.random.uniform(self.origin[2], self.extent[2],
+                                  nz).astype("float32")
             x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
             y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
-            z_rpt = np.repeat(z, nz).reshape((nc * nz, 1))  # repeat z
-            cly_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
-            points = np.vstack([rec_cyl, cyl_b]).reshape(npoints, self.ndims)
+            z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
+            cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
 
-            return super(Rectangular, self)._mesh_to_geo_disc(points)
+            points = np.vstack([cube_cyl, cyl_b])
+
+            # print(points)
+            # points = cube
+
+            return super(CylinderInCube, self)._mesh_to_geo_disc(points)
         else:
             pass
             # TODO: error out uniform method
