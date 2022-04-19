@@ -14,68 +14,11 @@
 
 from .pde_base import PDE
 
-__all__ = ['Laplace', 'Poisson']
-
-
-class Laplace(PDE):
-    """
-    Two dimentional Laplace Equation
-    
-    .. math::
-        \\frac{\\partial^2 u}{\\partial x^2} + \\frac{\\partial^2 u}{\\partial y^2} = 0.
-
-    Example:
-        >>> import paddlescience as psci
-        >>> pde = psci.pde.Laplace2D()
-    """
-
-    def __init__(self, dim=2, weight=1.0):
-        super(Laplace, self).__init__(1, weight=weight)
-
-        if dim == 2:
-            # independent variable
-            x = sympy.Symbol('x')
-            y = sympy.Symbol('y')
-
-            # dependent variable
-            u = sympy.Function('u')(x, y)
-
-            # variables in order
-            self.independent_variable = [x, y]
-            self.dependent_variable = [u]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = [u.diff(x).diff(x) + u.diff(y).diff(y)]
-            self.rhs = 0
-
-        elif dim == 3:
-            # independent variable
-            x = sympy.Symbol('x')
-            y = sympy.Symbol('y')
-            z = sympy.Symbol('z')
-
-            # dependent variable
-            u = sympy.Function('u')(x, y, z)
-
-            # variables in order
-            self.independent_variable = [x, y, z]
-            self.dependent_variable = [u]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = [
-                u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z)
-            ]
-            self.rhs = 0
+__all__ = ['Poisson']
 
 
 class Poisson(PDE):
-    def __init__(self, dim=2, weight=1.0):
+    def __init__(self, dim=2, rhs=None, weight=1.0):
         super(Poisson, self).__init__(1, weight=1.0)
 
         if dim == 2:
@@ -95,7 +38,10 @@ class Poisson(PDE):
 
             # equations and rhs
             self.equations = [u.diff(x).diff(x) + u.diff(y).diff(y)]
-            self.rhs = 0
+            if rhs == None:
+                self.rhs = [0.0]
+            else:
+                self.rhs = [rhs]
 
         elif dim == 3:
             # independent variable
@@ -117,4 +63,9 @@ class Poisson(PDE):
             self.equations = [
                 u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z)
             ]
-            self.rhs = 0
+            # TODO: check rhs type, should be lambda/None/scalar/list
+            # TODO: rhs is list
+            if rhs == None:
+                self.rhs = [0.0]
+            else:
+                self.rhs = [rhs]
