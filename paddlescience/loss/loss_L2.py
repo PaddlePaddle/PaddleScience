@@ -55,7 +55,7 @@ class L2(LossBase):
             rst = cmploss.compute_formula(formula, input, input_attr, None)
             rhs = pde.rhs_disc[i]
             weight = pde.weight[i]
-            if rhs == None:
+            if rhs is None:
                 loss += paddle.norm(rst, p=2)**2 * weight
             else:
                 loss += paddle.norm(rst - rhs, p=2)**2 * weight
@@ -72,11 +72,14 @@ class L2(LossBase):
 
         loss = 0.0
         for b in pde.bc[name_b]:
-            lhs = cmploss.compute_formula(b.formula, input, input_attr,
+            rst = cmploss.compute_formula(b.formula, input, input_attr,
                                           None)  # TODO: hard code
             rhs = b.rhs  # TODO: to support lambda
             weight = b.weight_disc
-            loss += paddle.norm(lhs - rhs, p=2)**2 * weight
+            if rhs is None:
+                loss += paddle.norm(rst - rhs, p=2)**2 * weight
+            else:
+                loss += paddle.norm(rst, p=2)**2 * weight
 
         return loss, cmploss.outs
 

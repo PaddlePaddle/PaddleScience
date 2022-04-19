@@ -68,7 +68,8 @@ class PDE:
             self.bc[name].append(arg)
 
     def discretize(self, method):
-        pass
+        # TODO: separete return 
+        return self
 
     # def add_item(self, pde_index, coefficient, *args):
     #     # if derivative not in first_order_derivatives:

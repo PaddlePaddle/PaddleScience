@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import types
+import paddle
 
 
 def discretize(pde,

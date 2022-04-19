@@ -14,6 +14,9 @@
 
 from .pde_base import PDE
 
+import sympy
+import numpy as np
+
 __all__ = ['Poisson']
 
 
