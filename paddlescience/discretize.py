@@ -49,6 +49,20 @@ def discretize(pde,
 
         # pde_disc.discretize_bc(pde_disc.geometry_disc)
 
+        # discritize rhs in equations
+        pde_disc.rhs_disc = list()
+        for rhs in pde_disc.rhs:
+            points_i = pde_disc.geometry.interior
+
+            data = list()
+            for n in range(len(points_i[0])):
+                data.append(points_i[:, n])
+
+            if type(rhs) == types.LambdaType:
+                pde_disc.rhs_disc.append(rhs(*data))
+            else:
+                pde_disc.rhs_disc.append(rhs)
+
         # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
             points_b = pde_disc.geometry.boundary[name_b]

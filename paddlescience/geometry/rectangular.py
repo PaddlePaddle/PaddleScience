@@ -75,10 +75,8 @@ class Rectangular(Geometry):
             ne = int(np.sqrt(npoints - 4 - 4))  # number of points in edge
             ni = npoints - 4 * ne - 4  # number of internal points 
 
-            x1 = self.origin[0]
-            y1 = self.origin[1]
-            x2 = self.extent[0]
-            y2 = self.extent[1]
+            x1, y1 = self.origin
+            x2, y2 = self.extent
 
             # interior
             steps.append(

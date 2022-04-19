@@ -40,6 +40,8 @@ class PDE:
         # right-hand side
         self.rhs = list()
 
+        self.rhs_disc = list()
+
         # Geometry
         self.geometry = None
 
