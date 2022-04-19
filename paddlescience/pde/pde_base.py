@@ -16,10 +16,11 @@
 
 import paddle
 import numpy as np
+from collections import OrderedDict
 
 
 class PDE:
-    def __init__(self, num_pdes=1, time_dependent=False, weight=None):
+    def __init__(self, num_equations=1, time_dependent=False, weight=None):
         # super(MathOperator, self).__init__()
 
         # time dependent / independent
@@ -46,13 +47,13 @@ class PDE:
         self.geometry = None
 
         # boundary condition list
-        self.bc = dict()
+        self.bc = OrderedDict()
 
         # weight
         if weight is None:
-            self.weight = [1.0 for i in range(num_pdes)]
+            self.weight = [1.0 for i in range(num_equations)]
         elif np.isscalar(weight):
-            self.weight = [weight for i in range(num_pdes)]
+            self.weight = [weight for i in range(num_equations)]
         else:
             pass  # TODO
 

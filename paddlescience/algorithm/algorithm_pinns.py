@@ -16,6 +16,8 @@ import paddle
 from .algorithm_base import AlgorithmBase
 from ..ins import InsAttr
 
+from collections import OrderedDict
+
 
 class PINNs(AlgorithmBase):
     """
@@ -38,18 +40,18 @@ class PINNs(AlgorithmBase):
     def create_ins(self, pde):
 
         ins = list()
-        ins_attr = dict()
+        ins_attr = OrderedDict()
 
         # TODO: hard code
-        ins_attr_i = dict()
+        ins_attr_i = OrderedDict()
         points = pde.geometry.interior
         data = points  # 
         ins.append(data)
         ins_attr_i["0"] = InsAttr(0, 0)
         ins_attr["interior"] = ins_attr_i
 
-        ins_attr_b = dict()
-        # loop on bc
+        ins_attr_b = OrderedDict()
+        # loop on boundary
         for name in pde.bc.keys():
             data = pde.geometry.boundary[name]
             ins.append(data)
@@ -57,6 +59,67 @@ class PINNs(AlgorithmBase):
         ins_attr["boundary"] = ins_attr_b
 
         return ins, ins_attr
+
+    def create_labels(self, pde):
+
+        labels = list()
+        labels_attr = OrderedDict()
+
+        # equation: rhs and weight
+        #   - labels_attr["equation"][i]["rhs"]
+        #   - labels_attr["equation"][i]["weight"]
+        for i in range(len(pde.equations)):
+            attr = dict()
+            rhs = pde.rhs_disc[i]
+            weight = pde.weight_disc[i]
+
+            if rhs is None:
+                attr["rhs"] = None
+            elif np.isscalar(rhs):
+                attr["rhs"] = rhs
+            elif type(rhs) is np.ndarray:
+                labels.append(rhs)
+                attr["rhs"] = rhs  # alias
+
+            if weight is None:
+                attr["weight"] = None
+            elif np.isscalar(weight):
+                attr["weight"] = weight
+            elif type(weight) is np.ndarray:
+                labels.append(weight)
+                attr["weight"] = weight  # alias
+
+            labels_attr["equation"].append(attr)
+
+        # bc: rhs and weight
+        #   - labels_attr["bc"][name_b][i]["rhs"]
+        #   - labels_attr["bc"][name_b][i]["weight"]
+        labels_attr["bc"] = OrderedDict()
+        for name_b, bc in pde.bc.items():
+            labels_attr["bc"][name_b] = list()
+            for b in bc:
+                attr = dict()
+                rhs = b.rhs_disc
+                weight = b.weight_disc
+                if rhs is None:
+                    attr["rhs"] = None
+                elif np.isscalar(rhs):
+                    attr["rhs"] = rhs
+                elif type(rhs) is np.ndarray:
+                    labels.append(rhs)
+                    attr["rhs"] = rhs  # alias
+
+                if weight is None:
+                    attr["weight"] = None
+                elif np.isscalar(weight):
+                    attr["weight"] = weight
+                elif type(weight) is np.ndarray:
+                    labels.append(weight)
+                    attr["weight"] = weight  # alias
+
+            labels_attr["bc"][name_b].append(attr)
+
+        return labels, labels_attr
 
     def compute(self, *ins, ins_attr, pde):
 
