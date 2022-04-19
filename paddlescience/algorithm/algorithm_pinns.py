@@ -14,7 +14,7 @@
 
 import paddle
 from .algorithm_base import AlgorithmBase
-from ..ins import InsAttr
+from ..inputs import InputsAttr
 
 from collections import OrderedDict
 import numpy as np
@@ -38,28 +38,28 @@ class PINNs(AlgorithmBase):
         self.net = net
         self.loss = loss
 
-    def create_ins(self, pde):
+    def create_inputs(self, pde):
 
-        ins = list()
-        ins_attr = OrderedDict()
+        inputs = list()
+        inputs_attr = OrderedDict()
 
         # TODO: hard code
-        ins_attr_i = OrderedDict()
+        inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
         data = points  # 
-        ins.append(data)
-        ins_attr_i["0"] = InsAttr(0, 0)
-        ins_attr["interior"] = ins_attr_i
+        inputs.append(data)
+        inputs_attr_i["0"] = InputsAttr(0, 0)
+        inputs_attr["interior"] = inputs_attr_i
 
-        ins_attr_b = OrderedDict()
+        inputs_attr_b = OrderedDict()
         # loop on boundary
         for name in pde.bc.keys():
             data = pde.geometry.boundary[name]
-            ins.append(data)
-            ins_attr_b[name] = InsAttr(0, 0)
-        ins_attr["boundary"] = ins_attr_b
+            inputs.append(data)
+            inputs_attr_b[name] = InputsAttr(0, 0)
+        inputs_attr["boundary"] = inputs_attr_b
 
-        return ins, ins_attr
+        return inputs, inputs_attr
 
     def create_labels(self, pde):
 
@@ -123,7 +123,7 @@ class PINNs(AlgorithmBase):
 
         return labels, labels_attr
 
-    def compute(self, *ins, ins_attr, pde):
+    def compute(self, *inputs, inputs_attr, pde):
 
         # print(args[1])
 
@@ -132,8 +132,8 @@ class PINNs(AlgorithmBase):
         # interior outputs and loss
         n = 0
         loss = 0.0
-        for name_i, input_attr in ins_attr["interior"].items():
-            input = ins[n]
+        for name_i, input_attr in inputs_attr["interior"].items():
+            input = inputs[n]
             loss_i, out_i = self.loss.eq_loss(
                 pde, self.net, name_i, input, input_attr,
                 bs=-1)  # TODO: bs is not used
@@ -142,8 +142,8 @@ class PINNs(AlgorithmBase):
             n += 1
 
         # boundary outputs and loss
-        for name_b, input_attr in ins_attr["boundary"].items():
-            input = ins[n]
+        for name_b, input_attr in inputs_attr["boundary"].items():
+            input = inputs[n]
             loss_b, out_b = self.loss.bc_loss(
                 pde, self.net, name_b, input, input_attr,
                 bs=-1)  # TODO: bs is not used

@@ -22,33 +22,33 @@ __all__ = ["Solver"]
 
 
 class DataSetStatic:
-    def __init__(self, nsamples, ins):
-        self.ins = ins
+    def __init__(self, nsamples, inputs):
+        self.inputs = inputs
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.ins
+        return self.inputs
 
     def __len__(self):
         return self.nsamples
 
 
 class ModelStatic(paddle.nn.Layer):
-    def __init__(self, pde, algo, ins_attr):
+    def __init__(self, pde, algo, inputs_attr):
         super(ModelStatic, self).__init__()
         self.pde = pde
         self.algo = algo
-        self.ins_attr = ins_attr
+        self.inputs_attr = inputs_attr
         self.algo.net.make_network_static()
 
     def forward(self, *args):
 
-        ins_attr = self.ins_attr
+        inputs_attr = self.inputs_attr
 
         _global_process_mesh = auto.ProcessMesh([0, 1])
 
         n = 0
-        for attr in ins_attr["interior"].values():
+        for attr in inputs_attr["interior"].values():
             input = args[n]
             auto.shard_tensor(
                 input,
@@ -58,7 +58,7 @@ class ModelStatic(paddle.nn.Layer):
                 })
             n += 1
 
-        for attr in ins_attr["boundary"].values():
+        for attr in inputs_attr["boundary"].values():
             input = args[n]
             auto.shard_tensor(
                 input,
@@ -68,7 +68,8 @@ class ModelStatic(paddle.nn.Layer):
                 })
             n += 1
 
-        loss, outs = self.algo.compute(*args, ins_attr=ins_attr, pde=self.pde)
+        loss, outs = self.algo.compute(
+            *args, inputs_attr=inputs_attr, pde=self.pde)
 
         # print("\n ********** compute done ****  \n")
 
@@ -130,21 +131,21 @@ class Solver(object):
             >>> rslt = solution(geo)
         """
 
-        ins, ins_attr = self.algo.create_ins(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         # labels, labels_attr = self.algo.create_labels(self.pde)
 
-        # convert ins to tensor
-        for i in range(len(ins)):
-            ins[i] = paddle.to_tensor(
-                ins[i], dtype='float32', stop_gradient=False)
+        # convert inputs to tensor
+        for i in range(len(inputs)):
+            inputs[i] = paddle.to_tensor(
+                inputs[i], dtype='float32', stop_gradient=False)
 
         for epoch in range(num_epoch):
 
             # TODO: error out num_epoch==0
 
             loss, outs = self.algo.compute(
-                *ins, ins_attr=ins_attr, pde=self.pde)
+                *inputs, inputs_attr=inputs_attr, pde=self.pde)
 
             loss.backward()
             self.opt.step()
@@ -176,12 +177,12 @@ class Solver(object):
         return outs
         # def solution_fn(geo):
         #     if geo.time_dependent == False:
-        #         if not isinstance(geo.space_domain, paddle.Tensor):
+        #         if not isinputstance(geo.space_domain, paddle.Tensor):
         #             geo.set_batch_size(geo.get_domain_size())
         #             geo.to_tensor()
         #         return self.algo.net.nn_func(geo.space_domain).numpy()
         #     else:
-        #         if not isinstance(geo.domain, paddle.Tensor):
+        #         if not isinputstance(geo.domain, paddle.Tensor):
         #             geo.set_batch_size(geo.get_domain_size())
         #             geo.to_tensor()
         #         return self.algo.net.nn_func(geo.domain).numpy()
@@ -192,12 +193,12 @@ class Solver(object):
 
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
-        ins, ins_attr = self.algo.create_ins(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         place = paddle.CUDAPlace(0)
         exe = paddle.static.Executor(place)
 
-        inputs = list()
+        inputs_static = list()
         feeds = dict()
 
         main_program = paddle.static.Program()
@@ -210,18 +211,20 @@ class Solver(object):
             # static  mode: make network here 
             self.algo.net.make_network_static()
 
-            for i in range(len(ins)):
+            for i in range(len(inputs)):
                 #inputs
                 input = paddle.static.data(
-                    name='input' + str(i), shape=ins[i].shape, dtype='float32')
+                    name='input' + str(i),
+                    shape=inputs[i].shape,
+                    dtype='float32')
                 input.stop_gradient = False
-                inputs.append(input)
+                inputs_static.append(input)
 
                 # feeds
-                feeds['input' + str(i)] = ins[i]
+                feeds['input' + str(i)] = inputs[i]
 
             loss, outs = self.algo.compute(
-                *inputs, ins_attr=ins_attr, pde=self.pde)
+                *inputs_static, inputs_attr=inputs_attr, pde=self.pde)
 
             self.opt.minimize(loss)
 
@@ -246,7 +249,7 @@ class Solver(object):
         strategy = fleet.DistributedStrategy()
         fleet.init(is_collective=True, strategy=strategy)
 
-        ins, ins_attr = self.algo.create_ins(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         place = paddle.CUDAPlace(0)
         exe = paddle.static.Executor(place)
@@ -265,18 +268,20 @@ class Solver(object):
 
             self.algo.net.make_network_static()
 
-            for i in range(len(ins)):
+            for i in range(len(inputs)):
                 # inputs
                 input = paddle.static.data(
-                    name='input' + str(i), shape=ins[i].shape, dtype='float32')
+                    name='input' + str(i),
+                    shape=inputs[i].shape,
+                    dtype='float32')
                 input.stop_gradient = False
                 inputs.append(input)
 
                 # feeds
-                feeds['input' + str(i)] = ins[i]
+                feeds['input' + str(i)] = inputs[i]
 
             loss, outs = self.algo.compute(
-                *inputs, ins_attr=ins_attr, pde=self.pde)
+                *inputs, inputs_attr=inputs_attr, pde=self.pde)
 
             opt_dist.minimize(loss)
 
@@ -299,17 +304,17 @@ class Solver(object):
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
 
         # inputs and its attributes
-        ins, ins_attr = self.algo.create_ins(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         # strategy
         dist_strategy = fleet.DistributedStrategy()
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, ins_attr)
+        model = ModelStatic(self.pde, self.algo, inputs_attr)
 
         inputs_spec = list()
-        for i in ins:
+        for i in inputs:
             inputs_spec.append(InputSpec(i.shape, 'float32', 'input' + str(i)))
 
         labels_spec = None
@@ -326,7 +331,7 @@ class Solver(object):
 
         print("\n ********** engine prepare done ****  \n")
 
-        train_dataset = DataSetStatic(num_epoch, ins)
+        train_dataset = DataSetStatic(num_epoch, inputs)
         rslt = engine.fit(train_dataset, sample_generator=False)
 
         print("\n ********** engine rslt done ****  \n")

@@ -15,7 +15,7 @@
 import paddle
 from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
-from ..ins import InsAttr
+from ..inputs import InputsAttr
 
 api_new = True  # TODO: delete
 
