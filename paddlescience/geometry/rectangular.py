@@ -142,7 +142,7 @@ class Rectangular(Geometry):
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
             origin = [x1, y1, z1]
-            extent = [x1, y2, z2]
+            extent = [x2, y1, z2]
             steps.append(self._sampling_mesh_interior(origin, extent, nf))
 
             origin = [x1, y2, z1]

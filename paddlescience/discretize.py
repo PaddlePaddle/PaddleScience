@@ -43,6 +43,8 @@ def discretize(pde,
         pde_disc.geometry = pde.geometry.discretize(space_method,
                                                     space_npoints)
 
+        # print(pde_disc.geometry.boundary)
+
         # discritize rhs in equations
         pde_disc.rhs_disc = list()
         for rhs in pde_disc.rhs:

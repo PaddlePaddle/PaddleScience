@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+# paddle.disable_static()
 
 geo = psci.geometry.CylinderInCube(
     origin=(-0.05, -0.05, -0.05),
@@ -32,8 +32,8 @@ geo.add_boundary(name="top", criteria=lambda x, y, z: z == 0.05)
 geo.add_boundary(name="down", criteria=lambda x, y, z: z == -0.05)
 geo.add_boundary(name="left", criteria=lambda x, y, z: x == -0.05)
 geo.add_boundary(name="right", criteria=lambda x, y, z: x == 0.05)
-geo.add_boundary(name="face", criteria=lambda x, y, z: y == -0.05)
-geo.add_boundary(name="back", criteria=lambda x, y, z: y == 0.05)
+# geo.add_boundary(name="front", criteria=lambda x, y, z: y == -0.05)
+# geo.add_boundary(name="back", criteria=lambda x, y, z: y == 0.05)
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=False)
