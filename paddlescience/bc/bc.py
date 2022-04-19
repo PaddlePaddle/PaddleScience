@@ -30,8 +30,8 @@ class Free(BC):
         super(Free, self).__init__(name, weight)
         self.category = "Free"
 
-    def formula(self, indvar):
-        return 0.0
+    def to_formula(self, indvar):
+        return None
 
 
 class Dirichlet(BC):
@@ -41,7 +41,7 @@ class Dirichlet(BC):
         self.formula = None
         self.rhs = rhs
 
-    def formula(self, indvar):
+    def to_formula(self, indvar):
         self.formula = sympy.Function(self.name)(*indvar)
 
 
@@ -51,10 +51,10 @@ class Neumann(BC):
         self.category = "Neumann"
         self.rhs = rhs
 
-    def formula(self, indvar):
+    def to_formula(self, indvar):
         n = sympy.Symbol('n')
         u = sympy.Function(self.name)(n)(*indvar)
-        return u.diff(n)
+        self.formula = u.diff(n)
 
 
 class Robin(BC):
@@ -63,10 +63,10 @@ class Robin(BC):
         self.category = "Robin"
         self.rhs = rhs
 
-    def formula(self, indvar):
+    def to_formula(self, indvar):
         n = sympy.Symbol('n')
         u = sympy.Function(self.name)(n)(*indvar)
-        return u + u.diff(n)
+        self.formula = u + u.diff(n)
 
 
 # if __name__ == "__main__":
