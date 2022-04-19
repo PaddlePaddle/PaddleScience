@@ -41,23 +41,37 @@ pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=False)
 # set bounday condition
 bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_top_w = psci.bc.Dirichlet('w', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_down_w = psci.bc.Dirichlet('w', rhs=0.0)
 
 bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_left_w = psci.bc.Dirichlet('w', rhs=0.0)
 
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_right_w = psci.bc.Dirichlet('w', rhs=0.0)
+
+bc_front_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_front_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_front_w = psci.bc.Dirichlet('w', rhs=0.0)
+
+bc_back_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_back_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_back_w = psci.bc.Dirichlet('w', rhs=0.0)
 
 pde.add_geometry(geo)
 
 # add bounday and boundary condition
-pde.add_bc("top", bc_top_u, bc_top_v)
-pde.add_bc("down", bc_down_u, bc_down_v)
-pde.add_bc("left", bc_left_u, bc_left_v)
-pde.add_bc("right", bc_right_u, bc_right_v)
+pde.add_bc("top", bc_top_u, bc_top_v, bc_top_w)
+pde.add_bc("down", bc_down_u, bc_down_v, bc_down_w)
+pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
+pde.add_bc("right", bc_right_u, bc_right_v, bc_right_w)
+pde.add_bc("front", bc_front_u, bc_front_v, bc_front_w)
+pde.add_bc("back", bc_back_u, bc_back_v, bc_back_w)
 
 # Discretization
 pde_disc = psci.discretize(pde, space_npoints=10000, space_method="sampling")

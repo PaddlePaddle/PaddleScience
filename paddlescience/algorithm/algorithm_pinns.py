@@ -49,6 +49,7 @@ class PINNs(AlgorithmBase):
         ins_attr["interior"] = ins_attr_i
 
         ins_attr_b = dict()
+        # loop on bc
         for name in pde.bc.keys():
             data = pde.geometry.boundary[name]
             ins.append(data)
