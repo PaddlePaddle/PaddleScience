@@ -34,7 +34,7 @@ class PDE:
 
         self.parameter = list()
 
-        # Equation list
+        # equation list
         self.equations = list()
 
         # right-hand side
@@ -42,11 +42,19 @@ class PDE:
 
         self.rhs_disc = list()
 
-        # Geometry
+        # geometry
         self.geometry = None
 
-        # Boundary condition list
+        # boundary condition list
         self.bc = dict()
+
+        # weight
+        if weight is None:
+            self.weight = [1.0 for i in range(num_pdes)]
+        elif np.isscalar(weight):
+            self.weight = [weight for i in range(num_pdes)]
+        else:
+            pass  # TODO
 
     def add_geometry(self, geo):
 

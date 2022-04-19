@@ -22,14 +22,6 @@ np.random.seed(1)
 #paddle.enable_static()
 paddle.disable_static()
 
-nup = psci.parameter.Parameter('nu')
-
-# geo = psci.geometry.CircleInRectangular(
-#     origin=(-0.05, -0.05),
-#     extent=(0.05, 0.05),
-#     circle_center=(0.0, 0.0),
-#     circle_radius=0.01)
-
 geo = psci.geometry.CylinderInCube(
     origin=(-0.05, -0.05, -0.05),
     extent=(0.05, 0.05, 0.05),
@@ -47,7 +39,7 @@ geo.add_boundary(name="back", criteria=lambda x, y, z: y == 0.05)
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=False)
 
 # set bounday condition
-bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y, z: 1.0)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
@@ -59,13 +51,6 @@ bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
-# bcdow_u = psci.bc.Neumann('u', rhs=0.0)
-# bcdown_u = psci.bc.Neumann('u', rhs=0.0)
-
-#geo.discretize(method="uniform", npoints=100)
-
-#exit()
-
 pde.add_geometry(geo)
 
 # add bounday and boundary condition
@@ -76,8 +61,6 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 
 # Discretization
 pde_disc = psci.discretize(pde, space_npoints=10000, space_method="sampling")
-
-# pde = psci.discretize(pde, space_npoints=(3, 3))
 
 # Network
 # TODO: remove num_ins and num_outs

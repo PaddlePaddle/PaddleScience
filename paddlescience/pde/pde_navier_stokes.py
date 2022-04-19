@@ -50,9 +50,9 @@ class NavierStokes(PDE):
                  rho=1.0,
                  dim=2,
                  time_dependent=False,
-                 weight=1.0):
+                 weight=None):
         super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent, weight=1.0)
+            dim + 1, time_dependent=time_dependent, weight=weight)
 
         # parameter list
         if is_parameter(nu):
