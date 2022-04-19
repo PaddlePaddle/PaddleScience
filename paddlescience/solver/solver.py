@@ -45,7 +45,7 @@ class ModelStatic(paddle.nn.Layer):
 
         ins_attr = self.ins_attr
 
-        _global_process_mesh = auto.ProcessMesh([0])
+        _global_process_mesh = auto.ProcessMesh([0, 1])
 
         n = 0
         for attr in ins_attr["interior"].values():
@@ -54,7 +54,7 @@ class ModelStatic(paddle.nn.Layer):
                 input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
-                    "dims_mapping": [-1, -1]
+                    "dims_mapping": [0, -1]
                 })
             n += 1
 
@@ -64,7 +64,7 @@ class ModelStatic(paddle.nn.Layer):
                 input,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
-                    "dims_mapping": [-1, -1]
+                    "dims_mapping": [0, -1]
                 })
             n += 1
 
@@ -325,6 +325,6 @@ class Solver(object):
         print("\n ********** engine prepare done ****  \n")
 
         train_dataset = DataSetStatic(num_epoch, ins)
-        rslt = engine.fit(train_dataset)
+        rslt = engine.fit(train_dataset, sample_generator=False)
 
         print("\n ********** engine rslt done ****  \n")
