@@ -18,6 +18,19 @@ __all__ = ['Poisson']
 
 
 class Poisson(PDE):
+    """
+    Two dimentional Poisson Equation
+    
+    .. math::
+        \\frac{\\partial^2 u}{\\partial x^2} + \\frac{\\partial^2 u}{\\partial y^2} = rhs.
+
+    Example:
+        >>> import paddlescience as psci
+        >>> pde = psci.pde.Poisson(dim=2, )
+    """
+
+    # TODO: doc 
+
     def __init__(self, dim=2, rhs=None, weight=1.0):
         super(Poisson, self).__init__(1, weight=1.0)
 

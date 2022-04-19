@@ -26,8 +26,10 @@ class Laplace(PDE):
 
     Example:
         >>> import paddlescience as psci
-        >>> pde = psci.pde.Laplace2D()
+        >>> pde = psci.pde.Laplace()
     """
+
+    # TODO: doc 
 
     def __init__(self, dim=2, weight=1.0):
         super(Laplace, self).__init__(1, weight=weight)
