@@ -19,10 +19,10 @@ class BC:
     def __init__(self, name, weight=1.0):
         self.category = None
         self.name = name
-        self.weight = weight  # scale or lambda
-        self.weight_disc = 1.0
         self.rhs = 0.0
+        self.weight = weight  # none, scale or lambda
         self.rhs_disc = 0.0
+        self.weight_disc = 1.0
 
 
 class Free(BC):
@@ -41,7 +41,7 @@ class Dirichlet(BC):
         self.formula = None
         self.rhs = rhs
 
-    def to_formula(self, indvar):
+    def formula(self, indvar):
         self.formula = sympy.Function(self.name)(*indvar)
 
 
