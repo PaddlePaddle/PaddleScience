@@ -44,15 +44,13 @@ class PINNs(AlgorithmBase):
         ins_attr_i = dict()
         points = pde.geometry.interior
         data = points  # 
-        # data = paddle.to_tensor(points, dtype='float32', stop_gradient=False)
         ins.append(data)
         ins_attr_i["0"] = InsAttr(0, 0)
         ins_attr["interior"] = ins_attr_i
 
         ins_attr_b = dict()
-        for name, points in pde.geometry.boundary.items():
-            data = points
-            # data = paddle.to_tensor(points, dtype='float32', stop_gradient=False)
+        for name in pde.bc.keys():
+            data = pde.geometry.boundary[name]
             ins.append(data)
             ins_attr_b[name] = InsAttr(0, 0)
         ins_attr["boundary"] = ins_attr_b
