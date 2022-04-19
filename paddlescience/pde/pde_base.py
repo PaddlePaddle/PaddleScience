@@ -40,7 +40,6 @@ class PDE:
 
         # right-hand side
         self.rhs = list()
-
         self.rhs_disc = list()
 
         # geometry
@@ -50,12 +49,16 @@ class PDE:
         self.bc = OrderedDict()
 
         # weight
-        if weight is None:
-            self.weight = [1.0 for i in range(num_equations)]
-        elif np.isscalar(weight):
-            self.weight = [weight for i in range(num_equations)]
-        else:
-            pass  # TODO
+        self.weight = weight
+        self.weight_disc = list()
+
+        # # weight
+        # if weight is None:
+        #     self.weight = [1.0 for i in range(num_equations)]
+        # elif np.isscalar(weight):
+        #     self.weight = [weight for i in range(num_equations)]
+        # else:
+        #     pass  # TODO
 
     def add_geometry(self, geo):
 

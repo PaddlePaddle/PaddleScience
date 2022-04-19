@@ -54,11 +54,18 @@ class L2(LossBase):
             formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, None)
             rhs = pde.rhs_disc[i]
-            weight = pde.weight[i]
+            weight = pde.weight_disc[i]
             if rhs is None:
-                loss += paddle.norm(rst, p=2)**2 * weight
+                if weight is None:
+                    loss += paddle.norm(rst, p=2)**2
+                else:
+                    loss += paddle.norm(rst, p=2)**2 * weight
             else:
-                loss += paddle.norm(rst - rhs, p=2)**2 * weight
+                if weight is None:
+                    loss += paddle.norm(rst - rhs, p=2)**2
+                else:
+                    loss += paddle.norm(rst - rhs, p=2)**2 * weight
+
         return loss, cmploss.outs
 
     # compute loss on one boundary
@@ -77,9 +84,15 @@ class L2(LossBase):
             rhs = b.rhs  # TODO: to support lambda
             weight = b.weight_disc
             if rhs is None:
-                loss += paddle.norm(rst - rhs, p=2)**2 * weight
+                if weight is None:
+                    loss += paddle.norm(rst, p=2)**2
+                else:
+                    loss += paddle.norm(rst, p=2)**2 * weight
             else:
-                loss += paddle.norm(rst, p=2)**2 * weight
+                if weight is None:
+                    loss += paddle.norm(rst - rhs, p=2)**2
+                else:
+                    loss += paddle.norm(rst - rhs, p=2)**2 * weight
 
         return loss, cmploss.outs
 

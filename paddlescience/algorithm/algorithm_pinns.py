@@ -17,6 +17,7 @@ from .algorithm_base import AlgorithmBase
 from ..ins import InsAttr
 
 from collections import OrderedDict
+import numpy as np
 
 
 class PINNs(AlgorithmBase):
@@ -68,6 +69,7 @@ class PINNs(AlgorithmBase):
         # equation: rhs and weight
         #   - labels_attr["equation"][i]["rhs"]
         #   - labels_attr["equation"][i]["weight"]
+        labels_attr["equations"] = list()
         for i in range(len(pde.equations)):
             attr = dict()
             rhs = pde.rhs_disc[i]
@@ -89,7 +91,7 @@ class PINNs(AlgorithmBase):
                 labels.append(weight)
                 attr["weight"] = weight  # alias
 
-            labels_attr["equation"].append(attr)
+            labels_attr["equations"].append(attr)
 
         # bc: rhs and weight
         #   - labels_attr["bc"][name_b][i]["rhs"]

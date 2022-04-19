@@ -132,6 +132,8 @@ class Solver(object):
 
         ins, ins_attr = self.algo.create_ins(self.pde)
 
+        # labels, labels_attr = self.algo.create_labels(self.pde)
+
         # convert ins to tensor
         for i in range(len(ins)):
             ins[i] = paddle.to_tensor(

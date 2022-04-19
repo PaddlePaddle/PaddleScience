@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import types
+import numpy as np
 import paddle
 
 
@@ -58,6 +59,13 @@ def discretize(pde,
                 pde_disc.rhs_disc.append(rhs(*data))
             else:
                 pde_disc.rhs_disc.append(rhs)
+
+        # discretize weight in equations
+        if (pde_disc.weight is None) or np.isscalar(weight):
+            pde_disc.weight_disc = [None for i in range(len(pde.equations))]
+        else:
+            pass
+            # TODO: points dependent value
 
         # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
