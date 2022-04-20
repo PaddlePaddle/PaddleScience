@@ -64,6 +64,14 @@ class PINNs(AlgorithmBase):
 
         return inputs, inputs_attr
 
+    def feed_labels_u_n(self, labels, labels_attr, u_n):
+
+        for i in range(len(args)):
+            idx = labels_attr["equations"][i]["u_n"]
+            labels[idx] = u_n[:, i]
+
+        return labels
+
     def create_labels(self, pde):
 
         labels = list()
@@ -79,18 +87,26 @@ class PINNs(AlgorithmBase):
             attr = dict()
             rhs = pde.rhs_disc[i]
             weight = pde.weight_disc[i]
+            u_n = pde.u_n_disc[i]
 
+            # rhs
             if (rhs is None) or np.isscalar(rhs):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 labels.append(rhs)
                 attr["rhs"] = LabelIndex(len(labels))
 
+            # weight
             if (weight is None) or np.isscalar(weight):
                 attr["weight"] = weight
             elif type(weight) is np.ndarray:
                 labels.append(weight)
                 attr["weight"] = LabelIndex(len(labels))
+
+            # u_n (in time-discretized equation)
+            if pde.time_disc_method is not None:
+                labels.append(u_n)
+                attr["u_n"] = LabelIndex(len(labels))
 
             labels_attr["equations"].append(attr)
 

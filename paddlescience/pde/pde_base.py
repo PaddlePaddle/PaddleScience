@@ -27,7 +27,7 @@ class PDE:
         self.time_dependent = time_dependent
 
         # discretize method (work for time-dependent equation)
-        self.time_discretize_method = None
+        self.time_disc_method = None
 
         self.independent_variable = list()
         self.dependent_variable = list()
@@ -51,6 +51,9 @@ class PDE:
         # weight
         self.weight = weight
         self.weight_disc = list()
+
+        # u_n_disc
+        self.u_n_disc = [None for i in range(num_equations)]
 
         # # weight
         # if weight is None:

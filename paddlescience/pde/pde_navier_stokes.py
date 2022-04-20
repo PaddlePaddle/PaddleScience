@@ -302,7 +302,7 @@ class NavierStokesImplicit(PDE):
         super(NavierStokesImplicit, self).__init__(dim + 1, dt)
 
         self.time_dependent = True
-        self.time_discretize_method = "implicit"
+        self.time_disc_method = "implicit"
         self.nu = ns.nu
         self.rho = ns.rho
         self.bc = ns.bc

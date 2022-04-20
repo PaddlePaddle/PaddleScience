@@ -227,6 +227,7 @@ class Solver(object):
             # static  mode: make network here 
             self.algo.net.make_network_static()
 
+            # inputs
             for i in range(len(inputs)):
                 #inputs
                 input = paddle.static.data(
@@ -235,9 +236,6 @@ class Solver(object):
                     dtype='float32')
                 input.stop_gradient = False
                 inputs_labels.append(input)
-
-                # feeds
-                feeds['input' + str(i)] = inputs[i]
 
             for i in range(len(labels)):
                 #labels
@@ -248,9 +246,6 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-                # feeds
-                feeds['label' + str(i)] = labels[i]
-
             loss, outs = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
@@ -260,6 +255,14 @@ class Solver(object):
                 pde=self.pde)
 
             self.opt.minimize(loss)
+
+        # feeds inputs
+        for i in range(len(inputs)):
+            feeds['input' + str(i)] = inputs[i]
+
+        # feeds labels
+        for i in range(len(labels)):
+            feeds['label' + str(i)] = labels[i]
 
         # fetch loss and net's outputs
         fetches = [loss.name]

@@ -16,14 +16,3 @@
 class LabelIndex(int):
     def __new__(cls, value, *args, **kwargs):
         return super(cls, cls).__new__(cls, value)
-
-    # def __init__(self, rhs):
-    #     self.rhs = None
-    #     self.weight = None
-    #     self.u_n = None
-    #     self.parameter = None
-
-    #     self.idx_rhs = 0
-    #     self.idx_weight = 0
-    #     self.idx_u_n = 0
-    #     self.idx_parameter = 0
