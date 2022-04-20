@@ -15,6 +15,7 @@
 import paddle
 from .algorithm_base import AlgorithmBase
 from ..inputs import InputsAttr
+from ..labels import LabelIndex
 
 from collections import OrderedDict
 import numpy as np
@@ -44,6 +45,8 @@ class PINNs(AlgorithmBase):
         inputs_attr = OrderedDict()
 
         # TODO: hard code
+
+        # interior: inputs_attr["interior"]["0"]
         inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
         data = points  # 
@@ -51,8 +54,8 @@ class PINNs(AlgorithmBase):
         inputs_attr_i["0"] = InputsAttr(0, 0)
         inputs_attr["interior"] = inputs_attr_i
 
+        # boundary: inputs_attr["boundary"][name]
         inputs_attr_b = OrderedDict()
-        # loop on boundary
         for name in pde.bc.keys():
             data = pde.geometry.boundary[name]
             inputs.append(data)
@@ -75,21 +78,17 @@ class PINNs(AlgorithmBase):
             rhs = pde.rhs_disc[i]
             weight = pde.weight_disc[i]
 
-            if rhs is None:
-                attr["rhs"] = None
-            elif np.isscalar(rhs):
+            if (rhs is None) or np.isscalar(rhs):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 labels.append(rhs)
-                attr["rhs"] = rhs  # alias
+                attr["rhs"] = LabelIndex(len(labels))
 
-            if weight is None:
-                attr["weight"] = None
-            elif np.isscalar(weight):
+            if (weight is None) or np.isscalar(weight):
                 attr["weight"] = weight
             elif type(weight) is np.ndarray:
                 labels.append(weight)
-                attr["weight"] = weight  # alias
+                attr["weight"] = LabelIndex(len(labels))
 
             labels_attr["equations"].append(attr)
 
@@ -103,31 +102,29 @@ class PINNs(AlgorithmBase):
                 attr = dict()
                 rhs = b.rhs_disc
                 weight = b.weight_disc
-                if rhs is None:
-                    attr["rhs"] = None
-                elif np.isscalar(rhs):
+                if (rhs is None) or np.isscalar(rhs):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     labels.append(rhs)
-                    attr["rhs"] = rhs  # alias
+                    attr["rhs"] = LabelIndex(len(labels))
 
-                if weight is None:
-                    attr["weight"] = None
-                elif np.isscalar(weight):
+                if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
                     labels.append(weight)
-                    attr["weight"] = weight  # alias
+                    attr["weight"] = LabelIndex(len(labels))
 
-            labels_attr["bc"][name_b].append(attr)
+                labels_attr["bc"][name_b].append(attr)
 
         return labels, labels_attr
 
-    def compute(self, *inputs, inputs_attr, pde):
-
-        # print(args[1])
+    def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
+                labels_attr, pde):
 
         outs = list()
+
+        inputs = inputs_labels[0:ninputs]  # inputs is from 0 to ninputs
+        labels = inputs_labels[ninputs::]  # labels is the rest
 
         # interior outputs and loss
         n = 0
@@ -135,7 +132,13 @@ class PINNs(AlgorithmBase):
         for name_i, input_attr in inputs_attr["interior"].items():
             input = inputs[n]
             loss_i, out_i = self.loss.eq_loss(
-                pde, self.net, name_i, input, input_attr,
+                pde,
+                self.net,
+                name_i,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
                 bs=-1)  # TODO: bs is not used
             loss += loss_i
             outs.append(out_i)
@@ -145,7 +148,13 @@ class PINNs(AlgorithmBase):
         for name_b, input_attr in inputs_attr["boundary"].items():
             input = inputs[n]
             loss_b, out_b = self.loss.bc_loss(
-                pde, self.net, name_b, input, input_attr,
+                pde,
+                self.net,
+                name_b,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
                 bs=-1)  # TODO: bs is not used
             loss += loss_b
             outs.append(out_b)

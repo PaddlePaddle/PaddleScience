@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-#paddle.disable_static()
+#paddle.enable_static()
+paddle.disable_static()
 
 geo = psci.geometry.CylinderInCube(
     origin=(-0.05, -0.05, -0.05),
@@ -74,7 +74,7 @@ pde.add_bc("front", bc_front_u, bc_front_v, bc_front_w)
 pde.add_bc("back", bc_back_u, bc_back_v, bc_back_w)
 
 # Discretization
-pde_disc = psci.discretize(pde, space_npoints=10000, space_method="sampling")
+pde_disc = psci.discretize(pde, space_npoints=1000, space_method="sampling")
 
 # Network
 # TODO: remove num_ins and num_outs

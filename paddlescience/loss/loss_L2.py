@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import paddle
-import paddle.nn.functional as F
+# import paddle.nn.functional as F
 # from paddle.autograd import batch_jacobian, batch_hessian
 # from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
 from .loss_base import LossBase, CompFormula
+from ..labels import LabelIndex
 
 
 class L2(LossBase):
@@ -42,7 +43,8 @@ class L2(LossBase):
 
     # compute loss on one interior 
     # there are multiple pde
-    def eq_loss(self, pde, net, name_i, input, input_attr, bs):
+    def eq_loss(self, pde, net, name_i, input, input_attr, labels, labels_attr,
+                bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -53,8 +55,13 @@ class L2(LossBase):
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, None)
-            rhs = pde.rhs_disc[i]
-            weight = pde.weight_disc[i]
+
+            # TODO: simplify
+            rhs_tmp = labels_attr["equations"][i]["rhs"]
+            weight_tmp = labels_attr["equations"][i]["weight"]
+            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelIndex else rhs_tmp
+            weight = labels[weight_tmp] if type(
+                weight_tmp) == LabelIndex else weight_tmp
             if rhs is None:
                 if weight is None:
                     loss += paddle.norm(rst, p=2)**2
@@ -70,7 +77,8 @@ class L2(LossBase):
 
     # compute loss on one boundary
     # there are multiple bc on one boundary
-    def bc_loss(self, pde, net, name_b, input, input_attr, bs):
+    def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
+                bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -78,11 +86,17 @@ class L2(LossBase):
         cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
 
         loss = 0.0
-        for b in pde.bc[name_b]:
-            rst = cmploss.compute_formula(b.formula, input, input_attr,
-                                          None)  # TODO: hard code
-            rhs = b.rhs  # TODO: to support lambda
-            weight = b.weight_disc
+        for i in range(len(pde.bc[name_b])):
+            # TODO: hard code bs
+            rst = cmploss.compute_formula(pde.bc[name_b][i].formula, input,
+                                          input_attr, None)
+
+            # TODO: simplify                                  
+            rhs_tmp = labels_attr["bc"][name_b][i]["rhs"]
+            weight_tmp = labels_attr["bc"][name_b][i]["weight"]
+            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelIndex else rhs_tmp
+            weight = labels[weight_tmp] if type(
+                weight_tmp) == LabelIndex else weight_tmp
             if rhs is None:
                 if weight is None:
                     loss += paddle.norm(rst, p=2)**2

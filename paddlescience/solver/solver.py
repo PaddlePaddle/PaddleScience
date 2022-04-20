@@ -131,21 +131,37 @@ class Solver(object):
             >>> rslt = solution(geo)
         """
 
+        # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        labels, labels_attr = self.algo.create_labels(self.pde)
 
-        # labels, labels_attr = self.algo.create_labels(self.pde)
+        # number of inputs and labels
+        ninputs = len(inputs)
+        nlabels = len(labels)
 
         # convert inputs to tensor
-        for i in range(len(inputs)):
+        for i in range(ninputs):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype='float32', stop_gradient=False)
+
+        # convert label to tensor
+        for i in range(nlabels):
+            labels[i] = paddle.to_tensor(
+                labels[i], dtype='float32', stop_gradient=False)
+
+        inputs_labels = inputs + labels  # tmp to one list
 
         for epoch in range(num_epoch):
 
             # TODO: error out num_epoch==0
 
             loss, outs = self.algo.compute(
-                *inputs, inputs_attr=inputs_attr, pde=self.pde)
+                *inputs_labels,
+                ninputs=ninputs,
+                inputs_attr=inputs_attr,
+                nlabels=nlabels,
+                labels_attr=labels_attr,
+                pde=self.pde)
 
             loss.backward()
             self.opt.step()
