@@ -209,12 +209,18 @@ class Solver(object):
 
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
+        # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        labels, labels_attr = self.algo.create_labels(self.pde)
+
+        # number of inputs and labels
+        ninputs = len(inputs)
+        nlabels = len(labels)
 
         place = paddle.CUDAPlace(0)
         exe = paddle.static.Executor(place)
 
-        inputs_static = list()
+        inputs_labels = list()
         feeds = dict()
 
         main_program = paddle.static.Program()
@@ -234,13 +240,30 @@ class Solver(object):
                     shape=inputs[i].shape,
                     dtype='float32')
                 input.stop_gradient = False
-                inputs_static.append(input)
+                inputs_labels.append(input)
 
                 # feeds
                 feeds['input' + str(i)] = inputs[i]
 
+            for i in range(len(labels)):
+                #labels
+                input = paddle.static.data(
+                    name='label' + str(i),
+                    shape=labels[i].shape,
+                    dtype='float32')
+                label.stop_gradient = False
+                inputs_labels.append(label)
+
+                # feeds
+                feeds['label' + str(i)] = labels[i]
+
             loss, outs = self.algo.compute(
-                *inputs_static, inputs_attr=inputs_attr, pde=self.pde)
+                *inputs_labels,
+                ninputs=ninputs,
+                inputs_attr=inputs_attr,
+                nlabels=nlabels,
+                labels_attr=labels_attr,
+                pde=self.pde)
 
             self.opt.minimize(loss)
 
