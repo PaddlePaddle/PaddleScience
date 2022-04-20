@@ -319,9 +319,9 @@ class NavierStokesImplicit(PDE):
             p = sympy.Function('p')(x, y)
 
             # dependent variable previous time step: u^{n-1}, v^{n-1}, p^{n-1}
-            u_1 = sympy.Function('u_1')(x, y)
-            v_1 = sympy.Function('v_1')(x, y)
-            p_1 = sympy.Function('p_1')(x, y)
+            u_n = sympy.Function('u_n')(x, y)
+            v_n = sympy.Function('v_n')(x, y)
+            p_n = sympy.Function('p_n')(x, y)
 
             # normal direction
             self.normal = sympy.Symbol('n')
@@ -331,10 +331,10 @@ class NavierStokesImplicit(PDE):
             continuty_rhs = 0
 
             # momentum
-            momentum_x = u / dt - u_1 / dt + u * u.diff(x) + v * u.diff(
+            momentum_x = u / dt - u_n / dt + u * u.diff(x) + v * u.diff(
                 y) - nu / rho * u.diff(x).diff(x) - nu / rho * u.diff(y).diff(
                     y) + 1.0 / rho * p.diff(x)
-            momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
+            momentum_y = v / dt - v_n / dt + u * v.diff(x) + v * v.diff(
                 y) - nu / rho * v.diff(x).diff(x) - nu / rho * v.diff(y).diff(
                     y) + 1.0 / rho * p.diff(y)
             momentum_x_rhs = 0
@@ -343,7 +343,7 @@ class NavierStokesImplicit(PDE):
             # variables in order
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
-            self.dependent_variable_n = [u_1, v_1, p_1]
+            self.dependent_variable_n = [u_n, v_n, p_n]
 
             # order
             self.order = 2
@@ -371,10 +371,10 @@ class NavierStokesImplicit(PDE):
             p = sympy.Function('p')(x, y, z)
 
             # dependent variable previous time step: u^{n-1}, v^{n-1}, w^{n-1}, p^{n-1}
-            u_1 = sympy.Function('u_1')(x, y, z)
-            v_1 = sympy.Function('v_1')(x, y, z)
-            w_1 = sympy.Function('w_1')(x, y, z)
-            p_1 = sympy.Function('p_1')(x, y, z)
+            u_n = sympy.Function('u_n')(x, y, z)
+            v_n = sympy.Function('v_n')(x, y, z)
+            w_n = sympy.Function('w_n')(x, y, z)
+            p_n = sympy.Function('p_n')(x, y, z)
 
             # normal direction
             self.normal = sympy.Symbol('n')
@@ -387,15 +387,15 @@ class NavierStokesImplicit(PDE):
             continuty_rhs = 0
 
             # momentum
-            momentum_x = u / dt - u_1 / dt + u * u.diff(x) + v * u.diff(
+            momentum_x = u / dt - u_n / dt + u * u.diff(x) + v * u.diff(
                 y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
                     x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
                         z).diff(z) + 1.0 / rho * p.diff(x)
-            momentum_y = v / dt - v_1 / dt + u * v.diff(x) + v * v.diff(
+            momentum_y = v / dt - v_n / dt + u * v.diff(x) + v * v.diff(
                 y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
                     x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
                         z).diff(z) + 1.0 / rho * p.diff(y)
-            momentum_z = w / dt - w_1 / dt + u * w.diff(x) + v * w.diff(
+            momentum_z = w / dt - w_n / dt + u * w.diff(x) + v * w.diff(
                 y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
                     x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
                         z).diff(z) + 1.0 / rho * p.diff(z)
@@ -406,7 +406,7 @@ class NavierStokesImplicit(PDE):
             # variables in order
             self.independent_variable = [x, y, z]
             self.dependent_variable = [u, v, w, p]
-            self.dependent_variable_n = [u_1, v_1, w_1, p_1]
+            self.dependent_variable_n = [u_n, v_n, w_n, p_n]
 
             # order
             self.order = 2
