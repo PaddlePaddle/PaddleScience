@@ -261,12 +261,12 @@ class NavierStokes(PDE):
             self.rhs.append(momentum_y_rhs)
             self.rhs.append(momentum_z_rhs)
 
-    def discretize(self, time_nsteps=None):
+    def discretize(self, dt=1.0):
 
         if self.time_dependent == False:
             return self
         else:
-            return NavierStokesImplicit(self)
+            return NavierStokesImplicit(self, dt)
 
     def discretize_bc(self, geometry):
 
@@ -299,13 +299,14 @@ class NavierStokes(PDE):
 
 class NavierStokesImplicit(PDE):
     def __init__(self, ns):
-        super(NavierStokesImplicit, self).__init__(dim + 1)
+        super(NavierStokesImplicit, self).__init__(dim + 1, dt)
 
         self.time_dependent = True
         self.time_discretize_method = "implicit"
         self.nu = ns.nu
         self.rho = ns.rho
         self.bc = ns.bc
+        self.dt = dt
 
         if dim == 2:
             # independent variable
@@ -324,9 +325,6 @@ class NavierStokesImplicit(PDE):
 
             # normal direction
             self.normal = sympy.Symbol('n')
-
-            # dt
-            self.dt = sympy.Symbol('dt')
 
             # continuty equation
             continuty = u.diff(x) + v.diff(x)
