@@ -46,7 +46,7 @@ class CompFormula:
         self.order = pde.order
         self.indvar = pde.independent_variable
         self.dvar = pde.dependent_variable
-        self.dvar_1 = pde.dependent_variable_1
+        self.dvar_1 = pde.dependent_variable_n
 
         self.outs = None
         self.jacobian = None

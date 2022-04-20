@@ -343,7 +343,7 @@ class NavierStokesImplicit(PDE):
             # variables in order
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
-            self.dependent_variable_1 = [u_1, v_1, p_1]
+            self.dependent_variable_n = [u_1, v_1, p_1]
 
             # order
             self.order = 2
@@ -406,7 +406,7 @@ class NavierStokesImplicit(PDE):
             # variables in order
             self.independent_variable = [x, y, z]
             self.dependent_variable = [u, v, w, p]
-            self.dependent_variable_1 = [u_1, v_1, w_1, p_1]
+            self.dependent_variable_n = [u_1, v_1, w_1, p_1]
 
             # order
             self.order = 2

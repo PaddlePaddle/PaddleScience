@@ -31,7 +31,7 @@ class PDE:
 
         self.independent_variable = list()
         self.dependent_variable = list()
-        self.dependent_variable_1 = list()
+        self.dependent_variable_n = list()
 
         self.parameter = list()
 

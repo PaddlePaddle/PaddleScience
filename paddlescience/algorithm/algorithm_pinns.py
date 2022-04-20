@@ -69,9 +69,11 @@ class PINNs(AlgorithmBase):
         labels = list()
         labels_attr = OrderedDict()
 
-        # equation: rhs and weight
+        # equation: rhs, weight, u_n, parameter
         #   - labels_attr["equation"][i]["rhs"]
         #   - labels_attr["equation"][i]["weight"]
+        #   - labels_attr["equation"][i]["u_n"]
+        #   - labels_attr["equation"][i]["parameter"]
         labels_attr["equations"] = list()
         for i in range(len(pde.equations)):
             attr = dict()
