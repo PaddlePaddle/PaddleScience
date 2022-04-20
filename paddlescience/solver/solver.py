@@ -22,54 +22,48 @@ __all__ = ["Solver"]
 
 
 class DataSetStatic:
-    def __init__(self, nsamples, inputs):
+    def __init__(self, nsamples, inputs_labels):
         self.inputs = inputs
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.inputs
+        return self.inputs_labels
 
     def __len__(self):
         return self.nsamples
 
 
 class ModelStatic(paddle.nn.Layer):
-    def __init__(self, pde, algo, inputs_attr):
+    def __init__(self, pde, algo, ninputs, inputs_attr, nlabels, labels_attr):
         super(ModelStatic, self).__init__()
         self.pde = pde
         self.algo = algo
+        self.ninputs = ninputs
         self.inputs_attr = inputs_attr
+        self.nlabels = nlabels
+        self.labels_attr = labels_attr
+
         self.algo.net.make_network_static()
 
-    def forward(self, *args):
-
-        inputs_attr = self.inputs_attr
+    def forward(self, *inputs_labels):
 
         _global_process_mesh = auto.ProcessMesh([0, 1])
 
-        n = 0
-        for attr in inputs_attr["interior"].values():
-            input = args[n]
+        for v in inputs_labels:
             auto.shard_tensor(
-                input,
+                v,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
                     "dims_mapping": [0, -1]
                 })
-            n += 1
-
-        for attr in inputs_attr["boundary"].values():
-            input = args[n]
-            auto.shard_tensor(
-                input,
-                dist_attr={
-                    "process_mesh": _global_process_mesh,
-                    "dims_mapping": [0, -1]
-                })
-            n += 1
 
         loss, outs = self.algo.compute(
-            *args, inputs_attr=inputs_attr, pde=self.pde)
+            *inputs_labels,
+            ninputs=self.ninputs,
+            inputs_attr=self.inputs_attr,
+            nlabels=self.nlabels,
+            labels_attr=self.labels_attr,
+            pde=self.pde)
 
         # print("\n ********** compute done ****  \n")
 
@@ -104,7 +98,7 @@ class Solver(object):
 
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
-        # return self.__solve_static_dist(num_epoch, bs, checkpoint_freq)
+        # return self.__solve_static_auto_dist(num_epoch, bs, checkpoint_freq)
 
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
@@ -344,23 +338,32 @@ class Solver(object):
 
         # inputs and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        labels, labels_attr = self.algo.create_labels(self.pde)
+
+        # number of inputs and labels
+        ninputs = len(inputs)
+        nlabels = len(labels)
+
+        inputs_labels = inputs + labels  # tmp to one list
 
         # strategy
         dist_strategy = fleet.DistributedStrategy()
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, inputs_attr)
+        model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr, nlabels,
+                            labels_attr)
 
-        inputs_spec = list()
-        for i in inputs:
-            inputs_spec.append(InputSpec(i.shape, 'float32', 'input' + str(i)))
+        inputs_labels_spec = list()
+        for i in inputs_labels:
+            inputs_labels_spec.append(
+                InputSpec(i.shape, 'float32', 'input' + str(i)))
 
         labels_spec = None
 
         engine = Engine(
             model,
-            inputs_spec=inputs_spec,
+            inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
 
@@ -370,7 +373,7 @@ class Solver(object):
 
         print("\n ********** engine prepare done ****  \n")
 
-        train_dataset = DataSetStatic(num_epoch, inputs)
+        train_dataset = DataSetStatic(num_epoch, inputs_labels)
         rslt = engine.fit(train_dataset, sample_generator=False)
 
         print("\n ********** engine rslt done ****  \n")
