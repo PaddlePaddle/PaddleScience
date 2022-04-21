@@ -220,6 +220,10 @@ class Solver(object):
         main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
+        #TODO: delete
+        data_n = np.zeros((inputs[0].shape[0], 3), dtype='float32')
+        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
+
         # construct program
         with paddle.static.program_guard(main_program, startup_program):
 
@@ -271,10 +275,6 @@ class Solver(object):
 
         # start up program
         exe.run(startup_program)
-
-        #TODO: delete
-        data_n = np.zeros((inputs[0].shape[0], 3))
-        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # main loop
         for epoch in range(num_epoch):
