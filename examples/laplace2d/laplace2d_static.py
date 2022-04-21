@@ -27,6 +27,13 @@ paddle.enable_static()
 paddle.seed(1234)
 np.random.seed(1234)
 
+np.set_printoptions(
+    suppress=True,
+    precision=6,
+    formatter={'float': '{:0.6f}'.format},
+    threshold=np.inf,
+    linewidth=1000)
+
 
 def compile(program, loss_name=None):
     build_strategy = paddle.static.BuildStrategy()
@@ -70,7 +77,7 @@ geo = psci.geometry.Rectangular(
 pdes = psci.pde.Laplace2D()
 
 # Discretization
-pdes, geo = psci.discretize(pdes, geo, space_nsteps=(11, 11))
+pdes, geo = psci.discretize(pdes, geo, space_nsteps=(101, 101))
 
 # bc value
 golden, bc_value = GenSolution(geo.get_space_domain(), geo.get_bc_index())
@@ -92,8 +99,8 @@ with paddle.static.program_guard(train_program, startup_program):
     net = psci.network.FCNetStatic(
         num_ins=2,
         num_outs=1,
-        num_layers=5,
-        hidden_size=20,
+        num_layers=10,
+        hidden_size=50,
         dtype='float32',
         activation='tanh')
 
@@ -104,8 +111,8 @@ with paddle.static.program_guard(train_program, startup_program):
     eq_loss = paddle.norm(hes[:, 0, 0] + hes[:, 1, 1], p=2)
 
     # bc_loss
-    bc_index = paddle.static.data(name='bc_idx', shape=[40], dtype='int32')
-    bc_value = paddle.static.data(name='bc_v', shape=[40, 1], dtype='float32')
+    bc_index = paddle.static.data(name='bc_idx', shape=[400], dtype='int32')
+    bc_value = paddle.static.data(name='bc_v', shape=[400, 1], dtype='float32')
     bc_u = paddle.index_select(outputs, bc_index)
     bc_diff = bc_u - bc_value
     bc_loss = paddle.norm(bc_diff, p=2)
