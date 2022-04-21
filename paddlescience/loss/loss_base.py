@@ -97,6 +97,8 @@ class CompFormula:
 
         rst = 0.0
 
+        # print(formula)
+
         # number of items seperated by add
         if formula.is_Add:
             num_item = len(formula.args)

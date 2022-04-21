@@ -269,7 +269,12 @@ class NavierStokes(PDE):
             pde_disc = NavierStokesImplicit(
                 nu=self.nu, rho=self.rho, dim=self.dim, time_step=time_step)
             pde_disc.geometry = self.geometry
-            pde_disc.bc = self.bc
+
+            for name, bc in self.bc.items():
+                pde_disc.bc[name] = list()
+                for i in range(len(bc)):
+                    bc_disc = bc[i].discretize(pde_disc.dependent_variable_n)
+                    pde.disc.bc[name].append(bc_disc)
         else:
             pass  # TODO: error out
         return pde_disc
@@ -351,7 +356,7 @@ class NavierStokesImplicit(PDE):
             # variables in order
             self.independent_variable = [x, y]
             self.dependent_variable = [u, v, p]
-            self.dependent_variable_n = [u_n, v_n, p_n]
+            self.dependent_variable_n = [u_n, v_n]
 
             # order
             self.order = 2
@@ -378,11 +383,10 @@ class NavierStokesImplicit(PDE):
             w = sympy.Function('w')(x, y, z)
             p = sympy.Function('p')(x, y, z)
 
-            # dependent variable previous time step: u^{n-1}, v^{n-1}, w^{n-1}, p^{n-1}
+            # dependent variable previous time step: u^{n-1}, v^{n-1}, w^{n-1}
             u_n = sympy.Function('u_n')(x, y, z)
             v_n = sympy.Function('v_n')(x, y, z)
             w_n = sympy.Function('w_n')(x, y, z)
-            p_n = sympy.Function('p_n')(x, y, z)
 
             # normal direction
             self.normal = sympy.Symbol('n')

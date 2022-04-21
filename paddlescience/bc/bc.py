@@ -44,6 +44,9 @@ class Dirichlet(BC):
     def to_formula(self, indvar):
         self.formula = sympy.Function(self.name)(*indvar)
 
+    def discretize(self, indvar):
+        return sympy.Function(self.name)(*indvar)
+
 
 class Neumann(BC):
     def __init__(self, name, rhs=0.0, weight=1.0):
