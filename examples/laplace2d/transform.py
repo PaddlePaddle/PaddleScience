@@ -17,6 +17,7 @@ import six
 from paddle import compat as cpt
 from paddle.fluid.framework import Block, Operator
 from paddle.fluid.backward import _create_op_desc_
+import paddle.fluid.core as core
 
 paddle.enable_static()
 
@@ -62,6 +63,7 @@ def slice_assign_shape(old_shape, decrease_axis):
             j += 1
     return new_shape
 
+
 def _remove_unused_var(program):
     all_remove_vars = []
     for block in program.blocks:
@@ -82,6 +84,7 @@ def _remove_unused_var(program):
         for v in remove_vars[i]:
             block._remove_var(v)
 
+
 def dead_code_elimination(program):
     program._sync_with_cpp()
     all_input_arg_names = set()
@@ -94,12 +97,14 @@ def dead_code_elimination(program):
     for block in program.blocks:
         ops = list(block.ops)
         for op in ops:
-            if op.type == "fill_constant_p" and (op.output('Y')[0] not in all_input_arg_names):
+            if op.type == "fill_constant_p" and (
+                    op.output('Y')[0] not in all_input_arg_names):
                 idx = block.ops.index(op)
                 block._remove_op(idx)
 
     _remove_unused_var(program)
     program._sync_with_cpp()
+
 
 def _adjust_input(block, input_map):
     for i in range(len(block.ops)):
@@ -107,6 +112,7 @@ def _adjust_input(block, input_map):
         for input_arg in current_op.input_arg_names:
             if input_arg in input_map:
                 current_op._rename_input(input_arg, input_map[input_arg])
+
 
 def _insert_fill_any_like_op(block, index, shape_op, fill_constant_op):
     fill_any_like_inputs = {}
@@ -125,6 +131,7 @@ def _insert_fill_any_like_op(block, index, shape_op, fill_constant_op):
         outputs=fill_any_like_outputs,
         attrs=fill_any_like_attrs)
     return fill_any_like_op
+
 
 def fuse_shape_fill_constant(program):
     program._sync_with_cpp()
@@ -148,7 +155,8 @@ def fuse_shape_fill_constant(program):
                 i += 1
                 continue
             # create and insert a new fill_any_like op
-            _insert_fill_any_like_op(block, fill_constant_idx + 1, shape_op, fill_constant_op)
+            _insert_fill_any_like_op(block, fill_constant_idx + 1, shape_op,
+                                     fill_constant_op)
             # remove the old operators
             block._remove_op(fill_constant_idx)
             block._remove_op(shape_idx)
@@ -157,6 +165,7 @@ def fuse_shape_fill_constant(program):
         i += 1
     _remove_unused_var(program)
     program._sync_with_cpp()
+
 
 def program_transform(program):
     assert program.num_blocks == 1
@@ -197,7 +206,8 @@ def program_transform(program):
                 _create_op_desc_('fill_constant_p', {}, {'Y': [out_names[0]]},
                                  {
                                      'shape': op_desc.attr('shape'),
-                                     'value': op_desc.attr('value')
+                                     'value': op_desc.attr('value'),
+                                     'dtype': op_desc.attr('dtype')
                                  }))
 
         elif op_desc.type() == 'matmul_v2':
@@ -237,7 +247,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[0]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             to_insert.append(
                 _create_op_desc_('add_p', {'X': [in_names[0]],
@@ -290,7 +301,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[0]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             if op_desc.attr('decrease_axis') is None:
                 to_insert.append(
@@ -342,7 +354,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[0]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
@@ -407,7 +420,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[0]).shape,
-                    'value': 1.0
+                    'value': 1.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
@@ -426,10 +440,12 @@ def program_transform(program):
         elif op_desc.type() == 'fill_zeros_like':
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
-                _create_op_desc_('fill_constant_p', {}, {
-                    'Y': [out_names[0]]
-                }, {'shape': block.var(in_names[0]).shape,
-                    'value': 0.0}))
+                _create_op_desc_('fill_constant_p', {}, {'Y': [out_names[0]]},
+                                 {
+                                     'shape': block.var(in_names[0]).shape,
+                                     'value': 0.0,
+                                     'dtype': core.VarDesc.VarType.FP32
+                                 }))
 
         elif op_desc.type() == 'matmul_v2_grad_grad':
             tmp_0 = name_gen.get_var(new_block, block.var(out_names[0]))
@@ -493,7 +509,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[2]).shape,
-                    'value': 1.0
+                    'value': 1.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
@@ -512,7 +529,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_4]}, {
                     'shape': block.var(in_names[2]).shape,
-                    'value': -2.0
+                    'value': -2.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             tmp_5 = name_gen.get_var(new_block, block.var(in_names[2]))
             to_insert.append(
@@ -626,7 +644,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[0]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             if block.var(in_names[1]).shape != block.var(in_names[0]).shape:
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[0]))
@@ -668,7 +687,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_0]}, {
                     'shape': block.var(in_names[2]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             to_insert.append(
                 _create_op_desc_('index_assign_p', {
@@ -681,10 +701,16 @@ def program_transform(program):
         elif op_desc.type() == 'scale':
             tmp_1 = name_gen.get_var(new_block, block.var(in_names[0]))
             to_insert.append(
-                _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
-                    'shape': block.var(in_names[0]).shape,
-                    'value': op_desc.attr('scale')
-                }))
+                _create_op_desc_(
+                    'fill_constant_p',
+                    {},
+                    {'Y': [tmp_1]},
+                    {
+                        'shape': block.var(in_names[0]).shape,
+                        'value': op_desc.attr('scale'),
+                        'dtype': core.VarDesc.VarType.
+                        FP32  # `scale` doesn't has [dtype] attr
+                    }))
             to_insert.append(
                 _create_op_desc_('mul_p', {'X': [in_names[0]],
                                            'Y': [tmp_1]},
@@ -800,7 +826,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[4]).shape,
-                    'value': -2.0
+                    'value': -2.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             tmp_2 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
@@ -821,7 +848,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_5]}, {
                     'shape': block.var(in_names[4]).shape,
-                    'value': 1.0
+                    'value': 1.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             tmp_6 = name_gen.get_var(new_block, block.var(in_names[4]))
             to_insert.append(
@@ -884,7 +912,8 @@ def program_transform(program):
             to_insert.append(
                 _create_op_desc_('fill_constant_p', {}, {'Y': [tmp_1]}, {
                     'shape': block.var(in_names[2]).shape,
-                    'value': 0.0
+                    'value': 0.0,
+                    'dtype': core.VarDesc.VarType.FP32
                 }))
             if block.var(in_names[0]).shape != block.var(in_names[2]).shape:
                 tmp_2 = name_gen.get_var(new_block, block.var(in_names[2]))
