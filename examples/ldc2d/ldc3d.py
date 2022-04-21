@@ -86,8 +86,7 @@ net = psci.network.FCNet(
     dtype="float32",
     activation='tanh')
 
-# Loss, TO rename
-# bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
+# Loss
 loss = psci.loss.L2()
 
 # Algorithm

@@ -207,6 +207,9 @@ class Solver(object):
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
 
+        u_n = np.zeros(inputs[0].shape)
+        labels = self.algo.feed_labels_u_n(labels, labels_attr, u_n)
+
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)

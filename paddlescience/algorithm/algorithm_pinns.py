@@ -66,7 +66,7 @@ class PINNs(AlgorithmBase):
 
     def feed_labels_u_n(self, labels, labels_attr, u_n):
 
-        for i in range(len(args)):
+        for i in range(len(u_n)):
             idx = labels_attr["equations"][i]["u_n"]
             labels[idx] = u_n[:, i]
 
