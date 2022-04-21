@@ -19,7 +19,6 @@ import sympy
 import numpy as np
 
 
-#class NavierStokes:
 class NavierStokes(PDE):
     """
     Two dimentional time-independent Navier-Stokes equation  
@@ -55,10 +54,14 @@ class NavierStokes(PDE):
             dim + 1, time_dependent=time_dependent, weight=weight)
 
         # parameter list
+        self.nu = nu
+        self.rho = rho
         if is_parameter(nu):
             self.parameter.append(nu)
         if is_parameter(rho):
             self.parameter.append(rho)
+
+        self.dim = dim
 
         if dim == 2 and time_dependent == False:
 
@@ -261,12 +264,15 @@ class NavierStokes(PDE):
             self.rhs.append(momentum_y_rhs)
             self.rhs.append(momentum_z_rhs)
 
-    def discretize(self, dt=1.0):
-
-        if self.time_dependent == False:
-            return self
+    def discretize(self, time_method=None, time_step=None):
+        if time_method == "implicit":
+            pde_disc = NavierStokesImplicit(
+                nu=self.nu, rho=self.rho, dim=self.dim, time_step=time_step)
+            pde_disc.geometry = self.geometry
+            pde_disc.bc = self.bc
         else:
-            return NavierStokesImplicit(self, dt)
+            pass  # TODO: error out
+        return pde_disc
 
     def discretize_bc(self, geometry):
 
@@ -293,32 +299,34 @@ class NavierStokes(PDE):
                 else:
                     b.rhs_disc = b.rhs
 
-    def discretize_geometry(self):
-        pass
-
 
 class NavierStokesImplicit(PDE):
-    def __init__(self, ns):
-        super(NavierStokesImplicit, self).__init__(dim + 1, dt)
+    def __init__(self, nu=0.01, rho=1.0, dim=2, time_step=None, weight=None):
+        super(NavierStokesImplicit, self).__init__(dim + 1)
 
         self.time_dependent = True
         self.time_disc_method = "implicit"
-        self.nu = ns.nu
-        self.rho = ns.rho
-        self.bc = ns.bc
-        self.dt = dt
+
+        # parameter list
+        if is_parameter(nu):
+            self.parameter.append(nu)
+        if is_parameter(rho):
+            self.parameter.append(rho)
+
+        # time step
+        self.dt = time_step
 
         if dim == 2:
             # independent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
 
-            # dependent variable current time step: u^{n}, v^{n}, p^{n}
+            # dependent variable current time step: u^{n+1}, v^{n+1}, p^{n+1}
             u = sympy.Function('u')(x, y)
             v = sympy.Function('v')(x, y)
             p = sympy.Function('p')(x, y)
 
-            # dependent variable previous time step: u^{n-1}, v^{n-1}, p^{n-1}
+            # dependent variable previous time step: u^{n}, v^{n}, p^{n}
             u_n = sympy.Function('u_n')(x, y)
             v_n = sympy.Function('v_n')(x, y)
             p_n = sympy.Function('p_n')(x, y)
@@ -380,6 +388,7 @@ class NavierStokesImplicit(PDE):
             self.normal = sympy.Symbol('n')
 
             # dt
+            dt = self.dt
             self.dt = sympy.Symbol('dt')
 
             # continuty equation

@@ -13,13 +13,15 @@
 # limitations under the License.
 
 import types
+import copy
 import numpy as np
 import paddle
 
 
 def discretize(pde,
-               time_nsteps=None,
-               space_method="sampling",
+               time_method=None,
+               time_step=None,
+               space_method=None,
                space_npoints=None):
     """
         Discretize PDE and Geometry
@@ -38,58 +40,58 @@ def discretize(pde,
             Discrte Geometry
     """
 
-    # PDE
-    if pde is not None:
-        pde_disc = pde.discretize(time_nsteps)
-        pde_disc.geometry = pde.geometry.discretize(space_method,
-                                                    space_npoints)
-
-        # print(pde_disc.geometry.boundary)
-
-        # discritize rhs in equations
-        pde_disc.rhs_disc = list()
-        for rhs in pde_disc.rhs:
-            points_i = pde_disc.geometry.interior
-
-            data = list()
-            for n in range(len(points_i[0])):
-                data.append(points_i[:, n])
-
-            if type(rhs) == types.LambdaType:
-                pde_disc.rhs_disc.append(rhs(*data))
-            else:
-                pde_disc.rhs_disc.append(rhs)
-
-        # discretize weight in equations
-        if (pde_disc.weight is None) or np.isscalar(weight):
-            pde_disc.weight_disc = [None for i in range(len(pde.equations))]
-        else:
-            pass
-            # TODO: points dependent value
-
-        # discritize weight and rhs in boundary condition
-        for name_b, bc in pde_disc.bc.items():
-            points_b = pde_disc.geometry.boundary[name_b]
-
-            data = list()
-            for n in range(len(points_b[0])):
-                data.append(points_b[:, n])
-
-            # boundary weight
-            for b in bc:
-                # compute weight lambda with cordinates
-                if type(b.weight) == types.LambdaType:
-                    b.weight_disc = b.weight(*data)
-                else:
-                    b.weight_disc = b.weight
-
-            # boundary rhs
-            for b in bc:
-                if type(b.rhs) == types.LambdaType:
-                    b.rhs_disc = b.rhs(*data)
-                else:
-                    b.rhs_disc = b.rhs
-
-        return pde_disc
+    # discretize pde
+    if pde.time_dependent and (time_method is not None):
+        pde_disc = pde.discretize(time_method, time_step)
     else:
-        return None
+        pde_disc = pde
+
+    # discretize geometry
+    pde_disc.geometry = pde_disc.geometry.discretize(space_method,
+                                                     space_npoints)
+
+    # discritize rhs in equations
+    pde_disc.rhs_disc = list()
+    for rhs in pde_disc.rhs:
+        points_i = pde_disc.geometry.interior
+
+        data = list()
+        for n in range(len(points_i[0])):
+            data.append(points_i[:, n])
+
+        if type(rhs) == types.LambdaType:
+            pde_disc.rhs_disc.append(rhs(*data))
+        else:
+            pde_disc.rhs_disc.append(rhs)
+
+    # discretize weight in equations
+    if (pde_disc.weight is None) or np.isscalar(weight):
+        pde_disc.weight_disc = [None for i in range(len(pde.equations))]
+    else:
+        pass
+        # TODO: points dependent value
+
+    # discritize weight and rhs in boundary condition
+    for name_b, bc in pde_disc.bc.items():
+        points_b = pde_disc.geometry.boundary[name_b]
+
+        data = list()
+        for n in range(len(points_b[0])):
+            data.append(points_b[:, n])
+
+        # boundary weight
+        for b in bc:
+            # compute weight lambda with cordinates
+            if type(b.weight) == types.LambdaType:
+                b.weight_disc = b.weight(*data)
+            else:
+                b.weight_disc = b.weight
+
+        # boundary rhs
+        for b in bc:
+            if type(b.rhs) == types.LambdaType:
+                b.rhs_disc = b.rhs(*data)
+            else:
+                b.rhs_disc = b.rhs
+
+    return pde_disc

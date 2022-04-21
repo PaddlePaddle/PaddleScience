@@ -36,7 +36,7 @@ geo.add_boundary(name="front", criteria=lambda x, y, z: y == -0.05)
 geo.add_boundary(name="back", criteria=lambda x, y, z: y == 0.05)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=False)
+pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=3, time_dependent=True)
 
 # set bounday condition
 bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)
@@ -74,7 +74,14 @@ pde.add_bc("front", bc_front_u, bc_front_v, bc_front_w)
 pde.add_bc("back", bc_back_u, bc_back_v, bc_back_w)
 
 # Discretization
-pde_disc = psci.discretize(pde, space_npoints=1000, space_method="sampling")
+pde_disc = psci.discretize(
+    pde,
+    time_method="implicit",
+    time_step=0.01,
+    space_npoints=1000,
+    space_method="sampling")
+
+print(type(pde_disc))
 
 # Network
 # TODO: remove num_ins and num_outs

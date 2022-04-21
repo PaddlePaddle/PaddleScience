@@ -14,7 +14,6 @@
 
 # from ..formula import MathOperator
 
-import paddle
 import numpy as np
 from collections import OrderedDict
 
@@ -26,99 +25,50 @@ class PDE:
         # time dependent / independent
         self.time_dependent = time_dependent
 
-        # discretize method (work for time-dependent equation)
-        self.time_disc_method = None
-
+        # independent variable
+        # dependent variable on current time step n
+        # dependent variable on next time step n+1
         self.independent_variable = list()
         self.dependent_variable = list()
         self.dependent_variable_n = list()
 
+        # parameter in pde
         self.parameter = list()
 
-        # equation list
+        # equation
         self.equations = list()
 
         # right-hand side
         self.rhs = list()
-        self.rhs_disc = list()
+
+        # boundary condition
+        self.bc = OrderedDict()
 
         # geometry
         self.geometry = None
 
-        # boundary condition list
-        self.bc = OrderedDict()
-
         # weight
         self.weight = weight
+
+        # rhs disc
+        self.rhs_disc = list()
+
+        # weight disc
         self.weight_disc = list()
+
+        # discretize method (for time-dependent)
+        self.time_disc_method = None
 
         # u_n_disc
         self.u_n_disc = [None for i in range(num_equations)]
 
-        # # weight
-        # if weight is None:
-        #     self.weight = [1.0 for i in range(num_equations)]
-        # elif np.isscalar(weight):
-        #     self.weight = [weight for i in range(num_equations)]
-        # else:
-        #     pass  # TODO
-
     def add_geometry(self, geo):
-
         self.geometry = geo
 
     def add_bc(self, name, *args):
-
         if name not in self.bc:
             self.bc[name] = list()
 
         for arg in args:
             arg.to_formula(self.independent_variable)
             self.bc[name].append(arg)
-
-    def discretize(self, method):
-        # TODO: separete return 
-        return self
-
-    # def add_item(self, pde_index, coefficient, *args):
-    #     # if derivative not in first_order_derivatives:
-    #     #     self.need_2nd_derivatives = True
-    #     self.pdes[pde_index].append(PDEItem(coefficient, args))
-
-    # def get_pde(self, idx):
-    #     return self.pdes[idx]
-
-    # def set_ic_value(self, ic_value, ic_check_dim=None):
-    #     self.ic_value = ic_value
-    #     self.ic_check_dim = ic_check_dim
-
-    # def set_bc_value(self, bc_value, bc_check_dim=None):
-    #     """
-    #         Set boudary value (Dirichlet boundary condition) to PDE
-
-    #         Parameters:
-    #             bc_value: array of values
-    #             bc_check_dim (list):  Optional, default None. If is not None, this list contains the dimensions to set boundary condition values on. If is None, boundary condition values are set on all dimentions of network output. 
-    #     """
-    #     self.bc_value = bc_value
-    #     self.bc_check_dim = bc_check_dim
-    #     # print(self.bc_value)
-
-    # def discretize(self):
-    #     pass  # TODO
-
-    # def to_tensor(self):
-    #     # time
-    #     if self.time_dependent == True:
-    #         self.ic_value = paddle.to_tensor(self.ic_value, dtype='float32')
-    #         self.ic_check_dim = paddle.to_tensor(
-    #             self.ic_check_dim,
-    #             dtype='int64') if self.ic_check_dim is not None else None
-    #     # space
-    #     self.bc_value = paddle.to_tensor(self.bc_value, dtype='float32')
-    #     self.bc_check_dim = paddle.to_tensor(
-    #         self.bc_check_dim,
-    #         dtype='int64') if self.bc_check_dim is not None else None
-
-    # def set_batch_size(self, batch_size):
-    #     self.batch_size = batch_size
