@@ -44,9 +44,9 @@ class CompFormula:
         self.pde = pde
         self.net = net
         self.order = pde.order
-        self.indvar = pde.independent_variable
-        self.dvar = pde.dependent_variable
-        self.dvar_n = pde.dependent_variable_n
+        self.indvar = pde.indvar
+        self.dvar = pde.dvar
+        self.dvar_n = pde.dvar_n
 
         self.outs = None
         self.jacobian = None

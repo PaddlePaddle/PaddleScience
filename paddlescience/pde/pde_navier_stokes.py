@@ -92,8 +92,8 @@ class NavierStokes(PDE):
             momentum_y_rhs = 0
 
             # variables in order
-            self.independent_variable = [x, y]
-            self.dependent_variable = [u, v, p]
+            self.indvar = [x, y]
+            self.dvar = [u, v, p]
 
             # order
             self.order = 2
@@ -138,8 +138,8 @@ class NavierStokes(PDE):
             momentum_y_rhs = 0
 
             # variables in order
-            self.independent_variable = [t, x, y]
-            self.dependent_variable = [u, v, p]
+            self.indvar = [t, x, y]
+            self.dvar = [u, v, p]
 
             # order
             self.order = 2
@@ -189,8 +189,8 @@ class NavierStokes(PDE):
             momentum_z_rhs = 0
 
             # variables in order
-            self.independent_variable = [x, y, z]
-            self.dependent_variable = [u, v, w, p]
+            self.indvar = [x, y, z]
+            self.dvar = [u, v, w, p]
 
             # order
             self.order = 2
@@ -246,8 +246,8 @@ class NavierStokes(PDE):
             momentum_z_rhs = 0
 
             # variables in order
-            self.independent_variable = [t, x, y, z]
-            self.dependent_variable = [u, v, w, p]
+            self.indvar = [t, x, y, z]
+            self.dvar = [u, v, w, p]
 
             # order
             self.order = 2
@@ -273,7 +273,7 @@ class NavierStokes(PDE):
             for name, bc in self.bc.items():
                 pde_disc.bc[name] = list()
                 for i in range(len(bc)):
-                    bc_disc = bc[i].discretize(pde_disc.dependent_variable_n)
+                    bc_disc = bc[i].discretize(pde_disc.dvar_n)
                     pde.disc.bc[name].append(bc_disc)
         else:
             pass  # TODO: error out
@@ -354,9 +354,9 @@ class NavierStokesImplicit(PDE):
             momentum_y_rhs = 0
 
             # variables in order
-            self.independent_variable = [x, y]
-            self.dependent_variable = [u, v, p]
-            self.dependent_variable_n = [u_n, v_n]
+            self.indvar = [x, y]
+            self.dvar = [u, v, p]
+            self.dvar_n = [u_n, v_n]
 
             # order
             self.order = 2
@@ -377,13 +377,13 @@ class NavierStokesImplicit(PDE):
             y = sympy.Symbol('y')
             z = sympy.Symbol('z')
 
-            # dependent variable current time step: u^{n}, v^{n}, w^{n}, p^{n}
+            # dependent variable current time step: u^{n+1}, v^{n+1}, w^{n+1}, p^{n+1}
             u = sympy.Function('u')(x, y, z)
             v = sympy.Function('v')(x, y, z)
             w = sympy.Function('w')(x, y, z)
             p = sympy.Function('p')(x, y, z)
 
-            # dependent variable previous time step: u^{n-1}, v^{n-1}, w^{n-1}
+            # dependent variable previous time step: u^{n}, v^{n}, w^{n}
             u_n = sympy.Function('u_n')(x, y, z)
             v_n = sympy.Function('v_n')(x, y, z)
             w_n = sympy.Function('w_n')(x, y, z)
@@ -417,9 +417,9 @@ class NavierStokesImplicit(PDE):
             momentum_z_rhs = 0
 
             # variables in order
-            self.independent_variable = [x, y, z]
-            self.dependent_variable = [u, v, w, p]
-            self.dependent_variable_n = [u_n, v_n, w_n]
+            self.indvar = [x, y, z]
+            self.dvar = [u, v, w, p]
+            self.dvar_n = [u_n, v_n, w_n]
 
             # order
             self.order = 2

@@ -28,9 +28,9 @@ class PDE:
         # independent variable
         # dependent variable on current time step n
         # dependent variable on next time step n+1
-        self.independent_variable = list()
-        self.dependent_variable = list()
-        self.dependent_variable_n = list()
+        self.indvar = list()
+        self.dvar = list()
+        self.dvar_n = list()
 
         # parameter in pde
         self.parameter = list()
@@ -70,5 +70,5 @@ class PDE:
             self.bc[name] = list()
 
         for arg in args:
-            arg.to_formula(self.independent_variable)
+            arg.to_formula(self.indvar)
             self.bc[name].append(arg)

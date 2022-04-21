@@ -106,7 +106,7 @@ class PINNs(AlgorithmBase):
         labels_attr["data_n"] = list()
         if pde.time_disc_method is not None:
             attr["data_n"] = list()
-            for i in range(len(pde.dependent_variable_n)):
+            for i in range(len(pde.dvar_n)):
                 labels_attr["data_n"].append(len(labels))
                 labels.append(None)  # placeholder
 

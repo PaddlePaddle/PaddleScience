@@ -43,8 +43,8 @@ class Laplace(PDE):
             u = sympy.Function('u')(x, y)
 
             # variables in order
-            self.independent_variable = [x, y]
-            self.dependent_variable = [u]
+            self.indvar = [x, y]
+            self.dvar = [u]
 
             # order
             self.order = 2
@@ -63,8 +63,8 @@ class Laplace(PDE):
             u = sympy.Function('u')(x, y, z)
 
             # variables in order
-            self.independent_variable = [x, y, z]
-            self.dependent_variable = [u]
+            self.indvar = [x, y, z]
+            self.dvar = [u]
 
             # order
             self.order = 2
