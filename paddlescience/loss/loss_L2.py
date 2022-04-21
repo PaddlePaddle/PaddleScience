@@ -17,7 +17,7 @@ import paddle
 # from paddle.autograd import batch_jacobian, batch_hessian
 # from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
 from .loss_base import LossBase, CompFormula
-from ..labels import LabelIndex
+from ..labels import LabelInt
 
 
 class L2(LossBase):
@@ -60,9 +60,9 @@ class L2(LossBase):
             # TODO: simplify
             rhs_tmp = labels_attr["equations"][i]["rhs"]
             weight_tmp = labels_attr["equations"][i]["weight"]
-            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelIndex else rhs_tmp
+            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelInt else rhs_tmp
             weight = labels[weight_tmp] if type(
-                weight_tmp) == LabelIndex else weight_tmp
+                weight_tmp) == LabelInt else weight_tmp
             if rhs is None:
                 if weight is None:
                     loss += paddle.norm(rst, p=2)**2
@@ -96,9 +96,9 @@ class L2(LossBase):
             # TODO: simplify                                  
             rhs_tmp = labels_attr["bc"][name_b][i]["rhs"]
             weight_tmp = labels_attr["bc"][name_b][i]["weight"]
-            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelIndex else rhs_tmp
+            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelInt else rhs_tmp
             weight = labels[weight_tmp] if type(
-                weight_tmp) == LabelIndex else weight_tmp
+                weight_tmp) == LabelInt else weight_tmp
             if rhs is None:
                 if weight is None:
                     loss += paddle.norm(rst, p=2)**2

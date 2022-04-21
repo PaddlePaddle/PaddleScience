@@ -13,6 +13,11 @@
 # limitations under the License.
 
 
-class LabelIndex(int):
+class LabelInt(int):
     def __new__(cls, value, *args, **kwargs):
         return super(cls, cls).__new__(cls, value)
+
+
+class LabelHolder:
+    def __init__(self):
+        self.shape = [None, 1]

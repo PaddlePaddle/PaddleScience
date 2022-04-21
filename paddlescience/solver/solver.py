@@ -220,10 +220,6 @@ class Solver(object):
         main_program = paddle.static.Program()
         startup_program = paddle.static.Program()
 
-        #TODO: delete
-        data_n = np.zeros((inputs[0].shape[0], 3), dtype='float32')
-        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
-
         # construct program
         with paddle.static.program_guard(main_program, startup_program):
 
@@ -259,6 +255,10 @@ class Solver(object):
                 pde=self.pde)
 
             self.opt.minimize(loss)
+
+        #TODO: delete
+        data_n = np.zeros((inputs[0].shape[0], 3), dtype='float32')
+        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # feeds inputs
         for i in range(len(inputs)):

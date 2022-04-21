@@ -20,7 +20,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
-#paddle.disable_static()
+# paddle.disable_static()
 
 geo = psci.geometry.CylinderInCube(
     origin=(-0.05, -0.05, -0.05),

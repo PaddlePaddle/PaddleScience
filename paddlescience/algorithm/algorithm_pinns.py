@@ -15,7 +15,7 @@
 import paddle
 from .algorithm_base import AlgorithmBase
 from ..inputs import InputsAttr
-from ..labels import LabelIndex
+from ..labels import LabelInt, LabelHolder
 
 from collections import OrderedDict
 import numpy as np
@@ -88,7 +88,7 @@ class PINNs(AlgorithmBase):
             if (rhs is None) or np.isscalar(rhs):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
-                attr["rhs"] = LabelIndex(len(labels))
+                attr["rhs"] = LabelInt(len(labels))
                 labels.append(rhs)
 
             # weight
@@ -96,7 +96,7 @@ class PINNs(AlgorithmBase):
             if (weight is None) or np.isscalar(weight):
                 attr["weight"] = weight
             elif type(weight) is np.ndarray:
-                attr["weight"] = LabelIndex(len(labels))
+                attr["weight"] = LabelInt(len(labels))
                 labels.append(weight)
 
             labels_attr["equations"].append(attr)
@@ -107,8 +107,8 @@ class PINNs(AlgorithmBase):
         if pde.time_disc_method is not None:
             attr["data_n"] = list()
             for i in range(len(pde.dvar_n)):
-                labels_attr["data_n"].append(len(labels))
-                labels.append(None)  # placeholder
+                labels_attr["data_n"].append(LabelInt(len(labels)))
+                labels.append(LabelHolder())  # placeholder with shape
 
         # bc: rhs and weight
         #   - labels_attr["bc"][name_b][i]["rhs"]
@@ -124,13 +124,13 @@ class PINNs(AlgorithmBase):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     labels.append(rhs)
-                    attr["rhs"] = LabelIndex(len(labels))
+                    attr["rhs"] = LabelInt(len(labels))
 
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
                     labels.append(weight)
-                    attr["weight"] = LabelIndex(len(labels))
+                    attr["weight"] = LabelInt(len(labels))
 
                 labels_attr["bc"][name_b].append(attr)
 
