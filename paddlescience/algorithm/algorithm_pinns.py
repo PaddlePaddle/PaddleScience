@@ -65,11 +65,10 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     def feed_labels_u_n(self, labels, labels_attr, u_n):
-
-        for i in range(len(u_n)):
+        n = len(u_n[0])
+        for i in range(n):
             idx = labels_attr["equations"][i]["u_n"]
             labels[idx] = u_n[:, i]
-
         return labels
 
     def create_labels(self, pde):
