@@ -96,6 +96,11 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
+        if paddle.in_dynamic_mode():
+            pass
+        else:
+            self.__init_static()
+
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
         # return self.__solve_static_auto_dist(num_epoch, bs, checkpoint_freq)
@@ -103,7 +108,6 @@ class Solver(object):
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
         else:
-            self.__init_static()
             return self.__solve_static(num_epoch, bs, checkpoint_freq)
 
     # solve in dynamic mode
@@ -265,16 +269,16 @@ class Solver(object):
         # start up program
         self.exe.run(self.startup_program)
 
+    def feed_data_n(self, data_n):
+        self.labels = self.algo.feed_labels_data_n(self.labels,
+                                                   self.labels_attr, data_n)
+
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
         labels = self.labels
         labels_attr = self.labels_attr
-
-        #TODO: delete
-        data_n = np.zeros((inputs[0].shape[0], 3), dtype='float32')
-        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # feeds inputs
         feeds = dict()
