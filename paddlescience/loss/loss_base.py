@@ -46,7 +46,7 @@ class CompFormula:
         self.order = pde.order
         self.indvar = pde.independent_variable
         self.dvar = pde.dependent_variable
-        self.dvar_1 = pde.dependent_variable_n
+        self.dvar_n = pde.dependent_variable_n
 
         self.outs = None
         self.jacobian = None
@@ -92,7 +92,8 @@ class CompFormula:
         self.jacobian = jacobian
         self.hessian = hessian
 
-    def compute_formula(self, formula, input, input_attr, normal):
+    def compute_formula(self, formula, input, input_attr, labels, labels_attr,
+                        normal):
 
         rst = 0.0
 
@@ -102,22 +103,23 @@ class CompFormula:
             # parser each item
             for item in formula.args:
                 rst += self.__compute_formula_item(item, input, input_attr,
-                                                   normal)
+                                                   labels, labels_attr, normal)
         else:
             num_item = 1
             rst += self.__compute_formula_item(formula, input, input_attr,
-                                               normal)
+                                               labels, labels_attr, normal)
 
         return rst
 
-    def __compute_formula_item(self, item, input, input_attr, normal):
+    def __compute_formula_item(self, item, input, input_attr, labels,
+                               labels_attr, normal):
 
         rst = 1.0  # TODO: float / double / float16
 
         if item.is_Mul:
             for it in item.args:
-                rst = rst * self.__compute_formula_item(it, input, input_attr,
-                                                        normal)
+                rst = rst * self.__compute_formula_item(
+                    it, input, input_attr, labels, labels_attr, normal)
         elif item.is_Number:
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
@@ -125,8 +127,8 @@ class CompFormula:
             rst = rst * self.__compute_formula_symbol(item, input, input_attr)
         elif item.is_Function:
             # print("*** function:", item)
-            rst = rst * self.__compute_formula_function(item, input,
-                                                        input_attr)
+            rst = rst * self.__compute_formula_function(
+                item, input, input_attr, labels, labels_attr)
         elif item.is_Derivative:
             # print("*** der:", item)
             rst = rst * self.__compute_formula_der(item, normal)
@@ -139,23 +141,30 @@ class CompFormula:
         var_idx = self.indvar.index(item)
         return self.input[:, var_idx + input_attr.indvar_start]  # TODO
 
-    def __compute_formula_function(self, item, input, input_attr):
+    def __compute_formula_function(self, item, input, input_attr, labels,
+                                   labels_attr):
 
         # output function value
         if item in self.dvar:
             f_idx = self.dvar.index(item)
-            # print("  -f_idx: ", f_idx)
             return self.outs[:, f_idx]
 
-        # input function value (for time-dependent previous time)
-        if item in self.dvar_1:
-            f_idx = self.dvar_1.index(item)
-            return input[:, f_idx + input_attr.dvar_1_start]  # TODO
+        # TODO: support u_n as net input
+        # # input function value (for time-dependent previous time)
+        # if item in self.dvar_n:
+        #     f_idx = self.dvar_n.index(item)
+        #     return input[:, f_idx + input_attr.dvar_n_start]  # TODO
 
-        # parameter pde
-        if item in self.parameter_pde:
-            f_idx = self.parameter_pde.index(item)
-            return input[:, f_idx + input_attr.parameter_pde_start]  # TODO
+        if item in self.dvar_n:
+            f_idx = self.dvar_n.index(item)
+            idx = labels_attr["data_n"][f_idx]
+            return labels[idx]
+
+        # TODO: support parameter pde
+        # # parameter pde
+        # if item in self.parameter_pde:
+        #     f_idx = self.parameter_pde.index(item)
+        #     return input[:, f_idx + input_attr.parameter_pde_start]  # TODO
 
     def __compute_formula_der(self, item, normal):
 

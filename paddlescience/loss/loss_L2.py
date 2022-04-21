@@ -54,7 +54,8 @@ class L2(LossBase):
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
-            rst = cmploss.compute_formula(formula, input, input_attr, None)
+            rst = cmploss.compute_formula(formula, input, input_attr, labels,
+                                          labels_attr, None)
 
             # TODO: simplify
             rhs_tmp = labels_attr["equations"][i]["rhs"]
@@ -89,7 +90,8 @@ class L2(LossBase):
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
             rst = cmploss.compute_formula(pde.bc[name_b][i].formula, input,
-                                          input_attr, None)
+                                          input_attr, labels, labels_attr,
+                                          None)
 
             # TODO: simplify                                  
             rhs_tmp = labels_attr["bc"][name_b][i]["rhs"]

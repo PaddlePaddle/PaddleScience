@@ -64,11 +64,10 @@ class PINNs(AlgorithmBase):
 
         return inputs, inputs_attr
 
-    def feed_labels_u_n(self, labels, labels_attr, u_n):
-        n = len(u_n[0])
-        for i in range(n):
-            idx = labels_attr["equations"][i]["u_n"]
-            labels[idx] = u_n[:, i]
+    def feed_labels_data_n(self, labels, labels_attr, data_n):
+        for i in range(len(data_n[0])):
+            idx = labels_attr["data_n"][i]
+            labels[idx] = data_n[:, i]
         return labels
 
     def create_labels(self, pde):
@@ -76,38 +75,40 @@ class PINNs(AlgorithmBase):
         labels = list()
         labels_attr = OrderedDict()
 
-        # equation: rhs, weight, u_n, parameter
+        # equation: rhs, weight, parameter
         #   - labels_attr["equation"][i]["rhs"]
         #   - labels_attr["equation"][i]["weight"]
-        #   - labels_attr["equation"][i]["u_n"]
         #   - labels_attr["equation"][i]["parameter"]
         labels_attr["equations"] = list()
         for i in range(len(pde.equations)):
             attr = dict()
-            rhs = pde.rhs_disc[i]
-            weight = pde.weight_disc[i]
-            u_n = pde.u_n_disc[i]
 
             # rhs
+            rhs = pde.rhs_disc[i]
             if (rhs is None) or np.isscalar(rhs):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
-                labels.append(rhs)
                 attr["rhs"] = LabelIndex(len(labels))
+                labels.append(rhs)
 
             # weight
+            weight = pde.weight_disc[i]
             if (weight is None) or np.isscalar(weight):
                 attr["weight"] = weight
             elif type(weight) is np.ndarray:
-                labels.append(weight)
                 attr["weight"] = LabelIndex(len(labels))
-
-            # u_n (in time-discretized equation)
-            if pde.time_disc_method is not None:
-                labels.append(u_n)
-                attr["u_n"] = LabelIndex(len(labels))
+                labels.append(weight)
 
             labels_attr["equations"].append(attr)
+
+        # data_n (in time-discretized equation)
+        #   - labels_attr["data_n"][i]
+        labels_attr["data_n"] = list()
+        if pde.time_disc_method is not None:
+            attr["data_n"] = list()
+            for i in range(len(pde.dependent_variable_n)):
+                labels_attr["data_n"].append(len(labels))
+                labels.append(None)  # placeholder
 
         # bc: rhs and weight
         #   - labels_attr["bc"][name_b][i]["rhs"]

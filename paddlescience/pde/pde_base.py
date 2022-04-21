@@ -59,8 +59,8 @@ class PDE:
         # discretize method (for time-dependent)
         self.time_disc_method = None
 
-        # u_n_disc
-        self.u_n_disc = [None for i in range(num_equations)]
+        # # u_n_disc
+        # self.u_n_disc = [None for i in range(num_equations)]
 
     def add_geometry(self, geo):
         self.geometry = geo

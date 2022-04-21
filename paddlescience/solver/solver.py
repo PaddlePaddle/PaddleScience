@@ -207,8 +207,10 @@ class Solver(object):
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
 
-        u_n = np.zeros((inputs[0].shape[0], 4))
-        labels = self.algo.feed_labels_u_n(labels, labels_attr, u_n)
+        #TODO: delete
+        data_n = np.zeros((inputs[0].shape[0], 3))
+
+        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # number of inputs and labels
         ninputs = len(inputs)
@@ -242,7 +244,7 @@ class Solver(object):
 
             for i in range(len(labels)):
                 #labels
-                input = paddle.static.data(
+                label = paddle.static.data(
                     name='label' + str(i),
                     shape=labels[i].shape,
                     dtype='float32')
