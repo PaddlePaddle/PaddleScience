@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sympy
+import copy
 
 
 class BC:
@@ -45,7 +46,9 @@ class Dirichlet(BC):
         self.formula = sympy.Function(self.name)(*indvar)
 
     def discretize(self, indvar):
-        return sympy.Function(self.name)(*indvar)
+        bc_disc = copy.deepcopy(self)
+        bc_disc.to_formula(indvar)
+        return bc_disc
 
 
 class Neumann(BC):

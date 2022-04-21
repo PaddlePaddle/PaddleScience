@@ -207,11 +207,6 @@ class Solver(object):
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
 
-        #TODO: delete
-        data_n = np.zeros((inputs[0].shape[0], 3))
-
-        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
-
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
@@ -276,6 +271,10 @@ class Solver(object):
 
         # start up program
         exe.run(startup_program)
+
+        #TODO: delete
+        data_n = np.zeros((inputs[0].shape[0], 3))
+        labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # main loop
         for epoch in range(num_epoch):

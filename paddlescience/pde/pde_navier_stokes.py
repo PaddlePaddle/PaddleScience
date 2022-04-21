@@ -274,7 +274,7 @@ class NavierStokes(PDE):
                 pde_disc.bc[name] = list()
                 for i in range(len(bc)):
                     bc_disc = bc[i].discretize(pde_disc.dvar_n)
-                    pde.disc.bc[name].append(bc_disc)
+                    pde_disc.bc[name].append(bc_disc)
         else:
             pass  # TODO: error out
         return pde_disc
