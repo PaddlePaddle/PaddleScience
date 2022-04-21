@@ -103,6 +103,7 @@ class Solver(object):
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
         else:
+            self.__init_static()
             return self.__solve_static(num_epoch, bs, checkpoint_freq)
 
     # solve in dynamic mode
@@ -201,27 +202,32 @@ class Solver(object):
 
     # solver in static mode
 
-    def __solve_static(self, num_epoch, bs, checkpoint_freq):
+    def __init_static(self):
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
 
+        self.inputs = inputs
+        self.inputs_attr = inputs_attr
+        self.labels = labels
+        self.labels_attr = labels_attr
+
         # number of inputs and labels
-        ninputs = len(inputs)
-        nlabels = len(labels)
+        ninputs = len(self.inputs)
+        nlabels = len(self.labels)
 
         place = paddle.CUDAPlace(0)
-        exe = paddle.static.Executor(place)
+        self.exe = paddle.static.Executor(place)
 
         inputs_labels = list()
-        feeds = dict()
 
-        main_program = paddle.static.Program()
-        startup_program = paddle.static.Program()
+        self.main_program = paddle.static.Program()
+        self.startup_program = paddle.static.Program()
 
         # construct program
-        with paddle.static.program_guard(main_program, startup_program):
+        with paddle.static.program_guard(self.main_program,
+                                         self.startup_program):
 
             # dynamic mode: make network in net's constructor
             # static  mode: make network here 
@@ -246,7 +252,7 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-            loss, outs = self.algo.compute(
+            self.loss, self.outs = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -254,13 +260,24 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
-            self.opt.minimize(loss)
+            self.opt.minimize(self.loss)
+
+        # start up program
+        self.exe.run(self.startup_program)
+
+    def __solve_static(self, num_epoch, bs, checkpoint_freq):
+
+        inputs = self.inputs
+        inputs_attr = self.inputs_attr
+        labels = self.labels
+        labels_attr = self.labels_attr
 
         #TODO: delete
         data_n = np.zeros((inputs[0].shape[0], 3), dtype='float32')
         labels = self.algo.feed_labels_data_n(labels, labels_attr, data_n)
 
         # feeds inputs
+        feeds = dict()
         for i in range(len(inputs)):
             feeds['input' + str(i)] = inputs[i]
 
@@ -269,16 +286,15 @@ class Solver(object):
             feeds['label' + str(i)] = labels[i]
 
         # fetch loss and net's outputs
-        fetches = [loss.name]
-        for out in outs:
+        fetches = [self.loss.name]
+        for out in self.outs:
             fetches.append(out.name)
-
-        # start up program
-        exe.run(startup_program)
 
         # main loop
         for epoch in range(num_epoch):
-            rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
+            rslt = self.exe.run(self.main_program,
+                                feed=feeds,
+                                fetch_list=fetches)
             print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
         return rslt[1:]
