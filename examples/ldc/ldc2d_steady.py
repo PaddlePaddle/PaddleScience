@@ -40,11 +40,12 @@ geo.add_boundary(name="left", criteria=lambda x, y: x == -0.05)
 geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
+pde = psci.pde.NavierStokes(
+    nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.01)
 
 # set bounday condition
-bc_top_u = psci.bc.Dirichlet(
-    'u', rhs=1.0, weight=lambda x, y: 1.0 - 20.0 * abs(x))
+weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=weight_top_u)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
@@ -88,7 +89,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1000)
+solution = solver.solve(num_epoch=5000)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 
