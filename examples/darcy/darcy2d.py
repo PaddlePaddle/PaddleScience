@@ -23,7 +23,10 @@ paddle.enable_static()
 # paddle.disable_static()
 
 # analytical solution 
-analytic_sol = lambda x, y: np.cos(x) * np.cosh(y)
+analytic_sol = lambda x, y: np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
+
+# analytical rhs
+analytic_rhs = lambda x, y: 8.0 * np.pi**2 * np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
@@ -33,8 +36,8 @@ geo.add_boundary(name="down", criteria=lambda x, y: y == 0.0)
 geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
 geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
 
-# N-S
-pde = psci.pde.Laplace(dim=2)
+# Poisson
+pde = psci.pde.Poisson(dim=2, rhs=analytic_rhs)
 
 # set bounday condition
 bc_top = psci.bc.Dirichlet('u', rhs=analytic_sol)
@@ -74,8 +77,6 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=100)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
-
-# Predict

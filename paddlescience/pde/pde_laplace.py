@@ -16,6 +16,9 @@ from .pde_base import PDE
 
 __all__ = ['Laplace']
 
+import sympy
+import numpy as np
+
 
 class Laplace(PDE):
     """
@@ -51,7 +54,7 @@ class Laplace(PDE):
 
             # equations and rhs
             self.equations = [u.diff(x).diff(x) + u.diff(y).diff(y)]
-            self.rhs = 0
+            self.rhs = [0.0]
 
         elif dim == 3:
             # independent variable
@@ -73,4 +76,4 @@ class Laplace(PDE):
             self.equations = [
                 u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z)
             ]
-            self.rhs = 0
+            self.rhs = [0.0]
