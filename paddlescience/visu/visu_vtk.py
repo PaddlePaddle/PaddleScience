@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import numpy as np
+import copy
+import types
 import vtk
 from pyevtk.hl import pointsToVTK
-import copy
 
 
 # Save geometry pointwise
@@ -29,8 +30,15 @@ def save_vtk(filename="output", geo_disc=None, data=None):
     ndims = len(points_vtk)
 
     # data
-    if data == None:
+    if data is None:
         data_vtk = {"placeholder": np.ones(npoints, dtype="float32")}
+    elif type(data) == types.LambdaType:
+        data_vtk = dict()
+        if ndims == 3:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1],
+                                    points_vtk[2])
+        elif ndims == 2:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1])
     else:
         data_vtk = __concatenate_data(data)
 

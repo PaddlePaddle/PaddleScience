@@ -57,7 +57,7 @@ pde = psci.discretize(pde, space_npoints=10000, space_method="uniform")
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
     num_ins=2,
-    num_outs=3,
+    num_outs=1,
     num_layers=10,
     hidden_size=50,
     dtype="float32",
@@ -74,7 +74,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=20)
+solution = solver.solve(num_epoch=1)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 
