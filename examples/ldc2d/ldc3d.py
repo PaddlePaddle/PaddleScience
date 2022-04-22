@@ -110,7 +110,7 @@ n = pde_disc.geometry.interior.shape[0]
 data_n = np.zeros((n, 3), dtype='float32')
 solver.feed_data_n(data_n)
 
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=2)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

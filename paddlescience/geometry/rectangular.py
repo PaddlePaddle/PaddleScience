@@ -305,11 +305,14 @@ class CircleInRectangular(Rectangular):
 
             return super(CircleInRectangular, self)._mesh_to_geo_disc(points)
         else:
-            pass
-            # TODO: error out uniform method
+            # TODO: better error out
+            print("ERROR: ",
+                  type(self).__name__,
+                  "does not support uniform discretization.")
+            exit()
 
 
-        # CylinderInCube
+# CylinderInCube
 class CylinderInCube(Rectangular):
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CylinderInCube, self).__init__(origin, extent)

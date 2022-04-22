@@ -19,19 +19,19 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+# paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
-geo = psci.geometry.CircleInRectangular(
-    origin=(-0.05, -0.05),
-    extent=(0.05, 0.05),
-    circle_center=(0.0, 0.0),
-    circle_radius=0.01)
+# geo = psci.geometry.CircleInRectangular(
+#     origin=(-0.05, -0.05),
+#     extent=(0.05, 0.05),
+#     circle_center=(0.0, 0.0),
+#     circle_radius=0.01)
 
 # set geometry and boundary
-# geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
 geo.add_boundary(
     name="top", criteria=lambda x, y: y == 0.05, normal=(0.0, 1.0))
@@ -43,7 +43,8 @@ geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
 pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
 
 # set bounday condition
-bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=lambda x, y: 1.0)
+bc_top_u = psci.bc.Dirichlet(
+    'u', rhs=1.0, weight=lambda x, y: 1.0 - 20.0 * abs(x))
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
 
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
@@ -55,13 +56,6 @@ bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
-# bcdow_u = psci.bc.Neumann('u', rhs=0.0)
-# bcdown_u = psci.bc.Neumann('u', rhs=0.0)
-
-#geo.discretize(method="uniform", npoints=100)
-
-#exit()
-
 pde.add_geometry(geo)
 
 # add bounday and boundary condition
@@ -70,10 +64,11 @@ pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
-# Discretization
-pde = psci.discretize(pde, space_npoints=10000, space_method="sampling")
+# discretization
+pde = psci.discretize(pde, space_npoints=16, space_method="uniform")
 
-# pde = psci.discretize(pde, space_npoints=(3, 3))
+# print(pde.geometry.interior)
+# print(pde.geometry.boundary)
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -85,8 +80,7 @@ net = psci.network.FCNet(
     dtype="float32",
     activation='tanh')
 
-# Loss, TO rename
-# bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
+# Loss
 loss = psci.loss.L2()
 
 # Algorithm

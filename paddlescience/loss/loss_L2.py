@@ -58,21 +58,28 @@ class L2(LossBase):
                                           labels_attr, None)
 
             # TODO: simplify
-            rhs_tmp = labels_attr["equations"][i]["rhs"]
-            weight_tmp = labels_attr["equations"][i]["weight"]
-            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelInt else rhs_tmp
-            weight = labels[weight_tmp] if type(
-                weight_tmp) == LabelInt else weight_tmp
+            rhs_eq = labels_attr["equations"][i]["rhs"]
+            if type(rhs_eq) == LabelInt:
+                rhs = labels[rhs_eq]
+            else:
+                rhs = rhs_eq
+
+            weight_eq = labels_attr["equations"][i]["weight"]
+            if type(weight_eq) == LabelInt:
+                weight = labels[weight_eq]
+            else:
+                weight = weight_eq
+
             if rhs is None:
                 if weight is None:
-                    loss += paddle.norm(rst, p=2)**2
+                    loss += paddle.norm(rst**2, p=1)
                 else:
-                    loss += paddle.norm(rst, p=2)**2 * weight
+                    loss += paddle.norm(rst**2 * weight, p=1)
             else:
                 if weight is None:
                     loss += paddle.norm(rst - rhs, p=2)**2
                 else:
-                    loss += paddle.norm(rst - rhs, p=2)**2 * weight
+                    loss += paddle.norm((rst - rhs)**2 * weight, p=1)
 
         return loss, cmploss.outs
 
@@ -89,26 +96,34 @@ class L2(LossBase):
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
-            rst = cmploss.compute_formula(pde.bc[name_b][i].formula, input,
-                                          input_attr, labels, labels_attr,
-                                          None)
+            formula = pde.bc[name_b][i].formula
+            rst = cmploss.compute_formula(formula, input, input_attr, labels,
+                                          labels_attr, None)
 
             # TODO: simplify                                  
-            rhs_tmp = labels_attr["bc"][name_b][i]["rhs"]
-            weight_tmp = labels_attr["bc"][name_b][i]["weight"]
-            rhs = labels[rhs_tmp] if type(rhs_tmp) == LabelInt else rhs_tmp
-            weight = labels[weight_tmp] if type(
-                weight_tmp) == LabelInt else weight_tmp
+            rhs_b = labels_attr["bc"][name_b][i]["rhs"]
+            if type(rhs_b) == LabelInt:
+                rhs = labels[rhs_b]
+            else:
+                rhs = rhs_b
+
+            weight_b = labels_attr["bc"][name_b][i]["weight"]
+
+            if type(weight_b) == LabelInt:
+                weight = labels[weight_b]
+            else:
+                weight = weight_b
+
             if rhs is None:
                 if weight is None:
                     loss += paddle.norm(rst, p=2)**2
                 else:
-                    loss += paddle.norm(rst, p=2)**2 * weight
+                    loss += paddle.norm(rst**2 * weight, p=1)
             else:
                 if weight is None:
                     loss += paddle.norm(rst - rhs, p=2)**2
                 else:
-                    loss += paddle.norm(rst - rhs, p=2)**2 * weight
+                    loss += paddle.norm((rst - rhs)**2 * weight, p=1)
 
         return loss, cmploss.outs
 

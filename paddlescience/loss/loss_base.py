@@ -84,9 +84,11 @@ class CompFormula:
         else:
             hessian = None
 
-        # print("*** Jacobian")
+        # print("*** Jacobian *** ")
         # print(jacobian[:])
-        # print(hessian[0][:])
+
+        # print("*** Hessian *** ")
+        # print(hessian[2][:])
 
         self.outs = outs
         self.jacobian = jacobian
@@ -123,6 +125,7 @@ class CompFormula:
                 rst = rst * self.__compute_formula_item(
                     it, input, input_attr, labels, labels_attr, normal)
         elif item.is_Number:
+            # print("*** number:", item)
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
             # print("*** symbol:", item)

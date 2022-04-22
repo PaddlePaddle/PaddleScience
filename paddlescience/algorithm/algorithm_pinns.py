@@ -123,14 +123,14 @@ class PINNs(AlgorithmBase):
                 if (rhs is None) or np.isscalar(rhs):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
-                    labels.append(rhs)
                     attr["rhs"] = LabelInt(len(labels))
+                    labels.append(rhs)
 
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
-                    labels.append(weight)
                     attr["weight"] = LabelInt(len(labels))
+                    labels.append(weight)
 
                 labels_attr["bc"][name_b].append(attr)
 
@@ -141,7 +141,7 @@ class PINNs(AlgorithmBase):
 
         outs = list()
 
-        inputs = inputs_labels[0:ninputs]  # inputs is from 0 to ninputs
+        inputs = inputs_labels[0:ninputs]  # inputs is from zero to ninputs
         labels = inputs_labels[ninputs::]  # labels is the rest
 
         # interior outputs and loss
@@ -158,6 +158,7 @@ class PINNs(AlgorithmBase):
                 labels,
                 labels_attr,
                 bs=-1)  # TODO: bs is not used
+
             loss += loss_i
             outs.append(out_i)
             n += 1
@@ -174,6 +175,7 @@ class PINNs(AlgorithmBase):
                 labels,
                 labels_attr,
                 bs=-1)  # TODO: bs is not used
+
             loss += loss_b
             outs.append(out_b)
             n += 1
