@@ -65,10 +65,7 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # discretization
-pde = psci.discretize(pde, space_npoints=16, space_method="uniform")
-
-# print(pde.geometry.interior)
-# print(pde.geometry.boundary)
+pde = psci.discretize(pde, space_npoints=10201, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -91,7 +88,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=1000)
 
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
 

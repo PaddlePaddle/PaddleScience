@@ -65,7 +65,7 @@ def discretize(pde,
             pde_disc.rhs_disc.append(rhs)
 
     # discretize weight in equations
-    if (pde_disc.weight is None) or np.isscalar(weight):
+    if (pde_disc.weight is None) or np.isscalar(pde_disc.weight):
         pde_disc.weight_disc = [None for i in range(len(pde.equations))]
     else:
         pass
