@@ -589,10 +589,24 @@ def program_transform(program):
                                  {'X': [in_names[0]],
                                   'Y': [in_names[0]]}, {'Z': [tmp_0]}, {}))
             tmp_1 = name_gen.get_var(new_block, block.var(out_names[0]))
-            to_insert.append(
-                _create_op_desc_('reduce_p', {'X': [tmp_0]}, {'Y': [tmp_1]},
-                                 {'axis': 0,
-                                  'keepdim': False}))
+            if len(block.var(tmp_0).shape) == 1 and block.var(tmp_0).shape[
+                    0] == 10201:
+                tmp_2 = name_gen.get_var(new_block,
+                                         block.var(tmp_0), [101, 101])
+                to_insert.append(
+                    _create_op_desc_('reshape_p', {'X': [tmp_0]},
+                                     {'Y': [tmp_2]}, {'shape': [101, 101]}))
+                to_insert.append(
+                    _create_op_desc_('reduce_p', {'X': [tmp_2]}, {
+                        'Y': [tmp_1]
+                    }, {'axis': [0, 1],
+                        'keepdim': False}))
+            else:
+                to_insert.append(
+                    _create_op_desc_('reduce_p', {'X': [tmp_0]}, {
+                        'Y': [tmp_1]
+                    }, {'axis': 0,
+                        'keepdim': False}))
             to_insert.append(
                 _create_op_desc_('sqrt_p', {'X': [tmp_1], },
                                  {'Y': [out_names[0]]}, {}))
