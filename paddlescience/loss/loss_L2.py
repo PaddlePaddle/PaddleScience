@@ -130,8 +130,7 @@ class L2(LossBase):
     def ic_loss(self, u, batch_id):
         pass
 
-# compute loss on real data 
-
+    # compute loss on real data 
     def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -146,15 +145,3 @@ class L2(LossBase):
             loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
 
         return loss, cmploss.outs
-
-    def total_loss(self, input, outs, pde, bs=None):
-
-        # ins_in = ins["interior"]
-        # ins_bc = ins["boundary"]
-
-        # lossbc = self.bc_loss(pde, insbc, outsbc, bs)
-        # losseq = self.eq_loss(pde, insin, outsin, bs)
-
-        # losstotal = lossbc + losseq
-
-        return losstotal
