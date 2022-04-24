@@ -129,17 +129,23 @@ class L2(LossBase):
 
     def ic_loss(self, u, batch_id):
         pass
-        # if self.geo.time_dependent == True:
-        #     ic_u = paddle.index_select(u, self.geo.ic_index[batch_id])
-        #     ic_value = pdes.ic_value
-        #     if pdes.ic_check_dim is not None:
-        #         ic_u = paddle.index_select(
-        #             ic_u, pdes.ic_check_dim, axis=1)
-        #     ic_diff = ic_u - ic_value
-        #     ic_diff = paddle.reshape(ic_diff, shape=[-1])
-        #     return paddle.norm(ic_diff, p=2)
-        # else:
-        #     return paddle.to_tensor([0], dtype="float32")
+
+# compute loss on real data 
+
+    def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+
+        cmploss = CompFormula(pde, net)
+
+        # compute outs
+        cmploss.compute_outs(input, bs)
+
+        loss = 0.0
+        for i in range(len(pde.dvar_n)):
+            idx = labels_attr["data"][i]
+            data = labels[idx]
+            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+
+        return loss, cmploss.outs
 
     def total_loss(self, input, outs, pde, bs=None):
 
@@ -152,28 +158,3 @@ class L2(LossBase):
         # losstotal = lossbc + losseq
 
         return losstotal
-
-        # b_datas = self.geo.get_domain()
-        # u = net.nn_func(b_datas)
-        # eq_loss = 0
-        # if self.run_in_batch:
-        #     eq_loss = self.batch_eq_loss(net, b_datas)
-        # else:
-        #     eq_loss_l = []
-        #     for data in b_datas:
-        #         eq_loss_l += self.eq_loss(net, data)
-        #     eq_loss = paddle.stack(eq_loss_l, axis=0)
-        #     eq_loss = paddle.norm(eq_loss, p=2)
-
-        # eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
-        # bc_loss = self.bc_loss(u, batch_id)
-        # ic_loss = self.ic_loss(u, batch_id)
-        # if self.synthesis_method == 'add':
-        #     loss = eq_loss + bc_loss + ic_loss
-        #     return loss, [eq_loss, bc_loss, ic_loss]
-        # elif self.synthesis_method == 'norm':
-        #     losses = [eq_loss, bc_loss, ic_loss]
-        #     loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
-        #     return loss, losses
-        # else:
-        #     assert 0, "Unsupported synthesis_method"

@@ -62,12 +62,26 @@ class PINNs(AlgorithmBase):
             inputs_attr_b[name] = InputsAttr(0, 0)
         inputs_attr["boundary"] = inputs_attr_b
 
+        # data: inputs_attr["data"]["0"]
+        inputs_attr_d = OrderedDict()
+        points = pde.geometry.data
+        if points is not None:
+            inputs.append(points)
+            inputs_attr_d["0"] = InputsAttr(0, 0)
+        inputs_attr["data"] = inputs_attr_d
+
         return inputs, inputs_attr
 
     def feed_labels_data_n(self, labels, labels_attr, data_n):
         for i in range(len(data_n[0])):
             idx = labels_attr["data_n"][i]
             labels[idx] = data_n[:, i]
+        return labels
+
+    def feed_labels_data(self, labels, labels_attr, data):
+        for i in range(len(data[0])):
+            idx = labels_attr["data"][i]
+            labels[idx] = data[:, i]
         return labels
 
     def create_labels(self, pde):
@@ -101,15 +115,6 @@ class PINNs(AlgorithmBase):
 
             labels_attr["equations"].append(attr)
 
-        # data_n (in time-discretized equation)
-        #   - labels_attr["data_n"][i]
-        labels_attr["data_n"] = list()
-        if pde.time_disc_method is not None:
-            attr["data_n"] = list()
-            for i in range(len(pde.dvar_n)):
-                labels_attr["data_n"].append(LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
-
         # bc: rhs and weight
         #   - labels_attr["bc"][name_b][i]["rhs"]
         #   - labels_attr["bc"][name_b][i]["weight"]
@@ -133,6 +138,22 @@ class PINNs(AlgorithmBase):
                     labels.append(weight)
 
                 labels_attr["bc"][name_b].append(attr)
+
+        # data_n: real data of previous time-step
+        # in time-discretized equation
+        #   - labels_attr["data_n"][i]
+        labels_attr["data_n"] = list()
+        if pde.time_disc_method is not None:
+            for i in range(len(pde.dvar_n)):
+                labels_attr["data_n"].append(LabelInt(len(labels)))
+                labels.append(LabelHolder())  # placeholder with shape
+
+        # data: real data
+        #   - labels_attr["data"][0]
+        labels_attr["data"] = list()
+        for i in range(len(pde.dvar_n)):
+            labels_attr["data"].append(LabelInt(len(labels)))
+            labels.append(LabelHolder())  # placeholder with shape
 
         return labels, labels_attr
 
@@ -178,6 +199,23 @@ class PINNs(AlgorithmBase):
 
             loss += loss_b
             outs.append(out_b)
+            n += 1
+
+        # data loss
+        for name_d, input_attr in inputs_attr["data"].items():
+            input = input[n]
+            loss_d, out_d = self.loss.data_loss(
+                pde,
+                self.net,
+                name_d,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs=-1)  # TODO: bs is not used
+
+            loss += loss_d
+            outs.append(out_d)
             n += 1
 
         loss = paddle.sqrt(loss)

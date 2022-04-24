@@ -52,29 +52,30 @@ class CompFormula:
         self.jacobian = None
         self.hessian = None
 
+    def compute_outs(self, input, bs):
+        self.outs = self.net.nn_func(input)
+
     def compute_outs_der(self, input, bs):
 
-        net = self.net
-
         # outs
-        outs = net.nn_func(input)
+        self.compute_outs(input, bs)
 
         # jacobian
         if self.order >= 1:
             if api_new:
-                jacobian = Jacobian(net.nn_func, input, is_batched=True)
+                jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
             else:
-                jacobian = Jacobian(net.nn_func, input, batch=True)
+                jacobian = Jacobian(self.net.nn_func, input, batch=True)
         else:
             jacobian = None
 
         # hessian
         if self.order >= 2:
             hessian = list()
-            for i in range(net.num_outs):
+            for i in range(self.net.num_outs):
 
                 def func(input):
-                    return net.nn_func(input)[:, i:i + 1]
+                    return self.net.nn_func(input)[:, i:i + 1]
 
                 if api_new:
                     hessian.append(Hessian(func, input, is_batched=True))
@@ -90,7 +91,7 @@ class CompFormula:
         # print("*** Hessian *** ")
         # print(hessian[2][:])
 
-        self.outs = outs
+        # self.outs = outs
         self.jacobian = jacobian
         self.hessian = hessian
 

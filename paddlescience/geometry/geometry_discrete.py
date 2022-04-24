@@ -23,8 +23,10 @@ class GeometryDiscrete:
 
     def __init__(self):
 
+        # TODO: data structure uniformation
         self.interior = None
         self.boundary = dict()
+        self.data = None
         self.normal = dict()
 
     def __str__(self):

@@ -273,6 +273,10 @@ class Solver(object):
         self.labels = self.algo.feed_labels_data_n(self.labels,
                                                    self.labels_attr, data_n)
 
+    def feed_data(self, data):
+        self.labels = self.algo.feed_labels_data(self.labels, self.labels_attr,
+                                                 data)
+
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
