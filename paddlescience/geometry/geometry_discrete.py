@@ -40,9 +40,10 @@ class GeometryDiscrete:
 
         # bc
         for name_b in self.boundary.keys():
-            if self.boundary[name_b] is np.ndarray:
+            if type(self.boundary[name_b]) is np.ndarray:
                 self.boundary[name_b] = self.__padding_array(
                     nprocs, self.boundary[name_b])
+
         # data
         if type(self.data) is np.ndarray:
             self.data = self.__padding_array(nprocs, self.data)

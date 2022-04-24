@@ -50,11 +50,15 @@ class ModelStatic(paddle.nn.Layer):
         _global_process_mesh = auto.ProcessMesh([0, 1])
 
         for v in inputs_labels:
+
+            # print(v.shape)
+
             auto.shard_tensor(
                 v,
                 dist_attr={
                     "process_mesh": _global_process_mesh,
-                    "dims_mapping": [0, -1]
+                    "dims_mapping":
+                    [0] + [-1 for _ in range(len(v.shape) - 1)]
                 })
 
         loss, outs = self.algo.compute(
