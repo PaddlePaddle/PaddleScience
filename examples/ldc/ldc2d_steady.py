@@ -66,7 +66,7 @@ pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
 # discretization
-pde = psci.discretize(pde, space_npoints=10201, space_method="uniform")
+pde_disc = psci.discretize(pde, space_npoints=10201, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -88,10 +88,10 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
-solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=5000)
 
-psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
 # Predict
 

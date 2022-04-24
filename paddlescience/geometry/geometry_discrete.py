@@ -35,18 +35,23 @@ class GeometryDiscrete:
     def padding(self, nprocs=1):
 
         # interior
-        self.interior = self.__padding_array(nprocs, self.interior)
+        if type(self.interior) is np.ndarray:
+            self.interior = self.__padding_array(nprocs, self.interior)
+
         # bc
         for name_b in self.boundary.keys():
-            self.boundary[name_b] = self.__padding_array(nprocs,
-                                                         self.boundary[name_b])
+            if self.boundary[name_b] is np.ndarray:
+                self.boundary[name_b] = self.__padding_array(
+                    nprocs, self.boundary[name_b])
         # data
-        self.data = self.__padding_array(nprocs, self.data)
+        if type(self.data) is np.ndarray:
+            self.data = self.__padding_array(nprocs, self.data)
+
         # TODO: normal
 
     def __padding_array(self, nprocs, array):
-        npad = (len(array) % nprocs) % nprocs  # pad npad elements
-        datapad = array[-1, :]
+        npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :].reshape((-1, 2))
         for i in range(npad):
             array = np.append(array, datapad, axis=0)
         return array
