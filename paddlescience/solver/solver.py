@@ -15,7 +15,6 @@ import numpy as np
 import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
-import paddle.distributed.auto_parallel as auto
 from paddle.distributed.auto_parallel.engine import Engine
 
 __all__ = ["Solver"]
@@ -23,11 +22,11 @@ __all__ = ["Solver"]
 
 class DataSetStatic:
     def __init__(self, nsamples, inputs_labels):
-        self.inputs = inputs
+        self.inputs = inputs_labels
         self.nsamples = nsamples
 
     def __getitem__(self, idx):
-        return self.inputs_labels
+        return self.inputs
 
     def __len__(self):
         return self.nsamples
@@ -46,20 +45,6 @@ class ModelStatic(paddle.nn.Layer):
         self.algo.net.make_network_static()
 
     def forward(self, *inputs_labels):
-
-        _global_process_mesh = auto.ProcessMesh([0, 1])
-
-        for v in inputs_labels:
-
-            # print(v.shape)
-
-            auto.shard_tensor(
-                v,
-                dist_attr={
-                    "process_mesh": _global_process_mesh,
-                    "dims_mapping":
-                    [0] + [-1 for _ in range(len(v.shape) - 1)]
-                })
 
         loss, outs = self.algo.compute(
             *inputs_labels,
