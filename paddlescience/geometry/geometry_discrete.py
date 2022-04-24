@@ -26,8 +26,27 @@ class GeometryDiscrete:
         # TODO: data structure uniformation
         self.interior = None
         self.boundary = dict()
-        self.data = None
         self.normal = dict()
+        self.data = None
 
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
+
+    def padding(self, nprocs=1):
+
+        # interior
+        self.interior = self.__padding_array(nprocs, self.interior)
+        # bc
+        for name_b in self.boundary.keys():
+            self.boundary[name_b] = self.__padding_array(nprocs,
+                                                         self.boundary[name_b])
+        # data
+        self.data = self.__padding_array(nprocs, self.data)
+        # TODO: normal
+
+    def __padding_array(self, nprocs, array):
+        npad = (len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :]
+        for i in range(npad):
+            array = np.append(array, datapad, axis=0)
+        return array
