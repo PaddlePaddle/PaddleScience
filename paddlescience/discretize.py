@@ -46,9 +46,11 @@ def discretize(pde,
     else:
         pde_disc = pde
 
-    # discretize geometry
+    # discretize and padding geometry
     pde_disc.geometry = pde_disc.geometry.discretize(space_method,
                                                      space_npoints)
+    nproc = paddle.distributed.get_world_size()
+    pde_disc.geometry.padding(nproc)
 
     # discritize rhs in equations
     pde_disc.rhs_disc = list()
