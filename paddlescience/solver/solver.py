@@ -99,16 +99,21 @@ class Solver(object):
         if paddle.in_dynamic_mode():
             pass
         else:
-            self.__init_static()
+            if paddle.distributed.get_world_size() == 1:
+                self.__init_static()
+            else:
+                pass
 
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
-
-        # return self.__solve_static_auto_dist(num_epoch, bs, checkpoint_freq)
 
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
         else:
-            return self.__solve_static(num_epoch, bs, checkpoint_freq)
+            if paddle.distributed.get_world_size() == 1:
+                return self.__solve_static(num_epoch, bs, checkpoint_freq)
+            else:
+                return self.__solve_static_auto_dist(num_epoch, bs,
+                                                     checkpoint_freq)
 
     # solve in dynamic mode
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):

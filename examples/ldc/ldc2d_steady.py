@@ -47,13 +47,10 @@ pde = psci.pde.NavierStokes(
 weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
 bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=weight_top_u)
 bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
-
 bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
-
 bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
-
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
