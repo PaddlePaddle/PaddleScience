@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle
+import numpy as np
 # import paddle.nn.functional as F
 # from paddle.autograd import batch_jacobian, batch_hessian
 # from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
@@ -64,22 +65,24 @@ class L2(LossBase):
             else:
                 rhs = rhs_eq
 
-            weight_eq = labels_attr["equations"][i]["weight"]
-            if type(weight_eq) == LabelInt:
-                weight = labels[weight_eq]
+            w_eq = labels_attr["equations"][i]["weight"]
+            if w_eq is None:
+                weight = None
+            elif type(w_eq) == LabelInt:
+                weight = paddle.sqrt(labels[w_eq])
             else:
-                weight = weight_eq
+                weight = np.sqrt(w_eq)
 
             if rhs is None:
                 if weight is None:
-                    loss += paddle.norm(rst**2, p=1)
+                    loss += paddle.norm(rst, p=2)
                 else:
-                    loss += paddle.norm(rst**2 * weight, p=1)
+                    loss += paddle.norm(rst * weight, p=2)
             else:
                 if weight is None:
-                    loss += paddle.norm(rst - rhs, p=2)**2
+                    loss += paddle.norm(rst - rhs, p=2)
                 else:
-                    loss += paddle.norm((rst - rhs)**2 * weight, p=1)
+                    loss += paddle.norm((rst - rhs) * weight, p=2)
 
         return loss, cmploss.outs
 
@@ -107,23 +110,24 @@ class L2(LossBase):
             else:
                 rhs = rhs_b
 
-            weight_b = labels_attr["bc"][name_b][i]["weight"]
-
-            if type(weight_b) == LabelInt:
-                weight = labels[weight_b]
+            w_b = labels_attr["bc"][name_b][i]["weight"]
+            if w_b is None:
+                weight = None
+            elif type(w_b) == LabelInt:
+                weight = labels[w_b]
             else:
-                weight = weight_b
+                weight = np.sqrt(w_b)
 
             if rhs is None:
                 if weight is None:
-                    loss += paddle.norm(rst, p=2)**2
+                    loss += paddle.norm(rst, p=2)
                 else:
-                    loss += paddle.norm(rst**2 * weight, p=1)
+                    loss += paddle.norm(rst * weight, p=2)
             else:
                 if weight is None:
-                    loss += paddle.norm(rst - rhs, p=2)**2
+                    loss += paddle.norm(rst - rhs, p=2)
                 else:
-                    loss += paddle.norm((rst - rhs)**2 * weight, p=1)
+                    loss += paddle.norm((rst - rhs) * weight, p=2)
 
         return loss, cmploss.outs
 
@@ -142,6 +146,6 @@ class L2(LossBase):
         for i in range(len(pde.dvar_n)):
             idx = labels_attr["data"][i]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)
 
         return loss, cmploss.outs
