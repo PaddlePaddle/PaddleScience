@@ -23,7 +23,7 @@ paddle.enable_static()
 # paddle.disable_static()
 
 # analytical solution 
-analytic_sol = lambda x, y: np.cos(x) * np.cosh(y)
+ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
@@ -37,10 +37,10 @@ geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
 pde = psci.pde.Laplace(dim=2)
 
 # set bounday condition
-bc_top = psci.bc.Dirichlet('u', rhs=analytic_sol)
-bc_down = psci.bc.Dirichlet('u', rhs=analytic_sol)
-bc_left = psci.bc.Dirichlet('u', rhs=analytic_sol)
-bc_right = psci.bc.Dirichlet('u', rhs=analytic_sol)
+bc_top = psci.bc.Dirichlet('u', rhs=ref_sol)
+bc_down = psci.bc.Dirichlet('u', rhs=ref_sol)
+bc_left = psci.bc.Dirichlet('u', rhs=ref_sol)
+bc_right = psci.bc.Dirichlet('u', rhs=ref_sol)
 
 pde.add_geometry(geo)
 
@@ -51,7 +51,8 @@ pde.add_bc("left", bc_left)
 pde.add_bc("right", bc_right)
 
 # discretization
-pde = psci.discretize(pde, space_npoints=10000, space_method="uniform")
+npoints = 10121
+pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -73,9 +74,21 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
-solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+solution = solver.solve(num_epoch=100)
 
-psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
-# Predict
+# MSE
+# TODO: solution array to dict: interior, bc
+cord = pde_disc.geometry.interior
+ref = ref_sol(cord[:, 0], cord[:, 1])
+diff = np.linalg.norm(solution[0] - ref)
+
+n = 1
+for cord in pde_disc.geometry.boundary.values():
+    ref = ref_sol(cord[:, 0], cord[:, 1])
+    diff += np.linalg.norm(solution[n] - ref)
+    n += 1
+
+print("MSE is: ", diff / npoints)
