@@ -52,7 +52,7 @@ class GeometryDiscrete:
 
     def __padding_array(self, nprocs, array):
         npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
-        datapad = array[-1, :].reshape((-1, 2))
+        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
         for i in range(npad):
             array = np.append(array, datapad, axis=0)
         return array
