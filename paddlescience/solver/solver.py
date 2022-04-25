@@ -206,6 +206,9 @@ class Solver(object):
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
 
+        for i in labels:
+            print(i, type(i))
+
         self.inputs = inputs
         self.inputs_attr = inputs_attr
         self.labels = labels

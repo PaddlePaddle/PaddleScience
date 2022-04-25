@@ -142,18 +142,19 @@ class PINNs(AlgorithmBase):
         # data_n: real data of previous time-step
         # in time-discretized equation
         #   - labels_attr["data_n"][i]
-        labels_attr["data_n"] = list()
         if pde.time_disc_method is not None:
+            labels_attr["data_n"] = list()
             for i in range(len(pde.dvar_n)):
                 labels_attr["data_n"].append(LabelInt(len(labels)))
                 labels.append(LabelHolder())  # placeholder with shape
 
         # data: real data
         #   - labels_attr["data"][0]
-        labels_attr["data"] = list()
-        for i in range(len(pde.dvar_n)):
-            labels_attr["data"].append(LabelInt(len(labels)))
-            labels.append(LabelHolder())  # placeholder with shape
+        if pde.geometry.data is not None:
+            labels_attr["data"] = list()
+            for i in range(len(pde.dvar)):
+                labels_attr["data"].append(LabelInt(len(labels)))
+                labels.append(LabelHolder())  # placeholder with shape
 
         return labels, labels_attr
 
