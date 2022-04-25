@@ -78,9 +78,11 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=5000)
+solution = solver.solve(num_epoch=1)
 
-psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
+rank = paddle.distributed.get_rank()
+fpname = "output-" + str(rank)
+psci.visu.save_vtk(filename=fpname, geo_disc=pde_disc.geometry, data=solution)
 
 # MSE
 # TODO: solution array to dict: interior, bc
