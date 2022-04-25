@@ -56,10 +56,10 @@ class ModelStatic(paddle.nn.Layer):
 
         # print("\n ********** compute done ****  \n")
 
-        return loss  #, outs # TODO: add outs
+        return loss, outs # TODO: add outs
 
 
-def loss_func(x):
+def loss_func(x, y):
 
     # print("\n ********** loss_func done ****  \n")
     return x
@@ -408,11 +408,12 @@ class Solver(object):
         print("\n ********** engine predict start ****  \n")
 
         # predict
+        test_dataset = DataSetStatic(1, inputs_labels)
         engine.prepare(optimizer=self.opt, loss=loss_func, mode='predict')
-        rslt = engine.predict(train_dataset, sample_generator=False)
+        rslt = engine.predict(test_dataset, sample_generator=False)
 
         print("\n ********** engine done ****  \n")
 
-        print(rslt)
+        print(rslt[0][1:])
 
-        return rslt
+        return rslt[0][1:]
