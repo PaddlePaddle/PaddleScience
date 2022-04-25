@@ -65,24 +65,24 @@ class L2(LossBase):
             else:
                 rhs = rhs_eq
 
-            w_eq = labels_attr["equations"][i]["weight"]
-            if w_eq is None:
-                weight = None
-            elif type(w_eq) == LabelInt:
-                weight = paddle.sqrt(labels[w_eq])
+            wgt_eq = labels_attr["equations"][i]["weight"]
+            if wgt_eq is None:
+                wgt = None
+            elif type(wgt_eq) == LabelInt:
+                wgt = paddle.sqrt(labels[wgt_eq])
             else:
-                weight = np.sqrt(w_eq)
+                wgt = np.sqrt(wgt_eq)
 
             if rhs is None:
-                if weight is None:
+                if wgt is None:
                     loss += paddle.norm(rst, p=2)
                 else:
-                    loss += paddle.norm(rst * weight, p=2)
+                    loss += paddle.norm(rst * wgt, p=2)
             else:
-                if weight is None:
+                if wgt is None:
                     loss += paddle.norm(rst - rhs, p=2)
                 else:
-                    loss += paddle.norm((rst - rhs) * weight, p=2)
+                    loss += paddle.norm((rst - rhs) * wgt, p=2)
 
         return loss, cmploss.outs
 
@@ -110,24 +110,24 @@ class L2(LossBase):
             else:
                 rhs = rhs_b
 
-            w_b = labels_attr["bc"][name_b][i]["weight"]
-            if w_b is None:
-                weight = None
-            elif type(w_b) == LabelInt:
-                weight = labels[w_b]
+            wgt_b = labels_attr["bc"][name_b][i]["weight"]
+            if wgt_b is None:
+                wgt = None
+            elif type(wgt_b) == LabelInt:
+                wgt = paddle.sqrt(labels[wgt_b])
             else:
-                weight = np.sqrt(w_b)
+                wgt = np.sqrt(wgt_b)
 
             if rhs is None:
-                if weight is None:
+                if wgt is None:
                     loss += paddle.norm(rst, p=2)
                 else:
-                    loss += paddle.norm(rst * weight, p=2)
+                    loss += paddle.norm(rst * wgt, p=2)
             else:
-                if weight is None:
+                if wgt is None:
                     loss += paddle.norm(rst - rhs, p=2)
                 else:
-                    loss += paddle.norm((rst - rhs) * weight, p=2)
+                    loss += paddle.norm((rst - rhs) * wgt, p=2)
 
         return loss, cmploss.outs
 
