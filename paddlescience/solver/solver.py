@@ -56,7 +56,7 @@ class ModelStatic(paddle.nn.Layer):
 
         # print("\n ********** compute done ****  \n")
 
-        return loss, outs # TODO: add outs
+        return loss, outs  # TODO: add outs
 
 
 def loss_func(x, y):
@@ -205,9 +205,6 @@ class Solver(object):
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
-
-        for i in labels:
-            print(i, type(i))
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -414,6 +411,6 @@ class Solver(object):
 
         print("\n ********** engine done ****  \n")
 
-        print(rslt[0][1:])
+        # print(rslt[0][1:])
 
         return rslt[0][1:]

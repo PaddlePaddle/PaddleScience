@@ -208,17 +208,10 @@ class PINNs(AlgorithmBase):
 
         # data loss
         for name_d, input_attr in inputs_attr["data"].items():
-            input = input[n]
+            input = inputs[n]
             loss_d, out_d = self.loss.data_loss(
-                pde,
-                self.net,
-                name_d,
-                input,
-                input_attr,
-                labels,
-                labels_attr,
+                pde, self.net, input, input_attr, labels, labels_attr,
                 bs=-1)  # TODO: bs is not used
-
             loss += loss_d
             outs.append(out_d)
             n += 1

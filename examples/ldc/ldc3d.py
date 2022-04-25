@@ -81,8 +81,6 @@ pde_disc = psci.discretize(
     space_npoints=1000,
     space_method="sampling")
 
-print(type(pde_disc))
-
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
