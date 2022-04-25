@@ -70,19 +70,22 @@ class L2(LossBase):
                 wgt = None
             elif type(wgt_eq) == LabelInt:
                 wgt = paddle.sqrt(labels[wgt_eq])
-            else:
+            elif np.isscalar(wgt_eq):
                 wgt = np.sqrt(wgt_eq)
+            else:
+                pass
+                # TODO: error out
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst, p=2)
+                    loss += paddle.norm(rst**2, p=1)
                 else:
-                    loss += paddle.norm(rst * wgt, p=2)
+                    loss += paddle.norm(rst**2 * wgt, p=1)
             else:
                 if wgt is None:
-                    loss += paddle.norm(rst - rhs, p=2)
+                    loss += paddle.norm((rst - rhs)**2, p=1)
                 else:
-                    loss += paddle.norm((rst - rhs) * wgt, p=2)
+                    loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -120,14 +123,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst, p=2)
+                    loss += paddle.norm(rst**2, p=1)
                 else:
-                    loss += paddle.norm(rst * wgt, p=2)
+                    loss += paddle.norm(rst**2 * wgt, p=1)
             else:
                 if wgt is None:
-                    loss += paddle.norm(rst - rhs, p=2)
+                    loss += paddle.norm((rst - rhs)**2, p=1)
                 else:
-                    loss += paddle.norm((rst - rhs) * wgt, p=2)
+                    loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -147,5 +150,6 @@ class L2(LossBase):
             idx = labels_attr["data"][i]
             data = labels[idx]
             loss += paddle.norm(cmploss.outs[:, i] - data, p=2)
+            # TODO: p=2 p=1
 
         return loss, cmploss.outs

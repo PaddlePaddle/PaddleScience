@@ -168,6 +168,9 @@ class PINNs(AlgorithmBase):
         # interior outputs and loss
         n = 0
         loss = 0.0
+
+        # interior outputs and loss
+        loss_eq = 0.0
         for name_i, input_attr in inputs_attr["interior"].items():
             input = inputs[n]
             loss_i, out_i = self.loss.eq_loss(
@@ -179,12 +182,13 @@ class PINNs(AlgorithmBase):
                 labels,
                 labels_attr,
                 bs=-1)  # TODO: bs is not used
-
-            loss += loss_i
+            loss_eq += loss_i
             outs.append(out_i)
             n += 1
+        loss += paddle.sqrt(loss_eq)
 
         # boundary outputs and loss
+        loss_bc = 0.0
         for name_b, input_attr in inputs_attr["boundary"].items():
             input = inputs[n]
             loss_b, out_b = self.loss.bc_loss(
@@ -196,10 +200,10 @@ class PINNs(AlgorithmBase):
                 labels,
                 labels_attr,
                 bs=-1)  # TODO: bs is not used
-
-            loss += loss_b
+            loss_bc += loss_b
             outs.append(out_b)
             n += 1
+        loss += paddle.sqrt(loss_bc)
 
         # data loss
         for name_d, input_attr in inputs_attr["data"].items():
@@ -218,5 +222,4 @@ class PINNs(AlgorithmBase):
             outs.append(out_d)
             n += 1
 
-        loss = paddle.sqrt(loss)
         return loss, outs  # TODO: return more
