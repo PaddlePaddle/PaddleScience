@@ -301,62 +301,62 @@ class Solver(object):
 
         return rslt[1:]
 
-    def __solve_static_dist(self, num_epoch, bs, checkpoint_freq):
+    # def __solve_static_dist(self, num_epoch, bs, checkpoint_freq):
 
-        # init dist environment
-        strategy = fleet.DistributedStrategy()
-        fleet.init(is_collective=True, strategy=strategy)
+    #     # init dist environment
+    #     strategy = fleet.DistributedStrategy()
+    #     fleet.init(is_collective=True, strategy=strategy)
 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+    #     inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
-        place = paddle.CUDAPlace(0)
-        exe = paddle.static.Executor(place)
+    #     place = paddle.CUDAPlace(0)
+    #     exe = paddle.static.Executor(place)
 
-        # dist optimizer
-        opt_dist = fleet.distributed_optimizer(self.opt)
+    #     # dist optimizer
+    #     opt_dist = fleet.distributed_optimizer(self.opt)
 
-        inputs = list()
-        feeds = dict()
+    #     inputs = list()
+    #     feeds = dict()
 
-        main_program = paddle.static.Program()
-        startup_program = paddle.static.Program()
+    #     main_program = paddle.static.Program()
+    #     startup_program = paddle.static.Program()
 
-        # construct program
-        with paddle.static.program_guard(main_program, startup_program):
+    #     # construct program
+    #     with paddle.static.program_guard(main_program, startup_program):
 
-            self.algo.net.make_network_static()
+    #         self.algo.net.make_network_static()
 
-            for i in range(len(inputs)):
-                # inputs
-                input = paddle.static.data(
-                    name='input' + str(i),
-                    shape=inputs[i].shape,
-                    dtype='float32')
-                input.stop_gradient = False
-                inputs.append(input)
+    #         for i in range(len(inputs)):
+    #             # inputs
+    #             input = paddle.static.data(
+    #                 name='input' + str(i),
+    #                 shape=inputs[i].shape,
+    #                 dtype='float32')
+    #             input.stop_gradient = False
+    #             inputs.append(input)
 
-                # feeds
-                feeds['input' + str(i)] = inputs[i]
+    #             # feeds
+    #             feeds['input' + str(i)] = inputs[i]
 
-            loss, outs = self.algo.compute(
-                *inputs, inputs_attr=inputs_attr, pde=self.pde)
+    #         loss, outs = self.algo.compute(
+    #             *inputs, inputs_attr=inputs_attr, pde=self.pde)
 
-            opt_dist.minimize(loss)
+    #         opt_dist.minimize(loss)
 
-        # fetch loss and net's output
-        fetches = [loss.name]
-        for out in outs:
-            fetches.append(out.name)
+    #     # fetch loss and net's output
+    #     fetches = [loss.name]
+    #     for out in outs:
+    #         fetches.append(out.name)
 
-        # start up program
-        exe.run(startup_program)
+    #     # start up program
+    #     exe.run(startup_program)
 
-        # main loop
-        for epoch in range(num_epoch):
-            rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
-            print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
+    #     # main loop
+    #     for epoch in range(num_epoch):
+    #         rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
+    #         print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
-        return rslt[1:]
+    #     return rslt[1:]
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
@@ -386,19 +386,30 @@ class Solver(object):
 
         labels_spec = None
 
+        # engine
         engine = Engine(
             model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
 
-        print("\n ********** engine prepare start ****  \n")
-
-        engine.prepare(optimizer=self.opt, loss=loss_func)
-
-        print("\n ********** engine prepare done ****  \n")
-
+        # dataset
         train_dataset = DataSetStatic(num_epoch, inputs_labels)
+
+        print("\n ********** engine training start ****  \n")
+
+        # train
+        engine.prepare(optimizer=self.opt, loss=loss_func)
         rslt = engine.fit(train_dataset, sample_generator=False)
 
-        print("\n ********** engine rslt done ****  \n")
+        print("\n ********** engine predict start ****  \n")
+
+        # predict
+        engine.prepare(optimizer=self.opt, loss=loss_func, mode='predict')
+        rslt = engine.predict(train_dataset, sample_generator=False)
+
+        print("\n ********** engine done ****  \n")
+
+        print(rslt)
+
+        return rslt
