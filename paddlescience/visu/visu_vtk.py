@@ -17,13 +17,22 @@ import copy
 import types
 import vtk
 from pyevtk.hl import pointsToVTK
+import paddle
 
 
 # Save geometry pointwise
 def save_vtk(filename="output", geo_disc=None, data=None):
 
+    nprocs = paddle.distributed.get_world_size()
+    nrank = paddle.distributed.get_rank()
+    fpname = filename + str(nrank)
+    if nprocs == 1:
+        geo_disc_sub = geo_disc
+    else:
+        geo_disc_sub = geo_disc.sub(nprocs, nrank)
+
     # concatenate data and cordiante 
-    points_vtk = __concatenate_geo(geo_disc)
+    points_vtk = __concatenate_geo(geo_disc_sub)
 
     # points's shape is [ndims][npoints]
     npoints = len(points_vtk[0])
@@ -46,12 +55,12 @@ def save_vtk(filename="output", geo_disc=None, data=None):
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+        pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk)
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype="float32")
-        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+        pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk)
 
 
 # concatenate cordinates of interior points and boundary points
