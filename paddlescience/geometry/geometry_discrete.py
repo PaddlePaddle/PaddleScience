@@ -56,3 +56,36 @@ class GeometryDiscrete:
         for i in range(npad):
             array = np.append(array, datapad, axis=0)
         return array
+
+    def split(self, nprocs=1):
+
+        dp = list()
+        for i in range(nprocs):
+            dp.append(self.sub(nprocs, i))
+        return dp
+
+    def sub(self, nprocs, n):
+
+        subp = GeometryDiscrete()
+
+        # interior
+        ni = int(len(self.interior) / nprocs)
+        s = ni * n
+        e = ni * (n + 1)
+        subp.interior = self.interior[s:e, :]
+
+        # boundary
+        for name, b in self.boundary.items():
+            nb = int(len(b) / nprocs)
+            s = nb * n
+            e = nb * (n + 1)
+            subp.boundary[name] = b[s:e, :]
+
+        # data
+        if self.data is not None:
+            nd = int(len(self.data) / nprocs)
+            s = nd * n
+            e = nd * (n + 1)
+            subp.data = self.data[s:e, :]
+
+        return subp
