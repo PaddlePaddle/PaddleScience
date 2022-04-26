@@ -49,7 +49,10 @@ class PINNs(AlgorithmBase):
         # interior: inputs_attr["interior"]["0"]
         inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
-        data = points  # 
+        if pde.time_dependent == True and pde.time_disc_method is None:
+            data = self.__timespace(pde.time_array, points)
+        else:
+            data = points
         inputs.append(data)
         inputs_attr_i["0"] = InputsAttr(0, 0)
         inputs_attr["interior"] = inputs_attr_i
@@ -57,7 +60,11 @@ class PINNs(AlgorithmBase):
         # boundary: inputs_attr["boundary"][name]
         inputs_attr_b = OrderedDict()
         for name in pde.bc.keys():
-            data = pde.geometry.boundary[name]
+            points = pde.geometry.boundary[name]
+            if pde.time_dependent == True and pde.time_disc_method is None:
+                data = self.__timespace(pde.time_array, points)
+            else:
+                data = points
             inputs.append(data)
             inputs_attr_b[name] = InputsAttr(0, 0)
         inputs_attr["boundary"] = inputs_attr_b
@@ -66,7 +73,11 @@ class PINNs(AlgorithmBase):
         inputs_attr_d = OrderedDict()
         points = pde.geometry.data
         if points is not None:
-            inputs.append(points)
+            if pde.time_dependent == True and pde.time_disc_method is None:
+                data = self.__timespace(pde.time_array, points)
+            else:
+                data = points
+            inputs.append(data)
             inputs_attr_d["0"] = InputsAttr(0, 0)
         inputs_attr["data"] = inputs_attr_d
 
@@ -135,7 +146,11 @@ class PINNs(AlgorithmBase):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
                     attr["weight"] = LabelInt(len(labels))
-                    labels.append(weight)
+                    if pde.time_dependent == True and pde.time_disc_method is None:
+                        data = np.tile(weight, len(pde.time_array))
+                    else:
+                        data = weight
+                    labels.append(data)
 
                 labels_attr["bc"][name_b].append(attr)
 
@@ -217,3 +232,12 @@ class PINNs(AlgorithmBase):
             n += 1
 
         return loss, outs  # TODO: return more
+
+    def __timespace(self, time, space):
+
+        nt = len(time)
+        ns = len(space)
+        time_r = np.repeat(time, ns).reshape((nt * ns, 1))
+        space_r = np.tile(space, (nt, 1)).reshape((nt * ns, 2))
+        timespace = np.concatenate([time_r, space_r], axis=1)
+        return timespace

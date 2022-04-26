@@ -73,12 +73,12 @@ pde.add_bc("right", bc_right_u, bc_right_v)
 
 # discretization
 pde_disc = psci.discretize(
-    pde, time_step=0.1, space_npoints=100, space_method="uniform")
+    pde, time_step=0.1, space_npoints=25, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=3, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
 loss = psci.loss.L2()

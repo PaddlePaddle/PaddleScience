@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .. import config
 from .pde_base import PDE
 from ..parameter import Parameter, is_parameter
 
@@ -281,12 +282,13 @@ class NavierStokes(PDE):
             pass
             # TODO: error out
 
+        # time related information
         pde_disc.time_internal = self.time_internal
         pde_disc.time_step = time_step
         t0 = self.time_internal[0]
         t1 = self.time_internal[1]
         n = int((t1 - t0) / time_step) + 1
-        pde_disc.time_array = np.linspace(t0, t1, n)
+        pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
 
         return pde_disc
 
