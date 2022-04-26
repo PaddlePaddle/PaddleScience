@@ -18,6 +18,7 @@ from . import config
 from . import parameter
 from . import geometry
 from . import bc
+from . import ic
 from . import pde
 from . import network
 from . import algorithm

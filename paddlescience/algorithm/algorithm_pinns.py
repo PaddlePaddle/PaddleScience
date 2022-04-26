@@ -49,8 +49,9 @@ class PINNs(AlgorithmBase):
         # interior: inputs_attr["interior"]["0"]
         inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
+
         if pde.time_dependent == True and pde.time_disc_method is None:
-            data = self.__timespace(pde.time_array, points)
+            data = self.__timespace(pde.time_array[1::], points)
         else:
             data = points
         inputs.append(data)
@@ -69,14 +70,21 @@ class PINNs(AlgorithmBase):
             inputs_attr_b[name] = InputsAttr(0, 0)
         inputs_attr["boundary"] = inputs_attr_b
 
+        # initial condition for time-dependent
+        # inputs_attr["init"]["0"]
+        inputs_attr_it = OrderedDict()
+        points = pde.geometry.interior
+        if pde.time_dependent == True and pde.time_disc_method is None:
+            data = self.__timespace(pde.time_array[0:1], points)
+            inputs.append(data)
+            inputs_attr_it["0"] = InputsAttr(0, 0)
+        inputs_attr["init"] = inputs_attr_it
+
         # data: inputs_attr["data"]["0"]
         inputs_attr_d = OrderedDict()
         points = pde.geometry.data
         if points is not None:
-            if pde.time_dependent == True and pde.time_disc_method is None:
-                data = self.__timespace(pde.time_array, points)
-            else:
-                data = points
+            data = points
             inputs.append(data)
             inputs_attr_d["0"] = InputsAttr(0, 0)
         inputs_attr["data"] = inputs_attr_d
@@ -154,6 +162,26 @@ class PINNs(AlgorithmBase):
 
                 labels_attr["bc"][name_b].append(attr)
 
+        # ic: rhs and weight
+        #   - labels_attr["ic"][i]["rhs"] 
+        #   - labels_attr["ic"][i]["weight"], weight is None or scalar 
+        labels_attr["ic"] = list()
+
+        for ic in pde.ic:
+            attr = dict()
+            # rhs
+            rhs = ic.rhs_disc
+            if (rhs is None) or np.isscalar(rhs):
+                attr["rhs"] = rhs
+            elif type(rhs) is np.ndarray:
+                attr["rhs"] = LabelInt(len(labels))
+                labels.append(rhs)
+            # weight
+            weight = ic.weight_disc
+            attr["weight"] = weight
+
+            labels_attr["ic"].append(attr)
+
         # data_n: real data of previous time-step
         # in time-discretized equation
         #   - labels_attr["data_n"][i]
@@ -181,7 +209,6 @@ class PINNs(AlgorithmBase):
         inputs = inputs_labels[0:ninputs]  # inputs is from zero to ninputs
         labels = inputs_labels[ninputs::]  # labels is the rest
 
-        # interior outputs and loss
         n = 0
         loss = 0.0
 
@@ -220,6 +247,24 @@ class PINNs(AlgorithmBase):
             outs.append(out_b)
             n += 1
         loss += paddle.sqrt(loss_bc)
+
+        # ic loss
+        loss_ic = 0.0
+        for name_ic, input_attr in inputs_attr["init"].items():
+            input = inputs[n]
+            loss_it, out_it = self.loss.ic_loss(
+                pde,
+                self.net,
+                name_ic,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs=-1)
+            loss_ic += loss_it
+            outs.append(out_it)
+            n += 1
+        loss += paddle.sqrt(loss_ic)
 
         # data loss
         for name_d, input_attr in inputs_attr["data"].items():

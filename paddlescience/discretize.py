@@ -97,4 +97,18 @@ def discretize(pde,
             else:
                 b.rhs_disc = b.rhs
 
+    # discretize rhs in initial condition
+    for ic in pde_disc.ic:
+        points_i = pde_disc.geometry.interior
+
+        data = list()
+        for n in range(len(points_i[0])):
+            data.append(points_i[:, n])
+
+        rhs = ic.rhs
+        if type(rhs) == types.LambdaType:
+            ic.rhs_disc = rhs(*data)
+        else:
+            ic.rhs_disc = rhs
+
     return pde_disc

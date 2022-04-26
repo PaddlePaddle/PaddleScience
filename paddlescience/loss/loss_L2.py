@@ -134,8 +134,24 @@ class L2(LossBase):
 
         return loss, cmploss.outs
 
-    def ic_loss(self, u, batch_id):
-        pass
+    def ic_loss(self, pde, net, name_ic, input, input_attr, labels,
+                labels_attr, bs):
+
+        # compute outs
+        cmploss = CompFormula(pde, net)
+        rst = cmploss.compute_outs(input, bs)
+
+        loss = 0.0
+        for i in range(len(pde.ic)):
+            formula = pde.ic[i].formula
+            rst = cmploss.compute_formula(formula, input, input_attr, labels,
+                                          labels_attr, None)
+            idx = labels_attr["ic"][i]["rhs"]
+            rhs = labels[idx]
+            wgt = labels_attr["ic"][i]["weight"]
+            loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+
+        return loss, cmploss.outs
 
     # compute loss on real data 
     def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):

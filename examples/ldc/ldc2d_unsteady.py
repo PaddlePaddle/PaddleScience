@@ -71,6 +71,10 @@ pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
+ic_u = psci.ic.IC('u', rhs=lambda x, y: x + y)
+ic_v = psci.ic.IC('v', rhs=lambda x, y: x + y)
+pde.add_ic(ic_u, ic_v)
+
 # discretization
 pde_disc = psci.discretize(
     pde, time_step=0.1, space_npoints=25, space_method="uniform")

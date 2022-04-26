@@ -44,6 +44,9 @@ class PDE:
         # boundary condition
         self.bc = OrderedDict()
 
+        # initial condition
+        self.ic = list()
+
         # geometry
         self.geometry = None
 
@@ -77,6 +80,11 @@ class PDE:
         for arg in args:
             arg.to_formula(self.indvar)
             self.bc[name].append(arg)
+
+    def add_ic(self, *args):
+        for arg in args:
+            arg.to_formula(self.indvar)
+            self.ic.append(arg)
 
     def set_time_interval(self, interval):
         self.time_internal = interval
