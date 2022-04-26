@@ -26,7 +26,6 @@ class FCNet(NetworkBase):
         num_outs(int): Number of outputs.
         num_layers(int): Number of layers.
         hidden_size(int): Hiden size in each layer.
-        dtype(string): Optional, default 'float32'. The data type of the weights and bias, we only support 'float32' now.
         activation(string): Optional, default 'tanh'. The type of activation function used in each layer, could be 'tanh' or 'sigmoid'.
 
     Example:
@@ -39,7 +38,6 @@ class FCNet(NetworkBase):
                  num_outs,
                  num_layers,
                  hidden_size,
-                 dtype='float32',
                  activation='tanh'):
         super(FCNet, self).__init__()
 
@@ -47,7 +45,6 @@ class FCNet(NetworkBase):
         self.num_outs = num_outs
         self.num_layers = num_layers
         self.hidden_size = hidden_size
-        self.dtype = dtype
 
         self.weights = []
         self.biases = []
@@ -87,9 +84,9 @@ class FCNet(NetworkBase):
                 rsize = self.hidden_size
 
             w = self.create_parameter(
-                shape=[lsize, rsize], dtype=self.dtype, is_bias=False)
+                shape=[lsize, rsize], dtype=self._dtype, is_bias=False)
             b = self.create_parameter(
-                shape=[rsize], dtype=self.dtype, is_bias=True)
+                shape=[rsize], dtype=self._dtype, is_bias=True)
             self.weights.append(w)
             self.biases.append(b)
             self.add_parameter("w_" + str(i), w)
@@ -108,9 +105,9 @@ class FCNet(NetworkBase):
                 rsize = self.hidden_size
 
             w = paddle.static.create_parameter(
-                shape=[lsize, rsize], dtype=self.dtype, is_bias=False)
+                shape=[lsize, rsize], dtype=self._dtype, is_bias=False)
             b = paddle.static.create_parameter(
-                shape=[rsize], dtype=self.dtype, is_bias=True)
+                shape=[rsize], dtype=self._dtype, is_bias=True)
 
             self.weights.append(w)
             self.biases.append(b)

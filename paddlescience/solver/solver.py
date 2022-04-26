@@ -16,6 +16,7 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+from .. import config
 
 __all__ = ["Solver"]
 
@@ -84,6 +85,7 @@ class Solver(object):
         self.pde = pde
         self.algo = algo
         self.opt = opt
+        self._dtype = config._dtype
 
         if paddle.in_dynamic_mode():
             pass
@@ -135,12 +137,12 @@ class Solver(object):
         # convert inputs to tensor
         for i in range(ninputs):
             inputs[i] = paddle.to_tensor(
-                inputs[i], dtype='float32', stop_gradient=False)
+                inputs[i], dtype=self._dtype, stop_gradient=False)
 
         # convert label to tensor
         for i in range(nlabels):
             labels[i] = paddle.to_tensor(
-                labels[i], dtype='float32', stop_gradient=False)
+                labels[i], dtype=self._dtype, stop_gradient=False)
 
         inputs_labels = inputs + labels  # tmp to one list
 
@@ -237,7 +239,7 @@ class Solver(object):
                 input = paddle.static.data(
                     name='input' + str(i),
                     shape=inputs[i].shape,
-                    dtype='float32')
+                    dtype=self._dtype)
                 input.stop_gradient = False
                 inputs_labels.append(input)
 
@@ -246,7 +248,7 @@ class Solver(object):
                 label = paddle.static.data(
                     name='label' + str(i),
                     shape=labels[i].shape,
-                    dtype='float32')
+                    dtype=self._dtype)
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
@@ -331,7 +333,7 @@ class Solver(object):
     #             input = paddle.static.data(
     #                 name='input' + str(i),
     #                 shape=inputs[i].shape,
-    #                 dtype='float32')
+    #                 dtype=self._dtype)
     #             input.stop_gradient = False
     #             inputs.append(input)
 
@@ -382,7 +384,7 @@ class Solver(object):
         inputs_labels_spec = list()
         for i in inputs_labels:
             inputs_labels_spec.append(
-                InputSpec(i.shape, 'float32', 'input' + str(i)))
+                InputSpec(i.shape, self._dtype, 'input' + str(i)))
 
         labels_spec = None
 

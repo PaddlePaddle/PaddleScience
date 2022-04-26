@@ -25,6 +25,5 @@ from . import loss
 from . import optimizer
 from . import solver
 from . import visu
-from .discretize import discretize
-#from .discretize import sampling_discretize
 from . import data
+from .discretize import discretize

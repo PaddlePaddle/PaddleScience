@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .. import config
 from .geometry_discrete import GeometryDiscrete
 import numpy as np
 import vtk
@@ -23,6 +24,7 @@ class Geometry:
     def __init__(self):
         self.criteria = dict()  # criteria (lambda) defining boundary
         self.normal = dict()  # boundary normal direction
+        self._dtype = config._dtype
 
     def add_boundary(self, name, criteria, normal=None):
 

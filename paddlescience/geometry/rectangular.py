@@ -100,10 +100,10 @@ class Rectangular(Geometry):
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             # four vertex
-            steps.append(np.array([x1, y1], dtype="float32"))
-            steps.append(np.array([x1, y2], dtype="float32"))
-            steps.append(np.array([x2, y1], dtype="float32"))
-            steps.append(np.array([x2, y2], dtype="float32"))
+            steps.append(np.array([x1, y1], dtype=self._dtype))
+            steps.append(np.array([x1, y2], dtype=self._dtype))
+            steps.append(np.array([x2, y1], dtype=self._dtype))
+            steps.append(np.array([x2, y2], dtype=self._dtype))
 
         elif self.ndims == 3:
 
@@ -199,14 +199,14 @@ class Rectangular(Geometry):
             steps.append(self._sampling_mesh_interior(origin, extent, ne))
 
             # eight vertex
-            steps.append(np.array([x1, y1, z1], dtype="float32"))
-            steps.append(np.array([x2, y1, z1], dtype="float32"))
-            steps.append(np.array([x2, y2, z1], dtype="float32"))
-            steps.append(np.array([x1, y2, z1], dtype="float32"))
-            steps.append(np.array([x1, y1, z2], dtype="float32"))
-            steps.append(np.array([x2, y1, z2], dtype="float32"))
-            steps.append(np.array([x2, y2, z2], dtype="float32"))
-            steps.append(np.array([x1, y2, z2], dtype="float32"))
+            steps.append(np.array([x1, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z2], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z2], dtype=self._dtype))
         else:
             pass
             # TODO: error out
@@ -218,11 +218,11 @@ class Rectangular(Geometry):
         steps = list()
         for i in range(self.ndims):
             if origin[i] == extent[i]:
-                steps.append(np.full(n, origin[i], dtype="float32"))
+                steps.append(np.full(n, origin[i], dtype=self._dtype))
             else:
                 steps.append(
                     np.random.uniform(origin[i], extent[i], n).astype(
-                        "float32"))
+                        self._dtype))
 
         return np.dstack(steps).reshape((n, self.ndims))
 
@@ -236,7 +236,7 @@ class Rectangular(Geometry):
                     self.extent[i],
                     npoints[i],
                     endpoint=True,
-                    dtype='float32'))
+                    dtype=self._dtype))
 
         # meshgrid and stack to cordinates
         if (self.ndims == 1):
@@ -283,8 +283,8 @@ class CircleInRectangular(Rectangular):
             nc = int(np.sqrt(npoints))  # npoints in circle
             nr = npoints - nc  # npoints in rectangular
 
-            center = np.array(self.circle_center, dtype="float32")
-            radius = np.array(self.circle_radius, dtype="float32")
+            center = np.array(self.circle_center, dtype=self._dtype)
+            radius = np.array(self.circle_radius, dtype=self._dtype)
 
             # rectangular points
             rec = super(CircleInRectangular, self)._sampling_mesh(nr)
@@ -297,8 +297,8 @@ class CircleInRectangular(Rectangular):
             angle = np.arange(nc) * (2.0 * np.pi / nc)
 
             # TODO: when circle is larger than rec
-            x = (np.sin(angle).reshape((nc, 1)) * radius).astype("float32")
-            y = (np.cos(angle).reshape((nc, 1)) * radius).astype("float32")
+            x = (np.sin(angle).reshape((nc, 1)) * radius).astype(self._dtype)
+            y = (np.cos(angle).reshape((nc, 1)) * radius).astype(self._dtype)
             cir_b = np.concatenate([x, y], axis=1)
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
@@ -335,8 +335,8 @@ class CylinderInCube(Rectangular):
             nr = npoints - nc
             nz = int(math.pow(npoints, 1.0 / 3.0))
 
-            center = np.array(self.circle_center, dtype="float32")
-            radius = np.array(self.circle_radius, dtype="float32")
+            center = np.array(self.circle_center, dtype=self._dtype)
+            radius = np.array(self.circle_radius, dtype=self._dtype)
 
             # cube points
             cube = super(CylinderInCube, self)._sampling_mesh(nr)
@@ -349,10 +349,10 @@ class CylinderInCube(Rectangular):
 
             # add cylinder boundary points
             angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = (np.sin(angle).reshape((1, nc)) * radius).astype("float32")
-            y = (np.cos(angle).reshape((1, nc)) * radius).astype("float32")
+            x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
+            y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
             z = np.random.uniform(self.origin[2], self.extent[2],
-                                  nz).astype("float32")
+                                  nz).astype(self._dtype)
             x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
             y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
             z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z

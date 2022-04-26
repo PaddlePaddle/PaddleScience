@@ -57,12 +57,7 @@ pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2,
-    num_outs=1,
-    num_layers=10,
-    hidden_size=50,
-    dtype="float32",
-    activation='tanh')
+    num_ins=2, num_outs=1, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
 loss = psci.loss.L2()

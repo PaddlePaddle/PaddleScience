@@ -12,4 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-dtype = 'float32'
+_dtype = 'float32'
+
+
+def set_dtype(dtype):
+    global _dtype
+    _dtype = dtype
+
+
+def get_dtype():
+    global _dtype
+    return _dtype

@@ -18,6 +18,7 @@ import types
 import vtk
 from pyevtk.hl import pointsToVTK
 import paddle
+from .. import config
 
 
 # Save geometry pointwise
@@ -40,7 +41,7 @@ def save_vtk(filename="output", geo_disc=None, data=None):
 
     # data
     if data is None:
-        data_vtk = {"placeholder": np.ones(npoints, dtype="float32")}
+        data_vtk = {"placeholder": np.ones(npoints, dtype=config._dtype)}
     elif type(data) == types.LambdaType:
         data_vtk = dict()
         if ndims == 3:
@@ -59,7 +60,7 @@ def save_vtk(filename="output", geo_disc=None, data=None):
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
-        axis_z = np.zeros(npoints, dtype="float32")
+        axis_z = np.zeros(npoints, dtype=config._dtype)
         pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk)
 
 

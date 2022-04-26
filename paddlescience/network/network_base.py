@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import paddle
+from .. import config
 
 
 class NetworkBase(paddle.nn.Layer):
     def __init__(self):
         super(NetworkBase, self).__init__()
+        self._dtype = config._dtype
 
     def make_network(self):
         pass
