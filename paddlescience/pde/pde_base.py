@@ -59,6 +59,11 @@ class PDE:
         # discretize method (for time-dependent)
         self.time_disc_method = None
 
+        # time interval
+        self.time_internal = None
+        self.time_step = None
+        self.time_array = None
+
         # # u_n_disc
         # self.u_n_disc = [None for i in range(num_equations)]
 
@@ -72,3 +77,6 @@ class PDE:
         for arg in args:
             arg.to_formula(self.indvar)
             self.bc[name].append(arg)
+
+    def set_time_interval(self, interval):
+        self.time_internal = interval

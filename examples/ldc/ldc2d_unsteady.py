@@ -14,35 +14,14 @@
 
 import paddlescience as psci
 import numpy as np
+import paddle
 
+paddle.seed(1)
+np.random.seed(1)
 
-# Generate BC value
-# Every row have 2 elements which means u,v of one point in one moment
-def GenBC(txy, bc_index):
-    bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
-    for i in range(len(bc_index)):
-        id = bc_index[i]
-        if abs(txy[id][2] - 0.05) < 1e-4:
-            bc_value[i][0] = 1.0
-            bc_value[i][1] = 0.0
-        else:
-            bc_value[i][0] = 0.0
-            bc_value[i][1] = 0.0
-    return bc_value
+paddle.enable_static()
 
-
-# Generate BC weight
-def GenBCWeight(txy, bc_index):
-    bc_weight = np.zeros((len(bc_index), 2)).astype(np.float32)
-    for i in range(len(bc_index)):
-        id = bc_index[i]
-        if abs(txy[id][2] - 0.05) < 1e-4:
-            bc_weight[i][0] = 1.0 - 20 * abs(txy[id][1])
-            bc_weight[i][1] = 1.0
-        else:
-            bc_weight[i][0] = 1.0
-            bc_weight[i][1] = 1.0
-    return bc_weight
+# paddle.disable_static()
 
 
 # Generate IC value
@@ -59,75 +38,59 @@ def GenIC(txy, ic_index):
     return ic_value
 
 
-if __name__ == "__main__":
-    # Geometry
-    geo = psci.geometry.Rectangular(
-        time_dependent=True,
-        time_origin=0,
-        time_extent=0.5,
-        space_origin=(-0.05, -0.05),
-        space_extent=(0.05, 0.05))
+# set geometry and boundary
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
-    # PDE Laplace
-    pdes = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2, time_dependent=True)
+geo.add_boundary(name="top", criteria=lambda x, y: y == 0.05)
+geo.add_boundary(name="down", criteria=lambda x, y: y == -0.05)
+geo.add_boundary(name="left", criteria=lambda x, y: x == -0.05)
+geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
 
-    # Discretization
-    pdes, geo = psci.discretize(
-        pdes, geo, time_nsteps=6, space_nsteps=(101, 101))
+# N-S
+pde = psci.pde.NavierStokes(
+    nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.01)
 
-    # bc value
-    bc_value = GenBC(geo.get_domain(), geo.get_bc_index())
-    pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
+pde.set_time_interval([0.0, 0.5])
 
-    # ic value
-    ic_value = GenIC(geo.get_domain(), geo.get_ic_index())
-    pdes.set_ic_value(ic_value=ic_value, ic_check_dim=[0, 1])
+# set bounday condition
+weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=weight_top_u)
+bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
-    # Network
-    net = psci.network.FCNet(
-        num_ins=3,
-        num_outs=3,
-        num_layers=10,
-        hidden_size=50,
-        dtype="float32",
-        activation='tanh')
+pde.add_geometry(geo)
 
-    # Loss, TO rename
-    bc_weight = GenBCWeight(geo.domain, geo.bc_index)
-    loss = psci.loss.L2(pdes=pdes,
-                        geo=geo,
-                        eq_weight=0.01,
-                        bc_weight=bc_weight,
-                        synthesis_method='norm')
+# add bounday and boundary condition
+pde.add_bc("top", bc_top_u, bc_top_v)
+pde.add_bc("down", bc_down_u, bc_down_v)
+pde.add_bc("left", bc_left_u, bc_left_v)
+pde.add_bc("right", bc_right_u, bc_right_v)
 
-    # Algorithm
-    algo = psci.algorithm.PINNs(net=net, loss=loss)
+# discretization
+pde_disc = psci.discretize(
+    pde, time_step=0.1, space_npoints=100, space_method="uniform")
 
-    # Optimizer
-    opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+# Network
+# TODO: remove num_ins and num_outs
+net = psci.network.FCNet(
+    num_ins=2, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
 
-    # Solver
-    solver = psci.solver.Solver(algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=10000)
+# Loss
+loss = psci.loss.L2()
 
-    # Use solution
-    rslt = solution(geo)
-    # Get the result of last moment
-    rslt = rslt[(-geo.space_domain_size):, :]
-    u = rslt[:, 0]
-    v = rslt[:, 1]
-    u_and_v = np.sqrt(u * u + v * v)
-    psci.visu.save_vtk(geo, u, filename="rslt_u")
-    psci.visu.save_vtk(geo, v, filename="rslt_v")
-    psci.visu.save_vtk(geo, u_and_v, filename="u_and_v")
+# Algorithm
+algo = psci.algorithm.PINNs(net=net, loss=loss)
 
-    openfoam_u = np.load("../ldc2d/openfoam/openfoam_u_100.npy")
-    diff_u = u - openfoam_u
-    RSE_u = np.linalg.norm(diff_u, ord=2)
-    MSE_u = RSE_u * RSE_u / geo.get_domain_size()
-    print("MSE_u: ", MSE_u)
-    openfoam_v = np.load("../ldc2d/openfoam/openfoam_v_100.npy")
-    diff_v = v - openfoam_v
-    RSE_v = np.linalg.norm(diff_v, ord=2)
-    MSE_v = RSE_v * RSE_v / geo.get_domain_size()
-    print("MSE_v: ", MSE_v)
+# Optimizer
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+
+# Solver
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+solution = solver.solve(num_epoch=1)
+
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)

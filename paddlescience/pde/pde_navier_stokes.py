@@ -265,7 +265,9 @@ class NavierStokes(PDE):
             self.rhs.append(momentum_z_rhs)
 
     def discretize(self, time_method=None, time_step=None):
-        if time_method == "implicit":
+        if time_method is None:
+            pde_disc = self
+        elif time_method == "implicit":
             pde_disc = NavierStokesImplicit(
                 nu=self.nu, rho=self.rho, dim=self.dim, time_step=time_step)
             pde_disc.geometry = self.geometry
@@ -276,7 +278,16 @@ class NavierStokes(PDE):
                     bc_disc = bc[i].discretize(pde_disc.indvar)
                     pde_disc.bc[name].append(bc_disc)
         else:
-            pass  # TODO: error out
+            pass
+            # TODO: error out
+
+        pde_disc.time_internal = self.time_internal
+        pde_disc.time_step = time_step
+        t0 = self.time_internal[0]
+        t1 = self.time_internal[1]
+        n = int((t1 - t0) / time_step) + 1
+        pde_disc.time_array = np.linspace(t0, t1, n)
+
         return pde_disc
 
     def discretize_bc(self, geometry):

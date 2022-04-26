@@ -41,7 +41,7 @@ def discretize(pde,
     """
 
     # discretize pde
-    if pde.time_dependent and (time_method is not None):
+    if pde.time_dependent:
         pde_disc = pde.discretize(time_method, time_step)
     else:
         pde_disc = pde
