@@ -71,14 +71,16 @@ class PINNs(AlgorithmBase):
         inputs_attr["boundary"] = inputs_attr_b
 
         # initial condition for time-dependent
-        # inputs_attr["init"]["0"]
-        inputs_attr_it = OrderedDict()
-        points = pde.geometry.interior
+        # inputs_attr["ic"]["0"]
         if pde.time_dependent == True and pde.time_disc_method is None:
+            inputs_attr_it = OrderedDict()
+            points = pde.geometry.interior
             data = self.__timespace(pde.time_array[0:1], points)
             inputs.append(data)
             inputs_attr_it["0"] = InputsAttr(0, 0)
-        inputs_attr["init"] = inputs_attr_it
+            inputs_attr["ic"] = inputs_attr_it
+        else:
+            inputs_attr["ic"] = OrderedDict()
 
         # data: inputs_attr["data"]["0"]
         inputs_attr_d = OrderedDict()
@@ -166,7 +168,6 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["ic"][i]["rhs"] 
         #   - labels_attr["ic"][i]["weight"], weight is None or scalar 
         labels_attr["ic"] = list()
-
         for ic in pde.ic:
             attr = dict()
             # rhs
@@ -250,7 +251,7 @@ class PINNs(AlgorithmBase):
 
         # ic loss
         loss_ic = 0.0
-        for name_ic, input_attr in inputs_attr["init"].items():
+        for name_ic, input_attr in inputs_attr["ic"].items():
             input = inputs[n]
             loss_it, out_it = self.loss.ic_loss(
                 pde,
@@ -264,7 +265,7 @@ class PINNs(AlgorithmBase):
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
-        loss += paddle.sqrt(loss_ic)
+            loss += paddle.sqrt(loss_ic)  # TODO: multiple ic
 
         # data loss
         for name_d, input_attr in inputs_attr["data"].items():
