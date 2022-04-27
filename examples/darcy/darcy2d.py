@@ -56,13 +56,13 @@ pde.add_bc("left", bc_left)
 pde.add_bc("right", bc_right)
 
 # discretization
-npoints = 10000
+npoints = 10201
 pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2, num_outs=1, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 
 # Loss
 loss = psci.loss.L2()
@@ -75,7 +75,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=10)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
@@ -83,12 +83,14 @@ psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 # TODO: solution array to dict: interior, bc
 cord = pde_disc.geometry.interior
 ref = ref_sol(cord[:, 0], cord[:, 1])
-diff = np.linalg.norm(solution[0] - ref)
+mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
 
 n = 1
 for cord in pde_disc.geometry.boundary.values():
     ref = ref_sol(cord[:, 0], cord[:, 1])
-    diff += np.linalg.norm(solution[n] - ref)
+    mse2 += np.linalg.norm(solution[n][:, 0] - ref, ord=2)**2
     n += 1
 
-print("MSE is: ", diff / npoints)
+mse = mse2 / npoints
+
+print("MSE is: ", mse)
