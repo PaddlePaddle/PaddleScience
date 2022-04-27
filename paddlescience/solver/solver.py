@@ -185,6 +185,9 @@ class Solver(object):
             #         np.save('./checkpoint/rslt_' + str(epoch + 1) + '.npy',
             #                 self.algo.net.nn_func(self.algo.loss.geo.domain))
 
+        for i in range(len(outs)):
+            outs[i] = outs[i].numpy()
+
         return outs
         # def solution_fn(geo):
         #     if geo.time_dependent == False:

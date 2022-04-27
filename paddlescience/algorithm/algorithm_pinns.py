@@ -249,6 +249,8 @@ class PINNs(AlgorithmBase):
             n += 1
         loss += paddle.sqrt(loss_bc)
 
+        # print("loss bc: ", loss_bc)
+
         # ic loss
         loss_ic = 0.0
         for name_ic, input_attr in inputs_attr["ic"].items():

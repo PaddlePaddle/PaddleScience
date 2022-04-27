@@ -51,13 +51,13 @@ pde.add_bc("left", bc_left)
 pde.add_bc("right", bc_right)
 
 # discretization
-npoints = 10121
+npoints = 16
 pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2, num_outs=1, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 
 # Loss
 loss = psci.loss.L2()
@@ -70,7 +70,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=100)
+solution = solver.solve(num_epoch=1)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
