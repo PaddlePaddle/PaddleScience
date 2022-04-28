@@ -20,7 +20,9 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
+
 #paddle.disable_static()
+
 
 def GenInitPhyInfo(xyz):
     uvwp = np.zeros((len(xyz), 3)).astype(np.float32)
@@ -29,13 +31,15 @@ def GenInitPhyInfo(xyz):
             uvwp[i][0] = 1.0
     return uvwp
 
+
 def GetRealPhyInfo(time):
     use_real_data = False
     if use_real_data is True:
-        xyzuvwp = np.load("csv/flow_re20_" + str(time) + "_xyzuvwp.npy") 
+        xyzuvwp = np.load("csv/flow_re20_" + str(time) + "_xyzuvwp.npy")
     else:
         xyzuvwp = np.ones((1000, 7)).astype(np.float32)
     return xyzuvwp
+
 
 circle_center = (0.0, 0.0)
 circle_radius = 0.5
@@ -119,12 +123,7 @@ pde_disc.geometry.data = real_xyz
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=3,
-    num_outs=4,
-    num_layers=10,
-    hidden_size=50,
-    dtype="float32",
-    activation='tanh')
+    num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss, TO rename
 # bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
@@ -142,8 +141,8 @@ n = pde_disc.geometry.interior.shape[0]
 
 # Solver train t0 -> t1
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solver.feed_data_n(uvw) # add u(n)
-solver.feed_data(real_uvwp) # add real data 
+solver.feed_data_n(uvw)  # add u(n)
+solver.feed_data(real_uvwp)  # add real data 
 print("###################### start time=0.5 train task ############")
 uvw_t1 = solver.solve(num_epoch=2)
 uvw_t1 = uvw_t1[0]
@@ -154,12 +153,13 @@ print(uvw_t1.shape)
 time_step = 9
 current_uvw = uvw_t1[:, 0:3]
 for i in range(time_step):
-    current_time = 0.5 + (i+1)*0.5
-    print("###################### start time=%f train task ############"%current_time)
-    solver.feed_data_n(current_uvw) # add u(n)
+    current_time = 0.5 + (i + 1) * 0.5
+    print("###################### start time=%f train task ############" %
+          current_time)
+    solver.feed_data_n(current_uvw)  # add u(n)
     real_xyzuvwp = GetRealPhyInfo(current_time)
     real_uvwp = real_xyzuvwp[:, 3:7]
-    solver.feed_data(real_uvwp) # add real data 
+    solver.feed_data(real_uvwp)  # add real data 
     next_uvwp = solver.solve(num_epoch=2)
     # Save vtk
     psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=next_uvwp)
