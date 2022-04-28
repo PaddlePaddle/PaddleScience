@@ -52,6 +52,9 @@ class L2(LossBase):
         # compute outs, jacobian, hessian
         cmploss.compute_outs_der(input, bs)
 
+        # print(input)
+        # print(cmploss.outs[0:4,:])
+
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
@@ -87,10 +90,13 @@ class L2(LossBase):
                 else:
                     loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
 
-            # print("rst: ", rst)
+            # if i==2:
+            #     print("rst: ", rst)
+            #     exit()
             # print("rhs: ", rhs)
             # print("wgt: ", wgt)
-            # print("loss: ", loss)
+            #print("loss: ", loss)
+            #exit()
             # print("")
 
         return loss, cmploss.outs
@@ -137,6 +143,9 @@ class L2(LossBase):
                     loss += paddle.norm((rst - rhs)**2, p=1)
                 else:
                     loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+
+            # print("rhs: ", rhs)
+            # exit()
 
         return loss, cmploss.outs
 
