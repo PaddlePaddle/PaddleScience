@@ -211,8 +211,6 @@ class PINNs(AlgorithmBase):
         labels = inputs_labels[ninputs::]  # labels is the rest
 
         n = 0
-        loss = 0.0
-
         # interior outputs and loss
         loss_eq = 0.0
         for name_i, input_attr in inputs_attr["interior"].items():
@@ -229,7 +227,6 @@ class PINNs(AlgorithmBase):
             loss_eq += loss_i
             outs.append(out_i)
             n += 1
-        loss += paddle.sqrt(loss_eq)
 
         # boundary outputs and loss
         loss_bc = 0.0
@@ -247,9 +244,6 @@ class PINNs(AlgorithmBase):
             loss_bc += loss_b
             outs.append(out_b)
             n += 1
-        loss += paddle.sqrt(loss_bc)
-
-        # print("loss bc: ", loss_bc)
 
         # ic loss
         loss_ic = 0.0
@@ -267,17 +261,33 @@ class PINNs(AlgorithmBase):
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
-            loss += paddle.sqrt(loss_ic)  # TODO: multiple ic
 
         # data loss
+        loss_data = 0.0
         for name_d, input_attr in inputs_attr["data"].items():
             input = inputs[n]
             loss_d, out_d = self.loss.data_loss(
                 pde, self.net, input, input_attr, labels, labels_attr,
                 bs=-1)  # TODO: bs is not used
-            loss += loss_d
+            loss_data += loss_d
             outs.append(out_d)
             n += 1
+
+        # print("loss eq:   ", loss_eq)
+        # print("loss bc:   ", loss_bc)
+        # print("loss ic:   ", loss_ic)
+        # print("loss data: ", loss_data)
+
+        # loss
+        p = self.loss.norm_p
+        if p == 1:
+            loss = self.__sqrt(loss_eq) + self.__sqrt(loss_bc) + self.__sqrt(
+                loss_ic) + self.__sqrt(loss_data)
+        elif p == 2:
+            loss = self.__sqrt(loss_eq + loss_bc + loss_ic + loss_data)
+        else:
+            pass
+            # TODO: error out
 
         return loss, outs  # TODO: return more
 
@@ -289,3 +299,9 @@ class PINNs(AlgorithmBase):
         space_r = np.tile(space, (nt, 1)).reshape((nt * ns, 2))
         timespace = np.concatenate([time_r, space_r], axis=1)
         return timespace
+
+    def __sqrt(self, x):
+        if np.isscalar(x):
+            return np.sqrt(x)
+        else:
+            return paddle.sqrt(x)

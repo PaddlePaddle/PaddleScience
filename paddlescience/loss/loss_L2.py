@@ -39,8 +39,8 @@ class L2(LossBase):
         >>> net = psci.loss.L2(pdes=pdes, geo=geo)
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, p=1):
+        self.norm_p = p
 
     # compute loss on one interior 
     # there are multiple pde
@@ -69,9 +69,9 @@ class L2(LossBase):
             if wgt_eq is None:
                 wgt = None
             elif type(wgt_eq) == LabelInt:
-                wgt = paddle.sqrt(labels[wgt_eq])
+                wgt = labels[wgt_eq]
             elif np.isscalar(wgt_eq):
-                wgt = np.sqrt(wgt_eq)
+                wgt = wgt_eq
             else:
                 pass
                 # TODO: error out
@@ -86,6 +86,12 @@ class L2(LossBase):
                     loss += paddle.norm((rst - rhs)**2, p=1)
                 else:
                     loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+
+            # print("rst: ", rst)
+            # print("rhs: ", rhs)
+            # print("wgt: ", wgt)
+            # print("loss: ", loss)
+            # print("")
 
         return loss, cmploss.outs
 
@@ -117,9 +123,9 @@ class L2(LossBase):
             if wgt_b is None:
                 wgt = None
             elif type(wgt_b) == LabelInt:
-                wgt = paddle.sqrt(labels[wgt_b])
+                wgt = labels[wgt_b]
             else:
-                wgt = np.sqrt(wgt_b)
+                wgt = wgt_b
 
             if rhs is None:
                 if wgt is None:
