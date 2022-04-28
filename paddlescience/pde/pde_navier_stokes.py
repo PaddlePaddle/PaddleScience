@@ -354,7 +354,7 @@ class NavierStokesImplicit(PDE):
             self.normal = sympy.Symbol('n')
 
             # continuty equation
-            continuty = u.diff(x) + v.diff(x)
+            continuty = u.diff(x) + v.diff(y)
             continuty_rhs = 0
 
             # momentum
@@ -410,7 +410,7 @@ class NavierStokesImplicit(PDE):
             self.dt = sympy.Symbol('dt')
 
             # continuty equation
-            continuty = u.diff(x) + v.diff(x) + w.diff(z)
+            continuty = u.diff(x) + v.diff(y) + w.diff(z)
             continuty_rhs = 0
 
             # momentum
