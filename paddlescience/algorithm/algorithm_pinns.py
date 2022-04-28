@@ -63,7 +63,7 @@ class PINNs(AlgorithmBase):
         for name in pde.bc.keys():
             points = pde.geometry.boundary[name]
             if pde.time_dependent == True and pde.time_disc_method is None:
-                data = self.__timespace(pde.time_array, points)
+                data = self.__timespace(pde.time_array[1::], points)
             else:
                 data = points
             inputs.append(data)
@@ -157,7 +157,7 @@ class PINNs(AlgorithmBase):
                 elif type(weight) is np.ndarray:
                     attr["weight"] = LabelInt(len(labels))
                     if pde.time_dependent == True and pde.time_disc_method is None:
-                        data = np.tile(weight, len(pde.time_array))
+                        data = np.tile(weight, len(pde.time_array[1::]))
                     else:
                         data = weight
                     labels.append(data)
