@@ -152,8 +152,12 @@ class L2(LossBase):
             formula = pde.ic[i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
-            idx = labels_attr["ic"][i]["rhs"]
-            rhs = labels[idx]
+
+            rhs_c = labels_attr["ic"][i]["rhs"]
+            if type(rhs_c) == LabelInt:
+                rhs = labels[rhs_c]
+            else:
+                rhs = rhs_c
             wgt = labels_attr["ic"][i]["weight"]
             loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
 

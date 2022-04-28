@@ -20,35 +20,19 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
-
 # paddle.disable_static()
-
-
-# Generate IC value
-def GenIC(txy, ic_index):
-    ic_value = np.zeros((len(ic_index), 2)).astype(np.float32)
-    for i in range(len(ic_index)):
-        id = ic_index[i]
-        if abs(txy[id][2] - 0.05) < 1e-4:
-            ic_value[i][0] = 1.0
-            ic_value[i][1] = 0.0
-        else:
-            ic_value[i][0] = 0.0
-            ic_value[i][1] = 0.0
-    return ic_value
-
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
-geo.add_boundary(name="top", criteria=lambda x, y: y == 0.05)
-geo.add_boundary(name="down", criteria=lambda x, y: y == -0.05)
-geo.add_boundary(name="left", criteria=lambda x, y: x == -0.05)
-geo.add_boundary(name="right", criteria=lambda x, y: x == 0.05)
+geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
+geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
+geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
+geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
 
 # N-S
 pde = psci.pde.NavierStokes(
-    nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.01)
+    nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
 
 pde.set_time_interval([0.0, 0.5])
 
@@ -71,13 +55,15 @@ pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
-ic_u = psci.ic.IC('u', rhs=lambda x, y: x + y)
-ic_v = psci.ic.IC('v', rhs=lambda x, y: x + y)
+# add initial condition
+ic_u = psci.ic.IC('u', rhs=0.0)
+ic_v = psci.ic.IC('v', rhs=0.0)
 pde.add_ic(ic_u, ic_v)
 
 # discretization
+npoints = 16
 pde_disc = psci.discretize(
-    pde, time_step=0.1, space_npoints=25, space_method="uniform")
+    pde, time_step=0.1, space_npoints=npoints, space_method="uniform")
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -85,7 +71,7 @@ net = psci.network.FCNet(
     num_ins=3, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
-loss = psci.loss.L2()
+loss = psci.loss.L2(p=2)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
