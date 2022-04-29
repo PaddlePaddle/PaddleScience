@@ -88,7 +88,7 @@ class Solver(object):
         self._dtype = config._dtype
 
         if paddle.in_dynamic_mode():
-            pass
+            self.__init_dynamic()
         else:
             if paddle.distributed.get_world_size() == 1:
                 self.__init_static()
@@ -106,8 +106,16 @@ class Solver(object):
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
+    def feed_data_n(self, data_n):
+        self.labels = self.algo.feed_labels_data_n(self.labels,
+                                                   self.labels_attr, data_n)
+
+    def feed_data(self, data):
+        self.labels = self.algo.feed_labels_data(self.labels, self.labels_attr,
+                                                 data)
+
     # solve in dynamic mode
-    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+    def __init_dynamic(self):
         """
         Train the network with respect to num_epoch.
  
@@ -129,6 +137,18 @@ class Solver(object):
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         labels, labels_attr = self.algo.create_labels(self.pde)
+
+        self.inputs = inputs
+        self.inputs_attr = inputs_attr
+        self.labels = labels
+        self.labels_attr = labels_attr
+
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+
+        inputs = self.inputs
+        inputs_attr = self.inputs_attr
+        labels = self.labels
+        labels_attr = self.labels_attr
 
         # number of inputs and labels
         ninputs = len(inputs)
@@ -164,26 +184,6 @@ class Solver(object):
 
             print("dynamic epoch: " + str(epoch + 1), "    loss:",
                   loss.numpy()[0])
-
-            # print("epoch/num_epoch: ", epoch + 1, "/", num_epoch,
-            #       "batch/num_batch: ", batch_id + 1, "/", num_batch,
-            #       "loss: ",
-            #       loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-            #       "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
-            #       losses[2].numpy()[0])
-
-            # if (epoch + 1) % checkpoint_freq == 0:
-            #     paddle.save(self.algo.net.state_dict(),
-            #                 './checkpoint/net_params_' + str(epoch + 1))
-            #     paddle.save(self.opt.state_dict(),
-            #                 './checkpoint/opt_params_' + str(epoch + 1))
-            #     if self.algo.loss.geo.time_dependent == False:
-            #         np.save(
-            #             './checkpoint/rslt_' + str(epoch + 1) + '.npy',
-            #             self.algo.net.nn_func(self.algo.loss.geo.space_domain))
-            #     else:
-            #         np.save('./checkpoint/rslt_' + str(epoch + 1) + '.npy',
-            #                 self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
@@ -267,14 +267,6 @@ class Solver(object):
 
         # start up program
         self.exe.run(self.startup_program)
-
-    def feed_data_n(self, data_n):
-        self.labels = self.algo.feed_labels_data_n(self.labels,
-                                                   self.labels_attr, data_n)
-
-    def feed_data(self, data):
-        self.labels = self.algo.feed_labels_data(self.labels, self.labels_attr,
-                                                 data)
 
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 

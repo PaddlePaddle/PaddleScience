@@ -20,7 +20,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
-#paddle.disable_static()
+# paddle.disable_static()
 
 cc = (0.0, 0.0)
 cr = 0.5
@@ -40,7 +40,7 @@ geo.add_boundary(
 pde = psci.pde.NavierStokes(nu=0.05, rho=1.0, dim=3, time_dependent=False)
 
 # boundary condition on left side: u=1, v=w=0
-bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_left_u = psci.bc.Dirichlet('u', rhs=1.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_left_w = psci.bc.Dirichlet('w', rhs=0.0)
 
@@ -59,15 +59,21 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# Discretization
+# discretization
 pde_disc = psci.discretize(pde, space_npoints=600, space_method="sampling")
 
-# Network
-# TODO: remove num_ins and num_outs
+# load real data
+real_data = np.load("flow_steady_re20/flow_re20_5.0.npy").astype("float32")
+real_cord = real_data[:, 0:3]
+real_sol = real_data[:, 3:7]
+
+pde_disc.geometry.data = real_cord
+
+# network
 net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
-# Loss
+# loss
 loss = psci.loss.L2(p=2)
 
 # Algorithm
@@ -78,7 +84,10 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1)
+
+solver.feed_data(real_sol)  # add real solution
+
+solution = solver.solve(num_epoch=10)
 
 # TODO 5. label physic_info
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
