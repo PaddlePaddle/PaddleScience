@@ -57,14 +57,14 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
         for t in range(nt):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
+            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
         for t in range(nt):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
+            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
@@ -90,7 +90,7 @@ def __concatenate_geo(geo_disc):
 # concatenate data
 def __concatenate_data(outs, nt=1):
 
-    vtkname = ["u", "v", "p", "w"]
+    vtkname = ["u1", "u2", "u3", "u4", "u5"]
 
     data = dict()
 
