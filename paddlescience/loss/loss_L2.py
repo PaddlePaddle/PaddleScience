@@ -42,7 +42,9 @@ class L2(LossBase):
                  pdes,
                  geo,
                  physic_info=None,
+                 real_data_value=None,
                  aux_func=None,
+                 real_data_loss_weight=None,
                  eq_weight=None,
                  bc_weight=None,
                  synthesis_method="add",
@@ -52,7 +54,12 @@ class L2(LossBase):
         self.pdes = pdes
         self.geo = geo
         self.physic_info = physic_info
+        if self.physic_info is not None:
+            self.physic_info = paddle.to_tensor(physic_info, dtype="float32")
+            self.physic_info.stop_gradient = True
+        self.real_data_value = real_data_value
         self.aux_func = aux_func
+        self.real_data_loss_weight = real_data_loss_weight
         self.eq_weight = eq_weight
         self.bc_weight = bc_weight
         self.synthesis_method = synthesis_method
@@ -112,14 +119,11 @@ class L2(LossBase):
 
     # Record the first order derivatives which contains [['du/dt', 'du/dx', 'du/dy', 'du/dz'],......]
     def batch_cal_first_order_derivatives(self, net, ins):
-        num_ins_mask = net.num_ins
-        if self.pdes.time_integration is True:
-            num_ins_mask = self.geo.space_dims
         d_values = batch_jacobian(net.nn_func, ins, create_graph=True)
         d_values = paddle.reshape(
             d_values, shape=[net.num_outs, self.batch_size, net.num_ins])
         for i in range(net.num_outs):
-            for j in range(num_ins_mask):
+            for j in range(net.num_ins):
                 if self.pdes.time_dependent:
                     self.d_records[first_order_derivatives[i][j]] = d_values[
                         i, :, j]
@@ -129,9 +133,6 @@ class L2(LossBase):
 
     # Record the second order derivatives which contains [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],...],...]
     def batch_cal_second_order_derivatives(self, net, ins):
-        num_ins_mask = net.num_ins
-        if self.pdes.time_integration is True:
-            num_ins_mask = self.geo.space_dims
         for i in range(net.num_outs):
 
             def func(ins):
@@ -140,8 +141,8 @@ class L2(LossBase):
             d_values = batch_hessian(func, ins, create_graph=True)
             d_values = paddle.reshape(
                 d_values, shape=[net.num_ins, self.batch_size, net.num_ins])
-            for j in range(num_ins_mask):
-                for k in range(num_ins_mask):
+            for j in range(net.num_ins):
+                for k in range(net.num_ins):
                     if self.pdes.time_dependent:
                         self.d_records[second_order_derivatives[i][j][
                             k]] = d_values[j, :, k]
@@ -164,13 +165,24 @@ class L2(LossBase):
                 for de in item.derivative:
                     tmp = tmp * self.d_records[de]
                 eq_loss_l[idx] += tmp
-            # modify the eq_loss when using time integration method
             if self.pdes.time_integration is True and idx > 0:
-                eq_loss_l[idx] -= ins[:, self.geo.space_dims + idx -
-                                      1] / self.pdes.dt
+                # [n,2] -> [n,4]
+                # eq_loss_l[idx] -= ins[:, self.geo.space_dims + idx -1] / self.pdes.dt
+                # [n,2] don't change
+                eq_loss_l[idx] -= self.physic_info[:, idx - 1] / self.pdes.dt
         self.d_records.clear()
-        eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
+        # eq_loss = paddle.reshape(paddle.stack(eq_loss_l, axis=0), shape=[-1])
+        eq_loss_l = paddle.stack(eq_loss_l, axis=0)
+        # get eq_weight
+        if self.eq_weight is not None:
+            eq_weight = paddle.to_tensor(self.eq_weight, dtype="float32")
+            eq_weight = paddle.transpose(eq_weight, perm=[1, 0])
+            eq_loss_l = eq_loss_l * eq_weight
+        eq_loss = paddle.reshape(eq_loss_l, shape=[-1])
         return paddle.norm(eq_loss, p=2)
+        #return paddle.to_tensor([0], dtype="float32")
+
+    # need to be delete
 
     def eq_loss(self, net, ins):
         self.cal_first_order_rslts(net, ins)
@@ -189,6 +201,28 @@ class L2(LossBase):
         self.d_records.clear()
         return eq_loss_l
 
+    def real_data_loss(self, u, batch_id):
+        if self.real_data_value is not None:
+            real_data_len = len(self.real_data_value)
+            # the train result 
+            real_data_u = u[-real_data_len:]
+            # the real uv data
+            space_dims = self.geo.space_dims
+            real_data_value = self.real_data_value[:, space_dims:(
+                2 * space_dims + 1)]
+            real_data_value = paddle.to_tensor(
+                real_data_value, dtype="float32")
+            real_data_value.stop_gradient = True
+            real_data_diff = real_data_u - real_data_value
+            if self.real_data_loss_weight is not None:
+                real_data_weight = paddle.to_tensor(
+                    self.real_data_loss_weight, dtype="float32")
+                real_data_diff = real_data_diff * paddle.sqrt(real_data_weight)
+            real_data_diff = paddle.reshape(real_data_diff, shape=[-1])
+            return paddle.norm(real_data_diff, p=2)
+        else:
+            return paddle.to_tensor([0], dtype="float32")
+
     def bc_loss(self, u, batch_id):
         bc_u = paddle.index_select(u, self.geo.bc_index[batch_id])
         bc_value = self.pdes.bc_value
@@ -199,8 +233,8 @@ class L2(LossBase):
             bc_weight = paddle.to_tensor(self.bc_weight, dtype="float32")
             bc_diff = bc_diff * paddle.sqrt(bc_weight)
         bc_diff = paddle.reshape(bc_diff, shape=[-1])
-        #return paddle.norm(bc_diff, p=2)
-        return paddle.to_tensor([0], dtype="float32")
+        return paddle.norm(bc_diff, p=2)
+        #return paddle.to_tensor([0], dtype="float32")
 
     def ic_loss(self, u, batch_id):
         if self.geo.time_dependent == True:
@@ -218,12 +252,15 @@ class L2(LossBase):
     def batch_run(self, net, batch_id):
         b_datas = self.geo.get_domain()
         # if use time_integration method
-        if self.pdes.time_integration == True:
-            physic_data = paddle.to_tensor(self.physic_info, dtype="float32")
-            physic_data.stop_gradient = False
-            b_datas_with_physic = paddle.concat(
-                x=[b_datas, physic_data], axis=-1)
-            b_datas = b_datas_with_physic
+        #if self.pdes.time_integration == True:
+        # [n,2] -> [n,4]
+        # physic_data = paddle.to_tensor(self.physic_info, dtype="float32")
+        # physic_data.stop_gradient = True 
+        # b_datas_with_physic = paddle.concat(
+        #     x=[b_datas, physic_data], axis=-1)
+        # b_datas = b_datas_with_physic
+        # [n,2] don't change
+        # self.physic_data = physic_data
         u = net.nn_func(b_datas)
         eq_loss = 0
         if self.run_in_batch:
@@ -234,14 +271,28 @@ class L2(LossBase):
                 eq_loss_l += self.eq_loss(net, data)
             eq_loss = paddle.stack(eq_loss_l, axis=0)
             eq_loss = paddle.norm(eq_loss, p=2)
-        eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
+        #eq_loss = eq_loss * self.eq_weight if self.eq_weight is not None else eq_loss
+        real_data_loss = self.real_data_loss(u, batch_id)
+        real_data_loss = real_data_loss * self.real_data_loss_weight if self.real_data_loss_weight is not None else real_data_loss
         bc_loss = self.bc_loss(u, batch_id)
         ic_loss = self.ic_loss(u, batch_id)
         if self.synthesis_method == 'add':
-            loss = eq_loss + bc_loss + ic_loss
-            return loss, [eq_loss, bc_loss, ic_loss]
+            if self.pdes.time_integration == True:
+                loss = eq_loss + real_data_loss + bc_loss + ic_loss
+                return loss, [eq_loss, real_data_loss, bc_loss, ic_loss]
+            else:
+                loss = eq_loss + bc_loss + ic_loss
+                return loss, [eq_loss, bc_loss, ic_loss]
         elif self.synthesis_method == 'norm':
-            losses = [eq_loss, bc_loss, ic_loss]
+            # if self.pdes.time_integration == True:
+            #     losses = [eq_loss, real_data_loss, bc_loss, ic_loss]
+            #     loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
+            #     return loss, losses
+            # else:
+            #     losses = [eq_loss, bc_loss, ic_loss]
+            #     loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
+            #     return loss, losses
+            losses = [eq_loss, real_data_loss, bc_loss]
             loss = paddle.norm(paddle.stack(losses, axis=0), p=2)
             return loss, losses
         else:

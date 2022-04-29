@@ -36,7 +36,11 @@ class Solver(object):
         self.algo = algo
         self.opt = opt
 
-    def solve(self, num_epoch=1000, batch_size=None, checkpoint_freq=1000):
+    def solve(self,
+              num_epoch=1000,
+              batch_size=None,
+              checkpoint_freq=1000,
+              first_train=True):
         """
         Train the network with respect to num_epoch.
  
@@ -54,11 +58,13 @@ class Solver(object):
             >>> solution = solver.solve(num_epoch=10000)
             >>> rslt = solution(geo)
         """
+
         batch_size = self.algo.loss.geo.get_domain_size(
         ) if batch_size is None else batch_size
-        self.algo.loss.set_batch_size(batch_size)
-        self.algo.loss.pdes.to_tensor()
-        self.algo.loss.geo.to_tensor()
+        if first_train == True:
+            self.algo.loss.set_batch_size(batch_size)
+            self.algo.loss.pdes.to_tensor()
+            self.algo.loss.geo.to_tensor()
         num_batch = self.algo.loss.num_batch
 
         for epoch_id in range(num_epoch):
@@ -67,32 +73,46 @@ class Solver(object):
                 loss.backward()
                 self.opt.step()
                 self.opt.clear_grad()
-                print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
-                      "batch/num_batch: ", batch_id + 1, "/", num_batch,
-                      "loss: ",
-                      loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                      "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
-                      losses[2].numpy()[0])
+                if self.algo.loss.pdes.time_integration == True:
+                    print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
+                          "batch/num_batch: ", batch_id + 1, "/", num_batch,
+                          "loss: ",
+                          loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
+                          "real_data_loss: ", losses[1].numpy()[0],
+                          "bc_loss: ", losses[2].numpy()[0])
+                else:
+                    print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
+                          "batch/num_batch: ", batch_id + 1, "/", num_batch,
+                          "loss: ",
+                          loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
+                          "real_data_loss: ", losses[1].numpy()[0],
+                          "bc_loss: ", losses[2].numpy()[0])
             if (epoch_id + 1) % checkpoint_freq == 0:
                 paddle.save(self.algo.net.state_dict(),
                             './checkpoint/net_params_' + str(epoch_id + 1))
                 paddle.save(self.opt.state_dict(),
                             './checkpoint/opt_params_' + str(epoch_id + 1))
                 if self.algo.loss.geo.time_dependent == False:
-                    if self.algo.loss.physic_info is False:
+                    if self.algo.loss.physic_info is None:
                         np.save(
                             './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                             self.algo.net.nn_func(
                                 self.algo.loss.geo.space_domain))
                     else:
-                        physic_data = paddle.to_tensor(
-                            self.algo.loss.physic_info, dtype="float32")
-                        input_data = paddle.concat(
-                            x=[self.algo.loss.geo.space_domain, physic_data],
-                            axis=-1)
+                        # [n,2] -> [n,4]
+                        # physic_data = paddle.to_tensor(
+                        #     self.algo.loss.physic_info, dtype="float32")
+                        # input_data = paddle.concat(
+                        #     x=[self.algo.loss.geo.space_domain, physic_data],
+                        #     axis=-1)
+                        # np.save(
+                        #     './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                        #     self.algo.net.nn_func(input_data))
+                        # [n,2] don't change
                         np.save(
                             './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                            self.algo.net.nn_func(input_data))
+                            self.algo.net.nn_func(
+                                self.algo.loss.geo.space_domain))
                 else:
                     np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                             self.algo.net.nn_func(self.algo.loss.geo.domain))
@@ -105,11 +125,16 @@ class Solver(object):
                 if physic_info is None:
                     return self.algo.net.nn_func(geo.space_domain).numpy()
                 else:
-                    physic_data = paddle.to_tensor(
+                    # [n,2] -> [n,4]
+                    # physic_data = paddle.to_tensor(
+                    #     physic_info, dtype="float32")
+                    # input_data = paddle.concat(
+                    #     x=[geo.space_domain, physic_data], axis=-1)
+                    # return self.algo.net.nn_func(input_data).numpy()
+                    # [n,2] don't change
+                    self.algo.loss.physic_info = paddle.to_tensor(
                         physic_info, dtype="float32")
-                    input_data = paddle.concat(
-                        x=[geo.space_domain, physic_data], axis=-1)
-                    return self.algo.net.nn_func(input_data).numpy()
+                    return self.algo.net.nn_func(geo.space_domain).numpy()
             else:
                 if not isinstance(geo.domain, paddle.Tensor):
                     geo.set_batch_size(geo.get_domain_size())

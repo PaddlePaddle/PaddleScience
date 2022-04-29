@@ -114,7 +114,8 @@ class CylinderInRectangular(Rectangular):
                             time_nsteps=None,
                             space_npoints=None,
                             space_nsteps=None,
-                            circle_bc_size=None):
+                            circle_bc_size=None,
+                            real_data=None):
         # check input
         self.space_npoints = (space_npoints, ) if (
             np.isscalar(space_npoints)) else space_npoints
@@ -145,6 +146,34 @@ class CylinderInRectangular(Rectangular):
             if (x_x0**2 + y_y0**2 > self.circle_radius**2):
                 space_points.append(current_point)
                 current_gen_num += 1
+
+        # more point for the cylinder around
+        # current_gen_num = 0
+        # while current_gen_num < space_npoints:
+        #     current_point = []
+        #     for j in range(self.space_ndims):
+        #         # get a random value in [space_origin[j], space_extent[j]]
+        #         random_value = self.space_origin[j] + (self.space_extent[j] -
+        #                                                self.space_origin[j]
+        #                                                ) * np.random.rand()
+        #         current_point.append(random_value)
+        #     # if the point is in circle, do not use it
+        #     x_x0 = current_point[0] - self.circle_center[0]
+        #     y_y0 = current_point[1] - self.circle_center[1]
+        #     is_not_in_cycle = (x_x0**2 + y_y0**2 > self.circle_radius**2)
+        #     # if the point is in more area
+        #     x_left = self.circle_center[0] - 2*self.circle_radius
+        #     x_right = self.circle_center[0] + 2*self.circle_radius
+        #     y_down = self.circle_center[1] - 2*self.circle_radius
+        #     y_up = self.circle_center[1] + 2*self.circle_radius 
+        #     is_in_more_area_x = ( current_point[0]> x_left and current_point[0]< x_right)
+        #     is_in_more_area_y = ( current_point[1] > y_down and current_point[1] < y_up)
+        #     # if the point is OK
+        #     if (is_not_in_cycle and (is_in_more_area_x or is_in_more_area_y)):
+        #         space_points.append(current_point)
+        #         current_gen_num += 1
+
+        # space_npoints = 2 * space_npoints
 
         # add boundry value in rectangular
         if (self.space_ndims == 2):
@@ -231,8 +260,15 @@ class CylinderInRectangular(Rectangular):
                     bc_index.append(bc_start + current_gen_circle_num + 1)
                     current_gen_circle_num += 2
 
+        # add real data
+        # real_data_len = len(real_data)
+        space_points = np.array(space_points)
+        if real_data is not None:
+            real_xy = real_data[:, 0:self.space_ndims]
+            space_points = np.concatenate((space_points, real_xy), axis=0)
+
         bc_index = np.array(bc_index)
-        space_domain = np.array(space_points)
+        space_domain = space_points
 
         # bc_index with time-domain
         nbc = len(bc_index)

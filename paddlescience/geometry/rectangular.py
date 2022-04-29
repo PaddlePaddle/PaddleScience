@@ -298,6 +298,16 @@ class Rectangular(Geometry):
                             bc_index[nbc] = k * nx * ny + j * nx + i
                             nbc += 1
 
+        # get inner_point index
+        space_all_index = np.arange(len(space_domain))
+        ip_index = np.setdiff1d(space_all_index, bc_index, assume_unique=False)
+        # print("lxd_debug: space_all_index_len %d"%len(space_domain))
+        # print(space_all_index)
+        # print("lxd_debug: bc_index %d"%len(bc_index))
+        # print(bc_index)
+        # print("lxd_debug: ip_index %d"%len(ip_index))
+        # print(ip_index)
+
         # bc_index with time-domain
         nbc = len(bc_index)
         if self.time_dependent == True:
@@ -336,12 +346,14 @@ class Rectangular(Geometry):
                 time_space_domain=domain)
             geo_disc.set_bc_index(bc_index)
             geo_disc.set_ic_index(ic_index)
+            geo_disc.set_ip_index(ip_index)
         else:
             geo_disc.set_domain(
                 space_domain=space_domain,
                 space_origin=self.space_origin,
                 space_extent=self.space_extent)
             geo_disc.set_bc_index(bc_index)
+            geo_disc.set_ip_index(ip_index)
 
         vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
         geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)

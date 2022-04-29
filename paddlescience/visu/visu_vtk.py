@@ -19,22 +19,33 @@ import copy
 
 
 # Save geometry pointwise
-def save_vtk_points(filename="output", geo=None, data=None):
+def save_vtk_points(filename="output", geo=None, data=None, input_numpy=False):
 
     # geo to numpy
-    geonp = geo.space_domain.numpy()
+    if input_numpy is False:
+        geonp = geo.space_domain.numpy()
+        print("The geonp is:")
+        print(geonp.shape)
+        # copy for vtk
+        for key in data:
+            data[key] = data[key].copy()
 
-    # copy for vtk
-    for key in data:
-        data[key] = data[key].copy()
-
-    if geo.space_dims == 3:
-        # pointsToVTK requires continuity in memory
-        axis_x = geonp[:, 0].copy()
-        axis_y = geonp[:, 1].copy()
-        axis_z = geonp[:, 2].copy()
-        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
-    elif geo.space_dims == 2:
+        if geo.space_dims == 3:
+            # pointsToVTK requires continuity in memory
+            axis_x = geonp[:, 0].copy()
+            axis_y = geonp[:, 1].copy()
+            axis_z = geonp[:, 2].copy()
+            pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
+        elif geo.space_dims == 2:
+            axis_x = geonp[:, 0].copy()
+            axis_y = geonp[:, 1].copy()
+            axis_z = np.zeros(len(geonp), dtype="float32")
+            pointsToVTK(filename, axis_x, axis_y, axis_z, data=data)
+    else:
+        geonp = geo
+        # copy for vtk
+        for key in data:
+            data[key] = data[key].copy()
         axis_x = geonp[:, 0].copy()
         axis_y = geonp[:, 1].copy()
         axis_z = np.zeros(len(geonp), dtype="float32")

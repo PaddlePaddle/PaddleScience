@@ -38,6 +38,8 @@ class GeometryDiscrete:
         self.ic_index = None
         # space BC index
         self.bc_index = None
+        # space inner point index
+        self.ip_index = None
         # visu vtk obj
         self.vtk_obj = None
         self.vtk_num_points = -1
@@ -81,6 +83,10 @@ class GeometryDiscrete:
     def set_bc_index(self, bc_index):
         self.bc_index = bc_index
 
+    # set ip index
+    def set_ip_index(self, ip_index):
+        self.ip_index = ip_index
+
     # set ic index
     def set_ic_index(self, ic_index):
         self.ic_index = ic_index
@@ -96,6 +102,18 @@ class GeometryDiscrete:
             Bounday index indicating which points are on the boundary.
         """
         return self.bc_index
+
+    # get ip index
+    def get_ip_index(self):
+        """
+        Get inner point index 
+
+        Returns
+        -------
+        ip_index: numpy array
+            Inner point index indicating which points are in the geo.
+        """
+        return self.ip_index
 
     # get bc index
     def get_ic_index(self):
@@ -153,6 +171,9 @@ class GeometryDiscrete:
         for batch_id in range(self.num_batch):
             self.bc_index[batch_id] = paddle.to_tensor(
                 self.bc_index[batch_id], dtype='int64')
+            if self.ip_index is not None:
+                self.ip_index[batch_id] = paddle.to_tensor(
+                    self.ip_index[batch_id], dtype='int64')
             if self.ic_index is not None:
                 self.ic_index[batch_id] = paddle.to_tensor(
                     self.ic_index[batch_id], dtype='int64')
@@ -176,6 +197,12 @@ class GeometryDiscrete:
             for idx in self.ic_index:
                 new_ic_index[idx // batch_size].append(idx)
             self.ic_index = [np.array(el) for el in new_ic_index]
+
+        if self.ip_index is not None:
+            new_ip_index = [[] for _ in range(self.num_batch)]
+            for idx in self.ip_index:
+                new_ip_index[idx // batch_size].append(idx)
+            self.ip_index = [np.array(el) for el in new_ip_index]
 
     def get_num_batch(self):
         return self.num_batch

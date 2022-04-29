@@ -83,12 +83,32 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000)
+solution = solver.solve(num_epoch=5000)
+
+# save weight of net
+# for name, param in net.named_parameters():
+#     print(param)
+
+# Get the grad of space_domain
+# domain_grad = geo.space_domain.grad
+# print("lxd_debug: the space domain grad is:")
+# print(domain_grad[-40:-1])
 
 # Use solution
 rslt = solution(geo)
 u = rslt[:, 0]
 v = rslt[:, 1]
+dx = 100
+print("lxd_debug: the rslt u")
+print("top point:")
+print(u[int(-dx):-1])
+print("next point:")
+print(u[int(-dx * 2):int(-dx)])
+print("far point:")
+print(u[int(-dx * 3):int(-dx * 2)])
+# output the result
+rslt_dictionary = {'u': u, 'v': v}
+psci.visu.save_vtk_points(filename="ldc2d", geo=geo, data=rslt_dictionary)
 u_and_v = np.sqrt(u * u + v * v)
 psci.visu.save_vtk(geo, u, filename="rslt_u")
 psci.visu.save_vtk(geo, v, filename="rslt_v")
