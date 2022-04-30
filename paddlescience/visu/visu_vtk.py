@@ -68,6 +68,28 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
+def __save_vtk_raw(filename="output", cordinate=None, data=None):
+
+    npoints = len(cordinate)
+    ndims = len(cordinate[0])
+
+    data_vtk = dict()
+
+    for i in range(len(data[0, :])):
+        data_vtk[str(i + 1)] = data[:, i].copy()
+
+    if ndims == 3:
+        axis_x = cordinate[:, 0].copy()
+        axis_y = cordinate[:, 1].copy()
+        axis_z = cordinate[:, 2].copy()
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+    elif ndims == 2:
+        axis_x = cordinate[:, 0].copy()
+        axis_y = cordinate[:, 1].copy()
+        axis_z = np.zeros(npoints, dtype=config._dtype)
+        pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+
+
 # concatenate cordinates of interior points and boundary points
 def __concatenate_geo(geo_disc):
 

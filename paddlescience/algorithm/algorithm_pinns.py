@@ -210,26 +210,28 @@ class PINNs(AlgorithmBase):
         inputs = inputs_labels[0:ninputs]  # inputs is from zero to ninputs
         labels = inputs_labels[ninputs::]  # labels is the rest
 
-        n = 0
-        # interior outputs and loss
+        # loss 
+        #   - interior points: eq loss
+        #   - boundary points: bc loss
+        #   - initial points:  ic loss
+        #   - data points: data loss and eq loss 
         loss_eq = 0.0
+        loss_bc = 0.0
+        loss_ic = 0.0
+        loss_data = 0.0
+
+        n = 0
+        # interior points: compute eq_loss
         for name_i, input_attr in inputs_attr["interior"].items():
             input = inputs[n]
             loss_i, out_i = self.loss.eq_loss(
-                pde,
-                self.net,
-                name_i,
-                input,
-                input_attr,
-                labels,
-                labels_attr,
+                pde, self.net, input, input_attr, labels, labels_attr,
                 bs=-1)  # TODO: bs is not used
             loss_eq += loss_i
             outs.append(out_i)
             n += 1
 
-        # boundary outputs and loss
-        loss_bc = 0.0
+        # boundary points: compute bc_loss 
         for name_b, input_attr in inputs_attr["boundary"].items():
             input = inputs[n]
             loss_b, out_b = self.loss.bc_loss(
@@ -245,32 +247,30 @@ class PINNs(AlgorithmBase):
             outs.append(out_b)
             n += 1
 
-        # ic loss
-        loss_ic = 0.0
+        # initial points: compute ic_loss
         for name_ic, input_attr in inputs_attr["ic"].items():
             input = inputs[n]
             loss_it, out_it = self.loss.ic_loss(
-                pde,
-                self.net,
-                name_ic,
-                input,
-                input_attr,
-                labels,
-                labels_attr,
-                bs=-1)
+                pde, self.net, input, input_attr, labels, labels_attr, bs=-1)
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
 
-        # data loss
-        loss_data = 0.0
+        # data points: compute data_loss and eq_loss
         for name_d, input_attr in inputs_attr["data"].items():
             input = inputs[n]
+
+            # data loss
             loss_d, out_d = self.loss.data_loss(
                 pde, self.net, input, input_attr, labels, labels_attr,
                 bs=-1)  # TODO: bs is not used
             loss_data += loss_d
             outs.append(out_d)
+
+            # eq loss
+            loss_i, out_i = self.loss.eq_loss(
+                pde, self.net, input, input_attr, labels, labels_attr, bs=-1)
+            loss_eq += loss_i
             n += 1
 
         # print("loss eq:   ", loss_eq)

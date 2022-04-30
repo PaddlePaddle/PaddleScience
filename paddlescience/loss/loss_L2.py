@@ -44,8 +44,7 @@ class L2(LossBase):
 
     # compute loss on one interior 
     # there are multiple pde
-    def eq_loss(self, pde, net, name_i, input, input_attr, labels, labels_attr,
-                bs):
+    def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -149,8 +148,7 @@ class L2(LossBase):
 
         return loss, cmploss.outs
 
-    def ic_loss(self, pde, net, name_ic, input, input_attr, labels,
-                labels_attr, bs):
+    def ic_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         # compute outs
         cmploss = CompFormula(pde, net)

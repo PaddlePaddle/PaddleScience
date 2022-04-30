@@ -13,4 +13,5 @@
 # limitations under the License.
 
 from .visu_vtk import save_vtk
+from .visu_vtk import __save_vtk_raw
 from .visu_matplotlib import save_mpl, plot_mpl

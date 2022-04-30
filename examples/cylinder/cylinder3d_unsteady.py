@@ -79,7 +79,7 @@ pde_disc = psci.discretize(
     space_method="sampling")
 
 # Get real data
-real_data = np.load("csv/flow_re200_10.00_xyzuvwp.npy")
+real_data = np.load("flow_unsteady_re200/flow_re200_10.00.npy")
 real_cord = real_data[:, 0:3]
 real_sol = real_data[:, 3:7]
 
