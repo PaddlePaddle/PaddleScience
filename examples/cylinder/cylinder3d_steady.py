@@ -60,10 +60,10 @@ pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
 # discretization
-pde_disc = psci.discretize(pde, space_npoints=600, space_method="sampling")
+pde_disc = psci.discretize(pde, space_npoints=60000, space_method="sampling")
 
 # load real data
-real_data = np.load("flow_steady_re20/flow_re20_5.0.npy").astype("float32")
+real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
 real_cord = real_data[:, 0:3]
 real_sol = real_data[:, 3:7]
 
@@ -87,7 +87,7 @@ solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 solver.feed_data(real_sol)  # add real solution
 
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=1)
 
 # TODO 5. label physic_info
 psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
