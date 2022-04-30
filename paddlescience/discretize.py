@@ -71,7 +71,7 @@ def discretize(pde,
     if (weight is None) or np.isscalar(weight):
         pde_disc.weight_disc = [weight for _ in range(len(pde.equations))]
     else:
-        pass
+        pde_disc.weight_disc = weight
         # TODO: points dependent value
 
     # discritize weight and rhs in boundary condition

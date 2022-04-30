@@ -37,7 +37,12 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.05, rho=1.0, dim=3, time_dependent=False)
+pde = psci.pde.NavierStokes(
+    nu=0.05,
+    rho=1.0,
+    dim=3,
+    time_dependent=False,
+    weight=[4.0, 0.01, 0.01, 0.01])
 
 # boundary condition on left side: u=1, v=w=0
 bc_left_u = psci.bc.Dirichlet('u', rhs=1.0)
