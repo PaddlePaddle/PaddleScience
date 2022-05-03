@@ -17,6 +17,7 @@ from .geometry_discrete import GeometryDiscrete
 import numpy as np
 import vtk
 import matplotlib.pyplot as plt
+import paddle
 
 
 # Geometry
@@ -79,5 +80,9 @@ class Geometry:
 
         # extract remain points, i.e. interior points
         geo_disc.interior = points[flag_i, :]
+
+        # padding
+        nproc = paddle.distributed.get_world_size()
+        geo_disc.padding(nproc)
 
         return geo_disc

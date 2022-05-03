@@ -265,58 +265,58 @@ class NavierStokes(PDE):
             self.rhs.append(momentum_y_rhs)
             self.rhs.append(momentum_z_rhs)
 
-    def discretize(self, time_method=None, time_step=None):
+    def time_discretize(self, time_method=None, time_step=None):
         if time_method is None:
             pde_disc = self
         elif time_method == "implicit":
             pde_disc = NavierStokesImplicit(
                 nu=self.nu, rho=self.rho, dim=self.dim, time_step=time_step)
-            pde_disc.geometry = self.geometry
+            # pde_disc.geometry = self.geometry
 
-            for name, bc in self.bc.items():
-                pde_disc.bc[name] = list()
-                for i in range(len(bc)):
-                    bc_disc = bc[i].discretize(pde_disc.indvar)
-                    pde_disc.bc[name].append(bc_disc)
+            # for name, bc in self.bc.items():
+            #     pde_disc.bc[name] = list()
+            #     for i in range(len(bc)):
+            #         bc_disc = bc[i].discretize(pde_disc.indvar)
+            #         pde_disc.bc[name].append(bc_disc)
         else:
             pass
             # TODO: error out
 
-        # time related information
-        if self.time_internal is not None:
-            pde_disc.time_internal = self.time_internal
-            pde_disc.time_step = time_step
-            t0 = self.time_internal[0]
-            t1 = self.time_internal[1]
-            n = int((t1 - t0) / time_step) + 1
-            pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
+        # # time related information
+        # if self.time_internal is not None:
+        #     pde_disc.time_internal = self.time_internal
+        #     pde_disc.time_step = time_step
+        #     t0 = self.time_internal[0]
+        #     t1 = self.time_internal[1]
+        #     n = int((t1 - t0) / time_step) + 1
+        #     pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
 
         return pde_disc
 
-    def discretize_bc(self, geometry):
+    # def discretize_bc(self, geometry):
 
-        # discritize weight and rhs in boundary condition
-        for name_b, bc in self.bc.items():
-            points_b = geometry.boundary[name_b]
+    #     # discritize weight and rhs in boundary condition
+    #     for name_b, bc in self.bc.items():
+    #         points_b = geometry.boundary[name_b]
 
-            data = list()
-            for n in range(len(points_b[0])):
-                data.append(points_b[:, n])
+    #         data = list()
+    #         for n in range(len(points_b[0])):
+    #             data.append(points_b[:, n])
 
-            # boundary weight
-            for b in bc:
-                # compute weight lambda with cordinates
-                if type(b.weight) == types.LambdaType:
-                    b.weight_disc = b.weight(*data)
-                else:
-                    b.weight_disc = b.weight
+    #         # boundary weight
+    #         for b in bc:
+    #             # compute weight lambda with cordinates
+    #             if type(b.weight) == types.LambdaType:
+    #                 b.weight_disc = b.weight(*data)
+    #             else:
+    #                 b.weight_disc = b.weight
 
-            # boundary rhs
-            for b in bc:
-                if type(b.rhs) == types.LambdaType:
-                    b.rhs_disc = b.rhs(*data)
-                else:
-                    b.rhs_disc = b.rhs
+    #         # boundary rhs
+    #         for b in bc:
+    #             if type(b.rhs) == types.LambdaType:
+    #                 b.rhs_disc = b.rhs(*data)
+    #             else:
+    #                 b.rhs_disc = b.rhs
 
 
 class NavierStokesImplicit(PDE):

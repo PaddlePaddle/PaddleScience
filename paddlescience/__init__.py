@@ -27,4 +27,3 @@ from . import optimizer
 from . import solver
 from . import visu
 from . import data
-from .discretize import discretize

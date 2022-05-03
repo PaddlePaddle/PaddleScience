@@ -22,6 +22,11 @@ np.random.seed(1)
 paddle.enable_static()
 # paddle.disable_static()
 
+# load real data
+real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
+real_cord = real_data[:, 0:3]
+real_sol = real_data[:, 3:7]
+
 cc = (0.0, 0.0)
 cr = 0.5
 geo = psci.geometry.CylinderInCube(
@@ -35,6 +40,10 @@ geo.add_boundary(name="right", criteria=lambda x, y, z: abs(x - 25.0) < 1e-4)
 geo.add_boundary(
     name="circle",
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
+
+# discretize geometry
+geo_disc = geo.discretize(npoints=60000, method="sampling")
+geo_disc.user = real_cord
 
 # N-S
 pde = psci.pde.NavierStokes(
@@ -57,22 +66,13 @@ bc_circle_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_circle_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_circle_w = psci.bc.Dirichlet('w', rhs=0.0)
 
-pde.add_geometry(geo)
-
 # add bounday and boundary condition
 pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# load real data
-real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
-real_cord = real_data[:, 0:3]
-real_sol = real_data[:, 3:7]
-
-pde.geometry.user = real_cord
-
-# discretization
-pde_disc = psci.discretize(pde, space_npoints=60000, space_method="sampling")
+# discritize pde
+pde_disc = pde.discretize(geo_disc=geo_disc)
 
 # network
 net = psci.network.FCNet(
