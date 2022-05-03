@@ -19,19 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
-#paddle.disable_static()
-
-
-def GetRealPhyInfo(time):
-    use_real_data = False
-    if use_real_data is True:
-        real_data = np.load("csv/flow_re20_" + str(time) + "_xyzuvwp.npy")
-    else:
-        real_data = np.ones((1000, 7)).astype(np.float32)
-    return real_data
-
+#paddle.enable_static()
+paddle.disable_static()
 
 cc = (0.0, 0.0)
 cr = 0.5
@@ -48,7 +37,12 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.05, rho=1.0, dim=3, time_dependent=True)
+pde = psci.pde.NavierStokes(
+    nu=0.05,
+    rho=1.0,
+    dim=3,
+    time_dependent=True,
+    weight=[4.0, 0.01, 0.01, 0.01])
 
 # boundary condition on left side: u=10, v=w=0
 bc_left_u = psci.bc.Dirichlet('u', rhs=10.0)
@@ -78,16 +72,15 @@ pde_disc = psci.discretize(
     space_npoints=600,
     space_method="sampling")
 
-# Get real data
-real_data = np.load("flow_unsteady_re200/flow_re200_10.00.npy")
+# load real data
+real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
 real_cord = real_data[:, 0:3]
-real_sol = real_data[:, 3:7]
+# real_sol = real_data[:, 3:7]
 
-# load real physic data in geo
-pde_disc.geometry.data = real_cord
+# load points in geo
+# pde_disc.geometry.data = real_cord
 
 # Network
-# TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
@@ -100,15 +93,15 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-# # Add (u0,v0,w0) message for implicit method
-# uvw = GenInitPhyInfo(pde_disc.geometry.interior)
-# n = pde_disc.geometry.interior.shape[0]
+n = len(pde_disc.geometry.interior)
+u_cur = np.ones((n, 3)).astype(np.float32)
+u_next = np.ones((n, 4)).astype(np.float32)
 
 # Solver train t0 -> t1
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
-# solver.feed_data_n(uvw)  # add u(n)
-# solver.feed_data(real_uvwp)  # add real data 
+solver.feed_data_n(u_cur)  # add u(n)
+solver.feed_data(u_next)  # add u(n+1)
 
 # print("###################### start time=0.5 train task ############")
 uvw_t1 = solver.solve(num_epoch=2)

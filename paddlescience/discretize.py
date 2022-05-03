@@ -52,8 +52,9 @@ def discretize(pde,
     nproc = paddle.distributed.get_world_size()
     pde_disc.geometry.padding(nproc)
 
-    # discritize rhs in equations
-    pde_disc.rhs_disc = list()
+    # discritize rhs in equation for interior points
+    pde_disc.rhs_disc = dict()
+    pde_disc.rhs_disc["interior"] = list()
     for rhs in pde_disc.rhs:
         points_i = pde_disc.geometry.interior
 
@@ -62,9 +63,24 @@ def discretize(pde,
             data.append(points_i[:, n])
 
         if type(rhs) == types.LambdaType:
-            pde_disc.rhs_disc.append(rhs(*data))
+            pde_disc.rhs_disc["interior"].append(rhs(*data))
         else:
-            pde_disc.rhs_disc.append(rhs)
+            pde_disc.rhs_disc["interior"].append(rhs)
+
+    # discritize rhs in equation for user points
+    if pde_disc.geometry.user is not None:
+        pde_disc.rhs_disc["user"] = list()
+        for rhs in pde_disc.rhs:
+            points_i = pde_disc.geometry.user
+
+            data = list()
+            for n in range(len(points_i[0])):
+                data.append(points_i[:, n])
+
+            if type(rhs) == types.LambdaType:
+                pde_disc.rhs_disc["user"].append(rhs(*data))
+            else:
+                pde_disc.rhs_disc["user"].append(rhs)
 
     # discretize weight in equations
     weight = pde_disc.weight
