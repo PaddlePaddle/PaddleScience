@@ -24,10 +24,10 @@ paddle.enable_static()
 
 psci.config.set_dtype("float32")
 
-# refal solution 
+# ref solution 
 ref_sol = lambda x, y: np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
 
-# refal rhs
+# ref rhs
 ref_rhs = lambda x, y: 8.0 * np.pi**2 * np.sin(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y)
 
 # set geometry and boundary
