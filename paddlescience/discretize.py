@@ -47,8 +47,12 @@ def discretize(pde,
         pde_disc = pde
 
     # discretize and padding geometry
+    user = pde.geometry.user
+
     pde_disc.geometry = pde_disc.geometry.discretize(space_method,
                                                      space_npoints)
+    pde_disc.geometry.user = user
+
     nproc = paddle.distributed.get_world_size()
     pde_disc.geometry.padding(nproc)
 

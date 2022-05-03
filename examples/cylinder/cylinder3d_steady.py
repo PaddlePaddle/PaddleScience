@@ -64,15 +64,15 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# discretization
-pde_disc = psci.discretize(pde, space_npoints=60000, space_method="sampling")
-
 # load real data
 real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
 real_cord = real_data[:, 0:3]
 real_sol = real_data[:, 3:7]
 
-pde_disc.geometry.data = real_cord
+pde.geometry.user = real_cord
+
+# discretization
+pde_disc = psci.discretize(pde, space_npoints=60000, space_method="sampling")
 
 # network
 net = psci.network.FCNet(
@@ -90,7 +90,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
-solver.feed_data(real_sol)  # add real solution
+solver.feed_data_user(real_sol)  # add real solution
 
 solution = solver.solve(num_epoch=2000)
 

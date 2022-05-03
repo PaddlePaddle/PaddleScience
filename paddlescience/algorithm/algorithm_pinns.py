@@ -196,7 +196,7 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["user"]["data_next"][i]
 
         # data_cur: solution of current time step on user points 
-        # data_next: reference solution of next time step on user points
+        # data_next: reference solution of next time step on user points 
         if pde.geometry.user is not None:
             labels_attr["user"] = OrderedDict()
 
@@ -223,13 +223,13 @@ class PINNs(AlgorithmBase):
 
                 labels_attr["user"]["equations"].append(attr)
 
-            # data_cur
+            # data next
             labels_attr["user"]["data_next"] = list()
             for i in range(len(pde.dvar)):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
                 labels.append(LabelHolder())  # placeholder with shape
 
-            # data next
+            # data cur
             if pde.time_disc_method is not None:
                 labels_attr["user"]["data_cur"] = list()
                 for i in range(len(pde.dvar_n)):
@@ -239,22 +239,25 @@ class PINNs(AlgorithmBase):
 
         return labels, labels_attr
 
-    def feed_labels_data_cur_int(self, labels, labels_attr, data_cur_int):
-        for i in range(len(pde.dvar_n)):
-            idx = labels_attr["data_cur_int"][i]
-            labels[idx] = data_cur_int[:, i]
+    def feed_data_interior_cur(self, labels, labels_attr, data):
+        n = len(labels_attr["interior"]["data_cur"])
+        for i in range(n):
+            idx = labels_attr["interior"]["data_cur"][i]
+            labels[idx] = data[:, i]
         return labels
 
-    def feed_labels_data_cur_user(self, labels, labels_attr, data_cur_user):
-        for i in range(len(pde.dvar_n)):
-            idx = labels_attr["data_cur_user"][i]
-            labels[idx] = data_cur_user[:, i]
+    def feed_data_user_cur(self, labels, labels_attr, data):
+        n = len(labels_attr["user"]["data_cur"])
+        for i in range(n):
+            idx = labels_attr["user"]["data_cur"][i]
+            labels[idx] = data[:, i]
         return labels
 
-    def feed_labels_data_next_user(self, labels, labels_attr, data_next_user):
-        for i in range(len(pde.dvar)):
-            idx = labels_attr["data_next_user"][i]
-            labels[idx] = data_next_user[:, i]
+    def feed_data_user_next(self, labels, labels_attr, data):
+        n = len(labels_attr["user"]["data_next"])
+        for i in range(n):
+            idx = labels_attr["user"]["data_next"][i]
+            labels[idx] = data[:, i]
         return labels
 
     def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,

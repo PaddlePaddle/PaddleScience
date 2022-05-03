@@ -44,7 +44,7 @@ class GeometryDiscrete:
                 self.boundary[name_b] = self.__padding_array(
                     nprocs, self.boundary[name_b])
 
-        # data
+        # user
         if type(self.user) is np.ndarray:
             self.user = self.__padding_array(nprocs, self.user)
 
@@ -81,11 +81,11 @@ class GeometryDiscrete:
             e = nb * (n + 1)
             subp.boundary[name] = b[s:e, :]
 
-        # data
+        # user
         if self.user is not None:
             nd = int(len(self.user) / nprocs)
             s = nd * n
             e = nd * (n + 1)
-            subp.data = self.user[s:e, :]
+            subp.user = self.user[s:e, :]
 
         return subp
