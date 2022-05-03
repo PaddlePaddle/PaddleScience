@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .. import config
 import numpy as np
 from collections import OrderedDict
 import types
@@ -148,7 +149,7 @@ class PDE:
         # discretize weight in equations
         weight = pde_disc.weight
         if (weight is None) or np.isscalar(weight):
-            pde_disc.weight_disc = [weight for _ in range(len(pde.equations))]
+            pde_disc.weight_disc = [weight for _ in range(len(self.equations))]
         else:
             pde_disc.weight_disc = weight
             # TODO: points dependent value

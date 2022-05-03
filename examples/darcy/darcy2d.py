@@ -38,6 +38,10 @@ geo.add_boundary(name="down", criteria=lambda x, y: y == 0.0)
 geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
 geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
 
+# discretize geometry
+npoints = 10201
+geo_disc = geo.discretize(npoints=npoints, method="uniform")
+
 # Poisson
 pde = psci.pde.Poisson(dim=2, rhs=ref_rhs)
 
@@ -47,17 +51,14 @@ bc_down = psci.bc.Dirichlet('u', rhs=ref_sol)
 bc_left = psci.bc.Dirichlet('u', rhs=ref_sol)
 bc_right = psci.bc.Dirichlet('u', rhs=ref_sol)
 
-pde.add_geometry(geo)
-
 # add bounday and boundary condition
 pde.add_bc("top", bc_top)
 pde.add_bc("down", bc_down)
 pde.add_bc("left", bc_left)
 pde.add_bc("right", bc_right)
 
-# discretization
-npoints = 10201
-pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
+# discretization pde
+pde_disc = pde.discretize(geo_disc=geo_disc)
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -75,7 +76,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=1000)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
