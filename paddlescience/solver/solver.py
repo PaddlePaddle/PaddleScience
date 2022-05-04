@@ -106,13 +106,20 @@ class Solver(object):
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
-    def feed_data_n(self, data_n):
-        self.labels = self.algo.feed_labels_data_n(self.labels,
-                                                   self.labels_attr, data_n)
+    def feed_data_interior_cur(self, data):
+        self.labels = self.algo.feed_data_interior_cur(self.labels,
+                                                       self.labels_attr, data)
 
-    def feed_data(self, data):
-        self.labels = self.algo.feed_labels_data(self.labels, self.labels_attr,
-                                                 data)
+    def feed_data_user_cur(self, data):
+        self.labels = self.algo.feed_data_user_cur(self.labels,
+                                                   self.labels_attr, data)
+
+    def feed_data_user_next(self, data):
+        self.labels = self.algo.feed_data_user_next(self.labels,
+                                                    self.labels_attr, data)
+
+    def feed_data_user(self, data):
+        self.feed_data_user_next(data)
 
     # solve in dynamic mode
     def __init_dynamic(self):

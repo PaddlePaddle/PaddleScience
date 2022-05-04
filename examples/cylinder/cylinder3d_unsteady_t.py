@@ -19,11 +19,11 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-# paddle.disable_static()
+# paddle.enable_static()
+paddle.disable_static()
 
 # load real data
-real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
+real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
 real_cord = real_data[:, 0:3]
 real_sol = real_data[:, 3:7]
 
@@ -43,18 +43,18 @@ geo.add_boundary(
 
 # discretize geometry
 geo_disc = geo.discretize(npoints=60000, method="sampling")
-geo_disc.user = real_cord
 
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.05,
     rho=1.0,
     dim=3,
-    time_dependent=False,
+    time_dependent=True,
     weight=[4.0, 0.01, 0.01, 0.01])
+pde.set_time_interval([0.0, 10.0])
 
-# boundary condition on left side: u=1, v=w=0
-bc_left_u = psci.bc.Dirichlet('u', rhs=1.0)
+# boundary condition on left side: u=10, v=w=0
+bc_left_u = psci.bc.Dirichlet('u', rhs=10.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_left_w = psci.bc.Dirichlet('w', rhs=0.0)
 
@@ -71,14 +71,20 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# discritize pde
-pde_disc = pde.discretize(geo_disc=geo_disc)
+# add initial condition
+ic_u = psci.ic.IC('u', rhs=0.0)
+ic_v = psci.ic.IC('v', rhs=0.0)
+ic_w = psci.ic.IC('w', rhs=0.0)
+pde.add_ic(ic_u, ic_v, ic_w)
 
-# network
+# discretization
+pde_disc = pde.discretize(time_step=0.5, geo_disc=geo_disc)
+
+# Network
 net = psci.network.FCNet(
-    num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=4, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
-# loss
+# Loss
 loss = psci.loss.L2(p=2)
 
 # Algorithm
@@ -87,14 +93,29 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-# Solver
-solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
+# Solver train t0 -> t1
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
-solver.feed_data_user(real_sol)  # add real solution
+# print("###################### start time=0.5 train task ############")
+uvw_t1 = solver.solve(num_epoch=2)
+# uvw_t1 = uvw_t1[0]
+# uvw_t1 = np.array(uvw_t1)
+# print(uvw_t1.shape)
 
-solution = solver.solve(num_epoch=2000)
-
-# TODO 5. label physic_info
-psci.visu.save_vtk(geo_disc=pde.geometry, data=solution)
-
-# psci.visu.__save_vtk_raw(cordinate=real_cord, data=real_sol)
+# # Solver train t1 -> tn
+# time_step = 9
+# current_uvw = uvw_t1[:, 0:3]
+# for i in range(time_step):
+#     current_time = 0.5 + (i + 1) * 0.5
+#     print("###################### start time=%f train task ############" %
+#           current_time)
+#     solver.feed_data_n(current_uvw)  # add u(n)
+#     real_xyzuvwp = GetRealPhyInfo(current_time)
+#     real_uvwp = real_xyzuvwp[:, 3:7]
+#     solver.feed_data(real_uvwp)  # add real data 
+#     next_uvwp = solver.solve(num_epoch=2)
+#     # Save vtk
+#     psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=next_uvwp)
+#     next_uvwp = next_uvwp[0]
+#     next_uvwp = np.array(next_uvwp)
+#     current_uvw = next_uvwp[:, 0:3]

@@ -27,7 +27,7 @@ class GeometryDiscrete:
         self.interior = None
         self.boundary = dict()
         self.normal = dict()
-        self.data = None
+        self.user = None
 
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
@@ -44,9 +44,9 @@ class GeometryDiscrete:
                 self.boundary[name_b] = self.__padding_array(
                     nprocs, self.boundary[name_b])
 
-        # data
-        if type(self.data) is np.ndarray:
-            self.data = self.__padding_array(nprocs, self.data)
+        # user
+        if type(self.user) is np.ndarray:
+            self.user = self.__padding_array(nprocs, self.user)
 
         # TODO: normal
 
@@ -81,11 +81,11 @@ class GeometryDiscrete:
             e = nb * (n + 1)
             subp.boundary[name] = b[s:e, :]
 
-        # data
-        if self.data is not None:
-            nd = int(len(self.data) / nprocs)
+        # user
+        if self.user is not None:
+            nd = int(len(self.user) / nprocs)
             s = nd * n
             e = nd * (n + 1)
-            subp.data = self.data[s:e, :]
+            subp.user = self.user[s:e, :]
 
         return subp

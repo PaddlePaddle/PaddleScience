@@ -163,7 +163,7 @@ class CompFormula:
 
         if item in self.dvar_n:
             f_idx = self.dvar_n.index(item)
-            idx = labels_attr["data_n"][f_idx]
+            idx = labels_attr["data_cur"][f_idx]
             return labels[idx]
 
         # TODO: support parameter pde

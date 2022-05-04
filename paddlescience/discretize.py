@@ -47,68 +47,11 @@ def discretize(pde,
         pde_disc = pde
 
     # discretize and padding geometry
+    user = pde.geometry.user
+
     pde_disc.geometry = pde_disc.geometry.discretize(space_method,
                                                      space_npoints)
+    pde_disc.geometry.user = user
+
     nproc = paddle.distributed.get_world_size()
     pde_disc.geometry.padding(nproc)
-
-    # discritize rhs in equations
-    pde_disc.rhs_disc = list()
-    for rhs in pde_disc.rhs:
-        points_i = pde_disc.geometry.interior
-
-        data = list()
-        for n in range(len(points_i[0])):
-            data.append(points_i[:, n])
-
-        if type(rhs) == types.LambdaType:
-            pde_disc.rhs_disc.append(rhs(*data))
-        else:
-            pde_disc.rhs_disc.append(rhs)
-
-    # discretize weight in equations
-    weight = pde_disc.weight
-    if (weight is None) or np.isscalar(weight):
-        pde_disc.weight_disc = [weight for _ in range(len(pde.equations))]
-    else:
-        pde_disc.weight_disc = weight
-        # TODO: points dependent value
-
-    # discritize weight and rhs in boundary condition
-    for name_b, bc in pde_disc.bc.items():
-        points_b = pde_disc.geometry.boundary[name_b]
-
-        data = list()
-        for n in range(len(points_b[0])):
-            data.append(points_b[:, n])
-
-        # boundary weight
-        for b in bc:
-            # compute weight lambda with cordinates
-            if type(b.weight) == types.LambdaType:
-                b.weight_disc = b.weight(*data)
-            else:
-                b.weight_disc = b.weight
-
-        # boundary rhs
-        for b in bc:
-            if type(b.rhs) == types.LambdaType:
-                b.rhs_disc = b.rhs(*data)
-            else:
-                b.rhs_disc = b.rhs
-
-    # discretize rhs in initial condition
-    for ic in pde_disc.ic:
-        points_i = pde_disc.geometry.interior
-
-        data = list()
-        for n in range(len(points_i[0])):
-            data.append(points_i[:, n])
-
-        rhs = ic.rhs
-        if type(rhs) == types.LambdaType:
-            ic.rhs_disc = rhs(*data)
-        else:
-            ic.rhs_disc = rhs
-
-    return pde_disc

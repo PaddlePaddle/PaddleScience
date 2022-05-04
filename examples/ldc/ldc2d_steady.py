@@ -32,6 +32,10 @@ geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
 geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
 geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
 
+# discretize geometry
+npoints = 10201
+geo_disc = geo.discretize(npoints=npoints, method="uniform")
+
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
@@ -47,17 +51,14 @@ bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
 
-pde.add_geometry(geo)
-
 # add bounday and boundary condition
 pde.add_bc("top", bc_top_u, bc_top_v)
 pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
-# discretization
-npoints = 10201
-pde_disc = psci.discretize(pde, space_npoints=npoints, space_method="uniform")
+# discretization pde
+pde_disc = pde.discretize(geo_disc=geo_disc)
 
 # Network
 # TODO: remove num_ins and num_outs

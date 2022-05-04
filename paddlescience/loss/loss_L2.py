@@ -89,15 +89,6 @@ class L2(LossBase):
                 else:
                     loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
 
-            # if i==2:
-            #     print("rst: ", rst)
-            #     exit()
-            # print("rhs: ", rhs)
-            # print("wgt: ", wgt)
-            #print("loss: ", loss)
-            #exit()
-            # print("")
-
         return loss, cmploss.outs
 
     # compute loss on one boundary
@@ -180,7 +171,7 @@ class L2(LossBase):
 
         loss = 0.0
         for i in range(len(pde.dvar)):
-            idx = labels_attr["data"][i]
+            idx = labels_attr["data_next"][i]
             data = labels[idx]
             loss += paddle.norm(cmploss.outs[:, i] - data, p=2)
             # TODO: p=2 p=1
