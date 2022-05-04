@@ -370,8 +370,9 @@ class PINNs(AlgorithmBase):
 
         nt = len(time)
         ns = len(space)
+        ndims = len(space[0])
         time_r = np.repeat(time, ns).reshape((nt * ns, 1))
-        space_r = np.tile(space, (nt, 1)).reshape((nt * ns, 2))
+        space_r = np.tile(space, (nt, 1)).reshape((nt * ns, ndims))
         timespace = np.concatenate([time_r, space_r], axis=1)
         return timespace
 

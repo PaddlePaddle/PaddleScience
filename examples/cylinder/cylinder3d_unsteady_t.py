@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-# paddle.disable_static()
+# paddle.enable_static()
+paddle.disable_static()
 
 # load real data
 real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
@@ -43,7 +43,6 @@ geo.add_boundary(
 
 # discretize geometry
 geo_disc = geo.discretize(npoints=60000, method="sampling")
-geo_disc.user = real_cord
 
 # N-S
 pde = psci.pde.NavierStokes(
@@ -72,13 +71,18 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
+# add initial condition
+ic_u = psci.ic.IC('u', rhs=0.0)
+ic_v = psci.ic.IC('v', rhs=0.0)
+ic_w = psci.ic.IC('w', rhs=0.0)
+pde.add_ic(ic_u, ic_v, ic_w)
+
 # discretization
-pde_disc = pde.discretize(
-    time_method="implicit", time_step=0.5, geo_disc=geo_disc)
+pde_disc = pde.discretize(time_step=0.5, geo_disc=geo_disc)
 
 # Network
 net = psci.network.FCNet(
-    num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=4, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
 loss = psci.loss.L2(p=2)
@@ -91,16 +95,6 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver train t0 -> t1
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-
-n = len(pde_disc.geometry.interior)
-ui_cur = np.ones((n, 3)).astype(np.float32)
-solver.feed_data_interior_cur(ui_cur)  # add u(n) interior
-
-n = len(real_cord)
-us_cur = np.ones((n, 3)).astype(np.float32)
-us_next = np.ones((n, 4)).astype(np.float32)
-solver.feed_data_user_cur(us_cur)  # add u(n) user 
-solver.feed_data_user_next(us_next)  # add u(n+1) user
 
 # print("###################### start time=0.5 train task ############")
 uvw_t1 = solver.solve(num_epoch=2)
