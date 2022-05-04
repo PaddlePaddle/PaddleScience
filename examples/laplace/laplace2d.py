@@ -27,11 +27,9 @@ ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
-
-geo.add_boundary(name="top", criteria=lambda x, y: y == 1.0)
-geo.add_boundary(name="down", criteria=lambda x, y: y == 0.0)
-geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
-geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
+geo.add_boundary(
+    name="around",
+    criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
 npoints = 10201
@@ -41,16 +39,10 @@ geo_disc = geo.discretize(npoints=npoints, method="uniform")
 pde = psci.pde.Laplace(dim=2)
 
 # set bounday condition
-bc_top = psci.bc.Dirichlet('u', rhs=ref_sol)
-bc_down = psci.bc.Dirichlet('u', rhs=ref_sol)
-bc_left = psci.bc.Dirichlet('u', rhs=ref_sol)
-bc_right = psci.bc.Dirichlet('u', rhs=ref_sol)
+bc_around = psci.bc.Dirichlet('u', rhs=ref_sol)
 
 # add bounday and boundary condition
-pde.add_bc("top", bc_top)
-pde.add_bc("down", bc_down)
-pde.add_bc("left", bc_left)
-pde.add_bc("right", bc_right)
+pde.add_bc("around", bc_around)
 
 # discretization pde
 pde_disc = pde.discretize(geo_disc=geo_disc)
@@ -71,7 +63,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1000)
+solution = solver.solve(num_epoch=10)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

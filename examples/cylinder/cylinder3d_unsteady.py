@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+# paddle.disable_static()
 
 # load real data
 real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
@@ -42,7 +42,7 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # discretize geometry
-geo_disc = geo.discretize(npoints=60000, method="sampling")
+geo_disc = geo.discretize(npoints=20000, method="sampling")
 geo_disc.user = real_cord
 
 # N-S
