@@ -19,8 +19,13 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
+# paddle.enable_static()
 paddle.disable_static()
+
+# load real data
+real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
+real_cord = real_data[:, 0:3]
+real_sol = real_data[:, 3:7]
 
 cc = (0.0, 0.0)
 cr = 0.5
@@ -36,6 +41,10 @@ geo.add_boundary(
     name="circle",
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
+# discretize geometry
+geo_disc = geo.discretize(npoints=60000, method="sampling")
+geo_disc.user = real_cord
+
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.05,
@@ -43,6 +52,7 @@ pde = psci.pde.NavierStokes(
     dim=3,
     time_dependent=True,
     weight=[4.0, 0.01, 0.01, 0.01])
+pde.set_time_interval([0.0, 10.0])
 
 # boundary condition on left side: u=10, v=w=0
 bc_left_u = psci.bc.Dirichlet('u', rhs=10.0)
@@ -57,28 +67,14 @@ bc_circle_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_circle_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_circle_w = psci.bc.Dirichlet('w', rhs=0.0)
 
-pde.add_geometry(geo)
-
 # add bounday and boundary condition
 pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# Discretization
-pde_disc = psci.discretize(
-    pde,
-    time_method="implicit",
-    time_step=0.5,
-    space_npoints=600,
-    space_method="sampling")
-
-# load real data
-real_data = np.load("flow_unsteady/flow_re200_10.00.npy").astype("float32")
-real_cord = real_data[:, 0:3]
-# real_sol = real_data[:, 3:7]
-
-# load points in geo
-# pde_disc.geometry.data = real_cord
+# discretization
+pde_disc = pde.discretize(
+    time_method="implicit", time_step=0.5, geo_disc=geo_disc)
 
 # Network
 net = psci.network.FCNet(
@@ -93,15 +89,18 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-n = len(pde_disc.geometry.interior)
-u_cur = np.ones((n, 3)).astype(np.float32)
-u_next = np.ones((n, 4)).astype(np.float32)
-
 # Solver train t0 -> t1
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
-solver.feed_data_n(u_cur)  # add u(n)
-solver.feed_data(u_next)  # add u(n+1)
+n = len(pde_disc.geometry.interior)
+ui_cur = np.ones((n, 3)).astype(np.float32)
+solver.feed_data_interior_cur(ui_cur)  # add u(n) interior
+
+n = len(real_cord)
+us_cur = np.ones((n, 3)).astype(np.float32)
+us_next = np.ones((n, 4)).astype(np.float32)
+solver.feed_data_user_cur(us_cur)  # add u(n) user 
+solver.feed_data_user_next(us_next)  # add u(n+1) user
 
 # print("###################### start time=0.5 train task ############")
 uvw_t1 = solver.solve(num_epoch=2)
