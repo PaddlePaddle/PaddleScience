@@ -20,16 +20,18 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
+# paddle.disable_static()
 
-#paddle.disable_static()
-
-
+# load real data
 def GetRealPhyInfo(time):
     use_real_data = True
     if use_real_data is True:
         real_data = np.load("flow_re200/flow_re200_" + format(time, '.2f') +
                       "_xyzuvwp.npy")
         real_data = real_data.astype(np.float32)
+        real_data = real_data[0:10000,:]
+        print("lxd_debug: the real_data size is:")
+        print(real_data.shape[0])
     else:
         real_data = np.ones((1000, 7)).astype(np.float32)
     return real_data
@@ -38,7 +40,7 @@ def GenInitPhyInfo(xyz):
     uvw = np.zeros((len(xyz), 3)).astype(np.float32)
     for i in range(len(xyz)):
         if abs(xyz[i][0] - (-8)) < 1e-4:
-            uvw[i][0] = 10.0
+            uvw[i][0] = 0.0
     return uvw
 
 cc = (0.0, 0.0)
@@ -55,8 +57,24 @@ geo.add_boundary(
     name="circle",
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
+# discretize geometry
+time_step = 0.25
+# Get real data
+real_data = GetRealPhyInfo(time_step)
+real_cord = real_data[:, 0:3]
+real_sol = real_data[:, 3:7]
+geo_disc = geo.discretize(npoints=60000, method="sampling")
+geo_disc.user = real_cord
+
 # N-S
-pde = psci.pde.NavierStokes(nu=0.05, rho=1.0, dim=3, time_dependent=True)
+pde = psci.pde.NavierStokes(
+    nu=0.05,
+    rho=1.0,
+    dim=3,
+    time_dependent=True,
+    weight=[4.0, 0.01, 0.01, 0.01])
+# TODO: ?
+pde.set_time_interval([0.0, 10.0])
 
 # boundary condition on left side: u=10, v=w=0
 bc_left_u = psci.bc.Dirichlet('u', rhs=10.0)
@@ -71,32 +89,16 @@ bc_circle_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_circle_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_circle_w = psci.bc.Dirichlet('w', rhs=0.0)
 
-pde.add_geometry(geo)
-
 # add bounday and boundary condition
 pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# Discretization
-time_step = 0.25
-pde_disc = psci.discretize(
-    pde,
-    time_method="implicit",
-    time_step=time_step,
-    space_npoints=600,
-    space_method="sampling")
-
-# Get real data
-real_data = GetRealPhyInfo(time_step)
-real_cord = real_data[:, 0:3]
-real_sol = real_data[:, 3:7]
-
-# load real physic data in geo
-pde_disc.geometry.data = real_cord
+# discretization
+pde_disc = pde.discretize(
+    time_method="implicit", time_step=time_step, geo_disc=geo_disc)
 
 # Network
-# TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
@@ -109,36 +111,43 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-# Add (u0,v0,w0) message for implicit method
-uvw_t0 = GenInitPhyInfo(pde_disc.geometry.interior)
-
 # Solver train t0 -> t1
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solver.feed_data_n(uvw_t0)  # add u(n)
-solver.feed_data(real_sol)  # add real data 
 
-print("###################### start time=0.5 train task ############")
-uvw_t1 = solver.solve(num_epoch=1000)
-psci.visu.save_vtk(geo_disc=pde.geometry, data=uvw_t1)
-uvw_t1 = uvw_t1[0]
-uvw_t1 = np.array(uvw_t1)
+# n = len(pde_disc.geometry.interior)
+# ui_cur = np.ones((n, 3)).astype(np.float32)
+ui_cur = pde_disc.geometry.interior
+solver.feed_data_interior_cur(ui_cur)  # add u(n) interior
 
-# Solver train t1 -> tn
-'''
-time_step = 39
-current_uvw = uvw_t1[:, 0:3]
-for i in range(time_step):
-    current_time = time_step + (i + 1) * time_step
-    print("###################### start time=%f train task ############" %
-          current_time)
-    solver.feed_data_n(current_uvw)  # add u(n)
-    real_xyzuvwp = GetRealPhyInfo(current_time)
-    real_uvwp = real_xyzuvwp[:, 3:7]
-    solver.feed_data(real_uvwp)  # add real data 
-    next_uvwp = solver.solve(num_epoch=2)
-    # Save vtk
-    psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=next_uvwp)
-    next_uvwp = next_uvwp[0]
-    next_uvwp = np.array(next_uvwp)
-    current_uvw = next_uvwp[:, 0:3]
-'''
+# n = len(real_cord)
+# us_cur = np.ones((n, 3)).astype(np.float32)
+# us_next = np.ones((n, 4)).astype(np.float32)
+# Add (u0,v0,w0) message for implicit method
+uvw_t0 = GenInitPhyInfo(pde_disc.geometry.interior)
+solver.feed_data_user_cur(real_cord)  # add u(n) user 
+solver.feed_data_user_next(real_sol)  # add u(n+1) user
+
+print("###################### start time=0.25 train task ############")
+uvw_t1 = solver.solve(num_epoch=2000)
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=uvw_t1)
+# uvw_t1 = uvw_t1[0]
+# uvw_t1 = np.array(uvw_t1)
+# print(uvw_t1.shape)
+
+# # Solver train t1 -> tn
+# time_step = 9
+# current_uvw = uvw_t1[:, 0:3]
+# for i in range(time_step):
+#     current_time = 0.5 + (i + 1) * 0.5
+#     print("###################### start time=%f train task ############" %
+#           current_time)
+#     solver.feed_data_n(current_uvw)  # add u(n)
+#     real_xyzuvwp = GetRealPhyInfo(current_time)
+#     real_uvwp = real_xyzuvwp[:, 3:7]
+#     solver.feed_data(real_uvwp)  # add real data 
+#     next_uvwp = solver.solve(num_epoch=2)
+#     # Save vtk
+#     psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=next_uvwp)
+#     next_uvwp = next_uvwp[0]
+#     next_uvwp = np.array(next_uvwp)
+#     current_uvw = next_uvwp[:, 0:3]
