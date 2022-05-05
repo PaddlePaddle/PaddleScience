@@ -143,7 +143,7 @@ class L2(LossBase):
 
         # compute outs
         cmploss = CompFormula(pde, net)
-        rst = cmploss.compute_outs(input, bs)
+        cmploss.compute_outs(input, bs)
 
         loss = 0.0
         for i in range(len(pde.ic)):

@@ -334,6 +334,7 @@ class NavierStokesImplicit(PDE):
 
         # time step
         self.dt = time_step
+        dt = time_step
 
         if dim == 2:
             # independent variable
@@ -404,10 +405,6 @@ class NavierStokesImplicit(PDE):
 
             # normal direction
             self.normal = sympy.Symbol('n')
-
-            # dt
-            dt = self.dt
-            self.dt = sympy.Symbol('dt')
 
             # continuty equation
             continuty = u.diff(x) + v.diff(y) + w.diff(z)

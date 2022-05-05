@@ -244,6 +244,7 @@ class PINNs(AlgorithmBase):
         for i in range(n):
             idx = labels_attr["interior"]["data_cur"][i]
             labels[idx] = data[:, i]
+            # print("idx int cur: ", idx)
         return labels
 
     def feed_data_user_cur(self, labels, labels_attr, data):
@@ -251,6 +252,7 @@ class PINNs(AlgorithmBase):
         for i in range(n):
             idx = labels_attr["user"]["data_cur"][i]
             labels[idx] = data[:, i]
+            # print("idx user cur: ", idx)
         return labels
 
     def feed_data_user_next(self, labels, labels_attr, data):
@@ -258,6 +260,7 @@ class PINNs(AlgorithmBase):
         for i in range(n):
             idx = labels_attr["user"]["data_next"][i]
             labels[idx] = data[:, i]
+            # print("idx user next: ", idx)
         return labels
 
     def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
@@ -348,10 +351,7 @@ class PINNs(AlgorithmBase):
 
             n += 1
 
-        # print("loss eq:   ", loss_eq)
-        # print("loss bc:   ", loss_bc)
-        # print("loss ic:   ", loss_ic)
-        # print("loss data: ", loss_data)
+        # print("loss eq/bc/ic/data:   ", loss_eq, loss_bc, loss_data)
 
         # loss
         p = self.loss.norm_p
