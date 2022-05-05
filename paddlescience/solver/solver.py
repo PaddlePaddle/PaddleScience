@@ -40,7 +40,8 @@ class Solver(object):
               num_epoch=1000,
               batch_size=None,
               checkpoint_freq=1000,
-              first_train=True):
+              first_train=True,
+              save_model_file_path=None):
         """
         Train the network with respect to num_epoch.
  
@@ -88,16 +89,16 @@ class Solver(object):
                           "real_data_loss: ", losses[1].numpy()[0],
                           "bc_loss: ", losses[2].numpy()[0])
             if (epoch_id + 1) % checkpoint_freq == 0:
-                paddle.save(self.algo.net.state_dict(),
-                            './checkpoint/net_params_' + str(epoch_id + 1))
-                paddle.save(self.opt.state_dict(),
-                            './checkpoint/opt_params_' + str(epoch_id + 1))
+                paddle.save(self.algo.net.state_dict(), save_model_file_path +
+                            '/checkpoint/net_params_' + str(epoch_id + 1))
+                paddle.save(self.opt.state_dict(), save_model_file_path +
+                            '/checkpoint/opt_params_' + str(epoch_id + 1))
                 if self.algo.loss.geo.time_dependent == False:
                     if self.algo.loss.physic_info is None:
-                        np.save(
-                            './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                            self.algo.net.nn_func(
-                                self.algo.loss.geo.space_domain))
+                        np.save(save_model_file_path + '/checkpoint/rslt_' +
+                                str(epoch_id + 1) + '.npy',
+                                self.algo.net.nn_func(
+                                    self.algo.loss.geo.space_domain))
                     else:
                         # [n,2] -> [n,4]
                         # physic_data = paddle.to_tensor(
@@ -109,12 +110,13 @@ class Solver(object):
                         #     './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
                         #     self.algo.net.nn_func(input_data))
                         # [n,2] don't change
-                        np.save(
-                            './checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
-                            self.algo.net.nn_func(
-                                self.algo.loss.geo.space_domain))
+                        np.save(save_model_file_path + '/checkpoint/rslt_' +
+                                str(epoch_id + 1) + '.npy',
+                                self.algo.net.nn_func(
+                                    self.algo.loss.geo.space_domain))
                 else:
-                    np.save('./checkpoint/rslt_' + str(epoch_id + 1) + '.npy',
+                    np.save(save_model_file_path + '/checkpoint/rslt_' +
+                            str(epoch_id + 1) + '.npy',
                             self.algo.net.nn_func(self.algo.loss.geo.domain))
 
         def solution_fn(geo, physic_info=None):

@@ -98,7 +98,7 @@ def GenInitPhyInfo(xyz):
     uvwp = np.zeros((len(xyz), 4)).astype(np.float32)
     for i in range(len(xyz)):
         if abs(xyz[i][0] - (-8)) < 1e-4:
-            uvwp[i][0] = 1.0
+            uvwp[i][0] = 10.0
     return uvwp
 
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     # Optimizer
     opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
-    use_saved_model = True
+    use_saved_model = False
     if use_saved_model is True:
         # load model
         layer_state_dict = paddle.load("checkpoint/net_params_1000")
@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     # Solver train t0 -> t1
     solver = psci.solver.Solver(algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=3000)
+    solution = solver.solve(num_epoch=2000, save_model_file_path=".")
     rslt_t1 = solution(geo, physic_info=uvwp)  #
     #SaveCsvFile(geo, rslt_t1, "fac3d_train_rslt_t10.0.csv")
     SaveVtkFile(geo, rslt_t1, "train_flowRe200/fac3d_train_rslt_t10s_0.25")
