@@ -173,7 +173,7 @@ class L2(LossBase):
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)
+            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
             # TODO: p=2 p=1
 
         return loss, cmploss.outs
