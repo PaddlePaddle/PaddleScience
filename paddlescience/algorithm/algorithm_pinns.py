@@ -285,6 +285,10 @@ class PINNs(AlgorithmBase):
         # interior points: compute eq_loss
         for name_i, input_attr in inputs_attr["interior"].items():
             input = inputs[n]
+
+            # print("int: ", len(input))
+            # print(input[0:5, :])
+
             loss_i, out_i = self.loss.eq_loss(
                 pde,
                 self.net,
@@ -300,6 +304,9 @@ class PINNs(AlgorithmBase):
         # boundary points: compute bc_loss 
         for name_b, input_attr in inputs_attr["bc"].items():
             input = inputs[n]
+
+            # print("bc: ", len(input))
+
             loss_b, out_b = self.loss.bc_loss(
                 pde,
                 self.net,
@@ -326,8 +333,10 @@ class PINNs(AlgorithmBase):
         for name_d, input_attr in inputs_attr["user"].items():
             input = inputs[n]
 
+            # print("user: ", len(input))
+
             # eq loss
-            loss_i, out_i = self.loss.eq_loss(
+            loss_id, out_id = self.loss.eq_loss(
                 pde,
                 self.net,
                 input,
@@ -335,7 +344,7 @@ class PINNs(AlgorithmBase):
                 labels,
                 labels_attr["user"],
                 bs=-1)
-            loss_eq += loss_i
+            loss_eq += loss_id
 
             # data loss
             loss_d, out_d = self.loss.data_loss(
@@ -347,11 +356,11 @@ class PINNs(AlgorithmBase):
                 labels_attr["user"],
                 bs=-1)  # TODO: bs is not used
             loss_data += loss_d
-            outs.append(out_d)
+            outs.append(out_id)
 
             n += 1
 
-        # print("loss eq/bc/ic/data:   ", loss_eq, loss_bc, loss_data)
+        # print("loss eq/bc/ic/data:   ", loss_eq.numpy())
 
         # loss
         p = self.loss.norm_p

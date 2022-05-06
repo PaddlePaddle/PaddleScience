@@ -270,7 +270,11 @@ class NavierStokes(PDE):
             pde_disc = self
         elif time_method == "implicit":
             pde_disc = NavierStokesImplicit(
-                nu=self.nu, rho=self.rho, dim=self.dim, time_step=time_step)
+                nu=self.nu,
+                rho=self.rho,
+                dim=self.dim,
+                time_step=time_step,
+                weight=self.weight)
             # pde_disc.geometry = self.geometry
 
             # for name, bc in self.bc.items():
@@ -321,7 +325,7 @@ class NavierStokes(PDE):
 
 class NavierStokesImplicit(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_step=None, weight=None):
-        super(NavierStokesImplicit, self).__init__(dim + 1)
+        super(NavierStokesImplicit, self).__init__(dim + 1, weight=weight)
 
         self.time_dependent = True
         self.time_disc_method = "implicit"

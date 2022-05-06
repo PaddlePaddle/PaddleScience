@@ -51,6 +51,7 @@ geo.add_boundary(
 
 # discretize geometry
 time_step = 0.25
+
 # Get real data
 real_data = GetRealPhyInfo(time_step)
 real_cord = real_data[:, 0:3]
@@ -59,6 +60,11 @@ real_solu = real_data[:, 3:7]
 geo_disc = geo.discretize(npoints=10000, method="sampling")
 geo_disc.user = real_cord
 
+geo_disc.interior = np.load("in.npy").astype("float32")
+geo_disc.boundary["left"] = np.load("bl.npy").astype("float32")
+geo_disc.boundary["right"] = np.load("br.npy").astype("float32")
+geo_disc.boundary["circle"] = np.load("bc.npy").astype("float32")
+
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.05,
@@ -66,7 +72,6 @@ pde = psci.pde.NavierStokes(
     dim=3,
     time_dependent=True,
     weight=[4.0, 0.01, 0.01, 0.01])
-# TODO: ?
 pde.set_time_interval([0.0, 10.0])
 
 # boundary condition on left side: u=10, v=w=0
@@ -123,27 +128,5 @@ solver.feed_data_user_cur(us_cur)  # add u(n) user
 solver.feed_data_user_next(us_next)  # add u(n+1) user
 
 print("###################### start time=0.25 train task ############")
-uvw_t1 = solver.solve(num_epoch=10)
+uvw_t1 = solver.solve(num_epoch=2000)
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=uvw_t1)
-
-# uvw_t1 = uvw_t1[0]
-# uvw_t1 = np.array(uvw_t1)
-# print(uvw_t1.shape)
-
-# # Solver train t1 -> tn
-# time_step = 9
-# current_uvw = uvw_t1[:, 0:3]
-# for i in range(time_step):
-#     current_time = 0.5 + (i + 1) * 0.5
-#     print("###################### start time=%f train task ############" %
-#           current_time)
-#     solver.feed_data_n(current_uvw)  # add u(n)
-#     real_xyzuvwp = GetRealPhyInfo(current_time)
-#     real_uvwp = real_xyzuvwp[:, 3:7]
-#     solver.feed_data(real_uvwp)  # add real data 
-#     next_uvwp = solver.solve(num_epoch=2)
-#     # Save vtk
-#     psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=next_uvwp)
-#     next_uvwp = next_uvwp[0]
-#     next_uvwp = np.array(next_uvwp)
-#     current_uvw = next_uvwp[:, 0:3]
