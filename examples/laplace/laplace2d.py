@@ -35,7 +35,7 @@ geo.add_boundary(
 npoints = 10201
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
-# N-S
+# 
 pde = psci.pde.Laplace(dim=2)
 
 # set bounday condition
