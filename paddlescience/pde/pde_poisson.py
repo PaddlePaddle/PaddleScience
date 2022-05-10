@@ -23,17 +23,16 @@ __all__ = ['Poisson']
 class Poisson(PDE):
     """
     Poisson Equation
-    ----------------
     
     .. math::
         \Delta u = rhs
 
     Parameter
-        dim : integer 
+        dim (integer) 
             Equation's dimention, 1, 2 and 3 are supported.
-        rhs : float or lambda function
+        rhs (float / lambda function)
             Right-hand side in equation
-        weight (optional) : float or list of float.
+        weight (optional, float / list of float)
             Weight for computing equation loss. The default value is 1.0.
 
     Example:

@@ -17,10 +17,21 @@ import numpy as np
 from collections import OrderedDict
 import types
 
+__all__ = ['PDE']
+
 
 class PDE:
+    """
+    User-define Equation
+
+    This module supports to define equations.
+
+    Example:
+        >>> import paddlescience as psci
+        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False)
+    """
+
     def __init__(self, num_equations=1, time_dependent=False, weight=None):
-        # super(MathOperator, self).__init__()
 
         # time dependent / independent
         self.time_dependent = time_dependent

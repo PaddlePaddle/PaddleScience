@@ -19,18 +19,17 @@ from ..parameter import Parameter, is_parameter
 import sympy
 import numpy as np
 
-__all__ = ['NavierStokes', 'NavierStokesImplicit']
+__all__ = ['NavierStokes']
 
 
 class NavierStokes(PDE):
     """
-    Navier-Stokes equation 
-    ----------------------
+    Navier-Stokes equation
 
     .. math::
         :nowrap:
 
-        Time-independent Navier-Stokes equation
+        Time-independent Navier-Stokes Equation
 
         \\begin{eqnarray*}
             && \\frac{\\partial u}{\\partial x} + \\frac{\\partial v}{\\partial y} + \\frac{\\partial w}{\\partial z} = 0,   \\\\

@@ -13,21 +13,17 @@
 # limitations under the License.
 
 from .pde_base import PDE
-
-__all__ = ['Laplace']
-
 import sympy
 import numpy as np
 
+__all__ = ['Laplace']
 
+
+# Laplace equation
 class Laplace(PDE):
     """
     Laplace Equation
-    ----------------
     
-    .. math::
-        \Delta u = 0
-
     Parameter
         dim : integer 
             Equation's dimention, 1, 2 and 3 are supported.

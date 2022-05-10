@@ -8,4 +8,3 @@ Geometry
 .. automodule:: paddlescience.geometry.geometry_discrete
    :members:
    :no-undoc-members:
-      

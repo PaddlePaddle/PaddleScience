@@ -17,21 +17,25 @@ from .geometry import Geometry
 import numpy as np
 import math
 
+__all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
+
 
 # Rectangular
 class Rectangular(Geometry):
-    #     """
-    #     Two dimentional rectangular
+    """
+    Two dimentional rectangular or three dimentional cube
 
-    #     Parameters:
-    #         origin: cordinate of left-bottom point of rectangular
-    #         extent: extent of rectangular
+    Parameter
+        origin : 
+            Cordinate of left-bottom point of rectangular
+        extent : 
+            Extent of rectangular
 
-    #     Example:
-    #         >>> import paddlescience as psci
-    #         >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-
-    #     """
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+        >>> geo3d = psci.geometry.Rectangular(origin=(0.0,0.0,0.0), extent=(2.0,2.0,2.0))
+    """
 
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
@@ -256,12 +260,29 @@ class Rectangular(Geometry):
         return points
 
 
-# cube 
 Cube = Rectangular
 
 
 # CircleInRectangular
 class CircleInRectangular(Rectangular):
+    """
+    Two dimentional rectangular removing one circle
+
+    Parameter
+        origin : list of float
+            Cordinate of left-bottom point of rectangular
+        extent : list of float
+            Extent of rectangular
+        circle_center : list of float
+            Center of circle
+        circle_radius: float
+            Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CycleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CircleInRectangular, self).__init__(origin, extent)
 
@@ -314,6 +335,24 @@ class CircleInRectangular(Rectangular):
 
 # CylinderInCube
 class CylinderInCube(Rectangular):
+    """
+    Three dimentional cube removing one cylinder
+
+    Parameter
+        origin : list of float
+            Cordinate of left-bottom point of rectangular
+        extent : list of float
+            Extent of rectangular
+        circle_center : list of float
+            Center of circle
+        circle_radius: float
+            Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CycleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CylinderInCube, self).__init__(origin, extent)
 
