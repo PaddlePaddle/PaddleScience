@@ -31,7 +31,7 @@ class Poisson(PDE):
     Parameter
         dim : integer 
             Equation's dimention, 1, 2 and 3 are supported.
-        rhs : float or lambda
+        rhs : float or lambda function
             Right-hand side in equation
         weight (optional) : float or list of float.
             Weight for computing equation loss. The default value is 1.0.

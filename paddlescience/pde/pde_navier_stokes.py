@@ -30,10 +30,22 @@ class NavierStokes(PDE):
     .. math::
         :nowrap:
 
+        Time-independent Navier-Stokes equation
+
         \\begin{eqnarray*}
-            \\frac{\\partial u}{\\partial x} + \\frac{\\partial u}{\\partial y} & = & 0,   \\\\
-            u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + dp/dx & = & 0,\\\\
-            u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + dp/dy & = & 0.
+            && \\frac{\\partial u}{\\partial x} + \\frac{\\partial v}{\\partial y} + \\frac{\\partial w}{\\partial z} = 0,   \\\\
+            && u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} +  w \\frac{\partial u}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + \\frac{\\partial p}{\\partial x} = 0,\\\\
+            && u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} +  w \\frac{\partial v}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + \\frac{\\partial p}{\\partial y}  = 0, \\\\
+            && u \\frac{\\partial w}{\\partial x} +  v \\frac{\partial w}{\\partial y} +  w \\frac{\partial w}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 w}{\\partial y^2} + \\frac{\\partial p}{\\partial z}  = 0.
+        \\end{eqnarray*}
+
+        Time-dependent Navier-Stokes equation
+
+        \\begin{eqnarray*}
+            && \\frac{\\partial u}{\\partial x} + \\frac{\\partial v}{\\partial y} + \\frac{\\partial w}{\\partial z} = 0,   \\\\
+            && \\frac{\\partial u}{\\partial t} + u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} +  w \\frac{\partial u}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + \\frac{\\partial p}{\\partial x} = 0,\\\\
+            && \\frac{\\partial v}{\\partial t} + u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} +  w \\frac{\partial v}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + \\frac{\\partial p}{\\partial y} = 0, \\\\
+            && \\frac{\\partial w}{\\partial t} + u \\frac{\\partial w}{\\partial x} +  v \\frac{\partial w}{\\partial y} +  w \\frac{\partial w}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 w}{\\partial y^2} + \\frac{\\partial p}{\\partial z} = 0.
         \\end{eqnarray*}
 
     Parameter
@@ -45,7 +57,7 @@ class NavierStokes(PDE):
             Equation's dimention, 2 and 3 are supported.
         time_dependent : bool
             Time-dependent or time-independent.
-        weight (optional) : float or list of float.
+        weight (optional) : float / list of float / lambda function.
             Weight for computing equation loss. The default value is 1.0.        
 
     Example:
@@ -283,13 +295,6 @@ class NavierStokes(PDE):
                 dim=self.dim,
                 time_step=time_step,
                 weight=self.weight)
-            # pde_disc.geometry = self.geometry
-
-            # for name, bc in self.bc.items():
-            #     pde_disc.bc[name] = list()
-            #     for i in range(len(bc)):
-            #         bc_disc = bc[i].discretize(pde_disc.indvar)
-            #         pde_disc.bc[name].append(bc_disc)
         else:
             pass
             # TODO: error out
