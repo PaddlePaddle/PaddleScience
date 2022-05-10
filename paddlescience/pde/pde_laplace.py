@@ -22,22 +22,45 @@ import numpy as np
 
 class Laplace(PDE):
     """
-    Two dimentional Laplace Equation
+    Laplace Equation
+    ----------------
     
     .. math::
-        \\frac{\\partial^2 u}{\\partial x^2} + \\frac{\\partial^2 u}{\\partial y^2} = 0.
+        \Delta u = 0
+
+    Parameter
+        dim : integer 
+            Equation's dimention, 1, 2 and 3 are supported.
+        weight (optional) : float or list of float.
+            Weight for computing equation loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci
-        >>> pde = psci.pde.Laplace()
+        >>> pde = psci.pde.Laplace(dim=2)
     """
-
-    # TODO: doc 
 
     def __init__(self, dim=2, weight=1.0):
         super(Laplace, self).__init__(1, weight=weight)
 
-        if dim == 2:
+        if dim == 1:
+            # independent variable
+            x = sympy.Symbol('x')
+
+            # dependent variable
+            u = sympy.Function('u')(x, )
+
+            # variables in order
+            self.indvar = [x]
+            self.dvar = [u]
+
+            # order
+            self.order = 2
+
+            # equations and rhs
+            self.equations = [u.diff(x).diff(x)]
+            self.rhs = [0.0]
+
+        elif dim == 2:
             # independent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')

@@ -22,14 +22,24 @@ __all__ = ['Poisson']
 
 class Poisson(PDE):
     """
-    Two dimentional Poisson Equation
+    Poisson Equation
+    ----------------
     
     .. math::
-        \\frac{\\partial^2 u}{\\partial x^2} + \\frac{\\partial^2 u}{\\partial y^2} = rhs.
+        \Delta u = rhs
+
+    Parameter
+        dim : integer 
+            Equation's dimention, 1, 2 and 3 are supported.
+        rhs : float or lambda
+            Right-hand side in equation
+        weight (optional) : float or list of float.
+            Weight for computing equation loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci
-        >>> pde = psci.pde.Poisson(dim=2, )
+        >>> pde = psci.pde.Poisson(dim=2, rhs=2.0)
+        >>> pde = psci.pde.Poisson(dim=2, rhs=lambda x, y: 1.0)
     """
 
     # TODO: doc 

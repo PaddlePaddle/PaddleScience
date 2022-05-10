@@ -14,6 +14,7 @@
 
 # apt-get install python3-sphinx texlive-latex-recommended texlive-latex-extra dvipng
 # pip3.7 install sphinx-rtd-theme recommonmark sphinx_copybutton sphinx_markdown_tables
+# pip3.7 install jinja2==3.0.3
 
 #python3.7 -m sphinx.cmd.quickstart --sep -p PaddleScience -a PaddlePaddle -v 0.1 -l en
 #python3.7 -msphinx --sep -p PaddleScience -a PaddlePaddle -v 0.1 -l en

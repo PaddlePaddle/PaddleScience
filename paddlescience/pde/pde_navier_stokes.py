@@ -19,10 +19,13 @@ from ..parameter import Parameter, is_parameter
 import sympy
 import numpy as np
 
+__all__ = ['NavierStokes', 'NavierStokesImplicit']
+
 
 class NavierStokes(PDE):
     """
-    Two dimentional time-independent Navier-Stokes equation  
+    Navier-Stokes equation 
+    ----------------------
 
     .. math::
         :nowrap:
@@ -33,16 +36,21 @@ class NavierStokes(PDE):
             u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + dp/dy & = & 0.
         \\end{eqnarray*}
 
-    Parameters
-    ----------
+    Parameter
         nu : float
-            Kinematic viscosity
+            Kinematic viscosity.
         rho : float
-            Density
+            Density.
+        dim : integer
+            Equation's dimention, 2 and 3 are supported.
+        time_dependent : bool
+            Time-dependent or time-independent.
+        weight (optional) : float or list of float.
+            Weight for computing equation loss. The default value is 1.0.        
 
     Example:
         >>> import paddlescience as psci
-        >>> pde = psci.pde.NavierStokes(0.01, 1.0)
+        >>> pde = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2)
     """
 
     def __init__(self,
@@ -286,41 +294,7 @@ class NavierStokes(PDE):
             pass
             # TODO: error out
 
-        # # time related information
-        # if self.time_internal is not None:
-        #     pde_disc.time_internal = self.time_internal
-        #     pde_disc.time_step = time_step
-        #     t0 = self.time_internal[0]
-        #     t1 = self.time_internal[1]
-        #     n = int((t1 - t0) / time_step) + 1
-        #     pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
-
         return pde_disc
-
-    # def discretize_bc(self, geometry):
-
-    #     # discritize weight and rhs in boundary condition
-    #     for name_b, bc in self.bc.items():
-    #         points_b = geometry.boundary[name_b]
-
-    #         data = list()
-    #         for n in range(len(points_b[0])):
-    #             data.append(points_b[:, n])
-
-    #         # boundary weight
-    #         for b in bc:
-    #             # compute weight lambda with cordinates
-    #             if type(b.weight) == types.LambdaType:
-    #                 b.weight_disc = b.weight(*data)
-    #             else:
-    #                 b.weight_disc = b.weight
-
-    #         # boundary rhs
-    #         for b in bc:
-    #             if type(b.rhs) == types.LambdaType:
-    #                 b.rhs_disc = b.rhs(*data)
-    #             else:
-    #                 b.rhs_disc = b.rhs
 
 
 class NavierStokesImplicit(PDE):
