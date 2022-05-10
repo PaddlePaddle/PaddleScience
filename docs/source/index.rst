@@ -46,6 +46,7 @@ PaddleScience is currently under active development. Its design is evolving and 
 
    paddlescience.pde <api/pde>
    paddlescience.geometry <api/geometry>
+   paddlescience.bc <api/bc>
    paddlescience.network <api/network>
    paddlescience.loss <api/loss>
    paddlescience.algorithm <api/algorithm>

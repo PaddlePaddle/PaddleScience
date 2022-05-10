@@ -48,8 +48,20 @@ class Rectangular(Geometry):
             pass  # TODO: error out
 
     def discretize(self, method="uniform", npoints=100):
+        """
+        Discretize rectangular
 
-        # TODO: scalar / list
+        Parameter
+            method: "uniform" / "sampling" 
+                Discretize rectangular using method "uniform" or "sampling"
+            npoints: integer
+                Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+        """
 
         if method == "uniform":
             if np.isscalar(npoints):
@@ -296,6 +308,20 @@ class CircleInRectangular(Rectangular):
             pass  # TODO: error out
 
     def discretize(self, method="sampling", npoints=20):
+        """
+        Discretize CircleInRectangular
+
+        Parameter
+            method: "sampling" 
+                Currently, only "sampling" method is supported
+            npoints: integer
+                Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+        """
 
         if method == "sampling":
 
@@ -366,7 +392,20 @@ class CylinderInCube(Rectangular):
             pass  # TODO: error out
 
     def discretize(self, method="sampling", npoints=1000):
+        """
+        Discretize CylinderInCube
 
+        Parameter
+            method: "sampling" 
+                Currently, only "sampling" method is supported
+            npoints: integer
+                Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+        """
         if method == "sampling":
 
             # TODO: better nc and nr

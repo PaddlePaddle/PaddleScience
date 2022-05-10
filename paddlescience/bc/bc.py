@@ -36,6 +36,23 @@ class Free(BC):
 
 
 class Dirichlet(BC):
+    """
+    Dirichlet boundary condition
+ 
+    Parameter
+        name: string
+            Name of dependent variable.
+        rhs: float / lambda function
+            Right-hand side of Dirichlet boundary condition. The default value is 0.0.
+        weight (optional) : float / lambda function
+            Weight for computing boundary loss. The default value is 1.0.
+
+    Example
+        >>> import paddlescience as psci
+        >>> bc1 = psci.bc.Dirichlet("u", rhs=0.0)
+        >>> bc2 = psci.bc.Dirichlet("u", rhs=lambda x, y: cos(x)*cosh(y))
+    """
+
     def __init__(self, name, rhs=0.0, weight=1.0):
         super(Dirichlet, self).__init__(name, weight)
         self.category = "Dirichlet"
@@ -52,6 +69,23 @@ class Dirichlet(BC):
 
 
 class Neumann(BC):
+    """
+    Neumann boundary condition
+ 
+    Parameter
+        name: string
+            Name of dependent variable
+        rhs: float / lambda function
+            Right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional) : float / lambda function
+            Weight for computing boundary loss. The default value is 1.0.
+
+    Example
+        >>> import paddlescience as psci
+        >>> bc1 = psci.bc.Neumann("u", rhs=1.0)
+        >>> bc2 = psci.bc.Neumann("u", rhs=lambda x, y: 1.0)
+    """
+
     def __init__(self, name, rhs=0.0, weight=1.0):
         super(Neumann, self).__init__(name, weight)
         self.category = "Neumann"
@@ -64,6 +98,23 @@ class Neumann(BC):
 
 
 class Robin(BC):
+    """
+    Robin boundary condition
+ 
+    Parameter
+        name: string
+            Name of dependent variable
+        rhs: float / lambda function
+            Right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional) : float / lambda function
+            Weight for computing boundary loss. The default value is 1.0.
+
+    Example
+        >>> import paddlescience as psci
+        >>> bc1 = psci.bc.Robin("u", rhs=0.0)
+        >>> bc2 = psci.bc.Robin("u", rhs=lambda x, y: 0.0)
+    """
+
     def __init__(self, name, rhs=0.0, weight=1.0):
         super(Robin, self).__init__(name, weight)
         self.category = "Robin"
@@ -73,23 +124,3 @@ class Robin(BC):
         n = sympy.Symbol('n')
         u = sympy.Function(self.name)(n)(*indvar)
         self.formula = u + u.diff(n)
-
-
-# if __name__ == "__main__":
-
-#     # set geometry and boundary
-#     geo = pcsi.geometry.Rectangular(origine=(0.0, 0.0), extent=(1.0, 1.0))
-#     geo.add_boundary(name="top", condition=lambda x, y: y == 1.0, normal=(0.0, 1.0))
-#     geo.add_boundary(name="down", condition=lambda x, y: y == 0.0, normal=(0.0, -1.0))
-
-#     # define N-S
-#     pde = psci.pde.NavierStokes(nu=0.1, rho=1.0, dim=2, time_dependent=False)
-
-#     # set bounday condition
-#     bctop_u = psci.bc.Dirichlet('u', 0)
-#     bctop_v = psci.bc.Dirichlet('v', 0)
-
-#     bcdown_u = psci.bc.Newmann('u', 0)
-
-#     # bounday and bondary condition to pde
-#     pde.add_bc("top", bctop_u, bctop_v)
