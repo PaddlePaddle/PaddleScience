@@ -24,11 +24,25 @@ class PDE:
     """
     User-define Equation
 
-    This module supports to define equations.
+    This module supports to define equations with following steps
+
+        1. define independent variable
+        2. define dependent variable
+        3. declare PDE 
+        4. set independent variable to PDE
+        5. set dependent variable to PDE
+        6. define equations and rhs
 
     Example:
         >>> import paddlescience as psci
+        >>> x = sympy.Symbol('x')
+        >>> y = sympy.Symbol('y')
+        >>> u = sympy.Function('u')(x,y)
         >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False)
+        >>> pde.indvar = [x, y]
+        >>> pde.dvar = [u]
+        >>> pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
+        >>> pde.rhs[0] = 0.0
     """
 
     def __init__(self, num_equations=1, time_dependent=False, weight=None):
@@ -110,11 +124,35 @@ class PDE:
             self.bc[name].append(arg)
 
     def add_ic(self, *args):
+        """
+        Add initial condition for time-dependent equation
+
+        Parameters:
+            args (initial conditions): The initial conditions 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=2, time_dependent=True)
+            >>> ic1 = psci.ic.IC('u', rhs=0) # u = 0 at start time
+            >>> ic2 = psci.ic.IC('v', rhs=0) # v = 0 at start time
+            >>> pde.add_ic(ic1, ic2)         # add initial conditions
+        """
         for arg in args:
             arg.to_formula(self.indvar)
             self.ic.append(arg)
 
     def set_time_interval(self, interval):
+        """
+        Set time interval for time-dependent equation
+
+        Parameters:
+            interval: [start time, end time]
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=2, time_dependent=True)
+            >>> pde.set_time_interval([0.0, 1.0]) # time interval [0.0, 1.0]
+        """
         self.time_internal = interval
 
     def discretize(self, time_method=None, time_step=None, geo_disc=None):
