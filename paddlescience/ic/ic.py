@@ -16,6 +16,21 @@ import sympy
 
 
 class IC:
+    """
+    Initial condition for time-dependent equation
+ 
+    Parameters:
+        name (string): Name of dependent variable.
+        rhs (float / lambda function): Right-hand side of initial boundary condition. The default value is 0.0.
+        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
+
+    Example
+        >>> import paddlescience as psci
+        >>> ic1 = psci.ic.IC("u")
+        >>> ic2 = psci.ic.IC("u", rhs=0.0)
+        >>> ic3 = psci.ic.IC("u", rhs=lambda x, y: cos(x)*cosh(y))
+    """
+
     def __init__(self, name, rhs=None, weight=1.0):
         self.name = name
         self.rhs = rhs

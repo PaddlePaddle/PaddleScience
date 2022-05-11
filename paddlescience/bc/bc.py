@@ -39,13 +39,10 @@ class Dirichlet(BC):
     """
     Dirichlet boundary condition
  
-    Parameter
-        name: string
-            Name of dependent variable.
-        rhs: float / lambda function
-            Right-hand side of Dirichlet boundary condition. The default value is 0.0.
-        weight (optional) : float / lambda function
-            Weight for computing boundary loss. The default value is 1.0.
+    Parameters:
+        name (string): Name of dependent variable.
+        rhs (float / lambda function): Right-hand side of Dirichlet boundary condition. The default value is 0.0.
+        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
 
     Example
         >>> import paddlescience as psci
@@ -72,13 +69,10 @@ class Neumann(BC):
     """
     Neumann boundary condition
  
-    Parameter
-        name: string
-            Name of dependent variable
-        rhs: float / lambda function
-            Right-hand side of Neumann boundary condition. The default value is 0.0.
-        weight (optional) : float / lambda function
-            Weight for computing boundary loss. The default value is 1.0.
+    Parameters:
+        name (string): Name of dependent variable
+        rhs (float / lambda function): Right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
 
     Example
         >>> import paddlescience as psci
@@ -101,13 +95,10 @@ class Robin(BC):
     """
     Robin boundary condition
  
-    Parameter
-        name: string
-            Name of dependent variable
-        rhs: float / lambda function
-            Right-hand side of Neumann boundary condition. The default value is 0.0.
-        weight (optional) : float / lambda function
-            Weight for computing boundary loss. The default value is 1.0.
+    Parameters:
+        name (string): Name of dependent variable
+        rhs (float / lambda function): Right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
 
     Example
         >>> import paddlescience as psci

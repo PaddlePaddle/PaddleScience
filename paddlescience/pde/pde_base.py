@@ -85,6 +85,23 @@ class PDE:
         self.geometry = geo
 
     def add_bc(self, name, *args):
+        """
+        Add boundary condition to boundary
+
+        Parameters:
+            name (string): Boundary name.
+            args (boundary conditions): The boundaries conditions which are added to boundary. 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
+            >>> pde = psci.pde.Laplace(dim=2)
+            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
+            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
+            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
+        """
+
         if name not in self.bc:
             self.bc[name] = list()
 

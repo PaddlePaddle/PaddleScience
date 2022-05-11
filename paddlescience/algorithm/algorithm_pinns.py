@@ -26,8 +26,8 @@ class PINNs(AlgorithmBase):
     The Physics Informed Neural Networks Algorithm.
 
     Parameters:
-        net(NetworkBase): The NN network used in PINNs algorithm.
-        loss(LossBase): The loss used in PINNs algorithm.
+        net(Network): The network used in PINNs algorithm.
+        loss(Loss): The loss used in PINNs algorithm.
 
     Example:
         >>> import paddlescience as psci

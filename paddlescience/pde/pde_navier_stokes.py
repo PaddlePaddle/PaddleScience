@@ -47,17 +47,12 @@ class NavierStokes(PDE):
             && \\frac{\\partial w}{\\partial t} + u \\frac{\\partial w}{\\partial x} +  v \\frac{\partial w}{\\partial y} +  w \\frac{\partial w}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 w}{\\partial y^2} + \\frac{\\partial p}{\\partial z} = 0.
         \\end{eqnarray*}
 
-    Parameter
-        nu : float
-            Kinematic viscosity.
-        rho : float
-            Density.
-        dim : integer
-            Equation's dimention, 2 and 3 are supported.
-        time_dependent : bool
-            Time-dependent or time-independent.
-        weight (optional) : float / list of float / lambda function.
-            Weight for computing equation loss. The default value is 1.0.        
+    Parameters:
+        nu (float): Kinematic viscosity.
+        rho (float): Density.
+        dim (integer): Equation's dimention, 2 and 3 are supported.
+        time_dependent (bool): Time-dependent or time-independent.
+        weight (optional, float / list of float / lambda function): Weight for computing equation loss. The default value is 1.0.        
 
     Example:
         >>> import paddlescience as psci

@@ -23,20 +23,13 @@ from ..labels import LabelInt
 
 class L2(LossBase):
     """
-    L2 loss which is synthesized by three part: the equation loss, the boundary condition loss, and the initial condition loss.
+    L2 loss.
 
     Parameters:
-        pdes(PDE): The partial differential equations used to calculate the equation loss.
-        geo(GeometryDiscrete): The discrete geometry on which the loss is calculated.
-        aux_func(Callable|None): Optional, default None. If is not None, it should be a python function which returns a list of Paddle Tensors. The list is used as right hand side values when calculating the equation loss.
-        eq_weight(float|None): Optional, default None. If is not None, it is multiplied on the equation loss before synthesis.
-        bc_weight(numpy.array|None): Optional, default None. If is not None, it should be a 1-D numpy array which has same number of elements as the bodunary condition points. This numpy array is used as weight when calculating the boundary condition loss.
-        synthesis_method(string): Optional, default 'add'. The method used when synthesizing the three parts of loss. If is 'add', just add three part directly; If is 'norm', synthesize three part by calculationg 2-norm.
-        run_in_batch(bool): Optional, default True. If is True, the equation loss is calculated per batch. If is False, the equation loss is calculated per point.
 
     Example:
         >>> import paddlescience as psci
-        >>> net = psci.loss.L2(pdes=pdes, geo=geo)
+        >>> net = psci.loss.L2()
     """
 
     def __init__(self, p=1):

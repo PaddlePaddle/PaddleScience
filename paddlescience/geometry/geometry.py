@@ -31,11 +31,9 @@ class Geometry:
         """
         Add (specify) bounday in geometry
 
-        Parameter
-            name: str
-                Boundary name
-            criteria: lambda function
-                Lambda function to define boundary.
+        Parameters:
+            name (string): Boundary name
+            criteria (lambda function): Lambda function to define boundary.
 
         Example:
             >>> import paddlescience as psci
@@ -50,9 +48,8 @@ class Geometry:
         """
         Delete bounday in geometry
 
-        Parameter
-            name: str
-                Boundary name
+        Parameters:
+            name (string): Boundary name
 
         Example:
             >>> import paddlescience as psci

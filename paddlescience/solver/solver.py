@@ -73,8 +73,8 @@ class Solver(object):
     Solver
  
     Parameters:
-        algo(AlgorithmBase): The algorithm used in the solver.
-        opt(paddle.Optimizer): The optimizer used in the solver.
+        algo(Algorithm): The algorithm used in the solver.
+        opt(paddlescience.Optimizer): The optimizer used in the solver.
 
     Example:
         >>> import paddlescience as psci
@@ -306,63 +306,6 @@ class Solver(object):
             print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
         return rslt[1:]
-
-    # def __solve_static_dist(self, num_epoch, bs, checkpoint_freq):
-
-    #     # init dist environment
-    #     strategy = fleet.DistributedStrategy()
-    #     fleet.init(is_collective=True, strategy=strategy)
-
-    #     inputs, inputs_attr = self.algo.create_inputs(self.pde)
-
-    #     place = paddle.CUDAPlace(0)
-    #     exe = paddle.static.Executor(place)
-
-    #     # dist optimizer
-    #     opt_dist = fleet.distributed_optimizer(self.opt)
-
-    #     inputs = list()
-    #     feeds = dict()
-
-    #     main_program = paddle.static.Program()
-    #     startup_program = paddle.static.Program()
-
-    #     # construct program
-    #     with paddle.static.program_guard(main_program, startup_program):
-
-    #         self.algo.net.make_network_static()
-
-    #         for i in range(len(inputs)):
-    #             # inputs
-    #             input = paddle.static.data(
-    #                 name='input' + str(i),
-    #                 shape=inputs[i].shape,
-    #                 dtype=self._dtype)
-    #             input.stop_gradient = False
-    #             inputs.append(input)
-
-    #             # feeds
-    #             feeds['input' + str(i)] = inputs[i]
-
-    #         loss, outs = self.algo.compute(
-    #             *inputs, inputs_attr=inputs_attr, pde=self.pde)
-
-    #         opt_dist.minimize(loss)
-
-    #     # fetch loss and net's output
-    #     fetches = [loss.name]
-    #     for out in outs:
-    #         fetches.append(out.name)
-
-    #     # start up program
-    #     exe.run(startup_program)
-
-    #     # main loop
-    #     for epoch in range(num_epoch):
-    #         rslt = exe.run(main_program, feed=feeds, fetch_list=fetches)
-    #         print("static-dist epoch: " + str(epoch + 1), "loss: ", rslt[0])
-
-    #     return rslt[1:]
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):

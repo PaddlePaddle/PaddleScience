@@ -19,14 +19,14 @@ from .network_base import NetworkBase
 
 class FCNet(NetworkBase):
     """
-    A multi-layer Full Connected Network. Each layer consists of a Matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
+    Full connected network. Each layer consists of a matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
 
     Parameters:
-        num_ins(int): Number of inputs.
-        num_outs(int): Number of outputs.
-        num_layers(int): Number of layers.
-        hidden_size(int): Hiden size in each layer.
-        activation(string): Optional, default 'tanh'. The type of activation function used in each layer, could be 'tanh' or 'sigmoid'.
+        num_ins (integer): Number of inputs.
+        num_outs (integer): Number of outputs.
+        num_layers (integer): Number of layers.
+        hidden_size (integer): Hiden size in each layer.
+        activation (optional, "tanh" / "sigmoid"): Activation function used in each layer. The default value is "tanh".
 
     Example:
         >>> import paddlescience as psci
@@ -62,9 +62,8 @@ class FCNet(NetworkBase):
 
         # self.make_network_static()
 
-        # return: 
-        #   dynamic mode: net's parameters 
-        #   static  mode: None
+        # dynamic mode: net's parameters 
+        # static  mode: None
     def parameters(self):
         if paddle.in_dynamic_mode():
             return super(FCNet, self).parameters()

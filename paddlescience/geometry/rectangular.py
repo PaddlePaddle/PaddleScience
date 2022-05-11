@@ -25,11 +25,9 @@ class Rectangular(Geometry):
     """
     Two dimentional rectangular or three dimentional cube
 
-    Parameter
-        origin : 
-            Cordinate of left-bottom point of rectangular
-        extent : 
-            Extent of rectangular
+    Parameters:
+        origin: Cordinate of left-bottom point of rectangular
+        extent: Extent of rectangular
 
     Example:
         >>> import paddlescience as psci
@@ -51,11 +49,9 @@ class Rectangular(Geometry):
         """
         Discretize rectangular
 
-        Parameter
-            method: "uniform" / "sampling" 
-                Discretize rectangular using method "uniform" or "sampling"
-            npoints: integer
-                Number of points
+        Parameters:
+            method ("uniform" / "sampling"): Discretize rectangular using method "uniform" or "sampling"
+            npoints (integer): Number of points
 
         Example:
             >>> import paddlescience as psci
@@ -280,15 +276,11 @@ class CircleInRectangular(Rectangular):
     """
     Two dimentional rectangular removing one circle
 
-    Parameter
-        origin : list of float
-            Cordinate of left-bottom point of rectangular
-        extent : list of float
-            Extent of rectangular
-        circle_center : list of float
-            Center of circle
-        circle_radius: float
-            Radius of circle
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
 
     Example:
         >>> import paddlescience as psci
@@ -311,11 +303,9 @@ class CircleInRectangular(Rectangular):
         """
         Discretize CircleInRectangular
 
-        Parameter
-            method: "sampling" 
-                Currently, only "sampling" method is supported
-            npoints: integer
-                Number of points
+        Parameters:
+            method (string): Currently, only "sampling" method is supported
+            npoints (integer): Number of points
 
         Example:
             >>> import paddlescience as psci
@@ -364,15 +354,11 @@ class CylinderInCube(Rectangular):
     """
     Three dimentional cube removing one cylinder
 
-    Parameter
-        origin : list of float
-            Cordinate of left-bottom point of rectangular
-        extent : list of float
-            Extent of rectangular
-        circle_center : list of float
-            Center of circle
-        circle_radius: float
-            Radius of circle
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
 
     Example:
         >>> import paddlescience as psci
@@ -395,11 +381,9 @@ class CylinderInCube(Rectangular):
         """
         Discretize CylinderInCube
 
-        Parameter
-            method: "sampling" 
-                Currently, only "sampling" method is supported
-            npoints: integer
-                Number of points
+        Parameters:
+            method (string): Currently, only "sampling" method is supported
+            npoints (integer): Number of points
 
         Example:
             >>> import paddlescience as psci

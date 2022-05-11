@@ -27,13 +27,10 @@ class Poisson(PDE):
     .. math::
         \Delta u = rhs
 
-    Parameter
-        dim (integer) 
-            Equation's dimention, 1, 2 and 3 are supported.
-        rhs (float / lambda function)
-            Right-hand side in equation
-        weight (optional, float / list of float)
-            Weight for computing equation loss. The default value is 1.0.
+    Parameters:
+        dim (integer): Equation's dimention, 1, 2 and 3 are supported.
+        rhs (float / lambda function): Right-hand side in equation
+        weight (optional, float / list of float): Weight for computing equation loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci
