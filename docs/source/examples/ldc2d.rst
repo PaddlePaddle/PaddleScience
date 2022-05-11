@@ -152,7 +152,6 @@ the graphs in vtp file which one can play using `Paraview <https://www.paraview.
 
     .. code-block::
     
-        rslt = solution(geo).numpy()
         rslt = solution(geo)
         u = rslt[:, 0]
         v = rslt[:, 1]

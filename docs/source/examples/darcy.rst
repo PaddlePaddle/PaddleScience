@@ -158,6 +158,6 @@ the graphs in vtp file which one can play using `Paraview <https://www.paraview.
 
     .. code-block::
 
-        rslt = solution(geo).numpy()
+        rslt = solution(geo)
         psci.visu.save_vtk(geo, rslt, 'rslt_darcy_2d')
         np.save(rslt, 'rslt_darcy_2d.npy')
