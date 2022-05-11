@@ -100,7 +100,7 @@ class Robin(BC):
         rhs (float / lambda function): Right-hand side of Neumann boundary condition. The default value is 0.0.
         weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
 
-    Example
+    Example:
         >>> import paddlescience as psci
         >>> bc1 = psci.bc.Robin("u", rhs=0.0)
         >>> bc2 = psci.bc.Robin("u", rhs=lambda x, y: 0.0)

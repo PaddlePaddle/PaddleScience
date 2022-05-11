@@ -24,7 +24,7 @@ class IC:
         rhs (float / lambda function): Right-hand side of initial boundary condition. The default value is 0.0.
         weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
 
-    Example
+    Example:
         >>> import paddlescience as psci
         >>> ic1 = psci.ic.IC("u")
         >>> ic2 = psci.ic.IC("u", rhs=0.0)
