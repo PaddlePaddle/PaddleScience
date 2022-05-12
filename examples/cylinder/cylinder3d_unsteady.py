@@ -75,7 +75,7 @@ geo_disc.user = real_cord
 
 # N-S equation
 pde = psci.pde.NavierStokes(
-    nu=0.005,
+    nu=0.01,
     rho=1.0,
     dim=3,
     time_dependent=True,
