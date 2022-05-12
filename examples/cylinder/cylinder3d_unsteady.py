@@ -67,7 +67,7 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # discretize geometry
-geo_disc = geo.discretize(npoints=80000, method="sampling")
+geo_disc = geo.discretize(npoints=40000, method="sampling")
 
 # the real_cord need to be added in geo_disc
 real_cord = GetRealPhyInfo(start_time, need_cord=True)
@@ -81,7 +81,7 @@ pde = psci.pde.NavierStokes(
     time_dependent=True,
     weight=[0.01, 0.01, 0.01, 0.01])
 
-pde.set_time_interval([0.0, 105.0])
+pde.set_time_interval([100.0, 110.0])
 
 # boundary condition on left side: u=10, v=w=0
 bc_left_u = psci.bc.Dirichlet('u', rhs=1.0, weight=1.0)
@@ -102,9 +102,8 @@ pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
 # pde discretization 
-# time_step = start_time - 0
 pde_disc = pde.discretize(
-    time_method="implicit", time_step=start_time, geo_disc=geo_disc)
+    time_method="implicit", time_step=time_step, geo_disc=geo_disc)
 
 # Network
 net = psci.network.FCNet(
@@ -121,33 +120,17 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver parameter
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solver.feed_data_interior_cur(GenInitPhyInfo(pde_disc.geometry.interior))  # add u(0) interior
-solver.feed_data_user_cur(GenInitPhyInfo(real_cord))  # add u(0) user 
-solver.feed_data_user_next(GetRealPhyInfo(start_time, need_physic=True))  # add u(start_time) user
 
 # num_epoch in train
-train_epoch = 20
+train_epoch = 2000
 
-# Solver time: 0 -> start_time
-start_time_result = solver.solve(num_epoch = train_epoch)
-file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(start_time)
-psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=start_time_result)
-start_time_interior = np.array(start_time_result[0])
-start_time_usr = np.array(start_time_result[-1])
-
-# time step need to be modified
-pde_disc = pde.discretize(
-    time_method="implicit", time_step=time_step, geo_disc=geo_disc)
-
-solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-
-# Solver time: [start_time, start_time+time_step, start_time+2*time_step, ...]
+# Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
 num_time_step = 10
-current_interior = start_time_interior[:, 0:3]
-current_user = start_time_usr[:, 0:3]
-#current_user = GetRealPhyInfo(start_time, need_physic=True)[:, 0:3]
+current_interior = np.zeros((len(pde_disc.geometry.interior), 3)).astype(np.float32)
+current_user = GetRealPhyInfo(start_time, need_physic=True)[:, 0:3]
 for i in range(num_time_step):
     next_time = start_time + (i + 1) * time_step
+    print("############# train next time=%f train task ############" % next_time)
     solver.feed_data_interior_cur(current_interior)  # add u(n) interior
     solver.feed_data_user_cur(current_user)  # add u(n) user 
     solver.feed_data_user_next(GetRealPhyInfo(next_time, need_physic=True))  # add u(n+1) user
@@ -155,8 +138,8 @@ for i in range(num_time_step):
     # Save vtk
     file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
     psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    # next_info -> current_info
     next_interior = np.array(next_uvwp[0])
     next_user = np.array(next_uvwp[-1])
     current_interior = next_interior[:, 0:3]
     current_user = next_user[:, 0:3]
-    #current_user = GetRealPhyInfo(next_time, need_physic=True)[:, 0:3]
