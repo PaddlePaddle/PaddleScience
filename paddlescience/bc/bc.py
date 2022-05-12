@@ -113,5 +113,5 @@ class Robin(BC):
 
     def to_formula(self, indvar):
         n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(n)(*indvar)
+        u = sympy.Function(self.name)(n)
         self.formula = u + u.diff(n)
