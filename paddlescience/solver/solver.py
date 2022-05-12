@@ -108,6 +108,17 @@ class Solver(object):
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
+    def predict(self):
+
+        if paddle.in_dynamic_mode():
+            return self.__predict_dynamic()
+        # else:
+        #     if paddle.distributed.get_world_size() == 1:
+        #         return self.__solve_static(num_epoch, bs, checkpoint_freq)
+        #     else:
+        #         return self.__solve_static_auto_dist(num_epoch, bs,
+        #                                              checkpoint_freq)
+
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,
                                                        self.labels_attr, data)
@@ -211,6 +222,20 @@ class Solver(object):
         #         return self.algo.net.nn_func(geo.domain).numpy()
 
         # return solution_fn
+
+    # predict in dynamic mode
+
+    def __predict_dynamic(self):
+        # create inputs 
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+
+        # convert inputs to tensor
+        for i in range(len(inputs)):
+            inputs[i] = paddle.to_tensor(
+                inputs[i], dtype=self._dtype, stop_gradient=False)
+
+        outs = self.algo.compute_forward(*inputs)
+        return outs
 
     # solver in static mode
 

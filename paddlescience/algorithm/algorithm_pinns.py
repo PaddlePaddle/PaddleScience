@@ -263,6 +263,16 @@ class PINNs(AlgorithmBase):
             # print("idx user next: ", idx)
         return labels
 
+    def compute_forward(self, *inputs):
+
+        outs = list()
+
+        for i in inputs:
+            out = self.net.nn_func(i)
+            outs.append(out)
+
+        return outs
+
     def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
                 labels_attr, pde):
 
