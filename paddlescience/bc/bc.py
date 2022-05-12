@@ -87,8 +87,13 @@ class Neumann(BC):
 
     def to_formula(self, indvar):
         n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(n)
-        self.formula = u.diff(n)
+        ud = sympy.Function(self.name)(n)
+        self.formula = ud.diff(n)
+
+    def discretize(self, indvar):
+        bc_disc = copy.deepcopy(self)
+        bc_disc.to_formula(indvar)
+        return bc_disc
 
 
 class Robin(BC):
@@ -113,5 +118,11 @@ class Robin(BC):
 
     def to_formula(self, indvar):
         n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(n)(*indvar)
-        self.formula = u + u.diff(n)
+        u = sympy.Function(self.name)(*indvar)
+        ud = sympy.Function(self.name)(n)
+        self.formula = u + ud.diff(n)
+
+    def discretize(self, indvar):
+        bc_disc = copy.deepcopy(self)
+        bc_disc.to_formula(indvar)
+        return bc_disc
