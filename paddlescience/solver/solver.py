@@ -95,7 +95,7 @@ class Solver(object):
             if paddle.distributed.get_world_size() == 1:
                 self.__init_static()
             else:
-                pass
+                self.__init_static_auto_dist()
 
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
 
@@ -134,7 +134,7 @@ class Solver(object):
     def feed_data_user(self, data):
         self.feed_data_user_next(data)
 
-    # solve in dynamic mode
+    # init in dynamic mode
     def __init_dynamic(self):
         """
         Train the network with respect to num_epoch.
@@ -353,12 +353,26 @@ class Solver(object):
 
         return rslt[:]
 
+    # init in static auto dist
+    def __init_static_auto_dist(self):
+
+        # create inputs/labels and its attributes
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        labels, labels_attr = self.algo.create_labels(self.pde)
+
+        self.inputs = inputs
+        self.inputs_attr = inputs_attr
+        self.labels = labels
+        self.labels_attr = labels_attr
+
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
 
         # inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs = self.inputs
+        inputs_attr = self.inputs_attr
+        labels = self.labels
+        labels_attr = self.labels_attr
 
         # number of inputs and labels
         ninputs = len(inputs)
