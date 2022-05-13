@@ -225,9 +225,9 @@ class Solver(object):
 
     # predict in dynamic mode
 
-    def __predict_dynamic(self):
+    def __predict_dynamic(self, pde):
         # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(pde)
 
         # convert inputs to tensor
         for i in range(len(inputs)):
@@ -331,6 +331,27 @@ class Solver(object):
             print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
         return rslt[1:]
+
+    # predict static
+    def __predict_static(self):
+
+        # create inputs and its attributes
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+
+        # feeds inputs
+        feeds = dict()
+        for i in range(len(inputs)):
+            feeds['input' + str(i)] = inputs[i]
+
+        # fetch outputs
+        fetches = list()
+        for out in self.outs:
+            fetches.append(out.name)
+
+        # run
+        rslt = self.exe.run(self.main_program, feed=feeds, fetch_list=fetches)
+
+        return rslt[:]
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
