@@ -75,9 +75,6 @@ class Rectangular(Geometry):
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
 
-        print(points)
-        print()
-
         return super(Rectangular, self)._mesh_to_geo_disc(points)
 
     def _sampling_mesh(self, npoints):

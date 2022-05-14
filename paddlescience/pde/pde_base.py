@@ -60,10 +60,10 @@ class PDE:
         self.parameter = list()
 
         # equation
-        self.equations = list()
+        self.equations = [None] * num_equations
 
         # right-hand side
-        self.rhs = list()
+        self.rhs = [None] * num_equations
 
         # boundary condition
         self.bc = OrderedDict()
