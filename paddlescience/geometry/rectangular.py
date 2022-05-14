@@ -227,6 +227,8 @@ class Rectangular(Geometry):
 
     def _sampling_mesh_interior(self, origin, extent, n):
 
+        # return np.random.uniform(low=origin, high=extent, size=(n, self.ndims))
+
         steps = list()
         for i in range(self.ndims):
             if origin[i] == extent[i]:
@@ -238,14 +240,19 @@ class Rectangular(Geometry):
 
         return np.dstack(steps).reshape((n, self.ndims))
 
-    def _uniform_mesh(self, npoints):
+    def _uniform_mesh(self, npoints, origin=None, extent=None):
+
+        if origin is None:
+            origin = self.origin
+        if extent is None:
+            extent = self.extent
 
         steps = list()
         for i in range(self.ndims):
             steps.append(
                 np.linspace(
-                    self.origin[i],
-                    self.extent[i],
+                    origin[i],
+                    extent[i],
                     npoints[i],
                     endpoint=True,
                     dtype=self._dtype))
@@ -418,13 +425,52 @@ class CylinderInCube(Rectangular):
         # number of points in circle     
         nc = int(2 * (nx + ny) * ratio_perimeter)
 
-        print(nx, ny, nz, nc, ncube)
-
         if method == "sampling":
             # cube points
             cube = super(CylinderInCube, self)._sampling_mesh(ncube)
-        else:
+        elif method == "uniform":
             cube = super(CylinderInCube, self)._uniform_mesh(ncube)
+
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[1] = self.origin[1]
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face1 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            org[1] = self.extent[1]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face2 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[0] = self.origin[0]
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face3 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            org[0] = self.extent[0]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face4 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            cube = np.vstack([cube, face1, face2, face3, face4])
+
+        else:
+            pass  # TODO: error out
 
         # remove cylinder points
         flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
