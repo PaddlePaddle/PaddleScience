@@ -32,7 +32,7 @@ class GeometryDiscrete:
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
 
-    def add_customized_points(self, cordinate=cord):
+    def add_customized_points(self, cordinate):
         """
         Add cutomized points (cordinate) to geometry
     

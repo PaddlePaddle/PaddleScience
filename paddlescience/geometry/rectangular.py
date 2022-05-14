@@ -38,10 +38,19 @@ class Rectangular(Geometry):
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
 
-        self.origin = origin
-        self.extent = extent
-        if len(origin) == len(extent):
-            self.ndims = len(origin)
+        if np.isscalar(origin):
+            self.origin = [origin]  # scalar to list
+        else:
+            self.origin = origin
+
+        if np.isscalar(extent):
+            self.extent = [extent]  # scalar to list
+        else:
+            self.extent = extent
+
+        # ndims
+        if len(self.origin) == len(self.extent):
+            self.ndims = len(self.origin)
         else:
             pass  # TODO: error out
 
@@ -51,25 +60,23 @@ class Rectangular(Geometry):
 
         Parameters:
             method ("uniform" / "sampling"): Discretize rectangular using method "uniform" or "sampling"
-            npoints (integer): Number of points
+            npoints (integer / integer list): Number of points 
 
         Example:
             >>> import paddlescience as psci
             >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
             >>> geo.discretize(method="uniform", npoints=100)
+            >>> geo.discretize(method="uniform", npoints=[10, 20])
+            >>> geo.discretize(method="sampling", npoints=200)
         """
 
         if method == "uniform":
-            if np.isscalar(npoints):
-                # npoints^{1/ndims}
-                n = int(math.pow(npoints, 1.0 / self.ndims))
-                nl = [n for i in range(self.ndims)]
-            else:
-                nl = npoints
-            points = self._uniform_mesh(nl)
+            points = self._uniform_mesh(npoints)
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
-            # TODO: npoints as list
+
+        print(points)
+        print()
 
         return super(Rectangular, self)._mesh_to_geo_disc(points)
 
@@ -78,38 +85,49 @@ class Rectangular(Geometry):
         steps = list()
 
         if self.ndims == 1:
-            pass  # TODO
+            steps.append(
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
+            steps.append(np.array(self.origin[0], dtype=self._dtype))
+            steps.append(np.array(self.extent[0], dtype=self._dtype))
 
         elif self.ndims == 2:
 
-            # TODO: npoint should be larger than 9
-
-            ne = int(np.sqrt(npoints - 4 - 4))  # number of points in edge
-            ni = npoints - 4 * ne - 4  # number of internal points 
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nx * ny = npoints 
+            # nx / ny = lx / ly
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            ny = np.sqrt(float(npoints) * ly / lx)
+            nx = float(npoints) / ny
+            nx = int(nx)
+            ny = int(ny)
 
             x1, y1 = self.origin
             x2, y2 = self.extent
 
             # interior
             steps.append(
-                self._sampling_mesh_interior(self.origin, self.extent, ni))
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
 
             # four boundary: down, top, left, right
             origin = [x1, y1]
             extent = [x2, y1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y1]
             extent = [x1, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y1]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             # four vertex
             steps.append(np.array([x1, y1], dtype=self._dtype))
@@ -119,96 +137,102 @@ class Rectangular(Geometry):
 
         elif self.ndims == 3:
 
-            # TODO: exact number of points
-
-            n = int(math.pow(npoints, 1.0 / 3.0))
-
-            nf = n * n  # number of points in face
-            ne = n - 2  # number of points in edge
-            ni = npoints - 6 * nf - 12 * ne - 8  # number of points internal
-
-            # print(npoints, n, nf, ne, ni)
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
 
             x1, y1, z1 = self.origin
             x2, y2, z2 = self.extent
 
             # interior
+            ni = npoints
             steps.append(
                 self._sampling_mesh_interior(self.origin, self.extent, ni))
 
             # six faces: down, top, left, right, front, back
             origin = [x1, y1, z1]
             extent = [x2, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
 
             origin = [x1, y1, z2]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
 
             origin = [x1, y1, z1]
             extent = [x1, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
 
             origin = [x2, y1, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
 
             origin = [x1, y1, z1]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
 
             origin = [x1, y2, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
 
             # twelve edges
             origin = [x1, y1, z1]
             extent = [x2, y1, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x2, y1, z1]
             extent = [x2, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y2, z1]
             extent = [x1, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2, z1]
             extent = [x1, y1, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x1, y1, z2]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x2, y1, z2]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y2, z2]
             extent = [x1, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2, z2]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x1, y1, z1]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x2, y1, z1]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x2, y2, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x1, y1, z1]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             # eight vertex
             steps.append(np.array([x1, y1, z1], dtype=self._dtype))
@@ -223,7 +247,7 @@ class Rectangular(Geometry):
             pass
             # TODO: error out
 
-        return np.vstack(steps).reshape(npoints, self.ndims)
+        return np.vstack(steps)
 
     def _sampling_mesh_interior(self, origin, extent, n):
 
@@ -247,19 +271,48 @@ class Rectangular(Geometry):
         if extent is None:
             extent = self.extent
 
+        if np.isscalar(npoints):
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            if self.ndims == 1:
+                nd = [npoints]
+            elif self.ndims == 2:
+                # nx * ny = npoints 
+                # nx / ny = lx / ly
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                ny = np.sqrt(float(npoints) * ly / lx)
+                nx = float(npoints) / ny
+                nd = [int(nx), int(ny)]
+            elif self.ndims == 3:
+                # nx * ny * nz = npoints 
+                # nx / lx = ny / ly = nz / lz
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                lz = self.extent[2] - self.origin[2]
+                nz = math.pow(
+                    float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+                nx = nz * lx / lz
+                ny = nz * ly / lz
+                nd = [int(nx), int(ny), int(nz)]
+        else:
+            nd = npoints
+
         steps = list()
         for i in range(self.ndims):
             steps.append(
                 np.linspace(
                     origin[i],
                     extent[i],
-                    npoints[i],
+                    nd[i],
                     endpoint=True,
                     dtype=self._dtype))
 
         # meshgrid and stack to cordinates
         if (self.ndims == 1):
-            points = steps[0]
+            points = steps[0].reshape((-1, 1))
         if (self.ndims == 2):
             mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
             points = np.stack(
@@ -271,7 +324,6 @@ class Rectangular(Geometry):
                 (mesh[2].reshape(-1), mesh[1].reshape(-1),
                  mesh[0].reshape(-1)),
                 axis=-1)
-
         return points
 
 
@@ -407,12 +459,21 @@ class CylinderInCube(Rectangular):
         ratio_perimeter = (3.14 * radius) / (lx + ly)
 
         if np.isscalar(npoints):
-            r_yx = lx / ly
-            r_zx = lx / lz
-            nx = math.pow(npoints * r_yx * r_zx, 1.0 / 3.0)
-            ny = int(nx / r_yx)
-            nz = int(nx / r_zx)
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly))
+            nx = nz * lx / lz
+            ny = nz * ly / lz
             nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
+
             # number of points in cube
             ncube = int(npoints * (1.0 + ratio_area)**2)
         else:
