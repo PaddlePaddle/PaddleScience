@@ -34,7 +34,6 @@ class PDE:
         6. define equations and rhs
 
     Example:
-        >>> import paddlescience as psci
         >>> x = sympy.Symbol('x')
         >>> y = sympy.Symbol('y')
         >>> u = sympy.Function('u')(x,y)
@@ -131,11 +130,21 @@ class PDE:
             args (initial conditions): The initial conditions 
 
         Example:
-            >>> import paddlescience as psci
-            >>> pde = psci.pde.NavierStokes(dim=2, time_dependent=True)
-            >>> ic1 = psci.ic.IC('u', rhs=0) # u = 0 at start time
-            >>> ic2 = psci.ic.IC('v', rhs=0) # v = 0 at start time
+            >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
+
+            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0, 0.0), extent=(1.0, 1.0, 1.0))
+            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
+            >>> geo_disc = geo.discretize(method="sampling", npoints=10000)
+
+            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
+            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
+            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
+
+            >>> ic1 = psci.ic.IC('u', rhs=0) 
+            >>> ic2 = psci.ic.IC('v', rhs=0) 
             >>> pde.add_ic(ic1, ic2)         # add initial conditions
+
+            >>> pde_disc = pde.discretize(time_method="continue", time_step=10, geo_disc=geo_disc)
         """
         for arg in args:
             arg.to_formula(self.indvar)
