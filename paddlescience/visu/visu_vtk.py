@@ -73,6 +73,9 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
     npoints = len(cordinate)
     ndims = len(cordinate[0])
 
+    if data is None:
+        data = np.ones((npoints, 1), dtype=type(cordinate[0, 0]))
+
     data_vtk = dict()
 
     for i in range(len(data[0, :])):

@@ -388,41 +388,60 @@ class CylinderInCube(Rectangular):
         Example:
             >>> import paddlescience as psci
             >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-            >>> geo.discretize(method="uniform", npoints=100)
+            >>> geo.discretize(method="sampling", npoints=100)
         """
-        if method == "sampling":
 
-            # TODO: better nc and nr
-            nc = int(np.sqrt(npoints))
-            nr = npoints - nc
-            nz = int(math.pow(npoints, 1.0 / 3.0))
+        lx = float(self.extent[0] - self.origin[0])
+        ly = float(self.extent[1] - self.origin[1])
+        lz = float(self.extent[2] - self.origin[2])
+        center = np.array(self.circle_center, dtype=self._dtype)
+        radius = np.array(self.circle_radius, dtype=self._dtype)
+        ratio_area = np.sqrt(3.14 * radius**2 / (lx * ly))
+        ratio_perimeter = (3.14 * radius) / (lx + ly)
 
-            center = np.array(self.circle_center, dtype=self._dtype)
-            radius = np.array(self.circle_radius, dtype=self._dtype)
-
-            # cube points
-            cube = super(CylinderInCube, self)._sampling_mesh(nr)
-
-            # remove cylinder points
-            flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
-            cube_cyl = cube[flag, :]
-
-            # TODO : points inside / outside cube
-
-            # add cylinder boundary points
-            angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
-            y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
-            z = np.random.uniform(self.origin[2], self.extent[2],
-                                  nz).astype(self._dtype)
-            x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
-            y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
-            z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
-            cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
-
-            points = np.vstack([cube_cyl, cyl_b])
-
-            return super(CylinderInCube, self)._mesh_to_geo_disc(points)
+        if np.isscalar(npoints):
+            r_yx = lx / ly
+            r_zx = lx / lz
+            nx = math.pow(npoints * r_yx * r_zx, 1.0 / 3.0)
+            ny = int(nx / r_yx)
+            nz = int(nx / r_zx)
+            nx = int(nx)
+            # number of points in cube
+            ncube = int(npoints * (1.0 + ratio_area)**2)
         else:
-            pass
-            # TODO: error out uniform method
+            nx = npoints[0]
+            ny = npoints[1]
+            nz = npoints[2]
+            # number of points in cube
+            ncube = npoints
+
+        # number of points in circle     
+        nc = int(2 * (nx + ny) * ratio_perimeter)
+
+        print(nx, ny, nz, nc, ncube)
+
+        if method == "sampling":
+            # cube points
+            cube = super(CylinderInCube, self)._sampling_mesh(ncube)
+        else:
+            cube = super(CylinderInCube, self)._uniform_mesh(ncube)
+
+        # remove cylinder points
+        flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
+        cube_cyl = cube[flag, :]
+
+        # TODO : points inside / outside cube
+
+        # add cylinder boundary points
+        angle = np.arange(nc) * (2.0 * np.pi / nc)
+        x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        z = np.linspace(self.origin[2], self.extent[2], nz).astype(self._dtype)
+        x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
+        y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
+        z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
+        cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
+
+        points = np.vstack([cube_cyl, cyl_b])
+
+        return super(CylinderInCube, self)._mesh_to_geo_disc(points)
