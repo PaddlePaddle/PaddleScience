@@ -28,7 +28,7 @@ import paddle.distributed as dist
 from pyevtk.hl import pointsToVTK
 
 import loading_cfd_data as cfd
-from Module.CFD import pinn_solver as psolver
+from module.cfd import pinn_solver as psolver
 
 
 def predict(net_params=None, vtk_filename = './vtk/uvp_t_'):
@@ -38,7 +38,7 @@ def predict(net_params=None, vtk_filename = './vtk/uvp_t_'):
     PINN = psolver.PysicsInformedNeuralNetwork(layers=6, net_params=net_params)
 
     # Loading data from openfoam
-    path = './datasets/data_0430/'
+    path = './data_0430/'
     dataloader = cfd.DataLoader(path=path, N_f=100000, time_start=1, time_end=50, time_nsteps=50)
     #training_time_list = dataloader.select_discretized_time(num_time=30)
     training_time_list = dataloader.select_ordered_time(num_time=50)
@@ -113,7 +113,7 @@ def predict_once_for_all(net_params=None, vtk_filename = './vtk/uvp_t_'):
     PINN = psolver.PysicsInformedNeuralNetwork(layers=6, net_params=net_params)
 
     # Loading data from openfoam
-    path = './datasets/data_0430/'
+    path = './data_0430/'
     dataloader = cfd.DataLoader(path=path, N_f=100000, time_start=1, time_end=50, time_nsteps=50)
     #training_time_list = dataloader.select_discretized_time(num_time=30)
     training_time_list = dataloader.select_ordered_time(num_time=50)
