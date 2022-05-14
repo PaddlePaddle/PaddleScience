@@ -48,20 +48,15 @@ class DataLoader:
         if self.random_time_steps and resued:
             return self.random_time_steps
         else:
-            print(self.discretized_time)
             self.random_time_steps = np.random.choice(self.discretized_time, num_time)
         self.random_time_steps.sort()
-        print(self.random_time_steps)
         return self.random_time_steps
 
     def select_ordered_time(self, num_time=20, reused=True):
         # num_time, number of time for training in each epoch
         if self.random_time_steps is not None and resued:
             return self.random_time_steps
-        else:
-            print(self.discretized_time)
         self.discretized_time.sort()
-        print(self.discretized_time)
         return self.discretized_time
 
     def reading_data_from_csv(self, path, filename):

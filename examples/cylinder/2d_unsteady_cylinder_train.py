@@ -27,8 +27,7 @@ import paddle.distributed as dist
 from pyevtk.hl import pointsToVTK
 
 import loading_cfd_data as cfd
-import Module as M
-import Module.CFD.pinn_solver as psolver
+import module.cfd.pinn_solver as psolver
 
 
 def train(net_params=None, distributed_env=False):
@@ -42,7 +41,7 @@ def train(net_params=None, distributed_env=False):
         net_params=net_params, distributed_env=distributed_env)
 
     # Loading data from openfoam 
-    path = './datasets/data_0430/'
+    path = './data_0430/'
     dataloader = cfd.DataLoader(path=path, N_f=9000, N_b=1000, time_start=1, time_end=50, time_nsteps=50)
     training_time_list = dataloader.select_discretized_time(num_time=30)
 
