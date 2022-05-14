@@ -37,14 +37,18 @@ class PDE:
         >>> x = sympy.Symbol('x')
         >>> y = sympy.Symbol('y')
         >>> u = sympy.Function('u')(x,y)
-        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False)
+        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False, order=2)
         >>> pde.indvar = [x, y]
         >>> pde.dvar = [u]
         >>> pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
         >>> pde.rhs[0] = 0.0
     """
 
-    def __init__(self, num_equations=1, time_dependent=False, weight=None):
+    def __init__(self,
+                 num_equations=1,
+                 time_dependent=False,
+                 weight=None,
+                 order=2):
 
         # time dependent / independent
         self.time_dependent = time_dependent
@@ -60,10 +64,13 @@ class PDE:
         self.parameter = list()
 
         # equation
-        self.equations = [None] * num_equations
+        self.equations = [None for i in range(num_equations)]
 
         # right-hand side
-        self.rhs = [None] * num_equations
+        self.rhs = [None for i in range(num_equations)]
+
+        # order
+        self.order = order
 
         # boundary condition
         self.bc = OrderedDict()
@@ -90,9 +97,6 @@ class PDE:
         self.time_internal = None
         self.time_step = None
         self.time_array = None
-
-        # # u_n_disc
-        # self.u_n_disc = [None for i in range(num_equations)]
 
     def add_geometry(self, geo):
         self.geometry = geo

@@ -19,9 +19,8 @@ import sympy
 x = sympy.Symbol('x')
 y = sympy.Symbol('y')
 u = sympy.Function('u')(x, y)
-pde = psci.pde.PDE(num_equations=1, time_dependent=False)
+pde = psci.pde.PDE(num_equations=1, time_dependent=False, order=2)
 pde.indvar = [x, y]
 pde.dvar = [u]
 pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
 pde.rhs[0] = 0.0
-pde.order = 2
