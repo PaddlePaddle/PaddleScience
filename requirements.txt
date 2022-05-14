@@ -1,3 +1,5 @@
 numpy
+sympy
 matplotlib
 vtk
+pyevtk
