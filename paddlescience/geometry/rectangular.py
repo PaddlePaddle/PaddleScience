@@ -54,7 +54,7 @@ class Rectangular(Geometry):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="uniform", npoints=100):
+    def discretize(self, method="uniform", npoints=100, padding=True):
         """
         Discretize rectangular
 
@@ -75,7 +75,7 @@ class Rectangular(Geometry):
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
 
-        return super(Rectangular, self)._mesh_to_geo_disc(points)
+        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 
     def _sampling_mesh(self, npoints):
 
@@ -355,7 +355,7 @@ class CircleInRectangular(Rectangular):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="sampling", npoints=20):
+    def discretize(self, method="sampling", npoints=20, padding=True):
         """
         Discretize CircleInRectangular
 
@@ -396,7 +396,8 @@ class CircleInRectangular(Rectangular):
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
 
-            return super(CircleInRectangular, self)._mesh_to_geo_disc(points)
+            return super(CircleInRectangular, self)._mesh_to_geo_disc(points,
+                                                                      padding)
         else:
             # TODO: better error out
             print("ERROR: ",
@@ -433,7 +434,7 @@ class CylinderInCube(Rectangular):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="sampling", npoints=1000):
+    def discretize(self, method="sampling", npoints=1000, padding=True):
         """
         Discretize CylinderInCube
 
@@ -548,4 +549,4 @@ class CylinderInCube(Rectangular):
 
         points = np.vstack([cube_cyl, cyl_b])
 
-        return super(CylinderInCube, self)._mesh_to_geo_disc(points)
+        return super(CylinderInCube, self)._mesh_to_geo_disc(points, padding)

@@ -80,7 +80,7 @@ class Geometry:
         self.normal.clear()
 
     # select boundaries from all points and construct disc geometry
-    def _mesh_to_geo_disc(self, points):
+    def _mesh_to_geo_disc(self, points, padding=True):
 
         geo_disc = GeometryDiscrete()
 
@@ -116,7 +116,8 @@ class Geometry:
         geo_disc.interior = points[flag_i, :]
 
         # padding
-        nproc = paddle.distributed.get_world_size()
-        geo_disc.padding(nproc)
+        if padding:
+            nproc = paddle.distributed.get_world_size()
+            geo_disc.padding(nproc)
 
         return geo_disc
