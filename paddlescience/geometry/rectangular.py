@@ -465,7 +465,7 @@ class CylinderInCube(Rectangular):
             lx = self.extent[0] - self.origin[0]
             ly = self.extent[1] - self.origin[1]
             lz = self.extent[2] - self.origin[2]
-            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly))
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
             nx = nz * lx / lz
             ny = nz * ly / lz
             nx = int(nx)
