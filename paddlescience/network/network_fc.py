@@ -122,3 +122,34 @@ class FCNet(NetworkBase):
         u = paddle.matmul(u, self.weights[-1])
         u = paddle.add(u, self.biases[-1])
         return u
+
+    def flatten_params(self):
+        flat_vars = list(map(paddle.flatten, self.weights + self.biases))
+        return paddle.flatten(paddle.concat(flat_vars))
+
+    def reconstruct(self, param_data):
+        params = self.weights + self.biases
+        param_sizes = [param.size for param in params]
+        flat_params = paddle.split(param_data, param_sizes)
+        is_biases = [False for _ in self.weights] + [True for _ in self.biases]
+
+        self.weights = []
+        self.biases = []
+
+        for old_param, flat_param, is_bias in zip(params, flat_params, is_biases):
+            shape = old_param.shape
+            value = paddle.reshape(flat_param, shape)
+            # new_param = self.create_parameter(shape,
+            #                                   dtype=self.dtype,
+            #                                   is_bias=is_bias,
+            #                                   default_initializer=Assign(value))
+            # if is_bias:
+            #     self.biases.append(new_param)
+            # else:
+            #     self.weights.append(new_param)
+            # self.add_parameter(old_param.name.split('.')[-1], new_param)
+            new_param = value
+            if is_bias:
+                self.biases.append(new_param)
+            else:
+                self.weights.append(new_param)
