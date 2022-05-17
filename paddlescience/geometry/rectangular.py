@@ -340,7 +340,7 @@ class CircleInRectangular(Rectangular):
 
     Example:
         >>> import paddlescience as psci
-        >>> geo2d = psci.geometry.CycleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
    """
 
     def __init__(self, origin, extent, circle_center, circle_radius):
@@ -419,7 +419,7 @@ class CylinderInCube(Rectangular):
 
     Example:
         >>> import paddlescience as psci
-        >>> geo2d = psci.geometry.CycleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
    """
 
     def __init__(self, origin, extent, circle_center, circle_radius):

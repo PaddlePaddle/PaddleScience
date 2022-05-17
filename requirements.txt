@@ -4,3 +4,4 @@ matplotlib
 vtk
 pyevtk
 pandas
+wget

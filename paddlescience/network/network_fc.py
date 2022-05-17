@@ -30,7 +30,7 @@ class FCNet(NetworkBase):
 
     Example:
         >>> import paddlescience as psci
-        >>> net = psci.network.FCNet(2, 3, 10, 50, dtype='float32', activiation='tanh')
+        >>> net = psci.network.FCNet(2, 3, 10, 50, activiation='tanh')
     """
 
     def __init__(self,
@@ -136,7 +136,8 @@ class FCNet(NetworkBase):
         self.weights = []
         self.biases = []
 
-        for old_param, flat_param, is_bias in zip(params, flat_params, is_biases):
+        for old_param, flat_param, is_bias in zip(params, flat_params,
+                                                  is_biases):
             shape = old_param.shape
             value = paddle.reshape(flat_param, shape)
             # new_param = self.create_parameter(shape,
