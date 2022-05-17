@@ -107,7 +107,7 @@ class Solver(object):
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
-    # predict
+    # predict (infer)
     def predict(self):
         if paddle.in_dynamic_mode():
             return self.__predict_dynamic()
@@ -117,22 +117,7 @@ class Solver(object):
             else:
                 return self.__predict_static_auto_dist()
 
-    def feed_data_interior_cur(self, data):
-        self.labels = self.algo.feed_data_interior_cur(self.labels,
-                                                       self.labels_attr, data)
-
-    def feed_data_user_cur(self, data):
-        self.labels = self.algo.feed_data_user_cur(self.labels,
-                                                   self.labels_attr, data)
-
-    def feed_data_user_next(self, data):
-        self.labels = self.algo.feed_data_user_next(self.labels,
-                                                    self.labels_attr, data)
-
-    def feed_data_user(self, data):
-        self.feed_data_user_next(data)
-
-    # init in dynamic mode
+    # init dynamic
     def __init_dynamic(self):
         # """
         # Train the network with respect to num_epoch.
@@ -161,6 +146,7 @@ class Solver(object):
         self.labels = labels
         self.labels_attr = labels_attr
 
+    # solve static 
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
@@ -207,22 +193,8 @@ class Solver(object):
             outs[i] = outs[i].numpy()
 
         return outs
-        # def solution_fn(geo):
-        #     if geo.time_dependent == False:
-        #         if not isinputstance(geo.space_domain, paddle.Tensor):
-        #             geo.set_batch_size(geo.get_domain_size())
-        #             geo.to_tensor()
-        #         return self.algo.net.nn_func(geo.space_domain).numpy()
-        #     else:
-        #         if not isinputstance(geo.domain, paddle.Tensor):
-        #             geo.set_batch_size(geo.get_domain_size())
-        #             geo.to_tensor()
-        #         return self.algo.net.nn_func(geo.domain).numpy()
 
-        # return solution_fn
-
-    # predict in dynamic mode
-
+    # predict dynamic
     def __predict_dynamic(self):
         # create inputs 
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -239,8 +211,7 @@ class Solver(object):
 
         return outs
 
-    # init static mode
-
+    # init static
     def __init_static(self):
 
         # create inputs/labels and its attributes
@@ -375,28 +346,7 @@ class Solver(object):
 
         return rslt
 
-    # predict static auto-dist
-    def __predict_static_auto_dist(self):
-
-        # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-
-        # feeds inputs
-        feeds = dict()
-        for i in range(len(inputs)):
-            feeds['input' + str(i)] = inputs[i]
-
-        # fetch outputs
-        fetches = list()
-        for out in self.outs_predict:
-            fetches.append(out.name)
-
-        rslt = self.engine._executor.run(self.predict_program,
-                                         feed=feeds,
-                                         fetch_list=fetches)
-        return rslt
-
-    # init static auto dist
+    # init in static mode with auto dist
     def __init_static_auto_dist(self):
 
         # create inputs/labels and its attributes
@@ -449,53 +399,74 @@ class Solver(object):
         train_dataset = DataSetStatic(num_epoch, inputs_labels)
 
         # train
-        engine.prepare(optimizer=self.opt, loss=loss_func)
-        engine.fit(train_dataset, sample_generator=False)
+        self.engine.prepare(optimizer=self.opt, loss=loss_func)
+        self.engine.fit(train_dataset, sample_generator=False)
 
-        # test
-        inputs_labels = list()
-        predict_program = paddle.fluid.Program()
-        start_program = paddle.fluid.Program()
-        with paddle.fluid.program_guard(predict_program, start_program):
-            with paddle.fluid.unique_name.guard():
+        # predict
+        self.predict_auto_dist_program = paddle.fluid.Program()
+        with paddle.static.program_guard(self.predict_auto_dist_program):
+            with paddle.utils.unique_name.guard():
+
                 self.algo.net.make_network_static()
+                ins = list()
                 for i in range(len(inputs)):
-                    #inputs
+                    ishape = list(inputs[i].shape)
+                    ishape[0] = -1
                     input = paddle.static.data(
-                        name='input' + str(i),
-                        shape=inputs[i].shape,
-                        dtype=self._dtype)
-                    inputs_labels.append(input)
-                for i in range(len(labels)):
-                    #labels
-                    label = paddle.static.data(
-                        name='label' + str(i),
-                        shape=labels[i].shape,
-                        dtype=self._dtype)
-                    inputs_labels.append(label)
+                        name='input' + str(i), shape=ishape, dtype=self._dtype)
+                    input.stop_gradient = False
+                    ins.append(input)
 
-                _, outputs = self.algo.compute(
-                    *inputs_labels,
-                    ninputs=ninputs,
-                    inputs_attr=inputs_attr,
-                    nlabels=nlabels,
-                    labels_attr=labels_attr,
-                    pde=self.pde)
+                self.outs_predict = self.algo.compute_forward(*ins)
 
         # feeds inputs
         feeds = dict()
         for i in range(len(inputs)):
             feeds['input' + str(i)] = inputs[i]
-        # feeds labels
-        for i in range(len(labels)):
-            feeds['label' + str(i)] = labels[i]
+
         # fetch_list
         fetches = []
-        for out in outputs:
+        for out in self.outs_predict:
             fetches.append(out.name)
 
-        rslt = engine._executor.run(predict_program,
-                                    feed=feeds,
-                                    fetch_list=fetches)
+        rslt = self.engine._executor.run(self.predict_auto_dist_program,
+                                         feed=feeds,
+                                         fetch_list=fetches)
 
         return rslt
+
+    # predict static auto-dist
+    def __predict_static_auto_dist(self):
+
+        # create inputs and its attributes
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+
+        # feeds inputs
+        feeds = dict()
+        for i in range(len(inputs)):
+            feeds['input' + str(i)] = inputs[i]
+
+        # fetch_list
+        fetches = []
+        for out in self.outs_predict:
+            fetches.append(out.name)
+
+        rslt = self.engine._executor.run(self.predict_auto_dist_program,
+                                         feed=feeds,
+                                         fetch_list=fetches)
+        return rslt
+
+    def feed_data_interior_cur(self, data):
+        self.labels = self.algo.feed_data_interior_cur(self.labels,
+                                                       self.labels_attr, data)
+
+    def feed_data_user_cur(self, data):
+        self.labels = self.algo.feed_data_user_cur(self.labels,
+                                                   self.labels_attr, data)
+
+    def feed_data_user_next(self, data):
+        self.labels = self.algo.feed_data_user_next(self.labels,
+                                                    self.labels_attr, data)
+
+    def feed_data_user(self, data):
+        self.feed_data_user_next(data)
