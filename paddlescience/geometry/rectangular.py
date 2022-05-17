@@ -439,7 +439,7 @@ class CylinderInCube(Rectangular):
         Discretize CylinderInCube
 
         Parameters:
-            method (string): Currently, only "sampling" method is supported
+            method (string): Currently, "uniform and "sampling" methods are supported
             npoints (integer): Number of points
 
         Example:
