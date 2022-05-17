@@ -67,7 +67,7 @@ The component organization is illustrated in the following figure.
 
    Lid Driven Cavity Flow  <examples/ldc2d>
    Darcy Flow in Porous Medium <examples/darcy>
-   Flow around A Cylinder <examples/cylinder3d>
+   Flow around a Cylinder <examples/cylinder3d>
 
 	     
 Indices and tables
