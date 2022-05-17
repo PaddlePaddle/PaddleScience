@@ -130,4 +130,3 @@ for next_time in range(int(pde_disc.time_internal[0])+1, int(pde_disc.time_inter
     # current_info need to be modified as follows: current_time -> next time
     current_interior = np.array(next_uvwp[0])[:, 0:3]
     current_user = np.array(next_uvwp[-1])[:, 0:3]
-    

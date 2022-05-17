@@ -53,7 +53,8 @@ the equation residues and the boundary values.
 Once the concept is clear, next let's take a look at how this translates into the
 dacy2d example.
 
-- **Constructing PDE**
+- **Constructing Geometry**
+
 
 First, define the problem geometry using the `psci.geometry` module interface. In this example,
 the geometry is a rectangle with the origin at coordinates (0.0, 0.0) and the extent set
@@ -61,28 +62,60 @@ to (1.0, 1.0).
 
     .. code-block::
 
-       geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+        geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 
-Next, define the PDE equations to solve. In this example, the equations are a 2d
-Poisson. This equation is present in the package, and one only needs to
-create a `psci.pde.Poisson` object to set up the equation. `rhs` is right-hand side value of Poisson equation.
+
+Next, add boundaries to the geometry, these boundaries will be used in PDE. 
+Note that the `geo.add_boundary` function is only used for boundaries with physical constraints. 
+
+    .. code-block::
+        
+        geo.add_boundary(name="top", criteria=lambda x, y: y == 1.0)
+        geo.add_boundary(name="down", criteria=lambda x, y: y == 0.0)
+        geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
+        geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
+
+
+Once the domain are prepared, a discretization recipe should be given.
+
+    .. code-block::
+
+        geo_disc = geo.discretize(npoints=npoints, method="uniform")
+
+- **Constructing PDE**
+
+
+After defining Geometry part, define the PDE equations to solve. In this example, the equations are a 2d
+Laplace. This equation is present in the package, and one only needs to
+create a `psci.pde.Poisson` object to set up the equation.
 
     .. code-block::
 
        pde = psci.pde.Poisson(dim=2, rhs=ref_rhs)
 
+Next, add boundaries equations for PDE. 
+The boundary equations in PDE are strongly bound to the boundary definitions in geometry. 
+The physical information on the  boundaries needs to be set and then added using `pde.add_bc`.
+
+    .. code-block::
+     
+        bc_top = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_down = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_left = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_right = psci.bc.Dirichlet('u', rhs=ref_sol)
+
+        pde.add_bc("top", bc_top)
+        pde.add_bc("down", bc_down)
+        pde.add_bc("left", bc_left)
+        pde.add_bc("right", bc_right)
+
 Once the equation and the problem domain are prepared, a discretization
 recipe should be given. This recipe will be used to generate the training data
-before training starts. The 2d space can be discretized into a N by M
-grid, 101 by 101 in this example specifically.
+before training starts.
 
     .. code-block::
 
-       geo_disc = geo.discretize(npoints=(101,101), method="uniform")
        pde_disc = pde.discretize(geo_disc=geo_disc)
-
-As mentioned above, a valid problem setup relies on sufficient constraints on
-the boundary and initial values. 
 
 
 - **Constructing the neural net**
@@ -102,8 +135,7 @@ tangent as the activation function.
 	        hidden_size=20,
 	        activation="tanh")
 
-Next, one of the most important steps is define the loss function. Here we use L2
-loss with custom weights assigned to the boundary values.
+Next, one of the most important steps is define the loss function. Here we use L2 loss.
 
     .. code-block::
 
@@ -130,9 +162,9 @@ epoches for each batch.
 
     .. code-block::
 
-       opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-       solver = psci.solver.Solver(algo=algo, opt=opt)
-       solution = solver.solve(num_epoch=30000)
+        opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+        solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+        solution = solver.solve(num_epoch=10000)
 
 Finally, `solver.solve` returns a function that calculates the solution value
 for given points in the geometry. Apply the function to the geometry, convert the
@@ -143,6 +175,4 @@ the graphs in vtp file which one can play using `Paraview <https://www.paraview.
 
     .. code-block::
 
-        rslt = solution(geo)
-        psci.visu.save_vtk(geo, rslt, 'rslt_darcy_2d')
-        np.save(rslt, 'rslt_darcy_2d.npy')
+        psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
