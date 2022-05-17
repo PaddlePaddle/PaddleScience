@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Created in May. 2022
 @author: Hui Xiang, Yanbo Zhang, Shengze Cai
@@ -27,7 +26,7 @@ import paddle.distributed as dist
 from pyevtk.hl import pointsToVTK
 
 import loading_cfd_data as cfd
-import module.cfd.pinn_solver as psolver
+import paddlescience.module.cfd.pinn_solver as psolver
 
 
 def train(net_params=None, distributed_env=False):
@@ -36,13 +35,27 @@ def train(net_params=None, distributed_env=False):
 
     #bc:10, eq:1, ic:10, suervise:10, nu=5e-3, t_start:0.6, t_end:0..9, t_step:20, init:0.5
     PINN = psolver.PysicsInformedNeuralNetwork(
-        layers=6, nu=2e-2, bc_weight=10, eq_weight=1, ic_weight=10, supervised_data_weight=10, 
-        outlet_weight=1, training_type='half-supervised', checkpoint_path='./checkpoint/', 
-        net_params=net_params, distributed_env=distributed_env)
+        layers=6,
+        nu=2e-2,
+        bc_weight=10,
+        eq_weight=1,
+        ic_weight=10,
+        supervised_data_weight=10,
+        outlet_weight=1,
+        training_type='half-supervised',
+        checkpoint_path='./checkpoint/',
+        net_params=net_params,
+        distributed_env=distributed_env)
 
     # Loading data from openfoam 
-    path = './data_0430/'
-    dataloader = cfd.DataLoader(path=path, N_f=9000, N_b=1000, time_start=1, time_end=50, time_nsteps=50)
+    path = './datasets/'
+    dataloader = cfd.DataLoader(
+        path=path,
+        N_f=9000,
+        N_b=1000,
+        time_start=1,
+        time_end=50,
+        time_nsteps=50)
     training_time_list = dataloader.select_discretized_time(num_time=30)
 
     # Set initial data, | p, u, v, t, x, y
@@ -61,12 +74,14 @@ def train(net_params=None, distributed_env=False):
     PINN.set_outlet_data(X=outlet_data)
 
     # Set training data, | t, x, y
-    training_data = dataloader.loading_train_inside_domain_data(training_time_list)
+    training_data = dataloader.loading_train_inside_domain_data(
+        training_time_list)
     PINN.set_eq_training_data(X=training_data)
 
     # Training
-    adm_opt = paddle.optimizer.Adam(learning_rate=1e-5, parameters=PINN.net.parameters())
-    PINN.train(num_epoch=100000, optimizer=adm_opt)
+    adm_opt = paddle.optimizer.Adam(
+        learning_rate=1e-5, parameters=PINN.net.parameters())
+    PINN.train(num_epoch=10, optimizer=adm_opt)
 
     #bfgs_opt = psci.optimizer.BFGS()
 
@@ -77,7 +92,3 @@ if __name__ == "__main__":
     train(net_params=net_params)
     # distributed_training
     #train(net_params=net_params, distributed_env=True)
-
-
-
-

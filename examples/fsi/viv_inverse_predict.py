@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 '''
 Created in May. 2022
 PINNs for Inverse VIV Problem
@@ -31,11 +30,10 @@ import paddle.distributed as dist
 
 from dataset import Dataset
 
-import module.fsi.viv_pinn_solver as psolver
-
-
+import paddlescience.module.fsi.viv_pinn_solver as psolver
 
 np.random.seed(1234)
+
 
 def predict(net_params=None):
 
@@ -48,24 +46,34 @@ def predict(net_params=None):
     #inputdata
     t_eta, eta, t_f, f, tmin, tmax = data.build_data()
 
-    PINN = psolver.PysicsInformedNeuralNetwork(layers=6, hidden_size=30, num_ins=1, num_outs=1, 
-            t_max=tmax, t_min=tmin, N_f=f.shape[0], checkpoint_path='./checkpoint/', net_params=net_params,mode='predict')
+    PINN = psolver.PysicsInformedNeuralNetwork(
+        layers=6,
+        hidden_size=30,
+        num_ins=1,
+        num_outs=1,
+        t_max=tmax,
+        t_min=tmin,
+        N_f=f.shape[0],
+        checkpoint_path='./checkpoint/',
+        net_params=net_params,
+        mode='predict')
 
     PINN.set_eta_data(X=(t_eta, eta))
     PINN.set_f_data(X=(t_f, f))
     eta_pred, f_pred = PINN.predict((-4.0, 0.0))
 
-    error_f = np.linalg.norm(f.reshape([-1]) - f_pred.numpy().reshape([-1]),2)/np.linalg.norm(f,2)
-    error_eta = np.linalg.norm(eta.reshape([-1]) - eta_pred.numpy().reshape([-1]),2)/np.linalg.norm(eta,2)
+    error_f = np.linalg.norm(
+        f.reshape([-1]) - f_pred.numpy().reshape([-1]), 2) / np.linalg.norm(f,
+                                                                            2)
+    error_eta = np.linalg.norm(
+        eta.reshape([-1]) - eta_pred.numpy().reshape([-1]),
+        2) / np.linalg.norm(eta, 2)
     print('------------------------')
     print('Error f: %e' % (error_f))
     print('Error eta: %e' % (error_eta))
     print('------------------------')
 
+
 if __name__ == "__main__":
-    net_params = 'checkpoint/net_params_100000'
+    net_params = './checkpoint/net_params_100000'
     predict(net_params=net_params)
-
-
-
-
