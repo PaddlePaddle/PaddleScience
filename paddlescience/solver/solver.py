@@ -78,9 +78,10 @@ class Solver(object):
 
     Example:
         >>> import paddlescience as psci
-        >>> solver = psci.solver.Solver(algo=algo, opt=opt)
+        >>> solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
     """
 
+    # init
     def __init__(self, pde, algo, opt):
         super(Solver, self).__init__()
 
@@ -97,8 +98,8 @@ class Solver(object):
             else:
                 self.__init_static_auto_dist()
 
+    # solve (train)
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
-
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
         else:
@@ -108,16 +109,15 @@ class Solver(object):
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
+    # predict
     def predict(self):
-
         if paddle.in_dynamic_mode():
             return self.__predict_dynamic()
-        # else:
-        #     if paddle.distributed.get_world_size() == 1:
-        #         return self.__solve_static(num_epoch, bs, checkpoint_freq)
-        #     else:
-        #         return self.__solve_static_auto_dist(num_epoch, bs,
-        #                                              checkpoint_freq)
+        else:
+            if paddle.distributed.get_world_size() == 1:
+                return self.__predict_static()
+            else:
+                return self.__predict_static_auto_dist()
 
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,
@@ -136,23 +136,23 @@ class Solver(object):
 
     # init in dynamic mode
     def __init_dynamic(self):
-        """
-        Train the network with respect to num_epoch.
- 
-        Parameters:
-            num_epoch(int): Optional, default 1000. Number of epochs.
-            batch_size(int|None): Under develop. Optional, default None. How many sample points are used as a batch during training.
-            checkpoint_freq(int): Under develop. Optional, default 1000. How many epochs to store the training status once.
+        # """
+        # Train the network with respect to num_epoch.
 
-        Return:
-            solution(Callable): A python func functhion that takes a GeometryDiscrete as input and a numpy array as outputs.
+        # Parameters:
+        #     num_epoch(int): Optional, default 1000. Number of epochs.
+        #     batch_size(int|None): Under develop. Optional, default None. How many sample points are used as a batch during training.
+        #     checkpoint_freq(int): Under develop. Optional, default 1000. How many epochs to store the training status once.
 
-        Example:
-            >>> import paddlescience as psci
-            >>> solver = psci.solver.Solver(algo=algo, opt=opt)
-            >>> solution = solver.solve(num_epoch=10000)
-            >>> rslt = solution(geo)
-        """
+        # Return:
+        #     solution(Callable): A python func functhion that takes a GeometryDiscrete as input and a numpy array as outputs.
+
+        # Example:
+        #     >>> import paddlescience as psci
+        #     >>> solver = psci.solver.Solver(algo=algo, opt=opt)
+        #     >>> solution = solver.solve(num_epoch=10000)
+        #     >>> rslt = solution(geo)
+        # """
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -225,9 +225,9 @@ class Solver(object):
 
     # predict in dynamic mode
 
-    def __predict_dynamic(self, pde):
+    def __predict_dynamic(self):
         # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         # convert inputs to tensor
         for i in range(len(inputs)):
@@ -237,7 +237,7 @@ class Solver(object):
         outs = self.algo.compute_forward(*inputs)
         return outs
 
-    # solver in static mode
+    # init static mode
 
     def __init_static(self):
 
@@ -259,11 +259,12 @@ class Solver(object):
 
         inputs_labels = list()
 
-        self.main_program = paddle.static.Program()
+        self.train_program = paddle.static.Program()
         self.startup_program = paddle.static.Program()
+        self.predict_program = paddle.static.Program()
 
-        # construct program
-        with paddle.static.program_guard(self.main_program,
+        # construct train program
+        with paddle.static.program_guard(self.train_program,
                                          self.startup_program):
 
             # dynamic mode: make network in net's constructor
@@ -299,9 +300,26 @@ class Solver(object):
 
             self.opt.minimize(self.loss)
 
-        # start up program
+        # construct predict program
+        with paddle.static.program_guard(self.predict_program):
+            with paddle.utils.unique_name.guard():
+
+                self.algo.net.make_network_static()
+                ins = list()
+                for i in range(len(inputs)):
+                    ishape = list(inputs[i].shape)
+                    ishape[0] = -1
+                    input = paddle.static.data(
+                        name='input' + str(i), shape=ishape, dtype=self._dtype)
+                    input.stop_gradient = False
+                    ins.append(input)
+
+                self.outs_predict = self.algo.compute_forward(*ins)
+
+        # startup program
         self.exe.run(self.startup_program)
 
+    # solve static
     def __solve_static(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
@@ -325,7 +343,7 @@ class Solver(object):
 
         # main loop
         for epoch in range(num_epoch):
-            rslt = self.exe.run(self.main_program,
+            rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
             print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
@@ -345,15 +363,39 @@ class Solver(object):
 
         # fetch outputs
         fetches = list()
-        for out in self.outs:
+        for out in self.outs_predict:
             fetches.append(out.name)
 
         # run
-        rslt = self.exe.run(self.main_program, feed=feeds, fetch_list=fetches)
+        rslt = self.exe.run(self.predict_program,
+                            feed=feeds,
+                            fetch_list=fetches)
 
         return rslt[:]
 
-    # init in static auto dist
+    # predict static auto-dist
+    def __predict_static_auto_dist(self):
+
+        # create inputs and its attributes
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+
+        # feeds inputs
+        feeds = dict()
+        for i in range(len(inputs)):
+            feeds['input' + str(i)] = inputs[i]
+
+        # fetch outputs
+        fetches = list()
+        for out in self.outs_predict:
+            fetches.append(out.name)
+
+        rslt = self.engine._executor.run(self.predict_program,
+                                         feed=feeds,
+                                         fetch_list=fetches)
+
+        return rslt
+
+    # init static auto dist
     def __init_static_auto_dist(self):
 
         # create inputs/labels and its attributes
@@ -396,7 +438,7 @@ class Solver(object):
         labels_spec = None
 
         # engine
-        engine = Engine(
+        self.engine = Engine(
             model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
@@ -405,19 +447,15 @@ class Solver(object):
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs_labels)
 
-        print("\n ********** engine training start ****  \n")
-
         # train
         engine.prepare(optimizer=self.opt, loss=loss_func)
         engine.fit(train_dataset, sample_generator=False)
 
-        print("\n ********** engine predict start ****  \n")
-
         # test
         inputs_labels = list()
-        test_program = paddle.fluid.Program()
+        predict_program = paddle.fluid.Program()
         start_program = paddle.fluid.Program()
-        with paddle.fluid.program_guard(test_program, start_program):
+        with paddle.fluid.program_guard(predict_program, start_program):
             with paddle.fluid.unique_name.guard():
                 self.algo.net.make_network_static()
                 for i in range(len(inputs)):
@@ -425,14 +463,14 @@ class Solver(object):
                     input = paddle.static.data(
                         name='input' + str(i),
                         shape=inputs[i].shape,
-                        dtype='float32')
+                        dtype=self._dtype)
                     inputs_labels.append(input)
                 for i in range(len(labels)):
                     #labels
                     label = paddle.static.data(
                         name='label' + str(i),
                         shape=labels[i].shape,
-                        dtype='float32')
+                        dtype=self._dtype)
                     inputs_labels.append(label)
 
                 _, outputs = self.algo.compute(
@@ -454,7 +492,8 @@ class Solver(object):
         fetches = []
         for out in outputs:
             fetches.append(out.name)
-        rslt = engine._executor.run(test_program,
+
+        rslt = engine._executor.run(predict_program,
                                     feed=feeds,
                                     fetch_list=fetches)
 
