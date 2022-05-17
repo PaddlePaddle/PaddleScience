@@ -57,8 +57,6 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        # print("\n ********** compute done ****  \n")
-
         return loss, outs  # TODO: add outs
 
 
@@ -235,6 +233,10 @@ class Solver(object):
                 inputs[i], dtype=self._dtype, stop_gradient=False)
 
         outs = self.algo.compute_forward(*inputs)
+
+        for i in range(len(outs)):
+            outs[i] = outs[i].numpy()
+
         return outs
 
     # init static mode
@@ -371,7 +373,7 @@ class Solver(object):
                             feed=feeds,
                             fetch_list=fetches)
 
-        return rslt[:]
+        return rslt
 
     # predict static auto-dist
     def __predict_static_auto_dist(self):
@@ -392,7 +394,6 @@ class Solver(object):
         rslt = self.engine._executor.run(self.predict_program,
                                          feed=feeds,
                                          fetch_list=fetches)
-
         return rslt
 
     # init static auto dist
