@@ -23,7 +23,7 @@ paddle.enable_static()
 # paddle.disable_static()
 
 # load real data
-real_data = np.load("flow_steady/re20_5.0.npy").astype("float32")
+real_data = np.load("./re20_5.0.npy").astype("float32")
 real_cord = real_data[:, 0:3]
 real_sol = real_data[:, 3:7]
 
