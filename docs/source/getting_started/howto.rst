@@ -10,7 +10,7 @@ Some simple examples are baked in for quick demonstration. Please find them in t
 
     .. code-block::
 
-        cd examples/laplace2d
+        cd examples/laplace
         python3.7 laplace2d.py
 
 - **Darcy flow example**
@@ -19,7 +19,7 @@ Some simple examples are baked in for quick demonstration. Please find them in t
 
     .. code-block::
 
-        cd examples/darcy2d
+        cd examples/darcy
         python3.7 darcy2d.py
 
 - **Lid Driven Cavity example**
@@ -28,5 +28,5 @@ Some simple examples are baked in for quick demonstration. Please find them in t
 
     .. code-block::
 
-        cd examples/ldc2d
-        python3.7 ldc2d.py
+        cd examples/ldc
+        python3.7 ldc2d_steady.py

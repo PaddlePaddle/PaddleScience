@@ -28,7 +28,6 @@ The Dirichlet boundary condition is set to be
        p(x,y) & =  sin(2\pi x) cos(2\pi y), \  x=1 \ \text{or} \ y=1.
 
 
-
 Following graphs plot the pressure from training the model on a 100 by 100 grid.
 
 .. image:: ../img/darcy_rslt_100x100.png
@@ -134,7 +133,6 @@ tangent as the activation function.
 	        num_outs=1,
 	        num_layers=5,
 	        hidden_size=20,
-	        dtype="float32",
 	        activation="tanh")
 
 Next, one of the most important steps is define the loss function. Here we use L2 loss.
@@ -142,7 +140,6 @@ Next, one of the most important steps is define the loss function. Here we use L
     .. code-block::
 
        loss = psci.loss.L2()
-
 
 By design, the `loss` object conveys complete information of the PDE and hence the
 latter is eclipsed in further steps. Now combine the neural net and the loss and we

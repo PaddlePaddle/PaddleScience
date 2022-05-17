@@ -33,6 +33,6 @@ def Adam(**kargs):
  
     Example:
         >>> import paddlescience as psci
-        >>> opt = psci.optimizer.Adam(learning_rate=0.1, parameters=linear.parameters())
+        >>> opt = psci.optimizer.Adam(learning_rate=0.1, parameters=net.parameters())
     """
     return paddle.optimizer.Adam(**kargs)

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .pde_base import PDE
 from .pde_laplace import Laplace
 from .pde_poisson import Poisson
 from .pde_navier_stokes import NavierStokes

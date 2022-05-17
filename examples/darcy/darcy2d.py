@@ -76,7 +76,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=1000)
+solution = solver.solve(num_epoch=10000)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

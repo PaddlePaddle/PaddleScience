@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.1'
+__version__ = '1.0 Beta'
+
+import paddle
+
+if paddle.distributed.get_world_size() >= 2:
+    paddle.enable_static()
 
 from . import config
 from . import parameter

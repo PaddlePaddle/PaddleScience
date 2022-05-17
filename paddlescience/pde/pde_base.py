@@ -17,10 +17,38 @@ import numpy as np
 from collections import OrderedDict
 import types
 
+__all__ = ['PDE']
+
 
 class PDE:
-    def __init__(self, num_equations=1, time_dependent=False, weight=None):
-        # super(MathOperator, self).__init__()
+    """
+    User-define Equation
+
+    This module supports to define equations with following steps
+
+        1. define independent variable
+        2. define dependent variable
+        3. declare PDE 
+        4. set independent variable to PDE
+        5. set dependent variable to PDE
+        6. define equations and rhs
+
+    Example:
+        >>> x = sympy.Symbol('x')
+        >>> y = sympy.Symbol('y')
+        >>> u = sympy.Function('u')(x,y)
+        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False, order=2)
+        >>> pde.indvar = [x, y]
+        >>> pde.dvar = [u]
+        >>> pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
+        >>> pde.rhs[0] = 0.0
+    """
+
+    def __init__(self,
+                 num_equations=1,
+                 time_dependent=False,
+                 weight=None,
+                 order=2):
 
         # time dependent / independent
         self.time_dependent = time_dependent
@@ -36,10 +64,13 @@ class PDE:
         self.parameter = list()
 
         # equation
-        self.equations = list()
+        self.equations = [None for i in range(num_equations)]
 
         # right-hand side
-        self.rhs = list()
+        self.rhs = [None for i in range(num_equations)]
+
+        # order
+        self.order = order
 
         # boundary condition
         self.bc = OrderedDict()
@@ -67,13 +98,27 @@ class PDE:
         self.time_step = None
         self.time_array = None
 
-        # # u_n_disc
-        # self.u_n_disc = [None for i in range(num_equations)]
-
     def add_geometry(self, geo):
         self.geometry = geo
 
     def add_bc(self, name, *args):
+        """
+        Add boundary condition to boundary
+
+        Parameters:
+            name (string): Boundary name.
+            args (boundary conditions): The boundaries conditions which are added to boundary. 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
+            >>> pde = psci.pde.Laplace(dim=2)
+            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
+            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
+            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
+        """
+
         if name not in self.bc:
             self.bc[name] = list()
 
@@ -82,11 +127,45 @@ class PDE:
             self.bc[name].append(arg)
 
     def add_ic(self, *args):
+        """
+        Add initial condition for time-dependent equation
+
+        Parameters:
+            args (initial conditions): The initial conditions 
+
+        Example:
+            >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
+
+            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0, 0.0), extent=(1.0, 1.0, 1.0))
+            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
+            >>> geo_disc = geo.discretize(method="sampling", npoints=10000)
+
+            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
+            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
+            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
+
+            >>> ic1 = psci.ic.IC('u', rhs=0) 
+            >>> ic2 = psci.ic.IC('v', rhs=0) 
+            >>> pde.add_ic(ic1, ic2)         # add initial conditions
+
+            >>> pde_disc = pde.discretize(time_method="continue", time_step=10, geo_disc=geo_disc)
+        """
         for arg in args:
             arg.to_formula(self.indvar)
             self.ic.append(arg)
 
     def set_time_interval(self, interval):
+        """
+        Set time interval for time-dependent equation
+
+        Parameters:
+            interval: [start time, end time]
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=2, time_dependent=True)
+            >>> pde.set_time_interval([0.0, 1.0]) # time interval [0.0, 1.0]
+        """
         self.time_internal = interval
 
     def discretize(self, time_method=None, time_step=None, geo_disc=None):

@@ -19,18 +19,18 @@ from .network_base import NetworkBase
 
 class FCNet(NetworkBase):
     """
-    A multi-layer Full Connected Network. Each layer consists of a Matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
+    Full connected network. Each layer consists of a matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
 
     Parameters:
-        num_ins(int): Number of inputs.
-        num_outs(int): Number of outputs.
-        num_layers(int): Number of layers.
-        hidden_size(int): Hiden size in each layer.
-        activation(string): Optional, default 'tanh'. The type of activation function used in each layer, could be 'tanh' or 'sigmoid'.
+        num_ins (integer): Number of inputs.
+        num_outs (integer): Number of outputs.
+        num_layers (integer): Number of layers.
+        hidden_size (integer): Hiden size in each layer.
+        activation (optional, "tanh" / "sigmoid"): Activation function used in each layer. The default value is "tanh".
 
     Example:
         >>> import paddlescience as psci
-        >>> net = psci.network.FCNet(2, 3, 10, 50, dtype='float32', activiation='tanh')
+        >>> net = psci.network.FCNet(2, 3, 10, 50, activiation='tanh')
     """
 
     def __init__(self,
@@ -62,9 +62,8 @@ class FCNet(NetworkBase):
 
         # self.make_network_static()
 
-        # return: 
-        #   dynamic mode: net's parameters 
-        #   static  mode: None
+        # dynamic mode: net's parameters 
+        # static  mode: None
     def parameters(self):
         if paddle.in_dynamic_mode():
             return super(FCNet, self).parameters()
@@ -123,3 +122,35 @@ class FCNet(NetworkBase):
         u = paddle.matmul(u, self.weights[-1])
         u = paddle.add(u, self.biases[-1])
         return u
+
+    def flatten_params(self):
+        flat_vars = list(map(paddle.flatten, self.weights + self.biases))
+        return paddle.flatten(paddle.concat(flat_vars))
+
+    def reconstruct(self, param_data):
+        params = self.weights + self.biases
+        param_sizes = [param.size for param in params]
+        flat_params = paddle.split(param_data, param_sizes)
+        is_biases = [False for _ in self.weights] + [True for _ in self.biases]
+
+        self.weights = []
+        self.biases = []
+
+        for old_param, flat_param, is_bias in zip(params, flat_params,
+                                                  is_biases):
+            shape = old_param.shape
+            value = paddle.reshape(flat_param, shape)
+            # new_param = self.create_parameter(shape,
+            #                                   dtype=self.dtype,
+            #                                   is_bias=is_bias,
+            #                                   default_initializer=Assign(value))
+            # if is_bias:
+            #     self.biases.append(new_param)
+            # else:
+            #     self.weights.append(new_param)
+            # self.add_parameter(old_param.name.split('.')[-1], new_param)
+            new_param = value
+            if is_bias:
+                self.biases.append(new_param)
+            else:
+                self.weights.append(new_param)

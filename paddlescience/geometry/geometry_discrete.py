@@ -32,6 +32,19 @@ class GeometryDiscrete:
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
 
+    def add_customized_points(self, cordinate):
+        """
+        Add cutomized points (cordinate) to geometry
+    
+        Parameters:
+            cord(array): Cordinate of customized points
+
+        Example:
+            >>> cord = numpy.array([[0,0,0],[0,1,2]])
+            >>> geo_disc.add_customized_points(cordinate=cord)
+        """
+        self.user = cord
+
     def padding(self, nprocs=1):
 
         # interior

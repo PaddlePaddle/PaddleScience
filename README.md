@@ -1,4 +1,4 @@
-*Current version of PaddleScience is v0.1.*
+*Current version of PaddleScience is v1.0 Beta.*
 
 # Introduction
 PaddleScience extends the PaddlePaddle framework with reusable
@@ -11,17 +11,17 @@ Its design is evolving and its APIs are subject to change.
 
 PaddleScience currently focuses on the PINNs model. The core components are as follows.
 
+- PDE, delineating partial differential equations in symbolic forms. Specific PDEs derive the
+    the base PDE class. 
+
 - Geometry, a declarative interface for defining the geometric domain. Automatic
     discretization is supported 
 
 - Neural net, currently supporting fully connected layers with customizable size and depth.
 
-- PDE, delineating partial differential equations in symbolic forms. Specific PDEs derive the
-    the base PDE class. Two native PDEs are currently included: Laplace2d and NavierStokes2d. 
-
 - Loss, defining what exact penalties are enforced during the training process. By default,
     the L2 loss is applied. In the current design, the total loss is a weighted sum of
-    three parts, the equation loss, the boundary condition loss and the initial condition loss.
+    four parts, the equation loss, the boundary condition loss, the initial condition loss and the data loss.
 
 - Optimizer, specifying which optimizer to use for training. Adam is the default option. More
     optimizers, such as BFGS, will be available in the future.
@@ -41,7 +41,7 @@ The component organization is illustrated in the following figure.
 
 Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
 
-Package dependencies: paddle, matplotlib, vtk. 
+Package dependencies: paddle, cuda (11.0 or higher), numpy, sympy, matplotlib, vtk, pyevtk, wget. 
 
 PaddleScience currently relies on new features of the Paddle framework so please be advised to download the latest version of Paddle on GitHub or on Gitee. 
 
@@ -59,21 +59,29 @@ export PYTHONPATH=$PWD:$PYTHONPATH
 
 ## Run examples
 
-Some simple examples are baked in for quick demonstration. Please find them in the `examples` directory. To run an example, just enter the subdirectory and run the demo code in Python commandline. 
+Some examples are baked in for quick demonstration. Please find them in the `examples` directory. To run an example, just enter the subdirectory and run the demo code in Python commandline. 
 
 ```
-cd examples/laplace2d
-python3.7 laplace2d.py
-
-cd examples/darcy2d
+# Darcy flow (Poisson equation)
+cd examples/darcy
 python3.7 darcy2d.py
 
-cd examples/ldc2d
-python3.7 ldc2d.py
+# LDC steady (Steady Navier-Stokes eqution)
+cd examples/ldc
+python3.7 ldc2d_steady.py
+
+# Lid Driven Cavity unsteady with continue-time method (Unsteady Navier-Stokes equation)
+cd examples/ldc
+python3.7 ldc2d_unsteady_t.py
+
+# Flow around a circular cylinder with discrete-time method (Unsteady Navier-Stokes equation)
+cd examples/cylinder
+python3.7 cylinder3d_unsteady.py
+
 ```
 
 ## Short tutorials on how to construct and solve a PINN model
 
-[A tutorial on Lid Driven Cavity flow](./examples/ldc2d/README.md)
+[A tutorial on Lid Driven Cavity flow](./examples/ldc/README.md)
 
-[A tutorial on Darcy flow in porous medium](./examples/darcy2d/README.md)
+[A tutorial on Darcy flow in porous medium](./examples/darcy/README.md)

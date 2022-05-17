@@ -26,8 +26,8 @@ class PINNs(AlgorithmBase):
     The Physics Informed Neural Networks Algorithm.
 
     Parameters:
-        net(NetworkBase): The NN network used in PINNs algorithm.
-        loss(LossBase): The loss used in PINNs algorithm.
+        net(Network): The network used in PINNs algorithm.
+        loss(Loss): The loss used in PINNs algorithm.
 
     Example:
         >>> import paddlescience as psci
@@ -262,6 +262,16 @@ class PINNs(AlgorithmBase):
             labels[idx] = data[:, i]
             # print("idx user next: ", idx)
         return labels
+
+    def compute_forward(self, *inputs):
+
+        outs = list()
+
+        for i in inputs:
+            out = self.net.nn_func(i)
+            outs.append(out)
+
+        return outs
 
     def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
                 labels_attr, pde):

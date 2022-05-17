@@ -28,11 +28,35 @@ class Geometry:
         self._dtype = config._dtype
 
     def add_boundary(self, name, criteria, normal=None):
+        """
+        Add (specify) bounday in geometry
+
+        Parameters:
+            name (string): Boundary name
+            criteria (lambda function): Lambda function to define boundary.
+
+        Example:
+            >>> import paddlescience as psci
+            >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
+        """
 
         self.criteria[name] = criteria
         self.normal[name] = normal
 
     def delete_boundary(self, name):
+        """
+        Delete bounday in geometry
+
+        Parameters:
+            name (string): Boundary name
+
+        Example:
+            >>> import paddlescience as psci
+            >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
+            >>> rec.delete_boundary("top") # delete top boundary
+        """
 
         if name in self.criteria:
             del self.criteria[name]
@@ -41,12 +65,22 @@ class Geometry:
             del self.normal[name]
 
     def clear_boundary(self):
+        """
+        Delete all the boundaries in geometry
+
+        Example:
+            >>> import paddlescience as psci
+            >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0)  # top boundary
+            >>> rec.add_boundary("down", criteria=lambda x, y : y==0.0) # down boundary
+            >>> rec.clear_boundary()
+        """
 
         self.criteria.clear()
         self.normal.clear()
 
     # select boundaries from all points and construct disc geometry
-    def _mesh_to_geo_disc(self, points):
+    def _mesh_to_geo_disc(self, points, padding=True):
 
         geo_disc = GeometryDiscrete()
 
@@ -82,7 +116,8 @@ class Geometry:
         geo_disc.interior = points[flag_i, :]
 
         # padding
-        nproc = paddle.distributed.get_world_size()
-        geo_disc.padding(nproc)
+        if padding:
+            nproc = paddle.distributed.get_world_size()
+            geo_disc.padding(nproc)
 
         return geo_disc

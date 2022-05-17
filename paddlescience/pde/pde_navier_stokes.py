@@ -19,30 +19,44 @@ from ..parameter import Parameter, is_parameter
 import sympy
 import numpy as np
 
+__all__ = ['NavierStokes']
+
 
 class NavierStokes(PDE):
     """
-    Two dimentional time-independent Navier-Stokes equation  
+    Navier-Stokes equation
 
     .. math::
         :nowrap:
 
+        Time-independent Navier-Stokes Equation
+
         \\begin{eqnarray*}
-            \\frac{\\partial u}{\\partial x} + \\frac{\\partial u}{\\partial y} & = & 0,   \\\\
-            u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + dp/dx & = & 0,\\\\
-            u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + dp/dy & = & 0.
+            && \\frac{\\partial u}{\\partial x} + \\frac{\\partial v}{\\partial y} + \\frac{\\partial w}{\\partial z} = 0,   \\\\
+            && u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} +  w \\frac{\partial u}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + \\frac{\\partial p}{\\partial x} = 0,\\\\
+            && u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} +  w \\frac{\partial v}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + \\frac{\\partial p}{\\partial y}  = 0, \\\\
+            && u \\frac{\\partial w}{\\partial x} +  v \\frac{\partial w}{\\partial y} +  w \\frac{\partial w}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 w}{\\partial y^2} + \\frac{\\partial p}{\\partial z}  = 0.
         \\end{eqnarray*}
 
-    Parameters
-    ----------
-        nu : float
-            Kinematic viscosity
-        rho : float
-            Density
+        Time-dependent Navier-Stokes equation
+
+        \\begin{eqnarray*}
+            && \\frac{\\partial u}{\\partial x} + \\frac{\\partial v}{\\partial y} + \\frac{\\partial w}{\\partial z} = 0,   \\\\
+            && \\frac{\\partial u}{\\partial t} + u \\frac{\\partial u}{\\partial x} +  v \\frac{\partial u}{\\partial y} +  w \\frac{\partial u}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 u}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 u}{\\partial y^2} + \\frac{\\partial p}{\\partial x} = 0,\\\\
+            && \\frac{\\partial v}{\\partial t} + u \\frac{\\partial v}{\\partial x} +  v \\frac{\partial v}{\\partial y} +  w \\frac{\partial v}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 v}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 v}{\\partial y^2} + \\frac{\\partial p}{\\partial y} = 0, \\\\
+            && \\frac{\\partial w}{\\partial t} + u \\frac{\\partial w}{\\partial x} +  v \\frac{\partial w}{\\partial y} +  w \\frac{\partial w}{\\partial z} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial x^2} - \\frac{\\nu}{\\rho} \\frac{\\partial^2 w}{\\partial z^2} - \\frac{\\nu}{\\rho}  \\frac{\\partial^2 w}{\\partial y^2} + \\frac{\\partial p}{\\partial z} = 0.
+        \\end{eqnarray*}
+
+    Parameters:
+        nu (float): Kinematic viscosity.
+        rho (float): Density.
+        dim (integer): Equation's dimention, 2 and 3 are supported.
+        time_dependent (bool): Time-dependent or time-independent.
+        weight (optional, float / list of float / lambda function): Weight for computing equation loss. The default value is 1.0.        
 
     Example:
         >>> import paddlescience as psci
-        >>> pde = psci.pde.NavierStokes(0.01, 1.0)
+        >>> pde = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2)
     """
 
     def __init__(self,
@@ -275,52 +289,11 @@ class NavierStokes(PDE):
                 dim=self.dim,
                 time_step=time_step,
                 weight=self.weight)
-            # pde_disc.geometry = self.geometry
-
-            # for name, bc in self.bc.items():
-            #     pde_disc.bc[name] = list()
-            #     for i in range(len(bc)):
-            #         bc_disc = bc[i].discretize(pde_disc.indvar)
-            #         pde_disc.bc[name].append(bc_disc)
         else:
             pass
             # TODO: error out
 
-        # # time related information
-        # if self.time_internal is not None:
-        #     pde_disc.time_internal = self.time_internal
-        #     pde_disc.time_step = time_step
-        #     t0 = self.time_internal[0]
-        #     t1 = self.time_internal[1]
-        #     n = int((t1 - t0) / time_step) + 1
-        #     pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
-
         return pde_disc
-
-    # def discretize_bc(self, geometry):
-
-    #     # discritize weight and rhs in boundary condition
-    #     for name_b, bc in self.bc.items():
-    #         points_b = geometry.boundary[name_b]
-
-    #         data = list()
-    #         for n in range(len(points_b[0])):
-    #             data.append(points_b[:, n])
-
-    #         # boundary weight
-    #         for b in bc:
-    #             # compute weight lambda with cordinates
-    #             if type(b.weight) == types.LambdaType:
-    #                 b.weight_disc = b.weight(*data)
-    #             else:
-    #                 b.weight_disc = b.weight
-
-    #         # boundary rhs
-    #         for b in bc:
-    #             if type(b.rhs) == types.LambdaType:
-    #                 b.rhs_disc = b.rhs(*data)
-    #             else:
-    #                 b.rhs_disc = b.rhs
 
 
 class NavierStokesImplicit(PDE):

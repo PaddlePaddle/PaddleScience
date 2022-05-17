@@ -1,3 +1,7 @@
 numpy
+sympy
 matplotlib
 vtk
+pyevtk
+pandas
+wget

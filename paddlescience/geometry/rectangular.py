@@ -17,87 +17,114 @@ from .geometry import Geometry
 import numpy as np
 import math
 
+__all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
+
 
 # Rectangular
 class Rectangular(Geometry):
-    #     """
-    #     Two dimentional rectangular
+    """
+    Two dimentional rectangular or three dimentional cube
 
-    #     Parameters:
-    #         origin: cordinate of left-bottom point of rectangular
-    #         extent: extent of rectangular
+    Parameters:
+        origin: Cordinate of left-bottom point of rectangular
+        extent: Extent of rectangular
 
-    #     Example:
-    #         >>> import paddlescience as psci
-    #         >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-
-    #     """
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+        >>> geo3d = psci.geometry.Rectangular(origin=(0.0,0.0,0.0), extent=(2.0,2.0,2.0))
+    """
 
     def __init__(self, origin, extent):
         super(Rectangular, self).__init__()
 
-        self.origin = origin
-        self.extent = extent
-        if len(origin) == len(extent):
-            self.ndims = len(origin)
+        if np.isscalar(origin):
+            self.origin = [origin]  # scalar to list
+        else:
+            self.origin = origin
+
+        if np.isscalar(extent):
+            self.extent = [extent]  # scalar to list
+        else:
+            self.extent = extent
+
+        # ndims
+        if len(self.origin) == len(self.extent):
+            self.ndims = len(self.origin)
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="uniform", npoints=100):
+    def discretize(self, method="uniform", npoints=100, padding=True):
+        """
+        Discretize rectangular
 
-        # TODO: scalar / list
+        Parameters:
+            method ("uniform" / "sampling"): Discretize rectangular using method "uniform" or "sampling"
+            npoints (integer / integer list): Number of points 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+            >>> geo.discretize(method="uniform", npoints=[10, 20])
+            >>> geo.discretize(method="sampling", npoints=200)
+        """
 
         if method == "uniform":
-            if np.isscalar(npoints):
-                # npoints^{1/ndims}
-                n = int(math.pow(npoints, 1.0 / self.ndims))
-                nl = [n for i in range(self.ndims)]
-            else:
-                nl = npoints
-            points = self._uniform_mesh(nl)
+            points = self._uniform_mesh(npoints)
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
-            # TODO: npoints as list
 
-        return super(Rectangular, self)._mesh_to_geo_disc(points)
+        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 
     def _sampling_mesh(self, npoints):
 
         steps = list()
 
         if self.ndims == 1:
-            pass  # TODO
+            steps.append(
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
+            steps.append(np.array(self.origin[0], dtype=self._dtype))
+            steps.append(np.array(self.extent[0], dtype=self._dtype))
 
         elif self.ndims == 2:
 
-            # TODO: npoint should be larger than 9
-
-            ne = int(np.sqrt(npoints - 4 - 4))  # number of points in edge
-            ni = npoints - 4 * ne - 4  # number of internal points 
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nx * ny = npoints 
+            # nx / ny = lx / ly
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            ny = np.sqrt(float(npoints) * ly / lx)
+            nx = float(npoints) / ny
+            nx = int(nx)
+            ny = int(ny)
 
             x1, y1 = self.origin
             x2, y2 = self.extent
 
             # interior
             steps.append(
-                self._sampling_mesh_interior(self.origin, self.extent, ni))
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
 
             # four boundary: down, top, left, right
             origin = [x1, y1]
             extent = [x2, y1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y1]
             extent = [x1, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y1]
             extent = [x2, y2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             # four vertex
             steps.append(np.array([x1, y1], dtype=self._dtype))
@@ -107,96 +134,102 @@ class Rectangular(Geometry):
 
         elif self.ndims == 3:
 
-            # TODO: exact number of points
-
-            n = int(math.pow(npoints, 1.0 / 3.0))
-
-            nf = n * n  # number of points in face
-            ne = n - 2  # number of points in edge
-            ni = npoints - 6 * nf - 12 * ne - 8  # number of points internal
-
-            # print(npoints, n, nf, ne, ni)
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
 
             x1, y1, z1 = self.origin
             x2, y2, z2 = self.extent
 
             # interior
+            ni = npoints
             steps.append(
                 self._sampling_mesh_interior(self.origin, self.extent, ni))
 
             # six faces: down, top, left, right, front, back
             origin = [x1, y1, z1]
             extent = [x2, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
 
             origin = [x1, y1, z2]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
 
             origin = [x1, y1, z1]
             extent = [x1, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
 
             origin = [x2, y1, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
 
             origin = [x1, y1, z1]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
 
             origin = [x1, y2, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, nf))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
 
             # twelve edges
             origin = [x1, y1, z1]
             extent = [x2, y1, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x2, y1, z1]
             extent = [x2, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y2, z1]
             extent = [x1, y2, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2, z1]
             extent = [x1, y1, z1]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x1, y1, z2]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x2, y1, z2]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x2, y2, z2]
             extent = [x1, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
 
             origin = [x1, y2, z2]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
 
             origin = [x1, y1, z1]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x2, y1, z1]
             extent = [x2, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x2, y2, z1]
             extent = [x2, y2, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             origin = [x1, y1, z1]
             extent = [x1, y1, z2]
-            steps.append(self._sampling_mesh_interior(origin, extent, ne))
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
 
             # eight vertex
             steps.append(np.array([x1, y1, z1], dtype=self._dtype))
@@ -211,9 +244,11 @@ class Rectangular(Geometry):
             pass
             # TODO: error out
 
-        return np.vstack(steps).reshape(npoints, self.ndims)
+        return np.vstack(steps)
 
     def _sampling_mesh_interior(self, origin, extent, n):
+
+        # return np.random.uniform(low=origin, high=extent, size=(n, self.ndims))
 
         steps = list()
         for i in range(self.ndims):
@@ -226,21 +261,55 @@ class Rectangular(Geometry):
 
         return np.dstack(steps).reshape((n, self.ndims))
 
-    def _uniform_mesh(self, npoints):
+    def _uniform_mesh(self, npoints, origin=None, extent=None):
+
+        if origin is None:
+            origin = self.origin
+        if extent is None:
+            extent = self.extent
+
+        if np.isscalar(npoints):
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            if self.ndims == 1:
+                nd = [npoints]
+            elif self.ndims == 2:
+                # nx * ny = npoints 
+                # nx / ny = lx / ly
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                ny = np.sqrt(float(npoints) * ly / lx)
+                nx = float(npoints) / ny
+                nd = [int(nx), int(ny)]
+            elif self.ndims == 3:
+                # nx * ny * nz = npoints 
+                # nx / lx = ny / ly = nz / lz
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                lz = self.extent[2] - self.origin[2]
+                nz = math.pow(
+                    float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+                nx = nz * lx / lz
+                ny = nz * ly / lz
+                nd = [int(nx), int(ny), int(nz)]
+        else:
+            nd = npoints
 
         steps = list()
         for i in range(self.ndims):
             steps.append(
                 np.linspace(
-                    self.origin[i],
-                    self.extent[i],
-                    npoints[i],
+                    origin[i],
+                    extent[i],
+                    nd[i],
                     endpoint=True,
                     dtype=self._dtype))
 
         # meshgrid and stack to cordinates
         if (self.ndims == 1):
-            points = steps[0]
+            points = steps[0].reshape((-1, 1))
         if (self.ndims == 2):
             mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
             points = np.stack(
@@ -252,16 +321,28 @@ class Rectangular(Geometry):
                 (mesh[2].reshape(-1), mesh[1].reshape(-1),
                  mesh[0].reshape(-1)),
                 axis=-1)
-
         return points
 
 
-# cube 
 Cube = Rectangular
 
 
 # CircleInRectangular
 class CircleInRectangular(Rectangular):
+    """
+    Two dimentional rectangular removing one circle
+
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CircleInRectangular, self).__init__(origin, extent)
 
@@ -274,7 +355,19 @@ class CircleInRectangular(Rectangular):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="sampling", npoints=20):
+    def discretize(self, method="sampling", npoints=20, padding=True):
+        """
+        Discretize CircleInRectangular
+
+        Parameters:
+            method (string): Currently, only "sampling" method is supported
+            npoints (integer): Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+        """
 
         if method == "sampling":
 
@@ -303,7 +396,8 @@ class CircleInRectangular(Rectangular):
             ncr = len(rec_cir) + len(cir_b)
             points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
 
-            return super(CircleInRectangular, self)._mesh_to_geo_disc(points)
+            return super(CircleInRectangular, self)._mesh_to_geo_disc(points,
+                                                                      padding)
         else:
             # TODO: better error out
             print("ERROR: ",
@@ -314,6 +408,20 @@ class CircleInRectangular(Rectangular):
 
 # CylinderInCube
 class CylinderInCube(Rectangular):
+    """
+    Three dimentional cube removing one cylinder
+
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
     def __init__(self, origin, extent, circle_center, circle_radius):
         super(CylinderInCube, self).__init__(origin, extent)
 
@@ -326,41 +434,119 @@ class CylinderInCube(Rectangular):
         else:
             pass  # TODO: error out
 
-    def discretize(self, method="sampling", npoints=1000):
+    def discretize(self, method="sampling", npoints=1000, padding=True):
+        """
+        Discretize CylinderInCube
+
+        Parameters:
+            method (string): Currently, "uniform and "sampling" methods are supported
+            npoints (integer): Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="sampling", npoints=100)
+        """
+
+        lx = float(self.extent[0] - self.origin[0])
+        ly = float(self.extent[1] - self.origin[1])
+        lz = float(self.extent[2] - self.origin[2])
+        center = np.array(self.circle_center, dtype=self._dtype)
+        radius = np.array(self.circle_radius, dtype=self._dtype)
+        ratio_area = np.sqrt(3.14 * radius**2 / (lx * ly))
+        ratio_perimeter = (3.14 * radius) / (lx + ly)
+
+        if np.isscalar(npoints):
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
+
+            # number of points in cube
+            ncube = int(npoints * (1.0 + ratio_area)**2)
+        else:
+            nx = npoints[0]
+            ny = npoints[1]
+            nz = npoints[2]
+            # number of points in cube
+            ncube = npoints
+
+        # number of points in circle     
+        nc = int(2 * (nx + ny) * ratio_perimeter)
 
         if method == "sampling":
-
-            # TODO: better nc and nr
-            nc = int(np.sqrt(npoints))
-            nr = npoints - nc
-            nz = int(math.pow(npoints, 1.0 / 3.0))
-
-            center = np.array(self.circle_center, dtype=self._dtype)
-            radius = np.array(self.circle_radius, dtype=self._dtype)
-
             # cube points
-            cube = super(CylinderInCube, self)._sampling_mesh(nr)
+            cube = super(CylinderInCube, self)._sampling_mesh(ncube)
+        elif method == "uniform":
+            cube = super(CylinderInCube, self)._uniform_mesh(ncube)
 
-            # remove cylinder points
-            flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
-            cube_cyl = cube[flag, :]
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[1] = self.origin[1]
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face1 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
 
-            # TODO : points inside / outside cube
+            org = list(self.origin)
+            org[1] = self.extent[1]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face2 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
 
-            # add cylinder boundary points
-            angle = np.arange(nc) * (2.0 * np.pi / nc)
-            x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
-            y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
-            z = np.random.uniform(self.origin[2], self.extent[2],
-                                  nz).astype(self._dtype)
-            x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
-            y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
-            z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
-            cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[0] = self.origin[0]
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face3 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
 
-            points = np.vstack([cube_cyl, cyl_b])
+            org = list(self.origin)
+            org[0] = self.extent[0]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face4 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
 
-            return super(CylinderInCube, self)._mesh_to_geo_disc(points)
+            cube = np.vstack([cube, face1, face2, face3, face4])
+
         else:
-            pass
-            # TODO: error out uniform method
+            pass  # TODO: error out
+
+        # remove cylinder points
+        flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
+        cube_cyl = cube[flag, :]
+
+        # TODO : points inside / outside cube
+
+        # add cylinder boundary points
+        angle = np.arange(nc) * (2.0 * np.pi / nc)
+        x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        z = np.linspace(self.origin[2], self.extent[2], nz).astype(self._dtype)
+        x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
+        y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
+        z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
+        cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
+
+        points = np.vstack([cube_cyl, cyl_b])
+
+        return super(CylinderInCube, self)._mesh_to_geo_disc(points, padding)
