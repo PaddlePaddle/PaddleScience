@@ -61,6 +61,7 @@ PaddleScience is currently under active development. Its design is evolving and 
 
    Lid Driven Cavity Flow  <examples/ldc2d>
    Darcy Flow in Porous Medium <examples/darcy>
+   Flow around A Cylinder <examples/cylinder3d>
 
 	     
 Indices and tables
