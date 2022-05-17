@@ -135,21 +135,10 @@ class PDE:
 
         Example:
             >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
-
-            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0, 0.0), extent=(1.0, 1.0, 1.0))
-            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
-            >>> geo_disc = geo.discretize(method="sampling", npoints=10000)
-
-            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
-            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
-            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
-
             >>> ic1 = psci.ic.IC('u', rhs=0) 
             >>> ic2 = psci.ic.IC('v', rhs=0) 
             >>> pde.add_ic(ic1, ic2)         # add initial conditions
-
-            >>> pde_disc = pde.discretize(time_method="continue", time_step=10, geo_disc=geo_disc)
-        """
+       """
         for arg in args:
             arg.to_formula(self.indvar)
             self.ic.append(arg)
@@ -169,6 +158,21 @@ class PDE:
         self.time_internal = interval
 
     def discretize(self, time_method=None, time_step=None, geo_disc=None):
+        """
+        Discretize equations. 
+
+        Parameters:
+            time_method (None/"implicit"): 
+                "implicit": discretize time-dependent Navier-Stokes equations with implicit method
+            time_step (integer): number of time steps for time-dependent equation
+            geo_disc (GeometryDisc): discrete geometry
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
+            >>> pde.set_time_interval([0.0, 1.0]) # time interval [0.0, 1.0]
+            >>> pde.discretize(geo_disc=geo_disc)
+        """
 
         # time discretize pde
         if self.time_dependent:

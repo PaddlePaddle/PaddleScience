@@ -16,9 +16,6 @@ __version__ = '1.0 Beta'
 
 import paddle
 
-if paddle.distributed.get_world_size() >= 2:
-    paddle.enable_static()
-
 from . import config
 from . import parameter
 from . import geometry

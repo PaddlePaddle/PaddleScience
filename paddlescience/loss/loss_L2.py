@@ -26,10 +26,15 @@ class L2(LossBase):
     L2 loss.
 
     Parameters:
+        p(1 or 2):
+
+            p=1: total loss = eqloss + bcloss + icloss + dataloss.
+
+            p=2: total loss = sqrt(eqloss**2 + bcloss**2 + icloss**2 + dataloss**2)
 
     Example:
         >>> import paddlescience as psci
-        >>> net = psci.loss.L2()
+        >>> loss = psci.loss.L2()
     """
 
     def __init__(self, p=1):
