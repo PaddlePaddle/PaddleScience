@@ -358,15 +358,6 @@ class Solver(object):
         self.labels = labels
         self.labels_attr = labels_attr
 
-    # solve in static mode with auto dist
-    def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
-
-        # inputs and its attributes
-        inputs = self.inputs
-        inputs_attr = self.inputs_attr
-        labels = self.labels
-        labels_attr = self.labels_attr
-
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
@@ -395,12 +386,22 @@ class Solver(object):
             labels_spec=labels_spec,
             strategy=dist_strategy)
 
-        # dataset
-        train_dataset = DataSetStatic(num_epoch, inputs_labels)
+        # prepare
+        self.engine.prepare(optimizer=self.opt, loss=loss_func, gradient_scale=False)
 
+    # solve in static mode with auto dist
+    def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
+
+        # inputs and its attributes
+        inputs = self.inputs
+        inputs_attr = self.inputs_attr
+        labels = self.labels
+        labels_attr = self.labels_attr
+
+        # dataset
+        train_dataset = DataSetStatic(num_epoch, inputs + labels)
         # train
-        self.engine.prepare(optimizer=self.opt, loss=loss_func)
-        self.engine.fit(train_dataset, sample_generator=False)
+        self.engine.fit(train_dataset, batch_size=None)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()

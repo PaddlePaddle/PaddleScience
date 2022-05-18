@@ -123,7 +123,7 @@ for next_time in range(int(pde_disc.time_internal[0])+1, int(pde_disc.time_inter
     solver.feed_data_interior_cur(current_interior)  # add u(n) interior
     solver.feed_data_user_cur(current_user)  # add u(n) user 
     solver.feed_data_user_next(GetRealPhyInfo(next_time, need_info='physic'))  # add u(n+1) user
-    next_uvwp = solver.solve(num_epoch = 2000)
+    next_uvwp = solver.solve(num_epoch=2000)
     # Save vtk
     file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(next_time)
     psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
