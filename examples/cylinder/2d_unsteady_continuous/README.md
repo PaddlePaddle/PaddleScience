@@ -111,12 +111,10 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
        adm_opt = paddle.optimizer.Adam(learning_rate=1e-5, parameters=PINN.net.parameters())
        PINN.train(num_epoch=10, optimizer=adm_opt)
    
-   A well pre-trained model is provided in the checkpoint folder by defining ` net_params = './checkpoint/pretrained_net_params'` in the cylinder2d_unsteady_train.py. 
-   A a new training process from scratch is spawned If `net_params = None`，.
-      
+   A well pre-trained model is provided in the checkpoint folder by defining ` net_params = './checkpoint/pretrained_net_params'` in the cylinder2d_unsteady_train.py,  otherwise the training process is spawned from scratch if `net_params = None`.
+   
     net_params = './checkpoint/pretrained_net_params'
     train(net_params=net_params)
-    
    
   - **Prediction**
    
