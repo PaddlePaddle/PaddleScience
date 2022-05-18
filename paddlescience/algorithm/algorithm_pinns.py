@@ -378,7 +378,7 @@ class PINNs(AlgorithmBase):
             loss = self.__sqrt(loss_eq) + self.__sqrt(loss_bc) + self.__sqrt(
                 loss_ic) + self.__sqrt(loss_data)
         elif p == 2:
-            loss = self.__sqrt(loss_eq + loss_bc + loss_ic + loss_data)
+            loss = self.__sqrt(loss_eq + loss_bc + loss_ic + 100 * loss_data)
         else:
             pass
             # TODO: error out
