@@ -31,27 +31,28 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
  **Install required libraries**
    
-    pip install -r requirements` 
+    cd PaddleScience
+    pip install -r requirements 
     
- **Set environment variables**
+ **Set PYTHONPATH**
  
-    export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/`
+    export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/
    
  **Preparing data**
    Before running the demo, the OpenFOAM dataset is required, run below script:
    
-    cd paddlescience/examples/cylinder/2d_unsteady_continuous
+    cd examples/cylinder/2d_unsteady_continuous
     python download_dataset.py
 
  **Training**
    The trained model is saved under checkpoint path.
    
-    cd paddlescience/examples/cylinder/2d_unsteady_continuous
+    cd examples/cylinder/2d_unsteady_continuous
     python cylinder2d_unsteady_train.py
 
- **Predict**
+ **Prediction**
  
-    cd paddlescience/examples/cylinder/2d_unsteady_continuous
+    cd examples/cylinder/2d_unsteady_continuous
     python cylinder2d_unsteady_predict.py
 
  **Visualization**
@@ -103,7 +104,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
             dtype="float32",
             activation='tanh')
     
-   **-Training**
+  - **Training**
    
    The adam optimizer is employed with learning rate 1e-5 are presented as below shown:
 
@@ -117,7 +118,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
     train(net_params=net_params)
     
    
-   **-Prediction**
+  - **Prediction**
    
    After training, the model is saved in the checkpoint foler, set `net_params` and execute `python cylinder2d_unsteady_predict.py` to get vtk results. The vtk files are generated and saved in the vtk folder. These *vtu* files can be visualized with [Paraview](https://www.paraview.org/).
 
