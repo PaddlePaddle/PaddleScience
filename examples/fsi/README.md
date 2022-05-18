@@ -34,22 +34,23 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
     git clone https://github.com/PaddlePaddle/PaddleScience.git
 
  **Install required libraries**
-   
+
+    cd PaddleScience
     pip install -r requirements` 
     
- **Set environment variables**
+ **Set PYTHONPATH**
  
     export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/`
 
 **Training**
   The trained model is saved under checkpoint path.
   
-    cd paddlescience/examples/fsi/
+    cd examples/fsi/
     python viv_inverse_train.py
 
-**Predict**
+**Prediction**
 
-    cd paddlescience/examples/fsi/
+    cd examples/fsi/
     python viv_inverse_predict.py
   
 ##  Construct the model 
