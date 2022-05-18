@@ -40,9 +40,9 @@ class Dirichlet(BC):
     Dirichlet boundary condition
  
     Parameters:
-        name (string): Name of dependent variable.
-        rhs (float / lambda function): Right-hand side of Dirichlet boundary condition. The default value is 0.0.
-        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
+        name (string): name of dependent variable.
+        rhs (float or lambda function): right-hand side of Dirichlet boundary condition. The default value is 0.0.
+        weight (optional, float or lambda function): weight in computing boundary loss. The default value is 1.0.
 
     Example
         >>> import paddlescience as psci
@@ -71,8 +71,8 @@ class Neumann(BC):
  
     Parameters:
         name (string): Name of dependent variable
-        rhs (float / lambda function): Right-hand side of Neumann boundary condition. The default value is 0.0.
-        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
+        rhs (float or lambda function): right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional, float or lambda function): weight for computing boundary loss. The default value is 1.0.
 
     Example
         >>> import paddlescience as psci
@@ -102,8 +102,8 @@ class Robin(BC):
  
     Parameters:
         name (string): Name of dependent variable
-        rhs (float / lambda function): Right-hand side of Neumann boundary condition. The default value is 0.0.
-        weight (optional, float / lambda function): Weight for computing boundary loss. The default value is 1.0.
+        rhs (float or lambda function): right-hand side of Neumann boundary condition. The default value is 0.0.
+        weight (optional, float or lambda function): weight for computing boundary loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci

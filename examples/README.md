@@ -24,16 +24,13 @@ Solving a Lid Driven Cavity problem in rectangular domain.
 
 
 2D unsteady circular cylinder
------------------------------
-Solving an unsteady 2-D NS equation in a rectangular domain with cylinder
+---------------------------------
+Solving an 2-D unsteady cylinder flow with the PINN continuous method.
 
-Preprocessing: set data path and filenames in loading_cfd_data.py
+3D unsteady circular cylinder
+---------------------------------
+Solving a 3-D unsteady cylinder flow with the PINN discrete method.
 
-Training:  python examples/cylinder/2d_unsteady_cylinder_train.py
-
-Predict:  python examples/cylinder/2d_unsteady_cylinder_predict.py
-
-# https://fleet-x.readthedocs.io/en/latest/paddle_fleet_rst/launch.html
-Distributed Scripts:  python -m paddle.distributed.launch --gpus="xxx" examples/cylinder/2d_unsteady_cylinder_train.py
-
-Pretrained checkpoint:  ./cylinder/checkpoint/pretrained_net_params
+VIV (vortex induced vibration)
+----------------------------------
+Solving the inverse problem of vortex induced vibration with the PINN continuous method.

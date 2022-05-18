@@ -1,24 +1,20 @@
 PDE (Partial Differential Equation)
 =====================================
 
-.. automodule:: paddlescience.pde.pde_laplace
-   :members:
+
+
+.. autoclass:: paddlescience.pde.pde_laplace::Laplace 
+   :members: add_bc
    :no-undoc-members:
-   :inherited-members:
 
-.. automodule:: paddlescience.pde.pde_poisson
-   :members:
+.. autoclass:: paddlescience.pde.pde_poisson::Poisson 
+   :members: add_bc
    :no-undoc-members:
-   :inherited-members:
 
-
-.. automodule:: paddlescience.pde.pde_navier_stokes
-   :members:
+.. autoclass:: paddlescience.pde.pde_navier_stokes::NavierStokes
+   :members: add_bc, add_ic, discretize, set_time_interval
    :no-undoc-members:
-   :inherited-members:
 
-
-.. automodule:: paddlescience.pde.pde_base
-   :members:
+.. autoclass:: paddlescience.pde.pde_base::PDE
+   :members: add_bc, add_ic, set_time_interval
    :no-undoc-members:
-   :inherited-members:   

@@ -14,9 +14,6 @@
 
 import paddle
 import numpy as np
-# import paddle.nn.functional as F
-# from paddle.autograd import batch_jacobian, batch_hessian
-# from ..pde import first_order_rslts, first_order_derivatives, second_order_derivatives
 from .loss_base import LossBase, CompFormula
 from ..labels import LabelInt
 
@@ -26,10 +23,15 @@ class L2(LossBase):
     L2 loss.
 
     Parameters:
+        p(1 or 2):
+
+            p=1: total loss = eqloss + bcloss + icloss + dataloss.
+
+            p=2: total loss = sqrt(eqloss**2 + bcloss**2 + icloss**2 + dataloss**2)
 
     Example:
         >>> import paddlescience as psci
-        >>> net = psci.loss.L2()
+        >>> loss = psci.loss.L2()
     """
 
     def __init__(self, p=1):

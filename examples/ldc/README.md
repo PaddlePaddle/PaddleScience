@@ -30,23 +30,64 @@ Once the concept is clear, next let's take a look at how this translates into th
 
 
 
-### Constructing PDE
+### Constructing Geometry
 
 First, define the problem geometry using the `psci.geometry` module interface. In this example,
 the geometry is a rectangle with the origin at coordinates (-0.05, -0.05) and the extent set
 to (0.05, 0.05).
 
 ```
-geo = psci.geometry.Rectangular(
-    space_origin=(-0.05, -0.05), space_extent=(0.05, 0.05))
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 ```
 
-Next, define the PDE equations to solve. In this example, the equations are a 2d
+Next, add boundaries to the geometry, these boundaries will be used in PDE. 
+Note that the `geo.add_boundary` function is only used for boundaries with physical constraints. 
+
+
+```
+geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
+geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
+geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
+geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
+```
+
+Once the domain are prepared, a discretization recipe should be given.
+
+```
+geo_disc = geo.discretize(npoints=npoints, method="uniform")
+```
+
+### Constructing PDE
+
+After defining Geometry part, define the PDE equations to solve. In this example, the equations are a 2d
 Navier Stokes. This equation is present in the package, and one only needs to
-create a `psci.pde.NavierStokes2D` object to set up the equation.
+create a `psci.pde.NavierStokes` object to set up the equation.
+
 
 ```
-pdes = psci.pde.NavierStokes2D(nu=0.01, rho=1.0)
+pde = psci.pde.NavierStokes(
+    nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
+```
+
+Next, add boundaries equations for PDE. 
+The boundary equations in PDE are strongly bound to the boundary definitions in geometry. 
+The physical information on the  boundaries needs to be set and then added using `pde.add_bc`.
+
+```
+weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
+bc_top_u = psci.bc.Dirichlet('u', rhs=1.0, weight=weight_top_u)
+bc_top_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_down_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_down_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
+bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
+bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
+
+pde.add_bc("top", bc_top_u, bc_top_v)
+pde.add_bc("down", bc_down_u, bc_down_v)
+pde.add_bc("left", bc_left_u, bc_left_v)
+pde.add_bc("right", bc_right_u, bc_right_v)
 ```
 
 Once the equation and the problem domain are prepared, a discretization
@@ -55,62 +96,30 @@ before training starts. Currently, the 2d space can be discretized into a N by M
 grid, 101 by 101 in this example specifically.
 
 ```
-pdes, geo = psci.discretize(pdes, geo, space_steps=(101, 101))
-```
-
-As mentioned above, a valid problem setup relies on sufficient constraints on
-the boundary and initial values. In this example, `GenBC` is the procedure that
-generates the actual boundary values, and by calling `pdes.set_bc_value()` the
-values are then passed to the PDE solver.
-It's worth noting however that in general the boundary and initial value
-conditions can be passed as a function to the solver rather than actual values.
-That feature will be addressed in the future.
-
-```
-def GenBC(xy, bc_index):
-    bc_value = np.zeros((len(bc_index), 2)).astype(np.float32)
-    for i in range(len(bc_index)):
-        id = bc_index[i]
-        if abs(xy[id][1] - 0.05) < 1e-4:
-            bc_value[i][0] = 1.0
-            bc_value[i][1] = 0.0
-        else:
-            bc_value[i][0] = 0.0
-            bc_value[i][1] = 0.0
-    return bc_value
-
-bc_value = GenBC(geo.space_domain, geo.bc_index)
-pdes.set_bc_value(bc_value=bc_value, bc_check_dim=[0, 1])
+pde_disc = pde.discretize(geo_disc=geo_disc)
 ```
 
 ### Constructing the neural net
 
 Now the PDE part is almost done, we move on to constructing the neural net.
 It's straightforward to define a fully connected network by creating a `psci.network.FCNet` object.
-Following is how we create an FFN of 5 hidden layers with 20 neurons on each, using hyperbolic
+Following is how we create an FFN of 10 hidden layers with 20 neurons on each, using hyperbolic
 tangent as the activation function.
 
 ```
 net = psci.network.FCNet(
     num_ins=2,
     num_outs=3,
-    num_layers=5,
+    num_layers=10,
     hidden_size=20,
     dtype="float32",
     activation='tanh')
 ```
 
-Next, one of the most important steps is define the loss function. Here we use L2
-loss with custom weights assigned to the boundary values.
+Next, one of the most important steps is define the loss function. Here we use L2 loss.
 
 ```
-bc_weight = GenBCWeight(geo.space_domain, geo.bc_index)
-loss = psci.loss.L2(pdes=pdes,
-                    geo=geo,
-                    eq_weight=0.01,
-                    bc_weight=bc_weight,
-                    synthesis_method='norm',
-                    run_in_batch=True)
+loss = psci.loss.L2(p=2)
 ```
 
 By design, the `loss` object conveys complete information of the PDE and hence the
@@ -128,15 +137,13 @@ a learning rate of 0.001.
 The `psci.solver.Solver` class bundles the PINNs model, which is called `algo` here,
 and the optimizer, into a solver object that exposes the `solve` interface.
 `solver.solve` accepts three key word arguments. `num_epoch` specicifies how many
-epoches for each batch. `batch_size` specifies the batch size of data that each train
-step works on. `checkpoint_freq` sets for how many epochs the network parameters are
-saved in local file system.
+epoches for each batch.
 
 
 ```
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000, batch_size=None, checkpoint_freq=1000)
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+solution = solver.solve(num_epoch=30000)
 ```
 
 Finally, `solver.solve` returns a function that calculates the solution value
@@ -147,12 +154,5 @@ outputs to Numpy and then you can verify the results.
 the graphs in vtp file which one can play using [Paraview](https://www.paraview.org/).
 
 ```
-rslt = solution(geo).numpy()
-rslt = solution(geo)
-u = rslt[:, 0]
-v = rslt[:, 1]
-u_and_v = np.sqrt(u * u + v * v)
-psci.visu.save_vtk(geo, u, filename="rslt_u")
-psci.visu.save_vtk(geo, v, filename="rslt_v")
-psci.visu.save_vtk(geo, u_and_v, filename="u_and_v")
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 ```

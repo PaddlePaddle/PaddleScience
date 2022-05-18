@@ -23,6 +23,20 @@ from .. import config
 
 # Save geometry pointwise
 def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
+    """
+    Visualization. Save data to vtk format.
+
+    Parameters:
+        filename(string): file name.
+        time_array(list or numpy array, optional): time steps list / array.
+        geo_disc (GeometryDiscrete): discrete geometry.
+        data (numpy array): data to be visualized.
+
+
+    Example:
+        >>> import paddlescience as psci
+        >>> psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
+    """
 
     nt = 1 if (time_array is None) else len(time_array) - 1
     nprocs = paddle.distributed.get_world_size()

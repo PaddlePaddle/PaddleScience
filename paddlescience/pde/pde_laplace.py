@@ -25,8 +25,8 @@ class Laplace(PDE):
     Laplace Equation
     
     Parameters:
-        dim (integer): Equation's dimention, one, two and three are supported.
-        weight (optional, float or list of float): Weight for computing equation loss. The default value is 1.0.
+        dim (integer): equation's dimention. 1, 2 and 3 are supported.
+        weight (optional, float or list of float): weight used in computing equation loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci

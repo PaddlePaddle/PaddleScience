@@ -32,7 +32,7 @@ PaddleScience currently focuses on the PINNs model. The core components are as f
 
 The component organization is illustrated in the following figure. 
 
-![image](./docs/source/img/pscicode.png)
+![image](./docs/source/img/PaddleScience_arch.png)
 
 
 # Getting started
@@ -41,7 +41,7 @@ The component organization is illustrated in the following figure.
 
 Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
 
-Package dependencies: paddle, cuda (11.0 or higher), numpy, sympy, matplotlib, vtk, pyevtk, wget. 
+Package dependencies: paddle, cuda (11.0 or higher), numpy, scipy, sympy, matplotlib, vtk, pyevtk, wget. 
 
 PaddleScience currently relies on new features of the Paddle framework so please be advised to download the latest version of Paddle on GitHub or on Gitee. 
 

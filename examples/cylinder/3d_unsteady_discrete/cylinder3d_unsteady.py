@@ -27,6 +27,7 @@ np.random.seed(1)
 # paddle.enable_static()
 paddle.disable_static()
 
+
 # load real data 
 def GetRealPhyInfo(time, need_info=None):
     # if real data don't exist, you need to download it.
@@ -35,7 +36,8 @@ def GetRealPhyInfo(time, need_info=None):
         wget.download(data_set)
         with zipfile.ZipFile('cylinder3d_openfoam_re100.zip', 'r') as zip_ref:
             zip_ref.extractall('openfoam_cylinder_re100')
-    real_data = np.load("openfoam_cylinder_re100/flow_re100_" + str(int(time)) + "_xyzuvwp.npy")
+    real_data = np.load("openfoam_cylinder_re100/flow_re100_" + str(
+        int(time)) + "_xyzuvwp.npy")
     real_data = real_data.astype(np.float32)
     if need_info == 'cord':
         return real_data[:, 0:3]
@@ -44,16 +46,14 @@ def GetRealPhyInfo(time, need_info=None):
     else:
         return real_data
 
+
 # define start time
 start_time = 100
 
 cc = (0.0, 0.0)
 cr = 0.5
 geo = psci.geometry.CylinderInCube(
-    origin=(-8, -8, -2),
-    extent=(25, 8, 2),
-    circle_center=cc,
-    circle_radius=cr)
+    origin=(-8, -8, -2), extent=(25, 8, 2), circle_center=cc, circle_radius=cr)
 
 geo.add_boundary(name="left", criteria=lambda x, y, z: abs(x + 8.0) < 1e-4)
 geo.add_boundary(name="right", criteria=lambda x, y, z: abs(x - 25.0) < 1e-4)
@@ -116,18 +116,23 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
-current_interior = np.zeros((len(pde_disc.geometry.interior), 3)).astype(np.float32)
+current_interior = np.zeros(
+    (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
-for next_time in range(int(pde_disc.time_internal[0])+1, int(pde_disc.time_internal[1])+1):
+for next_time in range(
+        int(pde_disc.time_internal[0]) + 1,
+        int(pde_disc.time_internal[1]) + 1):
     print("### train next time=%f train task ###" % next_time)
     solver.feed_data_interior_cur(current_interior)  # add u(n) interior
     solver.feed_data_user_cur(current_user)  # add u(n) user 
-    solver.feed_data_user_next(GetRealPhyInfo(next_time, need_info='physic'))  # add u(n+1) user
+    solver.feed_data_user_next(GetRealPhyInfo(
+        next_time, need_info='physic'))  # add u(n+1) user
     next_uvwp = solver.solve(num_epoch=2000)
     # Save vtk
-    file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(next_time)
-    psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
+        next_time)
+    psci.visu.save_vtk(
+        filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
     # current_info need to be modified as follows: current_time -> next time
     current_interior = np.array(next_uvwp[0])[:, 0:3]
     current_user = np.array(next_uvwp[-1])[:, 0:3]
-    

@@ -16,6 +16,7 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+paddle.disable_static()
 from .. import config
 
 __all__ = ["Solver"]
