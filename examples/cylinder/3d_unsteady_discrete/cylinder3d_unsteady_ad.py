@@ -32,6 +32,7 @@ enable_prim()
 start_time = 100
 time_step = 1
 
+
 # load real data 
 def GetRealPhyInfo(time, need_info=None):
     # if real data don't exist, you need to download it.
@@ -49,6 +50,7 @@ def GetRealPhyInfo(time, need_info=None):
         return real_data[:, 3:7]
     else:
         return real_data
+
 
 cc = (0.0, 0.0)
 cr = 0.5
@@ -114,7 +116,6 @@ data_size = len(geo_disc.user)
 inputs, inputs_attr = algo.create_inputs(pde_disc)
 labels, labels_attr = algo.create_labels(pde_disc)
 
-
 main_program = paddle.static.Program()
 startup_program = paddle.static.Program()
 
@@ -148,9 +149,10 @@ with paddle.static.program_guard(main_program, startup_program):
 # data parallel
 nranks = paddle.distributed.get_world_size()
 if nranks > 1:
-    main_program, startup_program = convert_to_distributed_program(main_program, startup_program, param_grads)
+    main_program, startup_program = convert_to_distributed_program(
+        main_program, startup_program, param_grads)
 
-with paddle.static.program_guard(main_program, startup_program):    
+with paddle.static.program_guard(main_program, startup_program):
     if prim_enabled():
         prim2orig(main_program.block(0))
 
@@ -189,9 +191,11 @@ for i in range(num_time_step):
     self_lables = algo.feed_data_user_cur(self_lables, labels_attr,
                                           current_user)
     self_lables = algo.feed_data_user_next(
-        self_lables, labels_attr, GetRealPhyInfo(
-        next_time, need_info='physic'))
-    self_lables = data_parallel_partition(self_lables, time_step = i)
+        self_lables,
+        labels_attr,
+        GetRealPhyInfo(
+            next_time, need_info='physic'))
+    self_lables = data_parallel_partition(self_lables, time_step=i)
 
     for j in range(len(self_lables)):
         feeds['label' + str(j)] = self_lables[j]

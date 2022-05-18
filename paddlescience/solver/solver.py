@@ -388,7 +388,8 @@ class Solver(object):
             strategy=dist_strategy)
 
         # prepare
-        self.engine.prepare(optimizer=self.opt, loss=loss_func, gradient_scale=False)
+        self.engine.prepare(
+            optimizer=self.opt, loss=loss_func, gradient_scale=False)
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
