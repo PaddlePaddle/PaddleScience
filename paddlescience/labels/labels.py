@@ -20,4 +20,4 @@ class LabelInt(int):
 
 class LabelHolder:
     def __init__(self):
-        self.shape = [None, 1]
+        self.shape = [None]
