@@ -108,6 +108,7 @@ PINN.train(num_epoch=100000, batchsize=batchsize, optimizer=adm_opt)
 ```
 
 - **Prediction**
+
 After training, the model is saved in the checkpoint foler, set `net_params` and execute `python viv_inverse_predict.py` to get predictions. 
 
 ```
