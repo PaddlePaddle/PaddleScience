@@ -36,11 +36,11 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
  **Install required libraries**
 
     cd PaddleScience
-    pip install -r requirements` 
+    pip install -r requirements 
     
  **Set PYTHONPATH**
  
-    export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/`
+    export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/
 
 **Training**
   The trained model is saved under checkpoint path.
