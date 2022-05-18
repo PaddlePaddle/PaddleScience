@@ -1,5 +1,5 @@
 """
-# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ from apibase import randtool
 
 np.random.seed(22)
 paddle.seed(22)
-paddle.disable_static()
-psci.config.set_dtype('float64')
 
 
 def cal_FCNet(ins,
@@ -31,6 +29,7 @@ def cal_FCNet(ins,
               num_outs,
               num_layers,
               hidden_size,
+              dtype='float64',
               activation='tanh'):
     """
     calculate FCNet api
@@ -40,6 +39,7 @@ def cal_FCNet(ins,
         num_outs=num_outs,
         num_layers=num_layers,
         hidden_size=hidden_size,
+        dtype=dtype,
         activation=activation)
 
     for i in range(num_layers):
@@ -200,7 +200,6 @@ def test_FCNet6():
     """
     xy_data = randtool("float", 0, 1, (9, 4))
     u = cal_with_np(xy_data, 4, 3, 2, 20)
-    obj.delta = 1e-5
     obj.run(res=u,
             ins=xy_data,
             num_ins=4,
@@ -244,79 +243,3 @@ def test_FCNet8():
             num_outs=3,
             num_layers=5,
             hidden_size=20)
-
-
-paddle.enable_static()
-
-
-def static_fcnet(ins,
-                 num_ins,
-                 num_outs,
-                 num_layers,
-                 hidden_size,
-                 activation='tanh'):
-    net = psci.network.FCNet(
-        num_ins, num_outs, num_layers, hidden_size, activation=activation)
-    net.make_network_static()
-    for i in range(num_layers):
-        net.weights[i] = paddle.ones_like(net.weights[i])
-    return net.nn_func(ins)
-
-
-class TestFCNet(APIBase):
-    """
-    test flatten
-    """
-
-    def hook(self):
-        """
-        implement
-        """
-        self.types = [np.float64]
-        # self.debug = True
-        # enable check grad
-        self.dygraph = False
-        self.static = True
-        self.enable_backward = False
-
-
-obj1 = TestFCNet(static_fcnet)
-
-
-@pytest.mark.api_network_FCNet
-def test_FCNet9():
-    """
-    static
-    default
-    """
-    xy_data = np.array([[0.1, 0.5]])
-    u = cal_with_np(xy_data, 2, 1, 2, 1)
-    obj1.run(res=u,
-             ins=xy_data,
-             num_ins=2,
-             num_outs=1,
-             num_layers=2,
-             hidden_size=1)
-
-
-@pytest.mark.api_network_FCNet
-def test_FCNet10():
-    """
-    static
-    xy shape (9, 4)
-    num_outs: 3
-    hidden_size: 20
-    num_layers: 5
-    activation='sigmoid'
-    """
-    # xy_data = randtool("float", 0, 1, (9, 4))
-    xy_data = np.array([[0.1, 0.5, 0.2, 0.4]])
-
-    u = cal_with_np(xy_data, 4, 3, 5, 20, activation='sigmoid')
-    obj1.run(res=u,
-             ins=xy_data,
-             num_ins=4,
-             num_outs=3,
-             num_layers=5,
-             hidden_size=20,
-             activation='sigmoid')
