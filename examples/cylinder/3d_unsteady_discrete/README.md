@@ -15,7 +15,7 @@ Following graphs show the results generated from training a grid with about 40,0
 
 
 <div align="center">
-<img src="../../docs/source/img/cylinder3d.gif" width = "500" align=center />
+<img src="../../../docs/source/img/cylinder3d.gif" width = "500" align=center />
 </div>
 
 
