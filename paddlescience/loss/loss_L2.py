@@ -34,8 +34,9 @@ class L2(LossBase):
         >>> loss = psci.loss.L2()
     """
 
-    def __init__(self, p=1):
+    def __init__(self, p=1, data_weight=1):
         self.norm_p = p
+        self.data_weight = data_weight
 
     # compute loss on one interior 
     # there are multiple pde
@@ -171,4 +172,5 @@ class L2(LossBase):
             loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
             # TODO: p=2 p=1
 
+        loss = self.data_weight * loss
         return loss, cmploss.outs
