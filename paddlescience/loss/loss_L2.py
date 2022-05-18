@@ -34,7 +34,7 @@ class L2(LossBase):
         >>> loss = psci.loss.L2()
     """
 
-    def __init__(self, p=1, data_weight=1):
+    def __init__(self, p=1, data_weight=1.0):
         self.norm_p = p
         self.data_weight = data_weight
 
