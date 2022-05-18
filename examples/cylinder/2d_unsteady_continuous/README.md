@@ -39,7 +39,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
     export PYTHONPATH=$PYTHONPATH:/user_path*/PaddleScience/
    
  **Preparing data**
-   Before running the demo, the OpenFOAM dataset is required, run below script:
+   Before running the demo, the OpenFOAM dataset is required, run below script to download data:
    
     cd examples/cylinder/2d_unsteady_continuous
     python download_dataset.py
@@ -124,4 +124,3 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
         net_params = './checkpoint/pretrained_net_params'
         vtk_filename = './vtk/uvp_t_'
         predict_once_for_all(net_params=net_params, vtk_filename=vtk_filename)
-
