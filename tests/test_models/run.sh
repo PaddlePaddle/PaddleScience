@@ -1,4 +1,6 @@
-# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+#!/bin/bash
+
+# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
 bug=0
 
-echo "api bug list:" >  result.txt
+echo "===== examples bug list =====" >  result.txt
+echo "serial bug list:" >>  result.txt
 for file in ${cases}
 do
-echo ${file}
+echo serial ${file} test
 if [[ ${ignore} =~ ${file##*/} ]]; then
     echo "skip"
 else
-    python3.7 -m pytest ${file}
+    python3.7 ${file}
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
     fi
 fi
 done
+echo "serial bugs: "${bug} >> result.txt
+
+
+ignore="test_cylinder3d_unsteady.py"
+echo "distributed bug list:" >>  result.txt
+for file in ${cases}
+do
+echo distributed ${file} test
+if [[ ${ignore} =~ ${file##*/} ]]; then
+    echo "skip"
+else
+    python3.7 -m paddle.distributed.launch --devices=0,1  ${file}
+    if [ $? -ne 0 ]; then
+        echo ${file} >> result.txt
+        bug=`expr ${bug} + 1`
+    fi
+fi
+done
+
 
 echo "total bugs: "${bug} >> result.txt
 cat result.txt
