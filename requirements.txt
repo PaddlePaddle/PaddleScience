@@ -6,3 +6,4 @@ vtk
 pyevtk
 pandas
 wget
+scipy

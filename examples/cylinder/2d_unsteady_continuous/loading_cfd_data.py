@@ -53,7 +53,7 @@ class DataLoader:
 
     def select_discretized_time(self, num_time=20, reused=True):
         # num_time, number of time for training in each epoch
-        if self.random_time_steps and resued:
+        if self.random_time_steps and reused:
             return self.random_time_steps
         else:
             self.random_time_steps = np.random.choice(self.discretized_time,
@@ -63,7 +63,7 @@ class DataLoader:
 
     def select_ordered_time(self, num_time=20, reused=True):
         # num_time, number of time for training in each epoch
-        if self.random_time_steps is not None and resued:
+        if self.random_time_steps is not None and reused:
             return self.random_time_steps
         self.discretized_time.sort()
         return self.discretized_time
