@@ -104,7 +104,7 @@ net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
-loss = psci.loss.L2(p=2)
+loss = psci.loss.L2(p=2, data_weight=100.0)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)

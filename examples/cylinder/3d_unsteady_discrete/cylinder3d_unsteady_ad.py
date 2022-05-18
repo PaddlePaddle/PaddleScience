@@ -142,7 +142,7 @@ with paddle.static.program_guard(main_program, startup_program):
 
     # total_loss
     total_loss = paddle.sqrt(bc_loss + output_var_0_eq_loss +
-                             output_var_4_eq_loss + data_loss)
+                             output_var_4_eq_loss + 100.0 * data_loss)
     opt_ops, param_grads = paddle.optimizer.Adam(0.001).minimize(total_loss)
 
 # data parallel
