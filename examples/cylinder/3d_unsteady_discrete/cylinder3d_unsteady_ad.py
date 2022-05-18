@@ -31,8 +31,6 @@ enable_prim()
 # define start time and time step
 start_time = 100
 time_step = 1
-npoints = 55384
-
 
 # load real data 
 def GetRealPhyInfo(time, need_info=None):
