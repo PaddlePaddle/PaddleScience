@@ -12,9 +12,9 @@ PDE (Partial Differential Equation)
    :no-undoc-members:
 
 .. autoclass:: paddlescience.pde.pde_navier_stokes::NavierStokes
-   :members: add_bc, add_ic, set_time_interval
+   :members: add_bc, add_ic, discretize, set_time_interval
    :no-undoc-members:
 
 .. autoclass:: paddlescience.pde.pde_base::PDE
-   :members:
+   :members: add_bc, add_ic, set_time_interval
    :no-undoc-members:

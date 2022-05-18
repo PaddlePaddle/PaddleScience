@@ -48,11 +48,11 @@ class NavierStokes(PDE):
         \\end{eqnarray*}
 
     Parameters:
-        nu (float): Kinematic viscosity.
-        rho (float): Density.
-        dim (integer): Equation's dimention, 2 and 3 are supported.
-        time_dependent (bool): Time-dependent or time-independent.
-        weight (optional, float / list of float / lambda function): Weight for computing equation loss. The default value is 1.0.        
+        nu (float): kinematic viscosity.
+        rho (float): density.
+        dim (integer): dquation's dimention. 2 and 3 are supported.
+        time_dependent (bool): time-dependent or time-independent.
+        weight (optional, float or list of float or lambda function): weight in computing equation loss. The default value is 1.0.        
 
     Example:
         >>> import paddlescience as psci

@@ -21,9 +21,9 @@ class IC:
     Initial condition for time-dependent equation
  
     Parameters:
-        name (string): Name of dependent variable.
-        rhs (float / lambda function): Right-hand side of initial boundary condition. The default value is 0.0.
-        weight (optional, float / lambda function): Weight for computing initial loss. The default value is 1.0.
+        name (string): name of dependent variable.
+        rhs (float or lambda function): right-hand side of initial boundary condition. The default value is 0.0.
+        weight (optional, float or lambda function): weight for computing initial loss. The default value is 1.0.
 
     Example:
         >>> import paddlescience as psci

@@ -34,6 +34,7 @@ class PDE:
         6. define equations and rhs
 
     Example:
+        >>> # Example: 2-dimentional Laplace equation
         >>> x = sympy.Symbol('x')
         >>> y = sympy.Symbol('y')
         >>> u = sympy.Function('u')(x,y)
@@ -106,8 +107,8 @@ class PDE:
         Add boundary condition to boundary
 
         Parameters:
-            name (string): Boundary name.
-            args (boundary conditions): The boundaries conditions which are added to boundary. 
+            name (string): boundary name.
+            args (boundary conditions): boundary conditions which are added to boundary. 
 
         Example:
             >>> import paddlescience as psci
@@ -131,7 +132,7 @@ class PDE:
         Add initial condition for time-dependent equation
 
         Parameters:
-            args (initial conditions): The initial conditions 
+            args (initial conditions): initial conditions 
 
         Example:
             >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
@@ -145,7 +146,7 @@ class PDE:
 
     def set_time_interval(self, interval):
         """
-        Set time interval for time-dependent equation
+        Set time interval (start time and end time) for time-dependent equation
 
         Parameters:
             interval: [start time, end time]
@@ -159,10 +160,10 @@ class PDE:
 
     def discretize(self, time_method=None, time_step=None, geo_disc=None):
         """
-        Discretize equations. 
+        Discretize equations
 
         Parameters:
-            time_method (None/"implicit"): 
+            time_method (None or "implicit"): 
                 "implicit": discretize time-dependent Navier-Stokes equations with implicit method
             time_step (integer): number of time steps for time-dependent equation
             geo_disc (GeometryDisc): discrete geometry
