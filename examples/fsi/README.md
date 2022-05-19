@@ -57,13 +57,14 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
   Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
   
 - **Load data for training**
+
 For training, *η* and *f* were obtained from CFD tools and saved in the *./examples/fsi/VIV_Training.mat* file, they are loaded as shown below:
 
 ```
 t_eta, eta, t_f, f, tmin, tmax = data.build_data()
 ``` 
 
-- **pinn_solver: define the pinn neural network**
+- **pinn_solver instance: define the pinn neural network**
      
 Since only the lateral vibration of the structure is considered and the inlet velocity is constant, time(*t*) is the only input dimension of the neural network and the output is the vibration amplitude of the structure.
 
@@ -74,8 +75,9 @@ PINN = psolver.PysicsInformedNeuralNetwork(layers=6, hidden_size=30, num_ins=1, 
         t_max=tmax, t_min=tmin, N_f=f.shape[0], checkpoint_path='./checkpoint/', net_params=net_params)
 ```
 
-- **pinn_solver: define the PDE**
-PDE is defined in `./paddlescience/module/fsi/viv_pinn_solver.py` as shown below:
+- **pinn_solver: define the equation**
+
+The equation is defined in `./paddlescience/module/fsi/viv_pinn_solver.py` as shown below:
 ```
 def neural_net_equations(self, t, u=None):
     eta = self.net.nn_func(t)
@@ -90,6 +92,7 @@ def neural_net_equations(self, t, u=None):
 ```     
 
 - **pinn_solver: define the loss weights**
+
 In this demo, the eta_weight and eq_weight are set as 100 and 1 seperately.
 ```
 self.eta_weight = 100
