@@ -37,23 +37,23 @@ done
 echo "serial bugs: "${bug} >> result.txt
 
 
-ignore="test_cylinder3d_unsteady.py"
-echo "distributed bug list:" >>  result.txt
-for file in ${cases}
-do
-echo distributed ${file} test
-if [[ ${ignore} =~ ${file##*/} ]]; then
-    echo "skip"
-else
-    python3.7 -m paddle.distributed.launch --devices=0,1  ${file}
-    if [ $? -ne 0 ]; then
-        echo ${file} >> result.txt
-        bug=`expr ${bug} + 1`
-    fi
-fi
-done
-
-
-echo "total bugs: "${bug} >> result.txt
+#ignore="test_cylinder3d_unsteady.py"
+#echo "distributed bug list:" >>  result.txt
+#for file in ${cases}
+#do
+#echo distributed ${file} test
+#if [[ ${ignore} =~ ${file##*/} ]]; then
+#    echo "skip"
+#else
+#    python3.7 -m paddle.distributed.launch --devices=0,1  ${file}
+#    if [ $? -ne 0 ]; then
+#        echo ${file} >> result.txt
+#        bug=`expr ${bug} + 1`
+#    fi
+#fi
+#done
+#
+#
+#echo "total bugs: "${bug} >> result.txt
 cat result.txt
 exit ${bug}
