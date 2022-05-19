@@ -50,4 +50,3 @@ else
   echo "error!"
   exit 8
 fi
-~
