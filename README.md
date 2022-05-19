@@ -75,7 +75,7 @@ cd examples/ldc
 python3.7 ldc2d_unsteady_t.py
 
 # Flow around a circular cylinder with discrete-time method (Unsteady Navier-Stokes equation)
-cd examples/cylinder
+cd examples/cylinder/3d_unsteady_discrete/baseline
 python3.7 cylinder3d_unsteady.py
 
 ```

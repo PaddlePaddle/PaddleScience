@@ -16,7 +16,7 @@ cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
 bug=0
 
-echo "api bug list:" >  result.txt
+echo "===== api bug list =====" >  result.txt
 for file in ${cases}
 do
 echo ${file}
