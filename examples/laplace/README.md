@@ -136,3 +136,12 @@ rslt = solution(geo).numpy()
 psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
 np.save(rslt, 'rslt_laplace_2d.npy')
 ```
+
+### Scalability on Distributed Systems
+Distributed is currently supported. The scalability performance is as follows:
+|gpus | points |  performance (sec/epoch) | 
+|---|---|---|
+|N1C1 | 580w * 1 | 0.9483 s| 
+|N1C8 | 580w * 4 |  0.9661 s | 
+|N2C16 | 580w * 8 |  0.9684 s | 
+|N4C32 | 580w * 16 |  0.9679 s | 

@@ -184,8 +184,7 @@ current_interior = np.zeros(
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
 for i in range(num_time_step):
     next_time = start_time + (i + 1) * time_step
-    print("############# train next time=%f train task ############" %
-          next_time)
+    print("### train next time=%f train task ###" % next_time)
     self_lables = algo.feed_data_interior_cur(labels, labels_attr,
                                               current_interior)
     self_lables = algo.feed_data_user_cur(self_lables, labels_attr,
@@ -205,8 +204,9 @@ for i in range(num_time_step):
         print("autograd epoch: " + str(k + 1), "    loss:", out[0])
     next_uvwp = out[1:]
     # # Save vtk
-    # file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
-    # psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
+    psci.visu.save_vtk(
+        filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])
