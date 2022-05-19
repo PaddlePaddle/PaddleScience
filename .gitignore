@@ -126,4 +126,5 @@ FETCH_HEAD
 .npy
 
 # vtk
-.vtk
+*.vtk
+*.vtu

@@ -5,7 +5,7 @@ Installation
 
     Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
 
-    Package dependencies: paddle, numpy, matplotlib, vtk
+    Package dependencies: paddle, cuda (11.0 or higher), numpy, scipy, sympy, matplotlib, vtk, pyevtk, wget
 
 - **Installation**
 

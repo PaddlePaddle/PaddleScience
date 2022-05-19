@@ -176,7 +176,6 @@ class PysicsInformedNeuralNetwork:
             num_outs=num_outs,
             num_layers=num_layers,
             hidden_size=hidden_size,
-            dtype="float32",
             activation='tanh')
 
     def neural_net_u(self, t, x, y):

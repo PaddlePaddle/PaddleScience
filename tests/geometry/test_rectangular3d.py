@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
 import paddlescience as psci
 import numpy as np
 
-geo = psci.geometry.Rectangular(
-    space_origin=(0.0, 0.0, 0.0), space_extent=(1.0, 1.0, 1.0))
+geo = psci.geometry.Rectangular(origin=(0.0, 0.0, 0.0), extent=(1.0, 1.0, 1.0))
 
-geo_disc = geo.discretize(space_nsteps=(3, 6, 4))
-
-data = np.ones(4 * 7 * 5, dtype="float32")
-psci.visu.save_vtk(geo_disc, data, 'test3d')
+geo_disc = geo.discretize(method="uniform", npoints=(3, 6, 3))
+geo_disc = geo.discretize(method="uniform", npoints=64)
+geo_disc = geo.discretize(method="sampling", npoints=100)
