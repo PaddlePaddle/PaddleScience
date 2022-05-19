@@ -37,43 +37,60 @@ the equation residues and the boundary values.
 Once the concept is clear, next let's take a look at how this translates into the
 Laplace2d example.
 
-### Constructing PDE
+### Constructing Geometry
 
 First, define the problem geometry using the `psci.geometry` module interface. In this example,
 the geometry is a rectangle with the origin at coordinates (0.0, 0.0) and the extent set
 to (1.0, 1.0).
 
 ```
-geo = psci.geometry.Rectangular(
-    space_origin=(0.0, 0.0), space_extent=(1.0, 1.0))
+geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 ```
 
-Next, define the PDE equations to solve. In this example, the equations are a 2d
-Laplace equation. This equation is present in the package, and one only needs to
-create a `psci.pde.Laplace2D` object to set up the equation.
+Next, add boundaries to the geometry, these boundaries will be used in PDE. 
+Note that the `geo.add_boundary` function is only used for boundaries with physical constraints. 
+
 
 ```
-pdes = psci.pde.Laplace2D()
+geo.add_boundary(
+    name="around",
+    criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
+```
+
+Once the domain are prepared, a discretization recipe should be given.
+
+```
+npoints = 10201
+geo_disc = geo.discretize(npoints=npoints, method="uniform")
+```
+
+### Constructing PDE
+
+After defining Geometry part, define the PDE equations to solve. In this example, the equations are a 2d
+Laplace. This equation is present in the package, and one only needs to
+create a `psci.pde.Laplace` object to set up the equation.
+
+```
+pde = psci.pde.Laplace(dim=2)
+```
+
+Next, add boundaries equations for PDE. 
+The boundary equations in PDE are strongly bound to the boundary definitions in geometry. 
+The physical information on the  boundaries needs to be set and then added using `pde.add_bc`.
+
+
+```
+bc_around = psci.bc.Dirichlet('u', rhs=ref_sol)
+
+pde.add_bc("around", bc_around)
 ```
 
 Once the equation and the problem domain are prepared, a discretization
 recipe should be given. This recipe will be used to generate the training data
-before training starts. Currently, the 2d space can be discretized into a N by M
-grid, 11 by 11 in this example specifically.
+before training starts.
 
 ```
-pdes, geo = psci.discretize(pdes, geo, space_steps=(11, 11))
-```
-
-As mentioned above, a valid problem setup relies on sufficient constraints on
-the boundary and initial values. In this example, we use analytical solution on the boundary, and by calling `pdes.set_bc_value()` the
-values are then passed to the PDE solver.
-It's worth noting however that in general the boundary and initial value
-conditions can be passed as a function to the solver rather than actual values.
-That feature will be addressed in the future.
-
-```
-pdes.set_bc_value(bc_value=bc_value)
+pde_disc = pde.discretize(geo_disc=geo_disc)
 ```
 
 ### Constructing the neural net
@@ -85,19 +102,14 @@ tangent as the activation function.
 
 ```
 net = psci.network.FCNet(
-    num_ins=2,
-    num_outs=1,
-    num_layers=5,
-    hidden_size=20,
-    dtype="float32",
-    activation='tanh')
+    num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 ```
 
-Next, one of the most important steps is define the loss function. Here we use L2
-loss with custom weights assigned to the boundary values.
+Next, one of the most important steps is define the loss function. Here we use L2 loss.
+
 
 ```
-loss = psci.loss.L2(pdes=pdes, geo=geo)
+loss = psci.loss.L2()
 ```
 
 By design, the `loss` object conveys complete information of the PDE and hence the
@@ -115,24 +127,38 @@ a learning rate of 0.001.
 The `psci.solver.Solver` class bundles the PINNs model, which is called `algo` here,
 and the optimizer, into a solver object that exposes the `solve` interface.
 `solver.solve` accepts three key word arguments. `num_epoch` specicifies how many
-epoches for each batch.
+epoches for each batch. 
 
 
 ```
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-solver = psci.solver.Solver(algo=algo, opt=opt)
-solution = solver.solve(num_epoch=30000)
+solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+solution = solver.solve(num_epoch=10000)
 ```
 
 Finally, `solver.solve` returns a function that calculates the solution value
 for given points in the geometry. Apply the function to the geometry, convert the
 outputs to Numpy and then you can verify the results. 
 
-`psci.visu.visu_vtk` is a helper utility for quick visualization. It saves
+`psci.visu.save_vtk` is a helper utility for quick visualization. It saves
 the graphs in vtp file which one can play using [Paraview](https://www.paraview.org/).
 
 ```
-rslt = solution(geo).numpy()
-psci.visu.save_vtk(geo, rslt, 'rslt_laplace_2d')
-np.save(rslt, 'rslt_laplace_2d.npy')
+psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 ```
+
+### Scalability on Distributed computing
+Distributed is currently supported. You can run the following command.
+```
+cd optimize
+python3.7 -m paddle.distributed.launch --gpus=1,2 laplace2d.py
+```
+
+The scalability performance is as follows:
+|Number of GPU | Number of points |  Performance (sec/epoch) | 
+|---|---|---|
+|N1C1 | 5.8M * 1 | 0.9483 s| 
+|N1C8 | 5.8M * 4 |  0.9661 s | 
+|N2C16 | 5.8M * 8 |  0.9684 s | 
+|N4C32 | 5.8M * 16 |  0.9679 s | 
+Note that N1C8 stands for using 1 node and 8 GPUs. Others are the same.

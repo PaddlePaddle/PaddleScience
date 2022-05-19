@@ -204,9 +204,10 @@ for i in range(num_time_step):
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
         print("autograd epoch: " + str(k + 1), "    loss:", out[0])
     next_uvwp = out[1:]
-    # # Save vtk
-    # file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
-    # psci.visu.save_vtk(filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    # Save vtk
+    file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
+    psci.visu.save_vtk(
+        filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])
