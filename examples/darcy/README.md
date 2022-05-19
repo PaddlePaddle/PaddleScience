@@ -72,7 +72,7 @@ geo_disc = geo.discretize(npoints=npoints, method="uniform")
 ### Constructing PDE
 
 After defining Geometry part, define the PDE equations to solve. In this example, the equations are a 2d
-Laplace. This equation is present in the package, and one only needs to
+Poisson. This equation is present in the package, and one only needs to
 create a `psci.pde.Poisson` object to set up the equation.
 
 ```

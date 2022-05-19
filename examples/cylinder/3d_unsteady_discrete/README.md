@@ -18,7 +18,6 @@ python3.7 cylinder3d_unsteady.py
 
 ## Optimize
 If you want to try out the advanced automatic differentiation function of static graph, you can run the following command.
-Compared with the baseline version, it can get 15% performance improvement.
 ```
 cd optimize
 python3.7 cylinder3d_unsteady_optimize.py

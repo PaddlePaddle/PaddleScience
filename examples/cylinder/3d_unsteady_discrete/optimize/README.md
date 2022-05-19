@@ -7,18 +7,19 @@ This guide introduces to how to build a PINN model for simulating the flow aroun
 
 This demo is based on Paddle static graph mode, including the following parts:
 
- - Use v1.0 API, including geometry, pde, bc, network, algorithm and other parts;
+ - Use the 1.0 API of PaddleScience suite to complete the construction of geometry, PDE, BC, network, algorithm, etc;
 
  - Note that the loss part is directly implemented based on the new automatic differentiation mechanism of the Paddle framework, and the provided procedural automatic differentiation interface, completes the definition of the eq_loss part, and forms the overall loss together with bc_loss and data_loss;
  
- - Distributed data parallelism + gradient accumulation technology, computational graph optimization technology, and new executor execution optimization technology are used in the demo.
+ - After the program is built, the distributed data parallel and gradient accumulation technology, computational graph optimization technology and new actuator execution optimization technology are used.
 
-In terms of `performance`, due to the new automatic differentiation mechanism, calculation graph optimization, and new executor execution optimization technology, the performance and video memory have been greatly improved. It is worth mentioning that due to the improvement of the new automatic differentiation mechanism in computing logic 15% increase.
+There are significant improvements in performance and memory occupation. It is worth mentioning that due to the improvement of calculation logic of the new automatic differentiation mechanism, the single machine performance is improved by 15%.
 
 In terms of `scale`, due to the introduction of distributed technology, 100 million grid-scale training can be achieved, and the estimated time required for training 2000 epochs is 266 minutes. Weakly scalable data on distributed systems are as follows:
-|gpus | points per gpu | total points | scaling | 
+| Number of GPU | Number of points | Total points | Scaling | 
 |---|---|---|---|
-|N1C1 | 20w | 20w | 1 | 
-|N1C8 | 20w | 160w | 0.99 | 
-|N2C16 | 20w | 320w | 0.96 | 
-|N4C32 | 20w | 640w | 0.93 | 
+|N1C1 | 200k | 200k | 1 | 
+|N1C8 | 200k | 1.6M | 0.99 | 
+|N2C16 | 200k | 3.2M | 0.96 | 
+|N4C32 | 200k | 6.4M | 0.93 | 
+Note that N1C8 stands for using 1 node and 8 GPUs. Others are the same.
