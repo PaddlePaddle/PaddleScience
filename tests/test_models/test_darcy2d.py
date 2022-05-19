@@ -136,4 +136,5 @@ def test_darcy2d_1():
 
 
 if __name__ == '__main__':
-    pytest.main([sys.argv[0]])
+    code = pytest.main([sys.argv[0]])
+    sys.exit(code)
