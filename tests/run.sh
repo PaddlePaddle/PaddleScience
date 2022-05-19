@@ -37,7 +37,7 @@ if [ `expr ${api} + ${example}` -eq 0 ]; then
   for file in ${result}
     do
       cat ${file}
-      echo "----------------------"
+      echo "------------------------"
     done
   echo "success!"
 else
@@ -45,6 +45,7 @@ else
   for file in ${result}
     do
       cat ${file}
+      echo "--------------------------"
     done
   echo "error!"
   exit 8
