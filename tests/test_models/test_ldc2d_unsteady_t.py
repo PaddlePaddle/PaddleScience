@@ -128,4 +128,5 @@ def test_ldc2d_unsteady_t_1():
 
 
 if __name__ == '__main__':
-    pytest.main([sys.argv[0]])
+    code = pytest.main([sys.argv[0]])
+    sys.exit(code)

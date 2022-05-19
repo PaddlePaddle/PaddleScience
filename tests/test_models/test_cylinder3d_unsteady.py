@@ -175,4 +175,5 @@ def test_cylinder3d_steady_1():
 
 
 if __name__ == '__main__':
-    pytest.main([sys.argv[0]])
+    code = pytest.main([sys.argv[0]])
+    sys.exit(code)
