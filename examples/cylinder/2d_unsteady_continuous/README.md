@@ -87,16 +87,16 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    The fluid viscosity `nu` represents fluid propery, according to the Reynolds number equation `Re=U*D/nu`, the default inlet velocity is 2, and the Reynolds number can be set through giving different viscosity. In this demo, the default Reynolds number is 100, the cylinder diameter is 1, and the viscosity equals to 0.02.
     
-   - **pinn_solver instance: define respective loss weights**
+- **pinn_solver instance: define respective loss weights**
 
-  The loss function consist of weighted eq_loss, bc_loss, ic_loss, outlet_loss and supervised_data_loss. The weight of each loss can be self-defined before training.
+   The loss function consist of weighted eq_loss, bc_loss, ic_loss, outlet_loss and supervised_data_loss. The weight of each loss can be self-defined before training.
 
     PINN = psolver.PysicsInformedNeuralNetwork(
         layers=6, nu=2e-2, bc_weight=10, eq_weight=1, ic_weight=10, supervised_data_weight=10, 
         outlet_weight=1, training_type='half-supervised', checkpoint_path='./checkpoint/', 
         net_params=net_params, distributed_env=distributed_env)
 
-   - **pinn_solver: define the neural network**
+- **pinn_solver: define the neural network**
 
    The fully connected neural network is used by default.
 
@@ -159,7 +159,9 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    After training, the model is saved in the checkpoint foler, set `net_params` and execute `python cylinder2d_unsteady_predict.py` to get vtk results. The vtk files are generated and saved in the vtk folder. These *vtu* files can be visualized with [Paraview](https://www.paraview.org/).
 
+    ```
     if __name__ == "__main__":
         net_params = './checkpoint/pretrained_net_params'
         vtk_filename = './vtk/uvp_t_'
         predict_once_for_all(net_params=net_params, vtk_filename=vtk_filename)
+    ```
