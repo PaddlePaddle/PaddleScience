@@ -161,4 +161,5 @@ The scalability performance is as follows:
 |N1C8 | 5.8M * 4 |  0.9661 s | 
 |N2C16 | 5.8M * 8 |  0.9684 s | 
 |N4C32 | 5.8M * 16 |  0.9679 s | 
+
 Note that N1C8 stands for using 1 node and 8 GPUs. Others are the same.
