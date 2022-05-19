@@ -33,7 +33,7 @@ else
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
-        serial_bug=`expr ${bug} + 1`
+        serial_bug=`expr ${serial_bug} + 1`
     fi
 fi
 done
@@ -52,7 +52,7 @@ else
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
-        distributed_bug=`expr ${bug} + 1`
+        distributed_bug=`expr ${distributed_bug} + 1`
     fi
 fi
 done
