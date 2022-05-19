@@ -67,7 +67,7 @@ The component organization is illustrated in the following figure.
 
    Lid Driven Cavity Flow  <examples/ldc2d>
    Darcy Flow in Porous Medium <examples/darcy>
-   Flow around a 3D Cylinder with Discrete Method <examples/cylinder3d>
+   3D Unsteady Cylinder Flow with Discrete Method <examples/cylinder3d>
    2D Unsteady Cylinder Flow with Continuous Method <examples/cylinder2d>
    Vortex induced Vibration <examples/viv>
 
