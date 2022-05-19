@@ -68,16 +68,18 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 ## Construct the model 
    Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
 
-   - **dataloader: loading data**
+- **dataloader: loading data**
 
    The spatiotemporal data are carried from OpenFOAM in this demo, taking 9000 interior training points and 200 supervised points seperately with 30 random time steps.
 
+    ```
     # Loading data from openfoam 
     path = './datasets/'
     dataloader = cfd.DataLoader(path=path, N_f=9000, N_b=1000, time_start=1, time_end=50, time_nsteps=50)
     training_time_list = dataloader.select_discretized_time(num_time=30)
+    ```
 
-   - **pinn_solver instance: define fluid properties**
+- **pinn_solver instance: define fluid properties**
 
    The flow domain grids are loaded from OpenFOAM for refering final results.
 
@@ -100,6 +102,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    The fully connected neural network is used by default.
 
+    ```
     def initialize_NN(self, num_ins=3, num_outs=3, num_layers=10, hidden_size=50):
         return psci.network.FCNet(
             num_ins=num_ins,
@@ -108,6 +111,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
             hidden_size=hidden_size,
             dtype="float32",
             activation='tanh')
+    ```
 
 - **pinn_solver: define the equation**
 
