@@ -17,6 +17,8 @@
 
 cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
+serial_bug=0
+distributed_bug=0
 bug=0
 
 echo "===== examples bug list =====" >  result.txt
@@ -31,29 +33,31 @@ else
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
+        serial_bug=`expr ${bug} + 1`
     fi
 fi
 done
-echo "serial bugs: "${bug} >> result.txt
+echo "serial bugs: "${serial_bug} >> result.txt
 
 
-#ignore="test_cylinder3d_unsteady.py"
-#echo "distributed bug list:" >>  result.txt
-#for file in ${cases}
-#do
-#echo distributed ${file} test
-#if [[ ${ignore} =~ ${file##*/} ]]; then
-#    echo "skip"
-#else
-#    python3.7 -m paddle.distributed.launch --devices=0,1  ${file}
-#    if [ $? -ne 0 ]; then
-#        echo ${file} >> result.txt
-#        bug=`expr ${bug} + 1`
-#    fi
-#fi
-#done
-#
-#
-#echo "total bugs: "${bug} >> result.txt
+ignore="test_cylinder3d_unsteady.py"
+echo "distributed bug list:" >>  result.txt
+for file in ${cases}
+do
+echo distributed ${file} test
+if [[ ${ignore} =~ ${file##*/} ]]; then
+    echo "skip"
+else
+    python3.7 -m paddle.distributed.launch --devices=0,1  ${file}
+    if [ $? -ne 0 ]; then
+        echo ${file} >> result.txt
+        bug=`expr ${bug} + 1`
+        distributed_bug=`expr ${bug} + 1`
+    fi
+fi
+done
+echo "distributed bugs: "${distributed_bug} >> result.txt
+
+echo "total bugs: "${bug} >> result.txt
 cat result.txt
 exit ${bug}
