@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,26 @@
 # limitations under the License.
 
 import paddle
+from .. import config
 
 
 class NetworkBase(paddle.nn.Layer):
     def __init__(self):
         super(NetworkBase, self).__init__()
+        self._dtype = config._dtype
 
     def make_network(self):
         pass
 
     def nn_func(self):
+        pass
+
+
+class GenNetworkIns:
+    def __init__(self):
+        self.time = False
+        self.space = False
+        self.un = False
+
+    def ins():
         pass

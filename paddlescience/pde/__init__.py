@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .pde_base import first_order_rslts, first_order_derivatives, second_order_derivatives
-from .pde_laplace_2d import Laplace2D
+from .pde_base import PDE
+from .pde_laplace import Laplace
+from .pde_poisson import Poisson
 from .pde_navier_stokes import NavierStokes

@@ -28,7 +28,6 @@ The Dirichlet boundary condition is set to be
        p(x,y) & =  sin(2\pi x) cos(2\pi y), \  x=1 \ \text{or} \ y=1.
 
 
-
 Following graphs plot the pressure from training the model on a 100 by 100 grid.
 
 .. image:: ../img/darcy_rslt_100x100.png
@@ -54,7 +53,8 @@ the equation residues and the boundary values.
 Once the concept is clear, next let's take a look at how this translates into the
 dacy2d example.
 
-- **Constructing PDE**
+- **Constructing Geometry**
+
 
 First, define the problem geometry using the `psci.geometry` module interface. In this example,
 the geometry is a rectangle with the origin at coordinates (0.0, 0.0) and the extent set
@@ -62,37 +62,60 @@ to (1.0, 1.0).
 
     .. code-block::
 
-       geo = psci.geometry.Rectangular(
-       space_origin=(0.0, 0.0), space_extent=(1.0, 1.0))
+        geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 
-Next, define the PDE equations to solve. In this example, the equations are a 2d
-Laplace. This equation is present in the package, and one only needs to
-create a `psci.pde.Laplace2D` object to set up the equation.
+
+Next, add boundaries to the geometry, these boundaries will be used in PDE. 
+Note that the `geo.add_boundary` function is only used for boundaries with physical constraints. 
+
+    .. code-block::
+        
+        geo.add_boundary(name="top", criteria=lambda x, y: y == 1.0)
+        geo.add_boundary(name="down", criteria=lambda x, y: y == 0.0)
+        geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
+        geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
+
+
+Once the domain are prepared, a discretization recipe should be given.
 
     .. code-block::
 
-       pdes = psci.pde.Laplace2D()
+        geo_disc = geo.discretize(npoints=npoints, method="uniform")
+
+- **Constructing PDE**
+
+
+After defining Geometry part, define the PDE equations to solve. In this example, the equations are a 2d
+Laplace. This equation is present in the package, and one only needs to
+create a `psci.pde.Poisson` object to set up the equation.
+
+    .. code-block::
+
+       pde = psci.pde.Poisson(dim=2, rhs=ref_rhs)
+
+Next, add boundaries equations for PDE. 
+The boundary equations in PDE are strongly bound to the boundary definitions in geometry. 
+The physical information on the  boundaries needs to be set and then added using `pde.add_bc`.
+
+    .. code-block::
+     
+        bc_top = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_down = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_left = psci.bc.Dirichlet('u', rhs=ref_sol)
+        bc_right = psci.bc.Dirichlet('u', rhs=ref_sol)
+
+        pde.add_bc("top", bc_top)
+        pde.add_bc("down", bc_down)
+        pde.add_bc("left", bc_left)
+        pde.add_bc("right", bc_right)
 
 Once the equation and the problem domain are prepared, a discretization
 recipe should be given. This recipe will be used to generate the training data
-before training starts. Currently, the 2d space can be discretized into a N by M
-grid, 101 by 101 in this example specifically.
+before training starts.
 
     .. code-block::
 
-       pdes, geo = psci.discretize(pdes, geo, space_steps=(101, 101))
-
-As mentioned above, a valid problem setup relies on sufficient constraints on
-the boundary and initial values. In this example, `GenBC` is the procedure that
-generates the actual boundary values, and by calling `pdes.set_bc_value()` the
-values are then passed to the PDE solver.
-It's worth noting however that in general the boundary and initial value
-conditions can be passed as a function to the solver rather than actual values.
-That feature will be addressed in the future.
-
-    .. code-block::
-
-       pdes.set_bc_value(bc_value=bc_value)
+       pde_disc = pde.discretize(geo_disc=geo_disc)
 
 
 - **Constructing the neural net**
@@ -110,19 +133,13 @@ tangent as the activation function.
 	        num_outs=1,
 	        num_layers=5,
 	        hidden_size=20,
-	        dtype="float32",
 	        activation="tanh")
 
-Next, one of the most important steps is define the loss function. Here we use L2
-loss with custom weights assigned to the boundary values.
+Next, one of the most important steps is define the loss function. Here we use L2 loss.
 
     .. code-block::
 
-       loss = psci.loss.L2(pdes=pdes,
-           geo=geo,
-           eq_weight=0.01,
-           bc_weight=bc_weight,
-           synthesis_method='norm')
+       loss = psci.loss.L2()
 
 By design, the `loss` object conveys complete information of the PDE and hence the
 latter is eclipsed in further steps. Now combine the neural net and the loss and we
@@ -145,9 +162,9 @@ epoches for each batch.
 
     .. code-block::
 
-       opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-       solver = psci.solver.Solver(algo=algo, opt=opt)
-       solution = solver.solve(num_epoch=30000)
+        opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+        solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+        solution = solver.solve(num_epoch=10000)
 
 Finally, `solver.solve` returns a function that calculates the solution value
 for given points in the geometry. Apply the function to the geometry, convert the
@@ -158,6 +175,4 @@ the graphs in vtp file which one can play using `Paraview <https://www.paraview.
 
     .. code-block::
 
-        rslt = solution(geo)
-        psci.visu.save_vtk(geo, rslt, 'rslt_darcy_2d')
-        np.save(rslt, 'rslt_darcy_2d.npy')
+        psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)

@@ -1,2 +1,0 @@
-Laplace Equation
-================

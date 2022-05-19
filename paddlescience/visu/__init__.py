@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,5 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .visu_vtk import save_vtk, save_vtk_points
+from .visu_vtk import save_vtk
+from .visu_vtk import __save_vtk_raw
 from .visu_matplotlib import save_mpl, plot_mpl

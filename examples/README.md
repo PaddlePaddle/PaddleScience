@@ -27,6 +27,10 @@ Solving a Lid Driven Cavity problem in rectangular domain.
 ---------------------------------
 Solving an 2-D unsteady cylinder flow with the PINN continuous method.
 
+3D unsteady circular cylinder
+---------------------------------
+Solving a 3-D unsteady cylinder flow with the PINN discrete method.
+
 VIV (vortex induced vibration)
 ----------------------------------
 Solving the inverse problem of vortex induced vibration with the PINN continuous method.

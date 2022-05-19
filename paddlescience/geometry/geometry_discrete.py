@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,175 +22,83 @@ class GeometryDiscrete:
     """
 
     def __init__(self):
-        # time discretization
-        self.time_dependent = False
-        self.time_domain_size = -1
-        self.time_domain = None
-        # space discretization
-        self.space_dims = 2
-        self.space_domain_size = -1
-        self.space_domain = None
-        # time-space domain after discretization
-        self.domain_dims = None
-        self.domain_size = -1
-        self.domain = None
-        # time IC index
-        self.ic_index = None
-        # space BC index
-        self.bc_index = None
-        # visu vtk obj
-        self.vtk_obj = None
-        self.vtk_num_points = -1
 
-    # set time domain
-    def set_time_domain(self, time_domain):
-        self.time_dependent = True
-        self.time_domain = time_domain
-        self.time_domain_size = len(time_domain)
+        # TODO: data structure uniformation
+        self.interior = None
+        self.boundary = dict()
+        self.normal = dict()
+        self.user = None
 
-    # set space domain
-    def set_space_domain(self, space_domain):
-        self.space_domain = space_domain
-        self.space_domain_size = len(space_domain)
-        self.space_dims = len(space_domain[0])
+    def __str__(self):
+        return "TODO: Print for DiscreteGeometry"
 
-    # set domain
-    def set_domain(self,
-                   time_domain=None,
-                   time_origin=None,
-                   time_extent=None,
-                   space_domain=None,
-                   space_origin=None,
-                   space_extent=None,
-                   time_space_domain=None):
-        # time domain
-        if time_domain is not None:
-            self.set_time_domain(time_domain)
-        # space domain
-        if space_domain is not None:
-            self.set_space_domain(space_domain)
-        # time-space domain
-        if time_space_domain is not None:
-            self.domain = time_space_domain
-            self.domain_size = len(time_space_domain)
-            self.domain_dims = len(time_space_domain[0])
-        self.space_origin = space_origin
-        self.space_extent = space_extent
-
-    # set bc index
-    def set_bc_index(self, bc_index):
-        self.bc_index = bc_index
-
-    # set ic index
-    def set_ic_index(self, ic_index):
-        self.ic_index = ic_index
-
-    # get bc index
-    def get_bc_index(self):
+    def add_customized_points(self, cordinate):
         """
-        Get bounday index 
+        Add cutomized points (cordinate) to geometry
+    
+        Parameters:
+            cord(array): Cordinate of customized points
 
-        Returns
-        -------
-        bc_index: numpy array
-            Bounday index indicating which points are on the boundary.
+        Example:
+            >>> cord = numpy.array([[0,0,0],[0,1,2]])
+            >>> geo_disc.add_customized_points(cordinate=cord)
         """
-        return self.bc_index
+        self.user = cord
 
-    # get bc index
-    def get_ic_index(self):
-        """
-        Get init index 
+    def padding(self, nprocs=1):
 
-        Returns
-        -------
-        ic_index: numpy array
-        """
-        return self.ic_index
+        # interior
+        if type(self.interior) is np.ndarray:
+            self.interior = self.__padding_array(nprocs, self.interior)
 
-    # get domain size
-    def get_domain_size(self):
-        if (self.domain_size != -1):
-            return self.domain_size
-        else:
-            return self.space_domain_size
+        # bc
+        for name_b in self.boundary.keys():
+            if type(self.boundary[name_b]) is np.ndarray:
+                self.boundary[name_b] = self.__padding_array(
+                    nprocs, self.boundary[name_b])
 
-    # get time domain
-    def get_time_domain(self):
-        return self.time_domain
+        # user
+        if type(self.user) is np.ndarray:
+            self.user = self.__padding_array(nprocs, self.user)
 
-    # get space domain
-    def get_space_domain(self):
-        """
-        Get space domain cordinates
+        # TODO: normal
 
-        Returns
-        -------
-        space_domain: numay array
-            Space domain cordinates
-        """
-        return self.space_domain
+    def __padding_array(self, nprocs, array):
+        npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
+        for i in range(npad):
+            array = np.append(array, datapad, axis=0)
+        return array
 
-    # get domain
-    def get_domain(self):
-        if (self.domain is not None):
-            return self.domain
-        else:
-            return self.space_domain
+    def split(self, nprocs=1):
 
-    # set time steps
-    def set_time_steps(self, time_steps):
-        self.time_steps = time_steps
+        dp = list()
+        for i in range(nprocs):
+            dp.append(self.sub(nprocs, i))
+        return dp
 
-    # set space steps
-    def set_space_steps(self, space_steps):
-        self.space_steps = space_steps
+    def sub(self, nprocs, n):
 
-    def to_tensor(self):
-        self.space_domain = paddle.to_tensor(
-            self.space_domain, dtype="float32")
-        self.space_domain.stop_gradient = False
-        for batch_id in range(self.num_batch):
-            self.bc_index[batch_id] = paddle.to_tensor(
-                self.bc_index[batch_id], dtype='int64')
-            if self.ic_index is not None:
-                self.ic_index[batch_id] = paddle.to_tensor(
-                    self.ic_index[batch_id], dtype='int64')
-        if self.domain is not None:
-            self.domain = paddle.to_tensor(self.domain, dtype="float32")
-            self.domain.stop_gradient = False
+        subp = GeometryDiscrete()
 
-    def set_batch_size(self, batch_size):
-        self.batch_size = batch_size
-        self.num_batch = self.get_domain_size() // batch_size
-        if self.get_domain_size() % batch_size != 0:
-            self.num_batch = self.num_batch + 1
+        # interior
+        ni = int(len(self.interior) / nprocs)
+        s = ni * n
+        e = ni * (n + 1)
+        subp.interior = self.interior[s:e, :]
 
-        new_bc_index = [[] for _ in range(self.num_batch)]
-        for idx in self.bc_index:
-            new_bc_index[idx // batch_size].append(idx)
-        self.bc_index = [np.array(el) for el in new_bc_index]
+        # boundary
+        for name, b in self.boundary.items():
+            nb = int(len(b) / nprocs)
+            s = nb * n
+            e = nb * (n + 1)
+            subp.boundary[name] = b[s:e, :]
 
-        if self.ic_index is not None:
-            new_ic_index = [[] for _ in range(self.num_batch)]
-            for idx in self.ic_index:
-                new_ic_index[idx // batch_size].append(idx)
-            self.ic_index = [np.array(el) for el in new_ic_index]
+        # user
+        if self.user is not None:
+            nd = int(len(self.user) / nprocs)
+            s = nd * n
+            e = nd * (n + 1)
+            subp.user = self.user[s:e, :]
 
-    def get_num_batch(self):
-        return self.num_batch
-
-    def set_vtk_obj(self, vtk_obj_name, vtk_obj, vtk_data_size):
-        self.vtk_obj_name = vtk_obj_name
-        self.vtk_obj = vtk_obj
-        self.vtk_data_size = vtk_data_size
-
-    def get_vtk_obj(self):
-        return self.vtk_obj_name, self.vtk_obj, self.vtk_data_size
-
-    # def set_mpl_obj(self, mpl_obj, mpl_data_shape):
-    #     self.mpl_obj = mpl_obj
-    #     self.mpl_data_shape = mpl_data_shape
-
-    # def get_mpl_obj(self):
-    #     return self.mpl_obj, self.space_domain self.vtk_data_shape
+        return subp
