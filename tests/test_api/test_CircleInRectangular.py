@@ -47,7 +47,6 @@ def test_CircleInRectangular0():
     assert len(geo.criteria) == 0
 
 
-#
 @pytest.mark.geometry_CircleInRectangular
 def test_CircleInRectangular1():
     """
@@ -66,7 +65,7 @@ def test_CircleInRectangular1():
     geo.add_boundary(
         "circle",
         criteria=lambda x, y: ((x - 0.5)**2 + (y - 0.5)**2 - 0.1**2) < 1e-4)
-    geo_disc = geo.discretize(method='sampling', npoints=10000)
+    geo_disc = geo.discretize(method='sampling', npoints=30000)
 
     assert geo_disc.interior.shape[1] == 2
     assert geo_disc.boundary["top"].shape[1] == 2
