@@ -22,4 +22,5 @@ In terms of `scale`, due to the introduction of distributed technology, 100 mill
 |N1C8 | 200k | 1.6M | 0.99 | 
 |N2C16 | 200k | 3.2M | 0.96 | 
 |N4C32 | 200k | 6.4M | 0.93 | 
+
 Note that N1C8 stands for using 1 node and 8 GPUs. Others are the same.
