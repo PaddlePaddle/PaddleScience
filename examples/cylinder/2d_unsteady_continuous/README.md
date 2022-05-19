@@ -139,12 +139,14 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
     PINN.set_eq_training_data(X=training_data)
     ```
 
-  - **Training**
+- **Training**
 
-   The adam optimizer is employed with learning rate 1e-5 are presented as below shown:
+   The adam optimizer could be use for multiple-phases training:
 
-       adm_opt = paddle.optimizer.Adam(learning_rate=1e-5, parameters=PINN.net.parameters())
-       PINN.train(num_epoch=10, optimizer=adm_opt)
+       adm_opt = paddle.optimizer.Adam(learning_rate=1e-3, parameters=PINN.net.parameters())
+       PINN.train(num_epoch=10000, optimizer=adm_opt)
+       adm_opt = paddle.optimizer.Adam(learning_rate=1e-4, parameters=PINN.net.parameters())
+       PINN.train(num_epoch=10000, optimizer=adm_opt)
 
    A well pre-trained model is provided in the checkpoint folder by defining ` net_params = './checkpoint/pretrained_net_params'` in the cylinder2d_unsteady_train.py,  otherwise the training process is spawned from scratch is spawned If `net_params = None`，.
       
@@ -153,7 +155,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    
 
-  - **Prediction**
+- **Prediction**
 
    After training, the model is saved in the checkpoint foler, set `net_params` and execute `python cylinder2d_unsteady_predict.py` to get vtk results. The vtk files are generated and saved in the vtk folder. These *vtu* files can be visualized with [Paraview](https://www.paraview.org/).
 
@@ -161,4 +163,3 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
         net_params = './checkpoint/pretrained_net_params'
         vtk_filename = './vtk/uvp_t_'
         predict_once_for_all(net_params=net_params, vtk_filename=vtk_filename)
-
