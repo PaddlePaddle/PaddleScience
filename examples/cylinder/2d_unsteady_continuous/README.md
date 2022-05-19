@@ -66,7 +66,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
 
 ## Construct the model 
-   Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
+Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
 
 - **dataloader: loading data**
 
@@ -93,7 +93,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    The loss function consist of weighted eq_loss, bc_loss, ic_loss, outlet_loss and supervised_data_loss. The weight of each loss can be self-defined before training.
 
-    PINN = psolver.PysicsInformedNeuralNetwork(
+        PINN = psolver.PysicsInformedNeuralNetwork(
         layers=6, nu=2e-2, bc_weight=10, eq_weight=1, ic_weight=10, supervised_data_weight=10, 
         outlet_weight=1, training_type='half-supervised', checkpoint_path='./checkpoint/', 
         net_params=net_params, distributed_env=distributed_env)
@@ -102,8 +102,7 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
 
    The fully connected neural network is used by default.
 
-    ```
-    def initialize_NN(self, num_ins=3, num_outs=3, num_layers=10, hidden_size=50):
+        def initialize_NN(self, num_ins=3, num_outs=3, num_layers=10, hidden_size=50):
         return psci.network.FCNet(
             num_ins=num_ins,
             num_outs=num_outs,
@@ -111,14 +110,12 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
             hidden_size=hidden_size,
             dtype="float32",
             activation='tanh')
-    ```
 
 - **pinn_solver: define the equation**
 
-    ```eq1 = (u * u_x + v * u_y) + p_x - (self.nu) * (u_xx + u_yy) + u_t
-    eq2 = (u * v_x + v * v_y) + p_y - (self.nu) * (v_xx + v_yy) + v_t
-    eq3 = u_x + v_y
-    ```
+        eq1 = (u * u_x + v * u_y) + p_x - (self.nu) * (u_xx + u_yy) + u_t
+        eq2 = (u * v_x + v * v_y) + p_y - (self.nu) * (v_xx + v_yy) + v_t
+        eq3 = u_x + v_y
 
 - **set data: IC | BC | Supervised | Training**
 
@@ -152,12 +149,10 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
        adm_opt = paddle.optimizer.Adam(learning_rate=1e-4, parameters=PINN.net.parameters())
        PINN.train(num_epoch=10000, optimizer=adm_opt)
 
-   A well pre-trained model is provided in the checkpoint folder by defining ` net_params = './checkpoint/pretrained_net_params'` in the cylinder2d_unsteady_train.py,  otherwise the training process is spawned from scratch is spawned If `net_params = None`，.
-      
-    net_params = './checkpoint/pretrained_net_params'
-    train(net_params=net_params)
-
+   A well pre-trained model is provided in the checkpoint folder by defining ` net_params = './checkpoint/pretrained_net_params'` in the cylinder2d_unsteady_train.py,  otherwise the training process is spawned from scratch is spawned If `net_params = None`.
    
+        net_params = './checkpoint/pretrained_net_params'
+        train(net_params=net_params)
 
 - **Prediction**
 

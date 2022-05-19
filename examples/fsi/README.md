@@ -54,32 +54,30 @@ More details can refer to [PaddlePaddle](https://www.paddlepaddle.org.cn/install
     python viv_inverse_predict.py
   
 ##  Construct the model 
-  Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
+Basically, the model is composed with 4 main parts: dataloader, pinn_solver, trainning and predicting logistic.  
   
 - **Load data for training**
 
-For training, *η* and *f* were obtained from CFD tools and saved in the *./examples/fsi/VIV_Training.mat* file, they are loaded as shown below:
+    For training, *η* and *f* were obtained from CFD tools and saved in the *./examples/fsi/VIV_Training.mat* file, they are loaded as shown below:
 
-    ```
-    t_eta, eta, t_f, f, tmin, tmax = data.build_data()
-    ``` 
+        t_eta, eta, t_f, f, tmin, tmax = data.build_data()
 
 - **pinn_solver instance: define the pinn neural network**
      
-Since only the lateral vibration of the structure is considered and the inlet velocity is constant, time(*t*) is the only input dimension of the neural network and the output is the vibration amplitude of the structure.
+    Since only the lateral vibration of the structure is considered and the inlet velocity is constant, time(*t*) is the only input dimension of the neural network and the output is the vibration amplitude of the structure.
 
-FCNet is employed by default as the neural network with 6 layers and 30 neurons  built for each layer, and the Neural Network is defined in the file `./examples/fsi/viv_inverse_train.py` as shown below:
+    FCNet is employed by default as the neural network with 6 layers and 30 neurons  built for each layer, and the Neural Network is defined in the file `./examples/fsi/viv_inverse_train.py` as shown below:
 
-    ```
-    PINN = psolver.PysicsInformedNeuralNetwork(layers=6, hidden_size=30, num_ins=1, num_outs=1, 
+    
+        PINN = psolver.PysicsInformedNeuralNetwork(layers=6, hidden_size=30, num_ins=1, num_outs=1, 
             t_max=tmax, t_min=tmin, N_f=f.shape[0], checkpoint_path='./checkpoint/', net_params=net_params)
-    ```
+
 
 - **pinn_solver: define the equation**
 
-The equation is defined in `./paddlescience/module/fsi/viv_pinn_solver.py` as shown below:
-    ```
-    def neural_net_equations(self, t, u=None):
+    The equation is defined in `./paddlescience/module/fsi/viv_pinn_solver.py` as shown below:
+    
+        def neural_net_equations(self, t, u=None):
         eta = self.net.nn_func(t)
         eta_t = self.autograd(eta, t)
         eta_tt = self.autograd(eta_t, t, create_graph=False)
@@ -89,14 +87,12 @@ The equation is defined in `./paddlescience/module/fsi/viv_pinn_solver.py` as sh
         k2_ = paddle.exp(self.k2)
         f = rho*eta_tt + k1_*eta_t + k2_*eta
         return eta, f
-    ```     
 
 - **pinn_solver: define the loss weights**
 
-In this demo, the eta_weight and eq_weight are set as 100 and 1 seperately.
-    ```
-    self.eta_weight = 100
-    ```
+    In this demo, the eta_weight and eq_weight are set as 100 and 1 seperately.
+    
+        self.eta_weight = 100
 
 - **Training**
 
@@ -112,13 +108,13 @@ In this demo, the eta_weight and eq_weight are set as 100 and 1 seperately.
 
 - **Prediction**
 
-After training, the model is saved in the checkpoint foler, set `net_params` and execute `python viv_inverse_predict.py` to get predictions. 
+    After training, the model is saved in the checkpoint foler, set `net_params` and execute `python viv_inverse_predict.py` to get predictions. 
 
-    ```
-    net_params = './checkpoint/net_params_100000'
-    predict(net_params=net_params)
-    ```
-The result is shown as below:
-<div align="center">
-<img src="image/viv.png" width = "400" height = "500" align=center /><img src="image/viv_f.png" width = "400" height = "500" align=center />
-</div>
+        net_params = './checkpoint/net_params_100000'
+        predict(net_params=net_params)
+
+    The result is shown as below:
+    
+  <div align="center">
+  <img src="image/viv.png" width = "350" height = "500" align=center /><img src="image/viv_f.png" width = "350" height = "500" align=center />
+  </div>
