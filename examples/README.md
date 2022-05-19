@@ -23,14 +23,6 @@ Solving a 2-D unsteady cylinder flow with the PINN continuous method.
 ---------------------------------
 Solving a 3-D unsteady cylinder flow with the PINN discrete method.
 
-3D unsteady circular cylinder
----------------------------------
-Solving a 3-D unsteady cylinder flow with the PINN discrete method.
-
-3D unsteady circular cylinder
----------------------------------
-Solving a 3-D unsteady cylinder flow with the PINN discrete method.
-
 VIV (vortex induced vibration)
 ----------------------------------
 Solving the inverse problem of vortex induced vibration with the PINN continuous method.
