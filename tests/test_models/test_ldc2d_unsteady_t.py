@@ -124,7 +124,7 @@ def test_ldc2d_unsteady_t_1():
         "standard/ldc2d_unsteady_t.npz", allow_pickle=True)
     solution = standard_value['dst_solution'].tolist()
     static_rslt = ldc2d_unsteady_t()
-    compare(solution, static_rslt)
+    compare(solution, static_rslt, delta=1e-5)
 
 
 if __name__ == '__main__':
