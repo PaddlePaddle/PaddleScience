@@ -1,4 +1,4 @@
-Flow around a Cylinder
+Flow around a Cylinder with Discrete Method
 ======================
 
 This guide introduces to how to build a PINN model for simulating the flow around a cylinder in PaddleScience.
