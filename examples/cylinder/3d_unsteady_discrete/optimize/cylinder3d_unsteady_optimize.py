@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,26 +14,36 @@
 
 import numpy as np
 import os
+import time
 import paddlescience as psci
 import paddle
 import os
 import wget
 import zipfile
 from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
-from utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
+from utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition, cinn_compile
 
 paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
-enable_prim()
+
+np.set_printoptions(
+    suppress=True,
+    precision=6,
+    formatter={'float': '{:0.6f}'.format},
+    threshold=np.inf,
+    linewidth=1000)
+
+if (os.getenv('FLAGS_use_cinn') != "1"):
+    enable_prim()
 
 # define start time and time step
 start_time = 100
 time_step = 1
 
 
-# load real data 
+# load real data
 def GetRealPhyInfo(time, need_info=None):
     # if real data don't exist, you need to download it.
     if os.path.exists('./openfoam_cylinder_re100') == False:
@@ -97,7 +107,7 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# pde discretization 
+# pde discretization
 pde_disc = pde.discretize(
     time_method="implicit", time_step=1, geo_disc=geo_disc)
 
@@ -137,9 +147,9 @@ with paddle.static.program_guard(main_program, startup_program):
                                            labels_var[7:10])
     # data_loss
     data_loss = l2_norm_square(outputs_var[4][:, 0]-labels_var[3]) + \
-                l2_norm_square(outputs_var[4][:, 1]-labels_var[4]) + \
-                l2_norm_square(outputs_var[4][:, 2]-labels_var[5]) + \
-                l2_norm_square(outputs_var[4][:, 3]-labels_var[6])
+        l2_norm_square(outputs_var[4][:, 1]-labels_var[4]) + \
+        l2_norm_square(outputs_var[4][:, 2]-labels_var[5]) + \
+        l2_norm_square(outputs_var[4][:, 3]-labels_var[6])
 
     # total_loss
     total_loss = paddle.sqrt(bc_loss + output_var_0_eq_loss +
@@ -167,15 +177,20 @@ feeds = dict(zip(inputs_name, inputs))
 
 fetches = [total_loss.name] + [var.name for var in outputs_var]
 
-main_program = compile_and_convert_back_to_program(
-    main_program,
-    feed=feeds,
-    fetch_list=fetches,
-    use_prune=True,
-    loss_name=total_loss.name)
+if prim_enabled():
+    print("Run without CINN")
+    main_program = compile_and_convert_back_to_program(
+        main_program,
+        feed=feeds,
+        fetch_list=fetches,
+        use_prune=True,
+        loss_name=total_loss.name)
+else:
+    print("Run with CINN")
+    main_program = cinn_compile(main_program, total_loss.name, fetches)
 
 # num_epoch in train
-train_epoch = 2000
+train_epoch = 110
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
 num_time_step = 10
@@ -200,14 +215,26 @@ for i in range(num_time_step):
     for j in range(len(self_lables)):
         feeds['label' + str(j)] = self_lables[j]
 
+    begin = time.time()
     for k in range(train_epoch):
+        if k + 1 == 10:
+            paddle.device.cuda.synchronize()
+            begin = time.time()
+
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
-        print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+        if (k + 1) % 100 == 0:
+            print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+
+    paddle.device.cuda.synchronize()
+    end = time.time()
+    print('{} epoch(10~{}) time: {} s'.format(train_epoch - 10, train_epoch,
+                                              end - begin))
+
     next_uvwp = out[1:]
     # Save vtk
-    file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
-    psci.visu.save_vtk(
-        filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    # file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
+    # psci.visu.save_vtk(
+    #     filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])

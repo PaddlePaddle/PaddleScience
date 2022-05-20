@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -158,22 +158,22 @@ def compute_eq_loss(inputs, outputs, labels_var):
     dt = 1.0
     continuty = jac0[:, 0] + jac1[:, 1] + jac2[:, 2]
     momentum_x = u / dt - u_n / dt + u * jac0[:, 0] + v * jac0[:, 1] + w * jac0[:, 2] - \
-                nu / rho * hes0[:, 0] - nu / rho * hes1[:, 1] - nu / rho * hes2[:, 2] + \
-                1.0 / rho * jac3[:, 0]
+        nu / rho * hes0[:, 0] - nu / rho * hes1[:, 1] - nu / rho * hes2[:, 2] + \
+        1.0 / rho * jac3[:, 0]
     momentum_y = v / dt - v_n / dt + u * jac1[:, 0] + v * jac1[:, 1] + w * jac1[:, 2] - \
-                nu / rho * hes3[:, 0] - nu / rho * hes4[:, 1] - nu / rho * hes5[:, 2] + \
-                1.0 / rho * jac3[:, 1]
+        nu / rho * hes3[:, 0] - nu / rho * hes4[:, 1] - nu / rho * hes5[:, 2] + \
+        1.0 / rho * jac3[:, 1]
     momentum_z = w / dt - w_n / dt + u * jac2[:, 0] + v * jac2[:, 1] + w * jac2[:, 2] - \
-                nu / rho * hes6[:, 0] - nu / rho * hes7[:, 1] - nu / rho * hes8[:, 2] + \
-                1.0 / rho * jac3[:, 2]
+        nu / rho * hes6[:, 0] - nu / rho * hes7[:, 1] - nu / rho * hes8[:, 2] + \
+        1.0 / rho * jac3[:, 2]
 
     rhs = 0
     wgt = np.sqrt(0.01)
 
     eq_loss = l2_norm_square((continuty - rhs)*wgt) + \
-            l2_norm_square((momentum_x - rhs)*wgt) + \
-            l2_norm_square((momentum_y - rhs)*wgt) + \
-            l2_norm_square((momentum_z - rhs)*wgt)
+        l2_norm_square((momentum_x - rhs)*wgt) + \
+        l2_norm_square((momentum_y - rhs)*wgt) + \
+        l2_norm_square((momentum_z - rhs)*wgt)
     return eq_loss
 
 
@@ -273,7 +273,7 @@ def compile_and_convert_back_to_program(program=None,
 
 def set_init_dist_attr(serial_main_prog):
 
-    # set init dp attr    
+    # set init dp attr
     default_dist_context = get_default_distributed_context()
     _global_parallel_strategy = "dp"
     _global_process_mesh = auto.ProcessMesh(list(range(nranks)))
@@ -328,3 +328,151 @@ def convert_to_distributed_program(serial_main_prog, serial_startup_prog,
 
     init_comm()
     return dist_main_prog, dist_startup_prog
+
+
+def cinn_compile(program, loss_name, fetch_list):
+    def cinn_optimize_program(program):
+        def _remove_unused_var(program):
+            all_remove_vars = []
+            for block in program.blocks:
+                args = []
+                for op in block.ops:
+                    args += op.input_arg_names
+                    args += op.output_arg_names
+                args = list(set(args))  # vals of all left ops
+                var_names = block.vars.keys()  # all vals
+                sub_block_remove_vars = []
+                for var in var_names:
+                    if var not in args:
+                        sub_block_remove_vars.append(var)
+                all_remove_vars.append(sub_block_remove_vars)
+
+            remove_vars = [list(set(v)) for v in all_remove_vars]
+            for i, block in enumerate(program.blocks):
+                for v in remove_vars[i]:
+                    block._remove_var(v)
+
+        def dead_code_elimination(program):
+            program._sync_with_cpp()
+            all_input_arg_names = set()
+            for block in program.blocks:
+                ops = list(block.ops)
+                for op in ops:
+                    for name in op.input_arg_names:
+                        all_input_arg_names.add(name)
+
+            for block in program.blocks:
+                ops = list(block.ops)
+                for op in ops:
+                    if op.type == "fill_constant_p" and (
+                            op.output('Y')[0] not in all_input_arg_names):
+                        idx = block.ops.index(op)
+                        block._remove_op(idx)
+
+            _remove_unused_var(program)
+            program._sync_with_cpp()
+
+        def fuse_shape_fill_constant(program):
+            def _insert_fill_any_like_op(block, index, shape_op,
+                                         fill_constant_op):
+                fill_any_like_inputs = {}
+                fill_any_like_inputs['X'] = block.var(
+                    shape_op.input('Input')[0])
+                fill_any_like_outputs = {}
+                fill_any_like_outputs['Out'] = block.var(
+                    fill_constant_op.output('Out')[0])
+                fill_any_like_attrs = {}
+                fill_any_like_attrs['value'] = fill_constant_op.attr('value')
+                fill_any_like_attrs['dtype'] = fill_constant_op.attr('dtype')
+                fill_any_like_attrs['op_role'] = fill_constant_op.attr(
+                    'op_role')
+
+                fill_any_like_op = block._insert_op(
+                    index,
+                    type='fill_any_like',
+                    inputs=fill_any_like_inputs,
+                    outputs=fill_any_like_outputs,
+                    attrs=fill_any_like_attrs)
+                return fill_any_like_op
+
+            program._sync_with_cpp()
+            block = program.block(0)
+            i = 0
+            while i < len(block.ops):
+                # find a fill_constant op
+                if block.ops[i].type == 'fill_constant':
+                    fill_constant_op = block.ops[i]
+                    fill_constant_idx = i
+                    shape_idx = -1
+                    # find the preceding shape op
+                    for j in reversed(range(fill_constant_idx)):
+                        if block.ops[j].type == 'shape':
+                            shape_out_name = block.ops[j].output_arg_names[0]
+                            if shape_out_name in fill_constant_op.input_arg_names:
+                                shape_op = block.ops[j]
+                                shape_idx = j
+                                break
+                    if shape_idx < 0:
+                        i += 1
+                        continue
+                    # create and insert a new fill_any_like op
+                    _insert_fill_any_like_op(block, fill_constant_idx + 1,
+                                             shape_op, fill_constant_op)
+                    # remove the old operators
+                    block._remove_op(fill_constant_idx)
+                    block._remove_op(shape_idx)
+                    # restart scanning for elementwise add from the deleted shape's index
+                    i = shape_idx
+                i += 1
+            _remove_unused_var(program)
+            program._sync_with_cpp()
+
+        tmp_program = program.clone()
+        dead_code_elimination(tmp_program)
+        fuse_shape_fill_constant(tmp_program)
+        return tmp_program
+
+    def _add_fetch_ops(program, fetch_list, fetch_var_name="fetch"):
+        assert isinstance(program, fluid.Program)
+        tmp_program = program.clone()
+        global_block = tmp_program.global_block()
+
+        if fetch_var_name in global_block.vars:
+            fetch_var = global_block.var(fetch_var_name)
+        else:
+            fetch_var = global_block.create_var(
+                name=fetch_var_name,
+                type=core.VarDesc.VarType.FETCH_LIST,
+                persistable=True)
+
+        # append fetch_operators
+        if not fluid.executor.has_fetch_operators(global_block, fetch_list,
+                                                  fetch_var_name, 'fetch'):
+            for i, var in enumerate(fetch_list):
+                assert isinstance(var, Variable) or isinstance(
+                    var, six.string_types), (
+                        "Wrong type for fetch_list[%s]: %s" % (i, type(var)))
+                global_block.append_op(
+                    type='fetch',
+                    inputs={'X': [var]},
+                    outputs={'Out': [fetch_var]},
+                    attrs={'col': i})
+        return tmp_program
+
+    def _compile(program, loss_name):
+        build_strategy = paddle.static.BuildStrategy()
+        exec_strategy = paddle.static.ExecutionStrategy()
+
+        exec_strategy.num_threads = 1
+
+        compiled_program = paddle.static.CompiledProgram(
+            program).with_data_parallel(
+                loss_name=loss_name,
+                build_strategy=build_strategy,
+                exec_strategy=exec_strategy)
+
+        return compiled_program
+
+    optimized_program = cinn_optimize_program(program)
+    program_with_fetch = _add_fetch_ops(optimized_program, fetch_list)
+    return _compile(program_with_fetch, loss_name)
