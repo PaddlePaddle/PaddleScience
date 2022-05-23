@@ -27,6 +27,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
+enable_prim()
 
 np.set_printoptions(
     suppress=True,
@@ -35,8 +36,7 @@ np.set_printoptions(
     threshold=np.inf,
     linewidth=1000)
 
-if (os.getenv('FLAGS_use_cinn') != "1"):
-    enable_prim()
+use_cinn = (os.getenv('FLAGS_use_cinn') == "1")
 
 # define start time and time step
 start_time = 100
@@ -156,29 +156,32 @@ with paddle.static.program_guard(main_program, startup_program):
                              output_var_4_eq_loss + 100.0 * data_loss)
     opt_ops, param_grads = paddle.optimizer.Adam(0.001).minimize(total_loss)
 
-# data parallel
-nranks = paddle.distributed.get_world_size()
-if nranks > 1:
-    main_program, startup_program = convert_to_distributed_program(
-        main_program, startup_program, param_grads)
-
-with paddle.static.program_guard(main_program, startup_program):
-    if prim_enabled():
-        prim2orig(main_program.block(0))
-
 gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 place = paddle.CUDAPlace(gpu_id)
 exe = paddle.static.Executor(place)
 exe.run(startup_program)
 
 inputs_name = [var.name for var in inputs_var]
-inputs = data_parallel_partition(inputs)
+
 feeds = dict(zip(inputs_name, inputs))
 
 fetches = [total_loss.name] + [var.name for var in outputs_var]
 
-if prim_enabled():
+if not use_cinn:
     print("Run without CINN")
+    # data parallel
+    nranks = paddle.distributed.get_world_size()
+    if nranks > 1:
+        main_program, startup_program = convert_to_distributed_program(
+            main_program, startup_program, param_grads)
+
+    with paddle.static.program_guard(main_program, startup_program):
+        if prim_enabled():
+            prim2orig(main_program.block(0))
+
+    inputs = data_parallel_partition(inputs)
+    feeds = dict(zip(inputs_name, inputs))
+
     main_program = compile_and_convert_back_to_program(
         main_program,
         feed=feeds,
@@ -191,9 +194,10 @@ else:
 
 # num_epoch in train
 train_epoch = 110
+print_step = 10
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
-num_time_step = 10
+num_time_step = 1
 current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
@@ -222,7 +226,7 @@ for i in range(num_time_step):
             begin = time.time()
 
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
-        if (k + 1) % 100 == 0:
+        if (k + 1) % print_step == 0:
             print("autograd epoch: " + str(k + 1), "    loss:", out[0])
 
     paddle.device.cuda.synchronize()

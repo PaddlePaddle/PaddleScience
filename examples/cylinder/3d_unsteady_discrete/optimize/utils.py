@@ -473,6 +473,6 @@ def cinn_compile(program, loss_name, fetch_list):
 
         return compiled_program
 
-    optimized_program = cinn_optimize_program(program)
-    program_with_fetch = _add_fetch_ops(optimized_program, fetch_list)
+    # optimized_program = cinn_optimize_program(program)
+    program_with_fetch = _add_fetch_ops(program, fetch_list)
     return _compile(program_with_fetch, loss_name)
