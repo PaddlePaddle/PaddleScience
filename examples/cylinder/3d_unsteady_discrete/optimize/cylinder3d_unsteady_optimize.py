@@ -163,6 +163,7 @@ exe.run(startup_program)
 
 inputs_name = [var.name for var in inputs_var]
 
+inputs = data_parallel_partition(inputs)
 feeds = dict(zip(inputs_name, inputs))
 
 fetches = [total_loss.name] + [var.name for var in outputs_var]
@@ -178,9 +179,6 @@ if not use_cinn:
     with paddle.static.program_guard(main_program, startup_program):
         if prim_enabled():
             prim2orig(main_program.block(0))
-
-    inputs = data_parallel_partition(inputs)
-    feeds = dict(zip(inputs_name, inputs))
 
     main_program = compile_and_convert_back_to_program(
         main_program,

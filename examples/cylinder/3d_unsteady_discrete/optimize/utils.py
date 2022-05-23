@@ -330,8 +330,8 @@ def convert_to_distributed_program(serial_main_prog, serial_startup_prog,
     return dist_main_prog, dist_startup_prog
 
 
-def cinn_compile(program, loss_name, fetch_list):
-    def cinn_optimize_program(program):
+def cinn_compile(origin_program, loss_name, fetch_list):
+    def cinn_optimize_program(input_program):
         def _remove_unused_var(program):
             all_remove_vars = []
             for block in program.blocks:
@@ -427,7 +427,7 @@ def cinn_compile(program, loss_name, fetch_list):
             _remove_unused_var(program)
             program._sync_with_cpp()
 
-        tmp_program = program.clone()
+        tmp_program = input_program.clone()
         dead_code_elimination(tmp_program)
         fuse_shape_fill_constant(tmp_program)
         return tmp_program
@@ -473,6 +473,6 @@ def cinn_compile(program, loss_name, fetch_list):
 
         return compiled_program
 
-    # optimized_program = cinn_optimize_program(program)
-    program_with_fetch = _add_fetch_ops(program, fetch_list)
+    optimized_program = cinn_optimize_program(origin_program)
+    program_with_fetch = _add_fetch_ops(optimized_program, fetch_list)
     return _compile(program_with_fetch, loss_name)
