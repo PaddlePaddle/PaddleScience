@@ -50,7 +50,7 @@ class ModelStatic(paddle.nn.Layer):
         for input in inputs_labels:
             input.stop_gradient = False
 
-        loss, outs = self.algo.compute(
+        loss, outs, loss_details = self.algo.compute(
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -58,7 +58,7 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs  # TODO: add outs
+        return loss, outs, loss_details  # TODO: add outs
 
 
 def loss_func(x, y):
@@ -175,7 +175,7 @@ class Solver(object):
 
             # TODO: error out num_epoch==0
 
-            loss, outs = self.algo.compute(
+            loss, outs, loss_details = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -187,8 +187,11 @@ class Solver(object):
             self.opt.step()
             self.opt.clear_grad()
 
-            print("dynamic epoch: " + str(epoch + 1), "    loss:",
-                  loss.numpy()[0])
+            print("dynamic epoch: " + str(epoch + 1), " loss:",
+                  loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                  " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                  loss_details[2].numpy()[0], " data loss:",
+                  loss_details[3].numpy()[0])
 
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
@@ -264,7 +267,7 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-            self.loss, self.outs = self.algo.compute(
+            self.loss, self.outs, self.loss_details = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -314,15 +317,20 @@ class Solver(object):
         fetches = [self.loss.name]
         for out in self.outs:
             fetches.append(out.name)
+        # fetch loss_details' outputs
+        for loss_detail in self.loss_details:
+            fetches.append(loss_detail.name)
 
         # main loop
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
+            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0],
+                  " eq loss:", rslt[-4], " bc loss:", rslt[-3], " ic loss:",
+                  rslt[-2], " data loss:", rslt[-1])
 
-        return rslt[1:]
+        return rslt[1:-4]
 
     # predict static
     def __predict_static(self):
