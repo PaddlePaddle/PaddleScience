@@ -58,7 +58,7 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs, loss_details  # TODO: add outs
+        return loss, outs  # TODO: add outs
 
 
 def loss_func(x, y):
