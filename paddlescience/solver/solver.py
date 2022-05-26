@@ -98,23 +98,32 @@ class Solver(object):
                 self.__init_static_auto_dist()
 
     # solve (train)
-    def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def solve(self,
+              num_epoch=2,
+              bs=None,
+              checkpoint_freq=1000,
+              checkpoint_path='./checkpoint/'):
         if paddle.in_dynamic_mode():
-            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
+                                        checkpoint_path)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__solve_static(num_epoch, bs, checkpoint_freq)
+                return self.__solve_static(num_epoch, bs, checkpoint_freq,
+                                           checkpoint_path)
             else:
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self):
+    def predict(self,
+                static_model_file=None,
+                dynamic_net_file=None,
+                dynamic_opt_file=None):
         if paddle.in_dynamic_mode():
-            return self.__predict_dynamic()
+            return self.__predict_dynamic(dynamic_net_file, dynamic_opt_file)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__predict_static()
+                return self.__predict_static(static_model_file)
             else:
                 return self.__predict_static_auto_dist()
 
@@ -148,7 +157,7 @@ class Solver(object):
         self.labels_attr = labels_attr
 
     # solve static 
-    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -193,13 +202,23 @@ class Solver(object):
                   loss_details[2].numpy()[0], " data loss:",
                   loss_details[3].numpy()[0])
 
+            if (epoch + 1) % checkpoint_freq == 0:
+                paddle.save(self.algo.net.state_dict(),
+                            checkpoint_path + 'dynamic_net_params_' +
+                            str(epoch + 1) + '.pdparams')
+                paddle.save(self.opt.state_dict(), checkpoint_path +
+                            'dynamic_opt_params_' + str(epoch + 1) + '.pdopt')
+
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
 
         return outs
 
     # predict dynamic
-    def __predict_dynamic(self):
+    def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
+        if dynamic_net_file == None or dynamic_opt_file == None:
+            print("Please specify the path and name of the dynamic model")
+            exit()
         # create inputs 
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
@@ -207,6 +226,12 @@ class Solver(object):
         for i in range(len(inputs)):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
+
+        # load model
+        layer_state_dict = paddle.load(dynamic_net_file)
+        self.algo.net.set_state_dict(layer_state_dict)
+        opt_state_dict = paddle.load(dynamic_opt_file)
+        self.opt.set_state_dict(opt_state_dict)
 
         outs = self.algo.compute_forward(*inputs)
 
@@ -297,7 +322,7 @@ class Solver(object):
         self.exe.run(self.startup_program)
 
     # solve static
-    def __solve_static(self, num_epoch, bs, checkpoint_freq):
+    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -330,10 +355,18 @@ class Solver(object):
                   " eq loss:", rslt[-4], " bc loss:", rslt[-3], " ic loss:",
                   rslt[-2], " data loss:", rslt[-1])
 
+            if (epoch + 1) % checkpoint_freq == 0:
+                paddle.save(self.train_program.state_dict(),
+                            checkpoint_path + 'static_model_params_' +
+                            str(epoch + 1) + '.pdparams')
+
         return rslt[1:-4]
 
     # predict static
-    def __predict_static(self):
+    def __predict_static(self, static_model_file):
+        if static_model_file == None:
+            print("Please specify the path and name of the static model")
+            exit()
 
         # create inputs and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -347,6 +380,10 @@ class Solver(object):
         fetches = list()
         for out in self.outs_predict:
             fetches.append(out.name)
+
+        # load model
+        state_dict = paddle.load(static_model_file)
+        self.predict_program.set_state_dict(state_dict)
 
         # run
         rslt = self.exe.run(self.predict_program,
