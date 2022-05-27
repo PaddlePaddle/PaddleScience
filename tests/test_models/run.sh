@@ -40,7 +40,7 @@ done
 echo "serial bugs: "${serial_bug} >> result.txt
 
 
-ignore="test_cylinder3d_unsteady.py"
+ignore=""
 echo "distributed bug list:" >>  result.txt
 for file in ${cases}
 do
