@@ -24,29 +24,8 @@ import zipfile
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
-#paddle.disable_static()
-
-
-# load real data 
-def GetRealPhyInfo(time, need_info=None):
-    # if real data don't exist, you need to download it.
-    if os.path.exists('./openfoam_cylinder_re100') == False:
-        data_set = 'https://dataset.bj.bcebos.com/PaddleScience/cylinder3D/openfoam_cylinder_re100/cylinder3d_openfoam_re100.zip'
-        wget.download(data_set)
-        with zipfile.ZipFile('cylinder3d_openfoam_re100.zip', 'r') as zip_ref:
-            zip_ref.extractall('openfoam_cylinder_re100')
-    real_data = np.load("openfoam_cylinder_re100/flow_re100_" + str(
-        int(time)) + "_xyzuvwp.npy")
-    real_data = real_data.astype(np.float32)
-    if need_info == 'cord':
-        return real_data[:, 0:3]
-    elif need_info == 'physic':
-        return real_data[:, 3:7]
-    else:
-        return real_data
-
+#paddle.enable_static()
+paddle.disable_static()
 
 # define start time
 start_time = 100
@@ -59,9 +38,6 @@ geo = psci.geometry.CylinderInCube(
 # discretize geometry
 geo_disc = geo.discretize(npoints=[200, 50, 4], method="uniform")
 
-# the real_cord need to be added in geo_disc
-geo_disc.user = GetRealPhyInfo(start_time, need_info='cord')
-
 # N-S equation
 pde = psci.pde.NavierStokes(
     nu=0.01,
@@ -73,6 +49,7 @@ pde = psci.pde.NavierStokes(
 pde.set_time_interval([100.0, 110.0])
 
 # pde discretization 
+# TODO(need to be moved in prediction)
 pde_disc = pde.discretize(
     time_method="implicit", time_step=1, geo_disc=geo_disc)
 
@@ -81,12 +58,14 @@ net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
+# TODO(need to be moved in prediction)
 loss = psci.loss.L2(p=2, data_weight=100.0)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
-# Optimizer
+# Optimizer 
+# TODO(need to be moved in prediction)
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver parameter
@@ -97,10 +76,6 @@ if paddle.in_dynamic_mode():
     next_uvwp = solver.predict(
         dynamic_net_file='checkpoint/dynamic_net_params_1000.pdparams',
         dynamic_opt_file='checkpoint/dynamic_opt_params_1000.pdopt')
-    # # check net
-    # for name, param in solver.algo.net.named_parameters():
-    #     print(name)
-    #     print(param)
 else:
     next_uvwp = solver.predict(
         static_model_file='checkpoint/static_model_params_1000.pdparams')
@@ -116,5 +91,4 @@ psci.visu.save_vtk(
 # save npy
 result = next_uvwp[-1]
 result = np.array(result)
-print(result[0:20, :])
 np.save("predict_cylinder_unsteady_re100/predict_result.npy", result)
