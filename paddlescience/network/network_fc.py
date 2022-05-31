@@ -119,8 +119,6 @@ class FCNet(NetworkBase):
             u = paddle.matmul(u, self.weights[i])
             u = paddle.add(u, self.biases[i])
             u = self.activation(u)
-        # if not paddle.in_dynamic_mode():
-        #         paddle.static.Print(self.weights[-1])
         u = paddle.matmul(u, self.weights[-1])
         u = paddle.add(u, self.biases[-1])
         return u

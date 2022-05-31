@@ -49,7 +49,6 @@ pde = psci.pde.NavierStokes(
 pde.set_time_interval([100.0, 110.0])
 
 # pde discretization 
-# TODO(need to be moved in prediction)
 pde_disc = pde.discretize(
     time_method="implicit", time_step=1, geo_disc=geo_disc)
 
@@ -58,14 +57,12 @@ net = psci.network.FCNet(
     num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
-# TODO(need to be moved in prediction)
 loss = psci.loss.L2(p=2, data_weight=100.0)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer 
-# TODO(need to be moved in prediction)
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver parameter
