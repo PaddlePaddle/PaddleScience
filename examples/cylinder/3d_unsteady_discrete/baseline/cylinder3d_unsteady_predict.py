@@ -86,6 +86,6 @@ psci.visu.save_vtk(
     filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
 # save npy
-result = next_uvwp[-1]
+result = next_uvwp[0]
 result = np.array(result)
 np.save("predict_cylinder_unsteady_re100/predict_result.npy", result)
