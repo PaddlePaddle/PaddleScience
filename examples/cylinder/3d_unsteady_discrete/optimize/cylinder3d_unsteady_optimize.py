@@ -205,7 +205,8 @@ for i in range(num_time_step):
         print("autograd epoch: " + str(k + 1), "    loss:", out[0])
     next_uvwp = out[1:]
     # Save vtk
-    file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
+    file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
+        next_time)
     psci.visu.save_vtk(
         filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
