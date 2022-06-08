@@ -171,29 +171,68 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        for epoch in range(num_epoch):
+        # Adam optimizer
+        if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
+                self.opt, paddle.optimizer.Adam):
+            for epoch in range(num_epoch):
 
-            # TODO: error out num_epoch==0
+                # TODO: error out num_epoch==0
 
-            loss, outs = self.algo.compute(
+                loss, outs = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+
+                loss.backward()
+                self.opt.step()
+                self.opt.clear_grad()
+
+            for i in range(len(outs)):
+                outs[i] = outs[i].numpy()
+
+            return outs
+        #elif self.opt is paddle.incubate.optimizer.functional.minimize_bfgs:
+        else:
+
+            def _f(x):
+                self.algo.net.reconstruct(x)
+                loss, outs = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+                return loss
+
+            x0 = self.algo.net.flatten_params()
+
+            for epoch in range(num_epoch):
+                results = self.opt(_f,
+                                   x0,
+                                   initial_inverse_hessian_estimate=None,
+                                   line_search_fn='strong_wolfe',
+                                   dtype='float32')
+                x0 = results[2]
+                print("dynamic graph: loss[LBFGS]: ", results[3].numpy()[0])
+                if results[0] == True:
+                    break
+
+            self.algo.net.reconstruct(x0)
+            _, outs = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
                 nlabels=nlabels,
                 labels_attr=labels_attr,
                 pde=self.pde)
+            for i in range(len(outs)):
+                outs[i] = outs[i].numpy()
 
-            loss.backward()
-            self.opt.step()
-            self.opt.clear_grad()
-
-            print("dynamic epoch: " + str(epoch + 1), "    loss:",
-                  loss.numpy()[0])
-
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
-
-        return outs
+            return outs
 
     # predict dynamic
     def __predict_dynamic(self):
