@@ -50,7 +50,7 @@ class ModelStatic(paddle.nn.Layer):
         for input in inputs_labels:
             input.stop_gradient = False
 
-        loss, outs, loss_details = self.algo.compute(
+        self.loss, self.outs, self.loss_details = self.algo.compute(
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -58,13 +58,13 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs  # TODO: add outs
+        return self.loss, self.outs, self.loss_details  # TODO: add outs
 
 
-def loss_func(x, y):
+def loss_func(x, y, z):
 
     # print("\n ********** loss_func done ****  \n")
-    return x
+    return x, z
 
 
 class Solver(object):
@@ -415,8 +415,8 @@ class Solver(object):
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr, nlabels,
-                            labels_attr)
+        self.model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr,
+                                 nlabels, labels_attr)
 
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
@@ -427,7 +427,7 @@ class Solver(object):
 
         # engine
         self.engine = Engine(
-            model,
+            self.model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
@@ -447,8 +447,9 @@ class Solver(object):
 
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
+
         # train
-        self.engine.fit(train_dataset, batch_size=None)
+        self.engine.fit(train_dataset, batch_size=None, fetch_list=None)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()
