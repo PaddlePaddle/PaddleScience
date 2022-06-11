@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.1'
+__version__ = '1.0 Beta'
 
+import paddle
+
+from . import config
+from . import parameter
 from . import geometry
+from . import bc
+from . import ic
 from . import pde
 from . import network
 from . import algorithm
@@ -22,6 +28,4 @@ from . import loss
 from . import optimizer
 from . import solver
 from . import visu
-from .discretize import discretize
-from .discretize import sampling_discretize
 from . import data

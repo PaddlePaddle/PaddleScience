@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,98 +12,267 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# from ..formula import MathOperator
+from .. import config
+import numpy as np
+from collections import OrderedDict
+import types
 
-import paddle
-
-#NOTE: do not change these list
-first_order_rslts = ['u', 'v', 'w', 'p']
-first_order_derivatives = [['du/dt', 'du/dx', 'du/dy', 'du/dz'],
-                           ['dv/dt', 'dv/dx', 'dv/dy', 'dv/dz'],
-                           ['dw/dt', 'dw/dx', 'dw/dy', 'dw/dz'],
-                           ['dp/dt', 'dp/dx', 'dp/dy', 'dp/dz']]
-
-second_order_derivatives = [[['d2u/dt2', 'd2u/dtdx', 'd2u/dtdy', 'd2u/dtdz'],
-                             ['d2u/dxdt', 'd2u/dx2', 'd2u/dxdy', 'd2u/dxdz'],
-                             ['d2u/dydt', 'd2u/dydx', 'd2u/dy2', 'd2u/dydz'],
-                             ['d2u/dzdt', 'd2u/dzdx', 'd2u/dzdy', 'd2u/dz2']],
-                            [['d2v/dt2', 'd2v/dtdx', 'd2v/dtdy', 'd2v/dtdz'],
-                             ['d2v/dxdt', 'd2v/dx2', 'd2v/dxdy', 'd2v/dxdz'],
-                             ['d2v/dydt', 'd2v/dydx', 'd2v/dy2', 'd2v/dydz'],
-                             ['d2v/dzdt', 'd2v/dzdx', 'd2v/dzdy', 'd2v/dz2']],
-                            [['d2w/dt2', 'd2w/dtdx', 'd2w/dtdy', 'd2w/dtdz'],
-                             ['d2w/dxdt', 'd2w/dx2', 'd2w/dxdy', 'd2w/dxdz'],
-                             ['d2w/dydt', 'd2w/dydx', 'd2w/dy2', 'd2w/dydz'],
-                             ['d2w/dzdt', 'd2w/dzdx', 'd2w/dzdy', 'd2w/dz2']],
-                            [['d2p/dt2', 'd2p/dtdx', 'd2p/dtdy', 'd2p/dtdz'],
-                             ['d2p/dxdt', 'd2p/dx2', 'd2p/dxdy', 'd2p/dxdz'],
-                             ['d2p/dydt', 'd2p/dydx', 'd2p/dy2', 'd2p/dydz'],
-                             ['d2p/dzdt', 'd2p/dzdx', 'd2p/dzdy', 'd2p/dz2']]]
-
-
-class PDEItem:
-    def __init__(self, coefficient, args):
-        self.coefficient = coefficient
-        self.derivative = []
-        for arg in args:
-            self.derivative.append(arg)
+__all__ = ['PDE']
 
 
 class PDE:
-    def __init__(self, num_pdes=1, time_dependent=False):
-        # super(MathOperator, self).__init__()
+    """
+    User-define Equation
+
+    This module supports to define equations with following steps
+
+        1. define independent variable
+        2. define dependent variable
+        3. declare PDE 
+        4. set independent variable to PDE
+        5. set dependent variable to PDE
+        6. define equations and rhs
+
+    Example:
+        >>> # Example: 2-dimentional Laplace equation
+        >>> x = sympy.Symbol('x')
+        >>> y = sympy.Symbol('y')
+        >>> u = sympy.Function('u')(x,y)
+        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False, order=2)
+        >>> pde.indvar = [x, y]
+        >>> pde.dvar = [u]
+        >>> pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
+        >>> pde.rhs[0] = 0.0
+    """
+
+    def __init__(self,
+                 num_equations=1,
+                 time_dependent=False,
+                 weight=None,
+                 order=2):
 
         # time dependent / independent
         self.time_dependent = time_dependent
 
-        # whether or not need 2nd order derivate
-        self.need_2nd_derivatives = True
+        # independent variable
+        # dependent variable on current time step n
+        # dependent variable on next time step n+1
+        self.indvar = list()
+        self.dvar = list()
+        self.dvar_n = list()
 
-        # pde definition
-        self.num_pdes = num_pdes
-        self.pdes = []
-        for i in range(self.num_pdes):
-            self.pdes.append([])
+        # parameter in pde
+        self.parameter = list()
 
-    def add_item(self, pde_index, coefficient, *args):
-        # if derivative not in first_order_derivatives:
-        #     self.need_2nd_derivatives = True
-        self.pdes[pde_index].append(PDEItem(coefficient, args))
+        # equation
+        self.equations = [None for i in range(num_equations)]
 
-    def get_pde(self, idx):
-        return self.pdes[idx]
+        # right-hand side
+        self.rhs = [None for i in range(num_equations)]
 
-    def set_ic_value(self, ic_value, ic_check_dim=None):
-        self.ic_value = ic_value
-        self.ic_check_dim = ic_check_dim
+        # order
+        self.order = order
 
-    def set_bc_value(self, bc_value, bc_check_dim=None):
+        # boundary condition
+        self.bc = OrderedDict()
+
+        # initial condition
+        self.ic = list()
+
+        # geometry
+        self.geometry = None
+
+        # weight
+        self.weight = weight
+
+        # rhs disc
+        self.rhs_disc = list()
+
+        # weight disc
+        self.weight_disc = list()
+
+        # discretize method (for time-dependent)
+        self.time_disc_method = None
+
+        # time interval
+        self.time_internal = None
+        self.time_step = None
+        self.time_array = None
+
+    def add_geometry(self, geo):
+        self.geometry = geo
+
+    def add_bc(self, name, *args):
         """
-            Set boudary value (Dirichlet boundary condition) to PDE
+        Add boundary condition to boundary
 
-            Parameters:
-                bc_value: array of values
-                bc_check_dim (list):  Optional, default None. If is not None, this list contains the dimensions to set boundary condition values on. If is None, boundary condition values are set on all dimentions of network output. 
+        Parameters:
+            name (string): boundary name.
+            args (boundary conditions): boundary conditions which are added to boundary. 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
+            >>> geo.add_boundary(name="top",criteria=lambda x, y: (y == 1.0))
+            >>> pde = psci.pde.Laplace(dim=2)
+            >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
+            >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
+            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
         """
-        self.bc_value = bc_value
-        self.bc_check_dim = bc_check_dim
-        # print(self.bc_value)
 
-    def discretize(self):
-        pass  # TODO
+        if name not in self.bc:
+            self.bc[name] = list()
 
-    def to_tensor(self):
-        # time
-        if self.time_dependent == True:
-            self.ic_value = paddle.to_tensor(self.ic_value, dtype='float32')
-            self.ic_check_dim = paddle.to_tensor(
-                self.ic_check_dim,
-                dtype='int64') if self.ic_check_dim is not None else None
-        # space
-        self.bc_value = paddle.to_tensor(self.bc_value, dtype='float32')
-        self.bc_check_dim = paddle.to_tensor(
-            self.bc_check_dim,
-            dtype='int64') if self.bc_check_dim is not None else None
+        for arg in args:
+            arg.to_formula(self.indvar)
+            self.bc[name].append(arg)
 
-    def set_batch_size(self, batch_size):
-        self.batch_size = batch_size
+    def add_ic(self, *args):
+        """
+        Add initial condition for time-dependent equation
+
+        Parameters:
+            args (initial conditions): initial conditions 
+
+        Example:
+            >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
+            >>> ic1 = psci.ic.IC('u', rhs=0) 
+            >>> ic2 = psci.ic.IC('v', rhs=0) 
+            >>> pde.add_ic(ic1, ic2)         # add initial conditions
+       """
+        for arg in args:
+            arg.to_formula(self.indvar)
+            self.ic.append(arg)
+
+    def set_time_interval(self, interval):
+        """
+        Set time interval (start time and end time) for time-dependent equation
+
+        Parameters:
+            interval: [start time, end time]
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=2, time_dependent=True)
+            >>> pde.set_time_interval([0.0, 1.0]) # time interval [0.0, 1.0]
+        """
+        self.time_internal = interval
+
+    def discretize(self, time_method=None, time_step=None, geo_disc=None):
+        """
+        Discretize equations
+
+        Parameters:
+            time_method (None or "implicit"): 
+                "implicit": discretize time-dependent Navier-Stokes equations with implicit method
+            time_step (integer): number of time steps for time-dependent equation
+            geo_disc (GeometryDisc): discrete geometry
+
+        Example:
+            >>> import paddlescience as psci
+            >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
+            >>> pde.set_time_interval([0.0, 1.0]) # time interval [0.0, 1.0]
+            >>> pde.discretize(geo_disc=geo_disc)
+        """
+
+        # time discretize pde
+        if self.time_dependent:
+            pde_disc = self.time_discretize(time_method, time_step)
+
+            # time interval
+            pde_disc.time_internal = self.time_internal
+            pde_disc.time_step = time_step
+            t0 = self.time_internal[0]
+            t1 = self.time_internal[1]
+            n = int((t1 - t0) / time_step) + 1
+            pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
+
+        else:
+            pde_disc = self
+
+        # geometry
+        pde_disc.geometry = geo_disc
+
+        # bc
+        for name, bc in self.bc.items():
+            pde_disc.bc[name] = list()
+            for i in range(len(bc)):
+                bc_disc = bc[i].discretize(pde_disc.indvar)
+                pde_disc.bc[name].append(bc_disc)
+
+        # discritize rhs in equation for interior points
+        pde_disc.rhs_disc = dict()
+        pde_disc.rhs_disc["interior"] = list()
+        for rhs in pde_disc.rhs:
+            points_i = pde_disc.geometry.interior
+
+            data = list()
+            for n in range(len(points_i[0])):
+                data.append(points_i[:, n])
+
+            if type(rhs) == types.LambdaType:
+                pde_disc.rhs_disc["interior"].append(rhs(*data))
+            else:
+                pde_disc.rhs_disc["interior"].append(rhs)
+
+        # discritize rhs in equation for user points
+        if pde_disc.geometry.user is not None:
+            pde_disc.rhs_disc["user"] = list()
+            for rhs in pde_disc.rhs:
+                points_i = pde_disc.geometry.user
+
+                data = list()
+                for n in range(len(points_i[0])):
+                    data.append(points_i[:, n])
+
+                if type(rhs) == types.LambdaType:
+                    pde_disc.rhs_disc["user"].append(rhs(*data))
+                else:
+                    pde_disc.rhs_disc["user"].append(rhs)
+
+        # discretize weight in equations
+        weight = pde_disc.weight
+        if (weight is None) or np.isscalar(weight):
+            pde_disc.weight_disc = [weight for _ in range(len(self.equations))]
+        else:
+            pde_disc.weight_disc = weight
+            # TODO: points dependent value
+
+        # discritize weight and rhs in boundary condition
+        for name_b, bc in pde_disc.bc.items():
+            points_b = pde_disc.geometry.boundary[name_b]
+
+            data = list()
+            for n in range(len(points_b[0])):
+                data.append(points_b[:, n])
+
+            # boundary weight
+            for b in bc:
+                # compute weight lambda with cordinates
+                if type(b.weight) == types.LambdaType:
+                    b.weight_disc = b.weight(*data)
+                else:
+                    b.weight_disc = b.weight
+
+            # boundary rhs
+            for b in bc:
+                if type(b.rhs) == types.LambdaType:
+                    b.rhs_disc = b.rhs(*data)
+                else:
+                    b.rhs_disc = b.rhs
+
+        # discretize rhs in initial condition
+        for ic in pde_disc.ic:
+            points_i = pde_disc.geometry.interior
+
+            data = list()
+            for n in range(len(points_i[0])):
+                data.append(points_i[:, n])
+
+            rhs = ic.rhs
+            if type(rhs) == types.LambdaType:
+                ic.rhs_disc = rhs(*data)
+            else:
+                ic.rhs_disc = rhs
+
+        return pde_disc

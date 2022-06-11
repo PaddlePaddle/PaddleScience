@@ -1,4 +1,9 @@
 numpy
+scipy
+sympy
 matplotlib
 vtk
 pyevtk
+pandas
+wget
+scipy

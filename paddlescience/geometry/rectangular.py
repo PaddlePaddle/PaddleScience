@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -8,383 +8,545 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR boundaryS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
 from .geometry_discrete import GeometryDiscrete
 from .geometry import Geometry
 import numpy as np
-import vtk
-import matplotlib.pyplot as plt
+import math
+
+__all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
 
 
 # Rectangular
 class Rectangular(Geometry):
     """
-    Two dimentional rectangular
+    Two dimentional rectangular or three dimentional cube
 
     Parameters:
-        space_origin: cordinate of left-bottom point of rectangular
-        space_extent: extent of rectangular
+        origin: Cordinate of left-bottom point of rectangular
+        extent: Extent of rectangular
 
     Example:
         >>> import paddlescience as psci
-        >>> geo = psci.geometry.Rectangular(space_origin=(0.0,0.0), space_extent=(1.0,1.0))
-
+        >>> geo2d = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+        >>> geo3d = psci.geometry.Rectangular(origin=(0.0,0.0,0.0), extent=(2.0,2.0,2.0))
     """
 
-    # init function
-    def __init__(self,
-                 time_dependent=False,
-                 time_origin=None,
-                 time_extent=None,
-                 space_origin=None,
-                 space_extent=None):
-        super(Rectangular, self).__init__(time_dependent, time_origin,
-                                          time_extent, space_origin,
-                                          space_extent)
+    def __init__(self, origin, extent):
+        super(Rectangular, self).__init__()
 
-        # check time inputs 
-        if (time_dependent == True):
-            if (time_origin == None or not np.isscalar(time_origin)):
-                print("ERROR: Please check the time_origin")
-                exit()
-            if (time_extent == None or not np.isscalar(time_extent)):
-                print("ERROR: Please check the time_extent")
-                exit()
+        if np.isscalar(origin):
+            self.origin = [origin]  # scalar to list
         else:
-            if (time_origin != None):
-                print(
-                    "Errror: The time_origin need to be None when time_dependent is false"
-                )
-                exit()
-            if (time_extent != None):
-                print(
-                    "Errror: The time_extent need to be None when time_dependent is false"
-                )
-                exit()
+            self.origin = origin
 
-        # check space inputs and set dimension
-        self.space_origin = (space_origin, ) if (
-            np.isscalar(space_origin)) else space_origin
-        self.space_extent = (space_extent, ) if (
-            np.isscalar(space_extent)) else space_extent
-
-        lso = len(self.space_origin)
-        lse = len(self.space_extent)
-        self.space_ndims = lso
-        if (lso != lse):
-            print(
-                "ERROR: Please check dimention of space_origin and space_extent."
-            )
-            exit()
-        elif lso == 1:
-            self.space_shape = "rectangular_1d"
-        elif lso == 2:
-            self.space_shape = "rectangular_2d"
-        elif lso == 3:
-            self.space_shape = "rectangular_3d"
+        if np.isscalar(extent):
+            self.extent = [extent]  # scalar to list
         else:
-            print("ERROR: Rectangular supported is should be 1d/2d/3d.")
+            self.extent = extent
 
-    # domain sampling discretize
-    def sampling_discretize(self,
-                            time_nsteps=None,
-                            space_point_size=None,
-                            space_nsteps=None):
-        # TODO
-        # check input
-        self.space_point_size = (space_point_size, ) if (
-            np.isscalar(space_point_size)) else space_point_size
-
-        self.space_nsteps = (space_nsteps, ) if (
-            np.isscalar(space_nsteps)) else space_nsteps
-
-        # discretization time space with linspace
-        steps = []
-        if self.time_dependent == True:
-            time_steps = np.linspace(
-                self.time_origin, self.time_extent, time_nsteps, endpoint=True)
-
-        # sampling in space discretization
-        space_points = []
-        for i in range(space_point_size):
-            current_point = []
-            for j in range(self.space_ndims):
-                # get a random value in [space_origin[j], space_extent[j]]
-                random_value = self.space_origin[j] + (
-                    self.space_extent[j] - self.space_origin[j]
-                ) * np.random.random_sample()
-                current_point.append(random_value)
-            space_points.append(current_point)
-
-        # add boundry value
-        if (self.space_ndims == 1):
-            nbc = 2
-            space_points.append(self.space_origin[-1])
-            space_points.append(self.space_extent[-1])
-            bc_index = np.ndarray(2, dtype=int)
-            bc_index[0] = space_point_size
-            bc_index[1] = space_point_size + 1
-        elif (self.space_ndims == 2):
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            nbc = nx * ny - (nx - 2) * (ny - 2)
-            bc_index = np.ndarray(nbc, dtype=int)
-            nbc = 0
-            x_start = self.space_origin[0]
-            delta_x = (self.space_extent[0] - self.space_origin[0]) / (nx - 1)
-            y_start = self.space_origin[1]
-            delta_y = (self.space_extent[1] - self.space_origin[1]) / (ny - 1)
-            for j in range(ny):
-                for i in range(nx):
-                    if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
-                        x = x_start + i * delta_x
-                        y = y_start + j * delta_y
-                        space_points.append([x, y])
-                        bc_index[nbc] = space_point_size + nbc
-                        nbc += 1
-        elif (self.space_ndims == 3):
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            nz = self.space_nsteps[2]
-            nbc = nx * ny * nz - (nx - 2) * (ny - 2) * (nz - 2)
-            bc_index = np.ndarray(nbc, dtype=int)
-            nbc = 0
-            x_start = self.space_origin[0]
-            delta_x = (self.space_extent[0] - self.space_origin[0]) / (nx - 1)
-            y_start = self.space_origin[1]
-            delta_y = (self.space_extent[1] - self.space_origin[1]) / (ny - 1)
-            z_start = self.space_origin[2]
-            delta_z = (self.space_extent[2] - self.space_origin[2]) / (nz - 1)
-            for k in range(nz):
-                for j in range(ny):
-                    for i in range(nx):
-                        if (k == 0 or k == nz - 1 or j == 0 or j == ny - 1 or
-                                i == 0 or i == nx - 1):
-                            x = x_start + i * delta_x
-                            y = y_start + j * delta_y
-                            z = z_start + k * delta_z
-                            space_points.append([x, y, z])
-                            bc_index[nbc] = space_point_size + nbc
-                            nbc += 1
-        space_domain = np.array(space_points)
-
-        # bc_index with time-domain
-        nbc = len(bc_index)
-        if self.time_dependent == True:
-            bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
-            bc_offset = bc_offset * len(space_domain)
-            bc_index = np.tile(bc_index, time_nsteps)
-            bc_index = bc_index + bc_offset
-
-        # IC index
-        if self.time_dependent == True:
-            ic_index = np.arange(len(space_domain))
-
-        # return discrete geometry
-        geo_disc = GeometryDiscrete()
-        domain = []
-        if self.time_dependent == True:
-            # Get the time-space domain which combine the time domain and space domain
-            for time in time_steps:
-                current_time = time * np.ones(
-                    (len(space_domain), 1), dtype=np.float32)
-                current_domain = np.concatenate(
-                    (current_time, space_domain), axis=-1)
-                domain.append(current_domain.tolist())
-            time_size = len(time_steps)
-            space_domain_size = space_domain.shape[0]
-            domain_dim = len(space_domain[0]) + 1
-            domain = np.array(domain).reshape(
-                (time_size * space_domain_size, domain_dim))
-
-        if self.time_dependent == True:
-            geo_disc.set_domain(
-                time_domain=time_steps,
-                space_domain=space_domain,
-                space_origin=self.space_origin,
-                space_extent=self.space_extent,
-                time_space_domain=domain)
-            geo_disc.set_bc_index(bc_index)
-            geo_disc.set_ic_index(ic_index)
+        # ndims
+        if len(self.origin) == len(self.extent):
+            self.ndims = len(self.origin)
         else:
-            geo_disc.set_domain(
-                space_domain=space_domain,
-                space_origin=self.space_origin,
-                space_extent=self.space_extent)
-            geo_disc.set_bc_index(bc_index)
+            pass  # TODO: error out
 
-        vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
-        geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
+    def discretize(self, method="uniform", npoints=100, padding=True):
+        """
+        Discretize rectangular
 
-        return geo_disc
+        Parameters:
+            method ("uniform" / "sampling"): Discretize rectangular using method "uniform" or "sampling"
+            npoints (integer / integer list): Number of points 
 
-    # domain discretize
-    def discretize(self, time_nsteps=None, space_nsteps=None):
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+            >>> geo.discretize(method="uniform", npoints=[10, 20])
+            >>> geo.discretize(method="sampling", npoints=200)
+        """
 
-        # check input
-        self.space_nsteps = (space_nsteps, ) if (
-            np.isscalar(space_nsteps)) else space_nsteps
+        if method == "uniform":
+            points = self._uniform_mesh(npoints)
+        elif method == "sampling":
+            points = self._sampling_mesh(npoints)
 
-        # discretization time space with linspace
-        steps = []
-        if self.time_dependent == True:
-            time_steps = np.linspace(
-                self.time_origin, self.time_extent, time_nsteps, endpoint=True)
+        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 
-        # discretization each space dimention with linspace
-        for i in range(self.space_ndims):
+    def _sampling_mesh(self, npoints):
+
+        steps = list()
+
+        if self.ndims == 1:
+            steps.append(
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
+            steps.append(np.array(self.origin[0], dtype=self._dtype))
+            steps.append(np.array(self.extent[0], dtype=self._dtype))
+
+        elif self.ndims == 2:
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nx * ny = npoints 
+            # nx / ny = lx / ly
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            ny = np.sqrt(float(npoints) * ly / lx)
+            nx = float(npoints) / ny
+            nx = int(nx)
+            ny = int(ny)
+
+            x1, y1 = self.origin
+            x2, y2 = self.extent
+
+            # interior
+            steps.append(
+                self._sampling_mesh_interior(self.origin, self.extent,
+                                             npoints))
+
+            # four boundary: down, top, left, right
+            origin = [x1, y1]
+            extent = [x2, y1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2]
+            extent = [x2, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y1]
+            extent = [x1, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y1]
+            extent = [x2, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            # four vertex
+            steps.append(np.array([x1, y1], dtype=self._dtype))
+            steps.append(np.array([x1, y2], dtype=self._dtype))
+            steps.append(np.array([x2, y1], dtype=self._dtype))
+            steps.append(np.array([x2, y2], dtype=self._dtype))
+
+        elif self.ndims == 3:
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
+
+            x1, y1, z1 = self.origin
+            x2, y2, z2 = self.extent
+
+            # interior
+            ni = npoints
+            steps.append(
+                self._sampling_mesh_interior(self.origin, self.extent, ni))
+
+            # six faces: down, top, left, right, front, back
+            origin = [x1, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
+
+            origin = [x1, y1, z2]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
+
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
+
+            origin = [x1, y2, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
+
+            # twelve edges
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y2, z1]
+            extent = [x1, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2, z1]
+            extent = [x1, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x1, y1, z2]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x2, y1, z2]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y2, z2]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2, z2]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x2, y2, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            # eight vertex
+            steps.append(np.array([x1, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z2], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z2], dtype=self._dtype))
+        else:
+            pass
+            # TODO: error out
+
+        return np.vstack(steps)
+
+    def _sampling_mesh_interior(self, origin, extent, n):
+
+        # return np.random.uniform(low=origin, high=extent, size=(n, self.ndims))
+
+        steps = list()
+        for i in range(self.ndims):
+            if origin[i] == extent[i]:
+                steps.append(np.full(n, origin[i], dtype=self._dtype))
+            else:
+                steps.append(
+                    np.random.uniform(origin[i], extent[i], n).astype(
+                        self._dtype))
+
+        return np.dstack(steps).reshape((n, self.ndims))
+
+    def _uniform_mesh(self, npoints, origin=None, extent=None):
+
+        if origin is None:
+            origin = self.origin
+        if extent is None:
+            extent = self.extent
+
+        if np.isscalar(npoints):
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            if self.ndims == 1:
+                nd = [npoints]
+            elif self.ndims == 2:
+                # nx * ny = npoints 
+                # nx / ny = lx / ly
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                ny = np.sqrt(float(npoints) * ly / lx)
+                nx = float(npoints) / ny
+                nd = [int(nx), int(ny)]
+            elif self.ndims == 3:
+                # nx * ny * nz = npoints 
+                # nx / lx = ny / ly = nz / lz
+                lx = self.extent[0] - self.origin[0]
+                ly = self.extent[1] - self.origin[1]
+                lz = self.extent[2] - self.origin[2]
+                nz = math.pow(
+                    float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+                nx = nz * lx / lz
+                ny = nz * ly / lz
+                nd = [int(nx), int(ny), int(nz)]
+        else:
+            nd = npoints
+
+        steps = list()
+        for i in range(self.ndims):
             steps.append(
                 np.linspace(
-                    self.space_origin[i],
-                    self.space_extent[i],
-                    self.space_nsteps[i],
-                    endpoint=True))
+                    origin[i],
+                    extent[i],
+                    nd[i],
+                    endpoint=True,
+                    dtype=self._dtype))
 
         # meshgrid and stack to cordinates
-        if self.time_dependent == True:
-            nsteps = time_nsteps
-            ndims = self.space_ndims + 1
-        else:
-            nsteps = 1
-            ndims = self.space_ndims
-        for i in self.space_nsteps:
-            nsteps *= i
-
-        if (self.space_ndims == 1):
-            space_domain = steps[0]
-        if (self.space_ndims == 2):
+        if (self.ndims == 1):
+            points = steps[0].reshape((-1, 1))
+        if (self.ndims == 2):
             mesh = np.meshgrid(steps[1], steps[0], sparse=False, indexing='ij')
-            space_domain = np.stack(
+            points = np.stack(
                 (mesh[1].reshape(-1), mesh[0].reshape(-1)), axis=-1)
-        elif (self.space_ndims == 3):
+        elif (self.ndims == 3):
             mesh = np.meshgrid(
                 steps[2], steps[1], steps[0], sparse=False, indexing='ij')
-            space_domain = np.stack(
+            points = np.stack(
                 (mesh[2].reshape(-1), mesh[1].reshape(-1),
                  mesh[0].reshape(-1)),
                 axis=-1)
+        return points
 
-        # bc_index
-        if (self.space_ndims == 1):
-            bc_index = np.ndarray(2, dtype=int)
-            bc_index[0] = 0
-            bc_index[1] = self.space_nsteps[-1]
-        elif (self.space_ndims == 2):
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            nbc = nx * ny - (nx - 2) * (ny - 2)
-            bc_index = np.ndarray(nbc, dtype=int)
-            nbc = 0
-            for j in range(ny):
-                for i in range(nx):
-                    if (j == 0 or j == ny - 1 or i == 0 or i == nx - 1):
-                        bc_index[nbc] = j * nx + i
-                        nbc += 1
-        elif (self.space_ndims == 3):
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            nz = self.space_nsteps[2]
-            nbc = nx * ny * nz - (nx - 2) * (ny - 2) * (nz - 2)
-            bc_index = np.ndarray(nbc, dtype=int)
-            nbc = 0
-            for k in range(nz):
-                for j in range(ny):
-                    for i in range(nx):
-                        if (k == 0 or k == nz - 1 or j == 0 or j == ny - 1 or
-                                i == 0 or i == nx - 1):
-                            bc_index[nbc] = k * nx * ny + j * nx + i
-                            nbc += 1
 
-        # bc_index with time-domain
-        nbc = len(bc_index)
-        if self.time_dependent == True:
-            bc_offset = np.arange(time_nsteps).repeat(len(bc_index))
-            bc_offset = bc_offset * len(space_domain)
-            bc_index = np.tile(bc_index, time_nsteps)
-            bc_index = bc_index + bc_offset
+Cube = Rectangular
 
-        # IC index
-        if self.time_dependent == True:
-            ic_index = np.arange(len(space_domain))
 
-        # return discrete geometry
-        geo_disc = GeometryDiscrete()
-        domain = []
-        if self.time_dependent == True:
-            # Get the time-space domain which combine the time domain and space domain
-            for time in time_steps:
-                current_time = time * np.ones(
-                    (len(space_domain), 1), dtype=np.float32)
-                current_domain = np.concatenate(
-                    (current_time, space_domain), axis=-1)
-                domain.append(current_domain.tolist())
-            time_size = len(time_steps)
-            space_domain_size = space_domain.shape[0]
-            domain_dim = len(space_domain[0]) + 1
-            domain = np.array(domain).reshape(
-                (time_size * space_domain_size, domain_dim))
+# CircleInRectangular
+class CircleInRectangular(Rectangular):
+    """
+    Two dimentional rectangular removing one circle
 
-        if self.time_dependent == True:
-            geo_disc.set_domain(
-                time_domain=time_steps,
-                space_domain=space_domain,
-                space_origin=self.space_origin,
-                space_extent=self.space_extent,
-                time_space_domain=domain)
-            geo_disc.set_bc_index(bc_index)
-            geo_disc.set_ic_index(ic_index)
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
+    def __init__(self, origin, extent, circle_center, circle_radius):
+        super(CircleInRectangular, self).__init__(origin, extent)
+
+        self.origin = origin
+        self.extent = extent
+        self.circle_center = circle_center
+        self.circle_radius = circle_radius
+        if len(origin) == len(extent):
+            self.ndims = len(origin)
         else:
-            geo_disc.set_domain(
-                space_domain=space_domain,
-                space_origin=self.space_origin,
-                space_extent=self.space_extent)
-            geo_disc.set_bc_index(bc_index)
+            pass  # TODO: error out
 
-        vtk_obj_name, vtk_obj, vtk_data_size = self.obj_vtk()
-        geo_disc.set_vtk_obj(vtk_obj_name, vtk_obj, vtk_data_size)
+    def discretize(self, method="sampling", npoints=20, padding=True):
+        """
+        Discretize CircleInRectangular
 
-        # mpl_obj, mpl_data_shape = self.obj_mpl()
-        # geo_disc.set_mpl_obj(mpl_obj, mpl_data_shape)
+        Parameters:
+            method (string): Currently, only "sampling" method is supported
+            npoints (integer): Number of points
 
-        return geo_disc
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="uniform", npoints=100)
+        """
 
-    # visu vtk
-    def obj_vtk(self):
-        # prepare plane obj 2d
-        if self.space_ndims == 2:
-            vtkobjname = "vtkPlanceSource"
-            self.plane = vtk.vtkPlaneSource()
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            self.plane.SetResolution(nx - 1, ny - 1)
-            self.plane.SetOrigin(
-                [self.space_origin[0], self.space_origin[1], 0])
-            self.plane.SetPoint1(
-                [self.space_extent[0], self.space_origin[1], 0])
-            self.plane.SetPoint2(
-                [self.space_origin[0], self.space_extent[1], 0])
-            self.plane.Update()
-            vtk_data_size = self.plane.GetOutput().GetNumberOfPoints()
-            return vtkobjname, self.plane, vtk_data_size
-        elif self.space_ndims == 3:
-            vtkobjname = "vtkImageData"
-            self.img = vtk.vtkImageData()
-            self.img.SetOrigin(self.space_origin[0], self.space_origin[1],
-                               self.space_origin[2])
-            nx = self.space_nsteps[0]
-            ny = self.space_nsteps[1]
-            nz = self.space_nsteps[2]
-            self.img.SetDimensions(nx, ny, nz)
-            vtk_data_size = self.img.GetNumberOfPoints()
-            return vtkobjname, self.img, vtk_data_size
+        if method == "sampling":
+
+            # TODO: better nc and nr
+            # TODO: exact nr using area info
+            nc = int(np.sqrt(npoints))  # npoints in circle
+            nr = npoints - nc  # npoints in rectangular
+
+            center = np.array(self.circle_center, dtype=self._dtype)
+            radius = np.array(self.circle_radius, dtype=self._dtype)
+
+            # rectangular points
+            rec = super(CircleInRectangular, self)._sampling_mesh(nr)
+
+            # remove circle points
+            flag = np.linalg.norm((rec - center), axis=1) >= radius
+            rec_cir = rec[flag, :]
+
+            # add circle boundary points
+            angle = np.arange(nc) * (2.0 * np.pi / nc)
+
+            # TODO: when circle is larger than rec
+            x = (np.sin(angle).reshape((nc, 1)) * radius).astype(self._dtype)
+            y = (np.cos(angle).reshape((nc, 1)) * radius).astype(self._dtype)
+            cir_b = np.concatenate([x, y], axis=1)
+            ncr = len(rec_cir) + len(cir_b)
+            points = np.vstack([rec_cir, cir_b]).reshape(ncr, self.ndims)
+
+            return super(CircleInRectangular, self)._mesh_to_geo_disc(points,
+                                                                      padding)
+        else:
+            # TODO: better error out
+            print("ERROR: ",
+                  type(self).__name__,
+                  "does not support uniform discretization.")
+            exit()
 
 
-# # visu matplotlib
-# def obj_mpl(self):
-#     # prepare plan obj 2d
-#     if self.space_ndims == 2:
-#         fig, self.ax = plt.subplots(subplot_kw={"projection": "3d"})
-#     return self.ax, (self.space_nsteps[0], self.space_nsteps[1])
+# CylinderInCube
+class CylinderInCube(Rectangular):
+    """
+    Three dimentional cube removing one cylinder
+
+    Parameters:
+        origin (list of float): Cordinate of left-bottom point of rectangular
+        extent (list of float): Extent of rectangular
+        circle_center (list of float): Center of circle
+        circle_radius (float): Radius of circle
+
+    Example:
+        >>> import paddlescience as psci
+        >>> geo2d = psci.geometry.CircleInRectangular(origin=(0.0,0.0), extent=(1.0,1.0), circle_center=(0.5,0.5), circle_radius=0.1)
+   """
+
+    def __init__(self, origin, extent, circle_center, circle_radius):
+        super(CylinderInCube, self).__init__(origin, extent)
+
+        self.origin = origin
+        self.extent = extent
+        self.circle_center = circle_center
+        self.circle_radius = circle_radius
+        if len(origin) == len(extent):
+            self.ndims = len(origin)
+        else:
+            pass  # TODO: error out
+
+    def discretize(self, method="sampling", npoints=1000, padding=True):
+        """
+        Discretize CylinderInCube
+
+        Parameters:
+            method (string): Currently, "uniform and "sampling" methods are supported
+            npoints (integer): Number of points
+
+        Example:
+            >>> import paddlescience as psci
+            >>> geo = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.discretize(method="sampling", npoints=100)
+        """
+
+        lx = float(self.extent[0] - self.origin[0])
+        ly = float(self.extent[1] - self.origin[1])
+        lz = float(self.extent[2] - self.origin[2])
+        center = np.array(self.circle_center, dtype=self._dtype)
+        radius = np.array(self.circle_radius, dtype=self._dtype)
+        ratio_area = np.sqrt(3.14 * radius**2 / (lx * ly))
+        ratio_perimeter = (3.14 * radius) / (lx + ly)
+
+        if np.isscalar(npoints):
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
+
+            # number of points in cube
+            ncube = int(npoints * (1.0 + ratio_area)**2)
+        else:
+            nx = npoints[0]
+            ny = npoints[1]
+            nz = npoints[2]
+            # number of points in cube
+            ncube = npoints
+
+        # number of points in circle     
+        nc = int(2 * (nx + ny) * ratio_perimeter)
+
+        if method == "sampling":
+            # cube points
+            cube = super(CylinderInCube, self)._sampling_mesh(ncube)
+        elif method == "uniform":
+            cube = super(CylinderInCube, self)._uniform_mesh(ncube)
+
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[1] = self.origin[1]
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face1 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            org[1] = self.extent[1]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[1] = 1
+            nface[2] *= 10
+            face2 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            ext = list(self.extent)
+            ext[0] = self.origin[0]
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face3 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            org = list(self.origin)
+            org[0] = self.extent[0]
+            ext = list(self.extent)
+            nface = ncube.copy()
+            nface[0] = 1
+            nface[2] *= 10
+            face4 = super(CylinderInCube, self)._uniform_mesh(
+                nface, origin=org, extent=ext)
+
+            cube = np.vstack([cube, face1, face2, face3, face4])
+
+        else:
+            pass  # TODO: error out
+
+        # remove cylinder points
+        flag = np.linalg.norm((cube[:, 0:2] - center), axis=1) >= radius
+        cube_cyl = cube[flag, :]
+
+        # TODO : points inside / outside cube
+
+        # add cylinder boundary points
+        angle = np.arange(nc) * (2.0 * np.pi / nc)
+        x = (np.sin(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        y = (np.cos(angle).reshape((1, nc)) * radius).astype(self._dtype)
+        z = np.linspace(self.origin[2], self.extent[2], nz).astype(self._dtype)
+        x_rpt = np.tile(x, nz).reshape((nc * nz, 1))  # repeat x
+        y_rpt = np.tile(y, nz).reshape((nc * nz, 1))  # repeat y
+        z_rpt = np.repeat(z, nc).reshape((nc * nz, 1))  # repeat z
+        cyl_b = np.concatenate([x_rpt, y_rpt, z_rpt], axis=1)  # [x, y, z]
+
+        points = np.vstack([cube_cyl, cyl_b])
+
+        return super(CylinderInCube, self)._mesh_to_geo_disc(points, padding)

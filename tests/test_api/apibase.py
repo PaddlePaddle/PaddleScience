@@ -1,18 +1,16 @@
-"""
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
-#
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
 
 from inspect import isfunction
 import copy
@@ -136,11 +134,10 @@ class APIBase(object):
             Assertion
         """
         # 取默认type
-        if self.dtype is None:
-            if np.float64 in self.types:
-                self.dtype = np.float64
-            else:
-                self.dtype = self.types[0]
+        if np.float64 in self.types:
+            self.dtype = np.float64
+        else:
+            self.dtype = self.types[0]
         if self.debug:
             for place in self.places:
                 self.place = place
@@ -495,7 +492,7 @@ class APIBase(object):
         Returns:
             None
         """
-        if not isinstance(res, (list, np.generic, np.ndarray)):
+        if not isinstance(res, (list, tuple, np.generic, np.ndarray)):
             raise TypeError("res must be numpy")
         self.kwargs = copy.deepcopy(kwargs)
         for k, v in self.kwargs.items():
