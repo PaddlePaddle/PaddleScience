@@ -51,6 +51,32 @@ class CompFormula:
         self.outs = None
         self.jacobian = None
         self.hessian = None
+        self.ders = []
+
+    # TODO(lml): 
+    # (1) Add options for procedural interface and functional interface.
+    # (2) Support lazy compute.
+    # (3) Use forward differentiation for performance optimization.
+    def compute_outs_and_ders(self, inputs, is_batched=True):
+        self.outs = self.net.nn_func(inputs)
+        cur_der = [self.outs]
+        for i in range(self.order):
+            cur_der = compute_next_order_der(cur_der, inputs, is_batched)
+            self.ders.append(cur_der)
+
+    def compute_next_order_der(cur_der, inputs, is_batched):
+        next_der = []
+
+        if is_batched:
+            for der in cur_der:
+                for i in range(der.shape[1]):
+                    next_der.append(paddle.static.gradients(der[:, i], inputs))
+        else:
+            for der in cur_der:
+                for i in range(der.shape[0]):
+                    next_der.append(paddle.static.gradients(der[i], inputs))
+
+        return next_der
 
     def compute_outs(self, input, bs):
         self.outs = self.net.nn_func(input)
