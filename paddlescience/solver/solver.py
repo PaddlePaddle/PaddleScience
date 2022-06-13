@@ -58,13 +58,13 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return self.loss, self.outs, self.loss_details  # TODO: add outs
+        return self.loss, self.outs  # TODO: add outs
 
 
-def loss_func(x, y, z):
+def loss_func(x, y):
 
     # print("\n ********** loss_func done ****  \n")
-    return x, z
+    return x
 
 
 class Solver(object):
@@ -448,8 +448,14 @@ class Solver(object):
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
 
+        fetches = dict()
+        fetches['eq_loss'] = self.model.loss_details[0].name
+        fetches['bc_loss'] = self.model.loss_details[1].name
+        fetches['ic_loss'] = self.model.loss_details[2].name
+        fetches['data_loss'] = self.model.loss_details[3].name
+
         # train
-        self.engine.fit(train_dataset, batch_size=None, fetch_list=None)
+        self.engine.fit(train_dataset, batch_size=None, fetches=fetches)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()
