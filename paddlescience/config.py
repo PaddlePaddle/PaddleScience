@@ -12,7 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from paddle.incubate.autograd import enable_prim, disable_prim
+
 _dtype = 'float32'
+_ad_api_mode = 'functional'
+
+
+def set_ad_api_mode(mode):
+    assert mode in ['functional', 'procedural'
+                    ], "Invalid AD API mode, must be functional or procedural."
+    global _ad_api_mode
+    _ad_api_mode = mode
+
+
+def get_ad_api_mode():
+    global _ad_api_mode
+    return _ad_api_mode
 
 
 def set_dtype(dtype):

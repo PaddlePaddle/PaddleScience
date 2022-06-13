@@ -16,6 +16,8 @@ import paddle
 from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
 from ..inputs import InputsAttr
+from ..config import get_ad_api_mode
+from paddle.incubate.autograd import prim_enabled
 
 api_new = True  # TODO: delete
 
@@ -39,6 +41,9 @@ class LossBase(object):
         pass
 
 
+# TODO(lml):
+# (1) Support lazy compute.
+# (2) Use forward differentiation for performance optimization.
 class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
@@ -53,18 +58,13 @@ class CompFormula:
         self.hessian = None
         self.ders = []
 
-    # TODO(lml): 
-    # (1) Add options for procedural interface and functional interface.
-    # (2) Support lazy compute.
-    # (3) Use forward differentiation for performance optimization.
-    def compute_outs_and_ders(self, inputs, is_batched=True):
-        self.outs = self.net.nn_func(inputs)
+    def compute_ders_with_procedural_api(self, inputs, is_batched=True):
         cur_der = [self.outs]
         for i in range(self.order):
-            cur_der = compute_next_order_der(cur_der, inputs, is_batched)
+            cur_der = self.compute_next_order_der(cur_der, inputs, is_batched)
             self.ders.append(cur_der)
 
-    def compute_next_order_der(cur_der, inputs, is_batched):
+    def compute_next_order_der(self, cur_der, inputs, is_batched):
         next_der = []
 
         if is_batched:
@@ -78,48 +78,56 @@ class CompFormula:
 
         return next_der
 
-    def compute_outs(self, input, bs):
+    def compute_outs(self, input):
         self.outs = self.net.nn_func(input)
 
     def compute_outs_der(self, input, bs):
-
         # outs
-        self.compute_outs(input, bs)
+        self.compute_outs(input)
 
-        # jacobian
-        if self.order >= 1:
-            if api_new:
-                jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
-            else:
-                jacobian = Jacobian(self.net.nn_func, input, batch=True)
+        if self.order > 2:
+            assert not paddle.in_dynamic_mode() and get_ad_api_mode(
+            ) == 'procedural' and prim_enabled(
+            ), "Only support 2+ order PDE in static mode, with procedural AD API and new AD mechanism based on primitive operators."
+
+        if get_ad_api_mode() == 'procedural':
+            self.compute_ders_with_procedural_api(inputs, is_batched=True)
         else:
-            jacobian = None
-
-        # hessian
-        if self.order >= 2:
-            hessian = list()
-            for i in range(self.net.num_outs):
-
-                def func(input):
-                    return self.net.nn_func(input)[:, i:i + 1]
-
+            # jacobian
+            if self.order >= 1:
                 if api_new:
-                    hessian.append(Hessian(func, input, is_batched=True))
+                    jacobian = Jacobian(
+                        self.net.nn_func, input, is_batched=True)
                 else:
-                    hessian.append(Hessian(func, input, batch=True))
+                    jacobian = Jacobian(self.net.nn_func, input, batch=True)
+            else:
+                jacobian = None
 
-        else:
-            hessian = None
+            # hessian
+            if self.order >= 2:
+                hessian = list()
+                for i in range(self.net.num_outs):
 
-        # print("*** Jacobian *** ")
-        # print(jacobian[:])
+                    def func(input):
+                        return self.net.nn_func(input)[:, i:i + 1]
 
-        # print("*** Hessian *** ")
-        # print(hessian[2][:])
+                    if api_new:
+                        hessian.append(Hessian(func, input, is_batched=True))
+                    else:
+                        hessian.append(Hessian(func, input, batch=True))
 
-        # self.outs = outs
-        self.jacobian = jacobian
-        self.hessian = hessian
+            else:
+                hessian = None
+
+            # print("*** Jacobian *** ")
+            # print(jacobian[:])
+
+            # print("*** Hessian *** ")
+            # print(hessian[2][:])
+
+            # self.outs = outs
+            self.jacobian = jacobian
+            self.hessian = hessian
 
     def compute_formula(self, formula, input, input_attr, labels, labels_attr,
                         normal):
@@ -198,6 +206,7 @@ class CompFormula:
         #     f_idx = self.parameter_pde.index(item)
         #     return input[:, f_idx + input_attr.parameter_pde_start]  # TODO
 
+        # TODO(lml): support procedural api
     def __compute_formula_der(self, item, normal):
 
         jacobian = self.jacobian
