@@ -180,6 +180,7 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
+        print("Dynamic graph is currently used.")
         for epoch in range(num_epoch):
 
             # TODO: error out num_epoch==0
@@ -196,7 +197,7 @@ class Solver(object):
             self.opt.step()
             self.opt.clear_grad()
 
-            print("dynamic epoch: " + str(epoch + 1), " loss:",
+            print("epoch: " + str(epoch + 1), " loss:",
                   loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
                   " bc loss:", loss_details[1].numpy()[0], " ic loss:",
                   loss_details[2].numpy()[0], " data loss:",
@@ -347,13 +348,14 @@ class Solver(object):
             fetches.append(loss_detail.name)
 
         # main loop
+        print("Static graph is currently used.")
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0],
-                  " eq loss:", rslt[-4], " bc loss:", rslt[-3], " ic loss:",
-                  rslt[-2], " data loss:", rslt[-1])
+            print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
+                  rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
+                  " data loss:", rslt[-1])
 
             if (epoch + 1) % checkpoint_freq == 0:
                 paddle.save(self.train_program.state_dict(),
