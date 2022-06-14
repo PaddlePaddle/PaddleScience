@@ -20,7 +20,7 @@ import os
 import wget
 import zipfile
 from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
-from utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
+from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
 
 paddle.seed(1)
 np.random.seed(1)
