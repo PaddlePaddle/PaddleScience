@@ -150,7 +150,6 @@ psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 ### Scalability on Distributed computing
 Distributed is currently supported. You can run the following command.
 ```
-cd optimize
 python3.7 -m paddle.distributed.launch --gpus=0,1 laplace2d.py
 ```
 

@@ -50,7 +50,7 @@ class ModelStatic(paddle.nn.Layer):
         for input in inputs_labels:
             input.stop_gradient = False
 
-        loss, outs = self.algo.compute(
+        self.loss, self.outs, self.loss_details = self.algo.compute(
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -58,7 +58,7 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs  # TODO: add outs
+        return self.loss, self.outs  # TODO: add outs
 
 
 def loss_func(x, y):
@@ -98,23 +98,32 @@ class Solver(object):
                 self.__init_static_auto_dist()
 
     # solve (train)
-    def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def solve(self,
+              num_epoch=2,
+              bs=None,
+              checkpoint_freq=1000,
+              checkpoint_path='./checkpoint/'):
         if paddle.in_dynamic_mode():
-            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
+                                        checkpoint_path)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__solve_static(num_epoch, bs, checkpoint_freq)
+                return self.__solve_static(num_epoch, bs, checkpoint_freq,
+                                           checkpoint_path)
             else:
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self):
+    def predict(self,
+                static_model_file=None,
+                dynamic_net_file=None,
+                dynamic_opt_file=None):
         if paddle.in_dynamic_mode():
-            return self.__predict_dynamic()
+            return self.__predict_dynamic(dynamic_net_file, dynamic_opt_file)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__predict_static()
+                return self.__predict_static(static_model_file)
             else:
                 return self.__predict_static_auto_dist()
 
@@ -148,7 +157,7 @@ class Solver(object):
         self.labels_attr = labels_attr
 
     # solve static 
-    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -235,7 +244,10 @@ class Solver(object):
             return outs
 
     # predict dynamic
-    def __predict_dynamic(self):
+    def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
+        if dynamic_net_file == None or dynamic_opt_file == None:
+            print("Please specify the path and name of the dynamic model")
+            exit()
         # create inputs 
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
@@ -243,6 +255,12 @@ class Solver(object):
         for i in range(len(inputs)):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
+
+        # load model
+        layer_state_dict = paddle.load(dynamic_net_file)
+        self.algo.net.set_state_dict(layer_state_dict)
+        opt_state_dict = paddle.load(dynamic_opt_file)
+        self.opt.set_state_dict(opt_state_dict)
 
         outs = self.algo.compute_forward(*inputs)
 
@@ -303,7 +321,7 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-            self.loss, self.outs = self.algo.compute(
+            self.loss, self.outs, self.loss_details = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -333,7 +351,7 @@ class Solver(object):
         self.exe.run(self.startup_program)
 
     # solve static
-    def __solve_static(self, num_epoch, bs, checkpoint_freq):
+    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -353,18 +371,32 @@ class Solver(object):
         fetches = [self.loss.name]
         for out in self.outs:
             fetches.append(out.name)
+        # fetch loss_details' outputs
+        for loss_detail in self.loss_details:
+            fetches.append(loss_detail.name)
 
         # main loop
+        print("Static graph is currently used.")
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
+            print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
+                  rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
+                  " data loss:", rslt[-1])
 
-        return rslt[1:]
+            if (epoch + 1) % checkpoint_freq == 0:
+                paddle.save(self.train_program.state_dict(),
+                            checkpoint_path + 'static_model_params_' +
+                            str(epoch + 1) + '.pdparams')
+
+        return rslt[1:-4]
 
     # predict static
-    def __predict_static(self):
+    def __predict_static(self, static_model_file):
+        if static_model_file == None:
+            print("Please specify the path and name of the static model")
+            exit()
 
         # create inputs and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -378,6 +410,10 @@ class Solver(object):
         fetches = list()
         for out in self.outs_predict:
             fetches.append(out.name)
+
+        # load model
+        state_dict = paddle.load(static_model_file)
+        self.predict_program.set_state_dict(state_dict)
 
         # run
         rslt = self.exe.run(self.predict_program,
@@ -409,8 +445,8 @@ class Solver(object):
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr, nlabels,
-                            labels_attr)
+        self.model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr,
+                                 nlabels, labels_attr)
 
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
@@ -421,7 +457,7 @@ class Solver(object):
 
         # engine
         self.engine = Engine(
-            model,
+            self.model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
@@ -441,8 +477,15 @@ class Solver(object):
 
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
+
+        fetches = dict()
+        fetches['eq_loss'] = self.model.loss_details[0].name
+        fetches['bc_loss'] = self.model.loss_details[1].name
+        fetches['ic_loss'] = self.model.loss_details[2].name
+        fetches['data_loss'] = self.model.loss_details[3].name
+
         # train
-        self.engine.fit(train_dataset, batch_size=None)
+        self.engine.fit(train_dataset, batch_size=None, fetches=fetches)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()
