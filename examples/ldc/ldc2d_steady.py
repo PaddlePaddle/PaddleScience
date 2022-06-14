@@ -15,13 +15,12 @@
 import paddlescience as psci
 import numpy as np
 import paddle
-from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+#paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -74,7 +73,7 @@ algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
 # opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = minimize_lbfgs
+opt = psci.optimizer.Lbfgs
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)

@@ -16,6 +16,7 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 paddle.disable_static()
 from .. import config
 
@@ -180,6 +181,7 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
+        print("Dynamic graph is currently used.")
         # Adam optimizer
         if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
                 self.opt, paddle.optimizer.Adam):
@@ -187,7 +189,7 @@ class Solver(object):
 
                 # TODO: error out num_epoch==0
 
-                loss, outs = self.algo.compute(
+                loss, outs, loss_details = self.algo.compute(
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -199,6 +201,20 @@ class Solver(object):
                 self.opt.step()
                 self.opt.clear_grad()
 
+                print("epoch: " + str(epoch + 1), " loss:",
+                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                      loss_details[2].numpy()[0], " data loss:",
+                      loss_details[3].numpy()[0])
+
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+                    paddle.save(self.opt.state_dict(),
+                                checkpoint_path + 'dynamic_opt_params_' +
+                                str(epoch + 1) + '.pdopt')
+
             for i in range(len(outs)):
                 outs[i] = outs[i].numpy()
 
@@ -208,7 +224,7 @@ class Solver(object):
 
             def _f(x):
                 self.algo.net.reconstruct(x)
-                loss, outs = self.algo.compute(
+                loss, outs, loss_details = self.algo.compute(
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -231,7 +247,7 @@ class Solver(object):
                     break
 
             self.algo.net.reconstruct(x0)
-            _, outs = self.algo.compute(
+            _, outs, _ = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -329,6 +345,9 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
+            if isinstance(self.opt, minimize_lbfgs()):
+                assert paddle.in_dynamic_mode(
+                ), "The lbfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
 
         # construct predict program

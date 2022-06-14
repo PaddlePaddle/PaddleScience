@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle
+from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 
 
 def Adam(**kargs):
@@ -36,3 +37,82 @@ def Adam(**kargs):
         >>> opt = psci.optimizer.Adam(learning_rate=0.1, parameters=net.parameters())
     """
     return paddle.optimizer.Adam(**kargs)
+
+
+def Lbfgs(objective_func,
+          initial_position,
+          history_size=100,
+          max_iters=50,
+          tolerance_grad=1e-8,
+          tolerance_change=1e-8,
+          initial_inverse_hessian_estimate=None,
+          line_search_fn='strong_wolfe',
+          max_line_search_iters=50,
+          initial_step_length=1.0,
+          dtype='float32',
+          name=None):
+    """
+    Minimizes a differentiable function `func` using the L-BFGS method.
+    The L-BFGS is simalar as BFGS, the only difference is that L-BFGS use historical
+    sk, yk, rhok rather than H_k-1 to compute Hk.
+    Reference:
+        Jorge Nocedal, Stephen J. Wright, Numerical Optimization, Second Edition, 2006.
+        pp179: Algorithm 7.5 (L-BFGS).
+    Following summarizes the the main logic of the program based on L-BFGS.Note: _k represents 
+    value of k_th iteration, ^T represents the transposition of a vector or matrix.
+    repeat
+        compute p_k by two-loop recursion
+        alpha = strong_wolfe(f, x_k, p_k)
+        x_k+1 = x_k + alpha * p_k
+        s_k = x_k+1 - x_k
+        y_k = g_k+1 - g_k
+        rho_k = 1 / (s_k^T * y_k)
+        update sk_vec, yk_vec, rhok_vec
+        check_converge
+    end 
+    Args:
+        objective_func: the objective function to minimize. ``func`` accepts
+            a multivariate input and returns a scalar.
+        initial_position (Tensor): the starting point of the iterates. For methods like Newton and quasi-Newton 
+        the initial trial step length should always be 1.0 .
+        history_size (Scalar): the number of stored vector pairs {si,yi}.
+        max_iters (Scalar): the maximum number of minimization iterations.
+        tolerance_grad (Scalar): terminates if the gradient norm is smaller than
+            this. Currently gradient norm uses inf norm.
+        tolerance_change (Scalar): terminates if the change of function value/position/parameter between 
+            two iterations is smaller than this value.
+        initial_inverse_hessian_estimate (Tensor): the initial inverse hessian approximation.
+        line_search_fn (str): indicate which line search method to use, only support 'strong wolfe' right now. May support 
+            'Hager Zhang' in the futrue.
+        max_line_search_iters (Scalar): the maximum number of line search iterations.
+        initial_step_length: step length used in first iteration of line search. different initial_step_length 
+        may cause different optimal result.
+        dtype ('float' | 'float32' | 'float64' | 'double'): the data
+            type to be used.
+    
+    Returns:
+        is_converge (bool): Indicates whether found the minimum within tolerance.
+        num_func_calls (int): number of objective function called.
+        position (Tensor): the position of the last iteration. If the search converged, this value is the argmin of 
+        the objective function regrading to the initial position.
+        objective_value (Tensor): objective function value at the `position`.
+        objective_gradient (Tensor): objective function gradient at the `position`.
+
+    Example:
+        >>> import paddlescience as psci
+        >>> opt = psci.optimizer.Lbfgs()
+    """
+
+    return paddle.incubate.optimizer.functional.lbfgs.minimize_lbfgs(
+        objective_func=objective_func,
+        initial_position=initial_position,
+        history_size=history_size,
+        max_iters=max_iters,
+        tolerance_grad=tolerance_grad,
+        tolerance_change=tolerance_change,
+        initial_inverse_hessian_estimate=initial_inverse_hessian_estimate,
+        line_search_fn=line_search_fn,
+        max_line_search_iters=max_line_search_iters,
+        initial_step_length=initial_step_length,
+        dtype=dtype,
+        name=name)
