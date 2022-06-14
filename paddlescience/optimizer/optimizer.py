@@ -14,6 +14,8 @@
 
 import paddle
 
+import jax.experimental.optimizers
+
 
 def Adam(**kargs):
     """
@@ -36,3 +38,9 @@ def Adam(**kargs):
         >>> opt = psci.optimizer.Adam(learning_rate=0.1, parameters=net.parameters())
     """
     return paddle.optimizer.Adam(**kargs)
+
+
+def Adam_jax(learning_rate):
+    optim_init, optim_update, optim_params = jax.experimental.optimizers.adam(
+        step_size=learning_rate)
+    return [optim_init, optim_update, optim_params]

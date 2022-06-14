@@ -16,6 +16,9 @@ import paddle
 import paddle.nn.functional as F
 from .network_base import NetworkBase
 
+import jax, jax.random
+import jax.example_libraries, jax.example_libraries.stax
+
 
 class FCNet(NetworkBase):
     """
@@ -70,6 +73,23 @@ class FCNet(NetworkBase):
         else:
             return None
 
+    def make_network_jax(self):
+
+        Dense = jax.example_libraries.stax.Dense
+        Tanh = jax.example_libraries.stax.Tanh
+
+        netlist = list()
+        for i in range(self.num_layers - 1):
+            netlist.append(Dense(self.hidden_size))
+            netlist.append(Tanh)  # TODO: optimizer sigmoid
+        netlist.append(Dense(self.num_outs))
+        init_func, self.predict_func = jax.example_libraries.stax.serial(
+            *netlist)
+
+        rng_key = jax.random.PRNGKey(0)
+        input_shape = (-1, self.num_ins)
+        _, self.weights = init_func(rng_key, input_shape)
+
     def make_network_dynamic(self):
         for i in range(self.num_layers):
             if i == 0:
@@ -123,6 +143,9 @@ class FCNet(NetworkBase):
         u = paddle.add(u, self.biases[-1])
         return u
 
+    def nn_func_jax(self, ins):
+        return self.predict_func(self.weights, ins)
+
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self.weights + self.biases))
         return paddle.flatten(paddle.concat(flat_vars))
@@ -140,15 +163,6 @@ class FCNet(NetworkBase):
                                                   is_biases):
             shape = old_param.shape
             value = paddle.reshape(flat_param, shape)
-            # new_param = self.create_parameter(shape,
-            #                                   dtype=self.dtype,
-            #                                   is_bias=is_bias,
-            #                                   default_initializer=Assign(value))
-            # if is_bias:
-            #     self.biases.append(new_param)
-            # else:
-            #     self.weights.append(new_param)
-            # self.add_parameter(old_param.name.split('.')[-1], new_param)
             new_param = value
             if is_bias:
                 self.biases.append(new_param)

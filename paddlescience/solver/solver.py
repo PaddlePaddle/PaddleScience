@@ -16,7 +16,9 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+
 paddle.disable_static()
+
 from .. import config
 
 __all__ = ["Solver"]
@@ -89,15 +91,16 @@ class Solver(object):
         self.opt = opt
         self._dtype = config._dtype
 
-        if paddle.in_dynamic_mode():
-            self.__init_dynamic()
-        else:
-            if paddle.distributed.get_world_size() == 1:
-                self.__init_static()
-            else:
-                self.__init_static_auto_dist()
+        # if paddle.in_dynamic_mode():
+        #     self.__init_dynamic()
+        # else:
+        #     if paddle.distributed.get_world_size() == 1:
+        #         self.__init_static()
+        #     else:
+        #         self.__init_static_auto_dist()
 
     # solve (train)
+
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
@@ -109,6 +112,7 @@ class Solver(object):
                                                      checkpoint_freq)
 
     # predict (infer)
+
     def predict(self):
         if paddle.in_dynamic_mode():
             return self.__predict_dynamic()
@@ -458,6 +462,50 @@ class Solver(object):
                                          feed=feeds,
                                          fetch_list=fetches)
         return rslt
+
+    def init_jax(self):
+
+        # create inputs/labels and its attributes
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        labels, labels_attr = self.algo.create_labels(self.pde)
+
+        self.inputs = inputs
+        self.inputs_attr = inputs_attr
+        self.labels = labels
+        self.labels_attr = labels_attr
+
+        [optim_init, self.optim_update, self.optim_params] = self.opt
+        self.optim_state = optim_init(self.algo.net.weights)
+
+    def solve_jax(self):
+
+        inputs = self.inputs
+        inputs_attr = self.inputs_attr
+        labels = self.labels
+        labels_attr = self.labels_attr
+
+        # number of inputs and labels
+        ninputs = len(inputs)
+        nlabels = len(labels)
+
+        inputs_labels = inputs + labels  # tmp to one list
+
+        for epoch in range(1):
+
+            param = self.optim_params(self.optim_state)
+
+            loss, outs = self.algo.compute(
+                *inputs_labels,
+                ninputs=ninputs,
+                inputs_attr=inputs_attr,
+                nlabels=nlabels,
+                labels_attr=labels_attr,
+                pde=self.pde)
+
+            self.optim_state = optim_update(epoch,
+                                            jax.grad(loss), self.optim_state)
+
+        return outs
 
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,
