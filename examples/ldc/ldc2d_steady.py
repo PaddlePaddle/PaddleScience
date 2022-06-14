@@ -72,7 +72,6 @@ loss = psci.loss.L2(p=2)
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 opt = psci.optimizer.Lbfgs()
 
 # Solver
@@ -81,8 +80,8 @@ solution = solver.solve(num_epoch=20)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
-# # MSE
-# # TODO: solution array to dict: interior, bc
+# MSE
+# TODO: solution array to dict: interior, bc
 # cord = pde_disc.geometry.interior
 # ref = ref_sol(cord[:, 0], cord[:, 1])
 # mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
