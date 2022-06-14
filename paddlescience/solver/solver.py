@@ -219,12 +219,12 @@ class Solver(object):
                 outs[i] = outs[i].numpy()
 
             return outs
-        #elif self.opt is paddle.incubate.optimizer.functional.minimize_bfgs:
-        else:
+        # L-bfgs optimizer
+        elif self.opt is minimize_lbfgs:
 
             def _f(x):
                 self.algo.net.reconstruct(x)
-                loss, outs, loss_details = self.algo.compute(
+                loss, self.outs, self.loss_details = self.algo.compute(
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -242,22 +242,27 @@ class Solver(object):
                                    line_search_fn='strong_wolfe',
                                    dtype='float32')
                 x0 = results[2]
-                print("dynamic graph: loss[LBFGS]: ", results[3].numpy()[0])
-                if results[0] == True:
-                    break
+
+                print("epoch: " + str(epoch + 1), " loss[LBFGS]:",
+                      results[3].numpy()[0], " eq loss:",
+                      self.loss_details[0].numpy()[0], " bc loss:",
+                      self.loss_details[1].numpy()[0], " ic loss:",
+                      self.loss_details[2].numpy()[0], " data loss:",
+                      self.loss_details[3].numpy()[0])
+
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
 
             self.algo.net.reconstruct(x0)
-            _, outs, _ = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-            for i in range(len(outs)):
-                outs[i] = outs[i].numpy()
 
-            return outs
+            return self.outs
+        else:
+            print(
+                "Please specify the optimizer, now only the adam and lbfgs optimizers are supported."
+            )
+            exit()
 
     # predict dynamic
     def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
@@ -345,7 +350,7 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
-            if isinstance(self.opt, minimize_lbfgs()):
+            if self.opt is minimize_lbfgs:
                 assert paddle.in_dynamic_mode(
                 ), "The lbfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
