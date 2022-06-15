@@ -34,7 +34,7 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
-npoints = 101
+npoints = 16
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace
@@ -61,19 +61,12 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Adam(learning_rate=0.001)
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
-exit()
-
-solver.solve()
-
-exit()
-
-solution = solver.solve(num_epoch=10000)
+solution = solver.solve(num_epoch=1)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

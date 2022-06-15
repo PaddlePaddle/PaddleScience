@@ -19,6 +19,8 @@ from ..inputs import InputsAttr
 
 import jax
 
+from .. import config
+
 from paddle.incubate.autograd import Jacobian, Hessian
 
 
@@ -57,22 +59,33 @@ class CompFormula:
         # outs
         self.compute_outs(input, bs)
 
+        print(input)
+        print(self.outs)
+
         # jacobian
         if self.order >= 1:
-            # jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
-            jacobian = jax.jacrev(self.net.nn_func)(input)
+            if config._compute_backend == "jax":
+                jacobian = jax.jacrev(self.net.nn_func)(input)
+            else:
+                jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
             jacobian = None
 
+        # print(jacobian)
+
         # hessian
         if self.order >= 2:
-            # hessian = list()
-            # for i in range(self.net.num_outs):
-            #     def func(input):
-            #         return self.net.nn_func(input)[:, i:i + 1]
-            #     hessian.append(Hessian(func, input, is_batched=True))
 
-            hessian = jax.hessian(self.net.nn_func)(input)
+            if config._compute_backend == "jax":
+                hessian = jax.hessian(self.net.nn_func)(input)
+            else:
+                hessian = list()
+                for i in range(self.net.num_outs):
+
+                    def func(input):
+                        return self.net.nn_func(input)[:, i:i + 1]
+
+                    hessian.append(Hessian(func, input, is_batched=True))
         else:
             hessian = None
 
@@ -81,6 +94,10 @@ class CompFormula:
 
         # print("*** Hessian *** ")
         # print(hessian[2][:])
+
+        print(jacobian.shape)
+        print(jacobian)
+        exit()
 
         # self.outs = outs
         self.jacobian = jacobian

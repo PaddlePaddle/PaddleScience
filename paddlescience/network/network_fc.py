@@ -62,8 +62,11 @@ class FCNet(NetworkBase):
 
         # dynamic mode: make network here
         # static  mode: make network in solver
-        if paddle.in_dynamic_mode():
-            self.make_network_dynamic()
+        if config._compute_backend == "jax":
+            self.make_network_jax()
+        else:
+            if paddle.in_dynamic_mode():
+                self.make_network_dynamic()
 
         # self.make_network_static()
 

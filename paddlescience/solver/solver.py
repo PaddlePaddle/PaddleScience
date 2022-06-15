@@ -17,6 +17,8 @@ from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 
+from jax import numpy as jnp
+
 paddle.disable_static()
 
 from .. import config
@@ -493,9 +495,17 @@ class Solver(object):
         ninputs = len(inputs)
         nlabels = len(labels)
 
+        # convert inputs to tensor
+        for i in range(ninputs):
+            inputs[i] = jnp.array(inputs[i], dtype=self._dtype)
+
+        # convert label to tensor
+        for i in range(nlabels):
+            labels[i] = jnp.array(labels[i], dtype=self._dtype)
+
         inputs_labels = inputs + labels  # tmp to one list
 
-        for epoch in range(1):
+        for epoch in range(num_epoch):
 
             param = self.optim_params(self.optim_state)
 
