@@ -16,6 +16,8 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
+from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
 from .. import config
 
@@ -181,39 +183,90 @@ class Solver(object):
         inputs_labels = inputs + labels  # tmp to one list
 
         print("Dynamic graph is currently used.")
-        for epoch in range(num_epoch):
+        # Adam optimizer
+        if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
+                self.opt, paddle.optimizer.Adam):
+            for epoch in range(num_epoch):
 
-            # TODO: error out num_epoch==0
+                # TODO: error out num_epoch==0
 
-            loss, outs, loss_details = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
+                loss, outs, loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
 
-            loss.backward()
-            self.opt.step()
-            self.opt.clear_grad()
+                loss.backward()
+                self.opt.step()
+                self.opt.clear_grad()
 
-            print("epoch: " + str(epoch + 1), " loss:",
-                  loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
-                  " bc loss:", loss_details[1].numpy()[0], " ic loss:",
-                  loss_details[2].numpy()[0], " data loss:",
-                  loss_details[3].numpy()[0])
+                print("epoch: " + str(epoch + 1), " loss:",
+                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                      loss_details[2].numpy()[0], " data loss:",
+                      loss_details[3].numpy()[0])
 
-            if (epoch + 1) % checkpoint_freq == 0:
-                paddle.save(self.algo.net.state_dict(),
-                            checkpoint_path + 'dynamic_net_params_' +
-                            str(epoch + 1) + '.pdparams')
-                paddle.save(self.opt.state_dict(), checkpoint_path +
-                            'dynamic_opt_params_' + str(epoch + 1) + '.pdopt')
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+                    paddle.save(self.opt.state_dict(),
+                                checkpoint_path + 'dynamic_opt_params_' +
+                                str(epoch + 1) + '.pdopt')
 
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
+            for i in range(len(outs)):
+                outs[i] = outs[i].numpy()
 
-        return outs
+            return outs
+        # L-bfgs optimizer
+        elif self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+
+            def _f(x):
+                self.algo.net.reconstruct(x)
+                loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+                return loss
+
+            x0 = self.algo.net.flatten_params()
+
+            for epoch in range(num_epoch):
+                results = self.opt(_f,
+                                   x0,
+                                   initial_inverse_hessian_estimate=None,
+                                   line_search_fn='strong_wolfe',
+                                   dtype='float32')
+                x0 = results[2]
+
+                print("epoch: " + str(epoch + 1), " loss:",
+                      results[3].numpy()[0], " eq loss:",
+                      self.loss_details[0].numpy()[0], " bc loss:",
+                      self.loss_details[1].numpy()[0], " ic loss:",
+                      self.loss_details[2].numpy()[0], " data loss:",
+                      self.loss_details[3].numpy()[0])
+
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+
+            self.algo.net.reconstruct(x0)
+
+            for i in range(len(self.outs)):
+                self.outs[i] = self.outs[i].numpy()
+
+            return self.outs
+        else:
+            print(
+                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
+            )
+            exit()
 
     # predict dynamic
     def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
@@ -301,6 +354,9 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
+            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+                assert paddle.in_dynamic_mode(
+                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
 
         # construct predict program
