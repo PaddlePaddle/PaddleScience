@@ -20,6 +20,9 @@ from ..labels import LabelInt, LabelHolder
 from collections import OrderedDict
 import numpy as np
 
+from .. import config
+import jax
+
 
 class PINNs(AlgorithmBase):
     """
@@ -399,4 +402,7 @@ class PINNs(AlgorithmBase):
         if np.isscalar(x):
             return np.sqrt(x)
         else:
-            return paddle.sqrt(x)
+            if config._compute_backend == "jax":
+                return jax.numpy.sqrt(x)
+            else:
+                return paddle.sqrt(x)

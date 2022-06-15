@@ -92,7 +92,7 @@ class FCNet(NetworkBase):
             *netlist)
 
         rng_key = jax.random.PRNGKey(0)
-        input_shape = (-1, self.num_ins)
+        input_shape = (4, self.num_ins)
         _, self.weights = init_func(rng_key, input_shape)
 
     def make_network_dynamic(self):

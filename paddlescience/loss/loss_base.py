@@ -59,13 +59,14 @@ class CompFormula:
         # outs
         self.compute_outs(input, bs)
 
-        print(input)
-        print(self.outs)
-
         # jacobian
         if self.order >= 1:
             if config._compute_backend == "jax":
-                jacobian = jax.jacrev(self.net.nn_func)(input)
+
+                def func(x):
+                    return jax.jacrev(self.net.nn_func)(x)
+
+                jacobian = jax.vmap(func, 0, 0)(input)
             else:
                 jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
@@ -77,7 +78,11 @@ class CompFormula:
         if self.order >= 2:
 
             if config._compute_backend == "jax":
-                hessian = jax.hessian(self.net.nn_func)(input)
+
+                def func(x):
+                    return jax.hessian(self.net.nn_func)(x)
+
+                hessian = jax.vmap(func, 0, 0)(input)
             else:
                 hessian = list()
                 for i in range(self.net.num_outs):
@@ -94,10 +99,6 @@ class CompFormula:
 
         # print("*** Hessian *** ")
         # print(hessian[2][:])
-
-        print(jacobian.shape)
-        print(jacobian)
-        exit()
 
         # self.outs = outs
         self.jacobian = jacobian
