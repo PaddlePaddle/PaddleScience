@@ -19,8 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
+paddle.enable_static()
+#paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
@@ -72,20 +72,19 @@ loss = psci.loss.L2(p=2)
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Lbfgs()
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=25, checkpoint_freq=20)
+solution = solver.solve(num_epoch=20000)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
-# MSE
-# TODO: solution array to dict: interior, bc
+# # MSE
+# # TODO: solution array to dict: interior, bc
 # cord = pde_disc.geometry.interior
 # ref = ref_sol(cord[:, 0], cord[:, 1])
-# mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2 
+# mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
 
 # n = 1
 # for cord in pde_disc.geometry.boundary.values():
