@@ -41,9 +41,7 @@ class LossBase(object):
         pass
 
 
-# TODO(lml):
-# (1) Support lazy compute.
-# (2) Use forward differentiation for performance optimization.
+# TODO(lml): Use forward differentiation for performance optimization.
 class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
@@ -78,12 +76,12 @@ class CompFormula:
 
         return next_der
 
-    def compute_outs(self, input):
+    def compute_outs(self, input, bs):
         self.outs = self.net.nn_func(input)
 
     def compute_outs_der(self, input, bs):
         # outs
-        self.compute_outs(input)
+        self.compute_outs(input, bs)
 
         if self.order > 2:
             assert not paddle.in_dynamic_mode() and get_ad_api_mode(
@@ -91,6 +89,8 @@ class CompFormula:
             ), "Only support 2+ order PDE in static mode, with procedural AD API and new AD mechanism based on primitive operators."
 
         if get_ad_api_mode() == 'procedural':
+            assert not paddle.in_dynamic_mode() and prim_enabled(
+            ), "Only support procedural AD API in static mode, with new AD mechanisim based on primmitive operators."
             self.compute_ders_with_procedural_api(inputs, is_batched=True)
         else:
             # jacobian
@@ -223,42 +223,57 @@ class CompFormula:
         # print("  -order: ", order)
         # print("  -f_idx: ", f_idx)
 
-        # parser jacobin for order 1
-        if order == 1:
-
-            v = item.args[1][0]
-            if v == sympy.Symbol('n'):
-                if api_new:
-                    rst = normal * jacobian[:, f_idx, :]  # TODO
-                else:
-                    rst = normal * jacobian[f_idx, :]
+        v = item.args[1][0]
+        if get_ad_api_mode() == 'procedural':
+            assert not paddle.in_dynamic_mode() and prim_enabled(
+            ), "Only support procedural AD API in static mode, with new AD mechanisim based on primmitive operators."
+            if order == 1 and v == sympy.Symbol('n'):
+                rst = normal * self.ders[0][f_idx]
             else:
-                var_idx = self.indvar.index(v)
+                num_ins = self.net.num_ins
+                base = f_idx * (num_ins**(order - 1))
+                bias = 0
+                for idx in range(order - 1):
+                    bias = bias * num_ins + self.indvars.index(item.args[idx +
+                                                                         1][0])
+                last_idx = self.indvars.index(item.args[order][0])
+                rst = self.ders[order - 1][base + bias, last_idx]
+        else:
+            # parser jacobin for order 1
+            if order == 1:
 
-                # print("  -var_idx: ", var_idx)
-
-                if api_new:
-                    rst = jacobian[:, f_idx, var_idx]
+                if v == sympy.Symbol('n'):
+                    if api_new:
+                        rst = normal * jacobian[:, f_idx, :]  # TODO
+                    else:
+                        rst = normal * jacobian[f_idx, :]
                 else:
-                    rst = jacobian[f_idx, var_idx]
+                    var_idx = self.indvar.index(v)
 
-        # parser hessian for order 2
-        elif order == 2:
+                    # print("  -var_idx: ", var_idx)
 
-            if (len(item.args[1:]) == 1):
-                var_idx = self.indvar.index(item.args[1][0])
-                # print("  -var_idx: ", var_idx)
-                if api_new:
-                    rst = hessian[f_idx][:, var_idx, var_idx]
+                    if api_new:
+                        rst = jacobian[:, f_idx, var_idx]
+                    else:
+                        rst = jacobian[f_idx, var_idx]
+
+            # parser hessian for order 2
+            elif order == 2:
+
+                if (len(item.args[1:]) == 1):
+                    var_idx = self.indvar.index(item.args[1][0])
+                    # print("  -var_idx: ", var_idx)
+                    if api_new:
+                        rst = hessian[f_idx][:, var_idx, var_idx]
+                    else:
+                        rst = hessian[f_idx, var_idx, :, var_idx]
                 else:
-                    rst = hessian[f_idx, var_idx, :, var_idx]
-            else:
-                var_idx1 = self.indvar.index(item.args[1][0])
-                var_idx2 = self.indvar.index(item.args[2][0])
+                    var_idx1 = self.indvar.index(item.args[1][0])
+                    var_idx2 = self.indvar.index(item.args[2][0])
 
-                if api_new:
-                    rst = hessian[f_idx][:, var_idx1, var_idx2]
-                else:
-                    rst = hessian[f_idx, var_idx1, :, var_idx2]
+                    if api_new:
+                        rst = hessian[f_idx][:, var_idx1, var_idx2]
+                    else:
+                        rst = hessian[f_idx, var_idx1, :, var_idx2]
 
         return rst
