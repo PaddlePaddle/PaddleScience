@@ -19,7 +19,7 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
+#paddle.enable_static()
 #paddle.disable_static()
 
 # analytical solution 
@@ -32,7 +32,7 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
-npoints = 10201
+npoints = 101
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace

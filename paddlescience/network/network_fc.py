@@ -133,7 +133,7 @@ class FCNet(NetworkBase):
             self.add_parameter("w_" + str(i), w)
             self.add_parameter("b_" + str(i), b)
 
-    def nn_func(self, ins):
+    def __nn_func_paddle(self, ins):
         u = ins
         for i in range(self.num_layers - 1):
             u = paddle.matmul(u, self.weights[i])
@@ -143,8 +143,11 @@ class FCNet(NetworkBase):
         u = paddle.add(u, self.biases[-1])
         return u
 
-    def nn_func_jax(self, ins):
+    def __nn_func_jax(self, ins):
         return self.predict_func(self.weights, ins)
+
+    def nn_func(self, ins):
+        return self.__nn_func_jax(ins)
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self.weights + self.biases))
