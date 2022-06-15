@@ -404,11 +404,12 @@ class Solver(object):
         for loss_detail in self.loss_details:
             fetches.append(loss_detail.name)
 
-        self.train_program = compile_and_convert_back_to_program(program=self.train_program,
-                                        feed=feeds,
-                                        fetch_list=fetches,
-                                        use_prune=True,
-                                        loss_name=self.loss.name)
+        self.train_program = compile_and_convert_back_to_program(
+            program=self.train_program,
+            feed=feeds,
+            fetch_list=fetches,
+            use_prune=True,
+            loss_name=self.loss.name)
 
         # main loop
         print("Static graph is currently used.")
