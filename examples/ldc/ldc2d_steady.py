@@ -20,7 +20,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 paddle.enable_static()
-#paddle.disable_static()
+# paddle.disable_static()
 
 nup = psci.parameter.Parameter('nu')
 
