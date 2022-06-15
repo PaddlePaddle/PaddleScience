@@ -17,6 +17,7 @@ from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
+from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
 from .. import config
 
@@ -220,7 +221,7 @@ class Solver(object):
 
             return outs
         # L-bfgs optimizer
-        elif self.opt is minimize_lbfgs:
+        elif self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
 
             def _f(x):
                 self.algo.net.reconstruct(x)
@@ -243,7 +244,7 @@ class Solver(object):
                                    dtype='float32')
                 x0 = results[2]
 
-                print("epoch: " + str(epoch + 1), " loss[LBFGS]:",
+                print("epoch: " + str(epoch + 1), " loss:",
                       results[3].numpy()[0], " eq loss:",
                       self.loss_details[0].numpy()[0], " bc loss:",
                       self.loss_details[1].numpy()[0], " ic loss:",
@@ -257,10 +258,13 @@ class Solver(object):
 
             self.algo.net.reconstruct(x0)
 
+            for i in range(len(self.outs)):
+                self.outs[i] = self.outs[i].numpy()
+
             return self.outs
         else:
             print(
-                "Please specify the optimizer, now only the adam and lbfgs optimizers are supported."
+                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
             )
             exit()
 
@@ -350,9 +354,9 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
-            if self.opt is minimize_lbfgs:
+            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
                 assert paddle.in_dynamic_mode(
-                ), "The lbfgs optimizer is only supported in dynamic graph"
+                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
 
         # construct predict program

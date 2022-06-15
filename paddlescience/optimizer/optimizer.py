@@ -14,6 +14,7 @@
 
 import paddle
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
+from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 
 
 def Adam(**kargs):
@@ -51,3 +52,18 @@ def Lbfgs():
     """
 
     return paddle.incubate.optimizer.functional.lbfgs.minimize_lbfgs
+
+
+def Bfgs():
+    """
+    Minimizes a differentiable function `func` using the BFGS method.
+    The BFGS is a quasi-Newton method for solving an unconstrained
+    optimization problem over a differentiable function.
+    Closely related is the Newton method for minimization. 
+
+    Example:
+        >>> import paddlescience as psci
+        >>> opt = psci.optimizer.Bfgs()
+    """
+
+    return paddle.incubate.optimizer.functional.bfgs.minimize_bfgs
