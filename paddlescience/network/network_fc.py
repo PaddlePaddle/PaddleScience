@@ -19,6 +19,8 @@ from .network_base import NetworkBase
 import jax, jax.random
 import jax.example_libraries, jax.example_libraries.stax
 
+from .. import config
+
 
 class FCNet(NetworkBase):
     """
@@ -147,7 +149,10 @@ class FCNet(NetworkBase):
         return self.predict_func(self.weights, ins)
 
     def nn_func(self, ins):
-        return self.__nn_func_jax(ins)
+        if config._compute_backend == "jax":
+            return self.__nn_func_jax(ins)
+        else:
+            return self.__nn_func_paddle(ins)
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self.weights + self.biases))

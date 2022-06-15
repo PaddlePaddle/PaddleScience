@@ -13,6 +13,7 @@
 # limitations under the License.
 
 _dtype = 'float32'
+_compute_backend = "paddle"
 
 
 def set_dtype(dtype):
@@ -23,3 +24,8 @@ def set_dtype(dtype):
 def get_dtype():
     global _dtype
     return _dtype
+
+
+def set_compute_backend(compute_backend):
+    global _compute_backend
+    _compute_backend = compute_backend

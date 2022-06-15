@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import paddle
+import jax.example_libraries.optimizers
 
-import jax.experimental.optimizers
+from .. import config
 
 
 def Adam(**kargs):
@@ -37,10 +38,9 @@ def Adam(**kargs):
         >>> import paddlescience as psci
         >>> opt = psci.optimizer.Adam(learning_rate=0.1, parameters=net.parameters())
     """
-    return paddle.optimizer.Adam(**kargs)
-
-
-def Adam_jax(learning_rate):
-    optim_init, optim_update, optim_params = jax.experimental.optimizers.adam(
-        step_size=learning_rate)
-    return [optim_init, optim_update, optim_params]
+    if config._compute_backend == "jax":
+        optim_init, optim_update, optim_params = jax.example_libraries.optimizers.adam(
+            step_size=kargs["learning_rate"])
+        return [optim_init, optim_update, optim_params]
+    else:
+        return paddle.optimizer.Adam(**kargs)

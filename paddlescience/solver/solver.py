@@ -91,25 +91,30 @@ class Solver(object):
         self.opt = opt
         self._dtype = config._dtype
 
-        # if paddle.in_dynamic_mode():
-        #     self.__init_dynamic()
-        # else:
-        #     if paddle.distributed.get_world_size() == 1:
-        #         self.__init_static()
-        #     else:
-        #         self.__init_static_auto_dist()
+        if config._compute_backend == "jax":
+            self.__init_jax()
+        else:
+            if paddle.in_dynamic_mode():
+                self.__init_dynamic()
+            else:
+                if paddle.distributed.get_world_size() == 1:
+                    self.__init_static()
+                else:
+                    self.__init_static_auto_dist()
 
     # solve (train)
-
     def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
-        if paddle.in_dynamic_mode():
-            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+        if config._compute_backend == "jax":
+            return self.__solve_jax(num_epoch, bs, checkpoint_freq)
         else:
-            if paddle.distributed.get_world_size() == 1:
-                return self.__solve_static(num_epoch, bs, checkpoint_freq)
+            if paddle.in_dynamic_mode():
+                return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
             else:
-                return self.__solve_static_auto_dist(num_epoch, bs,
-                                                     checkpoint_freq)
+                if paddle.distributed.get_world_size() == 1:
+                    return self.__solve_static(num_epoch, bs, checkpoint_freq)
+                else:
+                    return self.__solve_static_auto_dist(num_epoch, bs,
+                                                         checkpoint_freq)
 
     # predict (infer)
 
@@ -463,7 +468,7 @@ class Solver(object):
                                          fetch_list=fetches)
         return rslt
 
-    def init_jax(self):
+    def __init_jax(self):
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -477,7 +482,7 @@ class Solver(object):
         [optim_init, self.optim_update, self.optim_params] = self.opt
         self.optim_state = optim_init(self.algo.net.weights)
 
-    def solve_jax(self):
+    def __solve_jax(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
