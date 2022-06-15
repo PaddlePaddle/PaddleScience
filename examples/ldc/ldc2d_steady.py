@@ -85,7 +85,7 @@ psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 # TODO: solution array to dict: interior, bc
 # cord = pde_disc.geometry.interior
 # ref = ref_sol(cord[:, 0], cord[:, 1])
-# mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
+# mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2 
 
 # n = 1
 # for cord in pde_disc.geometry.boundary.values():
