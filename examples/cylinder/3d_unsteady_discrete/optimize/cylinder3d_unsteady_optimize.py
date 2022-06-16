@@ -195,7 +195,7 @@ train_epoch = 110
 print_step = 10
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
-num_time_step = 1
+num_time_step = 10
 current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
