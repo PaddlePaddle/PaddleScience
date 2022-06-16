@@ -20,6 +20,7 @@ from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
 from .. import config
+from .utils import compile_and_convert_back_to_program
 
 __all__ = ["Solver"]
 
@@ -404,6 +405,12 @@ class Solver(object):
             fetches.append(loss_detail.name)
 
         # main loop
+        self.train_program = compile_and_convert_back_to_program(
+            self.train_program,
+            feed=feeds,
+            fetch_list=fetches,
+            use_prune=True,
+            loss_name=self.loss.name)
         print("Static graph is currently used.")
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,
