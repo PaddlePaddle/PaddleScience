@@ -19,6 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
+# paddle.enable_static()
+
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
@@ -61,7 +63,7 @@ opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=25, checkpoint_freq=20)
+solution = solver.solve(num_epoch=5000)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

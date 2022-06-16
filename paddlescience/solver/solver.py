@@ -355,10 +355,34 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
-            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
-                assert paddle.in_dynamic_mode(
-                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
-            self.opt.minimize(self.loss)
+            # if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+            #     assert paddle.in_dynamic_mode(
+            #     ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
+            # Adam optimizer
+            if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
+                    self.opt, paddle.optimizer.Adam):
+                self.opt.minimize(self.loss)
+            else:
+                #TODO
+                def _f(x):
+                    self.algo.net.reconstruct(x)
+                    self.loss, self.outs, self.loss_details = self.algo.compute(
+                        *inputs_labels,
+                        ninputs=ninputs,
+                        inputs_attr=inputs_attr,
+                        nlabels=nlabels,
+                        labels_attr=labels_attr,
+                        pde=self.pde)
+                    return self.loss
+
+                x0 = self.algo.net.flatten_params()
+                # results = self.opt(_f,
+                #                     x0,
+                #                     initial_inverse_hessian_estimate=None,
+                #                     line_search_fn='strong_wolfe',
+                #                     dtype='float32')
+                # x0 = results[2]
+                self.algo.net.reconstruct(x0)
 
         # construct predict program
         with paddle.static.program_guard(self.predict_program):
@@ -405,12 +429,12 @@ class Solver(object):
             fetches.append(loss_detail.name)
 
         # main loop
-        self.train_program = compile_and_convert_back_to_program(
-            self.train_program,
-            feed=feeds,
-            fetch_list=fetches,
-            use_prune=True,
-            loss_name=self.loss.name)
+        # self.train_program = compile_and_convert_back_to_program(
+        #     self.train_program,
+        #     feed=feeds,
+        #     fetch_list=fetches,
+        #     use_prune=True,
+        #     loss_name=self.loss.name)
         print("Static graph is currently used.")
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,

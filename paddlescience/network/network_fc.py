@@ -15,6 +15,7 @@
 import paddle
 import paddle.nn.functional as F
 from .network_base import NetworkBase
+import numpy as np
 
 
 class FCNet(NetworkBase):
@@ -129,7 +130,27 @@ class FCNet(NetworkBase):
 
     def reconstruct(self, param_data):
         params = self.weights + self.biases
-        param_sizes = [param.size for param in params]
+        # param_sizes = [param.size for param in params]
+
+        param_sizes = []
+        weights_size = []
+        bias_size = []
+        for i in range(self.num_layers):
+            if i == 0:
+                lsize = self.num_ins
+                rsize = self.hidden_size
+            elif i == (self.num_layers - 1):
+                lsize = self.hidden_size
+                rsize = self.num_outs
+            else:
+                lsize = self.hidden_size
+                rsize = self.hidden_size
+
+            weights_size.append(lsize * rsize)
+            bias_size.append(rsize)
+
+        param_sizes = weights_size + bias_size
+
         flat_params = paddle.split(param_data, param_sizes)
         is_biases = [False for _ in self.weights] + [True for _ in self.biases]
 
@@ -138,6 +159,7 @@ class FCNet(NetworkBase):
 
         for old_param, flat_param, is_bias in zip(params, flat_params,
                                                   is_biases):
+            print("lxd_debug: debug in old_param")
             shape = old_param.shape
             value = paddle.reshape(flat_param, shape)
             # new_param = self.create_parameter(shape,
