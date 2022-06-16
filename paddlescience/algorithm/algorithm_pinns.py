@@ -373,7 +373,7 @@ class PINNs(AlgorithmBase):
             pass
             # TODO: error out
 
-        return loss, outs  # TODO: return more
+        return loss  #, outs  # TODO: return more
 
     def __timespace(self, time, space):
 

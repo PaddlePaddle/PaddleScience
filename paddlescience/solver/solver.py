@@ -510,28 +510,19 @@ class Solver(object):
 
             param = self.optim_params(self.optim_state)
 
-            # print(param)
-            # print(inputs_labels)
-            # exit()
-
-            self.loss, self.outs = self.algo.compute(
-                param,
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-
             grads = jax.grad(
-                self.algo.compute,
-                argnums=6)(*inputs_labels, ninputs, inputs_attr, nlabels,
-                           labels_attr, self.pde, param)
+                self.algo.compute, argnums=0)(param,
+                                              *inputs_labels,
+                                              ninputs=ninputs,
+                                              inputs_attr=inputs_attr,
+                                              nlabels=nlabels,
+                                              labels_attr=labels_attr,
+                                              pde=self.pde)
 
             self.optim_state = self.optim_update(epoch, grads,
                                                  self.optim_state)
 
-        return outs
+        return None
 
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,
