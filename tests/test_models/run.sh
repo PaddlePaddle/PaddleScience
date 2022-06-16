@@ -21,6 +21,7 @@ serial_bug=0
 distributed_bug=0
 bug=0
 
+CUDA_VISIBLE_DEVICES=0
 echo "===== examples bug list =====" >  result.txt
 echo "serial bug list:" >>  result.txt
 for file in ${cases}
@@ -40,7 +41,8 @@ done
 echo "serial bugs: "${serial_bug} >> result.txt
 
 
-ignore="test_cylinder3d_unsteady.py"
+CUDA_VISIBLE_DEVICES=0,1
+ignore=""
 echo "distributed bug list:" >>  result.txt
 for file in ${cases}
 do

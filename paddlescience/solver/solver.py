@@ -16,8 +16,11 @@ import paddle
 from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
+from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
+from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
 from .. import config
+from .utils import compile_and_convert_back_to_program
 
 __all__ = ["Solver"]
 
@@ -50,7 +53,7 @@ class ModelStatic(paddle.nn.Layer):
         for input in inputs_labels:
             input.stop_gradient = False
 
-        loss, outs = self.algo.compute(
+        self.loss, self.outs, self.loss_details = self.algo.compute(
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -58,7 +61,7 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs  # TODO: add outs
+        return self.loss, self.outs  # TODO: add outs
 
 
 def loss_func(x, y):
@@ -98,23 +101,32 @@ class Solver(object):
                 self.__init_static_auto_dist()
 
     # solve (train)
-    def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def solve(self,
+              num_epoch=2,
+              bs=None,
+              checkpoint_freq=1000,
+              checkpoint_path='./checkpoint/'):
         if paddle.in_dynamic_mode():
-            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
+                                        checkpoint_path)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__solve_static(num_epoch, bs, checkpoint_freq)
+                return self.__solve_static(num_epoch, bs, checkpoint_freq,
+                                           checkpoint_path)
             else:
                 return self.__solve_static_auto_dist(num_epoch, bs,
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self):
+    def predict(self,
+                static_model_file=None,
+                dynamic_net_file=None,
+                dynamic_opt_file=None):
         if paddle.in_dynamic_mode():
-            return self.__predict_dynamic()
+            return self.__predict_dynamic(dynamic_net_file, dynamic_opt_file)
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__predict_static()
+                return self.__predict_static(static_model_file)
             else:
                 return self.__predict_static_auto_dist()
 
@@ -148,7 +160,7 @@ class Solver(object):
         self.labels_attr = labels_attr
 
     # solve static 
-    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -171,32 +183,97 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        for epoch in range(num_epoch):
+        print("Dynamic graph is currently used.")
+        # Adam optimizer
+        if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
+                self.opt, paddle.optimizer.Adam):
+            for epoch in range(num_epoch):
 
-            # TODO: error out num_epoch==0
+                # TODO: error out num_epoch==0
 
-            loss, outs = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
+                loss, outs, loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
 
-            loss.backward()
-            self.opt.step()
-            self.opt.clear_grad()
+                loss.backward()
+                self.opt.step()
+                self.opt.clear_grad()
 
-            print("dynamic epoch: " + str(epoch + 1), "    loss:",
-                  loss.numpy()[0])
+                print("epoch: " + str(epoch + 1), " loss:",
+                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                      loss_details[2].numpy()[0], " data loss:",
+                      loss_details[3].numpy()[0])
 
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+                    paddle.save(self.opt.state_dict(),
+                                checkpoint_path + 'dynamic_opt_params_' +
+                                str(epoch + 1) + '.pdopt')
 
-        return outs
+            for i in range(len(outs)):
+                outs[i] = outs[i].numpy()
+
+            return outs
+        # L-bfgs optimizer
+        elif self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+
+            def _f(x):
+                self.algo.net.reconstruct(x)
+                loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+                return loss
+
+            x0 = self.algo.net.flatten_params()
+
+            for epoch in range(num_epoch):
+                results = self.opt(_f,
+                                   x0,
+                                   initial_inverse_hessian_estimate=None,
+                                   line_search_fn='strong_wolfe',
+                                   dtype='float32')
+                x0 = results[2]
+
+                print("epoch: " + str(epoch + 1), " loss:",
+                      results[3].numpy()[0], " eq loss:",
+                      self.loss_details[0].numpy()[0], " bc loss:",
+                      self.loss_details[1].numpy()[0], " ic loss:",
+                      self.loss_details[2].numpy()[0], " data loss:",
+                      self.loss_details[3].numpy()[0])
+
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+
+            self.algo.net.reconstruct(x0)
+
+            for i in range(len(self.outs)):
+                self.outs[i] = self.outs[i].numpy()
+
+            return self.outs
+        else:
+            print(
+                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
+            )
+            exit()
 
     # predict dynamic
-    def __predict_dynamic(self):
+    def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
+        if dynamic_net_file == None or dynamic_opt_file == None:
+            print("Please specify the path and name of the dynamic model")
+            exit()
         # create inputs 
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
@@ -204,6 +281,12 @@ class Solver(object):
         for i in range(len(inputs)):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
+
+        # load model
+        layer_state_dict = paddle.load(dynamic_net_file)
+        self.algo.net.set_state_dict(layer_state_dict)
+        opt_state_dict = paddle.load(dynamic_opt_file)
+        self.opt.set_state_dict(opt_state_dict)
 
         outs = self.algo.compute_forward(*inputs)
 
@@ -264,7 +347,7 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-            self.loss, self.outs = self.algo.compute(
+            self.loss, self.outs, self.loss_details = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -272,6 +355,9 @@ class Solver(object):
                 labels_attr=labels_attr,
                 pde=self.pde)
 
+            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+                assert paddle.in_dynamic_mode(
+                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
 
         # construct predict program
@@ -294,7 +380,7 @@ class Solver(object):
         self.exe.run(self.startup_program)
 
     # solve static
-    def __solve_static(self, num_epoch, bs, checkpoint_freq):
+    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -314,18 +400,38 @@ class Solver(object):
         fetches = [self.loss.name]
         for out in self.outs:
             fetches.append(out.name)
+        # fetch loss_details' outputs
+        for loss_detail in self.loss_details:
+            fetches.append(loss_detail.name)
 
         # main loop
+        self.train_program = compile_and_convert_back_to_program(
+            self.train_program,
+            feed=feeds,
+            fetch_list=fetches,
+            use_prune=True,
+            loss_name=self.loss.name)
+        print("Static graph is currently used.")
         for epoch in range(num_epoch):
             rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
+            print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
+                  rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
+                  " data loss:", rslt[-1])
 
-        return rslt[1:]
+            if (epoch + 1) % checkpoint_freq == 0:
+                paddle.save(self.train_program.state_dict(),
+                            checkpoint_path + 'static_model_params_' +
+                            str(epoch + 1) + '.pdparams')
+
+        return rslt[1:-4]
 
     # predict static
-    def __predict_static(self):
+    def __predict_static(self, static_model_file):
+        if static_model_file == None:
+            print("Please specify the path and name of the static model")
+            exit()
 
         # create inputs and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -339,6 +445,10 @@ class Solver(object):
         fetches = list()
         for out in self.outs_predict:
             fetches.append(out.name)
+
+        # load model
+        state_dict = paddle.load(static_model_file)
+        self.predict_program.set_state_dict(state_dict)
 
         # run
         rslt = self.exe.run(self.predict_program,
@@ -370,8 +480,8 @@ class Solver(object):
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr, nlabels,
-                            labels_attr)
+        self.model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr,
+                                 nlabels, labels_attr)
 
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
@@ -382,7 +492,7 @@ class Solver(object):
 
         # engine
         self.engine = Engine(
-            model,
+            self.model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
@@ -402,8 +512,15 @@ class Solver(object):
 
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
+
+        fetches = dict()
+        fetches['eq_loss'] = self.model.loss_details[0].name
+        fetches['bc_loss'] = self.model.loss_details[1].name
+        fetches['ic_loss'] = self.model.loss_details[2].name
+        fetches['data_loss'] = self.model.loss_details[3].name
+
         # train
-        self.engine.fit(train_dataset, batch_size=None)
+        self.engine.fit(train_dataset, batch_size=None, fetches=fetches)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()

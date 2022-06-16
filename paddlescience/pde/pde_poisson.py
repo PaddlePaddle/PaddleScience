@@ -38,8 +38,6 @@ class Poisson(PDE):
         >>> pde = psci.pde.Poisson(dim=2, rhs=lambda x, y: 1.0)
     """
 
-    # TODO: doc 
-
     def __init__(self, dim=2, rhs=None, weight=1.0):
         super(Poisson, self).__init__(1, weight=1.0)
 

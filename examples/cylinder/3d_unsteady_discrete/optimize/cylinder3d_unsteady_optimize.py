@@ -21,7 +21,7 @@ import os
 import wget
 import zipfile
 from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
-from utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition, cinn_compile
+from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition, cinn_compile
 
 paddle.seed(1)
 np.random.seed(1)
@@ -234,7 +234,8 @@ for i in range(num_time_step):
 
     next_uvwp = out[1:]
     # Save vtk
-    # file_path = "train_flow_unsteady_re200/fac3d_train_rslt_" + str(next_time)
+    # file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
+    #     next_time)
     # psci.visu.save_vtk(
     #     filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 

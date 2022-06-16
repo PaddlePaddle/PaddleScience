@@ -370,8 +370,6 @@ class PINNs(AlgorithmBase):
 
             n += 1
 
-        # print("loss eq/bc/ic/data:   ", loss_eq.numpy())
-
         # loss
         p = self.loss.norm_p
         if p == 1:
@@ -383,7 +381,16 @@ class PINNs(AlgorithmBase):
             pass
             # TODO: error out
 
-        return loss, outs  # TODO: return more
+        loss_details = list()
+        loss_details.append(loss_eq)
+        loss_details.append(loss_bc)
+        loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
+        loss_details.append(loss_ic)
+        loss_data = (loss - loss) if isinstance(loss_data,
+                                                float) else loss_data
+        loss_details.append(loss_data)
+
+        return loss, outs, loss_details
 
     def __timespace(self, time, space):
 
