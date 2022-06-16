@@ -16,7 +16,7 @@
 
 
 cases=`find . -maxdepth 1 -name "test_*.py" | sort `
-ignore=""
+ignore="test_cylinder3d_unsteady.py"
 serial_bug=0
 distributed_bug=0
 bug=0
