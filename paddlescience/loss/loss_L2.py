@@ -42,12 +42,20 @@ class L2(LossBase):
 
     # compute loss on one interior 
     # there are multiple pde
-    def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def eq_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                param=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)
+        cmploss.compute_outs_der(input, bs, param)
 
         # print(input)
         # print(cmploss.outs[0:4,:])
@@ -95,13 +103,22 @@ class L2(LossBase):
 
     # compute loss on one boundary
     # there are multiple bc on one boundary
-    def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
-                bs):
+    def bc_loss(self,
+                pde,
+                net,
+                name_b,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                param=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
+        cmploss.compute_outs_der(input, bs,
+                                 param)  # TODO: dirichlet not need der
 
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
@@ -145,11 +162,19 @@ class L2(LossBase):
 
         return loss, cmploss.outs
 
-    def ic_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def ic_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                param=None):
 
         # compute outs
         cmploss = CompFormula(pde, net)
-        cmploss.compute_outs(input, bs)
+        cmploss.compute_outs(input, bs, param)
 
         loss = 0.0
         for i in range(len(pde.ic)):
@@ -169,12 +194,20 @@ class L2(LossBase):
         return loss, cmploss.outs
 
     # compute loss on real data 
-    def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def data_loss(self,
+                  pde,
+                  net,
+                  input,
+                  input_attr,
+                  labels,
+                  labels_attr,
+                  bs,
+                  param=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs
-        cmploss.compute_outs(input, bs)
+        cmploss.compute_outs(input, bs, param)
 
         loss = 0.0
         for i in range(len(pde.dvar)):

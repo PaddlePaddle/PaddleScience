@@ -51,13 +51,13 @@ class CompFormula:
         self.jacobian = None
         self.hessian = None
 
-    def compute_outs(self, input, bs):
-        self.outs = self.net.nn_func(input)
+    def compute_outs(self, input, bs, param=None):
+        self.outs = self.net.nn_func(input, param)
 
-    def compute_outs_der(self, input, bs):
+    def compute_outs_der(self, input, bs, param=None):
 
         # outs
-        self.compute_outs(input, bs)
+        self.compute_outs(input, bs, param)
 
         # jacobian
         if self.order >= 1:

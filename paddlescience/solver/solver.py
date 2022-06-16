@@ -17,7 +17,8 @@ from paddle.static import InputSpec
 from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 
-from jax import numpy as jnp
+import jax
+import jax.numpy as jnp
 
 paddle.disable_static()
 
@@ -509,16 +510,13 @@ class Solver(object):
 
             param = self.optim_params(self.optim_state)
 
-            loss, outs = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
+            grads = jax.grad(
+                self.algo.compute,
+                argnums=6)(*inputs_labels, ninputs, inputs_attr, nlabels,
+                           labels_attr, self.pde, param)
 
-            self.optim_state = optim_update(epoch,
-                                            jax.grad(loss), self.optim_state)
+            self.optim_state = self.optim_update(epoch, grads,
+                                                 self.optim_state)
 
         return outs
 
