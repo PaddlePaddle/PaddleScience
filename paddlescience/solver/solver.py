@@ -510,7 +510,7 @@ class Solver(object):
 
             param = self.optim_params(self.optim_state)
 
-            grads = jax.grad(
+            loss, grads = jax.value_and_grad(
                 self.algo.compute, argnums=0)(param,
                                               *inputs_labels,
                                               ninputs=ninputs,
@@ -521,6 +521,8 @@ class Solver(object):
 
             self.optim_state = self.optim_update(epoch, grads,
                                                  self.optim_state)
+
+            print("Loss: ", loss)
 
         return None
 
