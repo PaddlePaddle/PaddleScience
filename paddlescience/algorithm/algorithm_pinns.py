@@ -276,14 +276,15 @@ class PINNs(AlgorithmBase):
 
         return outs
 
-    def compute(self,
-                *inputs_labels,
-                ninputs,
-                inputs_attr,
-                nlabels,
-                labels_attr,
-                pde,
-                param=None):
+    def compute(
+            self,
+            param,
+            *inputs_labels,
+            ninputs,
+            inputs_attr,
+            nlabels,
+            labels_attr,
+            pde, ):
 
         outs = list()
 
@@ -309,8 +310,8 @@ class PINNs(AlgorithmBase):
             # print(input[0:5, :])
 
             loss_i, out_i = self.loss.eq_loss(
-                pde, self.net, input, input_attr, labels,
-                labels_attr["interior"], -1, param)  # TODO: bs is not used
+                param, pde, self.net, input, input_attr, labels,
+                labels_attr["interior"], -1)  # TODO: bs is not used
             loss_eq += loss_i
             outs.append(out_i)
             n += 1
@@ -322,8 +323,8 @@ class PINNs(AlgorithmBase):
             # print("bc: ", len(input))
 
             loss_b, out_b = self.loss.bc_loss(
-                pde, self.net, name_b, input, input_attr, labels, labels_attr,
-                -1, param)  # TODO: bs is not used
+                param, pde, self.net, name_b, input, input_attr, labels,
+                labels_attr, -1)  # TODO: bs is not used
             loss_bc += loss_b
             outs.append(out_b)
             n += 1
@@ -331,9 +332,9 @@ class PINNs(AlgorithmBase):
         # initial points: compute ic_loss
         for name_ic, input_attr in inputs_attr["ic"].items():
             input = inputs[n]
-            loss_it, out_it = self.loss.ic_loss(pde, self.net, input,
+            loss_it, out_it = self.loss.ic_loss(param, pde, self.net, input,
                                                 input_attr, labels,
-                                                labels_attr, -1, param)
+                                                labels_attr, -1)
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
@@ -345,15 +346,15 @@ class PINNs(AlgorithmBase):
             # print("user: ", len(input))
 
             # eq loss
-            loss_id, out_id = self.loss.eq_loss(pde, self.net, input,
+            loss_id, out_id = self.loss.eq_loss(param, pde, self.net, input,
                                                 input_attr, labels,
-                                                labels_attr["user"], -1, param)
+                                                labels_attr["user"], -1)
             loss_eq += loss_id
 
             # data loss
             loss_d, out_d = self.loss.data_loss(
-                pde, self.net, input, input_attr, labels, labels_attr["user"],
-                -1, param)  # TODO: bs is not used
+                param, pde, self.net, input, input_attr, labels,
+                labels_attr["user"], -1)  # TODO: bs is not used
             loss_data += loss_d
             outs.append(out_id)
 

@@ -59,14 +59,18 @@ class CompFormula:
         # outs
         self.compute_outs(input, bs, param)
 
+        # print(input)
+        # print(param)
+        # exit()
+
         # jacobian
         if self.order >= 1:
             if config._compute_backend == "jax":
 
-                def func(x):
-                    return jax.jacrev(self.net.nn_func)(x)
+                def func(param, x):
+                    return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
 
-                jacobian = jax.vmap(func, 0, 0)(input)
+                jacobian = jax.vmap(func, [None, 0], 0)(param, input)
             else:
                 jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
@@ -79,10 +83,10 @@ class CompFormula:
 
             if config._compute_backend == "jax":
 
-                def func(x):
-                    return jax.hessian(self.net.nn_func)(x)
+                def func(param, x):
+                    return jax.hessian(self.net.nn_func, argnums=0)(x, param)
 
-                hessian = jax.vmap(func, 0, 0)(input)
+                hessian = jax.vmap(func, [None, 0], 0)(param, input)
             else:
                 hessian = list()
                 for i in range(self.net.num_outs):

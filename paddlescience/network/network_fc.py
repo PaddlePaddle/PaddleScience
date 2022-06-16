@@ -148,12 +148,12 @@ class FCNet(NetworkBase):
         u = paddle.add(u, self.biases[-1])
         return u
 
-    def __nn_func_jax(self, ins, param):
+    def __nn_func_jax(self, param, ins):
         return self.predict_func(param, ins)
 
     def nn_func(self, ins, param=None):
         if config._compute_backend == "jax":
-            return self.__nn_func_jax(ins, param)
+            return self.__nn_func_jax(param, ins)
         else:
             return self.__nn_func_paddle(ins)
 
