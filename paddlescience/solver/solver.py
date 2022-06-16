@@ -120,15 +120,17 @@ class Solver(object):
                                                          checkpoint_freq)
 
     # predict (infer)
-
     def predict(self):
-        if paddle.in_dynamic_mode():
-            return self.__predict_dynamic()
+        if config._compute_backend == "jax":
+            return self.__predict_jax()
         else:
-            if paddle.distributed.get_world_size() == 1:
-                return self.__predict_static()
+            if paddle.in_dynamic_mode():
+                return self.__predict_dynamic()
             else:
-                return self.__predict_static_auto_dist()
+                if paddle.distributed.get_world_size() == 1:
+                    return self.__predict_static()
+                else:
+                    return self.__predict_static_auto_dist()
 
     # init dynamic
     def __init_dynamic(self):
@@ -525,6 +527,22 @@ class Solver(object):
             print("Loss: ", loss)
 
         return None
+
+    # predict dynamic
+    def __predict_jax(self):
+        # create inputs 
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+
+        # convert inputs to tensor
+        for i in range(len(inputs)):
+            inputs[i] = jnp.array(inputs[i], dtype=self._dtype)
+
+        outs = self.algo.compute_forward(*inputs)
+
+        for i in range(len(outs)):
+            outs[i] = outs[i].numpy()
+
+        return outs
 
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,
