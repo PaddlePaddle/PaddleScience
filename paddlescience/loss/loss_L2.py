@@ -17,6 +17,8 @@ import numpy as np
 from .loss_base import LossBase, CompFormula
 from ..labels import LabelInt
 
+from .. import config
+
 from jax import numpy as jnp
 
 
@@ -79,18 +81,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    # loss += paddle.norm(rst**2, p=1)
-                    loss += jnp.linalg.norm(rst**2, ord=1)
+                    loss += self.__norm(rst**2, p=1)
                 else:
-                    # loss += paddle.norm(rst**2 * wgt, p=1)
-                    loss += jnp.linalg.norm(rst**2 * wgt, ord=1)
+                    loss += self.__norm(rst**2 * wgt, p=1)
             else:
                 if wgt is None:
-                    # loss += paddle.norm((rst - rhs)**2, p=1)
-                    loss += jnp.linalg.norm((rst - rhs)**2, ord=1)
+                    loss += self.__norm((rst - rhs)**2, p=1)
                 else:
-                    # loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
-                    loss += jnp.linalg.norm((rst - rhs)**2 * wgt, ord=1)
+                    loss += self.__norm((rst - rhs)**2 * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -129,18 +127,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    # loss += paddle.norm(rst**2, p=1)
-                    loss += jnp.linalg.norm(rst**2, ord=1)
+                    loss += self.__norm(rst**2, p=1)
                 else:
-                    # loss += paddle.norm(rst**2 * wgt, p=1)
-                    loss += jnp.linalg.norm(rst**2 * wgt, ord=1)
+                    loss += self.__norm(rst**2 * wgt, p=1)
             else:
                 if wgt is None:
-                    # loss += paddle.norm((rst - rhs)**2, p=1)
-                    loss += jnp.linalg.norm((rst - rhs)**2, ord=1)
+                    loss += self.__norm((rst - rhs)**2, p=1)
                 else:
-                    # loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
-                    loss += jnp.linalg.norm((rst - rhs)**2 * wgt, ord=1)
+                    loss += self.__norm((rst - rhs)**2 * wgt, p=1)
 
             # print("rhs: ", rhs)
             # exit()
@@ -166,8 +160,7 @@ class L2(LossBase):
             else:
                 rhs = rhs_c
             wgt = labels_attr["ic"][i]["weight"]
-            # loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
-            loss += jnp.linalg.norm((rst - rhs)**2 * wgt, ord=1)
+            loss += self.__norm((rst - rhs)**2 * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -184,8 +177,14 @@ class L2(LossBase):
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            loss += self.__norm(cmploss.outs[:, i] - data, p=2)**2
             # TODO: p=2 p=1
 
         loss = self.data_weight * loss
         return loss, cmploss.outs
+
+    def __norm(self, x, p):
+        if config._compute_backend == "jax":
+            return jnp.linalg.norm(x, ord=p)
+        else:
+            return paddle.norm(x, p=p)

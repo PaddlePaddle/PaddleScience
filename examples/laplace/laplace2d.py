@@ -16,7 +16,7 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-psci.config.set_compute_backend("jax")
+# psci.config.set_compute_backend("jax")
 
 paddle.seed(1)
 np.random.seed(1)
@@ -34,7 +34,7 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
-npoints = 121
+npoints = 16
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace

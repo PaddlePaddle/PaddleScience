@@ -276,15 +276,8 @@ class PINNs(AlgorithmBase):
 
         return outs
 
-    def compute(
-            self,
-            param,
-            *inputs_labels,
-            ninputs,
-            inputs_attr,
-            nlabels,
-            labels_attr,
-            pde, ):
+    def compute(self, param, *inputs_labels, ninputs, inputs_attr, nlabels,
+                labels_attr, pde):
 
         outs = list()
 
@@ -373,7 +366,10 @@ class PINNs(AlgorithmBase):
             pass
             # TODO: error out
 
-        return loss  #, outs  # TODO: return more
+        if config._compute_backend == "jax":
+            return loss  # TODO: return more
+        else:
+            return loss, outs
 
     def __timespace(self, time, space):
 

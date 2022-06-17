@@ -56,6 +56,7 @@ class ModelStatic(paddle.nn.Layer):
             input.stop_gradient = False
 
         loss, outs = self.algo.compute(
+            None,
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -169,6 +170,8 @@ class Solver(object):
         labels = self.labels
         labels_attr = self.labels_attr
 
+        print(inputs)
+
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
@@ -190,6 +193,7 @@ class Solver(object):
             # TODO: error out num_epoch==0
 
             loss, outs = self.algo.compute(
+                None,
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
@@ -279,6 +283,7 @@ class Solver(object):
                 inputs_labels.append(label)
 
             self.loss, self.outs = self.algo.compute(
+                None,
                 *inputs_labels,
                 ninputs=ninputs,
                 inputs_attr=inputs_attr,
