@@ -487,6 +487,7 @@ class Solver(object):
         [optim_init, self.optim_update, self.optim_params] = self.opt
         self.optim_state = optim_init(self.algo.net.weights)
 
+    # solve with jax
     def __solve_jax(self, num_epoch, bs, checkpoint_freq):
 
         inputs = self.inputs
@@ -528,7 +529,7 @@ class Solver(object):
 
         return None
 
-    # predict dynamic
+    # predict with jax
     def __predict_jax(self):
         # create inputs 
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
@@ -537,10 +538,9 @@ class Solver(object):
         for i in range(len(inputs)):
             inputs[i] = jnp.array(inputs[i], dtype=self._dtype)
 
-        outs = self.algo.compute_forward(*inputs)
+        param = self.optim_params(self.optim_state)
 
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
+        outs = self.algo.compute_forward(param, *inputs)
 
         return outs
 
