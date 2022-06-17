@@ -16,7 +16,7 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-# psci.config.set_compute_backend("jax")
+psci.config.set_compute_backend("jax")
 
 paddle.seed(1)
 np.random.seed(1)
@@ -68,9 +68,9 @@ solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
 solution = solver.solve(num_epoch=1)
 
-solver.predict()
+solution = solver.predict()
 
-exit()
+# exit()
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

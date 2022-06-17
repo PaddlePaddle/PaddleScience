@@ -91,9 +91,10 @@ class FCNet(NetworkBase):
         init_func, self.predict_func = jax.example_libraries.stax.serial(
             *netlist)
 
-        rng_key = jax.random.PRNGKey(0)
+        rng_key = jax.random.PRNGKey(1)
         input_shape = (None, self.num_ins)
         _, self.weights = init_func(rng_key, input_shape)
+        # print(self.weights)
 
     def make_network_dynamic(self):
         for i in range(self.num_layers):

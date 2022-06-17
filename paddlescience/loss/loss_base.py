@@ -60,7 +60,7 @@ class CompFormula:
         self.compute_outs(input, bs, param)
 
         # print(input)
-        # print(param)
+        # print(self.outs)
         # exit()
 
         # jacobian

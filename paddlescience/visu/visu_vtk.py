@@ -20,6 +20,8 @@ from pyevtk.hl import pointsToVTK
 import paddle
 from .. import config
 
+import jax
+
 
 # Save geometry pointwise
 def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
@@ -137,7 +139,10 @@ def __concatenate_data(outs, nt=1):
     npouts = list()
     for out in outs:
         if type(out) != np.ndarray:
-            npouts.append(out.numpy())  # tenor to array
+            if config._compute_backend == "jax":
+                npouts.append(out)
+            else:
+                npouts.append(out.numpy())  # tenor to array
         else:
             npouts.append(out)
 

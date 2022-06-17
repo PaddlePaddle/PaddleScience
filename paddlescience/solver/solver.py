@@ -170,8 +170,6 @@ class Solver(object):
         labels = self.labels
         labels_attr = self.labels_attr
 
-        print(inputs)
-
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
@@ -530,7 +528,7 @@ class Solver(object):
             self.optim_state = self.optim_update(epoch, grads,
                                                  self.optim_state)
 
-            print("Loss: ", loss)
+            print("Epoch: ", epoch, " Loss: ", loss)
 
         return None
 
