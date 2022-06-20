@@ -35,13 +35,10 @@ geo_disc.boundary["inlet"] = np.stack(
     (b_inlet_x.flatten(), b_inlet_y.flatten()), axis=1)
 geo_disc.boundary["outlet"] = np.stack(
     (b_outlet_x.flatten(), b_outlet_y.flatten()), axis=1)
-# geo_disc.user = np.stack((sup_x.flatten(), sup_y.flatten()), axis=1)
-
-# print(geo_disc.interior)
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2, time_dependent=True)
-pde.set_time_interval([1, 50])
+pde.set_time_interval([0, 50])
 
 # set bounday condition
 bc_inlet_u = psci.bc.Dirichlet('u', rhs=b_inlet_u.flatten(), weight=10.0)
@@ -59,7 +56,7 @@ ic_p = psci.ic.IC('p', rhs=init_p.flatten(), weight=10.0)
 pde.add_ic(ic_u, ic_v, ic_p)
 
 # discretization pde
-pde_disc = pde.discretize(time_step=1.0, geo_disc=geo_disc)
+pde_disc = pde.discretize(time_step=10.0, geo_disc=geo_disc)
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -81,7 +78,7 @@ solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 # Set supervised data
 # solver.feed_data_user(np.stack((sup_p.flatten(), sup_u.flatten(), sup_v.flatten()), axis=1))
 
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=10)
 
 psci.visu.save_vtk(
     time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
