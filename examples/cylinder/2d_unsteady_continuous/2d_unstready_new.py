@@ -27,7 +27,11 @@ dr = loading_cfd_data.DataLoader(path='./datasets/')
 b_inlet_u, b_inlet_v, t, b_inlet_x, b_inlet_y = dr.loading_boundary_data([1])
 b_outlet_p, t, b_outlet_x, b_outlet_y = dr.loading_outlet_data([1])
 init_p, init_u, init_v, t, init_x, init_y = dr.loading_initial_data([1])
-sup_p, sup_u, sup_v, t, sup_x, sup_y = dr.loading_supervised_data([1])
+sup_p, sup_u, sup_v, t, sup_x, sup_y = dr.loading_supervised_data([1, 2])
+
+init_x = init_x.astype('float32')
+init_y = init_y.astype('float32')
+n1 = int(sup_x.shape[0] / 2)
 
 geo_disc = psci.geometry.GeometryDiscrete()
 geo_disc.interior = np.stack((init_x.flatten(), init_y.flatten()), axis=1)
@@ -35,10 +39,12 @@ geo_disc.boundary["inlet"] = np.stack(
     (b_inlet_x.flatten(), b_inlet_y.flatten()), axis=1)
 geo_disc.boundary["outlet"] = np.stack(
     (b_outlet_x.flatten(), b_outlet_y.flatten()), axis=1)
+geo_disc.user = np.stack(
+    (sup_x[0:n1].flatten(), sup_y[0:n1].flatten()), axis=1)
 
 # N-S
 pde = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2, time_dependent=True)
-pde.set_time_interval([0, 50])
+pde.set_time_interval([0, 20])
 
 # set bounday condition
 bc_inlet_u = psci.bc.Dirichlet('u', rhs=b_inlet_u.flatten(), weight=10.0)
@@ -76,7 +82,9 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
 # Set supervised data
-# solver.feed_data_user(np.stack((sup_p.flatten(), sup_u.flatten(), sup_v.flatten()), axis=1))
+sup_data = np.stack(
+    (sup_p.flatten(), sup_u.flatten(), sup_v.flatten()), axis=1)
+solver.feed_data_user(sup_data)
 
 solution = solver.solve(num_epoch=10)
 
