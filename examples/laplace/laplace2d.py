@@ -19,7 +19,7 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
+paddle.enable_static()
 
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)

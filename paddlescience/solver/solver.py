@@ -347,24 +347,25 @@ class Solver(object):
                 label.stop_gradient = False
                 inputs_labels.append(label)
 
-            self.loss, self.outs, self.loss_details = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-
             # if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
             #     assert paddle.in_dynamic_mode(
             #     ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
             # Adam optimizer
             if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
                     self.opt, paddle.optimizer.Adam):
+
+                self.loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+
                 self.opt.minimize(self.loss)
             else:
                 #TODO
-                def _f(x):
+                def _lbfgs_func(x):
                     self.algo.net.reconstruct(x)
                     self.loss, self.outs, self.loss_details = self.algo.compute(
                         *inputs_labels,
@@ -376,15 +377,18 @@ class Solver(object):
                     return self.loss
 
                 x0 = self.algo.net.flatten_params()
-                # results = self.opt(_f,
-                #                     x0,
-                #                     initial_inverse_hessian_estimate=None,
-                #                     line_search_fn='strong_wolfe',
-                #                     dtype='float32')
-                # x0 = results[2]
+                print("lxd_debug: look x0")
+                print(x0)
+                results = self.opt(_lbfgs_func,
+                                   x0,
+                                   initial_inverse_hessian_estimate=None,
+                                   line_search_fn='strong_wolfe',
+                                   dtype='float32')
+                x0 = results[2]
                 self.algo.net.reconstruct(x0)
 
         # construct predict program
+        '''
         with paddle.static.program_guard(self.predict_program):
             with paddle.utils.unique_name.guard():
 
@@ -399,6 +403,7 @@ class Solver(object):
                     ins.append(input)
 
                 self.outs_predict = self.algo.compute_forward(*ins)
+        '''
 
         # startup program
         self.exe.run(self.startup_program)
