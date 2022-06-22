@@ -166,6 +166,10 @@ class CompFormula:
         jacobian = self.jacobian
         hessian = self.hessian
 
+        # translate sympy diff to f_idx and var_idx
+        # f_idx: dependent(function) index, this function is in which index of dependent variable list 
+        # var_idx: variable index, this variable is in which index of independent variable list
+
         # dependent variable
         f_idx = self.dvar.index(item.args[0])
 
@@ -174,29 +178,30 @@ class CompFormula:
         for it in item.args[1:]:
             order += it[1]
 
-        # print("  -order: ", order)
-        # print("  -f_idx: ", f_idx)
-
         # parser jacobin for order 1
         if order == 1:
-
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
                 rst = normal * jacobian[:, f_idx, :]  # TODO
             else:
                 var_idx = self.indvar.index(v)
-
                 rst = jacobian[:, f_idx, var_idx]
 
         # parser hessian for order 2
         elif order == 2:
+            var_idx = list()
+            for it in item.args[1:]:
+                for i in range(it[1]):
+                    idx = self.indvar.index(it[0])
+                    var_idx.append(idx)
+            rst = hessian[f_idx][:, var_idx[0], var_idx[1]]
 
-            if (len(item.args[1:]) == 1):
-                var_idx = self.indvar.index(item.args[1][0])
-                rst = hessian[f_idx][:, var_idx, var_idx]
-            else:
-                var_idx1 = self.indvar.index(item.args[1][0])
-                var_idx2 = self.indvar.index(item.args[2][0])
-                rst = hessian[f_idx][:, var_idx1, var_idx2]
+            # if (len(item.args[1:]) == 1):
+            #     var_idx = self.indvar.index(item.args[1][0])
+            #     rst = hessian[f_idx][:, var_idx, var_idx]
+            # else:
+            #     var_idx1 = self.indvar.index(item.args[1][0])
+            #     var_idx2 = self.indvar.index(item.args[2][0])
+            #     rst = hessian[f_idx][:, var_idx1, var_idx2]
 
         return rst
