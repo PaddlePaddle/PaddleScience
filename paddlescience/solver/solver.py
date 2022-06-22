@@ -84,7 +84,7 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt):
+    def __init__(self, pde, algo, opt=None):
         super(Solver, self).__init__()
 
         self.pde = pde
@@ -118,12 +118,9 @@ class Solver(object):
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self,
-                static_model_file=None,
-                dynamic_net_file=None,
-                dynamic_opt_file=None):
+    def predict(self, static_model_file=None, dynamic_net_file=None):
         if paddle.in_dynamic_mode():
-            return self.__predict_dynamic(dynamic_net_file, dynamic_opt_file)
+            return self.__predict_dynamic(dynamic_net_file)
         else:
             if paddle.distributed.get_world_size() == 1:
                 return self.__predict_static(static_model_file)
@@ -270,8 +267,8 @@ class Solver(object):
             exit()
 
     # predict dynamic
-    def __predict_dynamic(self, dynamic_net_file, dynamic_opt_file):
-        if dynamic_net_file == None or dynamic_opt_file == None:
+    def __predict_dynamic(self, dynamic_net_file):
+        if dynamic_net_file == None:
             print("Please specify the path and name of the dynamic model")
             exit()
         # create inputs 
@@ -285,8 +282,9 @@ class Solver(object):
         # load model
         layer_state_dict = paddle.load(dynamic_net_file)
         self.algo.net.set_state_dict(layer_state_dict)
-        opt_state_dict = paddle.load(dynamic_opt_file)
-        self.opt.set_state_dict(opt_state_dict)
+        if self.opt != None:
+            opt_state_dict = paddle.load(dynamic_opt_file)
+            self.opt.set_state_dict(opt_state_dict)
 
         outs = self.algo.compute_forward(*inputs)
 
