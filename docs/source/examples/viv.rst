@@ -3,6 +3,8 @@ VIV (vortex induced vibration)
 
 This guide introduces how to build a simple VIV model with PaddleScience.
 
+Test for github-bot template check
+
 - **Use case introduction**
 
 This demo is a typical application of inverse problem,  vortex induced vibrations of bluff bodies occur when the vortex shedding frequency is close to the natural frequency of the structure, the VIV system is equivalent to a one-dimensional spring-damper system: 
