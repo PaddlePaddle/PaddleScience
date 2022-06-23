@@ -86,7 +86,7 @@ class CompFormula:
                 def func(param, x):
                     return jax.hessian(self.net.nn_func, argnums=0)(x, param)
 
-                hessian = jax.vmap(func, [None, 0], 0)(param, input)
+                hessian = jax.vmap(func, [None, 0], -1)(param, input)
             else:
                 hessian = list()
                 for i in range(self.net.num_outs):
@@ -99,10 +99,15 @@ class CompFormula:
             hessian = None
 
         # print("*** Jacobian *** ")
-        # print(jacobian[:])
+        # print(jacobian[3])
+        # print(jacobian[:][0][0])
+        # print(jacobian[1][0][0])
 
         # print("*** Hessian *** ")
-        # print(hessian[2][:])
+        # print(hessian[0][2,:,:])
+        # print(hessian.shape)
+        # print(hessian[0][0][0][:])
+        # print(hessian[0][:])
 
         # self.outs = outs
         self.jacobian = jacobian
@@ -212,9 +217,6 @@ class CompFormula:
                     rst = normal * jacobian[f_idx, :]
             else:
                 var_idx = self.indvar.index(v)
-
-                # print("  -var_idx: ", var_idx)
-
                 rst = jacobian[:, f_idx, var_idx]
 
         # parser hessian for order 2
@@ -222,12 +224,17 @@ class CompFormula:
 
             if (len(item.args[1:]) == 1):
                 var_idx = self.indvar.index(item.args[1][0])
-                # print("  -var_idx: ", var_idx)
-                rst = hessian[f_idx][:, var_idx, var_idx]
+                if config._compute_backend == "jax":
+                    rst = hessian[f_idx][var_idx][var_idx][:]
+                else:
+                    rst = hessian[f_idx][:, var_idx, var_idx]
             else:
                 var_idx1 = self.indvar.index(item.args[1][0])
                 var_idx2 = self.indvar.index(item.args[2][0])
 
-                rst = hessian[f_idx][:, var_idx1, var_idx2]
+                if config._compute_backend == "jax":
+                    rst = hessian[f_idx][var_idx1][var_idx2][:]
+                else:
+                    rst = hessian[f_idx][:, var_idx1, var_idx2]
 
         return rst

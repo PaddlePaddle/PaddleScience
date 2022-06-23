@@ -87,14 +87,24 @@ class FCNet(NetworkBase):
         for i in range(self.num_layers - 1):
             netlist.append(Dense(self.hidden_size))
             netlist.append(Tanh)  # TODO: optimizer sigmoid
+        i = self.num_layers - 1
         netlist.append(Dense(self.num_outs))
+
+        # netlist = list()
+        # for i in range(self.num_layers - 1):
+        #     netlist.append(Dense(self.hidden_size, W_init=jax.nn.initializers.constant(2.0*i+1), b_init=jax.nn.initializers.constant(2.0*i+2)))
+        #     netlist.append(Tanh)  # TODO: optimizer sigmoid
+        # i = self.num_layers - 1
+        # netlist.append(Dense(self.num_outs, W_init=jax.nn.initializers.constant(2.0*i+1), b_init=jax.nn.initializers.constant(2.0*i+2)))
+
         init_func, self.predict_func = jax.example_libraries.stax.serial(
             *netlist)
 
         rng_key = jax.random.PRNGKey(1)
         input_shape = (None, self.num_ins)
         _, self.weights = init_func(rng_key, input_shape)
-        # print(self.weights)
+        # print("len: ", len(self.weights))
+        # print(self.weights[0][1])
 
     def make_network_dynamic(self):
         for i in range(self.num_layers):
@@ -112,6 +122,12 @@ class FCNet(NetworkBase):
                 shape=[lsize, rsize], dtype=self._dtype, is_bias=False)
             b = self.create_parameter(
                 shape=[rsize], dtype=self._dtype, is_bias=True)
+
+            # w = self.create_parameter(
+            #     shape=[lsize, rsize], dtype=self._dtype, is_bias=False, default_initializer=paddle.nn.initializer.Constant(2.0*i+1))
+            # b = self.create_parameter(
+            #     shape=[rsize], dtype=self._dtype, is_bias=True, default_initializer=paddle.nn.initializer.Constant(2.0*i+2))
+
             self.weights.append(w)
             self.biases.append(b)
             self.add_parameter("w_" + str(i), w)
