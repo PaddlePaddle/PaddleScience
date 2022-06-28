@@ -17,7 +17,11 @@ from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
 from ..inputs import InputsAttr
 
+import time
+
 import jax
+from jax import jit
+from functools import partial
 
 from .. import config
 
@@ -54,23 +58,32 @@ class CompFormula:
     def compute_outs(self, input, bs, param=None):
         self.outs = self.net.nn_func(input, param)
 
+    # @partial(jit, static_argnums=(0,))
+    def __func_hes_jax(self, param, x):
+        return jax.hessian(self.net.nn_func, argnums=0)(x, param)
+
+    # @partial(jit, static_argnums=(0,))
+    def __v_func_hes_jax(self, param, x):
+        return jax.vmap(self.__func_hes_jax, [None, 0], -1)(param, x)
+
     def compute_outs_der(self, input, bs, param=None):
 
         # outs
         self.compute_outs(input, bs, param)
 
-        # print(input)
-        # print(self.outs)
-        # exit()
-
         # jacobian
         if self.order >= 1:
+
             if config._compute_backend == "jax":
 
                 def func(param, x):
                     return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
 
-                jacobian = jax.vmap(func, [None, 0], 0)(param, input)
+                @jit
+                def v_func(param, x):
+                    return jax.vmap(func, [None, 0], -1)(param, x)
+
+                jacobian = v_func(param, input)
             else:
                 jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
@@ -81,12 +94,12 @@ class CompFormula:
         # hessian
         if self.order >= 2:
 
+            t1 = time.time()
+
+            # hessian = self.__v_func_jax(param, input)
+
             if config._compute_backend == "jax":
-
-                def func(param, x):
-                    return jax.hessian(self.net.nn_func, argnums=0)(x, param)
-
-                hessian = jax.vmap(func, [None, 0], -1)(param, input)
+                hessian = self.__v_func_hes_jax(param, input)
             else:
                 hessian = list()
                 for i in range(self.net.num_outs):
@@ -95,19 +108,11 @@ class CompFormula:
                         return self.net.nn_func(input)[:, i:i + 1]
 
                     hessian.append(Hessian(func, input, is_batched=True))
+
+            t2 = time.time()
+            print("1: ", t2 - t1)
         else:
             hessian = None
-
-        # print("*** Jacobian *** ")
-        # print(jacobian[3])
-        # print(jacobian[:][0][0])
-        # print(jacobian[1][0][0])
-
-        # print("*** Hessian *** ")
-        # print(hessian[0][2,:,:])
-        # print(hessian.shape)
-        # print(hessian[0][0][0][:])
-        # print(hessian[0][:])
 
         # self.outs = outs
         self.jacobian = jacobian
@@ -222,6 +227,8 @@ class CompFormula:
         # parser hessian for order 2
         elif order == 2:
 
+            # t1 = time.time()
+
             if (len(item.args[1:]) == 1):
                 var_idx = self.indvar.index(item.args[1][0])
                 if config._compute_backend == "jax":
@@ -236,5 +243,8 @@ class CompFormula:
                     rst = hessian[f_idx][var_idx1][var_idx2][:]
                 else:
                     rst = hessian[f_idx][:, var_idx1, var_idx2]
+
+            # t2 = time.time()
+            # print("2: ", t2-t1)
 
         return rst

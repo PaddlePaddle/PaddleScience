@@ -18,8 +18,11 @@ from .network_base import NetworkBase
 
 import jax, jax.random
 import jax.example_libraries, jax.example_libraries.stax
+from jax import jit
 
 from .. import config
+
+from functools import partial
 
 
 class FCNet(NetworkBase):
@@ -87,9 +90,9 @@ class FCNet(NetworkBase):
         for i in range(self.num_layers - 1):
             netlist.append(Dense(self.hidden_size))
             netlist.append(Tanh)  # TODO: optimizer sigmoid
-        i = self.num_layers - 1
         netlist.append(Dense(self.num_outs))
 
+        # i = self.num_layers - 1
         # netlist = list()
         # for i in range(self.num_layers - 1):
         #     netlist.append(Dense(self.hidden_size, W_init=jax.nn.initializers.constant(2.0*i+1), b_init=jax.nn.initializers.constant(2.0*i+2)))
@@ -155,6 +158,7 @@ class FCNet(NetworkBase):
             self.add_parameter("w_" + str(i), w)
             self.add_parameter("b_" + str(i), b)
 
+    # @partial(jit, static_argnums=(0,))
     def __nn_func_paddle(self, ins):
         u = ins
         for i in range(self.num_layers - 1):
@@ -165,9 +169,11 @@ class FCNet(NetworkBase):
         u = paddle.add(u, self.biases[-1])
         return u
 
+    # @partial(jit, static_argnums=(0,))
     def __nn_func_jax(self, param, ins):
         return self.predict_func(param, ins)
 
+    # @partial(jit, static_argnums=(0,))
     def nn_func(self, ins, param=None):
         if config._compute_backend == "jax":
             return self.__nn_func_jax(param, ins)
