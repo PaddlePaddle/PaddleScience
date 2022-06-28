@@ -58,6 +58,12 @@ class CompFormula:
     def compute_outs(self, input, bs, param=None):
         self.outs = self.net.nn_func(input, param)
 
+    def __func_jac_jax(self, param, x):
+        return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
+
+    def __v_func_jac_jax(self, param, x):
+        return jax.vmap(self.__func_jac_jax, [None, 0], -1)(param, x)
+
     # @partial(jit, static_argnums=(0,))
     def __func_hes_jax(self, param, x):
         return jax.hessian(self.net.nn_func, argnums=0)(x, param)
@@ -65,6 +71,10 @@ class CompFormula:
     # @partial(jit, static_argnums=(0,))
     def __v_func_hes_jax(self, param, x):
         return jax.vmap(self.__func_hes_jax, [None, 0], -1)(param, x)
+
+    # def __v_func_hes_jax(self):
+    #     # return jax.jit(jax.vmap(self.__func_hes_jax, [None, 0], 0))
+    #     return jax.vmap(self.__func_hes_jax, [None, 0], 0)
 
     def compute_outs_der(self, input, bs, param=None):
 
@@ -76,14 +86,13 @@ class CompFormula:
 
             if config._compute_backend == "jax":
 
-                def func(param, x):
-                    return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
+                # def func(param, x):
+                #     return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
 
-                @jit
-                def v_func(param, x):
-                    return jax.vmap(func, [None, 0], -1)(param, x)
+                # def v_func(param, x):
+                #     return jax.vmap(func, [None, 0], -1)(param, x)
 
-                jacobian = v_func(param, input)
+                jacobian = self.__v_func_jac_jax(param, input)
             else:
                 jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
@@ -94,9 +103,9 @@ class CompFormula:
         # hessian
         if self.order >= 2:
 
-            t1 = time.time()
+            # t1 = time.time()
 
-            # hessian = self.__v_func_jax(param, input)
+            # hessian = self.__v_func_hes_jax(param, input)
 
             if config._compute_backend == "jax":
                 hessian = self.__v_func_hes_jax(param, input)
@@ -109,8 +118,8 @@ class CompFormula:
 
                     hessian.append(Hessian(func, input, is_batched=True))
 
-            t2 = time.time()
-            print("1: ", t2 - t1)
+            # t2 = time.time()
+            # print("1: ", t2 - t1)
         else:
             hessian = None
 
