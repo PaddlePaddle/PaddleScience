@@ -64,7 +64,7 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # discretize geometry
-geo_disc = geo.discretize(npoints=[20, 50, 4], method="uniform")
+geo_disc = geo.discretize(npoints=[200, 50, 4], method="uniform")
 
 # the real_cord need to be added in geo_disc
 geo_disc.user = GetRealPhyInfo(start_time, need_info='cord')
