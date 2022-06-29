@@ -27,6 +27,8 @@ time_tmp = np.linspace(0, 50, 50, endpoint=True).astype(int)
 time_array = np.random.choice(time_tmp, 11)
 time_array.sort()
 
+time_array = np.array([0, 1])
+
 # loading data from files
 dr = loading_cfd_data.DataLoader(path='./datasets/')
 
@@ -57,7 +59,7 @@ geo_disc.user = np.stack(
     (sup_x[0:n1].flatten(), sup_y[0:n1].flatten()), axis=1)
 
 # N-S
-pde = psci.pde.NavierStokes(nu=0.01, rho=1.0, dim=2, time_dependent=True)
+pde = psci.pde.NavierStokes(nu=0.02, rho=1.0, dim=2, time_dependent=True)
 
 # set bounday condition
 bc_inlet_u = psci.bc.Dirichlet('u', rhs=b_inlet_u.flatten(), weight=10.0)
@@ -81,6 +83,10 @@ pde_disc = pde.discretize(time_array=time_array, geo_disc=geo_disc)
 net = psci.network.FCNet(
     num_ins=3, num_outs=3, num_layers=6, hidden_size=50, activation='tanh')
 
+net_params = './checkpoint/pretrained_net_params'
+load_params = paddle.load(net_params)
+net.set_state_dict(load_params)
+
 # Loss
 loss = psci.loss.L2(p=2)
 
@@ -98,7 +104,7 @@ sup_data = np.stack(
     (sup_p.flatten(), sup_u.flatten(), sup_v.flatten()), axis=1)
 solver.feed_data_user(sup_data)
 
-solution = solver.solve(num_epoch=100)
+solution = solver.solve(num_epoch=10)
 
 psci.visu.save_vtk(
     time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
