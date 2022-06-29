@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
+
 _dtype = 'float32'
 
 
@@ -23,3 +25,23 @@ def set_dtype(dtype):
 def get_dtype():
     global _dtype
     return _dtype
+
+
+def enable_static():
+    paddle.enable_static()
+
+
+def enable_prim():
+    paddle.incubate.autograd.enable_prim()
+
+
+def prim_enabled():
+    return paddle.incubate.autograd.prim_enabled()
+
+
+def disable_prim():
+    paddle.incubate.autograd.disable_prim()
+
+
+def prim2orig(*args):
+    return paddle.incubate.autograd.prim2orig(*args)

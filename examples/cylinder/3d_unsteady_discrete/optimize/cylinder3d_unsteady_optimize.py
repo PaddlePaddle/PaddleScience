@@ -19,14 +19,14 @@ import paddle
 import os
 import wget
 import zipfile
-from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
+# from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
 from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
 
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-enable_prim()
+psci.enable_static()
+psci.enable_prim()
 
 # define start time and time step
 start_time = 100
@@ -64,7 +64,7 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # discretize geometry
-geo_disc = geo.discretize(npoints=[200, 50, 4], method="uniform")
+geo_disc = geo.discretize(npoints=[20, 50, 4], method="uniform")
 
 # the real_cord need to be added in geo_disc
 geo_disc.user = GetRealPhyInfo(start_time, need_info='cord')
@@ -153,8 +153,8 @@ if nranks > 1:
         main_program, startup_program, param_grads)
 
 with paddle.static.program_guard(main_program, startup_program):
-    if prim_enabled():
-        prim2orig(main_program.block(0))
+    if psci.prim_enabled():
+        psci.prim2orig(main_program.block(0))
 
 gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 place = paddle.CUDAPlace(gpu_id)

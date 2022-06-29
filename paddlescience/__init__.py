@@ -29,3 +29,9 @@ from . import optimizer
 from . import solver
 from . import visu
 from . import data
+
+from .config import enable_static
+from .config import enable_prim
+from .config import prim_enabled
+from .config import disable_prim
+from .config import prim2orig
