@@ -36,21 +36,24 @@ def enable_static():
 
 def enable_prim():
     '''
-    Enable the automatic differentiation.
+    Enable automatic differentiation mechanism based on 
+    automatic differentiation basic operator.
     '''
     paddle.incubate.autograd.enable_prim()
 
 
 def disable_prim():
     '''
-    Disable the automatic differentiation.
+    Disable automatic differentiation mechanism based on 
+    automatic differentiation basic operator.
     '''
     paddle.incubate.autograd.disable_prim()
 
 
 def prim_enabled():
     '''
-    Determine whether automatic differentiation is enabled.
+    Determine whether automatic differentiation based on 
+    automatic differentiation basic operator is enabled.
     '''
     return paddle.incubate.autograd.prim_enabled()
 
