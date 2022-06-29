@@ -28,20 +28,38 @@ def get_dtype():
 
 
 def enable_static():
+    """
+    Use static graph mode.
+    """
     paddle.enable_static()
 
 
 def enable_prim():
+    '''
+    Enable the automatic differentiation.
+    '''
     paddle.incubate.autograd.enable_prim()
 
 
-def prim_enabled():
-    return paddle.incubate.autograd.prim_enabled()
-
-
 def disable_prim():
+    '''
+    Disable the automatic differentiation.
+    '''
     paddle.incubate.autograd.disable_prim()
 
 
+def prim_enabled():
+    '''
+    Determine whether automatic differentiation is enabled.
+    '''
+    return paddle.incubate.autograd.prim_enabled()
+
+
 def prim2orig(*args):
+    '''
+    All operators in the target block are processed as follows.
+    If it is an automatic differential basic operator, it will be
+    transformed into one or a series of original operators with
+    equivalent function to support execution.
+    '''
     return paddle.incubate.autograd.prim2orig(*args)
