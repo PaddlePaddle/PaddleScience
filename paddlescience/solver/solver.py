@@ -19,6 +19,10 @@ from paddle.distributed.auto_parallel.engine import Engine
 
 import jax
 import jax.numpy as jnp
+from jax import jit
+
+from functools import partial
+import time
 
 paddle.disable_static()
 
@@ -501,6 +505,8 @@ class Solver(object):
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
+        self.ninputs = ninputs
+        self.nlabels = nlabels
 
         # convert inputs to tensor
         for i in range(ninputs):
@@ -512,23 +518,54 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        for epoch in range(num_epoch):
+        # @partial(jit, static_argnames=["ninputs", "nlabels"])
+        @jit
+        def update(epoch, optim_state, *inputs_labels):
 
-            param = self.optim_params(self.optim_state)
+            param = self.optim_params(optim_state)
 
             loss, grads = jax.value_and_grad(
                 self.algo.compute, argnums=0)(param,
                                               *inputs_labels,
-                                              ninputs=ninputs,
-                                              inputs_attr=inputs_attr,
-                                              nlabels=nlabels,
-                                              labels_attr=labels_attr,
+                                              ninputs=self.ninputs,
+                                              inputs_attr=self.inputs_attr,
+                                              nlabels=self.nlabels,
+                                              labels_attr=self.labels_attr,
                                               pde=self.pde)
 
-            self.optim_state = self.optim_update(epoch, grads,
-                                                 self.optim_state)
+            optim_state = self.optim_update(epoch, grads, optim_state)
+
+            return loss, optim_state
+
+        loss, optim_state = update(0, self.optim_state, *inputs_labels)
+        loss.block_until_ready()
+
+        t1 = time.time()
+
+        for epoch in range(num_epoch):
+
+            loss, optim_state = update(epoch + 1, optim_state, *inputs_labels)
+
+            # param = self.optim_params(self.optim_state)
+
+            # loss, grads = jax.value_and_grad(
+            #     self.algo.compute, argnums=0)(param,
+            #                                   *inputs_labels,
+            #                                   ninputs=ninputs,
+            #                                   inputs_attr=inputs_attr,
+            #                                   nlabels=nlabels,
+            #                                   labels_attr=labels_attr,
+            #                                   pde=self.pde)
+
+            # self.optim_state = self.optim_update(epoch, grads,
+            #                                      self.optim_state)
 
             print("Epoch: ", epoch, " Loss: ", loss)
+
+        loss.block_until_ready()
+
+        t2 = time.time()
+        print("time : ", t2 - t1)
 
         return None
 
