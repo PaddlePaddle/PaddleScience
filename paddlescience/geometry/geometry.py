@@ -19,6 +19,9 @@ import vtk
 import matplotlib.pyplot as plt
 import paddle
 import pyvista as pv
+from pysdf import SDF
+import trimesh
+import time
 
 
 # Geometry
@@ -90,15 +93,10 @@ class Geometry:
         self.mesh_file.clear()
 
     def _is_inside_mesh(self, points, filename):
-        flag_inside_mesh = np.full(len(points), False, dtype='bool')
-        mesh_model = pv.read(filename)
-        for i in range(len(points)):
-            # TODO The vertice[0,0,0] is not applicable in all cases
-            point = [[0, 0, 0], points[i]]
-            point_poly = pv.PolyData(point)
-            select = point_poly.select_enclosed_points(mesh_model)
-            flag_inside_mesh[i] = select['SelectedPoints'][1]
-        return flag_inside_mesh
+        mesh_model = trimesh.load(filename)
+        f = SDF(mesh_model.vertices, mesh_model.faces)
+        origin_contained = f.contains(points)
+        return origin_contained
 
     def _get_points_from_meshfile(self, filename):
         mesh_model = pv.read(filename)
