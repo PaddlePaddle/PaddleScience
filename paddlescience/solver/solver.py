@@ -362,7 +362,11 @@ class Solver(object):
 
         # number of inputs and labels
         ninputs = len(self.inputs)
-        nlabels = len(self.labels)
+        # determine the shape when use new-ad
+        if config.prim_enabled():
+            nlabels = len(self.pde.geometry.user)
+        else:
+            nlabels = len(self.labels)
 
         place = paddle.CUDAPlace(0)
         self.exe = paddle.static.Executor(place)
