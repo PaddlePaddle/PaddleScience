@@ -353,7 +353,13 @@ class Solver(object):
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        if config.prim_enabled():
+            labels, labels_attr = self.algo.create_labels(
+                self.pde,
+                interior_shape=len(self.pde.geometry.interior),
+                supervised_shape=len(self.pde.geometry.user))
+        else:
+            labels, labels_attr = self.algo.create_labels(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -363,6 +369,11 @@ class Solver(object):
         # number of inputs and labels
         ninputs = len(self.inputs)
         nlabels = len(self.labels)
+        # determine the shape when use new-ad
+        # if config.prim_enabled():
+        #     nlabels = len(self.pde.geometry.user)
+        # else:
+        #     nlabels = len(self.labels)
 
         place = paddle.CUDAPlace(0)
         self.exe = paddle.static.Executor(place)
