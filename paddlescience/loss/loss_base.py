@@ -58,24 +58,6 @@ class CompFormula:
     def compute_outs(self, input, bs, param=None):
         self.outs = self.net.nn_func(input, param)
 
-    def __func_jac_jax(self, param, x):
-        return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
-
-    def __v_func_jac_jax(self, param, x):
-        return jax.vmap(self.__func_jac_jax, [None, 0], -1)(param, x)
-
-    # @partial(jit, static_argnums=(0,))
-    def __func_hes_jax(self, param, x):
-        return jax.hessian(self.net.nn_func, argnums=0)(x, param)
-
-    # @partial(jit, static_argnums=(0,))
-    def __v_func_hes_jax(self, param, x):
-        return jax.vmap(self.__func_hes_jax, [None, 0], -1)(param, x)
-
-    # def __v_func_hes_jax(self):
-    #     # return jax.jit(jax.vmap(self.__func_hes_jax, [None, 0], 0))
-    #     return jax.vmap(self.__func_hes_jax, [None, 0], 0)
-
     def compute_outs_der(self, input, bs, param=None):
 
         # outs
@@ -86,29 +68,24 @@ class CompFormula:
 
             if config._compute_backend == "jax":
 
-                # def func(param, x):
-                #     return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
+                def func(param, x):
+                    return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
 
-                # def v_func(param, x):
-                #     return jax.vmap(func, [None, 0], -1)(param, x)
-
-                jacobian = self.__v_func_jac_jax(param, input)
+                jacobian = jax.vmap(func, [None, 0], -1)(param, input)
             else:
                 jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
             jacobian = None
 
-        # print(jacobian)
-
         # hessian
         if self.order >= 2:
 
-            # t1 = time.time()
-
-            # hessian = self.__v_func_hes_jax(param, input)
-
             if config._compute_backend == "jax":
-                hessian = self.__v_func_hes_jax(param, input)
+
+                def func(param, x):
+                    return jax.hessian(self.net.nn_func, argnums=0)(x, param)
+
+                hessian = jax.vmap(func, [None, 0], -1)(param, input)
             else:
                 hessian = list()
                 for i in range(self.net.num_outs):
@@ -117,9 +94,6 @@ class CompFormula:
                         return self.net.nn_func(input)[:, i:i + 1]
 
                     hessian.append(Hessian(func, input, is_batched=True))
-
-            # t2 = time.time()
-            # print("1: ", t2 - t1)
         else:
             hessian = None
 
@@ -131,8 +105,6 @@ class CompFormula:
                         normal):
 
         rst = 0.0
-
-        # print(formula)
 
         # number of items seperated by add
         if formula.is_Add:

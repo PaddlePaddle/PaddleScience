@@ -190,9 +190,22 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        for epoch in range(num_epoch):
+        loss, outs = self.algo.compute(
+            None,
+            *inputs_labels,
+            ninputs=ninputs,
+            inputs_attr=inputs_attr,
+            nlabels=nlabels,
+            labels_attr=labels_attr,
+            pde=self.pde)
 
-            # TODO: error out num_epoch==0
+        loss.backward()
+        self.opt.step()
+        self.opt.clear_grad()
+
+        t1 = time.time()
+
+        for epoch in range(num_epoch - 1):
 
             loss, outs = self.algo.compute(
                 None,
@@ -209,6 +222,9 @@ class Solver(object):
 
             print("dynamic epoch: " + str(epoch + 1), "    loss:",
                   loss.numpy()[0])
+
+        t2 = time.time()
+        print("time : ", t2 - t1)
 
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
@@ -337,11 +353,18 @@ class Solver(object):
             fetches.append(out.name)
 
         # main loop
-        for epoch in range(num_epoch):
+        rslt = self.exe.run(self.train_program, feed=feeds, fetch_list=fetches)
+
+        t1 = time.time()
+
+        for epoch in range(num_epoch - 1):
             rslt = self.exe.run(self.train_program,
                                 feed=feeds,
                                 fetch_list=fetches)
             print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
+
+        t2 = time.time()
+        print("time : ", t2 - t1)
 
         return rslt[1:]
 
@@ -518,7 +541,6 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        # @partial(jit, static_argnames=["ninputs", "nlabels"])
         @jit
         def update(epoch, optim_state, *inputs_labels):
 
@@ -538,36 +560,20 @@ class Solver(object):
             return loss, optim_state
 
         loss, optim_state = update(0, self.optim_state, *inputs_labels)
-        loss.block_until_ready()
+        print("jax epoch: ", 0, " Loss: ", loss)
 
+        loss.block_until_ready()
         t1 = time.time()
 
-        for epoch in range(num_epoch):
-
+        for epoch in range(num_epoch - 1):
             loss, optim_state = update(epoch + 1, optim_state, *inputs_labels)
-
-            # param = self.optim_params(self.optim_state)
-
-            # loss, grads = jax.value_and_grad(
-            #     self.algo.compute, argnums=0)(param,
-            #                                   *inputs_labels,
-            #                                   ninputs=ninputs,
-            #                                   inputs_attr=inputs_attr,
-            #                                   nlabels=nlabels,
-            #                                   labels_attr=labels_attr,
-            #                                   pde=self.pde)
-
-            # self.optim_state = self.optim_update(epoch, grads,
-            #                                      self.optim_state)
-
-            print("Epoch: ", epoch, " Loss: ", loss)
+            print("jax epoch: ", epoch + 1, " Loss: ", loss)
 
         loss.block_until_ready()
-
         t2 = time.time()
         print("time : ", t2 - t1)
 
-        return None
+        return loss
 
     # predict with jax
     def __predict_jax(self):
