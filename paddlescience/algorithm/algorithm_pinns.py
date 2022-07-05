@@ -121,7 +121,11 @@ class PINNs(AlgorithmBase):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 attr["rhs"] = LabelInt(len(labels))
-                labels.append(rhs)
+                if pde.time_dependent == True and pde.time_disc_method is None:
+                    data = self.__repeatspace(pde.time_array[1::], rhs)
+                else:
+                    data = rhs
+                labels.append(data)
 
             # weight
             weight = pde.weight_disc[i]
@@ -155,7 +159,11 @@ class PINNs(AlgorithmBase):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     attr["rhs"] = LabelInt(len(labels))
-                    labels.append(rhs)
+                    if pde.time_dependent == True and pde.time_disc_method is None:
+                        data = self.__repeatspace(pde.time_array[1::], rhs)
+                    else:
+                        data = rhs
+                    labels.append(data)
 
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
@@ -370,8 +378,6 @@ class PINNs(AlgorithmBase):
 
             n += 1
 
-        # print("loss eq/bc/ic/data:   ", loss_eq.numpy())
-
         # loss
         p = self.loss.norm_p
         if p == 1:
@@ -383,7 +389,16 @@ class PINNs(AlgorithmBase):
             pass
             # TODO: error out
 
-        return loss, outs  # TODO: return more
+        loss_details = list()
+        loss_details.append(loss_eq)
+        loss_details.append(loss_bc)
+        loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
+        loss_details.append(loss_ic)
+        loss_data = (loss - loss) if isinstance(loss_data,
+                                                float) else loss_data
+        loss_details.append(loss_data)
+
+        return loss, outs, loss_details
 
     def __timespace(self, time, space):
 
@@ -394,6 +409,13 @@ class PINNs(AlgorithmBase):
         space_r = np.tile(space, (nt, 1)).reshape((nt * ns, ndims))
         timespace = np.concatenate([time_r, space_r], axis=1)
         return timespace
+
+    def __repeatspace(self, time, space):
+
+        nt = len(time)
+        ns = len(space)
+        space_r = np.tile(space, (nt, 1)).reshape((nt * ns))
+        return space_r
 
     def __sqrt(self, x):
         if np.isscalar(x):
