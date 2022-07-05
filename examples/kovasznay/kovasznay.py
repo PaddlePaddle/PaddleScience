@@ -20,7 +20,9 @@ paddle.seed(1)
 np.random.seed(1)
 
 # paddle.enable_static()
-paddle.disable_static()
+# paddle.disable_static()
+psci.config.enable_static()
+psci.config.enable_prim()
 
 # constants
 Re = 40.0

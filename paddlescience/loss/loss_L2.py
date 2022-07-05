@@ -18,6 +18,14 @@ from .loss_base import LossBase, CompFormula
 from ..labels import LabelInt
 
 
+def l2_norm_square(x, scale=None):
+    if scale is None:
+        l2_norm = paddle.norm(x, p=2)
+    else:
+        l2_norm = paddle.norm(x * scale, p=2) / scale
+    return l2_norm * l2_norm
+
+
 class L2(LossBase):
     """
     L2 loss.
@@ -76,14 +84,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst * rst, p=1)
+                    loss += l2_norm_square(rst)
                 else:
-                    loss += paddle.norm(rst * rst * wgt, p=1)
+                    loss += l2_norm_square(rst * np.sqrt(wgt), 10000)
             else:
                 if wgt is None:
-                    loss += paddle.norm((rst - rhs) * (rst - rhs), p=1)
+                    loss += l2_norm_square(rst - rhs)
                 else:
-                    loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
+                    loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
 
         return loss, cmploss.outs
 
@@ -124,14 +132,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst * rst, p=1)
+                    loss += l2_norm_square(rst)
                 else:
-                    loss += paddle.norm(rst * rst * wgt, p=1)
+                    loss += l2_norm_square(rst * np.sqrt(wgt), 10000)
             else:
                 if wgt is None:
-                    loss += paddle.norm((rst - rhs) * (rst - rhs), p=1)
+                    loss += l2_norm_square(rst - rhs)
                 else:
-                    loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
+                    loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
 
             # print("rhs: ", rhs)
             # exit()
@@ -156,7 +164,7 @@ class L2(LossBase):
             else:
                 rhs = rhs_c
             wgt = labels_attr["ic"][i]["weight"]
-            loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
+            loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
 
         return loss, cmploss.outs
 
@@ -172,8 +180,7 @@ class L2(LossBase):
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            norm = paddle.norm(cmploss.outs[:, i] - data, p=2)
-            loss += norm * norm
+            loss += l2_norm_square(cmploss.outs[:, i] - data)
             # TODO: p=2 p=1
 
         loss = self.data_weight * loss
