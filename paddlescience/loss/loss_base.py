@@ -203,7 +203,10 @@ class CompFormula:
                     rst = normal * jacobian[f_idx, :]
             else:
                 var_idx = self.indvar.index(v)
-                rst = jacobian[:, f_idx, var_idx]
+                if config._compute_backend == "jax":
+                    rst = jacobian[f_idx, var_idx, :]
+                else:
+                    rst = jacobian[:, f_idx, var_idx]
 
         # parser hessian for order 2
         elif order == 2:
