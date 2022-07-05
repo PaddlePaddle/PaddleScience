@@ -63,7 +63,7 @@ opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=5000)
+solution = solver.solve(num_epoch=25, checkpoint_freq=20)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
