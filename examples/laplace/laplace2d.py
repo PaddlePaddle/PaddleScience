@@ -19,6 +19,9 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
+psci.config.enable_static()
+psci.config.enable_prim()
+
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
@@ -56,8 +59,8 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Lbfgs()
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+# opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)

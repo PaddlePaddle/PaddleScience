@@ -76,14 +76,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst**2, p=1)
+                    loss += paddle.norm(rst * rst, p=1)
                 else:
-                    loss += paddle.norm(rst**2 * wgt, p=1)
+                    loss += paddle.norm(rst * rst * wgt, p=1)
             else:
                 if wgt is None:
-                    loss += paddle.norm((rst - rhs)**2, p=1)
+                    loss += paddle.norm((rst - rhs) * (rst - rhs), p=1)
                 else:
-                    loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+                    loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -124,14 +124,14 @@ class L2(LossBase):
 
             if rhs is None:
                 if wgt is None:
-                    loss += paddle.norm(rst**2, p=1)
+                    loss += paddle.norm(rst * rst, p=1)
                 else:
-                    loss += paddle.norm(rst**2 * wgt, p=1)
+                    loss += paddle.norm(rst * rst * wgt, p=1)
             else:
                 if wgt is None:
-                    loss += paddle.norm((rst - rhs)**2, p=1)
+                    loss += paddle.norm((rst - rhs) * (rst - rhs), p=1)
                 else:
-                    loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+                    loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
 
             # print("rhs: ", rhs)
             # exit()
@@ -156,7 +156,7 @@ class L2(LossBase):
             else:
                 rhs = rhs_c
             wgt = labels_attr["ic"][i]["weight"]
-            loss += paddle.norm((rst - rhs)**2 * wgt, p=1)
+            loss += paddle.norm((rst - rhs) * (rst - rhs) * wgt, p=1)
 
         return loss, cmploss.outs
 
@@ -172,7 +172,8 @@ class L2(LossBase):
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            norm = paddle.norm(cmploss.outs[:, i] - data, p=2)
+            loss += norm * norm
             # TODO: p=2 p=1
 
         loss = self.data_weight * loss
