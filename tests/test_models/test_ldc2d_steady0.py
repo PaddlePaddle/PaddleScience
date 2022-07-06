@@ -93,6 +93,9 @@ def ldc2d_steady(npoints, static=True):
     return solution
 
 
+standard_value = np.load("standard/ldc2d_steady0.npz", allow_pickle=True)
+
+
 @pytest.mark.ldc2d_steady
 @pytest.mark.skipif(
     paddle.distributed.get_world_size() != 1, reason="skip serial case")
@@ -100,12 +103,14 @@ def test_ldc2d_steady_0():
     """
     test ldc2d_steady
     """
-    standard_value = np.load("standard/ldc2d_steady0.npz", allow_pickle=True)
-    solution = standard_value['solution'].tolist()
+    dyn_solution = standard_value['dyn_solution'].tolist()
+    stc_solution = standard_value['stc_solution'].tolist()
     dynamic_rslt = ldc2d_steady(10, static=False)
     static_rslt = ldc2d_steady(10)
     compare(dynamic_rslt, static_rslt)
-    compare(solution, static_rslt)
+
+    compare(dyn_solution, dynamic_rslt, delta=1e-7)
+    compare(stc_solution, static_rslt, delta=1e-7)
 
 
 @pytest.mark.ldc2d_steady
@@ -116,10 +121,9 @@ def test_ldc2d_steady_1():
     test ldc2d_steady
     distributed case: padding
     """
-    standard_value = np.load("standard/ldc2d_steady0.npz", allow_pickle=True)
     solution = standard_value['dst_solution'].tolist()
-    static_rslt = ldc2d_steady(10)
-    compare(solution, static_rslt)
+    dst_rslt = ldc2d_steady(10)
+    compare(solution, dst_rslt, delta=1e-7)
 
 
 if __name__ == '__main__':
