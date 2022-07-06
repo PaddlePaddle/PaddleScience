@@ -353,7 +353,7 @@ class Solver(object):
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        if config.prim_enabled():
+        if config.prim_enabled() and self.pde.geometry.user is not None:
             labels, labels_attr = self.algo.create_labels(
                 self.pde,
                 interior_shape=len(self.pde.geometry.interior),
