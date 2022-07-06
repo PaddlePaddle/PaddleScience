@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-case=`find . -maxdepth 1 -name "test_*.py" | sort `
+cases=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
 serial_bug=0
 distributed_bug=0
