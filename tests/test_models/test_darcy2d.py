@@ -84,7 +84,7 @@ def darcy2d(static=True):
 
     # Solver
     solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=1)
+    solution = solver.solve(num_epoch=25)
 
     # MSE
     # TODO: solution array to dict: interior, bc
@@ -102,6 +102,9 @@ def darcy2d(static=True):
     return solution, mse
 
 
+standard_value = np.load("./standard/darcy2d.npz", allow_pickle=True)
+
+
 @pytest.mark.darcy2d
 @pytest.mark.skipif(
     paddle.distributed.get_world_size() != 1, reason="skip serial case")
@@ -109,14 +112,18 @@ def test_darcy2d_0():
     """
     test darcy2d
     """
-    standard_value = np.load("./standard/darcy2d.npz", allow_pickle=True)
-    solution, mse = standard_value['solution'].tolist(), standard_value['mse']
+    dyn_solution, dyn_mse = standard_value['dyn_solution'].tolist(
+    ), standard_value['dyn_mse']
+    stc_solution, stc_mse = standard_value['stc_solution'].tolist(
+    ), standard_value['stc_mse']
     dynamic_rslt, dynamic_mse = darcy2d(static=False)
     static_rslt, static_mse = darcy2d()
     compare(dynamic_rslt, static_rslt)
     compare(dynamic_mse, static_mse)
-    compare(solution, static_rslt)
-    compare(mse, static_mse)
+    compare(dyn_solution, dynamic_rslt, delta=1e-7)
+    compare(dyn_mse, dynamic_mse, mode="equal")
+    compare(stc_solution, static_rslt, delta=1e-7)
+    compare(stc_mse, static_mse, mode="equal")
 
 
 @pytest.mark.darcy2d
@@ -131,8 +138,8 @@ def test_darcy2d_1():
     solution, mse = standard_value['dst_solution'].tolist(), standard_value[
         'dst_mse']
     static_rslt, static_mse = darcy2d()
-    compare(solution, static_rslt)
-    compare(mse, static_mse)
+    compare(solution, static_rslt, delta=1e-7)
+    compare(mse, static_mse, delta=1e-7)
 
 
 if __name__ == '__main__':
