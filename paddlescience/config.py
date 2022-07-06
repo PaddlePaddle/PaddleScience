@@ -15,6 +15,7 @@
 import paddle
 
 _dtype = 'float32'
+_use_visualdl = False
 
 
 def set_dtype(dtype):
@@ -25,6 +26,15 @@ def set_dtype(dtype):
 def get_dtype():
     global _dtype
     return _dtype
+
+
+def enable_visualdl():
+    global _use_visualdl
+    _use_visualdl = True
+
+
+def visualdl_enabled():
+    return _use_visualdl
 
 
 def enable_static():
