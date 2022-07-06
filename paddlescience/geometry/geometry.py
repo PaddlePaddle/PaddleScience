@@ -20,8 +20,6 @@ import matplotlib.pyplot as plt
 import paddle
 import pyvista as pv
 from pysdf import SDF
-import trimesh
-import time
 
 
 # Geometry
@@ -93,13 +91,21 @@ class Geometry:
         self.mesh_file.clear()
 
     def _is_inside_mesh(self, points, filename):
-        mesh_model = trimesh.load(filename)
-        f = SDF(mesh_model.vertices, mesh_model.faces)
-        origin_contained = f.contains(points)
+
+        mesh_model = pv.read(filename)
+        faces_as_array = mesh_model.faces.reshape(
+            (mesh_model.n_faces, 4))[:, 1:]
+
+        sdf = SDF(mesh_model.points, faces_as_array)
+
+        origin_contained = sdf.contains(points)
+
         return origin_contained
 
     def _get_points_from_meshfile(self, filename):
+
         mesh_model = pv.read(filename)
+
         return mesh_model.points
 
     # select boundaries from all points and construct disc geometry
