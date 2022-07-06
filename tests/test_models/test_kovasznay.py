@@ -84,9 +84,12 @@ def kovasznay(static=True):
 
     # Solver
     solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=1)
+    solution = solver.solve(num_epoch=25)
 
     return solution
+
+
+standard_value = np.load("./standard/kovasznay.npz", allow_pickle=True)
 
 
 @pytest.mark.kovasznay
@@ -96,12 +99,14 @@ def test_kovasznay_0():
     """
     test kovasznay
     """
-    standard_value = np.load("./standard/kovasznay.npz", allow_pickle=True)
-    solution = standard_value['solution'].tolist()
+    dyn_solution = standard_value['dyn_solution'].tolist()
+    stc_solution = standard_value['stc_solution'].tolist()
     dynamic_rslt = kovasznay(static=False)
     static_rslt = kovasznay()
     compare(dynamic_rslt, static_rslt)
-    compare(solution, static_rslt)
+
+    compare(dyn_solution, dynamic_rslt, delta=1e-7)
+    compare(stc_solution, static_rslt, delta=1e-7)
 
 
 @pytest.mark.kovasznay
@@ -112,10 +117,9 @@ def test_kovasznay_1():
     test kovasznay
     distributed case: padding
     """
-    standard_value = np.load("./standard/kovasznay.npz", allow_pickle=True)
     solution = standard_value['dst_solution'].tolist()
     static_rslt = kovasznay()
-    compare(solution, static_rslt)
+    compare(solution, static_rslt, delta=1e-7)
 
 
 if __name__ == '__main__':
