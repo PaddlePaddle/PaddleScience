@@ -100,7 +100,7 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels(self, pde):
+    def create_labels(self, pde, interior_shape=None, supervised_shape=None):
 
         labels = list()
         labels_attr = OrderedDict()
@@ -143,7 +143,10 @@ class PINNs(AlgorithmBase):
             for i in range(len(pde.dvar_n)):
                 labels_attr["interior"]["data_cur"].append(
                     LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if interior_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(interior_shape))
 
         # bc
         #   - labels_attr["bc"][name_b][i]["rhs"]
@@ -235,7 +238,10 @@ class PINNs(AlgorithmBase):
             labels_attr["user"]["data_next"] = list()
             for i in range(len(pde.dvar)):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if supervised_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(supervised_shape))
 
             # data cur
             if pde.time_disc_method is not None:
@@ -243,7 +249,11 @@ class PINNs(AlgorithmBase):
                 for i in range(len(pde.dvar_n)):
                     labels_attr["user"]["data_cur"].append(
                         LabelInt(len(labels)))
-                    labels.append(LabelHolder())  # placeholder with shape
+                    if supervised_shape == None:
+                        # placeholder with shape
+                        labels.append(LabelHolder())
+                    else:
+                        labels.append(LabelHolder(supervised_shape))
 
         return labels, labels_attr
 
