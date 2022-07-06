@@ -15,13 +15,13 @@
 # limitations under the License.
 
 
-export FLAGS_enable_eager_mode=0
 case=`find . -maxdepth 1 -name "test_*.py" | sort `
 ignore=""
 serial_bug=0
 distributed_bug=0
 bug=0
 
+export FLAGS_enable_eager_mode=0
 export CUDA_VISIBLE_DEVICE=0
 echo "===== examples bug list =====" >  result.txt
 echo "serial bug list:" >>  result.txt
