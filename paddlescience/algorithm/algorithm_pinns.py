@@ -100,7 +100,7 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels(self, pde):
+    def create_labels(self, pde, interior_shape=None, supervised_shape=None):
 
         labels = list()
         labels_attr = OrderedDict()
@@ -121,7 +121,11 @@ class PINNs(AlgorithmBase):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 attr["rhs"] = LabelInt(len(labels))
-                labels.append(rhs)
+                if pde.time_dependent == True and pde.time_disc_method is None:
+                    data = self.__repeatspace(pde.time_array[1::], rhs)
+                else:
+                    data = rhs
+                labels.append(data)
 
             # weight
             weight = pde.weight_disc[i]
@@ -139,7 +143,10 @@ class PINNs(AlgorithmBase):
             for i in range(len(pde.dvar_n)):
                 labels_attr["interior"]["data_cur"].append(
                     LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if interior_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(interior_shape))
 
         # bc
         #   - labels_attr["bc"][name_b][i]["rhs"]
@@ -155,7 +162,11 @@ class PINNs(AlgorithmBase):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     attr["rhs"] = LabelInt(len(labels))
-                    labels.append(rhs)
+                    if pde.time_dependent == True and pde.time_disc_method is None:
+                        data = self.__repeatspace(pde.time_array[1::], rhs)
+                    else:
+                        data = rhs
+                    labels.append(data)
 
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
@@ -227,7 +238,10 @@ class PINNs(AlgorithmBase):
             labels_attr["user"]["data_next"] = list()
             for i in range(len(pde.dvar)):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if supervised_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(supervised_shape))
 
             # data cur
             if pde.time_disc_method is not None:
@@ -235,7 +249,11 @@ class PINNs(AlgorithmBase):
                 for i in range(len(pde.dvar_n)):
                     labels_attr["user"]["data_cur"].append(
                         LabelInt(len(labels)))
-                    labels.append(LabelHolder())  # placeholder with shape
+                    if supervised_shape == None:
+                        # placeholder with shape
+                        labels.append(LabelHolder())
+                    else:
+                        labels.append(LabelHolder(supervised_shape))
 
         return labels, labels_attr
 
@@ -401,6 +419,13 @@ class PINNs(AlgorithmBase):
         space_r = np.tile(space, (nt, 1)).reshape((nt * ns, ndims))
         timespace = np.concatenate([time_r, space_r], axis=1)
         return timespace
+
+    def __repeatspace(self, time, space):
+
+        nt = len(time)
+        ns = len(space)
+        space_r = np.tile(space, (nt, 1)).reshape((nt * ns))
+        return space_r
 
     def __sqrt(self, x):
         if np.isscalar(x):

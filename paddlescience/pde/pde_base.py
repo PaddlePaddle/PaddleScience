@@ -158,7 +158,11 @@ class PDE:
         """
         self.time_internal = interval
 
-    def discretize(self, time_method=None, time_step=None, geo_disc=None):
+    def discretize(self,
+                   time_method=None,
+                   time_step=None,
+                   time_array=None,
+                   geo_disc=None):
         """
         Discretize equations
 
@@ -180,13 +184,16 @@ class PDE:
             pde_disc = self.time_discretize(time_method, time_step)
 
             # time interval
-            pde_disc.time_internal = self.time_internal
-            pde_disc.time_step = time_step
-            t0 = self.time_internal[0]
-            t1 = self.time_internal[1]
-            n = int((t1 - t0) / time_step) + 1
-            pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
-
+            if time_array is None:
+                pde_disc.time_internal = self.time_internal
+                pde_disc.time_step = time_step
+                t0 = self.time_internal[0]
+                t1 = self.time_internal[1]
+                n = int((t1 - t0) / time_step) + 1
+                pde_disc.time_array = np.linspace(
+                    t0, t1, n, dtype=config._dtype)
+            else:
+                pde_disc.time_array = time_array.astype(config._dtype)
         else:
             pde_disc = self
 

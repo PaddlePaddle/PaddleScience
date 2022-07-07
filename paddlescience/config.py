@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
+
 _dtype = 'float32'
 
 
@@ -23,3 +25,44 @@ def set_dtype(dtype):
 def get_dtype():
     global _dtype
     return _dtype
+
+
+def enable_static():
+    """
+    Use static graph mode.
+    """
+    paddle.enable_static()
+
+
+def enable_prim():
+    '''
+    Enable automatic differentiation mechanism based on 
+    automatic differentiation basic operator.
+    '''
+    paddle.incubate.autograd.enable_prim()
+
+
+def disable_prim():
+    '''
+    Disable automatic differentiation mechanism based on 
+    automatic differentiation basic operator.
+    '''
+    paddle.incubate.autograd.disable_prim()
+
+
+def prim_enabled():
+    '''
+    Determine whether automatic differentiation based on 
+    automatic differentiation basic operator is enabled.
+    '''
+    return paddle.incubate.autograd.prim_enabled()
+
+
+def prim2orig(*args):
+    '''
+    All operators in the target block are processed as follows.
+    If it is an automatic differential basic operator, it will be
+    transformed into one or a series of original operators with
+    equivalent function to support execution.
+    '''
+    return paddle.incubate.autograd.prim2orig(*args)

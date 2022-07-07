@@ -119,6 +119,9 @@ class L2(LossBase):
             else:
                 wgt = wgt_b
 
+            # print("rst: ", rst.shape)
+            # print("rhs: ", rhs.shape)
+
             if rhs is None:
                 if wgt is None:
                     loss += paddle.norm(rst**2, p=1)
