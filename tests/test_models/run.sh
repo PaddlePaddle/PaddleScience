@@ -21,7 +21,6 @@ serial_bug=0
 distributed_bug=0
 bug=0
 
-export FLAGS_enable_eager_mode=0
 export CUDA_VISIBLE_DEVICE=0
 echo "===== examples bug list =====" >  result.txt
 echo "serial bug list:" >>  result.txt
