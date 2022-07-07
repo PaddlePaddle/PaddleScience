@@ -27,9 +27,9 @@ class Geometry:
         self.normal = dict()  # boundary normal direction
         self._dtype = config._dtype
 
-    def add_boundary(self, name, criteria, normal=None):
+    def set_boundary(self, name, criteria, normal=None):
         """
-        Add (specify) bounday in geometry
+        Set (specify) bounday in geometry
 
         Parameters:
             name (string): Boundary name
@@ -38,11 +38,14 @@ class Geometry:
         Example:
             >>> import paddlescience as psci
             >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-            >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
+            >>> rec.set_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
         """
 
         self.criteria[name] = criteria
         self.normal[name] = normal
+
+    def add_boundary(self, name, criteria, normal=None):
+        self.set_boundary(name, criteria, normal)
 
     def delete_boundary(self, name):
         """

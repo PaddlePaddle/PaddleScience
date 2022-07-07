@@ -34,63 +34,28 @@ class Laplace(PDE):
     """
 
     def __init__(self, dim=2, weight=1.0):
-        super(Laplace, self).__init__(1, weight=weight)
 
         if dim == 1:
-            # independent variable
+            # independent and dependent variable
             x = sympy.Symbol('x')
-
-            # dependent variable
             u = sympy.Function('u')(x, )
-
-            # variables in order
-            self.indvar = [x]
-            self.dvar = [u]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = [u.diff(x).diff(x)]
-            self.rhs = [0.0]
+            super(Laplace, self).__init__([x], [u])
+            self.add_equation(u.diff(x).diff(x))
 
         elif dim == 2:
-            # independent variable
+            # independent and dependent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
-
-            # dependent variable
             u = sympy.Function('u')(x, y)
-
-            # variables in order
-            self.indvar = [x, y]
-            self.dvar = [u]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = [u.diff(x).diff(x) + u.diff(y).diff(y)]
-            self.rhs = [0.0]
+            super(Laplace, self).__init__([x, y], [u])
+            self.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y))
 
         elif dim == 3:
-            # independent variable
+            # independent and dependent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
             z = sympy.Symbol('z')
-
-            # dependent variable
             u = sympy.Function('u')(x, y, z)
-
-            # variables in order
-            self.indvar = [x, y, z]
-            self.dvar = [u]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = [
-                u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z)
-            ]
-            self.rhs = [0.0]
+            super(Laplace, self).__init__([x, y, z], [u])
+            self.add_equation(
+                u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z))

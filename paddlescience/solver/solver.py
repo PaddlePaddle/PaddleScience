@@ -84,7 +84,7 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt):
+    def __init__(self, pde, algo, opt=None):
         super(Solver, self).__init__()
 
         self.pde = pde
