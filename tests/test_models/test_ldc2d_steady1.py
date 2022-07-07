@@ -88,9 +88,12 @@ def ldc2d_steady(npoints, static=True):
 
     # Solver
     solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=1)
+    solution = solver.solve(num_epoch=25)
 
     return solution
+
+
+standard_value = np.load("standard/ldc2d_steady1.npz", allow_pickle=True)
 
 
 @pytest.mark.ldc2d_steady
@@ -100,12 +103,11 @@ def test_ldc2d_steady_0():
     """
     test ldc2d_steady
     """
-    standard_value = np.load("standard/ldc2d_steady1.npz", allow_pickle=True)
-    solution = standard_value['solution'].tolist()
+    dyn_solution = standard_value['dyn_solution'].tolist()
+    stc_solution = standard_value['stc_solution'].tolist()
     dynamic_rslt = ldc2d_steady(16, static=False)
     static_rslt = ldc2d_steady(16)
     compare(dynamic_rslt, static_rslt)
-    compare(solution, static_rslt)
 
 
 @pytest.mark.ldc2d_steady
@@ -116,7 +118,6 @@ def test_ldc2d_steady_1():
     test ldc2d_steady
     distributed case: no padding
     """
-    standard_value = np.load("standard/ldc2d_steady1.npz", allow_pickle=True)
     solution = standard_value['dst_solution'].tolist()
     static_rslt = ldc2d_steady(16)
     compare(solution, static_rslt)
