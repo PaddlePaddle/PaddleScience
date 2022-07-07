@@ -64,7 +64,7 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         elif ndims == 2:
             data_vtk["data"] = data(points_vtk[0], points_vtk[1])
     else:
-        data_vtk = __concatenate_data(data, nt)
+        data_vtk = __concatenate_data(data[0:1], nt)  # TODO: should keep 
 
     if ndims == 3:
         axis_x = points_vtk[0]
@@ -112,8 +112,8 @@ def __concatenate_geo(geo_disc):
 
     # concatenate interior and bounday points
     x = [geo_disc.interior]
-    for value in geo_disc.boundary.values():
-        x.append(value)
+    # for value in geo_disc.boundary.values(): # TODO: should keep
+    #     x.append(value)
     points = np.concatenate(x, axis=0)
 
     ndims = len(points[0])
