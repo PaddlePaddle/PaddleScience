@@ -109,6 +109,9 @@ def test_ldc2d_steady_0():
     static_rslt = ldc2d_steady(16)
     compare(dynamic_rslt, static_rslt)
 
+    compare(dyn_solution, dynamic_rslt, delta=1e-7)
+    compare(stc_solution, static_rslt, delta=1e-7)
+
 
 @pytest.mark.ldc2d_steady
 @pytest.mark.skipif(
@@ -120,7 +123,7 @@ def test_ldc2d_steady_1():
     """
     solution = standard_value['dst_solution'].tolist()
     static_rslt = ldc2d_steady(16)
-    compare(solution, static_rslt)
+    compare(solution, static_rslti, delta=1e-7)
 
 
 if __name__ == '__main__':
