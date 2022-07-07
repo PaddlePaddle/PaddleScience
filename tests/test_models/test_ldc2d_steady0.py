@@ -88,7 +88,7 @@ def ldc2d_steady(npoints, static=True):
 
     # Solver
     solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=1)
+    solution = solver.solve(num_epoch=25)
 
     return solution
 
