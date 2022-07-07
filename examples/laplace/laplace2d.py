@@ -20,7 +20,7 @@ paddle.seed(1)
 np.random.seed(1)
 
 psci.config.enable_static()
-psci.config.enable_prim()
+# psci.config.enable_prim()
 
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)

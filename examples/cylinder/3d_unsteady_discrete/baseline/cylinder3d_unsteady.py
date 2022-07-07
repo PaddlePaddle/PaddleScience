@@ -24,8 +24,12 @@ import zipfile
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
+# paddle.enable_static()
+# paddle.disable_static()
+
+psci.config.enable_static()
+
+# psci.config.enable_prim()
 
 
 # load real data 
@@ -129,7 +133,7 @@ for next_time in range(
     solver.feed_data_user_next(GetRealPhyInfo(
         next_time, need_info='physic'))  # add u(n+1) user
     next_uvwp = solver.solve(
-        num_epoch=2000,
+        num_epoch=20,
         checkpoint_path='checkpoint/cylinder3d_model_' + str(next_time) + "/")
     # Save vtk
     file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(

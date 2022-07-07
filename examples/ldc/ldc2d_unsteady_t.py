@@ -22,7 +22,7 @@ np.random.seed(1)
 # paddle.enable_static()
 # paddle.disable_static()
 psci.config.enable_static()
-psci.config.enable_prim()
+# psci.config.enable_prim()
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
@@ -82,7 +82,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=10000)
+solution = solver.solve(num_epoch=20)
 
 psci.visu.save_vtk(
     time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
