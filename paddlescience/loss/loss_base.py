@@ -13,16 +13,10 @@
 # limitations under the License.
 
 import paddle
-from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
 from ..inputs import InputsAttr
 
-api_new = True  # TODO: delete
-
-if api_new:
-    from paddle.incubate.autograd import Jacobian, Hessian
-else:
-    from paddle.autograd.functional import Hessian, Jacobian
+from paddle.incubate.autograd import Jacobian, Hessian
 
 
 class LossBase(object):
@@ -62,10 +56,7 @@ class CompFormula:
 
         # jacobian
         if self.order >= 1:
-            if api_new:
-                jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
-            else:
-                jacobian = Jacobian(self.net.nn_func, input, batch=True)
+            jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
         else:
             jacobian = None
 
@@ -77,10 +68,7 @@ class CompFormula:
                 def func(input):
                     return self.net.nn_func(input)[:, i:i + 1]
 
-                if api_new:
-                    hessian.append(Hessian(func, input, is_batched=True))
-                else:
-                    hessian.append(Hessian(func, input, batch=True))
+                hessian.append(Hessian(func, input, is_batched=True))
 
         else:
             hessian = None
@@ -193,37 +181,21 @@ class CompFormula:
 
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
-                if api_new:
-                    rst = normal * jacobian[:, f_idx, :]  # TODO
-                else:
-                    rst = normal * jacobian[f_idx, :]
+                rst = normal * jacobian[:, f_idx, :]  # TODO
             else:
                 var_idx = self.indvar.index(v)
 
-                # print("  -var_idx: ", var_idx)
-
-                if api_new:
-                    rst = jacobian[:, f_idx, var_idx]
-                else:
-                    rst = jacobian[f_idx, var_idx]
+                rst = jacobian[:, f_idx, var_idx]
 
         # parser hessian for order 2
         elif order == 2:
 
             if (len(item.args[1:]) == 1):
                 var_idx = self.indvar.index(item.args[1][0])
-                # print("  -var_idx: ", var_idx)
-                if api_new:
-                    rst = hessian[f_idx][:, var_idx, var_idx]
-                else:
-                    rst = hessian[f_idx, var_idx, :, var_idx]
+                rst = hessian[f_idx][:, var_idx, var_idx]
             else:
                 var_idx1 = self.indvar.index(item.args[1][0])
                 var_idx2 = self.indvar.index(item.args[2][0])
-
-                if api_new:
-                    rst = hessian[f_idx][:, var_idx1, var_idx2]
-                else:
-                    rst = hessian[f_idx, var_idx1, :, var_idx2]
+                rst = hessian[f_idx][:, var_idx1, var_idx2]
 
         return rst

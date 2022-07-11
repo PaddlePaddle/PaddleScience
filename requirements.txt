@@ -7,3 +7,6 @@ pyevtk
 pandas
 wget
 scipy
+visualdl
+pyvista
+pysdf

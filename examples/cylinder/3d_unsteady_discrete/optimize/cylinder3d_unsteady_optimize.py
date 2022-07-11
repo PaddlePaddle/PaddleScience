@@ -20,14 +20,14 @@ import paddle
 import os
 import wget
 import zipfile
-from paddle.incubate.autograd import prim2orig, enable_prim, prim_enabled
+
 from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition, cinn_compile
 
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-enable_prim()
+psci.config.enable_static()
+psci.config.enable_prim()
 
 np.set_printoptions(
     suppress=True,
@@ -156,6 +156,8 @@ with paddle.static.program_guard(main_program, startup_program):
                              output_var_4_eq_loss + 100.0 * data_loss)
     opt_ops, param_grads = paddle.optimizer.Adam(0.001).minimize(total_loss)
 
+# data parallel
+
 gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 place = paddle.CUDAPlace(gpu_id)
 exe = paddle.static.Executor(place)
@@ -177,8 +179,8 @@ if not use_cinn:
             main_program, startup_program, param_grads)
 
     with paddle.static.program_guard(main_program, startup_program):
-        if prim_enabled():
-            prim2orig(main_program.block(0))
+        if psci.config.prim_enabled():
+            psci.config.prim2orig(main_program.block(0))
 
     main_program = compile_and_convert_back_to_program(
         main_program,

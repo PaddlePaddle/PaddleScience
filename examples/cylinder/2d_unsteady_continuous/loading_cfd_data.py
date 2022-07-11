@@ -240,6 +240,6 @@ class DataLoader:
         u = initial_t_data[:, 2].reshape((-1, 1))
         v = initial_t_data[:, 3].reshape((-1, 1))
         t = initial_t_data[:, 0].reshape((-1, 1))
-        x = initial_t_data[:, 6].reshape((-1, 1))
-        y = initial_t_data[:, 7].reshape((-1, 1))
+        x = initial_t_data[:, 5].reshape((-1, 1))
+        y = initial_t_data[:, 6].reshape((-1, 1))
         return p, u, v, t, x, y
