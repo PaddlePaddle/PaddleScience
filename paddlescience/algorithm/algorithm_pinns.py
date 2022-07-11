@@ -50,7 +50,7 @@ class PINNs(AlgorithmBase):
         # interior: inputs_attr["interior"]["0"]
         inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
-        if pde.time_dependent == True and pde.time_disc_method is None:
+        if pde._time_dependent == True and pde.time_disc_method is None:
             # time dependent equation with continue method
             data = self.__timespace(pde.time_array[1::], points)
         else:
@@ -61,10 +61,10 @@ class PINNs(AlgorithmBase):
 
         # boundary: inputs_attr["boundary"][name]
         inputs_attr_b = OrderedDict()
-        for name in pde.bc.keys():
+        for name in pde._bc.keys():
             points = pde.geometry.boundary[name]
             # time dependent equation with continue method
-            if pde.time_dependent == True and pde.time_disc_method is None:
+            if pde._time_dependent == True and pde.time_disc_method is None:
                 data = self.__timespace(pde.time_array[1::], points)
             else:
                 data = points
@@ -74,7 +74,7 @@ class PINNs(AlgorithmBase):
 
         # initial condition for time-dependent
         # inputs_attr["ic"]["0"]
-        if pde.time_dependent == True and pde.time_disc_method is None:
+        if pde._time_dependent == True and pde.time_disc_method is None:
             inputs_attr_it = OrderedDict()
             points = pde.geometry.interior
             data = self.__timespace(pde.time_array[0:1], points)
@@ -88,7 +88,7 @@ class PINNs(AlgorithmBase):
         inputs_attr_d = OrderedDict()
         points = pde.geometry.user
         if points is not None:
-            if pde.time_dependent == True and pde.time_disc_method is None:
+            if pde._time_dependent == True and pde.time_disc_method is None:
                 # time dependent equation with continue method
                 data = self.__timespace(pde.time_array[1::], points)
             else:
@@ -112,7 +112,7 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["interior"]["data_cur"][i]
         labels_attr["interior"] = OrderedDict()
         labels_attr["interior"]["equations"] = list()
-        for i in range(len(pde.equations)):
+        for i in range(len(pde._equations)):
             attr = dict()
 
             # rhs
@@ -121,7 +121,7 @@ class PINNs(AlgorithmBase):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 attr["rhs"] = LabelInt(len(labels))
-                if pde.time_dependent == True and pde.time_disc_method is None:
+                if pde._time_dependent == True and pde.time_disc_method is None:
                     data = self.__repeatspace(pde.time_array[1::], rhs)
                 else:
                     data = rhs
@@ -149,7 +149,7 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["bc"][name_b][i]["rhs"]
         #   - labels_attr["bc"][name_b][i]["weight"]
         labels_attr["bc"] = OrderedDict()
-        for name_b, bc in pde.bc.items():
+        for name_b, bc in pde._bc.items():
             labels_attr["bc"][name_b] = list()
             for b in bc:
                 attr = dict()
@@ -159,7 +159,7 @@ class PINNs(AlgorithmBase):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     attr["rhs"] = LabelInt(len(labels))
-                    if pde.time_dependent == True and pde.time_disc_method is None:
+                    if pde._time_dependent == True and pde.time_disc_method is None:
                         data = self.__repeatspace(pde.time_array[1::], rhs)
                     else:
                         data = rhs
@@ -169,7 +169,7 @@ class PINNs(AlgorithmBase):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
                     attr["weight"] = LabelInt(len(labels))
-                    if pde.time_dependent == True and pde.time_disc_method is None:
+                    if pde._time_dependent == True and pde.time_disc_method is None:
                         data = np.tile(weight, len(pde.time_array[1::]))
                     else:
                         data = weight
@@ -181,7 +181,7 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["ic"][i]["rhs"] 
         #   - labels_attr["ic"][i]["weight"], weight is None or scalar 
         labels_attr["ic"] = list()
-        for ic in pde.ic:
+        for ic in pde._ic:
             attr = dict()
             # rhs
             rhs = ic.rhs_disc
@@ -210,7 +210,7 @@ class PINNs(AlgorithmBase):
 
             # equation
             labels_attr["user"]["equations"] = list()
-            for i in range(len(pde.equations)):
+            for i in range(len(pde._equations)):
                 attr = dict()
 
                 # rhs

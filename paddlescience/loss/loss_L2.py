@@ -20,10 +20,12 @@ from ..labels import LabelInt
 import copy
 
 
+# Equation loss
 class EqLoss(FormulaLoss):
-    def __init__(self):
+    def __init__(self, n):
         super(EqLoss, self).__init__()
         self._loss_obj = [self]
+        self._n = n
 
     def compute(self, pde, net, input, rhs=None):
 
@@ -32,25 +34,24 @@ class EqLoss(FormulaLoss):
         cmploss.compute_outs_der(input, bs)
 
         # compute rst on left-hand side
-        loss = 0.0
-        for i in range(len(pde.equations)):
-            formula = pde.equations[i]
-            rst = cmploss.compute_formula(formula, input)
+        formula = pde.equations[self._n]
+        rst = cmploss.compute_formula(formula, input)
 
-            # loss
-            if rhs is None:
-                loss += paddle.norm(rst, p=2) * self._loss_wgt[i]
-            else:
-                loss += paddle.norm(rst - rhs, p=2) * self._loss_wgt[i]
+        # loss
+        if rhs is None:
+            loss = paddle.norm(rst, p=2) * self._loss_wgt[i]
+        else:
+            loss = paddle.norm(rst - rhs, p=2) * self._loss_wgt[i]
 
         return loss, cmploss.outs
 
 
 class BcLoss(FormulaLoss):
-    def __init__(self, name):
+    def __init__(self, name, n=None):
         super(BcLoss, self).__init__()
         self._loss_obj = [self]
         self._name = name
+        self._n = n
 
     def compute(self, pde, net, input, rhs=None):
 
@@ -74,8 +75,9 @@ class BcLoss(FormulaLoss):
 
 class IcLoss(FormulaLoss):
     def __init__(self):
-        super(IcLoss, self).__init__()
+        super(IcLoss, self).__init__(n)
         self._loss_obj = [self]
+        self._n = n
 
     def compute(self, pde, net, input, rhs=None):
 
