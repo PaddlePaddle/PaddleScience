@@ -19,10 +19,8 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
+# paddle.enable_static()
 # paddle.disable_static()
-
-nup = psci.parameter.Parameter('nu')
 
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
@@ -38,7 +36,8 @@ geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # N-S
 pde = psci.pde.NavierStokes(
-    nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
+    nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
+pde.set_time_interval([0.0, 0.5])
 
 # set bounday condition
 weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
@@ -57,13 +56,18 @@ pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
 pde.add_bc("right", bc_right_u, bc_right_v)
 
+# add initial condition
+ic_u = psci.ic.IC('u', rhs=0.0)
+ic_v = psci.ic.IC('v', rhs=0.0)
+pde.add_ic(ic_u, ic_v)
+
 # discretization pde
-pde_disc = pde.discretize(geo_disc=geo_disc)
+pde_disc = pde.discretize(time_step=0.1, geo_disc=geo_disc)
 
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=3, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
 
 # Loss
 loss = psci.loss.L2(p=2)
@@ -76,22 +80,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=20000)
+solution = solver.solve(num_epoch=10000)
 
-psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
-
-# # MSE
-# # TODO: solution array to dict: interior, bc
-# cord = pde_disc.geometry.interior
-# ref = ref_sol(cord[:, 0], cord[:, 1])
-# mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
-
-# n = 1
-# for cord in pde_disc.geometry.boundary.values():
-#     ref = ref_sol(cord[:, 0], cord[:, 1])
-#     mse2 += np.linalg.norm(solution[n][:, 0] - ref, ord=2)**2
-#     n += 1
-
-# mse = mse2 / npoints
-
-# print("MSE is: ", mse)
+psci.visu.save_vtk(
+    time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
