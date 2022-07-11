@@ -56,17 +56,116 @@ class EqLoss(FormulaLoss):
         super(EqLoss, self).__init__()
         self._loss_obj = [self]
 
-    def compute(self):
-        rst = 5.0
-        return rst * self._loss_wgt
+    def compute(self, pde, net, input, rhs=None):
+
+        # compute outs, jacobian, hessian
+        cmploss = CompFormula(pde, net)
+        cmploss.compute_outs_der(input, bs)
+
+        # compute rst on left-hand side
+        loss = 0.0
+        for i in range(len(pde.equations)):
+            formula = pde.equations[i]
+            rst = cmploss.compute_formula(formula, input)
+
+            # loss
+            if rhs is None:
+                loss += paddle.norm(rst, p=2) * self._loss_wgt[i]
+            else:
+                loss += paddle.norm(rst - rhs, p=2) * self._loss_wgt[i]
+
+        return loss, cmploss.outs
+
+
+class BcLoss(FormulaLoss):
+    def __init__(self, name):
+        super(BcLoss, self).__init__()
+        self._loss_obj = [self]
+        self._name = name
+
+    def compute(self, pde, net, input, rhs=None):
+
+        # compute outs, jacobian, hessian
+        cmploss = CompFormula(pde, net)
+        cmploss.compute_outs_der(input, bs)
+
+        loss = 0.0
+        for i in range(pde.bc[self._name]):
+            # compute rst on left-hand side
+            formula = pde.bc[self._name][i].formula
+            rst = cmploss.compute_formula(formula, input)
+            # loss 
+            if rhs is None:
+                loss += paddle.norm(rst**2, p=1) * self._loss_wgt
+            else:
+                loss += paddle.norm((rst - rhs)**2, p=1) * self._loss_wgt
+
+        return loss, cmploss.outs
+
+
+class IcLoss(FormulaLoss):
+    def __init__(self):
+        super(IcLoss, self).__init__()
+        self._loss_obj = [self]
+
+    def compute(self, pde, net, input, rhs=None):
+
+        # compute outs
+        cmploss = CompFormula(pde, net)
+        cmploss.compute_outs(input, bs)
+        # loss
+        loss = 0.0
+        for i in range(len(pde.ic)):
+            formula = pde.ic[i].formula
+            rst = cmploss.compute_formula(formula, input)
+            # loss 
+            if rhs is None:
+                loss += paddle.norm(rst**2, p=1) * self._loss_wgt
+            else:
+                loss += paddle.norm((rst - rhs)**2, p=1) * self._loss_wgt
+
+        return loss, cmploss.outs
+
+
+class DataLoss(FormulaLoss):
+    def __init__(self):
+        super(DataLoss, self).__init__()
+        self._loss_obj = [self]
+
+    def compute(self, pde, net, input):
+
+        # compute outs
+        cmploss = CompFormula(pde, net)
+        cmploss.compute_outs(input, bs)
+        # loss
+        loss = 0.0
+        for i in range(len(pde.dvar)):
+            idx = labels_attr["data_next"][i]
+            data = labels[idx]
+            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+
+        loss = self.data_weight * loss
+        return loss, cmploss.outs
 
 
 eqloss1 = EqLoss()
 eqloss2 = EqLoss()
-loss = 3.0 * eqloss1 + eqloss2
+bcloss1 = BcLoss("top")
+loss = eqloss1 + eqloss2 + bcloss1  # loss._loss_obj = [eqloss1, eqloss2, bcloss1]
 
-rst = loss.compute()
+rst = loss.compute(net, pde, input)
 print(rst)
+
+# option 1
+eq_loss = psci.loss.Eqloss()
+bc_loss = psci.loss.BcLoss("top")
+total_loss = [3.0, 2.0] * eq_loss + bc_loss
+
+# option 2
+eq1_loss = psci.loss.Eqloss(1)
+eq2_loss = psci.loss.Eqloss(2)
+bc_loss = psci.loss.BcLoss("top")
+total_loss = 3.0 * eq1_loss + 2.0 * eq2_loss + bc_loss
 
 # print(loss._loss_obj)
 
