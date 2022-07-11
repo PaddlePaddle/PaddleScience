@@ -19,8 +19,6 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
 
 def use_psci_geometry():
     # set geometry and boundary
@@ -43,7 +41,7 @@ def use_psci_geometry():
         hidden_size=50,
         activation='tanh')
 
-    net.initialize('checkpoint/static_model_params_10000.pdparams')
+    net.initialize('checkpoint/dynamic_net_params_10000.pdparams')
 
     # Algorithm
     algo = psci.algorithm.PINNs(net=net)
@@ -67,7 +65,7 @@ def use_data():
         hidden_size=50,
         activation='tanh')
 
-    net.initialize('checkpoint/static_model_params_10000.pdparams')
+    net.initialize('checkpoint/dynamic_net_params_10000.pdparams')
 
     # Algorithm
     algo = psci.algorithm.PINNs(net=net)
