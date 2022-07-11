@@ -84,13 +84,21 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None):
+    def __init__(self, pde=None, algo=None, opt=None, infer_input=None):
         super(Solver, self).__init__()
 
         self.pde = pde
         self.algo = algo
         self.opt = opt
         self._dtype = config._dtype
+
+        if infer_input is not None:
+            self.infer_input = infer_input.astype(self._dtype)
+
+        if self.algo.loss is not None:
+            self.mode = "train"
+        else:
+            self.mode = "inference"
 
         if paddle.in_dynamic_mode():
             self.__init_dynamic()
@@ -118,12 +126,12 @@ class Solver(object):
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self, static_model_file=None, dynamic_net_file=None):
+    def predict(self, input=None):
         if paddle.in_dynamic_mode():
-            return self.__predict_dynamic(dynamic_net_file)
+            return self.__predict_dynamic()
         else:
             if paddle.distributed.get_world_size() == 1:
-                return self.__predict_static(static_model_file)
+                return self.__predict_static()
             else:
                 return self.__predict_static_auto_dist()
 
@@ -147,14 +155,15 @@ class Solver(object):
         #     >>> rslt = solution(geo)
         # """
 
-        # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        if self.mode == "train":
+            # create inputs/labels and its attributes
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+            labels, labels_attr = self.algo.create_labels(self.pde)
 
-        self.inputs = inputs
-        self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
+            self.inputs = inputs
+            self.inputs_attr = inputs_attr
+            self.labels = labels
+            self.labels_attr = labels_attr
 
     # solve static 
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
@@ -320,24 +329,21 @@ class Solver(object):
         writer_data_loss.close()
 
     # predict dynamic
-    def __predict_dynamic(self, dynamic_net_file):
-        if dynamic_net_file == None:
-            print("Please specify the path and name of the dynamic model")
-            exit()
+    def __predict_dynamic(self):
         # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        if self.pde is not None:
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        else:
+            if isinstance(self.infer_input, list):
+                inputs = self.infer_input
+            else:
+                inputs = list()
+                inputs.append(self.infer_input)
 
         # convert inputs to tensor
         for i in range(len(inputs)):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
-
-        # load model
-        layer_state_dict = paddle.load(dynamic_net_file)
-        self.algo.net.set_state_dict(layer_state_dict)
-        if self.opt != None:
-            opt_state_dict = paddle.load(dynamic_opt_file)
-            self.opt.set_state_dict(opt_state_dict)
 
         outs = self.algo.compute_forward(*inputs)
 
@@ -348,90 +354,104 @@ class Solver(object):
 
     # init static
     def __init_static(self):
-
-        # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        if config.prim_enabled() and self.pde.geometry.user is not None:
-            labels, labels_attr = self.algo.create_labels(
-                self.pde,
-                interior_shape=len(self.pde.geometry.interior),
-                supervised_shape=len(self.pde.geometry.user))
+        if self.mode == "train":
+            # create inputs/labels and its attributes
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+            if config.prim_enabled() and self.pde.geometry.user is not None:
+                labels, labels_attr = self.algo.create_labels(
+                    self.pde,
+                    interior_shape=len(self.pde.geometry.interior),
+                    supervised_shape=len(self.pde.geometry.user))
+            else:
+                labels, labels_attr = self.algo.create_labels(self.pde)
         else:
-            labels, labels_attr = self.algo.create_labels(self.pde)
+            if self.pde is not None:
+                inputs, inputs_attr = self.algo.create_inputs(self.pde)
+            else:
+                if isinstance(self.infer_input, list):
+                    inputs = self.infer_input
+                else:
+                    inputs = list()
+                    inputs.append(self.infer_input)
 
         self.inputs = inputs
-        self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
+        if self.mode == "train":
+            self.inputs_attr = inputs_attr
+            self.labels = labels
+            self.labels_attr = labels_attr
 
         # number of inputs and labels
         ninputs = len(self.inputs)
-        nlabels = len(self.labels)
+        if self.mode == "train":
+            nlabels = len(self.labels)
+            inputs_labels = list()
 
         place = paddle.CUDAPlace(0)
         self.exe = paddle.static.Executor(place)
 
-        inputs_labels = list()
+        if self.mode == "train":
+            self.train_program = paddle.static.Program()
+            self.startup_program = paddle.static.Program()
+            # construct train program
+            with paddle.static.program_guard(self.train_program,
+                                             self.startup_program):
 
-        self.train_program = paddle.static.Program()
-        self.startup_program = paddle.static.Program()
-        self.predict_program = paddle.static.Program()
-
-        # construct train program
-        with paddle.static.program_guard(self.train_program,
-                                         self.startup_program):
-
-            # dynamic mode: make network in net's constructor
-            # static  mode: make network here 
-            self.algo.net.make_network_static()
-
-            # inputs
-            for i in range(len(inputs)):
-                #inputs
-                input = paddle.static.data(
-                    name='input' + str(i),
-                    shape=inputs[i].shape,
-                    dtype=self._dtype)
-                input.stop_gradient = False
-                inputs_labels.append(input)
-
-            for i in range(len(labels)):
-                #labels
-                label = paddle.static.data(
-                    name='label' + str(i),
-                    shape=labels[i].shape,
-                    dtype=self._dtype)
-                label.stop_gradient = False
-                inputs_labels.append(label)
-
-            self.loss, self.outs, self.loss_details = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-
-            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
-                assert paddle.in_dynamic_mode(
-                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
-            self.opt.minimize(self.loss)
-
-        # construct predict program
-        with paddle.static.program_guard(self.predict_program):
-            with paddle.utils.unique_name.guard():
-
+                # dynamic mode: make network in net's constructor
+                # static  mode: make network here 
                 self.algo.net.make_network_static()
-                ins = list()
-                for i in range(len(inputs)):
-                    ishape = list(inputs[i].shape)
-                    ishape[0] = -1
-                    input = paddle.static.data(
-                        name='input' + str(i), shape=ishape, dtype=self._dtype)
-                    input.stop_gradient = False
-                    ins.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                # inputs
+                for i in range(len(inputs)):
+                    #inputs
+                    input = paddle.static.data(
+                        name='input' + str(i),
+                        shape=inputs[i].shape,
+                        dtype=self._dtype)
+                    input.stop_gradient = False
+                    inputs_labels.append(input)
+
+                for i in range(len(labels)):
+                    #labels
+                    label = paddle.static.data(
+                        name='label' + str(i),
+                        shape=labels[i].shape,
+                        dtype=self._dtype)
+                    label.stop_gradient = False
+                    inputs_labels.append(label)
+
+                self.loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+
+                if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+                    assert paddle.in_dynamic_mode(
+                    ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
+                self.opt.minimize(self.loss)
+        else:
+            self.predict_program = paddle.static.Program()
+            self.startup_program = paddle.static.Program()
+            # construct predict program
+            with paddle.static.program_guard(self.predict_program,
+                                             self.startup_program):
+                with paddle.utils.unique_name.guard():
+
+                    self.algo.net.make_network_static()
+                    ins = list()
+                    for i in range(len(inputs)):
+                        ishape = list(inputs[i].shape)
+                        ishape[0] = -1
+                        input = paddle.static.data(
+                            name='input' + str(i),
+                            shape=ishape,
+                            dtype=self._dtype)
+                        input.stop_gradient = False
+                        ins.append(input)
+
+                    self.outs_predict = self.algo.compute_forward(*ins)
 
         # startup program
         self.exe.run(self.startup_program)
@@ -503,13 +523,16 @@ class Solver(object):
         return rslt[1:-4]
 
     # predict static
-    def __predict_static(self, static_model_file):
-        if static_model_file == None:
-            print("Please specify the path and name of the static model")
-            exit()
-
+    def __predict_static(self):
         # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        if self.pde is not None:
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        else:
+            if isinstance(self.infer_input, list):
+                inputs = self.infer_input
+            else:
+                inputs = list()
+                inputs.append(self.infer_input)
 
         # feeds inputs
         feeds = dict()
@@ -522,8 +545,11 @@ class Solver(object):
             fetches.append(out.name)
 
         # load model
-        state_dict = paddle.load(static_model_file)
-        self.predict_program.set_state_dict(state_dict)
+        if self.algo.net.params_path is not None:
+            state_dict = paddle.load(self.algo.net.params_path)
+            self.predict_program.set_state_dict(state_dict)
+        else:
+            assert 0, "Please specify the path and name of the static model."
 
         # run
         rslt = self.exe.run(self.predict_program,

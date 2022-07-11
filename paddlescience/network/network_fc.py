@@ -61,6 +61,7 @@ class FCNet(NetworkBase):
             self.make_network_dynamic()
 
         # self.make_network_static()
+        self.params_path = None
 
         # dynamic mode: net's parameters 
         # static  mode: None
@@ -122,6 +123,15 @@ class FCNet(NetworkBase):
         u = paddle.matmul(u, self.weights[-1])
         u = paddle.add(u, self.biases[-1])
         return u
+
+    def initialize(self, params=None):
+        self.params_path = params
+        # In dynamic graph mode, load the params.
+        # In static graph mode, just save the filename 
+        # and initialize it in solver program.
+        if paddle.in_dynamic_mode():
+            layer_state_dict = paddle.load(params)
+            self.set_state_dict(layer_state_dict)
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self.weights + self.biases))

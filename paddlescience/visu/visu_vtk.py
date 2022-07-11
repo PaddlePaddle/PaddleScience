@@ -29,7 +29,7 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
     Parameters:
         filename(string): file name.
         time_array(list or numpy array, optional): time steps list / array.
-        geo_disc (GeometryDiscrete): discrete geometry.
+        geo_disc (GeometryDiscrete or numpy array): discrete geometry.
         data (numpy array): data to be visualized.
 
 
@@ -37,6 +37,14 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         >>> import paddlescience as psci
         >>> psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
     """
+
+    if type(geo_disc) is np.ndarray:
+        if isinstance(data, list) and len(data) == 1:
+            output = data[0]
+            __save_vtk_raw(filename, geo_disc, output)
+        else:
+            assert 0, "geo_disc is GeometryDiscrete or numpy array."
+        return
 
     nt = 1 if (time_array is None) else len(time_array) - 1
     nprocs = paddle.distributed.get_world_size()
@@ -101,8 +109,8 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
         axis_z = cordinate[:, 2].copy()
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
     elif ndims == 2:
-        axis_x = cordinate[:, 0].copy()
-        axis_y = cordinate[:, 1].copy()
+        axis_x = cordinate[:, 0].copy().astype(config._dtype)
+        axis_y = cordinate[:, 1].copy().astype(config._dtype)
         axis_z = np.zeros(npoints, dtype=config._dtype)
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
 
