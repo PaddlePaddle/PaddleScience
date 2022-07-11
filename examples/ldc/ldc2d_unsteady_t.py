@@ -19,7 +19,7 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
+paddle.enable_static()
 # paddle.disable_static()
 
 # set geometry and boundary

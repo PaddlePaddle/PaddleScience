@@ -126,7 +126,7 @@ class Solver(object):
                                                      checkpoint_freq)
 
     # predict (infer)
-    def predict(self, input=None):
+    def predict(self):
         if paddle.in_dynamic_mode():
             return self.__predict_dynamic()
         else:
