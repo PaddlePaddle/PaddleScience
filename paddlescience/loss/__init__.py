@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .loss_L2 import L2
+from .loss_eq import EqLoss
+from .loss_bc import BcLoss
+from .loss_ic import IcLoss
+from .loss_data import DataLoss

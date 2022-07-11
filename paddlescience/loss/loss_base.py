@@ -20,20 +20,6 @@ from ..inputs import InputsAttr
 from paddle.incubate.autograd import Jacobian, Hessian
 
 
-class LossBase(object):
-    def __init__(self, pdes, geo):
-        pass
-
-    def eq_loss(self, net):
-        pass
-
-    def bc_loss(self, net):
-        pass
-
-    def ic_loss(self, net):
-        pass
-
-
 class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
@@ -199,4 +185,35 @@ class CompFormula:
                 var_idx2 = self.indvar.index(item.args[2][0])
                 rst = hessian[f_idx][:, var_idx1, var_idx2]
 
+        return rst
+
+
+class LossFormula:
+    def __init__(self):
+        self._loss_obj = list()
+        self._loss_wgt = 1.0
+
+    # add class
+    def __add__(self, other):
+        floss = LossFormula()
+        floss._loss_obj = self._loss_obj + other._loss_obj
+        return floss
+
+    # multiply scalar (right)
+    def __mul__(self, other):
+        floss = copy.deepcopy(self)
+        floss._loss_wgt *= self._loss_wgt * other
+        return floss
+
+    # multiply scalar (left)
+    def __rmul__(self, other):
+        floss = copy.deepcopy(self)
+        floss._loss_wgt *= self._loss_wgt * other
+        return floss
+
+    # compute loss
+    def compute(self):
+        rst = 0.0
+        for obj in self._loss_obj:
+            rst += obj.compute()
         return rst

@@ -12,43 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import paddle
-# import numpy as np
-# from .loss_base import LossBase, CompFormula
-# from ..labels import LabelInt
+import paddle
+import numpy as np
+from .loss_base import LossBase, CompFormula
+from ..labels import LabelInt
 
 import copy
-
-
-class FormulaLoss:
-    def __init__(self):
-        self._loss_obj = list()
-        self._loss_wgt = 1.0
-
-    # add class
-    def __add__(self, other):
-        floss = FormulaLoss()
-        floss._loss_obj = self._loss_obj + other._loss_obj
-        return floss
-
-    # multiply scalar (right)
-    def __mul__(self, other):
-        floss = copy.deepcopy(self)
-        floss._loss_wgt *= self._loss_wgt * other
-        return floss
-
-    # multiply scalar (left)
-    def __rmul__(self, other):
-        floss = copy.deepcopy(self)
-        floss._loss_wgt *= self._loss_wgt * other
-        return floss
-
-    # compute loss
-    def compute(self):
-        rst = 0.0
-        for obj in self._loss_obj:
-            rst += obj.compute()
-        return rst
 
 
 class EqLoss(FormulaLoss):
@@ -148,24 +117,24 @@ class DataLoss(FormulaLoss):
         return loss, cmploss.outs
 
 
-eqloss1 = EqLoss()
-eqloss2 = EqLoss()
-bcloss1 = BcLoss("top")
-loss = eqloss1 + eqloss2 + bcloss1  # loss._loss_obj = [eqloss1, eqloss2, bcloss1]
+# eqloss1 = EqLoss()
+# eqloss2 = EqLoss()
+# bcloss1 = BcLoss("top")
+# loss = eqloss1 + eqloss2 + bcloss1  # loss._loss_obj = [eqloss1, eqloss2, bcloss1]
 
-rst = loss.compute(net, pde, input)
-print(rst)
+# rst = loss.compute(net, pde, input)
+# print(rst)
 
-# option 1
-eq_loss = psci.loss.Eqloss()
-bc_loss = psci.loss.BcLoss("top")
-total_loss = [3.0, 2.0] * eq_loss + bc_loss
+# # option 1
+# eq_loss = psci.loss.Eqloss()
+# bc_loss = psci.loss.BcLoss("top")
+# total_loss = [3.0, 2.0] * eq_loss + bc_loss
 
-# option 2
-eq1_loss = psci.loss.Eqloss(1)
-eq2_loss = psci.loss.Eqloss(2)
-bc_loss = psci.loss.BcLoss("top")
-total_loss = 3.0 * eq1_loss + 2.0 * eq2_loss + bc_loss
+# # option 2
+# eq1_loss = psci.loss.Eqloss(1)
+# eq2_loss = psci.loss.Eqloss(2)
+# bc_loss = psci.loss.BcLoss("top")
+# total_loss = 3.0 * eq1_loss + 2.0 * eq2_loss + bc_loss
 
 # print(loss._loss_obj)
 
