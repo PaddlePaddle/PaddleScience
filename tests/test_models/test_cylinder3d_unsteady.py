@@ -22,6 +22,7 @@ import wget
 import zipfile
 import sys
 import pytest
+from tool import compare
 
 
 def cylinder3d_unsteady(static=True):
@@ -118,7 +119,7 @@ def cylinder3d_unsteady(static=True):
         activation='tanh')
 
     # Loss
-    loss = psci.loss.L2(p=2)
+    loss = psci.loss.L2(p=2, loss=loss)
 
     # Algorithm
     algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -134,6 +135,7 @@ def cylinder3d_unsteady(static=True):
     current_interior = np.zeros(
         (len(pde_disc.geometry.interior), 3)).astype(np.float32)
     current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
+    rslt = []
     for next_time in range(
             int(pde_disc.time_internal[0]) + 1,
             int(pde_disc.time_internal[1]) + 1):
@@ -143,13 +145,18 @@ def cylinder3d_unsteady(static=True):
         solver.feed_data_user_next(
             GetRealPhyInfo(
                 next_time, need_info='physic'))  # add u(n+1) user
-        next_uvwp = solver.solve(num_epoch=1)
-        for i in range(len(next_uvwp)):
-            assert next_uvwp[i].shape == res_shape[i]
+        next_uvwp = solver.solve(num_epoch=10)
+
+        res = [np.sum(item, axis=0) for item in next_uvwp]
+        rslt.append(res)
 
         # current_info need to be modified as follows: current_time -> next time
         current_interior = np.array(next_uvwp[0])[:, 0:3]
         current_user = np.array(next_uvwp[-1])[:, 0:3]
+    return np.mean(rslt, axis=0)
+
+
+standard = np.load("./standard/cylinder3d_unsteady.npz", allow_pickle=True)
 
 
 @pytest.mark.cylinder3d_unsteady
@@ -159,8 +166,16 @@ def test_cylinder3d_unsteady_0():
     """
     test cylinder3d_steady
     """
-    cylinder3d_unsteady(static=False)
-    cylinder3d_unsteady(static=True)
+    dyn_standard, stc_standard = standard['dyn_solution'], standard[
+        'stc_solution']
+    dyn_rslt = cylinder3d_unsteady(static=False)
+    stc_rslt = cylinder3d_unsteady(static=True)
+
+    print(dyn_standard)
+    print(dyn_rslt)
+    compare(dyn_rslt, stc_rslt, delta=1e-5)
+    compare(dyn_standard, dyn_rslt, mode="equal")
+    compare(stc_standard, stc_rslt, mode="equal")
 
 
 @pytest.mark.cylinder3d_unsteady
@@ -171,7 +186,9 @@ def test_cylinder3d_steady_1():
     test cylinder3d_steady
     distributed case: padding
     """
-    cylinder3d_unsteady()
+    dst_standard = standard['dst_solution']
+    dst_rslt = cylinder3d_unsteady(static=True)
+    compare(dst_standard, dst_rslt, mode="equal")
 
 
 if __name__ == '__main__':
