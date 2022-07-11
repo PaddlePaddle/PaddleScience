@@ -119,10 +119,10 @@ def cylinder3d_unsteady(static=True):
         activation='tanh')
 
     # Loss
-    loss = psci.loss.L2(p=2, loss=loss)
+    loss = psci.loss.L2(p=2, data_weight=100.0)
 
     # Algorithm
-    algo = psci.algorithm.PINNs(net=net, data_weight=100.0)
+    algo = psci.algorithm.PINNs(net=net)
 
     # Optimizer
     opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
