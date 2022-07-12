@@ -19,6 +19,19 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
+# net = psci.network.FCNet(
+#     num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
+
+# net.make_network()
+
+# w1 = paddle.nn.initializer.Constant(2.0)
+# b1 = paddle.nn.initializer.Constant(3.0)
+# net.initialize(n=[1,2], weight_init=w1, bias_init=b1) 
+
+# exit()
+
+import sympy
+
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
@@ -29,7 +42,7 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
-npoints = 10201
+npoints = 16
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace
@@ -39,25 +52,24 @@ pde = psci.pde.Laplace(dim=2)
 bc_around = psci.bc.Dirichlet('u', rhs=ref_sol)
 
 # add bounday and boundary condition
-pde.add_bc("around", bc_around)
+pde.set_bc("around", bc_around)
 
 # discretization pde
 pde_disc = pde.discretize(geo_disc=geo_disc)
 
-# Network
-# TODO: remove num_ins and num_outs
+# network
 net = psci.network.FCNet(
     num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 
 # Loss
-loss = psci.loss.L2()
+loss = psci.loss.EqLoss()
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Lbfgs()
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+# opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
