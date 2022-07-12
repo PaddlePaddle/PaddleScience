@@ -18,9 +18,16 @@ from .loss_base import LossFormula, CompFormula
 
 
 class EqLoss(LossFormula):
-    def __init__(self):
+    def __init__(self, eq=None, output=None):
         super(EqLoss, self).__init__()
-        self._loss_obj = [self]
+        self._loss = [self]
+
+        if eq is not None:
+            self._eq = eq
+
+        if output is not None:
+            self._net = output._net
+            self._input = output._input
 
     def compute(self, pde, net, input, rhs=None):
 

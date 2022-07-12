@@ -61,8 +61,12 @@ pde_disc = pde.discretize(geo_disc=geo_disc)
 net = psci.network.FCNet(
     num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 
-# Loss
-loss = psci.loss.EqLoss()
+input = np.ones((3, 2))
+
+out = net(input)
+loss = psci.loss.EqLoss(eq=pde._equations[0], output=out)
+
+exit()
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -73,7 +77,10 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=25, checkpoint_freq=20)
+
+exit()
+
+solution = solver.solve(num_epoch=1, checkpoint_freq=20)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
