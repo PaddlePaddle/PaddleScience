@@ -84,7 +84,7 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None):
+    def __init__(self, pde, algo, opt=None, inputs_custom=None):
         super(Solver, self).__init__()
 
         self.pde = pde
@@ -93,7 +93,7 @@ class Solver(object):
         self._dtype = config._dtype
 
         if paddle.in_dynamic_mode():
-            self.__init_dynamic()
+            self.__init_dynamic(inputs_custom)
         else:
             if paddle.distributed.get_world_size() == 1:
                 self.__init_static()
@@ -131,7 +131,7 @@ class Solver(object):
                 return self.__predict_static_auto_dist()
 
     # init dynamic
-    def __init_dynamic(self):
+    def __init_dynamic(self, inputs_custom=None):
         # """
         # Train the network with respect to num_epoch.
 
@@ -151,8 +151,14 @@ class Solver(object):
         # """
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        if inputs_custom is None:
+            inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+            labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
+        else:
+            inputs, inputs_attr = self.algo.create_inputs_from_custom(
+                inputs_custom)
+            labels, labels_attr = self.algo.create_labels_from_custom(
+                inputs_custom)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -328,7 +334,7 @@ class Solver(object):
             print("Please specify the path and name of the dynamic model")
             exit()
         # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # convert inputs to tensor
         for i in range(len(inputs)):
@@ -352,8 +358,8 @@ class Solver(object):
     def __init_static(self):
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+        labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -505,7 +511,7 @@ class Solver(object):
             exit()
 
         # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # feeds inputs
         feeds = dict()
@@ -532,8 +538,8 @@ class Solver(object):
     def __init_static_auto_dist(self):
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+        labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -630,7 +636,7 @@ class Solver(object):
     def __predict_static_auto_dist(self):
 
         # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # feeds inputs
         feeds = dict()

@@ -90,7 +90,7 @@ class PINNs(AlgorithmBase):
         return labels, labels_attr
 
     # create inputs used as net input
-    def create_inputs_from_geometry(self, pde):
+    def create_inputs_from_pde(self, pde):
 
         inputs = list()
         inputs_attr = OrderedDict()
@@ -150,7 +150,7 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels_from_geometry(self, pde):
+    def create_labels_from_pde(self, pde):
 
         labels = list()
         labels_attr = OrderedDict()
