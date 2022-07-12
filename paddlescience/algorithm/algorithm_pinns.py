@@ -45,44 +45,49 @@ class PINNs(AlgorithmBase):
         inputs_attr = OrderedDict()
 
         # interior
-        inputs.append(inputs_custom["interior"])
-        inputs_attr_i = OrderedDict()
-        inputs_attr_i["0"] = InputsAttr(0, 0)
-        inputs_attr["interior"] = inputs_attr_i
+        if "interior" in inputs_custom:
+            inputs.append(inputs_custom["interior"])
+            inputs_attr_i = OrderedDict()
+            inputs_attr_i["0"] = InputsAttr(0, 0)
+            inputs_attr["interior"] = inputs_attr_i
 
         # boundary
-        inputs_attr_b = OrderedDict()
-        for name in inputs_custom["boundary"].keys():
-            inputs.append(inputs_custom["boundary"][name])
-            inputs_attr_b[name] = InputsAttr(0, 0)
-        inputs_attr["bc"] = inputs_attr_b
+        if "boundary" in inputs_custom:
+            inputs_attr_b = OrderedDict()
+            for name in inputs_custom["boundary"].keys():
+                inputs.append(inputs_custom["boundary"][name])
+                inputs_attr_b[name] = InputsAttr(0, 0)
+            inputs_attr["bc"] = inputs_attr_b
 
         # initial
-        inputs.append(inputs_custom["initial"])
-        inputs_attr_it = OrderedDict()
-        inputs_attr_it["0"] = InputsAttr(0, 0)
-        inputs_attr["ic"] = inputs_attr_it
+        if "initial" in inputs_custom:
+            inputs.append(inputs_custom["initial"])
+            inputs_attr_it = OrderedDict()
+            inputs_attr_it["0"] = InputsAttr(0, 0)
+            inputs_attr["ic"] = inputs_attr_it
 
-        # supervise
-        inputs.append(inputs_custom["supervise"])
-        inputs_attr_d = OrderedDict()
-        inputs_attr_d["0"] = InputsAttr(0, 0)
-        inputs_attr["user"] = inputs_attr_d
+        # supervised
+        if "supervise" in inputs_custom:
+            inputs.append(inputs_custom["supervise"])
+            inputs_attr_d = OrderedDict()
+            inputs_attr_d["0"] = InputsAttr(0, 0)
+            inputs_attr["user"] = inputs_attr_d
 
         return inputs, inputs_attr
 
-    # def create_labels_from_custom(self, labels_custom):
+    def create_labels_from_custom(self, inputs_custom):
 
-    #     labels = list()
-    #     labels_attr = OrderedDict()
+        labels = list()
+        labels_attr = OrderedDict()
 
-    #     # data next
-    #     labels_attr["user"]["data_next"] = list()
-    #     for i in range(labels_custom["supervised_data"]):
-    #         labels_attr["user"]["data_next"].append(i)
-    #         labels.append(labels_custom["supervised_data"][i]
+        # data next
+        if "supervise_data" in inputs_custom:
+            labels_attr["user"]["data_next"] = list()
+            for i in range(inputs_custom["supervise_data"]):
+                labels.append(inputs_custom["supervise_data"][i])
+                labels_attr["user"]["data_next"].append(i)
 
-    #     return labels, labels_attr  
+        return labels, labels_attr
 
     # create inputs used as net input
     def create_inputs_from_geometry(self, pde):
@@ -145,7 +150,7 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels(self, pde):
+    def create_labels_from_geometry(self, pde):
 
         labels = list()
         labels_attr = OrderedDict()
