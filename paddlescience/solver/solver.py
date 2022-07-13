@@ -148,12 +148,12 @@ class Solver(object):
         # """
 
         # create inputs/labels and its attributes
-        if self.opt is not None:
-            inputs, inputs_attr = self.algo.create_inputs(self.pde)
-            labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        self.inputs = inputs
+        self.inputs_attr = inputs_attr
 
-            self.inputs = inputs
-            self.inputs_attr = inputs_attr
+        if self.opt is not None:
+            labels, labels_attr = self.algo.create_labels(self.pde)
             self.labels = labels
             self.labels_attr = labels_attr
 
@@ -339,31 +339,30 @@ class Solver(object):
 
     # init static
     def __init_static(self):
-        pass
-
-    # solve static
-    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        if config.prim_enabled() and self.pde.geometry.user is not None:
-            labels, labels_attr = self.algo.create_labels(
-                self.pde,
-                interior_shape=len(self.pde.geometry.interior),
-                supervised_shape=len(self.pde.geometry.user))
-        else:
-            labels, labels_attr = self.algo.create_labels(self.pde)
-
         self.inputs = inputs
         self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
 
-        # number of inputs and labels
-        ninputs = len(self.inputs)
-        nlabels = len(self.labels)
+        if self.opt is not None:
+            if config.prim_enabled() and self.pde.geometry.user is not None:
+                labels, labels_attr = self.algo.create_labels(
+                    self.pde,
+                    interior_shape=len(self.pde.geometry.interior),
+                    supervised_shape=len(self.pde.geometry.user))
+            else:
+                labels, labels_attr = self.algo.create_labels(self.pde)
+            self.labels = labels
+            self.labels_attr = labels_attr
 
         place = paddle.CUDAPlace(0)
         self.exe = paddle.static.Executor(place)
+
+    # solve static
+    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
+        # number of inputs and labels
+        ninputs = len(self.inputs)
+        nlabels = len(self.labels)
 
         inputs_labels = list()
 
@@ -379,20 +378,20 @@ class Solver(object):
             self.algo.net.make_network_static()
 
             # inputs
-            for i in range(len(inputs)):
+            for i in range(len(self.inputs)):
                 #inputs
                 input = paddle.static.data(
                     name='input' + str(i),
-                    shape=inputs[i].shape,
+                    shape=self.inputs[i].shape,
                     dtype=self._dtype)
                 input.stop_gradient = False
                 inputs_labels.append(input)
 
-            for i in range(len(labels)):
+            for i in range(len(self.labels)):
                 #labels
                 label = paddle.static.data(
                     name='label' + str(i),
-                    shape=labels[i].shape,
+                    shape=self.labels[i].shape,
                     dtype=self._dtype)
                 label.stop_gradient = False
                 inputs_labels.append(label)
@@ -400,9 +399,9 @@ class Solver(object):
             self.loss, self.outs, self.loss_details = self.algo.compute(
                 *inputs_labels,
                 ninputs=ninputs,
-                inputs_attr=inputs_attr,
+                inputs_attr=self.inputs_attr,
                 nlabels=nlabels,
-                labels_attr=labels_attr,
+                labels_attr=self.labels_attr,
                 pde=self.pde)
 
             if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
@@ -482,24 +481,6 @@ class Solver(object):
 
     # predict static
     def __predict_static(self):
-        # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        if config.prim_enabled() and self.pde.geometry.user is not None:
-            labels, labels_attr = self.algo.create_labels(
-                self.pde,
-                interior_shape=len(self.pde.geometry.interior),
-                supervised_shape=len(self.pde.geometry.user))
-        else:
-            labels, labels_attr = self.algo.create_labels(self.pde)
-
-        self.inputs = inputs
-        self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
-
-        place = paddle.CUDAPlace(0)
-        self.exe = paddle.static.Executor(place)
-
         self.startup_program = paddle.static.Program()
         self.predict_program = paddle.static.Program()
 
@@ -510,8 +491,8 @@ class Solver(object):
 
                 self.algo.net.make_network_static()
                 ins = list()
-                for i in range(len(inputs)):
-                    ishape = list(inputs[i].shape)
+                for i in range(len(self.inputs)):
+                    ishape = list(self.inputs[i].shape)
                     ishape[0] = -1
                     input = paddle.static.data(
                         name='input' + str(i), shape=ishape, dtype=self._dtype)
@@ -525,8 +506,8 @@ class Solver(object):
 
         # feeds inputs
         feeds = dict()
-        for i in range(len(inputs)):
-            feeds['input' + str(i)] = inputs[i]
+        for i in range(len(self.inputs)):
+            feeds['input' + str(i)] = self.inputs[i]
 
         # fetch outputs
         fetches = list()
