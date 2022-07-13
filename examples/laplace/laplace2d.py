@@ -64,7 +64,14 @@ net = psci.network.FCNet(
 input = np.ones((3, 2))
 
 out = net(input)
-loss = psci.loss.EqLoss(eq=pde._equations[0], output=out)
+
+losseq = psci.loss.EqLoss(pde.equations(0), netout=out)
+
+losseq.compute()
+
+lossbc = psci.loss.BcLoss("top", netout=out)
+
+loss = losseq + lossbc
 
 exit()
 

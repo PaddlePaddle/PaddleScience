@@ -187,15 +187,15 @@ class CompFormula:
         return rst
 
 
-class LossFormula:
+class FormulaLoss:
     def __init__(self):
-        self._loss_obj = list()
+        self._loss = list()
         self._loss_wgt = 1.0
 
     # add class
     def __add__(self, other):
-        floss = LossFormula()
-        floss._loss_obj = self._loss_obj + other._loss_obj
+        floss = FormulaLoss()
+        floss._loss = self._loss + other._loss
         return floss
 
     # multiply scalar (right)
@@ -213,6 +213,6 @@ class LossFormula:
     # compute loss
     def compute(self):
         rst = 0.0
-        for obj in self._loss_obj:
+        for obj in self._loss:
             rst += obj.compute()
         return rst

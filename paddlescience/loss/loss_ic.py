@@ -14,13 +14,13 @@
 
 import paddle
 import copy
-from .loss_base import LossFormula, CompFormula
+from .loss_base import FormulaLoss, CompFormula
 
 
-class IcLoss(LossFormula):
+class IcLoss(FormulaLoss):
     def __init__(self):
         super(IcLoss, self).__init__()
-        self._loss_obj = [self]
+        self._loss = [self]
 
     def compute(self, pde, net, input, rhs=None):
 

@@ -14,20 +14,22 @@
 
 import paddle
 import copy
-from .loss_base import LossFormula, CompFormula
+from .loss_base import FormulaLoss, CompFormula
 
 
-class EqLoss(LossFormula):
-    def __init__(self, eq=None, output=None):
+class EqLoss(FormulaLoss):
+    def __init__(self, eq=None, netout=None):
         super(EqLoss, self).__init__()
         self._loss = [self]
 
         if eq is not None:
-            self._eq = eq
+            self._eq = [eq]
 
-        if output is not None:
-            self._net = output._net
-            self._input = output._input
+        if netout is not None:
+            self._net = netout._net
+            self._input = netout._input
+
+    # def __add__(self, other):
 
     def compute(self, pde, net, input, rhs=None):
 
