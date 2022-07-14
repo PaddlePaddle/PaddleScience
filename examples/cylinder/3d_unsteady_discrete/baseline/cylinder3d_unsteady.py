@@ -126,7 +126,7 @@ for next_time in range(
     solver.feed_data_user_next(GetRealPhyInfo(
         next_time, need_info='physic'))  # add u(n+1) user
     next_uvwp = solver.solve(
-        num_epoch=10,
+        num_epoch=2000,
         checkpoint_path='checkpoint/cylinder3d_model_' + str(next_time) + "/")
     # Save vtk
     file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
