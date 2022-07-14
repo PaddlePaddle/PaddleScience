@@ -24,9 +24,6 @@ import zipfile
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-paddle.disable_static()
-
 
 # load real data 
 def GetRealPhyInfo(time, need_info=None):
@@ -129,7 +126,7 @@ for next_time in range(
     solver.feed_data_user_next(GetRealPhyInfo(
         next_time, need_info='physic'))  # add u(n+1) user
     next_uvwp = solver.solve(
-        num_epoch=2000,
+        num_epoch=10,
         checkpoint_path='checkpoint/cylinder3d_model_' + str(next_time) + "/")
     # Save vtk
     file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
@@ -139,34 +136,3 @@ for next_time in range(
     # current_info need to be modified as follows: current_time -> next time
     current_interior = np.array(next_uvwp[0])[:, 0:3]
     current_user = np.array(next_uvwp[-1])[:, 0:3]
-
-# predict
-cc = (0.0, 0.0)
-cr = 1.0
-geo_predict = psci.geometry.CylinderInCube(
-    origin=(-8, -8, -2), extent=(8, 8, 2), circle_center=cc, circle_radius=cr)
-
-solver.pde.geometry = geo_predict.discretize(npoints=5000, method="sampling")
-
-if paddle.in_dynamic_mode():
-    next_uvwp = solver.predict(
-        dynamic_net_file='checkpoint/cylinder3d_model_101/dynamic_net_params_1000.pdparams',
-        dynamic_opt_file='checkpoint/cylinder3d_model_101/dynamic_opt_params_1000.pdopt'
-    )
-else:
-    next_uvwp = solver.predict(
-        static_model_file='checkpoint/cylinder3d_model_101/static_model_params_1000.pdparams'
-    )
-
-# save vtk
-if paddle.in_dynamic_mode():
-    file_path = "predict_cylinder_unsteady_re100/rslt_dynamic_" + str(100)
-else:
-    file_path = "predict_cylinder_unsteady_re100/rslt_static_" + str(100)
-psci.visu.save_vtk(
-    filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
-
-# save npy
-result = next_uvwp[0]
-result = np.array(result)
-np.save("predict_cylinder_unsteady_re100/predict_result.npy", result)
