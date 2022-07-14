@@ -271,7 +271,6 @@ class NavierStokesImplicit(PDE):
             # dependent variable previous time step: u^{n}, v^{n}, p^{n}
             u_n = sympy.Function('u_n')(x, y)
             v_n = sympy.Function('v_n')(x, y)
-            p_n = sympy.Function('p_n')(x, y)
 
             # normal direction
             self.normal = sympy.Symbol('n')
@@ -290,7 +289,8 @@ class NavierStokesImplicit(PDE):
             momentum_x_rhs = 0
             momentum_y_rhs = 0
 
-            super(NavierStokes, self).__init__([x, y], [u, v, p], [u_n, v_n])
+            super(NavierStokes, self).__init__([x, y], [u, v, p])
+            self.dvar_n = [u_n, v_n]
             self.add_equation(continuty, continuty_rhs)
             self.add_equation(momentum_x, momentum_x_rhs)
             self.add_equation(momentum_y, momentum_y_rhs)
@@ -338,6 +338,7 @@ class NavierStokesImplicit(PDE):
 
             super(NavierStokes, self).__init__([x, y, z], [u, v, w, p],
                                                [u_n, v_n, w_n])
+            self.dvar_n = [u_n, v_n, w_n]
             self.add_equation(continuty, continuty_rhs)
             self.add_equation(momentum_x, momentum_x_rhs)
             self.add_equation(momentum_y, momentum_y_rhs)
