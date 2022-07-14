@@ -18,7 +18,7 @@ from .loss_base import FormulaLoss, CompFormula
 
 
 class BcLoss(FormulaLoss):
-    def __init__(self, name):
+    def __init__(self, name, netout=None):
         super(BcLoss, self).__init__()
         self._loss = [self]
         self._name = name

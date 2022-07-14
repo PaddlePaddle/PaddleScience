@@ -20,6 +20,11 @@ from ..labels import LabelInt, LabelHolder
 from collections import OrderedDict
 import numpy as np
 
+from ..loss import EqLoss
+from ..loss import BcLoss
+from ..loss import IcLoss
+from ..loss import DataLoss
+
 
 class PINNs(AlgorithmBase):
     """
@@ -39,53 +44,80 @@ class PINNs(AlgorithmBase):
         self.net = net
         self.loss = loss
 
-    def create_inputs_from_custom(self, inputs_custom):
+        # print(self.loss._loss)
+        # print(type(self.loss._loss[0]))
+        # print(EqLoss)
+
+    def create_inputs_from_loss(self):
 
         inputs = list()
         inputs_attr = OrderedDict()
 
+        inputs_attr_i = OrderedDict()
+        inputs_attr_b = OrderedDict()
+        inputs_attr_it = OrderedDict()
+        inputs_attr_d = OrderedDict()
+
         # interior
-        if "interior" in inputs_custom:
-            inputs.append(inputs_custom["interior"])
-            inputs_attr_i = OrderedDict()
-            inputs_attr_i["0"] = InputsAttr(0, 0)
-            inputs_attr["interior"] = inputs_attr_i
+        for i in self.loss._loss:
+            if type(i) is EqLoss:
+                inputs.append(i._input)
+                inputs_attr_i["0"] = InputsAttr(0, 0)
+                inputs_attr["interior"] = inputs_attr_i
 
         # boundary
-        if "boundary" in inputs_custom:
-            inputs_attr_b = OrderedDict()
-            for name in inputs_custom["boundary"].keys():
-                inputs.append(inputs_custom["boundary"][name])
+        for i in self.loss._loss:
+            if type(i) is BcLoss:
+                name = i._name
+                inputs.append(i._input)
                 inputs_attr_b[name] = InputsAttr(0, 0)
-            inputs_attr["bc"] = inputs_attr_b
 
         # initial
-        if "initial" in inputs_custom:
-            inputs.append(inputs_custom["initial"])
-            inputs_attr_it = OrderedDict()
-            inputs_attr_it["0"] = InputsAttr(0, 0)
-            inputs_attr["ic"] = inputs_attr_it
+        for i in self.loss._loss:
+            if type(i) is IcLoss:
+                inputs.append(i._input)
+                inputs_attr_it["0"] = InputsAttr(0, 0)
+                inputs_attr["ic"] = inputs_attr_it
 
-        # supervised
-        if "supervise" in inputs_custom:
-            inputs.append(inputs_custom["supervise"])
-            inputs_attr_d = OrderedDict()
-            inputs_attr_d["0"] = InputsAttr(0, 0)
-            inputs_attr["user"] = inputs_attr_d
+        # supervise
+        for i in self.loss._loss:
+            if type(i) is DataLoss:
+                inputs.append(i._input)
+                inputs_attr_d["0"] = InputsAttr(0, 0)
+                inputs_attr["user"] = inputs_attr_d
+
+        inputs_attr["interior"] = inputs_attr_i
+        inputs_attr["bc"] = inputs_attr_b
+        inputs_attr["ic"] = inputs_attr_it
+        inputs_attr["user"] = inputs_attr_d
+
+        # print(inputs)
+        # print(inputs_attr)
 
         return inputs, inputs_attr
 
-    def create_labels_from_custom(self, inputs_custom):
+    def create_labels_from_loss(self):
 
         labels = list()
         labels_attr = OrderedDict()
 
-        # data next
-        if "supervise_data" in inputs_custom:
-            labels_attr["user"]["data_next"] = list()
-            for i in range(inputs_custom["supervise_data"]):
-                labels.append(inputs_custom["supervise_data"][i])
-                labels_attr["user"]["data_next"].append(i)
+        # for i in self.loss._loss:
+        #     if is i DataLoss:
+        #         labels.append(i._ref)
+        #         labels_attr_d["0"] = InputsAttr(0, 0)
+        #         labels_attr["user"] = inputs_attr_d
+
+        #     labels_attr["user"]["data_next"] = list()
+        #     for i in range(len(pde.dvar)):
+        #         labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
+        #         labels.append(LabelHolder())
+
+        # # data next
+        # if "supervise_data" in inputs_custom:
+        #     labels_attr["user"]["data_next"] = list()
+        #     for i in range(inputs_custom["supervise_data"]):
+        #         labels.append(inputs_custom["supervise_data"][i])
+        #         labels_attr["user"]["data_next"].append(i)
 
         return labels, labels_attr
 
@@ -333,6 +365,8 @@ class PINNs(AlgorithmBase):
 
     def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
                 labels_attr, pde):
+
+        print(self.loss)
 
         outs = list()
 

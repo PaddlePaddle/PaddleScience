@@ -210,9 +210,23 @@ class FormulaLoss:
         floss._loss_wgt *= self._loss_wgt * other
         return floss
 
-    # compute loss
-    def compute(self):
-        rst = 0.0
-        for obj in self._loss:
-            rst += obj.compute()
-        return rst
+    # eq loss
+    def eq_loss(self, pde, net, input, rhs=None):
+
+        # compute outs, jacobian, hessian
+        cmploss = CompFormula(pde, net)
+        cmploss.compute_outs_der(input, bs)
+
+        # compute rst on left-hand side
+        loss = 0.0
+        for i in self._neq:
+            formula = pde.equations[i]
+            rst = cmploss.compute_formula(formula, input)
+
+            # loss
+            if rhs is None:
+                loss += paddle.norm(rst, p=2) * self._loss_wgt
+            else:
+                loss += paddle.norm(rst - rhs, p=2) * self._loss_wgt
+
+        return loss, cmploss.outs

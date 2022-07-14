@@ -65,18 +65,25 @@ input = np.ones((3, 2))
 
 out = net(input)
 
-losseq = psci.loss.EqLoss(pde.equations(0), netout=out)
+losseq1 = psci.loss.EqLoss({"pde": pde, "neq": 0}, netout=out)
+losseq2 = psci.loss.EqLoss({"pde": pde, "neq": 1}, netout=out)
+# losseq = losseq1 + losseq2
+# lossbc = psci.loss.BcLoss("top", netout=out)
+# loss = losseq + lossbc
 
-losseq.compute()
+#print(loss._loss)
 
-lossbc = psci.loss.BcLoss("top", netout=out)
+#print(type(loss._loss[0]))
 
-loss = losseq + lossbc
-
-exit()
+loss = losseq1 + losseq2
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
+
+# algo.create_inputs_from_loss()
+# algo.create_labels_from_loss()
+
+# exit()
 
 # Optimizer
 opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
@@ -85,9 +92,9 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
-exit()
-
 solution = solver.solve(num_epoch=1, checkpoint_freq=20)
+
+exit()
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

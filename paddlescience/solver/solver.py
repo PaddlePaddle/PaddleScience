@@ -84,7 +84,7 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None, inputs_custom=None):
+    def __init__(self, pde, algo, opt=None):
         super(Solver, self).__init__()
 
         self.pde = pde
@@ -93,7 +93,7 @@ class Solver(object):
         self._dtype = config._dtype
 
         if paddle.in_dynamic_mode():
-            self.__init_dynamic(inputs_custom)
+            self.__init_dynamic()
         else:
             if paddle.distributed.get_world_size() == 1:
                 self.__init_static()
@@ -131,7 +131,7 @@ class Solver(object):
                 return self.__predict_static_auto_dist()
 
     # init dynamic
-    def __init_dynamic(self, inputs_custom=None):
+    def __init_dynamic(self):
         # """
         # Train the network with respect to num_epoch.
 
@@ -151,14 +151,15 @@ class Solver(object):
         # """
 
         # create inputs/labels and its attributes
+
+        inputs_custom = 1
+
         if inputs_custom is None:
             inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
             labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
         else:
-            inputs, inputs_attr = self.algo.create_inputs_from_custom(
-                inputs_custom)
-            labels, labels_attr = self.algo.create_labels_from_custom(
-                inputs_custom)
+            inputs, inputs_attr = self.algo.create_inputs_from_loss()
+            labels, labels_attr = self.algo.create_labels_from_loss()
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr

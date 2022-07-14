@@ -23,13 +23,12 @@ class EqLoss(FormulaLoss):
         self._loss = [self]
 
         if eq is not None:
-            self._eq = [eq]
+            self._pde = eq["pde"]
+            self._neq = eq["neq"]
 
         if netout is not None:
             self._net = netout._net
             self._input = netout._input
-
-    # def __add__(self, other):
 
     def compute(self, pde, net, input, rhs=None):
 
@@ -39,14 +38,14 @@ class EqLoss(FormulaLoss):
 
         # compute rst on left-hand side
         loss = 0.0
-        for i in range(len(pde.equations)):
+        for i in self._neq:
             formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input)
 
             # loss
             if rhs is None:
-                loss += paddle.norm(rst, p=2) * self._loss_wgt[i]
+                loss += paddle.norm(rst, p=2) * self._loss_wgt
             else:
-                loss += paddle.norm(rst - rhs, p=2) * self._loss_wgt[i]
+                loss += paddle.norm(rst - rhs, p=2) * self._loss_wgt
 
         return loss, cmploss.outs
