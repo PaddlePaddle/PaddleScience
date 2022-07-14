@@ -65,8 +65,6 @@ class NavierStokes(PDE):
                  dim=2,
                  time_dependent=False,
                  weight=None):
-        super(NavierStokes, self).__init__(
-            dim + 1, time_dependent=time_dependent, weight=weight)
 
         # parameter list
         self.nu = nu
@@ -80,11 +78,9 @@ class NavierStokes(PDE):
 
         if dim == 2 and time_dependent == False:
 
-            # independent variable
+            # independent and dependent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
-
-            # dependent variable
             u = sympy.Function('u')(x, y)
             v = sympy.Function('v')(x, y)
             p = sympy.Function('p')(x, y)
@@ -95,8 +91,7 @@ class NavierStokes(PDE):
             # continuty equation
             continuty = u.diff(x) + v.diff(y)
             continuty_rhs = 0
-
-            # momentum x equation
+            # momentum equation
             momentum_x = u * u.diff(x) + v * u.diff(y) - nu / rho * u.diff(
                 x).diff(x) - nu / rho * u.diff(y).diff(y) + 1.0 / rho * p.diff(
                     x)
@@ -106,22 +101,10 @@ class NavierStokes(PDE):
             momentum_x_rhs = 0
             momentum_y_rhs = 0
 
-            # variables in order
-            self.indvar = [x, y]
-            self.dvar = [u, v, p]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
+            super(NavierStokes, self).__init__([x, y], [u, v, p])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
 
         elif dim == 2 and time_dependent == True:
 
@@ -152,22 +135,10 @@ class NavierStokes(PDE):
             momentum_x_rhs = 0
             momentum_y_rhs = 0
 
-            # variables in order
-            self.indvar = [t, x, y]
-            self.dvar = [u, v, p]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
+            super(NavierStokes, self).__init__([t, x, y], [u, v, p])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
 
         elif dim == 3 and time_dependent == False:
 
@@ -203,24 +174,11 @@ class NavierStokes(PDE):
             momentum_y_rhs = 0
             momentum_z_rhs = 0
 
-            # variables in order
-            self.indvar = [x, y, z]
-            self.dvar = [u, v, w, p]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.equations.append(momentum_z)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
-            self.rhs.append(momentum_z_rhs)
+            super(NavierStokes, self).__init__([x, y, z], [u, v, w, p])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
+            self.add_equation(momentum_z, momentum_z_rhs)
 
         elif dim == 3 and time_dependent == True:
 
@@ -260,24 +218,11 @@ class NavierStokes(PDE):
             momentum_y_rhs = 0
             momentum_z_rhs = 0
 
-            # variables in order
-            self.indvar = [t, x, y, z]
-            self.dvar = [u, v, w, p]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.equations.append(momentum_z)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
-            self.rhs.append(momentum_z_rhs)
+            super(NavierStokes, self).__init__([t, x, y, z], [u, v, w, p])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
+            self.add_equation(momentum_z, momentum_z_rhs)
 
     def time_discretize(self, time_method=None, time_step=None):
         if time_method is None:
@@ -345,23 +290,10 @@ class NavierStokesImplicit(PDE):
             momentum_x_rhs = 0
             momentum_y_rhs = 0
 
-            # variables in order
-            self.indvar = [x, y]
-            self.dvar = [u, v, p]
-            self.dvar_n = [u_n, v_n]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
+            super(NavierStokes, self).__init__([x, y], [u, v, p], [u_n, v_n])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
 
         elif dim == 3:
             # independent variable
@@ -404,22 +336,9 @@ class NavierStokesImplicit(PDE):
             momentum_y_rhs = 0
             momentum_z_rhs = 0
 
-            # variables in order
-            self.indvar = [x, y, z]
-            self.dvar = [u, v, w, p]
-            self.dvar_n = [u_n, v_n, w_n]
-
-            # order
-            self.order = 2
-
-            # equations and rhs
-            self.equations = list()
-            self.rhs = list()
-            self.equations.append(continuty)
-            self.equations.append(momentum_x)
-            self.equations.append(momentum_y)
-            self.equations.append(momentum_z)
-            self.rhs.append(continuty_rhs)
-            self.rhs.append(momentum_x_rhs)
-            self.rhs.append(momentum_y_rhs)
-            self.rhs.append(momentum_z_rhs)
+            super(NavierStokes, self).__init__([x, y, z], [u, v, w, p],
+                                               [u_n, v_n, w_n])
+            self.add_equation(continuty, continuty_rhs)
+            self.add_equation(momentum_x, momentum_x_rhs)
+            self.add_equation(momentum_y, momentum_y_rhs)
+            self.add_equation(momentum_z, momentum_z_rhs)
