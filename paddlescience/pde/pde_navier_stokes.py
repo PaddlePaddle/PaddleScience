@@ -245,6 +245,10 @@ class NavierStokes(PDE):
 class NavierStokesImplicit(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_step=None, weight=None):
 
+        # time step
+        self.dt = time_step
+        dt = time_step
+
         if dim == 2:
             # independent variable
             x = sympy.Symbol('x')
@@ -340,7 +344,3 @@ class NavierStokesImplicit(PDE):
             self.parameter.append(nu)
         if is_parameter(rho):
             self.parameter.append(rho)
-
-        # time step
-        self.dt = time_step
-        dt = time_step
