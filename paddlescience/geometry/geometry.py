@@ -24,11 +24,12 @@ from pysdf import SDF
 
 # Geometry
 class Geometry:
-    def __init__(self):
+    def __init__(self, tri_mesh=None):
         self.criteria = dict()  # criteria (lambda) defining boundary
         self.mesh_file = dict()
         self.normal = dict()  # boundary normal direction
         self._dtype = config._dtype
+        self.tri_mesh = tri_mesh
 
     def add_boundary(self, name, criteria=None, normal=None, filename=None):
         """
@@ -166,3 +167,35 @@ class Geometry:
             geo_disc.padding(nproc)
 
         return geo_disc
+
+    def __sub__(self, other):
+        return Geometry(self.tri_mesh.boolean_difference(other.tri_mesh))
+
+    def discretize(self, method="sampling", npoints=100, padding=True):
+        pv_mesh = self.tri_mesh
+
+        return pv_mesh.points
+        '''
+        while True:
+            if len(pv_mesh.points) < npoints:
+                pv_mesh = pv_mesh.subdivide(1, 'linear')
+            else:
+                break
+        
+        triangle = pv_mesh
+        triangle_points = np.random.choice(len(triangle.points), npoints)
+        return triangle.points[triangle_points,:]
+        '''
+        # Get (x_min,y_min,z_min) (x_max,y_max,z_max)
+        x_min = np.min(pv_mesh.points[:, 0])
+        x_max = np.max(pv_mesh.points[:, 0])
+
+        y_min = np.min(pv_mesh.points[:, 1])
+        y_max = np.max(pv_mesh.points[:, 1])
+
+        z_min = np.min(pv_mesh.points[:, 2])
+        z_max = np.max(pv_mesh.points[:, 2])
+
+        # sampling in the cube
+
+        # delete or get points in the mesh
