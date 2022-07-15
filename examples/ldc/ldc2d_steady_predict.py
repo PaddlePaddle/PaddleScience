@@ -19,8 +19,6 @@ import paddle
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
 # set geometry and boundary
 geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
@@ -37,10 +35,13 @@ pde_disc = pde.discretize(geo_disc=geo_disc)
 net = psci.network.FCNet(
     num_ins=2, num_outs=3, num_layers=10, hidden_size=50, activation='tanh')
 
-net.initialize('checkpoint/static_model_params_10000.pdparams')
+net.initialize('checkpoint/dynamic_net_params_10000.pdparams')
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net)
+
+# Optimizer
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo)
