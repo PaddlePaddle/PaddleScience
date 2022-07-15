@@ -28,6 +28,8 @@ class FormulaLoss:
 
         self._loss_wgt = 1.0
 
+        self.norm_p = 1
+
     # add class
     def __add__(self, other):
         floss = FormulaLoss()
