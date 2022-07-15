@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import paddle
-from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
 from ..inputs import InputsAttr
 

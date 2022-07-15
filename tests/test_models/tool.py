@@ -15,7 +15,7 @@
 import numpy as np
 
 
-def compare(res, expect, delta=1e-6, rtol=1e-5):
+def compare(res, expect, delta=1e-6, rtol=1e-5, mode="close"):
     """
     比较函数
     :param paddle: paddle结果
@@ -24,16 +24,22 @@ def compare(res, expect, delta=1e-6, rtol=1e-5):
     :return:
     """
     if isinstance(res, np.ndarray):
-        print(1)
         assert res.shape == expect.shape
-        assert np.allclose(res, expect, atol=delta, rtol=rtol, equal_nan=True)
+        if mode == "close":
+            assert np.allclose(
+                res, expect, atol=delta, rtol=rtol, equal_nan=True)
+        elif mode == "equal":
+            res = res.astype(expect.dtype)
+            assert np.array_equal(res, expect, equal_nan=True)
     elif isinstance(res, (list, tuple)):
         for i, j in enumerate(res):
-            compare(j, expect[i], delta, rtol)
-            print(2)
+            compare(j, expect[i], delta, rtol, mode=mode)
     elif isinstance(res, (int, float, complex, bool)):
-        assert np.allclose(res, expect, atol=delta, rtol=rtol, equal_nan=True)
-        print(3)
+        if mode == "close":
+            assert np.allclose(
+                res, expect, atol=delta, rtol=rtol, equal_nan=True)
+        elif mode == "equal":
+            assert np.array_equal(res, expect, equal_nan=True)
     else:
         assert TypeError
 

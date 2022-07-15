@@ -426,6 +426,10 @@ class Solver(object):
                 ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
             self.opt.minimize(self.loss)
 
+            # new ad
+            if config.prim_enabled():
+                config.prim2orig()
+
         # construct predict program
         with paddle.static.program_guard(self.predict_program):
             with paddle.utils.unique_name.guard():
