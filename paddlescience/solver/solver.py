@@ -421,6 +421,10 @@ class Solver(object):
             if config.prim_enabled():
                 config.prim2orig()
 
+            # new ad
+            if config.prim_enabled():
+                config.prim2orig()
+
         # construct predict program
         with paddle.static.program_guard(self.predict_program):
             with paddle.utils.unique_name.guard():

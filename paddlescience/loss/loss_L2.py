@@ -16,14 +16,34 @@ import paddle
 import numpy as np
 from .loss_base import LossBase, CompFormula
 from ..labels import LabelInt
+from .. import config
 
 
-def l2_norm_square(x, scale=None):
-    if scale is None:
-        l2_norm = paddle.norm(x, p=2)
+def l2_norm_square(x, wgt=None):
+    # new ad
+    if config.prim_enabled():
+        if wgt is None:
+            l2_norm = paddle.norm(x, p=2)
+        elif np.isscalar(wgt):
+            wgt2 = np.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        else:
+            wgt2 = paddle.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        return l2_norm * l2_norm
     else:
-        l2_norm = paddle.norm(x * scale, p=2) / scale
-    return l2_norm * l2_norm
+        if wgt is None:
+            return paddle.norm(x**2, p=1)
+        else:
+            return paddle.norm(x**2 * wgt, p=1)
+
+
+# def l2_norm_square(x, scale=None):
+#     if scale is None:
+#         l2_norm = paddle.norm(x, p=2)
+#     else:
+#         l2_norm = paddle.norm(x * scale, p=2) / scale
+#     return l2_norm * l2_norm
 
 
 class L2(LossBase):
@@ -83,15 +103,9 @@ class L2(LossBase):
                 # TODO: error out
 
             if rhs is None:
-                if wgt is None:
-                    loss += l2_norm_square(rst)
-                else:
-                    loss += l2_norm_square(rst * np.sqrt(wgt), 10000)
+                loss += l2_norm_square(rst, wgt)
             else:
-                if wgt is None:
-                    loss += l2_norm_square(rst - rhs)
-                else:
-                    loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
+                loss += l2_norm_square((rst - rhs), wgt)
 
         return loss, cmploss.outs
 
@@ -129,17 +143,12 @@ class L2(LossBase):
 
             # print("rst: ", rst.shape)
             # print("rhs: ", rhs.shape)
+            # print("wgt: ", wgt)
 
             if rhs is None:
-                if wgt is None:
-                    loss += l2_norm_square(rst)
-                else:
-                    loss += l2_norm_square(rst * np.sqrt(wgt), 10000)
+                loss += l2_norm_square(rst, wgt)
             else:
-                if wgt is None:
-                    loss += l2_norm_square(rst - rhs)
-                else:
-                    loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
+                loss += l2_norm_square((rst - rhs), wgt)
 
             # print("rhs: ", rhs)
             # exit()
@@ -164,7 +173,7 @@ class L2(LossBase):
             else:
                 rhs = rhs_c
             wgt = labels_attr["ic"][i]["weight"]
-            loss += l2_norm_square((rst - rhs) * np.sqrt(wgt), 10000)
+            loss += l2_norm_square(rst - rhs, wgt)
 
         return loss, cmploss.outs
 

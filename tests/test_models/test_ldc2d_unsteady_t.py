@@ -44,7 +44,7 @@ def ldc2d_unsteady_t(static=True):
     # N-S
     pde = psci.pde.NavierStokes(
         nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
-    pde.set_time_interval([0.0, 0.2])
+    pde.set_time_interval([0.0, 0.5])
 
     # set bounday condition
     weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
@@ -91,9 +91,12 @@ def ldc2d_unsteady_t(static=True):
 
     # Solver
     solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-    solution = solver.solve(num_epoch=1)
+    solution = solver.solve(num_epoch=25)
 
     return solution
+
+
+standard_value = np.load("standard/ldc2d_unsteady_t.npz", allow_pickle=True)
 
 
 @pytest.mark.ldc2d_unsteady_t
@@ -103,13 +106,15 @@ def test_ldc2d_unsteady_t_0():
     """
     test ldc2d_steady
     """
-    standard_value = np.load(
-        "standard/ldc2d_unsteady_t.npz", allow_pickle=True)
-    solution = standard_value['solution'].tolist()
+    dyn_solution = standard_value['dyn_solution'].tolist()
+    stc_solution = standard_value['stc_solution'].tolist()
     dynamic_rslt = ldc2d_unsteady_t(static=False)
+    print(dynamic_rslt)
     static_rslt = ldc2d_unsteady_t()
     compare(dynamic_rslt, static_rslt)
-    compare(solution, static_rslt)
+
+    compare(dyn_solution, dynamic_rslt, delta=1e-7)
+    compare(stc_solution, static_rslt, delta=1e-7)
 
 
 @pytest.mark.ldc2d_unsteady_t
@@ -120,11 +125,9 @@ def test_ldc2d_unsteady_t_1():
     test ldc2d_steady
     distributed case: padding
     """
-    standard_value = np.load(
-        "standard/ldc2d_unsteady_t.npz", allow_pickle=True)
     solution = standard_value['dst_solution'].tolist()
     static_rslt = ldc2d_unsteady_t()
-    compare(solution, static_rslt, delta=1e-5)
+    compare(solution, static_rslt, delta=1e-7)
 
 
 if __name__ == '__main__':
