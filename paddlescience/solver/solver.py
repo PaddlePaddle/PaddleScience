@@ -151,8 +151,8 @@ class Solver(object):
         # """
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+        labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -328,7 +328,7 @@ class Solver(object):
             print("Please specify the path and name of the dynamic model")
             exit()
         # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # convert inputs to tensor
         for i in range(len(inputs)):
@@ -352,14 +352,14 @@ class Solver(object):
     def __init_static(self):
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
         if config.prim_enabled() and self.pde.geometry.user is not None:
-            labels, labels_attr = self.algo.create_labels(
+            labels, labels_attr = self.algo.create_labels_from_pde(
                 self.pde,
                 interior_shape=len(self.pde.geometry.interior),
                 supervised_shape=len(self.pde.geometry.user))
         else:
-            labels, labels_attr = self.algo.create_labels(self.pde)
+            labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -515,7 +515,7 @@ class Solver(object):
             exit()
 
         # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # feeds inputs
         feeds = dict()
@@ -542,8 +542,8 @@ class Solver(object):
     def __init_static_auto_dist(self):
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+        labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -640,7 +640,7 @@ class Solver(object):
     def __predict_static_auto_dist(self):
 
         # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
 
         # feeds inputs
         feeds = dict()

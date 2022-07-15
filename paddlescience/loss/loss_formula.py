@@ -49,7 +49,6 @@ class FormulaLoss:
         floss._loss_wgt *= self._loss_wgt * other
         return floss
 
-    # compute equation loss 
     def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -57,9 +56,12 @@ class FormulaLoss:
         # compute outs, jacobian, hessian
         cmploss.compute_outs_der(input, bs)
 
+        # print(input)
+        # print(cmploss.outs[0:4,:])
+
         loss = 0.0
-        for i in range(len(self._eqlist)):
-            formula = self._eqlist[i]
+        for i in range(len(pde.equations)):
+            formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 

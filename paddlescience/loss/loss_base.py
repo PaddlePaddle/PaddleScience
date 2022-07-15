@@ -15,6 +15,7 @@
 import paddle
 import sympy
 from ..inputs import InputsAttr
+from .. import config
 
 from paddle.incubate.autograd import Jacobian, Hessian
 
