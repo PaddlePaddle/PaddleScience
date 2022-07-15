@@ -66,16 +66,6 @@ class NavierStokes(PDE):
                  time_dependent=False,
                  weight=None):
 
-        # parameter list
-        self.nu = nu
-        self.rho = rho
-        if is_parameter(nu):
-            self.parameter.append(nu)
-        if is_parameter(rho):
-            self.parameter.append(rho)
-
-        self.dim = dim
-
         if dim == 2 and time_dependent == False:
 
             # independent and dependent variable
@@ -225,6 +215,16 @@ class NavierStokes(PDE):
             self.add_equation(momentum_y, momentum_y_rhs)
             self.add_equation(momentum_z, momentum_z_rhs)
 
+        # parameter list
+        self.nu = nu
+        self.rho = rho
+        if is_parameter(nu):
+            self.parameter.append(nu)
+        if is_parameter(rho):
+            self.parameter.append(rho)
+
+        self.dim = dim
+
     def time_discretize(self, time_method=None, time_step=None):
         if time_method is None:
             pde_disc = self
@@ -244,19 +244,6 @@ class NavierStokes(PDE):
 
 class NavierStokesImplicit(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_step=None, weight=None):
-
-        self.time_dependent = True
-        self.time_disc_method = "implicit"
-
-        # parameter list
-        if is_parameter(nu):
-            self.parameter.append(nu)
-        if is_parameter(rho):
-            self.parameter.append(rho)
-
-        # time step
-        self.dt = time_step
-        dt = time_step
 
         if dim == 2:
             # independent variable
@@ -344,3 +331,16 @@ class NavierStokesImplicit(PDE):
             self.add_equation(momentum_x, momentum_x_rhs)
             self.add_equation(momentum_y, momentum_y_rhs)
             self.add_equation(momentum_z, momentum_z_rhs)
+
+        # parameter list
+        self.time_dependent = True
+        self.time_disc_method = "implicit"
+
+        if is_parameter(nu):
+            self.parameter.append(nu)
+        if is_parameter(rho):
+            self.parameter.append(rho)
+
+        # time step
+        self.dt = time_step
+        dt = time_step
