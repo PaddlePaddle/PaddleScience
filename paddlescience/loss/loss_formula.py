@@ -17,16 +17,20 @@ import numpy as np
 from .loss_base import CompFormula, l2_norm_square
 from ..labels import LabelInt
 from .. import config
+import copy
 
 
 class FormulaLoss:
     def __init__(self):
         self._eqlist = list()
         self._bclist = list()
-        self._iclist = list()
-        self._datalist = list()
+        self._iclist = False
+        self._datalist = False
 
-        self._loss_wgt = 1.0
+        self._eqwgt = list()
+        self._bcwgt = list()
+        self._icwgt = list()
+        self._datawgt = list()
 
         self.norm_p = 1
 
@@ -37,18 +41,29 @@ class FormulaLoss:
         floss._bclist = self._bclist + other._bclist
         floss._iclist = self._iclist + other._iclist
         floss._datalist = self._datalist + other._datalist
+        floss._eqwgt = self._eqwgt + other._eqwgt
+        floss._bcwgt = self._bcwgt + other._bcwgt
+        floss._icwgt = self._icwgt + other._icwgt
+        floss._datawgt = self._datawgt + other._datawgt
         return floss
 
     # multiply scalar (right)
-    def __mul__(self, other):
+    def __mul__(self, weight):
         floss = copy.deepcopy(self)
-        floss._loss_wgt *= self._loss_wgt * other
+        for i in range(len(floss._eqwgt)):
+            floss._eqwgt[i] *= weight
+        for i in range(len(floss._bcwgt)):
+            floss._bcwgt[i] *= weight            
+        for i in range(len(floss._icwgt)):
+            floss._icwgt[i] *= weight    
+        for i in range(len(floss._datawgt)):
+            floss._datawgt[i] *= weight
         return floss
 
     # multiply scalar (left)
     def __rmul__(self, other):
         floss = copy.deepcopy(self)
-        floss._loss_wgt *= self._loss_wgt * other
+        self.__mul__(other)
         return floss
 
     def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
@@ -64,6 +79,12 @@ class FormulaLoss:
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
+
+            if formula not in self._eqlist:
+                continue
+            else:
+                idx = self._eqlist.index(formula)
+
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 
@@ -74,16 +95,7 @@ class FormulaLoss:
             else:
                 rhs = rhs_eq
 
-            wgt_eq = labels_attr["equations"][i]["weight"]
-            if wgt_eq is None:
-                wgt = None
-            elif type(wgt_eq) == LabelInt:
-                wgt = labels[wgt_eq]
-            elif np.isscalar(wgt_eq):
-                wgt = wgt_eq
-            else:
-                pass
-                # TODO: error out
+            wgt = self._eqwgt[idx]
 
             if rhs is None:
                 loss += l2_norm_square(rst, wgt)
@@ -116,13 +128,8 @@ class FormulaLoss:
             else:
                 rhs = rhs_b
 
-            wgt_b = labels_attr["bc"][name_b][i]["weight"]
-            if wgt_b is None:
-                wgt = None
-            elif type(wgt_b) == LabelInt:
-                wgt = labels[wgt_b]
-            else:
-                wgt = wgt_b
+            idx = self._bclist.index(name_b)
+            wgt = self._bcwgt[idx]
 
             if rhs is None:
                 loss += l2_norm_square(rst, wgt)
@@ -173,25 +180,30 @@ class FormulaLoss:
 
 
 def EqLoss(eq, netout=None):
-
     floss = FormulaLoss()
     floss._eqlist = [eq]
+    floss._eqwgt = [1.0]
     return floss
 
 
 def BcLoss(name, netout=None):
     floss = FormulaLoss()
     floss._bclist = [name]
+    floss._bcwgt = [1.0]
     return floss
 
 
 def IcLoss():
     floss = FormulaLoss()
+    floss._iclist = True
+    floss._icwgt = [1.0]
     return floss
 
 
 def DataLoss():
     floss = FormulaLoss()
+    floss._datalist = True
+    floss._datawgt = [1.0]
     return floss
 
     # if netout is not None:
