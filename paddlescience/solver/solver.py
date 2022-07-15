@@ -184,7 +184,7 @@ class Solver(object):
         inputs_labels = inputs + labels  # tmp to one list
 
         print("Dynamic graph is currently used.")
-        if paddle.config.visualdl_enabled() == True:
+        if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
                 logdir=checkpoint_path + 'visualDL/eq_loss')
@@ -220,7 +220,7 @@ class Solver(object):
                       loss_details[3].numpy()[0])
 
                 # write loss for visual DL
-                if paddle.config.visualdl_enabled() == True:
+                if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
                         tag="loss", step=epoch, value=loss.numpy()[0])
                     writer_eq_loss.add_scalar(
@@ -284,7 +284,7 @@ class Solver(object):
                       self.loss_details[3].numpy()[0])
 
                 # write loss for visual DL
-                if paddle.config.visualdl_enabled() == True:
+                if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
                         tag="loss", step=epoch, value=results[3].numpy()[0])
                     writer_eq_loss.add_scalar(
@@ -322,7 +322,7 @@ class Solver(object):
             exit()
 
         # close writer in visual DL
-        if paddle.config.visualdl_enabled() == True:
+        if config.visualdl_enabled() == True:
             writer_loss.close()
             writer_eq_loss.close()
             writer_bc_loss.close()
@@ -476,7 +476,7 @@ class Solver(object):
 
         # main loop
         print("Static graph is currently used.")
-        if paddle.config.visualdl_enabled() == True:
+        if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
                 logdir=checkpoint_path + 'visualDL/eq_loss')
@@ -495,7 +495,7 @@ class Solver(object):
                   " data loss:", rslt[-1])
 
             # write loss for visual DL
-            if paddle.config.visualdl_enabled() == True:
+            if config.visualdl_enabled() == True:
                 writer_loss.add_scalar(tag="loss", step=epoch, value=rslt[0])
                 writer_eq_loss.add_scalar(
                     tag="detail_loss", step=epoch, value=rslt[-4])
@@ -512,7 +512,7 @@ class Solver(object):
                             str(epoch + 1) + '.pdparams')
 
         # close writer in visual DL
-        if paddle.config.visualdl_enabled() == True:
+        if config.visualdl_enabled() == True:
             writer_loss.close()
             writer_eq_loss.close()
             writer_bc_loss.close()
