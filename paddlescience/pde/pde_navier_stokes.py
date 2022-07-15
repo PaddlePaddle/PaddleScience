@@ -64,7 +64,7 @@ class NavierStokes(PDE):
                  rho=1.0,
                  dim=2,
                  time_dependent=False,
-                 weight=1.0):
+                 weight=None):
 
         # parameter list
         self.nu = nu
