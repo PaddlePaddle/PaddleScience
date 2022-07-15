@@ -15,6 +15,7 @@
 import paddle
 import paddle.nn.functional as F
 from .network_base import NetworkBase
+import numpy as np
 
 
 class FCNet(NetworkBase):
@@ -129,28 +130,67 @@ class FCNet(NetworkBase):
 
     def reconstruct(self, param_data):
         params = self.weights + self.biases
-        param_sizes = [param.size for param in params]
+        # param_sizes = [param.size for param in params]
+
+        param_sizes = []
+        weights_size = []
+        bias_size = []
+        for i in range(self.num_layers):
+            if i == 0:
+                lsize = self.num_ins
+                rsize = self.hidden_size
+            elif i == (self.num_layers - 1):
+                lsize = self.hidden_size
+                rsize = self.num_outs
+            else:
+                lsize = self.hidden_size
+                rsize = self.hidden_size
+
+            weights_size.append(lsize * rsize)
+            bias_size.append(rsize)
+
+        param_sizes = weights_size + bias_size
+
         flat_params = paddle.split(param_data, param_sizes)
         is_biases = [False for _ in self.weights] + [True for _ in self.biases]
 
-        self.weights = []
-        self.biases = []
+        #self.weights = []
+        #self.biases = []
+
+        weight_index = 0
+        bias_index = 0
+
+        paddle.static.Print(self.weights[0], message="parameter_before")
 
         for old_param, flat_param, is_bias in zip(params, flat_params,
                                                   is_biases):
             shape = old_param.shape
             value = paddle.reshape(flat_param, shape)
-            # new_param = self.create_parameter(shape,
-            #                                   dtype=self.dtype,
-            #                                   is_bias=is_bias,
-            #                                   default_initializer=Assign(value))
-            # if is_bias:
-            #     self.biases.append(new_param)
-            # else:
-            #     self.weights.append(new_param)
-            # self.add_parameter(old_param.name.split('.')[-1], new_param)
-            new_param = value
-            if is_bias:
-                self.biases.append(new_param)
+            if not paddle.in_dynamic_mode():
+                # new_param = self.create_parameter(
+                #     shape,
+                #     dtype=self._dtype,
+                #     is_bias=is_bias,
+                #     default_initializer=None
+                # ) 
+                # new_param = paddle.full(shape=shape, fill_value=0, dtype=self._dtype)
+                # paddle.assign(new_param, value)
+                if is_bias:
+                    #self.biases.append(new_param)
+                    #self.biases[bias_index].assign(new_param)
+                    paddle.assign(self.biases[bias_index], value)
+                    bias_index += 1
+                else:
+                    #self.weights.append(new_param)
+                    #self.weights[weight_index].assign(new_param)
+                    paddle.assign(self.weights[weight_index], value)
+                    weight_index += 1
+                #self.add_parameter(old_param.name.split('.')[-1], new_param)
             else:
-                self.weights.append(new_param)
+                new_param = value
+                if is_bias:
+                    self.biases.append(new_param)
+                else:
+                    self.weights.append(new_param)
+
+        paddle.static.Print(self.weights[0], message="parameter_after")
