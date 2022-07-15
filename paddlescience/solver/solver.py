@@ -47,7 +47,7 @@ class ModelStatic(paddle.nn.Layer):
         self.nlabels = nlabels
         self.labels_attr = labels_attr
 
-        self.algo.net.make_network_static()
+        self.algo.net.make_network()
 
     def forward(self, *inputs_labels):
         for input in inputs_labels:
@@ -209,9 +209,9 @@ class Solver(object):
                 self.opt.step()
                 self.opt.clear_grad()
 
-                print("epoch: " + str(epoch + 1), " loss:",
-                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
-                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                print("epoch: " + str(epoch + 1), " loss:", loss.numpy()[0],
+                      " eq loss:", loss_details[0].numpy()[0], " bc loss:",
+                      loss_details[1].numpy()[0], " ic loss:",
                       loss_details[2].numpy()[0], " data loss:",
                       loss_details[3].numpy()[0])
 
@@ -385,7 +385,7 @@ class Solver(object):
 
             # dynamic mode: make network in net's constructor
             # static  mode: make network here 
-            self.algo.net.make_network_static()
+            self.algo.net.make_network()
 
             # inputs
             for i in range(len(inputs)):
@@ -427,7 +427,7 @@ class Solver(object):
         with paddle.static.program_guard(self.predict_program):
             with paddle.utils.unique_name.guard():
 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
                 ins = list()
                 for i in range(len(inputs)):
                     ishape = list(inputs[i].shape)
@@ -608,7 +608,7 @@ class Solver(object):
         with paddle.static.program_guard(self.predict_auto_dist_program):
             with paddle.utils.unique_name.guard():
 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
                 ins = list()
                 for i in range(len(inputs)):
                     ishape = list(inputs[i].shape)
