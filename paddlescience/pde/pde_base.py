@@ -41,7 +41,7 @@ class PDE:
         >>> pde.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y))
     """
 
-    def __init__(self, indvar, dvar, dvar_n=None):
+    def __init__(self, indvar, dvar, weight=None):
 
         # independent variable
         if type(indvar) is list or type(indvar) is tuple:
@@ -56,12 +56,7 @@ class PDE:
             pass  # TODO: error out
 
         # dependent variable on previous time step n-1
-        if dvar_n is None:
-            self.dvar_n = list()
-        elif type(dvar_n) is list or type(dvar_n) is tuple:
-            self.dvar_n = dvar_n
-        else:
-            pass  # TODO: error out
+        self.dvar_n = list()
 
         # time dependent / time independent
         self.time_dependent = False
@@ -90,7 +85,7 @@ class PDE:
         self.geometry = None
 
         # weight
-        self.weight = 0.0  # TODO
+        self.weight = weight
 
         # rhs disc
         self.rhs_disc = list()
