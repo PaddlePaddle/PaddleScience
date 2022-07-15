@@ -64,7 +64,7 @@ class NavierStokes(PDE):
                  rho=1.0,
                  dim=2,
                  time_dependent=False,
-                 weight=None):
+                 weight=1.0):
 
         # parameter list
         self.nu = nu
@@ -243,7 +243,6 @@ class NavierStokes(PDE):
 
 class NavierStokesImplicit(PDE):
     def __init__(self, nu=0.01, rho=1.0, dim=2, time_step=None, weight=None):
-        super(NavierStokesImplicit, self).__init__(dim + 1, weight=weight)
 
         self.time_dependent = True
         self.time_disc_method = "implicit"
@@ -289,7 +288,7 @@ class NavierStokesImplicit(PDE):
             momentum_x_rhs = 0
             momentum_y_rhs = 0
 
-            super(NavierStokes, self).__init__([x, y], [u, v, p])
+            super(NavierStokesImplicit, self).__init__([x, y], [u, v, p])
             self.dvar_n = [u_n, v_n]
             self.add_equation(continuty, continuty_rhs)
             self.add_equation(momentum_x, momentum_x_rhs)
@@ -336,8 +335,7 @@ class NavierStokesImplicit(PDE):
             momentum_y_rhs = 0
             momentum_z_rhs = 0
 
-            super(NavierStokes, self).__init__([x, y, z], [u, v, w, p],
-                                               [u_n, v_n, w_n])
+            super(NavierStokesImplicit, self).__init__([x, y, z], [u, v, w, p])
             self.dvar_n = [u_n, v_n, w_n]
             self.add_equation(continuty, continuty_rhs)
             self.add_equation(momentum_x, momentum_x_rhs)

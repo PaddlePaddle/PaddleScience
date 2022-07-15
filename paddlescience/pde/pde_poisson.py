@@ -45,7 +45,7 @@ class Poisson(PDE):
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
             u = sympy.Function('u')(x, y)
-            super(Poisson, self).__init__([x, y], [u])
+            super(Poisson, self).__init__([x, y], [u], weight)
             self.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y), rhs)
 
         elif dim == 3:
@@ -55,6 +55,6 @@ class Poisson(PDE):
             z = sympy.Symbol('z')
             u = sympy.Function('u')(x, y, z)
 
-            super(Poisson, self).__init__([x, y, z], [u])
+            super(Poisson, self).__init__([x, y, z], [u], weight)
             self.add_equation(
                 u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z), rhs)

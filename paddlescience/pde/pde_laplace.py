@@ -39,7 +39,7 @@ class Laplace(PDE):
             # independent and dependent variable
             x = sympy.Symbol('x')
             u = sympy.Function('u')(x, )
-            super(Laplace, self).__init__([x], [u])
+            super(Laplace, self).__init__([x], [u], weight)
             self.add_equation(u.diff(x).diff(x))
 
         elif dim == 2:
@@ -47,7 +47,7 @@ class Laplace(PDE):
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
             u = sympy.Function('u')(x, y)
-            super(Laplace, self).__init__([x, y], [u])
+            super(Laplace, self).__init__([x, y], [u], weight)
             self.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y))
 
         elif dim == 3:
@@ -56,6 +56,6 @@ class Laplace(PDE):
             y = sympy.Symbol('y')
             z = sympy.Symbol('z')
             u = sympy.Function('u')(x, y, z)
-            super(Laplace, self).__init__([x, y, z], [u])
+            super(Laplace, self).__init__([x, y, z], [u], weight)
             self.add_equation(
                 u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z))
