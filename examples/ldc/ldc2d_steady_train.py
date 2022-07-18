@@ -71,7 +71,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=20)
+solution = solver.solve(num_epoch=20000)
 
 solution = solver.predict()
 
