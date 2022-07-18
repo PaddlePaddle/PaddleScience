@@ -24,14 +24,13 @@ from pysdf import SDF
 
 # Geometry
 class Geometry:
-    def __init__(self, tri_mesh=None):
+    def __init__(self):
         self.criteria = dict()  # criteria (lambda) defining boundary
-        self.mesh_file = dict()
+        self.tri_mesh = dict()
         self.normal = dict()  # boundary normal direction
         self._dtype = config._dtype
-        self.tri_mesh = tri_mesh
 
-    def add_boundary(self, name, criteria=None, normal=None, filename=None):
+    def add_boundary(self, name, criteria=None, normal=None, tri_mesh=None):
         """
         Add (specify) bounday in geometry
 
@@ -49,8 +48,8 @@ class Geometry:
             self.criteria[name] = criteria
             self.normal[name] = normal
 
-        if filename != None:
-            self.mesh_file[name] = filename
+        if tri_mesh != None:
+            self.tri_mesh[name] = tri_mesh
 
     def delete_boundary(self, name):
         """
@@ -72,8 +71,8 @@ class Geometry:
         if name in self.normal:
             del self.normal[name]
 
-        if name in self.mesh_file:
-            del self.mesh_file[name]
+        if name in self.tri_mesh:
+            del self.tri_mesh[name]
 
     def clear_boundary(self):
         """
@@ -89,24 +88,37 @@ class Geometry:
 
         self.criteria.clear()
         self.normal.clear()
-        self.mesh_file.clear()
+        self.tri_mesh.clear()
 
-    def _is_inside_mesh(self, points, filename):
+    def _is_inside_mesh(self, points, tri_mesh):
 
-        mesh_model = pv.read(filename)
+        if isinstance(tri_mesh, str):
+            mesh_model = pv.read(tri_mesh)
+        else:
+            mesh_model = tri_mesh
+
+        # The mesh must be manifold and need to be triangulate
+        if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
+            assert 0, "The mesh must be manifold and need to be triangulate."
+
+        # The all the faces of mesh must be triangles
         faces_as_array = mesh_model.faces.reshape(
             (mesh_model.n_faces, 4))[:, 1:]
 
-        sdf = SDF(mesh_model.points, faces_as_array)
+        sdf = SDF(mesh_model.points, faces_as_array, False)
 
         origin_contained = sdf.contains(points)
 
         return origin_contained
 
-    def _get_points_from_meshfile(self, filename):
+    def _get_points_from_meshfile(self, tri_mesh):
 
-        mesh_model = pv.read(filename)
+        if isinstance(tri_mesh, str):
+            mesh_model = pv.read(tri_mesh)
+        else:
+            mesh_model = tri_mesh
 
+        # TODO(liu-xiandong): Need to increase sampling points on the boundary
         return mesh_model.points
 
     # select boundaries from all points and construct disc geometry
@@ -143,18 +155,18 @@ class Geometry:
             geo_disc.normal[name] = normal_disc
 
         # boundary points defined by mesh_file
-        for name in self.mesh_file.keys():
+        for name in self.tri_mesh.keys():
 
             # flag boundary points which inside the mesh
             flag_inside_mesh = self._is_inside_mesh(points,
-                                                    self.mesh_file[name])
+                                                    self.tri_mesh[name])
 
             # set extracted points as False
             flag_i[flag_inside_mesh] = False
 
             # add boundary points
             geo_disc.boundary[name] = self._get_points_from_meshfile(
-                self.mesh_file[name])
+                self.tri_mesh[name])
 
             # TODO: normal
 
@@ -167,35 +179,3 @@ class Geometry:
             geo_disc.padding(nproc)
 
         return geo_disc
-
-    def __sub__(self, other):
-        return Geometry(self.tri_mesh.boolean_difference(other.tri_mesh))
-
-    def discretize(self, method="sampling", npoints=100, padding=True):
-        pv_mesh = self.tri_mesh
-
-        return pv_mesh.points
-        '''
-        while True:
-            if len(pv_mesh.points) < npoints:
-                pv_mesh = pv_mesh.subdivide(1, 'linear')
-            else:
-                break
-        
-        triangle = pv_mesh
-        triangle_points = np.random.choice(len(triangle.points), npoints)
-        return triangle.points[triangle_points,:]
-        '''
-        # Get (x_min,y_min,z_min) (x_max,y_max,z_max)
-        x_min = np.min(pv_mesh.points[:, 0])
-        x_max = np.max(pv_mesh.points[:, 0])
-
-        y_min = np.min(pv_mesh.points[:, 1])
-        y_max = np.max(pv_mesh.points[:, 1])
-
-        z_min = np.min(pv_mesh.points[:, 2])
-        z_max = np.max(pv_mesh.points[:, 2])
-
-        # sampling in the cube
-
-        # delete or get points in the mesh
