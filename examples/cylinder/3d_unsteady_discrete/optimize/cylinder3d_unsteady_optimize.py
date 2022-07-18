@@ -37,6 +37,7 @@ np.set_printoptions(
     linewidth=1000)
 
 use_cinn = (os.getenv('FLAGS_use_cinn') == "1")
+allow_cinn_ops = os.getenv('FLAGS_allow_cinn_ops').split(';')
 
 # define start time and time step
 start_time = 100
@@ -190,11 +191,13 @@ if not use_cinn:
         loss_name=total_loss.name)
 else:
     print("Run with CINN")
+    with paddle.static.program_guard(main_program, startup_program):
+        prim2orig(main_program.block(0), allow_cinn_ops)
     main_program = cinn_compile(main_program, total_loss.name, fetches)
 
 # num_epoch in train
 train_epoch = 110
-print_step = 10
+print_step = 1
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
 num_time_step = 1
