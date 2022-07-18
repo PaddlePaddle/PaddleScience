@@ -400,7 +400,8 @@ class CircleInRectangular(Rectangular):
                                                                       padding)
         else:
             # TODO: better error out
-            print("ERROR: ", type(self).__name__,
+            print("ERROR: ",
+                  type(self).__name__,
                   "does not support uniform discretization.")
             exit()
 
