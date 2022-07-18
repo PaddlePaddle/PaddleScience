@@ -34,7 +34,7 @@ class PINNs(AlgorithmBase):
         >>> algo = psci.algorithm.PINNs(net=net, loss=loss)
     """
 
-    def __init__(self, net, loss):
+    def __init__(self, net, loss=None):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
