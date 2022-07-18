@@ -260,7 +260,7 @@ class PINNs(AlgorithmBase):
 
         return labels, labels_attr
 
-    def create_inputs_from_loss(self):
+    def create_inputs_from_loss(self, pde):
 
         inputs = list()
         inputs_attr = OrderedDict()
@@ -271,40 +271,38 @@ class PINNs(AlgorithmBase):
         inputs_attr_d = OrderedDict()
 
         # interior
-        for i in self.loss._loss:
-            if type(i) is EqLoss:
-                inputs.append(i._input)
+        for eq in pde.equations:
+            if eq in self.loss._eqlist:
+                idx = self.loss._eqlist.index(eq)
+                inputs.append(self.loss._eqinput[idx])
                 inputs_attr_i["0"] = InputsAttr(0, 0)
                 inputs_attr["interior"] = inputs_attr_i
+                break
+        inputs_attr["interior"] = inputs_attr_i
 
         # boundary
-        for i in self.loss._loss:
-            if type(i) is BcLoss:
-                name = i._name
-                inputs.append(i._input)
+        for name in pde.bc.keys():
+            if name in self.loss._bclist:
+                idx = self.loss._bclist.index(name)
+                inputs.append(self.loss._bcinput[idx])
                 inputs_attr_b[name] = InputsAttr(0, 0)
+        inputs_attr["bc"] = inputs_attr_b
 
-        # initial
-        for i in self.loss._loss:
-            if type(i) is IcLoss:
-                inputs.append(i._input)
-                inputs_attr_it["0"] = InputsAttr(0, 0)
-                inputs_attr["ic"] = inputs_attr_it
+        # ic
+        if True in self.loss._iclist:
+            inputs.append(self.loss._icinput)
+            inputs_attr_it["0"] = InputsAttr(0, 0)
+            inputs_attr["ic"] = inputs_attr_it
 
-        # supervise
-        for i in self.loss._loss:
-            if type(i) is DataLoss:
-                inputs.append(i._input)
-                inputs_attr_d["0"] = InputsAttr(0, 0)
-                inputs_attr["user"] = inputs_attr_d
+        # data
+        if True in self.loss._datalist:
+            inputs.append(self.loss._datainput)
+            inputs_attr_d["0"] = InputsAttr(0, 0)
 
         inputs_attr["interior"] = inputs_attr_i
         inputs_attr["bc"] = inputs_attr_b
         inputs_attr["ic"] = inputs_attr_it
         inputs_attr["user"] = inputs_attr_d
-
-        # print(inputs)
-        # print(inputs_attr)
 
         return inputs, inputs_attr
 
@@ -313,16 +311,51 @@ class PINNs(AlgorithmBase):
         labels = list()
         labels_attr = OrderedDict()
 
-        # for i in self.loss._loss:
-        #     if is i DataLoss:
-        #         labels.append(i._ref)
-        #         labels_attr_d["0"] = InputsAttr(0, 0)
-        #         labels_attr["user"] = inputs_attr_d
+        # equation
+        labels_attr["interior"] = OrderedDict()
+        labels_attr["interior"]["equations"] = list()
 
-        #     labels_attr["user"]["data_next"] = list()
-        #     for i in range(len(pde.dvar)):
-        #         labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
-        #         labels.append(LabelHolder())
+        for i in range(len(pde.equations)):
+            attr = dict()
+
+            # rhs and weight
+            if pde.equations[i] in self.loss._eqlist:
+                rhs = pde.rhs_disc["interior"][i]
+                if (rhs is None) or np.isscalar(rhs):
+                    attr["rhs"] = rhs
+
+                weight = pde.weight_disc[i]
+                if (weight is None) or np.isscalar(weight):
+                    attr["weight"] = weight
+
+        # bc
+        labels_attr["bc"] = OrderedDict()
+        for name_b, bc in pde.bc.items():
+
+            if name in self.loss._bclist:
+                labels_attr["bc"][name_b] = list()
+                for b in bc:
+                    attr = dict()
+                    rhs = b.rhs_disc  # rhs
+                    if (rhs is None) or np.isscalar(rhs):
+                        attr["rhs"] = rhs
+                    weight = b.weight_disc  # weight
+                    if (weight is None) or np.isscalar(weight):
+                        attr["weight"] = weight
+
+        # ic
+        labels_attr["ic"] = list()
+        for ic in pde.ic:
+            attr = dict()
+            rhs = ic.rhs_disc  # rhs
+            if (rhs is None) or np.isscalar(rhs):
+                attr["rhs"] = rhs
+            weight = ic.weight_disc  # weight
+            attr["weight"] = weight
+
+            labels_attr["ic"].append(attr)
+
+        # data
 
         # # data next
         # if "supervise_data" in inputs_custom:

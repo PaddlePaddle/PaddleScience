@@ -32,6 +32,9 @@ class FormulaLoss:
         self._icwgt = list()
         self._datawgt = list()
 
+        self._eqinput = list()
+        self._eqnet = list()
+
         self.norm_p = 1
 
     # add class
@@ -41,10 +44,22 @@ class FormulaLoss:
         floss._bclist = self._bclist + other._bclist
         floss._iclist = self._iclist + other._iclist
         floss._datalist = self._datalist + other._datalist
+
         floss._eqwgt = self._eqwgt + other._eqwgt
         floss._bcwgt = self._bcwgt + other._bcwgt
         floss._icwgt = self._icwgt + other._icwgt
         floss._datawgt = self._datawgt + other._datawgt
+
+        floss._eqinput = self._eqinput + other._eqinput
+        floss._bcinput = self._bcinput + other._bcinput
+        floss._icinput = self._icinput + other._icinput
+        floss._datainput = self._datainput + other._datainput
+
+        floss._eqnet = self._eqnet + other._eqnet
+        floss._bcnet = self._bcnet + other._bcnet
+        floss._icnet = self._icnet + other._icnet
+        floss._datanet = self._datanet + other._datanet
+
         return floss
 
     # multiply scalar (right)
@@ -183,6 +198,9 @@ def EqLoss(eq, netout=None):
     floss = FormulaLoss()
     floss._eqlist = [eq]
     floss._eqwgt = [1.0]
+    if netout is not None:
+        floss._eqinput = [netout._input]
+        floss._eqnet = [netout._net]
     return floss
 
 
@@ -190,22 +208,27 @@ def BcLoss(name, netout=None):
     floss = FormulaLoss()
     floss._bclist = [name]
     floss._bcwgt = [1.0]
+    if netout is not None:
+        floss._bcinput = [netout._input]
+        floss._bcnet = [netout._net]
     return floss
 
 
-def IcLoss():
+def IcLoss(netout=None):
     floss = FormulaLoss()
     floss._iclist = True
     floss._icwgt = [1.0]
+    if netout is not None:
+        floss._icinput = [netout._input]
+        floss._icnet = [netout._net]
     return floss
 
 
-def DataLoss():
+def DataLoss(netout=None):
     floss = FormulaLoss()
     floss._datalist = True
     floss._datawgt = [1.0]
+    if netout is not None:
+        floss._datainput = [netout._input]
+        floss._datanet = [netout._net]
     return floss
-
-    # if netout is not None:
-    #     self._net = netout._net
-    #     self._input = netout._input
