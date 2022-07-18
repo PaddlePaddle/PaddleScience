@@ -476,13 +476,13 @@ class PINNs(AlgorithmBase):
             # TODO: error out
 
         loss_details = list()
-        loss_details.append(loss_eq)
-        loss_details.append(loss_bc)
+        loss_details.append(self.__sqrt(loss_eq))
+        loss_details.append(self.__sqrt(loss_bc))
         loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
-        loss_details.append(loss_ic)
+        loss_details.append(self.__sqrt(loss_ic))
         loss_data = (loss - loss) if isinstance(loss_data,
                                                 float) else loss_data
-        loss_details.append(loss_data)
+        loss_details.append(self.__sqrt(loss_data))
 
         return loss, outs, loss_details
 
