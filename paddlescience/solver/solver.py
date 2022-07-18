@@ -475,8 +475,26 @@ class Solver(object):
         writer_ic_loss = LogWriter(logdir=checkpoint_path + 'visualDL/ic_loss')
         writer_data_loss = LogWriter(
             logdir=checkpoint_path + 'visualDL/data_loss')
+
+        begin = time.time()
+        import os
+        if os.getenv('FLAGS_use_cinn') == "1":
+            print("=========== Run with CINN ===============")
+            from . import utils
+            compiled_program = utils.cinn_compile(self.train_program,
+                                                  self.loss.name, fetches)
+        else:
+            compiled_program = self.train_program
+
         for epoch in range(num_epoch):
-            rslt = self.exe.run(self.train_program,
+            if epoch == 1:
+                first_step_cost = time.time() - begin
+
+            if epoch == 10:
+                paddle.device.cuda.synchronize()
+                begin = time.time()
+
+            rslt = self.exe.run(compiled_program,
                                 feed=feeds,
                                 fetch_list=fetches)
             print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
@@ -498,6 +516,12 @@ class Solver(object):
                 paddle.save(self.train_program.state_dict(),
                             checkpoint_path + 'static_model_params_' +
                             str(epoch + 1) + '.pdparams')
+
+        paddle.device.cuda.synchronize()
+        end = time.time()
+        print('First step cost {} s'.format(first_step_cost))
+        print('{} epoch(10~{}) time: {} s'.format(num_epoch - 10, num_epoch,
+                                                  end - begin))
 
         # close writer in visual DL
         writer_loss.close()

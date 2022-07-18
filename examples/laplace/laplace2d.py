@@ -16,8 +16,17 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
+paddle.enable_static()
+
 paddle.seed(1)
 np.random.seed(1)
+
+np.set_printoptions(
+    suppress=True,
+    precision=6,
+    formatter={'float': '{:0.6f}'.format},
+    threshold=np.inf,
+    linewidth=1000)
 
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
@@ -56,8 +65,8 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Lbfgs()
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+# opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
