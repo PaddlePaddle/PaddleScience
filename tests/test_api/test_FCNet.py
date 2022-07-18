@@ -257,7 +257,7 @@ def static_fcnet(ins,
                  activation='tanh'):
     net = psci.network.FCNet(
         num_ins, num_outs, num_layers, hidden_size, activation=activation)
-    net.make_network_static()
+    net.make_network()
     for i in range(num_layers):
         net._weights[i] = paddle.ones_like(net._weights[i])
     return net.nn_func(ins)
