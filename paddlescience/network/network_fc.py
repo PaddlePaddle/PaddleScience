@@ -141,8 +141,13 @@ class FCNet(NetworkBase):
                    learaning_rate=1.0):
 
         if type(path) is str:
-            state_dict = paddle.load(path)
-            self.set_state_dict(state_dict)
+            self.params_path = path
+            # In dynamic graph mode, load the params.
+            # In static graph mode, just save the filename 
+            # and initialize it in solver program.
+            if paddle.in_dynamic_mode():
+                layer_state_dict = paddle.load(path)
+                self.set_state_dict(layer_state_dict)
         else:
             # convert int to list of int
             if isinstance(n, int):
