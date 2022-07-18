@@ -39,7 +39,10 @@ def enable_prim():
     Enable automatic differentiation mechanism based on 
     automatic differentiation basic operator.
     '''
-    paddle.incubate.autograd.enable_prim()
+    if paddle.in_dynamic_mode():
+        pass  # TODO: error out
+    else:
+        paddle.incubate.autograd.enable_prim()
 
 
 def disable_prim():
@@ -47,7 +50,10 @@ def disable_prim():
     Disable automatic differentiation mechanism based on 
     automatic differentiation basic operator.
     '''
-    paddle.incubate.autograd.disable_prim()
+    if paddle.in_dynamic_mode():
+        pass
+    else:
+        paddle.incubate.autograd.disable_prim()
 
 
 def prim_enabled():
@@ -55,7 +61,10 @@ def prim_enabled():
     Determine whether automatic differentiation based on 
     automatic differentiation basic operator is enabled.
     '''
-    return paddle.incubate.autograd.prim_enabled()
+    if paddle.in_dynamic_mode():
+        return False
+    else:
+        return paddle.incubate.autograd.prim_enabled()
 
 
 def prim2orig(*args):
@@ -65,4 +74,7 @@ def prim2orig(*args):
     transformed into one or a series of original operators with
     equivalent function to support execution.
     '''
-    return paddle.incubate.autograd.prim2orig(*args)
+    if paddle.in_dynamic_mode():
+        pass
+    else:
+        return paddle.incubate.autograd.prim2orig(*args)
