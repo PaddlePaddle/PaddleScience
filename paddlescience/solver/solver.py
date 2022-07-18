@@ -207,9 +207,9 @@ class Solver(object):
                 self.opt.step()
                 self.opt.clear_grad()
 
-                print("epoch: " + str(epoch + 1), " loss:", loss.numpy()[0],
-                      " eq loss:", loss_details[0].numpy()[0], " bc loss:",
-                      loss_details[1].numpy()[0], " ic loss:",
+                print("epoch: " + str(epoch + 1), " loss:",
+                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
                       loss_details[2].numpy()[0], " data loss:",
                       loss_details[3].numpy()[0])
 
