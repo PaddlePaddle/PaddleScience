@@ -151,8 +151,11 @@ class Solver(object):
         # """
 
         # create inputs/labels and its attributes
-        inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
-        labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
+        # inputs, inputs_attr = self.algo.create_inputs_from_pde(self.pde)
+        # labels, labels_attr = self.algo.create_labels_from_pde(self.pde)
+
+        inputs, inputs_attr = self.algo.create_inputs_from_loss(self.pde)
+        labels, labels_attr = self.algo.create_labels_from_loss(self.pde)
 
         self.inputs = inputs
         self.inputs_attr = inputs_attr

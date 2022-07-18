@@ -273,13 +273,13 @@ class PINNs(AlgorithmBase):
         # interior
         for eq in pde.equations:
 
-            print(eq)
-            print(self.loss._eqlist)
+            # print(eq)
+            # print(self.loss._eqlist)
 
             if eq in self.loss._eqlist:
                 idx = self.loss._eqlist.index(eq)
 
-                print(idx, self.loss._eqinput[idx])
+                # print(idx, self.loss._eqinput[idx])
 
                 inputs.append(self.loss._eqinput[idx])
                 inputs_attr_i["0"] = InputsAttr(0, 0)
@@ -313,7 +313,7 @@ class PINNs(AlgorithmBase):
 
         return inputs, inputs_attr
 
-    def create_labels_from_loss(self):
+    def create_labels_from_loss(self, pde):
 
         labels = list()
         labels_attr = OrderedDict()
@@ -335,20 +335,27 @@ class PINNs(AlgorithmBase):
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
 
+            labels_attr["interior"]["equations"].append(attr)
+
         # bc
         labels_attr["bc"] = OrderedDict()
         for name_b, bc in pde.bc.items():
 
-            if name in self.loss._bclist:
+            if name_b in self.loss._bclist:
                 labels_attr["bc"][name_b] = list()
                 for b in bc:
                     attr = dict()
                     rhs = b.rhs_disc  # rhs
                     if (rhs is None) or np.isscalar(rhs):
                         attr["rhs"] = rhs
+                    elif type(rhs) is np.ndarray:
+                        attr["rhs"] = LabelInt(len(labels))
+                        labels.append(rhs)
                     weight = b.weight_disc  # weight
                     if (weight is None) or np.isscalar(weight):
                         attr["weight"] = weight
+
+            labels_attr["bc"][name_b].append(attr)
 
         # ic
         labels_attr["ic"] = list()

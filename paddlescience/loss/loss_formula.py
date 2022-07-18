@@ -98,6 +98,8 @@ class FormulaLoss:
         # print(input)
         # print(cmploss.outs[0:4,:])
 
+        print(len(pde.equations))
+
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
