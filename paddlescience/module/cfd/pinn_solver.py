@@ -366,9 +366,8 @@ class PysicsInformedNeuralNetwork:
         else:
             eq_loss = losses[0].numpy()[0]
         print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
-              "loss[Adam]: ",
-              loss.numpy()[0], "eq_loss: ", eq_loss, "bc_loss: ",
-              losses[1].numpy()[0], "supervised data_loss: ",
+              "loss[Adam]: ", loss.numpy()[0], "eq_loss: ", eq_loss,
+              "bc_loss: ", losses[1].numpy()[0], "supervised data_loss: ",
               losses[2].numpy()[0], "outlet_loss: ", losses[3].numpy()[0],
               "initial_loss: ", losses[4].numpy()[0])
 
@@ -399,10 +398,9 @@ class PysicsInformedNeuralNetwork:
                                dtype='float32')
             x0 = results[2]
             print("Step: {step:>6} [LS] loss[BFGS]: ", results[3].numpy()[0],
-                  "total loss:",
-                  loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                  "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
-                  losses[2].numpy()[0])
+                  "total loss:", loss.numpy()[0], "eq_loss: ",
+                  losses[0].numpy()[0], "bc_loss: ", losses[1].numpy()[0],
+                  "ic_loss: ", losses[2].numpy()[0])
             step += 1
 
         print("======Optimization results======")

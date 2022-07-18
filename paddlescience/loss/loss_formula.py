@@ -53,9 +53,9 @@ class FormulaLoss:
         for i in range(len(floss._eqwgt)):
             floss._eqwgt[i] *= weight
         for i in range(len(floss._bcwgt)):
-            floss._bcwgt[i] *= weight            
+            floss._bcwgt[i] *= weight
         for i in range(len(floss._icwgt)):
-            floss._icwgt[i] *= weight    
+            floss._icwgt[i] *= weight
         for i in range(len(floss._datawgt)):
             floss._datawgt[i] *= weight
         return floss
