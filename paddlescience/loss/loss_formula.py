@@ -51,7 +51,6 @@ class FormulaLoss:
         floss._bclist = self._bclist + other._bclist
         floss._iclist = self._iclist + other._iclist
         floss._datalist = self._datalist + other._datalist
-
         floss._eqwgt = self._eqwgt + other._eqwgt
         floss._bcwgt = self._bcwgt + other._bcwgt
         floss._icwgt = self._icwgt + other._icwgt
@@ -97,8 +96,6 @@ class FormulaLoss:
 
         # print(input)
         # print(cmploss.outs[0:4,:])
-
-        print(len(pde.equations))
 
         loss = 0.0
         for i in range(len(pde.equations)):
