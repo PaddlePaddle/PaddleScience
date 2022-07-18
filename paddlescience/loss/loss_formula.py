@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,30 +17,55 @@ import numpy as np
 from .loss_base import CompFormula, l2_norm_square
 from ..labels import LabelInt
 from .. import config
+import copy
 
 
-class L2:
-    """
-    L2 loss.
+class FormulaLoss:
+    def __init__(self):
+        self._eqlist = list()
+        self._bclist = list()
+        self._iclist = False
+        self._datalist = False
 
-    Parameters:
-        p(1 or 2):
+        self._eqwgt = list()
+        self._bcwgt = list()
+        self._icwgt = list()
+        self._datawgt = list()
 
-            p=1: total loss = eqloss + bcloss + icloss + dataloss.
+        self.norm_p = 1
 
-            p=2: total loss = sqrt(eqloss**2 + bcloss**2 + icloss**2 + dataloss**2)
+    # add class
+    def __add__(self, other):
+        floss = FormulaLoss()
+        floss._eqlist = self._eqlist + other._eqlist
+        floss._bclist = self._bclist + other._bclist
+        floss._iclist = self._iclist + other._iclist
+        floss._datalist = self._datalist + other._datalist
+        floss._eqwgt = self._eqwgt + other._eqwgt
+        floss._bcwgt = self._bcwgt + other._bcwgt
+        floss._icwgt = self._icwgt + other._icwgt
+        floss._datawgt = self._datawgt + other._datawgt
+        return floss
 
-    Example:
-        >>> import paddlescience as psci
-        >>> loss = psci.loss.L2()
-    """
+    # multiply scalar (right)
+    def __mul__(self, weight):
+        floss = copy.deepcopy(self)
+        for i in range(len(floss._eqwgt)):
+            floss._eqwgt[i] *= weight
+        for i in range(len(floss._bcwgt)):
+            floss._bcwgt[i] *= weight
+        for i in range(len(floss._icwgt)):
+            floss._icwgt[i] *= weight
+        for i in range(len(floss._datawgt)):
+            floss._datawgt[i] *= weight
+        return floss
 
-    def __init__(self, p=1, data_weight=1.0):
-        self.norm_p = p
-        self.data_weight = data_weight
+    # multiply scalar (left)
+    def __rmul__(self, other):
+        floss = copy.deepcopy(self)
+        self.__mul__(other)
+        return floss
 
-    # compute loss on one interior 
-    # there are multiple pde
     def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -54,6 +79,12 @@ class L2:
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
+
+            if formula not in self._eqlist:
+                continue
+            else:
+                idx = self._eqlist.index(formula)
+
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 
@@ -64,16 +95,7 @@ class L2:
             else:
                 rhs = rhs_eq
 
-            wgt_eq = labels_attr["equations"][i]["weight"]
-            if wgt_eq is None:
-                wgt = None
-            elif type(wgt_eq) == LabelInt:
-                wgt = labels[wgt_eq]
-            elif np.isscalar(wgt_eq):
-                wgt = wgt_eq
-            else:
-                pass
-                # TODO: error out
+            wgt = self._eqwgt[idx]
 
             if rhs is None:
                 loss += l2_norm_square(rst, wgt)
@@ -106,13 +128,8 @@ class L2:
             else:
                 rhs = rhs_b
 
-            wgt_b = labels_attr["bc"][name_b][i]["weight"]
-            if wgt_b is None:
-                wgt = None
-            elif type(wgt_b) == LabelInt:
-                wgt = labels[wgt_b]
-            else:
-                wgt = wgt_b
+            idx = self._bclist.index(name_b)
+            wgt = self._bcwgt[idx]
 
             if rhs is None:
                 loss += l2_norm_square(rst, wgt)
@@ -160,3 +177,35 @@ class L2:
 
         loss = self.data_weight * loss
         return loss, cmploss.outs
+
+
+def EqLoss(eq, netout=None):
+    floss = FormulaLoss()
+    floss._eqlist = [eq]
+    floss._eqwgt = [1.0]
+    return floss
+
+
+def BcLoss(name, netout=None):
+    floss = FormulaLoss()
+    floss._bclist = [name]
+    floss._bcwgt = [1.0]
+    return floss
+
+
+def IcLoss():
+    floss = FormulaLoss()
+    floss._iclist = True
+    floss._icwgt = [1.0]
+    return floss
+
+
+def DataLoss():
+    floss = FormulaLoss()
+    floss._datalist = True
+    floss._datawgt = [1.0]
+    return floss
+
+    # if netout is not None:
+    #     self._net = netout._net
+    #     self._input = netout._input
