@@ -366,55 +366,20 @@ class Solver(object):
 
             inputs_labels = list()
 
-            # dynamic mode: make network in net's constructor
-            # static  mode: make network here 
-            self.algo.net.make_network()
-
-            # inputs
-            for i in range(len(inputs)):
-                #inputs
-                input = paddle.static.data(
-                    name='input' + str(i),
-                    shape=inputs[i].shape,
-                    dtype=self._dtype)
-                input.stop_gradient = False
-                inputs_labels.append(input)
-
-            for i in range(len(labels)):
-                #labels
-                label = paddle.static.data(
-                    name='label' + str(i),
-                    shape=labels[i].shape,
-                    dtype=self._dtype)
-                label.stop_gradient = False
-                inputs_labels.append(label)
-
-            self.loss, self.outs, self.loss_details = self.algo.compute(
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-
-            if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
-                assert paddle.in_dynamic_mode(
-                ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
-            self.opt.minimize(self.loss)
-
-            # new ad
-            if config.prim_enabled():
-                config.prim2orig()
+            self.train_program = paddle.static.Program()
+            self.startup_program = paddle.static.Program()
 
             # construct train program
             with paddle.static.program_guard(self.train_program,
                                              self.startup_program):
 
+                # dynamic mode: make network in net's constructor
+                # static  mode: make network here 
                 self.algo.net.make_network()
-                ins = list()
-                for i in range(len(inputs)):
-                    ishape = list(inputs[i].shape)
-                    ishape[0] = -1
+
+                # inputs
+                for i in range(len(self.inputs)):
+                    #inputs
                     input = paddle.static.data(
                         name='input' + str(i),
                         shape=self.inputs[i].shape,
