@@ -130,27 +130,27 @@ def compute_eq_loss(inputs, outputs, labels_var):
     u_n = labels_var[0]
     v_n = labels_var[1]
     w_n = labels_var[2]
-    jac0, = paddle.static.gradients([u], [inputs])  # du/dx, du/dy, du/dz
-    jac1, = paddle.static.gradients([v], [inputs])  # dv/dx, dv/dy, dv/dz
-    jac2, = paddle.static.gradients([w], [inputs])  # dw/dx, dw/dy, dw/dz
-    jac3, = paddle.static.gradients([p], [inputs])  # dp/dx, dp/dy, dp/dz
-    hes0, = paddle.static.gradients(
+    jac0, = paddle.incubate.autograd.grad([u], [inputs])  # du/dx, du/dy, du/dz
+    jac1, = paddle.incubate.autograd.grad([v], [inputs])  # dv/dx, dv/dy, dv/dz
+    jac2, = paddle.incubate.autograd.grad([w], [inputs])  # dw/dx, dw/dy, dw/dz
+    jac3, = paddle.incubate.autograd.grad([p], [inputs])  # dp/dx, dp/dy, dp/dz
+    hes0, = paddle.incubate.autograd.grad(
         [jac0[:, 0]], [inputs])  # du*du/dx*dx, du*du/dx*dy, du*du/dx*dz
-    hes1, = paddle.static.gradients(
+    hes1, = paddle.incubate.autograd.grad(
         [jac0[:, 1]], [inputs])  # du*du/dy*dx, du*du/dy*dy, du*du/dy*dz
-    hes2, = paddle.static.gradients(
+    hes2, = paddle.incubate.autograd.grad(
         [jac0[:, 2]], [inputs])  # du*du/dz*dx, du*du/dz*dy, du*du/dz*dz
-    hes3, = paddle.static.gradients(
+    hes3, = paddle.incubate.autograd.grad(
         [jac1[:, 0]], [inputs])  # dv*dv/dx*dx, dv*dv/dx*dy, dv*dv/dx*dz
-    hes4, = paddle.static.gradients(
+    hes4, = paddle.incubate.autograd.grad(
         [jac1[:, 1]], [inputs])  # dv*dv/dy*dx, dv*dv/dy*dy, dv*dv/dy*dz
-    hes5, = paddle.static.gradients(
+    hes5, = paddle.incubate.autograd.grad(
         [jac1[:, 2]], [inputs])  # dv*dv/dz*dx, dv*dv/dz*dy, dv*dv/dz*dz
-    hes6, = paddle.static.gradients(
+    hes6, = paddle.incubate.autograd.grad(
         [jac2[:, 0]], [inputs])  # dw*dw/dx*dx, dw*dw/dx*dy, dw*dw/dx*dz
-    hes7, = paddle.static.gradients(
+    hes7, = paddle.incubate.autograd.grad(
         [jac2[:, 1]], [inputs])  # dw*dw/dy*dx, dw*dw/dy*dy, dw*dw/dy*dz
-    hes8, = paddle.static.gradients(
+    hes8, = paddle.incubate.autograd.grad(
         [jac2[:, 2]], [inputs])  # dw*dw/dz*dx, dw*dw/dz*dy, dw*dw/dz*dz
 
     nu = 0.01

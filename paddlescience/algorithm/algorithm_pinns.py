@@ -34,13 +34,13 @@ class PINNs(AlgorithmBase):
         >>> algo = psci.algorithm.PINNs(net=net, loss=loss)
     """
 
-    def __init__(self, net, loss):
+    def __init__(self, net, loss=None):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
 
     # create inputs used as net input
-    def create_inputs(self, pde):
+    def create_inputs_from_pde(self, pde):
 
         inputs = list()
         inputs_attr = OrderedDict()
@@ -100,7 +100,10 @@ class PINNs(AlgorithmBase):
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels(self, pde, interior_shape=None, supervised_shape=None):
+    def create_labels_from_pde(self,
+                               pde,
+                               interior_shape=None,
+                               supervised_shape=None):
 
         labels = list()
         labels_attr = OrderedDict()
@@ -257,6 +260,79 @@ class PINNs(AlgorithmBase):
 
         return labels, labels_attr
 
+    def create_inputs_from_loss(self):
+
+        inputs = list()
+        inputs_attr = OrderedDict()
+
+        inputs_attr_i = OrderedDict()
+        inputs_attr_b = OrderedDict()
+        inputs_attr_it = OrderedDict()
+        inputs_attr_d = OrderedDict()
+
+        # interior
+        for i in self.loss._loss:
+            if type(i) is EqLoss:
+                inputs.append(i._input)
+                inputs_attr_i["0"] = InputsAttr(0, 0)
+                inputs_attr["interior"] = inputs_attr_i
+
+        # boundary
+        for i in self.loss._loss:
+            if type(i) is BcLoss:
+                name = i._name
+                inputs.append(i._input)
+                inputs_attr_b[name] = InputsAttr(0, 0)
+
+        # initial
+        for i in self.loss._loss:
+            if type(i) is IcLoss:
+                inputs.append(i._input)
+                inputs_attr_it["0"] = InputsAttr(0, 0)
+                inputs_attr["ic"] = inputs_attr_it
+
+        # supervise
+        for i in self.loss._loss:
+            if type(i) is DataLoss:
+                inputs.append(i._input)
+                inputs_attr_d["0"] = InputsAttr(0, 0)
+                inputs_attr["user"] = inputs_attr_d
+
+        inputs_attr["interior"] = inputs_attr_i
+        inputs_attr["bc"] = inputs_attr_b
+        inputs_attr["ic"] = inputs_attr_it
+        inputs_attr["user"] = inputs_attr_d
+
+        # print(inputs)
+        # print(inputs_attr)
+
+        return inputs, inputs_attr
+
+    def create_labels_from_loss(self):
+
+        labels = list()
+        labels_attr = OrderedDict()
+
+        # for i in self.loss._loss:
+        #     if is i DataLoss:
+        #         labels.append(i._ref)
+        #         labels_attr_d["0"] = InputsAttr(0, 0)
+        #         labels_attr["user"] = inputs_attr_d
+
+        #     labels_attr["user"]["data_next"] = list()
+        #     for i in range(len(pde.dvar)):
+        #         labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
+        #         labels.append(LabelHolder())
+
+        # # data next
+        # if "supervise_data" in inputs_custom:
+        #     labels_attr["user"]["data_next"] = list()
+        #     for i in range(inputs_custom["supervise_data"]):
+        #         labels.append(inputs_custom["supervise_data"][i])
+        #         labels_attr["user"]["data_next"].append(i)
+
+        return labels, labels_attr
+
     def feed_data_interior_cur(self, labels, labels_attr, data):
         n = len(labels_attr["interior"]["data_cur"])
         for i in range(n):
@@ -400,13 +476,13 @@ class PINNs(AlgorithmBase):
             # TODO: error out
 
         loss_details = list()
-        loss_details.append(loss_eq)
-        loss_details.append(loss_bc)
+        loss_details.append(self.__sqrt(loss_eq))
+        loss_details.append(self.__sqrt(loss_bc))
         loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
-        loss_details.append(loss_ic)
+        loss_details.append(self.__sqrt(loss_ic))
         loss_data = (loss - loss) if isinstance(loss_data,
                                                 float) else loss_data
-        loss_details.append(loss_data)
+        loss_details.append(self.__sqrt(loss_data))
 
         return loss, outs, loss_details
 
