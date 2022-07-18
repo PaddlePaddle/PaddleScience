@@ -15,22 +15,9 @@
 import paddle
 import sympy
 from ..inputs import InputsAttr
+from .. import config
 
 from paddle.incubate.autograd import Jacobian, Hessian
-
-
-class LossBase(object):
-    def __init__(self, pdes, geo):
-        pass
-
-    def eq_loss(self, net):
-        pass
-
-    def bc_loss(self, net):
-        pass
-
-    def ic_loss(self, net):
-        pass
 
 
 class CompFormula:
@@ -190,3 +177,22 @@ class CompFormula:
                 rst = hessian[f_idx][:, var_idx1, var_idx2]
 
         return rst
+
+
+def l2_norm_square(x, wgt=None):
+    # new ad
+    if config.prim_enabled():
+        if wgt is None:
+            l2_norm = paddle.norm(x, p=2)
+        elif np.isscalar(wgt):
+            wgt2 = np.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        else:
+            wgt2 = paddle.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        return l2_norm * l2_norm
+    else:
+        if wgt is None:
+            return paddle.norm(x**2, p=1)
+        else:
+            return paddle.norm(x**2 * wgt, p=1)
