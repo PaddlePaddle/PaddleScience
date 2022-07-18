@@ -24,8 +24,8 @@ class FormulaLoss:
     def __init__(self):
         self._eqlist = list()
         self._bclist = list()
-        self._iclist = False
-        self._datalist = False
+        self._iclist = list()
+        self._datalist = list()
 
         self._eqwgt = list()
         self._bcwgt = list()
@@ -33,7 +33,14 @@ class FormulaLoss:
         self._datawgt = list()
 
         self._eqinput = list()
+        self._bcinput = list()
+        self._icinput = list()
+        self._datainput = list()
+
         self._eqnet = list()
+        self._bcnet = list()
+        self._icnet = list()
+        self._datanet = list()
 
         self.norm_p = 1
 
@@ -201,6 +208,9 @@ def EqLoss(eq, netout=None):
     if netout is not None:
         floss._eqinput = [netout._input]
         floss._eqnet = [netout._net]
+    else:
+        floss._eqinput = []
+        floss._eqnet = []
     return floss
 
 
@@ -211,24 +221,33 @@ def BcLoss(name, netout=None):
     if netout is not None:
         floss._bcinput = [netout._input]
         floss._bcnet = [netout._net]
+    else:
+        floss._bcinput = []
+        floss._bcnet = []
     return floss
 
 
 def IcLoss(netout=None):
     floss = FormulaLoss()
-    floss._iclist = True
+    floss._iclist = [True]
     floss._icwgt = [1.0]
     if netout is not None:
         floss._icinput = [netout._input]
         floss._icnet = [netout._net]
+    else:
+        floss._icinput = []
+        floss._icnet = []
     return floss
 
 
 def DataLoss(netout=None):
     floss = FormulaLoss()
-    floss._datalist = True
+    floss._datalist = [True]
     floss._datawgt = [1.0]
     if netout is not None:
         floss._datainput = [netout._input]
         floss._datanet = [netout._net]
+    else:
+        floss._datainput = []
+        floss._datanet = []
     return floss

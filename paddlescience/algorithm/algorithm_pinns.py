@@ -272,8 +272,15 @@ class PINNs(AlgorithmBase):
 
         # interior
         for eq in pde.equations:
+
+            print(eq)
+            print(self.loss._eqlist)
+
             if eq in self.loss._eqlist:
                 idx = self.loss._eqlist.index(eq)
+
+                print(idx, self.loss._eqinput[idx])
+
                 inputs.append(self.loss._eqinput[idx])
                 inputs_attr_i["0"] = InputsAttr(0, 0)
                 inputs_attr["interior"] = inputs_attr_i
@@ -351,7 +358,8 @@ class PINNs(AlgorithmBase):
             if (rhs is None) or np.isscalar(rhs):
                 attr["rhs"] = rhs
             weight = ic.weight_disc  # weight
-            attr["weight"] = weight
+            if (weight is None) or np.isscalar(weight):
+                attr["weight"] = weight
 
             labels_attr["ic"].append(attr)
 
