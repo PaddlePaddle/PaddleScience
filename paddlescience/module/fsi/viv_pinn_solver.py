@@ -182,9 +182,9 @@ class PysicsInformedNeuralNetwork:
             k1__ = np.exp(self.k1.numpy()[0])
             k2__ = np.exp(self.k2.numpy()[0])
             print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
-                  "loss[Adam]: ", loss.numpy()[0], "k1:", k1__, "k2:", k2__,
-                  "eta loss:", losses[0].numpy()[0], "eq_loss:",
-                  losses[1].numpy()[0])
+                  "loss[Adam]: ",
+                  loss.numpy()[0], "k1:", k1__, "k2:", k2__, "eta loss:",
+                  losses[0].numpy()[0], "eq_loss:", losses[1].numpy()[0])
             if (epoch_id + 1) % self.checkpoint_freq == 0:
                 paddle.save(
                     self.net.state_dict(),
@@ -212,9 +212,10 @@ class PysicsInformedNeuralNetwork:
                                dtype='float32')
             x0 = results[2]
             print("Step: {step:>6} [LS] loss[BFGS]: ", results[3].numpy()[0],
-                  "total loss:", loss.numpy()[0], "eq_loss: ",
-                  losses[0].numpy()[0], "bc_loss: ", losses[1].numpy()[0],
-                  "ic_loss: ", losses[2].numpy()[0])
+                  "total loss:",
+                  loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
+                  "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
+                  losses[2].numpy()[0])
             step += 1
 
         print("======Optimization results======")
