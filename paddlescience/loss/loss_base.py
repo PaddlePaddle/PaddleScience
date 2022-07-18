@@ -37,11 +37,9 @@ class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
         self.net = net
-        self.order = pde.order
         self.indvar = pde.indvar
         self.dvar = pde.dvar
         self.dvar_n = pde.dvar_n
-
         self.outs = None
         self.jacobian = None
         self.hessian = None
@@ -55,23 +53,16 @@ class CompFormula:
         self.compute_outs(input, bs)
 
         # jacobian
-        if self.order >= 1:
-            jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
-        else:
-            jacobian = None
+        jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
 
         # hessian
-        if self.order >= 2:
-            hessian = list()
-            for i in range(self.net.num_outs):
+        hessian = list()
+        for i in range(self.net.num_outs):
 
-                def func(input):
-                    return self.net.nn_func(input)[:, i:i + 1]
+            def func(input):
+                return self.net.nn_func(input)[:, i:i + 1]
 
-                hessian.append(Hessian(func, input, is_batched=True))
-
-        else:
-            hessian = None
+            hessian.append(Hessian(func, input, is_batched=True))
 
         # print("*** Jacobian *** ")
         # print(jacobian[:])
