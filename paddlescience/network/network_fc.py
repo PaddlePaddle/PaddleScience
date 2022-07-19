@@ -17,6 +17,12 @@ import paddle.nn.functional as F
 from .network_base import NetworkBase
 
 
+class NetOut:
+    def __init__(self, net, input):
+        self._net = net
+        self._input = input
+
+
 class FCNet(NetworkBase):
     """
     Full connected network. Each layer consists of a matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
@@ -132,6 +138,9 @@ class FCNet(NetworkBase):
         u = paddle.matmul(u, self._weights[-1])
         u = paddle.add(u, self._biases[-1])
         return u
+
+    def set_input(self, input):
+        return NetOut(self, input)
 
     def initialize(self,
                    path=None,
