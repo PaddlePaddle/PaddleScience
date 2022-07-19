@@ -47,7 +47,7 @@ class ModelStatic(paddle.nn.Layer):
         self.nlabels = nlabels
         self.labels_attr = labels_attr
 
-        self.algo.net.make_network_static()
+        self.algo.net.make_network()
 
     def forward(self, *inputs_labels):
         for input in inputs_labels:
@@ -382,7 +382,7 @@ class Solver(object):
 
                 # dynamic mode: make network in net's constructor
                 # static  mode: make network here 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
 
                 # inputs
                 for i in range(len(self.inputs)):
@@ -502,7 +502,7 @@ class Solver(object):
                                          self.startup_program):
             with paddle.utils.unique_name.guard():
 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
                 ins = list()
                 for i in range(len(self.inputs)):
                     ishape = list(self.inputs[i].shape)
@@ -611,7 +611,7 @@ class Solver(object):
         with paddle.static.program_guard(self.predict_auto_dist_program):
             with paddle.utils.unique_name.guard():
 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
                 ins = list()
                 for i in range(len(inputs)):
                     ishape = list(inputs[i].shape)
