@@ -14,6 +14,7 @@
 
 import paddle
 import sympy
+import numpy as np
 from ..inputs import InputsAttr
 from .. import config
 
