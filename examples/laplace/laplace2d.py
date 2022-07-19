@@ -16,17 +16,11 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-paddle.enable_static()
+if psci.config.cinn_enabled():
+    psci.config.enable_static()
 
 paddle.seed(1)
 np.random.seed(1)
-
-np.set_printoptions(
-    suppress=True,
-    precision=6,
-    formatter={'float': '{:0.6f}'.format},
-    threshold=np.inf,
-    linewidth=1000)
 
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)

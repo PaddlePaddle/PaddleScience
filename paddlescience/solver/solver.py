@@ -21,6 +21,8 @@ from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
 from .. import config
 from visualdl import LogWriter
+import time
+from . import utils
 
 __all__ = ["Solver"]
 
@@ -458,11 +460,9 @@ class Solver(object):
             writer_data_loss = LogWriter(
                 logdir=checkpoint_path + 'visualDL/data_loss')
 
-        import os, time
         begin = time.time()
-        if os.getenv('FLAGS_use_cinn') == "1":
+        if config.cinn_enabled():
             print("=========== Run with CINN ===============")
-            from . import utils
             compiled_program = utils.cinn_compile(self.train_program,
                                                   self.loss.name, fetches)
         else:
