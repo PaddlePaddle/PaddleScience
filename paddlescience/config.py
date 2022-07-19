@@ -93,7 +93,11 @@ def prim2orig(*args):
 
 def cinn_enabled():
     '''
-    Determine whether CINN is enabled.
+    Determine whether CINN is enabled. Ref https://github.com/PaddlePaddle/CINN
     '''
-    return os.getenv('FLAGS_use_cinn') == "1" or os.getenv(
-        'FLAGS_use_cinn').lower() == "true"
+    cinn_flag = os.getenv('FLAGS_use_cinn', '0')
+    check_cinn_set = cinn_flag == "1" or cinn_flag.lower() == "true"
+    if check_cinn_set:
+        enable_static()
+        enable_prim()
+    return check_cinn_set
