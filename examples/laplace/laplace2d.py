@@ -15,25 +15,6 @@
 import paddlescience as psci
 import numpy as np
 import paddle
-import sys
-
-if psci.config.cinn_enabled():
-    psci.config.enable_static()
-
-assert len(sys.argv) == 5
-
-num_layers = int(sys.argv[1])
-assert num_layers in [10, 20]
-
-hidden_size = int(sys.argv[2])
-assert hidden_size in [20, 50, 512]
-
-npoints = int(sys.argv[3])
-assert npoints in [121, 10201]
-
-use_prim = int(sys.argv[4])
-if not use_prim:
-    psci.config.disable_prim()
 
 paddle.seed(1)
 np.random.seed(1)
@@ -48,6 +29,7 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
+npoints = 10201
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace
@@ -65,11 +47,7 @@ pde_disc = pde.discretize(geo_disc=geo_disc)
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2,
-    num_outs=1,
-    num_layers=num_layers,
-    hidden_size=hidden_size,
-    activation='tanh')
+    num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
 
 # Loss
 loss = psci.loss.L2()
@@ -78,12 +56,12 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-# opt = psci.optimizer.Lbfgs()
+# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=2010, checkpoint_freq=100000)
+solution = solver.solve(num_epoch=25, checkpoint_freq=20)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

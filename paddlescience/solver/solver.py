@@ -19,10 +19,10 @@ from paddle.distributed.auto_parallel.engine import Engine
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 paddle.disable_static()
+from . import utils
 from .. import config
 from visualdl import LogWriter
 import time
-from . import utils
 
 __all__ = ["Solver"]
 
@@ -460,22 +460,14 @@ class Solver(object):
             writer_data_loss = LogWriter(
                 logdir=checkpoint_path + 'visualDL/data_loss')
 
-        begin = time.time()
         if config.cinn_enabled():
-            print("=========== Run with CINN ===============")
+            begin = time.time()
             compiled_program = utils.cinn_compile(self.train_program,
                                                   self.loss.name, fetches)
         else:
             compiled_program = self.train_program
 
         for epoch in range(num_epoch):
-            if epoch == 1:
-                first_step_cost = time.time() - begin
-
-            if epoch == 10:
-                paddle.device.cuda.synchronize()
-                begin = time.time()
-
             rslt = self.exe.run(compiled_program,
                                 feed=feeds,
                                 fetch_list=fetches)
@@ -500,11 +492,18 @@ class Solver(object):
                             checkpoint_path + 'static_model_params_' +
                             str(epoch + 1) + '.pdparams')
 
-        paddle.device.cuda.synchronize()
-        end = time.time()
-        print('First step cost {} s'.format(first_step_cost))
-        print('{} epoch(10~{}) time: {} s'.format(num_epoch - 10, num_epoch,
-                                                  end - begin))
+            if config.cinn_enabled():
+                if epoch == 0:
+                    first_step_cost = time.time() - begin
+                elif epoch == 9:
+                    paddle.device.cuda.synchronize()
+                    begin = time.time()
+                elif epoch == num_epoch - 1:
+                    paddle.device.cuda.synchronize()
+                    end = time.time()
+                    print('First step cost {} s'.format(first_step_cost))
+                    print('{} epoch(10~{}) cost {} s'.format(
+                        num_epoch - 10, num_epoch, end - begin))
 
         # close writer in visual DL
         if config.visualdl_enabled() == True:
