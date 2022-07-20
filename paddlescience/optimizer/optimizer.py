@@ -43,8 +43,7 @@ def Adam(**kargs):
 def Lbfgs():
     """
     Minimizes a differentiable function `func` using the L-BFGS method.
-    The L-BFGS is simalar as BFGS, the only difference is that L-BFGS use historical
-    sk, yk, rhok rather than H_k-1 to compute Hk.
+    The L-BFGS is simalar as BFGS.
 
     Example:
         >>> import paddlescience as psci
