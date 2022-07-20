@@ -355,7 +355,7 @@ class Solver(object):
 
         if self.opt is not None:
             if config.prim_enabled() and self.pde.geometry.user is not None:
-                labels, labels_attr = self.algo.create_labels(
+                labels, labels_attr = self.algo.create_labels_from_pde(
                     self.pde,
                     interior_shape=len(self.pde.geometry.interior),
                     supervised_shape=len(self.pde.geometry.user))
