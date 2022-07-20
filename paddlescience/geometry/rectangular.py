@@ -16,6 +16,7 @@ from .geometry_discrete import GeometryDiscrete
 from .geometry import Geometry
 import numpy as np
 import math
+from scipy.stats import qmc
 
 __all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
 
@@ -74,8 +75,218 @@ class Rectangular(Geometry):
             points = self._uniform_mesh(npoints)
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
+        elif method == "sampler_halton":
+            points = self._sampling_halton(npoints)
+        elif method == "sampler_sobol":
+            points = self._sampling_sobol(npoints)
+        elif method == "sampler_lhs":
+            points = self._sampling_lhs(npoints)
+        else:
+            assert 0, "The discretize method can only be uniform, sampling or sampler_halton."
 
         return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
+
+    def _sampling_boundary(self, npoints):
+        steps = list()
+
+        if self.ndims == 1:
+            steps.append(np.array(self.origin[0], dtype=self._dtype))
+            steps.append(np.array(self.extent[0], dtype=self._dtype))
+        elif self.ndims == 2:
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nx * ny = npoints 
+            # nx / ny = lx / ly
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            ny = np.sqrt(float(npoints) * ly / lx)
+            nx = float(npoints) / ny
+            nx = int(nx)
+            ny = int(ny)
+
+            x1, y1 = self.origin
+            x2, y2 = self.extent
+
+            # four boundary: down, top, left, right
+            origin = [x1, y1]
+            extent = [x2, y1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2]
+            extent = [x2, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y1]
+            extent = [x1, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y1]
+            extent = [x2, y2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            # four vertex
+            steps.append(np.array([x1, y1], dtype=self._dtype))
+            steps.append(np.array([x1, y2], dtype=self._dtype))
+            steps.append(np.array([x2, y1], dtype=self._dtype))
+            steps.append(np.array([x2, y2], dtype=self._dtype))
+        elif self.ndims == 3:
+
+            # nx: number of points on x-axis
+            # ny: number of points on y-axis
+            # nz: number of points on z-axis
+            # nx * ny * nz = npoints 
+            # nx / lx = ny / ly = nz / lz
+            lx = self.extent[0] - self.origin[0]
+            ly = self.extent[1] - self.origin[1]
+            lz = self.extent[2] - self.origin[2]
+            nz = math.pow(float(npoints + 1) * lz**2 / (lx * ly), 1.0 / 3.0)
+            nx = nz * lx / lz
+            ny = nz * ly / lz
+            nx = int(nx)
+            ny = int(ny)
+            nz = int(nz)
+
+            x1, y1, z1 = self.origin
+            x2, y2, z2 = self.extent
+
+            # six faces: down, top, left, right, front, back
+            origin = [x1, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
+
+            origin = [x1, y1, z2]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * ny))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny * nz))
+
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
+
+            origin = [x1, y2, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx * nz))
+
+            # twelve edges
+            origin = [x1, y1, z1]
+            extent = [x2, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y2, z1]
+            extent = [x1, y2, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2, z1]
+            extent = [x1, y1, z1]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x1, y1, z2]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x2, y1, z2]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x2, y2, z2]
+            extent = [x1, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nx))
+
+            origin = [x1, y2, z2]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, ny))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x2, y1, z1]
+            extent = [x2, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x2, y2, z1]
+            extent = [x2, y2, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            origin = [x1, y1, z1]
+            extent = [x1, y1, z2]
+            steps.append(self._sampling_mesh_interior(origin, extent, nz))
+
+            # eight vertex
+            steps.append(np.array([x1, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z1], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z1], dtype=self._dtype))
+            steps.append(np.array([x1, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y1, z2], dtype=self._dtype))
+            steps.append(np.array([x2, y2, z2], dtype=self._dtype))
+            steps.append(np.array([x1, y2, z2], dtype=self._dtype))
+
+        return np.vstack(steps)
+
+    def _sampling_halton(self, npoints):
+
+        sampler = qmc.Halton(d=self.ndims, scramble=False)
+
+        sample = sampler.random(n=npoints)
+
+        l_bounds = self.origin
+        u_bounds = self.extent
+
+        result = qmc.scale(sample, l_bounds, u_bounds)
+
+        result = np.array(result).astype(self._dtype)
+
+        boundary_points = self._sampling_boundary(npoints)
+
+        return np.concatenate((result, boundary_points), axis=0)
+
+    def _sampling_sobol(self, npoints):
+
+        sampler = qmc.Sobol(d=self.ndims, scramble=False)
+
+        # log_points = np.ceil(np.log2(npoints))
+        # sample = sampler.random_base2(m=log_points)
+        sample = sampler.random(n=npoints)
+
+        l_bounds = self.origin
+        u_bounds = self.extent
+
+        result = qmc.scale(sample, l_bounds, u_bounds)
+
+        result = np.array(result).astype(self._dtype)
+
+        boundary_points = self._sampling_boundary(npoints)
+
+        return np.concatenate((result, boundary_points), axis=0)
+
+    def _sampling_lhs(self, npoints):
+
+        sampler = qmc.LatinHypercube(d=self.ndims)
+
+        sample = sampler.random(n=npoints)
+
+        l_bounds = self.origin
+        u_bounds = self.extent
+
+        result = qmc.scale(sample, l_bounds, u_bounds)
+
+        result = np.array(result).astype(self._dtype)
+
+        boundary_points = self._sampling_boundary(npoints)
+
+        return np.concatenate((result, boundary_points), axis=0)
 
     def _sampling_mesh(self, npoints):
 
