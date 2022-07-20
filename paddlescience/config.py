@@ -97,7 +97,14 @@ def cinn_enabled():
     '''
     cinn_flag = os.getenv('FLAGS_use_cinn', '0')
     check_cinn_set = cinn_flag == "1" or cinn_flag.lower() == "true"
-    if check_cinn_set:
+    return check_cinn_set
+
+
+def enable_cinn():
+    '''
+    Enable CINN based on static graph mode and automatic differentiation basic operator.
+    Please ensure FLAGS_use_cinn is set to 1 or true. Ref https://github.com/PaddlePaddle/CINN
+    '''
+    if cinn_enabled():
         enable_static()
         enable_prim()
-    return check_cinn_set
