@@ -155,7 +155,12 @@ class L2:
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            if config.prim_enabled():
+                nrm = paddle.norm(cmploss.outs[:, i] - data, p=2)
+                loss += nrm * nrm
+            else:
+                loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+
             # TODO: p=2 p=1
 
         loss = self.data_weight * loss
