@@ -27,11 +27,16 @@ class PINNs(AlgorithmBase):
 
     Parameters:
         net(Network): The network used in PINNs algorithm.
-        loss(Loss): The loss used in PINNs algorithm.
+        loss(Loss, optional): The loss used in PINNs algorithm.
 
     Example:
+        >>> # 1. train
         >>> import paddlescience as psci
         >>> algo = psci.algorithm.PINNs(net=net, loss=loss)
+
+        >>> # 2. predict
+        >>> import paddlescience as psci
+        >>> algo = psci.algorithm.PINNs(net=net)
     """
 
     def __init__(self, net, loss=None):

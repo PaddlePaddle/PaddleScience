@@ -77,12 +77,20 @@ class Solver(object):
     Solver
  
     Parameters:
+        pde(paddlescience.pde): The PDE used in the solver.
         algo(Algorithm): The algorithm used in the solver.
-        opt(paddlescience.Optimizer): The optimizer used in the solver.
+        opt(paddlescience.Optimizer, optional): The optimizer used in the solver.
 
     Example:
+        >>> # 1. train
         >>> import paddlescience as psci
         >>> solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+        >>> solution = solver.solve()
+
+        >>> # 2. predict
+        >>> import paddlescience as psci
+        >>> solver = psci.solver.Solver(pde=pde_disc, algo=algo)
+        >>> solution = solver.predict()
     """
 
     # init
