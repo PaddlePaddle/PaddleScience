@@ -419,7 +419,7 @@ class Solver(object):
                 self.opt.minimize(self.loss)
 
                 # new ad
-                if config.prim_enabled():
+                if config.prim_enabled() and not config.cinn_enabled():
                     config.prim2orig()
 
             # startup program
@@ -462,6 +462,7 @@ class Solver(object):
 
         if config.cinn_enabled():
             begin = time.time()
+            print("CINN is currently used.")
             compiled_program = utils.cinn_compile(self.train_program,
                                                   self.loss.name, fetches)
         else:
