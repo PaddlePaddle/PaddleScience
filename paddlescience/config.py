@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle
+import os
 
 _dtype = 'float32'
 _use_visualdl = False
@@ -88,3 +89,15 @@ def prim2orig(*args):
         pass
     else:
         return paddle.incubate.autograd.prim2orig(*args)
+
+
+def cinn_enabled():
+    '''
+    Determine whether CINN is enabled. Ref https://github.com/PaddlePaddle/CINN
+    '''
+    cinn_flag = os.getenv('FLAGS_use_cinn', '0')
+    check_cinn_set = cinn_flag == "1" or cinn_flag.lower() == "true"
+    if check_cinn_set:
+        enable_static()
+        enable_prim()
+    return check_cinn_set
