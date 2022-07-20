@@ -30,7 +30,7 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         filename(string): file name.
         time_array(list or numpy array, optional): time steps list / array.
         geo_disc (GeometryDiscrete): discrete geometry.
-        data (numpy array): data to be visualized.
+        data (numpy array, optional): data to be visualized.
 
 
     Example:
