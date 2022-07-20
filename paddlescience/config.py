@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import paddle
+import os
 
 _dtype = 'float32'
+_use_visualdl = False
 
 
 def set_dtype(dtype):
@@ -25,6 +27,15 @@ def set_dtype(dtype):
 def get_dtype():
     global _dtype
     return _dtype
+
+
+def enable_visualdl():
+    global _use_visualdl
+    _use_visualdl = True
+
+
+def visualdl_enabled():
+    return _use_visualdl
 
 
 def enable_static():
@@ -78,3 +89,22 @@ def prim2orig(*args):
         pass
     else:
         return paddle.incubate.autograd.prim2orig(*args)
+
+
+def cinn_enabled():
+    '''
+    Determine whether CINN is enabled. Ref https://github.com/PaddlePaddle/CINN
+    '''
+    cinn_flag = os.getenv('FLAGS_use_cinn', '0')
+    check_cinn_set = cinn_flag == "1" or cinn_flag.lower() == "true"
+    return check_cinn_set
+
+
+def enable_cinn():
+    '''
+    Enable CINN based on static graph mode and automatic differentiation basic operator.
+    Please ensure FLAGS_use_cinn is set to 1 or true. Ref https://github.com/PaddlePaddle/CINN
+    '''
+    if cinn_enabled():
+        enable_static()
+        enable_prim()
