@@ -18,3 +18,6 @@ class InputsAttr:
         self.indvar_start = istart
         self.dvar_1_start = dstart
         self.parameter_pde_start = pstart
+
+    def __repr__(self):
+        return "inputs_attr"
