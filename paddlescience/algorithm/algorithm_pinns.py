@@ -54,8 +54,6 @@ class PINNs(AlgorithmBase):
         # self.__print_input(inputs)
         # self.__print_input_attr(inputs_attr)
 
-        print(inputs[1])
-
         return inputs, inputs_attr
 
     def create_labels(self, pde):
