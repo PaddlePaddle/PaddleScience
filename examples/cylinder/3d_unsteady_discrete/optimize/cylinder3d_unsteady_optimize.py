@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,14 @@
 
 import numpy as np
 import os
+import time
 import paddlescience as psci
 import paddle
 import os
 import wget
 import zipfile
-from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
+
+from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition, cinn_compile
 
 paddle.seed(1)
 np.random.seed(1)
@@ -27,12 +29,22 @@ np.random.seed(1)
 psci.config.enable_static()
 psci.config.enable_prim()
 
+np.set_printoptions(
+    suppress=True,
+    precision=6,
+    formatter={'float': '{:0.6f}'.format},
+    threshold=np.inf,
+    linewidth=1000)
+
+use_cinn = (os.getenv('FLAGS_use_cinn') == "1")
+allow_cinn_ops = os.getenv('FLAGS_allow_cinn_ops').split(';')
+
 # define start time and time step
 start_time = 100
 time_step = 1
 
 
-# load real data 
+# load real data
 def GetRealPhyInfo(time, need_info=None):
     # if real data don't exist, you need to download it.
     if os.path.exists('./openfoam_cylinder_re100') == False:
@@ -96,7 +108,7 @@ pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
 pde.add_bc("right", bc_right_p)
 pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-# pde discretization 
+# pde discretization
 pde_disc = pde.discretize(
     time_method="implicit", time_step=1, geo_disc=geo_disc)
 
@@ -136,9 +148,9 @@ with paddle.static.program_guard(main_program, startup_program):
                                            labels_var[7:10])
     # data_loss
     data_loss = l2_norm_square(outputs_var[4][:, 0]-labels_var[3]) + \
-                l2_norm_square(outputs_var[4][:, 1]-labels_var[4]) + \
-                l2_norm_square(outputs_var[4][:, 2]-labels_var[5]) + \
-                l2_norm_square(outputs_var[4][:, 3]-labels_var[6])
+        l2_norm_square(outputs_var[4][:, 1]-labels_var[4]) + \
+        l2_norm_square(outputs_var[4][:, 2]-labels_var[5]) + \
+        l2_norm_square(outputs_var[4][:, 3]-labels_var[6])
 
     # total_loss
     total_loss = paddle.sqrt(bc_loss + output_var_0_eq_loss +
@@ -146,14 +158,6 @@ with paddle.static.program_guard(main_program, startup_program):
     opt_ops, param_grads = paddle.optimizer.Adam(0.001).minimize(total_loss)
 
 # data parallel
-nranks = paddle.distributed.get_world_size()
-if nranks > 1:
-    main_program, startup_program = convert_to_distributed_program(
-        main_program, startup_program, param_grads)
-
-with paddle.static.program_guard(main_program, startup_program):
-    if psci.config.prim_enabled():
-        psci.config.prim2orig(main_program.block(0))
 
 gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 place = paddle.CUDAPlace(gpu_id)
@@ -161,23 +165,42 @@ exe = paddle.static.Executor(place)
 exe.run(startup_program)
 
 inputs_name = [var.name for var in inputs_var]
+
 inputs = data_parallel_partition(inputs)
 feeds = dict(zip(inputs_name, inputs))
 
 fetches = [total_loss.name] + [var.name for var in outputs_var]
 
-main_program = compile_and_convert_back_to_program(
-    main_program,
-    feed=feeds,
-    fetch_list=fetches,
-    use_prune=True,
-    loss_name=total_loss.name)
+if not use_cinn:
+    print("Run without CINN")
+    # data parallel
+    nranks = paddle.distributed.get_world_size()
+    if nranks > 1:
+        main_program, startup_program = convert_to_distributed_program(
+            main_program, startup_program, param_grads)
+
+    with paddle.static.program_guard(main_program, startup_program):
+        if psci.config.prim_enabled():
+            psci.config.prim2orig(main_program.block(0))
+
+    main_program = compile_and_convert_back_to_program(
+        main_program,
+        feed=feeds,
+        fetch_list=fetches,
+        use_prune=True,
+        loss_name=total_loss.name)
+else:
+    print("Run with CINN")
+    with paddle.static.program_guard(main_program, startup_program):
+        prim2orig(main_program.block(0), allow_cinn_ops)
+    main_program = cinn_compile(main_program, total_loss.name, fetches)
 
 # num_epoch in train
-train_epoch = 2000
+train_epoch = 110
+print_step = 1
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
-num_time_step = 10
+num_time_step = 1
 current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
@@ -199,15 +222,27 @@ for i in range(num_time_step):
     for j in range(len(self_lables)):
         feeds['label' + str(j)] = self_lables[j]
 
+    begin = time.time()
     for k in range(train_epoch):
+        if k + 1 == 10:
+            paddle.device.cuda.synchronize()
+            begin = time.time()
+
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
-        print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+        if (k + 1) % print_step == 0:
+            print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+
+    paddle.device.cuda.synchronize()
+    end = time.time()
+    print('{} epoch(10~{}) time: {} s'.format(train_epoch - 10, train_epoch,
+                                              end - begin))
+
     next_uvwp = out[1:]
     # Save vtk
-    file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
-        next_time)
-    psci.visu.save_vtk(
-        filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    # file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
+    #     next_time)
+    # psci.visu.save_vtk(
+    #     filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])

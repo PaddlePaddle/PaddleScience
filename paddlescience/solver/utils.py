@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -158,22 +158,22 @@ def compute_eq_loss(inputs, outputs, labels_var):
     dt = 1.0
     continuty = jac0[:, 0] + jac1[:, 1] + jac2[:, 2]
     momentum_x = u / dt - u_n / dt + u * jac0[:, 0] + v * jac0[:, 1] + w * jac0[:, 2] - \
-                nu / rho * hes0[:, 0] - nu / rho * hes1[:, 1] - nu / rho * hes2[:, 2] + \
-                1.0 / rho * jac3[:, 0]
+        nu / rho * hes0[:, 0] - nu / rho * hes1[:, 1] - nu / rho * hes2[:, 2] + \
+        1.0 / rho * jac3[:, 0]
     momentum_y = v / dt - v_n / dt + u * jac1[:, 0] + v * jac1[:, 1] + w * jac1[:, 2] - \
-                nu / rho * hes3[:, 0] - nu / rho * hes4[:, 1] - nu / rho * hes5[:, 2] + \
-                1.0 / rho * jac3[:, 1]
+        nu / rho * hes3[:, 0] - nu / rho * hes4[:, 1] - nu / rho * hes5[:, 2] + \
+        1.0 / rho * jac3[:, 1]
     momentum_z = w / dt - w_n / dt + u * jac2[:, 0] + v * jac2[:, 1] + w * jac2[:, 2] - \
-                nu / rho * hes6[:, 0] - nu / rho * hes7[:, 1] - nu / rho * hes8[:, 2] + \
-                1.0 / rho * jac3[:, 2]
+        nu / rho * hes6[:, 0] - nu / rho * hes7[:, 1] - nu / rho * hes8[:, 2] + \
+        1.0 / rho * jac3[:, 2]
 
     rhs = 0
     wgt = np.sqrt(0.01)
 
     eq_loss = l2_norm_square((continuty - rhs)*wgt) + \
-            l2_norm_square((momentum_x - rhs)*wgt) + \
-            l2_norm_square((momentum_y - rhs)*wgt) + \
-            l2_norm_square((momentum_z - rhs)*wgt)
+        l2_norm_square((momentum_x - rhs)*wgt) + \
+        l2_norm_square((momentum_y - rhs)*wgt) + \
+        l2_norm_square((momentum_z - rhs)*wgt)
     return eq_loss
 
 
@@ -273,7 +273,7 @@ def compile_and_convert_back_to_program(program=None,
 
 def set_init_dist_attr(serial_main_prog):
 
-    # set init dp attr    
+    # set init dp attr
     default_dist_context = get_default_distributed_context()
     _global_parallel_strategy = "dp"
     _global_process_mesh = auto.ProcessMesh(list(range(nranks)))
