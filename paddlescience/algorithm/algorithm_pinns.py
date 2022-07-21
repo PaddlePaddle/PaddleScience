@@ -16,6 +16,7 @@ import paddle
 from .algorithm_base import AlgorithmBase
 from ..inputs import InputsAttr
 from ..labels import LabelInt, LabelHolder
+from ..loss import FormulaLoss
 
 from collections import OrderedDict
 import numpy as np
@@ -43,6 +44,30 @@ class PINNs(AlgorithmBase):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
+
+    def create_inputs(self, pde):
+        if type(self.loss) is FormulaLoss:
+            inputs, inputs_attr = self.create_inputs_from_loss(pde)
+        else:
+            inputs, inputs_attr = self.create_inputs_from_pde(pde)
+
+        # self.__print_input(inputs)
+        # self.__print_input_attr(inputs_attr)
+
+        print(inputs[1])
+
+        return inputs, inputs_attr
+
+    def create_labels(self, pde):
+        if type(self.loss) is FormulaLoss:
+            labels, labels_attr = self.create_labels_from_loss(pde)
+        else:
+            labels, labels_attr = self.create_labels_from_pde(pde)
+
+        # self.__print_label(labels)
+        # self.__print_label_attr(labels_attr)
+
+        return labels, labels_attr
 
     # create inputs used as net input
     def create_inputs_from_pde(self, pde):
@@ -309,9 +334,6 @@ class PINNs(AlgorithmBase):
         inputs_attr["ic"] = inputs_attr_it
         inputs_attr["user"] = inputs_attr_d
 
-        self.__print_input(inputs)
-        self.__print_input_attr(inputs_attr)
-
         return inputs, inputs_attr
 
     # print input
@@ -419,9 +441,6 @@ class PINNs(AlgorithmBase):
             for i in range(n):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
                 labels.append(self.loss._supref[0][:, i])
-
-        self.__print_label(labels)
-        self.__print_label_attr(labels_attr)
 
         return labels, labels_attr
 
