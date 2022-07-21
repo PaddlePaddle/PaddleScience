@@ -25,22 +25,24 @@ class FormulaLoss:
         self._eqlist = list()
         self._bclist = list()
         self._iclist = list()
-        self._datalist = list()
+        self._suplist = list()
 
         self._eqwgt = list()
         self._bcwgt = list()
         self._icwgt = list()
-        self._datawgt = list()
+        self._supwgt = list()
 
         self._eqinput = list()
         self._bcinput = list()
         self._icinput = list()
-        self._datainput = list()
+        self._supinput = list()
 
         self._eqnet = list()
         self._bcnet = list()
         self._icnet = list()
-        self._datanet = list()
+        self._supnet = list()
+
+        self._supref = list()
 
         self.norm_p = 1
 
@@ -50,21 +52,23 @@ class FormulaLoss:
         floss._eqlist = self._eqlist + other._eqlist
         floss._bclist = self._bclist + other._bclist
         floss._iclist = self._iclist + other._iclist
-        floss._datalist = self._datalist + other._datalist
+        floss._suplist = self._suplist + other._suplist
         floss._eqwgt = self._eqwgt + other._eqwgt
         floss._bcwgt = self._bcwgt + other._bcwgt
         floss._icwgt = self._icwgt + other._icwgt
-        floss._datawgt = self._datawgt + other._datawgt
+        floss._supwgt = self._supwgt + other._supwgt
 
         floss._eqinput = self._eqinput + other._eqinput
         floss._bcinput = self._bcinput + other._bcinput
         floss._icinput = self._icinput + other._icinput
-        floss._datainput = self._datainput + other._datainput
+        floss._supinput = self._supinput + other._supinput
 
         floss._eqnet = self._eqnet + other._eqnet
         floss._bcnet = self._bcnet + other._bcnet
         floss._icnet = self._icnet + other._icnet
-        floss._datanet = self._datanet + other._datanet
+        floss._supnet = self._supnet + other._supnet
+
+        floss._supref = self._supref + other._supref
 
         return floss
 
@@ -77,14 +81,21 @@ class FormulaLoss:
             floss._bcwgt[i] *= weight
         for i in range(len(floss._icwgt)):
             floss._icwgt[i] *= weight
-        for i in range(len(floss._datawgt)):
-            floss._datawgt[i] *= weight
+        for i in range(len(floss._supwgt)):
+            floss._supwgt[i] *= weight
         return floss
 
     # multiply scalar (left)
-    def __rmul__(self, other):
+    def __rmul__(self, weight):
         floss = copy.deepcopy(self)
-        self.__mul__(other)
+        for i in range(len(floss._eqwgt)):
+            floss._eqwgt[i] *= weight
+        for i in range(len(floss._bcwgt)):
+            floss._bcwgt[i] *= weight
+        for i in range(len(floss._icwgt)):
+            floss._icwgt[i] *= weight
+        for i in range(len(floss._supwgt)):
+            floss._supwgt[i] *= weight
         return floss
 
     def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
@@ -137,12 +148,12 @@ class FormulaLoss:
 
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
-            # TODO: hard code bs
+
             formula = pde.bc[name_b][i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 
-            # TODO: simplify                                  
+            # TODO: simplify                                 
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]
@@ -176,6 +187,7 @@ class FormulaLoss:
                 rhs = labels[rhs_c]
             else:
                 rhs = rhs_c
+
             wgt = labels_attr["ic"][i]["weight"]
             loss += l2_norm_square(rst - rhs, wgt)
 
@@ -196,7 +208,7 @@ class FormulaLoss:
             loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
             # TODO: p=2 p=1
 
-        loss = self.data_weight * loss
+        loss = self._supwgt[0] * loss
         return loss, cmploss.outs
 
 
@@ -239,14 +251,16 @@ def IcLoss(netout=None):
     return floss
 
 
-def DataLoss(netout=None):
+def DataLoss(netout=None, ref=None):
     floss = FormulaLoss()
-    floss._datalist = [True]
-    floss._datawgt = [1.0]
+    floss._suplist = [True]
+    floss._supwgt = [1.0]
     if netout is not None:
-        floss._datainput = [netout._input]
-        floss._datanet = [netout._net]
+        floss._supinput = [netout._input]
+        floss._supnet = [netout._net]
+        floss._supref = [ref]
     else:
-        floss._datainput = []
-        floss._datanet = []
+        floss._supinput = []
+        floss._supnet = []
+        floss._supref = []
     return floss

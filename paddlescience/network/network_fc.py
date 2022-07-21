@@ -139,7 +139,7 @@ class FCNet(NetworkBase):
         u = paddle.add(u, self._biases[-1])
         return u
 
-    def set_input(self, input):
+    def __call__(self, input):
         return NetOut(self, input)
 
     def initialize(self,
@@ -200,14 +200,14 @@ class FCNet(NetworkBase):
                         is_bias=True,
                         attr=b_attr)
 
-    def initialize(self, params=None):
-        self.params_path = params
-        # In dynamic graph mode, load the params.
-        # In static graph mode, just save the filename 
-        # and initialize it in solver program.
-        if paddle.in_dynamic_mode():
-            layer_state_dict = paddle.load(params)
-            self.set_state_dict(layer_state_dict)
+    # def initialize(self, params=None):
+    #     self.params_path = params
+    #     # In dynamic graph mode, load the params.
+    #     # In static graph mode, just save the filename 
+    #     # and initialize it in solver program.
+    #     if paddle.in_dynamic_mode():
+    #         layer_state_dict = paddle.load(params)
+    #         self.set_state_dict(layer_state_dict)
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self._weights + self._biases))
