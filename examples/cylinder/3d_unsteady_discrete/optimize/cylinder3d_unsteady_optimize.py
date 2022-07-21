@@ -192,7 +192,7 @@ if not use_cinn:
 else:
     print("Run with CINN")
     with paddle.static.program_guard(main_program, startup_program):
-        prim2orig(main_program.block(0), allow_cinn_ops)
+        psci.config.prim2orig(main_program.block(0), allow_cinn_ops)
     main_program = cinn_compile(main_program, total_loss.name, fetches)
 
 # num_epoch in train
