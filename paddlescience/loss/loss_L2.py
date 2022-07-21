@@ -14,12 +14,31 @@
 
 import paddle
 import numpy as np
-from .loss_base import CompFormula, l2_norm_square
+from .loss_base import LossBase, CompFormula
 from ..labels import LabelInt
 from .. import config
 
 
-class L2:
+def l2_norm_square(x, wgt=None):
+    # new ad
+    if config.prim_enabled():
+        if wgt is None:
+            l2_norm = paddle.norm(x, p=2)
+        elif np.isscalar(wgt):
+            wgt2 = np.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        else:
+            wgt2 = paddle.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        return l2_norm * l2_norm
+    else:
+        if wgt is None:
+            return paddle.norm(x**2, p=1)
+        else:
+            return paddle.norm(x**2 * wgt, p=1)
+
+
+class L2(LossBase):
     """
     L2 loss.
 
@@ -114,10 +133,17 @@ class L2:
             else:
                 wgt = wgt_b
 
+            # print("rst: ", rst.shape)
+            # print("rhs: ", rhs.shape)
+            # print("wgt: ", wgt)
+
             if rhs is None:
                 loss += l2_norm_square(rst, wgt)
             else:
                 loss += l2_norm_square((rst - rhs), wgt)
+
+            # print("rhs: ", rhs)
+            # exit()
 
         return loss, cmploss.outs
 

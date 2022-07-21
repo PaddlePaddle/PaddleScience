@@ -13,4 +13,3 @@
 # limitations under the License.
 
 from .loss_L2 import L2
-from .loss_formula import EqLoss, BcLoss, IcLoss, DataLoss

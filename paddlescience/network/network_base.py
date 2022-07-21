@@ -27,9 +27,6 @@ class NetworkBase(paddle.nn.Layer):
     def nn_func(self):
         pass
 
-    def initialize(self, params=None):
-        pass
-
 
 class GenNetworkIns:
     def __init__(self):

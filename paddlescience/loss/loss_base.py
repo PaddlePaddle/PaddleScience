@@ -15,18 +15,33 @@
 import paddle
 import sympy
 from ..inputs import InputsAttr
-from .. import config
 
 from paddle.incubate.autograd import Jacobian, Hessian
+
+
+class LossBase(object):
+    def __init__(self, pdes, geo):
+        pass
+
+    def eq_loss(self, net):
+        pass
+
+    def bc_loss(self, net):
+        pass
+
+    def ic_loss(self, net):
+        pass
 
 
 class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
         self.net = net
+        self.order = pde.order
         self.indvar = pde.indvar
         self.dvar = pde.dvar
         self.dvar_n = pde.dvar_n
+
         self.outs = None
         self.jacobian = None
         self.hessian = None
@@ -40,16 +55,23 @@ class CompFormula:
         self.compute_outs(input, bs)
 
         # jacobian
-        jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
+        if self.order >= 1:
+            jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
+        else:
+            jacobian = None
 
         # hessian
-        hessian = list()
-        for i in range(self.net.num_outs):
+        if self.order >= 2:
+            hessian = list()
+            for i in range(self.net.num_outs):
 
-            def func(input):
-                return self.net.nn_func(input)[:, i:i + 1]
+                def func(input):
+                    return self.net.nn_func(input)[:, i:i + 1]
 
-            hessian.append(Hessian(func, input, is_batched=True))
+                hessian.append(Hessian(func, input, is_batched=True))
+
+        else:
+            hessian = None
 
         # print("*** Jacobian *** ")
         # print(jacobian[:])
@@ -177,22 +199,3 @@ class CompFormula:
                 rst = hessian[f_idx][:, var_idx1, var_idx2]
 
         return rst
-
-
-def l2_norm_square(x, wgt=None):
-    # new ad
-    if config.prim_enabled():
-        if wgt is None:
-            l2_norm = paddle.norm(x, p=2)
-        elif np.isscalar(wgt):
-            wgt2 = np.sqrt(wgt)
-            l2_norm = paddle.norm(x * wgt2, p=2)
-        else:
-            wgt2 = paddle.sqrt(wgt)
-            l2_norm = paddle.norm(x * wgt2, p=2)
-        return l2_norm * l2_norm
-    else:
-        if wgt is None:
-            return paddle.norm(x**2, p=1)
-        else:
-            return paddle.norm(x**2 * wgt, p=1)

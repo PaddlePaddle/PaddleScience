@@ -25,7 +25,7 @@ def jud_pinns(pde_disc):
     net = psci.network.FCNet(2, 1, 2, 1)
     loss = psci.loss.L2()
     algo = psci.algorithm.PINNs(net=net, loss=loss)
-    inputs, inputs_attr = algo.create_inputs_from_pde(pde_disc)
+    inputs, inputs_attr = algo.create_inputs(pde_disc)
     assert inputs == pde_inputs
     assert len(inputs_attr) == 4
 
