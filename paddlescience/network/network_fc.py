@@ -148,6 +148,31 @@ class FCNet(NetworkBase):
                    weight_init=None,
                    bias_init=None,
                    learaning_rate=1.0):
+        """
+        Initialize network parameters. There are two methods:
+
+        - initialize with parameters from file. This needs to specify parameter "path".
+        - initialize with paddle.nn.initializer. This needs to specify parameter "n", "weight_init/bias_init" and "learning_rate".
+
+        Parameters:
+            path (string): parameter file 
+            n (integer or list of integer): layers to initialize
+            weight_init (paddle.nn.initializer): initializer used for weight
+            bias_init (paddle.nn.initializer): initializer used for bias
+            learning_rate (float, optional): learning rate 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> net = psci.network.FCNet(num_ins=2, num_outs=3, num_layers=10, hidden_size=20, activation="tanh")
+
+            >>> # option 1: use file fc.pdparams to initialize
+            >>> net.initialize(path="fc.pdparams")
+
+            >>> # option 2: initialize layer 1 and layer 2 with constants
+            >>> wcst = paddle.nn.initializer.Constant(2.0)
+            >>> bcst = paddle.nn.initializer.Constant(3.0)
+            >>> net.initialize(n=[1,2], weight_init=wcst, bias_init=bcst) 
+        """
 
         if type(path) is str:
             self.params_path = path
