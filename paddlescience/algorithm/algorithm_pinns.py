@@ -56,11 +56,12 @@ class PINNs(AlgorithmBase):
 
         return inputs, inputs_attr
 
-    def create_labels(self, pde):
+    def create_labels(self, pde, interior_shape=None, supervised_shape=None):
         if type(self.loss) is FormulaLoss:
             labels, labels_attr = self.create_labels_from_loss(pde)
         else:
-            labels, labels_attr = self.create_labels_from_pde(pde)
+            labels, labels_attr = self.create_labels_from_pde(
+                pde, interior_shape, supervised_shape)
 
         # self.__print_label(labels)
         # self.__print_label_attr(labels_attr)
