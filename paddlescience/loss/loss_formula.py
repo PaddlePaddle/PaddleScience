@@ -218,7 +218,7 @@ def EqLoss(eq, netout=None):
  
     Parameters:
         eq (pde.equation): Equation 
-        netout (output of network): 
+        netout (optional): output of network
 
     Example
         >>> import paddlescience as psci
@@ -247,8 +247,8 @@ def BcLoss(name, netout=None):
         name (string): boundary name
         netout (optional): output of network
 
-    Example
-        >>> import paddlescience as 
+    Example:
+        >>> import paddlescience as psci
         >>> net = psci.network.FCNet(...)
         >>> out = net(input)
         >>> loss = psci.loss.BcLoss("top", out) # loss is boundary loss on "top" boundary
@@ -273,8 +273,8 @@ def IcLoss(netout=None):
     Parameters:
         netout (optional): output of network  
 
-    Example
-        >>> import paddlescience as 
+    Example:
+        >>> import paddlescience as psci
         >>> net = psci.network.FCNet(...)
         >>> out = net(input)
         >>> loss = psci.loss.IcLoss("top") # loss is initial loss
@@ -300,8 +300,8 @@ def DataLoss(netout=None, ref=None):
         netout (optional): output of network
         ref (numpy.ndarray or Tensor) : reference values on supervise points   
 
-    Example
-        >>> import paddlescience as 
+    Example:
+        >>> import paddlescience as psci
         >>> net = psci.network.FCNet(...)
         >>> out = net(input)
         >>> loss = psci.loss.DataLoss(out, ref=np.ones(3)) # loss is initial loss
