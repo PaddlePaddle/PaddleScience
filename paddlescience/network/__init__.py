@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .network_fc import FCNet
+import paddle.nn.initializer as initializer
