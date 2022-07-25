@@ -39,7 +39,7 @@ class L2:
                  p=1,
                  eq_weight=None,
                  bc_weight=None,
-                 ic_loss=None,
+                 ic_weight=None,
                  data_weight=1.0):
         self.norm_p = p
         self.eq_weight = eq_weight
