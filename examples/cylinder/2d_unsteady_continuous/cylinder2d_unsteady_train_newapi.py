@@ -107,20 +107,10 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=1)
+solution = solver.solve(num_epoch=10)
 
-for i in solution:
-    print(i.shape)
-
+# Save last time data to vtk
 n = int(i_x.shape[0] / len(time_array))
-
-i_x = i_x.astype("float32")
-i_y = i_y.astype("float32")
-
-cord = np.stack((i_x[0:n], i_y[0:n]), axis=1)
+cord = np.stack(
+    (i_x[0:n].astype("float32"), i_y[0:n].astype("float32")), axis=1)
 psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-
-exit()
-
-psci.visu.save_vtk(
-    time_array=time_array, geo_disc=pde_disc.geometry, data=solution)
