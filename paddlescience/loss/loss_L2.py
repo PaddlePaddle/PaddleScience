@@ -145,7 +145,6 @@ class L2:
             else:
                 loss += l2_norm_square((rst - rhs), wgt)
 
-        print(loss)
         return loss, cmploss.outs
 
     def ic_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
