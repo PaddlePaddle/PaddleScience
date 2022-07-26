@@ -1,0 +1,184 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, PaddleScience
+# This file is distributed under the same license as the PaddleScience
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PaddleScience \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-06 11:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/index.rst:36
+msgid "Installation"
+msgstr "安装"
+
+#: ../../source/index.rst:36
+msgid "Running Example"
+msgstr "运行样例"
+
+#: ../../source/index.rst:36 ca4ecc75dcc64ad281928568da5cc01b
+msgid "Getting Started"
+msgstr "开始"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.pde"
+msgstr "paddlescience.pde"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.geometry"
+msgstr "paddlescience.geometry"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.discretize"
+msgstr "paddlescience.discretize"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.network"
+msgstr "paddlescience.network"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.loss"
+msgstr "paddlescience.loss"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.algorithm"
+msgstr "paddlescience.algorithm"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.optimizer"
+msgstr "paddlescience.optimizer"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.solver"
+msgstr "paddlescience.solver"
+
+#: ../../source/index.rst:43
+msgid "paddlescience.visu"
+msgstr "paddlescience.visu"
+
+#: ../../source/index.rst:43 b80be169b50d4504b3d4c0cec4f2526b
+msgid "API Reference"
+msgstr "API 参考"
+
+#: ../../source/index.rst:58
+msgid "Lid Driven Cavity Flow"
+msgstr "顶盖驱动方腔流"
+
+#: ../../source/index.rst:58
+msgid "Darcy Flow in Porous Medium"
+msgstr "多孔介质中的达西流动"
+
+#: ../../source/index.rst:58 49f94a5eeb9a44f59a10671e5bd47e5b
+msgid "Example / Demo"
+msgstr "示例 / 演示"
+
+#: ../../source/index.rst:2 e1341ce6efd84f0eb154bad4b493649c
+msgid "Welcome to PaddleScience’s documentation"
+msgstr "欢迎来到 PaddleScience 文档中心"
+
+#: ../../source/index.rst:4 47fdfc60d063403596da1177c5c3db83
+msgid ""
+"PaddleScience is SDK and library for developing AI-driven scientific "
+"computing applications based on PaddlePaddle. Current version is v0.1."
+msgstr "PaddleScience 是用于开发基于 PaddlePaddle 的人工智能驱动的科学计算应用程序的 SDK 和 library。当前版本为预发布版本v0.1。"
+
+#: ../../source/index.rst:6 fb20cdfdcae641a5b8a164db1484616b
+msgid ""
+"PaddleScience extends the PaddlePaddle framework with reusable software "
+"components for developing novel scientific computing applications. Such "
+"new applications include Physics-informed Machine Learning, neural "
+"network based PDE solvers, machine learning for CFD, and so on."
+msgstr "PaddleScience 使用可重用的软件组件扩展了PaddlePaddle框架，以开发新的科学计算应用。 这些新应用包括基于物理的机器学习、基于神经网络的PDE求解器、用于CFD的机器学习等。"
+
+#: ../../source/index.rst:8 d4cbd76889d9411ca02ddef9e0fa58b1
+msgid ""
+"PaddleScience is currently under active development. Its design is "
+"evolving and its APIs are subject to change."
+msgstr "PaddleScience 目前正在积极发展，它的设计、API也会不断演进。"
+
+#: ../../source/index.rst:11 9039860bc99b42219965c6c805928315
+msgid "**Core features and organization**"
+msgstr "核心特征和组织架构"
+
+#: ../../source/index.rst:13 a1b89d0c0a064e5b988ff124b2fdb3b2
+msgid ""
+"PaddleScience currently focuses on the PINNs model. The core components "
+"are as follows."
+msgstr "PaddleScience 目前专注于 PINNs 模型，核心组件如下所示。"
+
+#: ../../source/index.rst:15 46aa938d547f413286b405c43f65666d
+msgid ""
+"Geometry, a declarative interface for defining the geometric domain. "
+"Automatic discretization is supported"
+msgstr "Geometry，一个用于定义几何域的声明性接口。支持自动离散化"
+
+#: ../../source/index.rst:17 29bf052453aa4d0182cd743ac2673f29
+msgid ""
+"PDE, delineating partial differential equations in symbolic forms. "
+"Specific PDEs derive the base PDE class. Two native PDEs are currently "
+"included: Laplace2d and NavierStokes2d."
+msgstr "PDE，以符号形式描述偏微分方程。特定的 PDE 派生于PDE基类。目前包括两种原生PDE：Laplace2d和NavierStokes2d。"
+
+#: ../../source/index.rst:19 d52706c6fd104e0d92daa21437a85570
+msgid ""
+"Loss, defining what exact penalties are enforced during the training "
+"process. By default, the L2 loss is applied. In the current design, the "
+"total loss is a weighted sum of three parts, the equation loss, the "
+"boundary condition loss and the initial condition loss."
+msgstr "Loss，定义训练过程中实施的具体惩罚。 默认应用L2损失。在当前的设计中，总Loss是 方程Loss、边界条件Loss和初始条件Loss 三部分的加权和。"
+
+#: ../../source/index.rst:21 939321ee55a54a87bdb072b9e8b805df
+msgid ""
+"Optimizer, specifying which optimizer to use for training. Adam is the "
+"default option. More optimizers, such as BFGS, will be available in the "
+"future."
+msgstr "Optimizer，指定用于训练的优化器。默认选项是Adam。未来将提供更多优化器，如BFGS"
+
+#: ../../source/index.rst:23 2fd9070aa37042639127bb83e29e4f37
+msgid ""
+"Solver, managing the training process given the training data in a batch "
+"fashion."
+msgstr "Solver，以批处理方式管理给定训练数据的训练过程。"
+
+#: ../../source/index.rst:25 639ec55ed8804767861e0b1da0dd9507
+msgid "Visualization, an easy access to the graph drawing utilities."
+msgstr "Visualization，轻松访问图形绘制应用。"
+
+#: ../../source/index.rst:27 eb49005a52774e049d2eef37f9bd9cab
+msgid "The component organization is illustrated in the following figure."
+msgstr "各组件的组织情况如下图所示。"
+
+#: ../../source/index.rst:32 6ea524a58cb249a7b151107be88e9bbf
+msgid "Project on GitHub: https://github.com/PaddlePaddle/PaddleScience"
+msgstr "GitHub 项目地址：https://github.com/PaddlePaddle/PaddleScience"
+
+#: ../../source/index.rst:33 201a452b19094fdbb6deabb7232bd60c
+msgid "Project on Gitee:  https://gitee.com/paddlepaddle/PaddleScience"
+msgstr "Gitee 项目地址:  https://gitee.com/paddlepaddle/PaddleScience"
+
+#: ../../source/index.rst:67 d4c0989d87604720abb8d1d3b1234d53
+msgid "Indices and tables"
+msgstr "索引和表格"
+
+#: ../../source/index.rst:68 cfcfc1c6d9c34eb89f23318568e46717
+msgid ":ref: `genindex` "
+msgstr ":ref: `索引 `"
+
+#: ../../source/index.rst:69 2996d4a1abb24fa58a98cab08609b7d4
+msgid ":ref: `modindex` "
+msgstr ":ref: `模块索引` "
+
+#: ../../source/index.rst:70 02932b49f0eb47b9bcee84aa8ae13845
+msgid ":ref: `search` "
+msgstr ":ref: `搜索页面` "
+

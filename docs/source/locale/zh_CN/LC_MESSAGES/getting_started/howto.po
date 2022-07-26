@@ -1,0 +1,57 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, PaddleScience
+# This file is distributed under the same license as the PaddleScience
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PaddleScience \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-06 11:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/getting_started/howto.rst:2 5cc46d0e4b0b4724a484e5173e57c41a
+msgid "Running Example"
+msgstr "运行样例"
+
+#: ../../source/getting_started/howto.rst:4 bfadd89d3a9c45ebb19fd474613b8273
+msgid ""
+"Some simple examples are baked in for quick demonstration. Please find "
+"them in the directory examples. To run an example, just enter the "
+"subdirectory and run the demo code in Python command line."
+msgstr "以下是一些用于快速演示的简单样例。 可以在examples目录中找到。 要运行某个样例，只需进入对应的子目录并在 Python 命令行中运行示例代码。"
+
+#: ../../source/getting_started/howto.rst:7 6e379ffc0f5e442baf28201838d538d3
+msgid "**Laplace equation example**"
+msgstr "**拉普拉斯方程样例**"
+
+#: ../../source/getting_started/howto.rst:9 8cad271bb7c24798ba0649a4a6b23a56
+msgid ""
+"Solving a steady state 2-dimensional Laplacian equation in a rectangular "
+"domain."
+msgstr "求解矩形域内稳态二维拉普拉斯方程"
+
+#: ../../source/getting_started/howto.rst:16 95c49290e8364b0a802061826d03c642
+msgid "**Darcy flow example**"
+msgstr "**达西渗流样例**"
+
+#: ../../source/getting_started/howto.rst:18 48673c0445a04800a843896e69ae1a02
+msgid "Solving a Darcy flow problem in a 2-dimensional setting."
+msgstr "求解二维渗流场中达西渗流问题"
+
+#: ../../source/getting_started/howto.rst:25 2dfa873055684c5f921bbd8e5c93751b
+msgid "**Lid Driven Cavity example**"
+msgstr "**顶盖驱动方腔流样例**"
+
+#: ../../source/getting_started/howto.rst:27 cb776b0821194f488bc00a4acdfbf8fc
+msgid "Solving a 2-dimensional Lid Driven Cavity problem in rectangular domain."
+msgstr "求解矩形域内二维顶盖驱动方腔流问题"
+

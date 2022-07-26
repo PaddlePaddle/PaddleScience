@@ -1,0 +1,66 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, PaddleScience
+# This file is distributed under the same license as the PaddleScience
+# package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PaddleScience \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-06 11:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/getting_started/installation.rst:2
+#: e8684915f66749f8a525469e7941d5ee
+msgid "Installation"
+msgstr "安装"
+
+#: ../../source/getting_started/installation.rst:4
+#: 63b0e04e2380410c86432eb67cc96023
+msgid "**Prerequisites**"
+msgstr "**预备条件**"
+
+#: ../../source/getting_started/installation.rst:6
+#: d08e21aa6d564bd0a80b8ed18bf4df3b
+msgid "Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100"
+msgstr "硬件要求：NVIDIA GPU V100, NVIDIA GPU A100"
+
+#: ../../source/getting_started/installation.rst:8
+#: de057014f8f6461d8b96af1545fa5b08
+msgid "Package dependencies: paddle, numpy, matplotlib, vtk"
+msgstr "安装包依赖：paddle, numpy, matplotlib, vtk"
+
+#: ../../source/getting_started/installation.rst:10
+#: cc0e9c7f1b2f4771bf25055c2c6be388
+msgid "**Installation**"
+msgstr "**安装**"
+
+#: ../../source/getting_started/installation.rst:12
+#: d4a10fd211b64031961c2ee97eb1e6b9
+msgid "Download and setup environment variable"
+msgstr "下载并设置环境变量"
+
+#: ../../source/getting_started/installation.rst:22
+#: cbeda37f7fc843bc8a8ea0ce004b5937
+msgid ""
+"Please refer to `PaddlePaddle "
+"<https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip"
+"/linux-pip.html>`_ to install paddle. Please choose \"develop\" version."
+msgstr ""
+"请参照 `PaddlePaddle "
+"<https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/install/pip"
+"/linux-pip.html>`_ 安装 paddle. 请选择 \"develop\" 版本"
+
+#: ../../source/getting_started/installation.rst:24
+#: 8d0bc6b578d4475491ce6e3a9afca789
+msgid "Install dependencies with pip"
+msgstr "使用 pip 安装依赖项"
+
