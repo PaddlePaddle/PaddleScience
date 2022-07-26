@@ -15,6 +15,7 @@
 import paddlescience as psci
 import numpy as np
 import paddle
+from laplace2d_config import *
 
 paddle.seed(1)
 np.random.seed(1)
@@ -29,7 +30,6 @@ geo.add_boundary(
     criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
 
 # discretize geometry
-npoints = 10201
 geo_disc = geo.discretize(npoints=npoints, method="uniform")
 
 # Laplace
