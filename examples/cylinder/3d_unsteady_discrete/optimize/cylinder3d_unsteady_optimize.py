@@ -120,7 +120,7 @@ startup_program = paddle.static.Program()
 
 with paddle.static.program_guard(main_program, startup_program):
     # build and apply network
-    algo.net.make_network_static()
+    algo.net.make_network()
     inputs_var = create_inputs_var(inputs)
     labels_var = create_labels_var(labels, npoints, data_size)
     outputs_var = [algo.net.nn_func(var) for var in inputs_var]
