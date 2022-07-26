@@ -75,14 +75,14 @@ class Rectangular(Geometry):
             points = self._uniform_mesh(npoints)
         elif method == "sampling":
             points = self._sampling_mesh(npoints)
-        elif method == "sampler_halton":
+        elif method == "quasi_halton":
             points = self._sampling_halton(npoints)
-        elif method == "sampler_sobol":
+        elif method == "quasi_sobol":
             points = self._sampling_sobol(npoints)
-        elif method == "sampler_lhs":
+        elif method == "quasi_lhs":
             points = self._sampling_lhs(npoints)
         else:
-            assert 0, "The discretize method can only be uniform, sampling or sampler_halton."
+            assert 0, "The discretize method can only be uniform, sampling or quasi sampler."
 
         return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 

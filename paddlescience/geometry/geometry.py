@@ -30,7 +30,7 @@ class Geometry:
         self.normal = dict()  # boundary normal direction
         self._dtype = config._dtype
 
-    def add_boundary(self, name, criteria=None, normal=None, tri_mesh=None):
+    def add_boundary(self, name, criteria=None, normal=None, filename=None):
         """
         Add (specify) bounday in geometry
 
@@ -48,8 +48,8 @@ class Geometry:
             self.criteria[name] = criteria
             self.normal[name] = normal
 
-        if tri_mesh != None:
-            self.tri_mesh[name] = tri_mesh
+        if filename != None:
+            self.tri_mesh[name] = filename
 
     def delete_boundary(self, name):
         """
