@@ -56,8 +56,7 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-# opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
-opt = psci.optimizer.Lbfgs()
+opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
