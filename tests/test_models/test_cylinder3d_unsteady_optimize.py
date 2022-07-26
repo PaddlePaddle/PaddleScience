@@ -248,7 +248,7 @@ def cylinder3d_unsteady_optimize():
     current_interior = np.zeros(
         (len(pde_disc.geometry.interior), 3)).astype(np.float32)
     current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
-    rslt = []
+    res = None
     for i in range(num_time_step):
         next_time = start_time + (i + 1) * time_step
         print("############# train next time=%f train task ############" %
@@ -271,9 +271,9 @@ def cylinder3d_unsteady_optimize():
             out = exe.run(main_program, feed=feeds, fetch_list=fetches)
             print("autograd epoch: " + str(k + 1), "    loss:", out[0])
         next_uvwp = out[1:]
-        print([item.shape for item in next_uvwp])
-        res = [np.sum(item, axis=0) for item in next_uvwp]
-        rslt.append(res)
+
+        if i == num_time_step - 1:
+            res = next_uvwp
 
         # next_info -> current_info
         next_interior = np.array(next_uvwp[0])
@@ -281,11 +281,13 @@ def cylinder3d_unsteady_optimize():
         current_interior = next_interior[:, 0:3]
         current_user = next_user[:, 0:3]
 
-    return np.mean(rslt, axis=0)
+    new = res[0]
+    for i in range(1, len(res)):
+        new = np.vstack((new, res[i]))
+    return new
 
 
-standard = np.load(
-    "./standard/cylinder3d_unsteady_optimize.npz", allow_pickle=True)
+standard = np.load("./standard/data.npz", allow_pickle=True)
 
 
 @pytest.mark.cylinder3d_unsteady_optimize
@@ -295,22 +297,9 @@ def test_cylinder3d_unsteady_0():
     """
     test cylinder3d_steady
     """
-    stc_standard = standard['stc_solution']
-    stc_rslt = cylinder3d_unsteady_optimize()
-
-    compare(stc_standard, stc_rslt, mode="equal")
-
-
-@pytest.mark.cylinder3d_unsteady_optimize
-@pytest.mark.skipif(
-    paddle.distributed.get_world_size() != 2, reason="skip distributed case")
-def test_cylinder3d_steady_1():
-    """
-    test cylinder3d_steady
-    """
-    dst_standard = standard['dst_solution']
-    dst_rslt = cylinder3d_unsteady_optimize()
-    compare(dst_standard, dst_rslt)
+    s = standard['rslt']
+    rslt = cylinder3d_unsteady_optimize()
+    assert np.allclose(s, rslt)
 
 
 if __name__ == '__main__':
