@@ -16,7 +16,6 @@ from .geometry_discrete import GeometryDiscrete
 from .geometry import Geometry
 import numpy as np
 import math
-from scipy.stats import qmc
 import pyvista as pv
 
 __all__ = ['PolyData']
@@ -24,18 +23,30 @@ __all__ = ['PolyData']
 
 # Rectangular
 class PolyData(Geometry):
-    # """
-    # Two dimentional rectangular or three dimentional cube
+    """
+    Three dimentional PolyData
 
-    # Parameters:
-    #     origin: Cordinate of left-bottom point of rectangular
-    #     extent: Extent of rectangular
+    Parameters:
+        vertices: Cordinate of points. Note that only 3D point data is supported currently.
+        faces: Face connectivity array. Note that faces must contain padding indicating the number of points in the face. And it needs to satisfy the right-hand rule.
 
-    # Example:
-    #     >>> import paddlescience as psci
-    #     >>> geo2d = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-    #     >>> geo3d = psci.geometry.Rectangular(origin=(0.0,0.0,0.0), extent=(2.0,2.0,2.0))
-    # """
+    Example:
+        >>> import paddlescience as psci
+        >>> vertices = np.array([[3, 3, 0], [7, 3, 0], 
+        >>>    [5, 7, 0], [3, 3, 0.5], 
+        >>>    [7, 3, 0.5], [5, 7, 0.5]])
+        >>> # Right-hand rule
+        >>> faces = np.hstack(
+        >>>    [
+        >>>        [3, 0, 2, 1],  # triangle
+        >>>        [3, 3, 4, 5],  # triangle
+        >>>        [4, 0, 3, 5, 2], # square
+        >>>        [4, 1, 2, 5, 4], # square
+        >>>        [4, 0, 1, 4, 3],  # square
+        >>>    ]
+        >>> )
+        >>> triangle = psci.geometry.PolyData(vertices, faces)
+    """
 
     def __init__(self, vertices, faces):
         super(PolyData, self).__init__()
