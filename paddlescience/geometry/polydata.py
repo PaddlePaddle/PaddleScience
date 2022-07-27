@@ -27,8 +27,8 @@ class PolyData(Geometry):
     Three dimentional PolyData
 
     Parameters:
-        vertices: Cordinate of points. Note that only 3D point data is supported currently.
-        faces: Face connectivity array. Note that faces must contain padding indicating the number of points in the face. And it needs to satisfy the right-hand rule.
+        vertices(int | float | double): Cordinate of points. Note that only 3D point data is supported currently.
+        faces(int): Face connectivity array. Note that faces must contain padding indicating the number of points in the face. And it needs to satisfy the right-hand rule.
 
     Example:
         >>> import paddlescience as psci
