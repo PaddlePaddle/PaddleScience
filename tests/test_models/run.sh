@@ -31,6 +31,7 @@ if [[ ${ignore} =~ ${file##*/} ]]; then
     echo "skip"
 else
     python3.7 ${file}
+    echo $CUDA_VISIBLE_DEVICE
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
