@@ -1,3 +1,17 @@
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 import paddle
 import paddle.nn
@@ -18,22 +32,27 @@ class GradNorm(NetworkBase):
     def __init__(self, net, n_loss, alpha, weight_attr=None):
         super().__init__()
         if not isinstance(net, NetworkBase):
-            raise ValueError("'net' must be a NetworkBase subclass instance.")
+            raise TypeError()("'net' must be a NetworkBase subclass instance.")
         if not hasattr(net, 'get_shared_layer'):
-            raise ValueError("'net' must be must have 'get_shared_layer' method.")
+            raise TypeError(
+                "'net' must be must have 'get_shared_layer' method.")
         if n_loss <= 1:
-            raise ValueError("'n_loss' must be greater than 1, but got {}".format(n_loss))
+            raise ValueError(
+                "'n_loss' must be greater than 1, but got {}".format(n_loss))
         if alpha < 0:
-            raise ValueError("'alpha' is a positive number, but got {}".format(alpha))
+            raise ValueError("'alpha' is a positive number, but got {}".format(
+                alpha))
         if weight_attr is not None:
             if len(weight_attr) != n_loss:
-                raise ValueError("weight_attr must have same length with loss weights.")
+                raise ValueError(
+                    "weight_attr must have same length with loss weights.")
 
         self.net = net
         self.loss_weights = self.create_parameter(
-            shape=[n_loss], 
+            shape=[n_loss],
             attr=Assign(weight_attr if weight_attr else [1] * n_loss),
-            dtype=self._dtype, is_bias=False)
+            dtype=self._dtype,
+            is_bias=False)
         self.set_grad()
         self.alpha = float(alpha)
         self.initial_losses = None
@@ -57,21 +76,25 @@ class GradNorm(NetworkBase):
         W = self.net.get_last_shared_layer()
 
         if self.loss_weights.grad is not None:
-            self.loss_weights.grad.set_value(paddle.zeros_like(self.loss_weights))
+            self.loss_weights.grad.set_value(
+                paddle.zeros_like(self.loss_weights))
 
         norms = []
         for i in range(losses.shape[0]):
             grad = paddle.autograd.grad(losses[i], W, retain_graph=True)
-            norms.append(paddle.norm(self.loss_weights[i]*grad[0], p=2))
+            norms.append(paddle.norm(self.loss_weights[i] * grad[0], p=2))
         norms = paddle.concat(norms)
 
         loss_ratio = losses.numpy() / self.initial_losses
         inverse_train_rate = loss_ratio / np.mean(loss_ratio)
 
         mean_norm = np.mean(norms.numpy())
-        constant_term = paddle.to_tensor(mean_norm * np.power(inverse_train_rate, self.alpha), dtype=self._dtype)
+        constant_term = paddle.to_tensor(
+            mean_norm * np.power(inverse_train_rate, self.alpha),
+            dtype=self._dtype)
         grad_norm_loss = paddle.norm(norms - constant_term, p=1)
-        self.loss_weights.grad.set_value(paddle.autograd.grad(grad_norm_loss, self.loss_weights)[0])
+        self.loss_weights.grad.set_value(
+            paddle.autograd.grad(grad_norm_loss, self.loss_weights)[0])
 
         return grad_norm_loss
 
