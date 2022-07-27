@@ -70,16 +70,19 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        for t in range(nt):
-            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
-            pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
+
+    if data is not None:
         for t in range(nt):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
+    else:
+        for t in range(nt):
+            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+            __save_vtk_raw(filename=fpname, cordinate=np.array(points_vtk).T)
 
 
 def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
@@ -139,8 +142,8 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
         axis_z = cordinate[:, 2].copy()
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
     elif ndims == 2:
-        axis_x = cordinate[:, 0].copy()
-        axis_y = cordinate[:, 1].copy()
+        axis_x = cordinate[:, 0].copy().astype(config._dtype)
+        axis_y = cordinate[:, 1].copy().astype(config._dtype)
         axis_z = np.zeros(npoints, dtype=config._dtype)
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
 
