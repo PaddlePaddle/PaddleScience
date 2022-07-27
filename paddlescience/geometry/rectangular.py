@@ -60,7 +60,7 @@ class Rectangular(Geometry):
         Discretize rectangular
 
         Parameters:
-            method ("uniform" / "sampling"): Discretize rectangular using method "uniform" or "sampling"
+            method ("uniform" / "sampling" / "quasi_halton" / "quasi_sobol"/ "quasi_lhs"): Discretize rectangular using method "uniform", "sampling", "quasi_halton", "quasi_sobol" or "quasi_lhs".
             npoints (integer / integer list): Number of points 
 
         Example:
@@ -69,6 +69,9 @@ class Rectangular(Geometry):
             >>> geo.discretize(method="uniform", npoints=100)
             >>> geo.discretize(method="uniform", npoints=[10, 20])
             >>> geo.discretize(method="sampling", npoints=200)
+            >>> geo.discretize(method="quasi_halton", npoints=200)
+            >>> geo.discretize(method="quasi_sobol", npoints=200)
+            >>> geo.discretize(method="quasi_lhs", npoints=200)
         """
 
         if method == "uniform":
