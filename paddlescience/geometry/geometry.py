@@ -28,6 +28,7 @@ class Geometry:
         self.criteria = dict()  # criteria (lambda) defining boundary
         self.tri_mesh = dict()
         self.normal = dict()  # boundary normal direction
+        self.pv_mesh = None
         self._dtype = config._dtype
 
     def add_boundary(self, name, criteria=None, normal=None, filename=None):
@@ -120,6 +121,10 @@ class Geometry:
 
         # TODO(liu-xiandong): Need to increase sampling points on the boundary
         return mesh_model.points
+
+    def __sub__(self, other):
+        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other.pv_mesh
+        return self
 
     # select boundaries from all points and construct disc geometry
     def _mesh_to_geo_disc(self, points, padding=True):
