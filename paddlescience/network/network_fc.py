@@ -235,3 +235,6 @@ class FCNet(NetworkBase):
                 self._biases.append(new_param)
             else:
                 self._weights.append(new_param)
+
+    def get_shared_layer(self):
+        return self.weights[-1]
