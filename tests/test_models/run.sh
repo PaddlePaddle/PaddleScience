@@ -30,6 +30,7 @@ echo serial ${file} test
 if [[ ${ignore} =~ ${file##*/} ]]; then
     echo "skip"
 else
+    export CUDA_VISIBLE_DEVICE=0
     python3.7 ${file}
     echo $CUDA_VISIBLE_DEVICE
     if [ $? -ne 0 ]; then
