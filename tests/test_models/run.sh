@@ -30,8 +30,7 @@ echo serial ${file} test
 if [[ ${ignore} =~ ${file##*/} ]]; then
     echo "skip"
 else
-    CUDA_VISIBLE_DEVICE=0 python3.7 ${file}
-    echo $CUDA_VISIBLE_DEVICE
+    python3.7 ${file}
     if [ $? -ne 0 ]; then
         echo ${file} >> result.txt
         bug=`expr ${bug} + 1`
