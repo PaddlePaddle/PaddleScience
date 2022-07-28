@@ -14,7 +14,6 @@
 
 __version__ = '1.0 Beta'
 
-import os
 import paddle
 
 from . import config
@@ -31,5 +30,4 @@ from . import solver
 from . import visu
 from . import data
 
-if os.getenv('FLAGS_use_cinn') == "1":
-    config.enable_cinn()
+config.try_enable_cinn()
