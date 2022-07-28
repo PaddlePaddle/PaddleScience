@@ -239,14 +239,14 @@ def run():
 standard = np.load("./standard/data.npz", allow_pickle=True)
 
 
-@pytest.mark.cylinder3d_unsteady
+@pytest.mark.cylinder3d_unsteady_optimize
 @pytest.mark.skipif(
     paddle.distributed.get_world_size() != 1, reason="skip serial case")
 def test_cylinder3d_unsteady_0():
     """
     test cylinder3d_steady
     """
-    standard_res = standard['solution']
+    standard_res = standard['rslt']
     rslt = run()
     assert np.allclose(standard_res, rslt)
 
