@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,14 +22,12 @@ import zipfile
 from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
 import pytest
 import sys
-from tool import compare
 
 
-def cylinder3d_unsteady_optimize():
+def run():
     paddle.seed(1)
     np.random.seed(1)
 
-    #paddle.disable_static()
     psci.config.enable_static()
     psci.config.enable_prim()
 
@@ -37,7 +35,7 @@ def cylinder3d_unsteady_optimize():
     start_time = 100
     time_step = 1
 
-    # load real data
+    # load real data 
     def GetRealPhyInfo(time, need_info=None):
         # if real data don't exist, you need to download it.
         if os.path.exists('./openfoam_cylinder_re100') == False:
@@ -92,6 +90,7 @@ def cylinder3d_unsteady_optimize():
     bc_left_u = psci.bc.Dirichlet('u', rhs=1.0, weight=1.0)
     bc_left_v = psci.bc.Dirichlet('v', rhs=0.0, weight=1.0)
     bc_left_w = psci.bc.Dirichlet('w', rhs=0.0, weight=1.0)
+
     # boundary condition on right side: p=0
     bc_right_p = psci.bc.Dirichlet('p', rhs=0.0, weight=1.0)
 
@@ -105,7 +104,7 @@ def cylinder3d_unsteady_optimize():
     pde.add_bc("right", bc_right_p)
     pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
 
-    # pde discretization
+    # pde discretization 
     pde_disc = pde.discretize(
         time_method="implicit", time_step=1, geo_disc=geo_disc)
 
@@ -145,59 +144,7 @@ def cylinder3d_unsteady_optimize():
         # eq loss
         output_var_0_eq_loss = compute_eq_loss(inputs_var[0], outputs_var[0],
                                                labels_var[0:3])
-    # boundary condition on right side: p=0
-    bc_right_p = psci.bc.Dirichlet('p', rhs=0.0, weight=1.0)
 
-    # boundary on circle
-    bc_circle_u = psci.bc.Dirichlet('u', rhs=0.0, weight=1.0)
-    bc_circle_v = psci.bc.Dirichlet('v', rhs=0.0, weight=1.0)
-    bc_circle_w = psci.bc.Dirichlet('w', rhs=0.0, weight=1.0)
-
-    # add bounday and boundary condition
-    pde.add_bc("left", bc_left_u, bc_left_v, bc_left_w)
-    pde.add_bc("right", bc_right_p)
-    pde.add_bc("circle", bc_circle_u, bc_circle_v, bc_circle_w)
-
-    # pde discretization
-    pde_disc = pde.discretize(
-        time_method="implicit", time_step=1, geo_disc=geo_disc)
-
-    # declare network
-    net = psci.network.FCNet(
-        num_ins=3,
-        num_outs=4,
-        num_layers=10,
-        hidden_size=50,
-        activation='tanh')
-
-    # Algorithm
-    algo = psci.algorithm.PINNs(net=net, loss=None)
-
-    # Get data shape
-    npoints = len(pde_disc.geometry.interior)
-    data_size = len(geo_disc.user)
-
-    # create inputs/labels and its attributes
-    inputs, inputs_attr = algo.create_inputs(pde_disc)
-    labels, labels_attr = algo.create_labels(pde_disc)
-
-    main_program = paddle.static.Program()
-    startup_program = paddle.static.Program()
-
-    with paddle.static.program_guard(main_program, startup_program):
-        # build and apply network
-        algo.net.make_network()
-        inputs_var = create_inputs_var(inputs)
-        labels_var = create_labels_var(labels, npoints, data_size)
-        outputs_var = [algo.net.nn_func(var) for var in inputs_var]
-
-        # bc loss
-        bc_loss = compute_bc_loss(inputs_attr, labels_attr, outputs_var,
-                                  pde_disc)
-
-        # eq loss
-        output_var_0_eq_loss = compute_eq_loss(inputs_var[0], outputs_var[0],
-                                               labels_var[0:3])
         output_var_4_eq_loss = compute_eq_loss(inputs_var[4], outputs_var[4],
                                                labels_var[7:10])
         # data_loss
@@ -248,7 +195,8 @@ def cylinder3d_unsteady_optimize():
     current_interior = np.zeros(
         (len(pde_disc.geometry.interior), 3)).astype(np.float32)
     current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
-    res = None
+
+    rslt = None
     for i in range(num_time_step):
         next_time = start_time + (i + 1) * time_step
         print("############# train next time=%f train task ############" %
@@ -271,9 +219,8 @@ def cylinder3d_unsteady_optimize():
             out = exe.run(main_program, feed=feeds, fetch_list=fetches)
             print("autograd epoch: " + str(k + 1), "    loss:", out[0])
         next_uvwp = out[1:]
-
         if i == num_time_step - 1:
-            res = next_uvwp
+            rslt = next_uvwp
 
         # next_info -> current_info
         next_interior = np.array(next_uvwp[0])
@@ -281,25 +228,27 @@ def cylinder3d_unsteady_optimize():
         current_interior = next_interior[:, 0:3]
         current_user = next_user[:, 0:3]
 
-    new = res[0]
-    for i in range(1, len(res)):
-        new = np.vstack((new, res[i]))
+    new = rslt[0]
+    for i in range(1, len(rslt)):
+        new = np.vstack((new, rslt[i]))
+    #np.savez("data", solution=new)
+    #print(new.shape)
     return new
 
 
 standard = np.load("./standard/data.npz", allow_pickle=True)
 
 
-@pytest.mark.cylinder3d_unsteady_optimize
+@pytest.mark.cylinder3d_unsteady
 @pytest.mark.skipif(
     paddle.distributed.get_world_size() != 1, reason="skip serial case")
 def test_cylinder3d_unsteady_0():
     """
     test cylinder3d_steady
     """
-    s = standard['rslt']
-    rslt = cylinder3d_unsteady_optimize()
-    assert np.allclose(s, rslt)
+    standard_res = standard['solution']
+    rslt = run()
+    assert np.allclose(standard_res, rslt)
 
 
 if __name__ == '__main__':
