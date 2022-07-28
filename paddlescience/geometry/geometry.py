@@ -26,8 +26,9 @@ from pysdf import SDF
 class Geometry:
     def __init__(self):
         self.criteria = dict()  # criteria (lambda) defining boundary
-        self.mesh_file = dict()
+        self.tri_mesh = dict()
         self.normal = dict()  # boundary normal direction
+        self.pv_mesh = None
         self._dtype = config._dtype
 
     def add_boundary(self, name, criteria=None, normal=None, filename=None):
@@ -49,7 +50,7 @@ class Geometry:
             self.normal[name] = normal
 
         if filename != None:
-            self.mesh_file[name] = filename
+            self.tri_mesh[name] = filename
 
     def delete_boundary(self, name):
         """
@@ -71,8 +72,8 @@ class Geometry:
         if name in self.normal:
             del self.normal[name]
 
-        if name in self.mesh_file:
-            del self.mesh_file[name]
+        if name in self.tri_mesh:
+            del self.tri_mesh[name]
 
     def clear_boundary(self):
         """
@@ -88,25 +89,42 @@ class Geometry:
 
         self.criteria.clear()
         self.normal.clear()
-        self.mesh_file.clear()
+        self.tri_mesh.clear()
 
-    def _is_inside_mesh(self, points, filename):
+    def _is_inside_mesh(self, points, tri_mesh):
 
-        mesh_model = pv.read(filename)
+        if isinstance(tri_mesh, str):
+            mesh_model = pv.read(tri_mesh)
+        else:
+            mesh_model = tri_mesh
+
+        # The mesh must be manifold and need to be triangulate
+        if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
+            assert 0, "The mesh must be manifold and need to be triangulate."
+
+        # The all the faces of mesh must be triangles
         faces_as_array = mesh_model.faces.reshape(
             (mesh_model.n_faces, 4))[:, 1:]
 
-        sdf = SDF(mesh_model.points, faces_as_array)
+        sdf = SDF(mesh_model.points, faces_as_array, False)
 
         origin_contained = sdf.contains(points)
 
         return origin_contained
 
-    def _get_points_from_meshfile(self, filename):
+    def _get_points_from_meshfile(self, tri_mesh):
 
-        mesh_model = pv.read(filename)
+        if isinstance(tri_mesh, str):
+            mesh_model = pv.read(tri_mesh)
+        else:
+            mesh_model = tri_mesh
 
+        # TODO(liu-xiandong): Need to increase sampling points on the boundary
         return mesh_model.points
+
+    def __sub__(self, other):
+        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other.pv_mesh
+        return self
 
     # select boundaries from all points and construct disc geometry
     def _mesh_to_geo_disc(self, points, padding=True):
@@ -142,18 +160,18 @@ class Geometry:
             geo_disc.normal[name] = normal_disc
 
         # boundary points defined by mesh_file
-        for name in self.mesh_file.keys():
+        for name in self.tri_mesh.keys():
 
             # flag boundary points which inside the mesh
             flag_inside_mesh = self._is_inside_mesh(points,
-                                                    self.mesh_file[name])
+                                                    self.tri_mesh[name])
 
             # set extracted points as False
             flag_i[flag_inside_mesh] = False
 
             # add boundary points
             geo_disc.boundary[name] = self._get_points_from_meshfile(
-                self.mesh_file[name])
+                self.tri_mesh[name])
 
             # TODO: normal
 

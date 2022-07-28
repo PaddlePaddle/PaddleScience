@@ -5,3 +5,7 @@ Loss
    :members:
    :no-undoc-members:
 
+
+.. automodule:: paddlescience.loss.loss_formula
+   :members:
+   :no-undoc-members: FormulaLoss

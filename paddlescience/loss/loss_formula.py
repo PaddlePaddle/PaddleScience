@@ -213,6 +213,20 @@ class FormulaLoss:
 
 
 def EqLoss(eq, netout=None):
+    """
+    Define equation loss
+ 
+    Parameters:
+        eq (pde.equation): Equation 
+        netout (optional): output of network
+
+    Example
+        >>> import paddlescience as psci
+        >>> net = psci.network.FCNet(...)
+        >>> out = net(input)
+        >>> loss = psci.loss.EqLoss(pde.equations[0], out) # loss is equation loss of equation 0 in pde
+    """
+
     floss = FormulaLoss()
     floss._eqlist = [eq]
     floss._eqwgt = [1.0]
@@ -226,6 +240,20 @@ def EqLoss(eq, netout=None):
 
 
 def BcLoss(name, netout=None):
+    """
+    Define boundary loss
+ 
+    Parameters:
+        name (string): boundary name
+        netout (optional): output of network
+
+    Example:
+        >>> import paddlescience as psci
+        >>> net = psci.network.FCNet(...)
+        >>> out = net(input)
+        >>> loss = psci.loss.BcLoss("top", out) # loss is boundary loss on "top" boundary
+    """
+
     floss = FormulaLoss()
     floss._bclist = [name]
     floss._bcwgt = [1.0]
@@ -239,6 +267,19 @@ def BcLoss(name, netout=None):
 
 
 def IcLoss(netout=None):
+    """
+    Define initial loss for time-dependent equation
+ 
+    Parameters:
+        netout (optional): output of network  
+
+    Example:
+        >>> import paddlescience as psci
+        >>> net = psci.network.FCNet(...)
+        >>> out = net(input)
+        >>> loss = psci.loss.IcLoss("top") # loss is initial loss
+    """
+
     floss = FormulaLoss()
     floss._iclist = [True]
     floss._icwgt = [1.0]
@@ -252,6 +293,19 @@ def IcLoss(netout=None):
 
 
 def DataLoss(netout=None, ref=None):
+    """
+    Define supervised loss
+ 
+    Parameters:
+        netout (optional): output of network
+        ref (numpy.ndarray or Tensor) : reference values on supervise points   
+
+    Example:
+        >>> import paddlescience as psci
+        >>> net = psci.network.FCNet(...)
+        >>> out = net(input)
+        >>> loss = psci.loss.DataLoss(out, ref=np.ones(3)) # loss is initial loss
+    """
     floss = FormulaLoss()
     floss._suplist = [True]
     floss._supwgt = [1.0]

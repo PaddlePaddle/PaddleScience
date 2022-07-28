@@ -96,38 +96,19 @@ class FCNet(NetworkBase):
             b_attr = self._bias_attr[i]
 
             # create parameter with attr
-            if paddle.in_dynamic_mode():
-                w = self.create_parameter(
-                    shape=[lsize, rsize],
-                    dtype=self._dtype,
-                    is_bias=False,
-                    attr=w_attr)
-                b = self.create_parameter(
-                    shape=[rsize],
-                    dtype=self._dtype,
-                    is_bias=True,
-                    attr=b_attr)
-            else:
-                w = paddle.static.create_parameter(
-                    shape=[lsize, rsize],
-                    dtype=self._dtype,
-                    is_bias=False,
-                    attr=w_attr)
-                b = paddle.static.create_parameter(
-                    shape=[rsize],
-                    dtype=self._dtype,
-                    is_bias=True,
-                    attr=b_attr)
+            w = self.create_parameter(
+                shape=[lsize, rsize],
+                dtype=self._dtype,
+                is_bias=False,
+                attr=w_attr)
+            b = self.create_parameter(
+                shape=[rsize], dtype=self._dtype, is_bias=True, attr=b_attr)
 
             # add parameter
             self._weights.append(w)
             self._biases.append(b)
             self.add_parameter("w_" + str(i), w)
             self.add_parameter("b_" + str(i), b)
-
-        # if self._path is not None:
-        #     state_dict = paddle.load(self._path)
-        #     self.set_state_dict(state_dict)
 
     def nn_func(self, ins):
         u = ins
@@ -148,6 +129,31 @@ class FCNet(NetworkBase):
                    weight_init=None,
                    bias_init=None,
                    learaning_rate=1.0):
+        """
+        Initialize network parameters. There are two methods:
+
+        - initialize with parameters from file. This needs to specify parameter "path".
+        - initialize with paddle.nn.initializer. This needs to specify parameter "n", "weight_init/bias_init" and "learning_rate".
+
+        Parameters:
+            path (string): parameter file 
+            n (integer or list of integer): layers to initialize
+            weight_init (paddle.nn.initializer): initializer used for weight
+            bias_init (paddle.nn.initializer): initializer used for bias
+            learning_rate (float, optional): learning rate 
+
+        Example:
+            >>> import paddlescience as psci
+            >>> net = psci.network.FCNet(num_ins=2, num_outs=3, num_layers=10, hidden_size=20, activation="tanh")
+
+            >>> # option 1: use file fc.pdparams to initialize
+            >>> net.initialize(path="fc.pdparams")
+
+            >>> # option 2: initialize layer 1 and layer 2 with constants
+            >>> wcst = paddle.nn.initializer.Constant(2.0)
+            >>> bcst = paddle.nn.initializer.Constant(3.0)
+            >>> net.initialize(n=[1,2], weight_init=wcst, bias_init=bcst) 
+        """
 
         if type(path) is str:
             self.params_path = path
@@ -181,11 +187,14 @@ class FCNet(NetworkBase):
                         initializer=weight_init,
                         learning_rate=learaning_rate)
                     self._weights_attr[i] = w_attr
-                    self._weights[i] = self.create_parameter(
-                        shape=[lsize, rsize],
-                        dtype=self._dtype,
-                        is_bias=False,
-                        attr=w_attr)
+                    # dynamic mode: create parameter here
+                    # static mode: create parameter in make_network
+                    if paddle.in_dynamic_mode():
+                        self._weights[i] = self.create_parameter(
+                            shape=[lsize, rsize],
+                            dtype=self._dtype,
+                            is_bias=False,
+                            attr=w_attr)
 
                 # update bias
                 if bias_init is not None:
@@ -194,11 +203,14 @@ class FCNet(NetworkBase):
                         initializer=bias_init,
                         learning_rate=learaning_rate)
                     self._bias_attr[i] = b_attr
-                    self._biases[i] = self.create_parameter(
-                        shape=[rsize],
-                        dtype=self._dtype,
-                        is_bias=True,
-                        attr=b_attr)
+                    # dynamic mode: create parameter here
+                    # static mode: create parameter in make_network
+                    if paddle.in_dynamic_mode():
+                        self._biases[i] = self.create_parameter(
+                            shape=[rsize],
+                            dtype=self._dtype,
+                            is_bias=True,
+                            attr=b_attr)
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self._weights + self._biases))

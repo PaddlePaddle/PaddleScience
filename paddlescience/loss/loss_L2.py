@@ -35,12 +35,23 @@ class L2:
         >>> loss = psci.loss.L2()
     """
 
-    def __init__(self, p=1, data_weight=1.0):
+    def __init__(self,
+                 p=1,
+                 eq_weight=None,
+                 bc_weight=None,
+                 ic_weight=None,
+                 data_weight=1.0):
         self.norm_p = p
+        self.eq_weight = eq_weight
+        self.bc_weight = bc_weight
+        self.ic_weight = ic_weight
         self.data_weight = data_weight
+
+        #TODO: check input
 
     # compute loss on one interior 
     # there are multiple pde
+
     def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
@@ -64,7 +75,14 @@ class L2:
             else:
                 rhs = rhs_eq
 
-            wgt_eq = labels_attr["equations"][i]["weight"]
+            if self.eq_weight is None:
+                wgt_eq = labels_attr["equations"][i]["weight"]
+            else:
+                if np.isscalar(self.eq_weight):
+                    wgt_eq = self.eq_weight
+                else:
+                    wgt_eq = self.eq_weight[i]
+
             if wgt_eq is None:
                 wgt = None
             elif type(wgt_eq) == LabelInt:
@@ -84,6 +102,7 @@ class L2:
 
     # compute loss on one boundary
     # there are multiple bc on one boundary
+
     def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
                 bs):
 
@@ -106,7 +125,14 @@ class L2:
             else:
                 rhs = rhs_b
 
-            wgt_b = labels_attr["bc"][name_b][i]["weight"]
+            if self.bc_weight is None:
+                wgt_b = labels_attr["bc"][name_b][i]["weight"]
+            else:
+                if np.isscalar(self.bc_weight):
+                    wgt_b = self.bc_weight
+                else:
+                    wgt_b = self.bc_weight[i]
+
             if wgt_b is None:
                 wgt = None
             elif type(wgt_b) == LabelInt:
@@ -138,7 +164,11 @@ class L2:
                 rhs = labels[rhs_c]
             else:
                 rhs = rhs_c
-            wgt = labels_attr["ic"][i]["weight"]
+
+            if self.ic_weight is None:
+                wgt = labels_attr["ic"][i]["weight"]
+            else:
+                wgt = self.ic_weight
             loss += l2_norm_square(rst - rhs, wgt)
 
         return loss, cmploss.outs
