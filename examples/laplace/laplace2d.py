@@ -16,6 +16,7 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
+psci.config.enable_static()
 paddle.seed(1)
 np.random.seed(1)
 
