@@ -627,6 +627,8 @@ class PINNs(AlgorithmBase):
         loss_data = (loss - loss) if isinstance(loss_data,
                                                 float) else loss_data
         loss_details.append(self.__sqrt(loss_data))
+        for ld in loss_details:
+            ld.persistable = True
 
         return loss, outs, loss_details
 
