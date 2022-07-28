@@ -126,6 +126,11 @@ class PINNs(AlgorithmBase):
             inputs_attr_d["0"] = InputsAttr(0, 0)
         inputs_attr["user"] = inputs_attr_d
 
+        # padding
+        nproc = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
+
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
@@ -332,6 +337,11 @@ class PINNs(AlgorithmBase):
         inputs_attr["bc"] = inputs_attr_b
         inputs_attr["ic"] = inputs_attr_it
         inputs_attr["user"] = inputs_attr_d
+
+        # padding
+        nproc = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
 
         return inputs, inputs_attr
 
@@ -652,3 +662,10 @@ class PINNs(AlgorithmBase):
             return np.sqrt(x)
         else:
             return paddle.sqrt(x)
+
+    def __padding_array(self, nprocs, array):
+        npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
+        for i in range(npad):
+            array = np.append(array, datapad, axis=0)
+        return array
