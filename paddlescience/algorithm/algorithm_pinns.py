@@ -127,7 +127,7 @@ class PINNs(AlgorithmBase):
         inputs_attr["user"] = inputs_attr_d
 
         # padding
-        nproc = paddle.distributed.get_world_size()
+        nprocs = paddle.distributed.get_world_size()
         for i in range(len(inputs)):
             inputs[i] = self.__padding_array(nprocs, inputs[i])
 
@@ -339,7 +339,7 @@ class PINNs(AlgorithmBase):
         inputs_attr["user"] = inputs_attr_d
 
         # padding
-        nproc = paddle.distributed.get_world_size()
+        nprocs = paddle.distributed.get_world_size()
         for i in range(len(inputs)):
             inputs[i] = self.__padding_array(nprocs, inputs[i])
 
