@@ -32,10 +32,10 @@ class CompFormula:
         self.jacobian = None
         self.hessian = None
 
-    def compute_outs(self, input, bs):
-        self.outs = self.net.nn_func(input)
+    def compute_outs(self, input, bs, params=None):
+        self.outs = self.net.nn_func(input, params)
 
-    def compute_outs_der(self, input, bs):
+    def compute_outs_der(self, input, bs, params=None):
 
         # outs
         self.compute_outs(input, bs)

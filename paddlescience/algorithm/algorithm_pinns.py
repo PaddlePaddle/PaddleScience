@@ -511,18 +511,24 @@ class PINNs(AlgorithmBase):
             # print("idx user next: ", idx)
         return labels
 
-    def compute_forward(self, *inputs):
+    def compute_forward(self, *inputs, params=None):
 
         outs = list()
 
         for i in inputs:
-            out = self.net.nn_func(i)
+            out = self.net.nn_func(i, params)
             outs.append(out)
 
         return outs
 
-    def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
-                labels_attr, pde):
+    def compute(self,
+                *inputs_labels,
+                ninputs,
+                inputs_attr,
+                nlabels,
+                labels_attr,
+                pde,
+                params=None):
 
         outs = list()
 
@@ -554,7 +560,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["interior"],
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_eq += loss_i
             outs.append(out_i)
             n += 1
@@ -573,7 +580,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr,
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_bc += loss_b
             outs.append(out_b)
             n += 1
@@ -582,7 +590,14 @@ class PINNs(AlgorithmBase):
         for name_ic, input_attr in inputs_attr["ic"].items():
             input = inputs[n]
             loss_it, out_it = self.loss.ic_loss(
-                pde, self.net, input, input_attr, labels, labels_attr, bs=-1)
+                pde,
+                self.net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs=-1,
+                params=None)
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
@@ -601,7 +616,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["user"],
-                bs=-1)
+                bs=-1,
+                params=None)
             loss_eq += loss_id
 
             # data loss
@@ -612,7 +628,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["user"],
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_data += loss_d
             outs.append(out_id)
 
