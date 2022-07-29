@@ -98,7 +98,15 @@ class FormulaLoss:
             floss._supwgt[i] *= weight
         return floss
 
-    def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def eq_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         cmploss = CompFormula(pde, net)
 
@@ -138,8 +146,16 @@ class FormulaLoss:
 
     # compute loss on one boundary
     # there are multiple bc on one boundary
-    def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
-                bs):
+    def bc_loss(self,
+                pde,
+                net,
+                name_b,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         cmploss = CompFormula(pde, net)
 
@@ -170,7 +186,15 @@ class FormulaLoss:
 
         return loss, cmploss.outs
 
-    def ic_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def ic_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         # compute outs
         cmploss = CompFormula(pde, net)
@@ -194,7 +218,15 @@ class FormulaLoss:
         return loss, cmploss.outs
 
     # compute loss on real data 
-    def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def data_loss(self,
+                  pde,
+                  net,
+                  input,
+                  input_attr,
+                  labels,
+                  labels_attr,
+                  bs,
+                  params=None):
 
         cmploss = CompFormula(pde, net)
 
