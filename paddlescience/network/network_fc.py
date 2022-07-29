@@ -110,7 +110,7 @@ class FCNet(NetworkBase):
             self.add_parameter("w_" + str(i), w)
             self.add_parameter("b_" + str(i), b)
 
-    def nn_func(self, ins):
+    def nn_func(self, ins, params=None):
         u = ins
         for i in range(self.num_layers - 1):
             u = paddle.matmul(u, self._weights[i])
