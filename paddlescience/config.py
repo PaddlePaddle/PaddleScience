@@ -17,7 +17,6 @@ import os
 
 _dtype = 'float32'
 _use_visualdl = False
-_use_config_parameter = False
 
 
 def set_dtype(dtype):
@@ -115,18 +114,3 @@ def try_enable_cinn():
     if cinn_enabled():
         enable_static()
         enable_prim()
-
-
-def enable_config_parameter():
-    """
-    Use config_parameter.
-    """
-    global _use_config_parameter
-    _use_config_parameter = True
-
-
-def config_parameter_enabled():
-    '''
-    Determine whether config_parameter is enabled.
-    '''
-    return _use_config_parameter
