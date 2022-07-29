@@ -20,11 +20,20 @@ _use_visualdl = False
 
 
 def set_dtype(dtype):
+    '''
+    Set data type.
+
+    Parameters:
+        dtype (string): 'float32' or 'float64'. The default is 'float32'.
+    '''
     global _dtype
     _dtype = dtype
 
 
 def get_dtype():
+    '''
+    Return data type used.
+    '''
     global _dtype
     return _dtype
 
