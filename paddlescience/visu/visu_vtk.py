@@ -21,6 +21,10 @@ import paddle
 from .. import config
 
 
+def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
+    pass
+
+
 # Save geometry pointwise
 def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
     """
