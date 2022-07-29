@@ -57,12 +57,13 @@ class FCNet(NetworkBase):
         self._weights_attr = [None for i in range(num_layers)]
         self._bias_attr = [None for i in range(num_layers)]
 
-        if activation == 'sigmoid':
-            self.activation = F.sigmoid
-        elif activation == 'tanh':
-            self.activation = paddle.tanh
+        if type(activation) is str:
+            if activation == 'sigmoid':
+                self.activation = F.sigmoid
+            elif activation == 'tanh':
+                self.activation = paddle.tanh
         else:
-            assert 0, "Unsupported activation type."
+            self.activation = activation
 
         # dynamic mode: make network here
         # static  mode: make network in solver
