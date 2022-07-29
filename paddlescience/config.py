@@ -107,9 +107,9 @@ def cinn_enabled():
     return check_cinn_set
 
 
-def enable_cinn():
+def try_enable_cinn():
     '''
-    Enable CINN based on static graph mode and automatic differentiation basic operator.
+    Try to enable CINN based on static graph mode and automatic differentiation basic operator.
     Please ensure FLAGS_use_cinn is set to 1 or true. Ref https://github.com/PaddlePaddle/CINN
     '''
     if cinn_enabled():

@@ -126,6 +126,11 @@ class PINNs(AlgorithmBase):
             inputs_attr_d["0"] = InputsAttr(0, 0)
         inputs_attr["user"] = inputs_attr_d
 
+        # padding
+        nprocs = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
+
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
@@ -333,6 +338,11 @@ class PINNs(AlgorithmBase):
         inputs_attr["ic"] = inputs_attr_it
         inputs_attr["user"] = inputs_attr_d
 
+        # padding
+        nprocs = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
+
         return inputs, inputs_attr
 
     # print input
@@ -501,18 +511,24 @@ class PINNs(AlgorithmBase):
             # print("idx user next: ", idx)
         return labels
 
-    def compute_forward(self, *inputs):
+    def compute_forward(self, *inputs, params=None):
 
         outs = list()
 
         for i in inputs:
-            out = self.net.nn_func(i)
+            out = self.net.nn_func(i, params)
             outs.append(out)
 
         return outs
 
-    def compute(self, *inputs_labels, ninputs, inputs_attr, nlabels,
-                labels_attr, pde):
+    def compute(self,
+                *inputs_labels,
+                ninputs,
+                inputs_attr,
+                nlabels,
+                labels_attr,
+                pde,
+                params=None):
 
         outs = list()
 
@@ -544,7 +560,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["interior"],
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_eq += loss_i
             outs.append(out_i)
             n += 1
@@ -563,7 +580,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr,
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_bc += loss_b
             outs.append(out_b)
             n += 1
@@ -572,7 +590,14 @@ class PINNs(AlgorithmBase):
         for name_ic, input_attr in inputs_attr["ic"].items():
             input = inputs[n]
             loss_it, out_it = self.loss.ic_loss(
-                pde, self.net, input, input_attr, labels, labels_attr, bs=-1)
+                pde,
+                self.net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs=-1,
+                params=None)
             loss_ic += loss_it
             outs.append(out_it)
             n += 1
@@ -591,7 +616,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["user"],
-                bs=-1)
+                bs=-1,
+                params=None)
             loss_eq += loss_id
 
             # data loss
@@ -602,7 +628,8 @@ class PINNs(AlgorithmBase):
                 input_attr,
                 labels,
                 labels_attr["user"],
-                bs=-1)  # TODO: bs is not used
+                bs=-1,
+                params=None)  # TODO: bs is not used
             loss_data += loss_d
             outs.append(out_id)
 
@@ -652,3 +679,10 @@ class PINNs(AlgorithmBase):
             return np.sqrt(x)
         else:
             return paddle.sqrt(x)
+
+    def __padding_array(self, nprocs, array):
+        npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
+        for i in range(npad):
+            array = np.append(array, datapad, axis=0)
+        return array
