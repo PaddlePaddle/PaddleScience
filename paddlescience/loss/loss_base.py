@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import paddle
-from paddle.autograd import batch_jacobian, batch_hessian
 import sympy
+import numpy as np
 from ..inputs import InputsAttr
+from .. import config
+from paddle.incubate.autograd import Jacobian, Hessian
 
 import time
 
@@ -23,34 +25,14 @@ import jax
 from jax import jit
 from functools import partial
 
-from .. import config
-
-from paddle.incubate.autograd import Jacobian, Hessian
-
-
-class LossBase(object):
-    def __init__(self, pdes, geo):
-        pass
-
-    def eq_loss(self, net):
-        pass
-
-    def bc_loss(self, net):
-        pass
-
-    def ic_loss(self, net):
-        pass
-
 
 class CompFormula:
     def __init__(self, pde, net):
         self.pde = pde
         self.net = net
-        self.order = pde.order
         self.indvar = pde.indvar
         self.dvar = pde.dvar
         self.dvar_n = pde.dvar_n
-
         self.outs = None
         self.jacobian = None
         self.hessian = None
@@ -64,38 +46,16 @@ class CompFormula:
         self.compute_outs(input, bs, param)
 
         # jacobian
-        if self.order >= 1:
-
-            if config._compute_backend == "jax":
-
-                def func(param, x):
-                    return jax.jacrev(self.net.nn_func, argnums=0)(x, param)
-
-                jacobian = jax.vmap(func, [None, 0], -1)(param, input)
-            else:
-                jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
-        else:
-            jacobian = None
+        jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
 
         # hessian
-        if self.order >= 2:
+        hessian = list()
+        for i in range(self.net.num_outs):
 
-            if config._compute_backend == "jax":
+            def func(input):
+                return self.net.nn_func(input)[:, i:i + 1]
 
-                def func(param, x):
-                    return jax.hessian(self.net.nn_func, argnums=0)(x, param)
-
-                hessian = jax.vmap(func, [None, 0], -1)(param, input)
-            else:
-                hessian = list()
-                for i in range(self.net.num_outs):
-
-                    def func(input):
-                        return self.net.nn_func(input)[:, i:i + 1]
-
-                    hessian.append(Hessian(func, input, is_batched=True))
-        else:
-            hessian = None
+            hessian.append(Hessian(func, input, is_batched=True))
 
         # self.outs = outs
         self.jacobian = jacobian
@@ -197,10 +157,7 @@ class CompFormula:
 
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
-                if api_new:
-                    rst = normal * jacobian[:, f_idx, :]  # TODO
-                else:
-                    rst = normal * jacobian[f_idx, :]
+                rst = normal * jacobian[:, f_idx, :]  # TODO
             else:
                 var_idx = self.indvar.index(v)
                 if config._compute_backend == "jax":
@@ -232,3 +189,22 @@ class CompFormula:
             # print("2: ", t2-t1)
 
         return rst
+
+
+def l2_norm_square(x, wgt=None):
+    # new ad
+    if config.prim_enabled():
+        if wgt is None:
+            l2_norm = paddle.norm(x, p=2)
+        elif np.isscalar(wgt):
+            wgt2 = np.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        else:
+            wgt2 = paddle.sqrt(wgt)
+            l2_norm = paddle.norm(x * wgt2, p=2)
+        return l2_norm * l2_norm
+    else:
+        if wgt is None:
+            return paddle.norm(x**2, p=1)
+        else:
+            return paddle.norm(x**2 * wgt, p=1)

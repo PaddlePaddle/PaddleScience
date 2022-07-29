@@ -14,8 +14,9 @@
 
 from .. import config
 import numpy as np
-from collections import OrderedDict
 import types
+import sympy
+import collections
 
 __all__ = ['PDE']
 
@@ -28,53 +29,54 @@ class PDE:
 
         1. define independent variable
         2. define dependent variable
-        3. declare PDE 
-        4. set independent variable to PDE
-        5. set dependent variable to PDE
-        6. define equations and rhs
+        3. declare PDE defining independent variable and dependent variable
+        4. define equations and rhs
 
     Example:
         >>> # Example: 2-dimentional Laplace equation
         >>> x = sympy.Symbol('x')
         >>> y = sympy.Symbol('y')
         >>> u = sympy.Function('u')(x,y)
-        >>> pde = psci.pde.PDE(num_equations=1, time_dependent=False, order=2)
-        >>> pde.indvar = [x, y]
-        >>> pde.dvar = [u]
-        >>> pde.equations[0] = u.diff(x).diff(x) + u.diff(y).diff(y)
-        >>> pde.rhs[0] = 0.0
+        >>> pde = psci.pde.PDE(indvar=[x, y], dvar=[u])
+        >>> pde.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y))
     """
 
-    def __init__(self,
-                 num_equations=1,
-                 time_dependent=False,
-                 weight=None,
-                 order=2):
-
-        # time dependent / independent
-        self.time_dependent = time_dependent
+    def __init__(self, indvar, dvar, weight=None):
 
         # independent variable
+        if type(indvar) is list or type(indvar) is tuple:
+            self.indvar = indvar
+        else:
+            pass  # TODO: error out
+
         # dependent variable on current time step n
-        # dependent variable on next time step n+1
-        self.indvar = list()
-        self.dvar = list()
+        if type(dvar) is list or type(dvar) is tuple:
+            self.dvar = dvar
+        else:
+            pass  # TODO: error out
+
+        # dependent variable on previous time step n-1
         self.dvar_n = list()
+
+        # time dependent / time independent
+        self.time_dependent = False
+        for var in self.indvar:
+            if var == sympy.Symbol('t'):
+                self.time_dependent = True
+                break
 
         # parameter in pde
         self.parameter = list()
 
-        # equation
-        self.equations = [None for i in range(num_equations)]
+        # equation and right-hand side
+        self.equations = list()
+        self.rhs = list()
 
-        # right-hand side
-        self.rhs = [None for i in range(num_equations)]
-
-        # order
-        self.order = order
+        # # order
+        # self.order = order
 
         # boundary condition
-        self.bc = OrderedDict()
+        self.bc = collections.OrderedDict()
 
         # initial condition
         self.ic = list()
@@ -102,7 +104,25 @@ class PDE:
     def add_geometry(self, geo):
         self.geometry = geo
 
-    def add_bc(self, name, *args):
+    def add_equation(self, eq, rhs=0.0):
+        """
+        Add equation to PDE
+
+        Parameters:
+            eq: equation defined with python sympy module.
+
+        Example:
+            >>> import paddlescience as psci
+            >>> x = sympy.Symbol('x')
+            >>> y = sympy.Symbol('y')
+            >>> u = sympy.Function('u')(x,y)
+            >>> pde = psci.pde.PDE(indvar=[x,y], dvar=[u])
+            >>> pde.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y))
+        """
+        self.equations.append(eq)
+        self.rhs.append(rhs)
+
+    def set_bc(self, name, *args):
         """
         Add boundary condition to boundary
 
@@ -117,7 +137,7 @@ class PDE:
             >>> pde = psci.pde.Laplace(dim=2)
             >>> bc1 = psci.bc.Dirichlet('u', rhs=0)
             >>> bc2 = psci.bc.Dirichlet('v', rhs=0)
-            >>> pde.add_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
+            >>> pde.set_bc("top", bc1, bc2) # add boundary conditions to boundary "top"
         """
 
         if name not in self.bc:
@@ -127,7 +147,10 @@ class PDE:
             arg.to_formula(self.indvar)
             self.bc[name].append(arg)
 
-    def add_ic(self, *args):
+    def add_bc(self, name, *args):
+        self.set_bc(name, *args)
+
+    def set_ic(self, *args):
         """
         Add initial condition for time-dependent equation
 
@@ -138,11 +161,14 @@ class PDE:
             >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
             >>> ic1 = psci.ic.IC('u', rhs=0) 
             >>> ic2 = psci.ic.IC('v', rhs=0) 
-            >>> pde.add_ic(ic1, ic2)         # add initial conditions
+            >>> pde.set_ic(ic1, ic2)         # add initial conditions
        """
         for arg in args:
             arg.to_formula(self.indvar)
             self.ic.append(arg)
+
+    def add_ic(self, *args):
+        self.set_ic(*args)
 
     def set_time_interval(self, interval):
         """
@@ -158,7 +184,11 @@ class PDE:
         """
         self.time_internal = interval
 
-    def discretize(self, time_method=None, time_step=None, geo_disc=None):
+    def discretize(self,
+                   time_method=None,
+                   time_step=None,
+                   time_array=None,
+                   geo_disc=None):
         """
         Discretize equations
 
@@ -180,13 +210,16 @@ class PDE:
             pde_disc = self.time_discretize(time_method, time_step)
 
             # time interval
-            pde_disc.time_internal = self.time_internal
-            pde_disc.time_step = time_step
-            t0 = self.time_internal[0]
-            t1 = self.time_internal[1]
-            n = int((t1 - t0) / time_step) + 1
-            pde_disc.time_array = np.linspace(t0, t1, n, dtype=config._dtype)
-
+            if time_array is None:
+                pde_disc.time_internal = self.time_internal
+                pde_disc.time_step = time_step
+                t0 = self.time_internal[0]
+                t1 = self.time_internal[1]
+                n = int((t1 - t0) / time_step) + 1
+                pde_disc.time_array = np.linspace(
+                    t0, t1, n, dtype=config._dtype)
+            else:
+                pde_disc.time_array = time_array.astype(config._dtype)
         else:
             pde_disc = self
 

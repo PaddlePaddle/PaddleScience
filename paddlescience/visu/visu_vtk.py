@@ -32,7 +32,7 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         filename(string): file name.
         time_array(list or numpy array, optional): time steps list / array.
         geo_disc (GeometryDiscrete): discrete geometry.
-        data (numpy array): data to be visualized.
+        data (numpy array, optional): data to be visualized.
 
 
     Example:
@@ -50,6 +50,47 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
 
     # concatenate data and cordiante 
     points_vtk = __concatenate_geo(geo_disc_sub)
+
+    # points's shape is [ndims][npoints]
+    npoints = len(points_vtk[0])
+    ndims = len(points_vtk)
+
+    # data
+    if data is None:
+        data_vtk = {"placeholder": np.ones(npoints, dtype=config._dtype)}
+    elif type(data) == types.LambdaType:
+        data_vtk = dict()
+        if ndims == 3:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1],
+                                    points_vtk[2])
+        elif ndims == 2:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1])
+    else:
+        data_vtk = __concatenate_data(data, nt)
+
+    if ndims == 3:
+        axis_x = points_vtk[0]
+        axis_y = points_vtk[1]
+        axis_z = points_vtk[2]
+    elif ndims == 2:
+        axis_x = points_vtk[0]
+        axis_y = points_vtk[1]
+        axis_z = np.zeros(npoints, dtype=config._dtype)
+
+    if data is not None:
+        for t in range(nt):
+            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+            pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
+    else:
+        for t in range(nt):
+            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+            __save_vtk_raw(filename=fpname, cordinate=np.array(points_vtk).T)
+
+
+def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
+
+    # concatenate data and cordiante 
+    points_vtk = __concatenate_cord(cord)
 
     # points's shape is [ndims][npoints]
     npoints = len(points_vtk[0])
@@ -103,8 +144,8 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
         axis_z = cordinate[:, 2].copy()
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
     elif ndims == 2:
-        axis_x = cordinate[:, 0].copy()
-        axis_y = cordinate[:, 1].copy()
+        axis_x = cordinate[:, 0].copy().astype(config._dtype)
+        axis_y = cordinate[:, 1].copy().astype(config._dtype)
         axis_z = np.zeros(npoints, dtype=config._dtype)
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
 
@@ -119,6 +160,20 @@ def __concatenate_geo(geo_disc):
     points = np.concatenate(x, axis=0)
 
     ndims = len(points[0])
+
+    # to pointsToVTK input format
+    points_vtk = list()
+    for i in range(ndims):
+        points_vtk.append(points[:, i].copy())
+
+    return points_vtk
+
+
+def __concatenate_cord(cordinates):
+    x = []
+    for cord in cordinates:
+        x.append(cord)
+    points = np.concatenate(x, axis=0)
 
     # to pointsToVTK input format
     points_vtk = list()

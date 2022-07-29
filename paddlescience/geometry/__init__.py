@@ -13,3 +13,5 @@
 # limitations under the License.
 
 from .rectangular import Rectangular, Cube, CircleInRectangular, CylinderInCube
+from .polydata import PolyData
+from .geometry_discrete import GeometryDiscrete

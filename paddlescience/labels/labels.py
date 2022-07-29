@@ -17,7 +17,13 @@ class LabelInt(int):
     def __new__(cls, value, *args, **kwargs):
         return super(cls, cls).__new__(cls, value)
 
+    def __repr__(self):
+        return str(self) + " (array)"
+
 
 class LabelHolder:
-    def __init__(self):
-        self.shape = [None]
+    def __init__(self, current_shape=None):
+        if current_shape == None:
+            self.shape = [None]
+        else:
+            self.shape = [current_shape]

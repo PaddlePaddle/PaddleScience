@@ -17,6 +17,7 @@ import numpy as np
 import paddle
 import pytest
 import sys
+from tool import compare
 
 
 def cylinder3d_steady(static=True):
@@ -106,12 +107,12 @@ def cylinder3d_steady(static=True):
     solver.feed_data_user(real_sol)  # add real solution
 
     res_shpae = [(2044, 4), (58, 4), (58, 4), (4, 4), (10000, 4)]
-    solution = solver.solve(num_epoch=1)
-    for i in range(len(solution)):
-        if i != 4:
-            assert solution[i].shape[1] == res_shpae[i][1]
-        else:
-            assert solution[i].shape == res_shpae[i]
+    solution = solver.solve(num_epoch=10)
+    res = [np.sum(item, axis=0) for item in solution]
+    return sum(res)
+
+
+standard = np.load("./standard/cylinder3d_steady.npz", allow_pickle=True)
 
 
 @pytest.mark.cylinder3d_steady
@@ -121,8 +122,14 @@ def test_cylinder3d_steady_0():
     """
     test cylinder3d_steady
     """
-    cylinder3d_steady(static=False)
-    cylinder3d_steady()
+    dyn_standard, stc_standard = standard['dyn_solution'], standard[
+        'stc_solution']
+    dyn_rslt = cylinder3d_steady(static=False)
+    stc_rslt = cylinder3d_steady()
+
+    compare(dyn_rslt, stc_rslt)
+    compare(dyn_standard, dyn_rslt, mode="equal")
+    compare(stc_rslt, stc_rslt, mode="equal")
 
 
 @pytest.mark.cylinder3d_steady
@@ -133,7 +140,9 @@ def test_cylinder3d_steady_1():
     test cylinder3d_steady
     distributed case: padding
     """
-    cylinder3d_steady()
+    dst_standard = standard["dst_solution"]
+    dst_rslt = cylinder3d_steady()
+    compare(dst_standard, dst_rslt, mode="equal")
 
 
 if __name__ == '__main__':

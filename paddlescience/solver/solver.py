@@ -20,13 +20,16 @@ from paddle.distributed.auto_parallel.engine import Engine
 import jax
 import jax.numpy as jnp
 from jax import jit
-
 from functools import partial
 import time
 
-paddle.disable_static()
+from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
+from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 
+from . import utils
 from .. import config
+from visualdl import LogWriter
+import time
 
 __all__ = ["Solver"]
 
@@ -53,14 +56,13 @@ class ModelStatic(paddle.nn.Layer):
         self.nlabels = nlabels
         self.labels_attr = labels_attr
 
-        self.algo.net.make_network_static()
+        self.algo.net.make_network()
 
     def forward(self, *inputs_labels):
         for input in inputs_labels:
             input.stop_gradient = False
 
-        loss, outs = self.algo.compute(
-            None,
+        self.loss, self.outs, self.loss_details = self.algo.compute(
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -68,7 +70,7 @@ class ModelStatic(paddle.nn.Layer):
             labels_attr=self.labels_attr,
             pde=self.pde)
 
-        return loss, outs  # TODO: add outs
+        return self.loss, self.outs  # TODO: add outs
 
 
 def loss_func(x, y):
@@ -82,16 +84,24 @@ class Solver(object):
     Solver
  
     Parameters:
+        pde(paddlescience.pde): The PDE used in the solver.
         algo(Algorithm): The algorithm used in the solver.
-        opt(paddlescience.Optimizer): The optimizer used in the solver.
+        opt(paddlescience.Optimizer, optional): The optimizer used in the solver.
 
     Example:
+        >>> # 1. train
         >>> import paddlescience as psci
         >>> solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
+        >>> solution = solver.solve()
+
+        >>> # 2. predict
+        >>> import paddlescience as psci
+        >>> solver = psci.solver.Solver(pde=pde_disc, algo=algo)
+        >>> solution = solver.predict()
     """
 
     # init
-    def __init__(self, pde, algo, opt):
+    def __init__(self, pde, algo, opt=None):
         super(Solver, self).__init__()
 
         self.pde = pde
@@ -111,12 +121,21 @@ class Solver(object):
                     self.__init_static_auto_dist()
 
     # solve (train)
-    def solve(self, num_epoch=2, bs=None, checkpoint_freq=1000):
+    def solve(self,
+              num_epoch=2,
+              bs=None,
+              checkpoint_freq=1000,
+              checkpoint_path='./checkpoint/'):
+
         if config._compute_backend == "jax":
             return self.__solve_jax(num_epoch, bs, checkpoint_freq)
+        elif paddle.in_dynamic_mode():
+            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
+                                        checkpoint_path)
         else:
-            if paddle.in_dynamic_mode():
-                return self.__solve_dynamic(num_epoch, bs, checkpoint_freq)
+            if paddle.distributed.get_world_size() == 1:
+                return self.__solve_static(num_epoch, bs, checkpoint_freq,
+                                           checkpoint_path)
             else:
                 if paddle.distributed.get_world_size() == 1:
                     return self.__solve_static(num_epoch, bs, checkpoint_freq)
@@ -159,15 +178,16 @@ class Solver(object):
 
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
-
         self.inputs = inputs
         self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
+
+        if self.opt is not None:
+            labels, labels_attr = self.algo.create_labels(self.pde)
+            self.labels = labels
+            self.labels_attr = labels_attr
 
     # solve static 
-    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq):
+    def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
@@ -190,46 +210,151 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        loss, outs = self.algo.compute(
-            None,
-            *inputs_labels,
-            ninputs=ninputs,
-            inputs_attr=inputs_attr,
-            nlabels=nlabels,
-            labels_attr=labels_attr,
-            pde=self.pde)
+        print("Dynamic graph is currently used.")
+        if config.visualdl_enabled() == True:
+            writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
+            writer_eq_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/eq_loss')
+            writer_bc_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/bc_loss')
+            writer_ic_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/ic_loss')
+            writer_data_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/data_loss')
+        # Adam optimizer
+        if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
+                self.opt, paddle.optimizer.Adam):
+            for epoch in range(num_epoch):
 
-        loss.backward()
-        self.opt.step()
-        self.opt.clear_grad()
+                # TODO: error out num_epoch==0
 
-        t1 = time.time()
+                loss, outs, loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
 
-        for epoch in range(num_epoch - 1):
+                loss.backward()
+                self.opt.step()
+                self.opt.clear_grad()
 
-            loss, outs = self.algo.compute(
-                None,
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
+                print("epoch: " + str(epoch + 1), " loss:",
+                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                      loss_details[2].numpy()[0], " data loss:",
+                      loss_details[3].numpy()[0])
 
-            loss.backward()
-            self.opt.step()
-            self.opt.clear_grad()
+                # write loss for visual DL
+                if config.visualdl_enabled() == True:
+                    writer_loss.add_scalar(
+                        tag="loss", step=epoch, value=loss.numpy()[0])
+                    writer_eq_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=loss_details[0].numpy()[0])
+                    writer_bc_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=loss_details[1].numpy()[0])
+                    writer_ic_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=loss_details[2].numpy()[0])
+                    writer_data_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=loss_details[3].numpy()[0])
 
-            print("dynamic epoch: " + str(epoch + 1), "    loss:",
-                  loss.numpy()[0])
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+                    paddle.save(self.opt.state_dict(),
+                                checkpoint_path + 'dynamic_opt_params_' +
+                                str(epoch + 1) + '.pdopt')
 
-        t2 = time.time()
-        print("time : ", t2 - t1)
+            for i in range(len(outs)):
+                outs[i] = outs[i].numpy()
 
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
+            return outs
+        # L-bfgs optimizer
+        elif self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
 
-        return outs
+            def _f(x):
+                self.algo.net.reconstruct(x)
+                loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=labels_attr,
+                    pde=self.pde)
+                return loss
+
+            x0 = self.algo.net.flatten_params()
+
+            for epoch in range(num_epoch):
+                results = self.opt(_f,
+                                   x0,
+                                   initial_inverse_hessian_estimate=None,
+                                   line_search_fn='strong_wolfe',
+                                   dtype='float32')
+                x0 = results[2]
+
+                print("epoch: " + str(epoch + 1), " loss:",
+                      results[3].numpy()[0], " eq loss:",
+                      self.loss_details[0].numpy()[0], " bc loss:",
+                      self.loss_details[1].numpy()[0], " ic loss:",
+                      self.loss_details[2].numpy()[0], " data loss:",
+                      self.loss_details[3].numpy()[0])
+
+                # write loss for visual DL
+                if config.visualdl_enabled() == True:
+                    writer_loss.add_scalar(
+                        tag="loss", step=epoch, value=results[3].numpy()[0])
+                    writer_eq_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=self.loss_details[0].numpy()[0])
+                    writer_bc_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=self.loss_details[1].numpy()[0])
+                    writer_ic_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=self.loss_details[2].numpy()[0])
+                    writer_data_loss.add_scalar(
+                        tag="detail_loss",
+                        step=epoch,
+                        value=self.loss_details[3].numpy()[0])
+
+                if (epoch + 1) % checkpoint_freq == 0:
+                    paddle.save(self.algo.net.state_dict(),
+                                checkpoint_path + 'dynamic_net_params_' +
+                                str(epoch + 1) + '.pdparams')
+
+            self.algo.net.reconstruct(x0)
+
+            for i in range(len(self.outs)):
+                self.outs[i] = self.outs[i].numpy()
+
+            return self.outs
+        else:
+            print(
+                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
+            )
+            exit()
+
+        # close writer in visual DL
+        if config.visualdl_enabled() == True:
+            writer_loss.close()
+            writer_eq_loss.close()
+            writer_bc_loss.close()
+            writer_ic_loss.close()
+            writer_data_loss.close()
 
     # predict dynamic
     def __predict_dynamic(self):
@@ -250,93 +375,86 @@ class Solver(object):
 
     # init static
     def __init_static(self):
-
         # create inputs/labels and its attributes
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        labels, labels_attr = self.algo.create_labels(self.pde)
-
         self.inputs = inputs
         self.inputs_attr = inputs_attr
-        self.labels = labels
-        self.labels_attr = labels_attr
 
-        # number of inputs and labels
-        ninputs = len(self.inputs)
-        nlabels = len(self.labels)
+        if self.opt is not None:
+            if config.prim_enabled() and self.pde.geometry.user is not None:
+                labels, labels_attr = self.algo.create_labels(
+                    self.pde,
+                    interior_shape=len(self.pde.geometry.interior),
+                    supervised_shape=len(self.pde.geometry.user))
+            else:
+                labels, labels_attr = self.algo.create_labels(self.pde)
+            self.labels = labels
+            self.labels_attr = labels_attr
 
         place = paddle.CUDAPlace(0)
         self.exe = paddle.static.Executor(place)
 
-        inputs_labels = list()
+        if self.opt is not None:
+            # number of inputs and labels
+            ninputs = len(self.inputs)
+            nlabels = len(self.labels)
 
-        self.train_program = paddle.static.Program()
-        self.startup_program = paddle.static.Program()
-        self.predict_program = paddle.static.Program()
+            inputs_labels = list()
 
-        # construct train program
-        with paddle.static.program_guard(self.train_program,
-                                         self.startup_program):
+            self.train_program = paddle.static.Program()
+            self.startup_program = paddle.static.Program()
 
-            # dynamic mode: make network in net's constructor
-            # static  mode: make network here 
-            self.algo.net.make_network_static()
+            # construct train program
+            with paddle.static.program_guard(self.train_program,
+                                             self.startup_program):
 
-            # inputs
-            for i in range(len(inputs)):
-                #inputs
-                input = paddle.static.data(
-                    name='input' + str(i),
-                    shape=inputs[i].shape,
-                    dtype=self._dtype)
-                input.stop_gradient = False
-                inputs_labels.append(input)
+                # dynamic mode: make network in net's constructor
+                # static  mode: make network here 
+                self.algo.net.make_network()
 
-            for i in range(len(labels)):
-                #labels
-                label = paddle.static.data(
-                    name='label' + str(i),
-                    shape=labels[i].shape,
-                    dtype=self._dtype)
-                label.stop_gradient = False
-                inputs_labels.append(label)
-
-            self.loss, self.outs = self.algo.compute(
-                None,
-                *inputs_labels,
-                ninputs=ninputs,
-                inputs_attr=inputs_attr,
-                nlabels=nlabels,
-                labels_attr=labels_attr,
-                pde=self.pde)
-
-            self.opt.minimize(self.loss)
-
-        # construct predict program
-        with paddle.static.program_guard(self.predict_program):
-            with paddle.utils.unique_name.guard():
-
-                self.algo.net.make_network_static()
-                ins = list()
-                for i in range(len(inputs)):
-                    ishape = list(inputs[i].shape)
-                    ishape[0] = -1
+                # inputs
+                for i in range(len(self.inputs)):
+                    #inputs
                     input = paddle.static.data(
-                        name='input' + str(i), shape=ishape, dtype=self._dtype)
+                        name='input' + str(i),
+                        shape=self.inputs[i].shape,
+                        dtype=self._dtype)
                     input.stop_gradient = False
-                    ins.append(input)
+                    inputs_labels.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                for i in range(len(self.labels)):
+                    #labels
+                    label = paddle.static.data(
+                        name='label' + str(i),
+                        shape=self.labels[i].shape,
+                        dtype=self._dtype)
+                    label.stop_gradient = False
+                    inputs_labels.append(label)
 
-        # startup program
-        self.exe.run(self.startup_program)
+                self.loss, self.outs, self.loss_details = self.algo.compute(
+                    *inputs_labels,
+                    ninputs=ninputs,
+                    inputs_attr=self.inputs_attr,
+                    nlabels=nlabels,
+                    labels_attr=self.labels_attr,
+                    pde=self.pde)
+
+                if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+                    assert paddle.in_dynamic_mode(
+                    ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
+                self.opt.minimize(self.loss)
+
+                # new ad
+                if config.prim_enabled() and not config.cinn_enabled():
+                    config.prim2orig()
+
+            # startup program
+            self.exe.run(self.startup_program)
 
     # solve static
-    def __solve_static(self, num_epoch, bs, checkpoint_freq):
-
+    def __solve_static(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
         inputs = self.inputs
-        inputs_attr = self.inputs_attr
         labels = self.labels
-        labels_attr = self.labels_attr
 
         # feeds inputs
         feeds = dict()
@@ -351,38 +469,120 @@ class Solver(object):
         fetches = [self.loss.name]
         for out in self.outs:
             fetches.append(out.name)
+        # fetch loss_details' outputs
+        for loss_detail in self.loss_details:
+            fetches.append(loss_detail.name)
 
         # main loop
-        rslt = self.exe.run(self.train_program, feed=feeds, fetch_list=fetches)
+        print("Static graph is currently used.")
+        if config.visualdl_enabled() == True:
+            writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
+            writer_eq_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/eq_loss')
+            writer_bc_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/bc_loss')
+            writer_ic_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/ic_loss')
+            writer_data_loss = LogWriter(
+                logdir=checkpoint_path + 'visualDL/data_loss')
 
-        t1 = time.time()
+        if config.cinn_enabled():
+            begin = time.time()
+            print("CINN is currently used.")
+            compiled_program = utils.cinn_compile(self.train_program,
+                                                  self.loss.name, fetches)
+        else:
+            compiled_program = self.train_program
 
-        for epoch in range(num_epoch - 1):
-            rslt = self.exe.run(self.train_program,
+        for epoch in range(num_epoch):
+            rslt = self.exe.run(compiled_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("static epoch: " + str(epoch + 1), "loss: ", rslt[0])
+            print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
+                  rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
+                  " data loss:", rslt[-1])
 
-        t2 = time.time()
-        print("time : ", t2 - t1)
+            # write loss for visual DL
+            if config.visualdl_enabled() == True:
+                writer_loss.add_scalar(tag="loss", step=epoch, value=rslt[0])
+                writer_eq_loss.add_scalar(
+                    tag="detail_loss", step=epoch, value=rslt[-4])
+                writer_bc_loss.add_scalar(
+                    tag="detail_loss", step=epoch, value=rslt[-3])
+                writer_ic_loss.add_scalar(
+                    tag="detail_loss", step=epoch, value=rslt[-2])
+                writer_data_loss.add_scalar(
+                    tag="detail_loss", step=epoch, value=rslt[-1])
 
-        return rslt[1:]
+            if (epoch + 1) % checkpoint_freq == 0:
+                paddle.save(self.train_program.state_dict(),
+                            checkpoint_path + 'static_model_params_' +
+                            str(epoch + 1) + '.pdparams')
+
+            if config.cinn_enabled():
+                if epoch == 0:
+                    first_step_cost = time.time() - begin
+                elif epoch == 9:
+                    paddle.device.cuda.synchronize()
+                    begin = time.time()
+                elif epoch == num_epoch - 1:
+                    paddle.device.cuda.synchronize()
+                    end = time.time()
+                    print('First step cost {} s'.format(first_step_cost))
+                    print('{} epoch(10~{}) cost {} s'.format(
+                        num_epoch - 10, num_epoch, end - begin))
+
+        # close writer in visual DL
+        if config.visualdl_enabled() == True:
+            writer_loss.close()
+            writer_eq_loss.close()
+            writer_bc_loss.close()
+            writer_ic_loss.close()
+            writer_data_loss.close()
+
+        return rslt[1:-4]
 
     # predict static
     def __predict_static(self):
+        self.startup_program = paddle.static.Program()
+        self.predict_program = paddle.static.Program()
 
-        # create inputs and its attributes
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        # construct predict program
+        with paddle.static.program_guard(self.predict_program,
+                                         self.startup_program):
+            with paddle.utils.unique_name.guard():
+
+                self.algo.net.make_network()
+                ins = list()
+                for i in range(len(self.inputs)):
+                    ishape = list(self.inputs[i].shape)
+                    ishape[0] = -1
+                    input = paddle.static.data(
+                        name='input' + str(i), shape=ishape, dtype=self._dtype)
+                    input.stop_gradient = False
+                    ins.append(input)
+
+                self.outs_predict = self.algo.compute_forward(*ins)
+
+        # startup program
+        self.exe.run(self.startup_program)
 
         # feeds inputs
         feeds = dict()
-        for i in range(len(inputs)):
-            feeds['input' + str(i)] = inputs[i]
+        for i in range(len(self.inputs)):
+            feeds['input' + str(i)] = self.inputs[i]
 
         # fetch outputs
         fetches = list()
         for out in self.outs_predict:
             fetches.append(out.name)
+
+        # load model
+        if self.algo.net.params_path is not None:
+            state_dict = paddle.load(self.algo.net.params_path)
+            self.predict_program.set_state_dict(state_dict)
+        else:
+            assert 0, "Please specify the path and name of the static model."
 
         # run
         rslt = self.exe.run(self.predict_program,
@@ -414,8 +614,8 @@ class Solver(object):
         dist_strategy.semi_auto = True
         fleet.init(is_collective=True, strategy=dist_strategy)
 
-        model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr, nlabels,
-                            labels_attr)
+        self.model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr,
+                                 nlabels, labels_attr)
 
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
@@ -426,7 +626,7 @@ class Solver(object):
 
         # engine
         self.engine = Engine(
-            model,
+            self.model,
             inputs_spec=inputs_labels_spec,
             labels_spec=labels_spec,
             strategy=dist_strategy)
@@ -446,15 +646,22 @@ class Solver(object):
 
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
+
+        fetches = dict()
+        fetches['eq_loss'] = self.model.loss_details[0].name
+        fetches['bc_loss'] = self.model.loss_details[1].name
+        fetches['ic_loss'] = self.model.loss_details[2].name
+        fetches['data_loss'] = self.model.loss_details[3].name
+
         # train
-        self.engine.fit(train_dataset, batch_size=None)
+        self.engine.fit(train_dataset, batch_size=None, fetches=fetches)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()
         with paddle.static.program_guard(self.predict_auto_dist_program):
             with paddle.utils.unique_name.guard():
 
-                self.algo.net.make_network_static()
+                self.algo.net.make_network()
                 ins = list()
                 for i in range(len(inputs)):
                     ishape = list(inputs[i].shape)

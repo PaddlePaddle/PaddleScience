@@ -14,15 +14,16 @@
 
 import paddle
 import numpy as np
-from .loss_base import LossBase, CompFormula
+from .loss_base import CompFormula, l2_norm_square
 from ..labels import LabelInt
+from .. import config
 
 from .. import config
 
 from jax import numpy as jnp
 
 
-class L2(LossBase):
+class L2:
     """
     L2 loss.
 
@@ -38,14 +39,24 @@ class L2(LossBase):
         >>> loss = psci.loss.L2()
     """
 
-    def __init__(self, p=1, data_weight=1.0):
+    def __init__(self,
+                 p=1,
+                 eq_weight=None,
+                 bc_weight=None,
+                 ic_weight=None,
+                 data_weight=1.0):
         self.norm_p = p
+        self.eq_weight = eq_weight
+        self.bc_weight = bc_weight
+        self.ic_weight = ic_weight
         self.data_weight = data_weight
+
+        #TODO: check input
 
     # compute loss on one interior 
     # there are multiple pde
-    def eq_loss(self, param, pde, net, input, input_attr, labels, labels_attr,
-                bs):
+
+    def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -68,7 +79,14 @@ class L2(LossBase):
             else:
                 rhs = rhs_eq
 
-            wgt_eq = labels_attr["equations"][i]["weight"]
+            if self.eq_weight is None:
+                wgt_eq = labels_attr["equations"][i]["weight"]
+            else:
+                if np.isscalar(self.eq_weight):
+                    wgt_eq = self.eq_weight
+                else:
+                    wgt_eq = self.eq_weight[i]
+
             if wgt_eq is None:
                 wgt = None
             elif type(wgt_eq) == LabelInt:
@@ -80,22 +98,17 @@ class L2(LossBase):
                 # TODO: error out
 
             if rhs is None:
-                if wgt is None:
-                    loss += self.__norm(rst**2, p=1)
-                else:
-                    loss += self.__norm(rst**2 * wgt, p=1)
+                loss += l2_norm_square(rst, wgt)
             else:
-                if wgt is None:
-                    loss += self.__norm((rst - rhs)**2, p=1)
-                else:
-                    loss += self.__norm((rst - rhs)**2 * wgt, p=1)
+                loss += l2_norm_square((rst - rhs), wgt)
 
         return loss, cmploss.outs
 
     # compute loss on one boundary
     # there are multiple bc on one boundary
-    def bc_loss(self, param, pde, net, name_b, input, input_attr, labels,
-                labels_attr, bs):
+
+    def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
+                bs):
 
         cmploss = CompFormula(pde, net)
 
@@ -117,7 +130,14 @@ class L2(LossBase):
             else:
                 rhs = rhs_b
 
-            wgt_b = labels_attr["bc"][name_b][i]["weight"]
+            if self.bc_weight is None:
+                wgt_b = labels_attr["bc"][name_b][i]["weight"]
+            else:
+                if np.isscalar(self.bc_weight):
+                    wgt_b = self.bc_weight
+                else:
+                    wgt_b = self.bc_weight[i]
+
             if wgt_b is None:
                 wgt = None
             elif type(wgt_b) == LabelInt:
@@ -126,18 +146,9 @@ class L2(LossBase):
                 wgt = wgt_b
 
             if rhs is None:
-                if wgt is None:
-                    loss += self.__norm(rst**2, p=1)
-                else:
-                    loss += self.__norm(rst**2 * wgt, p=1)
+                loss += l2_norm_square(rst, wgt)
             else:
-                if wgt is None:
-                    loss += self.__norm((rst - rhs)**2, p=1)
-                else:
-                    loss += self.__norm((rst - rhs)**2 * wgt, p=1)
-
-            # print("rhs: ", rhs)
-            # exit()
+                loss += l2_norm_square((rst - rhs), wgt)
 
         return loss, cmploss.outs
 
@@ -159,8 +170,12 @@ class L2(LossBase):
                 rhs = labels[rhs_c]
             else:
                 rhs = rhs_c
-            wgt = labels_attr["ic"][i]["weight"]
-            loss += self.__norm((rst - rhs)**2 * wgt, p=1)
+
+            if self.ic_weight is None:
+                wgt = labels_attr["ic"][i]["weight"]
+            else:
+                wgt = self.ic_weight
+            loss += l2_norm_square(rst - rhs, wgt)
 
         return loss, cmploss.outs
 
@@ -177,14 +192,13 @@ class L2(LossBase):
         for i in range(len(pde.dvar)):
             idx = labels_attr["data_next"][i]
             data = labels[idx]
-            loss += self.__norm(cmploss.outs[:, i] - data, p=2)**2
+            if config.prim_enabled():
+                nrm = paddle.norm(cmploss.outs[:, i] - data, p=2)
+                loss += nrm * nrm
+            else:
+                loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+
             # TODO: p=2 p=1
 
         loss = self.data_weight * loss
         return loss, cmploss.outs
-
-    def __norm(self, x, p):
-        if config._compute_backend == "jax":
-            return jnp.linalg.norm(x, ord=p)
-        else:
-            return paddle.norm(x, p=p)

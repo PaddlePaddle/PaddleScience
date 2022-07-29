@@ -24,9 +24,6 @@ import zipfile
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
-paddle.disable_static()
-
 
 # load real data 
 def GetRealPhyInfo(time, need_info=None):
@@ -115,6 +112,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 # Solver parameter
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 
+# train
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
 current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
@@ -127,7 +125,9 @@ for next_time in range(
     solver.feed_data_user_cur(current_user)  # add u(n) user 
     solver.feed_data_user_next(GetRealPhyInfo(
         next_time, need_info='physic'))  # add u(n+1) user
-    next_uvwp = solver.solve(num_epoch=2000)
+    next_uvwp = solver.solve(
+        num_epoch=2000,
+        checkpoint_path='checkpoint/cylinder3d_model_' + str(next_time) + "/")
     # Save vtk
     file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
         next_time)

@@ -23,9 +23,6 @@ psci.config.set_compute_backend("jax")
 paddle.seed(1)
 np.random.seed(1)
 
-#paddle.enable_static()
-#paddle.disable_static()
-
 # analytical solution 
 ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
 
@@ -67,12 +64,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-
-solution = solver.solve(num_epoch=10)
-
-exit()
-
-solution = solver.predict()
+solution = solver.solve(num_epoch=25, checkpoint_freq=20)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 

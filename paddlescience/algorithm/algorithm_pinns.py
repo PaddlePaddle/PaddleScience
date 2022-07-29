@@ -16,6 +16,7 @@ import paddle
 from .algorithm_base import AlgorithmBase
 from ..inputs import InputsAttr
 from ..labels import LabelInt, LabelHolder
+from ..loss import FormulaLoss
 
 from collections import OrderedDict
 import numpy as np
@@ -30,20 +31,48 @@ class PINNs(AlgorithmBase):
 
     Parameters:
         net(Network): The network used in PINNs algorithm.
-        loss(Loss): The loss used in PINNs algorithm.
+        loss(Loss, optional): The loss used in PINNs algorithm.
 
     Example:
+        >>> # 1. train
         >>> import paddlescience as psci
         >>> algo = psci.algorithm.PINNs(net=net, loss=loss)
+
+        >>> # 2. predict
+        >>> import paddlescience as psci
+        >>> algo = psci.algorithm.PINNs(net=net)
     """
 
-    def __init__(self, net, loss):
+    def __init__(self, net, loss=None):
         super(PINNs, self).__init__()
         self.net = net
         self.loss = loss
 
-    # create inputs used as net input
     def create_inputs(self, pde):
+        if type(self.loss) is FormulaLoss:
+            inputs, inputs_attr = self.create_inputs_from_loss(pde)
+        else:
+            inputs, inputs_attr = self.create_inputs_from_pde(pde)
+
+        # self.__print_input(inputs)
+        # self.__print_input_attr(inputs_attr)
+
+        return inputs, inputs_attr
+
+    def create_labels(self, pde, interior_shape=None, supervised_shape=None):
+        if type(self.loss) is FormulaLoss:
+            labels, labels_attr = self.create_labels_from_loss(pde)
+        else:
+            labels, labels_attr = self.create_labels_from_pde(
+                pde, interior_shape, supervised_shape)
+
+        # self.__print_label(labels)
+        # self.__print_label_attr(labels_attr)
+
+        return labels, labels_attr
+
+    # create inputs used as net input
+    def create_inputs_from_pde(self, pde):
 
         inputs = list()
         inputs_attr = OrderedDict()
@@ -100,10 +129,18 @@ class PINNs(AlgorithmBase):
             inputs_attr_d["0"] = InputsAttr(0, 0)
         inputs_attr["user"] = inputs_attr_d
 
+        # padding
+        nprocs = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
+
         return inputs, inputs_attr
 
     # create labels used in computing loss, but not used as net input 
-    def create_labels(self, pde):
+    def create_labels_from_pde(self,
+                               pde,
+                               interior_shape=None,
+                               supervised_shape=None):
 
         labels = list()
         labels_attr = OrderedDict()
@@ -124,7 +161,11 @@ class PINNs(AlgorithmBase):
                 attr["rhs"] = rhs
             elif type(rhs) is np.ndarray:
                 attr["rhs"] = LabelInt(len(labels))
-                labels.append(rhs)
+                if pde.time_dependent == True and pde.time_disc_method is None:
+                    data = self.__repeatspace(pde.time_array[1::], rhs)
+                else:
+                    data = rhs
+                labels.append(data)
 
             # weight
             weight = pde.weight_disc[i]
@@ -142,7 +183,10 @@ class PINNs(AlgorithmBase):
             for i in range(len(pde.dvar_n)):
                 labels_attr["interior"]["data_cur"].append(
                     LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if interior_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(interior_shape))
 
         # bc
         #   - labels_attr["bc"][name_b][i]["rhs"]
@@ -158,7 +202,11 @@ class PINNs(AlgorithmBase):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
                     attr["rhs"] = LabelInt(len(labels))
-                    labels.append(rhs)
+                    if pde.time_dependent == True and pde.time_disc_method is None:
+                        data = self.__repeatspace(pde.time_array[1::], rhs)
+                    else:
+                        data = rhs
+                    labels.append(data)
 
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
@@ -230,7 +278,10 @@ class PINNs(AlgorithmBase):
             labels_attr["user"]["data_next"] = list()
             for i in range(len(pde.dvar)):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
-                labels.append(LabelHolder())  # placeholder with shape
+                if supervised_shape == None:
+                    labels.append(LabelHolder())  # placeholder with shape
+                else:
+                    labels.append(LabelHolder(supervised_shape))
 
             # data cur
             if pde.time_disc_method is not None:
@@ -238,9 +289,206 @@ class PINNs(AlgorithmBase):
                 for i in range(len(pde.dvar_n)):
                     labels_attr["user"]["data_cur"].append(
                         LabelInt(len(labels)))
-                    labels.append(LabelHolder())  # placeholder with shape
+                    if supervised_shape == None:
+                        # placeholder with shape
+                        labels.append(LabelHolder())
+                    else:
+                        labels.append(LabelHolder(supervised_shape))
 
         return labels, labels_attr
+
+    def create_inputs_from_loss(self, pde):
+
+        inputs = list()
+        inputs_attr = OrderedDict()
+
+        inputs_attr_i = OrderedDict()
+        inputs_attr_b = OrderedDict()
+        inputs_attr_it = OrderedDict()
+        inputs_attr_d = OrderedDict()
+
+        # interior
+        for eq in pde.equations:
+            if eq in self.loss._eqlist:
+                idx = self.loss._eqlist.index(eq)
+                inputs.append(self.loss._eqinput[idx])
+                inputs_attr_i["0"] = InputsAttr(0, 0)
+                inputs_attr["interior"] = inputs_attr_i
+                break
+        inputs_attr["interior"] = inputs_attr_i
+
+        # boundary
+        for name in pde.bc.keys():
+            if name in self.loss._bclist:
+                idx = self.loss._bclist.index(name)
+                inputs.append(self.loss._bcinput[idx])
+                inputs_attr_b[name] = InputsAttr(0, 0)
+        inputs_attr["bc"] = inputs_attr_b
+
+        # ic
+        if True in self.loss._iclist:
+            inputs.append(self.loss._icinput[0])
+            inputs_attr_it["0"] = InputsAttr(0, 0)
+            inputs_attr["ic"] = inputs_attr_it
+
+        # data
+        if True in self.loss._suplist:
+            inputs.append(self.loss._supinput[0])
+            inputs_attr_d["0"] = InputsAttr(0, 0)
+
+        inputs_attr["interior"] = inputs_attr_i
+        inputs_attr["bc"] = inputs_attr_b
+        inputs_attr["ic"] = inputs_attr_it
+        inputs_attr["user"] = inputs_attr_d
+
+        # padding
+        nprocs = paddle.distributed.get_world_size()
+        for i in range(len(inputs)):
+            inputs[i] = self.__padding_array(nprocs, inputs[i])
+
+        return inputs, inputs_attr
+
+    # print input
+    def __print_input(self, input):
+        print(" ** inputs ** ")
+        for i in input:
+            print(i.shape)
+        print("")
+
+    # print input_attr
+    def __print_input_attr(self, attr):
+        for key in attr.keys():
+            print(" ** ", key, " **")
+            print(attr[key])
+        print("")
+
+    def create_labels_from_loss(self, pde):
+
+        labels = list()
+        labels_attr = OrderedDict()
+
+        # equation
+        labels_attr["interior"] = OrderedDict()
+        labels_attr["interior"]["equations"] = list()
+        for i in range(len(pde.equations)):
+            eq = pde.equations[i]
+            attr = dict()
+            if eq in self.loss._eqlist:
+                idx = self.loss._eqlist.index(eq)
+                # rhs
+                rhs = pde.rhs[i]
+                if (rhs is None) or np.isscalar(rhs):
+                    attr["rhs"] = rhs
+                # weight
+                weight = self.loss._eqwgt[idx]
+                if (weight is None) or np.isscalar(weight):
+                    attr["weight"] = weight
+
+                labels_attr["interior"]["equations"].append(attr)
+
+        # bc
+        labels_attr["bc"] = OrderedDict()
+        for name_b, bc in pde.bc.items():
+            if name_b in self.loss._bclist:
+                idx = self.loss._bclist.index(name_b)
+                labels_attr["bc"][name_b] = list()
+                for b in bc:
+                    attr = dict()
+                    # rhs
+                    rhs = b.rhs
+                    if (rhs is None) or np.isscalar(rhs):
+                        attr["rhs"] = rhs
+                    elif type(rhs) is np.ndarray:
+                        attr["rhs"] = LabelInt(len(labels))
+                        labels.append(rhs)
+                    # weight
+                    weight = self.loss._bcwgt[idx]
+                    if (weight is None) or np.isscalar(weight):
+                        attr["weight"] = weight
+
+                    labels_attr["bc"][name_b].append(attr)
+
+        # ic
+        labels_attr["ic"] = list()
+        if True in self.loss._iclist:
+            for ic in pde.ic:
+                attr = dict()
+                rhs = ic.rhs  # rhs
+                if (rhs is None) or np.isscalar(rhs):
+                    attr["rhs"] = rhs
+                elif type(rhs) is np.ndarray:
+                    attr["rhs"] = LabelInt(len(labels))
+                    labels.append(rhs)
+                weight = self.loss._icwgt[0]  # weight # TODO multiple ic
+                if (weight is None) or np.isscalar(weight):
+                    attr["weight"] = weight
+
+                labels_attr["ic"].append(attr)
+
+        # sup
+        if True in self.loss._suplist:
+            labels_attr["user"] = OrderedDict()
+
+            # equation
+            labels_attr["user"]["equations"] = list()
+            for i in range(len(pde.equations)):
+                eq = pde.equations[i]
+                attr = dict()
+                if eq in self.loss._eqlist:
+                    idx = self.loss._eqlist.index(eq)
+                    # rhs
+                    rhs = pde.rhs[i]
+                    if (rhs is None) or np.isscalar(rhs):
+                        attr["rhs"] = rhs
+                    # weight
+                    weight = self.loss._eqwgt[idx]
+                    if (weight is None) or np.isscalar(weight):
+                        attr["weight"] = weight
+
+                    labels_attr["user"]["equations"].append(attr)
+
+            # data next
+            labels_attr["user"]["data_next"] = list()
+            n = self.loss._supref[0].shape[-1]
+            for i in range(n):
+                labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
+                labels.append(self.loss._supref[0][:, i])
+
+        return labels, labels_attr
+
+    # print label
+    def __print_label(self, label):
+        print(" ** labels ** ")
+        for i in label:
+            print(i.shape)
+        print("")
+
+    # print label_attr 
+    def __print_label_attr(self, attr):
+
+        print("** interior-equations ** ")
+        for i in attr["interior"]["equations"]:
+            print(i)
+
+        print("** bc **")
+        for k in attr["bc"].keys():
+            print("- key: ", k)
+            for i in attr["bc"][k]:
+                print(i)
+
+        print("** ic **")
+        for i in attr["ic"]:
+            print(i)
+
+        print("** user-equations ** ")
+        for i in attr["user"]["equations"]:
+            print(i)
+
+        print("** user-data ** ")
+        for i in attr["user"]["data_next"]:
+            print(i)
+
+        print("")
 
     def feed_data_interior_cur(self, labels, labels_attr, data):
         n = len(labels_attr["interior"]["data_cur"])
@@ -353,8 +601,6 @@ class PINNs(AlgorithmBase):
 
             n += 1
 
-        # print("loss eq/bc/ic/data:   ", loss_eq.numpy())
-
         # loss
         p = self.loss.norm_p
         if p == 1:
@@ -366,10 +612,16 @@ class PINNs(AlgorithmBase):
             pass
             # TODO: error out
 
-        if config._compute_backend == "jax":
-            return loss  # TODO: return more
-        else:
-            return loss, outs
+        loss_details = list()
+        loss_details.append(self.__sqrt(loss_eq))
+        loss_details.append(self.__sqrt(loss_bc))
+        loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
+        loss_details.append(self.__sqrt(loss_ic))
+        loss_data = (loss - loss) if isinstance(loss_data,
+                                                float) else loss_data
+        loss_details.append(self.__sqrt(loss_data))
+
+        return loss, outs, loss_details
 
     def __timespace(self, time, space):
 
@@ -381,6 +633,13 @@ class PINNs(AlgorithmBase):
         timespace = np.concatenate([time_r, space_r], axis=1)
         return timespace
 
+    def __repeatspace(self, time, space):
+
+        nt = len(time)
+        ns = len(space)
+        space_r = np.tile(space, (nt, 1)).reshape((nt * ns))
+        return space_r
+
     def __sqrt(self, x):
         if np.isscalar(x):
             return np.sqrt(x)
@@ -389,3 +648,10 @@ class PINNs(AlgorithmBase):
                 return jax.numpy.sqrt(x)
             else:
                 return paddle.sqrt(x)
+
+    def __padding_array(self, nprocs, array):
+        npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
+        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
+        for i in range(npad):
+            array = np.append(array, datapad, axis=0)
+        return array

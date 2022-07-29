@@ -91,7 +91,7 @@ class DataLoader:
 
         return replicated_t, spatial_data
 
-    def loading_train_inside_domain_data(self, time_list):
+    def loading_train_inside_domain_data(self, time_list, flatten=False):
         # load train_domain points
         # domain_train.csv, title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
         filename = 'domain_train.csv'
@@ -111,9 +111,12 @@ class DataLoader:
         y = domain_data[:, 5].reshape((-1, 1))
         t, xy = self.replicate_time_list(time_list, x.shape[0], [x, y])
         print("residual data shape:", t.shape[0])
-        return t, xy[0], xy[1]
+        if flatten == True:
+            return t.flatten(), xy[0].flatten(), xy[1].flatten()
+        else:
+            return t, xy[0], xy[1]
 
-    def loading_outlet_data(self, time_list):
+    def loading_outlet_data(self, time_list, flatten=False):
         filename = 'domain_outlet.csv'
         path = self.path
 
@@ -129,7 +132,12 @@ class DataLoader:
         print("outlet data shape:", outlet_data.shape[0])
         t, pxy = self.replicate_time_list(time_list, outlet_data.shape[0],
                                           [p, x, y])
-        return pxy[0], t, pxy[1], pxy[2]
+
+        if flatten == True:
+            return pxy[0].flatten(), t.flatten(), pxy[1].flatten(), pxy[
+                2].flatten()
+        else:
+            return pxy[0], t, pxy[1], pxy[2]
 
     def loading_inlet_data(self, time_list, path):
         #  title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
@@ -152,7 +160,7 @@ class DataLoader:
         # u, v, x, y
         return self.loading_data(time_list, path, filename)
 
-    def loading_boundary_data(self, time_list, num_random=None):
+    def loading_boundary_data(self, time_list, num_random=None, flatten=False):
         inlet_bc = self.loading_inlet_data(time_list, self.path)
         # side_bc = self.loading_side_data(time_list, self.path)
         cylinder_bc = self.loading_cylinder_data(time_list, self.path)
@@ -162,7 +170,12 @@ class DataLoader:
         x = np.concatenate((inlet_bc[2], cylinder_bc[2]))
         y = np.concatenate((inlet_bc[3], cylinder_bc[3]))
         t, uvxy = self.replicate_time_list(time_list, u.shape[0], [u, v, x, y])
-        return uvxy[0], uvxy[1], t, uvxy[2], uvxy[3]
+
+        if flatten == True:
+            return uvxy[0].flatten(), uvxy[1].flatten(), t.flatten(), uvxy[
+                2].flatten(), uvxy[3].flatten()
+        else:
+            return uvxy[0], uvxy[1], t, uvxy[2], uvxy[3]
 
     def loading_data(self, time_list, path, filename, num_random=None):
         # boudnary datra: cylinder/inlet/side
@@ -187,7 +200,7 @@ class DataLoader:
         print("boundary  data shape:", boundary_data.shape[0])
         return u, v, x, y
 
-    def loading_supervised_data(self, time_list):
+    def loading_supervised_data(self, time_list, flatten=False):
         path = self.path
 
         supervised_data = None
@@ -219,9 +232,14 @@ class DataLoader:
         t = full_supervised_data[:, 0].reshape((-1, 1))
         x = full_supervised_data[:, 6].reshape((-1, 1))
         y = full_supervised_data[:, 7].reshape((-1, 1))
-        return p, u, v, t, x, y
 
-    def loading_initial_data(self, time_list):
+        if flatten == True:
+            return p.flatten(), u.flatten(), v.flatten(), t.flatten(
+            ), x.flatten(), y.flatten()
+        else:
+            return p, u, v, t, x, y
+
+    def loading_initial_data(self, time_list, flatten=False):
         # "p","U:0","U:1","U:2","vtkOriginalPointIds","Points:0","Points:1","Points:2"
         path = self.path
 
@@ -240,6 +258,10 @@ class DataLoader:
         u = initial_t_data[:, 2].reshape((-1, 1))
         v = initial_t_data[:, 3].reshape((-1, 1))
         t = initial_t_data[:, 0].reshape((-1, 1))
-        x = initial_t_data[:, 6].reshape((-1, 1))
-        y = initial_t_data[:, 7].reshape((-1, 1))
-        return p, u, v, t, x, y
+        x = initial_t_data[:, 5].reshape((-1, 1))
+        y = initial_t_data[:, 6].reshape((-1, 1))
+        if flatten == True:
+            return p.flatten(), u.flatten(), v.flatten(), t.flatten(
+            ), x.flatten(), y.flatten()
+        else:
+            return p, u, v, t, x, y
