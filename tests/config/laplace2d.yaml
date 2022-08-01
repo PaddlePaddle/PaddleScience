@@ -2,7 +2,7 @@
   # Config
   visualdl_enabled: False
   static_enabled: False
-  prim_enabled: false
+  prim_enabled: False
   # Geometry
   npoints: 512
   seed: 1
@@ -22,7 +22,7 @@
   # Config
   visualdl_enabled: False
   static_enabled: False
-  prim_enabled: false
+  prim_enabled: False
   # Geometry
   npoints: 256
   seed: 1
