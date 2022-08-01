@@ -281,7 +281,7 @@ class Solver(object):
                                    x0,
                                    initial_inverse_hessian_estimate=None,
                                    line_search_fn='strong_wolfe',
-                                   dtype='float32')
+                                   dtype=config._dtype)
                 x0 = results[2]
 
                 print("epoch: " + str(epoch + 1), " loss:",
@@ -601,7 +601,7 @@ class Solver(object):
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
             inputs_labels_spec.append(
-                InputSpec(data.shape, 'float32', 'input' + str(i)))
+                InputSpec(data.shape, config._dtype, 'input' + str(i)))
 
         labels_spec = None
 
