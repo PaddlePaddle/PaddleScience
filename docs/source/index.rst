@@ -59,6 +59,7 @@ The component organization is illustrated in the following figure.
    paddlescience.optimizer <api/optimizer>
    paddlescience.solver <api/solver>
    paddlescience.visu <api/visu>
+   paddlescience.config <api/config>
 
    
 .. toctree::

@@ -57,12 +57,15 @@ class FCNet(NetworkBase):
         self._weights_attr = [None for i in range(num_layers)]
         self._bias_attr = [None for i in range(num_layers)]
 
-        if activation == 'sigmoid':
-            self.activation = F.sigmoid
-        elif activation == 'tanh':
-            self.activation = paddle.tanh
+        act_str = {'sigmoid': F.sigmoid, 'tanh': paddle.tanh}
+        if isinstance(activation, str) and (activation in act_str):
+            self.activation = act_str.get(activation)
+        elif callable(activation):
+            self.activation = activation
         else:
-            assert 0, "Unsupported activation type."
+            raise ValueError(
+                'Expected activation is String format[sigmoid, tanh] or Callable object.'
+            )
 
         # dynamic mode: make network here
         # static  mode: make network in solver
