@@ -16,7 +16,7 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-cfg = psci.utils.options.parse_args()
+cfg = psci.utils.parse_args()
 
 if cfg is not None:
     # Geometry
@@ -103,6 +103,9 @@ solution = solver.solve(num_epoch=epochs)
 
 psci.visu.save_vtk(
     filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
+
+psci.visu.save_npy(
+    filename=solution_filename, geo_disc=pde_disc.geometry, data=solution)
 
 # MSE
 # TODO: solution array to dict: interior, bc
