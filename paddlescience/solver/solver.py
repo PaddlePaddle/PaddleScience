@@ -18,7 +18,6 @@ from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
-paddle.disable_static()
 from . import utils
 from .. import config
 from visualdl import LogWriter
