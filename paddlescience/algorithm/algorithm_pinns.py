@@ -511,7 +511,7 @@ class PINNs(AlgorithmBase):
             # print("idx user next: ", idx)
         return labels
 
-    def compute_forward(self, *inputs, params=None):
+    def compute_forward(self, params, *inputs):
 
         outs = list()
 
@@ -521,14 +521,8 @@ class PINNs(AlgorithmBase):
 
         return outs
 
-    def compute(self,
-                *inputs_labels,
-                ninputs,
-                inputs_attr,
-                nlabels,
-                labels_attr,
-                pde,
-                params=None):
+    def compute(self, params, *inputs_labels, ninputs, inputs_attr, nlabels,
+                labels_attr, pde):
 
         outs = list()
 
