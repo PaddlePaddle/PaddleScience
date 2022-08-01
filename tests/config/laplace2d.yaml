@@ -1,8 +1,8 @@
 - input: 0
   # Config
-  visualdl_enabled: False
-  static_enabled: False
-  prim_enabled: False
+  visualdl_enable: False
+  static_enable: False
+  prim_enable: False
   # Geometry
   npoints: 512
   seed: 1
@@ -20,9 +20,9 @@
   checkpoint_path: 'checkpoints'
 - input: 1
   # Config
-  visualdl_enabled: False
-  static_enabled: False
-  prim_enabled: False
+  visualdl_enable: False
+  static_enable: False
+  prim_enable: False
   # Geometry
   npoints: 256
   seed: 1

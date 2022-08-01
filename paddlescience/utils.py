@@ -89,11 +89,11 @@ def parse_args():
 
     if cfg is not None:
         # Enable related flags
-        if cfg['visualdl_enabled'] == True:
+        if cfg['visualdl_enable'] == True:
             enable_visualdl()
-        if cfg['static_enabled'] == True:
+        if cfg['static_enable'] == True:
             enable_static()
-        if cfg['prim_enabled'] == True:
+        if cfg['prim_enable'] == True:
             enable_prim()
     else:
         pass
