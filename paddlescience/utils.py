@@ -57,7 +57,7 @@ def parse_config(cfg_file, config_index):
     return yaml_config[config_index]
 
 
-def get_config(fname, overrides=None, config_index=0):
+def get_config(fname, config_index=0):
     """
     Read config from file
     """
@@ -85,14 +85,17 @@ def parse_args():
     args = parser.parse_args()
 
     # Get config
-    cfg = get_config(args.config_file, args.opt, args.config_index)
+    cfg = get_config(args.config_file, args.config_index)
 
-    # Enable related flags
-    if cfg['visualdl_enabled'] == True:
-        enable_visualdl()
-    if cfg['static_enabled'] == True:
-        enable_static()
-    if cfg['prim_enabled'] == True:
-        enable_prim()
+    if cfg is not None:
+        # Enable related flags
+        if cfg['visualdl_enabled'] == True:
+            enable_visualdl()
+        if cfg['static_enabled'] == True:
+            enable_static()
+        if cfg['prim_enabled'] == True:
+            enable_prim()
+    else:
+        pass
 
     return cfg

@@ -21,8 +21,56 @@ import paddle
 from .. import config
 
 
+# Save geometry pointwise of numpy
 def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
-    pass
+    """
+    Save data to numpy format.
+
+    Parameters:
+        filename(string): file name.
+        time_array(list or numpy array, optional): time steps list / array.
+        geo_disc (GeometryDiscrete): discrete geometry.
+        data (numpy array, optional): data to be saved.
+
+
+    Example:
+        >>> import paddlescience as psci
+        >>> psci.visu.save_npy(geo_disc=pde_disc.geometry, data=solution)
+    """
+    nt = 1 if (time_array is None) else len(time_array) - 1
+    nprocs = paddle.distributed.get_world_size()
+    nrank = paddle.distributed.get_rank()
+    if nprocs == 1:
+        geo_disc_sub = geo_disc
+    else:
+        geo_disc_sub = geo_disc.sub(nprocs, nrank)
+
+    # concatenate data and cordiante 
+    points_vtk = __concatenate_geo(geo_disc_sub)
+
+    # points's shape is [ndims][npoints]
+    npoints = len(points_vtk[0])
+    ndims = len(points_vtk)
+
+    # data
+    if data is None:
+        data_vtk = {"placeholder": np.ones(npoints, dtype=config._dtype)}
+    elif type(data) == types.LambdaType:
+        data_vtk = dict()
+        if ndims == 3:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1],
+                                    points_vtk[2])
+        elif ndims == 2:
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1])
+    else:
+        data_vtk = __concatenate_data(data, nt)
+
+    for t in range(nt):
+        fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+        current_cord = np.array(points_vtk).astype(config._dtype)
+        current_data = np.array(list(data_vtk[t].values()))
+        result = np.concatenate((current_cord, current_data), axis=0).T
+        np.save(fpname, result)
 
 
 # Save geometry pointwise
