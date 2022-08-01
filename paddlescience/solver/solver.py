@@ -18,7 +18,6 @@ from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
-paddle.disable_static()
 from . import utils
 from .. import config
 from visualdl import LogWriter
@@ -56,6 +55,7 @@ class ModelStatic(paddle.nn.Layer):
             input.stop_gradient = False
 
         self.loss, self.outs, self.loss_details = self.algo.compute(
+            None,
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -210,6 +210,7 @@ class Solver(object):
                 # TODO: error out num_epoch==0
 
                 loss, outs, loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -266,6 +267,7 @@ class Solver(object):
             def _f(x):
                 self.algo.net.reconstruct(x)
                 loss, self.outs, self.loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -347,7 +349,7 @@ class Solver(object):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
 
-        outs = self.algo.compute_forward(*inputs)
+        outs = self.algo.compute_forward(None, *inputs)
 
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
@@ -413,6 +415,7 @@ class Solver(object):
                     inputs_labels.append(label)
 
                 self.loss, self.outs, self.loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=self.inputs_attr,
@@ -543,7 +546,7 @@ class Solver(object):
                     input.stop_gradient = False
                     ins.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                self.outs_predict = self.algo.compute_forward(None, *ins)
 
         # startup program
         self.exe.run(self.startup_program)
@@ -652,7 +655,7 @@ class Solver(object):
                     input.stop_gradient = False
                     ins.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                self.outs_predict = self.algo.compute_forward(None, *ins)
 
         # feeds inputs
         feeds = dict()
