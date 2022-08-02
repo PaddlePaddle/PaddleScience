@@ -22,6 +22,8 @@ import numpy as np
 paddle.seed(1)
 np.random.seed(1)
 
+paddle.enable_static()
+
 # time array
 time_tmp = np.linspace(0, 50, 50, endpoint=True).astype(int)
 time_array = np.random.choice(time_tmp, 11)
@@ -32,19 +34,20 @@ time_array = np.array([1, 2, 3])
 # loading data from files
 dr = loading_cfd_data.DataLoader(path='./datasets/')
 # interior data
-i_t, i_x, i_y = dr.loading_train_inside_domain_data(time_array, flatten=True)
+i_t, i_x, i_y = dr.loading_train_inside_domain_data(
+    time_array, flatten=True, dtype='float32')
 # boundary inlet and circle
 b_inlet_u, b_inlet_v, b_inlet_t, b_inlet_x, b_inlet_y = dr.loading_boundary_data(
-    time_array, flatten=True)
+    time_array, flatten=True, dtype='float32')
 # boundary outlet
 b_outlet_p, b_outlet_t, b_outlet_x, b_outlet_y = dr.loading_outlet_data(
-    time_array, flatten=True)
+    time_array, flatten=True, dtype='float32')
 # initial data
 init_p, init_u, init_v, init_t, init_x, init_y = dr.loading_initial_data(
-    [1], flatten=True)
+    [1], flatten=True, dtype='float32')
 # supervised data
 sup_p, sup_u, sup_v, sup_t, sup_x, sup_y = dr.loading_supervised_data(
-    time_array, flatten=True)
+    time_array, flatten=True, dtype='float32')
 
 inputeq = np.stack((i_t, i_x, i_y), axis=1)
 inputbc1 = np.stack((b_inlet_t, b_inlet_x, b_inlet_y), axis=1)
