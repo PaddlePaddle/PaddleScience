@@ -87,6 +87,8 @@ class Rectangular(Geometry):
         else:
             assert 0, "The discretize method can only be uniform, sampling or quasi sampler."
 
+        #TODO
+
         return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 
     def _sampling_boundary(self, npoints):

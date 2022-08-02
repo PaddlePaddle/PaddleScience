@@ -91,6 +91,9 @@ class Geometry:
         self.normal.clear()
         self.tri_mesh.clear()
 
+    def boundary_encryption(self, name, dist):
+        pass
+
     def _is_inside_mesh(self, points, tri_mesh):
 
         if isinstance(tri_mesh, str):
