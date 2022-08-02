@@ -1,6 +1,6 @@
 - input: 0
   # Config
-  visualdl_enable: False
+  use_visualdl: False
   static_enable: False
   prim_enable: False
   # Geometry
@@ -20,7 +20,7 @@
   checkpoint_path: 'checkpoints'
 - input: 1
   # Config
-  visualdl_enable: False
+  use_visualdl: False
   static_enable: False
   prim_enable: False
   # Geometry
