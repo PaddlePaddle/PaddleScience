@@ -1,4 +1,4 @@
-# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,15 +57,77 @@ def parse_config(cfg_file, config_index):
     return yaml_config[config_index]
 
 
-def get_config(fname, config_index=0):
+def override(dl, ks, v):
+    """
+    Recursively replace dict of list
+    Args:
+        dl(dict or list): dict or list to be replaced
+        ks(list): list of keys
+        v(str): value to be replaced
+    """
+
+    def str2num(v):
+        try:
+            return eval(v)
+        except Exception:
+            return v
+
+    assert isinstance(dl, (list, dict)), ("{} should be a list or a dict")
+    assert len(ks) > 0, ('lenght of keys should larger than 0')
+    if isinstance(dl, list):
+        k = str2num(ks[0])
+        if len(ks) == 1:
+            assert k < len(dl), ('index({}) out of range({})'.format(k, dl))
+            dl[k] = str2num(v)
+        else:
+            override(dl[k], ks[1:], v)
+    else:
+        if len(ks) == 1:
+            assert ks[0] in dl, ('{} is not exist in {}'.format(ks[0], dl))
+            dl[ks[0]] = str2num(v)
+        else:
+            override(dl[ks[0]], ks[1:], v)
+
+
+def override_config(config, options=None):
+    """
+    Recursively override the config
+    Args:
+        config(dict): dict to be replaced
+        options(list): list of pairs(key0.key1.idx.key2=value)
+            such as: [
+                'topk=2',
+                'VALID.transforms.1.ResizeImage.resize_short=300'
+            ]
+    Returns:
+        config(dict): replaced config
+    """
+    if options is not None:
+        for opt in options:
+            assert isinstance(opt,
+                              str), ("option({}) should be a str".format(opt))
+            assert "=" in opt, (
+                "option({}) should contain a ="
+                "to distinguish between key and value".format(opt))
+            pair = opt.split('=')
+            assert len(pair) == 2, ("there can be only a = in the option")
+            key, value = pair
+            keys = key.split('.')
+            override(config, keys, value)
+
+    return config
+
+
+def get_config(fname, config_index=0, overrides=None):
     """
     Read config from file
     """
-    if fname is None:
+    if fname is None and overrides is None:
         return None
     assert os.path.exists(fname), (
         'config file({}) is not exist'.format(fname))
     config = parse_config(fname, config_index)
+    override_config(config, overrides)
 
     return config
 
@@ -82,14 +144,18 @@ def parse_args():
         default=0,
         help='run validation every interval')
 
+    # config options
+    parser.add_argument(
+        "-o", "--opt", nargs='+', help="set configuration options")
+
     args = parser.parse_args()
 
     # Get config
-    cfg = get_config(args.config_file, args.config_index)
+    cfg = get_config(args.config_file, args.config_index, args.opt)
 
     if cfg is not None:
         # Enable related flags
-        if cfg['visualdl_enable'] == True:
+        if cfg['use_visualdl'] == True:
             enable_visualdl()
         if cfg['static_enable'] == True:
             enable_static()
