@@ -52,8 +52,8 @@ class FCNet(NetworkBase):
         self.num_layers = num_layers
         self.hidden_size = hidden_size
 
-        self._weights = []
-        self._biases = []
+        self._weights = [None for i in range(num_layers)]
+        self._biases = [None for i in range(num_layers)]
         self._weights_attr = [None for i in range(num_layers)]
         self._bias_attr = [None for i in range(num_layers)]
 
@@ -99,19 +99,17 @@ class FCNet(NetworkBase):
             b_attr = self._bias_attr[i]
 
             # create parameter with attr
-            w = self.create_parameter(
+            self._weights[i] = self.create_parameter(
                 shape=[lsize, rsize],
                 dtype=self._dtype,
                 is_bias=False,
                 attr=w_attr)
-            b = self.create_parameter(
+            self._biases[i] = self.create_parameter(
                 shape=[rsize], dtype=self._dtype, is_bias=True, attr=b_attr)
 
             # add parameter
-            self._weights.append(w)
-            self._biases.append(b)
-            self.add_parameter("w_" + str(i), w)
-            self.add_parameter("b_" + str(i), b)
+            self.add_parameter("w_" + str(i), self._weights[i])
+            self.add_parameter("b_" + str(i), self._biases[i])
 
     def __nn_func_paddle(self, ins):
         u = ins
@@ -201,6 +199,8 @@ class FCNet(NetworkBase):
                             dtype=self._dtype,
                             is_bias=False,
                             attr=w_attr)
+                        # add parameter
+                        self.add_parameter("w_" + str(i), self._weights[i])
 
                 # update bias
                 if bias_init is not None:
@@ -217,6 +217,8 @@ class FCNet(NetworkBase):
                             dtype=self._dtype,
                             is_bias=True,
                             attr=b_attr)
+                        # add parameter
+                        self.add_parameter("b_" + str(i), self._biases[i])
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self._weights + self._biases))
