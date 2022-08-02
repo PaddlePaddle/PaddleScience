@@ -91,7 +91,8 @@ class Geometry:
         self.normal.clear()
         self.tri_mesh.clear()
 
-    def boundary_encryption(self, name, dist):
+    def boundary_encryption(self, name, dist, npoints):
+        # record the message 
         pass
 
     def _is_inside_mesh(self, points, tri_mesh):
@@ -99,7 +100,7 @@ class Geometry:
         if isinstance(tri_mesh, str):
             mesh_model = pv.read(tri_mesh)
         else:
-            mesh_model = tri_mesh
+            mesh_model = tri_mesh.pv_mesh
 
         # The mesh must be manifold and need to be triangulate
         if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
@@ -120,13 +121,13 @@ class Geometry:
         if isinstance(tri_mesh, str):
             mesh_model = pv.read(tri_mesh)
         else:
-            mesh_model = tri_mesh
+            mesh_model = tri_mesh.pv_mesh
 
         # TODO(liu-xiandong): Need to increase sampling points on the boundary
         return mesh_model.points
 
     def __sub__(self, other):
-        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other.pv_mesh
+        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other
         return self
 
     # select boundaries from all points and construct disc geometry

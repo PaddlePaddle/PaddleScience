@@ -17,6 +17,7 @@ from .geometry import Geometry
 import numpy as np
 import math
 from scipy.stats import qmc
+from pysdf import SDF
 
 __all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
 
@@ -87,9 +88,50 @@ class Rectangular(Geometry):
         else:
             assert 0, "The discretize method can only be uniform, sampling or quasi sampler."
 
-        #TODO
+        print("lxd_debug: now we find all_points:")
+        print(len(points))
 
-        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
+        #TODO
+        # phase 1. sampler interior points
+        encryption_points = self._sampling_encryption(
+            1, 200000, self.tri_mesh['triangle'])
+        print("lxd_debug: now we find encryption_points:")
+        print(len(encryption_points))
+
+        result = np.concatenate((points, encryption_points), axis=0)
+        print("lxd_debug: now all the data need to be watched:")
+        print(len(result))
+
+        return super(Rectangular, self)._mesh_to_geo_disc(result, padding)
+
+    def _sampling_encryption(self, dist, npoints, geo=None):
+        # TODO
+        sampler = qmc.Halton(d=self.ndims, scramble=False)
+
+        sample = sampler.random(n=npoints)
+
+        l_bounds = self.origin
+        u_bounds = self.extent
+
+        result = qmc.scale(sample, l_bounds, u_bounds)
+
+        result = np.array(result).astype(self._dtype)
+
+        # Get points geo is a trigulate pv mesh
+        geo = geo.pv_mesh
+
+        if geo.is_manifold is False and geo.is_all_triangles is False:
+            assert 0, "The mesh must be manifold and need to be triangulate."
+
+        faces_as_array = geo.faces.reshape((geo.n_faces, 4))[:, 1:]
+
+        f = SDF(geo.points, faces_as_array, False)
+
+        sdf_multi_point = f(result)
+
+        sdf_flag = (sdf_multi_point < 0) & (sdf_multi_point >= -dist)
+
+        return result[sdf_flag, :]
 
     def _sampling_boundary(self, npoints):
         steps = list()
