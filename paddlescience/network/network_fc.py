@@ -32,7 +32,7 @@ class FCNet(NetworkBase):
         num_outs (integer): Number of outputs.
         num_layers (integer): Number of layers.
         hidden_size (integer): Hiden size in each layer.
-        activation (optional, "tanh" / "sigmoid"): Activation function used in each layer. The default value is "tanh".
+        activation (optional, "tanh" / "sigmoid" / PaddlePaddle's operator): Activation function used in each layer. Currently, expected input is string format[sigmoid, tanh] or PaddlePaddle's operator (e.g. paddle.exp). The default value is "tanh".  
 
     Example:
         >>> import paddlescience as psci
