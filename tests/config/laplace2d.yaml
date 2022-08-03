@@ -1,0 +1,42 @@
+- input: 0
+  Global:
+    use_visualdl: False
+    static_enable: False
+    prim_enable: False
+    epochs: 20000
+  Geometry:
+    npoints: 512
+    seed: 1
+    sampler_method: 'sampling'
+  Model:
+    num_layers: 5
+    hidden_size: 20
+    activation: 'tanh'
+  Optimizer:
+    lr:
+      learning_rate: 0.001
+  Post-processing:
+    solution_filename: 'output_laplace2d'
+    vtk_filename: 'output_laplace2d'
+    checkpoint_path: 'checkpoints'
+- input: 1
+  Global:
+    use_visualdl: False
+    static_enable: False
+    prim_enable: False
+    epochs: 20000
+  Geometry:
+    npoints: 258
+    seed: 1
+    sampler_method: 'sampling'
+  Model:
+    num_layers: 5
+    hidden_size: 20
+    activation: 'tanh'
+  Optimizer:
+    lr:
+      learning_rate: 0.001
+  Post-processing:
+    solution_filename: 'output_laplace2d'
+    vtk_filename: 'output_laplace2d'
+    checkpoint_path: 'checkpoints'
