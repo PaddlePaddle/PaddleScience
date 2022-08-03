@@ -155,11 +155,11 @@ def parse_args():
 
     if cfg is not None:
         # Enable related flags
-        if cfg['use_visualdl'] == True:
+        if cfg['Global']['use_visualdl'] == True:
             enable_visualdl()
-        if cfg['static_enable'] == True:
+        if cfg['Global']['static_enable'] == True:
             enable_static()
-        if cfg['prim_enable'] == True:
+        if cfg['Global']['prim_enable'] == True:
             enable_prim()
     else:
         pass
