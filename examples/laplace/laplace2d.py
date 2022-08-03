@@ -20,20 +20,20 @@ cfg = psci.utils.parse_args()
 
 if cfg is not None:
     # Geometry
-    npoints = cfg['npoints']
-    seed_num = cfg['seed']
-    sampler_method = cfg['sampler_method']
+    npoints = cfg['Geometry']['npoints']
+    seed_num = cfg['Geometry']['seed']
+    sampler_method = cfg['Geometry']['sampler_method']
     # Network
-    epochs = cfg['epochs']
-    num_layers = cfg['num_layers']
-    hidden_size = cfg['hidden_size']
-    activation = cfg['activation']
+    epochs = cfg['Global']['epochs']
+    num_layers = cfg['Model']['num_layers']
+    hidden_size = cfg['Model']['hidden_size']
+    activation = cfg['Model']['activation']
     # Optimizer
-    learning_rate = cfg['learning_rate']
+    learning_rate = cfg['Optimizer']['lr']['learning_rate']
     # Post-processing
-    solution_filename = cfg['solution_filename']
-    vtk_filename = cfg['vtk_filename']
-    checkpoint_path = cfg['checkpoint_path']
+    solution_filename = cfg['Post-processing']['solution_filename']
+    vtk_filename = cfg['Post-processing']['vtk_filename']
+    checkpoint_path = cfg['Post-processing']['checkpoint_path']
 else:
     # Geometry
     npoints = 10201
