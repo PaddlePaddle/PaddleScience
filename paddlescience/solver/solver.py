@@ -565,8 +565,6 @@ class Solver(object):
         if self.algo.net.params_path is not None:
             state_dict = paddle.load(self.algo.net.params_path)
             self.predict_program.set_state_dict(state_dict)
-        else:
-            assert 0, "Please specify the path and name of the static model."
 
         # run
         rslt = self.exe.run(self.predict_program,
