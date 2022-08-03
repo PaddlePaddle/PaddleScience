@@ -451,6 +451,11 @@ class PINNs(AlgorithmBase):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
                 labels.append(self.loss._supref[0][:, i])
 
+        # padding
+        nprocs = paddle.distributed.get_world_size()
+        for i in range(len(labels)):
+            labels[i] = self.__padding_array(nprocs, labels[i])
+
         return labels, labels_attr
 
     # print label
@@ -676,7 +681,12 @@ class PINNs(AlgorithmBase):
 
     def __padding_array(self, nprocs, array):
         npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
-        datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
-        for i in range(npad):
-            array = np.append(array, datapad, axis=0)
+        if array.ndim == 2:
+            datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))
+            for i in range(npad):
+                array = np.append(array, datapad, axis=0)
+        elif array.ndim == 1:
+            datapad = array[-1]
+            for i in range(npad):
+                array = np.append(array, datapad)
         return array
