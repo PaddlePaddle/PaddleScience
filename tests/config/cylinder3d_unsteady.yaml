@@ -1,0 +1,21 @@
+- input: 0
+  Global:
+    use_visualdl: False
+    static_enable: True
+    prim_enable: False
+    epochs: 2000
+  Geometry:
+    npoints: 60000
+    seed: 1
+    sampler_method: 'sampling'
+  Model:
+    num_layers: 10
+    hidden_size: 20
+    activation: 'tanh'
+  Optimizer:
+    lr:
+      learning_rate: 0.001
+  Post-processing:
+    solution_filename: 'output_cylinder3d_unsteady'
+    vtk_filename: 'output_cylinder3d_unsteady'
+    checkpoint_path: 'checkpoints'
