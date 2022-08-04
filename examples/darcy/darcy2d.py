@@ -16,11 +16,45 @@ import paddlescience as psci
 import numpy as np
 import paddle
 
-paddle.seed(1)
-np.random.seed(1)
+cfg = psci.utils.parse_args()
 
-paddle.enable_static()
-# paddle.disable_static()
+if cfg is not None:
+    # Geometry
+    npoints = cfg['Geometry']['npoints']
+    seed_num = cfg['Geometry']['seed']
+    sampler_method = cfg['Geometry']['sampler_method']
+    # Network
+    epochs = cfg['Global']['epochs']
+    num_layers = cfg['Model']['num_layers']
+    hidden_size = cfg['Model']['hidden_size']
+    activation = cfg['Model']['activation']
+    # Optimizer
+    learning_rate = cfg['Optimizer']['lr']['learning_rate']
+    # Post-processing
+    solution_filename = cfg['Post-processing']['solution_filename']
+    vtk_filename = cfg['Post-processing']['vtk_filename']
+    checkpoint_path = cfg['Post-processing']['checkpoint_path']
+else:
+    # Config
+    paddle.enable_static()
+    # Geometry
+    npoints = 10201
+    seed_num = 1
+    sampler_method = 'uniform'
+    # Network
+    epochs = 10000
+    num_layers = 5
+    hidden_size = 20
+    activation = 'tanh'
+    # Optimizer
+    learning_rate = 0.001
+    # Post-processing
+    solution_filename = 'output_laplace2d'
+    vtk_filename = 'output_laplace2d'
+    checkpoint_path = 'checkpoints'
+
+paddle.seed(seed_num)
+np.random.seed(seed_num)
 
 psci.config.set_dtype("float32")
 
@@ -39,8 +73,7 @@ geo.add_boundary(name="left", criteria=lambda x, y: x == 0.0)
 geo.add_boundary(name="right", criteria=lambda x, y: x == 1.0)
 
 # discretize geometry
-npoints = 10201
-geo_disc = geo.discretize(npoints=npoints, method="uniform")
+geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 
 # Poisson
 pde = psci.pde.Poisson(dim=2, rhs=ref_rhs)
@@ -63,7 +96,11 @@ pde_disc = pde.discretize(geo_disc=geo_disc)
 # Network
 # TODO: remove num_ins and num_outs
 net = psci.network.FCNet(
-    num_ins=2, num_outs=1, num_layers=5, hidden_size=20, activation='tanh')
+    num_ins=2,
+    num_outs=1,
+    num_layers=num_layers,
+    hidden_size=hidden_size,
+    activation=activation)
 
 # Loss
 loss = psci.loss.L2()
@@ -72,11 +109,12 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
+opt = psci.optimizer.Adam(
+    learning_rate=learning_rate, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=10000)
+solution = solver.solve(num_epoch=epochs)
 
 psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
 
