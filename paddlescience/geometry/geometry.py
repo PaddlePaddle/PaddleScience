@@ -28,6 +28,7 @@ class Geometry:
         self.criteria = dict()  # criteria (lambda) defining boundary
         self.tri_mesh = dict()
         self.normal = dict()  # boundary normal direction
+        self.encryption = dict()
         self.pv_mesh = None
         self._dtype = config._dtype
 
