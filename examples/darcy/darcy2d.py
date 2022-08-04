@@ -49,8 +49,8 @@ else:
     # Optimizer
     learning_rate = 0.001
     # Post-processing
-    solution_filename = 'output_laplace2d'
-    vtk_filename = 'output_laplace2d'
+    solution_filename = 'output_darcy2d'
+    vtk_filename = 'output_darcy2d'
     checkpoint_path = 'checkpoints'
 
 paddle.seed(seed_num)

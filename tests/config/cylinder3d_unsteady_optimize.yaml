@@ -16,6 +16,6 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_cylinder3d_unsteady'
-    vtk_filename: 'output_cylinder3d_unsteady'
+    solution_filename: 'output_cylinder3d_unsteady_optimize'
+    vtk_filename: 'output_cylinder3d_unsteady_optimize'
     checkpoint_path: 'checkpoints'

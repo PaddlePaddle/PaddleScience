@@ -41,8 +41,8 @@ else:
     sampler_method = 'uniform'
     # Network
     epochs = 20000
-    num_layers = 5
-    hidden_size = 20
+    num_layers = 10
+    hidden_size = 50
     activation = 'tanh'
     # Optimizer
     learning_rate = 0.001
