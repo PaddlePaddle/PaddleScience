@@ -49,8 +49,8 @@ else:
     # Optimizer
     learning_rate = 0.001
     # Post-processing
-    solution_filename = 'output_ldc2d_steady_train'
-    vtk_filename = 'output_ldc2d_steady_train'
+    solution_filename = 'output_ldc2d_unsteady_t'
+    vtk_filename = 'output_ldc2d_unsteady_t'
     checkpoint_path = 'checkpoints'
 
 paddle.seed(seed_num)

@@ -99,7 +99,7 @@ opt = psci.optimizer.Adam(
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=epochs)
+solution = solver.solve(num_epoch=solution)
 
 psci.visu.save_vtk(
     filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
