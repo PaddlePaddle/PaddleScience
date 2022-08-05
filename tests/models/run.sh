@@ -19,7 +19,7 @@ echo $cases
 ignoe=""
 bug=0
 
-echo "============ failed cases =============" >> result.txt
+echo "============ failed cases =============" > result.txt
 for file_dir in ${cases}
 do
     name=`basename -s .yaml $file_dir`
@@ -32,4 +32,5 @@ do
     fi
 done
 echo "total bugs: "${bug} >> result.txt
+cat result.txt
 exit ${bug}
