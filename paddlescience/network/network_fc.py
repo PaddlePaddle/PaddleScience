@@ -237,4 +237,4 @@ class FCNet(NetworkBase):
                 self._weights.append(new_param)
 
     def get_shared_layer(self):
-        return self.weights[-1]
+        return self._weights[-1]
