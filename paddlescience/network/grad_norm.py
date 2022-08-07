@@ -16,7 +16,7 @@ import numpy as np
 import paddle
 import paddle.nn
 from paddle.nn.initializer import Assign
-from .network_base import NetworkBase
+from network_base import NetworkBase
 
 
 class GradNorm(NetworkBase):
@@ -34,8 +34,7 @@ class GradNorm(NetworkBase):
         if not isinstance(net, NetworkBase):
             raise TypeError()("'net' must be a NetworkBase subclass instance.")
         if not hasattr(net, 'get_shared_layer'):
-            raise TypeError(
-                "'net' must be must have 'get_shared_layer' method.")
+            raise TypeError("'net' must have 'get_shared_layer' method.")
         if n_loss <= 1:
             raise ValueError(
                 "'n_loss' must be greater than 1, but got {}".format(n_loss))
@@ -47,6 +46,7 @@ class GradNorm(NetworkBase):
                 raise ValueError(
                     "weight_attr must have same length with loss weights.")
 
+        self.n_loss = n_loss
         self.net = net
         self.loss_weights = self.create_parameter(
             shape=[n_loss],
@@ -97,6 +97,15 @@ class GradNorm(NetworkBase):
             paddle.autograd.grad(grad_norm_loss, self.loss_weights)[0])
 
         return grad_norm_loss
+
+    def renormalize(self):
+        normalize_coeff = self.n_loss / paddle.sum(self.loss_weights)
+        self.loss_weights = self.create_parameter(
+            shape=[self.n_loss],
+            attr=Assign(self.loss_weights * normalize_coeff),
+            dtype=self._dtype,
+            is_bias=False)
+        self.set_grad()
 
     def reset_initial_losses(self):
         self.initial_losses = None
