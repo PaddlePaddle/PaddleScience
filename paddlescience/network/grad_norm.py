@@ -16,7 +16,7 @@ import numpy as np
 import paddle
 import paddle.nn
 from paddle.nn.initializer import Assign
-from network_base import NetworkBase
+from .network_base import NetworkBase
 
 
 class GradNorm(NetworkBase):
