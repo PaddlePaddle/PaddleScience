@@ -32,7 +32,7 @@ class GradNorm(NetworkBase):
     def __init__(self, net, n_loss, alpha, weight_attr=None):
         super().__init__()
         if not isinstance(net, NetworkBase):
-            raise TypeError()("'net' must be a NetworkBase subclass instance.")
+            raise TypeError("'net' must be a NetworkBase subclass instance.")
         if not hasattr(net, 'get_shared_layer'):
             raise TypeError("'net' must have 'get_shared_layer' method.")
         if n_loss <= 1:
@@ -73,7 +73,7 @@ class GradNorm(NetworkBase):
         if self.initial_losses is None:
             self.initial_losses = losses.numpy()
 
-        W = self.net.get_last_shared_layer()
+        W = self.net.get_shared_layer()
 
         if self.loss_weights.grad is not None:
             self.loss_weights.grad.set_value(
