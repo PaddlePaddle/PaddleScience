@@ -96,10 +96,11 @@ class Rectangular(Geometry):
                 self.encryption[name].get_npoints(), self.tri_mesh[name])
             encryption_total_points.append(encryption_points)
 
-        encryption_total_points = np.vstack(encryption_total_points)
-        result = np.concatenate((points, encryption_total_points), axis=0)
+        if len(encryption_total_points) > 0:
+            encryption_total_points = np.vstack(encryption_total_points)
+            points = np.concatenate((points, encryption_total_points), axis=0)
 
-        return super(Rectangular, self)._mesh_to_geo_disc(result, padding)
+        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
 
     def _sampling_encryption(self, dist, npoints, geo=None):
         # construct the sdf of the geo
