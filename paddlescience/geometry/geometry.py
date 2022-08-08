@@ -22,6 +22,19 @@ import pyvista as pv
 from pysdf import SDF
 
 
+# Encryption
+class Encryption:
+    def __init__(self, dist, npoints):
+        self.dist = dist
+        self.npoints = npoints
+
+    def get_dist(self):
+        return self.dist
+
+    def get_npoints(self):
+        return self.npoints
+
+
 # Geometry
 class Geometry:
     def __init__(self):
@@ -94,7 +107,7 @@ class Geometry:
 
     def boundary_encryption(self, name, dist, npoints):
         # record the message 
-        pass
+        self.encryption[name] = Encryption(dist, npoints)
 
     def _is_inside_mesh(self, points, tri_mesh):
 

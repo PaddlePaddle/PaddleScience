@@ -88,12 +88,16 @@ class Rectangular(Geometry):
         else:
             assert 0, "The discretize method can only be uniform, sampling or quasi sampler."
 
-        #TODO
-        # phase 1. sampler interior points
-        encryption_points = self._sampling_encryption(
-            1, 200000, self.tri_mesh['triangle'])
+        # generate encryption points.
+        encryption_total_points = []
+        for name in self.encryption.keys():
+            encryption_points = self._sampling_encryption(
+                self.encryption[name].get_dist(),
+                self.encryption[name].get_npoints(), self.tri_mesh[name])
+            encryption_total_points.append(encryption_points)
 
-        result = np.concatenate((points, encryption_points), axis=0)
+        encryption_total_points = np.vstack(encryption_total_points)
+        result = np.concatenate((points, encryption_total_points), axis=0)
 
         return super(Rectangular, self)._mesh_to_geo_disc(result, padding)
 
