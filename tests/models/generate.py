@@ -66,5 +66,5 @@ for case in all_cases:
 
 with open("test_{}.py".format(args.file), "a") as f:
     f.write(('if __name__ == "__main__":\n'
-             '    pytest.main(["-sv", sys.argv[0]])\n'
+             '    code=pytest.main(["-sv", sys.argv[0]])\n    sys.exit(code)\n'
              "\n"))
