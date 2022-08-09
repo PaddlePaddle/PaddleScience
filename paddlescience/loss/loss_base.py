@@ -166,7 +166,6 @@ class CompFormula:
                 rst = normal * jacobian[:, f_idx, :]  # TODO
             else:
                 var_idx = self.indvar.index(v)
-
                 rst = jacobian[:, f_idx, var_idx]
 
         # parser hessian for order 2
