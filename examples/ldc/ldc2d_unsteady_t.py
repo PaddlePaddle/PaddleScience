@@ -121,4 +121,13 @@ solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=epochs)
 
 psci.visu.save_vtk(
-    time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
+    filename=vtk_filename,
+    time_array=pde_disc.time_array,
+    geo_disc=pde_disc.geometry,
+    data=solution)
+
+psci.visu.save_npy(
+    filename=solution_filename,
+    time_array=pde_disc.time_array,
+    geo_disc=pde_disc.geometry,
+    data=solution)

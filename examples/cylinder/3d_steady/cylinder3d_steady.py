@@ -132,3 +132,6 @@ solver.feed_data_user(real_sol)  # add real solution
 solution = solver.solve(num_epoch=epochs)
 
 psci.visu.save_vtk(filename=vtk_filename, geo_disc=pde.geometry, data=solution)
+
+psci.visu.save_npy(
+    filename=solution_filename, geo_disc=pde.geometry, data=solution)
