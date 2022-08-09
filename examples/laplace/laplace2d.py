@@ -40,7 +40,7 @@ else:
     seed_num = 1
     sampler_method = 'uniform'
     # Network
-    epochs = 20000
+    epochs = 20  #000
     num_layers = 5
     hidden_size = 20
     activation = 'tanh'
@@ -51,6 +51,7 @@ else:
     vtk_filename = 'output_laplace2d'
     checkpoint_path = 'checkpoints'
 
+paddle.enable_static()
 paddle.seed(seed_num)
 np.random.seed(seed_num)
 
@@ -94,8 +95,7 @@ loss = psci.loss.L2()
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-opt = psci.optimizer.Adam(
-    learning_rate=learning_rate, parameters=net.parameters())
+opt = psci.optimizer.Lbfgs()
 
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
