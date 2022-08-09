@@ -27,7 +27,7 @@ do
     python3.7 generate.py -f ${name}
     python3.7 test_${name}.py
     if [ $? -ne 0 ]; then
-        echo ${file} >> result.txt
+        echo test_${name} >> result.txt
         bug=`expr ${bug} + 1`
     fi
 done
