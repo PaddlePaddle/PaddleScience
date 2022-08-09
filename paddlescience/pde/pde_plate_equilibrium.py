@@ -21,19 +21,11 @@ __all__ = ['PlateEquilibrium']
 
 # PlateEquilibrium equation
 class PlateEquilibrium(PDE):
-    """
-    Plate Equilibrium Equation
-    
-    Parameters:
-        stiff (float): 
-        mass (float): 
-
-    Example:
-        >>> import paddlescience as psci
-        >>> pde = psci.pde.PlateEquilibrium()
-    """
-
-    def __init__(self, stiff, mass, rhs=None, time_dependent=False,
+    def __init__(self,
+                 stiff,
+                 mass=1.0,
+                 rhs=None,
+                 time_dependent=False,
                  weight=1.0):
 
         if time_dependent == True:
@@ -49,7 +41,7 @@ class PlateEquilibrium(PDE):
             w2x2y = w.diff(y).diff(y).diff(x).diff(x)
             w2t = w.diff(t).diff(t)
 
-            eq = stiff * w4x + 2 * mass * w2x2y + mass * w4y + stiff / mass * w.diff(
+            eq = stiff * w4x + 2.0 * stiff * w2x2y + stiff * w4y + mass * w.diff(
                 t).diff(t)
             self.add_equation(eq, rhs)
 
@@ -64,5 +56,5 @@ class PlateEquilibrium(PDE):
             w4y = w.diff(y).diff(y).diff(y).diff(y)
             w2x2y = w.diff(y).diff(y).diff(x).diff(x)
 
-            eq = stiff * w4x + 2.0 * mass * w2x2y + mass * w4y
+            eq = stiff * w4x + 2.0 * stiff * w2x2y + stiff * w4y
             self.add_equation(eq, rhs)
