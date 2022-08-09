@@ -104,7 +104,7 @@ class CompFormula:
                 item, input, input_attr, labels, labels_attr)
         elif item.is_Derivative:
             # print("*** der:", item)
-            rst = rst * self.__compute_formula_der(item, normal)
+            rst = rst * self.__compute_formula_der(item, input, normal)
         else:
             pass
 
@@ -139,7 +139,7 @@ class CompFormula:
         #     f_idx = self.parameter_pde.index(item)
         #     return input[:, f_idx + input_attr.parameter_pde_start]  # TODO
 
-    def __compute_formula_der(self, item, normal):
+    def __compute_formula_der(self, item, input, normal):
 
         jacobian = self.jacobian
         hessian = self.hessian
@@ -161,7 +161,6 @@ class CompFormula:
 
         # parser jacobin for order 1
         if order == 1:
-
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
                 rst = normal * jacobian[:, f_idx, :]  # TODO
@@ -172,7 +171,6 @@ class CompFormula:
 
         # parser hessian for order 2
         elif order == 2:
-
             var_idx = list()
             for it in item.args[1:]:
                 for i in range(it[1]):
@@ -180,13 +178,14 @@ class CompFormula:
                     var_idx.append(idx)
             rst = hessian[f_idx][:, var_idx[0], var_idx[1]]
 
-            # if (len(item.args[1:]) == 1):
-            #     var_idx = self.indvar.index(item.args[1][0])
-            #     rst = hessian[f_idx][:, var_idx, var_idx]
-            # else:
-            #     var_idx1 = self.indvar.index(item.args[1][0])
-            #     var_idx2 = self.indvar.index(item.args[2][0])
-            #     rst = hessian[f_idx][:, var_idx1, var_idx2]
+        # order >= 3
+        else:
+            out = self.outs[:, f_idx]
+            for it in item.args[1:]:
+                for i in range(it[1]):
+                    idx = self.indvar.index(it[0])
+                    out = paddle.incubate.autograd.grad(out, input)[:, idx]
+            rst = out
 
         return rst
 
