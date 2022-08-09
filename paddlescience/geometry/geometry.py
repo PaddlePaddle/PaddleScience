@@ -105,7 +105,7 @@ class Geometry:
         self.normal.clear()
         self.tri_mesh.clear()
 
-    def boundary_encryption(self, name, dist, npoints):
+    def _boundary_encryption(self, name, dist, npoints):
         # record the message 
         self.encryption[name] = Encryption(dist, npoints)
 
@@ -147,7 +147,7 @@ class Geometry:
     # select boundaries from all points and construct disc geometry
     def _mesh_to_geo_disc(self, points, padding=True):
 
-        geo_disc = GeometryDiscrete()
+        geo_disc = GeometryDiscrete(geometry=self)
 
         npoints = len(points)
 

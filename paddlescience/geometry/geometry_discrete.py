@@ -21,13 +21,16 @@ class GeometryDiscrete:
     Geometry Discrete
     """
 
-    def __init__(self):
+    def __init__(self, geometry=None):
 
         # TODO: data structure uniformation
         self.interior = None
         self.boundary = dict()
         self.normal = dict()
         self.user = None
+        self.geometry = None
+        if geometry is not None:
+            self.geometry = geometry
 
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
@@ -102,3 +105,7 @@ class GeometryDiscrete:
             subp.user = self.user[s:e, :]
 
         return subp
+
+    def boundary_encryption(self, name, dist, npoints):
+        # record the message 
+        self.encryption[name] = Encryption(dist, npoints)
