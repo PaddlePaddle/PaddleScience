@@ -64,6 +64,7 @@ def cal_gradnorm(ins,
 
     for i in range(num_layers):
         net._weights[i] = paddle.ones_like(net._weights[i])
+        net._weights[i].stop_gradient = False
 
     grad_norm = psci.network.GradNorm(
         net=net, n_loss=n_loss, alpha=alpha, weight_attr=weight_attr)
