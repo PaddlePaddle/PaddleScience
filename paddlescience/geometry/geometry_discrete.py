@@ -106,9 +106,9 @@ class GeometryDiscrete:
 
         return subp
 
-    def boundary_encryption(self, name, dist, npoints):
-        encryption_points = self.geometry._sampling_encryption(
+    def boundary_refinement(self, name, dist, npoints):
+        refinement_points = self.geometry._sampling_refinement(
             dist, npoints, self.geometry.tri_mesh[name])
         self.interior = np.concatenate(
-            (self.interior, encryption_points), axis=0)
+            (self.interior, refinement_points), axis=0)
         return self
