@@ -145,7 +145,7 @@ class Geometry:
         return self
 
     # select boundaries from all points and construct disc geometry
-    def _mesh_to_geo_disc(self, points, padding=True):
+    def _mesh_to_geo_disc(self, points, padding=True, npoints_need=100):
 
         geo_disc = GeometryDiscrete(geometry=self)
 
@@ -196,9 +196,20 @@ class Geometry:
         # extract remain points, i.e. interior points
         geo_disc.interior = points[flag_i, :]
 
+        # if generate more points, remove it
+        total_boundary_points = 0
+        for name in geo_disc.boundary.keys():
+            total_boundary_points += len(geo_disc.boundary[name])
+
+        need_interior_points = npoints_need - total_boundary_points
+        geo_disc.interior = geo_disc.interior[0:need_interior_points, :]
+
         # padding
         if padding:
             nproc = paddle.distributed.get_world_size()
             geo_disc.padding(nproc)
 
         return geo_disc
+
+    def _sampling_encryption(self, dist, npoints, geo=None):
+        pass
