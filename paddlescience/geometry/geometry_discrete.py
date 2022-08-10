@@ -107,5 +107,8 @@ class GeometryDiscrete:
         return subp
 
     def boundary_encryption(self, name, dist, npoints):
-        # record the message 
-        self.encryption[name] = Encryption(dist, npoints)
+        encryption_points = self.geometry._sampling_encryption(
+            dist, npoints, self.geometry.tri_mesh[name])
+        self.interior = np.concatenate(
+            (self.interior, encryption_points), axis=0)
+        return self
