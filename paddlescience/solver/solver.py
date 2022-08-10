@@ -191,7 +191,7 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        print("Dynamic graph is currently used.")
+        print("Dynamic Graph is Currently in Use.")
         if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
@@ -205,6 +205,10 @@ class Solver(object):
         # Adam optimizer
         if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
                 self.opt, paddle.optimizer.Adam):
+
+            # record time
+            timer = utils.Timer()
+
             for epoch in range(num_epoch):
 
                 # TODO: error out num_epoch==0
@@ -256,6 +260,10 @@ class Solver(object):
                     paddle.save(self.opt.state_dict(),
                                 checkpoint_path + 'dynamic_opt_params_' +
                                 str(epoch + 1) + '.pdopt')
+
+            # print time
+            timer.end()
+            timer.print()
 
             for i in range(len(outs)):
                 outs[i] = outs[i].numpy()
@@ -458,7 +466,10 @@ class Solver(object):
             fetches.append(loss_detail.name)
 
         # main loop
-        print("Static graph is currently used.")
+        print("Static Graph is Currently in Use.")
+        if config.prim_enabled():
+            print("Optimized AD is Currently in Use")
+
         if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
@@ -477,6 +488,9 @@ class Solver(object):
                                                   self.loss.name, fetches)
         else:
             compiled_program = self.train_program
+
+        # record time
+        timer = utils.Timer()
 
         for epoch in range(num_epoch):
             rslt = self.exe.run(compiled_program,
@@ -515,6 +529,9 @@ class Solver(object):
                     print('First step cost {} s'.format(first_step_cost))
                     print('{} epoch(10~{}) cost {} s'.format(
                         num_epoch - 10, num_epoch, end - begin))
+        # print time
+        timer.end()
+        timer.print()
 
         # close writer in visual DL
         if config.visualdl_enabled() == True:
@@ -667,9 +684,14 @@ class Solver(object):
         for out in self.outs_predict:
             fetches.append(out.name)
 
+        timer = utils.Timer()
+
         rslt = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
                                          fetch_list=fetches)
+
+        timer.end()
+        timer.print()
 
         return rslt
 
