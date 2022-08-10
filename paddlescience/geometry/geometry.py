@@ -178,13 +178,8 @@ class Geometry:
         # extract remain points, i.e. interior points
         geo_disc.interior = points[flag_i, :]
 
-        # if generate more points, remove it
-        total_boundary_points = 0
-        for name in geo_disc.boundary.keys():
-            total_boundary_points += len(geo_disc.boundary[name])
-
-        need_interior_points = npoints_need - total_boundary_points
-        geo_disc.interior = geo_disc.interior[0:need_interior_points, :]
+        # TODO: Note that the currently generated points are inaccurate 
+        # and will be fixed in the future
 
         # padding
         if padding:
