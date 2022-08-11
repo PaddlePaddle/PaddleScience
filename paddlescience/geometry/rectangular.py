@@ -17,6 +17,7 @@ from .geometry import Geometry
 import numpy as np
 import math
 from scipy.stats import qmc
+from pysdf import SDF
 
 __all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
 
@@ -87,7 +88,50 @@ class Rectangular(Geometry):
         else:
             assert 0, "The discretize method can only be uniform, sampling or quasi sampler."
 
-        return super(Rectangular, self)._mesh_to_geo_disc(points, padding)
+        return super(Rectangular, self)._mesh_to_geo_disc(points, padding,
+                                                          npoints)
+
+    def _sampling_refinement(self, dist, npoints, geo=None):
+        # construct the sdf of the geo
+        geo = geo.pv_mesh
+
+        if geo.is_manifold is False and geo.is_all_triangles is False:
+            assert 0, "The mesh must be watertight and need to be a Triangulate mesh."
+
+        faces_as_array = geo.faces.reshape((geo.n_faces, 4))[:, 1:]
+
+        f = SDF(geo.points, faces_as_array, False)
+
+        points = []
+        num_points = 0
+        num_iters = 0
+
+        while True:
+            # If we get enough points, we stop the loop.
+            if num_points >= npoints:
+                break
+
+            # Generate enough points
+            sampler = qmc.Halton(d=self.ndims, scramble=False)
+            sample = sampler.random(n=2 * (num_iters + 1) *
+                                    (npoints - num_points))
+            l_bounds = self.origin
+            u_bounds = self.extent
+            result = qmc.scale(sample, l_bounds, u_bounds)
+            result = np.array(result).astype(self._dtype)
+            sdf_multi_point = f(result)
+
+            # Get the points which meet the requirements
+            sdf_flag = (sdf_multi_point < 0) & (sdf_multi_point >= -dist)
+            result = result[sdf_flag, :]
+            points.append(result)
+
+            # Update the loop message
+            num_points += len(result)
+            num_iters += 1
+
+        points = np.vstack(points)
+        return points[0:npoints, :]
 
     def _sampling_boundary(self, npoints):
         steps = list()
