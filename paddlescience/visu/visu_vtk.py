@@ -69,6 +69,8 @@ def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
         fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
         current_cord = np.array(points_vtk).astype(config._dtype)
         current_data = np.array(list(data_vtk[t].values()))
+        print(len(current_cord[0]))
+        print(len(current_data[0]))
         result = np.concatenate((current_cord, current_data), axis=0).T
         np.save(fpname, result)
 
