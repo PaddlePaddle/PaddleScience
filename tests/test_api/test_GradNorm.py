@@ -90,7 +90,7 @@ class TestGradNorm(APIBase):
         # enable check grad
         self.static = False
         self.enable_backward = False
-        self.rtol = 1e-3
+        self.rtol = 1e-7
 
 
 obj = TestGradNorm(cal_gradnorm)
