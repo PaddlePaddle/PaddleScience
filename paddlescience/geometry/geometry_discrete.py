@@ -107,6 +107,17 @@ class GeometryDiscrete:
         return subp
 
     def boundary_refinement(self, name, dist, npoints):
+        """
+        Refinement of boundaries in geometry
+
+        Example:
+            >>> import paddlescience as psci
+            >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
+            >>> geo.add_boundary(name="triangle", filename="triangle.stl")
+            >>> geo_disc = geo.discretize(method="quasi_sobol", npoints= 3000)
+            >>> geo_disc = geo_disc.boundary_refinement(name="triangle", dist=1, npoints=20000)
+        """
+
         refinement_points = self.geometry._sampling_refinement(
             dist, npoints, self.geometry.tri_mesh[name])
         self.interior = np.concatenate(
