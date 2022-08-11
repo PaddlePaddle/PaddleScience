@@ -108,14 +108,15 @@ class GeometryDiscrete:
 
     def boundary_refinement(self, name, dist, npoints):
         """
-        Refinement of boundaries in geometry
+        Refinement of boundaries in geometry. The boundary `name` must be defined by the `filename` of the `add_boundary` function.
+        If `add_boundary` is called in the way of `criteria`, the boundary name cannot be refined.
 
         Example:
             >>> import paddlescience as psci
             >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-            >>> geo.add_boundary(name="triangle", filename="triangle.stl")
+            >>> geo.add_boundary(name="geo_boundary", filename="geo_boundary.stl")
             >>> geo_disc = geo.discretize(method="quasi_sobol", npoints= 3000)
-            >>> geo_disc = geo_disc.boundary_refinement(name="triangle", dist=1, npoints=20000)
+            >>> geo_disc = geo_disc.boundary_refinement(name="geo_boundary", dist=1, npoints=20000)
         """
 
         refinement_points = self.geometry._sampling_refinement(

@@ -38,6 +38,7 @@ class Geometry:
         Parameters:
             name (string): Boundary name
             criteria (lambda function): Lambda function to define boundary.
+            filename (string): Read mesh file to define boundary. The mesh file needs to meet two conditions: 1. It must be watertight. 2. It must be a `Triangular Mesh`.
 
         Example:
             >>> import paddlescience as psci
@@ -100,7 +101,7 @@ class Geometry:
 
         # The mesh must be manifold and need to be triangulate
         if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
-            assert 0, "The mesh must be manifold and need to be triangulate."
+            assert 0, "The mesh must be manifold and need to be Triangulate mesh."
 
         # The all the faces of mesh must be triangles
         faces_as_array = mesh_model.faces.reshape(
