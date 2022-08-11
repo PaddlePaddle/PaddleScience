@@ -40,7 +40,7 @@ else:
     seed_num = 1
     sampler_method = "sampling"
     # Network
-    epochs = 2000
+    epochs = 20
     num_layers = 10
     hidden_size = 50
     activation = 'tanh'
