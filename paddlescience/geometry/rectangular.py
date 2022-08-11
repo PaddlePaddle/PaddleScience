@@ -96,7 +96,7 @@ class Rectangular(Geometry):
         geo = geo.pv_mesh
 
         if geo.is_manifold is False and geo.is_all_triangles is False:
-            assert 0, "The mesh must be manifold and need to be a Triangulate mesh."
+            assert 0, "The mesh must be watertight and need to be a Triangulate mesh."
 
         faces_as_array = geo.faces.reshape((geo.n_faces, 4))[:, 1:]
 

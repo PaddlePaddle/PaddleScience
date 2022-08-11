@@ -44,6 +44,7 @@ class Geometry:
             >>> import paddlescience as psci
             >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
             >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
+            >>> rec.add_boundary("geo_boundary", filename="geo_boundary.stl")
         """
 
         if criteria != None:
@@ -101,7 +102,7 @@ class Geometry:
 
         # The mesh must be manifold and need to be triangulate
         if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
-            assert 0, "The mesh must be manifold and need to be Triangulate mesh."
+            assert 0, "The mesh must be watertight and need to be Triangulate mesh."
 
         # The all the faces of mesh must be triangles
         faces_as_array = mesh_model.faces.reshape(
