@@ -62,8 +62,14 @@ class CompFormula:
         self.jacobian = jacobian
         self.hessian = hessian
 
-    def compute_formula(self, formula, input, input_attr, labels, labels_attr,
-                        normal):
+    def compute_formula(self,
+                        formula,
+                        input,
+                        input_attr,
+                        labels,
+                        labels_attr,
+                        normal,
+                        params=None):
 
         rst = 0.0
 
@@ -75,23 +81,31 @@ class CompFormula:
             # parser each item
             for item in formula.args:
                 rst += self.__compute_formula_item(item, input, input_attr,
-                                                   labels, labels_attr, normal)
+                                                   labels, labels_attr, normal,
+                                                   params)
         else:
             num_item = 1
             rst += self.__compute_formula_item(formula, input, input_attr,
-                                               labels, labels_attr, normal)
+                                               labels, labels_attr, normal,
+                                               params)
 
         return rst
 
-    def __compute_formula_item(self, item, input, input_attr, labels,
-                               labels_attr, normal):
+    def __compute_formula_item(self,
+                               item,
+                               input,
+                               input_attr,
+                               labels,
+                               labels_attr,
+                               normal,
+                               params=None):
 
         rst = 1.0  # TODO: float / double / float16
 
         if item.is_Mul:
             for it in item.args:
                 rst = rst * self.__compute_formula_item(
-                    it, input, input_attr, labels, labels_attr, normal)
+                    it, input, input_attr, labels, labels_attr, normal, params)
         elif item.is_Number:
             # print("*** number:", item)
             rst = float(item) * rst  # TODO: float / double / float16
@@ -104,7 +118,7 @@ class CompFormula:
                 item, input, input_attr, labels, labels_attr)
         elif item.is_Derivative:
             # print("*** der:", item)
-            rst = rst * self.__compute_formula_der(item, input, normal)
+            rst = rst * self.__compute_formula_der(item, input, normal, params)
         else:
             pass
 
@@ -139,7 +153,7 @@ class CompFormula:
         #     f_idx = self.parameter_pde.index(item)
         #     return input[:, f_idx + input_attr.parameter_pde_start]  # TODO
 
-    def __compute_formula_der(self, item, input, normal):
+    def __compute_formula_der(self, item, input, normal, params=None):
 
         jacobian = self.jacobian
         hessian = self.hessian
