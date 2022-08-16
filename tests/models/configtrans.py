@@ -41,6 +41,14 @@ class YamlLoader(object):
         """
         return self.yml[n].get("Dir")
 
+    def _get_time(self, n):
+        time = self.yml[n].get("Time")
+        if time:
+            return int((time.get("end_time") - time.get("start_time")) /
+                       time.get("time_step"))
+        else:
+            return 1
+
     def get_all_case(self):
         """
         get all case name
@@ -55,7 +63,8 @@ class YamlLoader(object):
     def get_solution_dir(self, n):
         """get_solution_dir"""
         pp = self.yml[n].get("Post-processing")
-        return pp.get("solution_filename") + "-t1-p0.npy", pp.get(
+        num = self._get_time(n)
+        return pp.get("solution_filename") + "-t{}-p0.npy".format(num), pp.get(
             "solution_save_dir")
 
     def get_global_config(self, n):
@@ -106,10 +115,12 @@ class CompareSolution(object):
 
     def accur_verify(self, static=False):
         """accuracy verify"""
-        standard = self._convert_standard(static)
-        solution = self._convert_solution(self.solution)
-
-        compare(standard, solution)
+        if isinstance(self.standard, np.lib.npyio.NpzFile):
+            standard = self._convert_standard(static)
+            solution = self._convert_solution(self.solution)
+            compare(standard, solution)
+        else:
+            compare(self.standard, self.solution)
 
     def converge_verify(self):
         """converge verify"""
