@@ -57,7 +57,13 @@ class FCNet(NetworkBase):
         self._weights_attr = [None for i in range(num_layers)]
         self._bias_attr = [None for i in range(num_layers)]
 
-        act_str = {'sigmoid': F.sigmoid, 'tanh': paddle.tanh}
+        act_str = {
+            'sigmoid': F.sigmoid,
+            'tanh': paddle.tanh,
+            'exp': paddle.exp,
+            'sin': paddle.sin,
+            'cos': paddle.cos
+        }
         if isinstance(activation, str) and (activation in act_str):
             self.activation = act_str.get(activation)
         elif callable(activation):
