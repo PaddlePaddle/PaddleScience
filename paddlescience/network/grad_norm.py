@@ -75,27 +75,37 @@ class GradNorm(NetworkBase):
 
         W = self.net.get_shared_layer()
 
+        # set grad to zero
         if self.loss_weights.grad is not None:
             self.loss_weights.grad.set_value(
                 paddle.zeros_like(self.loss_weights))
 
+        # calulate each loss's grad
         norms = []
         for i in range(losses.shape[0]):
             grad = paddle.autograd.grad(losses[i], W, retain_graph=True)
             norms.append(paddle.norm(self.loss_weights[i] * grad[0], p=2))
         norms = paddle.concat(norms)
 
+        # calculate the inverse train rate
         loss_ratio = losses.numpy() / self.initial_losses
         inverse_train_rate = loss_ratio / np.mean(loss_ratio)
 
+        # calculate the mean value of grad
         mean_norm = np.mean(norms.numpy())
+
+        # convert it to constant, instead of having grads
         constant_term = paddle.to_tensor(
             mean_norm * np.power(inverse_train_rate, self.alpha),
             dtype=self._dtype)
+        # calculate the grad norm loss
         grad_norm_loss = paddle.norm(norms - constant_term, p=1)
+        # update the grad of loss weights
         self.loss_weights.grad.set_value(
             paddle.autograd.grad(grad_norm_loss, self.loss_weights)[0])
-
+        #  renormalize the loss weights each step when training
+        if self.training:
+            self.renormalize()
         return grad_norm_loss
 
     def renormalize(self):
