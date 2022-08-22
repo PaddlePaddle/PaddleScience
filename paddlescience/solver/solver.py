@@ -22,6 +22,8 @@ from . import utils
 from .. import config
 from visualdl import LogWriter
 import time
+import operator
+import functools
 
 __all__ = ["Solver"]
 
@@ -422,20 +424,63 @@ class Solver(object):
                     label.stop_gradient = False
                     inputs_labels.append(label)
 
-                self.loss, self.outs, self.loss_details = self.algo.compute(
-                    None,
-                    *inputs_labels,
-                    ninputs=ninputs,
-                    inputs_attr=self.inputs_attr,
-                    nlabels=nlabels,
-                    labels_attr=self.labels_attr,
-                    pde=self.pde)
+                if isinstance(self.opt, (paddle.optimizer.Adam, paddle.optimizer.AdamW)):
+                    self.loss, self.outs, self.loss_details = self.algo.compute(
+                        None,
+                        *inputs_labels,
+                        ninputs=ninputs,
+                        inputs_attr=self.inputs_attr,
+                        nlabels=nlabels,
+                        labels_attr=self.labels_attr,
+                        pde=self.pde)
 
-                if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
-                    assert paddle.in_dynamic_mode(
-                    ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
-                self.opt.minimize(self.loss)
+                    if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
+                        assert paddle.in_dynamic_mode(
+                        ), "The lbfgs and bfgs optimizer is only supported in dynamic graph"
+                    self.opt.minimize(self.loss)
+                
+                elif self.opt in (minimize_bfgs, minimize_lbfgs):
+                    def construct(params):
+                        return paddle.concat([paddle.flatten(w) for w in params])
+                    
+                    def unconstruct(params, shapes):
+                        params = paddle.split(params, [functools.reduce(operator.mul, s) for s in shapes])
+                        return [paddle.reshape(w, s) for w, s in zip(params, shapes)]
+                    
+                    def copy(xs):
+                        ys = []
+                        for x in xs:
+                            y = paddle.assign(x)
+                            y.stop_gradient = x.stop_gradient
+                            ys.append(y)
+                        return ys
 
+                    shapes = [w.shape for w in self.algo.net._weights+self.algo.net._biases]
+
+                    def f(x):
+                        params = unconstruct(x, shapes)
+                        # f must be stateless, so copy inputs_labels as local variable list.
+                        loss, _, _ = self.algo.compute(
+                            params, 
+                            *copy(inputs_labels),
+                            ninputs=ninputs,
+                            inputs_attr=self.inputs_attr,
+                            nlabels=nlabels,
+                            labels_attr=self.labels_attr,
+                            pde=self.pde)
+                        return loss 
+                    
+                    x0 = construct(self.algo.net._weights+self.algo.net._biases)
+                    _, _, xk, self.loss, _ = self.opt(
+                        f,
+                        x0,
+                        max_iters=50,
+                        initial_inverse_hessian_estimate=None,
+                        line_search_fn='strong_wolfe',
+                        dtype='float32')
+                    params = unconstruct(xk, shapes)
+                    self.algo.net.update_params(params) 
+                   
                 # new ad
                 if config.prim_enabled() and not config.cinn_enabled():
                     config.prim2orig()
@@ -459,11 +504,11 @@ class Solver(object):
 
         # fetch loss and net's outputs
         fetches = [self.loss.name]
-        for out in self.outs:
-            fetches.append(out.name)
-        # fetch loss_details' outputs
-        for loss_detail in self.loss_details:
-            fetches.append(loss_detail.name)
+        # for out in self.outs:
+        #     fetches.append(out.name)
+        # # fetch loss_details' outputs
+        # for loss_detail in self.loss_details:
+        #     fetches.append(loss_detail.name)
 
         # load model
         if self.algo.net.params_path is not None:
@@ -501,9 +546,11 @@ class Solver(object):
             rslt = self.exe.run(compiled_program,
                                 feed=feeds,
                                 fetch_list=fetches)
-            print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
-                  rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
-                  " data loss:", rslt[-1])
+            # print("epoch: " + str(epoch + 1), "loss: ", rslt[0], " eq loss:",
+            #       rslt[-4], " bc loss:", rslt[-3], " ic loss:", rslt[-2],
+            #       " data loss:", rslt[-1])
+    
+            print("epoch: " + str(epoch + 1), "loss: ", rslt[0])
 
             # write loss for visual DL
             if config.visualdl_enabled() == True:

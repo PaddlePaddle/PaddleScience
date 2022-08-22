@@ -41,14 +41,14 @@ class CompFormula:
         self.compute_outs(input, bs, params)
 
         # jacobian
-        jacobian = Jacobian(self.net.nn_func, input, is_batched=True)
+        jacobian = Jacobian(lambda x: self.net.nn_func(x, params), input, is_batched=True)
 
         # hessian
         hessian = list()
         for i in range(self.net.num_outs):
 
             def func(input):
-                return self.net.nn_func(input)[:, i:i + 1]
+                return self.net.nn_func(input, params)[:, i:i + 1]
 
             hessian.append(Hessian(func, input, is_batched=True))
 

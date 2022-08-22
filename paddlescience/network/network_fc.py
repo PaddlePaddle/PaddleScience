@@ -117,18 +117,27 @@ class FCNet(NetworkBase):
             self.add_parameter("w_" + str(i), self._weights[i])
             self.add_parameter("b_" + str(i), self._biases[i])
 
-    def __nn_func_paddle(self, ins):
+    def __nn_func_paddle(self, ins, params=None):
         u = ins
+        if params:
+            weights, biases = params[:len(self._weights)], params[len(self._weights):]
+        else:
+            weights, biases = self._weights, self._biases
+
         for i in range(self.num_layers - 1):
-            u = paddle.matmul(u, self._weights[i])
-            u = paddle.add(u, self._biases[i])
+            u = paddle.matmul(u, weights[i])
+            u = paddle.add(u, biases[i])
             u = self.activation(u)
-        u = paddle.matmul(u, self._weights[-1])
-        u = paddle.add(u, self._biases[-1])
+        u = paddle.matmul(u, weights[-1])
+        u = paddle.add(u, biases[-1])
         return u
 
     def nn_func(self, ins, params=None):
-        return self.__nn_func_paddle(ins)
+        return self.__nn_func_paddle(ins, params)
+
+    def update_params(self, params):
+        for old, new in zip(self._weights+self._biases, params):
+            paddle.assign(new, old) # inplace update
 
     def __call__(self, input):
         return NetOut(self, input)
