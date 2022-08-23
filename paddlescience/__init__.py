@@ -29,3 +29,6 @@ from . import optimizer
 from . import solver
 from . import visu
 from . import data
+from . import utils
+
+config.try_enable_cinn()

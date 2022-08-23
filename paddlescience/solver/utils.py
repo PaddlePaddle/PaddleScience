@@ -14,6 +14,7 @@
 
 import six
 import numpy as np
+import time
 import paddle
 from paddle import fluid
 from paddle.fluid import core
@@ -476,3 +477,19 @@ def cinn_compile(origin_program, loss_name, fetch_list):
     optimized_program = cinn_optimize_program(origin_program)
     program_with_fetch = _add_fetch_ops(optimized_program, fetch_list)
     return _compile(program_with_fetch, loss_name)
+
+
+class Timer:
+    def __init__(self):
+        self.tstart = time.time()
+        self.tend = 0.0
+
+    def start(self):
+        self.tstart = time.time()
+
+    def end(self):
+        self.tend = time.time()
+
+    def print(self):
+        elap = self.tend - self.tstart
+        print("Computation time is (sencond): ", elap)

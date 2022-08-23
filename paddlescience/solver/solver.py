@@ -18,7 +18,6 @@ from paddle.distributed import fleet
 from paddle.distributed.auto_parallel.engine import Engine
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
-paddle.disable_static()
 from . import utils
 from .. import config
 from visualdl import LogWriter
@@ -56,6 +55,7 @@ class ModelStatic(paddle.nn.Layer):
             input.stop_gradient = False
 
         self.loss, self.outs, self.loss_details = self.algo.compute(
+            None,
             *inputs_labels,
             ninputs=self.ninputs,
             inputs_attr=self.inputs_attr,
@@ -191,7 +191,7 @@ class Solver(object):
 
         inputs_labels = inputs + labels  # tmp to one list
 
-        print("Dynamic graph is currently used.")
+        print("Dynamic Graph is Currently in Use.")
         if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
@@ -205,11 +205,16 @@ class Solver(object):
         # Adam optimizer
         if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
                 self.opt, paddle.optimizer.Adam):
+
+            # record time
+            timer = utils.Timer()
+
             for epoch in range(num_epoch):
 
                 # TODO: error out num_epoch==0
 
                 loss, outs, loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -256,6 +261,10 @@ class Solver(object):
                                 checkpoint_path + 'dynamic_opt_params_' +
                                 str(epoch + 1) + '.pdopt')
 
+            # print time
+            timer.end()
+            timer.print()
+
             for i in range(len(outs)):
                 outs[i] = outs[i].numpy()
 
@@ -266,6 +275,7 @@ class Solver(object):
             def _f(x):
                 self.algo.net.reconstruct(x)
                 loss, self.outs, self.loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=inputs_attr,
@@ -281,7 +291,7 @@ class Solver(object):
                                    x0,
                                    initial_inverse_hessian_estimate=None,
                                    line_search_fn='strong_wolfe',
-                                   dtype='float32')
+                                   dtype=config._dtype)
                 x0 = results[2]
 
                 print("epoch: " + str(epoch + 1), " loss:",
@@ -347,7 +357,7 @@ class Solver(object):
             inputs[i] = paddle.to_tensor(
                 inputs[i], dtype=self._dtype, stop_gradient=False)
 
-        outs = self.algo.compute_forward(*inputs)
+        outs = self.algo.compute_forward(None, *inputs)
 
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
@@ -413,6 +423,7 @@ class Solver(object):
                     inputs_labels.append(label)
 
                 self.loss, self.outs, self.loss_details = self.algo.compute(
+                    None,
                     *inputs_labels,
                     ninputs=ninputs,
                     inputs_attr=self.inputs_attr,
@@ -454,8 +465,16 @@ class Solver(object):
         for loss_detail in self.loss_details:
             fetches.append(loss_detail.name)
 
+        # load model
+        if self.algo.net.params_path is not None:
+            state_dict = paddle.load(self.algo.net.params_path)
+            self.train_program.set_state_dict(state_dict)
+
         # main loop
-        print("Static graph is currently used.")
+        print("Static Graph is Currently in Use.")
+        if config.prim_enabled():
+            print("Optimized AD is Currently in Use")
+
         if config.visualdl_enabled() == True:
             writer_loss = LogWriter(logdir=checkpoint_path + 'visualDL/loss')
             writer_eq_loss = LogWriter(
@@ -474,6 +493,9 @@ class Solver(object):
                                                   self.loss.name, fetches)
         else:
             compiled_program = self.train_program
+
+        # record time
+        timer = utils.Timer()
 
         for epoch in range(num_epoch):
             rslt = self.exe.run(compiled_program,
@@ -512,6 +534,9 @@ class Solver(object):
                     print('First step cost {} s'.format(first_step_cost))
                     print('{} epoch(10~{}) cost {} s'.format(
                         num_epoch - 10, num_epoch, end - begin))
+        # print time
+        timer.end()
+        timer.print()
 
         # close writer in visual DL
         if config.visualdl_enabled() == True:
@@ -543,7 +568,7 @@ class Solver(object):
                     input.stop_gradient = False
                     ins.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                self.outs_predict = self.algo.compute_forward(None, *ins)
 
         # startup program
         self.exe.run(self.startup_program)
@@ -601,7 +626,7 @@ class Solver(object):
         inputs_labels_spec = list()
         for i, data in enumerate(inputs_labels):
             inputs_labels_spec.append(
-                InputSpec(data.shape, 'float32', 'input' + str(i)))
+                InputSpec(data.shape, config._dtype, 'input' + str(i)))
 
         labels_spec = None
 
@@ -652,7 +677,7 @@ class Solver(object):
                     input.stop_gradient = False
                     ins.append(input)
 
-                self.outs_predict = self.algo.compute_forward(*ins)
+                self.outs_predict = self.algo.compute_forward(None, *ins)
 
         # feeds inputs
         feeds = dict()
@@ -664,9 +689,14 @@ class Solver(object):
         for out in self.outs_predict:
             fetches.append(out.name)
 
+        timer = utils.Timer()
+
         rslt = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
                                          fetch_list=fetches)
+
+        timer.end()
+        timer.print()
 
         return rslt
 

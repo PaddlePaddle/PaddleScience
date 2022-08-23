@@ -52,12 +52,20 @@ class L2:
     # compute loss on one interior 
     # there are multiple pde
 
-    def eq_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def eq_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)
+        cmploss.compute_outs_der(input, bs, params)
 
         # print(input)
         # print(cmploss.outs[0:4,:])
@@ -66,7 +74,7 @@ class L2:
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None)
+                                          labels_attr, None, params)
 
             # TODO: simplify
             rhs_eq = labels_attr["equations"][i]["rhs"]
@@ -103,20 +111,29 @@ class L2:
     # compute loss on one boundary
     # there are multiple bc on one boundary
 
-    def bc_loss(self, pde, net, name_b, input, input_attr, labels, labels_attr,
-                bs):
+    def bc_loss(self,
+                pde,
+                net,
+                name_b,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
+        cmploss.compute_outs_der(input, bs,
+                                 params)  # TODO: dirichlet not need der
 
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
             formula = pde.bc[name_b][i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None)
+                                          labels_attr, None, params)
 
             # TODO: simplify                                  
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
@@ -147,17 +164,25 @@ class L2:
 
         return loss, cmploss.outs
 
-    def ic_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def ic_loss(self,
+                pde,
+                net,
+                input,
+                input_attr,
+                labels,
+                labels_attr,
+                bs,
+                params=None):
 
         # compute outs
         cmploss = CompFormula(pde, net)
-        cmploss.compute_outs(input, bs)
+        cmploss.compute_outs(input, bs, params)
 
         loss = 0.0
         for i in range(len(pde.ic)):
             formula = pde.ic[i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None)
+                                          labels_attr, None, params)
 
             rhs_c = labels_attr["ic"][i]["rhs"]
             if type(rhs_c) == LabelInt:
@@ -174,12 +199,20 @@ class L2:
         return loss, cmploss.outs
 
     # compute loss on real data 
-    def data_loss(self, pde, net, input, input_attr, labels, labels_attr, bs):
+    def data_loss(self,
+                  pde,
+                  net,
+                  input,
+                  input_attr,
+                  labels,
+                  labels_attr,
+                  bs,
+                  params=None):
 
         cmploss = CompFormula(pde, net)
 
         # compute outs
-        cmploss.compute_outs(input, bs)
+        cmploss.compute_outs(input, bs, params)
 
         loss = 0.0
         for i in range(len(pde.dvar)):
