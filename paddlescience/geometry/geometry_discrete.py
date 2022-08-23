@@ -14,7 +14,7 @@
 
 import numpy as np
 import paddle
-
+from collections import OrderedDict
 
 class GeometryDiscrete:
     """
@@ -25,8 +25,8 @@ class GeometryDiscrete:
 
         # TODO: data structure uniformation
         self.interior = None
-        self.boundary = dict()
-        self.normal = dict()
+        self.boundary = OrderedDict()
+        self.normal = OrderedDict()
         self.user = None
 
     def __str__(self):

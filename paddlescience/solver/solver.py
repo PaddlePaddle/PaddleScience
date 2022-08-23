@@ -544,7 +544,7 @@ class Solver(object):
             writer_ic_loss.close()
             writer_data_loss.close()
 
-        return self.__outs_to_solution(rslt[1:-4], inputs_attr)
+        return self.__outs_to_solution(rslt[1:-4], self.inputs_attr)
 
     # predict static
     def __predict_static(self):

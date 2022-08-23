@@ -110,10 +110,18 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=1)
 
-# Save last time data to vtk
-n = int(i_x.shape[0] / len(time_array))
-cord = np.stack(
-    (i_x[0:n].astype("float32"), i_y[0:n].astype("float32")), axis=1)
-psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
+
+cordeq = np.stack((i_x, i_y), axis=1)
+cordbc1 = np.stack((b_inlet_x, b_inlet_y), axis=1)
+cordbc2 = np.stack((b_outlet_x, b_outlet_y), axis=1)
+cord = [cordeq, cordbc1, cordbc2]
+
+psci.visu.save_vtk_cord(time_array=time_array, cord=cord, data=solution)
+
+# # Save last time data to vtk
+# n = int(i_x.shape[0] / len(time_array))
+# cord = np.stack(
+#     (i_x[0:n].astype("float32"), i_y[0:n].astype("float32")), axis=1)
+# psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])

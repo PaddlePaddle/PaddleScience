@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .visu_vtk import save_vtk, save_npy
+from .visu_vtk import save_vtk, save_npy, save_vtk_cord
 from .visu_vtk import __save_vtk_raw
 from .visu_matplotlib import save_mpl, plot_mpl

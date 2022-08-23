@@ -140,6 +140,10 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
 def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
 
     # concatenate data and cordiante 
+    nt = 1 if (time_array is None) else len(time_array) - 1
+    nprocs = paddle.distributed.get_world_size()
+    nrank = paddle.distributed.get_rank()
+    
     points_vtk = __concatenate_cord(cord)
 
     # points's shape is [ndims][npoints]
@@ -226,6 +230,7 @@ def __concatenate_cord(cordinates):
     points = np.concatenate(x, axis=0)
 
     # to pointsToVTK input format
+    ndims = points.shape[1]
     points_vtk = list()
     for i in range(ndims):
         points_vtk.append(points[:, i].copy())
@@ -242,14 +247,24 @@ def __concatenate_data(outs, nt=1):
 
     # to numpy
     npouts = list()
-    for out in outs:
+    for name in outs["interior"]: # interior
+        out = outs["interior"][name]
         if type(out) != np.ndarray:
             npouts.append(out.numpy())  # tenor to array
         else:
-            npouts.append(out)
+            npouts.append(out)        
+        npouts.append(out) 
+
+    for name in outs["bc"]: # bc
+        out = outs["bc"][name]
+        if type(out) != np.ndarray:
+            npouts.append(out.numpy())  # tenor to array
+        else:
+            npouts.append(out)        
+        npouts.append(out) 
 
     # concatenate data
-    ndata = outs[0].shape[1]
+    ndata = outs["interior"]["0"].shape[1]
     data_vtk = list()
 
     for t in range(nt):
