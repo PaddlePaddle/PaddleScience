@@ -32,7 +32,7 @@ class FCNet(NetworkBase):
         num_outs (integer): Number of outputs.
         num_layers (integer): Number of layers.
         hidden_size (integer): Hiden size in each layer.
-        activation (optional, "tanh" / "sigmoid"): Activation function used in each layer. The default value is "tanh".
+        activation (optional, "tanh" / "sigmoid" / PaddlePaddle's operator): Activation function used in each layer. Currently, expected input is string format[sigmoid, tanh] or PaddlePaddle's operator (e.g. paddle.exp). The default value is "tanh".  
 
     Example:
         >>> import paddlescience as psci
@@ -52,17 +52,26 @@ class FCNet(NetworkBase):
         self.num_layers = num_layers
         self.hidden_size = hidden_size
 
-        self._weights = []
-        self._biases = []
+        self._weights = [None for i in range(num_layers)]
+        self._biases = [None for i in range(num_layers)]
         self._weights_attr = [None for i in range(num_layers)]
         self._bias_attr = [None for i in range(num_layers)]
 
-        if activation == 'sigmoid':
-            self.activation = F.sigmoid
-        elif activation == 'tanh':
-            self.activation = paddle.tanh
+        act_str = {
+            'sigmoid': F.sigmoid,
+            'tanh': paddle.tanh,
+            'exp': paddle.exp,
+            'sin': paddle.sin,
+            'cos': paddle.cos
+        }
+        if isinstance(activation, str) and (activation in act_str):
+            self.activation = act_str.get(activation)
+        elif callable(activation):
+            self.activation = activation
         else:
-            assert 0, "Unsupported activation type."
+            raise ValueError(
+                'Expected activation is String format[sigmoid, tanh] or Callable object.'
+            )
 
         # dynamic mode: make network here
         # static  mode: make network in solver
@@ -96,21 +105,19 @@ class FCNet(NetworkBase):
             b_attr = self._bias_attr[i]
 
             # create parameter with attr
-            w = self.create_parameter(
+            self._weights[i] = self.create_parameter(
                 shape=[lsize, rsize],
                 dtype=self._dtype,
                 is_bias=False,
                 attr=w_attr)
-            b = self.create_parameter(
+            self._biases[i] = self.create_parameter(
                 shape=[rsize], dtype=self._dtype, is_bias=True, attr=b_attr)
 
             # add parameter
-            self._weights.append(w)
-            self._biases.append(b)
-            self.add_parameter("w_" + str(i), w)
-            self.add_parameter("b_" + str(i), b)
+            self.add_parameter("w_" + str(i), self._weights[i])
+            self.add_parameter("b_" + str(i), self._biases[i])
 
-    def nn_func(self, ins):
+    def __nn_func_paddle(self, ins):
         u = ins
         for i in range(self.num_layers - 1):
             u = paddle.matmul(u, self._weights[i])
@@ -119,6 +126,9 @@ class FCNet(NetworkBase):
         u = paddle.matmul(u, self._weights[-1])
         u = paddle.add(u, self._biases[-1])
         return u
+
+    def nn_func(self, ins, params=None):
+        return self.__nn_func_paddle(ins)
 
     def __call__(self, input):
         return NetOut(self, input)
@@ -195,6 +205,8 @@ class FCNet(NetworkBase):
                             dtype=self._dtype,
                             is_bias=False,
                             attr=w_attr)
+                        # add parameter
+                        self.add_parameter("w_" + str(i), self._weights[i])
 
                 # update bias
                 if bias_init is not None:
@@ -211,6 +223,8 @@ class FCNet(NetworkBase):
                             dtype=self._dtype,
                             is_bias=True,
                             attr=b_attr)
+                        # add parameter
+                        self.add_parameter("b_" + str(i), self._biases[i])
 
     def flatten_params(self):
         flat_vars = list(map(paddle.flatten, self._weights + self._biases))

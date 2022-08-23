@@ -21,11 +21,46 @@ import wget
 import zipfile
 from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
 
-paddle.seed(1)
-np.random.seed(1)
+cfg = psci.utils.parse_args()
 
-psci.config.enable_static()
-psci.config.enable_prim()
+if cfg is not None:
+    # Geometry
+    npoints = cfg['Geometry']['npoints']
+    seed_num = cfg['Geometry']['seed']
+    sampler_method = cfg['Geometry']['sampler_method']
+    # Network
+    epochs = cfg['Global']['epochs']
+    num_layers = cfg['Model']['num_layers']
+    hidden_size = cfg['Model']['hidden_size']
+    activation = cfg['Model']['activation']
+    # Optimizer
+    learning_rate = cfg['Optimizer']['lr']['learning_rate']
+    # Post-processing
+    solution_filename = cfg['Post-processing']['solution_filename']
+    vtk_filename = cfg['Post-processing']['vtk_filename']
+    checkpoint_path = cfg['Post-processing']['checkpoint_path']
+else:
+    # config
+    psci.config.enable_static()
+    psci.config.enable_prim()
+    # Geometry
+    npoints = [200, 50, 4]
+    seed_num = 1
+    sampler_method = "uniform"
+    # Network
+    epochs = 2000
+    num_layers = 10
+    hidden_size = 50
+    activation = 'tanh'
+    # Optimizer
+    learning_rate = 0.001
+    # Post-processing
+    solution_filename = 'output_cylinder3d_unsteady'
+    vtk_filename = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_"
+    checkpoint_path = 'checkpoint/cylinder3d_model_'
+
+paddle.seed(seed_num)
+np.random.seed(seed_num)
 
 # define start time and time step
 start_time = 100
@@ -63,7 +98,7 @@ geo.add_boundary(
     criteria=lambda x, y, z: ((x - cc[0])**2 + (y - cc[1])**2 - cr**2) < 1e-4)
 
 # discretize geometry
-geo_disc = geo.discretize(npoints=[200, 50, 4], method="uniform")
+geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 
 # the real_cord need to be added in geo_disc
 geo_disc.user = GetRealPhyInfo(start_time, need_info='cord')
@@ -102,7 +137,11 @@ pde_disc = pde.discretize(
 
 # declare network
 net = psci.network.FCNet(
-    num_ins=3, num_outs=4, num_layers=10, hidden_size=50, activation='tanh')
+    num_ins=3,
+    num_outs=4,
+    num_layers=num_layers,
+    hidden_size=hidden_size,
+    activation=activation)
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=None)
@@ -143,7 +182,8 @@ with paddle.static.program_guard(main_program, startup_program):
     # total_loss
     total_loss = paddle.sqrt(bc_loss + output_var_0_eq_loss +
                              output_var_4_eq_loss + 100.0 * data_loss)
-    opt_ops, param_grads = paddle.optimizer.Adam(0.001).minimize(total_loss)
+    opt_ops, param_grads = paddle.optimizer.Adam(learning_rate).minimize(
+        total_loss)
 
 # data parallel
 nranks = paddle.distributed.get_world_size()
@@ -174,7 +214,7 @@ main_program = compile_and_convert_back_to_program(
     loss_name=total_loss.name)
 
 # num_epoch in train
-train_epoch = 2000
+train_epoch = epochs
 
 # Solver time: (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
 num_time_step = 10
@@ -203,11 +243,15 @@ for i in range(num_time_step):
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
         print("autograd epoch: " + str(k + 1), "    loss:", out[0])
     next_uvwp = out[1:]
+
     # Save vtk
-    file_path = "train_cylinder_unsteady_re100/cylinder3d_train_rslt_" + str(
-        next_time)
+    file_path = vtk_filename + str(next_time)
     psci.visu.save_vtk(
         filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    psci.visu.save_npy(
+        filename=solution_filename + str(next_time),
+        geo_disc=pde_disc.geometry,
+        data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])
