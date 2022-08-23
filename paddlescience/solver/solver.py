@@ -20,6 +20,7 @@ from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 from . import utils
 from .. import config
+from collections import OrderedDict
 from visualdl import LogWriter
 import time
 
@@ -268,7 +269,9 @@ class Solver(object):
             for i in range(len(outs)):
                 outs[i] = outs[i].numpy()
 
-            return outs
+            return self.__outs_to_solution(outs, inputs_attr)
+
+
         # L-bfgs optimizer
         elif self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
 
@@ -332,7 +335,7 @@ class Solver(object):
             for i in range(len(self.outs)):
                 self.outs[i] = self.outs[i].numpy()
 
-            return self.outs
+            return self.__outs_to_solution(self.outs, inputs_attr)
         else:
             print(
                 "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
@@ -362,7 +365,7 @@ class Solver(object):
         for i in range(len(outs)):
             outs[i] = outs[i].numpy()
 
-        return outs
+        return self.__outs_to_solution(outs, inputs_attr)
 
     # init static
     def __init_static(self):
@@ -541,7 +544,7 @@ class Solver(object):
             writer_ic_loss.close()
             writer_data_loss.close()
 
-        return rslt[1:-4]
+        return self.__outs_to_solution(rslt[1:-4], inputs_attr)
 
     # predict static
     def __predict_static(self):
@@ -586,11 +589,11 @@ class Solver(object):
             assert 0, "Please specify the path and name of the static model."
 
         # run
-        rslt = self.exe.run(self.predict_program,
+        outs = self.exe.run(self.predict_program,
                             feed=feeds,
                             fetch_list=fetches)
 
-        return rslt
+        return self.__outs_to_solution(outs, inputs_attr)
 
     # init in static mode with auto dist
     def __init_static_auto_dist(self):
@@ -686,14 +689,14 @@ class Solver(object):
 
         timer = utils.Timer()
 
-        rslt = self.engine._executor.run(self.predict_auto_dist_program,
+        outs = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
                                          fetch_list=fetches)
 
         timer.end()
         timer.print()
 
-        return rslt
+        return self.__outs_to_solution(outs, inputs_attr)
 
     # predict static auto-dist
     def __predict_static_auto_dist(self):
@@ -711,10 +714,26 @@ class Solver(object):
         for out in self.outs_predict:
             fetches.append(out.name)
 
-        rslt = self.engine._executor.run(self.predict_auto_dist_program,
+        outs = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
                                          fetch_list=fetches)
-        return rslt
+
+        return self.__outs_to_solution(outs, inputs_attr)
+
+
+    # convert outs (list) to solution (dict) using info from inputs_attr
+    def __outs_to_solution(self, outs, inputs_attr):
+
+        n = 0
+        sol = OrderedDict()
+        for i in inputs_attr.keys():
+            sol_i = OrderedDict()
+            for name in inputs_attr[i].keys():
+                sol_i[name] = outs[n]
+            sol[i] = sol_i
+
+        return sol
+
 
     def feed_data_interior_cur(self, data):
         self.labels = self.algo.feed_data_interior_cur(self.labels,

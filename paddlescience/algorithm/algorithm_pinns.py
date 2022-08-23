@@ -113,7 +113,7 @@ class PINNs(AlgorithmBase):
         else:
             inputs_attr["ic"] = OrderedDict()
 
-        # data: inputs_attr["user"]["0"]
+        # data: inputs_attr["supervise"]["0"]
         inputs_attr_d = OrderedDict()
         points = pde.geometry.user
         if points is not None:
@@ -124,7 +124,7 @@ class PINNs(AlgorithmBase):
                 data = points
             inputs.append(data)
             inputs_attr_d["0"] = InputsAttr(0, 0)
-        inputs_attr["user"] = inputs_attr_d
+        inputs_attr["supervise"] = inputs_attr_d
 
         # padding
         nprocs = paddle.distributed.get_world_size()
@@ -237,24 +237,24 @@ class PINNs(AlgorithmBase):
             labels_attr["ic"].append(attr)
 
         # user points
-        #   - labels_attr["user"]["equation"][i]["rhs"]
-        #   - labels_attr["user"]["equation"][i]["weight"]
-        #   - labels_attr["user"]["equation"][i]["parameter"]
-        #   - labels_attr["user"]["data_cur"][i]
-        #   - labels_attr["user"]["data_next"][i]
+        #   - labels_attr["supervise"]["equation"][i]["rhs"]
+        #   - labels_attr["supervise"]["equation"][i]["weight"]
+        #   - labels_attr["supervise"]["equation"][i]["parameter"]
+        #   - labels_attr["supervise"]["data_cur"][i]
+        #   - labels_attr["supervise"]["data_next"][i]
 
         # data_cur: solution of current time step on user points 
         # data_next: reference solution of next time step on user points 
         if pde.geometry.user is not None:
-            labels_attr["user"] = OrderedDict()
+            labels_attr["supervise"] = OrderedDict()
 
             # equation
-            labels_attr["user"]["equations"] = list()
+            labels_attr["supervise"]["equations"] = list()
             for i in range(len(pde.equations)):
                 attr = dict()
 
                 # rhs
-                rhs = pde.rhs_disc["user"][i]
+                rhs = pde.rhs_disc["supervise"][i]
                 if (rhs is None) or np.isscalar(rhs):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
@@ -269,12 +269,12 @@ class PINNs(AlgorithmBase):
                     attr["weight"] = LabelInt(len(labels))
                     labels.append(weight)
 
-                labels_attr["user"]["equations"].append(attr)
+                labels_attr["supervise"]["equations"].append(attr)
 
             # data next
-            labels_attr["user"]["data_next"] = list()
+            labels_attr["supervise"]["data_next"] = list()
             for i in range(len(pde.dvar)):
-                labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
+                labels_attr["supervise"]["data_next"].append(LabelInt(len(labels)))
                 if supervised_shape == None:
                     labels.append(LabelHolder())  # placeholder with shape
                 else:
@@ -282,9 +282,9 @@ class PINNs(AlgorithmBase):
 
             # data cur
             if pde.time_disc_method is not None:
-                labels_attr["user"]["data_cur"] = list()
+                labels_attr["supervise"]["data_cur"] = list()
                 for i in range(len(pde.dvar_n)):
-                    labels_attr["user"]["data_cur"].append(
+                    labels_attr["supervise"]["data_cur"].append(
                         LabelInt(len(labels)))
                     if supervised_shape == None:
                         # placeholder with shape
@@ -336,7 +336,7 @@ class PINNs(AlgorithmBase):
         inputs_attr["interior"] = inputs_attr_i
         inputs_attr["bc"] = inputs_attr_b
         inputs_attr["ic"] = inputs_attr_it
-        inputs_attr["user"] = inputs_attr_d
+        inputs_attr["supervise"] = inputs_attr_d
 
         # padding
         nprocs = paddle.distributed.get_world_size()
@@ -424,10 +424,10 @@ class PINNs(AlgorithmBase):
 
         # sup
         if True in self.loss._suplist:
-            labels_attr["user"] = OrderedDict()
+            labels_attr["supervise"] = OrderedDict()
 
             # equation
-            labels_attr["user"]["equations"] = list()
+            labels_attr["supervise"]["equations"] = list()
             for i in range(len(pde.equations)):
                 eq = pde.equations[i]
                 attr = dict()
@@ -442,13 +442,13 @@ class PINNs(AlgorithmBase):
                     if (weight is None) or np.isscalar(weight):
                         attr["weight"] = weight
 
-                    labels_attr["user"]["equations"].append(attr)
+                    labels_attr["supervise"]["equations"].append(attr)
 
             # data next
-            labels_attr["user"]["data_next"] = list()
+            labels_attr["supervise"]["data_next"] = list()
             n = self.loss._supref[0].shape[-1]
             for i in range(n):
-                labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
+                labels_attr["supervise"]["data_next"].append(LabelInt(len(labels)))
                 labels.append(self.loss._supref[0][:, i])
 
         # padding
@@ -483,11 +483,11 @@ class PINNs(AlgorithmBase):
             print(i)
 
         print("** user-equations ** ")
-        for i in attr["user"]["equations"]:
+        for i in attr["supervise"]["equations"]:
             print(i)
 
         print("** user-data ** ")
-        for i in attr["user"]["data_next"]:
+        for i in attr["supervise"]["data_next"]:
             print(i)
 
         print("")
@@ -501,17 +501,17 @@ class PINNs(AlgorithmBase):
         return labels
 
     def feed_data_user_cur(self, labels, labels_attr, data):
-        n = len(labels_attr["user"]["data_cur"])
+        n = len(labels_attr["supervise"]["data_cur"])
         for i in range(n):
-            idx = labels_attr["user"]["data_cur"][i]
+            idx = labels_attr["supervise"]["data_cur"][i]
             labels[idx] = data[:, i]
             # print("idx user cur: ", idx)
         return labels
 
     def feed_data_user_next(self, labels, labels_attr, data):
-        n = len(labels_attr["user"]["data_next"])
+        n = len(labels_attr["supervise"]["data_next"])
         for i in range(n):
-            idx = labels_attr["user"]["data_next"][i]
+            idx = labels_attr["supervise"]["data_next"][i]
             labels[idx] = data[:, i]
             # print("idx user next: ", idx)
         return labels
@@ -602,7 +602,7 @@ class PINNs(AlgorithmBase):
             n += 1
 
         # data points: compute data_loss and eq_loss
-        for name_d, input_attr in inputs_attr["user"].items():
+        for name_d, input_attr in inputs_attr["supervise"].items():
             input = inputs[n]
 
             # print("user: ", len(input))
@@ -614,7 +614,7 @@ class PINNs(AlgorithmBase):
                 input,
                 input_attr,
                 labels,
-                labels_attr["user"],
+                labels_attr["supervise"],
                 bs=-1,
                 params=params)
             loss_eq += loss_id
@@ -626,7 +626,7 @@ class PINNs(AlgorithmBase):
                 input,
                 input_attr,
                 labels,
-                labels_attr["user"],
+                labels_attr["supervise"],
                 bs=-1,
                 params=params)  # TODO: bs is not used
             loss_data += loss_d
