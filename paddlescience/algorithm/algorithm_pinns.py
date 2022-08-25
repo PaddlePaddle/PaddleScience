@@ -446,10 +446,16 @@ class PINNs(AlgorithmBase):
 
             # data next
             labels_attr["user"]["data_next"] = list()
+            labels_attr["user"]["data_next_sub"] = list()
             n = self.loss._supref[0].shape[-1]
+            sub = self.loss._supsub[0]
             for i in range(n):
                 labels_attr["user"]["data_next"].append(LabelInt(len(labels)))
                 labels.append(self.loss._supref[0][:, i])
+                if sub is None:
+                    labels_attr["user"]["data_next_sub"].append(i)
+                else:
+                    labels_attr["user"]["data_next_sub"].append(sub[i])
 
         # padding
         nprocs = paddle.distributed.get_world_size()

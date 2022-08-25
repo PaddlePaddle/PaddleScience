@@ -21,7 +21,18 @@ class NetOut:
     def __init__(self, net, input):
         self._net = net
         self._input = input
+        self._sub = None
 
+    def __getitem__(self, item):
+        net = NetOut(self._net, self._input)
+        # convert item to list
+        if isinstance(item, slice):
+            net._sub = list(range(10)[item])
+        elif isinstance(item, int):
+            net._sub = list(item)
+        else:
+            net._sub = item
+        return net
 
 class FCNet(NetworkBase):
     """

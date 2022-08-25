@@ -41,6 +41,7 @@ class FormulaLoss:
         self._bcnet = list()
         self._icnet = list()
         self._supnet = list()
+        self._supsub = list()
 
         self._supref = list()
 
@@ -67,6 +68,7 @@ class FormulaLoss:
         floss._bcnet = self._bcnet + other._bcnet
         floss._icnet = self._icnet + other._icnet
         floss._supnet = self._supnet + other._supnet
+        floss._supsub = self._supsub + other._supsub
 
         floss._supref = self._supref + other._supref
 
@@ -234,10 +236,13 @@ class FormulaLoss:
         cmploss.compute_outs(input, bs)
 
         loss = 0.0
-        for i in range(len(pde.dvar)):
-            idx = labels_attr["data_next"][i]
-            data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+        n = len(labels_attr["data_next"])
+        for i in range(n):
+            idx_d = labels_attr["data_next"][i]
+            idx_o = labels_attr["data_next_sub"][i]
+            data = labels[idx_d]
+            out = cmploss.outs[:, idx_o]
+            loss += paddle.norm(out - data, p=2)**2
             # TODO: p=2 p=1
 
         loss = self._supwgt[0] * loss
@@ -344,6 +349,7 @@ def DataLoss(netout=None, ref=None):
     if netout is not None:
         floss._supinput = [netout._input]
         floss._supnet = [netout._net]
+        floss._supsub = [netout._sub]
         floss._supref = [ref]
     else:
         floss._supinput = []
