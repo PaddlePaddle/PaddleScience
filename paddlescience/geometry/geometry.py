@@ -93,7 +93,7 @@ class Geometry:
         self.normal.clear()
         self.tri_mesh.clear()
 
-    def _is_inside_mesh(self, points, tri_mesh):
+    def _get_sdf(self, tri_mesh):
 
         if isinstance(tri_mesh, str):
             mesh_model = pv.read(tri_mesh)
@@ -110,19 +110,21 @@ class Geometry:
 
         sdf = SDF(mesh_model.points, faces_as_array, False)
 
+        return sdf
+
+    def _is_inside_mesh(self, points, tri_mesh):
+
+        sdf = self._get_sdf(tri_mesh)
+
         origin_contained = sdf.contains(points)
 
         return origin_contained
 
-    def _get_points_from_meshfile(self, tri_mesh):
+    def _sampling_points_from_meshfile(self, tri_mesh, npoints):
 
-        if isinstance(tri_mesh, str):
-            mesh_model = pv.read(tri_mesh)
-        else:
-            mesh_model = tri_mesh.pv_mesh
+        sdf = self._get_sdf(tri_mesh)
 
-        # TODO(liu-xiandong): Need to increase sampling points on the boundary
-        return mesh_model.points
+        return sdf.sample_surface(int(npoints))
 
     def __sub__(self, other):
         self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other
@@ -172,8 +174,9 @@ class Geometry:
             flag_i[flag_inside_mesh] = False
 
             # add boundary points
-            geo_disc.boundary[name] = self._get_points_from_meshfile(
-                self.tri_mesh[name])
+            # geo_disc.boundary[name] = self._sampling_points_from_meshfile(self.tri_mesh[name], np.ceil(np.sqrt(npoints)))
+            geo_disc.boundary[name] = self._sampling_points_from_meshfile(
+                self.tri_mesh[name], npoints)
 
             # TODO: normal
 

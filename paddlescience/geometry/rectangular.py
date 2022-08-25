@@ -18,6 +18,7 @@ import numpy as np
 import math
 from scipy.stats import qmc
 from pysdf import SDF
+import pyvista as pv
 
 __all__ = ['Rectangular', 'Cube', 'CircleInRectangular', 'CylinderInCube']
 
@@ -93,7 +94,10 @@ class Rectangular(Geometry):
 
     def _sampling_refinement(self, dist, npoints, geo=None):
         # construct the sdf of the geo
-        geo = geo.pv_mesh
+        if isinstance(geo, str):
+            geo = pv.read(geo)
+        else:
+            geo = geo.pv_mesh
 
         if geo.is_manifold is False and geo.is_all_triangles is False:
             assert 0, "The mesh must be watertight and need to be a Triangulate mesh."
