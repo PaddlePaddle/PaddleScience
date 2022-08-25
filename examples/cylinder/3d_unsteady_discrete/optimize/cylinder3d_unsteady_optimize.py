@@ -248,6 +248,10 @@ for i in range(num_time_step):
     file_path = vtk_filename + str(next_time)
     psci.visu.save_vtk(
         filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
+    psci.visu.save_npy(
+        filename=solution_filename + str(next_time),
+        geo_disc=pde_disc.geometry,
+        data=next_uvwp)
 
     # next_info -> current_info
     next_interior = np.array(next_uvwp[0])

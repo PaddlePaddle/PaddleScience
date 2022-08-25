@@ -468,6 +468,11 @@ class Solver(object):
         for loss_detail in self.loss_details:
             fetches.append(loss_detail.name)
 
+        # load model
+        if self.algo.net.params_path is not None:
+            state_dict = paddle.load(self.algo.net.params_path)
+            self.train_program.set_state_dict(state_dict)
+
         # main loop
         print("Static Graph is Currently in Use.")
         if config.prim_enabled():

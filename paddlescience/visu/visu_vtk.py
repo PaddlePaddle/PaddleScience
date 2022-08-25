@@ -211,6 +211,8 @@ def __concatenate_geo(geo_disc):
     x = [geo_disc.interior]
     for value in geo_disc.boundary.values():
         x.append(value)
+    if geo_disc.user is not None:
+        x.append(geo_disc.user)
     points = np.concatenate(x, axis=0)
 
     ndims = len(points[0])

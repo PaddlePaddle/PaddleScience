@@ -23,6 +23,10 @@ if cfg is not None:
     npoints = cfg['Geometry']['npoints']
     seed_num = cfg['Geometry']['seed']
     sampler_method = cfg['Geometry']['sampler_method']
+    # Time
+    start_time = cfg['Time']['start_time']
+    end_time = cfg['Time']['end_time']
+    time_step = cfg['Time']['time_step']
     # Network
     epochs = cfg['Global']['epochs']
     num_layers = cfg['Model']['num_layers']
@@ -41,6 +45,10 @@ else:
     npoints = 10201
     seed_num = 1
     sampler_method = 'uniform'
+    # Time
+    start_time = 0.0
+    end_time = 0.5
+    time_step = 0.1
     # Network
     epochs = 10000
     num_layers = 10
@@ -70,7 +78,7 @@ geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
-pde.set_time_interval([0.0, 0.5])
+pde.set_time_interval([start_time, end_time])
 
 # set bounday condition
 weight_top_u = lambda x, y: 1.0 - 20.0 * abs(x)
@@ -95,7 +103,7 @@ ic_v = psci.ic.IC('v', rhs=0.0)
 pde.add_ic(ic_u, ic_v)
 
 # discretization pde
-pde_disc = pde.discretize(time_step=0.1, geo_disc=geo_disc)
+pde_disc = pde.discretize(time_step=time_step, geo_disc=geo_disc)
 
 # Network
 # TODO: remove num_ins and num_outs
@@ -121,4 +129,13 @@ solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=epochs)
 
 psci.visu.save_vtk(
-    time_array=pde_disc.time_array, geo_disc=pde_disc.geometry, data=solution)
+    filename=vtk_filename,
+    time_array=pde_disc.time_array,
+    geo_disc=pde_disc.geometry,
+    data=solution)
+
+psci.visu.save_npy(
+    filename=solution_filename,
+    time_array=pde_disc.time_array,
+    geo_disc=pde_disc.geometry,
+    data=solution)

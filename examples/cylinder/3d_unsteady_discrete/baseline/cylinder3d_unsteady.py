@@ -176,6 +176,11 @@ for next_time in range(
     psci.visu.save_vtk(
         filename=file_path, geo_disc=pde_disc.geometry, data=next_uvwp)
 
+    psci.visu.save_npy(
+        filename=solution_filename + str(next_time),
+        geo_disc=pde_disc.geometry,
+        data=next_uvwp)
+
     # current_info need to be modified as follows: current_time -> next time
     current_interior = np.array(next_uvwp[0])[:, 0:3]
     current_user = np.array(next_uvwp[-1])[:, 0:3]
