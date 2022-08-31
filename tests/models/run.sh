@@ -18,7 +18,7 @@ cases=`find ../config/$1 -name "*.yaml" | sort`
 echo $cases
 ignoe=""
 bug=0
-
+cp ../../examples/cylinder/3d_steady/re20_5.0.npy ./
 echo "============ failed cases =============" > result.txt
 for file_dir in ${cases}
 do
