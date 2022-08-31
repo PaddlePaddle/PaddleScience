@@ -49,6 +49,13 @@ class YamlLoader(object):
         else:
             return 1
 
+    def _get_label(self, n):
+        label = self.yml[n].get("label")
+        if label:
+            return '110'
+        else:
+            return ''
+
     def get_all_case(self):
         """
         get all case name
@@ -64,8 +71,9 @@ class YamlLoader(object):
         """get_solution_dir"""
         pp = self.yml[n].get("Post-processing")
         num = self._get_time(n)
-        return pp.get("solution_filename") + "-t{}-p0.npy".format(num), pp.get(
-            "solution_save_dir")
+        label = self._get_label(n)
+        return pp.get("solution_filename") + label + "-t{}-p0.npy".format(
+            num), pp.get("solution_save_dir")
 
     def get_global_config(self, n):
         """get global config"""
