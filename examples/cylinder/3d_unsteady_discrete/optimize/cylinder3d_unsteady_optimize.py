@@ -20,6 +20,8 @@ import os
 import wget
 import zipfile
 from paddlescience.solver.utils import l2_norm_square, compute_bc_loss, compute_eq_loss, compile_and_convert_back_to_program, create_inputs_var, create_labels_var, convert_to_distributed_program, data_parallel_partition
+from paddle.distributed.passes import new_pass, PassManager
+import time
 
 cfg = psci.utils.parse_args()
 
@@ -191,27 +193,27 @@ if nranks > 1:
     main_program, startup_program = convert_to_distributed_program(
         main_program, startup_program, param_grads)
 
-with paddle.static.program_guard(main_program, startup_program):
-    if psci.config.prim_enabled():
-        psci.config.prim2orig(main_program.block(0))
-
-gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
-place = paddle.CUDAPlace(gpu_id)
-exe = paddle.static.Executor(place)
-exe.run(startup_program)
-
 inputs_name = [var.name for var in inputs_var]
 inputs = data_parallel_partition(inputs)
 feeds = dict(zip(inputs_name, inputs))
 
 fetches = [total_loss.name] + [var.name for var in outputs_var]
 
-main_program = compile_and_convert_back_to_program(
-    main_program,
-    feed=feeds,
-    fetch_list=fetches,
-    use_prune=True,
-    loss_name=total_loss.name)
+# convert prim op to original if cinn is not enabled
+if not psci.config.cinn_enabled():
+    with paddle.static.program_guard(main_program, startup_program):
+        if psci.config.prim_enabled():
+            psci.config.prim2orig(main_program.block(0))
+else:
+    pass_manager = PassManager(
+        [new_pass("build_cinn", {'feed': feeds,
+                                 'fetch_list': fetches})])
+    pass_manager.apply([main_program], [startup_program])
+
+gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+place = paddle.CUDAPlace(gpu_id)
+exe = paddle.static.Executor(place)
+exe.run(startup_program)
 
 # num_epoch in train
 train_epoch = epochs
@@ -221,6 +223,7 @@ num_time_step = 10
 current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
+
 for i in range(num_time_step):
     next_time = start_time + (i + 1) * time_step
     print("############# train next time=%f train task ############" %
@@ -239,9 +242,11 @@ for i in range(num_time_step):
     for j in range(len(self_lables)):
         feeds['label' + str(j)] = self_lables[j]
 
+    st = time.time()
     for k in range(train_epoch):
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
-        print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+        #print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+    print(f"Step {i} loop run {time.time()-st}")
     next_uvwp = out[1:]
 
     # Save vtk

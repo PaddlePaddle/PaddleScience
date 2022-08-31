@@ -27,3 +27,13 @@ On this basis, if you want to use a distributed system, you can run the followin
 cd optimize
 python3.7 -m paddle.distributed.launch --gpus=1,2 cylinder3d_unsteady_optimize.py
 ```
+
+Furthermore, you can run a CINN version with prim op by running the following command:
+
+```
+export FLAGS_use_cinn=1
+export FLAGS_cinn_use_new_fusion_pass=1
+
+cd optimize
+python3.7 -m paddle.distributed.launch --gpus=1,2 cylinder3d_unsteady_optimize.py
+```
