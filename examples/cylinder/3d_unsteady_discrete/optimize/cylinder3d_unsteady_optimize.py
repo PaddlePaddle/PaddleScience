@@ -245,7 +245,7 @@ for i in range(num_time_step):
     st = time.time()
     for k in range(train_epoch):
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
-        #print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+        print("autograd epoch: " + str(k + 1), "    loss:", out[0])
     print(f"Step {i} loop run {time.time()-st}")
     next_uvwp = out[1:]
 
