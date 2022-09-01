@@ -224,6 +224,7 @@ current_interior = np.zeros(
     (len(pde_disc.geometry.interior), 3)).astype(np.float32)
 current_user = GetRealPhyInfo(start_time, need_info='physic')[:, 0:3]
 
+build_flag = True
 for i in range(num_time_step):
     next_time = start_time + (i + 1) * time_step
     print("############# train next time=%f train task ############" %
@@ -246,6 +247,10 @@ for i in range(num_time_step):
     for k in range(train_epoch):
         out = exe.run(main_program, feed=feeds, fetch_list=fetches)
         print("autograd epoch: " + str(k + 1), "    loss:", out[0])
+        if build_flag:
+            build_flag = False
+            print(f"Build cost {time.time()-st}")
+            st = time.time()
     print(f"Step {i} loop run {time.time()-st}")
     next_uvwp = out[1:]
 
