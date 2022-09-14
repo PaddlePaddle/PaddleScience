@@ -34,6 +34,7 @@ class NetOut:
             net._sub = item
         return net
 
+
 class FCNet(NetworkBase):
     """
     Full connected network. Each layer consists of a matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
