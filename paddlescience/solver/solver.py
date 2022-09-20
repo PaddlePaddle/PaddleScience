@@ -13,9 +13,7 @@
 # limitations under the License.
 import numpy as np
 import paddle
-from paddle.static import InputSpec
-from paddle.distributed import fleet
-from paddle.distributed.auto_parallel.engine import Engine
+from paddle.distributed.fleet import auto
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 from . import utils
@@ -26,7 +24,7 @@ import time
 __all__ = ["Solver"]
 
 
-class DataSetStatic:
+class DataSetStatic(paddle.io.Dataset):
     def __init__(self, nsamples, inputs_labels):
         self.inputs = inputs_labels
         self.nsamples = nsamples
@@ -62,6 +60,11 @@ class ModelStatic(paddle.nn.Layer):
             nlabels=self.nlabels,
             labels_attr=self.labels_attr,
             pde=self.pde)
+
+        auto.fetch(self.loss_details[0], 'eq_loss')
+        auto.fetch(self.loss_details[1], 'bc_loss')
+        auto.fetch(self.loss_details[2], 'ic_loss')
+        auto.fetch(self.loss_details[3], 'data_loss')
 
         return self.loss, self.outs  # TODO: add outs
 
@@ -613,33 +616,17 @@ class Solver(object):
         ninputs = len(inputs)
         nlabels = len(labels)
 
-        inputs_labels = inputs + labels  # tmp to one list
-
         # strategy
-        dist_strategy = fleet.DistributedStrategy()
-        dist_strategy.semi_auto = True
-        fleet.init(is_collective=True, strategy=dist_strategy)
+        dist_strategy = auto.Strategy()
+        dist_strategy.auto_mode = "semi"
+        dist_strategy.gradient_scale = False
 
         self.model = ModelStatic(self.pde, self.algo, ninputs, inputs_attr,
                                  nlabels, labels_attr)
 
-        inputs_labels_spec = list()
-        for i, data in enumerate(inputs_labels):
-            inputs_labels_spec.append(
-                InputSpec(data.shape, config._dtype, 'input' + str(i)))
-
-        labels_spec = None
-
         # engine
-        self.engine = Engine(
-            self.model,
-            inputs_spec=inputs_labels_spec,
-            labels_spec=labels_spec,
-            strategy=dist_strategy)
-
-        # prepare
-        self.engine.prepare(
-            optimizer=self.opt, loss=loss_func, gradient_scale=False)
+        self.engine = auto.Engine(
+            self.model, loss_func, self.opt, strategy=dist_strategy)
 
     # solve in static mode with auto dist
     def __solve_static_auto_dist(self, num_epoch, bs, checkpoint_freq):
@@ -653,14 +640,8 @@ class Solver(object):
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
 
-        fetches = dict()
-        fetches['eq_loss'] = self.model.loss_details[0].name
-        fetches['bc_loss'] = self.model.loss_details[1].name
-        fetches['ic_loss'] = self.model.loss_details[2].name
-        fetches['data_loss'] = self.model.loss_details[3].name
-
         # train
-        self.engine.fit(train_dataset, batch_size=None, fetches=fetches)
+        self.engine.fit(train_dataset, len(inputs + labels), batch_size=None)
 
         # predict
         self.predict_auto_dist_program = paddle.fluid.Program()
