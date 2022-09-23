@@ -80,6 +80,16 @@ class YamlLoader(object):
         gf = self.yml[n].get("Global")
         return gf.get("static_enable"), gf.get("prim_enable")
 
+    def get_global_epochs(self, n):
+        """get global epochs"""
+        ge = self.yml[n].get("Global")
+        return ge.get("epochs")
+
+    def get_geometry_npoints(self, n):
+        """get geometry npoints"""
+        gn = self.yml[n].get("Geometry")
+        return gn.get("npoints")
+
     def get_docstring(self, n):
         """get docstring"""
         return self.yml[n].get("docs")
@@ -130,10 +140,14 @@ class CompareSolution(object):
         else:
             compare(self.standard, self.solution)
 
-    def converge_verify(self):
+    def converge_verify(self, static=False, npoints = 10):
         """converge verify"""
-        #TODO
-        pass
+        if isinstance(self.standard, np.lib.npyio.NpzFile):
+            standard = self._convert_standard(static)
+            solution = self._convert_solution(self.solution)
+            compare_CE(standard, solution, npoints)
+        else:
+            compare_CE(self.standard, self.solution, npoints)
 
     def _convert_solution(self, solution):
         """convert run solution shape"""
@@ -179,6 +193,21 @@ def compare(res, expect, delta=1e-6, rtol=1e-5, mode="close"):
             assert np.allclose(
                 res, expect, atol=delta, rtol=rtol, equal_nan=True)
         elif mode == "equal":
+            assert np.array_equal(res, expect, equal_nan=True)
+    else:
+        assert TypeError
+
+
+def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
+    if isinstance(res, np.ndarray):
+        assert res.shape == expect.shape
+        if mode == "close":
+            index = np.divide((res - expect), expect, np.zeros_like(res - expect), where = expect!=0)
+            print("The result is:")
+            print(np.linalg.norm(index) / npoints)
+            assert np.linalg.norm(index) / npoints <= 1e-3
+        elif mode == "equal":
+            res = res.astype(expect.dtype)
             assert np.array_equal(res, expect, equal_nan=True)
     else:
         assert TypeError

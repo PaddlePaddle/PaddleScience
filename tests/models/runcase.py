@@ -31,27 +31,35 @@ class RunCases(object):
             case_num, py = item
             static, prim = self.obj.get_global_config(case_num)
             solution, standard_str = self.obj.get_solution_dir(case_num)
+            npoints = self.obj.get_geometry_npoints(case_num)
+            epochs = self.obj.get_global_epochs(case_num)
             print(solution)
             print(standard_str)
             order = GenerateOrder(self.yaml_dir)(py, case_num)
             os.system(order)
             cs = CompareSolution(standard_str, solution)
-            cs.accur_verify(static)
+            if epochs <= 1000:
+                cs.accur_verify(static)
+            else:
+                cs.converge_verify(static, npoints)
 
     def run_case(self, k):
         case = self.obj.get_case(k)
         case_num, py = case
         static, prim = self.obj.get_global_config(case_num)
         solution, standard_str = self.obj.get_solution_dir(case_num)
+        npoints = self.obj.get_geometry_npoints(case_num)
+        epochs = self.obj.get_global_epochs(case_num)
         print(solution)
         print(standard_str)
         order = GenerateOrder(self.yaml_dir)(py, case_num)
         os.system(order)
         cs = CompareSolution(standard_str, solution)
-        cs.accur_verify(static)
-
-
+        if epochs <= 1000:
+            cs.accur_verify(static)
+        else:
+            cs.converge_verify(static, npoints)
 if __name__ == '__main__':
-    file = "./laplace2d.yaml"
+    file = "../standard_data/ce_week_standard/laplace2d.yaml"
     obj = RunCases(file)
     obj.run()
