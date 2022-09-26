@@ -207,11 +207,14 @@ def l2_norm_square(x, wgt=None):
     # new ad
     if config.prim_enabled():
         if wgt is None:
+            print("here1")
             l2_norm = paddle.norm(x, p=2)
         elif np.isscalar(wgt):
+            print("here2")
             wgt2 = np.sqrt(wgt)
             l2_norm = paddle.norm(x * wgt2, p=2)
         else:
+            print("here3")
             wgt2 = paddle.sqrt(wgt)
             l2_norm = paddle.norm(x * wgt2, p=2)
         return l2_norm * l2_norm
