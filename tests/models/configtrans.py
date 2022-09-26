@@ -205,7 +205,7 @@ def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
             index = np.divide((res - expect), expect, np.zeros_like(res - expect), where = expect!=0)
             print("The result is:")
             print(np.linalg.norm(index) / npoints)
-            assert np.linalg.norm(index) / npoints <= 1e-3
+            assert (np.array(np.linalg.norm(index) / npoints) <= 1e-3).all()
         elif mode == "equal":
             res = res.astype(expect.dtype)
             assert np.array_equal(res, expect, equal_nan=True)

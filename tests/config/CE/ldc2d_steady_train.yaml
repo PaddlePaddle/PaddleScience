@@ -21,7 +21,7 @@
     solution_filename: 'output_ldc2d_steady_train'
     vtk_filename: 'output_ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: ".../standard_data/ce_week_standard/ldc2d_steady_train_dynamic.npy"
+    solution_save_dir: "../standard_data/ce_week_standard/ldc2d_steady_train_dynamic.npy"
 
 - test: 1
   Dir: '../../examples/ldc/ldc2d_steady_train.py'
