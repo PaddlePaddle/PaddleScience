@@ -202,7 +202,11 @@ def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
     if isinstance(res, np.ndarray):
         assert res.shape == expect.shape
         if mode == "close":
-            index = np.divide((res - expect), expect, np.zeros_like(res - expect), where = expect!=0)
+            index = np.divide(
+                (res - expect),
+                expect,
+                np.zeros_like(res - expect),
+                where = expect!=0)
             print("The result is:")
             print(np.linalg.norm(index) / npoints)
             assert (np.array(np.linalg.norm(index) / npoints) <= 1e-3).all()
@@ -211,3 +215,4 @@ def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
             assert np.array_equal(res, expect, equal_nan=True)
     else:
         assert TypeError
+        
