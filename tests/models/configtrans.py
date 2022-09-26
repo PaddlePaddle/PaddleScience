@@ -140,7 +140,7 @@ class CompareSolution(object):
         else:
             compare(self.standard, self.solution)
 
-    def converge_verify(self, static=False, npoints = 10):
+    def converge_verify(self, static=False, npoints=10):
         """converge verify"""
         if isinstance(self.standard, np.lib.npyio.NpzFile):
             standard = self._convert_standard(static)
@@ -206,7 +206,7 @@ def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
                 (res - expect),
                 expect,
                 np.zeros_like(res - expect),
-                where = expect!=0)
+                where=expect != 0)
             print("The result is:")
             print(np.linalg.norm(index) / npoints)
             assert (np.array(np.linalg.norm(index) / npoints) <= 1e-3).all()
@@ -215,4 +215,3 @@ def compare_CE(res, expect, npoints, delta=1e-6, rtol=1e-5, mode="close"):
             assert np.array_equal(res, expect, equal_nan=True)
     else:
         assert TypeError
-        

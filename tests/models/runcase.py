@@ -65,4 +65,3 @@ if __name__ == '__main__':
     file = "../standard_data/ce_week_standard/laplace2d.yaml"
     obj = RunCases(file)
     obj.run()
-    
