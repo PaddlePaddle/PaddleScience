@@ -24,7 +24,6 @@
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/cylinder3d_unsteady_optimize_static.npy"
 
-
 - test: 1
   Dir: '../../examples/cylinder/3d_unsteady_discrete/optimize/cylinder3d_unsteady_optimize.py'
   label: '3D'
@@ -50,3 +49,4 @@
     vtk_filename: 'cylinder3d_unsteady_static'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/cylinder3d_unsteady_optimize_new_ad.npy"
+  
