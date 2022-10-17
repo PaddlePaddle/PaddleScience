@@ -37,7 +37,7 @@ def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
         >>> import paddlescience as psci
         >>> psci.visu.save_npy(geo_disc=pde_disc.geometry, data=solution)
     """
-    nt = 1 if (time_array is None) else len(time_array) - 1
+    nt = None if (time_array is None) else len(time_array) - 1
     nprocs = paddle.distributed.get_world_size()
     nrank = paddle.distributed.get_rank()
     if nprocs == 1:
@@ -90,7 +90,7 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         >>> psci.visu.save_vtk(geo_disc=pde_disc.geometry, data=solution)
     """
 
-    nt = 1 if (time_array is None) else len(time_array) - 1
+    nt = None if (time_array is None) else len(time_array) - 1
     nprocs = paddle.distributed.get_world_size()
     nrank = paddle.distributed.get_rank()
     if nprocs == 1:
@@ -236,7 +236,7 @@ def __concatenate_cord(cordinates):
 
 
 # concatenate data
-def __concatenate_data(outs, nt=1):
+def __concatenate_data(outs, nt=None):
 
     vtkname = ["u1", "u2", "u3", "u4", "u5"]
 
@@ -244,7 +244,13 @@ def __concatenate_data(outs, nt=1):
 
     # to numpy
     npouts = list()
-    for out in outs:
+    if nt is None:
+        nouts = len(outs)
+    else:
+        nouts = len(outs) - 1
+
+    for i in range(nouts):
+        out = outs[i]
         if type(out) != np.ndarray:
             npouts.append(out.numpy())  # tenor to array
         else:
