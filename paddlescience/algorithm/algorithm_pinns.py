@@ -188,6 +188,7 @@ class PINNs(AlgorithmBase):
         # bc
         #   - labels_attr["bc"][name_b][i]["rhs"]
         #   - labels_attr["bc"][name_b][i]["weight"]
+        #   - labels_attr["bc"][name_b][i]["normal"]
         labels_attr["bc"] = OrderedDict()
         for name_b, bc in pde.bc.items():
             labels_attr["bc"][name_b] = list()
@@ -195,6 +196,9 @@ class PINNs(AlgorithmBase):
                 attr = dict()
                 rhs = b.rhs_disc
                 weight = b.weight_disc
+                normal = b.normal_disc
+
+                # rhs
                 if (rhs is None) or np.isscalar(rhs):
                     attr["rhs"] = rhs
                 elif type(rhs) is np.ndarray:
@@ -205,6 +209,7 @@ class PINNs(AlgorithmBase):
                         data = rhs
                     labels.append(data)
 
+                # weight
                 if (weight is None) or np.isscalar(weight):
                     attr["weight"] = weight
                 elif type(weight) is np.ndarray:
@@ -213,6 +218,23 @@ class PINNs(AlgorithmBase):
                         data = np.tile(weight, len(pde.time_array[1::]))
                     else:
                         data = weight
+                    labels.append(data)
+
+                # normal
+                # print(normal)
+                if normal is None:
+                    attr["normal"] = normal
+                elif np.isscalar(normal):
+                    attr["normal"] = LabelInt(len(labels))
+                    data = normal
+                    labels.append(data)
+                else:
+                    attr["normal"] = LabelInt(len(labels))
+                    if pde.time_dependent == True and pde.time_disc_method is None:
+                        data = np.tile(normal, len(pde.time_array[1::]))
+                    else:
+                        data = normal
+                    print(data)
                     labels.append(data)
 
                 labels_attr["bc"][name_b].append(attr)

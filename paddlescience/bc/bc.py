@@ -24,6 +24,7 @@ class BC:
         self.weight = weight  # none, scale or lambda
         self.rhs_disc = 0.0
         self.weight_disc = 1.0
+        self.normal_disc = 1.0
 
 
 class Free(BC):
