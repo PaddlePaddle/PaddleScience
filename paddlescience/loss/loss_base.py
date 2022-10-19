@@ -177,15 +177,10 @@ class CompFormula:
         if order == 1:
             v = item.args[1][0]
             if v == sympy.Symbol('n'):
-
-                # # normal = [1.0, 1.0]
-                # print(normal)
-                # #print(jacobian[:, f_idx, :])
-                # exit()
-
-                normal = normal.reshape((1, 2))
-
-                rst = paddle.dot(normal, jacobian[:, f_idx, :])  # TODO
+                if normal.ndim == 1:
+                    rst = paddle.matmul(jacobian[:, f_idx, :], normal)
+                else:
+                    rst = paddle.dot(normal, jacobian[:, f_idx, :])
             else:
                 var_idx = self.indvar.index(v)
                 rst = jacobian[:, f_idx, var_idx]
