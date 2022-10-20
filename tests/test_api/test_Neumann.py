@@ -26,7 +26,7 @@ def test_Neumann0():
     n = sympy.Symbol('n')
     bc_v = psci.bc.Neumann('v', rhs=0.0)
     r = bc_v.discretize(indvar)
-    eq = sympy.Function('v')(x, y)
+    eq = sympy.Function('v')(*indvar)
     fo = sympy.Derivative(eq, n)
     assert r.formula == fo
 
@@ -40,7 +40,7 @@ def test_Neumann1():
     n = sympy.Symbol('n')
     bc_u = psci.bc.Neumann('u', rhs=lambda x, y, z: x * y * z)
     r = bc_u.discretize(indvar)
-    eq = sympy.Function('u')(t, x, y, z)
+    eq = sympy.Function('u')(*indvar)
     fo = sympy.Derivative(eq, n)
     assert r.formula == fo
 
@@ -54,7 +54,7 @@ def test_Neumann2():
     n = sympy.Symbol('n')
     bc_u = psci.bc.Neumann('u', rhs=lambda x, y, z: x * y * z, weight=0.5)
     r = bc_u.discretize(indvar)
-    eq = sympy.Function('u')(t, x, y, z)
+    eq = sympy.Function('u')(*indvar)
     fo = sympy.Derivative(eq, n)
     assert r.formula == fo
     assert bc_u.weight == 0.5
