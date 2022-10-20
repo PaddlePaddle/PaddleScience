@@ -65,7 +65,8 @@ def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
     else:
         data_vtk = __concatenate_data(data, nt)
 
-    for t in range(nt):
+    n = 1 if (nt is None) else nt
+    for t in range(n):
         fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
         current_cord = np.array(points_vtk).astype(config._dtype)
         current_data = np.array(list(data_vtk[t].values()))
@@ -127,12 +128,13 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
 
+    n = 1 if (nt is None) else nt
     if data is not None:
-        for t in range(nt):
+        for t in range(n):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     else:
-        for t in range(nt):
+        for t in range(n):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             __save_vtk_raw(filename=fpname, cordinate=np.array(points_vtk).T)
 
@@ -159,18 +161,19 @@ def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
     else:
         data_vtk = __concatenate_data(data, nt)
 
+    n = 1 if (nt is None) else nt
     if ndims == 3:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        for t in range(nt):
+        for t in range(n):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
-        for t in range(nt):
+        for t in range(n):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
@@ -260,12 +263,13 @@ def __concatenate_data(outs, nt=None):
     ndata = outs[0].shape[1]
     data_vtk = list()
 
-    for t in range(nt):
+    n = 1 if (nt is None) else nt
+    for t in range(n):
         for i in range(ndata):
             x = list()
             for out in npouts:
-                s = int(len(out) / nt) * t
-                e = int(len(out) / nt) * (t + 1)
+                s = int(len(out) / n) * t
+                e = int(len(out) / n) * (t + 1)
                 x.append(out[s:e, i])
             data[vtkname[i]] = np.concatenate(x, axis=0)
 
