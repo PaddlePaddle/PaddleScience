@@ -131,9 +131,16 @@ class L2:
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
+
+            normal_b = labels_attr["bc"][name_b][i]["normal"]
+            if type(normal_b) == LabelInt:
+                normal = labels[normal_b]
+            else:
+                normal = normal_b
+
             formula = pde.bc[name_b][i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None, params)
+                                          labels_attr, normal, params)
 
             # TODO: simplify                                  
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]

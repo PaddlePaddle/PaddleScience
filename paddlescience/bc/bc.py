@@ -24,6 +24,7 @@ class BC:
         self.weight = weight  # none, scale or lambda
         self.rhs_disc = 0.0
         self.weight_disc = 1.0
+        self.normal_disc = 1.0
 
 
 class Free(BC):
@@ -87,8 +88,8 @@ class Neumann(BC):
 
     def to_formula(self, indvar):
         n = sympy.Symbol('n')
-        ud = sympy.Function(self.name)(n)
-        self.formula = ud.diff(n)
+        u = sympy.Function(self.name)(*indvar)
+        self.formula = sympy.Derivative(u, n)
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)
@@ -119,8 +120,7 @@ class Robin(BC):
     def to_formula(self, indvar):
         n = sympy.Symbol('n')
         u = sympy.Function(self.name)(*indvar)
-        ud = sympy.Function(self.name)(n)
-        self.formula = u + ud.diff(n)
+        self.formula = u + sympy.Derivative(u, n)
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)

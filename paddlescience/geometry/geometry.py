@@ -158,7 +158,7 @@ class Geometry:
 
             # TODO: normal
             normal = self.normal[name]
-            normal_disc = None
+            normal_disc = normal
             geo_disc.normal[name] = normal_disc
 
         # boundary points defined by mesh_file
