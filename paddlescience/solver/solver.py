@@ -230,31 +230,32 @@ class Solver(object):
                 self.opt.clear_grad()
 
                 print("epoch: " + str(epoch + 1), " loss:",
-                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
-                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
-                      loss_details[2].numpy()[0], " data loss:",
-                      loss_details[3].numpy()[0])
+                      float(loss), " eq loss:",
+                      float(loss_details[0]), " bc loss:",
+                      float(loss_details[1]), " ic loss:",
+                      float(loss_details[2]), " data loss:",
+                      float(loss_details[3]))
 
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
-                        tag="loss", step=epoch, value=loss.numpy()[0])
+                        tag="loss", step=epoch, value=float(loss))
                     writer_eq_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=loss_details[0].numpy()[0])
+                        value=float(loss_details[0]))
                     writer_bc_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=loss_details[1].numpy()[0])
+                        value=float(loss_details[1]))
                     writer_ic_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=loss_details[2].numpy()[0])
+                        value=float(loss_details[2]))
                     writer_data_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=loss_details[3].numpy()[0])
+                        value=float(loss_details[3]))
 
                 if (epoch + 1) % checkpoint_freq == 0:
                     paddle.save(self.algo.net.state_dict(),
@@ -298,32 +299,32 @@ class Solver(object):
                 x0 = results[2]
 
                 print("epoch: " + str(epoch + 1), " loss:",
-                      results[3].numpy()[0], " eq loss:",
-                      self.loss_details[0].numpy()[0], " bc loss:",
-                      self.loss_details[1].numpy()[0], " ic loss:",
-                      self.loss_details[2].numpy()[0], " data loss:",
-                      self.loss_details[3].numpy()[0])
+                      float(results[3]), " eq loss:",
+                      float(self.loss_details[0]), " bc loss:",
+                      float(self.loss_details[1]), " ic loss:",
+                      float(self.loss_details[2]), " data loss:",
+                      float(self.loss_details[3]))
 
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
-                        tag="loss", step=epoch, value=results[3].numpy()[0])
+                        tag="loss", step=epoch, value=float(results[3]))
                     writer_eq_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=self.loss_details[0].numpy()[0])
+                        value=float(self.loss_details[0]))
                     writer_bc_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=self.loss_details[1].numpy()[0])
+                        value=float(self.loss_details[1]))
                     writer_ic_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=self.loss_details[2].numpy()[0])
+                        value=float(self.loss_details[2]))
                     writer_data_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=self.loss_details[3].numpy()[0])
+                        value=float(self.loss_details[3]))
 
                 if (epoch + 1) % checkpoint_freq == 0:
                     paddle.save(self.algo.net.state_dict(),
