@@ -18,7 +18,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'output_ldc2d_steady_train_dynamic'
     vtk_filename: 'output_ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/ldc2d_steady_train_dynamic.npy"
@@ -43,7 +43,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'output_ldc2d_steady_train_static'
     vtk_filename: 'output_ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/ldc2d_steady_train_static.npy"
@@ -68,7 +68,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'output_ldc2d_steady_train_new_ad'
     vtk_filename: 'output_ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/ldc2d_steady_train_new_ad.npy"
