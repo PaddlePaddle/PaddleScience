@@ -179,12 +179,12 @@ class PysicsInformedNeuralNetwork:
                 self.scheduler.step()
 
             print("current lr is {}".format(self.opt.get_lr()))
-            k1__ = np.exp(self.k1.numpy()[0])
-            k2__ = np.exp(self.k2.numpy()[0])
+            k1__ = np.exp(float(self.k1))
+            k2__ = np.exp(float(self.k2))
             print("epoch/num_epoch: ", epoch_id + 1, "/", num_epoch,
                   "loss[Adam]: ",
-                  loss.numpy()[0], "k1:", k1__, "k2:", k2__, "eta loss:",
-                  losses[0].numpy()[0], "eq_loss:", losses[1].numpy()[0])
+                  float(loss), "k1:", k1__, "k2:", k2__, "eta loss:",
+                  float(losses[0]), "eq_loss:", float(losses[1]))
             if (epoch_id + 1) % self.checkpoint_freq == 0:
                 paddle.save(
                     self.net.state_dict(),
@@ -211,11 +211,11 @@ class PysicsInformedNeuralNetwork:
                                line_search_fn='strong_wolfe',
                                dtype='float32')
             x0 = results[2]
-            print("Step: {step:>6} [LS] loss[BFGS]: ", results[3].numpy()[0],
-                  "total loss:",
-                  loss.numpy()[0], "eq_loss: ", losses[0].numpy()[0],
-                  "bc_loss: ", losses[1].numpy()[0], "ic_loss: ",
-                  losses[2].numpy()[0])
+            print("Step: {step:>6} [LS] loss[BFGS]: ",
+                  float(results[3]), "total loss:",
+                  float(loss), "eq_loss: ",
+                  float(losses[0]), "bc_loss: ",
+                  float(losses[1]), "ic_loss: ", float(losses[2]))
             step += 1
 
         print("======Optimization results======")
