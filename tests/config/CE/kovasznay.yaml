@@ -70,7 +70,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'kovasznay_static'
+    solution_filename: 'kovasznay_new_ad'
     vtk_filename: 'output_kovasznay'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/kovasznay_new_ad.npy"
