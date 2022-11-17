@@ -22,7 +22,7 @@
     solution_filename: 'cylinder3d_unsteady_dynamic'
     vtk_filename: 'cylinder3d_unsteady_dynamic'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_unsteady_dynamic.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_unsteady_dynamic.npy"
 
 
 - test: 1
@@ -49,7 +49,7 @@
     solution_filename: 'cylinder3d_unsteady_static'
     vtk_filename: 'cylinder3d_unsteady_static'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_unsteady_static.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_unsteady_static.npy"
 
 
 - test: 2
@@ -73,7 +73,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'cylinder3d_unsteady_static'
-    vtk_filename: 'cylinder3d_unsteady_static'
+    solution_filename: 'cylinder3d_unsteady_new_ad'
+    vtk_filename: 'cylinder3d_unsteady_new_ad'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_unsteady_new_ad.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_unsteady_new_ad.npy"
