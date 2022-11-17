@@ -18,10 +18,10 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
-    vtk_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'ldc2d_steady_train_dynamic'
+    vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_steady0.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady0.npz"
 
 - test: 1
   Dir: '../../examples/ldc/ldc2d_steady_train.py'
@@ -43,10 +43,10 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
-    vtk_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'ldc2d_steady_train_static'
+    vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_steady0.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady0.npz"
 
 - test: 2
   Dir: '../../examples/ldc/ldc2d_steady_train.py'
@@ -68,10 +68,10 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
-    vtk_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'ldc2d_steady_train_static'
+    vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_steady1.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady1.npz"
 
 
 - test: 3
@@ -80,7 +80,7 @@
   Global:
     use_visualdl: False
     static_enable: True
-    prim_enable: False
+    prim_enable: True
     epochs: 25
   Geometry:
     npoints: 16
@@ -94,7 +94,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'output_ldc2d_steady_train'
-    vtk_filename: 'output_ldc2d_steady_train'
+    solution_filename: 'ldc2d_steady_train_new_ad'
+    vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_steady1.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_new_ad.npy"
