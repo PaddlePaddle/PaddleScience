@@ -1,4 +1,4 @@
-- input: 0
+- test: 0
   Dir: '../../examples/ldc/ldc2d_unsteady_t.py'
   docs: 'dynamic'
   Global:
@@ -25,10 +25,10 @@
     solution_filename: 'ldc2d_unsteady_dynamic'
     vtk_filename: 'output_ldc2d_unsteady_t'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_unsteady_dynamic.npy"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_unsteady_dynamic.npy"
 
 
-- input: 1
+- test: 1
   Dir: '../../examples/ldc/ldc2d_unsteady_t.py'
   docs: 'static'
   Global:
@@ -55,14 +55,14 @@
     solution_filename: 'ldc2d_unsteady_static'
     vtk_filename: 'output_ldc2d_unsteady_t'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_unsteady_dynamic.npy"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_unsteady_static.npy"
 
-- input: 2
+- test: 2
   Dir: '../../examples/ldc/ldc2d_unsteady_t.py'
-  docs: 'dynamic'
+  docs: 'new_ad'
   Global:
     use_visualdl: False
-    static_enable: False
+    static_enable: True
     prim_enable: True
     epochs: 25
   Geometry:
@@ -81,7 +81,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'ldc2d_unsteady_dynamic'
+    solution_filename: 'ldc2d_unsteady_new_ad'
     vtk_filename: 'output_ldc2d_unsteady_t'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/ldc2d_unsteady_dynamic.npy"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_unsteady_new_ad.npy"
