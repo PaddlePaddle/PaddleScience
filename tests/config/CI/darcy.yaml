@@ -21,7 +21,7 @@
     solution_filename: 'darcy2d_dynamic'
     vtk_filename: 'darcy2d_dynamic'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/darcy2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/darcy2d.npz"
 
 
 - test: 1
@@ -47,7 +47,7 @@
     solution_filename: 'darcy2d_static'
     vtk_filename: 'darcy2d_static'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/darcy2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/darcy2d.npz"
 
 
 - test: 2
@@ -70,7 +70,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'darcy2d_static'
-    vtk_filename: 'darcy2d_static'
+    solution_filename: 'darcy2d_new_ad'
+    vtk_filename: 'darcy2d_new_ad'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/darcy2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/darcy2d.npz"

@@ -27,7 +27,7 @@
 - test: 1
   Dir: '../../examples/cylinder/3d_unsteady_discrete/optimize/cylinder3d_unsteady_optimize.py'
   label: '3D'
-  docs: 'static'
+  docs: 'new_ad'
   Global:
     use_visualdl: False
     static_enable: True
@@ -45,7 +45,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'cylinder3d_unsteady_static'
-    vtk_filename: 'cylinder3d_unsteady_static'
+    solution_filename: 'cylinder3d_unsteady_new_ad'
+    vtk_filename: 'cylinder3d_unsteady_new_ad'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/cylinder3d_unsteady_optimize_new_ad.npy"
