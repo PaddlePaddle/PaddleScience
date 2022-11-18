@@ -21,7 +21,7 @@
     solution_filename: 'cylinder3d_steady_dynamic'
     vtk_filename: 'cylinder3d_steady_dynamic'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_steady_dynamic.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_steady_dynamic.npy"
 
 
 - test: 1
@@ -47,7 +47,7 @@
     solution_filename: 'cylinder3d_steady_static'
     vtk_filename: 'cylinder3d_steady_static'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_steady_static.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_steady_static.npy"
 
 
 - test: 2
@@ -70,7 +70,7 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'cylinder3d_steady_static'
-    vtk_filename: 'cylinder3d_steady_static'
+    solution_filename: 'cylinder3d_steady_new_ad'
+    vtk_filename: 'cylinder3d_steady_new_ad'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../test_models/standard/cylinder3d_steady_new_ad.npy"
+    solution_save_dir: "../standard_data/ci_standard/cylinder3d_steady_new_ad.npy"
