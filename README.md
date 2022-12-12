@@ -51,7 +51,7 @@ For more details on installation, please refer to the offical [PaddlePaddle repo
 
 ```
 Download from GitHub: git clone https://github.com/PaddlePaddle/PaddleScience.git
-Download from Gitee:  git clone https://github.com/PaddlePaddle/PaddleScience.git
+Download from Gitee:  git clone https://gitee.com/PaddlePaddle/PaddleScience.git
 
 cd PaddleScience
 export PYTHONPATH=$PWD:$PYTHONPATH
