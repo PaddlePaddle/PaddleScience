@@ -10,3 +10,4 @@ scipy
 visualdl
 pyvista
 pysdf
+pyyaml
