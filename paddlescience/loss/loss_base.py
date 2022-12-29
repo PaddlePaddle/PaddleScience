@@ -211,3 +211,10 @@ def l2_norm_square(x, wgt=None):
         return paddle.norm(x**2, p=1)
     else:
         return paddle.norm(x**2 * wgt, p=1)
+
+
+def mse(x, wgt=None):
+    if wgt is None:
+        return paddle.mean(paddle.square(x))
+    else:
+        return paddle.mean(paddle.square(x)) * wgt

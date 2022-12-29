@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
 
 import paddle
 import numpy as np
-from .loss_base import CompFormula, l2_norm_square
+from .loss_base import CompFormula, l2_norm_square, mse
 from ..labels import LabelInt
 from .. import config
 import copy
@@ -127,9 +127,10 @@ class FormulaLoss:
 
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
-
+            # print(f"result {i} = {rst.shape} {rst.mean().item():.10f}")
             # TODO: simplify
             rhs_eq = labels_attr["equations"][i]["rhs"]
+            # print("type of rhs_eq is ", type(rhs_eq))
             if type(rhs_eq) == LabelInt:
                 rhs = labels[rhs_eq]
             else:
@@ -138,10 +139,10 @@ class FormulaLoss:
             wgt = self._eqwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss += mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
-
+                loss += mse((rst - rhs), wgt)
+        # print(f"eq loss = {loss.item():.10f}")
         return loss, cmploss.outs
 
     # compute loss on one boundary
@@ -169,7 +170,7 @@ class FormulaLoss:
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 
-            # TODO: simplify                                 
+            # TODO: simplify
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]
@@ -180,9 +181,9 @@ class FormulaLoss:
             wgt = self._bcwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss += mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
+                loss += mse((rst - rhs), wgt)
 
         return loss, cmploss.outs
 
@@ -213,11 +214,12 @@ class FormulaLoss:
                 rhs = rhs_c
 
             wgt = labels_attr["ic"][i]["weight"]
-            loss += l2_norm_square(rst - rhs, wgt)
+            # print(f"ic_loss rst = {rst.mean().item():.5f} - rhs = {rhs.mean().item():.5f}")
+            loss += mse(rst - rhs, wgt)
 
         return loss, cmploss.outs
 
-    # compute loss on real data 
+    # compute loss on real data
     def data_loss(self,
                   pde,
                   net,
@@ -234,10 +236,11 @@ class FormulaLoss:
         cmploss.compute_outs(input, bs)
 
         loss = 0.0
-        for i in range(len(pde.dvar)):
-            idx = labels_attr["data_next"][i]
+        for i in range(len(pde.dvar) - 1):
+            idx = labels_attr["data_next"][i] + 1
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            # loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            loss += mse(cmploss.outs[:, i] - data)
             # TODO: p=2 p=1
 
         loss = self._supwgt[0] * loss
@@ -247,9 +250,9 @@ class FormulaLoss:
 def EqLoss(eq, netout=None):
     """
     Define equation loss
- 
+
     Parameters:
-        eq (pde.equation): Equation 
+        eq (pde.equation): Equation
         netout (optional): output of network
 
     Example
@@ -274,7 +277,7 @@ def EqLoss(eq, netout=None):
 def BcLoss(name, netout=None):
     """
     Define boundary loss
- 
+
     Parameters:
         name (string): boundary name
         netout (optional): output of network
@@ -301,9 +304,9 @@ def BcLoss(name, netout=None):
 def IcLoss(netout=None):
     """
     Define initial loss for time-dependent equation
- 
+
     Parameters:
-        netout (optional): output of network  
+        netout (optional): output of network
 
     Example:
         >>> import paddlescience as psci
@@ -327,10 +330,10 @@ def IcLoss(netout=None):
 def DataLoss(netout=None, ref=None):
     """
     Define supervised loss
- 
+
     Parameters:
         netout (optional): output of network
-        ref (numpy.ndarray or Tensor) : reference values on supervise points   
+        ref (numpy.ndarray or Tensor) : reference values on supervise points
 
     Example:
         >>> import paddlescience as psci

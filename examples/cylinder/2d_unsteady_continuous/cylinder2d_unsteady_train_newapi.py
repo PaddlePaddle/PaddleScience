@@ -19,17 +19,17 @@ import paddle
 import loading_cfd_data
 import numpy as np
 
-paddle.seed(1)
-np.random.seed(1)
+# paddle.seed(42)
+# np.random.seed(42)
 
-paddle.enable_static()
+# paddle.enable_static()
 
 # time array
-time_tmp = np.linspace(0, 50, 50, endpoint=True).astype(int)
-time_array = np.random.choice(time_tmp, 11)
+time_tmp = np.linspace(1, 50, 50, endpoint=True).astype("int")
+time_array = np.random.choice(time_tmp, 30)
 time_array.sort()
 
-time_array = np.array([1, 2, 3])
+# time_array = np.array([2,2,3,8,11,11,12,15,19,21,21,22,22,23,24,24,24,25,29,30,33,36,38,39,39,40,43,44,44,49])
 
 # loading data from files
 dr = loading_cfd_data.DataLoader(path='./datasets/')
@@ -77,7 +77,7 @@ pde.set_ic(ic_u, ic_v, ic_p)
 # Network
 net = psci.network.FCNet(
     num_ins=3, num_outs=3, num_layers=6, hidden_size=50, activation='tanh')
-net.initialize(path='./checkpoint/pretrained_net_params')
+# net.initialize(path='./checkpoint/pretrained_net_params')
 
 outeq = net(inputeq)
 outbc1 = net(inputbc1)
@@ -98,7 +98,14 @@ lossic = psci.loss.IcLoss(netout=outic)
 losssup = psci.loss.DataLoss(netout=outsup, ref=refsup)
 
 # total loss
-loss = losseq1 + losseq2 + losseq3 + 10.0 * lossbc1 + lossbc2 + 10.0 * lossic + 10.0 * losssup
+loss = losseq1 + \
+    losseq2 + \
+    losseq3 + \
+    10.0 * lossbc1 + \
+    lossbc2 + \
+    10.0 * lossic + \
+    10.0 * losssup
+
 
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
@@ -114,6 +121,11 @@ solution = solver.solve(num_epoch=10)
 
 # Save last time data to vtk
 n = int(i_x.shape[0] / len(time_array))
-cord = np.stack(
-    (i_x[0:n].astype("float32"), i_y[0:n].astype("float32")), axis=1)
+cord = np.stack((i_x[0:n].astype("float32"), i_y[0:n].astype("float32")), axis=1)
+
 psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
+# psci.visu.save_vtk(
+#     filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
+
+# psci.visu.save_npy(
+#     filename=solution_filename, geo_disc=pde_disc.geometry, data=solution)

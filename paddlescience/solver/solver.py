@@ -226,6 +226,9 @@ class Solver(object):
                     pde=self.pde)
 
                 loss.backward()
+                # for n, p in self.algo.net.named_parameters():
+                #     print(f"{n} {p.mean().item():.10f} {p.grad.mean().item():.10}")
+                # exit()
                 self.opt.step()
                 self.opt.clear_grad()
 
@@ -472,7 +475,11 @@ class Solver(object):
         # load model
         if self.algo.net.params_path is not None:
             state_dict = paddle.load(self.algo.net.params_path)
-            self.train_program.set_state_dict(state_dict)
+            # 静态图加载预训练权重
+            self.train_program.set_state_dict({
+                "fc_net_0." + k: v
+                for k, v in state_dict.items()
+            })
 
         # main loop
         print("Static Graph is Currently in Use.")

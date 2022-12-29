@@ -79,26 +79,28 @@ class PINNs(AlgorithmBase):
         # interior: inputs_attr["interior"]["0"]
         inputs_attr_i = OrderedDict()
         points = pde.geometry.interior
+        points_size = pde.geometry.interior_size
         if pde.time_dependent == True and pde.time_disc_method is None:
             # time dependent equation with continue method
             data = self.__timespace(pde.time_array[1::], points)
         else:
             data = points
         inputs.append(data)
-        inputs_attr_i["0"] = InputsAttr(0, 0)
+        inputs_attr_i["0"] = InputsAttr(0, 0, size=points_size)
         inputs_attr["interior"] = inputs_attr_i
 
         # boundary: inputs_attr["boundary"][name]
         inputs_attr_b = OrderedDict()
         for name in pde.bc.keys():
             points = pde.geometry.boundary[name]
+            points_size = pde.geometry.boundary_size[name]
             # time dependent equation with continue method
             if pde.time_dependent == True and pde.time_disc_method is None:
                 data = self.__timespace(pde.time_array[1::], points)
             else:
                 data = points
             inputs.append(data)
-            inputs_attr_b[name] = InputsAttr(0, 0)
+            inputs_attr_b[name] = InputsAttr(0, 0, size=points_size)
         inputs_attr["bc"] = inputs_attr_b
 
         # initial condition for time-dependent
@@ -106,9 +108,10 @@ class PINNs(AlgorithmBase):
         if pde.time_dependent == True and pde.time_disc_method is None:
             inputs_attr_it = OrderedDict()
             points = pde.geometry.interior
+            points_size = pde.geometry.interior_size
             data = self.__timespace(pde.time_array[0:1], points)
             inputs.append(data)
-            inputs_attr_it["0"] = InputsAttr(0, 0)
+            inputs_attr_it["0"] = InputsAttr(0, 0, size=points_size)
             inputs_attr["ic"] = inputs_attr_it
         else:
             inputs_attr["ic"] = OrderedDict()
@@ -116,6 +119,7 @@ class PINNs(AlgorithmBase):
         # data: inputs_attr["user"]["0"]
         inputs_attr_d = OrderedDict()
         points = pde.geometry.user
+        points_size = pde.geometry.user_size
         if points is not None:
             if pde.time_dependent == True and pde.time_disc_method is None:
                 # time dependent equation with continue method
@@ -123,7 +127,7 @@ class PINNs(AlgorithmBase):
             else:
                 data = points
             inputs.append(data)
-            inputs_attr_d["0"] = InputsAttr(0, 0)
+            inputs_attr_d["0"] = InputsAttr(0, 0, size=points_size)
         inputs_attr["user"] = inputs_attr_d
 
         # padding
@@ -625,21 +629,22 @@ class PINNs(AlgorithmBase):
 
         # data points: compute data_loss and eq_loss
         for name_d, input_attr in inputs_attr["user"].items():
-            input = inputs[n]
+            input = inputs[n] # [8490,3]
 
             # print("user: ", len(input))
 
             # eq loss
-            loss_id, out_id = self.loss.eq_loss(
-                pde,
-                self.net,
-                input,
-                input_attr,
-                labels,
-                labels_attr["user"],
-                bs=-1,
-                params=params)
-            loss_eq += loss_id
+            # loss_id, out_id = self.loss.eq_loss(
+            #     pde,
+            #     self.net,
+            #     input,
+            #     input_attr,
+            #     labels,
+            #     labels_attr["user"],
+            #     bs=-1,
+            #     params=params)
+            # loss_eq += loss_id
+            # outs.append(out_id)
 
             # data loss
             loss_d, out_d = self.loss.data_loss(
@@ -652,29 +657,32 @@ class PINNs(AlgorithmBase):
                 bs=-1,
                 params=params)  # TODO: bs is not used
             loss_data += loss_d
-            outs.append(out_id)
 
             n += 1
 
         # loss
-        p = self.loss.norm_p
-        if p == 1:
-            loss = self.__sqrt(loss_eq) + self.__sqrt(loss_bc) + self.__sqrt(
-                loss_ic) + self.__sqrt(loss_data)
-        elif p == 2:
-            loss = self.__sqrt(loss_eq + loss_bc + loss_ic + loss_data)
-        else:
-            pass
-            # TODO: error out
+        loss = loss_eq + loss_bc + loss_ic + loss_data
+        # loss = loss_eq
+        # print(f"total loss= {loss.item():.15f}")
+        # loss = loss_eq
+        # p = self.loss.norm_p
+        # if p == 1:
+        #     loss = self.__sqrt(loss_eq) + self.__sqrt(loss_bc) + self.__sqrt(
+        #         loss_ic) + self.__sqrt(loss_data)
+        # elif p == 2:
+        #     loss = self.__sqrt(loss_eq + loss_bc + loss_ic + loss_data)
+        # else:
+        #     pass
+        #     # TODO: error out
 
         loss_details = list()
-        loss_details.append(self.__sqrt(loss_eq))
-        loss_details.append(self.__sqrt(loss_bc))
+        loss_details.append((loss_eq))
+        loss_details.append((loss_bc))
         loss_ic = (loss - loss) if isinstance(loss_ic, float) else loss_ic
-        loss_details.append(self.__sqrt(loss_ic))
+        loss_details.append((loss_ic))
         loss_data = (loss - loss) if isinstance(loss_data,
                                                 float) else loss_data
-        loss_details.append(self.__sqrt(loss_data))
+        loss_details.append((loss_data))
 
         return loss, outs, loss_details
 

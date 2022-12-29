@@ -66,10 +66,7 @@ class PysicsInformedNeuralNetwork:
             load_params = paddle.load(net_params)
             self.net.set_state_dict(load_params)
 
-        self.opt = paddle.optimizer.Adam(
-            learning_rate=learning_rate,
-            weight_decay=0.005,
-            parameters=self.net.parameters()) if not opt else opt
+        self.opt = None
 
         if self.distributed_env:
             self.parallel_net = paddle.DataParallel(self.net)
@@ -196,8 +193,8 @@ class PysicsInformedNeuralNetwork:
         u_t = self.autograd(u, t)
         u_x = self.autograd(u, x)
         u_y = self.autograd(u, y)
-        u_xx = self.autograd(u_x, x, create_graph=False)
-        u_yy = self.autograd(u_y, y, create_graph=False)
+        u_xx = self.autograd(u_x, x, create_graph=True)
+        u_yy = self.autograd(u_y, y, create_graph=True)
 
         v_t = self.autograd(
             v,
@@ -208,13 +205,13 @@ class PysicsInformedNeuralNetwork:
         v_y = self.autograd(
             v,
             y, )
-        v_xx = self.autograd(v_x, x, create_graph=False)
-        v_yy = self.autograd(v_y, y, create_graph=False)
+        v_xx = self.autograd(v_x, x, create_graph=True)
+        v_yy = self.autograd(v_y, y, create_graph=True)
 
         p_x = self.autograd(p, x)
         p_y = self.autograd(p, y)
 
-        # NS 
+        # NS
         eq1 = (u * u_x + v * u_y) + p_x - (self.nu) * (u_xx + u_yy) + u_t
         eq2 = (u * v_x + v * v_y) + p_y - (self.nu) * (v_xx + v_yy) + v_t
         # Continuty
@@ -226,7 +223,7 @@ class PysicsInformedNeuralNetwork:
 
     def autograd(self, U, x, create_graph=True):
         return paddle.autograd.grad(
-            U, x, retain_graph=True, create_graph=create_graph)[0]
+            U, x, retain_graph=False, create_graph=create_graph)[0]
 
     def set_training_loss(self, loss):
         self.psci_loss = loss
@@ -244,8 +241,7 @@ class PysicsInformedNeuralNetwork:
     def fwd_computing_loss_2d(self, loss_mode='MSE'):
         # physics informed neural networks (inside the domain)
         # initial data
-        (self.u_pred_i, self.v_pred_i,
-         self.p_pred_i) = self.neural_net_u(self.t_i, self.x_i, self.y_i)
+        (self.u_pred_i, self.v_pred_i, self.p_pred_i) = self.neural_net_u(self.t_i, self.x_i, self.y_i)
 
         # IC loss
         if loss_mode == 'L2':
@@ -257,9 +253,8 @@ class PysicsInformedNeuralNetwork:
                           paddle.mean(paddle.square(self.v_i.reshape([-1]) - self.v_pred_i.reshape([-1]))) + \
                           paddle.mean(paddle.square(self.p_i.reshape([-1]) - self.p_pred_i.reshape([-1])))
 
-# boundary data
-        (self.u_pred_b, self.v_pred_b,
-         self.p_pred_b) = self.neural_net_u(self.t_b, self.x_b, self.y_b)
+        # boundary data
+        (self.u_pred_b, self.v_pred_b, self.p_pred_b) = self.neural_net_u(self.t_b, self.x_b, self.y_b)
 
         # BC loss
         if loss_mode == 'L2':
@@ -270,22 +265,17 @@ class PysicsInformedNeuralNetwork:
                           paddle.mean(paddle.square(self.v_b.reshape([-1]) - self.v_pred_b.reshape([-1])))
 
         # outlet data
-        (self.u_pred_o, self.v_pred_o,
-         self.p_pred_o) = self.neural_net_u(self.t_o, self.x_o, self.y_o)
+        (self.u_pred_o, self.v_pred_o, self.p_pred_o) = self.neural_net_u(self.t_o, self.x_o, self.y_o)
 
         # outlet loss
         if loss_mode == 'L2':
-            self.loss_o = paddle.norm(
-                (self.p_o.reshape([-1]) - self.p_pred_o.reshape([-1])), p=2)
+            self.loss_o = paddle.norm((self.p_o.reshape([-1]) - self.p_pred_o.reshape([-1])), p=2)
         if loss_mode == 'MSE':
-            self.loss_o = paddle.mean(
-                paddle.square(
-                    self.p_o.reshape([-1]) - self.p_pred_o.reshape([-1])))
+            self.loss_o = paddle.mean(paddle.square(self.p_o.reshape([-1]) - self.p_pred_o.reshape([-1])))
 
         # supervised interior data
         if self.training_type == 'half-supervised':
-            (self.u_pred_s, self.v_pred_s,
-             self.p_pred_s) = self.neural_net_u(self.t_s, self.x_s, self.y_s)
+            (self.u_pred_s, self.v_pred_s, self.p_pred_s) = self.neural_net_u(self.t_s, self.x_s, self.y_s)
             # supervised data loss
             if loss_mode == 'L2':
                 self.loss_s = paddle.norm((self.u_s.reshape([-1]) - self.u_pred_s.reshape([-1])), p=2) + \
@@ -294,11 +284,10 @@ class PysicsInformedNeuralNetwork:
                 self.loss_s = paddle.mean(paddle.square(self.u_s.reshape([-1]) - self.u_pred_s.reshape([-1]))) + \
                               paddle.mean(paddle.square(self.v_s.reshape([-1]) - self.v_pred_s.reshape([-1])))
 
-        # equation        
+        # equation
         if self.training_type == 'unsupervised' or self.training_type == 'half-supervised':
-            (self.eq1_pred, self.eq2_pred,
-             self.eq3_pred) = self.neural_net_equations(self.t_f, self.x_f,
-                                                        self.y_f)
+            (self.eq1_pred, self.eq2_pred, self.eq3_pred) = self.neural_net_equations(self.t_f, self.x_f, self.y_f)
+
             # equation residual loss
             if loss_mode == 'L2':
                 self.loss_e = paddle.norm(self.eq1_pred.reshape([-1]), p=2) + \
@@ -353,6 +342,9 @@ class PysicsInformedNeuralNetwork:
             for epoch_id in range(num_epoch):
                 loss, losses = loss_func()
                 loss.backward()
+                # for n, p in self.net.named_parameters():
+                #     print(f"{n} {p.mean().item():.10f} {p.grad.mean().item():.10}")
+                # exit()
                 self.opt.step()
                 self.opt.clear_grad()
                 if scheduler:

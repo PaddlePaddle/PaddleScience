@@ -15,6 +15,7 @@
 import paddlescience as psci
 import numpy as np
 import paddle
+from copy import deepcopy
 
 cfg = psci.utils.parse_args()
 
@@ -115,6 +116,19 @@ opt = psci.optimizer.Adam(
 # Solver
 solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
 solution = solver.solve(num_epoch=epochs)
+# print(f"len(solution) = {len(solution)}, {[x.shape for x in solution]}")
+# for x in solution:
+#     print(f"{x.mean():.8f} ", end='')
+# print('\n')
+# """1卡
+# len(solution) = 5, [(9801, 1), (101, 1), (101, 1), (99, 1), (99, 1)]
+# 0.10737147 0.11142290 0.08696169 0.01422692 0.17965697 
+# """
+# """2卡
+# len(solution) = 5, [(9802, 1), (102, 1), (102, 1), (100, 1), (100, 1)]
+# 0.07302262 0.09996056 0.03176829 0.01742404 0.11158486
+# """
+# exit(0)
 
 psci.visu.save_vtk(
     filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
@@ -124,6 +138,7 @@ psci.visu.save_npy(
 
 # MSE
 # TODO: solution array to dict: interior, bc
+# cord = pde_disc.geometry.interior[:pde_disc.geometry.interior_size]
 cord = pde_disc.geometry.interior
 ref = ref_sol(cord[:, 0], cord[:, 1])
 mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
@@ -137,3 +152,15 @@ for cord in pde_disc.geometry.boundary.values():
 mse = mse2 / npoints
 
 print("MSE is: ", mse)
+
+"""2卡
+len(solution) = 5, [(9802, 1), (102, 1), (102, 1), (100, 1), (100, 1)]
+(2, 5103)
+(1, 10206)
+"""
+
+"""1卡
+len(solution) = 5, [(9801, 1), (101, 1), (101, 1), (99, 1), (99, 1)]
+(2, 10201)
+(1, 10201)
+"""

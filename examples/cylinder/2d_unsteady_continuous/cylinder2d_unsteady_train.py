@@ -80,13 +80,16 @@ def train(net_params=None, distributed_env=False):
 
     # Training
     adm_opt = paddle.optimizer.Adam(
-        learning_rate=1e-5, parameters=PINN.net.parameters())
+        learning_rate=0.001, parameters=PINN.net.parameters())
     PINN.train(num_epoch=10, optimizer=adm_opt)
 
     #bfgs_opt = psci.optimizer.BFGS()
 
 
 if __name__ == "__main__":
+    # fix random seed
+    paddle.seed(42)
+    np.random.seed(42)
     # Loss | eq 0.0071044, bc 0.0003727, ic 0.06930, data 0.001471
     net_params = './checkpoint/pretrained_net_params'
     train(net_params=net_params)

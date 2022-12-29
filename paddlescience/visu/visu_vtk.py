@@ -201,6 +201,7 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
         axis_y = cordinate[:, 1].copy().astype(config._dtype)
         axis_z = np.zeros(npoints, dtype=config._dtype)
         pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtk)
+    print(f"vtk_raw file saved at [{filename}]")
 
 
 # concatenate cordinates of interior points and boundary points

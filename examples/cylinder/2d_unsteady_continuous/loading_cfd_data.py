@@ -235,8 +235,7 @@ class DataLoader:
             # p,U:0,U:1,U:2,Points:0,Points:1,Points:2
 
             t_len = data_from_pd.shape[0]
-            supervised_t = np.array([time / self.scale] * t_len).reshape(
-                (-1, 1))
+            supervised_t = np.array([time / self.scale] * t_len).reshape((-1, 1))
             if supervised_data is None:
                 supervised_data = np.array(data_from_pd)
                 t_data = np.concatenate(

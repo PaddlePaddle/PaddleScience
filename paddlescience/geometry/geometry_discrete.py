@@ -25,9 +25,12 @@ class GeometryDiscrete:
 
         # TODO: data structure uniformation
         self.interior = None
+        self.interior_size = 0
         self.boundary = dict()
+        self.boundary_size = dict()
         self.normal = dict()
         self.user = None
+        self.user_size = None
         self.geometry = None
         if geometry is not None:
             self.geometry = geometry
@@ -52,16 +55,19 @@ class GeometryDiscrete:
 
         # interior
         if type(self.interior) is np.ndarray:
+            self.interior_size = len(self.interior)
             self.interior = self.__padding_array(nprocs, self.interior)
 
         # bc
         for name_b in self.boundary.keys():
             if type(self.boundary[name_b]) is np.ndarray:
+                self.boundary_size[name_b] = len(self.boundary[name_b])
                 self.boundary[name_b] = self.__padding_array(
                     nprocs, self.boundary[name_b])
 
         # user
         if type(self.user) is np.ndarray:
+            self.user_size = len(self.user)
             self.user = self.__padding_array(nprocs, self.user)
 
         # TODO: normal
