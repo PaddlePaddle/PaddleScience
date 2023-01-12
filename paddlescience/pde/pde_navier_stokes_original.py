@@ -52,7 +52,7 @@ class NavierStokes(PDE):
         rho (float): density.
         dim (integer): dquation's dimention. 2 and 3 are supported.
         time_dependent (bool): time-dependent or time-independent.
-        weight (optional, float or list of float or lambda function): weight in computing equation loss. The default value is 1.0.
+        weight (optional, float or list of float or lambda function): weight in computing equation loss. The default value is 1.0.        
 
     Example:
         >>> import paddlescience as psci
@@ -171,6 +171,7 @@ class NavierStokes(PDE):
             self.add_equation(momentum_z, momentum_z_rhs)
 
         elif dim == 3 and time_dependent == True:
+
             # independent variable
             t = sympy.Symbol('t')
             x = sympy.Symbol('x')
@@ -183,37 +184,8 @@ class NavierStokes(PDE):
             w = sympy.Function('w')(t, x, y, z)
             p = sympy.Function('p')(t, x, y, z)
 
-
-
-            '''
-            add new k-epsilon equation, standard wall function
-            '''
-            k = sympy.Function('k')(t, x, y, z)
-            ep = sympy.Function('ep')(t, x, y, z)
-
             # normal direction
             self.normal = sympy.Symbol('n')
-            # Model constants, these parameters are to be defined
-            sig_k = 1.0
-            sig_ep = 1.3
-            C_ep1 = 1.44
-            C_ep2 = 1.92
-            C_mu = 0.09
-            E = 9.793
-
-            # Turbulent Viscosity
-            nu_t = C_mu * (k ** 2) / (ep + 1e-4)
-
-            # Turbulent Production Term
-            P_k = nu_t * (
-                2 * (u.diff(x)) ** 2
-                + 2 * (v.diff(y)) ** 2
-                + (u.diff(y)) ** 2
-                + (v.diff(x)) ** 2
-                + 2 * u.diff(y) * v.diff(x)
-            )
-
-            # set equations
 
             # continuty equation
             continuty = u.diff(x) + v.diff(y) + w.diff(z)
@@ -221,40 +193,27 @@ class NavierStokes(PDE):
 
             # momentum x equation
             momentum_x = u.diff(t) + u * u.diff(x) + v * u.diff(
-                y) + w * u.diff(z) + p.diff(x) - ((nu + nu_t) * u.diff(x)).diff(x) - ((nu + nu_t) * u.diff(y)).diff(y) - ((nu + nu_t) * u.diff(z)).diff(z)
+                y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
+                    x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(x)
             momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
-                y) + w * v.diff(z) + p.diff(y) - ((nu + nu_t) * v.diff(x)).diff(x) - ((nu + nu_t) * v.diff(y)).diff(y) - ((nu + nu_t) * v.diff(z)).diff(z)
+                y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
+                    x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(y)
             momentum_z = w.diff(t) + u * w.diff(x) + v * w.diff(
-                y) + w * w.diff(z) + p.diff(z) - ((nu + nu_t) * w.diff(x)).diff(x) - ((nu + nu_t) * w.diff(y)).diff(y) - ((nu + nu_t) * w.diff(z)).diff(z)
-            k_equation = k.diff(t) + u * k.diff(x) + v * k.diff(y) + w * k.diff(z) - ((nu + nu_t / sig_k) * k.diff(x)).diff(x) - ((nu + nu_t / sig_k) * k.diff(y)).diff(y) - ((nu + nu_t / sig_k) * k.diff(z)).diff(z) - P_k + ep
-            ep_equation = ep.diff(t) + u * ep.diff(x) + v * ep.diff(y) - ((nu + nu_t / sig_ep) * ep.diff(x)).diff(x) - ((nu + nu_t / sig_ep) * ep.diff(y)).diff(y) - (C_ep1 * P_k - C_ep2 * ep) * ep / (k + 1e-3)
-
-            # momentum_x = u.diff(t) + u * u.diff(x) + v * u.diff(
-            #     y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
-            #         x) - nu / rho * u.diff(y).diff(y) - nu / rho * u.diff(
-            #             z).diff(z) + 1.0 / rho * p.diff(x)
-            # momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
-            #     y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
-            #         x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
-            #             z).diff(z) + 1.0 / rho * p.diff(y)
-            # momentum_z = w.diff(t) + u * w.diff(x) + v * w.diff(
-            #     y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
-            #         x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
-            #             z).diff(z) + 1.0 / rho * p.diff(z)
+                y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
+                    x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(z)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
             momentum_z_rhs = 0
-            k_equation_rhs = 0
-            ep_equation_rhs = 0
 
-            super(NavierStokes, self).__init__([t, x, y, z], [u, v, w, p, k, ep],
+            super(NavierStokes, self).__init__([t, x, y, z], [u, v, w, p],
                                                weight)
             self.add_equation(continuty, continuty_rhs)
             self.add_equation(momentum_x, momentum_x_rhs)
             self.add_equation(momentum_y, momentum_y_rhs)
             self.add_equation(momentum_z, momentum_z_rhs)
-            self.add_equation(k_equation, k_equation_rhs)
-            self.add_equation(ep_equation, ep_equation_rhs)
 
         # parameter list
         self.nu = nu

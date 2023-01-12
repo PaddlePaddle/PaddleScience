@@ -15,3 +15,4 @@
 from .rectangular import Rectangular, Cube, CircleInRectangular, CylinderInCube
 from .polydata import PolyData
 from .geometry_discrete import GeometryDiscrete
+from .line import Line

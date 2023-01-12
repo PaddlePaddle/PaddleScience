@@ -13,5 +13,4 @@
 # limitations under the License.
 
 from .network_fc import FCNet
-from .grad_norm import GradNorm
 import paddle.nn.initializer as initializer

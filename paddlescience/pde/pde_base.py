@@ -233,7 +233,7 @@ class PDE:
                 bc_disc = bc[i].discretize(pde_disc.indvar)
                 pde_disc.bc[name].append(bc_disc)
 
-        # discritize r hs in equation for interior points
+        # discritize rhs in equation for interior points
         pde_disc.rhs_disc = dict()
         pde_disc.rhs_disc["interior"] = list()
         for rhs in pde_disc.rhs:
@@ -274,7 +274,6 @@ class PDE:
         # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
             points_b = pde_disc.geometry.boundary[name_b]
-            normal_b = pde_disc.geometry.normal[name_b]
 
             data = list()
             for n in range(len(points_b[0])):
@@ -294,10 +293,6 @@ class PDE:
                     b.rhs_disc = b.rhs(*data)
                 else:
                     b.rhs_disc = b.rhs
-
-            # boundary normal
-            for b in bc:
-                b.normal_disc = normal_b
 
         # discretize rhs in initial condition
         for ic in pde_disc.ic:

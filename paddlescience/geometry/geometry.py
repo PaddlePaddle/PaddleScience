@@ -38,13 +38,11 @@ class Geometry:
         Parameters:
             name (string): Boundary name
             criteria (lambda function): Lambda function to define boundary.
-            filename (string): Read mesh file to define boundary. The mesh file needs to meet two conditions: 1. It must be watertight. 2. It must be a `Triangular Mesh`.
 
         Example:
             >>> import paddlescience as psci
             >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
             >>> rec.add_boundary("top", criteria=lambda x, y : y==1.0) # top boundary
-            >>> rec.add_boundary("geo_boundary", filename="geo_boundary.stl")
         """
 
         if criteria != None:
@@ -98,11 +96,11 @@ class Geometry:
         if isinstance(tri_mesh, str):
             mesh_model = pv.read(tri_mesh)
         else:
-            mesh_model = tri_mesh.pv_mesh
+            mesh_model = tri_mesh
 
         # The mesh must be manifold and need to be triangulate
         if mesh_model.is_manifold is False and mesh_model.is_all_triangles is False:
-            assert 0, "The mesh must be watertight and need to be Triangulate mesh."
+            assert 0, "The mesh must be manifold and need to be triangulate."
 
         # The all the faces of mesh must be triangles
         faces_as_array = mesh_model.faces.reshape(
@@ -119,19 +117,19 @@ class Geometry:
         if isinstance(tri_mesh, str):
             mesh_model = pv.read(tri_mesh)
         else:
-            mesh_model = tri_mesh.pv_mesh
+            mesh_model = tri_mesh
 
         # TODO(liu-xiandong): Need to increase sampling points on the boundary
         return mesh_model.points
 
     def __sub__(self, other):
-        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other
+        self.tri_mesh['subtraction' + str(len(self.tri_mesh))] = other.pv_mesh
         return self
 
     # select boundaries from all points and construct disc geometry
-    def _mesh_to_geo_disc(self, points, padding=True, npoints_need=100):
+    def _mesh_to_geo_disc(self, points, padding=True):
 
-        geo_disc = GeometryDiscrete(geometry=self)
+        geo_disc = GeometryDiscrete()
 
         npoints = len(points)
 
@@ -158,7 +156,7 @@ class Geometry:
 
             # TODO: normal
             normal = self.normal[name]
-            normal_disc = normal
+            normal_disc = None
             geo_disc.normal[name] = normal_disc
 
         # boundary points defined by mesh_file
@@ -180,15 +178,9 @@ class Geometry:
         # extract remain points, i.e. interior points
         geo_disc.interior = points[flag_i, :]
 
-        # TODO: Note that the currently generated points are inaccurate 
-        # and will be fixed in the future
-
         # padding
         if padding:
             nproc = paddle.distributed.get_world_size()
             geo_disc.padding(nproc)
 
         return geo_disc
-
-    def _sampling_refinement(self, dist, npoints, geo=None):
-        pass

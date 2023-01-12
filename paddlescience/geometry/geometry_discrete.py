@@ -21,16 +21,13 @@ class GeometryDiscrete:
     Geometry Discrete
     """
 
-    def __init__(self, geometry=None):
+    def __init__(self):
 
         # TODO: data structure uniformation
         self.interior = None
         self.boundary = dict()
         self.normal = dict()
         self.user = None
-        self.geometry = None
-        if geometry is not None:
-            self.geometry = geometry
 
     def __str__(self):
         return "TODO: Print for DiscreteGeometry"
@@ -105,22 +102,3 @@ class GeometryDiscrete:
             subp.user = self.user[s:e, :]
 
         return subp
-
-    def boundary_refinement(self, name, dist, npoints):
-        """
-        Refinement of boundaries in geometry. The boundary `name` must be defined by the `filename` of the `add_boundary` function.
-        If `add_boundary` is called in the way of `criteria`, the boundary name cannot be refined.
-
-        Example:
-            >>> import paddlescience as psci
-            >>> rec = psci.geometry.Rectangular(origin=(0.0,0.0), extent=(1.0,1.0))
-            >>> geo.add_boundary(name="geo_boundary", filename="geo_boundary.stl")
-            >>> geo_disc = geo.discretize(method="quasi_sobol", npoints= 3000)
-            >>> geo_disc = geo_disc.boundary_refinement(name="geo_boundary", dist=1, npoints=20000)
-        """
-
-        refinement_points = self.geometry._sampling_refinement(
-            dist, npoints, self.geometry.tri_mesh[name])
-        self.interior = np.concatenate(
-            (self.interior, refinement_points), axis=0)
-        return self

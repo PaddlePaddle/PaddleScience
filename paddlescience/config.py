@@ -39,17 +39,11 @@ def get_dtype():
 
 
 def enable_visualdl():
-    """
-    Use visualdl.
-    """
     global _use_visualdl
     _use_visualdl = True
 
 
 def visualdl_enabled():
-    '''
-    Determine whether visualdl is enabled.
-    '''
     return _use_visualdl
 
 

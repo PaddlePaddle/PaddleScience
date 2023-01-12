@@ -74,7 +74,7 @@ class L2:
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None, params)
+                                          labels_attr, None)
 
             # TODO: simplify
             rhs_eq = labels_attr["equations"][i]["rhs"]
@@ -131,16 +131,9 @@ class L2:
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
-
-            normal_b = labels_attr["bc"][name_b][i]["normal"]
-            if type(normal_b) == LabelInt:
-                normal = labels[normal_b]
-            else:
-                normal = normal_b
-
             formula = pde.bc[name_b][i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, normal, params)
+                                          labels_attr, None)
 
             # TODO: simplify                                  
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
@@ -189,7 +182,7 @@ class L2:
         for i in range(len(pde.ic)):
             formula = pde.ic[i].formula
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None, params)
+                                          labels_attr, None)
 
             rhs_c = labels_attr["ic"][i]["rhs"]
             if type(rhs_c) == LabelInt:

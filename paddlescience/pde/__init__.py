@@ -15,5 +15,11 @@
 from .pde_base import PDE
 from .pde_laplace import Laplace
 from .pde_poisson import Poisson
-from .pde_navier_stokes import NavierStokes
-from .pde_plate_equilibrium import PlateEquilibrium
+
+# if using wf ns, select below
+# from .pde_navier_stokes import NavierStokes
+
+# if using idel ns, select below
+from .pde_navier_stokes_original import NavierStokes
+
+from .pde_euler_beam import EulerBeam

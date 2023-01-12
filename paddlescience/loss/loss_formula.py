@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
 
 import paddle
 import numpy as np
-from .loss_base import CompFormula, l2_norm_square
+from .loss_base import CompFormula, l2_norm_square, mse
 from ..labels import LabelInt
 from .. import config
 import copy
@@ -53,6 +53,7 @@ class FormulaLoss:
         floss._bclist = self._bclist + other._bclist
         floss._iclist = self._iclist + other._iclist
         floss._suplist = self._suplist + other._suplist
+
         floss._eqwgt = self._eqwgt + other._eqwgt
         floss._bcwgt = self._bcwgt + other._bcwgt
         floss._icwgt = self._icwgt + other._icwgt
@@ -113,9 +114,6 @@ class FormulaLoss:
         # compute outs, jacobian, hessian
         cmploss.compute_outs_der(input, bs)
 
-        # print(input)
-        # print(cmploss.outs[0:4,:])
-
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
@@ -127,7 +125,6 @@ class FormulaLoss:
 
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
-
             # TODO: simplify
             rhs_eq = labels_attr["equations"][i]["rhs"]
             if type(rhs_eq) == LabelInt:
@@ -138,10 +135,9 @@ class FormulaLoss:
             wgt = self._eqwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss += mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
-
+                loss += mse((rst - rhs), wgt)
         return loss, cmploss.outs
 
     # compute loss on one boundary
@@ -169,7 +165,7 @@ class FormulaLoss:
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
 
-            # TODO: simplify                                 
+            # TODO: simplify
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]
@@ -180,9 +176,9 @@ class FormulaLoss:
             wgt = self._bcwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss += mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
+                loss += mse((rst - rhs), wgt)
 
         return loss, cmploss.outs
 
@@ -213,11 +209,11 @@ class FormulaLoss:
                 rhs = rhs_c
 
             wgt = labels_attr["ic"][i]["weight"]
-            loss += l2_norm_square(rst - rhs, wgt)
+            loss += mse(rst - rhs, wgt)
 
         return loss, cmploss.outs
 
-    # compute loss on real data 
+    # compute loss on real data
     def data_loss(self,
                   pde,
                   net,
@@ -232,12 +228,22 @@ class FormulaLoss:
 
         # compute outs
         cmploss.compute_outs(input, bs)
-
+        # print(input.shape)
+        # print(input[:, 0].shape, input[:, 0].mean())
+        # print(input[:, 1].shape, input[:, 1].mean())
+        # print(input[:, 2].shape, input[:, 2].mean())
+        # print(input[:, 3].shape, input[:, 3].mean())
+        # exit(0)
+        # print(cmploss.outs.shape)
+        # exit()
         loss = 0.0
-        for i in range(len(pde.dvar)):
+        for i in range(len(pde.dvar) - 1):
+            # [u(t, x, y, z), v(t, x, y, z), w(t, x, y, z), p(t, x, y, z)]
             idx = labels_attr["data_next"][i]
+            # [[63916], [63916], [63916], [63916], [8000], [8000], [8000]]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            # print(f"data{i}.shape={data.shape}, data.mean={data.mean().item():.10f}")
+            loss += mse(cmploss.outs[:, i] - data)
             # TODO: p=2 p=1
 
         loss = self._supwgt[0] * loss
@@ -247,9 +253,9 @@ class FormulaLoss:
 def EqLoss(eq, netout=None):
     """
     Define equation loss
- 
+
     Parameters:
-        eq (pde.equation): Equation 
+        eq (pde.equation): Equation
         netout (optional): output of network
 
     Example
@@ -274,7 +280,7 @@ def EqLoss(eq, netout=None):
 def BcLoss(name, netout=None):
     """
     Define boundary loss
- 
+
     Parameters:
         name (string): boundary name
         netout (optional): output of network
@@ -301,9 +307,9 @@ def BcLoss(name, netout=None):
 def IcLoss(netout=None):
     """
     Define initial loss for time-dependent equation
- 
+
     Parameters:
-        netout (optional): output of network  
+        netout (optional): output of network
 
     Example:
         >>> import paddlescience as psci
@@ -327,10 +333,10 @@ def IcLoss(netout=None):
 def DataLoss(netout=None, ref=None):
     """
     Define supervised loss
- 
+
     Parameters:
         netout (optional): output of network
-        ref (numpy.ndarray or Tensor) : reference values on supervise points   
+        ref (numpy.ndarray or Tensor) : reference values on supervise points
 
     Example:
         >>> import paddlescience as psci

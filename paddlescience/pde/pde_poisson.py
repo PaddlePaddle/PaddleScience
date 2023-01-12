@@ -40,14 +40,7 @@ class Poisson(PDE):
 
     def __init__(self, dim=2, rhs=0.0, weight=1.0):
 
-        if dim == 1:
-            # independent and dependent variable
-            x = sympy.Symbol('x')
-            u = sympy.Function('u')(x)
-            super(Poisson, self).__init__([x], [u], weight)
-            self.add_equation(u.diff(x).diff(x), rhs)
-
-        elif dim == 2:
+        if dim == 2:
             # independent and dependent variable
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
