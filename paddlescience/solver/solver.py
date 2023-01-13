@@ -78,7 +78,7 @@ def loss_func(x, y):
 class Solver(object):
     """
     Solver
- 
+
     Parameters:
         pde(paddlescience.pde): The PDE used in the solver.
         algo(Algorithm): The algorithm used in the solver.
@@ -165,11 +165,11 @@ class Solver(object):
         # print([x.shape for x in inputs]) # [(150000, 4), (16605, 4), (12645, 4), (16125, 4), (63916, 4), (8000, 4)]
         # print(inputs_attr)
         # OrderedDict([
-        # ('interior', OrderedDict([('0', inputs_attr)])), 
-        # ('bc', OrderedDict([('inlet', inputs_attr), 
-        # ('cylinder', inputs_attr), 
-        # ('outlet', inputs_attr)])), 
-        # ('ic', OrderedDict([('0', inputs_attr)])), 
+        # ('interior', OrderedDict([('0', inputs_attr)])),
+        # ('bc', OrderedDict([('inlet', inputs_attr),
+        # ('cylinder', inputs_attr),
+        # ('outlet', inputs_attr)])),
+        # ('ic', OrderedDict([('0', inputs_attr)])),
         # ('user', OrderedDict([('0', inputs_attr)]))])
         self.inputs = inputs
         self.inputs_attr = inputs_attr
@@ -179,7 +179,7 @@ class Solver(object):
             self.labels = labels
             self.labels_attr = labels_attr
 
-    # solve static 
+    # solve static
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
@@ -194,12 +194,12 @@ class Solver(object):
         # convert inputs to tensor
         for i in range(ninputs):
             inputs[i] = paddle.to_tensor(
-                inputs[i], dtype=self._dtype, stop_gradient=False)
+                inputs[i], dtype=self._dtype, stop_gradient=True)
 
         # convert label to tensor
         for i in range(nlabels):
             labels[i] = paddle.to_tensor(
-                labels[i], dtype=self._dtype, stop_gradient=False)
+                labels[i], dtype=self._dtype, stop_gradient=True)
 
         inputs_labels = inputs + labels  # tmp to one list
 
@@ -238,12 +238,22 @@ class Solver(object):
                 self.opt.step()
                 self.opt.clear_grad()
 
-                print("epoch: " + str(epoch + 1), " loss:",
-                      loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
-                      " bc loss:", loss_details[1].numpy()[0], " ic loss:",
-                      loss_details[2].numpy()[0], " data loss:",
-                      loss_details[3].numpy()[0])
-
+                # print("epoch: " + str(epoch + 1), " loss:",
+                #       loss.numpy()[0], " eq loss:", loss_details[0].numpy()[0],
+                #       " bc loss:", loss_details[1].numpy()[0], " ic loss:",
+                #       loss_details[2].numpy()[0], " data loss:",
+                #       loss_details[3].numpy()[0])
+                print(
+                    f"epoch: {epoch + 1} "
+                    f"lr: {self.opt.get_lr():.5f} "
+                    f"loss: {float(loss):.8f} "
+                    f"eq loss: {float(loss_details[0]):.8f} "
+                    f"bc loss: {float(loss_details[1]):.8f} "
+                    f"ic loss: {float(loss_details[2]):.8f} "
+                    f"data loss: {float(loss_details[3]):.8f}"
+                )
+                if not isinstance(self.opt._learning_rate, float):
+                    self.opt._learning_rate.step()
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
@@ -361,7 +371,7 @@ class Solver(object):
 
     # predict dynamic
     def __predict_dynamic(self):
-        # create inputs 
+        # create inputs
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
 
         # convert inputs to tensor
@@ -412,7 +422,7 @@ class Solver(object):
                                              self.startup_program):
 
                 # dynamic mode: make network in net's constructor
-                # static  mode: make network here 
+                # static  mode: make network here
                 self.algo.net.make_network()
 
                 # inputs

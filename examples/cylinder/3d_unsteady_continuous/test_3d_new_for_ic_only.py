@@ -217,7 +217,7 @@ np.random.seed(42)
 # time arraep
 ic_t = 200000
 t_start = 200050
-t_end = 200100
+t_end = 200050
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
 time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
@@ -227,13 +227,13 @@ time_array.sort()
 print(f"time_num = {time_num}, time_array = {time_array}")
 
 # weight of losses - inlet, outlet, cylinder, top wall, bottom wall, equation, initial condition, supervised data
-inlet_wgt = 2.0
+inlet_wgt = 10.0
 outlet_wgt = 1.0
-cylinder_wgt = 5.0
-top_wgt = 2.0
-bottom_wgt = 2.0
-eq_wgt= 2.0
-ic_wgt = 5.0
+cylinder_wgt = 10.0
+top_wgt = 1.0
+bottom_wgt = 1.0
+eq_wgt= 1.0
+ic_wgt = 10.0
 sup_wgt = 10.0
 
 # initial value
@@ -558,4 +558,4 @@ i_z = i_z * 320
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_13_new", time_array=time_array, cord=cord, data=solution)
+psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_13_new_ic_", time_array=time_array, cord=cord, data=solution)

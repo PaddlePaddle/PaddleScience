@@ -1,12 +1,11 @@
 numpy
-scipy
+scipy==1.7.3
 sympy
 matplotlib
 vtk
 pyevtk
 pandas
 wget
-scipy
 visualdl
 pyvista
 pysdf

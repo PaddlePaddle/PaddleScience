@@ -141,8 +141,9 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
     # points's shape is [ndims][npoints]
     # npoints = len(points_vtk[0])
 
-    nt = 1 if (time_array is None) else len(time_array) - 1
-    print(time_array, nt)
+    nt = 1 if (time_array is None) else len(time_array)
+    print(f"nt = {nt}")
+
     # nprocs = paddle.distributed.get_world_size()
     nrank = paddle.distributed.get_rank()
     # data
@@ -151,8 +152,7 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
     elif type(data) == types.LambdaType:
         data_vtk = dict()
         if ndims == 3:
-            data_vtk["data"] = data(points_vtk[0], points_vtk[1],
-                                    points_vtk[2])
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1], points_vtk[2])
         elif ndims == 2:
             data_vtk["data"] = data(points_vtk[0], points_vtk[1])
     else:
@@ -307,7 +307,7 @@ def __concatenate_data(outs, nt=1):
     vtkname = ["u1", "u2", "u3", "u4", "u5"]
 
     # to numpy
-    npouts = list()
+    npouts = []
     for out in outs:
         if type(out) != np.ndarray:
             npouts.append(out.numpy())  # tenor to array
@@ -316,19 +316,24 @@ def __concatenate_data(outs, nt=1):
 
     # concatenate data
     ndata = outs[0].shape[1] # 4
-    data_vtk = list()  # list[dict[str, np.ndarray]]
+    data_vtk = []  # list[dict[str, np.ndarray]]
 
     for t in range(nt):
         data_t = {}
         for i in range(ndata):
-            x = list()
+            x = []
             for out in npouts:
                 s = int(len(out) / nt) * t
                 e = int(len(out) / nt) * (t + 1)
                 x.append(out[s:e, i])
             data_t[vtkname[i]] = np.concatenate(x, axis=0)
-
         data_vtk.append(data_t)
+    # for u in vtkname[:-1]:
+    #     print(f"{np.allclose(data_vtk[0][u], data_vtk[1][u])} {(data_vtk[0][u] - data_vtk[1][u]).mean().item():.5f}")
+    #     print(f"{np.allclose(data_vtk[0][u], data_vtk[2][u])} {(data_vtk[0][u] - data_vtk[2][u]).mean().item():.5f}")
+    #     print(f"{np.allclose(data_vtk[0][u], data_vtk[3][u])} {(data_vtk[0][u] - data_vtk[3][u]).mean().item():.5f}")
+    #     print(f"{np.allclose(data_vtk[0][u], data_vtk[4][u])} {(data_vtk[0][u] - data_vtk[4][u]).mean().item():.5f}")
+    # exit()
     # [(t1){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
     #  (t2){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
     #  (t3){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
