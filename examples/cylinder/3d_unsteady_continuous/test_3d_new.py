@@ -262,8 +262,8 @@ sup_w = txyz_uvwpe_s[:, 6]; print(f"sup_w={sup_w.shape} {sup_w.mean().item():.10
 sup_p = txyz_uvwpe_s[:, 7]; print(f"sup_p={sup_p.shape} {sup_p.mean().item():.10f}")
 
 # num points to sample per GPU
-num_points = 30000
-# num_points = 15000
+# num_points = 30000
+num_points = 15000
 # discretize node by geo
 inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_step=time_num, nr_points=num_points)
 

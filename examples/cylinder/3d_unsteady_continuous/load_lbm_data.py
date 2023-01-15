@@ -159,9 +159,9 @@ import math
 import copy
 from pyevtk.hl import pointsToVTK
 
-dir_ic = '/workspace/hesensen/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/ic_data/'
+dir_ic = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/ic_data'
 # dir_sp = '/home/aistudio/work/data/supervised_data/'
-dir_sp_mode1 = '/workspace/hesensen/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/new_sp_data/'
+dir_sp_mode1 = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/new_sp_data'
 
 #file_pattern = 'point_70.000000_9.000000_27.000000.dat'
 

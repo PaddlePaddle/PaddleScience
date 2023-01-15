@@ -10,3 +10,5 @@ visualdl
 pyvista
 pysdf
 pyyaml
+symengine
+chaospy
