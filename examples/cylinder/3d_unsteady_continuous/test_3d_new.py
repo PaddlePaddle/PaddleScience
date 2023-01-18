@@ -217,7 +217,7 @@ np.random.seed(42)
 # time arraep
 ic_t = 200000
 t_start = 200050
-t_end = 200100
+t_end = 200050
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
 time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)

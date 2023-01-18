@@ -159,9 +159,10 @@ import math
 import copy
 from pyevtk.hl import pointsToVTK
 
-dir_ic = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/ic_data'
-# dir_sp = '/home/aistudio/work/data/supervised_data/'
-dir_sp_mode1 = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/new_sp_data'
+dir_ic = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/ic_data/'
+# dir_ic = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/ic_data_hss/'
+dir_sp_mode1 = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/new_sp_data/'
+# dir_sp_mode1 = '/workspace/chenqipeng/PaddleScience_cqp/examples/cylinder/3d_unsteady_continuous/data/new_sp_data_hss/'
 
 #file_pattern = 'point_70.000000_9.000000_27.000000.dat'
 
@@ -195,13 +196,14 @@ def load_ic_data(t):
     flow_list = []
     flow_array = None
     for file_path in list_of_files:
-        with open(file_path) as fp:
+        with open(file_path, encoding="utf-8") as fp:
             line = fp.readline()
             data_list = line.strip('\n').split(',')
         flow_list.append(data_list)
     flow_array = np.array(flow_list, dtype=float)
 
     # Set ic t=0
+    print(type(flow_array))
     flow_array[:, 0] = 0
 
     # Normalize x,y,z to [0,1]
