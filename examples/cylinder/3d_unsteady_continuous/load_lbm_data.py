@@ -213,8 +213,8 @@ def load_ic_data(t):
         normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
-    # flow_array[:,7] = flow_array[:,7] - pressure_base
-    flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
+    flow_array[:,7] = flow_array[:,7] - pressure_base
+    # flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
 
     flow_array = flow_array.astype(np.float32)
     # txyzuvwpe
@@ -262,7 +262,8 @@ def load_supervised_data(t_start, t_end, t_step, t_ic, num_points):
         normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
-    flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
+    flow_array[:,7] = flow_array[:,7] - pressure_base
+    # flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
 
     flow_array = flow_array.astype(np.float32)
 

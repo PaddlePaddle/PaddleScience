@@ -214,6 +214,8 @@ paddle.seed(42)
 np.random.seed(42)
 # paddle.enable_static()
 
+domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
+
 # time arraep
 ic_t = 200000
 t_start = 200050
@@ -232,7 +234,7 @@ outlet_wgt = 1.0
 cylinder_wgt = 5.0
 top_wgt = 2.0
 bottom_wgt = 2.0
-eq_wgt= 2.0
+eq_wgt= 5.0
 ic_wgt = 5.0
 sup_wgt = 10.0
 
@@ -315,11 +317,11 @@ inputic = np.stack((init_t, init_x, init_y, init_z), axis=1)
 inputsup = np.stack((sup_t, sup_x, sup_y, sup_z), axis=1)
 refsup = np.stack((sup_u, sup_v, sup_w), axis=1)
 
-# N-S, Re=3900, D=80, u=1, nu=8/390
-pde = psci.pde.NavierStokes(nu=0.0205, rho=1.0, dim=3, time_dependent=True)
+# N-S, Re=3900, D=80, u=0.1, nu=80/3900; Re = rho u D / nu, nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
+pde = psci.pde.NavierStokes(nu=0.00205, rho=1.0, dim=3, time_dependent=True)
 
 # set bounday condition
-bc_inlet_u = psci.bc.Dirichlet("u", rhs=1.0)
+bc_inlet_u = psci.bc.Dirichlet("u", rhs=0.1)
 bc_inlet_v = psci.bc.Dirichlet("v", rhs=0.0)
 bc_inlet_w = psci.bc.Dirichlet("w", rhs=0.0)
 bc_cylinder_u = psci.bc.Dirichlet("u", rhs=0.0)
@@ -552,9 +554,9 @@ i_y = i_y.astype("float32")
 i_z = i_z.astype("float32")
 
 # denormalize back
-i_x = i_x * 1600
-i_y = i_y * 800
-i_z = i_z * 320
+i_x = i_x * domain_coordinate_interval_dict[1][1]
+i_y = i_y * domain_coordinate_interval_dict[2][1]
+i_z = i_z * domain_coordinate_interval_dict[3][1]
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
