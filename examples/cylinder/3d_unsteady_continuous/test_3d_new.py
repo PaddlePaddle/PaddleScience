@@ -332,8 +332,8 @@ refsup = np.stack((sup_u, sup_v, sup_w), axis=1)
 # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
 pde = psci.pde.NavierStokes(nu=0.00205, rho=1.0, dim=3, time_dependent=True)
 
-# set bounday condition
-bc_inlet_u = psci.bc.Dirichlet("u", rhs=0.1)
+# set bounday condition (PS: 按照无量纲设置)
+bc_inlet_u = psci.bc.Dirichlet("u", rhs=1.0)
 bc_inlet_v = psci.bc.Dirichlet("v", rhs=0.0)
 bc_inlet_w = psci.bc.Dirichlet("w", rhs=0.0)
 bc_cylinder_u = psci.bc.Dirichlet("u", rhs=0.0)
@@ -362,7 +362,7 @@ pde.set_ic(ic_u, ic_v, ic_w)
 # Network
 net = psci.network.FCNet(
     num_ins=4, num_outs=4, num_layers=6, hidden_size=50, activation="tanh")
-net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
+# net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
 
 outeq = net(inputeq)
 outbc1 = net(inputbc1)
@@ -556,7 +556,7 @@ solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
 solution = solver.solve(num_epoch=num_epoch)
-solution = solver.predict()
+# solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
@@ -577,10 +577,10 @@ cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 
 for n in len(solution):
     for i in solution[0].shape[1]:
-        solution[n][:][4] = solution[n][:][4] * uvw_star
-        solution[n][:][5] = solution[n][:][5] * uvw_star
-        solution[n][:][6] = solution[n][:][6] * uvw_star
-        solution[n][:][7] = solution[n][:][7] * p_star
+        solution[n][:][3:4] = solution[n][:][3:4] * uvw_star
+        solution[n][:][4:5] = solution[n][:][4:5] * uvw_star
+        solution[n][:][5:6] = solution[n][:][5:6] * uvw_star
+        solution[n][:][6:7] = solution[n][:][6:7] * p_star
 
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
 psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_19_new", time_array=time_array, cord=cord, data=solution)
