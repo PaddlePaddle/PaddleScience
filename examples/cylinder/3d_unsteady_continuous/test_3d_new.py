@@ -216,6 +216,18 @@ np.random.seed(42)
 
 domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
 
+# Dimensionless Trick for Navier Stokes equations
+Re = 3900
+U0 = 0.1
+Dcylinder = 80.0
+rho = 1.0
+nu = rho * U0 * Dcylinder / Re
+
+t_star = Dcylinder / U0 # 800
+xyz_star = Dcylinder    # 80
+uvw_star = U0           # 0.1
+p_star = rho * U0 * U0  # 0.01
+
 # time arraep
 ic_t = 200000
 t_start = 200050
@@ -267,43 +279,43 @@ sup_p = txyz_uvwpe_s[:, 7]; print(f"sup_p={sup_p.shape} {sup_p.mean().item():.10
 # num_points = 30000
 num_points = 15000
 # discretize node by geo
-inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_step=time_num, nr_points=num_points)
+inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_num=time_num, t_step=t_step, nr_points=num_points)
 
 # interior nodes discre
-i_t = interior_txyz[:, 0]; print(f"i_t={i_t.shape} {i_t.mean().item():.10f}")
-i_x = interior_txyz[:, 1]; print(f"i_x={i_x.shape} {i_x.mean().item():.10f}")
-i_y = interior_txyz[:, 2]; print(f"i_y={i_y.shape} {i_y.mean().item():.10f}")
-i_z = interior_txyz[:, 3]; print(f"i_z={i_z.shape} {i_z.mean().item():.10f}")
+i_t = interior_txyz[:, 0] / t_star;     print(f"i_t={i_t.shape} {i_t.mean().item():.10f}")
+i_x = interior_txyz[:, 1] / xyz_star;   print(f"i_x={i_x.shape} {i_x.mean().item():.10f}")
+i_y = interior_txyz[:, 2] / xyz_star;   print(f"i_y={i_y.shape} {i_y.mean().item():.10f}")
+i_z = interior_txyz[:, 3] / xyz_star;   print(f"i_z={i_z.shape} {i_z.mean().item():.10f}")
 
 # bc inlet nodes discre
-b_inlet_t = inlet_txyz[:, 0]; print(f"b_inlet_t={b_inlet_t.shape} {b_inlet_t.mean().item():.10f}")
-b_inlet_x = inlet_txyz[:, 1]; print(f"b_inlet_x={b_inlet_x.shape} {b_inlet_x.mean().item():.10f}")
-b_inlet_y = inlet_txyz[:, 2]; print(f"b_inlet_y={b_inlet_y.shape} {b_inlet_y.mean().item():.10f}")
-b_inlet_z = inlet_txyz[:, 3]; print(f"b_inlet_z={b_inlet_z.shape} {b_inlet_z.mean().item():.10f}")
+b_inlet_t = inlet_txyz[:, 0] / t_star;   print(f"b_inlet_t={b_inlet_t.shape} {b_inlet_t.mean().item():.10f}")
+b_inlet_x = inlet_txyz[:, 1] / xyz_star; print(f"b_inlet_x={b_inlet_x.shape} {b_inlet_x.mean().item():.10f}")
+b_inlet_y = inlet_txyz[:, 2] / xyz_star; print(f"b_inlet_y={b_inlet_y.shape} {b_inlet_y.mean().item():.10f}")
+b_inlet_z = inlet_txyz[:, 3] / xyz_star; print(f"b_inlet_z={b_inlet_z.shape} {b_inlet_z.mean().item():.10f}")
 
 # bc outlet nodes discre
-b_outlet_t = outlet_txyz[:, 0]; print(f"b_outlet_t={b_outlet_t.shape} {b_outlet_t.mean().item():.10f}")
-b_outlet_x = outlet_txyz[:, 1]; print(f"b_outlet_x={b_outlet_x.shape} {b_outlet_x.mean().item():.10f}")
-b_outlet_y = outlet_txyz[:, 2]; print(f"b_outlet_y={b_outlet_y.shape} {b_outlet_y.mean().item():.10f}")
-b_outlet_z = outlet_txyz[:, 3]; print(f"b_outlet_z={b_outlet_z.shape} {b_outlet_z.mean().item():.10f}")
+b_outlet_t = outlet_txyz[:, 0] / t_star;   print(f"b_outlet_t={b_outlet_t.shape} {b_outlet_t.mean().item():.10f}")
+b_outlet_x = outlet_txyz[:, 1] / xyz_star; print(f"b_outlet_x={b_outlet_x.shape} {b_outlet_x.mean().item():.10f}")
+b_outlet_y = outlet_txyz[:, 2] / xyz_star; print(f"b_outlet_y={b_outlet_y.shape} {b_outlet_y.mean().item():.10f}")
+b_outlet_z = outlet_txyz[:, 3] / xyz_star; print(f"b_outlet_z={b_outlet_z.shape} {b_outlet_z.mean().item():.10f}")
 
 # bc cylinder nodes discre
-b_cylinder_t = cylinder_txyz[:, 0]; print(f"b_cylinder_t={b_cylinder_t.shape} {b_cylinder_t.mean().item():.10f}")
-b_cylinder_x = cylinder_txyz[:, 1]; print(f"b_cylinder_x={b_cylinder_x.shape} {b_cylinder_x.mean().item():.10f}")
-b_cylinder_y = cylinder_txyz[:, 2]; print(f"b_cylinder_y={b_cylinder_y.shape} {b_cylinder_y.mean().item():.10f}")
-b_cylinder_z = cylinder_txyz[:, 3]; print(f"b_cylinder_z={b_cylinder_z.shape} {b_cylinder_z.mean().item():.10f}")
+b_cylinder_t = cylinder_txyz[:, 0] / t_star;   print(f"b_cylinder_t={b_cylinder_t.shape} {b_cylinder_t.mean().item():.10f}")
+b_cylinder_x = cylinder_txyz[:, 1] / xyz_star; print(f"b_cylinder_x={b_cylinder_x.shape} {b_cylinder_x.mean().item():.10f}")
+b_cylinder_y = cylinder_txyz[:, 2] / xyz_star; print(f"b_cylinder_y={b_cylinder_y.shape} {b_cylinder_y.mean().item():.10f}")
+b_cylinder_z = cylinder_txyz[:, 3] / xyz_star; print(f"b_cylinder_z={b_cylinder_z.shape} {b_cylinder_z.mean().item():.10f}")
 
 # bc-top nodes discre
-b_top_t = top_txyz[:, 0]; print(f"b_top_t={b_top_t.shape} {b_top_t.mean().item():.10f}") # value = [1, 2, 3, 4, 5]
-b_top_x = top_txyz[:, 1]; print(f"b_top_x={b_top_x.shape} {b_top_x.mean().item():.10f}")
-b_top_y = top_txyz[:, 2]; print(f"b_top_y={b_top_y.shape} {b_top_y.mean().item():.10f}")
-b_top_z = top_txyz[:, 3]; print(f"b_top_z={b_top_z.shape} {b_top_z.mean().item():.10f}")
+b_top_t = top_txyz[:, 0] / t_star;   print(f"b_top_t={b_top_t.shape} {b_top_t.mean().item():.10f}") # value = [1, 2, 3, 4, 5]
+b_top_x = top_txyz[:, 1] / xyz_star; print(f"b_top_x={b_top_x.shape} {b_top_x.mean().item():.10f}")
+b_top_y = top_txyz[:, 2] / xyz_star; print(f"b_top_y={b_top_y.shape} {b_top_y.mean().item():.10f}")
+b_top_z = top_txyz[:, 3] / xyz_star; print(f"b_top_z={b_top_z.shape} {b_top_z.mean().item():.10f}")
 
 # bc-bottom nodes discre
-b_bottom_t = bottom_txyz[:, 0]; print(f"b_bottom_t={b_bottom_t.shape} {b_bottom_t.mean().item():.10f}") # value = [1, 2, 3, 4, 5]
-b_bottom_x = bottom_txyz[:, 1]; print(f"b_bottom_x={b_bottom_x.shape} {b_bottom_x.mean().item():.10f}")
-b_bottom_y = bottom_txyz[:, 2]; print(f"b_bottom_y={b_bottom_y.shape} {b_bottom_y.mean().item():.10f}")
-b_bottom_z = bottom_txyz[:, 3]; print(f"b_bottom_z={b_bottom_z.shape} {b_bottom_z.mean().item():.10f}")
+b_bottom_t = bottom_txyz[:, 0] / t_star;   print(f"b_bottom_t={b_bottom_t.shape} {b_bottom_t.mean().item():.10f}") # value = [1, 2, 3, 4, 5]
+b_bottom_x = bottom_txyz[:, 1] / xyz_star; print(f"b_bottom_x={b_bottom_x.shape} {b_bottom_x.mean().item():.10f}")
+b_bottom_y = bottom_txyz[:, 2] / xyz_star; print(f"b_bottom_y={b_bottom_y.shape} {b_bottom_y.mean().item():.10f}")
+b_bottom_z = bottom_txyz[:, 3] / xyz_star; print(f"b_bottom_z={b_bottom_z.shape} {b_bottom_z.mean().item():.10f}")
 
 # bc & interior nodes for nn
 inputeq = np.stack((i_t, i_x, i_y, i_z), axis=1)
@@ -543,7 +555,7 @@ opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-# solution = solver.solve(num_epoch=num_epoch)
+solution = solver.solve(num_epoch=num_epoch)
 solution = solver.predict()
 
 # print shape of every subset points' output
@@ -557,10 +569,18 @@ i_y = i_y.astype("float32")
 i_z = i_z.astype("float32")
 
 # denormalize back
-i_x = i_x * domain_coordinate_interval_dict[1][1]
-i_y = i_y * domain_coordinate_interval_dict[2][1]
-i_z = i_z * domain_coordinate_interval_dict[3][1]
+i_x = i_x * xyz_star
+i_y = i_y * xyz_star
+i_z = i_z * xyz_star
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
+
+for n in len(solution):
+    for i in solution[0].shape[1]:
+        solution[n][:][4] = solution[n][:][4] * uvw_star
+        solution[n][:][5] = solution[n][:][5] * uvw_star
+        solution[n][:][6] = solution[n][:][6] * uvw_star
+        solution[n][:][7] = solution[n][:][7] * p_star
+
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
 psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_19_new", time_array=time_array, cord=cord, data=solution)

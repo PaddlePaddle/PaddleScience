@@ -172,6 +172,10 @@ pressure_base = 101325.0
 # time_step = 1 # need change to 0.1
 time_start_per_file = 200000
 domain_coordinate_interval_dict = {1: [0,1600], 2: [0,800], 3: [0,320]}
+t_star = 800.0
+xyz_star = 80.0
+uvw_star = 0.1
+p_star = 0.01
 
 def normalize(max_domain, min_domain, array, index):
     #array_min = min(array[:,index])
@@ -213,20 +217,20 @@ def load_ic_data(t):
         normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
-    flow_array[:,7] = flow_array[:,7] - pressure_base
+    flow_array[:, 7] = flow_array[:, 7] - pressure_base
     # flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
 
     flow_array = flow_array.astype(np.float32)
     # txyzuvwpe
     print("IC data shape: {}".format(flow_array.shape))
-    t = flow_array[:, 0].reshape((-1, 1))
-    x = flow_array[:, 1].reshape((-1, 1))
-    y = flow_array[:, 2].reshape((-1, 1))
-    z = flow_array[:, 3].reshape((-1, 1))
-    u = flow_array[:, 4].reshape((-1, 1))
-    v = flow_array[:, 5].reshape((-1, 1))
-    w = flow_array[:, 6].reshape((-1, 1))
-    p = flow_array[:, 7].reshape((-1, 1))
+    t = flow_array[:, 0].reshape((-1, 1)) / t_star
+    x = flow_array[:, 1].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[1][1]
+    y = flow_array[:, 2].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[2][1]
+    z = flow_array[:, 3].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[3][1]
+    u = flow_array[:, 4].reshape((-1, 1)) / uvw_star
+    v = flow_array[:, 5].reshape((-1, 1)) / uvw_star
+    w = flow_array[:, 6].reshape((-1, 1)) / uvw_star
+    p = flow_array[:, 7].reshape((-1, 1)) / p_star
     #return np.transpose(flow_array.astype(np.float32))
     return np.concatenate([t, x, y, z, u, v, w, p], axis=1)
     # return t, x, y, z, u, v, w, p
@@ -262,21 +266,22 @@ def load_supervised_data(t_start, t_end, t_step, t_ic, num_points):
         normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
-    flow_array[:,7] = flow_array[:,7] - pressure_base
+    flow_array[:, 7] = flow_array[:, 7] - pressure_base
     # flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
 
     flow_array = flow_array.astype(np.float32)
 
     # txyzuvwpe
     print("Supervised data shape: {}".format(flow_array.shape))
-    t = (flow_array[:, 0].reshape((-1, 1)) - t_ic) / t_step
-    x = flow_array[:, 1].reshape((-1, 1))
-    y = flow_array[:, 2].reshape((-1, 1))
-    z = flow_array[:, 3].reshape((-1, 1))
-    u = flow_array[:, 4].reshape((-1, 1))
-    v = flow_array[:, 5].reshape((-1, 1))
-    w = flow_array[:, 6].reshape((-1, 1))
-    p = flow_array[:, 7].reshape((-1, 1))
+    # t = (flow_array[:, 0].reshape((-1, 1)) - t_ic) / t_step
+    t = (flow_array[:, 0].reshape((-1, 1)) - t_ic) / t_star
+    x = flow_array[:, 1].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[1][1]
+    y = flow_array[:, 2].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[2][1]
+    z = flow_array[:, 3].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[3][1]
+    u = flow_array[:, 4].reshape((-1, 1)) / uvw_star
+    v = flow_array[:, 5].reshape((-1, 1)) / uvw_star
+    w = flow_array[:, 6].reshape((-1, 1)) / uvw_star
+    p = flow_array[:, 7].reshape((-1, 1)) / p_star
     return np.concatenate([t, x, y, z, u, v, w, p], axis=1)
     # return t, x, y, z, u, v, w, p
 

@@ -21,8 +21,6 @@ import numpy as np
 
 __all__ = ['NavierStokes']
 
-dci_dict = {0:[50], 1:[0,1600], 2:[0,800], 3:[0,320]}
-
 class NavierStokes(PDE):
     """
     Navier-Stokes equation
@@ -189,22 +187,22 @@ class NavierStokes(PDE):
             self.normal = sympy.Symbol('n')
 
             # continuty equation
-            continuty = u.diff(x) / dci_dict[1][1] + v.diff(y) / dci_dict[2][1] + w.diff(z) / dci_dict[3][1]
+            continuty = u.diff(x) + v.diff(y) + w.diff(z)
             continuty_rhs = 0
 
             # momentum x equation
-            momentum_x = u.diff(t) / dci_dict[0][0] + u * u.diff(x) / dci_dict[1][1] + v * u.diff(
-                y) / dci_dict[2][1] + w * u.diff(z) / dci_dict[3][1] - nu / rho * u.diff(x).diff(
-                    x) / (dci_dict[1][1]**2) - nu / rho * u.diff(y).diff(y) / (dci_dict[2][1]**2) - nu / rho * u.diff(
-                        z).diff(z) / (dci_dict[3][1]**2) + 1.0 / rho * p.diff(x) / dci_dict[1][1]
-            momentum_y = v.diff(t) / dci_dict[0][0] + u * v.diff(x) / dci_dict[1][1] + v * v.diff(
-                y) / dci_dict[2][1] + w * v.diff(z) / dci_dict[3][1] - nu / rho * v.diff(x).diff(
-                    x) / (dci_dict[1][1]**2) - nu / rho * v.diff(y).diff(y) / (dci_dict[2][1]**2) - nu / rho * v.diff(
-                        z).diff(z) / (dci_dict[3][1]**2) + 1.0 / rho * p.diff(y) / dci_dict[2][1]
-            momentum_z = w.diff(t) / dci_dict[0][0] + u * w.diff(x) / dci_dict[1][1] + v * w.diff(
-                y) / dci_dict[2][1] + w * w.diff(z) / dci_dict[3][1] - nu / rho * w.diff(x).diff(
-                    x) / (dci_dict[1][1]**2) - nu / rho * w.diff(y).diff(y) / (dci_dict[2][1]**2) - nu / rho * w.diff(
-                        z).diff(z) / (dci_dict[3][1]**2) + 1.0 / rho * p.diff(z) / dci_dict[3][1]
+            momentum_x = u.diff(t) + u * u.diff(x) + v * u.diff(
+                y) + w * u.diff(z) - nu / rho * u.diff(x).diff(
+                    x) - nu / rho * u.diff(y).diff(y) / - nu / rho * u.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(x)
+            momentum_y = v.diff(t) + u * v.diff(x) + v * v.diff(
+                y) + w * v.diff(z) - nu / rho * v.diff(x).diff(
+                    x) - nu / rho * v.diff(y).diff(y) - nu / rho * v.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(y)
+            momentum_z = w.diff(t) + u * w.diff(x) + v * w.diff(
+                y) + w * w.diff(z) - nu / rho * w.diff(x).diff(
+                    x) - nu / rho * w.diff(y).diff(y) - nu / rho * w.diff(
+                        z).diff(z) + 1.0 / rho * p.diff(z)
             momentum_x_rhs = 0
             momentum_y_rhs = 0
             momentum_z_rhs = 0
