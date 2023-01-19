@@ -219,7 +219,7 @@ domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
 # time arraep
 ic_t = 200000
 t_start = 200050
-t_end = 200050
+t_end = 200250
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
 time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
@@ -234,7 +234,7 @@ outlet_wgt = 1.0
 cylinder_wgt = 5.0
 top_wgt = 2.0
 bottom_wgt = 2.0
-eq_wgt= 5.0
+eq_wgt= 10.0
 ic_wgt = 5.0
 sup_wgt = 10.0
 
@@ -317,7 +317,7 @@ inputic = np.stack((init_t, init_x, init_y, init_z), axis=1)
 inputsup = np.stack((sup_t, sup_x, sup_y, sup_z), axis=1)
 refsup = np.stack((sup_u, sup_v, sup_w), axis=1)
 
-# N-S, Re=3900, D=80, u=0.1, nu=80/3900; Re = rho u D / nu, nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
+# N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
 pde = psci.pde.NavierStokes(nu=0.00205, rho=1.0, dim=3, time_dependent=True)
 
 # set bounday condition
@@ -350,6 +350,7 @@ pde.set_ic(ic_u, ic_v, ic_w)
 # Network
 net = psci.network.FCNet(
     num_ins=4, num_outs=4, num_layers=6, hidden_size=50, activation="tanh")
+net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
 
 outeq = net(inputeq)
 outbc1 = net(inputbc1)
@@ -380,7 +381,7 @@ lossic = psci.loss.IcLoss(netout=outic)
 losssup = psci.loss.DataLoss(netout=outsup[0:3], ref=refsup)
 
 # total loss
-loss = losseq1 * eq_wgt+ losseq2 * eq_wgt + losseq3 * eq_wgt + losseq4 * eq_wgt + \
+loss = losseq1 * eq_wgt + losseq2 * eq_wgt + losseq3 * eq_wgt + losseq4 * eq_wgt + \
     lossbc1 * inlet_wgt + \
     lossbc2 * outlet_wgt + \
     lossbc3 * cylinder_wgt + \
@@ -388,6 +389,7 @@ loss = losseq1 * eq_wgt+ losseq2 * eq_wgt + losseq3 * eq_wgt + losseq4 * eq_wgt 
     lossbc5 * bottom_wgt + \
     lossic * ic_wgt + \
     losssup * sup_wgt
+
 # loss = lossic
 
 # Algorithm
@@ -541,7 +543,8 @@ opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=num_epoch)
+# solution = solver.solve(num_epoch=num_epoch)
+solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
@@ -560,4 +563,4 @@ i_z = i_z * domain_coordinate_interval_dict[3][1]
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_13_new", time_array=time_array, cord=cord, data=solution)
+psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_19_new", time_array=time_array, cord=cord, data=solution)

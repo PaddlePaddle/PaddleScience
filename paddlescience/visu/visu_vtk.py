@@ -175,15 +175,15 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        for t in range(nt):
-            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+        for t in range(nt + 1):
+            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
-        for t in range(nt):
-            fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+        for t in range(nt + 1):
+            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
@@ -283,7 +283,7 @@ def __concatenate_geo(geo_disc):
 
 def __concatenate_cord(cordinates=None, nd=None):
     x = []
-    # print(cordinates.shape) # (150000, 3)
+    print('cordinates.shape: ', cordinates.shape) # (150000, 3)
     for cord in cordinates:
         x.append(cord)
     points = np.concatenate(x, axis=0)
@@ -304,6 +304,7 @@ def __concatenate_cord(cordinates=None, nd=None):
 def __concatenate_data(outs, nt=1):
     # print([x.shape for x in outs])
     # outs: [(150000, 4), (4695, 4), (1570, 4), (4600, 4), (179260, 4)]
+    # outs: [(150000, 4), (4515, 4), (1320, 4), (4725, 4), (9280, 4), (9220, 4), (179260, 4), (82200, 4)]
     vtkname = ["u1", "u2", "u3", "u4", "u5"]
 
     # to numpy
@@ -318,11 +319,22 @@ def __concatenate_data(outs, nt=1):
     ndata = outs[0].shape[1] # 4
     data_vtk = []  # list[dict[str, np.ndarray]]
 
+    # ic solution
+    data_t = {}
+    for i in range(ndata):
+        x = []
+        out = npouts[-2]
+        x.append(out[:,i])
+        data_t[vtkname[i]] = np.concatenate(x, axis=0)
+    data_vtk.append(data_t)
+
+    # 1~nt solutions
     for t in range(nt):
         data_t = {}
         for i in range(ndata):
             x = []
-            for out in npouts:
+            for out in npouts[:-2]:
+                # print('len(out) = ', len(out))
                 s = int(len(out) / nt) * t
                 e = int(len(out) / nt) * (t + 1)
                 x.append(out[s:e, i])
