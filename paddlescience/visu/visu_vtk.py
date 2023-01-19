@@ -176,14 +176,14 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
         for t in range(nt + 1):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
+            fpname = filename + "-t" + str(t) + "-p" + str(nrank); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
         for t in range(nt + 1):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank)
+            fpname = filename + "-t" + str(t) + "-p" + str(nrank); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
@@ -283,7 +283,7 @@ def __concatenate_geo(geo_disc):
 
 def __concatenate_cord(cordinates=None, nd=None):
     x = []
-    print('cordinates.shape: ', cordinates.shape) # (150000, 3)
+    # print('cordinates.shape: ', cordinates.shape) # (150000, 3)
     for cord in cordinates:
         x.append(cord)
     points = np.concatenate(x, axis=0)
