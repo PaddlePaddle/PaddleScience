@@ -176,14 +176,14 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
         for t in range(nt + 1):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank); print(fpname)
+            fpname = filename + "-p" + str(nrank) + "-t" + str(t); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
         for t in range(nt + 1):
-            fpname = filename + "-t" + str(t) + "-p" + str(nrank); print(fpname)
+            fpname = filename + "-p" + str(nrank) + "-t" + str(t); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
@@ -323,8 +323,8 @@ def __concatenate_data(outs, nt=1):
     data_t = {}
     for i in range(ndata):
         x = []
-        out = npouts[-2]
-        x.append(out[:,i])
+        for out in npouts[-2:-1]:
+            x.append(out[:, i])
         data_t[vtkname[i]] = np.concatenate(x, axis=0)
     data_vtk.append(data_t)
 
@@ -334,7 +334,6 @@ def __concatenate_data(outs, nt=1):
         for i in range(ndata):
             x = []
             for out in npouts[:-2]:
-                # print('len(out) = ', len(out))
                 s = int(len(out) / nt) * t
                 e = int(len(out) / nt) * (t + 1)
                 x.append(out[s:e, i])

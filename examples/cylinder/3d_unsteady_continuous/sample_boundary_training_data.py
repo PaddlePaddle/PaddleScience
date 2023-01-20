@@ -112,11 +112,6 @@ from paddlescience.modulus.geometry.primitives_3d import Box, Cylinder, Sphere
 from paddlescience.modulus.utils.io.vtk import var_to_polyvtk
 
 domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
-t_star = 800.0
-xyz_star = 80.0
-uvw_star = 0.1
-p_star = 0.01
-
 
 def normalize(max_domain, min_domain, array, index):
     diff = max_domain - min_domain

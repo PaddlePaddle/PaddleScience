@@ -228,7 +228,7 @@ xyz_star = Dcylinder    # 80
 uvw_star = U0           # 0.1
 p_star = rho * U0 * U0  # 0.01
 
-# time arraep
+# time array
 ic_t = 200000
 t_start = 200050
 t_end = 200250
@@ -357,12 +357,12 @@ ic_u = psci.ic.IC("u", rhs=init_u)
 ic_v = psci.ic.IC("v", rhs=init_v)
 ic_w = psci.ic.IC("w", rhs=init_w)
 ic_p = psci.ic.IC("p", rhs=init_p)
-pde.set_ic(ic_u, ic_v, ic_w)
+pde.set_ic(ic_u, ic_v, ic_w, ic_p)
 
 # Network
 net = psci.network.FCNet(
     num_ins=4, num_outs=4, num_layers=6, hidden_size=50, activation="tanh")
-# net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
+net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
 
 outeq = net(inputeq)
 outbc1 = net(inputbc1)
@@ -555,8 +555,8 @@ opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=num_epoch)
-# solution = solver.predict()
+# solution = solver.solve(num_epoch=num_epoch)
+solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
@@ -578,11 +578,10 @@ cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 print('len(solution) = ', len(solution))
 print('solution[0].shape[1] = ', solution[0].shape[1])
 for n in range(len(solution)):
-    for i in range(solution[0].shape[1]):
-        solution[n][:][3:4] = solution[n][:][3:4] * uvw_star
-        solution[n][:][4:5] = solution[n][:][4:5] * uvw_star
-        solution[n][:][5:6] = solution[n][:][5:6] * uvw_star
-        solution[n][:][6:7] = solution[n][:][6:7] * p_star
+    solution[n][:, 0:1] = solution[n][:, 0:1] * uvw_star
+    solution[n][:, 1:2] = solution[n][:, 1:2] * uvw_star
+    solution[n][:, 2:3] = solution[n][:, 2:3] * uvw_star
+    solution[n][:, 3:4] = solution[n][:, 3:4] * p_star
 
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_19_new", time_array=time_array, cord=cord, data=solution)
+psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_20_new", time_array=time_array, cord=cord, data=solution)

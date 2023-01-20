@@ -172,10 +172,6 @@ pressure_base = 101325.0
 # time_step = 1 # need change to 0.1
 time_start_per_file = 200000
 domain_coordinate_interval_dict = {1: [0,1600], 2: [0,800], 3: [0,320]}
-t_star = 800.0
-xyz_star = 80.0
-uvw_star = 0.1
-p_star = 0.01
 
 def normalize(max_domain, min_domain, array, index):
     #array_min = min(array[:,index])
