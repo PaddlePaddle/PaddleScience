@@ -575,8 +575,10 @@ i_z = i_z * xyz_star
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 
-for n in len(solution):
-    for i in solution[0].shape[1]:
+print('len(solution) = ', len(solution))
+print('solution[0].shape[1] = ', solution[0].shape[1])
+for n in range(len(solution)):
+    for i in range(solution[0].shape[1]):
         solution[n][:][3:4] = solution[n][:][3:4] * uvw_star
         solution[n][:][4:5] = solution[n][:][4:5] * uvw_star
         solution[n][:][5:6] = solution[n][:][5:6] * uvw_star

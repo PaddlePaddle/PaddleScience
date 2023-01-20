@@ -211,10 +211,10 @@ def load_ic_data(t):
     flow_array[:, 0] = 0
 
     # Normalize x,y,z to [0,1]
-    for  coordinate, interval in domain_coordinate_interval_dict.items():
-        min_domain = interval[0]
-        max_domain = interval[1]
-        normalize(max_domain, min_domain, flow_array, coordinate)
+    # for  coordinate, interval in domain_coordinate_interval_dict.items():
+    #     min_domain = interval[0]
+    #     max_domain = interval[1]
+    #     normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
     flow_array[:, 7] = flow_array[:, 7] - pressure_base
@@ -224,9 +224,9 @@ def load_ic_data(t):
     # txyzuvwpe
     print("IC data shape: {}".format(flow_array.shape))
     t = flow_array[:, 0].reshape((-1, 1)) / t_star
-    x = flow_array[:, 1].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[1][1]
-    y = flow_array[:, 2].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[2][1]
-    z = flow_array[:, 3].reshape((-1, 1)) / xyz_star * domain_coordinate_interval_dict[3][1]
+    x = flow_array[:, 1].reshape((-1, 1)) / xyz_star
+    y = flow_array[:, 2].reshape((-1, 1)) / xyz_star
+    z = flow_array[:, 3].reshape((-1, 1)) / xyz_star
     u = flow_array[:, 4].reshape((-1, 1)) / uvw_star
     v = flow_array[:, 5].reshape((-1, 1)) / uvw_star
     w = flow_array[:, 6].reshape((-1, 1)) / uvw_star
@@ -260,10 +260,10 @@ def load_supervised_data(t_start, t_end, t_step, t_ic, num_points):
     flow_array = np.array(flow_list, dtype=float)
 
     # Normalize x,y,z to [0,1]
-    for coordinate, interval in domain_coordinate_interval_dict.items():
-        min_domain = interval[0]
-        max_domain = interval[1]
-        normalize(max_domain, min_domain, flow_array, coordinate)
+    # for coordinate, interval in domain_coordinate_interval_dict.items():
+    #     min_domain = interval[0]
+    #     max_domain = interval[1]
+    #     normalize(max_domain, min_domain, flow_array, coordinate)
 
     # Cast pressure baseline
     flow_array[:, 7] = flow_array[:, 7] - pressure_base

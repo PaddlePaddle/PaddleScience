@@ -188,12 +188,12 @@ def sample_data(t_num, t_step=50, nr_points = 4000):
     print("Volume: {:.3f}".format(np.sum(s["area"])))
 
 
-    for item in [inlet_txyz, outlet_txyz, up_txyz, down_txyz, cylinder_txyz, interior2_txyz]:
-        # Normalize x,y,z to [0,1]
-        for coordinate, interval in domain_coordinate_interval_dict.items():
-            min_domain = interval[0]
-            max_domain = interval[1]
-            normalize(max_domain, min_domain, item, coordinate)
+    # for item in [inlet_txyz, outlet_txyz, up_txyz, down_txyz, cylinder_txyz, interior2_txyz]:
+    #     # Normalize x,y,z to [0,1]
+    #     for coordinate, interval in domain_coordinate_interval_dict.items():
+    #         min_domain = interval[0]
+    #         max_domain = interval[1]
+    #         normalize(max_domain, min_domain, item, coordinate)
 
     return inlet_txyz, outlet_txyz, up_txyz, down_txyz, cylinder_txyz, interior2_txyz
 
@@ -207,7 +207,7 @@ def replicate_t(t_num, t_step, data):
     full_data = None
     for time in range(1, t_num+1):
         t_len = data.shape[0]
-        t_extended = np.array([time * t_step / t_star] * t_len, dtype=np.float32).reshape((-1, 1))
+        t_extended = np.array([time * t_step] * t_len, dtype=np.float32).reshape((-1, 1))
         t_data = np.concatenate((t_extended, data), axis=1)
         if full_data is None:
             full_data = t_data
