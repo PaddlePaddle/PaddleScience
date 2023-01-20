@@ -402,8 +402,6 @@ loss = losseq1 * eq_wgt + losseq2 * eq_wgt + losseq3 * eq_wgt + losseq4 * eq_wgt
     lossic * ic_wgt + \
     losssup * sup_wgt
 
-# loss = lossic
-
 # Algorithm
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 

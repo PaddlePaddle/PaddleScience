@@ -175,15 +175,15 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        for t in range(nt + 1):
-            fpname = filename + "-p" + str(nrank) + "-t" + str(t); print(fpname)
+        for t in range(nt):
+            fpname = filename + "-p" + str(nrank) + "-t" + str(t + 1); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
-        for t in range(nt + 1):
-            fpname = filename + "-p" + str(nrank) + "-t" + str(t); print(fpname)
+        for t in range(nt):
+            fpname = filename + "-p" + str(nrank) + "-t" + str(t + 1); print(fpname)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
 
@@ -319,21 +319,12 @@ def __concatenate_data(outs, nt=1):
     ndata = outs[0].shape[1] # 4
     data_vtk = []  # list[dict[str, np.ndarray]]
 
-    # ic solution
-    data_t = {}
-    for i in range(ndata):
-        x = []
-        for out in npouts[-2:-1]:
-            x.append(out[:, i])
-        data_t[vtkname[i]] = np.concatenate(x, axis=0)
-    data_vtk.append(data_t)
-
     # 1~nt solutions
     for t in range(nt):
         data_t = {}
         for i in range(ndata):
             x = []
-            for out in npouts[:-2]:
+            for out in npouts:
                 s = int(len(out) / nt) * t
                 e = int(len(out) / nt) * (t + 1)
                 x.append(out[s:e, i])
