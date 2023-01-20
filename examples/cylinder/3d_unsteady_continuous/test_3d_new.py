@@ -252,28 +252,28 @@ sup_wgt = 10.0
 
 # initial value
 txyz_uvwpe_ic = load_ic_data(ic_t)
-init_t = txyz_uvwpe_ic[:, 0]; print(f"init_t={init_t.shape} {init_t.mean().item():.10f}")
-init_x = txyz_uvwpe_ic[:, 1]; print(f"init_x={init_x.shape} {init_x.mean().item():.10f}")
-init_y = txyz_uvwpe_ic[:, 2]; print(f"init_y={init_y.shape} {init_y.mean().item():.10f}")
-init_z = txyz_uvwpe_ic[:, 3]; print(f"init_z={init_z.shape} {init_z.mean().item():.10f}")
-init_u = txyz_uvwpe_ic[:, 4]; print(f"init_u={init_u.shape} {init_u.mean().item():.10f}")
-init_v = txyz_uvwpe_ic[:, 5]; print(f"init_v={init_v.shape} {init_v.mean().item():.10f}")
-init_w = txyz_uvwpe_ic[:, 6]; print(f"init_w={init_w.shape} {init_w.mean().item():.10f}")
-init_p = txyz_uvwpe_ic[:, 7]; print(f"init_p={init_p.shape} {init_p.mean().item():.10f}")
+init_t = txyz_uvwpe_ic[:, 0] / t_star; print(f"init_t={init_t.shape} {init_t.mean().item():.10f}")
+init_x = txyz_uvwpe_ic[:, 1] / xyz_star; print(f"init_x={init_x.shape} {init_x.mean().item():.10f}")
+init_y = txyz_uvwpe_ic[:, 2] / xyz_star; print(f"init_y={init_y.shape} {init_y.mean().item():.10f}")
+init_z = txyz_uvwpe_ic[:, 3] / xyz_star; print(f"init_z={init_z.shape} {init_z.mean().item():.10f}")
+init_u = txyz_uvwpe_ic[:, 4] / uvw_star; print(f"init_u={init_u.shape} {init_u.mean().item():.10f}")
+init_v = txyz_uvwpe_ic[:, 5] / uvw_star; print(f"init_v={init_v.shape} {init_v.mean().item():.10f}")
+init_w = txyz_uvwpe_ic[:, 6] / uvw_star; print(f"init_w={init_w.shape} {init_w.mean().item():.10f}")
+init_p = txyz_uvwpe_ic[:, 7] / p_star; print(f"init_p={init_p.shape} {init_p.mean().item():.10f}")
 
 # num of supervised points
 n_sup = 2000
 
 # supervised data
 txyz_uvwpe_s = load_supervised_data(t_start, t_end, t_step, ic_t, n_sup)
-sup_t = txyz_uvwpe_s[:, 0]; print(f"sup_t={sup_t.shape} {sup_t.mean().item():.10f}")
-sup_x = txyz_uvwpe_s[:, 1]; print(f"sup_x={sup_x.shape} {sup_x.mean().item():.10f}")
-sup_y = txyz_uvwpe_s[:, 2]; print(f"sup_y={sup_y.shape} {sup_y.mean().item():.10f}")
-sup_z = txyz_uvwpe_s[:, 3]; print(f"sup_z={sup_z.shape} {sup_z.mean().item():.10f}")
-sup_u = txyz_uvwpe_s[:, 4]; print(f"sup_u={sup_u.shape} {sup_u.mean().item():.10f}")
-sup_v = txyz_uvwpe_s[:, 5]; print(f"sup_v={sup_v.shape} {sup_v.mean().item():.10f}")
-sup_w = txyz_uvwpe_s[:, 6]; print(f"sup_w={sup_w.shape} {sup_w.mean().item():.10f}")
-sup_p = txyz_uvwpe_s[:, 7]; print(f"sup_p={sup_p.shape} {sup_p.mean().item():.10f}")
+sup_t = txyz_uvwpe_s[:, 0] / t_star; print(f"sup_t={sup_t.shape} {sup_t.mean().item():.10f}")
+sup_x = txyz_uvwpe_s[:, 1] / xyz_star; print(f"sup_x={sup_x.shape} {sup_x.mean().item():.10f}")
+sup_y = txyz_uvwpe_s[:, 2] / xyz_star; print(f"sup_y={sup_y.shape} {sup_y.mean().item():.10f}")
+sup_z = txyz_uvwpe_s[:, 3] / xyz_star; print(f"sup_z={sup_z.shape} {sup_z.mean().item():.10f}")
+sup_u = txyz_uvwpe_s[:, 4] / uvw_star; print(f"sup_u={sup_u.shape} {sup_u.mean().item():.10f}")
+sup_v = txyz_uvwpe_s[:, 5] / uvw_star; print(f"sup_v={sup_v.shape} {sup_v.mean().item():.10f}")
+sup_w = txyz_uvwpe_s[:, 6] / uvw_star; print(f"sup_w={sup_w.shape} {sup_w.mean().item():.10f}")
+sup_p = txyz_uvwpe_s[:, 7] / p_star; print(f"sup_p={sup_p.shape} {sup_p.mean().item():.10f}")
 
 # num points to sample per GPU
 # num_points = 30000
