@@ -362,7 +362,7 @@ pde.set_ic(ic_u, ic_v, ic_w) # 添加ic_p会使ic_loss非常大
 # Network
 net = psci.network.FCNet(
     num_ins=4, num_outs=4, num_layers=6, hidden_size=50, activation="tanh")
-# net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
+net.initialize('checkpoint/dynamic_net_params_100000.pdparams')
 
 outeq = net(inputeq)
 outbc1 = net(inputbc1)
@@ -553,8 +553,8 @@ opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=num_epoch)
-# solution = solver.predict()
+# solution = solver.solve(num_epoch=num_epoch)
+solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
