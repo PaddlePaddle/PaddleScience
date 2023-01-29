@@ -15,17 +15,21 @@
 from __future__ import annotations
 
 import copy
-# from typing import Tuple
 
 import numpy as np
-import open3d
+# import open3d
 import pymesh
 import pysdf
-import pyvista
-# from paddle.io import DataLoader
-
+from stl import mesh as np_mesh
+from typing import Union
 # from ..data import PointBatchSampler, PointDataset
 from .geometry import Geometry
+
+# from typing import Tuple
+
+# import pyvista
+# from paddle.io import DataLoader
+
 
 
 def area_of_triangles(v0: np.ndarray, v1: np.ndarray,
@@ -79,32 +83,38 @@ class Mesh(Geometry):
     """A geometry represented by a point cloud, i.e., a set of points in space.
 
     Args:
-        mesh_file(str): Mesh file path, such as "/root/of/self.py_mesh.stl".
+        mesh(str, Mesh): Mesh file path, such as "/root/of/self.py_mesh.stl".
     """
 
-    def __init__(self, mesh_file):
-        self.mesh_file = mesh_file
-        self.py_mesh = pymesh.meshio.load_mesh(mesh_file)
-        self.num_faces = len(self.py_mesh.num_faces)
-        self.num_points = len(self.py_mesh.num_vertices)
+    def __init__(self, mesh: Union[str, pymesh.Mesh]):
+        if isinstance(mesh, str):
+            self.py_mesh = pymesh.meshio.load_mesh(mesh)
+        elif isinstance(mesh, pymesh.Mesh):
+            self.py_mesh = mesh
+        else:
+            raise ValueError(f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
+
+        self.np_mesh = np_mesh.Mesh(np.zeros(self.py_mesh.faces.shape[0], dtype=np_mesh.Mesh.dtype))
+        self.np_mesh.vectors = self.py_mesh.vertices[self.py_mesh.faces]
+        self.num_faces = self.py_mesh.num_faces
+        self.num_points = self.py_mesh.num_vertices
         self.points = self.py_mesh.vertices
         self.sdf = pysdf.SDF(self.py_mesh.vertices, self.py_mesh.faces)
         self.face_bounary = (
-            ((np.min(self.py_mesh.vectors[:, :, 0])),
-             np.max(self.py_mesh.vectors[:, :, 0])),
-            ((np.min(self.py_mesh.vectors[:, :, 1])),
-             np.max(self.py_mesh.vectors[:, :, 1])),
-            ((np.min(self.py_mesh.vectors[:, :, 2])),
-             np.max(self.py_mesh.vectors[:, :, 2])), )
+            ((np.min(self.np_mesh.vectors[:, :, 0])),
+             np.max(self.np_mesh.vectors[:, :, 0])),
+            ((np.min(self.np_mesh.vectors[:, :, 1])),
+             np.max(self.np_mesh.vectors[:, :, 1])),
+            ((np.min(self.np_mesh.vectors[:, :, 2])),
+             np.max(self.np_mesh.vectors[:, :, 2]))
+        )
         self.boundary_points = None
         self.boundary_normals = None
         super().__init__(
             self.points.shape[-1],
-            (np.amin(
-                self.points, axis=0), np.amax(
-                    self.points, axis=0)),
-            np.inf, )
-        self.eps = 1e-5
+            (np.amin(self.points, axis=0), np.amax(self.points, axis=0)),
+            np.inf
+        )
 
     def inside(self, x: np.ndarray) -> np.ndarray:
         """_summary_
@@ -126,8 +136,8 @@ class Mesh(Geometry):
         Returns:
             np.ndarray(bool): [N, ]
         """
-        sdf_x = self.sdf(x)
-        return np.logical_and(-self.eps < sdf_x, sdf_x < self.eps)
+        inner_mask = self.sdf.contains(x)
+        return ~inner_mask
 
     def random_points(self, n, random="pseudo") -> np.ndarray:
         cur_n = 0
@@ -137,7 +147,7 @@ class Mesh(Geometry):
                 np.random.uniform(
                     e[0], e[1], size=n) for e in self.face_bounary
             ]
-            random_points = np.stack(random_points, axis=1)  # [n,3]
+            random_points = np.stack(random_points, axis=1)
             inner_mask = self.sdf.contains(random_points)
             valid_random_points = random_points[inner_mask]
 
@@ -150,82 +160,59 @@ class Mesh(Geometry):
         return all_points
 
     def random_boundary_points(self, n, random="pseudo"):
-        triangle_areas = area_of_triangles(self.py_mesh.v0, self.py_mesh.v1,
-                                           self.py_mesh.v2)
-        triangle_probabilities = triangle_areas / np.linalg.norm(
-            triangle_areas, ord=1)
+        triangle_areas = area_of_triangles(
+            self.np_mesh.v0,
+            self.np_mesh.v1,
+            self.np_mesh.v2
+        )
+        triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
         triangle_index = np.arange(triangle_probabilities.shape[0])
-        points_per_triangle = np.random.choice(
-            triangle_index, n, p=triangle_probabilities)
+        points_per_triangle = np.random.choice(triangle_index, n, p=triangle_probabilities)
         points_per_triangle, _ = np.histogram(
             points_per_triangle,
-            np.arange(triangle_probabilities.shape[0] + 1) - 0.5, )
+            np.arange(triangle_probabilities.shape[0] + 1) - 0.5
+        )
 
         all_points = []
-        for index, nr_p in enumerate(
-                points_per_triangle):  # for every triangle
+        for index, nr_p in enumerate(points_per_triangle):
             if nr_p == 0:
                 continue
-            sampled_points = sample_triangle(self.py_mesh.v0[index],
-                                             self.py_mesh.v1[index],
-                                             self.py_mesh.v2[index], nr_p)
+            sampled_points = sample_triangle(self.np_mesh.v0[index],
+                                             self.np_mesh.v1[index],
+                                             self.np_mesh.v2[index], nr_p)
             all_points.append(sampled_points)
 
         return np.concatenate(all_points, axis=0)
 
     def union(self, rhs: Mesh):
-        assert self.dim == rhs.dim, f"self.py_mesh.dim({self.dim}) must equal to self.py_mesh.dim({rhs.dim})"
-        ret = copy.deepcopy(self)
-        ret.py_mesh = pymesh.boolean(
-            ret.py_mesh, rhs.py_mesh, operation="union", engine="igl")
-        ret.num_faces = len(ret.py_mesh.num_faces)
-        ret.num_points = len(ret.py_mesh.num_vertices)
-        ret.points = ret.py_mesh.vertices
-        super().__init__(
-            ret.points.shape[-1],
-            (np.amin(
-                ret.points, axis=0), np.amax(
-                    ret.points, axis=0)),
-            np.inf, )
-        return ret
+        csg = pymesh.CSGTree({
+            "union": [
+                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
+            ]
+        })
+        return Mesh(csg.mesh)
 
     def __or__(self, rhs):
         return self.union(rhs)
 
     def difference(self, rhs):
-        assert self.dim == rhs.dim, f"self.py_mesh.dim({self.dim}) must equal to self.py_mesh.dim({rhs.dim})"
-        ret = copy.deepcopy(self)
-        ret.py_mesh = pymesh.boolean(
-            ret.py_mesh, rhs.py_mesh, operation="difference", engine="igl")
-        ret.num_faces = len(ret.py_mesh.num_faces)
-        ret.num_points = len(ret.py_mesh.num_vertices)
-        ret.points = ret.py_mesh.vertices
-        super().__init__(
-            ret.points.shape[-1],
-            (np.amin(
-                ret.points, axis=0), np.amax(
-                    ret.points, axis=0)),
-            np.inf, )
-        return ret
+        csg = pymesh.CSGTree({
+            "difference": [
+                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
+            ]
+        })
+        return Mesh(csg.mesh)
 
     def __sub__(self, rhs):
         return self.difference(rhs)
 
     def intersection(self, rhs):
-        assert self.dim == rhs.dim, f"self.py_mesh.dim({self.dim}) must equal to self.py_mesh.dim({rhs.dim})"
-        ret = copy.deepcopy(self)
-        ret.py_mesh = pymesh.boolean(
-            ret.py_mesh, rhs.py_mesh, operation="intersection", engine="igl")
-        ret.num_faces = len(ret.py_mesh.num_faces)
-        ret.num_points = len(ret.py_mesh.num_vertices)
-        ret.points = ret.py_mesh.vertices
-        super().__init__(
-            ret.points.shape[-1],
-            (np.amin(
-                ret.points, axis=0), np.amax(
-                    ret.points, axis=0)),
-            np.inf, )
-        return ret
+        csg = pymesh.CSGTree({
+            "intersection": [
+                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
+            ]
+        })
+        return Mesh(csg.mesh)
 
     def __and__(self, rhs):
         return self.intersection(rhs)
