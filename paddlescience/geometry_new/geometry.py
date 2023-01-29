@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import abc
-from typing import Dict
+from typing import Callable, Dict
 
 import numpy as np
+
+from .. import config
+from ..utils import AttrDict
 
 
 class Geometry(object):
@@ -23,6 +26,19 @@ class Geometry(object):
         self.dim = dim
         self.bbox = bbox
         self.diam = min(diam, np.linalg.norm(bbox[1] - bbox[0]))
+        self.sample_config = {}
+        self.batch_data_dict = {}
+
+    def add_sample_config(self, name:str, batch_size:int, criteria: Callable=None, random:str="pseudo", fixed: bool=True):
+        if name == "interior" or name == "boundary":
+            print(f"criteria for {name} is unneccessary, set criteria to None")
+            criteria = None
+        self.sample_config[name] = AttrDict({
+            "criteria": criteria,
+            "batch_size": batch_size,
+            "random": random,
+            "fixed": fixed
+        })
 
     @abc.abstractmethod
     def inside(self, x: np.ndarray):
@@ -52,6 +68,23 @@ class Geometry(object):
     @abc.abstractmethod
     def random_points(self, n: int, random: str="pseudo"):
         """Compute the random point locations in the geometry."""
+
+    def random_points_with_criteria(self, n: int, random: str="pseudo", criteria: Callable=None):
+        """Compute the random point locations in the geometry and return those meet criteria."""
+        x = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        i = 0
+        while i < n:
+            tmp = self.random_points(n, random)
+            if criteria is not None:
+                criteria_mask = criteria(*np.split(tmp, self.dim, axis=1)).flatten()
+                tmp = tmp[criteria_mask]
+
+            if len(tmp) > n - i:
+                tmp = tmp[:n - i]
+            x[i:i + len(tmp)] = tmp
+            i += len(tmp)
+            print(i)
+        return x
 
     def uniform_boundary_points(self, n: int):
         """Compute the equispaced point locations on the boundary."""
@@ -115,25 +148,22 @@ class Geometry(object):
         """Return the name of class"""
         return self.__class__.__name__
 
-    def fetch_data(self,
-                   batch_size: int,
-                   key_index_map: Dict[str, int],
-                   location="all",
-                   random="pseudo") -> Dict[str, np.ndarray]:
-        if location == "all":
-            raw_data = self.random_points(batch_size, random)
-        elif location == "interior":
-            raw_data = self.random_points(batch_size, random)
-        elif location == "boundary":
-            raw_data = self.random_boundary_points(batch_size, random)
-        else:
-            raise ValueError(f"Invalid location({location})")
+    def fetch_batch_data(self) -> Dict[str, np.ndarray]:
+        batch_data_dict = {}
+        # generate batch data
+        for name, cfg in self.sample_config.items():
+            if cfg.fixed and name in self.batch_data_dict:
+                batch_data_dict[name] = self.batch_data_dict[name]
+                continue
+            if name == "interior":
+                raw_data = self.random_points(cfg.batch_size, cfg.random)
+            elif name == "boundary":
+                raw_data = self.random_boundary_points(cfg.batch_size, cfg.random)
+            else:
+                raw_data = self.random_points_with_criteria(cfg.batch_size, cfg.random, cfg.criteria)
+            batch_data_dict[name] = raw_data
 
-        assert len(key_index_map) == self.dim, \
-            f"Dimension of {self}({self.dim}) must be equal " \
-            f"to number of keys in key_index_map({len(key_index_map)})"
+        # cache data if used later
+        self.batch_data_dict = batch_data_dict
 
-        outputs = {}
-        for name, ind in key_index_map.items():
-            outputs[name] = raw_data[:, ind:ind + 1]
-        return outputs
+        return batch_data_dict

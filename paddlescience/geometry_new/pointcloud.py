@@ -16,7 +16,7 @@ import numpy as np
 
 from .geometry import Geometry
 from .. import config
-from ..data import BatchSampler
+# from ..data import BatchSampler
 
 
 class PointCloud(Geometry):
@@ -36,20 +36,20 @@ class PointCloud(Geometry):
         self.boundary_points = None
         self.boundary_normals = None
         all_points = self.points
-        if boundary_points is not None:
-            self.boundary_points = np.asarray(
-                boundary_points, dtype=config._dtype)
-            self.num_boundary_points = len(boundary_points)
-            all_points = np.vstack((self.points, self.boundary_points))
-            self.boundary_sampler = BatchSampler(
-                self.num_boundary_points, shuffle=True)
-            if boundary_normals is not None:
-                if len(boundary_normals) != len(boundary_points):
-                    raise ValueError(
-                        "the shape of boundary_normals should be the same as boundary_points"
-                    )
-                self.boundary_normals = np.asarray(
-                    boundary_normals, dtype=config._dtype)
+        # if boundary_points is not None:
+        #     self.boundary_points = np.asarray(
+        #         boundary_points, dtype=config._dtype)
+        #     self.num_boundary_points = len(boundary_points)
+        #     all_points = np.vstack((self.points, self.boundary_points))
+        #     self.boundary_sampler = BatchSampler(
+        #         self.num_boundary_points, shuffle=True)
+        #     if boundary_normals is not None:
+        #         if len(boundary_normals) != len(boundary_points):
+        #             raise ValueError(
+        #                 "the shape of boundary_normals should be the same as boundary_points"
+        #             )
+        #         self.boundary_normals = np.asarray(
+        #             boundary_normals, dtype=config._dtype)
         super().__init__(
             len(points[0]),
             (np.amin(
