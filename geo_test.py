@@ -1,8 +1,8 @@
 import numpy as np
-import paddle
+# import paddle
 import pymesh
 from pyevtk.hl import pointsToVTK
-
+# import open3d
 from paddlescience.geometry_new import Mesh, Rectangle, Disk
 
 # import pysdf
@@ -46,27 +46,64 @@ def __save_vtk_raw(filename="output", cordinate=None, data=None):
 
 
 
+# vertices = np.array([
+#     [1, 0, 0],
+#     [0, 1, 0],
+#     [0, 0, 1],
+#     [0, 1, 1],
+# ])
+# faces = np.array([
+#     [0, 2, 1],
+#     [1, 2, 3]
+# ])
+# mesh = pymesh.form_mesh(vertices, faces)
+# print(type())
+# mesh.add_attribute("vertex_normal")
+# normals = mesh.get_attribute("vertex_normal").reshape([-1, 3])
+# print(normals)
+# exit()
+
 # closed_mesh = Mesh("/workspace/hesensen/PaddleScience_Aneurysm/examples/BloodFlow/aneurysm_closed.stl")
+# closed_mesh_o3d = open3d.io.read_triangle_mesh("/workspace/hesensen/PaddleScience_Aneurysm/examples/BloodFlow/aneurysm_closed.stl")
+# print(np.asarray(closed_mesh_o3d.triangles).shape)
+# print(closed_mesh.py_mesh.faces.shape)
+# exit()
 # print(closed_mesh.py_mesh.vertices.shape)
+# tri = closed_mesh.py_mesh.faces[302]
+# p = closed_mesh.py_mesh.vertices[tri]
+# p0, p1, p2 = np.split(p, 3, axis=0)
+# # print(p0, p1, p2)
+# p01 = (p1 - p0).reshape([-1, ])
+# p12 = (p2 - p2).reshape([-1, ])
+# p02 = (p2 - p0).reshape([-1, ])
 # closed_mesh.py_mesh.add_attribute("vertex_normal")
 # normals = closed_mesh.py_mesh.get_attribute("vertex_normal").reshape([-1, 3])
+# p0_normal = normals[tri[0]]
+# p1_normal = normals[tri[1]]
+# p2_normal = normals[tri[2]]
+# print(p0_normal.shape, p01.shape)
+# print(p1_normal.shape, p12.shape)
+# print(p2_normal.shape, p02.shape)
+# print(p01.dot(p0_normal))
+# print(p12.dot(p1_normal))
+# print(p02.dot(p2_normal))
+# exit()
 # print(normals.shape, normals.sum(), normals.dtype)
 # print((normals**2).sum())
 # exit()
-box_mesh = Mesh("./box_zyb.stl")
-difference_mesh = box_mesh - marine_mesh
-difference_mesh.add_sample_config("interior", batch_size=50000)
-difference_mesh.add_sample_config("boundary", batch_size=50000)
-difference_mesh.add_sample_config("bc1", batch_size=50000, criteria=lambda x, y, z: (-10 < x - 0.0) & (x - 0.0 < 10))
-points_dict = difference_mesh.fetch_batch_data()
+# box_mesh = Mesh("./box_zyb.stl")
+# difference_mesh.add_sample_config("interior", batch_size=50000)
+# difference_mesh.add_sample_config("boundary", batch_size=50000)
+# difference_mesh.add_sample_config("bc1", batch_size=50000, criteria=lambda x, y, z: (-10 < x - 0.0) & (x - 0.0 < 10))
+# points_dict = difference_mesh.fetch_batch_data()
 # bc1_points = points_dict["bc1"]
-interior_points = points_dict["interior"]
-boundary_points = points_dict["boundary"]
+# interior_points = points_dict["interior"]
+# boundary_points = points_dict["boundary"]
 # for k, v in points_dict.items():
 #     print(f"{k} {v.shape}")
 # exit()
-__save_vtk_raw("difference_interior", interior_points, np.full([len(interior_points), 1], 10.0))
-__save_vtk_raw("difference_boundary", boundary_points, np.full([len(boundary_points), 1], 100.0))
+# __save_vtk_raw("difference_interior", interior_points, np.full([len(interior_points), 1], 10.0))
+# __save_vtk_raw("difference_boundary", boundary_points, np.full([len(boundary_points), 1], 100.0))
 # __save_vtk_raw("difference_bc1", bc1_points, np.full([len(bc1_points), 1], 200.0))
 # exit()
 # inlet_mesh = Mesh("/workspace/hesensen/PaddleScience_Aneurysm/examples/BloodFlow/aneurysm_inlet.stl")
@@ -98,6 +135,7 @@ __save_vtk_raw("difference_boundary", boundary_points, np.full([len(boundary_poi
 # __save_vtk_raw("and_mesh", and_mesh.points, np.full([len(and_mesh.points), 1], 25.0))
 
 # x_mesh = Mesh("/workspace/hesensen/PaddleScience_geometry_dev/vtus/x.stl")
+# one = open3d.io.readst
 # # print(x_mesh.num_points)
 # points = x_mesh.random_boundary_points(10000)
 # x_inter_points = x_mesh.random_points(10000)
@@ -112,10 +150,10 @@ __save_vtk_raw("difference_boundary", boundary_points, np.full([len(boundary_poi
 # # __save_vtk_raw("xyz_mesh", xyz_mesh.vertices, np.full([len(xyz_mesh.vertices), 1], 20.0))
 # # exit()
 # ball_mesh = Mesh("/workspace/hesensen/PaddleScience_geometry_dev/vtus/ball.stl")
-# box_mesh = Mesh("/workspace/hesensen/PaddleScience_geometry_dev/vtus/box.stl")
-
+box_mesh = Mesh("/workspace/hesensen/PaddleScience_geometry_dev/vtus/box.stl")
 # left_mesh = ball_mesh & box_mesh
-# right_mesh = x_mesh | y_mesh | z_mesh
+# right_mesh = y_mesh | z_mesh
+# exit()
 # up_mesh = left_mesh - right_mesh
 # up_points = up_mesh.random_boundary_points(10000)
 # up_inter_points = up_mesh.random_points(10000)
@@ -124,17 +162,17 @@ __save_vtk_raw("difference_boundary", boundary_points, np.full([len(boundary_poi
 # print(up_inter_points.shape)
 # print(up_inter_points_boundary.shape)
 # print(up_inter_points_real_inter.shape)
-# __save_vtk_raw("up_random_points", up_points, np.full([len(up_points), 1], 20.0))
-# __save_vtk_raw("up_interior_random_points", up_inter_points, np.full([len(up_inter_points), 1], 10.0))
-# __save_vtk_raw("up_interior_random_points_boundary", up_inter_points_boundary, np.full([len(up_inter_points_boundary), 1], 10.0))
-# __save_vtk_raw("up_interior_random_points_real_inter", up_inter_points_real_inter, np.full([len(up_inter_points_real_inter), 1], 10.0))
+# __save_vtk_raw("new_up_random_points", up_points, np.full([len(up_points), 1], 20.0))
+# __save_vtk_raw("new_up_interior_random_points", up_inter_points, np.full([len(up_inter_points), 1], 10.0))
+# __save_vtk_raw("new_up_interior_random_points_boundary", up_inter_points_boundary, np.full([len(up_inter_points_boundary), 1], 10.0))
+# __save_vtk_raw("new_up_interior_random_points_real_inter", up_inter_points_real_inter, np.full([len(up_inter_points_real_inter), 1], 10.0))
 # exit()
-# __save_vtk_raw("left_mesh", left_mesh.points, np.full([len(left_mesh.points), 1], 10.0))
-# __save_vtk_raw("right_mesh", right_mesh.points, np.full([len(right_mesh.points), 1], 20.0))
-# __save_vtk_raw("up_mesh", up_mesh.points, np.full([len(up_mesh.points), 1], 30.0))
-# __save_vtk_raw("x_mesh", x_mesh.points, np.full([len(x_mesh.points), 1], 10.0))
-# __save_vtk_raw("y_mesh", y_mesh.points, np.full([len(y_mesh.points), 1], 20.0))
-# __save_vtk_raw("z_mesh", z_mesh.points, np.full([len(z_mesh.points), 1], 30.0))
+__save_vtk_raw("new_left_mesh", left_mesh.points, np.full([len(left_mesh.points), 1], 10.0))
+__save_vtk_raw("new_right_mesh", right_mesh.points, np.full([len(right_mesh.points), 1], 20.0))
+__save_vtk_raw("new_up_mesh", up_mesh.points, np.full([len(up_mesh.points), 1], 30.0))
+__save_vtk_raw("new_x_mesh", x_mesh.points, np.full([len(x_mesh.points), 1], 10.0))
+__save_vtk_raw("new_y_mesh", y_mesh.points, np.full([len(y_mesh.points), 1], 20.0))
+__save_vtk_raw("new_z_mesh", z_mesh.points, np.full([len(z_mesh.points), 1], 30.0))
 
 
 # rect = Rectangle([0, 0], [10, 10])
