@@ -15,21 +15,16 @@
 from __future__ import annotations
 
 import copy
+from typing import List, Union
 
 import numpy as np
-# import open3d
 import pymesh
 import pysdf
 from stl import mesh as np_mesh
-from typing import Union
-# from ..data import PointBatchSampler, PointDataset
+
 from .geometry import Geometry
-
-# from typing import Tuple
-
-# import pyvista
-# from paddle.io import DataLoader
-
+from .inflation import pymesh_inflation
+from .sampler import sample
 
 
 def area_of_triangles(v0: np.ndarray, v1: np.ndarray,
@@ -55,8 +50,8 @@ def area_of_triangles(v0: np.ndarray, v1: np.ndarray,
     return area
 
 
-def sample_triangle(v0: np.ndarray, v1: np.ndarray, v2: np.ndarray,
-                    n: int) -> np.ndarray:
+def sample_in_triangle(v0: np.ndarray, v1: np.ndarray, v2: np.ndarray,
+                    n: int, random="pseudo") -> np.ndarray:
     """
     Uniformly sample n points in an 3D triangle defined by 3 vertices v0, v1, v2
     https://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle
@@ -70,8 +65,8 @@ def sample_triangle(v0: np.ndarray, v1: np.ndarray, v2: np.ndarray,
     Returns:
         np.ndarray: Coordinates of sampled n points.
     """
-    r1 = np.random.uniform(0, 1, size=n)
-    r2 = np.random.uniform(0, 1, size=n)
+    r1 = sample(n, 1, random).flatten()
+    r2 = sample(n, 1, random).flatten()
     s1 = np.sqrt(r1)
     x = v0[0] * (1.0 - s1) + v1[0] * (1.0 - r2) * s1 + v2[0] * r2 * s1
     y = v0[1] * (1.0 - s1) + v1[1] * (1.0 - r2) * s1 + v2[1] * r2 * s1
@@ -144,10 +139,10 @@ class Mesh(Geometry):
         all_points = []
         while cur_n < n:
             random_points = [
-                np.random.uniform(
-                    e[0], e[1], size=n) for e in self.face_bounary
+                sample(_n, 1, random) * (e[1] - e[0]) + e[0]
+                for e in self.face_bounary
             ]
-            random_points = np.stack(random_points, axis=1)
+            random_points = np.concatenate(random_points, axis=1)
             inner_mask = self.sdf.contains(random_points)
             valid_random_points = random_points[inner_mask]
 
@@ -158,6 +153,85 @@ class Mesh(Geometry):
         if cur_n > n:
             all_points = all_points[:n]
         return all_points
+
+    def inflated_random_points(
+        self, n: Union[int, List[int]],
+        distance: Union[int, List[Union[int, float]]],
+        random="pseudo"
+    ) -> np.ndarray:
+        if not isinstance(n, (tuple, list)):
+            n = [n]
+        if not isinstance(distance, (tuple, list)):
+            distance = [distance]
+        if len(n) != len(distance):
+            raise ValueError(
+                f"len(n)({len(n)}) must be equal to len(distance)({len(distance)})"
+            )
+        all_points = []
+        for _n, _dist in zip(n, distance):
+            inflated_mesh = Mesh(pymesh_inflation(self.py_mesh, _dist))
+            cur_n = 0
+            inflated_points = []
+            while cur_n < _n:
+                random_points = [
+                    sample(_n, 1, random) * (e[1] - e[0]) + e[0]
+                    for e in inflated_mesh.face_bounary
+                ]
+                random_points = np.concatenate(random_points, axis=1)
+                inner_mask = inflated_mesh.sdf.contains(random_points)
+                valid_random_points = random_points[inner_mask]
+
+                inflated_points.append(valid_random_points)
+                cur_n += len(valid_random_points)
+
+            inflated_points = np.concatenate(inflated_points, axis=0)
+            if cur_n > _n:
+                inflated_points = inflated_points[:_n]
+            all_points.append(inflated_points)
+
+        return np.concatenate(all_points, axis=0)
+
+    def inflated_random_boundary_points(self, n: Union[int, List[int]], distance: Union[int, List[Union[int, float]]], random="pseudo") -> np.ndarray:
+        if not isinstance(n, (tuple, list)):
+            n = [n]
+        if not isinstance(distance, (tuple, list)):
+            distance = [distance]
+        if len(n) != len(distance):
+            raise ValueError(
+                f"len(n)({len(n)}) must be equal to len(distance)({len(distance)})"
+            )
+        all_points = []
+        for _n, _dist in zip(n, distance):
+            inflated_mesh = Mesh(pymesh_inflation(self.py_mesh, _dist))
+            triangle_areas = area_of_triangles(
+                inflated_mesh.np_mesh.v0,
+                inflated_mesh.np_mesh.v1,
+                inflated_mesh.np_mesh.v2
+            )
+            triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
+            triangle_index = np.arange(triangle_probabilities.shape[0])
+            points_per_triangle = np.random.choice(triangle_index, _n, p=triangle_probabilities)
+            points_per_triangle, _ = np.histogram(
+                points_per_triangle,
+                np.arange(triangle_probabilities.shape[0] + 1) - 0.5
+            )
+
+            inflated_boundary_points = []
+            for index, nr_p in enumerate(points_per_triangle):
+                if nr_p == 0:
+                    continue
+                sampled_points = sample_in_triangle(
+                    inflated_mesh.np_mesh.v0[index],
+                    inflated_mesh.np_mesh.v1[index],
+                    inflated_mesh.np_mesh.v2[index],
+                    nr_p,
+                    random
+                )
+                inflated_boundary_points.append(sampled_points)
+            inflated_boundary_points = np.concatenate(inflated_boundary_points, axis=0)
+            all_points.append(inflated_boundary_points)
+
+        return np.concatenate(all_points, axis=0)
 
     def random_boundary_points(self, n, random="pseudo"):
         triangle_areas = area_of_triangles(
@@ -177,9 +251,13 @@ class Mesh(Geometry):
         for index, nr_p in enumerate(points_per_triangle):
             if nr_p == 0:
                 continue
-            sampled_points = sample_triangle(self.np_mesh.v0[index],
-                                             self.np_mesh.v1[index],
-                                             self.np_mesh.v2[index], nr_p)
+            sampled_points = sample_in_triangle(
+                self.np_mesh.v0[index],
+                self.np_mesh.v1[index],
+                self.np_mesh.v2[index],
+                nr_p,
+                random
+            )
             all_points.append(sampled_points)
 
         return np.concatenate(all_points, axis=0)
