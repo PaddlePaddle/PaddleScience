@@ -21,12 +21,12 @@ from .geometry_nd import Hypercube, Hypersphere
 
 
 class Cuboid(Hypercube):
-    """
-    Args:
-        xmin: Coordinate of bottom left corner.
-        xmax: Coordinate of top right corner.
-    """
+    """Class for Cuboid
 
+    Args:
+        xmin (Tuple[float, float, float]): Coordinate of bottom left corner.
+        xmax (Tuple[float, float, float]): Coordinate of top right corner.
+    """
     def __init__(self, xmin, xmax):
         super().__init__(xmin, xmax)
         dx = self.xmax - self.xmin
@@ -42,14 +42,13 @@ class Cuboid(Hypercube):
             pts.append(np.hstack((u, np.full((len(u), 1), z))))
         rect = Rectangle(self.xmin[::2], self.xmax[::2])
         for y in [self.xmin[1], self.xmax[1]]:
-            u = rect.random_points(
-                int(np.ceil(density * rect.area)), random=random)
+            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
             pts.append(
-                np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:])))
+                np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:]))
+            )
         rect = Rectangle(self.xmin[1:], self.xmax[1:])
         for x in [self.xmin[0], self.xmax[0]]:
-            u = rect.random_points(
-                int(np.ceil(density * rect.area)), random=random)
+            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
             pts.append(np.hstack((np.full((len(u), 1), x), u)))
         pts = np.vstack(pts)
         if len(pts) > n:
@@ -77,18 +76,17 @@ class Cuboid(Hypercube):
                 u = list(itertools.product(y[1:-1], z[1:-1]))
                 pts.append(np.hstack((np.full((len(u), 1), v), u)))
         pts = np.vstack(pts)
-        if n != len(pts):
-            print("Warning: {} points required, but {} points sampled.".format(
-                n, len(pts)))
+        if len(pts) > n:
+            return pts[np.random.choice(len(pts), size=n, replace=False)]
         return pts
 
 
 class Sphere(Hypersphere):
-    """
-    Args:
-        center: Center of the sphere.
-        radius: Radius of the sphere.
-    """
+    """Class for Sphere
 
+    Args:
+        center (Tuple[float, float, float]): Center of the sphere.
+        radius (float): Radius of the sphere.
+    """
     def __init__(self, center, radius):
         super().__init__(center, radius)

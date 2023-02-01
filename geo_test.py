@@ -3,7 +3,7 @@ import numpy as np
 import pymesh
 from pyevtk.hl import pointsToVTK
 # import open3d
-from paddlescience.geometry_new import Mesh, Rectangle, Disk
+from paddlescience.neo_geometry import Mesh, Rectangle, Disk
 
 # import pysdf
 # vertices = np.array([

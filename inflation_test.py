@@ -2,7 +2,7 @@ import numpy as np
 import pymesh
 from pyevtk.hl import pointsToVTK
 
-from paddlescience.geometry_new import Disk, Mesh, Rectangle
+from paddlescience.neo_geometry import Disk, Mesh, Rectangle
 
 
 def __save_vtk_raw(filename="output", cordinate=None, data=None):

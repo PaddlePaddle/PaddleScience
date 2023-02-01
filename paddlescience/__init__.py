@@ -19,7 +19,7 @@ import paddle
 from . import config
 from . import parameter
 from . import geometry
-from . import geometry_new
+from . import neo_geometry
 from . import bc
 from . import ic
 from . import pde
