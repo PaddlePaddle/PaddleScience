@@ -151,9 +151,8 @@ class GeometryXTime:
     def uniform_initial_points(self, n):
         x = self.geometry.uniform_points(n, True)
         t = self.timedomain.t0
-        if n != len(x):
-            print("Warning: {} points required, but {} points sampled.".format(
-                n, len(x)))
+        if len(x) > n:
+            x = x[0: n]
         return np.hstack((x, np.full([len(x), 1], t, dtype=config._dtype)))
 
     def random_initial_points(self, n, random="pseudo"):

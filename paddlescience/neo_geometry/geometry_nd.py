@@ -35,11 +35,13 @@ class Hypercube(Geometry):
 
         self.side_length = self.xmax - self.xmin
         super().__init__(
-            len(xmin), (self.xmin, self.xmax),
-            np.linalg.norm(self.side_length))
+            len(xmin),
+            (self.xmin, self.xmax),
+            np.linalg.norm(self.side_length)
+        )
         self.volume = np.prod(self.side_length)
 
-    def inside(self, x):
+    def is_inside(self, x):
         return np.logical_and(
             np.all(x >= self.xmin, axis=-1), np.all(x <= self.xmax, axis=-1))
 
@@ -47,7 +49,7 @@ class Hypercube(Geometry):
         _on_boundary = np.logical_or(
             np.any(np.isclose(x, self.xmin), axis=-1),
             np.any(np.isclose(x, self.xmax), axis=-1), )
-        return np.logical_and(self.inside(x), _on_boundary)
+        return np.logical_and(self.is_inside(x), _on_boundary)
 
     def boundary_normal(self, x):
         _n = -np.isclose(x, self.xmin).astype(config._dtype) + np.isclose(
@@ -83,9 +85,8 @@ class Hypercube(Geometry):
                         endpoint=False,
                         dtype=config._dtype, )[1:])
         x = np.array(list(itertools.product(*xi)))
-        if n != len(x):
-            print("Warning: {} points required, but {} points sampled.".format(
-                n, len(x)))
+        if len(x) > n:
+            x = x[0: n]
         return x
 
     def random_points(self, n, random="pseudo"):
@@ -119,7 +120,7 @@ class Hypersphere(Geometry):
 
         self._r2 = radius**2
 
-    def inside(self, x):
+    def is_inside(self, x):
         return np.linalg.norm(x - self.center, axis=-1) <= self.radius
 
     def on_boundary(self, x):
@@ -134,10 +135,10 @@ class Hypersphere(Geometry):
         return (-ad + (ad**2 - np.sum(xc * xc, axis=-1) + self._r2)**0.5
                 ).astype(config._dtype)
 
-    def distance2boundary(self, x, dirn):
+    def distance_to_boundary(self, x, dirn):
         return self.distance2boundary_unitdirn(x, dirn / np.linalg.norm(dirn))
 
-    def mindist2boundary(self, x):
+    def mindist_to_boundary(self, x):
         return np.amin(self.radius - np.linalg.norm(x - self.center, axis=-1))
 
     def boundary_normal(self, x):

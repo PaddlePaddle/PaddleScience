@@ -27,53 +27,6 @@ from .inflation import pymesh_inflation
 from .sampler import sample
 
 
-def area_of_triangles(v0: np.ndarray, v1: np.ndarray,
-                      v2: np.ndarray) -> np.ndarray:
-    """ref https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
-
-    Args:
-        v0 (np.ndarray): Coordinates of the first vertex of the triangle surface with shape of [N, 3].
-        v1 (np.ndarray): Coordinates of the second vertex of the triangle surface with shape of [N, 3].
-        v2 (np.ndarray): Coordinates of the third vertex of the triangle surface with shape of [N, 3].
-
-    Returns:
-        np.ndarray: Area of each triangle with shape of [N, ].
-    """
-    a = np.sqrt((v0[:, 0] - v1[:, 0])**2 + (v0[:, 1] - v1[:, 1])**2 + (
-        v0[:, 2] - v1[:, 2])**2 + 1e-10)
-    b = np.sqrt((v1[:, 0] - v2[:, 0])**2 + (v1[:, 1] - v2[:, 1])**2 + (
-        v1[:, 2] - v2[:, 2])**2 + 1e-10)
-    c = np.sqrt((v0[:, 0] - v2[:, 0])**2 + (v0[:, 1] - v2[:, 1])**2 + (
-        v0[:, 2] - v2[:, 2])**2 + 1e-10)
-    s = (a + b + c) / 2
-    area = np.sqrt(s * (s - a) * (s - b) * (s - c) + 1e-10)
-    return area
-
-
-def sample_in_triangle(v0: np.ndarray, v1: np.ndarray, v2: np.ndarray,
-                    n: int, random="pseudo") -> np.ndarray:
-    """
-    Uniformly sample n points in an 3D triangle defined by 3 vertices v0, v1, v2
-    https://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle
-
-    Args:
-        v0 (np.ndarray): Coordinates of the first vertex of an triangle with shape of [3, ].
-        v1 (np.ndarray): Coordinates of the second vertex of an triangle with shape of [3, ].
-        v2 (np.ndarray): Coordinates of the third vertex of an triangle with shape of [3, ].
-        n (int): Number of points to be sampled.
-
-    Returns:
-        np.ndarray: Coordinates of sampled n points.
-    """
-    r1 = sample(n, 1, random).flatten()
-    r2 = sample(n, 1, random).flatten()
-    s1 = np.sqrt(r1)
-    x = v0[0] * (1.0 - s1) + v1[0] * (1.0 - r2) * s1 + v2[0] * r2 * s1
-    y = v0[1] * (1.0 - s1) + v1[1] * (1.0 - r2) * s1 + v2[1] * r2 * s1
-    z = v0[2] * (1.0 - s1) + v1[2] * (1.0 - r2) * s1 + v2[2] * r2 * s1
-    return np.stack([x, y, z], axis=1)
-
-
 class Mesh(Geometry):
     """A geometry represented by a point cloud, i.e., a set of points in space.
 
@@ -111,30 +64,14 @@ class Mesh(Geometry):
             np.inf
         )
 
-    def inside(self, x: np.ndarray) -> np.ndarray:
-        """_summary_
-
-        Args:
-            x (np.ndarray): [N, D]
-
-        Returns:
-            np.ndarray(bool): [N, ]
-        """
+    def is_inside(self, x):
         return self.sdf.contains(x)
 
-    def on_boundary(self, x: np.ndarray) -> np.ndarray:
-        """_summary_
-
-        Args:
-            x (np.ndarray): [N, D]
-
-        Returns:
-            np.ndarray(bool): [N, ]
-        """
+    def on_boundary(self, x):
         inner_mask = self.sdf.contains(x)
         return ~inner_mask
 
-    def random_points(self, n, random="pseudo") -> np.ndarray:
+    def random_points(self, n, random="pseudo"):
         cur_n = 0
         all_points = []
         while cur_n < n:
@@ -154,11 +91,7 @@ class Mesh(Geometry):
             all_points = all_points[:n]
         return all_points
 
-    def inflated_random_points(
-        self, n: Union[int, List[int]],
-        distance: Union[int, List[Union[int, float]]],
-        random="pseudo"
-    ) -> np.ndarray:
+    def inflated_random_points(self, n, distance, random="pseudo"):
         if not isinstance(n, (tuple, list)):
             n = [n]
         if not isinstance(distance, (tuple, list)):
@@ -191,7 +124,7 @@ class Mesh(Geometry):
 
         return np.concatenate(all_points, axis=0)
 
-    def inflated_random_boundary_points(self, n: Union[int, List[int]], distance: Union[int, List[Union[int, float]]], random="pseudo") -> np.ndarray:
+    def inflated_random_boundary_points(self, n, distance, random="pseudo"):
         if not isinstance(n, (tuple, list)):
             n = [n]
         if not isinstance(distance, (tuple, list)):
@@ -210,7 +143,9 @@ class Mesh(Geometry):
             )
             triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
             triangle_index = np.arange(triangle_probabilities.shape[0])
-            points_per_triangle = np.random.choice(triangle_index, _n, p=triangle_probabilities)
+            points_per_triangle = np.random.choice(
+                triangle_index, _n, p=triangle_probabilities
+            )
             points_per_triangle, _ = np.histogram(
                 points_per_triangle,
                 np.arange(triangle_probabilities.shape[0] + 1) - 0.5
@@ -294,3 +229,48 @@ class Mesh(Geometry):
 
     def __and__(self, rhs):
         return self.intersection(rhs)
+
+
+def area_of_triangles(v0, v1, v2):
+    """ref https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
+
+    Args:
+        v0 (np.ndarray): Coordinates of the first vertex of the triangle surface with shape of [N, 3].
+        v1 (np.ndarray): Coordinates of the second vertex of the triangle surface with shape of [N, 3].
+        v2 (np.ndarray): Coordinates of the third vertex of the triangle surface with shape of [N, 3].
+
+    Returns:
+        np.ndarray: Area of each triangle with shape of [N, ].
+    """
+    a = np.sqrt((v0[:, 0] - v1[:, 0])**2 + (v0[:, 1] - v1[:, 1])**2 + (
+        v0[:, 2] - v1[:, 2])**2 + 1e-10)
+    b = np.sqrt((v1[:, 0] - v2[:, 0])**2 + (v1[:, 1] - v2[:, 1])**2 + (
+        v1[:, 2] - v2[:, 2])**2 + 1e-10)
+    c = np.sqrt((v0[:, 0] - v2[:, 0])**2 + (v0[:, 1] - v2[:, 1])**2 + (
+        v0[:, 2] - v2[:, 2])**2 + 1e-10)
+    s = (a + b + c) / 2
+    area = np.sqrt(s * (s - a) * (s - b) * (s - c) + 1e-10)
+    return area
+
+
+def sample_in_triangle(v0, v1, v2, n, random="pseudo"):
+    """
+    Uniformly sample n points in an 3D triangle defined by 3 vertices v0, v1, v2
+    https://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle
+
+    Args:
+        v0 (np.ndarray): Coordinates of the first vertex of an triangle with shape of [3, ].
+        v1 (np.ndarray): Coordinates of the second vertex of an triangle with shape of [3, ].
+        v2 (np.ndarray): Coordinates of the third vertex of an triangle with shape of [3, ].
+        n (int): Number of points to be sampled.
+
+    Returns:
+        np.ndarray: Coordinates of sampled n points.
+    """
+    r1 = sample(n, 1, random).flatten()
+    r2 = sample(n, 1, random).flatten()
+    s1 = np.sqrt(r1)
+    x = v0[0] * (1.0 - s1) + v1[0] * (1.0 - r2) * s1 + v2[0] * r2 * s1
+    y = v0[1] * (1.0 - s1) + v1[1] * (1.0 - r2) * s1 + v2[1] * r2 * s1
+    z = v0[2] * (1.0 - s1) + v1[2] * (1.0 - r2) * s1 + v2[2] * r2 * s1
+    return np.stack([x, y, z], axis=1)
