@@ -35,20 +35,20 @@ class CSGUnion(geometry.Geometry):
         self.geom1 = geom1
         self.geom2 = geom2
 
-    def inside(self, x):
-        return np.logical_or(self.geom1.inside(x), self.geom2.inside(x))
+    def is_inside(self, x):
+        return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
 
     def on_boundary(self, x):
         return np.logical_or(
-            np.logical_and(self.geom1.on_boundary(x), ~self.geom2.inside(x)),
-            np.logical_and(self.geom2.on_boundary(x), ~self.geom1.inside(x)), )
+            np.logical_and(self.geom1.on_boundary(x), ~self.geom2.is_inside(x)),
+            np.logical_and(self.geom2.on_boundary(x), ~self.geom1.is_inside(x)), )
 
     def boundary_normal(self, x):
         return np.logical_and(
             self.geom1.on_boundary(x),
-            ~self.geom2.inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
+            ~self.geom2.is_inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
                 x) + np.logical_and(
-                    self.geom2.on_boundary(x), ~self.geom1.inside(
+                    self.geom2.on_boundary(x), ~self.geom1.is_inside(
                         x))[:, np.newaxis] * self.geom2.boundary_normal(x)
 
     def random_points(self, n, random="pseudo"):
@@ -57,7 +57,7 @@ class CSGUnion(geometry.Geometry):
         while i < n:
             tmp = (np.random.rand(n, self.dim) *
                    (self.bbox[1] - self.bbox[0]) + self.bbox[0])
-            tmp = tmp[self.inside(tmp)]
+            tmp = tmp[self.is_inside(tmp)]
 
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
@@ -71,12 +71,12 @@ class CSGUnion(geometry.Geometry):
         while i < n:
             geom1_boundary_points = self.geom1.random_boundary_points(
                 n, random=random)
-            geom1_boundary_points = geom1_boundary_points[~self.geom2.inside(
+            geom1_boundary_points = geom1_boundary_points[~self.geom2.is_inside(
                 geom1_boundary_points)]
 
             geom2_boundary_points = self.geom2.random_boundary_points(
                 n, random=random)
-            geom2_boundary_points = geom2_boundary_points[~self.geom1.inside(
+            geom2_boundary_points = geom2_boundary_points[~self.geom1.is_inside(
                 geom2_boundary_points)]
 
             tmp = np.concatenate(
@@ -92,11 +92,11 @@ class CSGUnion(geometry.Geometry):
     def periodic_point(self, x, component):
         x = np.copy(x)
         on_boundary_geom1 = np.logical_and(
-            self.geom1.on_boundary(x), ~self.geom2.inside(x))
+            self.geom1.on_boundary(x), ~self.geom2.is_inside(x))
         x[on_boundary_geom1] = self.geom1.periodic_point(
             x, component)[on_boundary_geom1]
         on_boundary_geom2 = np.logical_and(
-            self.geom2.on_boundary(x), ~self.geom1.inside(x))
+            self.geom2.on_boundary(x), ~self.geom1.is_inside(x))
         x[on_boundary_geom2] = self.geom2.periodic_point(
             x, component)[on_boundary_geom2]
         return x
@@ -113,20 +113,20 @@ class CSGDifference(geometry.Geometry):
         self.geom1 = geom1
         self.geom2 = geom2
 
-    def inside(self, x):
-        return np.logical_and(self.geom1.inside(x), ~self.geom2.inside(x))
+    def is_inside(self, x):
+        return np.logical_and(self.geom1.is_inside(x), ~self.geom2.is_inside(x))
 
     def on_boundary(self, x):
         return np.logical_or(
-            np.logical_and(self.geom1.on_boundary(x), ~self.geom2.inside(x)),
-            np.logical_and(self.geom1.inside(x), self.geom2.on_boundary(x)), )
+            np.logical_and(self.geom1.on_boundary(x), ~self.geom2.is_inside(x)),
+            np.logical_and(self.geom1.is_inside(x), self.geom2.on_boundary(x)), )
 
     def boundary_normal(self, x):
         return np.logical_and(
             self.geom1.on_boundary(x),
-            ~self.geom2.inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
+            ~self.geom2.is_inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
                 x) + np.logical_and(
-                    self.geom1.inside(x), self.geom2.on_boundary(
+                    self.geom1.is_inside(x), self.geom2.on_boundary(
                         x))[:, np.newaxis] * -self.geom2.boundary_normal(x)
 
     def random_points(self, n, random="pseudo"):
@@ -134,7 +134,7 @@ class CSGDifference(geometry.Geometry):
         i = 0
         while i < n:
             tmp = self.geom1.random_points(n, random=random)
-            tmp = tmp[~self.geom2.inside(tmp)]
+            tmp = tmp[~self.geom2.is_inside(tmp)]
 
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
@@ -149,12 +149,12 @@ class CSGDifference(geometry.Geometry):
 
             geom1_boundary_points = self.geom1.random_boundary_points(
                 n, random=random)
-            geom1_boundary_points = geom1_boundary_points[~self.geom2.inside(
+            geom1_boundary_points = geom1_boundary_points[~self.geom2.is_inside(
                 geom1_boundary_points)]
 
             geom2_boundary_points = self.geom2.random_boundary_points(
                 n, random=random)
-            geom2_boundary_points = geom2_boundary_points[self.geom1.inside(
+            geom2_boundary_points = geom2_boundary_points[self.geom1.is_inside(
                 geom2_boundary_points)]
 
             tmp = np.concatenate(
@@ -170,7 +170,7 @@ class CSGDifference(geometry.Geometry):
     def periodic_point(self, x, component):
         x = np.copy(x)
         on_boundary_geom1 = np.logical_and(
-            self.geom1.on_boundary(x), ~self.geom2.inside(x))
+            self.geom1.on_boundary(x), ~self.geom2.is_inside(x))
         x[on_boundary_geom1] = self.geom1.periodic_point(
             x, component)[on_boundary_geom1]
         return x
@@ -192,20 +192,20 @@ class CSGIntersection(geometry.Geometry):
         self.geom1 = geom1
         self.geom2 = geom2
 
-    def inside(self, x):
-        return np.logical_and(self.geom1.inside(x), self.geom2.inside(x))
+    def is_inside(self, x):
+        return np.logical_and(self.geom1.is_inside(x), self.geom2.is_inside(x))
 
     def on_boundary(self, x):
         return np.logical_or(
-            np.logical_and(self.geom1.on_boundary(x), self.geom2.inside(x)),
-            np.logical_and(self.geom1.inside(x), self.geom2.on_boundary(x)), )
+            np.logical_and(self.geom1.on_boundary(x), self.geom2.is_inside(x)),
+            np.logical_and(self.geom1.is_inside(x), self.geom2.on_boundary(x)), )
 
     def boundary_normal(self, x):
         return np.logical_and(
             self.geom1.on_boundary(x),
-            self.geom2.inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
+            self.geom2.is_inside(x))[:, np.newaxis] * self.geom1.boundary_normal(
                 x) + np.logical_and(
-                    self.geom1.inside(x), self.geom2.on_boundary(
+                    self.geom1.is_inside(x), self.geom2.on_boundary(
                         x))[:, np.newaxis] * self.geom2.boundary_normal(x)
 
     def random_points(self, n, random="pseudo"):
@@ -213,7 +213,7 @@ class CSGIntersection(geometry.Geometry):
         i = 0
         while i < n:
             tmp = self.geom1.random_points(n, random=random)
-            tmp = tmp[self.geom2.inside(tmp)]
+            tmp = tmp[self.geom2.is_inside(tmp)]
 
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
@@ -228,12 +228,12 @@ class CSGIntersection(geometry.Geometry):
 
             geom1_boundary_points = self.geom1.random_boundary_points(
                 n, random=random)
-            geom1_boundary_points = geom1_boundary_points[self.geom2.inside(
+            geom1_boundary_points = geom1_boundary_points[self.geom2.is_inside(
                 geom1_boundary_points)]
 
             geom2_boundary_points = self.geom2.random_boundary_points(
                 n, random=random)
-            geom2_boundary_points = geom2_boundary_points[self.geom1.inside(
+            geom2_boundary_points = geom2_boundary_points[self.geom1.is_inside(
                 geom2_boundary_points)]
 
             tmp = np.concatenate(
@@ -249,11 +249,11 @@ class CSGIntersection(geometry.Geometry):
     def periodic_point(self, x, component):
         x = np.copy(x)
         on_boundary_geom1 = np.logical_and(
-            self.geom1.on_boundary(x), self.geom2.inside(x))
+            self.geom1.on_boundary(x), self.geom2.is_inside(x))
         x[on_boundary_geom1] = self.geom1.periodic_point(
             x, component)[on_boundary_geom1]
         on_boundary_geom2 = np.logical_and(
-            self.geom2.on_boundary(x), self.geom1.inside(x))
+            self.geom2.on_boundary(x), self.geom1.is_inside(x))
         x[on_boundary_geom2] = self.geom2.periodic_point(
             x, component)[on_boundary_geom2]
         return x

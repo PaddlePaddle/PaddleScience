@@ -26,9 +26,11 @@ def sample(n_samples, dimension, sampler="pseudo"):
     Args:
         n_samples (int): The number of samples.
         dimension (int): Space dimension.
-        sampler (string): One of the following: "pseudo" (pseudorandom), "LHS" (Latin
+        sampler (str): One of the following: "pseudo" (pseudorandom), "LHS" (Latin
             hypercube sampling), "Halton" (Halton sequence), "Hammersley" (Hammersley
             sequence), or "Sobol" (Sobol sequence).
+    Returns:
+        np.ndarray: Generated random samples with shape of [n_samples, dimension].
     """
     if sampler == "pseudo":
         return pseudorandom(n_samples, dimension)
@@ -47,6 +49,7 @@ def pseudorandom(n_samples, dimension):
 
 
 def quasirandom(n_samples, dimension, sampler):
+    """Quasi random"""
     # Certain points should be removed:
     # - Boundary points such as [..., 0, ...]
     # - Special points [0, 0, 0, ...] and [0.5, 0.5, 0.5, ...], which cause error in
