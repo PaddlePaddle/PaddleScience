@@ -77,9 +77,9 @@ geo.add_boundary(name="right", criteria=boundary_right)
 # discretize geometry
 geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 
-# N-S
+# N-S: Re = 100, u = 1.0, nu = rho u d / Re = 1.0 * 1.0 * 0.1 / 100 = 0.001
 pde = psci.pde.NavierStokes(
-    nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
+    nu=0.001, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
 
 # define bounday conditions
 bc_top_u = psci.bc.Dirichlet('u', rhs=1.0)

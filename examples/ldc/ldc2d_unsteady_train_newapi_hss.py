@@ -47,7 +47,7 @@ seed_num = 42
 sampler_method = 'uniform'
 # Time
 start_time = 0.0
-end_time = 0.5
+end_time = 1.0
 time_step = 0.1
 time_num = int((end_time - start_time) / time_step) + 1
 time_tmp = np.linspace(start_time, end_time, time_num, endpoint=True)
@@ -112,9 +112,9 @@ geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
 # discretize geometry
 geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 
-# N-S
+# N-S: Re = 100, u = 1.0, nu = rho u d / Re = 1.0 * 1.0 * 0.1 / 100 = 0.001
 pde = psci.pde.NavierStokes(
-    nu=0.01, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
+    nu=0.001, rho=1.0, dim=2, time_dependent=True, weight=0.0001)
 pde.set_time_interval([start_time, end_time])
 
 # define boundary condition
