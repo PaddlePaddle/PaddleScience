@@ -83,7 +83,6 @@ class Geometry(object):
                 tmp = tmp[:n - i]
             x[i:i + len(tmp)] = tmp
             i += len(tmp)
-            print(i)
         return x
 
     def uniform_boundary_points(self, n: int):
