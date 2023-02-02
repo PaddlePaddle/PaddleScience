@@ -14,13 +14,11 @@
 
 from __future__ import annotations
 
-import copy
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 import pymesh
 import pysdf
-from stl import mesh as np_mesh
 
 from .geometry import Geometry
 from .inflation import pymesh_inflation
@@ -42,42 +40,46 @@ class Mesh(Geometry):
         else:
             raise ValueError(f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
 
-        self.np_mesh = np_mesh.Mesh(np.zeros(self.py_mesh.faces.shape[0], dtype=np_mesh.Mesh.dtype))
-        self.np_mesh.vectors = self.py_mesh.vertices[self.py_mesh.faces]
+        self.vertices = self.py_mesh.vertices
+        self.faces = self.py_mesh.faces
+        self.vectors = self.vertices[self.faces]
+        super().__init__(
+            self.vertices.shape[-1],
+            (np.amin(self.vertices, axis=0), np.amax(self.vertices, axis=0)),
+            np.inf
+        )
+        self.v0 = self.vectors[:, 0]
+        self.v1 = self.vectors[:, 1]
+        self.v2 = self.vectors[:, 2]
+        self.num_vertices = self.py_mesh.num_vertices
         self.num_faces = self.py_mesh.num_faces
-        self.num_points = self.py_mesh.num_vertices
-        self.points = self.py_mesh.vertices
-        self.sdf = pysdf.SDF(self.py_mesh.vertices, self.py_mesh.faces)
-        self.face_bounary = (
-            ((np.min(self.np_mesh.vectors[:, :, 0])),
-             np.max(self.np_mesh.vectors[:, :, 0])),
-            ((np.min(self.np_mesh.vectors[:, :, 1])),
-             np.max(self.np_mesh.vectors[:, :, 1])),
-            ((np.min(self.np_mesh.vectors[:, :, 2])),
-             np.max(self.np_mesh.vectors[:, :, 2]))
+        self.sdf = pysdf.SDF(self.vertices, self.faces)
+        self.bounds = (
+            ((np.min(self.vectors[:, :, 0])),
+             np.max(self.vectors[:, :, 0])),
+            ((np.min(self.vectors[:, :, 1])),
+             np.max(self.vectors[:, :, 1])),
+            ((np.min(self.vectors[:, :, 2])),
+             np.max(self.vectors[:, :, 2]))
         )
         self.boundary_points = None
         self.boundary_normals = None
-        super().__init__(
-            self.points.shape[-1],
-            (np.amin(self.points, axis=0), np.amax(self.points, axis=0)),
-            np.inf
-        )
 
     def is_inside(self, x):
+        # NOTE: point on boundary is included
         return self.sdf.contains(x)
 
     def on_boundary(self, x):
-        inner_mask = self.sdf.contains(x)
-        return ~inner_mask
+        x_sdf = self.sdf(x)
+        return np.isclose(x_sdf, 0.0)
 
     def random_points(self, n, random="pseudo"):
         cur_n = 0
         all_points = []
         while cur_n < n:
             random_points = [
-                sample(_n, 1, random) * (e[1] - e[0]) + e[0]
-                for e in self.face_bounary
+                sample(n, 1, random) * (e[1] - e[0]) + e[0]
+                for e in self.bounds
             ]
             random_points = np.concatenate(random_points, axis=1)
             inner_mask = self.sdf.contains(random_points)
@@ -90,6 +92,10 @@ class Mesh(Geometry):
         if cur_n > n:
             all_points = all_points[:n]
         return all_points
+
+    def uniform_boundary_points(self, n: int):
+        """Compute the equispaced points on the boundary."""
+        return self.sdf.sample_surface(n)
 
     def inflated_random_points(self, n, distance, random="pseudo"):
         if not isinstance(n, (tuple, list)):
@@ -108,7 +114,7 @@ class Mesh(Geometry):
             while cur_n < _n:
                 random_points = [
                     sample(_n, 1, random) * (e[1] - e[0]) + e[0]
-                    for e in inflated_mesh.face_bounary
+                    for e in inflated_mesh.bounds
                 ]
                 random_points = np.concatenate(random_points, axis=1)
                 inner_mask = inflated_mesh.sdf.contains(random_points)
@@ -137,9 +143,9 @@ class Mesh(Geometry):
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(pymesh_inflation(self.py_mesh, _dist))
             triangle_areas = area_of_triangles(
-                inflated_mesh.np_mesh.v0,
-                inflated_mesh.np_mesh.v1,
-                inflated_mesh.np_mesh.v2
+                inflated_mesh.v0,
+                inflated_mesh.v1,
+                inflated_mesh.v2
             )
             triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
             triangle_index = np.arange(triangle_probabilities.shape[0])
@@ -156,9 +162,9 @@ class Mesh(Geometry):
                 if nr_p == 0:
                     continue
                 sampled_points = sample_in_triangle(
-                    inflated_mesh.np_mesh.v0[index],
-                    inflated_mesh.np_mesh.v1[index],
-                    inflated_mesh.np_mesh.v2[index],
+                    inflated_mesh.v0[index],
+                    inflated_mesh.v1[index],
+                    inflated_mesh.v2[index],
                     nr_p,
                     random
                 )
@@ -170,9 +176,9 @@ class Mesh(Geometry):
 
     def random_boundary_points(self, n, random="pseudo"):
         triangle_areas = area_of_triangles(
-            self.np_mesh.v0,
-            self.np_mesh.v1,
-            self.np_mesh.v2
+            self.v0,
+            self.v1,
+            self.v2
         )
         triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
         triangle_index = np.arange(triangle_probabilities.shape[0])
@@ -187,9 +193,9 @@ class Mesh(Geometry):
             if nr_p == 0:
                 continue
             sampled_points = sample_in_triangle(
-                self.np_mesh.v0[index],
-                self.np_mesh.v1[index],
-                self.np_mesh.v2[index],
+                self.v0[index],
+                self.v1[index],
+                self.v2[index],
                 nr_p,
                 random
             )
