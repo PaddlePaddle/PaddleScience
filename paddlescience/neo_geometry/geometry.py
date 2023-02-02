@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 import abc
 from typing import Callable, Dict
 

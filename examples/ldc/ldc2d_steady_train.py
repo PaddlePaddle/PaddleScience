@@ -37,7 +37,7 @@ if cfg is not None:
 else:
     # Geometry
     npoints = 10201
-    seed_num = 42
+    seed_num = 1
     sampler_method = 'uniform'
     # Network
     epochs = 20000
@@ -55,47 +55,15 @@ paddle.seed(seed_num)
 np.random.seed(seed_num)
 
 # set geometry and boundary
-# geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
 
-# geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
-# geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
-# geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
-# geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
+geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
+geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
+geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
+geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
 
-# # discretize geometry
-# geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
-
-"""
-interior.shape = (9801, 2)
-top.shape= (101, 2)
-down.shape= (101, 2)
-left.shape= (99, 2)
-right.shape= (99, 2)
-"""
-
-geo_disc = psci.geometry_new.Rectangle([-0.05, -0.05], [0.05, 0.05])
-geo_disc.add_sample_config("interior", 9801)
-geo_disc.add_sample_config("top", 101, lambda x, y: abs(y - 0.05) < 1e-5)
-geo_disc.add_sample_config("down", 101, lambda x, y: abs(y + 0.05) < 1e-5)
-geo_disc.add_sample_config("left", 99, lambda x, y: abs(x + 0.05) < 1e-5)
-geo_disc.add_sample_config("right", 99, lambda x, y: abs(x - 0.05) < 1e-5)
-
-points_dict = geo_disc.fetch_batch_data()
-geo_disc.interior = points_dict["interior"]
-geo_disc.boundary = {
-    "top": points_dict["top"]
-    "down": points_dict["down"]
-    "left": points_dict["left"]
-    "right": points_dict["right"]
-}
-geo_disc.normal = {
-    "top": None,
-    "down": None,
-    "left": None,
-    "right": None,
-}
-geo_disc.user = None
-geo_disc.geometry = None
+# discretize geometry
+geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
 
 # N-S
 pde = psci.pde.NavierStokes(

@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 import itertools
 
 import numpy as np
 
+from .. import config
 from .geometry_1d import Interval
 from .geometry_2d import Rectangle
 from .geometry_3d import Cuboid
 from .geometry_nd import Hypercube
-from .. import config
 
 
 class TimeDomain(Interval):
