@@ -340,17 +340,19 @@ bc_cylinder_u = psci.bc.Dirichlet("u", rhs=0.0)
 bc_cylinder_v = psci.bc.Dirichlet("v", rhs=0.0)
 bc_cylinder_w = psci.bc.Dirichlet("w", rhs=0.0)
 bc_outlet_p = psci.bc.Dirichlet("p", rhs=0.0)
-bc_top_u = psci.bc.Dirichlet("u", rhs=0.0)
+bc_top_u = psci.bc.Dirichlet("u", rhs=1.0)
 bc_top_v = psci.bc.Dirichlet("v", rhs=0.0)
-bc_bottom_u = psci.bc.Dirichlet("u", rhs=0.0)
+bc_top_w = psci.bc.Dirichlet("w", rhs=0.0)
+bc_bottom_u = psci.bc.Dirichlet("u", rhs=1.0)
 bc_bottom_v = psci.bc.Dirichlet("v", rhs=0.0)
+bc_bottom_w = psci.bc.Dirichlet("w", rhs=0.0)
 
 # add bounday and boundary condition
 pde.set_bc("inlet", bc_inlet_u, bc_inlet_v, bc_inlet_w)
 pde.set_bc("cylinder", bc_cylinder_u, bc_cylinder_v, bc_cylinder_w)
 pde.set_bc("outlet", bc_outlet_p)
-pde.set_bc("top", bc_top_u, bc_top_v)
-pde.set_bc("bottom", bc_bottom_u, bc_bottom_v)
+pde.set_bc("top", bc_top_u, bc_top_v, bc_top_w)
+pde.set_bc("bottom", bc_bottom_u, bc_bottom_v, bc_bottom_w)
 
 # add initial condition
 ic_u = psci.ic.IC("u", rhs=init_u)
@@ -582,4 +584,4 @@ for n in range(len(solution)):
     solution[n][:, 3:4] = solution[n][:, 3:4] * p_star
 
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_20_new", time_array=time_array, cord=cord, data=solution)
+psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_31_new", time_array=time_array, cord=cord, data=solution)
