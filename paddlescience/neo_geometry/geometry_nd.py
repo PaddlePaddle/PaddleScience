@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 import itertools
 
 import numpy as np
 from scipy import stats
 from sklearn import preprocessing
 
+from .. import config
 from .geometry import Geometry
 from .sampler import sample
-from .. import config
 
 
 class Hypercube(Geometry):

@@ -26,6 +26,5 @@ from .geometry_2d import Disk, Polygon, Rectangle, Triangle
 from .geometry_3d import Cuboid, Sphere
 from .geometry_nd import Hypercube, Hypersphere
 from .mesh import Mesh
-from .pointcloud import PointCloud
 from .sampler import sample
 from .timedomain import GeometryXTime, TimeDomain

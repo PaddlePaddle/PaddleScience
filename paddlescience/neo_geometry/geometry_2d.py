@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 from typing import Tuple
 
 import numpy as np
@@ -27,7 +31,7 @@ class Disk(Geometry):
     """Class for disk geometry
 
     Args:
-        center (Tuple[float, float]): Center point of disk[x0, y0].
+        center (Tuple[float, float]): Center point of disk [x0, y0].
         radius (float): Radius of disk.
     """
     def __init__(self, center, radius: float):

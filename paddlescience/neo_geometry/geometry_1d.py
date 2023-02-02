@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 from typing import Dict
 
 import numpy as np
@@ -22,6 +26,12 @@ from .sampler import sample
 
 
 class Interval(Geometry):
+    """Class for interval
+
+    Args:
+        l (float): Left position of interval.
+        r (float): Right position of interval.
+    """
     def __init__(self, l, r):
         super().__init__(1, (np.array([[l]]), np.array([[r]])), r - l)
         self.l = l

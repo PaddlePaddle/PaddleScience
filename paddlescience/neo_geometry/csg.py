@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Code below is heavily based on https://github.com/lululxvi/deepxde
+"""
+
 import numpy as np
 
-from . import geometry
 from .. import config
+from . import geometry
 from .mesh import Mesh
 
 
