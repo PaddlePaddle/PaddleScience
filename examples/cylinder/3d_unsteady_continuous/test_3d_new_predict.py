@@ -214,8 +214,6 @@ paddle.seed(42)
 np.random.seed(42)
 # paddle.enable_static()
 
-domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
-
 # Dimensionless Trick for Navier Stokes equations
 Re = 3900
 U0 = 0.1
@@ -231,14 +229,17 @@ p_star = rho * U0 * U0  # 0.01
 # time array
 ic_t = 200000
 t_start = 200050
-t_end = 200250
+t_end = 2001000
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
+time_list = [i for i in range(1, time_num + 1)]
 time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
-# time_array = np.random.choice(time_tmp, time_num, replace=False)
-time_array = time_tmp
-time_array.sort()
-print(f"time_num = {time_num}, time_array = {time_array}")
+# time_index = np.random.choice(time_list, int(time_num / 2.5), replace=False)
+# time_index.sort()
+time_index = time_list
+time_array = time_index * t_step
+print(f"time_num = {time_num}, time_list = {time_list}, time_tmp = {time_tmp}")
+print(f"time_index = {time_index}, time_array = {time_array}")
 
 # weight of losses - inlet, outlet, cylinder, top wall, bottom wall, equation, initial condition, supervised data
 inlet_wgt = 2.0
@@ -265,7 +266,7 @@ init_p = txyz_uvwpe_ic[:, 7] / p_star; print(f"init_p={init_p.shape} {init_p.mea
 n_sup = 2000
 
 # supervised data
-txyz_uvwpe_s = load_supervised_data(t_start, t_end, t_step, ic_t, n_sup)
+txyz_uvwpe_s = load_supervised_data(t_start, t_end, t_step, time_index, ic_t, n_sup)
 sup_t = txyz_uvwpe_s[:, 0] / t_star; print(f"sup_t={sup_t.shape} {sup_t.mean().item():.10f}")
 sup_x = txyz_uvwpe_s[:, 1] / xyz_star; print(f"sup_x={sup_x.shape} {sup_x.mean().item():.10f}")
 sup_y = txyz_uvwpe_s[:, 2] / xyz_star; print(f"sup_y={sup_y.shape} {sup_y.mean().item():.10f}")
@@ -276,8 +277,8 @@ sup_w = txyz_uvwpe_s[:, 6] / uvw_star; print(f"sup_w={sup_w.shape} {sup_w.mean()
 sup_p = txyz_uvwpe_s[:, 7] / p_star; print(f"sup_p={sup_p.shape} {sup_p.mean().item():.10f}")
 
 # num points to sample per GPU
-# num_points = 30000
-num_points = 15000
+num_points = 30000
+# num_points = 15000
 # discretize node by geo
 inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_num=time_num, t_step=t_step, nr_points=num_points)
 
@@ -550,13 +551,16 @@ num_epoch = 100000
 _lr = Cosine(num_epoch, 1, 0.001, warmup_epoch=5000, by_epoch=True)()
 # _lr = 0.001
 opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
+# opt_params = './checkpoint/dynamic_opt_params_100000.pdopt'
+# load_net_params = paddle.load(opt_params)
+# opt.set_state_dict(load_net_params)
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-# solution = solver.solve(num_epoch=num_epoch)
-solution = solver.predict()
+solution = solver.solve(num_epoch=num_epoch)
+# solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
@@ -584,4 +588,4 @@ for n in range(len(solution)):
     solution[n][:, 3:4] = solution[n][:, 3:4] * p_star
 
 # psci.visu.__save_vtk_raw(cordinate=cord, data=solution[0][-n::])
-psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_31_new", time_array=time_array, cord=cord, data=solution)
+psci.visu.save_vtk_cord(filename="./vtk/output_2023_1_31_new_predict", time_array=time_array, cord=cord, data=solution)

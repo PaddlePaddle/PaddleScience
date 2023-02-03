@@ -121,7 +121,7 @@ def normalize(max_domain, min_domain, array, index):
         array[:,index] = (array[:, index] - min_domain)/diff
 
 
-def sample_data(t_num, t_step=50, nr_points = 4000):
+def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
     # make standard constructive solid geometry example
     # make primitives
     box = Box(point_1=(0, 0, 0), point_2=(1600, 800, 320))
@@ -146,28 +146,28 @@ def sample_data(t_num, t_step=50, nr_points = 4000):
     inlet = boundaries[5]
     inlet = convert_float64_to_float32(inlet)
     inlet_xyz = np.concatenate((inlet['x'], inlet['y'], inlet['z']), axis=1)
-    inlet_txyz = replicate_t(t_num, t_step, inlet_xyz)
+    inlet_txyz = replicate_t(t_num, t_index, t_step, inlet_xyz)
 
     # outlet = boundaries[1]
     outlet = boundaries[4]
     outlet = convert_float64_to_float32(outlet)
     outlet_xyz = np.concatenate((outlet['x'], outlet['y'], outlet['z']), axis=1)
-    outlet_txyz = replicate_t(t_num, t_step, outlet_xyz)
+    outlet_txyz = replicate_t(t_num, t_index, t_step, outlet_xyz)
 
     cylinder = boundaries[6]
     cylinder = convert_float64_to_float32(cylinder)
     cylinder_xyz = np.concatenate((cylinder['x'], cylinder['y'], cylinder['z']), axis=1)
-    cylinder_txyz = replicate_t(t_num, t_step, cylinder_xyz)
+    cylinder_txyz = replicate_t(t_num, t_index, t_step, cylinder_xyz)
 
     up = boundaries[2]
     up = convert_float64_to_float32(up)
     up_xyz = np.concatenate((up['x'], up['y'], up['z']), axis=1)
-    up_txyz = replicate_t(t_num, t_step, up_xyz)
+    up_txyz = replicate_t(t_num, t_index, t_step, up_xyz)
 
     down = boundaries[3]
     down = convert_float64_to_float32(down)
     down_xyz = np.concatenate((down['x'], down['y'], down['z']), axis=1)
-    down_txyz = replicate_t(t_num, t_step, down_xyz)
+    down_txyz = replicate_t(t_num, t_index, t_step, down_xyz)
 
     print("Sampling Domain data ......")
     interior = geo.sample_interior(nr_points=nr_points, compute_sdf_derivatives=True)
@@ -178,7 +178,7 @@ def sample_data(t_num, t_step=50, nr_points = 4000):
     interior1_xyz = np.concatenate((interior1['x'], interior1['y'], interior1['z']), axis=1)
     interior2_xyz = np.concatenate((interior_xyz, interior1_xyz), axis=0)
     # interior_txyz = replicate_t(t_num, t_step, interior_xyz)
-    interior2_txyz = replicate_t(t_num, t_step, interior2_xyz)
+    interior2_txyz = replicate_t(t_num, t_index, t_step, interior2_xyz)
     var_to_polyvtk(interior, "interior")
     print("Volume: {:.3f}".format(np.sum(s["area"])))
 
@@ -198,9 +198,10 @@ def convert_float64_to_float32(dict_a):
         dict_a[k]=dict_a[k].astype(np.float32)
     return dict_a
 
-def replicate_t(t_num, t_step, data):
+def replicate_t(t_num, t_index, t_step, data):
     full_data = None
-    for time in range(1, t_num+1):
+    # for time in range(1, t_num+1):
+    for time in t_index:
         t_len = data.shape[0]
         t_extended = np.array([time * t_step] * t_len, dtype=np.float32).reshape((-1, 1))
         t_data = np.concatenate((t_extended, data), axis=1)

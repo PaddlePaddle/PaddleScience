@@ -233,10 +233,10 @@ def load_ic_data(t):
 
 
 # t_step = 50, t_start=200050, t_end=200250, take 3 steps
-def load_supervised_data(t_start, t_end, t_step, t_ic, num_points):
+def load_supervised_data(t_start, t_end, t_step, t_index, t_ic, n_sup_pts):
     print("Loading Supervised data ......")
-    row_index = round((t_start - time_start_per_file) / t_step)  # row_index = 1, strat from second row
-    row_length = int((t_end - t_start) / t_step) + 1
+    # row_index = round((t_start - time_start_per_file) / t_step)  # row_index = 1, strat from second row
+    # row_length = int((t_end - t_start) / t_step) + 1
 
     # Get list of all files in a given directory sorted by name
     list_of_files = sorted(filter(os.path.isfile, glob.glob(dir_sp_mode1 + '*')))
@@ -245,14 +245,16 @@ def load_supervised_data(t_start, t_end, t_step, t_ic, num_points):
     # Iterate over sorted list of files and print the file paths one by one.
     flow_list = []
     flow_array = None
-    # for file_path in random_files[:num_points]:
+    # for file_path in random_files[:n_sup_pts]:
     # read all supervised_data
     for file_path in random_files:
         with open(file_path) as fp:
             for index, line in enumerate(fp):
-                if index in range(row_index, row_index + row_length):
+                if index in t_index:
+                # if index in range(row_index, row_index + row_length):
                     data_list = line.strip('\n').split(',')
                     flow_list.append(data_list)
+                    # print(index, data_list)
     flow_array = np.array(flow_list, dtype=float)
 
     # Normalize x,y,z to [0,1]
