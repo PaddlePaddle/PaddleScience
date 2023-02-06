@@ -150,6 +150,7 @@ Created in Oct. 2022
 @author: Hui Xiang, Yanbo Zhang
 """
 
+from operator import length_hint
 import os
 import time
 import glob
@@ -231,6 +232,48 @@ def load_ic_data(t):
     return np.concatenate([t, x, y, z, u, v, w, p], axis=1)
     # return t, x, y, z, u, v, w, p
 
+def load_all_LBM_data(t_index, t_ic):
+    print("Loading all LBM data ......")
+    # Get list of all files in a given directory sorted by name
+    list_of_files = sorted(filter(os.path.isfile, glob.glob(dir_ic + '*')))
+    num_cords = len(list_of_files)
+    print('load_all_LBM_data(): len(list_of_files) = ', num_cords)
+
+    # Iterate over sorted list of files and print the file paths one by one.
+    flow_list = []
+    flow_array = None
+    # time_index = t_index
+    # time_index = np.append(time_index, len(t_index)+1)
+    # print('load_all_ic_data: ', time_index)
+
+    for file_path in list_of_files:
+        with open(file_path, encoding="utf-8") as fp:
+            for index, line in enumerate(fp):
+                # print('index = ', index)
+                if index in t_index:
+                    # print('saved !')
+                    data_list = line.strip('\n').split(',')
+                    flow_list.append(data_list)
+    flow_array = np.array(flow_list, dtype=float)
+
+    # Cast pressure baseline
+    flow_array[:, 7] = flow_array[:, 7] - pressure_base
+    # flow_array[:, 7] = flow_array[:, 7] / pressure_base - 1
+
+    flow_array = flow_array.astype(np.float32)
+
+    # txyzuvwpe
+    print("All time data shape: {}".format(flow_array.shape))
+    # t = (flow_array[:, 0].reshape((-1, 1)) - t_ic) / t_step
+    t = flow_array[:, 0].reshape((-1, 1)) - t_ic
+    x = flow_array[:, 1].reshape((-1, 1))
+    y = flow_array[:, 2].reshape((-1, 1))
+    z = flow_array[:, 3].reshape((-1, 1))
+    u = flow_array[:, 4].reshape((-1, 1))
+    v = flow_array[:, 5].reshape((-1, 1))
+    w = flow_array[:, 6].reshape((-1, 1))
+    p = flow_array[:, 7].reshape((-1, 1))
+    return num_cords, np.concatenate([t, x, y, z, u, v, w, p], axis=1)
 
 # t_step = 50, t_start=200050, t_end=200250, take 3 steps
 def load_supervised_data(t_start, t_end, t_step, t_index, t_ic, n_sup_pts):

@@ -232,8 +232,9 @@ t_start = 200050
 t_end = 201000
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
-time_list = [i for i in range(1, time_num + 1)]
-time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
+time_list = np.linspace(int((t_start - ic_t) / t_step), int((t_end - ic_t) / t_step), time_num, endpoint=True).astype(int)
+# time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
+time_tmp = time_list * t_step
 time_index = np.random.choice(time_list, int(time_num / 2.5), replace=False)
 time_index.sort()
 time_array = time_index * t_step
@@ -279,7 +280,8 @@ sup_p = txyz_uvwpe_s[:, 7] / p_star; print(f"sup_p={sup_p.shape} {sup_p.mean().i
 # num_points = 30000
 num_points = 10000
 # discretize node by geo
-inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_num=time_num, t_index=time_index, t_step=t_step, nr_points=num_points)
+inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = \
+    sample_data.sample_data(t_num=time_num, t_index=time_index, t_step=t_step, nr_points=num_points)
 
 # interior nodes discre
 i_t = interior_txyz[:, 0] / t_star;     print(f"i_t={i_t.shape} {i_t.mean().item():.10f}")
