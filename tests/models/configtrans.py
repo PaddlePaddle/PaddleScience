@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from this import d
 import yaml
 import numpy as np
 
@@ -55,6 +56,13 @@ class YamlLoader(object):
             return '110'
         else:
             return ''
+
+    def _get_dis(self, n):
+        dis = self.yml[n].get("dis")
+        if dis:
+            return True
+        else:
+            return False
 
     def get_all_case(self):
         """
@@ -111,14 +119,17 @@ class GenerateOrder(object):
         """initialize"""
         self.case = case
 
-    def get_order(self, py, case_num):
+    def get_order(self, py, case_num, dis_flag):
         """get order"""
-        order = "python3.7 {} -c {} -i {}".format(py, self.case, case_num)
+        if dis_flag:
+            order = "python3.7 -m paddle.distributed.launch --devices=0,1 {} -c {} -i {}".format(py, self.case, case_num)
+        else:
+            order = "python3.7 {} -c {} -i {}".format(py, self.case, case_num)
         return order
 
-    def __call__(self, py, case_num):
+    def __call__(self, py, case_num, dis_flag = False):
         """call"""
-        return self.get_order(py, case_num)
+        return self.get_order(py, case_num, dis_flag)
 
 
 class CompareSolution(object):
