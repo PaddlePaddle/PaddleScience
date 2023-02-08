@@ -23,4 +23,3 @@
     vtk_filename: 'cylinder3d_steady_static_dis'
     checkpoint_path: 'checkpoints'
     solution_save_dir: "../standard_data/ce_week_standard/cylinder3d_steady_static_dis.npy"
-
