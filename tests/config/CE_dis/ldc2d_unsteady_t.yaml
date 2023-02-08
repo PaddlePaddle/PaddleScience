@@ -1,0 +1,29 @@
+- test: 0
+  Dir: '../../examples/ldc/ldc2d_unsteady_t.py'
+  docs: 'static_dis'
+  dis: True
+  Global:
+    use_visualdl: False
+    static_enable: True
+    prim_enable: False
+    epochs: 10000
+  Geometry:
+    npoints: 10201
+    seed: 1
+    sampler_method: 'uniform'
+  Time:
+    start_time: 0.0
+    end_time: 0.5
+    time_step: 0.1
+  Model:
+    num_layers: 10
+    hidden_size: 50
+    activation: 'tanh'
+  Optimizer:
+    lr:
+      learning_rate: 0.001
+  Post-processing:
+    solution_filename: 'ldc2d_unsteady_static_t_dis'
+    vtk_filename: 'output_ldc2d_unsteady_t'
+    checkpoint_path: 'checkpoints'
+    solution_save_dir: "../standard_data/ce_week_standard/ldc2d_unsteady_t_static_dis.npy"
