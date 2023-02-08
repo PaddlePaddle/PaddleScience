@@ -641,6 +641,8 @@ class Solver(object):
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
 
+        timer = utils.Timer()
+
         # train
         self.engine.fit(train_dataset, len(inputs + labels), batch_size=None)
 
@@ -670,8 +672,6 @@ class Solver(object):
         fetches = []
         for out in self.outs_predict:
             fetches.append(out.name)
-
-        timer = utils.Timer()
 
         rslt = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
