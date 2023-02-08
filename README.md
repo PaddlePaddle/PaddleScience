@@ -50,11 +50,13 @@ For more details on installation, please refer to the offical [PaddlePaddle repo
 ## Download and environment setup
 
 ```
-Download from GitHub: git clone git@github.com:PaddlePaddle/PaddleScience.git
-Download from Gitee:  git clone git@gitee.com:paddlepaddle/PaddleScience.git
+Download from GitHub: git clone https://github.com/PaddlePaddle/PaddleScience.git
+Download from Gitee:  git clone https://gitee.com/PaddlePaddle/PaddleScience.git
 
 cd PaddleScience
 export PYTHONPATH=$PWD:$PYTHONPATH
+
+pip install -r requirements.txt
 ```
 
 ## Run examples
@@ -64,19 +66,19 @@ Some examples are baked in for quick demonstration. Please find them in the `exa
 ```
 # Darcy flow (Poisson equation)
 cd examples/darcy
-python3.7 darcy2d.py
+python darcy2d.py
 
 # LDC steady (Steady Navier-Stokes eqution)
 cd examples/ldc
-python3.7 ldc2d_steady.py
+python ldc2d_steady_train.py
 
 # Lid Driven Cavity unsteady with continue-time method (Unsteady Navier-Stokes equation)
 cd examples/ldc
-python3.7 ldc2d_unsteady_t.py
+python ldc2d_unsteady_t.py
 
 # Flow around a circular cylinder with discrete-time method (Unsteady Navier-Stokes equation)
 cd examples/cylinder/3d_unsteady_discrete/baseline
-python3.7 cylinder3d_unsteady.py
+python cylinder3d_unsteady.py
 
 ```
 

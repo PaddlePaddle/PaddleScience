@@ -19,6 +19,7 @@ import vtk
 from pyevtk.hl import pointsToVTK
 import paddle
 from .. import config
+from ..solver.utils import data_parallel_partition
 
 
 # Save geometry pointwise of numpy
@@ -44,6 +45,7 @@ def save_npy(filename="output", time_array=None, geo_disc=None, data=None):
         geo_disc_sub = geo_disc
     else:
         geo_disc_sub = geo_disc.sub(nprocs, nrank)
+        data = data_parallel_partition(copy.deepcopy(data))
 
     # concatenate data and cordiante 
     points_vtk = __concatenate_geo(geo_disc_sub)

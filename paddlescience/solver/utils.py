@@ -332,7 +332,7 @@ def convert_to_distributed_program(serial_main_prog, serial_startup_prog,
 
 
 def cinn_compile(origin_program, loss_name, fetch_list):
-    def cinn_optimize_program(input_program):
+    def cinn_optimize_program(input_program, fetch_list):
         def _remove_unused_var(program):
             all_remove_vars = []
             for block in program.blocks:
@@ -353,20 +353,48 @@ def cinn_compile(origin_program, loss_name, fetch_list):
                 for v in remove_vars[i]:
                     block._remove_var(v)
 
-        def dead_code_elimination(program):
+        def dead_code_elimination(program, fetch_list):
             program._sync_with_cpp()
-            all_input_arg_names = set()
+            in2ops = dict()
+            out2op = dict()
             for block in program.blocks:
                 ops = list(block.ops)
                 for op in ops:
                     for name in op.input_arg_names:
-                        all_input_arg_names.add(name)
+                        if name not in in2ops:
+                            in2ops[name] = 0
+                        in2ops[name] += 1
+
+                    for name in op.output_arg_names:
+                        out2op[name] = op
+
+            remove_ops = set()
+            remove_names = set()
+            while True:
+                all_removed = True
+                for name in remove_names:
+                    out2op.pop(name)
+                remove_names.clear()
+
+                for name, op in out2op.items():
+                    if (name not in in2ops) and (name not in fetch_list):
+                        all_removed = False
+
+                        remove_ops.add(op)
+                        remove_names.add(name)
+
+                        for in_name in op.input_arg_names:
+                            in2ops[in_name] -= 1
+                            if in2ops[in_name] == 0:
+                                in2ops.pop(in_name)
+
+                if all_removed:
+                    break
 
             for block in program.blocks:
                 ops = list(block.ops)
                 for op in ops:
-                    if op.type == "fill_constant_p" and (
-                            op.output('Y')[0] not in all_input_arg_names):
+                    if op in remove_ops:
                         idx = block.ops.index(op)
                         block._remove_op(idx)
 
@@ -429,7 +457,7 @@ def cinn_compile(origin_program, loss_name, fetch_list):
             program._sync_with_cpp()
 
         tmp_program = input_program.clone()
-        dead_code_elimination(tmp_program)
+        dead_code_elimination(tmp_program, fetch_list)
         fuse_shape_fill_constant(tmp_program)
         return tmp_program
 
@@ -474,8 +502,9 @@ def cinn_compile(origin_program, loss_name, fetch_list):
 
         return compiled_program
 
-    optimized_program = cinn_optimize_program(origin_program)
+    optimized_program = cinn_optimize_program(origin_program, fetch_list)
     program_with_fetch = _add_fetch_ops(optimized_program, fetch_list)
+
     return _compile(program_with_fetch, loss_name)
 
 
