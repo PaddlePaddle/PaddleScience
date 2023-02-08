@@ -122,12 +122,13 @@ class GenerateOrder(object):
     def get_order(self, py, case_num, dis_flag):
         """get order"""
         if dis_flag:
-            order = "python3.7 -m paddle.distributed.launch --devices=0,1 {} -c {} -i {}".format(py, self.case, case_num)
+            order = "python3.7 -m paddle.distributed.launch --devices=0,1 {} -c {} -i {}".format(
+                py, self.case, case_num)
         else:
             order = "python3.7 {} -c {} -i {}".format(py, self.case, case_num)
         return order
 
-    def __call__(self, py, case_num, dis_flag = False):
+    def __call__(self, py, case_num, dis_flag=False):
         """call"""
         return self.get_order(py, case_num, dis_flag)
 
