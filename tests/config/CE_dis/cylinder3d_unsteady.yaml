@@ -1,0 +1,26 @@
+- test: 0
+  Dir: '../../examples/cylinder/3d_unsteady_discrete/baseline/cylinder3d_unsteady.py'
+  label: '3D'
+  docs: 'static_dis'
+  dis: True
+  Global:
+    use_visualdl: False
+    static_enable: True
+    prim_enable: False
+    epochs: 2000
+  Geometry:
+    npoints: [200,50,4]
+    seed: 1
+    sampler_method: 'uniform'
+  Model:
+    num_layers: 10
+    hidden_size: 50
+    activation: 'tanh'
+  Optimizer:
+    lr:
+      learning_rate: 0.001
+  Post-processing:
+    solution_filename: 'cylinder3d_unsteady_static_dis'
+    vtk_filename: 'cylinder3d_unsteady_static_dis'
+    checkpoint_path: 'checkpoints'
+    solution_save_dir: "../standard_data/ce_week_standard/cylinder3d_unsteady_static_dis.npy"
