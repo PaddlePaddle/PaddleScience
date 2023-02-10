@@ -228,15 +228,16 @@ p_star = rho * U0 * U0  # 0.01
 
 # time array
 ic_t = 200000
-t_start = 200050
-t_end = 2001000
+t_start = 200000
+t_end = 201000
 t_step = 50
 time_num = int((t_end - t_start) / t_step) + 1
-time_list = [i for i in range(1, time_num + 1)]
-time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
+time_list = np.linspace(int((t_start - ic_t) / t_step), int((t_end - ic_t) / t_step), time_num, endpoint=True).astype(int)
+# time_tmp = np.linspace(t_start - ic_t, t_end - ic_t, time_num, endpoint=True)
+time_tmp = time_list * t_step
 # time_index = np.random.choice(time_list, int(time_num / 2.5), replace=False)
 # time_index.sort()
-time_index = time_list
+time_index = np.array(time_list)
 time_array = time_index * t_step
 print(f"time_num = {time_num}, time_list = {time_list}, time_tmp = {time_tmp}")
 print(f"time_index = {time_index}, time_array = {time_array}")
@@ -280,7 +281,8 @@ sup_p = txyz_uvwpe_s[:, 7] / p_star; print(f"sup_p={sup_p.shape} {sup_p.mean().i
 num_points = 30000
 # num_points = 15000
 # discretize node by geo
-inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = sample_data.sample_data(t_num=time_num, t_step=t_step, nr_points=num_points)
+inlet_txyz, outlet_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = \
+    sample_data.sample_data(t_num=time_num, t_index=time_index, t_step=t_step, nr_points=num_points)
 
 # interior nodes discre
 i_t = interior_txyz[:, 0] / t_star;     print(f"i_t={i_t.shape} {i_t.mean().item():.10f}")
@@ -559,8 +561,8 @@ opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=num_epoch)
-# solution = solver.predict()
+# solution = solver.solve(num_epoch=num_epoch)
+solution = solver.predict()
 
 # print shape of every subset points' output
 for idx, si in enumerate(solution):
@@ -579,8 +581,10 @@ i_z = i_z * xyz_star
 
 cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
 
+print('len(cord) = ', len(cord))
 print('len(solution) = ', len(solution))
-print('solution[0].shape[1] = ', solution[0].shape[1])
+print('solution[0].shape[0] = ', solution[0].shape[0], ', solution[0].shape[1] = ', solution[0].shape[1])
+
 for n in range(len(solution)):
     solution[n][:, 0:1] = solution[n][:, 0:1] * uvw_star
     solution[n][:, 1:2] = solution[n][:, 1:2] * uvw_star

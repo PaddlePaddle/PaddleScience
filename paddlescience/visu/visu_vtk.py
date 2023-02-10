@@ -157,15 +157,16 @@ def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=N
             data_vtk["data"] = data(points_vtk[0], points_vtk[1])
     else:
         data_vtk = __concatenate_data(data, nt)
+        
         # for t in range(nt):
-            # print(data_vtk[t].keys())
-            # for k in data_vtk[t]:
-                # print(points_vtk[0].shape)
-                # print(points_vtk[1].shape)
-                # print(points_vtk[2].shape)
-                # print(data_vtk[t][k].shape)
-            # print("\n")
-            # exit()
+        #     print(data_vtk[t].keys())
+        #     for k in data_vtk[t]:
+        #         print(points_vtk[0].shape)
+        #         print(points_vtk[1].shape)
+        #         print(points_vtk[2].shape)
+        #         print(data_vtk[t][k].shape)
+        #     print("\n")
+        #     exit()
         # [(t1){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
         #  (t2){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
         #  (t3){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}

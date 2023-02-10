@@ -38,23 +38,29 @@ class Poisson(PDE):
         >>> pde = psci.pde.Poisson(dim=2, rhs=lambda x, y: 1.0)
     """
 
-    def __init__(self, dim=2, rhs=0.0, weight=1.0):
+    def __init__(self, dim=2, alpha=1.0, rhs=0.0, weight=1.0):
 
         if dim == 2:
             # independent and dependent variable
+            t = sympy.Symbol('t')
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
-            u = sympy.Function('u')(x, y)
-            super(Poisson, self).__init__([x, y], [u], weight)
-            self.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y), rhs)
+            u = sympy.Function('u')(t, x, y)
+            super(Poisson, self).__init__([t, x, y], [u], weight)
+            self.add_equation(
+                u.diff(t) - alpha * (u.diff(x).diff(x) + u.diff(y).diff(y)), 
+                rhs)
 
         elif dim == 3:
             # independent variable
+            t = sympy.Symbol('t')
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
             z = sympy.Symbol('z')
-            u = sympy.Function('u')(x, y, z)
+            u = sympy.Function('u')(t, x, y, z)
 
-            super(Poisson, self).__init__([x, y, z], [u], weight)
+            super(Poisson, self).__init__([t, x, y, z], [u], weight)
             self.add_equation(
-                u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z), rhs)
+                u.diff(t) 
+                - alpha * (u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z)), 
+                rhs)
