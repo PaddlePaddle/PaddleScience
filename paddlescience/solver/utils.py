@@ -228,8 +228,7 @@ def compile_and_convert_back_to_program(program=None,
         build_strategy = paddle.static.BuildStrategy()
 
         compiled_program = paddle.static.CompiledProgram(
-            program,
-            build_strategy=build_strategy)
+            program, build_strategy=build_strategy)
 
         return compiled_program
 
