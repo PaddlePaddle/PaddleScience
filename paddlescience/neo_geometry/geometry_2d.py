@@ -16,8 +16,7 @@
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
 
-from typing import Tuple
-
+import math
 import numpy as np
 from scipy import spatial
 
@@ -62,10 +61,22 @@ class Disk(Geometry):
         y = np.sqrt(r) * np.sin(theta)
         return self.radius * np.stack((x, y), axis=1) + self.center
 
+    def uniform_points(self, n: int, boundary=True):
+        l = self.center[0] - self.radius
+        b = self.center[1] - self.radius
+        r = self.center[0] + self.radius
+        t = self.center[1] + self.radius
+        rect = Rectangle([l, b], [r, t])
+        n_points_rect = int(n * (4 / math.pi))
+        uniform_points = rect.uniform_points(n_points_rect, False)
+        uniform_disk_points = uniform_points[self.is_inside(uniform_points)]
+        return uniform_disk_points
+
     def uniform_boundary_points(self, n):
         theta = np.linspace(0, 2 * np.pi, num=n, endpoint=False)
         X = np.stack((np.cos(theta), np.sin(theta)), axis=1)
-        return self.radius * X + self.center
+        points = self.radius * X + self.center
+        return (points, self.boundary_normal(points))
 
     def random_boundary_points(self, n, random="pseudo"):
         theta = 2 * np.pi * sample(n, 1, random)
@@ -130,7 +141,8 @@ class Rectangle(Hypercube):
                 x.append([self.xmax[0] - (l - l2), self.xmax[1]])
             else:
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
-        return np.vstack(x)
+        points = np.vstack(x)
+        return (points, self.boundary_normal(points))
 
     @staticmethod
     def is_valid(vertices):

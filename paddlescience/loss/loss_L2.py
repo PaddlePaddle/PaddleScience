@@ -49,7 +49,7 @@ class L2:
 
         #TODO: check input
 
-    # compute loss on one interior 
+    # compute loss on one interior
     # there are multiple pde
 
     def eq_loss(self,
@@ -125,14 +125,14 @@ class L2:
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs,
+        cmploss.compute_outs_der(input[0], bs,
                                  params)  # TODO: dirichlet not need der
 
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
             # TODO: hard code bs
 
-            normal_b = labels_attr["bc"][name_b][i]["normal"]
+            normal_b = input[1]
             if type(normal_b) == LabelInt:
                 normal = labels[normal_b]
             else:
@@ -142,7 +142,7 @@ class L2:
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, normal, params)
 
-            # TODO: simplify                                  
+            # TODO: simplify
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]
@@ -205,7 +205,7 @@ class L2:
 
         return loss, cmploss.outs
 
-    # compute loss on real data 
+    # compute loss on real data
     def data_loss(self,
                   pde,
                   net,

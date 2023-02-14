@@ -128,7 +128,7 @@ class PDE:
 
         Parameters:
             name (string): boundary name.
-            args (boundary conditions): boundary conditions which are added to boundary. 
+            args (boundary conditions): boundary conditions which are added to boundary.
 
         Example:
             >>> import paddlescience as psci
@@ -155,12 +155,12 @@ class PDE:
         Add initial condition for time-dependent equation
 
         Parameters:
-            args (initial conditions): initial conditions 
+            args (initial conditions): initial conditions
 
         Example:
             >>> pde = psci.pde.NavierStokes(dim=3, time_dependent=True)
-            >>> ic1 = psci.ic.IC('u', rhs=0) 
-            >>> ic2 = psci.ic.IC('v', rhs=0) 
+            >>> ic1 = psci.ic.IC('u', rhs=0)
+            >>> ic2 = psci.ic.IC('v', rhs=0)
             >>> pde.set_ic(ic1, ic2)         # add initial conditions
        """
         for arg in args:
@@ -193,7 +193,7 @@ class PDE:
         Discretize equations
 
         Parameters:
-            time_method (None or "implicit"): 
+            time_method (None or "implicit"):
                 "implicit": discretize time-dependent Navier-Stokes equations with implicit method
             time_step (integer): number of time steps for time-dependent equation
             geo_disc (GeometryDisc): discrete geometry
@@ -273,8 +273,8 @@ class PDE:
 
         # discritize weight and rhs in boundary condition
         for name_b, bc in pde_disc.bc.items():
-            points_b = pde_disc.geometry.boundary[name_b]
-            normal_b = pde_disc.geometry.normal[name_b]
+            points_b = pde_disc.geometry.boundary[name_b][0]
+            normal_b = pde_disc.geometry.boundary[name_b][1]
 
             data = list()
             for n in range(len(points_b[0])):

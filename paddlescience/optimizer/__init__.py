@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .optimizer import Adam, Lbfgs, Bfgs
+from .lr import Cosine

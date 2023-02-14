@@ -1,11 +1,11 @@
 # Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
 
 import paddle
 import numpy as np
-from .loss_base import CompFormula, l2_norm_square
+from .loss_base import CompFormula, l2_norm_square, mse
 from ..labels import LabelInt
 from .. import config
 import copy
@@ -113,9 +113,6 @@ class FormulaLoss:
         # compute outs, jacobian, hessian
         cmploss.compute_outs_der(input, bs)
 
-        # print(input)
-        # print(cmploss.outs[0:4,:])
-
         loss = 0.0
         for i in range(len(pde.equations)):
             formula = pde.equations[i]
@@ -127,7 +124,6 @@ class FormulaLoss:
 
             rst = cmploss.compute_formula(formula, input, input_attr, labels,
                                           labels_attr, None)
-
             # TODO: simplify
             rhs_eq = labels_attr["equations"][i]["rhs"]
             if type(rhs_eq) == LabelInt:
@@ -138,10 +134,10 @@ class FormulaLoss:
             wgt = self._eqwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss_i = mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
-
+                loss_i = mse((rst - rhs), wgt)
+            loss += loss_i
         return loss, cmploss.outs
 
     # compute loss on one boundary
@@ -160,16 +156,14 @@ class FormulaLoss:
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
-
+        cmploss.compute_outs_der(input[0], bs)  # TODO: dirichlet not need der
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
 
             formula = pde.bc[name_b][i].formula
-            rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None)
-
-            # TODO: simplify                                 
+            rst = cmploss.compute_formula(formula, input[0], input_attr, labels,
+                                          labels_attr, input[1])
+            # TODO: simplify
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]
@@ -180,10 +174,10 @@ class FormulaLoss:
             wgt = self._bcwgt[idx]
 
             if rhs is None:
-                loss += l2_norm_square(rst, wgt)
+                loss_b = mse(rst, wgt)
             else:
-                loss += l2_norm_square((rst - rhs), wgt)
-
+                loss_b = mse((rst - rhs), wgt)
+            loss += loss_b
         return loss, cmploss.outs
 
     def ic_loss(self,
@@ -213,11 +207,11 @@ class FormulaLoss:
                 rhs = rhs_c
 
             wgt = labels_attr["ic"][i]["weight"]
-            loss += l2_norm_square(rst - rhs, wgt)
-
+            loss_ic = mse(rst - rhs, wgt)
+            loss += loss_ic
         return loss, cmploss.outs
 
-    # compute loss on real data 
+    # compute loss on real data
     def data_loss(self,
                   pde,
                   net,
@@ -234,12 +228,16 @@ class FormulaLoss:
         cmploss.compute_outs(input, bs)
 
         loss = 0.0
-        for i in range(len(pde.dvar)):
+        for i in range(len(pde.dvar) - 1):
+            # [u(t, x, y, z), v(t, x, y, z), w(t, x, y, z), p(t, x, y, z)]
             idx = labels_attr["data_next"][i]
+            # [[63916], [63916], [63916], [63916], [8000], [8000], [8000]]
             data = labels[idx]
-            loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
+            loss_d = mse(cmploss.outs[:, i] - data)
+            loss += loss_d
+            # print(f"data_loss[{i}]: rhs.type={type(data)}, rhs={data if isinstance(data, (float, int)) else data.shape} wgt={self._supwgt[0]} mse={loss_d.item():.10f}")
             # TODO: p=2 p=1
-
+        # print(f"data_loss={loss.item():.10f}")
         loss = self._supwgt[0] * loss
         return loss, cmploss.outs
 
@@ -247,9 +245,9 @@ class FormulaLoss:
 def EqLoss(eq, netout=None):
     """
     Define equation loss
- 
+
     Parameters:
-        eq (pde.equation): Equation 
+        eq (pde.equation): Equation
         netout (optional): output of network
 
     Example
@@ -274,7 +272,7 @@ def EqLoss(eq, netout=None):
 def BcLoss(name, netout=None):
     """
     Define boundary loss
- 
+
     Parameters:
         name (string): boundary name
         netout (optional): output of network
@@ -298,12 +296,39 @@ def BcLoss(name, netout=None):
     return floss
 
 
+def PeriodicLoss(name, netout=None):
+    """
+    Define boundary loss
+
+    Parameters:
+        name (string): boundary name
+        netout (optional): output of network
+
+    Example:
+        >>> import paddlescience as psci
+        >>> net = psci.network.FCNet(...)
+        >>> out = net(input)
+        >>> loss = psci.loss.PeriodicLoss("top", out) # loss is boundary loss on "top" boundary
+    """
+
+    floss = FormulaLoss()
+    floss._bclist = [name] * 2
+    floss._bcwgt = [1.0] * 2
+    if netout is not None:
+        floss._bcinput = [netout._input]
+        floss._bcnet = [netout._net]
+    else:
+        floss._bcinput = []
+        floss._bcnet = []
+    return floss
+
+
 def IcLoss(netout=None):
     """
     Define initial loss for time-dependent equation
- 
+
     Parameters:
-        netout (optional): output of network  
+        netout (optional): output of network
 
     Example:
         >>> import paddlescience as psci
@@ -327,10 +352,10 @@ def IcLoss(netout=None):
 def DataLoss(netout=None, ref=None):
     """
     Define supervised loss
- 
+
     Parameters:
         netout (optional): output of network
-        ref (numpy.ndarray or Tensor) : reference values on supervise points   
+        ref (numpy.ndarray or Tensor) : reference values on supervise points
 
     Example:
         >>> import paddlescience as psci

@@ -94,3 +94,13 @@ class Sphere(Hypersphere):
     """
     def __init__(self, center, radius):
         super().__init__(center, radius)
+
+    def uniform_boundary_points(self, n: int):
+        phi = 0.618
+        l = np.array(np.arange(0, n)).astype("float32")
+        z = (2 * l - 1) / n - 1
+        z = z.clip(-1+1e-7, 1-1e-7)
+        x = np.sqrt((1 - z * z)) * np.cos(2 * np.pi * l * phi)
+        y = np.sqrt((1 - z * z)) * np.sin(2 * np.pi * l * phi)
+        points = np.stack((x, y, z), axis=1)
+        return (points, self.boundary_normal(points))

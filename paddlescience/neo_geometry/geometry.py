@@ -86,6 +86,25 @@ class Geometry(object):
             i += len(tmp)
         return x
 
+    def random_boundary_points_with_criteria(self, n: int, random: str="pseudo", criteria: Callable=None) -> np.ndarray:
+        """Compute the random points in the geometry and return those meet criteria."""
+        x = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        normals = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        i = 0
+        while i < n:
+            tmp, tmp_normals = self.random_boundary_points(n, random)
+            if criteria is not None:
+                criteria_mask = criteria(*np.split(tmp, self.dim, axis=1)).flatten()
+                tmp = tmp[criteria_mask]
+                tmp_normals = tmp_normals[criteria_mask]
+            if len(tmp) > n - i:
+                tmp = tmp[:n - i]
+                tmp_normals = tmp_normals[: n - i]
+            x[i:i + len(tmp)] = tmp
+            normals[i:i + len(tmp)] = tmp_normals
+            i += len(tmp)
+        return (x, normals)
+
     @abc.abstractmethod
     def random_points(self, n: int, random: str="pseudo"):
         """Compute the random points in the geometry."""
@@ -113,9 +132,12 @@ class Geometry(object):
                 batch_data_dict[name] = self.batch_data_dict[name]
                 continue
             if name == "interior":
-                raw_data = self.random_points(cfg.batch_size, cfg.random)
+                raw_data = self.uniform_points(cfg.batch_size, cfg.random)
             elif name == "boundary":
-                raw_data = self.random_boundary_points(cfg.batch_size, cfg.random)
+                # raw_data = self.random_boundary_points(cfg.batch_size, cfg.random)
+                raw_data = self.uniform_boundary_points(cfg.batch_size)
+            elif "boundary" in name:
+                raw_data = self.random_boundary_points_with_criteria(cfg.batch_size, cfg.random)
             else:
                 raw_data = self.random_points_with_criteria(cfg.batch_size, cfg.random, cfg.criteria)
             batch_data_dict[name] = raw_data

@@ -17,7 +17,7 @@ from .algorithm_base import AlgorithmBase
 from ..inputs import InputsAttr
 from ..labels import LabelInt, LabelHolder
 from ..loss import FormulaLoss
-
+import sys
 from collections import OrderedDict
 import numpy as np
 
@@ -133,7 +133,7 @@ class PINNs(AlgorithmBase):
 
         return inputs, inputs_attr
 
-    # create labels used in computing loss, but not used as net input 
+    # create labels used in computing loss, but not used as net input
     def create_labels_from_pde(self,
                                pde,
                                interior_shape=None,
@@ -234,14 +234,14 @@ class PINNs(AlgorithmBase):
                         data = np.tile(normal, len(pde.time_array[1::]))
                     else:
                         data = normal
-                    print(data)
+                    # print(data)
                     labels.append(data)
 
                 labels_attr["bc"][name_b].append(attr)
 
         # ic
-        #   - labels_attr["ic"][i]["rhs"] 
-        #   - labels_attr["ic"][i]["weight"], weight is None or scalar 
+        #   - labels_attr["ic"][i]["rhs"]
+        #   - labels_attr["ic"][i]["weight"], weight is None or scalar
         labels_attr["ic"] = list()
         for ic in pde.ic:
             attr = dict()
@@ -265,8 +265,8 @@ class PINNs(AlgorithmBase):
         #   - labels_attr["user"]["data_cur"][i]
         #   - labels_attr["user"]["data_next"][i]
 
-        # data_cur: solution of current time step on user points 
-        # data_next: reference solution of next time step on user points 
+        # data_cur: solution of current time step on user points
+        # data_next: reference solution of next time step on user points
         if pde.geometry.user is not None:
             labels_attr["user"] = OrderedDict()
 
@@ -487,7 +487,7 @@ class PINNs(AlgorithmBase):
             print(i.shape)
         print("")
 
-    # print label_attr 
+    # print label_attr
     def __print_label_attr(self, attr):
 
         print("** interior-equations ** ")
@@ -556,11 +556,11 @@ class PINNs(AlgorithmBase):
         inputs = inputs_labels[0:ninputs]  # inputs is from zero to ninputs
         labels = inputs_labels[ninputs::]  # labels is the rest
 
-        # loss 
+        # loss
         #   - interior points: eq loss
         #   - boundary points: bc loss
         #   - initial points:  ic loss
-        #   - data points: data loss and eq loss 
+        #   - data points: data loss and eq loss
         loss_eq = 0.0
         loss_bc = 0.0
         loss_ic = 0.0
@@ -587,7 +587,7 @@ class PINNs(AlgorithmBase):
             outs.append(out_i)
             n += 1
 
-        # boundary points: compute bc_loss 
+        # boundary points: compute bc_loss
         for name_b, input_attr in inputs_attr["bc"].items():
             input = inputs[n]
 
@@ -702,6 +702,8 @@ class PINNs(AlgorithmBase):
             return paddle.sqrt(x)
 
     def __padding_array(self, nprocs, array):
+        if nprocs == 1:
+            return array
         npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
         if array.ndim == 2:
             datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))

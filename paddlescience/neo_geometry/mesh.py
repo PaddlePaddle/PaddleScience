@@ -40,6 +40,11 @@ class Mesh(Geometry):
         else:
             raise ValueError(f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
 
+        if "face_normal" not in self.py_mesh.get_attribute_names():
+            # auto compute "face_area", "face_normal", "vertex_normal"
+            self.py_mesh.add_attribute("vertex_normal")
+        self.face_normal = self.py_mesh.get_attribute("face_normal").reshape([-1, 3])
+
         self.vertices = self.py_mesh.vertices
         self.faces = self.py_mesh.faces
         self.vectors = self.vertices[self.faces]
@@ -62,8 +67,6 @@ class Mesh(Geometry):
             ((np.min(self.vectors[:, :, 2])),
              np.max(self.vectors[:, :, 2]))
         )
-        self.boundary_points = None
-        self.boundary_normals = None
 
     def is_inside(self, x):
         # NOTE: point on boundary is included
@@ -168,6 +171,20 @@ class Mesh(Geometry):
                     nr_p,
                     random
                 )
+
+                invar["normal_x"].append(
+                    np.full(x.shape, mesh.normals[index, 0]) / normal_scale
+                )
+                invar["normal_y"].append(
+                    np.full(x.shape, mesh.normals[index, 1]) / normal_scale
+                )
+                invar["normal_z"].append(
+                    np.full(x.shape, mesh.normals[index, 2]) / normal_scale
+                )
+                # 记录每一个采样点所在三角面的面积
+                invar["area"].append(
+                    np.full(x.shape, triangle_areas[index] / x.shape[0])
+                )
                 inflated_boundary_points.append(sampled_points)
             inflated_boundary_points = np.concatenate(inflated_boundary_points, axis=0)
             all_points.append(inflated_boundary_points)
@@ -189,6 +206,7 @@ class Mesh(Geometry):
         )
 
         all_points = []
+        all_normals = []
         for index, nr_p in enumerate(points_per_triangle):
             if nr_p == 0:
                 continue
@@ -199,9 +217,18 @@ class Mesh(Geometry):
                 nr_p,
                 random
             )
+            sampled_normals = self.face_normal[index]
+            sampled_normals = np.tile(
+                sampled_normals[None, :],
+                [nr_p, 1]
+            )
             all_points.append(sampled_points)
+            all_normals.append(sampled_normals)
 
-        return np.concatenate(all_points, axis=0)
+        return (
+            np.concatenate(all_points, axis=0),
+            np.concatenate(all_normals, axis=0)
+        )
 
     def union(self, rhs: Mesh):
         csg = pymesh.CSGTree({
