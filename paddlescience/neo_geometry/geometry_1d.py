@@ -11,12 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
-
-from typing import Dict
 
 import numpy as np
 
@@ -32,6 +29,7 @@ class Interval(Geometry):
         l (float): Left position of interval.
         r (float): Right position of interval.
     """
+
     def __init__(self, l, r):
         super().__init__(1, (np.array([[l]]), np.array([[r]])), r - l)
         self.l = l
@@ -49,7 +47,8 @@ class Interval(Geometry):
 
     def uniform_points(self, n: int, boundary: bool=True):
         if boundary:
-            return np.linspace(self.l, self.r, n, dtype=config._dtype).reshape([-1, 1])
+            return np.linspace(
+                self.l, self.r, n, dtype=config._dtype).reshape([-1, 1])
         return np.linspace(
             self.l, self.r, n + 1, endpoint=False,
             dtype=config._dtype)[1:].reshape([-1, 1])
@@ -70,9 +69,3 @@ class Interval(Geometry):
             return np.array([[self.l], [self.r]]).astype(config._dtype)
         return np.random.choice([self.l, self.r], n).\
             reshape([-1, 1]).astype(config._dtype)
-
-    def periodic_point(self, x: np.ndarray, component: int=0):
-        periodic_x = np.copy(x)
-        periodic_x[np.isclose(x, self.l)] = self.r
-        periodic_x[np.isclose(x, self.r)] = self.l
-        return periodic_x
