@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
@@ -33,7 +32,12 @@ class Geometry(object):
         self.sample_config = {}
         self.batch_data_dict = {}
 
-    def add_sample_config(self, name:str, batch_size:int, criteria: Callable=None, random: str="pseudo", fixed: bool=True):
+    def add_sample_config(self,
+                          name: str,
+                          batch_size: int,
+                          criteria: Callable=None,
+                          random: str="pseudo",
+                          fixed: bool=True):
         """Add configuration for sampling points in geometry.
 
         Args:
@@ -71,14 +75,36 @@ class Geometry(object):
               f"Use random_points instead.")
         return self.random_points(n)
 
-    def random_points_with_criteria(self, n: int, random: str="pseudo", criteria: Callable=None) -> np.ndarray:
+    def random_points_with_criteria(self,
+                                    n: int,
+                                    random: str="pseudo",
+                                    criteria: Callable=None) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.dim), dtype=config._dtype)
         i = 0
         while i < n:
             tmp = self.random_points(n, random)
             if criteria is not None:
-                criteria_mask = criteria(*np.split(tmp, self.dim, axis=1)).flatten()
+                criteria_mask = criteria(*np.split(
+                    tmp, self.dim, axis=1)).flatten()
+                tmp = tmp[criteria_mask]
+            if len(tmp) > n - i:
+                tmp = tmp[:n - i]
+            x[i:i + len(tmp)] = tmp
+            i += len(tmp)
+        return x
+
+    def random_boundary_points_with_criteria(
+            self, n: int, random: str="pseudo",
+            criteria: Callable=None) -> np.ndarray:
+        """Compute the random points in the geometry and return those meet criteria."""
+        x = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        i = 0
+        while i < n:
+            tmp = self.random_boundary_points(n, random)
+            if criteria is not None:
+                criteria_mask = criteria(*np.split(
+                    tmp, self.dim, axis=1)).flatten()
                 tmp = tmp[criteria_mask]
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
@@ -115,9 +141,17 @@ class Geometry(object):
             if name == "interior":
                 raw_data = self.random_points(cfg.batch_size, cfg.random)
             elif name == "boundary":
-                raw_data = self.random_boundary_points(cfg.batch_size, cfg.random)
+                raw_data = self.random_boundary_points(cfg.batch_size,
+                                                       cfg.random)
+            elif name.startswith("interior_"):
+                raw_data = self.random_points_with_criteria(cfg.batch_size,
+                                                            cfg.random)
+            elif name.startswith("boundary_"):
+                raw_data = self.random_boundary_points_with_criteria(
+                    cfg.batch_size, cfg.random)
             else:
-                raw_data = self.random_points_with_criteria(cfg.batch_size, cfg.random, cfg.criteria)
+                raw_data = self.random_points_with_criteria(
+                    cfg.batch_size, cfg.random, cfg.criteria)
             batch_data_dict[name] = raw_data
 
         # cache data if used later

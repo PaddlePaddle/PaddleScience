@@ -14,9 +14,8 @@
 
 __all__ = [
     "CSGDifference", "CSGIntersection", "CSGUnion", "Cuboid", "Disk",
-    "Geometry", "GeometryXTime", "Hypercube", "Hypersphere", "Interval",
-    "PointCloud", "Polygon", "Rectangle", "Sphere", "TimeDomain", "Triangle",
-    "sample", "Mesh"
+    "Geometry", "Hypercube", "Hypersphere", "Interval", "PointCloud",
+    "Polygon", "Rectangle", "Sphere", "Triangle", "sample", "Mesh"
 ]
 
 from .csg import CSGDifference, CSGIntersection, CSGUnion
@@ -27,4 +26,3 @@ from .geometry_3d import Cuboid, Sphere
 from .geometry_nd import Hypercube, Hypersphere
 from .mesh import Mesh
 from .sampler import sample
-from .timedomain import GeometryXTime, TimeDomain
