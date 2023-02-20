@@ -1,8 +1,20 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 import open3d
 import pymesh
-
-from typing import Union
 
 
 def inflation(mesh, dis, direction=1):
@@ -52,8 +64,7 @@ def inflation(mesh, dis, direction=1):
     new_points = np.array(new_points)
     new_mesh = open3d.geometry.TriangleMesh(
         open3d.utility.Vector3dVector(new_points),
-        open3d.utility.Vector3iVector(triangles)
-    )
+        open3d.utility.Vector3iVector(triangles))
 
     new_mesh.remove_duplicated_vertices()
     new_mesh.remove_degenerate_triangles()
@@ -77,9 +88,10 @@ def pymesh_inflation(mesh, distance):
     faces = np.array(mesh.faces)
     open3d_mesh = open3d.geometry.TriangleMesh(
         open3d.utility.Vector3dVector(vertices),
-        open3d.utility.Vector3iVector(faces)
-    )
-    inflated_open3d_mesh = inflation(open3d_mesh, abs(distance), 1.0 if distance >= 0.0 else -1.0)
+        open3d.utility.Vector3iVector(faces))
+    inflated_open3d_mesh = inflation(open3d_mesh,
+                                     abs(distance), 1.0
+                                     if distance >= 0.0 else -1.0)
     vertices = np.array(inflated_open3d_mesh.vertices).astype("float32")
     faces = np.array(inflated_open3d_mesh.triangles)
     inflated_pymesh = pymesh.form_mesh(vertices, faces)
@@ -109,8 +121,7 @@ def offset(mesh, dis):
     triangles = np.asarray(mesh.triangles)
 
     edges = np.vstack(
-        [triangles[:, [0, 1]], triangles[:, [1, 2]], triangles[:, [2, 0]]]
-    )
+        [triangles[:, [0, 1]], triangles[:, [1, 2]], triangles[:, [2, 0]]])
     edges = set(map(tuple, edges))
     edges = np.array(list(edges))
 
@@ -119,12 +130,9 @@ def offset(mesh, dis):
         [
             np.intersect1d(
                 np.argwhere(triangles == edge[0])[:, 0],
-                np.argwhere(triangles == edge[1])[:, 0],
-            )
-            for edge in edges
+                np.argwhere(triangles == edge[1])[:, 0], ) for edge in edges
         ],
-        dtype=object,
-    )
+        dtype=object, )
     surface_edges = edges[[len(i) == 1 for i in edges_in_triangle]]
     edges_in_triangle = [i for i in edges_in_triangle if len(i) == 1]
 
@@ -134,15 +142,15 @@ def offset(mesh, dis):
         other_point = vertices[np.setdiff1d(triangle, edge)].squeeze()
         edge = vertices[edge]
         u = (other_point[0] - edge[0][0]) * (edge[0][0] - edge[1][0]) + (
-            other_point[1] - edge[0][1]
-        ) * (edge[0][1] - edge[1][1])
-        u = u / np.sum((edge[0] - edge[1]) ** 2)
+            other_point[1] - edge[0][1]) * (edge[0][1] - edge[1][1])
+        u = u / np.sum((edge[0] - edge[1])**2)
         edge_normal = edge[0] + u * (edge[0] - edge[1])
         edge_normal = edge_normal - other_point
         edges_normals.append(edge_normal)
 
     edges_normals = np.array(edges_normals)
-    edges_normals = edges_normals / np.linalg.norm(edges_normals, axis=1)[:, None]
+    edges_normals = edges_normals / np.linalg.norm(
+        edges_normals, axis=1)[:, None]
 
     new_mesh = open3d.geometry.TriangleMesh()
     new_vertices = []
@@ -154,7 +162,8 @@ def offset(mesh, dis):
         new_point = vertices[point] + new_point
         new_vertices.append(new_point)
 
-    new_vertices = np.hstack((np.array(new_vertices), np.zeros((len(new_vertices), 1))))
+    new_vertices = np.hstack((np.array(new_vertices), np.zeros(
+        (len(new_vertices), 1))))
     new_mesh.vertices = open3d.utility.Vector3dVector(new_vertices)
     new_mesh.triangles = open3d.utility.Vector3iVector(triangles)
     new_mesh.compute_triangle_normals()
