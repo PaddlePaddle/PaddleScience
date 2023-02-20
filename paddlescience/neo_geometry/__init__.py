@@ -12,24 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '1.0 Beta'
+__all__ = [
+    "CSGDifference", "CSGIntersection", "CSGUnion", "Cuboid", "Disk",
+    "Geometry", "Hypercube", "Hypersphere", "Interval", "PointCloud",
+    "Polygon", "Rectangle", "Sphere", "Triangle", "sample", "Mesh"
+]
 
-import paddle
-
-from . import config
-from . import parameter
-from . import geometry
-from . import neo_geometry
-from . import bc
-from . import ic
-from . import pde
-from . import network
-from . import algorithm
-from . import loss
-from . import optimizer
-from . import solver
-from . import visu
-from . import data
-from . import utils
-
-config.try_enable_cinn()
+from .csg import CSGDifference, CSGIntersection, CSGUnion
+from .geometry import Geometry
+from .geometry_1d import Interval
+from .geometry_2d import Disk, Polygon, Rectangle, Triangle
+from .geometry_3d import Cuboid, Sphere
+from .geometry_nd import Hypercube, Hypersphere
+from .mesh import Mesh
+from .sampler import sample
