@@ -16,7 +16,7 @@ Code below is heavily based on https://github.com/lululxvi/deepxde
 """
 
 import abc
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import numpy as np
 
@@ -35,7 +35,7 @@ class Geometry(object):
     def add_sample_config(self,
                           name: str,
                           batch_size: int,
-                          criteria: Callable=None,
+                          criteria: Optional[Callable]=None,
                           random: str="pseudo",
                           fixed: bool=True):
         """Add configuration for sampling points in geometry.
@@ -144,11 +144,11 @@ class Geometry(object):
                 raw_data = self.random_boundary_points(cfg.batch_size,
                                                        cfg.random)
             elif name.startswith("interior_"):
-                raw_data = self.random_points_with_criteria(cfg.batch_size,
-                                                            cfg.random)
+                raw_data = self.random_points_with_criteria(
+                    cfg.batch_size, cfg.random, cfg.criteria)
             elif name.startswith("boundary_"):
                 raw_data = self.random_boundary_points_with_criteria(
-                    cfg.batch_size, cfg.random)
+                    cfg.batch_size, cfg.random, cfg.criteria)
             else:
                 raw_data = self.random_points_with_criteria(
                     cfg.batch_size, cfg.random, cfg.criteria)
