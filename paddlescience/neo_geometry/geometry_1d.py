@@ -55,7 +55,7 @@ class Interval(Geometry):
 
     def random_points(self, n: int, random: str="pseudo"):
         x = sample(n, 1, random)
-        return (self.l + self.x * self.diam).astype(config._dtype)
+        return (self.l + x * self.diam).astype(config._dtype)
 
     def uniform_boundary_points(self, n: int):
         if n == 1:
