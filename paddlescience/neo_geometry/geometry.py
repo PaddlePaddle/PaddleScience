@@ -11,13 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
 
 import abc
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import numpy as np
 
@@ -33,7 +32,13 @@ class Geometry(object):
         self.sample_config = {}
         self.batch_data_dict = {}
 
-    def add_sample_config(self, name:str, batch_size:int, criteria: Callable=None, random: str="pseudo", fixed: bool=True):
+    def add_sample_config(self,
+                          name: str,
+                          batch_size: int,
+                          criteria: Optional[Callable]=None,
+                          random: str="pseudo",
+                          fixed: bool=True,
+                          with_normal: bool=False):
         """Add configuration for sampling points in geometry.
 
         Args:
@@ -42,6 +47,7 @@ class Geometry(object):
             criteria (Callable, optional): Criteria sampled points meets. Defaults to None.
             random (str, optional): Method for random such as "pseudo", "LHS". Defaults to "pseudo".
             fixed (bool, optional): Whether to fix sampled points. Defaults to True.
+            with_normal (bool, optional): Whether to return with its' normal data. Defaults to False.
         """
         if name == "interior" or name == "boundary":
             print(f"criteria for {name} is unneccessary, set criteria to None")
@@ -50,7 +56,8 @@ class Geometry(object):
             "criteria": criteria,
             "batch_size": batch_size,
             "random": random,
-            "fixed": fixed
+            "fixed": fixed,
+            "with_normal": with_normal
         })
 
     @abc.abstractmethod
@@ -71,14 +78,18 @@ class Geometry(object):
               f"Use random_points instead.")
         return self.random_points(n)
 
-    def random_points_with_criteria(self, n: int, random: str="pseudo", criteria: Callable=None) -> np.ndarray:
+    def random_points_with_criteria(self,
+                                    n: int,
+                                    random: str="pseudo",
+                                    criteria: Callable=None) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.dim), dtype=config._dtype)
         i = 0
         while i < n:
             tmp = self.random_points(n, random)
             if criteria is not None:
-                criteria_mask = criteria(*np.split(tmp, self.dim, axis=1)).flatten()
+                criteria_mask = criteria(*np.split(
+                    tmp, self.dim, axis=1)).flatten()
                 tmp = tmp[criteria_mask]
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
@@ -86,24 +97,23 @@ class Geometry(object):
             i += len(tmp)
         return x
 
-    def random_boundary_points_with_criteria(self, n: int, random: str="pseudo", criteria: Callable=None) -> np.ndarray:
+    def random_boundary_points_with_criteria(
+            self, n: int, random: str="pseudo",
+            criteria: Callable=None) -> np.ndarray:
         """Compute the random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.dim), dtype=config._dtype)
-        normals = np.empty(shape=(n, self.dim), dtype=config._dtype)
         i = 0
         while i < n:
-            tmp, tmp_normals = self.random_boundary_points(n, random)
+            tmp = self.random_boundary_points(n, random)
             if criteria is not None:
-                criteria_mask = criteria(*np.split(tmp, self.dim, axis=1)).flatten()
+                criteria_mask = criteria(*np.split(
+                    tmp, self.dim, axis=1)).flatten()
                 tmp = tmp[criteria_mask]
-                tmp_normals = tmp_normals[criteria_mask]
             if len(tmp) > n - i:
                 tmp = tmp[:n - i]
-                tmp_normals = tmp_normals[: n - i]
             x[i:i + len(tmp)] = tmp
-            normals[i:i + len(tmp)] = tmp_normals
             i += len(tmp)
-        return (x, normals)
+        return x
 
     @abc.abstractmethod
     def random_points(self, n: int, random: str="pseudo"):
@@ -132,14 +142,41 @@ class Geometry(object):
                 batch_data_dict[name] = self.batch_data_dict[name]
                 continue
             if name == "interior":
-                raw_data = self.uniform_points(cfg.batch_size, cfg.random)
+                raw_data = self.random_points(cfg.batch_size, cfg.random)
             elif name == "boundary":
-                # raw_data = self.random_boundary_points(cfg.batch_size, cfg.random)
-                raw_data = self.uniform_boundary_points(cfg.batch_size)
-            elif "boundary" in name:
-                raw_data = self.random_boundary_points_with_criteria(cfg.batch_size, cfg.random)
+                if cfg.with_normal:
+                    if self.__class__.__name__ == "Mesh":
+                        raw_data = self.random_boundary_points(
+                            cfg.batch_size, cfg.random, cfg.with_normal)
+                    else:
+                        raw_data = self.random_boundary_points(
+                            cfg.batch_size,
+                            cfg.random, )
+                        raw_data = (raw_data, self.boundary_normal(raw_data))
+                else:
+                    raw_data = self.random_boundary_points(cfg.batch_size,
+                                                           cfg.random)
+            elif name.startswith("interior_"):
+                raw_data = self.random_points_with_criteria(
+                    cfg.batch_size, cfg.random, cfg.criteria)
+            elif name.startswith("boundary_"):
+                if cfg.with_normal:
+                    if self.__class__.__name__ == "Mesh":
+                        raw_data = self.random_boundary_points_with_criteria(
+                            cfg.batch_size, cfg.random, cfg.criteria,
+                            cfg.with_normal)
+                    else:
+                        raw_data = self.random_boundary_points_with_criteria(
+                            cfg.batch_size,
+                            cfg.random,
+                            cfg.criteria, )
+                        raw_data = (raw_data, self.boundary_normal(raw_data))
+                else:
+                    raw_data = self.random_boundary_points_with_criteria(
+                        cfg.batch_size, cfg.random, cfg.criteria)
             else:
-                raw_data = self.random_points_with_criteria(cfg.batch_size, cfg.random, cfg.criteria)
+                raw_data = self.random_points_with_criteria(
+                    cfg.batch_size, cfg.random, cfg.criteria)
             batch_data_dict[name] = raw_data
 
         # cache data if used later

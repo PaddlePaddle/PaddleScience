@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
@@ -31,6 +30,7 @@ class Cuboid(Hypercube):
         xmin (Tuple[float, float, float]): Bottom left corner point [x0, y0, z0].
         xmax (Tuple[float, float, float]): Top right corner point [x1, y1, z1].
     """
+
     def __init__(self, xmin, xmax):
         super().__init__(xmin, xmax)
         dx = self.xmax - self.xmin
@@ -46,13 +46,14 @@ class Cuboid(Hypercube):
             pts.append(np.hstack((u, np.full((len(u), 1), z))))
         rect = Rectangle(self.xmin[::2], self.xmax[::2])
         for y in [self.xmin[1], self.xmax[1]]:
-            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
+            u = rect.random_points(
+                int(np.ceil(density * rect.area)), random=random)
             pts.append(
-                np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:]))
-            )
+                np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:])))
         rect = Rectangle(self.xmin[1:], self.xmax[1:])
         for x in [self.xmin[0], self.xmax[0]]:
-            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
+            u = rect.random_points(
+                int(np.ceil(density * rect.area)), random=random)
             pts.append(np.hstack((np.full((len(u), 1), x), u)))
         pts = np.vstack(pts)
         if len(pts) > n:
@@ -92,15 +93,6 @@ class Sphere(Hypersphere):
         center (Tuple[float, float, float]): Center of the sphere [x0, y0, z0].
         radius (float): Radius of the sphere.
     """
+
     def __init__(self, center, radius):
         super().__init__(center, radius)
-
-    def uniform_boundary_points(self, n: int):
-        phi = 0.618
-        l = np.array(np.arange(0, n)).astype("float32")
-        z = (2 * l - 1) / n - 1
-        z = z.clip(-1+1e-7, 1-1e-7)
-        x = np.sqrt((1 - z * z)) * np.cos(2 * np.pi * l * phi)
-        y = np.sqrt((1 - z * z)) * np.sin(2 * np.pi * l * phi)
-        points = np.stack((x, y, z), axis=1)
-        return (points, self.boundary_normal(points))

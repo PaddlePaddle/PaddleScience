@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
 
-import math
 import numpy as np
 from scipy import spatial
 
@@ -33,13 +31,12 @@ class Disk(Geometry):
         center (Tuple[float, float]): Center point of disk [x0, y0].
         radius (float): Radius of disk.
     """
+
     def __init__(self, center, radius: float):
         self.center = np.array(center, dtype=config._dtype)
         self.radius = radius
-        super().__init__(2,
-            (self.center - radius, self.center + radius),
-            2 * radius
-        )
+        super().__init__(2, (self.center - radius, self.center + radius),
+                         2 * radius)
 
     def is_inside(self, x):
         return np.linalg.norm(x - self.center, axis=1) <= self.radius
@@ -50,7 +47,8 @@ class Disk(Geometry):
     def boundary_normal(self, x):
         ox = x - self.center
         ox_len = np.linalg.norm(ox, axis=1, keepdims=True)
-        ox = (ox / ox_len) * np.isclose(ox_len, self.radius).astype(config._dtype)
+        ox = (ox / ox_len) * np.isclose(ox_len,
+                                        self.radius).astype(config._dtype)
         return ox
 
     def random_points(self, n, random="pseudo"):
@@ -61,22 +59,10 @@ class Disk(Geometry):
         y = np.sqrt(r) * np.sin(theta)
         return self.radius * np.stack((x, y), axis=1) + self.center
 
-    def uniform_points(self, n: int, boundary=True):
-        l = self.center[0] - self.radius
-        b = self.center[1] - self.radius
-        r = self.center[0] + self.radius
-        t = self.center[1] + self.radius
-        rect = Rectangle([l, b], [r, t])
-        n_points_rect = int(n * (4 / math.pi))
-        uniform_points = rect.uniform_points(n_points_rect, False)
-        uniform_disk_points = uniform_points[self.is_inside(uniform_points)]
-        return uniform_disk_points
-
     def uniform_boundary_points(self, n):
         theta = np.linspace(0, 2 * np.pi, num=n, endpoint=False)
         X = np.stack((np.cos(theta), np.sin(theta)), axis=1)
-        points = self.radius * X + self.center
-        return (points, self.boundary_normal(points))
+        return self.radius * X + self.center
 
     def random_boundary_points(self, n, random="pseudo"):
         theta = 2 * np.pi * sample(n, 1, random)
@@ -91,32 +77,28 @@ class Rectangle(Hypercube):
         xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
         xmax (Tuple[float, float]): Top right corner point, [x1, y1].
     """
+
     def __init__(self, xmin, xmax):
         super().__init__(xmin, xmax)
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
 
     def uniform_boundary_points(self, n):
-        nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
-        bottom = np.hstack((
-            np.linspace(self.xmin[0], self.xmax[0], nx, endpoint=False).reshape([nx, 1]),
-            np.full([nx, 1], self.xmin[1])
-        ))
-        right = np.hstack((
-            np.full([ny, 1], self.xmax[0]),
-            np.linspace(self.xmin[1], self.xmax[1], ny, endpoint=False).reshape([ny, 1])
-        ))
-        top = np.hstack((
-            np.linspace(self.xmin[0], self.xmax[0], nx + 1)[1:].reshape([nx, 1]),
-            np.full([nx, 1], self.xmax[1])
-        ))
-        left = np.hstack((
-            np.full([ny, 1], self.xmin[0]),
-            np.linspace(self.xmin[1], self.xmax[1], ny + 1)[1:].reshape([ny, 1])
-        ))
+        nx, ny = np.ceil(n / self.perimeter *
+                         (self.xmax - self.xmin)).astype(int)
+        bottom = np.hstack((np.linspace(
+            self.xmin[0], self.xmax[0], nx, endpoint=False).reshape([nx, 1]),
+                            np.full([nx, 1], self.xmin[1])))
+        right = np.hstack((np.full([ny, 1], self.xmax[0]), np.linspace(
+            self.xmin[1], self.xmax[1], ny, endpoint=False).reshape([ny, 1])))
+        top = np.hstack((np.linspace(self.xmin[0], self.xmax[0],
+                                     nx + 1)[1:].reshape([nx, 1]),
+                         np.full([nx, 1], self.xmax[1])))
+        left = np.hstack((np.full([ny, 1], self.xmin[0]), np.linspace(
+            self.xmin[1], self.xmax[1], ny + 1)[1:].reshape([ny, 1])))
         x = np.vstack((bottom, right, top, left))
         if len(x) > n:
-            x = x[0: n]
+            x = x[0:n]
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -128,7 +110,7 @@ class Rectangle(Hypercube):
         # Remove the possible points very close to the corners
         u = u[~np.isclose(u, l1 / self.perimeter)]
         u = u[~np.isclose(u, l3 / self.perimeter)]
-        u = u[0: n]
+        u = u[0:n]
 
         u *= self.perimeter
         x = []
@@ -141,8 +123,7 @@ class Rectangle(Hypercube):
                 x.append([self.xmax[0] - (l - l2), self.xmax[1]])
             else:
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
-        points = np.vstack(x)
-        return (points, self.boundary_normal(points))
+        return np.vstack(x)
 
     @staticmethod
     def is_valid(vertices):
@@ -165,6 +146,7 @@ class Triangle(Geometry):
         x2 (Tuple[float, float]): Second point of Triangle [x1, y1].
         x3 (Tuple[float, float]): Third point of Triangle [x2, y2].
     """
+
     def __init__(self, x1, x2, x3):
         self.area = polygon_signed_area([x1, x2, x3])
         # Clockwise
@@ -190,36 +172,32 @@ class Triangle(Geometry):
         self.n31_normal = clockwise_rotation_90(self.n31)
         self.perimeter = self.l12 + self.l23 + self.l31
 
-        super().__init__(
-            2,
-            (np.minimum(x1, np.minimum(x2, x3)), np.maximum(x1, np.maximum(x2, x3))),
-            self.l12 * self.l23 * self.l31 /
-                (self.perimeter * (self.l12 + self.l23 - self.l31) *
-                (self.l23 + self.l31 - self.l12) *
-                (self.l31 + self.l12 - self.l23))**0.5
-        )
+        super().__init__(2, (np.minimum(x1, np.minimum(x2, x3)), np.maximum(
+            x1, np.maximum(x2, x3))), self.l12 * self.l23 * self.l31 /
+                         (self.perimeter * (self.l12 + self.l23 - self.l31) *
+                          (self.l23 + self.l31 - self.l12) *
+                          (self.l31 + self.l12 - self.l23))**0.5)
 
     def is_inside(self, x):
         # https://stackoverflow.com/a/2049593/12679294
-        _sign = np.stack([
-            np.cross(self.v12, x - self.x1),
-            np.cross(self.v23, x - self.x2),
-            np.cross(self.v31, x - self.x3)
-        ], axis=1)
+        _sign = np.stack(
+            [
+                np.cross(self.v12, x - self.x1),
+                np.cross(self.v23, x - self.x2),
+                np.cross(self.v31, x - self.x3)
+            ],
+            axis=1)
         return ~(np.any(_sign > 0, axis=-1) & np.any(_sign < 0, axis=-1))
 
     def on_boundary(self, x):
         l1 = np.linalg.norm(x - self.x1, axis=-1)
         l2 = np.linalg.norm(x - self.x2, axis=-1)
         l3 = np.linalg.norm(x - self.x3, axis=-1)
-        return np.any(
-            np.isclose(
-                [l1 + l2 - self.l12, l2 + l3 - self.l23, l3 + l1 - self.l31],
-                0,
-                atol=1e-6
-            ),
-            axis=0
-        )
+        return np.any(np.isclose(
+            [l1 + l2 - self.l12, l2 + l3 - self.l23, l3 + l1 - self.l31],
+            0,
+            atol=1e-6),
+                      axis=0)
 
     def boundary_normal(self, x):
         l1 = np.linalg.norm(x - self.x1, axis=-1, keepdims=True)
@@ -263,7 +241,7 @@ class Triangle(Geometry):
             endpoint=False)[:, None] * self.v31 + self.x3)
         x = np.vstack((x12, x23, x31))
         if len(x) > n:
-            x = x[0: n]
+            x = x[0:n]
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -311,27 +289,24 @@ class Polygon(Geometry):
             self.vertices = np.flipud(self.vertices)
 
         self.diagonals = spatial.distance.squareform(
-            spatial.distance.pdist(self.vertices)
-        )
+            spatial.distance.pdist(self.vertices))
         super().__init__(
-            2,
-            (np.amin(self.vertices, axis=0), np.amax(self.vertices, axis=0)),
-            np.max(self.diagonals)
-        )
+            2, (np.amin(
+                self.vertices, axis=0), np.amax(
+                    self.vertices, axis=0)),
+            np.max(self.diagonals))
         self.nvertices = len(self.vertices)
         self.perimeter = np.sum(
-            [self.diagonals[i, i + 1] for i in range(-1, self.nvertices - 1)]
-        )
+            [self.diagonals[i, i + 1] for i in range(-1, self.nvertices - 1)])
         self.bbox = np.array(
-            [np.min(self.vertices, axis=0), np.max(self.vertices, axis=0)]
-        )
+            [np.min(self.vertices, axis=0), np.max(self.vertices, axis=0)])
 
         self.segments = self.vertices[1:] - self.vertices[:-1]
         self.segments = np.vstack(
-            (self.vertices[0] - self.vertices[-1], self.segments)
-        )
+            (self.vertices[0] - self.vertices[-1], self.segments))
         self.normal = clockwise_rotation_90(self.segments.T).T
-        self.normal = self.normal / np.linalg.norm(self.normal, axis=1).reshape(-1, 1)
+        self.normal = self.normal / np.linalg.norm(
+            self.normal, axis=1).reshape(-1, 1)
 
     def is_inside(self, x):
         def wn_PnPoly(P, V):
@@ -358,8 +333,7 @@ class Polygon(Geometry):
                         V[i + 1, 1] > P[:, 1:2],  # An upward crossing
                         is_left(V[i], V[i + 1], P) > 0,  # P left of edge
                     ]),
-                    axis=-1
-                )
+                    axis=-1)
                 wn[tmp] += 1  # Have a valid up intersect
                 tmp = np.all(
                     np.hstack([
@@ -367,8 +341,7 @@ class Polygon(Geometry):
                         V[i + 1, 1] <= P[:, 1:2],  # A downward crossing
                         is_left(V[i], V[i + 1], P) < 0,  # P right of edge
                     ]),
-                    axis=-1
-                )
+                    axis=-1)
                 wn[tmp] -= 1  # Have a valid down intersect
             return wn
 
@@ -403,7 +376,7 @@ class Polygon(Geometry):
                         i + 1] - self.vertices[i]) + self.vertices[i])
         x = np.vstack(x)
         if len(x) > n:
-            x = x[0: n]
+            x = x[0:n]
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -421,12 +394,14 @@ class Polygon(Geometry):
         i = -1
         l0 = 0
         l1 = l0 + self.diagonals[i, i + 1]
-        v = (self.vertices[i + 1] - self.vertices[i]) / self.diagonals[i, i + 1]
+        v = (
+            self.vertices[i + 1] - self.vertices[i]) / self.diagonals[i, i + 1]
         for l in u:
             if l > l1:
                 i += 1
                 l0, l1 = l1, l1 + self.diagonals[i, i + 1]
-                v = (self.vertices[i + 1] - self.vertices[i]) / self.diagonals[i, i + 1]
+                v = (self.vertices[i + 1] - self.vertices[i]
+                     ) / self.diagonals[i, i + 1]
             x.append((l - l0) * v + self.vertices[i])
         return np.vstack(x)
 

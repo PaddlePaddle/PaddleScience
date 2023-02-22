@@ -92,12 +92,16 @@ class Neumann(BC):
         for indv in indvar:
             if indv.name == "t":
                 continue
-            self.formula += sympy.Derivative(u, indv) * sympy.Symbol(f"n_{indv.name}")
+            self.formula += sympy.Derivative(
+                u, indv) * sympy.Symbol(f"n_{indv.name}")
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)
         bc_disc.to_formula(indvar)
         return bc_disc
+
+    def __str__(self):
+        return self.formula
 
 
 class Robin(BC):
@@ -115,28 +119,30 @@ class Robin(BC):
         >>> bc2 = psci.bc.Robin("u", rhs=lambda x, y: 0.0)
     """
 
-    def __init__(self, name, h, T_amb, rhs=0.0, weight=1.0):
+    def __init__(self, name, a, b, rhs=0.0, weight=1.0):
         super(Robin, self).__init__(name, weight)
         self.category = "Robin"
         self.rhs = rhs
-        self.h = h
-        self.T_amb = T_amb
+        self.a = a
+        self.b = b
 
     def to_formula(self, indvar):
         u = sympy.Function(self.name)(*indvar)
-        self.formula = 0
+        self.formula = u * self.a
         for indv in indvar:
             if indv.name == "t":
                 continue
-            self.formula += sympy.Derivative(u, indv) * sympy.Symbol(f"n_{indv.name}")
-        self.formula += self.h * u
-        self.formula -= self.h * self.T_amb
+            self.formula += sympy.Derivative(
+                u, indv) * sympy.Symbol(f"n_{indv.name}") * self.b
         print(f"Robin expr = {self.formula}")
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)
         bc_disc.to_formula(indvar)
         return bc_disc
+
+    def __str__(self):
+        return self.formula
 
 
 class Periodic(BC):

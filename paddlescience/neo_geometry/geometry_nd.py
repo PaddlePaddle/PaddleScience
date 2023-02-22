@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Code below is heavily based on https://github.com/lululxvi/deepxde
 """
@@ -39,10 +38,8 @@ class Hypercube(Geometry):
 
         self.side_length = self.xmax - self.xmin
         super().__init__(
-            len(xmin),
-            (self.xmin, self.xmax),
-            np.linalg.norm(self.side_length)
-        )
+            len(xmin), (self.xmin, self.xmax),
+            np.linalg.norm(self.side_length))
         self.volume = np.prod(self.side_length)
 
     def is_inside(self, x):
@@ -90,7 +87,7 @@ class Hypercube(Geometry):
                         dtype=config._dtype, )[1:])
         x = np.array(list(itertools.product(*xi)))
         if len(x) > n:
-            x = x[0: n]
+            x = x[0:n]
         return x
 
     def random_points(self, n, random="pseudo"):
@@ -104,14 +101,6 @@ class Hypercube(Geometry):
         # Replace value of the randomly picked dimension with the nearest boundary value (0 or 1)
         x[np.arange(n), rand_dim] = np.round(x[np.arange(n), rand_dim])
         return (self.xmax - self.xmin) * x + self.xmin
-
-    def periodic_point(self, x, component):
-        y = np.copy(x)
-        _on_xmin = np.isclose(y[:, component], self.xmin[component])
-        _on_xmax = np.isclose(y[:, component], self.xmax[component])
-        y[:, component][_on_xmin] = self.xmax[component]
-        y[:, component][_on_xmax] = self.xmin[component]
-        return y
 
 
 class Hypersphere(Geometry):
@@ -131,19 +120,6 @@ class Hypersphere(Geometry):
         return np.isclose(
             np.linalg.norm(
                 x - self.center, axis=-1), self.radius)
-
-    def distance2boundary_unitdirn(self, x, dirn):
-        # https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-        xc = x - self.center
-        ad = np.dot(xc, dirn)
-        return (-ad + (ad**2 - np.sum(xc * xc, axis=-1) + self._r2)**0.5
-                ).astype(config._dtype)
-
-    def distance_to_boundary(self, x, dirn):
-        return self.distance2boundary_unitdirn(x, dirn / np.linalg.norm(dirn))
-
-    def mindist_to_boundary(self, x):
-        return np.amin(self.radius - np.linalg.norm(x - self.center, axis=-1))
 
     def boundary_normal(self, x):
         _n = x - self.center
@@ -174,12 +150,3 @@ class Hypersphere(Geometry):
             X = stats.norm.ppf(U).astype(config._dtype)
         X = preprocessing.normalize(X)
         return self.radius * X + self.center
-
-    def background_points(self, x, dirn, dist2npt, shift):
-        dirn = dirn / np.linalg.norm(dirn)
-        dx = self.distance2boundary_unitdirn(x, -dirn)
-        n = max(dist2npt(dx), 1)
-        h = dx / n
-        pts = x - np.arange(
-            -shift, n - shift + 1, dtype=config._dtype)[:, None] * h * dirn
-        return pts

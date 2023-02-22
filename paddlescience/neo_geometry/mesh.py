@@ -14,12 +14,21 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Union
 
 import numpy as np
-import pymesh
+
+try:
+    import pymesh
+except ImportError:
+    warnings.warn(
+        "Refer to README.md and install pymesh before using mesh API in neo_geometry"
+    )
+
 import pysdf
 
+from .. import config
 from .geometry import Geometry
 from .inflation import pymesh_inflation
 from .sampler import sample
@@ -38,21 +47,20 @@ class Mesh(Geometry):
         elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
-            raise ValueError(f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
-
-        if "face_normal" not in self.py_mesh.get_attribute_names():
-            # auto compute "face_area", "face_normal", "vertex_normal"
-            self.py_mesh.add_attribute("vertex_normal")
-        self.face_normal = self.py_mesh.get_attribute("face_normal").reshape([-1, 3])
+            raise ValueError(
+                f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
 
         self.vertices = self.py_mesh.vertices
         self.faces = self.py_mesh.faces
         self.vectors = self.vertices[self.faces]
+        self.py_mesh.add_attribute("face_normal")
+        self.face_normal = self.py_mesh.get_attribute("face_normal").reshape(
+            [-1, 3])
         super().__init__(
-            self.vertices.shape[-1],
-            (np.amin(self.vertices, axis=0), np.amax(self.vertices, axis=0)),
-            np.inf
-        )
+            self.vertices.shape[-1], (np.amin(
+                self.vertices, axis=0), np.amax(
+                    self.vertices, axis=0)),
+            np.inf)
         self.v0 = self.vectors[:, 0]
         self.v1 = self.vectors[:, 1]
         self.v2 = self.vectors[:, 2]
@@ -60,13 +68,10 @@ class Mesh(Geometry):
         self.num_faces = self.py_mesh.num_faces
         self.sdf = pysdf.SDF(self.vertices, self.faces)
         self.bounds = (
-            ((np.min(self.vectors[:, :, 0])),
-             np.max(self.vectors[:, :, 0])),
+            ((np.min(self.vectors[:, :, 0])), np.max(self.vectors[:, :, 0])),
             ((np.min(self.vectors[:, :, 1])),
-             np.max(self.vectors[:, :, 1])),
-            ((np.min(self.vectors[:, :, 2])),
-             np.max(self.vectors[:, :, 2]))
-        )
+             np.max(self.vectors[:, :, 1])), ((np.min(self.vectors[:, :, 2])),
+                                              np.max(self.vectors[:, :, 2])))
 
     def is_inside(self, x):
         # NOTE: point on boundary is included
@@ -146,95 +151,100 @@ class Mesh(Geometry):
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(pymesh_inflation(self.py_mesh, _dist))
             triangle_areas = area_of_triangles(
-                inflated_mesh.v0,
-                inflated_mesh.v1,
-                inflated_mesh.v2
-            )
-            triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
-            triangle_index = np.arange(triangle_probabilities.shape[0])
+                inflated_mesh.v0, inflated_mesh.v1, inflated_mesh.v2)
+            triangle_prob = triangle_areas / np.linalg.norm(
+                triangle_areas, ord=1)
+            triangle_index = np.arange(triangle_prob.shape[0])
             points_per_triangle = np.random.choice(
-                triangle_index, _n, p=triangle_probabilities
-            )
+                triangle_index, _n, p=triangle_prob)
             points_per_triangle, _ = np.histogram(
                 points_per_triangle,
-                np.arange(triangle_probabilities.shape[0] + 1) - 0.5
-            )
+                np.arange(triangle_prob.shape[0] + 1) - 0.5)
 
             inflated_boundary_points = []
-            for index, nr_p in enumerate(points_per_triangle):
-                if nr_p == 0:
+            for index, num_point in enumerate(points_per_triangle):
+                if num_point == 0:
                     continue
                 sampled_points = sample_in_triangle(
-                    inflated_mesh.v0[index],
-                    inflated_mesh.v1[index],
-                    inflated_mesh.v2[index],
-                    nr_p,
-                    random
-                )
-
-                invar["normal_x"].append(
-                    np.full(x.shape, mesh.normals[index, 0]) / normal_scale
-                )
-                invar["normal_y"].append(
-                    np.full(x.shape, mesh.normals[index, 1]) / normal_scale
-                )
-                invar["normal_z"].append(
-                    np.full(x.shape, mesh.normals[index, 2]) / normal_scale
-                )
-                # 记录每一个采样点所在三角面的面积
-                invar["area"].append(
-                    np.full(x.shape, triangle_areas[index] / x.shape[0])
-                )
+                    inflated_mesh.v0[index], inflated_mesh.v1[index],
+                    inflated_mesh.v2[index], num_point, random)
                 inflated_boundary_points.append(sampled_points)
-            inflated_boundary_points = np.concatenate(inflated_boundary_points, axis=0)
+            inflated_boundary_points = np.concatenate(
+                inflated_boundary_points, axis=0)
             all_points.append(inflated_boundary_points)
 
         return np.concatenate(all_points, axis=0)
 
-    def random_boundary_points(self, n, random="pseudo"):
-        triangle_areas = area_of_triangles(
-            self.v0,
-            self.v1,
-            self.v2
-        )
-        triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
-        triangle_index = np.arange(triangle_probabilities.shape[0])
-        points_per_triangle = np.random.choice(triangle_index, n, p=triangle_probabilities)
+    def random_boundary_points(self, n, random="pseudo", with_normal=False):
+        triangle_areas = area_of_triangles(self.v0, self.v1, self.v2)
+        triangle_prob = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
+        triangle_index = np.arange(triangle_prob.shape[0])
+
+        points_per_triangle = np.random.choice(
+            triangle_index, n, p=triangle_prob)
         points_per_triangle, _ = np.histogram(
-            points_per_triangle,
-            np.arange(triangle_probabilities.shape[0] + 1) - 0.5
-        )
+            points_per_triangle, np.arange(triangle_prob.shape[0] + 1) - 0.5)
 
         all_points = []
         all_normals = []
-        for index, nr_p in enumerate(points_per_triangle):
-            if nr_p == 0:
+
+        for index, num_point in enumerate(points_per_triangle):
+            if num_point == 0:
                 continue
-            sampled_points = sample_in_triangle(
-                self.v0[index],
-                self.v1[index],
-                self.v2[index],
-                nr_p,
-                random
-            )
-            sampled_normals = self.face_normal[index]
-            sampled_normals = np.tile(
-                sampled_normals[None, :],
-                [nr_p, 1]
-            )
+            sampled_points = sample_in_triangle(self.v0[index], self.v1[index],
+                                                self.v2[index], num_point,
+                                                random)
             all_points.append(sampled_points)
+
+            sampled_normals = np.tile((self.face_normal[index:index + 1]),
+                                      (num_point, 1))
             all_normals.append(sampled_normals)
 
-        return (
-            np.concatenate(all_points, axis=0),
-            np.concatenate(all_normals, axis=0)
-        )
+        all_points = np.concatenate(all_points, axis=0)
+        all_normals = np.concatenate(all_normals, axis=0)
+
+        if with_normal:
+            return all_points, all_normals
+        return all_points
+
+    def random_boundary_points_with_criteria(self,
+                                             n,
+                                             random="pseudo",
+                                             criteria=None,
+                                             with_normal=False):
+        x = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        all_normal = np.empty(shape=(n, self.dim), dtype=config._dtype)
+        i = 0
+
+        while i < n:
+            tmp = self.random_boundary_points(n, random, with_normal)
+            if with_normal:
+                tmp = tmp, normal
+            if criteria is not None:
+                criteria_mask = criteria(*np.split(
+                    tmp, self.dim, axis=1)).flatten()
+                tmp = tmp[criteria_mask]
+                if with_normal:
+                    normal = normal[criteria_mask]
+            if len(tmp) > n - i:
+                tmp = tmp[:n - i]
+                if with_normal:
+                    all_normal = normal[:n - i]
+            x[i:i + len(tmp)] = tmp
+            if with_normal:
+                all_normal[i:i + len(normal)] = normal
+            i += len(tmp)
+        if with_normal:
+            return x, all_normal
+        return x,
 
     def union(self, rhs: Mesh):
         csg = pymesh.CSGTree({
-            "union": [
-                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
-            ]
+            "union": [{
+                "mesh": self.py_mesh
+            }, {
+                "mesh": rhs.py_mesh
+            }]
         })
         return Mesh(csg.mesh)
 
@@ -243,9 +253,11 @@ class Mesh(Geometry):
 
     def difference(self, rhs):
         csg = pymesh.CSGTree({
-            "difference": [
-                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
-            ]
+            "difference": [{
+                "mesh": self.py_mesh
+            }, {
+                "mesh": rhs.py_mesh
+            }]
         })
         return Mesh(csg.mesh)
 
@@ -254,9 +266,11 @@ class Mesh(Geometry):
 
     def intersection(self, rhs):
         csg = pymesh.CSGTree({
-            "intersection": [
-                {"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}
-            ]
+            "intersection": [{
+                "mesh": self.py_mesh
+            }, {
+                "mesh": rhs.py_mesh
+            }]
         })
         return Mesh(csg.mesh)
 
