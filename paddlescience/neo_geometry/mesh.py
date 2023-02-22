@@ -14,10 +14,18 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Union
 
 import numpy as np
-import pymesh
+
+try:
+    import pymesh
+except ImportError:
+    warnings.warn(
+        "Refer to README.md and install pymesh before using mesh API in neo_geometry"
+    )
+
 import pysdf
 
 from .geometry import Geometry
