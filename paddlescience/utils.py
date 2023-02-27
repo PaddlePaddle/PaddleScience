@@ -11,12 +11,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import yaml
 import argparse
-from .config import enable_visualdl, enable_static, enable_prim
+import os
 
-__all__ = ['AttrDict', 'parse_args']
+import numpy as np
+import yaml
+
+from .config import enable_prim, enable_static, enable_visualdl
+
+__all__ = ['AttrDict', 'parse_args', 'replicate_t']
+
+
+def replicate_t(t_array, data):
+    """
+    replicate_t
+    """
+    full_data = None
+    t_len = data.shape[0]
+    for time in t_array:
+        t_extended = np.array(
+            [time] * t_len, dtype="float32").reshape((-1, 1))  # [N, 1]
+        t_data = np.concatenate(
+            (t_extended, data), axis=1)  # [N, xyz]->[N, txyz]
+        if full_data is None:
+            full_data = t_data
+        else:
+            full_data = np.concatenate((full_data, t_data))  # [N*t_step,txyz]
+
+    return full_data
 
 
 class AttrDict(dict):

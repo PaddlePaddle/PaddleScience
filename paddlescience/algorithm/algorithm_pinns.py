@@ -570,7 +570,6 @@ class PINNs(AlgorithmBase):
         # interior points: compute eq_loss
         for name_i, input_attr in inputs_attr["interior"].items():
             input = inputs[n]
-
             # print("int: ", len(input))
             # print(input[0:5, :])
 
@@ -702,6 +701,8 @@ class PINNs(AlgorithmBase):
             return paddle.sqrt(x)
 
     def __padding_array(self, nprocs, array):
+        if nprocs == 1:
+            return array
         npad = (nprocs - len(array) % nprocs) % nprocs  # pad npad elements
         if array.ndim == 2:
             datapad = array[-1, :].reshape((-1, array[-1, :].shape[0]))

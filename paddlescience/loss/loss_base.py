@@ -111,7 +111,8 @@ class CompFormula:
             rst = float(item) * rst  # TODO: float / double / float16
         elif item.is_Symbol:
             # print("*** symbol:", item)
-            rst = rst * self.__compute_formula_symbol(item, input, input_attr)
+            rst = rst * self.__compute_formula_symbol(item, input, normal,
+                                                      input_attr)
         elif item.is_Function:
             # print("*** function:", item)
             rst = rst * self.__compute_formula_function(
@@ -124,9 +125,14 @@ class CompFormula:
 
         return rst
 
-    def __compute_formula_symbol(self, item, input, input_attr):
-        var_idx = self.indvar.index(item)
-        return self.input[:, var_idx + input_attr.indvar_start]  # TODO
+    def __compute_formula_symbol(self, item, input, normal, input_attr):
+        if item.name.startswith("n_"):
+            var_idx = self.indvar.index(sympy.Symbol(item.name[2:]))
+            rst_norm = normal[:, var_idx + input_attr.indvar_start]
+            return rst_norm
+        else:
+            var_idx = self.indvar.index(item)
+            return input[:, var_idx + input_attr.indvar_start]  # TODO
 
     def __compute_formula_function(self, item, input, input_attr, labels,
                                    labels_attr):

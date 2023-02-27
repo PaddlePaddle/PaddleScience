@@ -87,9 +87,13 @@ class Neumann(BC):
         self.rhs = rhs
 
     def to_formula(self, indvar):
-        n = sympy.Symbol('n')
         u = sympy.Function(self.name)(*indvar)
-        self.formula = sympy.Derivative(u, n)
+        self.formula = 0
+        for indv in indvar:
+            if indv.name == "t":
+                continue
+            self.formula += sympy.Derivative(
+                u, indv) * sympy.Symbol(f"n_{indv.name}")
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)
@@ -112,15 +116,21 @@ class Robin(BC):
         >>> bc2 = psci.bc.Robin("u", rhs=lambda x, y: 0.0)
     """
 
-    def __init__(self, name, rhs=0.0, weight=1.0):
+    def __init__(self, name, a, b, rhs=0.0, weight=1.0):
         super(Robin, self).__init__(name, weight)
         self.category = "Robin"
+        self.a = a
+        self.b = b
         self.rhs = rhs
 
     def to_formula(self, indvar):
-        n = sympy.Symbol('n')
         u = sympy.Function(self.name)(*indvar)
-        self.formula = u + sympy.Derivative(u, n)
+        self.formula = self.a * u
+        for indv in indvar:
+            if indv.name == "t":
+                continue
+            self.formula += sympy.Derivative(u, indv) * \
+                sympy.Symbol(f"n_{indv.name}") * self.b
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)

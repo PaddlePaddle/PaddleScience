@@ -125,7 +125,9 @@ class L2:
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs,
+        cmploss.compute_outs_der(input[0]
+                                 if isinstance(input,
+                                               (tuple, list)) else input, bs,
                                  params)  # TODO: dirichlet not need der
 
         loss = 0.0
@@ -133,6 +135,8 @@ class L2:
             # TODO: hard code bs
 
             normal_b = labels_attr["bc"][name_b][i]["normal"]
+            if isinstance(input, (tuple, list)):
+                normal_b = input[1]
             if type(normal_b) == LabelInt:
                 normal = labels[normal_b]
             else:

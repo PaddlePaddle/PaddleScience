@@ -160,16 +160,19 @@ class FormulaLoss:
         cmploss = CompFormula(pde, net)
 
         # compute outs, jacobian, hessian
-        cmploss.compute_outs_der(input, bs)  # TODO: dirichlet not need der
+        cmploss.compute_outs_der(input[0]
+                                 if isinstance(input, (tuple, list)) else
+                                 input, bs)  # TODO: dirichlet not need der
 
         loss = 0.0
         for i in range(len(pde.bc[name_b])):
 
             formula = pde.bc[name_b][i].formula
-            rst = cmploss.compute_formula(formula, input, input_attr, labels,
-                                          labels_attr, None)
+            rst = cmploss.compute_formula(
+                formula, input, input_attr, labels, labels_attr, input[1]
+                if isinstance(input, (tuple, list)) else None)
 
-            # TODO: simplify                                 
+            # TODO: simplify
             rhs_b = labels_attr["bc"][name_b][i]["rhs"]
             if type(rhs_b) == LabelInt:
                 rhs = labels[rhs_b]

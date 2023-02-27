@@ -184,8 +184,11 @@ class Solver(object):
 
         # convert inputs to tensor
         for i in range(ninputs):
-            inputs[i] = paddle.to_tensor(
-                inputs[i], dtype=self._dtype, stop_gradient=False)
+            if isinstance(inputs[i], (list, tuple)):
+                inputs[i] = [paddle.to_tensor(x) for x in inputs[i]]
+            else:
+                inputs[i] = paddle.to_tensor(
+                    inputs[i], dtype=self._dtype, stop_gradient=False)
 
         # convert label to tensor
         for i in range(nlabels):
@@ -228,6 +231,8 @@ class Solver(object):
                 loss.backward()
                 self.opt.step()
                 self.opt.clear_grad()
+                if not isinstance(self.opt._learning_rate, float):
+                    self.opt._learning_rate.step()
 
                 print("epoch: " + str(epoch + 1), " loss:",
                       float(loss), " eq loss:",

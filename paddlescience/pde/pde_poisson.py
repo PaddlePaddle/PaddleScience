@@ -23,7 +23,7 @@ __all__ = ['Poisson']
 class Poisson(PDE):
     """
     Poisson Equation
-    
+
     .. math::
         \Delta u = rhs
 
@@ -38,30 +38,29 @@ class Poisson(PDE):
         >>> pde = psci.pde.Poisson(dim=2, rhs=lambda x, y: 1.0)
     """
 
-    def __init__(self, dim=2, rhs=0.0, weight=1.0):
+    def __init__(self, dim=2, alpha=1.0, rhs=0.0, weight=1.0):
 
-        if dim == 1:
+        if dim == 2:
             # independent and dependent variable
-            x = sympy.Symbol('x')
-            u = sympy.Function('u')(x)
-            super(Poisson, self).__init__([x], [u], weight)
-            self.add_equation(u.diff(x).diff(x), rhs)
-
-        elif dim == 2:
-            # independent and dependent variable
+            t = sympy.Symbol('t')
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
-            u = sympy.Function('u')(x, y)
-            super(Poisson, self).__init__([x, y], [u], weight)
-            self.add_equation(u.diff(x).diff(x) + u.diff(y).diff(y), rhs)
+            T = sympy.Function('T')(t, x, y)
+            super(Poisson, self).__init__([t, x, y], [T], weight)
+            self.add_equation(
+                T.diff(t) - alpha * (T.diff(x).diff(x) + T.diff(y).diff(y)),
+                rhs)
 
         elif dim == 3:
             # independent variable
+            t = sympy.Symbol('t')
             x = sympy.Symbol('x')
             y = sympy.Symbol('y')
             z = sympy.Symbol('z')
-            u = sympy.Function('u')(x, y, z)
+            T = sympy.Function('T')(t, x, y, z)
 
-            super(Poisson, self).__init__([x, y, z], [u], weight)
+            super(Poisson, self).__init__([t, x, y, z], [T], weight)
             self.add_equation(
-                u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z), rhs)
+                T.diff(t) - alpha *
+                (T.diff(x).diff(x) + T.diff(y).diff(y) + T.diff(z).diff(z)),
+                rhs)
