@@ -56,20 +56,17 @@ points_dict = geo.fetch_batch_data()
 geo_disc = geo
 geo_disc.interior = points_dict["interior"]
 geo_disc.boundary = {
-    "around": points_dict["boundary"],
+    "around":
+    (points_dict["boundary"], geo.boundary_normal(points_dict["boundary"])),
 }
 geo_disc.user = None
-geo_disc.normal = {
-    "around": None,
-}
-# for k, v in points_dict.items():
-#     print(f"sampled data {k}.shape = {v.shape}")
+geo_disc.normal = {"around": None, }
 
 # Poisson
-pde = psci.pde.Poisson(dim=3, alpha=0.1, rhs=1.0, weight=1.0) # weight ?
+pde = psci.pde.Poisson(dim=3, alpha=0.1, rhs=1.0, weight=1.0)
 
 # define boundary condition dT/dn+hT-hT_amb=0
-bc_around = psci.bc.Robin("T", h=1, T_amb=1, rhs=0)
+bc_around = psci.bc.Robin("T", a=1.0, b=1.0, rhs=1.0)
 
 # set bounday condition
 pde.set_bc("around", bc_around)
@@ -88,7 +85,7 @@ net = psci.network.FCNet(
     num_layers=num_layers,
     hidden_size=hidden_size,
     activation=activation)
-net.initialize("./checkpoint/dynamic_net_params_20000.pdparams")
+# net.initialize("./checkpoint/dynamic_net_params_20000.pdparams")
 
 # loss = psci.loss.L2()
 # eq loss
@@ -120,19 +117,24 @@ loss = losseq + 10.0 * lossic + 10.0 * lossbc
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-learning_rate = Cosine(epochs, 1, learning_rate, warmup_epoch=int(epochs * 0.05), by_epoch=True)()
+learning_rate = Cosine(
+    epochs, 1, learning_rate, warmup_epoch=int(epochs * 0.05), by_epoch=True)()
 opt = psci.optimizer.Adam(
     learning_rate=learning_rate, parameters=net.parameters())
 
 # Solver
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
-# solution = solver.solve(num_epoch=epochs, use_dataloader=False, batch_size=[10240, 10240, 10240])
-solution = solver.predict()
+solution = solver.solve(
+    num_epoch=epochs, use_dataloader=False, batch_size=[10240, 10240, 10240])
+# solution = solver.predict()
 for i in range(len(solution)):
     print(f"solution[{i}]={solution[i].shape}")
 
 # Save result to vtk
-dirname = "vtk_3d_robin_bs10240"
+dirname = "vtk_3d_robin_bs10240_PRver"
 os.makedirs(f"./{dirname}", exist_ok=True)
 for i in range(time_num):
-    psci.visu.__save_vtk_raw(filename=f"./{dirname}/disk_poisson3d_output_time{i}", cordinate=geo_disc.interior, data=solution[0][i*num_cords:(i+1)*num_cords])
+    psci.visu.__save_vtk_raw(
+        filename=f"./{dirname}/disk_poisson3d_output_time{i}",
+        cordinate=geo_disc.interior,
+        data=solution[0][i * num_cords:(i + 1) * num_cords])

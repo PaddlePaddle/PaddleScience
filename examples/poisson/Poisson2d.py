@@ -17,7 +17,6 @@ import paddle
 import paddlescience as psci
 from paddlescience.optimizer.lr import Cosine
 
-
 # Geometry
 npoints = 10201
 seed_num = 42
@@ -37,6 +36,7 @@ checkpoint_path = 'checkpoints'
 paddle.seed(seed_num)
 np.random.seed(seed_num)
 
+
 def replicate_t(t_array, data):
     """
     replicate_t
@@ -44,14 +44,17 @@ def replicate_t(t_array, data):
     full_data = None
     t_len = data.shape[0]
     for time in t_array:
-        t_extended = np.array([time] * t_len, dtype="float32").reshape((-1, 1)) # [N, 1]
-        t_data = np.concatenate((t_extended, data), axis=1) # [N, xyz]->[N, txyz]
+        t_extended = np.array(
+            [time] * t_len, dtype="float32").reshape((-1, 1))  # [N, 1]
+        t_data = np.concatenate(
+            (t_extended, data), axis=1)  # [N, xyz]->[N, txyz]
         if full_data is None:
             full_data = t_data
         else:
-            full_data = np.concatenate((full_data, t_data)) # [N*t_step,txyz]
+            full_data = np.concatenate((full_data, t_data))  # [N*t_step,txyz]
 
     return full_data
+
 
 # time
 start_time = 0.1
@@ -66,38 +69,20 @@ print(f"time_num = {time_num}, time_array = {time_array}")
 # geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
 geo = psci.neo_geometry.Disk((0.0, 0.0), 1.0)
 geo.add_sample_config("interior", 10000)
-geo.add_sample_config("boundary", 1000)
+geo.add_sample_config("boundary", 1000, with_normal=True)
 
 points_dict = geo.fetch_batch_data()
 geo_disc = geo
 geo_disc.interior = points_dict["interior"]
 geo_disc.boundary = {
-    "around": points_dict["boundary"],
+    "around":
+    (points_dict["boundary"], geo.boundary_normal(points_dict["boundary"])),
 }
 geo_disc.user = None
-geo_disc.normal = {
-    "around": None,
-}
+geo_disc.normal = {"around": None, }
 
-
-# bp = geo_disc.boundary["around"][0]
-# bn = geo_disc.boundary["around"][1]
-# geo_disc.boundary["around"][1][:, 0] -= 0.3
-# geo_disc.boundary["around"][1][:, 1] -= 0.4
-# print(f"{np.abs(bn[:, 0]).mean().item():.10f}")
-# print(f"{np.abs(bn[:, 1]).mean().item():.10f}")
-# pp = bp - bn
-# print(np.abs(pp.sum(-1)).sum()) # 2.3005902738404416e-14
-# exit()
-# print(geo_disc.interior.shape)
-# print(geo_disc.boundary["around"][0].shape)
-# print(geo_disc.boundary["around"][1].shape)
-
-# psci.visu.__save_vtk_raw("disk_interior", geo_disc.interior, np.full([len(geo_disc.interior), 1], 1))
-# psci.visu.__save_vtk_raw("disk_boundary", geo_disc.boundary["around"][0], np.full([len(geo_disc.boundary["around"][0]), 1], 1))
-# exit()
 # Poisson
-pde = psci.pde.Poisson(dim=2, alpha=0.1, rhs=1.0, weight=1.0) # weight ?
+pde = psci.pde.Poisson(dim=2, alpha=0.1, rhs=1.0, weight=1.0)  # weight ?
 
 # define boundary condition dT/dn = q
 bc_around = psci.bc.Neumann('T', rhs=1.0)
@@ -151,7 +136,8 @@ loss = losseq + 10.0 * lossic + 10.0 * lossbc
 algo = psci.algorithm.PINNs(net=net, loss=loss)
 
 # Optimizer
-learning_rate = Cosine(epochs, 1, learning_rate, warmup_epoch=int(epochs * 0.05), by_epoch=True)()
+learning_rate = Cosine(
+    epochs, 1, learning_rate, warmup_epoch=int(epochs * 0.05), by_epoch=True)()
 opt = psci.optimizer.Adam(
     learning_rate=learning_rate, parameters=net.parameters())
 
@@ -164,7 +150,10 @@ for i in range(len(solution)):
 
 # Save result to vtk
 for i in range(time_num):
-    psci.visu.__save_vtk_raw(filename=f"./vtk/disk_poisson2d_output_time{i}", cordinate=geo_disc.interior, data=solution[0][i*num_cords:(i+1)*num_cords])
+    psci.visu.__save_vtk_raw(
+        filename=f"./vtk/disk_poisson2d_output_time{i}",
+        cordinate=geo_disc.interior,
+        data=solution[0][i * num_cords:(i + 1) * num_cords])
 # psci.visu.save_vtk(
 #     filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
 

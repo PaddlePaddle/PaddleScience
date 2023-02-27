@@ -107,6 +107,7 @@ class Neumann(BC):
 class Robin(BC):
     """
     Robin boundary condition
+    a * f + b * df/dn == rhs
 
     Parameters:
         name (string): Name of dependent variable
@@ -134,7 +135,6 @@ class Robin(BC):
                 continue
             self.formula += sympy.Derivative(
                 u, indv) * sympy.Symbol(f"n_{indv.name}") * self.b
-        print(f"Robin expr = {self.formula}")
 
     def discretize(self, indvar):
         bc_disc = copy.deepcopy(self)
@@ -143,34 +143,3 @@ class Robin(BC):
 
     def __str__(self):
         return self.formula
-
-
-class Periodic(BC):
-    """
-    Periodic boundary condition
-
-    Parameters:
-        name (string): Name of dependent variable
-        rhs (float or lambda function): right-hand side of Neumann boundary condition. The default value is 0.0.
-        weight (optional, float or lambda function): weight for computing boundary loss. The default value is 1.0.
-
-    Example:
-        >>> import paddlescience as psci
-        >>> bc1 = psci.bc.Periodic("u", rhs=0.0)
-        >>> bc2 = psci.bc.Periodic("u", rhs=lambda x, y: 0.0)
-    """
-
-    def __init__(self, name, rhs=0.0, weight=1.0):
-        super(Periodic, self).__init__(name, weight)
-        self.category = "Periodic"
-        self.rhs = rhs
-
-    def to_formula(self, indvar):
-        n = sympy.Symbol('n')
-        u = sympy.Function(self.name)(*indvar)
-        self.formula = u + sympy.Derivative(u, n)
-
-    def discretize(self, indvar):
-        bc_disc = copy.deepcopy(self)
-        bc_disc.to_formula(indvar)
-        return bc_disc

@@ -51,50 +51,20 @@ else:
     vtk_filename = 'output_ldc2d_steady_train'
     checkpoint_path = 'checkpoints'
 
-paddle.seed(42)
-np.random.seed(42)
+paddle.seed(seed_num)
+np.random.seed(seed_num)
 
 # set geometry and boundary
-# geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
-geo = psci.neo_geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))
-geo.add_sample_config("interior", 9801)
-geo.add_sample_config("boundary_top", 101)
-geo.add_sample_config("boundary_down", 101)
-geo.add_sample_config("boundary_left", 99)
-geo.add_sample_config("boundary_right", 99)
-points_dict = geo.fetch_batch_data()
-# for k, v in points_dict.items():
-#     print(f"{k} {len(v)}")
-# exit()
-# geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
-# geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
-# geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
-# geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
+geo = psci.geometry.Rectangular(origin=(-0.05, -0.05), extent=(0.05, 0.05))
+
+geo.add_boundary(name="top", criteria=lambda x, y: abs(y - 0.05) < 1e-5)
+geo.add_boundary(name="down", criteria=lambda x, y: abs(y + 0.05) < 1e-5)
+geo.add_boundary(name="left", criteria=lambda x, y: abs(x + 0.05) < 1e-5)
+geo.add_boundary(name="right", criteria=lambda x, y: abs(x - 0.05) < 1e-5)
 
 # discretize geometry
-# geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
-geo_disc = geo
-geo_disc.interior = points_dict["interior"]
-geo_disc.boundary = {
-    "top": points_dict["boundary_top"],
-    "down": points_dict["boundary_down"],
-    "left": points_dict["boundary_left"],
-    "right": points_dict["boundary_right"]
-}
-geo_disc.user = None
-geo_disc.normal = {
-    "top": None,
-    "down": None,
-    "left": None,
-    "right": None
-}
-"""
-interior (9801, 2)
-top (101, 2)
-down (101, 2)
-left (99, 2)
-right (99, 2)
-"""
+geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
+
 # N-S
 pde = psci.pde.NavierStokes(
     nu=0.01, rho=1.0, dim=2, time_dependent=False, weight=0.0001)
@@ -109,17 +79,12 @@ bc_left_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_left_v = psci.bc.Dirichlet('v', rhs=0.0)
 bc_right_u = psci.bc.Dirichlet('u', rhs=0.0)
 bc_right_v = psci.bc.Dirichlet('v', rhs=0.0)
-neumann_bc_right_u = psci.bc.Neumann('u', rhs=0.0)
-# print(geo_disc.boundary["right"][1].shape)
-# print(geo_disc.boundary["right"][1][:, 0].mean())
-# print(geo_disc.boundary["right"][1][:, 1].mean())
 
 # add bounday and boundary condition
 pde.add_bc("top", bc_top_u, bc_top_v)
 pde.add_bc("down", bc_down_u, bc_down_v)
 pde.add_bc("left", bc_left_u, bc_left_v)
-# pde.add_bc("right", bc_right_u, bc_right_v)
-pde.add_bc("right", neumann_bc_right_u)
+pde.add_bc("right", bc_right_u, bc_right_v)
 
 # discretization pde
 pde_disc = pde.discretize(geo_disc=geo_disc)
