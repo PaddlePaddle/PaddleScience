@@ -11,3 +11,4 @@ visualdl
 pyvista==0.37.0
 pysdf
 pyyaml
+scikit-optimize
