@@ -141,41 +141,103 @@ def save_vtk(filename="output", time_array=None, geo_disc=None, data=None):
             __save_vtk_raw(filename=fpname, cordinate=np.array(points_vtk).T)
 
 
-def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
+# def save_vtk_cord(filename="output", time_array=None, cord=None, data=None):
 
-    # concatenate data and cordiante 
-    points_vtk = __concatenate_cord(cord)
+#     # nt = None if (time_array is None) else len(time_array) - 1
+#     # concatenate data and cordiante 
+#     points_vtk = __concatenate_cord(cord)
+#     nrank = paddle.distributed.get_rank()
+#     # points's shape is [ndims][npoints]
+#     npoints = len(points_vtk[0])
+#     ndims = len(points_vtk)
 
+#     # data
+#     if data is None:
+#         data_vtk = {"placeholder": np.ones(npoints, dtype=config._dtype)}
+#     elif type(data) == types.LambdaType:
+#         data_vtk = dict()
+#         if ndims == 3:
+#             data_vtk["data"] = data(points_vtk[0], points_vtk[1],
+#                                     points_vtk[2])
+#         elif ndims == 2:
+#             data_vtk["data"] = data(points_vtk[0], points_vtk[1])
+#     else:
+#         data_vtk = __concatenate_data(data, nt)
+
+#     n = 1 if (nt is None) else nt
+#     if ndims == 3:
+#         axis_x = points_vtk[0]
+#         axis_y = points_vtk[1]
+#         axis_z = points_vtk[2]
+#         for t in range(n):
+#             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+#             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
+#     elif ndims == 2:
+#         axis_x = points_vtk[0]
+#         axis_y = points_vtk[1]
+#         axis_z = np.zeros(npoints, dtype=config._dtype)
+#         for t in range(n):
+#             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
+#             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
+
+def save_vtk_cord(filename="./visual/output", time_array=None, cord=None, data=None):
+    npoints = len(cord)
+    # ndims = len(points_vtk)
+    ndims = len(cord[0])
+    # concatenate data and cordiante
+    points_vtk = __concatenate_cord(cordinates=cord, nd=ndims) # Tuple[shape[30000,], shape[30000,], shape[30000,]]
+    # points_vtk[0] *= 80
+    # points_vtk[1] *= 40
+    # points_vtk[2] *= 30
+    # print(points_vtk[0].shape, points_vtk[0].min(), points_vtk[0].max())
+    # print(points_vtk[1].shape, points_vtk[1].min(), points_vtk[1].max())
+    # print(points_vtk[2].shape, points_vtk[2].min(), points_vtk[2].max())
+    # exit()
     # points's shape is [ndims][npoints]
-    npoints = len(points_vtk[0])
-    ndims = len(points_vtk)
-
+    # npoints = len(points_vtk[0])
+ 
+    nt = 1 if (time_array is None) else len(time_array)
+    print(f"nt = {nt}")
+ 
+    # nprocs = paddle.distributed.get_world_size()
+    nrank = paddle.distributed.get_rank()
     # data
     if data is None:
         data_vtk = {"placeholder": np.ones(npoints, dtype=config._dtype)}
     elif type(data) == types.LambdaType:
         data_vtk = dict()
         if ndims == 3:
-            data_vtk["data"] = data(points_vtk[0], points_vtk[1],
-                                    points_vtk[2])
+            data_vtk["data"] = data(points_vtk[0], points_vtk[1], points_vtk[2])
         elif ndims == 2:
             data_vtk["data"] = data(points_vtk[0], points_vtk[1])
     else:
         data_vtk = __concatenate_data(data, nt)
-
-    n = 1 if (nt is None) else nt
+        # for t in range(nt):
+            # print(data_vtk[t].keys())
+            # for k in data_vtk[t]:
+                # print(points_vtk[0].shape)
+                # print(points_vtk[1].shape)
+                # print(points_vtk[2].shape)
+                # print(data_vtk[t][k].shape)
+            # print("\n")
+            # exit()
+        # [(t1){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
+        #  (t2){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
+        #  (t3){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}
+        #  (t4){"u1": ndarray, "u2": ndarray, ..., "u4": ndarray}]
+ 
     if ndims == 3:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = points_vtk[2]
-        for t in range(n):
+        for t in range(nt):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
     elif ndims == 2:
         axis_x = points_vtk[0]
         axis_y = points_vtk[1]
         axis_z = np.zeros(npoints, dtype=config._dtype)
-        for t in range(n):
+        for t in range(nt):
             fpname = filename + "-t" + str(t + 1) + "-p" + str(nrank)
             pointsToVTK(fpname, axis_x, axis_y, axis_z, data=data_vtk[t])
 
@@ -227,15 +289,40 @@ def __concatenate_geo(geo_disc):
     return points_vtk
 
 
-def __concatenate_cord(cordinates):
+# def __concatenate_cord(cordinates):
+#     # # concatenate data and cordiante 
+#     # points_vtk = __concatenate_cord(cordinates)
+#     # nrank = paddle.distributed.get_rank()
+#     # # points's shape is [ndims][npoints]
+#     # ndims = len(points_vtk)
+# a
+#     x = []
+#     for cord in cordinates:
+#         x.append(cord)
+#     points = np.concatenate(x, axis=0)
+
+#     # to pointsToVTK input format
+#     points_vtk = list()
+#     for i in range(ndims):
+#         points_vtk.append(points[:, i].copy())
+
+#     return points_vtk
+
+def __concatenate_cord(cordinates=None, nd=None):
     x = []
+    # print(cordinates.shape) # (150000, 3)
     for cord in cordinates:
         x.append(cord)
     points = np.concatenate(x, axis=0)
-
+    points = points.reshape(cordinates.shape[0],cordinates.shape[1])
+    # print(points.shape)
+    # print(np.allclose(cordinates, points))
+    # exit(0)
+ 
     # to pointsToVTK input format
+    # 变成[[x1,x2,....,xn], [y1,y2,....,yn], [z1,z2,....,zn]]的list，类型为Tuple[shape[N,], shape[N,], shape[N,]]
     points_vtk = list()
-    for i in range(ndims):
+    for i in range(nd):
         points_vtk.append(points[:, i].copy())
 
     return points_vtk
