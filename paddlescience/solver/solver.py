@@ -11,11 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import csv
+from re import S
+import paddle.profiler as profiler
+
 import numpy as np
 import paddle
 from paddle.distributed.fleet import auto
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
+from paddlescience.solver.loader import load_data
 from . import utils
 from .. import config
 from visualdl import LogWriter
@@ -97,14 +102,14 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None):
+    def __init__(self, pde, algo, opt=None, lbm=None):
         super(Solver, self).__init__()
 
         self.pde = pde
         self.algo = algo
         self.opt = opt
         self._dtype = config._dtype
-
+        self.lbm = lbm
         if paddle.in_dynamic_mode():
             self.__init_dynamic()
         else:
@@ -164,35 +169,61 @@ class Solver(object):
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
         self.inputs = inputs
         self.inputs_attr = inputs_attr
-
         if self.opt is not None:
             labels, labels_attr = self.algo.create_labels(self.pde)
             self.labels = labels
             self.labels_attr = labels_attr
 
-    # solve static 
+    # solve static  
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
         inputs_attr = self.inputs_attr
         labels = self.labels
         labels_attr = self.labels_attr
-
         # number of inputs and labels
         ninputs = len(inputs)
         nlabels = len(labels)
+        if bs is None:
+            # convert inputs to tensor, comment out for dataloader
+            for i in range(ninputs):
+                inputs[i] = paddle.to_tensor(
+                    inputs[i], dtype=self._dtype, stop_gradient=True)
 
-        # convert inputs to tensor
-        for i in range(ninputs):
-            inputs[i] = paddle.to_tensor(
-                inputs[i], dtype=self._dtype, stop_gradient=False)
+            # convert label to tensor
+            for i in range(nlabels):
+                labels[i] = paddle.to_tensor(
+                    labels[i], dtype=self._dtype, stop_gradient=True)
+            inputs_labels = inputs + labels  # tmp to one list
 
-        # convert label to tensor
-        for i in range(nlabels):
-            labels[i] = paddle.to_tensor(
-                labels[i], dtype=self._dtype, stop_gradient=False)
+        elif (type(bs).__name__ == 'dict'):
+            import paddlescience.solver.loader as loader
+            bs_input = [
+                bs['interior'], bs['inlet'], bs['outlet'], bs['cylinder'],
+                bs['top'], bs['bottom'], bs['ic'], bs['supervised']
+            ]  #inputs 
+            bs_label = [
+                bs['ic'], bs['ic'], bs['ic'], bs['supervised'],
+                bs['supervised'], bs['supervised']
+            ]  #labels
 
-        inputs_labels = inputs + labels  # tmp to one list
+            for i in range(ninputs):
+                iterator = loader.get_batch_iterator(
+                    bsize=int(bs_input[i]),
+                    num_samples=len(inputs[i]),
+                    input_list=inputs[i].astype(np.float32))
+                inputs[i] = iterator
+            for i in range(nlabels):
+                iterator = loader.get_batch_iterator(
+                    bsize=int(bs_label[i]),
+                    num_samples=len(labels[i]),
+                    input_list=labels[i].astype(np.float32))
+                labels[i] = iterator
+            inputs_labels_iter = inputs + labels  # tmp to one list
+        else:
+            print(
+                "Error : [num_batch] is wrong, the batch number should be at least 1"
+            )
 
         print("Dynamic Graph is Currently in Use.")
         if config.visualdl_enabled() == True:
@@ -208,14 +239,30 @@ class Solver(object):
         # Adam optimizer
         if isinstance(self.opt, paddle.optimizer.AdamW) or isinstance(
                 self.opt, paddle.optimizer.Adam):
-
             # record time
             timer = utils.Timer()
-
+            import os
+            dirname = os.path.dirname(__file__)
+            out_path = dirname + r'/../../examples/cylinder/3d_unsteady_discrete/output/'
+            print(out_path)
+            now = time.strftime("%H_%M_%S", time.localtime(time.time()))
+            file_name = now + '_test_loss.txt'
+            file_lbm = [now + '_lbm_err_0.csv', now + '_lbm_err_99.csv']
+            with open(out_path + file_lbm[0], 'w') as file:
+                w = csv.writer(file)
+                w.writerow(
+                    ['epoch', 'error u', 'error v', 'error w', 'error p'])
+            with open(out_path + file_lbm[1], 'w') as file:
+                w = csv.writer(file)
+                w.writerow(
+                    ['epoch', 'error u', 'error v', 'error w', 'error p'])
             for epoch in range(num_epoch):
-
                 # TODO: error out num_epoch==0
+                if bs is not None:
+                    inputs_labels = loader.load_data(
+                        inputs_labels_iter, var_type=type(bs).__name__)
 
+                # iterator works
                 loss, outs, loss_details = self.algo.compute(
                     None,
                     *inputs_labels,
@@ -226,39 +273,64 @@ class Solver(object):
                     pde=self.pde)
 
                 loss.backward()
-                # for n, p in self.algo.net.named_parameters():
-                #     print(f"{n} {p.mean().item():.10f} {p.grad.mean().item():.10}")
-                # exit()
                 self.opt.step()
                 self.opt.clear_grad()
-
-                print("epoch: " + str(epoch + 1), " loss:",
-                      float(loss), " eq loss:",
-                      float(loss_details[0]), " bc loss:",
-                      float(loss_details[1]), " ic loss:",
-                      float(loss_details[2]), " data loss:",
-                      float(loss_details[3]))
-
+                if not isinstance(self.opt._learning_rate, float):
+                    self.opt._learning_rate.step()
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
-                        tag="loss", step=epoch, value=float(loss))
+                        tag="loss", step=epoch, value=loss.numpy()[0])
                     writer_eq_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(loss_details[0]))
+                        value=loss_details[0].numpy()[0])
                     writer_bc_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(loss_details[1]))
+                        value=loss_details[1].numpy()[0])
                     writer_ic_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(loss_details[2]))
+                        value=loss_details[2].numpy()[0])
                     writer_data_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(loss_details[3]))
+                        value=loss_details[3].numpy()[0])
+
+                print_str = \
+                    f"epoch: {epoch + 1} " + f"lr: {self.opt.get_lr():.5f} " + f"loss: {float(loss):.8f} " +\
+                    f"eq loss: {float(loss_details[0]):.8f} " + f"bc loss: {float(loss_details[1]):.8f} " +\
+                    f"ic loss: {float(loss_details[2]):.8f} " + f"data loss: {float(loss_details[3]):.8f}"
+                print(print_str)
+                with open(out_path + file_name, 'a') as file0:
+                    print(print_str, file=file0)
+
+                lbm = self.lbm
+                uvw_star = 0.1
+                p_star = 0.01
+                solution = []
+                solution.append(
+                    self.__predict_dynamic(inputs=[lbm[0][:, 0:4]])[0])
+                solution.append(
+                    self.__predict_dynamic(inputs=[lbm[1][:, 0:4]])[0])
+                self.uvwp_denomalization(solution[0], p_star,
+                                         uvw_star)  # modify [solution]
+                self.uvwp_denomalization(solution[1], p_star,
+                                         uvw_star)  # modify [solution]
+
+                residual = []
+                for i in range(len(lbm)):
+                    temp_list = lbm[i][:, 4:8] - solution[i][:]
+                    residual.append(np.absolute(np.array(temp_list)))
+                    temp_error = (np.array(residual[i])).sum(axis=0)
+                    mean_error = (np.array(residual[i])).mean(axis=0)
+                    print(
+                        f" error: e_u = {temp_error[0]},  e_v = {temp_error[1]},  e_w = {temp_error[2]},  e_p = {temp_error[3]}"
+                    )
+                    with open(out_path + file_lbm[i], 'a') as file0:
+                        w = csv.writer(file0)
+                        w.writerow([(epoch + 1)] + mean_error.tolist())
 
                 if (epoch + 1) % checkpoint_freq == 0:
                     paddle.save(self.algo.net.state_dict(),
@@ -302,32 +374,32 @@ class Solver(object):
                 x0 = results[2]
 
                 print("epoch: " + str(epoch + 1), " loss:",
-                      float(results[3]), " eq loss:",
-                      float(self.loss_details[0]), " bc loss:",
-                      float(self.loss_details[1]), " ic loss:",
-                      float(self.loss_details[2]), " data loss:",
-                      float(self.loss_details[3]))
+                      results[3].numpy()[0], " eq loss:",
+                      self.loss_details[0].numpy()[0], " bc loss:",
+                      self.loss_details[1].numpy()[0], " ic loss:",
+                      self.loss_details[2].numpy()[0], " data loss:",
+                      self.loss_details[3].numpy()[0])
 
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
                     writer_loss.add_scalar(
-                        tag="loss", step=epoch, value=float(results[3]))
+                        tag="loss", step=epoch, value=results[3].numpy()[0])
                     writer_eq_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(self.loss_details[0]))
+                        value=self.loss_details[0].numpy()[0])
                     writer_bc_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(self.loss_details[1]))
+                        value=self.loss_details[1].numpy()[0])
                     writer_ic_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(self.loss_details[2]))
+                        value=self.loss_details[2].numpy()[0])
                     writer_data_loss.add_scalar(
                         tag="detail_loss",
                         step=epoch,
-                        value=float(self.loss_details[3]))
+                        value=self.loss_details[3].numpy()[0])
 
                 if (epoch + 1) % checkpoint_freq == 0:
                     paddle.save(self.algo.net.state_dict(),
@@ -355,19 +427,42 @@ class Solver(object):
             writer_data_loss.close()
 
     # predict dynamic
-    def __predict_dynamic(self):
-        # create inputs 
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-
+    def __predict_dynamic(self, inputs=None):
+        # create inputs
+        if inputs is not None:
+            inputs = inputs
+        else:
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        n = 30
+        temp_inputs = [[] for _ in range(n)]
         # convert inputs to tensor
         for i in range(len(inputs)):
-            inputs[i] = paddle.to_tensor(
-                inputs[i], dtype=self._dtype, stop_gradient=False)
+            # inputs[i] = paddle.to_tensor(inputs[i], dtype=self._dtype, stop_gradient=False)
+            temp = np.array_split(inputs[i], n)
+            for j in range(n):
+                temp_tensor = paddle.to_tensor(
+                    temp[j], dtype=self._dtype, stop_gradient=False)
+                temp_inputs[j].append(temp_tensor)
 
-        outs = self.algo.compute_forward(None, *inputs)
+        for i in range(n):
+            temp_outs = self.algo.compute_forward(None, *temp_inputs[i])
+            for j in range(len(inputs)):
+                temp_outs[j] = temp_outs[j].numpy()
 
-        for i in range(len(outs)):
-            outs[i] = outs[i].numpy()
+            if i == 0:
+                outs = temp_outs
+            else:
+                for k, x in enumerate(temp_outs):
+                    outs[k] = np.concatenate((outs[k], x), axis=0)
+
+        # # convert inputs to tensor
+        # for i in range(len(inputs)):
+        #     inputs[i] = paddle.to_tensor(
+        #         inputs[i], dtype=self._dtype, stop_gradient=False)
+        # outs = self.algo.compute_forward(None, *inputs)
+
+        # for i in range(len(outs)):
+        #     outs[i] = outs[i].numpy()
 
         return outs
 
@@ -407,7 +502,7 @@ class Solver(object):
                                              self.startup_program):
 
                 # dynamic mode: make network in net's constructor
-                # static  mode: make network here 
+                # static  mode: make network here
                 self.algo.net.make_network()
 
                 # inputs
@@ -475,11 +570,7 @@ class Solver(object):
         # load model
         if self.algo.net.params_path is not None:
             state_dict = paddle.load(self.algo.net.params_path)
-            # 静态图加载预训练权重
-            self.train_program.set_state_dict({
-                "fc_net_0." + k: v
-                for k, v in state_dict.items()
-            })
+            self.train_program.set_state_dict(state_dict)
 
         # main loop
         print("Static Graph is Currently in Use.")
@@ -648,8 +739,6 @@ class Solver(object):
         # dataset
         train_dataset = DataSetStatic(num_epoch, inputs + labels)
 
-        timer = utils.Timer()
-
         # train
         self.engine.fit(train_dataset, len(inputs + labels), batch_size=None)
 
@@ -679,6 +768,8 @@ class Solver(object):
         fetches = []
         for out in self.outs_predict:
             fetches.append(out.name)
+
+        timer = utils.Timer()
 
         rslt = self.engine._executor.run(self.predict_auto_dist_program,
                                          feed=feeds,
@@ -724,3 +815,9 @@ class Solver(object):
 
     def feed_data_user(self, data):
         self.feed_data_user_next(data)
+
+    def uvwp_denomalization(self, solution, p_star, uvw_star):
+        solution[:, 0:1] = solution[:, 0:1] * uvw_star
+        solution[:, 1:2] = solution[:, 1:2] * uvw_star
+        solution[:, 2:3] = solution[:, 2:3] * uvw_star
+        solution[:, 3:4] = solution[:, 3:4] * p_star

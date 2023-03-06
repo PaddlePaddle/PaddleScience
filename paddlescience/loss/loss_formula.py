@@ -237,7 +237,7 @@ class FormulaLoss:
 
         loss = 0.0
         for i in range(len(pde.dvar) - 1):
-            idx = labels_attr["data_next"][i] + 1
+            idx = labels_attr["data_next"][i]
             data = labels[idx]
             # loss += paddle.norm(cmploss.outs[:, i] - data, p=2)**2
             loss += mse(cmploss.outs[:, i] - data)

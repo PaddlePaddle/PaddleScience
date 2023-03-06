@@ -1,0 +1,54 @@
+{
+    "Fluid properties":
+    {
+        "Reynold's number":3900,
+    },
+    
+    "hyper parameters":
+    {
+        "number of epoch":400000,
+
+        "random seed":42,
+
+        "learning rate":0.001,
+
+        "hidden size":512,
+
+        "batch size":
+        {
+            
+            "interior":4000,    
+
+            "inlet":256,   
+            "outlet":256,   
+            "cylinder":256, 
+            "top":1280, 
+            "bottom":1280, 
+
+            "initial condition":6400,  
+            "supervised":6400,
+        },
+
+        "weight of losses":
+        {
+            "pde":1.0,
+            "initial condition":5.0,
+
+            "front":2.0,
+            "back":2.0,
+            "left inlet":2.0,
+            "right outlet":1.0,
+            "top":2.0,
+            "bottom":2.0,
+            "cylinder":5.0,
+            
+            "supervised":10.0,
+        },
+
+        "Simulated Annealing":
+        {
+            "warm epochs":50000,
+        },
+    }
+
+}

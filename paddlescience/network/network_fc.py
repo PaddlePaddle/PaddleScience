@@ -22,7 +22,18 @@ class NetOut:
         self._net = net
         self._input = input
 
+    def __getitem__(self, item):
+        net = NetOut(self._net, self._input)
+        # convert item to list
+        if isinstance(item, slice):
+            net._sub = list(range(10)[item])
+        elif isinstance(item, int):
+            net._sub = list(item)
+        else:
+            net._sub = item
+        return net
 
+ 
 class FCNet(NetworkBase):
     """
     Full connected network. Each layer consists of a matmul operator, an elementwise_add operator, and an activation function operator expect for the last layer.
