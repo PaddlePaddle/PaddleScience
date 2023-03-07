@@ -53,10 +53,10 @@ class LorenzDataset(Dataset):
         self.mu = np.asarray([
             np.mean(data[:, :, 0]), np.mean(data[:, :, 1]),
             np.mean(data[:, :, 2])
-        ]).squeeze()
+        ]).reshape(1, 3)
         self.std = np.asarray([
             np.std(data[:, :, 0]), np.std(data[:, :, 1]), np.std(data[:, :, 2])
-        ]).squeeze()
+        ]).reshape(1, 3)
 
         self.data = data
 
@@ -103,14 +103,15 @@ class CylinderDataset(Dataset):
 
         data = np.asarray(data)
         visc = np.asarray(visc, dtype='float32')
+
         self.mu = np.asarray([
             np.mean(data[:, :, 0]), np.mean(data[:, :, 1]),
             np.mean(data[:, :, 2]), np.mean(visc)
-        ]).squeeze()
+        ]).reshape(1, 4, 1, 1)
         self.std = np.asarray([
             np.std(data[:, :, 0]), np.std(data[:, :, 1]),
             np.std(data[:, :, 2]), np.std(visc)
-        ]).squeeze()
+        ]).reshape(1, 4, 1, 1)
 
         self.data = data
         self.visc = visc
@@ -152,11 +153,11 @@ class RosslerDataset(Dataset):
         self.mu = np.asarray([
             np.mean(data[:, :, 0]), np.mean(data[:, :, 1]),
             np.min(data[:, :, 2])
-        ]).squeeze()
+        ]).reshape(1, 3)
         self.std = np.asarray([
             np.std(data[:, :, 0]), np.std(data[:, :, 1]),
             np.max(data[:, :, 2]) - np.min(data[:, :, 2])
-        ]).squeeze()
+        ]).reshape(1, 3)
 
         self.data = data
 
