@@ -159,7 +159,7 @@ class MaskedAttention(nn.Layer):
         # Concat previous key and value tensors
         if layer_past is not None:
             past_key, past_value = layer_past[0].transpose(
-                -2, -1), layer_past[1]  # transpose back cf below
+                [0, 1, 3, 2]), layer_past[1]  # transpose back cf below
             key = paddle.concat((past_key, key), axis=-1)
             value = paddle.concat((past_value, value), axis=-2)
 
