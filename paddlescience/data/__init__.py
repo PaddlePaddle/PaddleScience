@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from paddle.io import DataLoader, BatchSampler, DistributedBatchSampler
+import paddle.distributed as dist
 
 from .data_process import save_data, load_data
 from .trphysx_dataset import LorenzDataset, CylinderDataset, RosslerDataset
 
 
 def build_dataloader(dataset_name,
-                     mode,
                      batch_size,
                      shuffle,
                      drop_last,
@@ -27,19 +27,16 @@ def build_dataloader(dataset_name,
     """
     Build the dataloader according to arguments 
     dataset_name - name of the dataset 
-    mode - train, val or test, 
     batch_size - batch size, 
     shuffle - is shuffle data
     drop_last -  """
-
-    assert mode in ['train', 'val', 'test']
 
     assert dataset_name in [
         'LorenzDataset', 'CylinderDataset', 'RosslerDataset'
     ]
     dataset = eval(dataset_name)(**dataset_args)
 
-    if mode == "train":
+    if dist.get_world_size() > 1:
         # Distribute data to multiple cards
         batch_sampler = DistributedBatchSampler(
             dataset=dataset,
