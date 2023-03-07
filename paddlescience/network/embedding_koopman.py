@@ -84,8 +84,10 @@ class LorenzEmbedding(nn.Layer):
             dtype=data.dtype,
             default_initializer=nn.initializer.Assign(data))
 
-        self.register_buffer('mu', paddle.to_tensor([0., 0., 0.]))
-        self.register_buffer('std', paddle.to_tensor([1., 1., 1.]))
+        self.register_buffer('mu',
+                             paddle.to_tensor([0., 0., 0.]).reshape([1, 3]))
+        self.register_buffer('std',
+                             paddle.to_tensor([1., 1., 1.]).reshape([1, 3]))
         self.apply(self._init_weights)
 
         self.loss_weight = 1e4
@@ -97,7 +99,7 @@ class LorenzEmbedding(nn.Layer):
             k = 1 / m.weight.shape[0]
             uniform = Uniform(-k**0.5, k**0.5)
             uniform(m.weight)
-            if isinstance(m, nn.Linear) and m.bias is not None:
+            if m.bias is not None:
                 uniform(m.bias)
         elif isinstance(m, nn.LayerNorm):
             zeros_(m.bias)
@@ -147,10 +149,10 @@ class LorenzEmbedding(nn.Layer):
             return self.kMatrix
 
     def _normalize(self, x):
-        return (x - self.mu.unsqueeze(0)) / self.std.unsqueeze(0)
+        return (x - self.mu) / self.std
 
     def _unnormalize(self, x):
-        return self.std.unsqueeze(0) * x + self.mu.unsqueeze(0)
+        return self.std * x + self.mu
 
     def compute_loss(self, inputs, **kwargs):
         self.train()
@@ -331,8 +333,10 @@ class CylinderEmbedding(nn.Layer):
             nn.Linear(1, 50), nn.ReLU(), nn.Linear(50, self.xidx.shape[0]))
 
         # Normalization occurs inside the model
-        self.register_buffer('mu', paddle.to_tensor([0., 0., 0., 0.]))
-        self.register_buffer('std', paddle.to_tensor([1., 1., 1., 1.]))
+        self.register_buffer(
+            'mu', paddle.to_tensor([0., 0., 0., 0.]).reshape([1, 4, 1, 1]))
+        self.register_buffer(
+            'std', paddle.to_tensor([1., 1., 1., 1.]).reshape([1, 4, 1, 1]))
         self.apply(self._init_weights)
 
         self.loss_weight = 1e1
@@ -341,12 +345,10 @@ class CylinderEmbedding(nn.Layer):
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
-            # trunc_normal_(m.weight)
             k = 1 / m.weight.shape[0]
             uniform = Uniform(-k**0.5, k**0.5)
             uniform(m.weight)
-            if isinstance(m, nn.Linear) and m.bias is not None:
-                # zeros_(m.bias)
+            if m.bias is not None:
                 uniform(m.bias)
         elif isinstance(m, nn.LayerNorm):
             zeros_(m.bias)
@@ -460,13 +462,11 @@ class CylinderEmbedding(nn.Layer):
             return self.kMatrix
 
     def _normalize(self, x: Tensor) -> Tensor:
-        x = (x - self.mu.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-             ) / self.std.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+        x = (x - self.mu) / self.std
         return x
 
     def _unnormalize(self, x: Tensor) -> Tensor:
-        return self.std[:3].unsqueeze(0).unsqueeze(-1).unsqueeze(
-            -1) * x + self.mu[:3].unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+        return self.std[:, :3] * x + self.mu[:, :3]
 
     def compute_loss(self, inputs, viscosity, **kwargs):
         self.train()
@@ -571,8 +571,10 @@ class RosslerEmbedding(nn.Layer):
             dtype=data.dtype,
             default_initializer=nn.initializer.Assign(data))
 
-        self.register_buffer('mu', paddle.to_tensor([0., 0., 0.]))
-        self.register_buffer('std', paddle.to_tensor([1., 1., 1.]))
+        self.register_buffer('mu',
+                             paddle.to_tensor([0., 0., 0.]).reshape([1, 3]))
+        self.register_buffer('std',
+                             paddle.to_tensor([1., 1., 1.]).reshape([1, 3]))
         self.apply(self._init_weights)
 
         self.loss_weight = 1e3
@@ -634,10 +636,10 @@ class RosslerEmbedding(nn.Layer):
             return self.kMatrix
 
     def _normalize(self, x):
-        return (x - self.mu.unsqueeze(0)) / self.std.unsqueeze(0)
+        return (x - self.mu) / self.std
 
     def _unnormalize(self, x):
-        return self.std.unsqueeze(0) * x + self.mu.unsqueeze(0)
+        return self.std * x + self.mu
 
     def compute_loss(self, inputs, **kwargs):
         self.train()
