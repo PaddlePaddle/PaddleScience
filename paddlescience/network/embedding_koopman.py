@@ -24,7 +24,7 @@ from typing import List, Tuple
 
 import paddle
 import paddle.nn as nn
-from paddle.nn.initializer import TruncatedNormal, Constant, Normal, Uniform
+from paddle.nn.initializer import Constant, Normal, Uniform
 
 from paddlescience.visu import CylinderViz
 
@@ -32,7 +32,6 @@ Tensor = paddle.Tensor
 TensorTuple = Tuple[paddle.Tensor]
 FloatTuple = Tuple[float]
 
-trunc_normal_ = TruncatedNormal(std=.02)
 normal_ = Normal
 zeros_ = Constant(value=0.)
 ones_ = Constant(value=1.)
