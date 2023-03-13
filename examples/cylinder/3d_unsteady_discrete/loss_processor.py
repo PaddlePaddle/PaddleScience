@@ -43,7 +43,7 @@ out_path = os.getcwd() + "/examples/cylinder/3d_unsteady_discrete"
 name_list = ['lr', 'total loss', 'equation loss', 'boundary loss', 'Initial Condition loss', 'data loss']
 
 # start read files
-f = open(out_path + "/output/13_05_57_test_loss.txt")               # 返回一个文z件对象 
+f = open(out_path + "/output/03_19_47_test_loss.txt")               # 返回一个文z件对象 
 lines = f.readlines()
 n = len(lines)
 m = 6
@@ -51,7 +51,7 @@ loss = np.zeros((m, n), dtype = np.float64)
 loss_reader(loss, name_list, f)
 f.close()
 
-f_ref = open(out_path + "/output/ref_mini_batch_loss.txt")               # 返回一个文z件对象 
+f_ref = open(out_path + "/output/0307_4e5.txt")               # 返回一个文z件对象 
 lines = f_ref.readlines()
 n1 = len(lines)
 m1 = 6
@@ -73,7 +73,7 @@ for i, row in enumerate(ax):
             max_len = len(epoch_ref)
         else:
             max_len = n
-        col.plot(epoch_ref[0:max_len], loss_ref[3 * i + j][0:max_len], 'r--', label = 'qipeng log')
+        col.plot(epoch_ref[0:max_len], loss_ref[3 * i + j][0:max_len], 'r--', label = '0307_4e5')
         col.set_yscale('log')
         col.set(xlim=(0, n), ylim=(0, np.max(loss[3 * i + j])))
         col.legend()
@@ -96,19 +96,21 @@ list_loss = [[0] * output_num for i in range(m - 1)]
 for i in range(output_num):
     a = int(step * i)
     b = int(step * (i + 1))
-    c = loss_ref[1][a:b] # total loss min value
+    c = loss[1][a:b] # total loss min value
     min_c = np.min(c)
     total_loss_min_index = np.where(c == min_c)[0][0] + step * i
     list_loss[0][i] = min_c
     for j in range(m - 2):
-        list_loss[j + 1][i] = loss_ref[j + 2][total_loss_min_index]
+        list_loss[j + 1][i] = loss[j + 2][total_loss_min_index]
 
-color = ['red', 'yellow', 'black', 'green', 'pink']
-fig1, ax1 = plt.subplots(figsize=(20, 8))
-plt.bar(range(output_num), height=list_loss[1], color = color[1], label = name_list[1 + 1])
-for i in range(2, m - 1):
-    plt.bar(range(output_num), height=list_loss[i], bottom = list_loss[i - 1], \
-        color = color[i], label = name_list[i + 1])
+color = ['yellow', 'black', 'green', 'blue']
+fig1, ax1 = plt.subplots(figsize=(30, 12))
+
+bottom = np.zeros((output_num,))
+for i in range(1, 5):
+    plt.bar(range(output_num), height=list_loss[i], bottom = bottom.tolist(), \
+        color = color[i - 1], label = name_list[i + 1])
+    bottom = bottom + np.array(list_loss[i])
 
 label_list = [str(step * i) + ' ~ ' + str(step * (i + 1)) for i in range(output_num)]
 ax1.set_title("minum total loss: Compostition Analysis")
@@ -118,6 +120,6 @@ ax1.set_xticks(range(output_num))
 ax1.set_xticklabels(label_list)
 ax1.legend()
 fig1.tight_layout()
-plt.savefig('./output/loss_ratio_ref.jpg')
+plt.savefig(out_path + '/output/loss_ratio_ref.jpg')
 plt.close(fig1)
 

@@ -75,15 +75,19 @@ def uvwp_denomalization(solution, p_star, uvw_star):
 
 if __name__=="__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
-    net_ref = dirname + r'/checkpoint/ref_dynamic_net_params_100000.pdparams'
-    net_mini_batch = dirname + r'/checkpoint/dynamic_net_params_40000.pdparams'
-    net_width_ref = 50
-    net_width_mini_batch = 512
-    net_width = net_width_ref
+    net_1 = dirname + r'/checkpoint/0217_origional.pdparams'
+    net_2 = dirname + r'/checkpoint/0302_mini_batch.pdparams'
+    net_3 = dirname + r'/checkpoint/0307_4e5.pdparams'
+    net_4 = dirname + r'/checkpoint/dynamic_net_params_10000.pdparams'
+    net_5 = dirname + r'/checkpoint_1/dynamic_net_params_26000.pdparams'
+    
+    net_ini = net_5
+
+    net_width = 512
 
     dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
     config = psci.utils.get_config(fname=dirname + r'/config.yaml', config_index="hyper parameters")
-    name_wt_time = dirname + r'/data/LBM_result_20_steps/cylinder3d_2023_1_31_LBM_'
+    name_wt_time = dirname + r'/data/LBM_result/cylinder3d_2023_1_31_LBM_'
 
     Re = 3900
     U0 = 0.1
@@ -99,7 +103,7 @@ if __name__=="__main__":
     # time arrayß
     ic_t = 200000
     t_start = 200050
-    t_end = 201000
+    t_end = 204950
     t_step = 50
     time_num = int((t_end - t_start) / t_step) + 1
     time_list = np.linspace(int((t_start - ic_t) / t_step), int((t_end - ic_t) / t_step), time_num, endpoint=True).astype(int)
@@ -131,7 +135,7 @@ if __name__=="__main__":
     outeq = net(inputeq)
 
     # Initialize Net
-    net.initialize(net_ref)
+    net.initialize(net_ini)
 
     # eq loss(decoupling refactorization is on the way)
     losseq1 = psci.loss.EqLoss(pde.equations[0], netout=outeq)
@@ -156,6 +160,7 @@ if __name__=="__main__":
     # LBM baseline, output Error 
     print("/*------------------ Quantitative analysis : LBM baseline error ------------------*/")
     residual = []
+    
     for i in range(num_time): 
         temp_list = lbm_uvwp[i][:, 4:8] - solution[0][i*n:(i+1)*n]
         residual.append(np.absolute(np.array(temp_list)))
@@ -165,7 +170,7 @@ if __name__=="__main__":
             sum = {(np.array(residual[i])).sum(axis=0)}，\
             mean = {(np.array(residual[i])).mean(axis=0)}, \
             median = {np.median(np.array(residual[i]), axis=0)}")
-        psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)
+        # psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)
 
 
     # Output VTK

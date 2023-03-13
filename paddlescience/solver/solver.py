@@ -123,7 +123,7 @@ class Solver(object):
               num_epoch=2,
               bs=None,
               checkpoint_freq=1000,
-              checkpoint_path='./checkpoint/'):
+              checkpoint_path='./checkpoint_1/'):
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
                                         checkpoint_path)
@@ -194,12 +194,12 @@ class Solver(object):
             for i in range(nlabels):
                 labels[i] = paddle.to_tensor(
                     labels[i], dtype=self._dtype, stop_gradient=True)       
-            inputs_labels = [inputs + labels] # tmp to one list
+            inputs_labels = inputs + labels # tmp to one list
 
         elif (type(bs).__name__=='dict'):
             import paddlescience.solver.loader as loader
-            bs_input = [bs['interior'], bs['inlet'], bs['cylinder'], bs['outlet'], bs['top'], bs['bottom'], bs['ic'], bs['supervised']]   #inputs 
-            bs_label = [bs['ic'], bs['ic'], bs['ic'], bs['supervised'], bs['supervised'], bs['supervised'], bs['supervised']]     #labels
+            bs_input = [bs['interior'], bs['inlet'], bs['outlet'], bs['cylinder'], bs['top'], bs['bottom'], bs['ic'], bs['supervised']]   #inputs 
+            bs_label = [bs['ic'], bs['ic'], bs['ic'], bs['supervised'], bs['supervised'], bs['supervised']]     #labels
 
             for i in range(ninputs):
                 iterator = loader.get_batch_iterator(bsize=int(bs_input[i]), n=len(inputs[i]), input=inputs[i].astype(np.float32))
@@ -235,8 +235,10 @@ class Solver(object):
             file_name = now + '_test_loss.txt'
             for epoch in range(num_epoch):
                 # TODO: error out num_epoch==0
-
-                inputs_labels = loader.load_data(inputs_labels_iter, var_type=type(bs).__name__)
+                if bs is not None:
+                    inputs_labels = loader.load_data(inputs_labels_iter, var_type=type(bs).__name__)
+                    print("bkp")
+                    exit()
                 # iterator works
                 
 
@@ -392,18 +394,18 @@ class Solver(object):
     def __predict_dynamic(self):
         # create inputs
         inputs, inputs_attr = self.algo.create_inputs(self.pde)
- 
-        temp_inputs = [[] for _ in range(10)]
+        n = 20
+        temp_inputs = [[] for _ in range(n)]
         # convert inputs to tensor
         for i in range(len(inputs)):
             # inputs[i] = paddle.to_tensor(inputs[i], dtype=self._dtype, stop_gradient=False)
-            temp = np.array_split(inputs[i], 10)
-            for j in range(10):
+            temp = np.array_split(inputs[i], n)
+            for j in range(n):
                 temp_tensor = paddle.to_tensor(temp[j], dtype=self._dtype, stop_gradient=False)
                 temp_inputs[j].append(temp_tensor)
         
         
-        for i in range(10):
+        for i in range(n):
             temp_outs = self.algo.compute_forward(None, *temp_inputs[i])
             for j in range(len(inputs)):
                 temp_outs[j] = temp_outs[j].numpy()
