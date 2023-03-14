@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+This code is refer from: 
+https://github.com/zabaras/transformer-physx
+"""
+################################ 导入相关的库 ###############################################
 import os
 import random
 import numpy as np
@@ -30,17 +34,19 @@ import paddlescience as psci
 from paddlescience import config
 
 config.enable_visualdl()
+
+################################ 设置超参数 ##################################################
 # hyper parameters
 seed = 12345
 
 # dataset config
-train_data_path = 'your data path/cylinder_training.hdf5'
+train_data_path = '/root/ssd3/zhangzhimin04/workspaces/dataset/trphysx_data/cylinder_training.hdf5'
 train_block_size = 16
 train_stride = 4
 train_batch_size = 4
 train_ndata = 27
 
-valid_data_path = 'your data path/cylinder_valid.hdf5'
+valid_data_path = '/root/ssd3/zhangzhimin04/workspaces/dataset/trphysx_data/cylinder_valid.hdf5'
 valid_block_size = 256
 valid_stride = 1024
 valid_batch_size = 16
@@ -77,9 +83,8 @@ def set_seed(seed=12345):
 
 
 def main():
-    # logger = get_logger(log_file=os.path.join(save_dir, 'train.log'))
     set_seed()
-
+    ################################ 定义数据集 ##############################################
     dataset_args = dict(
         file_path=train_data_path,
         block_size=train_block_size,
@@ -87,7 +92,6 @@ def main():
         ndata=train_ndata, )
     train_dataloader = build_dataloader(
         'CylinderDataset',
-        mode='train',
         batch_size=train_batch_size,
         num_workers=0,
         shuffle=True,
@@ -101,13 +105,13 @@ def main():
         ndata=valid_ndata, )
     valid_dataloader = build_dataloader(
         'CylinderDataset',
-        mode='val',
         batch_size=valid_batch_size,
         num_workers=0,
         shuffle=False,
         drop_last=False,
         dataset_args=dataset_args)
 
+    ################################ 定义模型 ###############################################
     embedding_net = CylinderEmbedding(state_dims=state_dims, n_embd=n_embd)
     viz = CylinderViz(checkpoint_path)
     net = PhysformerGPT2(
@@ -119,6 +123,7 @@ def main():
         pretrained_model=embedding_model_params,
         viz=viz)
 
+    ################################ 优化器设置 ##############################################
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=clip_norm)
     scheduler = CosineAnnealingWarmRestarts(
         learning_rate, T_0, T_mult, eta_min=eta_min)
@@ -128,6 +133,7 @@ def main():
         grad_clip=clip,
         weight_decay=weight_decay)
 
+    ################################ 定义Solver并训练 #########################################
     algo = TrPhysx(net)
 
     solver = psci.solver.Solver(
