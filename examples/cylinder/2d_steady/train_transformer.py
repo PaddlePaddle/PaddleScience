@@ -40,13 +40,13 @@ config.enable_visualdl()
 seed = 12345
 
 # dataset config
-train_data_path = '/root/ssd3/zhangzhimin04/workspaces/dataset/trphysx_data/cylinder_training.hdf5'
+train_data_path = 'your data path/cylinder_training.hdf5'
 train_block_size = 16
 train_stride = 4
 train_batch_size = 4
 train_ndata = 27
 
-valid_data_path = '/root/ssd3/zhangzhimin04/workspaces/dataset/trphysx_data/cylinder_valid.hdf5'
+valid_data_path = 'your data path/cylinder_valid.hdf5'
 valid_block_size = 256
 valid_stride = 1024
 valid_batch_size = 16
