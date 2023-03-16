@@ -12,24 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
-from abc import abstractclassmethod
-from typing import Union
 
-import numpy as np
+import os
+import sys
 import paddle
-import paddle.distributed as dist
-from sympy import N
+import numpy as np
 import paddlescience as psci
-from paddle.optimizer import lr
-from pyevtk.hl import pointsToVTK
-
 import sample_boundary_training_data as sample_data
-import vtk
 from load_lbm_data import load_vtk
-import sys, os
-
-
 
 
 Re = 3900
@@ -109,9 +99,6 @@ print(f"time_list = {time_list}")
 print(f"time_tmp = {time_tmp}")
 print(f"time_index = {time_index}")
 print(f"time_array = {time_array}")
-
-
-
 
 # initial value
 ic_name = dirname + r'/data/LBM_result/cylinder3d_2023_1_31_LBM_'
@@ -322,8 +309,24 @@ from paddle.regularizer import L2Decay
 _lr = psci.optimizer.lr.Cosine(num_epoch, 1, learning_rate = learning_rate, warmup_epoch=w_epoch, by_epoch=True)()
 opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 
+
+def txyz_nomalization(t_star, xyz_star, txyz_input):
+    i_t = txyz_input[:, 0] / t_star;     
+    i_x = txyz_input[:, 1] / xyz_star;  
+    i_y = txyz_input[:, 2] / xyz_star;   
+    i_z = txyz_input[:, 3] / xyz_star;   
+    return i_t, i_x, i_y, i_z
+
+lbm_01 = load_vtk([0],  t_step=50, load_uvwp=True, load_txyz=True, name_wt_time=ic_name)[0]
+lbm_99 = load_vtk([99], t_step=50, load_uvwp=True, load_txyz=True, name_wt_time=ic_name)[0]
+tmp = txyz_nomalization(t_star, xyz_star, lbm_01)
+lbm_01[:, 0:4] = np.stack(tmp, axis=1)
+tmp = txyz_nomalization(t_star, xyz_star, lbm_99)
+lbm_99[:, 0:4] = np.stack(tmp, axis=1)
+
+lbm = [lbm_01, lbm_99]
 # Solver
-solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
+solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt, lbm=lbm)
 
 # Solve
 solution = solver.solve(num_epoch=num_epoch, bs=bs)

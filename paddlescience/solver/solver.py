@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from copy import deepcopy
+import csv
 from re import S
 import paddle.profiler as profiler
 
@@ -102,14 +102,14 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None):
+    def __init__(self, pde, algo, opt=None, lbm=None):
         super(Solver, self).__init__()
 
         self.pde = pde
         self.algo = algo
         self.opt = opt
         self._dtype = config._dtype
-
+        self.lbm = lbm
         if paddle.in_dynamic_mode():
             self.__init_dynamic()
         else:
@@ -123,7 +123,7 @@ class Solver(object):
               num_epoch=2,
               bs=None,
               checkpoint_freq=1000,
-              checkpoint_path='./checkpoint_1/'):
+              checkpoint_path='./checkpoint/'):
         if paddle.in_dynamic_mode():
             return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
                                         checkpoint_path)
@@ -233,15 +233,19 @@ class Solver(object):
             print(out_path)
             now = time.strftime("%H_%M_%S",time.localtime(time.time())) 
             file_name = now + '_test_loss.txt'
+            file_lbm = [now + '_lbm_err_0.csv', now + '_lbm_err_99.csv']
+            with open(out_path + file_lbm[0],'w') as file:
+                w = csv.writer(file)
+                w.writerow(['epoch', 'error u', 'error v', 'error w', 'error p'])
+            with open(out_path + file_lbm[1],'w') as file:
+                w = csv.writer(file)
+                w.writerow(['epoch', 'error u', 'error v', 'error w', 'error p'])
             for epoch in range(num_epoch):
                 # TODO: error out num_epoch==0
                 if bs is not None:
                     inputs_labels = loader.load_data(inputs_labels_iter, var_type=type(bs).__name__)
-                    print("bkp")
-                    exit()
-                # iterator works
-                
 
+                # iterator works
                 loss, outs, loss_details = self.algo.compute(
                     None,
                     *inputs_labels,
@@ -276,26 +280,35 @@ class Solver(object):
                             tag="detail_loss",
                             step=epoch,
                             value=loss_details[3].numpy()[0])
-                print(
-                    f"epoch: {epoch + 1} "
-                    f"lr: {self.opt.get_lr():.5f} "
-                    f"loss: {float(loss):.8f} "
-                    f"eq loss: {float(loss_details[0]):.8f} "
-                    f"bc loss: {float(loss_details[1]):.8f} "
-                    f"ic loss: {float(loss_details[2]):.8f} "
-                    f"data loss: {float(loss_details[3]):.8f}"
-                )
-                
+
+                print_str = \
+                    f"epoch: {epoch + 1} " + f"lr: {self.opt.get_lr():.5f} " + f"loss: {float(loss):.8f} " +\
+                    f"eq loss: {float(loss_details[0]):.8f} " + f"bc loss: {float(loss_details[1]):.8f} " +\
+                    f"ic loss: {float(loss_details[2]):.8f} " + f"data loss: {float(loss_details[3]):.8f}"
+                print(print_str)
                 with open(out_path + file_name,'a') as file0:
-                    print(
-                        f"epoch: {epoch + 1} "
-                        f"lr: {self.opt.get_lr():.5f} "
-                        f"loss: {float(loss):.8f} "
-                        f"eq loss: {float(loss_details[0]):.8f} "
-                        f"bc loss: {float(loss_details[1]):.8f} "
-                        f"ic loss: {float(loss_details[2]):.8f} "
-                        f"data loss: {float(loss_details[3]):.8f}"
-                    , file = file0)
+                    print(print_str, file = file0)
+
+                lbm = self.lbm
+                uvw_star = 0.1
+                p_star =  0.01
+                solution = []
+                solution.append(self.__predict_dynamic(inputs=[lbm[0][:, 0:4]])[0])
+                solution.append(self.__predict_dynamic(inputs=[lbm[1][:, 0:4]])[0])
+                self.uvwp_denomalization(solution[0], p_star, uvw_star) # modify [solution]
+                self.uvwp_denomalization(solution[1], p_star, uvw_star) # modify [solution]
+                
+                residual = []
+                for i in range(len(lbm)): 
+                    temp_list = lbm[i][:, 4:8] - solution[i][:]
+                    residual.append(np.absolute(np.array(temp_list)))
+                    temp_error = (np.array(residual[i])).sum(axis=0)
+                    mean_error = (np.array(residual[i])).mean(axis=0)
+                    print(f" error: e_u = {temp_error[0]},  e_v = {temp_error[1]},  e_w = {temp_error[2]},  e_p = {temp_error[3]}")
+                    with open(out_path + file_lbm[i],'a') as file0:
+                        w = csv.writer(file0)
+                        w.writerow([(epoch + 1)] + mean_error.tolist())
+
                 if (epoch + 1) % checkpoint_freq == 0:
                     paddle.save(self.algo.net.state_dict(),
                                 checkpoint_path + 'dynamic_net_params_' +
@@ -391,10 +404,13 @@ class Solver(object):
             writer_data_loss.close()
  
     # predict dynamic
-    def __predict_dynamic(self):
+    def __predict_dynamic(self, inputs=None):
         # create inputs
-        inputs, inputs_attr = self.algo.create_inputs(self.pde)
-        n = 20
+        if inputs is not None:
+            inputs = inputs
+        else:
+            inputs, inputs_attr = self.algo.create_inputs(self.pde)
+        n = 30
         temp_inputs = [[] for _ in range(n)]
         # convert inputs to tensor
         for i in range(len(inputs)):
@@ -776,3 +792,9 @@ class Solver(object):
  
     def feed_data_user(self, data):
         self.feed_data_user_next(data)
+
+    def uvwp_denomalization(self, solution, p_star, uvw_star):
+        solution[:, 0:1] = solution[:, 0:1] * uvw_star
+        solution[:, 1:2] = solution[:, 1:2] * uvw_star
+        solution[:, 2:3] = solution[:, 2:3] * uvw_star
+        solution[:, 3:4] = solution[:, 3:4] * p_star

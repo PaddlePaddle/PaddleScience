@@ -15,19 +15,21 @@
 
 import os
 import sys
+import csv
 import paddle
 import numpy as np
 import paddlescience as psci
-
-import sample_boundary_training_data as sample_data
-from load_lbm_data import load_vtk
+from load_lbm_data import load_vtk, load_msh, write_vtu
 
 paddle.seed(42)
 np.random.seed(42)
 
-def load_input(t_star, xyz_star, name_wt_time):
-    txyz_uvwpe_input = load_vtk([0], 0, load_uvwp=True, load_txyz=True, name_wt_time=name_wt_time)[0]
-
+def load_input(t_star, xyz_star, file_name, time_tmp, not_mesh):
+    if not_mesh == True:
+        txyz_uvwpe_input = load_vtk([0], 0, load_uvwp=True, load_txyz=True, name_wt_time=file_name)[0]
+        input_mesh = 0
+    else:
+        txyz_uvwpe_input, input_mesh = load_msh(file_name)
     num_time = time_tmp.shape[0]
     num_nodes = txyz_uvwpe_input.shape[0] # nodes number of every time
     num_nodes_all_time = num_time * num_nodes
@@ -46,7 +48,7 @@ def load_input(t_star, xyz_star, name_wt_time):
     i_x = ix / xyz_star;   print(f"i_x={i_x.shape} {i_x.mean().item():.10f}")
     i_y = iy / xyz_star;   print(f"i_y={i_y.shape} {i_y.mean().item():.10f}")
     i_z = iz / xyz_star;   print(f"i_z={i_z.shape} {i_z.mean().item():.10f}")
-    return i_t, i_x, i_y, i_z, num_nodes
+    return i_t, i_x, i_y, i_z, num_nodes, input_mesh
 
 
 def xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time):
@@ -73,67 +75,7 @@ def uvwp_denomalization(solution, p_star, uvw_star):
         solution[i][:, 3:4] = solution[i][:, 3:4] * p_star
 
 
-if __name__=="__main__":
-    dirname = os.path.dirname(os.path.abspath(__file__))
-    net_1 = dirname + r'/checkpoint/0217_origional.pdparams'
-    net_2 = dirname + r'/checkpoint/0302_mini_batch.pdparams'
-    net_3 = dirname + r'/checkpoint/0307_4e5.pdparams'
-    net_4 = dirname + r'/checkpoint/dynamic_net_params_10000.pdparams'
-    net_5 = dirname + r'/checkpoint_1/dynamic_net_params_26000.pdparams'
-    
-    net_ini = net_5
-
-    net_width = 512
-
-    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
-    config = psci.utils.get_config(fname=dirname + r'/config.yaml', config_index="hyper parameters")
-    name_wt_time = dirname + r'/data/LBM_result/cylinder3d_2023_1_31_LBM_'
-
-    Re = 3900
-    U0 = 0.1
-    Dcylinder = 80.0
-    rho = 1.0
-    nu = rho * U0 * Dcylinder / Re
-
-    t_star = Dcylinder / U0 # 800
-    xyz_star = Dcylinder    # 80
-    uvw_star = U0           # 0.1ß
-    p_star = rho * U0 * U0  # 0.01
-
-    # time arrayß
-    ic_t = 200000
-    t_start = 200050
-    t_end = 204950
-    t_step = 50
-    time_num = int((t_end - t_start) / t_step) + 1
-    time_list = np.linspace(int((t_start - ic_t) / t_step), int((t_end - ic_t) / t_step), time_num, endpoint=True).astype(int)
-    time_tmp = time_list * t_step
-    time_index = np.random.choice(time_list, int(time_num / 2.5), replace=False)
-    time_index.sort()
-    time_array = time_index * t_step
-    print(f"time_num = {time_num}")
-    print(f"time_list = {time_list}")
-    print(f"time_tmp = {time_tmp}")
-    print(f"time_index = {time_index}")
-    print(f"time_array = {time_array}")
-    num_time = time_tmp.shape[0]
-
-    lbm_uvwp = load_vtk(time_list=time_list, t_step=t_step, load_uvwp=True, name_wt_time=name_wt_time)
-
-    # load baseline nodes coordinates
-    i_t, i_x, i_y, i_z, n = load_input(t_star, xyz_star, name_wt_time=name_wt_time)
-
-    # eq cord
-    inputeq = np.stack((i_t, i_x, i_y, i_z), axis=1)
-
-    # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
-    pde = psci.pde.NavierStokes(nu=0.00205, rho=1.0, dim=3, time_dependent=True)
-
-    # Network
-    net = psci.network.FCNet(
-        num_ins=4, num_outs=4, num_layers=6, hidden_size=net_width, activation="tanh")
-    outeq = net(inputeq)
-
+def net_predict(net, net_ini, pde, outeq):
     # Initialize Net
     net.initialize(net_ini)
 
@@ -152,30 +94,130 @@ if __name__=="__main__":
 
     # Solve
     solution = solver.predict()
+    return solution
 
-    # denormalization
-    cord = xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time)
-    uvwp_denomalization(solution, p_star, uvw_star) # modify [solution]
 
-    # LBM baseline, output Error 
-    print("/*------------------ Quantitative analysis : LBM baseline error ------------------*/")
-    residual = []
+if __name__=="__main__":
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    net_1 = dirname + r'/checkpoint/0217_origional.pdparams'
+    net_2 = dirname + r'/checkpoint/0302_mini_batch.pdparams'
+    net_3 = dirname + r'/checkpoint/0307_4e5.pdparams'
+    net_4 = dirname + r'/checkpoint/dynamic_net_params_78000.pdparams'
+    net_5 = dirname + r'/checkpoint_1/dynamic_net_params_335000.pdparams'
     
-    for i in range(num_time): 
-        temp_list = lbm_uvwp[i][:, 4:8] - solution[0][i*n:(i+1)*n]
-        residual.append(np.absolute(np.array(temp_list)))
-        print(
-        f"{time_list[i]} \
-            time = {time_tmp[i]} s, \
-            sum = {(np.array(residual[i])).sum(axis=0)}，\
-            mean = {(np.array(residual[i])).mean(axis=0)}, \
-            median = {np.median(np.array(residual[i]), axis=0)}")
-        # psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)
+    net_ini = net_5
+    net_width = 512
+    not_mesh = False # if u do prediction by mesh, pick False
 
+    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
+    config = psci.utils.get_config(fname=dirname + r'/config.yaml', config_index="hyper parameters")
+    ref_file = dirname + r'/data/LBM_result/cylinder3d_2023_1_31_LBM_'
+    msh_file = dirname + r'/data/3d_cylinder.msh'
+    Re = 3900
+    U0 = 0.1
+    Dcylinder = 80.0
+    rho = 1.0
+    nu = rho * U0 * Dcylinder / Re
+
+    t_star = Dcylinder / U0 # 800
+    xyz_star = Dcylinder    # 80
+    uvw_star = U0           # 0.1ß
+    p_star = rho * U0 * U0  # 0.01
+
+    # time array
+    ic_t = 200000
+    t_start = 200050
+    t_end = 204950
+    t_step = 50
+    time_num = int((t_end - t_start) / t_step) + 1
+    time_list = np.linspace(int((t_start - ic_t) / t_step), int((t_end - ic_t) / t_step), time_num, endpoint=True).astype(int)
+    time_tmp = time_list * t_step
+    time_index = np.random.choice(time_list, int(time_num / 2.5), replace=False)
+    time_index.sort()
+    time_array = time_index * t_step
+    num_time = time_tmp.shape[0]
+    print(f"time_num = {time_num}")
+    print(f"time_list = {time_list}")
+    print(f"time_tmp = {time_tmp}")
+    print(f"time_index = {time_index}")
+    print(f"time_array = {time_array}")
+
+    if not_mesh == True:
+        lbm_uvwp = load_vtk(time_list=time_list, t_step=t_step, load_uvwp=True, name_wt_time=ref_file)
+
+    # load baseline nodes coordinates
+    if not_mesh == True:
+        input_file = ref_file
+    else:
+        input_file = msh_file
+    i_t, i_x, i_y, i_z, n, input_mesh = load_input(t_star, xyz_star, file_name=input_file, time_tmp=time_tmp, not_mesh=not_mesh)
+    cord = xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time)
+
+    # eq cord
+    inputeq = np.stack((i_t, i_x, i_y, i_z), axis=1)
+
+    # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
+    pde = psci.pde.NavierStokes(nu=0.00205, rho=1.0, dim=3, time_dependent=True)
+
+    # Network
+    net = psci.network.FCNet(
+        num_ins=4, num_outs=4, num_layers=6, hidden_size=net_width, activation="tanh")
+    outeq = net(inputeq)
+
+    if not_mesh == True:
+        #Find min error
+        print("/*------------------     Saved Models : find min err       ------------------*/")
+        time_checklist = np.arange(1000, 401000, 1000) #1000 minimum
+        err_min = float("inf")
+        err_index = -1
+        lbm_99 = load_vtk(time_list=[99], t_step=t_step, load_uvwp=True, name_wt_time=ref_file)
+        e_input = load_input(t_star, xyz_star, file_name=ref_file, time_tmp=np.array([4950]), not_mesh=True)
+        net_findmin = psci.network.FCNet(
+            num_ins=4, num_outs=4, num_layers=6, hidden_size=net_width, activation="tanh")
+        e_outeq = net_findmin(np.stack(e_input[0:4], axis=1))
+        with open(dirname + r'/output/err.csv','w') as file:
+            w = csv.writer(file)
+            w.writerow(['epoch', 'error u', 'error v', 'error w', 'error p'])
+        for i in time_checklist:
+            net_ini = dirname + r'/checkpoint_1/dynamic_net_params_' + str(int(i)) + '.pdparams'
+            solution = net_predict(net_findmin, net_ini, pde, e_outeq)
+            uvwp_denomalization(solution, p_star, uvw_star) # modify [solution]
+            err = lbm_99[0][:, 4:8] - solution[0][0:n]
+            err_sum = (np.absolute(err)).sum(axis=0)
+            err_mean = (np.absolute(err)).mean(axis=0)
+            if err_min > err_sum[0]:
+                err_min = err_sum[0]
+                err_index = i
+            print(f'epoch = {int(i)}', f'  sum = {err_sum}')
+            with open(dirname + r'/output/err.csv','a') as file:
+                w = csv.writer(file)
+                w.writerow([int(i)] + err_mean.tolist())
+            net_ini = dirname + r'/checkpoint_1/dynamic_net_params_' + str(int(err_index)) + '.pdparams'
+        print(f'*best epoch = {int(err_index)}', f'  sum = {err_min}')
+
+    solution = net_predict(net, net_ini, pde, outeq)
+    uvwp_denomalization(solution, p_star, uvw_star)
+
+    print("/*------------------ Quantitative analysis : LBM baseline error ------------------*/")
+    if not_mesh == True:
+        # LBM baseline, output Error 
+        residual = []
+        for i in range(num_time): 
+            temp_list = lbm_uvwp[i][:, 4:8] - solution[0][i*n:(i+1)*n]
+            residual.append(np.absolute(np.array(temp_list)))
+            print(
+            f"{time_list[i]} \
+                time = {time_tmp[i]} s, \
+                sum = {(np.array(residual[i])).sum(axis=0)}，\
+                mean = {(np.array(residual[i])).mean(axis=0)}, \
+                median = {np.median(np.array(residual[i]), axis=0)}")
+            # psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)
 
     # Output VTK
     print("/*------------------     Output VTK : Result visualization     ------------------*/")
     for i in range(num_time):
-        print(cord.shape, solution[0][i*n:(i+1)*n].shape)
-        psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_predict_{i+1}", cordinate=cord, data=solution[0][i*n:(i+1)*n])
+        if not_mesh == False:
+            write_vtu(file=dirname + f"/vtk_mesh/0302_predict_{i+1}.vtu", mesh=input_mesh, solution=solution[0][i*n:(i+1)*n])
+        else:
+            psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_predict_{i+1}", cordinate=cord, data=solution[0][i*n:(i+1)*n])
         

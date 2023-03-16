@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import errno
 import matplotlib.pyplot as plt
 import numpy as np
 import re
@@ -41,9 +42,11 @@ def loss_reader(loss, loss_name_list, f):
 plt.style.use('_mpl-gallery')
 out_path = os.getcwd() + "/examples/cylinder/3d_unsteady_discrete"
 name_list = ['lr', 'total loss', 'equation loss', 'boundary loss', 'Initial Condition loss', 'data loss']
-
+f_ref = open(out_path + "/output/0314_99steps.txt")               # 返回一个文z件对象 
+f = open(out_path + "/output/06_58_14_test_loss.txt")               # 返回一个文z件对象 
+file_err = out_path + "/output/06_58_14_lbm_err_99.csv"
 # start read files
-f = open(out_path + "/output/03_19_47_test_loss.txt")               # 返回一个文z件对象 
+
 lines = f.readlines()
 n = len(lines)
 m = 6
@@ -51,7 +54,7 @@ loss = np.zeros((m, n), dtype = np.float64)
 loss_reader(loss, name_list, f)
 f.close()
 
-f_ref = open(out_path + "/output/0307_4e5.txt")               # 返回一个文z件对象 
+
 lines = f_ref.readlines()
 n1 = len(lines)
 m1 = 6
@@ -75,7 +78,7 @@ for i, row in enumerate(ax):
             max_len = n
         col.plot(epoch_ref[0:max_len], loss_ref[3 * i + j][0:max_len], 'r--', label = '0307_4e5')
         col.set_yscale('log')
-        col.set(xlim=(0, n), ylim=(0, np.max(loss[3 * i + j])))
+        col.set(xlim=(1, n), ylim=(1e-6, np.max(loss[3 * i + j])))
         col.legend()
         if col.get_subplotspec().is_last_row():
             col.set_xlabel('epoch')
@@ -123,3 +126,29 @@ fig1.tight_layout()
 plt.savefig(out_path + '/output/loss_ratio_ref.jpg')
 plt.close(fig1)
 
+fig2, ax2 = plt.subplots(figsize=(30, 12))
+import pandas as pd
+
+err_data = pd.read_csv(file_err)
+err_index = err_data['epoch'].tolist() 
+err_u = err_data['error u'].tolist() 
+err_v = err_data['error v'].tolist() 
+err_w = err_data['error w'].tolist() 
+err_p = err_data['error p'].tolist() 
+
+loss_saved = np.zeros((len(err_index), ))
+ax2.plot(epoch, loss[1], 'b--', label = 'train loss')
+ax2.plot(err_index, err_u, 'r--', label = 'validation loss : u')
+ax2.plot(err_index, err_v, 'y--', label = 'validation loss : v')
+ax2.plot(err_index, err_w, 'g--', label = 'validation loss : w')
+ax2.plot(err_index, err_p, 'c--', label = 'validation loss : p')
+ax2.axhline(err_u.pop(), linestyle = '--', c = 'm')
+col.set(xlim=(0, n), ylim=(1e-6, np.max(loss[1])))
+ax2.set_title("Train & Validation: Loss Grow")
+ax2.set_xlabel("epoch")
+ax2.set_ylabel("loss")
+ax2.set_yscale('log')
+ax2.legend()
+fig2.tight_layout()
+plt.savefig(out_path + '/output/train_validation_cmp.jpg')
+plt.close(fig2)

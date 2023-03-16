@@ -10,7 +10,7 @@
 
         "random seed":42,
 
-        "learning rate":0.001,
+        "learning rate":0.0001,
 
         "hidden size":512,
 
@@ -19,13 +19,13 @@
             
             "interior":4000,    # 160000 points
 
-            "inlet":1162,   # 4648 points
-            "outlet":358,   # 4648 points
-            "cylinder":358, # 1432 points
-            "top":320, # 10016 points
-            "bottom":9944, # 1432 points
+            "inlet":256,   # 4672 points
+            "outlet":256,   # 5072 points
+            "cylinder":256, # 1584 points
+            "top":1280, # 10816 points
+            "bottom":1280, # 9760 points
 
-            "initial condition":6400,  # 131520 points
+            "initial condition":6400,  # 179260 points
             "supervised":6400,  # 131520 points
         },
 

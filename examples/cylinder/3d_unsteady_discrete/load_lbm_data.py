@@ -17,6 +17,8 @@ Created in Oct. 2022
 """
 
 import os
+import sys
+import meshio
 import numpy as np
 
 
@@ -24,9 +26,6 @@ def load_vtk(time_list, t_step, load_uvwp=False, load_txyz=False, name_wt_time=N
     """_summary_
     load LBM(traditional methodology) points coordinates, use these points as interior points for tranning
     """
-    import sys
-    import meshio
-    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
     return_list = []
     for i in time_list:
         file = name_wt_time + f'{i}.vtu'
@@ -49,3 +48,25 @@ def load_vtk(time_list, t_step, load_uvwp=False, load_txyz=False, name_wt_time=N
             # part2.append((np.concatenate((u, v, w, p), axis = 1)).tolist())
         return_list.append(np.concatenate((part1, part2), axis = 1))
     return return_list
+
+def load_msh(file):
+    mesh = meshio.read(file)
+    n = mesh.points.shape[0]
+    cord = np.zeros((n, 4))
+    t = np.full((n, 1), int(0))
+    x = mesh.points[:, 0].reshape(n, 1)
+    y = mesh.points[:, 1].reshape(n, 1)
+    z = mesh.points[:, 2].reshape(n, 1)
+    cord = np.concatenate((t, x, y, z), axis = 1).astype(np.float32)
+    return cord, mesh
+
+
+def write_vtu(file, mesh, solution):
+    point_data_dic = {}
+    point_data_dic['u'] = solution[:, 0]
+    point_data_dic['v'] = solution[:, 1]
+    point_data_dic['w'] = solution[:, 2]
+    point_data_dic['p'] = solution[:, 3]
+    mesh.point_data = point_data_dic
+    mesh.write(file)
+    print(f"vtk_raw file saved at [{file}]")
