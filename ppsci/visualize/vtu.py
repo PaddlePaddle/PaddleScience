@@ -21,7 +21,7 @@ from ppsci.utils import logger
 
 
 def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
-    """Save data to '*.vtu' file.
+    """Save data to '*.vtu' file(s).
 
     Args:
         filename (str): Output filename.
@@ -58,27 +58,35 @@ def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
         value_keys = ["dummy_key"]
 
     data_ndim = value.shape[1]
-    _n = npoint // num_timestamp
+    nx = npoint // num_timestamp
     for t in range(num_timestamp):
         # NOTE: each array in data_vtu should be 1-dim, i.e. [N, 1] will occur error.
         if coord_ndim == 2:
-            axis_x = np.ascontiguousarray(coord[t * _n : (t + 1) * _n, 0])
-            axis_y = np.ascontiguousarray(coord[t * _n : (t + 1) * _n, 1])
-            axis_z = np.zeros([_n], dtype="float32")
+            axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
+            axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
+            axis_z = np.zeros([nx], dtype="float32")
         elif coord_ndim == 3:
-            axis_x = np.ascontiguousarray(coord[t * _n : (t + 1) * _n, 0])
-            axis_y = np.ascontiguousarray(coord[t * _n : (t + 1) * _n, 1])
-            axis_z = np.ascontiguousarray(coord[t * _n : (t + 1) * _n, 2])
+            axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
+            axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
+            axis_z = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 2])
 
         data_vtu = {}
         for j in range(data_ndim):
             data_vtu[value_keys[j]] = np.ascontiguousarray(
-                value[t * _n : (t + 1) * _n, j]
+                value[t * nx : (t + 1) * nx, j]
             )
 
-        filename_t = f"{filename}_t-{t}" if num_timestamp > 1 else filename
-        hl.pointsToVTK(filename_t, axis_x, axis_y, axis_z, data=data_vtu)
-    logger.info(f"Vtu results has been saved to {filename}")
+        if num_timestamp > 1:
+            hl.pointsToVTK(f"{filename}_t-{t}", axis_x, axis_y, axis_z, data=data_vtu)
+        else:
+            hl.pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtu)
+
+    if num_timestamp > 1:
+        logger.info(
+            f"Visualization results are saved to {filename}_t-1 ~ {filename}_t-{num_timestamp}"
+        )
+    else:
+        logger.info(f"Visualization result is saved to {filename}")
 
 
 def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamp=1):
