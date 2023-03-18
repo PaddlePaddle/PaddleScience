@@ -18,7 +18,6 @@ import numpy as np
 import paddle
 from paddle.distributed.fleet import auto
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
-from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from visualdl import LogWriter
 
 from .. import config
