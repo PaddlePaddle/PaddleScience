@@ -237,36 +237,36 @@ class TimeXGeometry(geometry.Geometry):
             # TODO(sensen): decouple uniform and random boundary sample.
             # x = self.geometry.uniform_boundary_points(nx)
 
-            tx = []
+            t_x = []
             if isinstance(self.geometry, mesh.Mesh):
-                normal_t = []
-                area_t = []
+                t_normal = []
+                t_area = []
 
             for ti in t:
-                tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                t_x.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
                 if isinstance(self.geometry, mesh.Mesh):
-                    normal_t.append(
+                    t_normal.append(
                         np.hstack((np.full([nx, 1], float(ti), dtype="float32"), _n))
                     )
-                    area_t.append(
+                    t_area.append(
                         np.hstack((np.full([nx, 1], float(ti), dtype="float32"), a))
                     )
 
-            tx = np.vstack(tx)
+            t_x = np.vstack(t_x)
             if isinstance(self.geometry, mesh.Mesh):
-                normal_t = np.vstack(normal_t)
-                area_t = np.vstack(area_t)
+                t_normal = np.vstack(t_normal)
+                t_area = np.vstack(t_area)
 
-            if len(tx) > n:
-                tx = tx[:n]
+            if len(t_x) > n:
+                t_x = t_x[:n]
                 if isinstance(self.geometry, mesh.Mesh):
-                    normal_t = normal_t[:n]
-                    area_t = area_t[:n]
+                    t_normal = t_normal[:n]
+                    t_area = t_area[:n]
 
             if isinstance(self.geometry, mesh.Mesh):
-                return tx, normal_t, area_t
+                return t_x, t_normal, t_area
             else:
-                return tx
+                return t_x
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
             nt = self.timedomain.num_timestamp - 1
@@ -280,36 +280,36 @@ class TimeXGeometry(geometry.Geometry):
             # TODO(sensen): decouple uniform and random boundary sample.
             # x = self.geometry.uniform_boundary_points(nx)
 
-            tx = []
+            t_x = []
             if isinstance(self.geometry, mesh.Mesh):
-                normal_t = []
-                area_t = []
+                t_normal = []
+                t_area = []
 
             for ti in t:
-                tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                t_x.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
                 if isinstance(self.geometry, mesh.Mesh):
-                    normal_t.append(
+                    t_normal.append(
                         np.hstack((np.full([nx, 1], float(ti), dtype="float32"), _n))
                     )
-                    area_t.append(
+                    t_area.append(
                         np.hstack((np.full([nx, 1], float(ti), dtype="float32"), a))
                     )
 
-            tx = np.vstack(tx)
+            t_x = np.vstack(t_x)
             if isinstance(self.geometry, mesh.Mesh):
-                normal_t = np.vstack(normal_t)
-                area_t = np.vstack(area_t)
+                t_normal = np.vstack(t_normal)
+                t_area = np.vstack(t_area)
 
-            if len(tx) > n:
-                tx = tx[:n]
+            if len(t_x) > n:
+                t_x = t_x[:n]
                 if isinstance(self.geometry, mesh.Mesh):
-                    normal_t = normal_t[:n]
-                    area_t = area_t[:n]
+                    t_normal = t_normal[:n]
+                    t_area = t_area[:n]
 
             if isinstance(self.geometry, mesh.Mesh):
-                return tx, normal_t, area_t
+                return t_x, t_normal, t_area
             else:
-                return tx
+                return t_x
         else:
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(n, random=random)
@@ -319,14 +319,14 @@ class TimeXGeometry(geometry.Geometry):
             t = self.timedomain.random_points(n, random=random)
             t = np.random.permutation(t)
 
-            tx = np.hstack((t, x))
+            t_x = np.hstack((t, x))
 
             if isinstance(self.geometry, mesh.Mesh):
-                normal_t = np.hstack((_n, t))
-                area_t = np.hstack((_n, t))
-                return tx, normal_t, area_t
+                t_normal = np.hstack((_n, t))
+                t_area = np.hstack((_n, t))
+                return t_x, t_normal, t_area
             else:
-                return tx
+                return t_x
 
     def uniform_initial_points(self, n):
         x = self.geometry.uniform_points(n, True)

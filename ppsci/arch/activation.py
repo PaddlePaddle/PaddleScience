@@ -31,10 +31,6 @@ act_func_dict = {
 }
 
 
-def python_silu(x):
-    return x
-
-
 def get_activation(act_name):
     """Get activation function according to act_name.
 
