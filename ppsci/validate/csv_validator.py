@@ -27,11 +27,9 @@ class CSVValidator(base.Validator):
 
     Args:
         csv_path (str): CSV file path.
-        input_keys (List[str]): Input keys in csv file, such as
-            ["X:0", "X:1"].
-        label_keys (List[str]): Label keys in csv file, such as
-            ["U:0", "U:1"].
-        alias_dict (Dict[str, str]): Alias name for input/label key, such as
+        input_keys (List[str]): Input keys in csv file, such as ["X:0", "X:1"].
+        label_keys (List[str]): Label keys in csv file, such as ["U:0", "U:1"].
+        alias_dict (Dict[str, str]): Alias name for input/label keys, such as
             {"X:0": "x", "X:1": "y", "U:0": "u", "U:1": "v"}.
         dataloader_cfg (Dict): Config of building a dataloader
         loss (LossBase): Loss functor.
