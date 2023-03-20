@@ -16,7 +16,6 @@ limitations under the License.
 import os.path as osp
 
 import numpy as np
-import pandas as pd
 
 from ppsci.data import dataset
 from ppsci.validate import base
@@ -26,7 +25,7 @@ class CSVValidator(base.Validator):
     """Validator for csv file
 
     Args:
-        csv_path (str): CSV file path.
+        file_path (str): CSV file path.
         input_keys (List[str]): Input keys in csv file, such as ["X:0", "X:1"].
         label_keys (List[str]): Label keys in csv file, such as ["U:0", "U:1"].
         alias_dict (Dict[str, str]): Alias name for input/label keys, such as
@@ -41,7 +40,7 @@ class CSVValidator(base.Validator):
 
     def __init__(
         self,
-        csv_path,
+        file_path,
         input_keys,
         label_keys,
         alias_dict,
@@ -51,33 +50,43 @@ class CSVValidator(base.Validator):
         metric=None,
         name=None,
     ):
-        if not osp.exists(csv_path):
-            raise FileNotFoundError(f"csv_path({csv_path}) not exist.")
+        if not osp.exists(file_path):
+            raise FileNotFoundError(f"file_path({file_path}) not exist.")
 
         # read data
-        raw_data_frame = pd.read_csv(csv_path)
+        if file_path.endswith(".csv"):
+            raw_data = self._load_csv_file(
+                file_path,
+                input_keys + label_keys,
+                alias_dict,
+            )
+        elif file_path.endswith(".mat"):
+            raw_data = self._load_mat_file(
+                file_path,
+                input_keys + label_keys,
+                alias_dict,
+            )
+        else:
+            raise NotImplementedError(f"file({file_path}) is not supported yet.")
 
         # convert to numpy array
         input = {}
         for key in input_keys:
-            input[key] = np.asarray(raw_data_frame[key], "float32")
-            input[key] = input[key].reshape([-1, 1])
+            if key in alias_dict:
+                input[alias_dict[key]] = np.asarray(raw_data[key], "float32").reshape(
+                    [-1, 1]
+                )
+            else:
+                input[key] = np.asarray(raw_data[key], "float32").reshape([-1, 1])
         label = {}
         for key in label_keys:
-            label[key] = np.asarray(raw_data_frame[key], "float32")
-            label[key] = label[key].reshape([-1, 1])
-
-        # replace key with alias
-        for key, alias in alias_dict.items():
-            if key in input_keys:
-                input[alias] = input.pop(key)
-            elif key in label_keys:
-                label[alias] = label.pop(key)
-            else:
-                raise ValueError(
-                    f"key({key}) in alias_dict didn't appear "
-                    f"in input_keys or label_keys"
+            if key in alias_dict:
+                label[alias_dict[key]] = np.asarray(raw_data[key], "float32").reshape(
+                    [-1, 1]
                 )
+            else:
+                label[key] = np.asarray(raw_data[key], "float32").reshape([-1, 1])
+
         self.input_keys = list(input.keys())
         self.output_keys = list(label.keys())
         self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
