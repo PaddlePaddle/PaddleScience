@@ -11,19 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""This *.py file is an example of solving 2d-unsteady-cylinder–flow, by using PINNs method."""
+import os
+import numpy as np
 import paddlescience as psci
-import numpy as np
 import paddle
-
 import loading_cfd_data
-import numpy as np
 
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
+# paddle.enable_static()f
+dirname = os.path.dirname(os.path.abspath(__file__)) + '/'
+os.chdir(dirname)
 # time array
 time_tmp = np.linspace(0, 50, 50, endpoint=True).astype(int)
 time_array = np.random.choice(time_tmp, 11)
@@ -110,7 +110,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=20)
 
 # Save last time data to vtk
 n = int(i_x.shape[0] / len(time_array))
