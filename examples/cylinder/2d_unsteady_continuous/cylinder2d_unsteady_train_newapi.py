@@ -22,8 +22,10 @@ import numpy as np
 paddle.seed(1)
 np.random.seed(1)
 
-paddle.enable_static()
-
+# paddle.enable_static()
+import os
+dirname =  os.path.dirname(os.path.abspath(__file__)) + '/'
+os.chdir(dirname)
 # time array
 time_tmp = np.linspace(0, 50, 50, endpoint=True).astype(int)
 time_array = np.random.choice(time_tmp, 11)
@@ -110,7 +112,7 @@ opt = psci.optimizer.Adam(learning_rate=0.001, parameters=net.parameters())
 solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt)
 
 # Solve
-solution = solver.solve(num_epoch=10)
+solution = solver.solve(num_epoch=20)
 
 # Save last time data to vtk
 n = int(i_x.shape[0] / len(time_array))

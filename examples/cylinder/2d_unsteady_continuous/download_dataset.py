@@ -18,7 +18,11 @@ import zipfile
 
 datasets = 'https://dataset.bj.bcebos.com/PaddleScience/cylinder2D_continuous/datasets.zip'
 
-wget.download(datasets)
+dirname =  os.path.dirname(os.path.abspath(__file__)) + '/'
+print("* Running [download_dataset.py]")
+wget.download(datasets, out=dirname)
 
-with zipfile.ZipFile('datasets.zip', 'r') as zip_ref:
-    zip_ref.extractall('./')
+with zipfile.ZipFile(dirname + 'datasets.zip', 'r') as zip_ref:
+    zip_ref.extractall(dirname)
+    print("\n" + "* Successfully Downloaded!")
+    print("* Data is prepared here :" + dirname + 'datasets/\n')
