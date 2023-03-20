@@ -162,5 +162,14 @@ def eval_func(solver, epoch_id, log_freq):
                 _validator.output_keys,
                 _validator.num_timestamp,
             )
+            # all_label = {
+            #     "eta_pred": all_label["eta"]
+            # }
+            # visualize.save_prediction_plot(
+            #     osp.join(visual_dir, _validator.name),
+            #     {**all_output, **all_input, **all_label},
+            #     "t_f",
+            #     _validator.output_keys + ["eta_pred"],
+            # )
 
     return target_metric

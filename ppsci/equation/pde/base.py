@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import paddle.nn as nn
 import sympy
 
 # from sympy import printing
@@ -24,6 +25,9 @@ class PDE(object):
     def __init__(self):
         super().__init__()
         self.equations = {}
+
+        # for PDE which has learnable parameter(s)
+        self.learnable_parameters = nn.ParameterList()
 
     def create_symbols(self, symbol_str):
         """Create symbols
@@ -57,3 +61,6 @@ class PDE(object):
             + [f"{name}: {eq}" for name, eq in self.equations.items()]
         )
         return _str
+
+    def parameters(self):
+        return self.learnable_parameters.parameters()
