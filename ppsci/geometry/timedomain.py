@@ -86,6 +86,7 @@ class TimeXGeometry(geometry.Geometry):
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
             nt = self.timedomain.num_timestamp - 1
+            nx = int(np.ceil(n / nt))
         else:
             nx = int(
                 np.ceil(
@@ -105,13 +106,16 @@ class TimeXGeometry(geometry.Geometry):
         ):
             t = self.timedomain.uniform_points(nt, boundary=True)
         else:
-            t = np.linspace(
-                self.timedomain.t1,
-                self.timedomain.t0,
-                num=nt,
-                endpoint=boundary,
-                dtype="float32",
-            )[:, None][::-1]
+            if self.timedomain.time_step is not None:
+                t = np.linspace(
+                    self.timedomain.t1,
+                    self.timedomain.t0,
+                    num=nt,
+                    endpoint=boundary,
+                    dtype="float32",
+                )[:, None][::-1]
+            else:
+                t = self.timedomain.timestamps[1:]
         tx = []
         for ti in t:
             tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
