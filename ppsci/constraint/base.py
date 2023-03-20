@@ -60,3 +60,20 @@ class Constraint:
                 )
 
         return data_dict
+
+    def _load_mat_file(self, file_path, keys, alias_dict):
+        import scipy.io as sio
+
+        raw_data = sio.loadmat(file_path)
+
+        # convert to numpy array
+        data_dict = {}
+        for key in keys:
+            if key in alias_dict:
+                data_dict[alias_dict[key]] = np.asarray(
+                    raw_data[key], "float32"
+                ).reshape([-1, 1])
+            else:
+                data_dict[key] = np.asarray(raw_data[key], "float32").reshape([-1, 1])
+
+        return data_dict

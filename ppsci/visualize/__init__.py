@@ -13,7 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from ppsci.visualize.plot import save_png_plot
 from ppsci.visualize.vtu import save_vtu_from_array
 from ppsci.visualize.vtu import save_vtu_from_dict
 
-__all__ = ["save_vtu_from_array", "save_vtu_from_dict"]
+__all__ = ["save_vtu_from_array", "save_vtu_from_dict", "save_png_plot"]

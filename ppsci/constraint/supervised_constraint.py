@@ -43,7 +43,7 @@ class SupervisedConstraint(base.Constraint):
         self,
         data_file,
         input_keys,
-        label_keys,
+        label_expr,
         alias_dict,
         dataloader_cfg,
         loss,
@@ -58,11 +58,13 @@ class SupervisedConstraint(base.Constraint):
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]
         self.output_keys = [
-            alias_dict[key] if key in alias_dict else key for key in label_keys
+            alias_dict[key] if key in alias_dict else key for key in label_expr
         ]
         if data_file.endswith(".csv"):
             # load data
-            data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
+            data = self._load_csv_file(
+                data_file, input_keys + list(label_expr.keys()), alias_dict
+            )
             if "t" not in data and timestamps is None:
                 raise ValueError(f"must given time data from t0 or data itself.")
             if timestamps is not None:
@@ -96,7 +98,17 @@ class SupervisedConstraint(base.Constraint):
                 label = {key: data[key] for key in self.output_keys}
                 self.num_timestamp = len(np.unique(data["t"]))
 
-            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
+            self.label_expr = label_expr
+        elif data_file.endswith(".mat"):
+            data = self._load_mat_file(
+                data_file, input_keys + list(label_expr.keys()), alias_dict
+            )
+            # time already in data and "t" in input_keys
+            input = {key: data[key] for key in self.input_keys}
+            label = {key: data[key] for key in self.output_keys}
+            self.num_timestamp = len(np.unique(data["t_f"]))
+
+            self.label_expr = label_expr
         else:
             raise NotImplementedError(f"Only suppport .csv file now.")
 
