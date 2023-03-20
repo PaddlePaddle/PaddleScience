@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import sympy
-from sympy.parsing import sympy_parser as sp_parser
-
 from ppsci.equation.pde import base
 from ppsci.gradient import hessian
 from ppsci.gradient import jacobian
@@ -33,101 +30,87 @@ class NavierStokes(base.PDE):
 
     def __init__(self, nu, rho, dim, time):
         super().__init__()
+        self.nu = nu
+        self.rho = rho
+        self.dim = dim
+        self.time = time
 
-        # Sympy Code
-        if isinstance(nu, float):
-            nu = sympy.Number(nu)
-        elif isinstance(nu, str):
-            nu = sp_parser.parse_expr(nu)
-        else:
-            raise ValueError(f"type of nu({type(nu)}) must be float or str")
+        def continuity_compute_func(out):
+            x, y = out["x"], out["y"]
+            u, v = out["u"], out["v"]
+            continuity = jacobian(u, x) + jacobian(v, y)
+            if self.dim == 3:
+                z = out["z"]
+                w = out["w"]
+                continuity += jacobian(w, z)
+            return continuity
 
-        if isinstance(rho, float):
-            rho = sympy.Number(rho)
-        elif isinstance(rho, str):
-            rho = sp_parser.parse_expr(rho)
-        else:
-            raise ValueError(f"type of rho({type(rho)}) must be float or str")
+        self.add_equation("continuity", continuity_compute_func)
 
-        # independent variable
-        t, x, y, z = self.create_symbols("t x y z")
-        invars = [x, y, z][:dim]
-        if time:
-            invars = [t] + invars
+        def momentum_x_compute_func(out):
+            x, y = out["x"], out["y"]
+            u, v, p = out["u"], out["v"], out["p"]
+            momentum_x = (
+                u * jacobian(u, x)
+                + v * jacobian(u, y)
+                - nu / rho * hessian(u, x)
+                - nu / rho * hessian(u, y)
+                + 1 / rho * jacobian(p, x)
+            )
+            if self.time:
+                t = out["t"]
+                momentum_x += jacobian(u, t)
+            if self.dim == 3:
+                z = out["z"]
+                w = out["w"]
+                momentum_x += w * jacobian(u, z)
+                momentum_x -= nu / rho * hessian(u, z)
+            return momentum_x
 
-        # dependent variable
-        u = self.create_function("u", invars)
-        v = self.create_function("v", invars)
-        w = self.create_function("w", invars) if dim == 3 else sympy.Number(0)
-        p = self.create_function("p", invars)
+        self.add_equation("momentum_x", momentum_x_compute_func)
 
-        # continuity equation
-        continuity = u.diff(x) + v.diff(y) + w.diff(z)
+        def momentum_y_compute_func(out):
+            x, y = out["x"], out["y"]
+            u, v, p = out["u"], out["v"], out["p"]
+            momentum_y = (
+                u * jacobian(v, x)
+                + v * jacobian(v, y)
+                - nu / rho * hessian(v, x)
+                - nu / rho * hessian(v, y)
+                + 1 / rho * jacobian(p, y)
+            )
+            if self.time:
+                t = out["t"]
+                momentum_y += jacobian(v, t)
+            if self.dim == 3:
+                z = out["z"]
+                w = out["w"]
+                momentum_y += w * jacobian(v, z)
+                momentum_y -= nu / rho * hessian(v, z)
+            return momentum_y
 
-        # momentum equation
-        momentum_x = (
-            u.diff(t)
-            + u * u.diff(x)
-            + v * u.diff(y)
-            + w * u.diff(z)
-            - nu / rho * u.diff(x, 2)
-            - nu / rho * u.diff(y, 2)
-            - nu / rho * u.diff(z, 2)
-            + 1.0 / rho * p.diff(x)
-        )
+        self.add_equation("momentum_y", momentum_y_compute_func)
 
-        momentum_y = (
-            v.diff(t)
-            + u * v.diff(x)
-            + v * v.diff(y)
-            + w * v.diff(z)
-            - nu / rho * v.diff(x, 2)
-            - nu / rho * v.diff(y, 2)
-            - nu / rho * v.diff(z, 2)
-            + 1.0 / rho * p.diff(y)
-        )
+        if self.dim == 3:
 
-        momentum_z = (
-            w.diff(t)
-            + u * w.diff(x)
-            + v * w.diff(y)
-            + w * w.diff(z)
-            - nu / rho * w.diff(x, 2)
-            - nu / rho * w.diff(y, 2)
-            - nu / rho * w.diff(z, 2)
-            + 1.0 / rho * p.diff(z)
-        )
+            def momentum_z_compute_func(out):
+                x, y = out["x"], out["y"]
+                u, v, p = out["u"], out["v"], out["p"]
+                momentum_z = (
+                    u * jacobian(w, x)
+                    + v * jacobian(w, y)
+                    - nu / rho * hessian(w, x)
+                    - nu / rho * hessian(w, y)
+                    + 1 / rho * jacobian(p, z)
+                )
+                if self.time:
+                    t = out["t"]
+                    momentum_z += jacobian(w, t)
+                if self.dim == 3:
+                    z = out["z"]
+                    w = out["w"]
+                    momentum_z += w * jacobian(w, z)
+                    momentum_z -= nu / rho * hessian(w, z)
+                return momentum_z
 
-        self.equations["continuity"] = continuity
-        self.equations["momentum_x"] = momentum_x
-        self.equations["momentum_y"] = momentum_y
-        if dim == 3:
-            self.equations["momentum_z"] = momentum_z
-        # =======
-
-        # Paddle API Code
-        # def continuity(d):
-        #     x, y = d["x"], d["y"]
-        #     u, v = d["u"], d["v"]
-
-        #     continuity = jacobian(u, x) + jacobian(v, y)
-        #     return continuity
-
-        # def momentum_x(d):
-        #     t, x, y = d["t"], d["x"], d["y"]
-        #     u, v, p = d["u"], d["v"], d["p"]
-        #     momentum_x = jacobian(u, t) + u * jacobian(u, x) + v * jacobian(u, y) - \
-        #         nu / rho * hessian(u, x) - nu / rho * hessian(u, y) + 1.0 / rho * jacobian(p, x)
-        #     return momentum_x
-
-        # def momentum_y(d):
-        #     t, x, y = d["t"], d["x"], d["y"]
-        #     u, v, p = d["u"], d["v"], d["p"]
-        #     momentum_y = jacobian(v, t) + u * jacobian(v, x) + v * jacobian(v, y) - \
-        #         nu / rho * hessian(v, x) - nu / rho * hessian(v, y) + 1.0 / rho * jacobian(p, y)
-        #     return momentum_y
-
-        # self.equations["continuity"] = continuity
-        # self.equations["momentum_x"] = momentum_x
-        # self.equations["momentum_y"] = momentum_y
-        # # =======
+            self.add_equation("momentum_z", momentum_z_compute_func)
