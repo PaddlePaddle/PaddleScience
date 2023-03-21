@@ -16,7 +16,6 @@ import pathlib
 import paddle
 import warnings
 import math
-import numpy as np
 from PIL import Image
 from typing import Union, Optional, List, Tuple, Text, BinaryIO
 

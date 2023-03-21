@@ -16,13 +16,12 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 import glob
-import paddle
-import random
-from paddle.io import Dataset, DataLoader, BatchSampler, DistributedBatchSampler
 import os
 from multiprocessing import Pool
 import shutil
 import time
+
+from paddle.io import Dataset, DistributedBatchSampler
 
 
 class GetDataset(Dataset):
