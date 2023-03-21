@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dis import dis
 import os
 from configtrans import YamlLoader, GenerateOrder, CompareSolution
 
@@ -50,9 +51,10 @@ class RunCases(object):
         solution, standard_str = self.obj.get_solution_dir(case_num)
         npoints = self.obj.get_geometry_npoints(case_num)
         epochs = self.obj.get_global_epochs(case_num)
+        dis_flag = self.obj._get_dis(case_num)
         print(solution)
         print(standard_str)
-        order = GenerateOrder(self.yaml_dir)(py, case_num)
+        order = GenerateOrder(self.yaml_dir)(py, case_num, dis_flag)
         os.system(order)
         cs = CompareSolution(standard_str, solution)
         if epochs <= 1000:

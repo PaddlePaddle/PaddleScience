@@ -16,7 +16,7 @@ import yaml
 import argparse
 from .config import enable_visualdl, enable_static, enable_prim
 
-__all__ = ['parse_args']
+__all__ = ['AttrDict', 'parse_args']
 
 
 class AttrDict(dict):
@@ -31,6 +31,9 @@ class AttrDict(dict):
             self.__dict__[key] = value
         else:
             self[key] = value
+
+    def __deepcopy__(self, content):
+        return AttrDict(copy.deepcopy(dict(self)))
 
 
 def create_attr_dict(yaml_config):

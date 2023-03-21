@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
+import os
 import paddle
 import time
 from paddle.distributed.fleet import auto
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 from . import utils
-from .. import config
+from .. import config, logging
 from visualdl import LogWriter
 import time
 
@@ -98,7 +99,15 @@ class Solver(object):
     """
 
     # init
-    def __init__(self, pde, algo, opt=None):
+    def __init__(self,
+                 pde,
+                 algo,
+                 opt=None,
+                 data_driven=False,
+                 lr_scheduler=None,
+                 lr_update_method='epoch',
+                 train_dataloader=None,
+                 valid_dataloader=None):
         super(Solver, self).__init__()
 
         self.pde = pde
@@ -106,8 +115,23 @@ class Solver(object):
         self.opt = opt
         self._dtype = config._dtype
 
+        self.data_driven = data_driven
+        self.lr_scheduler = lr_scheduler
+
+        assert lr_update_method in [
+            'epoch', 'step'
+        ], "invalid lr update method: {!r}".format(lr_update_method)
+        self.lr_update_method = lr_update_method
+
+        assert (train_dataloader is not None and
+                valid_dataloader is not None) or (train_dataloader is None and
+                                                  valid_dataloader is None)
+        self.train_dataloader = train_dataloader
+        self.valid_dataloader = valid_dataloader
+
         if paddle.in_dynamic_mode():
-            self.__init_dynamic()
+            if data_driven is False:
+                self.__init_dynamic()
         else:
             if paddle.distributed.get_world_size() == 1:
                 self.__init_static()
@@ -121,8 +145,12 @@ class Solver(object):
               checkpoint_freq=1000,
               checkpoint_path='./checkpoint/'):
         if paddle.in_dynamic_mode():
-            return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
-                                        checkpoint_path)
+            if self.data_driven is False:
+                return self.__solve_dynamic(num_epoch, bs, checkpoint_freq,
+                                            checkpoint_path)
+            else:
+                return self.__solve_dynamic_data_driven(
+                    num_epoch, bs, checkpoint_freq, checkpoint_path)
         else:
             if paddle.distributed.get_world_size() == 1:
                 return self.__solve_static(num_epoch, bs, checkpoint_freq,
@@ -381,6 +409,72 @@ class Solver(object):
             writer_bc_loss.close()
             writer_ic_loss.close()
             writer_data_loss.close()
+
+    def __solve_dynamic_data_driven(self, num_epoch, bs, checkpoint_freq,
+                                    checkpoint_path):
+
+        logger = logging.get_logger(log_file=os.path.join(checkpoint_path,
+                                                          'train.log'))
+        if config.visualdl_enabled() == True:
+            vdl_writer = LogWriter(logdir=os.path.join(checkpoint_path,
+                                                       'visualDL/loss'))
+
+        # for train
+        for epoch in range(num_epoch):
+            loss_total = 0
+            total_batch = len(self.train_dataloader)
+            for idx, batch in enumerate(self.train_dataloader):
+
+                losses = self.algo.compute(**batch)
+                loss = losses["loss"]
+                loss_total += loss
+                cur_lr = self.opt.get_lr()
+                if idx % 10 == 0 or idx + 1 == total_batch:
+                    logger.info(
+                        'epoch: [{}/{}], iter: [{}/{}], lr: {:.5f}, loss {:.5f}'
+                        .format(epoch, num_epoch, idx, total_batch, cur_lr,
+                                loss.item()))
+                step = epoch * total_batch + idx
+                if config.visualdl_enabled() == True:
+                    vdl_writer.add_scalar('loss', loss.item(), step)
+
+                loss.backward()
+                self.opt.step()
+                self.opt.clear_grad()
+                if self.lr_update_method == 'step':
+                    self.lr_scheduler.step((epoch + 1) + float(idx) /
+                                           total_batch)
+
+            if self.lr_update_method == 'epoch':
+                self.lr_scheduler.step()
+            logger.info('epoch: [{}/{}], lr: {:.5f}, avg_loss {:.5f}'
+                        .format(epoch, num_epoch, cur_lr,
+                                loss_total.item() / total_batch))
+
+            if (epoch + 1) % checkpoint_freq == 0 or epoch == num_epoch - 1:
+                # for eval
+                total_batch = len(self.valid_dataloader)
+                loss_total = 0
+                for idx, batch in enumerate(self.valid_dataloader):
+                    batch['visu_dir'] = os.path.join(
+                        checkpoint_path, 'visu/{}'.format(epoch + 1))
+                    losses = self.algo.eval(**batch)
+                    loss_total = loss_total + losses['loss']
+                    if idx % 10 == 0 or idx + 1 == total_batch:
+                        logger.info('eval iter: [{}/{}], loss {:.5f}'
+                                    .format(idx, total_batch,
+                                            float(loss_total / (idx + 1))))
+                avg_loss = loss_total.item() / total_batch
+                logger.info('eval avg_loss {:.5f}'.format(avg_loss))
+
+                paddle.save(self.algo.net.state_dict(),
+                            checkpoint_path + 'dynamic_net_params_' +
+                            str(epoch + 1) + '.pdparams')
+                paddle.save(self.opt.state_dict(), checkpoint_path +
+                            'dynamic_opt_params_' + str(epoch + 1) + '.pdopt')
+
+        if config.visualdl_enabled() == True:
+            vdl_writer.close()
 
     # predict dynamic
     def __predict_dynamic(self):

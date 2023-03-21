@@ -11,25 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-__version__ = '1.0 Beta'
-
+import os
 import paddle
 
-from . import config
-from . import parameter
-from . import geometry
-from . import neo_geometry
-from . import bc
-from . import ic
-from . import pde
-from . import network
-from . import algorithm
-from . import loss
-from . import optimizer
-from . import solver
-from . import visu
-from . import data
-from . import utils
+from .algorithm_base import AlgorithmBase
 
-config.try_enable_cinn()
+
+class TrPhysx(AlgorithmBase):
+    """
+    Methods related with the TrPhysx algorithm. 
+    """
+
+    def __init__(self, net, **kwargs):
+        super(TrPhysx, self).__init__()
+        self.net = net
+
+    def compute(self, inputs, **kwargs):
+        """ model training """
+        self.net.train()
+        losses = self.net.compute_loss(inputs, **kwargs)
+        return losses
+
+    @paddle.no_grad()
+    def eval(self, inputs, **kwargs):
+        """ model evalution """
+        self.net.eval()
+        losses = self.net.evaluate(inputs, **kwargs)
+        return losses
