@@ -1,5 +1,5 @@
 ===========================train_params===========================
-model_name:det_mv3_db_v2_0
+model_name:cylinder2d_unsteady_train_newapi
 python:python3.7
 gpu_list:0
 Global.use_gpu:True|True

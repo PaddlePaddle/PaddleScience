@@ -247,12 +247,11 @@ class Solver(object):
                 Rn = np.zeros((N_print, 1))   # 每Step reader用时为：R1, R2,...Rn
                 Tn = np.zeros((N_print, 1))   # 每Step训练用时：T1, T2,...Tn
                 Sn = np.zeros((N_print, 1))   # 每Step 单卡BatchSize 为S1, S2,...Sn
-            
+                Sn[0] = 1 # Full batch training
                 time_point = np.zeros((num_epoch+1, 1))
                 samples = 0     # samples代表上次打印到本次打印，新完成训练的样本数量
                 for i in range(ninputs):
                     samples += inputs[i].shape[0]
-                    Sn[0] += inputs[i].shape[0]
                 time_point[0] = time.perf_counter()
                 reader_cost = 0
 
