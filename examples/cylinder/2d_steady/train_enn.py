@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+This code is refer from: 
+https://github.com/zabaras/transformer-physx
+"""
+################################ 导入相关的库 ###############################################
 import os
 import sys
 import random
@@ -30,6 +34,7 @@ from paddlescience import config
 
 config.enable_visualdl()
 
+################################ 设置超参数 ##################################################
 # hyper parameters
 seed = 12345
 
@@ -60,6 +65,8 @@ checkpoint_path = './output/trphysx/cylinder/enn/'
 
 
 def main():
+
+    ################################ 定义数据集 ##############################################
     # create train dataloader
     dataset_args = dict(
         file_path=train_data_path,
@@ -67,7 +74,6 @@ def main():
         stride=train_stride, )
     train_dataloader = build_dataloader(
         'CylinderDataset',
-        mode='train',
         batch_size=train_batch_size,
         num_workers=0,
         shuffle=True,
@@ -81,19 +87,20 @@ def main():
         ndata=valid_batch_size, )
     valid_dataloader = build_dataloader(
         'CylinderDataset',
-        mode='val',
         batch_size=valid_batch_size,
         num_workers=0,
         shuffle=False,
         drop_last=False,
         dataset_args=dataset_args)
 
+    ################################ 定义模型 ###############################################
     # create model
     net = CylinderEmbedding(state_dims=state_dims, n_embd=n_embd)
     # set the mean and std of the dataset
     net.mu = paddle.to_tensor(train_dataloader.dataset.mu)
     net.std = paddle.to_tensor(train_dataloader.dataset.std)
 
+    ################################ 优化器设置 ##############################################
     # optimizer for training
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=clip_norm)
     scheduler = ExponentialDecay(learning_rate=learning_rate, gamma=gamma)
@@ -103,6 +110,7 @@ def main():
         grad_clip=clip,
         weight_decay=weight_decay)
 
+    ################################ 定义Solver并训练 #########################################
     algo = TrPhysx(net)
 
     solver = psci.solver.Solver(
