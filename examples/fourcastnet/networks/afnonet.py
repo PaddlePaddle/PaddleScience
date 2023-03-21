@@ -141,9 +141,6 @@ class AFNO2D(nn.Layer):
     def forward(self, x):
         bias = x
 
-        dtype = x.dtype
-        x = x.cast(paddle.float32)
-
         B, H, W, C = x.shape
 
         x = paddle.fft.rfft2(x, axes=(1, 2), norm="ortho")
@@ -192,7 +189,6 @@ class AFNO2D(nn.Layer):
         x = paddle.as_complex(x)
         x = x.reshape((B, H, W // 2 + 1, C))
         x = paddle.fft.irfft2(x, s=(H, W), axes=(1, 2), norm="ortho")
-        x = x.cast(dtype)
 
         return x + bias
 
