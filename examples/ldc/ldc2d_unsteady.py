@@ -30,16 +30,16 @@ from ppsci.utils import save_load
 
 def train(solver: ppsci.solver.Solver):
     # init hyper-parameters
-    epochs = 1000
+    epochs = 20000
     solver.cfg = {
         "profiler_options": None,
         "Global": {"epochs": epochs},
         "Arch": {"name": "MLP"},
     }
-    solver.iters_per_epoch = 10
-    save_freq = 20
+    solver.iters_per_epoch = 1
+    save_freq = 100
     eval_during_train = True
-    eval_freq = 20
+    eval_freq = 100
     start_eval_epoch = 1
 
     # init gradient accumulation config
@@ -84,43 +84,38 @@ def train(solver: ppsci.solver.Solver):
                 "iters_per_epoch": solver.iters_per_epoch,
                 "sampler": {
                     "name": "BatchSampler",
-                    "batch_size": 9801 * 5,
+                    "batch_size": 9801 * 15,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 4,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
+            ppsci.loss.MSELoss("mean"),
             evenly=True,
-            weight_dict={
-                "continuity": 0.0001,
-                "momentum_x": 0.0001,
-                "momentum_y": 0.0001,
-            },
             name="EQ",
         ),
         "BC_top": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-            {"u": 1, "v": 0},
+            {"u": 1.0, "v": 0.0},
             solver.geom["time_rect"],
             {
                 "dataset": "NamedArrayDataset",
                 "iters_per_epoch": solver.iters_per_epoch,
                 "sampler": {
                     "name": "BatchSampler",
-                    "batch_size": 100 * 5,
+                    "batch_size": 101 * 15,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 1,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
-            criteria=lambda t, x, y: np.isclose(y, 0.05),
-            weight_dict={"u": lambda input: 1 - 20 * np.abs(input["x"])},
+            ppsci.loss.MSELoss("mean"),
+            criteria=lambda t, x, y: np.isclose(y, 0.5),
+            weight_dict={"u": 10.0, "v": 10.0},
             name="BC_top",
         ),
         "BC_down": ppsci.constraint.BoundaryConstraint(
@@ -132,16 +127,17 @@ def train(solver: ppsci.solver.Solver):
                 "iters_per_epoch": solver.iters_per_epoch,
                 "sampler": {
                     "name": "BatchSampler",
-                    "batch_size": 100 * 5,
+                    "batch_size": 101 * 15,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 1,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
-            criteria=lambda t, x, y: np.isclose(y, -0.05),
+            ppsci.loss.MSELoss("mean"),
+            criteria=lambda t, x, y: np.isclose(y, -0.5),
+            weight_dict={"u": 10.0, "v": 10.0},
             name="BC_down",
         ),
         "BC_left": ppsci.constraint.BoundaryConstraint(
@@ -153,16 +149,17 @@ def train(solver: ppsci.solver.Solver):
                 "iters_per_epoch": solver.iters_per_epoch,
                 "sampler": {
                     "name": "BatchSampler",
-                    "batch_size": 100 * 5,
+                    "batch_size": 99 * 15,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 1,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
-            criteria=lambda t, x, y: np.isclose(x, -0.05),
+            ppsci.loss.MSELoss("mean"),
+            criteria=lambda t, x, y: np.isclose(x, -0.5),
+            weight_dict={"u": 10.0, "v": 10.0},
             name="BC_left",
         ),
         "BC_right": ppsci.constraint.BoundaryConstraint(
@@ -174,16 +171,17 @@ def train(solver: ppsci.solver.Solver):
                 "iters_per_epoch": solver.iters_per_epoch,
                 "sampler": {
                     "name": "BatchSampler",
-                    "batch_size": 100 * 5,
+                    "batch_size": 99 * 15,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 1,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
-            criteria=lambda t, x, y: np.isclose(x, 0.05),
+            ppsci.loss.MSELoss("mean"),
+            criteria=lambda t, x, y: np.isclose(x, 0.5),
+            weight_dict={"u": 10.0, "v": 10.0},
             name="BC_right",
         ),
         "IC": ppsci.constraint.InitialConstraint(
@@ -197,13 +195,15 @@ def train(solver: ppsci.solver.Solver):
                     "name": "BatchSampler",
                     "batch_size": 9801,
                     "drop_last": False,
-                    "shuffle": True,
+                    "shuffle": False,
                 },
                 "num_workers": 2,
                 "seed": 42,
                 "use_shared_memory": False,
             },
-            ppsci.loss.MSELoss("sum"),
+            ppsci.loss.MSELoss("mean"),
+            evenly=True,
+            weight_dict={"u": 10.0, "v": 10.0},
             name="IC",
         ),
     }
@@ -322,9 +322,6 @@ def eval(solver: ppsci.solver.Solver, epoch_id):
             "Residual": ppsci.validate.GeometryValidator(
                 solver.equation["NavierStokes"].equations,
                 {
-                    "continuity": 0,
-                    "momentum_x": 0,
-                    "momentum_y": 0,
                     "u": 0,
                     "v": 0,
                     "p": 0,
@@ -332,10 +329,10 @@ def eval(solver: ppsci.solver.Solver, epoch_id):
                 solver.geom["time_rect"],
                 {
                     "dataset": "NamedArrayDataset",
-                    "total_size": 9801 * 6,
+                    "total_size": 9801 * 16,
                     "sampler": {
                         "name": "BatchSampler",
-                        "batch_size": 512,
+                        "batch_size": 2048,
                         "drop_last": False,
                         "shuffle": False,
                     },
@@ -384,7 +381,7 @@ if __name__ == "__main__":
     random.seed(42 + solver.rank)
 
     # set output diretory
-    solver.output_dir = "./output_unsteady"
+    solver.output_dir = "./output_unsteady_debug"
 
     # initialize logger
     solver.log_freq = 10
@@ -405,9 +402,9 @@ if __name__ == "__main__":
     solver.geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(
-                0.0, 0.5, timestamps=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+                0.0, 1.5, timestamps=np.linspace(0.0, 1.5, 16, endpoint=True)
             ),
-            ppsci.geometry.Rectangle([-0.05, -0.05], [0.05, 0.05]),
+            ppsci.geometry.Rectangle([-0.5, -0.5], [0.5, 0.5]),
         )
     }
 
@@ -417,7 +414,7 @@ if __name__ == "__main__":
     )
 
     # manually init equation(s)
-    solver.equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1, 2, True)}
+    solver.equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
 
     # init AMP
     solver.use_amp = False
