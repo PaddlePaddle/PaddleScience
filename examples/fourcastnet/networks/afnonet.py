@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#reference: https://github.com/NVlabs/AFNO-transformer
+# reference: https://github.com/NVlabs/AFNO-transformer
+
 import warnings
 import math
 from functools import partial
+
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.fft
-from paddle.nn.initializer import Constant, Normal, Uniform
+from paddle.nn.initializer import Constant, Uniform
+
 from utils.img_utils import PeriodicPad2d
 
-normal_ = Normal
 zeros_ = Constant(value=0.)
 ones_ = Constant(value=1.)
 
@@ -424,23 +426,15 @@ def drop_path(x,
               drop_prob: float=0.,
               training: bool=False,
               scale_by_keep: bool=True):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
 
-    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
-    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
-    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
-    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
-    'survival rate' as the argument.
-
-    """
     if drop_prob == 0. or not training:
         return x
     keep_prob = 1 - drop_prob
-    shape = (x.shape[0], ) + (1, ) * (
-        x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
+    shape = (x.shape[0], ) + (1, ) * (x.ndim - 1)
+    random_tensor = paddle.full(shape, keep_prob)
+    random_tensor = paddle.bernoulli(random_tensor)
     if keep_prob > 0.0 and scale_by_keep:
-        random_tensor.div_(keep_prob)
+        random_tensor = random_tensor / keep_prob
     return x * random_tensor
 
 
