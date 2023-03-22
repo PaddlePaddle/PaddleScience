@@ -51,9 +51,6 @@ class SupervisedConstraint(base.Constraint):
         timestamps=None,
         name="SupBC",
     ):
-        if not osp.exists(data_file):
-            raise FileNotFoundError(f"data_file({data_file}) not exist.")
-
         self.input_keys = [
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]
@@ -155,9 +152,6 @@ class SupervisedInitialConstraint(base.Constraint):
         weight_dict=None,
         name="SupIC",
     ):
-        if not osp.exists(data_file):
-            raise FileNotFoundError(f"data_file({data_file}) not exist.")
-
         self.input_keys = [
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]
@@ -166,7 +160,7 @@ class SupervisedInitialConstraint(base.Constraint):
         ]
         if data_file.endswith(".csv"):
             # load data
-            data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
+            data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and t0 is None:
                 raise ValueError(f"must given time data from t0 or data itself.")
             if t0 is not None:
