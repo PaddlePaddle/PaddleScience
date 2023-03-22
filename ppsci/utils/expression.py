@@ -18,9 +18,9 @@ import types
 import paddle
 import sympy
 
-from ppsci.gradient import clear
-from ppsci.gradient import hessian
-from ppsci.gradient import jacobian
+from ppsci.autodiff import clear
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 
 
 class ExpressionSolver(paddle.nn.Layer):
@@ -147,7 +147,6 @@ class ExpressionSolver(paddle.nn.Layer):
         self.expr_dict[expr_name] = expr
 
     def __str__(self):
-        ret = f"input: {self.input_keys}, output: {self.output_keys}\n" + "\n".join(
+        return f"input: {self.input_keys}, output: {self.output_keys}\n" + "\n".join(
             [f"{name} = {expr}" for name, expr in self.expr_dict.items()]
         )
-        return ret

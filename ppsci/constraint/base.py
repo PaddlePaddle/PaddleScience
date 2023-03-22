@@ -29,7 +29,7 @@ class Constraint:
         self.name = name
 
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"name = {self.name}",
@@ -40,23 +40,3 @@ class Constraint:
                 f"loss = {self.loss}",
             ]
         )
-        return _str
-
-    def _load_csv_file(self, file_path, keys, alias_dict):
-        import pandas as pd
-
-        raw_data_frame = pd.read_csv(file_path)
-
-        # convert to numpy array
-        data_dict = {}
-        for key in keys:
-            if key in alias_dict:
-                data_dict[alias_dict[key]] = np.asarray(
-                    raw_data_frame[key], "float32"
-                ).reshape([-1, 1])
-            else:
-                data_dict[key] = np.asarray(raw_data_frame[key], "float32").reshape(
-                    [-1, 1]
-                )
-
-        return data_dict

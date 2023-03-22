@@ -18,6 +18,7 @@ import os.path as osp
 import numpy as np
 
 from ppsci.geometry import geometry
+from ppsci.utils import misc
 
 
 class PointCloud(geometry.Geometry):
@@ -39,37 +40,26 @@ class PointCloud(geometry.Geometry):
         boundary_normal_path=None,
         alias_dict=None,
     ):
-        if not osp.exists(interior_path):
-            raise FileNotFoundError(f"interior_path({interior_path}) not exist.")
-
         # PointCloud from CSV file
         if interior_path.endswith(".csv"):
             # read data
-            import pandas as pd
-
-            raw_data_frame = pd.read_csv(interior_path)
+            data_dict = misc.load_csv_file(interior_path, coord_keys)
 
             # convert to numpy array
             self.interior = []
             for key in coord_keys:
-                self.interior.append(
-                    np.asarray(raw_data_frame[key], "float32").reshape([-1, 1])
-                )
+                self.interior.append(data_dict[key])
             self.interior = np.concatenate(self.interior, -1)
 
         # PointCloud from CSV file
         if boundary_path is not None and boundary_path.endswith(".csv"):
             # read data
-            import pandas as pd
-
-            raw_data_frame = pd.read_csv(boundary_path)
+            data_dict = misc.load_csv_file(boundary_path, coord_keys)
 
             # convert to numpy array
             self.boundary = {}
             for key in coord_keys:
-                self.boundary.append(
-                    np.asarray(raw_data_frame[key], "float32").reshape([-1, 1])
-                )
+                self.boundary.append(data_dict[key])
             self.boundary = np.concatenate(self.boundary, -1)
         else:
             self.boundary = None
@@ -77,16 +67,12 @@ class PointCloud(geometry.Geometry):
         # PointCloud from CSV file
         if boundary_normal_path is not None and boundary_normal_path.endswith(".csv"):
             # read data
-            import pandas as pd
-
-            raw_data_frame = pd.read_csv(boundary_normal_path)
+            data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
 
             # convert to numpy array
             self.normal = {}
             for key in coord_keys:
-                self.normal.append(
-                    np.asarray(raw_data_frame[key], "float32").reshape([-1, 1])
-                )
+                self.normal.append(data_dict[key])
             self.normal = np.concatenate(self.normal, -1)
         else:
             self.normal = None
