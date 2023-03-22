@@ -52,8 +52,7 @@ class PDE(object):
         self.equations.update({name: equation})
 
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [self.__class__.__name__]
             + [f"{name}: {eq}" for name, eq in self.equations.items()]
         )
-        return _str

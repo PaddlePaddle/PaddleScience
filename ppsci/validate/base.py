@@ -27,7 +27,7 @@ class Validator(object):
         self.name = name
 
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"name = {self.name}",
@@ -40,4 +40,3 @@ class Validator(object):
                 f"metric = {list(self.metric.keys())}",
             ]
         )
-        return _str
