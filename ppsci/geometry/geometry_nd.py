@@ -112,7 +112,13 @@ class Hypercube(geometry.Geometry):
         _on_xmax = np.isclose(y[:, component], self.xmax[component])
         y[:, component][_on_xmin] = self.xmax[component]
         y[:, component][_on_xmax] = self.xmin[component]
-        return misc.convert_to_dict(y, self.dim_keys)
+        y_normal = self.boundary_normal(y)
+
+        y = misc.convert_to_dict(y, self.dim_keys)
+        y_normal = misc.convert_to_dict(
+            y_normal, [f"normal_{k}" for k in self.dim_keys]
+        )
+        return {**y, **y_normal}
 
 
 class Hypersphere(geometry.Geometry):
