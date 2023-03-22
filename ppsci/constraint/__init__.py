@@ -32,6 +32,7 @@ __all__ = [
     "InitialConstraint",
     "IntegralConstraint",
     "InteriorConstraint",
+    "PeriodicConstraint",
     "SupervisedConstraint",
     "SupervisedInitialConstraint",
 ]
