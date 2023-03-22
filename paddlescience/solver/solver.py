@@ -11,18 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import numpy as np
 import os
-import paddle
 import time
+import numpy as np
+from visualdl import LogWriter
+import paddle
 from paddle.distributed.fleet import auto
 from paddle.incubate.optimizer.functional.lbfgs import minimize_lbfgs
 from paddle.incubate.optimizer.functional.bfgs import minimize_bfgs
 from . import utils
 from .. import config, logging
-from visualdl import LogWriter
-import time
-
+"""This *.py file is the solver class of PDSC"""
 __all__ = ["Solver"]
 
 
@@ -80,7 +79,7 @@ def loss_func(x, y):
 class Solver(object):
     """
     Solver
- 
+
     Parameters:
         pde(paddlescience.pde): The PDE used in the solver.
         algo(Algorithm): The algorithm used in the solver.
@@ -175,12 +174,15 @@ class Solver(object):
         # Train the network with respect to num_epoch.
 
         # Parameters:
-        #     num_epoch(int): Optional, default 1000. Number of epochs.
-        #     batch_size(int|None): Under develop. Optional, default None. How many sample points are used as a batch during training.
-        #     checkpoint_freq(int): Under develop. Optional, default 1000. How many epochs to store the training status once.
+        #     -num_epoch(int): Optional, default 1000. Number of epochs.
+        #     -batch_size(int|None): Under develop. Optional, default None.
+        #       How many sample points are used as a batch during training.
+        #     -checkpoint_freq(int): Under develop. Optional, default 1000.
+        #       How many epochs to store the training status once.
 
         # Return:
-        #     solution(Callable): A python func functhion that takes a GeometryDiscrete as input and a numpy array as outputs.
+        #     solution(Callable):A python func functhion that takes
+        #       a GeometryDiscrete as input and a numpy array as outputs.
 
         # Example:
         #     >>> import paddlescience as psci
@@ -199,7 +201,7 @@ class Solver(object):
             self.labels = labels
             self.labels_attr = labels_attr
 
-    # solve static 
+    # solve static
     def __solve_dynamic(self, num_epoch, bs, checkpoint_freq, checkpoint_path):
 
         inputs = self.inputs
@@ -288,11 +290,17 @@ class Solver(object):
                       float(loss_details[1]), " ic loss:",
                       float(loss_details[2]), " data loss:",
                       float(loss_details[3]))
-                      
+
                 if tipc_test_mode is True: # tipc test
                     # 最终打印期望格式如下：
-                    # ..., ... , loss: 0.12345, avg_reader_cost: 0.12345 sec, avg_batch_cost: 0.12345 sec, avg_samples: 100, ips: 0.12345 samples/s
-                    print(f'..., ... , loss: {float(loss)}, avg_reader_cost: {avg_reader_cost} sec, avg_batch_cost: {avg_batch_cost} sec, avg_samples: {avg_samples}, ips: {ips} samples/s')
+                    # ..., ... , loss: 0.12345, avg_reader_cost: 0.12345 sec,
+                    # avg_batch_cost: 0.12345 sec, avg_samples: 100, ips: 0.12345 samples/s
+                    print(f'..., ... , loss: \
+                        {float(loss)}, avg_reader_cost: \
+                        {avg_reader_cost} sec, avg_batch_cost: \
+                        {avg_batch_cost} sec, avg_samples: \
+                        {avg_samples}, ips: \
+                        {ips} samples/s')
 
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
@@ -397,7 +405,8 @@ class Solver(object):
             return self.outs
         else:
             print(
-                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
+                "Please specify the optimizer, now only the adam, \
+                lbfgs and bfgs optimizers are supported."
             )
             exit()
 
@@ -841,3 +850,4 @@ class Solver(object):
 
     def feed_data_user(self, data):
         self.feed_data_user_next(data)
+

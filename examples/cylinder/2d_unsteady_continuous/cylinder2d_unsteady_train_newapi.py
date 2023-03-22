@@ -11,19 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""This *.py file is an example of solving 2d-unsteady-cylinder–flow, by using PINNs method."""
+import os
+import numpy as np
 import paddlescience as psci
-import numpy as np
 import paddle
-
 import loading_cfd_data
-import numpy as np
 
 paddle.seed(1)
 np.random.seed(1)
 
-# paddle.enable_static()
-import os
+# paddle.enable_static()f
 dirname =  os.path.dirname(os.path.abspath(__file__)) + '/'
 os.chdir(dirname)
 # time array
