@@ -17,14 +17,20 @@ import copy
 
 from ppsci.loss.integral import IntegralLoss
 from ppsci.loss.l1 import L1Loss
+from ppsci.loss.l1 import PeriodicL1Loss
 from ppsci.loss.l2 import L2Loss
+from ppsci.loss.l2 import PeriodicL2Loss
 from ppsci.loss.mse import MSELoss
+from ppsci.loss.mse import PeriodicMSELoss
 
 __all__ = [
     "IntegralLoss",
     "L1Loss",
+    "PeriodicL1Loss",
     "L2Loss",
+    "PeriodicL2Loss",
     "MSELoss",
+    "PeriodicMSELoss",
 ]
 
 

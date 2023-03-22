@@ -21,6 +21,7 @@ import numpy as np
 
 from ppsci.geometry import geometry
 from ppsci.geometry.sampler import sample
+from ppsci.utils import misc
 
 
 class Interval(geometry.Geometry):
@@ -71,7 +72,8 @@ class Interval(geometry.Geometry):
         return np.random.choice([self.l, self.r], n).reshape([-1, 1]).astype("float32")
 
     def periodic_point(self, x: np.ndarray, component: int = 0):
-        periodic_x = np.copy(x)
-        periodic_x[np.isclose(x, self.l)] = self.r
-        periodic_x[np.isclose(x, self.r)] = self.l
-        return periodic_x
+        x_array = misc.convert_to_array(x, self.dim_keys)
+        periodic_x = x_array
+        periodic_x[np.isclose(x_array, self.l)] = self.r
+        periodic_x[np.isclose(x_array, self.r)] = self.l
+        return misc.convert_to_dict(periodic_x, self.dim_keys)
