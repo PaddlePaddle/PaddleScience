@@ -25,6 +25,7 @@ from sklearn import preprocessing
 
 from ppsci.geometry import geometry
 from ppsci.geometry import sampler
+from ppsci.utils import misc
 
 
 class Hypercube(geometry.Geometry):
@@ -106,12 +107,12 @@ class Hypercube(geometry.Geometry):
         return (self.xmax - self.xmin) * x + self.xmin
 
     def periodic_point(self, x, component):
-        y = np.copy(x)
+        y = misc.convert_to_array(x, self.dim_keys)
         _on_xmin = np.isclose(y[:, component], self.xmin[component])
         _on_xmax = np.isclose(y[:, component], self.xmax[component])
         y[:, component][_on_xmin] = self.xmax[component]
         y[:, component][_on_xmax] = self.xmin[component]
-        return y
+        return misc.convert_to_dict(y, self.dim_keys)
 
 
 class Hypersphere(geometry.Geometry):

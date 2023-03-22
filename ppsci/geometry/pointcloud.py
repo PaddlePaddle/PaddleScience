@@ -52,7 +52,7 @@ class PointCloud(geometry.Geometry):
             self.interior = np.concatenate(self.interior, -1)
 
         # PointCloud from CSV file
-        if boundary_path is not None and boundary_path.endswith(".csv"):
+        if boundary_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_path, coord_keys)
 
@@ -65,7 +65,7 @@ class PointCloud(geometry.Geometry):
             self.boundary = None
 
         # PointCloud from CSV file
-        if boundary_normal_path is not None and boundary_normal_path.endswith(".csv"):
+        if boundary_normal_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
 
