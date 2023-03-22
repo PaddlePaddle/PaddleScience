@@ -76,4 +76,10 @@ class Interval(geometry.Geometry):
         periodic_x = x_array
         periodic_x[np.isclose(x_array, self.l)] = self.r
         periodic_x[np.isclose(x_array, self.r)] = self.l
-        return misc.convert_to_dict(periodic_x, self.dim_keys)
+        periodic_x_normal = self.boundary_normal(periodic_x)
+
+        periodic_x = misc.convert_to_dict(periodic_x, self.dim_keys)
+        periodic_x_normal = misc.convert_to_dict(
+            periodic_x_normal, [f"normal_{k}" for k in self.dim_keys]
+        )
+        return {**periodic_x, **periodic_x_normal}
