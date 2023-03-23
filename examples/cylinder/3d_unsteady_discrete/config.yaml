@@ -6,7 +6,7 @@
     
     "hyper parameters":
     {
-        "number of epoch":40000,
+        "number of epoch":400000,
 
         "random seed":42,
 
@@ -17,16 +17,16 @@
         "batch size":
         {
             
-            "interior":4000,    # 160000 points
+            "interior":4000,    
 
-            "inlet":256,   # 4672 points
-            "outlet":256,   # 5072 points
-            "cylinder":256, # 1584 points
-            "top":1280, # 10816 points
-            "bottom":1280, # 9760 points
+            "inlet":256,   
+            "outlet":256,   
+            "cylinder":256, 
+            "top":1280, 
+            "bottom":1280, 
 
-            "initial condition":6400,  # 179260 points
-            "supervised":6400,  # 131520 points
+            "initial condition":6400,  
+            "supervised":6400,
         },
 
         "weight of losses":
@@ -47,9 +47,8 @@
 
         "Simulated Annealing":
         {
-            "warm epochs":5000,
+            "warm epochs":50000,
         },
     }
 
 }
-

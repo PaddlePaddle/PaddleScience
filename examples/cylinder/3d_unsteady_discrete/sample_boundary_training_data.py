@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # import numpy as np
 # import paddlescience as psci
 # from paddlescience.modulus.geometry.primitives_3d import Box, Sphere, Cylinder
@@ -35,7 +49,6 @@
 #     # geo = box + box2 - cylinder_1
 #     geo = box - cylinder_1
 #     geo1 = box2 - cylinder_1
-
 
 #     print("Sampling Boundary data ......")
 #     # sample geometry for plotting in Paraview
@@ -100,8 +113,6 @@
 #             full_data = np.concatenate((full_data, t_data))
 
 #     return full_data
-
-
 """
 Created in Oct. 2022
 @author: Hui Xiang, Yanbo Zhang
@@ -112,24 +123,25 @@ from paddlescience.modulus.geometry.primitives_3d import Box, Cylinder, Sphere
 from paddlescience.modulus.utils.io.vtk import var_to_polyvtk
 from paddlescience.visu.visu_vtk import __save_vtk_raw
 
-domain_coordinate_interval_dict = {1:[0,1600], 2:[0,800], 3:[0,320]}
+domain_coordinate_interval_dict = {1: [0, 1600], 2: [0, 800], 3: [0, 320]}
+
 
 def normalize(max_domain, min_domain, array, index):
     diff = max_domain - min_domain
     if abs(diff) < 0.0000001:
-        array[:,index] = 0.0
+        array[:, index] = 0.0
     else:
-        array[:,index] = (array[:, index] - min_domain)/diff
+        array[:, index] = (array[:, index] - min_domain) / diff
 
 
-def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
+def sample_data(t_num, t_index, t_step=50, nr_points=4000):
     # make standard constructive solid geometry example
     # make primitives
-    box = Box(point_1=(0, 0, 0), point_2=(1600, 800, 320))
+    box = Box(point_1=(10, 10, 60), point_2=(1590, 798, 250))
     # box = Box(point_1=(0, 0, 0), point_2=(1200, 400, 300))
 
-    box2 = Box(point_1=(200, 100, 0), point_2=(1600, 700, 320))
-    cylinder_1 = Cylinder(center=(400, 400, 160), radius=40, height=320)
+    box2 = Box(point_1=(200, 100, 60), point_2=(1590, 700, 250))
+    cylinder_1 = Cylinder(center=(400, 400, 160), radius=40, height=190)
 
     # combine with boolean operations
     geo = box - cylinder_1
@@ -139,7 +151,7 @@ def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
     # sample geometry for plotting in Paraview
     # 5: Inlet, 4:Outlet, 6:cylinder, 0: Front, 1:Back, 2:Top, 3:Bottom
     # boundaries, s  = geo.sample_boundary(nr_points=nr_points, curve_index_filters=[4, 5, 6])
-    boundaries, s  = geo.sample_boundary(nr_points=nr_points)
+    boundaries, s = geo.sample_boundary(nr_points=nr_points)
 
     var_to_polyvtk(s, "boundary")
     print("Surface Area: {:.3f}".format(np.sum(s["area"])))
@@ -152,16 +164,18 @@ def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
     # outlet = boundaries[1]
     outlet = boundaries[4]
     outlet = convert_float64_to_float32(outlet)
-    outlet_xyz = np.concatenate((outlet['x'], outlet['y'], outlet['z']), axis=1)
+    outlet_xyz = np.concatenate(
+        (outlet['x'], outlet['y'], outlet['z']), axis=1)
     outlet_txyz = replicate_t(t_num, t_index, t_step, outlet_xyz)
 
     cylinder = boundaries[6]
     cylinder = convert_float64_to_float32(cylinder)
-    cylinder_xyz = np.concatenate((cylinder['x'], cylinder['y'], cylinder['z']), axis=1)
+    cylinder_xyz = np.concatenate(
+        (cylinder['x'], cylinder['y'], cylinder['z']), axis=1)
     cylinder_txyz = replicate_t(t_num, t_index, t_step, cylinder_xyz)
 
     front = boundaries[0]
-    front= convert_float64_to_float32(front)
+    front = convert_float64_to_float32(front)
     front_xyz = np.concatenate((front['x'], front['y'], front['z']), axis=1)
     front_txyz = replicate_t(t_num, t_index, t_step, front_xyz)
 
@@ -177,22 +191,26 @@ def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
 
     bottom = boundaries[3]
     bottom = convert_float64_to_float32(bottom)
-    bottom_xyz = np.concatenate((bottom['x'], bottom['y'], bottom['z']), axis=1)
+    bottom_xyz = np.concatenate(
+        (bottom['x'], bottom['y'], bottom['z']), axis=1)
     bottom_txyz = replicate_t(t_num, t_index, t_step, bottom_xyz)
 
     print("Sampling Domain data ......")
-    interior = geo.sample_interior(nr_points=nr_points, compute_sdf_derivatives=True)
+    interior = geo.sample_interior(
+        nr_points=nr_points, compute_sdf_derivatives=True)
     interior = convert_float64_to_float32(interior)
-    interior_xyz = np.concatenate((interior['x'], interior['y'], interior['z']), axis=1)
-    interior1 = geo1.sample_interior(nr_points=nr_points, compute_sdf_derivatives=True)
+    interior_xyz = np.concatenate(
+        (interior['x'], interior['y'], interior['z']), axis=1)
+    interior1 = geo1.sample_interior(
+        nr_points=nr_points, compute_sdf_derivatives=True)
     interior1 = convert_float64_to_float32(interior1)
-    interior1_xyz = np.concatenate((interior1['x'], interior1['y'], interior1['z']), axis=1)
+    interior1_xyz = np.concatenate(
+        (interior1['x'], interior1['y'], interior1['z']), axis=1)
     interior2_xyz = np.concatenate((interior_xyz, interior1_xyz), axis=0)
     # interior_txyz = replicate_t(t_num, t_step, interior_xyz)
     interior2_txyz = replicate_t(t_num, t_index, t_step, interior2_xyz)
     var_to_polyvtk(interior, "interior")
     print("Volume: {:.3f}".format(np.sum(s["area"])))
-
 
     # for item in [inlet_txyz, outlet_txyz, front_txyz, back_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior2_txyz]:
     #     # Normalize x,y,z to [0,1]
@@ -204,7 +222,7 @@ def sample_data(t_num, t_index, t_step=50, nr_points = 4000):
     return inlet_txyz, outlet_txyz, front_txyz, back_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior2_txyz
 
 
-def sample_data_mesh(t_num, t_index, t_step=50, nr_points = 4000):
+def sample_data_mesh(t_num, t_index, t_step=50, nr_points=4000):
     # make standard constructive solid geometry example
     # make primitives
     box = psci.neo_geometry.Mesh("Box1.stl")
@@ -222,17 +240,22 @@ def sample_data_mesh(t_num, t_index, t_step=50, nr_points = 4000):
     # bottom (1255, 3)
     # cylinder (202, 3)
     geo.add_sample_config("interior", nr_points)
-    geo.add_sample_config("boundary_inlet", 630, criteria=lambda x, y, z: np.isclose(x, 0))
-    geo.add_sample_config("boundary_outlet", 618, criteria=lambda x, y, z: np.isclose(x, 1600))
-    geo.add_sample_config("boundary_front", 2969, criteria=lambda x, y, z: np.isclose(z, 320))
-    geo.add_sample_config("boundary_back", 3061, criteria=lambda x, y, z: np.isclose(z, 0))
-    geo.add_sample_config("boundary_top", 1265, criteria=lambda x, y, z: np.isclose(y, 800))
-    geo.add_sample_config("boundary_bottom", 1255, criteria=lambda x, y, z: np.isclose(y, 0))
+    geo.add_sample_config(
+        "boundary_inlet", 630, criteria=lambda x, y, z: np.isclose(x, 0))
+    geo.add_sample_config(
+        "boundary_outlet", 618, criteria=lambda x, y, z: np.isclose(x, 1600))
+    geo.add_sample_config(
+        "boundary_front", 2969, criteria=lambda x, y, z: np.isclose(z, 320))
+    geo.add_sample_config(
+        "boundary_back", 3061, criteria=lambda x, y, z: np.isclose(z, 0))
+    geo.add_sample_config(
+        "boundary_top", 1265, criteria=lambda x, y, z: np.isclose(y, 800))
+    geo.add_sample_config(
+        "boundary_bottom", 1255, criteria=lambda x, y, z: np.isclose(y, 0))
     geo.add_sample_config(
         "boundary_cylinder",
         202,
-        criteria=lambda x, y, z: np.isclose((x - 400) ** 2 + (y - 400) ** 2, 1600)
-    )
+        criteria=lambda x, y, z: np.isclose((x - 400)**2 + (y - 400)**2, 1600))
 
     geo1.add_sample_config("interior", nr_points)
 
@@ -272,15 +295,17 @@ def sample_data_mesh(t_num, t_index, t_step=50, nr_points = 4000):
 
 def convert_float64_to_float32(dict_a):
     for k in dict_a:
-        dict_a[k]=dict_a[k].astype(np.float32)
+        dict_a[k] = dict_a[k].astype(np.float32)
     return dict_a
+
 
 def replicate_t(t_num, t_index, t_step, data):
     full_data = None
     # for time in range(1, t_num+1):
     for time in t_index:
         t_len = data.shape[0]
-        t_extended = np.array([time * t_step] * t_len, dtype=np.float32).reshape((-1, 1))
+        t_extended = np.array(
+            [time * t_step] * t_len, dtype=np.float32).reshape((-1, 1))
         t_data = np.concatenate((t_extended, data), axis=1)
         if full_data is None:
             full_data = t_data
@@ -288,6 +313,7 @@ def replicate_t(t_num, t_index, t_step, data):
             full_data = np.concatenate((full_data, t_data))
 
     return full_data
+
 
 def get_boundary_data_and_training_data(time_num, num_points):
     inlet_txyz, outlet_txyz, front_txyz, back_txyz, top_txyz, bottom_txyz, cylinder_txyz, interior_txyz = \
@@ -405,12 +431,18 @@ def get_boundary_data_and_training_data(time_num, num_points):
     interior_y = interior_txyz[:, 2].reshape((-1, 1))
     interior_z = interior_txyz[:, 3].reshape((-1, 1))
 
-    inlet_data = (inlet_t, inlet_x, inlet_y, inlet_z, inlet_u, inlet_v, inlet_w, inlet_p)
-    front_data = (front_t, front_x, front_y, front_z, front_u, front_v, front_w, front_p)
-    back_data = (back_t, back_x, back_y, back_z, back_u, back_v, back_w, back_p)
+    inlet_data = (inlet_t, inlet_x, inlet_y, inlet_z, inlet_u, inlet_v,
+                  inlet_w, inlet_p)
+    front_data = (front_t, front_x, front_y, front_z, front_u, front_v,
+                  front_w, front_p)
+    back_data = (back_t, back_x, back_y, back_z, back_u, back_v, back_w,
+                 back_p)
     top_data = (top_t, top_x, top_y, top_z, top_u, top_v, top_w, top_p)
-    bottom_data = (bottom_t, bottom_x, bottom_y, bottom_z, bottom_u, bottom_v, bottom_w, bottom_p)
-    cylinder_data = (cylinder_t, cylinder_x, cylinder_y, cylinder_z, cylinder_u, cylinder_v, cylinder_w, cylinder_p)
-    outlet_data = (outlet_t, outlet_x, outlet_y, outlet_z, outlet_u, outlet_v, outlet_w, outlet_p)
+    bottom_data = (bottom_t, bottom_x, bottom_y, bottom_z, bottom_u, bottom_v,
+                   bottom_w, bottom_p)
+    cylinder_data = (cylinder_t, cylinder_x, cylinder_y, cylinder_z,
+                     cylinder_u, cylinder_v, cylinder_w, cylinder_p)
+    outlet_data = (outlet_t, outlet_x, outlet_y, outlet_z, outlet_u, outlet_v,
+                   outlet_w, outlet_p)
     interior_data = (interior_t, interior_x, interior_y, interior_z)
     return inlet_data, front_data, back_data, top_data, bottom_data, cylinder_data, outlet_data, interior_data

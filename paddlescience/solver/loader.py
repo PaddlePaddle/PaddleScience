@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file provide the dataloader iterator"""
 import paddle
 
 
@@ -24,32 +25,35 @@ def load_data(inputs_labels_iter, var_type):
     """
     inputs_labels = [None for _ in range(len(inputs_labels_iter))]
     if var_type == 'dict':
-        for i, iter in enumerate(inputs_labels_iter):
-            inputs_labels[i] = next(iter)
+        for i, input_iter in enumerate(inputs_labels_iter):
+            inputs_labels[i] = next(input_iter)
     return inputs_labels
 
 
-def get_batch_iterator(bsize, n, input):
+def get_batch_iterator(bsize, num_samples, input_list):
     """_summary_
 
     Args:
-        bsize (_type_): _description_
-        n (_type_): _description_
-        input (_type_): _description_
+        bsize (int): _description_
+        n (int): _description_
+        input (list): _description_
 
     Returns:
         _type_: _description_
     """
-    ds = EqDataSet(num_samples = n, input = input)
-    bs = paddle.io.BatchSampler(dataset = ds, shuffle = False, batch_size = bsize, drop_last = False)
-    loader = paddle.io.DataLoader(dataset = ds, batch_sampler = bs, num_workers=0)
+    dataset = EqDataSet(num_samples=num_samples, input_list=input_list)
+    batch_sampler = paddle.io.BatchSampler(
+        dataset=dataset, shuffle=False, batch_size=bsize, drop_last=False)
+    loader = paddle.io.DataLoader(
+        dataset=dataset, batch_sampler=batch_sampler, num_workers=0)
     loader = InfiniteDataLoader(loader)
     return iter(loader)
 
 
-class InfiniteDataLoader(object):
+class InfiniteDataLoader():
     """_summary_
     """
+
     def __init__(self, dataloader):
         self.dataloader = dataloader
 
@@ -58,6 +62,10 @@ class InfiniteDataLoader(object):
             dataloader = iter(self.dataloader)
             for batch in dataloader:
                 yield batch
+
+    def method_one(self):
+        """_summary_
+        """
 
 
 class EqDataSet(paddle.io.Dataset):
@@ -69,14 +77,15 @@ class EqDataSet(paddle.io.Dataset):
     Returns:
         _type_: _description_
     """
-    def __init__(self, num_samples, input):
-        self.input = input
+
+    def __init__(self, num_samples, input_list):
+        self.input_list = input_list
         self.num_samples = num_samples
+        super().__init__()
 
     def __getitem__(self, index):
-        output = self.input[index]
+        output = self.input_list[index]
         return output
 
     def __len__(self):
-        return self.num_samples  
- 
+        return self.num_samples
