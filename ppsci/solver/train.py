@@ -41,7 +41,7 @@ def train_epoch_func(solver, epoch_id, log_freq):
         reader_cost = 0
         batch_cost = 0
         reader_tic = time.perf_counter()
-        for _, _constraint in solver.constraints.items():
+        for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
             # profile code below
@@ -134,7 +134,7 @@ def train_LBFGS_epoch_func(solver, epoch_id, log_freq):
         batch_cost = 0
         total_batch_size = []
         reader_tic = time.perf_counter()
-        for _, _constraint in solver.constraints.items():
+        for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
             for v in input_dict.values():
@@ -152,7 +152,7 @@ def train_LBFGS_epoch_func(solver, epoch_id, log_freq):
                 Tensor: Computed loss.
             """
             total_loss = 0
-            for i, _constraint in enumerate(solver.constraints.values()):
+            for i, _constraint in enumerate(solver.constraint.values()):
                 evaluator = expression.ExpressionSolver(
                     _constraint.input_keys, _constraint.output_keys, solver.model
                 )

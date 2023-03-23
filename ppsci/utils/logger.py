@@ -39,6 +39,9 @@ def init_logger(name="ppsci", log_file=None, log_level=logging.INFO):
     Returns:
         logging.Logger: The expected logger.
     """
+    if isinstance(log_level, str):
+        log_level = getattr(logging, log_level.upper())
+
     global _logger
 
     # solve mutiple init issue when using paddlescience.py and engin.engin

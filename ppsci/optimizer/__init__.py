@@ -59,10 +59,15 @@ def build_optimizer(cfg, model_list, epochs, iters_per_epoch):
     # build lr_scheduler
     cfg = copy.deepcopy(cfg)
     lr_cfg = cfg.pop("lr")
-    lr_scheduler = build_lr_scheduler(lr_cfg, epochs, iters_per_epoch)
+    if isinstance(lr_cfg, float):
+        lr_scheduler = lr_cfg
+    else:
+        lr_scheduler = build_lr_scheduler(lr_cfg, epochs, iters_per_epoch)
 
     # build optimizer
     opt_cls = cfg.pop("name")
     optimizer = eval(opt_cls)(learning_rate=lr_scheduler, **cfg)(model_list)
 
+    if isinstance(lr_scheduler, float):
+        return optimizer, None
     return optimizer, lr_scheduler
