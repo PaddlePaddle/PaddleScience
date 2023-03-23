@@ -15,6 +15,7 @@ limitations under the License.
 
 import collections
 import csv
+import random
 
 import numpy as np
 import paddle
@@ -196,3 +197,9 @@ def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
     except Exception as e:
         logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
         raise
+
+
+def set_random_seed(seed):
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
