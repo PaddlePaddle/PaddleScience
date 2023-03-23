@@ -48,7 +48,9 @@ def _load_pretrain_from_path(model, path):
         path (str, optional): Pretrained model path.
     """
     if not (os.path.isdir(path) or os.path.exists(path + ".pdparams")):
-        raise ValueError(f"Pretrained model path {path}.pdparams does not exists.")
+        raise FileNotFoundError(
+            f"Pretrained model path {path}.pdparams does not exists."
+        )
 
     param_state_dict = paddle.load(path + ".pdparams")
     model.set_dict(param_state_dict)
@@ -67,37 +69,49 @@ def load_pretrain(model, path):
     _load_pretrain_from_path(model, path=path)
 
 
-def load_checkpoint(path, model, optimizer=None):
+def load_checkpoint(path, model, optimizer, grad_scaler=None):
     """Load from checkpoint.
 
     Args:
         path (AttrDict): Path for checkpoint.
         model (nn.Layer): Model with parameters.
-        optimizer (optimizer.Optimizer, optional): Optimizer for model.. Defaults to None.
+        optimizer (optimizer.Optimizer, optional): Optimizer for model.
+        grad_scaler (amp.GradScaler, optional): GradScaler for AMP. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
     """
-    if path and optimizer is not None:
-        assert os.path.exists(path + ".pdparams"), f"{path}.pdparams not exist."
-        assert os.path.exists(path + ".pdopt"), f"{path}.pdopt not exist."
-        # load state dict
-        param_dict = paddle.load(path + ".pdparams")
-        optim_dict = paddle.load(path + ".pdopt")
-        metric_dict = paddle.load(path + ".pdstates")
-        # set state dict
-        model.set_state_dict(param_dict)
-        optimizer.set_state_dict(optim_dict)
-        logger.info(f"Finish loading checkpoints from {path}")
-        return metric_dict
+    if not os.path.exists(path + ".pdparams"):
+        raise FileNotFoundError(f"{path}.pdparams not exist.")
+    if not os.path.exists(path + ".pdopt"):
+        raise FileNotFoundError(f"{path}.pdopt not exist.")
+    if grad_scaler is not None and not os.path.exists(path + ".pdscaler"):
+        raise FileNotFoundError(f"{path}.scaler not exist.")
+
+    # load state dict
+    param_dict = paddle.load(path + ".pdparams")
+    optim_dict = paddle.load(path + ".pdopt")
+    metric_dict = paddle.load(path + ".pdstates")
+    if grad_scaler is not None:
+        scaler_dict = paddle.load(path + ".pdscaler")
+
+    # set state dict
+    model.set_state_dict(param_dict)
+    optimizer.set_state_dict(optim_dict)
+    if grad_scaler is not None:
+        grad_scaler.load_state_dict(scaler_dict)
+
+    logger.info(f"Finish loading checkpoint from {path}")
+    return metric_dict
 
 
-def save_checkpoint(model, optimizer, metric, model_dir, model_name="", prefix="ppsci"):
+def save_checkpoint(model, optimizer, grad_scaler, metric, model_dir, prefix="model"):
     """Save checkpoint, including model params, optimizer params, metric information.
 
     Args:
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer): Optimizer for model.
+        grad_scaler (amp.GradScaler, optional): GradScaler for AMP. Defaults to None.
         metric (Dict[str, Any]): Metric information, such as {"RMSE": ...}.
         model_dir (str): Directory for chekpoint storage.
         model_name (str, optional): Name of model, such as "MLP". Defaults to "".
@@ -105,11 +119,13 @@ def save_checkpoint(model, optimizer, metric, model_dir, model_name="", prefix="
     """
     if paddle.distributed.get_rank() != 0:
         return
-    model_dir = os.path.join(model_dir, model_name)
+    model_dir = os.path.join(model_dir, "checkpoints")
     _mkdir_if_not_exist(model_dir)
     model_path = os.path.join(model_dir, prefix)
 
     paddle.save(model.state_dict(), model_path + ".pdparams")
     paddle.save(optimizer.state_dict(), model_path + ".pdopt")
     paddle.save(metric, model_path + ".pdstates")
-    logger.info(f"Already save model in {model_path}")
+    if grad_scaler is not None:
+        paddle.save(grad_scaler.state_dict(), model_path + ".pdscaler")
+    logger.info(f"Finish saving checkpoint to {model_path}")
