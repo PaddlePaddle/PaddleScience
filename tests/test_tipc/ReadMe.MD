@@ -26,20 +26,24 @@ cd PaddleScience
 修改此目录下对应案例的txt参数文件，来生成不同log，注意对于训练epoch要修改训练py文件，
 
 ```
-/workspace/PaddleScience/tests/test_tipc/configs
+./PaddleScience/tests/test_tipc/configs
 ```
 单卡:自动运行打开Profiling
 ```
 export CUDA_VISIBLE_DEVICES=0 
 ```
+在根目录下运行
 ```
-bash tests/test_tipc/benchmark_train.sh /workspace/PaddleScience/tests/test_tipc/configs/train_2d_unsteady_continuous.txt benchmark_train
+bash tests/test_tipc/benchmark_train.sh ./PaddleScience/tests/test_tipc/configs/train_2d_unsteady_continuous.txt benchmark_train
 ```
 benchmark训练得到训练日志后，会自动保存训练日志并解析得到ips等信息，日志解析代码位于：
 - https://console.cloud.baidu-int.com/devops/icode/repos/baidu/paddle/benchmark-frame/blob/master/tools/scripts/analysis.py
-```
-wget https://paddle-qa.bj.bcebos.com/benchmark/tools.tar.gz
 
+*在解析工具下载好之后，运行脚本
+```
+cd PaddleScience/tests/test_tipc/
+wget https://paddle-qa.bj.bcebos.com/benchmark/tools.tar.gz
+tar -zxvf tools.tar.gz
 export BENCHMARK_ROOT=$PWD/tools
 ```
 如果运行成功会生成index文件夹，该目录下面生成jason文件，其中可以找到对应的ips数值
