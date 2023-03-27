@@ -319,7 +319,8 @@ else
                     run_train=${trainer_value2}
                     run_export=${export_value2}
                 else
-                    run_train=${norm_trainer}
+                    run_train=${PDSC_DIR}${norm_trainer}
+                    echo -e '\n' ${run_train} '\n'
                     run_export=${norm_export}
                 fi
 

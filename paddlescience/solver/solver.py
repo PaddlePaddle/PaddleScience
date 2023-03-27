@@ -292,9 +292,6 @@ class Solver(object):
                       float(loss_details[3]))
 
                 if tipc_test_mode is True:  # tipc test
-                    # 最终打印期望格式如下：
-                    # ..., ... , loss: 0.12345, avg_reader_cost: 0.12345 sec,
-                    # avg_batch_cost: 0.12345 sec, avg_samples: 100, ips: 0.12345 samples/s
                     print(f'..., ... , loss: \
                         {float(loss)}, avg_reader_cost: \
                         {avg_reader_cost} sec, avg_batch_cost: \
@@ -404,8 +401,8 @@ class Solver(object):
 
             return self.outs
         else:
-            print("Please specify the optimizer, now only the adam, \
-                lbfgs and bfgs optimizers are supported.")
+            print("Please specify the optimizer, now only the adam, "
+                  "lbfgs and bfgs optimizers are supported.")
             exit()
 
         # close writer in visual DL
