@@ -18,7 +18,6 @@ import os
 from typing import Any
 from typing import Dict
 from typing import Optional
-from typing import Union
 
 import paddle
 import paddle.amp as amp
@@ -185,7 +184,7 @@ class Solver(object):
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
-    def from_conf(cfg: Dict[str, Any], mode: Literal["train", "eval"]):
+    def from_config(cfg: Dict[str, Any], mode: Literal["train", "eval"]):
         config.print_config(cfg)
         # TODO(sensen): sanity check for config
         output_dir = cfg["Global"]["output_dir"]

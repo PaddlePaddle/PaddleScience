@@ -32,7 +32,7 @@ class NetBase(nn.Layer):
         self._output_transform = None
 
     def forward(self, *args, **kwargs):
-        raise NotImplementedError(f"NetBase.forward is not implemented")
+        raise NotImplementedError("NetBase.forward is not implemented")
 
     @property
     def num_params(self):

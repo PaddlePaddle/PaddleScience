@@ -51,12 +51,12 @@ class MLP(base.NetBase):
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
-                    f"num_layers should be None when hidden_size is specified"
+                    "num_layers should be None when hidden_size is specified"
                 )
         elif isinstance(hidden_size, int):
             if not isinstance(num_layers, int):
                 raise ValueError(
-                    f"num_layers should be an int when hidden_size is an int"
+                    "num_layers should be an int when hidden_size is an int"
                 )
             hidden_size = [hidden_size] * num_layers
         else:
