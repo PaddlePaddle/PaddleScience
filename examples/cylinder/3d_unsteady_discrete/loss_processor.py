@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 
 def loss_reader(loss, loss_name_list, f):
-    """read losses from file and returns
+    """read losses from a log file and returns
 
     Args:
         loss (numpy array): return losses array
@@ -39,6 +39,13 @@ def loss_reader(loss, loss_name_list, f):
 
 
 def plot_trainloss(loss, loss_ref, name_list):
+    """plot training loss only
+
+    Args:
+        loss (_type_): _description_
+        loss_ref (_type_): _description_
+        name_list (_type_): _description_
+    """
     # fluctuition_cease_node = 75000
     n = loss.shape[1]
     n_ref = loss_ref.shape[1]
@@ -74,6 +81,13 @@ def plot_trainloss(loss, loss_ref, name_list):
 
 
 def plot_loss_ratio(out_path, name_list, loss):
+    """plot the ratio of loss by stacked histogram
+
+    Args:
+        out_path (_type_): _description_
+        name_list (_type_): _description_
+        loss (_type_): _description_
+    """
     output_num = 10
     step = int(loss.shape[1] / output_num)
     list_loss = [[0] * output_num for i in range(m - 1)]
@@ -111,6 +125,13 @@ def plot_loss_ratio(out_path, name_list, loss):
 
 
 def plot_train_validation_loss(file_err, out_path, n):
+    """plot train and validation loss, where validation means quantitative mean nodes error
+
+    Args:
+        file_err (_type_): _description_
+        out_path (_type_): _description_
+        n (_type_): _description_
+    """
     fig2, ax2 = plt.subplots(figsize=(30, 12))
     err_data = pd.read_csv(file_err)
     err_index = err_data['epoch'].tolist()
@@ -137,33 +158,34 @@ def plot_train_validation_loss(file_err, out_path, n):
     plt.close(fig2)
 
 
-# plot train data
-plt.style.use('_mpl-gallery')
-out_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-name_list = [
-    'lr', 'total loss', 'equation loss', 'boundary loss',
-    'Initial Condition loss', 'data loss'
-]
-f = open(out_path + "/output/0307_4e5.txt")  # experiment loss file 
-f_ref = open(out_path + "/output/0314_99steps.txt")  # reference loss file 
-file_err = out_path + "/output/06_58_14_lbm_err_99.csv"  # lbm error file for validation
-m = len(name_list)
+if __name__ == "__main__":
+    # plot train data
+    plt.style.use('_mpl-gallery')
+    out_path = os.path.dirname(os.path.abspath(__file__)) + '/'
+    name_list = [
+        'lr', 'total loss', 'equation loss', 'boundary loss',
+        'Initial Condition loss', 'data loss'
+    ]
+    f = open(out_path + "/output/0307_4e5.txt")  # experiment loss file 
+    f_ref = open(out_path + "/output/0314_99steps.txt")  # reference loss file 
+    file_err = out_path + "/output/06_58_14_lbm_err_99.csv"  # lbm error file for validation
+    m = len(name_list)
 
-# start read files
-lines = f.readlines()
-loss = np.zeros((m, len(lines)), dtype=np.float64)
-loss_reader(loss, name_list, f)
-f.close()
+    # start read files
+    lines = f.readlines()
+    loss = np.zeros((m, len(lines)), dtype=np.float64)
+    loss_reader(loss, name_list, f)
+    f.close()
 
-lines = f_ref.readlines()
-loss_ref = np.zeros((m, len(lines)), dtype=np.float64)
-loss_reader(loss_ref, name_list, f_ref)
-f_ref.close()
+    lines = f_ref.readlines()
+    loss_ref = np.zeros((m, len(lines)), dtype=np.float64)
+    loss_reader(loss_ref, name_list, f_ref)
+    f_ref.close()
 
-# ploting
-plot_trainloss(loss, loss_ref, name_list)
-plot_loss_ratio(out_path, name_list, loss)
-if os.path.exists(file_err) == True:
-    plot_train_validation_loss(file_err, out_path, loss.shape[1])
-else:
-    print(f"Warning : {file_err} is missing")
+    # ploting
+    plot_trainloss(loss, loss_ref, name_list)
+    plot_loss_ratio(out_path, name_list, loss)
+    if os.path.exists(file_err) == True:
+        plot_train_validation_loss(file_err, out_path, loss.shape[1])
+    else:
+        print(f"Warning : {file_err} is missing")

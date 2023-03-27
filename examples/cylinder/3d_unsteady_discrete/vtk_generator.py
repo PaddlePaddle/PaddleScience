@@ -25,6 +25,18 @@ np.random.seed(42)
 
 
 def load_input(t_star, xyz_star, file_name, time_tmp, not_mesh):
+    """ load inputs, combine by time steps, decide load from mesh or not
+
+    Args:
+        t_star (_type_): _description_
+        xyz_star (_type_): _description_
+        file_name (_type_): _description_
+        time_tmp (_type_): _description_
+        not_mesh (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if not_mesh == True:
         txyz_uvwpe_input = load_vtk(
             [0], 0, load_uvwp=True, load_txyz=True, name_wt_time=file_name)[0]
@@ -56,7 +68,19 @@ def load_input(t_star, xyz_star, file_name, time_tmp, not_mesh):
     return i_t, i_x, i_y, i_z, num_nodes, input_mesh
 
 
-def xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time):
+def xyz_denormalization(i_x, i_y, i_z, xyz_star, num_time):
+    """spatial denomalization
+
+    Args:
+        i_x (_type_): _description_
+        i_y (_type_): _description_
+        i_z (_type_): _description_
+        xyz_star (_type_): _description_
+        num_time (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # only coord at start time is needed
     n = int(i_x.shape[0] / num_time)
     i_x = i_x.astype("float32")
@@ -71,7 +95,14 @@ def xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time):
     return cord
 
 
-def uvwp_denomalization(solution, p_star, uvw_star):
+def uvwp_denormalization(solution, p_star, uvw_star):
+    """result denormalization
+
+    Args:
+        solution (_type_): _description_
+        p_star (_type_): _description_
+        uvw_star (_type_): _description_
+    """
     # denormalization
     for i in range(len(solution)):
         solution[i][:, 0:1] = solution[i][:, 0:1] * uvw_star
@@ -81,6 +112,17 @@ def uvwp_denomalization(solution, p_star, uvw_star):
 
 
 def write_error(baseline, solution, err_min, err_index):
+    """write error for train & validation loss
+
+    Args:
+        baseline (_type_): _description_
+        solution (_type_): _description_
+        err_min (_type_): _description_
+        err_index (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # update err_min & err_index
     new_err_min = err_min
     new_err_index = err_index
@@ -103,6 +145,17 @@ def write_error(baseline, solution, err_min, err_index):
 
 
 def net_predict(net_ini, pde, net_width, inputeq):
+    """do net initialization and predict solution
+
+    Args:
+        net_ini (_type_): _description_
+        pde (_type_): _description_
+        net_width (_type_): _description_
+        inputeq (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # Network
     net = psci.network.FCNet(
         num_ins=4,
@@ -192,7 +245,7 @@ if __name__ == "__main__":
         file_name=input_file,
         time_tmp=time_tmp,
         not_mesh=not_mesh)
-    cord = xyz_denomalization(i_x, i_y, i_z, xyz_star, num_time)
+    cord = xyz_denormalization(i_x, i_y, i_z, xyz_star, num_time)
 
     # eq cord
     inputeq = np.stack((i_t, i_x, i_y, i_z), axis=1)
@@ -225,8 +278,8 @@ if __name__ == "__main__":
             solution = net_predict(
                 net_ini, pde, net_width, np.stack(
                     e_input[0:4], axis=1))
-            uvwp_denomalization(solution, p_star,
-                                uvw_star)  # modify [solution]
+            uvwp_denormalization(solution, p_star,
+                                 uvw_star)  # modify [solution]
             err_min, err_index = write_error(
                 baseline=lbm_99,
                 solution=solution,
@@ -238,7 +291,7 @@ if __name__ == "__main__":
 
     # evaluate with the best model
     solution = net_predict(net_ini, pde, net_width, inputeq)
-    uvwp_denomalization(solution, p_star, uvw_star)
+    uvwp_denormalization(solution, p_star, uvw_star)
 
     print(
         "/*------------------ Quantitative analysis : LBM baseline error -----------------*/"

@@ -24,7 +24,7 @@ def load_vtk(time_list,
              load_uvwp=False,
              load_txyz=False,
              name_wt_time=None):
-    """load LBM(traditional methodology) points coordinates, use these points as interior points for tranning_summary_
+    """load LBM(traditional methodology) points coordinates, use these points as interior points for trianing
     Args:
         time_list (list): time step index
         t_step (int): the time that one step cost
@@ -76,7 +76,7 @@ def load_msh(file):
 
 
 def write_vtu(file, mesh, solution):
-    """Write vtk file by concatenate mesh and solution
+    """write *.vtk file by concatenating mesh and solution
     Args:
         file (str): output directory
         mesh (mesh): mesh object

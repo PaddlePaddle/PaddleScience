@@ -16,12 +16,14 @@ import paddle
 
 
 def load_data(inputs_labels_iter, var_type):
-    """_summary_
+    """for each sort of input, specify the corresponding iterator and fetch data
 
     Args:
-        inputs_labels (_type_): _description_
         inputs_labels_iter (_type_): _description_
         var_type (_type_): _description_
+
+    Returns:
+        _type_: _description_
     """
     inputs_labels = [None for _ in range(len(inputs_labels_iter))]
     if var_type == 'dict':

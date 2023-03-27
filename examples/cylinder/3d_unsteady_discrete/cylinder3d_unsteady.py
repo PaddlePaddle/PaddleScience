@@ -371,25 +371,6 @@ if __name__ == "__main__":
         by_epoch=True)()
     opt = psci.optimizer.Adam(learning_rate=_lr, parameters=net.parameters())
 
-    # Read validation reference for time step : 0, 99
-    lbm_01 = load_vtk(
-        [0],
-        t_step=TIME_STEP,
-        load_uvwp=True,
-        load_txyz=True,
-        name_wt_time=ic_name)[0]
-    lbm_99 = load_vtk(
-        [99],
-        t_step=TIME_STEP,
-        load_uvwp=True,
-        load_txyz=True,
-        name_wt_time=ic_name)[0]
-    tmp = txyz_nomalization(T_STAR, XYZ_STAR, lbm_01)
-    lbm_01[:, 0:4] = np.stack(tmp, axis=1)
-    tmp = txyz_nomalization(T_STAR, XYZ_STAR, lbm_99)
-    lbm_99[:, 0:4] = np.stack(tmp, axis=1)
-    lbm = [lbm_01, lbm_99]
-
     # Solver
     solver = psci.solver.Solver(pde=pde, algo=algo, opt=opt, lbm=lbm)
 
