@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os.path as osp
 import types
 
 import numpy as np
@@ -23,7 +22,6 @@ from sympy.parsing import sympy_parser as sp_parser
 from ppsci import geometry
 from ppsci.constraint import base
 from ppsci.data import dataset
-from ppsci.utils import misc
 
 
 class BoundaryConstraint(base.Constraint):
