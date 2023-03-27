@@ -24,18 +24,18 @@ def gaussian_perturb(x, level=0.01):
 def load_model(model, checkpoint_file):
     checkpoint_fname = checkpoint_file
     checkpoint = paddle.load(checkpoint_fname)
-    model.set_state_dict(checkpoint['model_state'])
+    model.set_state_dict(checkpoint["model_state"])
     model.eval()
     return model
 
 
 def downsample(x, scale=0.125):
     return paddle.nn.functional.interpolate(
-        x, scale_factor=scale, mode='bilinear')
+        x, scale_factor=scale, mode="bilinear")
 
 
 def date_to_hours(date):
-    date_obj = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    date_obj = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     day_of_year = date_obj.timetuple().tm_yday - 1
     hour_of_day = date_obj.timetuple().tm_hour
     hours_since_jan_01_epoch = 24 * day_of_year + hour_of_day

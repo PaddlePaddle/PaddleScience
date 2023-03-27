@@ -95,7 +95,7 @@ def reshape_fields(img,
     img_shape_y = np.shape(img)[-1]
     n_channels = np.shape(img)[
         1]  #this will either be N_in_channels or N_out_channels
-    channels = params.in_channels if inp_or_tar == 'inp' else params.out_channels
+    channels = params.in_channels if inp_or_tar == "inp" else params.out_channels
     means = np.load(params.global_means_path)[:, channels]
     stds = np.load(params.global_stds_path)[:, channels]
     if crop_size_x == None:
@@ -104,21 +104,21 @@ def reshape_fields(img,
         crop_size_y = img_shape_y
 
     if normalize:
-        if params.normalization == 'minmax':
+        if params.normalization == "minmax":
             raise Exception("minmax not supported. Use zscore")
-        elif params.normalization == 'zscore':
+        elif params.normalization == "zscore":
             img -= means
             img /= stds
 
     if params.add_grid:
-        if inp_or_tar == 'inp':
-            if params.gridtype == 'linear':
+        if inp_or_tar == "inp":
+            if params.gridtype == "linear":
                 assert params.N_grid_channels == 2, "N_grid_channels must be set to 2 for gridtype linear"
                 x = np.meshgrid(np.linspace(-1, 1, img_shape_x))
                 y = np.meshgrid(np.linspace(-1, 1, img_shape_y))
                 grid_x, grid_y = np.meshgrid(y, x)
                 grid = np.stack((grid_x, grid_y), axis=0)
-            elif params.gridtype == 'sinusoidal':
+            elif params.gridtype == "sinusoidal":
                 assert params.N_grid_channels == 4, "N_grid_channels must be set to 4 for gridtype sinusoidal"
                 x1 = np.meshgrid(
                     np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))
@@ -136,7 +136,7 @@ def reshape_fields(img,
                     axis=0)
             img = np.concatenate((img, grid), axis=1)
 
-    if params.orography and inp_or_tar == 'inp':
+    if params.orography and inp_or_tar == "inp":
         img = np.concatenate((img, np.expand_dims(orog, axis=(0, 1))), axis=1)
         n_channels += 1
 
@@ -146,10 +146,10 @@ def reshape_fields(img,
     if train and (crop_size_x or crop_size_y):
         img = img[:, :, rnd_x:rnd_x + crop_size_x, rnd_y:rnd_y + crop_size_y]
 
-    if inp_or_tar == 'inp':
+    if inp_or_tar == "inp":
         img = np.reshape(img, (n_channels * (n_history + 1), crop_size_x,
                                crop_size_y))
-    elif inp_or_tar == 'tar':
+    elif inp_or_tar == "tar":
         if params.two_step_training:
             img = np.reshape(img, (n_channels * 2, crop_size_x, crop_size_y))
         else:
@@ -188,14 +188,14 @@ def reshape_precip(img,
         eps = params.precip_eps
         img = np.log1p(img / eps)
     if params.add_grid:
-        if inp_or_tar == 'inp':
-            if params.gridtype == 'linear':
+        if inp_or_tar == "inp":
+            if params.gridtype == "linear":
                 assert params.N_grid_channels == 2, "N_grid_channels must be set to 2 for gridtype linear"
                 x = np.meshgrid(np.linspace(-1, 1, img_shape_x))
                 y = np.meshgrid(np.linspace(-1, 1, img_shape_y))
                 grid_x, grid_y = np.meshgrid(y, x)
                 grid = np.stack((grid_x, grid_y), axis=0)
-            elif params.gridtype == 'sinusoidal':
+            elif params.gridtype == "sinusoidal":
                 assert params.N_grid_channels == 4, "N_grid_channels must be set to 4 for gridtype sinusoidal"
                 x1 = np.meshgrid(
                     np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))

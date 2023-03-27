@@ -98,7 +98,7 @@ class Trainer(object):
         self.valid_data_loader, self.valid_dataset = get_data_loader(
             params, params.valid_data_path, self.distributed, train=False)
         self.loss_obj = LpLoss()
-        logger.info('rank {}, data loader initialized'.format(world_rank))
+        logger.info("rank {}, data loader initialized".format(world_rank))
 
         params.crop_size_x = self.valid_dataset.crop_size_x
         params.crop_size_y = self.valid_dataset.crop_size_y
@@ -109,17 +109,18 @@ class Trainer(object):
         self.precip = True if "precip" in params else False
 
         if self.precip:
-            if 'model_wind_path' not in params:
+            if "model_wind_path" not in params:
                 raise Exception("no backbone model weights specified")
             # load a wind model 
             # the wind model has out channels = in channels
-            out_channels = np.array(params['in_channels'])
-            params['N_out_channels'] = len(out_channels)
+            out_channels = np.array(params["in_channels"])
+            params["N_out_channels"] = len(out_channels)
 
-            if params.nettype_wind == 'afno':
+            if params.nettype_wind == "afno":
                 self.model_wind = AFNONet(params)
             else:
-                raise Exception("not implemented")
+                raise ValueError(
+                    f"params.nettype({params.nettype}) is not implemented")
 
             if dist.is_initialized():
                 self.model_wind = paddle.DataParallel(self.model_wind)
@@ -129,12 +130,13 @@ class Trainer(object):
 
         # reset out_channels for precip models
         if self.precip:
-            params['N_out_channels'] = len(params['out_channels'])
+            params["N_out_channels"] = len(params["out_channels"])
 
-        if params.nettype == 'afno':
+        if params.nettype == "afno":
             self.model = AFNONet(params)
         else:
-            raise Exception("not implemented")
+            raise ValueError(
+                f"params.nettype({params.nettype}) is not implemented")
 
         # precip model
         if self.precip:
@@ -142,10 +144,10 @@ class Trainer(object):
 
         self.iters = 0
         self.startEpoch = 0
-        if params.scheduler == 'ReduceLROnPlateau':
+        if params.scheduler == "ReduceLROnPlateau":
             self.scheduler = paddle.optimizer.lr.ReduceOnPlateau(
-                learning_rate=params.lr, factor=0.2, patience=5, mode='min')
-        elif params.scheduler == 'CosineAnnealingLR':
+                learning_rate=params.lr, factor=0.2, patience=5, mode="min")
+        elif params.scheduler == "CosineAnnealingLR":
             self.scheduler = paddle.optimizer.lr.CosineAnnealingDecay(
                 learning_rate=params.lr,
                 T_max=params.max_epochs,
@@ -200,9 +202,9 @@ class Trainer(object):
             if run_val:
                 valid_time, valid_logs = self.validate_one_epoch()
 
-            if self.params.scheduler == 'ReduceLROnPlateau':
-                self.scheduler.step(valid_logs['valid_loss'])
-            elif self.params.scheduler == 'CosineAnnealingLR':
+            if self.params.scheduler == "ReduceLROnPlateau":
+                self.scheduler.step(valid_logs["valid_loss"])
+            elif self.params.scheduler == "CosineAnnealingLR":
                 self.scheduler.step()
 
             if self.world_rank == 0:
@@ -212,20 +214,20 @@ class Trainer(object):
                     if epoch >= self.params.max_epochs - 10:
                         # save last 10 epochs
                         self.save_checkpoint(self.params.checkpoint_path[:-4] +
-                                             str(epoch) + '.tar')
-                    if run_val and valid_logs['valid_loss'] <= best_valid_loss:
-                        #logger.info('Val loss improved from {} to {}'.format(best_valid_loss, valid_logs['valid_loss']))
+                                             str(epoch) + ".tar")
+                    if run_val and valid_logs["valid_loss"] <= best_valid_loss:
+                        #logger.info("Val loss improved from {} to {}".format(best_valid_loss, valid_logs["valid_loss"]))
                         self.save_checkpoint(self.params.best_checkpoint_path)
-                        best_valid_loss = valid_logs['valid_loss']
+                        best_valid_loss = valid_logs["valid_loss"]
 
     def train_one_epoch(self):
         """" Run one epoch. Trains model on training set. """
         self.epoch += 1
-        logger.info('Starting training epoch {}'.format(self.epoch))
+        logger.info("Starting training epoch {}".format(self.epoch))
         tr_start = time.time()
         data_time = 0
         self.model.train()
-        logger.info('total iters:{}'.format(len(self.train_data_loader)))
+        logger.info("total iters:{}".format(len(self.train_data_loader)))
         cur_data_start = time.time()
 
         for i, data in enumerate(self.train_data_loader, 0):
@@ -235,7 +237,7 @@ class Trainer(object):
             inp, tar = data
             if self.params.orography and self.params.two_step_training:
                 orog = inp[:, -2:-1]
-            if 'residual_field' in self.params.target:
+            if "residual_field" in self.params.target:
                 tar -= inp[:, 0:tar.size()[1]]
             data_time += time.time() - data_start
             cur_model_start = time.time()
@@ -282,7 +284,7 @@ class Trainer(object):
                                          i >= len(self.train_data_loader) - 1):
                 if self.params.two_step_training:
                     logger.info(
-                        'Train epoch: [{}/{}], iter: [{}/{}], lr: {:.8f}, data_time: {:.5f}, model_time: {:.5f}, back_time: {:.5f}, loss: {:.5f}, loss_step_one: {:.5f}, loss_step_two: {:.5f}'.
+                        "Train epoch: [{}/{}], iter: [{}/{}], lr: {:.8f}, data_time: {:.5f}, model_time: {:.5f}, back_time: {:.5f}, loss: {:.5f}, loss_step_one: {:.5f}, loss_step_two: {:.5f}".
                         format(self.epoch, self.params.max_epochs, i,
                                len(self.train_data_loader),
                                self.optimizer.get_lr(), cur_data_time,
@@ -291,7 +293,7 @@ class Trainer(object):
                                loss_step_one.item(), loss_step_two.item()))
                 else:
                     logger.info(
-                        'Train epoch: [{}/{}], iter: [{}/{}], lr: {:.8f}, data_time: {:.5f}, model_time: {:.5f}, back_time: {:.5f}, loss: {:.5f}'.
+                        "Train epoch: [{}/{}], iter: [{}/{}], lr: {:.8f}, data_time: {:.5f}, model_time: {:.5f}, back_time: {:.5f}, loss: {:.5f}".
                         format(self.epoch, self.params.max_epochs, i,
                                len(self.train_data_loader),
                                self.optimizer.get_lr(), cur_data_time,
@@ -308,17 +310,17 @@ class Trainer(object):
                         lr=self.optimizer.get_lr(),
                         loss=loss.item(), )
                 self.log_writer.log_metrics(
-                    metrics=log_data, prefix='TRAIN', step=self.iters)
+                    metrics=log_data, prefix="TRAIN", step=self.iters)
             cur_data_start = time.time()
 
         if self.params.two_step_training:
             logs = {
-                'loss': loss,
-                'loss_step_one': loss_step_one,
-                'loss_step_two': loss_step_two
+                "loss": loss,
+                "loss_step_one": loss_step_one,
+                "loss_step_two": loss_step_two
             }
         else:
-            logs = {'loss': loss}
+            logs = {"loss": loss}
 
         if dist.is_initialized():
             for key in sorted(logs.keys()):
@@ -327,26 +329,26 @@ class Trainer(object):
             if dist.get_rank() == 0:
                 if self.params.two_step_training:
                     log_data = dict(
-                        loss_total=logs['loss'],
-                        loss_step_one_total=logs['loss_step_one'],
-                        loss_step_two_total=logs['loss_step_two'])
+                        loss_total=logs["loss"],
+                        loss_step_one_total=logs["loss_step_one"],
+                        loss_step_two_total=logs["loss_step_two"])
                 else:
-                    log_data = dict(loss_total=logs['loss'], )
+                    log_data = dict(loss_total=logs["loss"], )
                 self.log_writer.log_metrics(
-                    metrics=log_data, prefix='TRAIN', step=self.iters)
+                    metrics=log_data, prefix="TRAIN", step=self.iters)
         tr_time = time.time() - tr_start
-        logger.info('Epoch {} training finished!, Time: {} sec'.format(
+        logger.info("Epoch {} training finished!, Time: {} sec".format(
             self.epoch, tr_time))
         return tr_time, data_time, logs
 
     def validate_one_epoch(self):
         """" Validate the model on one epoch. """
-        logger.info('Starting eval epoch {}'.format(self.epoch))
+        logger.info("Starting eval epoch {}".format(self.epoch))
         self.model.eval()
 
-        if self.params.normalization == 'minmax':
+        if self.params.normalization == "minmax":
             raise Exception("minmax normalization not supported")
-        elif self.params.normalization == 'zscore':
+        elif self.params.normalization == "zscore":
             mult = paddle.to_tensor(
                 np.load(self.params.global_stds_path)[
                     0, self.params.out_channels, 0, 0])
@@ -401,14 +403,14 @@ class Trainer(object):
                 if dist.get_rank() == 0 and i % 10 == 0:
                     if self.params.two_step_training:
                         logger.info(
-                            'Eval epoch: [{}/{}], iter: [{}/{}], loss:{:.5f}, loss_step_one:{:.5f}, loss_step_two:{:.5f}'.
+                            "Eval epoch: [{}/{}], iter: [{}/{}], loss:{:.5f}, loss_step_one:{:.5f}, loss_step_two:{:.5f}".
                             format(self.epoch, self.params.max_epochs, i,
                                    len(self.valid_data_loader),
                                    loss.item(),
                                    loss_step_one.item(), loss_step_two.item()))
                     else:
                         logger.info(
-                            'Eval epoch: [{}/{}], iter: [{}/{}], loss:{:.5f}'.
+                            "Eval epoch: [{}/{}], iter: [{}/{}], loss:{:.5f}".
                             format(self.epoch, self.params.max_epochs, i,
                                    len(self.valid_data_loader), loss.item()))
 
@@ -418,7 +420,7 @@ class Trainer(object):
 
                 #direct prediction weighted rmse
                 if self.params.two_step_training:
-                    if 'residual_field' in self.params.target:
+                    if "residual_field" in self.params.target:
                         valid_weighted_rmse += weighted_rmse_paddle(
                             (gen_step_one + inp),
                             (tar[:, 0:self.params.N_out_channels] + inp))
@@ -426,7 +428,7 @@ class Trainer(object):
                         valid_weighted_rmse += weighted_rmse_paddle(
                             gen_step_one, tar[:, 0:self.params.N_out_channels])
                 else:
-                    if 'residual_field' in self.params.target:
+                    if "residual_field" in self.params.target:
                         valid_weighted_rmse += weighted_rmse_paddle(
                             (gen + inp), (tar + inp))
                     else:
@@ -452,57 +454,57 @@ class Trainer(object):
         valid_weighted_rmse = mult * paddle.mean(valid_weighted_rmse, axis=0)
         if self.precip:
             logs = {
-                'valid_l1': valid_buff_cpu[1],
-                'valid_loss': valid_buff_cpu[0],
-                'valid_rmse_tp': valid_weighted_rmse_cpu[0]
+                "valid_l1": valid_buff_cpu[1],
+                "valid_loss": valid_buff_cpu[0],
+                "valid_rmse_tp": valid_weighted_rmse_cpu[0]
             }
         else:
             try:
                 logs = {
-                    'valid_l1': valid_buff_cpu[1],
-                    'valid_loss': valid_buff_cpu[0],
-                    'valid_rmse_u10': valid_weighted_rmse_cpu[0],
-                    'valid_rmse_v10': valid_weighted_rmse_cpu[1]
+                    "valid_l1": valid_buff_cpu[1],
+                    "valid_loss": valid_buff_cpu[0],
+                    "valid_rmse_u10": valid_weighted_rmse_cpu[0],
+                    "valid_rmse_v10": valid_weighted_rmse_cpu[1]
                 }
             except:
                 logs = {
-                    'valid_l1': valid_buff_cpu[1],
-                    'valid_loss': valid_buff_cpu[0],
-                    'valid_rmse_u10': valid_weighted_rmse_cpu[0]
-                }  #, 'valid_rmse_v10': valid_weighted_rmse[1]}
+                    "valid_l1": valid_buff_cpu[1],
+                    "valid_loss": valid_buff_cpu[0],
+                    "valid_rmse_u10": valid_weighted_rmse_cpu[0]
+                }  #, "valid_rmse_v10": valid_weighted_rmse[1]}
 
         if self.precip:
             logger.info(
-                'Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {}, avg rmse tp: {:.5f}'.
-                format(self.epoch, self.params.max_epochs, logs['valid_loss'],
-                       logs['valid_l1'], logs['valid_rmse_tp']))
+                "Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {}, avg rmse tp: {:.5f}".
+                format(self.epoch, self.params.max_epochs, logs["valid_loss"],
+                       logs["valid_l1"], logs["valid_rmse_tp"]))
         else:
             try:
                 logger.info(
-                    'Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {:.5f}, avg rmse u10: {:.5f}, avg rmse v10: {:.5f}'.
+                    "Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {:.5f}, avg rmse u10: {:.5f}, avg rmse v10: {:.5f}".
                     format(self.epoch, self.params.max_epochs, logs[
-                        'valid_loss'], logs['valid_l1'], logs[
-                            'valid_rmse_u10'], logs['valid_rmse_v10']))
+                        "valid_loss"], logs["valid_l1"], logs[
+                            "valid_rmse_u10"], logs["valid_rmse_v10"]))
             except:
                 logger.info(
-                    'Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {}, avg rmse u10: {:.5f}'.
+                    "Eval epoch: [{}/{}], avg loss: {:.5f}, avg l1: {}, avg rmse u10: {:.5f}".
                     format(self.epoch, self.params.max_epochs, logs[
-                        'valid_loss'], logs['valid_l1'], logs[
-                            'valid_rmse_u10']))
-        logger.info('Epoch {} validation finished!, Time: {} sec'.format(
+                        "valid_loss"], logs["valid_l1"], logs[
+                            "valid_rmse_u10"]))
+        logger.info("Epoch {} validation finished!, Time: {} sec".format(
             self.epoch, valid_time))
         return valid_time, logs
 
     def load_model_wind(self, model_path):
         if self.params.log_to_screen:
-            logger.info('Loading the wind model weights from {}'.format(
+            logger.info("Loading the wind model weights from {}".format(
                 model_path))
         checkpoint = paddle.load(model_path)
         if dist.is_initialized():
-            self.model_wind.set_state_dict(checkpoint['model_state'])
+            self.model_wind.set_state_dict(checkpoint["model_state"])
         else:
             new_model_state = OrderedDict()
-            model_key = 'model_state' if 'model_state' in checkpoint else 'state_dict'
+            model_key = "model_state" if "model_state" in checkpoint else "state_dict"
             for key in checkpoint[model_key].keys():
                 new_model_state[key] = checkpoint[model_key][key]
             self.model_wind.set_state_dict(new_model_state)
@@ -516,93 +518,93 @@ class Trainer(object):
             model = self.model
 
         paddle.save({
-            'iters': self.iters,
-            'epoch': self.epoch,
-            'model_state': model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
+            "iters": self.iters,
+            "epoch": self.epoch,
+            "model_state": model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict()
         }, checkpoint_path)
 
     def restore_checkpoint(self, checkpoint_path):
         """ We intentionally require a checkpoint_dir to be passed
         in order to allow Ray Tune to use this function """
-        logger.info('restore checkpoint from {}'.format(checkpoint_path))
+        logger.info("restore checkpoint from {}".format(checkpoint_path))
         checkpoint = paddle.load(checkpoint_path)
-        self.model.set_state_dict(checkpoint['model_state'])
-        logger.info('restore fininshed!!!')
+        self.model.set_state_dict(checkpoint["model_state"])
+        logger.info("restore fininshed!!!")
 
-        self.iters = checkpoint['iters']
-        self.startEpoch = checkpoint['epoch']
+        self.iters = checkpoint["iters"]
+        self.startEpoch = checkpoint["epoch"]
         if self.params.resuming:  #restore checkpoint is used for finetuning as well as resuming. If finetuning (i.e., not resuming), restore checkpoint does not load optimizer state, instead uses config specified lr.
-            self.optimizer.set_state_dict(checkpoint['optimizer_state_dict'])
+            self.optimizer.set_state_dict(checkpoint["optimizer_state_dict"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dist.init_parallel_env()
     world_size = dist.get_world_size()
     world_rank = dist.get_rank()
     set_seed()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run_num", default='00', type=str)
-    parser.add_argument("--yaml_config", default='config/AFNO.yaml', type=str)
-    parser.add_argument("--config", default='default', type=str)
-    parser.add_argument("--enable_amp", default=False, action='store_true')
+    parser.add_argument("--run_num", default="00", type=str)
+    parser.add_argument("--yaml_config", default="config/AFNO.yaml", type=str)
+    parser.add_argument("--config", default="default", type=str)
+    parser.add_argument("--enable_amp", default=False, action="store_true")
     parser.add_argument("--epsilon_factor", default=0, type=float)
 
     args = parser.parse_args()
 
     params = YParams(os.path.abspath(args.yaml_config), args.config)
-    params['epsilon_factor'] = args.epsilon_factor
-    params['world_size'] = world_size
+    params["epsilon_factor"] = args.epsilon_factor
+    params["world_size"] = world_size
     # set device
-    device = 'gpu:{}'.format(dist.ParallelEnv().dev_id)
+    device = "gpu:{}".format(dist.ParallelEnv().dev_id)
     device = paddle.set_device(device)
 
-    params['global_batch_size'] = params.batch_size * params['world_size']
-    params['batch_size'] = int(params.batch_size)
+    params["global_batch_size"] = params.batch_size * params["world_size"]
+    params["batch_size"] = int(params.batch_size)
 
     # Set up directory
-    expDir = os.path.join(params.exp_dir, args.config + '_paddle',
+    expDir = os.path.join(params.exp_dir, args.config + "_paddle",
                           str(args.run_num))
 
     logger = get_logger(
-        name='FourCastNet', log_file=os.path.join(expDir, 'out.log'))
-    log_writer = VDLLogger(save_dir=os.path.join(expDir, 'vdl/'))
+        name="FourCastNet", log_file=os.path.join(expDir, "out.log"))
+    log_writer = VDLLogger(save_dir=os.path.join(expDir, "vdl/"))
 
     if dist.get_rank() == 0:
         if not os.path.isdir(expDir):
             os.makedirs(expDir)
-            os.makedirs(os.path.join(expDir, 'training_checkpoints/'))
+            os.makedirs(os.path.join(expDir, "training_checkpoints/"))
 
-    params['experiment_dir'] = os.path.abspath(expDir)
-    params['checkpoint_path'] = os.path.join(expDir,
-                                             'training_checkpoints/ckpt.tar')
-    params['best_checkpoint_path'] = os.path.join(
-        expDir, 'training_checkpoints/best_ckpt.tar')
+    params["experiment_dir"] = os.path.abspath(expDir)
+    params["checkpoint_path"] = os.path.join(expDir,
+                                             "training_checkpoints/ckpt.tar")
+    params["best_checkpoint_path"] = os.path.join(
+        expDir, "training_checkpoints/best_ckpt.tar")
 
     # Do not comment this line out please:
     args.resuming = True if os.path.isfile(params.checkpoint_path) else False
 
-    params['resuming'] = args.resuming
-    params['enable_amp'] = args.enable_amp
+    params["resuming"] = args.resuming
+    params["enable_amp"] = args.enable_amp
 
-    params['log_to_screen'] = (world_rank == 0) and params['log_to_screen']
+    params["log_to_screen"] = (world_rank == 0) and params["log_to_screen"]
 
-    params['in_channels'] = np.array(params['in_channels'])
-    params['out_channels'] = np.array(params['out_channels'])
+    params["in_channels"] = np.array(params["in_channels"])
+    params["out_channels"] = np.array(params["out_channels"])
     if params.orography:
-        params['N_in_channels'] = len(params['in_channels']) + 1
+        params["N_in_channels"] = len(params["in_channels"]) + 1
     else:
-        params['N_in_channels'] = len(params['in_channels'])
+        params["N_in_channels"] = len(params["in_channels"])
 
-    params['N_out_channels'] = len(params['out_channels'])
+    params["N_out_channels"] = len(params["out_channels"])
 
     if dist.get_rank() == 0:
         hparams = ruamelDict()
         yaml = YAML()
         for key, value in params.params.items():
             hparams[str(key)] = str(value)
-        with open(os.path.join(expDir, 'hyperparams.yaml'), 'w') as hpfile:
+        with open(os.path.join(expDir, "hyperparams.yaml"), "w") as hpfile:
             yaml.dump(hparams, hpfile)
 
     print_dict(params.params, logger)
@@ -610,4 +612,4 @@ if __name__ == '__main__':
     trainer = Trainer(params, world_rank, world_size, logger, log_writer)
     trainer.train()
     log_writer.close()
-    logger.info('DONE ---- rank %d' % world_rank)
+    logger.info("DONE ---- rank %d" % world_rank)

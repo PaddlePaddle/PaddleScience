@@ -65,7 +65,7 @@ def _trunc_normal_(tensor, mean, std, a, b):
     tensor = paddle.multiply(tensor, paddle.to_tensor(std * math.sqrt(2.)))
     tensor = paddle.add(tensor, paddle.to_tensor(mean))
 
-    # Clamp to ensure it's in the proper range
+    # Clamp to ensure it"s in the proper range
     tensor = paddle.clip(tensor, min=a, max=b)
     return tensor
 
@@ -161,26 +161,26 @@ class AFNO2D(nn.Layer):
         kept_modes = int(total_modes * self.hard_thresholding_fraction)
 
         o1_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes] = F.relu(
-            paddle.einsum('xyzbi,bio->xyzbo', x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].real(), self.w1[0]) - \
-            paddle.einsum('xyzbi,bio->xyzbo', x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].imag(), self.w1[1]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].real(), self.w1[0]) - \
+            paddle.einsum("xyzbi,bio->xyzbo", x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].imag(), self.w1[1]) + \
             self.b1[0]
         )
 
         o1_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes] = F.relu(
-            paddle.einsum('xyzbi,bio->xyzbo', x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].imag(), self.w1[0]) + \
-            paddle.einsum('xyzbi,bio->xyzbo', x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].real(), self.w1[1]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].imag(), self.w1[0]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", x[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes].real(), self.w1[1]) + \
             self.b1[1]
         )
 
         o2_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes]  = (
-            paddle.einsum('xyzbi,bio->xyzbo', o1_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[0]) - \
-            paddle.einsum('xyzbi,bio->xyzbo', o1_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[1]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", o1_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[0]) - \
+            paddle.einsum("xyzbi,bio->xyzbo", o1_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[1]) + \
             self.b2[0]
         )
 
         o2_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes]  = (
-            paddle.einsum('xyzbi,bio->xyzbo', o1_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[0]) + \
-            paddle.einsum('xyzbi,bio->xyzbo', o1_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[1]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", o1_imag[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[0]) + \
+            paddle.einsum("xyzbi,bio->xyzbo", o1_real[:, total_modes-kept_modes:total_modes+kept_modes, :kept_modes], self.w2[1]) + \
             self.b2[1]
         )
 
@@ -365,7 +365,7 @@ class AFNONet(nn.Layer):
                 uniform(m.bias)
 
     def no_weight_decay(self):
-        return {'pos_embed', 'cls_token'}
+        return {"pos_embed", "cls_token"}
 
     def forward_features(self, x):
         B = x.shape[0]
@@ -447,7 +447,7 @@ class DropPath(nn.Layer):
         return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
     def extra_repr(self):
-        return f'drop_prob={round(self.drop_prob,3):0.3f}'
+        return f"drop_prob={round(self.drop_prob,3):0.3f}"
 
 
 if __name__ == "__main__":

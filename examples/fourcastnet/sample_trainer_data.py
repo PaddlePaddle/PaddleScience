@@ -41,13 +41,13 @@ class GetDataset(Dataset):
         self.files_paths = glob.glob(self.location + "/*.h5")
         self.files_paths.sort()
         self.n_years = len(self.files_paths)
-        with h5py.File(self.files_paths[0], 'r') as _f:
+        with h5py.File(self.files_paths[0], "r") as _f:
             print("Getting file stats from {}".format(self.files_paths[0]))
-            self.n_samples_per_year = _f['fields'].shape[0]
+            self.n_samples_per_year = _f["fields"].shape[0]
             #original image shape (before padding)
-            self.img_shape_x = _f['fields'].shape[
+            self.img_shape_x = _f["fields"].shape[
                 2] - 1  #just get rid of one of the pixels
-            self.img_shape_y = _f['fields'].shape[3]
+            self.img_shape_y = _f["fields"].shape[3]
 
         self.n_samples_total = self.n_years * self.n_samples_per_year
         self.files = [None for _ in range(self.n_years)]
@@ -59,11 +59,11 @@ class GetDataset(Dataset):
             format(6 * self.dt * self.n_history, 6 * self.dt))
 
     def _open_file(self, year_idx):
-        _file = h5py.File(self.files_paths[year_idx], 'r')
-        self.files[year_idx] = _file['fields']
+        _file = h5py.File(self.files_paths[year_idx], "r")
+        self.files[year_idx] = _file["fields"]
         if self.precip:
             self.precip_files[year_idx] = h5py.File(
-                self.precip_paths[year_idx], 'r')['tp']
+                self.precip_paths[year_idx], "r")["tp"]
 
     def __len__(self):
         return self.n_samples_total
@@ -154,39 +154,39 @@ def fun(train_data_path, save_path, batch_idxs, precip_data_path):
         for i in range(100):
             total, used, free = shutil.disk_usage("/")
             if free // 2**30 < 500:
-                print('No space left!!!, sleep 60s')
+                print("No space left!!!, sleep 60s")
                 time.sleep(60)
             else:
                 break
         if free // 2**30 < 500:
-            print('Error, No space left!!!')
+            print("Error, No space left!!!")
             break
-        fdest = h5py.File('{}/{:0>8d}.h5'.format(save_path, idx), 'a')
-        fdest['fields'] = data
+        fdest = h5py.File("{}/{:0>8d}.h5".format(save_path, idx), "a")
+        fdest["fields"] = data
 
 
 def sample_data_epoch(epoch):
 
     processes = 64
-    train_data_path = '../afs_era5/train'
-    precip_data_path = '../afs_era5/precip/train'
-    save_path = '../era5_split_train/epoch_tmp'
-    dst_path = '../era5_split_train/epoch_{}'.format(epoch)
+    train_data_path = "../afs_era5/train"
+    precip_data_path = "../afs_era5/precip/train"
+    save_path = "../era5_split_train/epoch_tmp"
+    dst_path = "../era5_split_train/epoch_{}".format(epoch)
     if os.path.exists(save_path):
-        print('save_path is arrelady exists! remove it')
+        print("save_path is arrelady exists! remove it")
         shutil.rmtree(save_path)
     if os.path.exists(dst_path):
-        print('dst_path is arrelady exists! remove it')
+        print("dst_path is arrelady exists! remove it")
         shutil.rmtree(dst_path)
     total, used, free = shutil.disk_usage("/")
     while free // 2**30 < 1500:
-        print('No space left!!!, sleep 60s')
+        print("No space left!!!, sleep 60s")
         time.sleep(60)
         total, used, free = shutil.disk_usage("/")
 
     os.makedirs(save_path)
-    num_trainer = int(os.getenv('TRAINERS'))
-    rank = int(os.getenv('PADDLE_TRAINER_ID'))
+    num_trainer = int(os.getenv("TRAINERS"))
+    rank = int(os.getenv("PADDLE_TRAINER_ID"))
     print(num_trainer, rank)
 
     dataset = GetDataset(train_data_path)
@@ -209,11 +209,11 @@ def sample_data_epoch(epoch):
     pool.close()
     pool.join()
     if result.successful():
-        print('successful')
-        print('rename {} to {}!!!'.format(save_path, dst_path))
+        print("successful")
+        print("rename {} to {}!!!".format(save_path, dst_path))
         shutil.move(save_path, dst_path)
     else:
-        print('error')
+        print("error")
 
 
 def main():
@@ -222,5 +222,5 @@ def main():
     sample_data_epoch(epoch)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

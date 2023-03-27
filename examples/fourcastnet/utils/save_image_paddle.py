@@ -33,7 +33,7 @@ def make_grid(tensor: Union[paddle.Tensor, List[paddle.Tensor]],
             (isinstance(tensor, list) and all(
                 isinstance(t, paddle.Tensor) for t in tensor))):
         raise TypeError(
-            f'tensor or list of tensors expected, got {type(tensor)}')
+            f"tensor or list of tensors expected, got {type(tensor)}")
 
     if "range" in kwargs.keys():
         warning = "range will be deprecated, please use value_range instead."

@@ -50,7 +50,7 @@ import glob
 import numpy as np
 from collections import defaultdict
 import argparse
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 import h5py
 
 import paddle
@@ -82,27 +82,28 @@ def setup(params):
     params.img_shape_x = img_shape_x
     params.img_shape_y = img_shape_y
 
-    logger.info('Loading trained model checkpoint from {}'.format(params[
-        'best_checkpoint_path']))
+    logger.info("Loading trained model checkpoint from {}".format(params[
+        "best_checkpoint_path"]))
 
     in_channels = np.array(params.in_channels)
     out_channels = np.array(params.out_channels)
     n_in_channels = len(in_channels)
     n_out_channels = len(out_channels)
 
-    params['N_in_channels'] = n_in_channels
-    params['N_out_channels'] = n_out_channels
+    params["N_in_channels"] = n_in_channels
+    params["N_out_channels"] = n_out_channels
     params.means = np.load(params.global_means_path)[
         0, out_channels]  # needed to standardize wind data
     params.stds = np.load(params.global_stds_path)[0, out_channels]
 
     # load the model
-    if params.nettype == 'afno':
+    if params.nettype == "afno":
         model = AFNONet(params)
     else:
-        raise Exception("not implemented")
+        raise ValueError(
+            f"params.nettype({params.nettype}) is not implemented")
 
-    checkpoint_file = params['best_checkpoint_path']
+    checkpoint_file = params["best_checkpoint_path"]
     model = load_model(model, checkpoint_file)
 
     # load the validation data
@@ -110,7 +111,7 @@ def setup(params):
     files_paths.sort()
     # which year
     yr = 0
-    valid_data_full = h5py.File(files_paths[yr], 'r')['fields']
+    valid_data_full = h5py.File(files_paths[yr], "r")["fields"]
 
     return valid_data_full, model
 
@@ -166,8 +167,8 @@ def autoregressive_inference(params, ic, valid_data_full, model):
     else:
         # use daily clim like weyn et al. (different from rasp)
         dc_path = params.dc_path
-        with h5py.File(dc_path, 'r') as f:
-            dc = f['time_means_daily'][ic:ic + prediction_length * dt:
+        with h5py.File(dc_path, "r") as f:
+            dc = f["time_means_daily"][ic:ic + prediction_length * dt:
                                        dt]  # 1460,21,721,1440
         m = paddle.to_tensor(
             (dc[:, out_channels, 0:img_shape_x, :] - means) / stds,
@@ -179,7 +180,7 @@ def autoregressive_inference(params, ic, valid_data_full, model):
     std = paddle.to_tensor(stds[:, 0, 0], dtype=paddle.float32)
 
     #autoregressive inference
-    logger.info('Begin autoregressive inference')
+    logger.info("Begin autoregressive inference")
 
     with paddle.no_grad():
         for i in range(valid_data.shape[0]):
@@ -241,12 +242,12 @@ def autoregressive_inference(params, ic, valid_data_full, model):
             if params.log_to_screen:
                 idx = idxes[fld]
                 logger.info(
-                    'Predicted timestep {} of {}. {} RMS Error: {}, ACC: {}'.
+                    "Predicted timestep {} of {}. {} RMS Error: {}, ACC: {}".
                     format(i, prediction_length, fld,
                            float(valid_loss[i, idx]), float(acc[i, idx])))
                 if params.interp > 0:
                     logger.info(
-                        '[COARSE] Predicted timestep {} of {}. {} RMS Error: {}, ACC: {}'.
+                        "[COARSE] Predicted timestep {} of {}. {} RMS Error: {}, ACC: {}".
                         format(i, prediction_length, fld,
                                float(valid_loss_coarse[i, idx]),
                                float(acc_coarse[i, idx])))
@@ -264,58 +265,58 @@ def autoregressive_inference(params, ic, valid_data_full, model):
         acc_sea=acc_sea.numpy())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--yaml_config", default='./config/AFNO.yaml', type=str)
-    parser.add_argument("--config", default='afno_backbone', type=str)
-    parser.add_argument("--use_daily_climatology", action='store_true')
-    parser.add_argument("--vis", action='store_true')
+        "--yaml_config", default="./config/AFNO.yaml", type=str)
+    parser.add_argument("--config", default="afno_backbone", type=str)
+    parser.add_argument("--use_daily_climatology", action="store_true")
+    parser.add_argument("--vis", action="store_true")
     parser.add_argument(
         "--output_dir",
-        default='output/inference_fourcastnet/',
+        default="output/inference_fourcastnet/",
         type=str,
-        help='Path to store inference outputs; must also set --weights arg')
+        help="Path to store inference outputs; must also set --weights arg")
     parser.add_argument("--interp", default=0, type=float)
     parser.add_argument(
         "--weights",
-        default='output/afno_backbone_finetune_paddle/00/training_checkpoints/best_ckpt.tar',
+        default="output/afno_backbone_finetune_paddle/00/training_checkpoints/best_ckpt.tar",
         type=str,
-        help='Path to model weights')
+        help="Path to model weights")
 
     args = parser.parse_args()
     params = YParams(os.path.abspath(args.yaml_config), args.config)
-    params['interp'] = args.interp
-    params['use_daily_climatology'] = args.use_daily_climatology
+    params["interp"] = args.interp
+    params["use_daily_climatology"] = args.use_daily_climatology
 
     vis = args.vis
     if vis:
-        params['ics_type'] = 'datetime'
-        params['prediction_length'] = 20
-        params['date_strings'] = ["2018-09-08 00:00:00"]
+        params["ics_type"] = "datetime"
+        params["prediction_length"] = 20
+        params["date_strings"] = ["2018-09-08 00:00:00"]
 
     # Set up directory
-    assert args.weights is not None, 'Must set --weights argument if using --output_dir'
+    assert args.weights is not None, "Must set --weights argument if using --output_dir"
     expDir = args.output_dir
     if not os.path.isdir(expDir):
         os.makedirs(expDir)
 
-    params['experiment_dir'] = os.path.abspath(expDir)
-    params['best_checkpoint_path'] = args.weights
+    params["experiment_dir"] = os.path.abspath(expDir)
+    params["best_checkpoint_path"] = args.weights
 
     log_writer = VDLLogger(save_dir=os.path.join(
-        os.path.abspath(expDir), 'vdl/'))
+        os.path.abspath(expDir), "vdl/"))
     logger = get_logger(
-        name='FourCastNet Inference',
-        log_file=os.path.join(os.path.abspath(expDir), 'inference_out.log'))
+        name="FourCastNet Inference",
+        log_file=os.path.join(os.path.abspath(expDir), "inference_out.log"))
 
-    n_ics = params['n_initial_conditions']
+    n_ics = params["n_initial_conditions"]
     if fld == "z500" or fld == "t850":
         n_samples_per_year = 1336
     else:
         n_samples_per_year = 1460
 
-    if params["ics_type"] == 'default':
+    if params["ics_type"] == "default":
         num_samples = n_samples_per_year - params.prediction_length
         stop = num_samples
         ics = np.arange(0, stop, DECORRELATION_TIME)
@@ -347,24 +348,24 @@ if __name__ == '__main__':
         logger.info("Initial condition {} of {}".format(i + 1, n_ics))
         res = autoregressive_inference(params, ic, valid_data_full, model)
         for key, value in res.items():
-            if key in ['seq_real', 'seq_pred']:
+            if key in ["seq_real", "seq_pred"]:
                 if i == 0:
                     results[key].append(value)
             else:
                 results[key].append(value)
 
     # average acc and rmse
-    rmse_avg = np.asarray(results['rmse']).mean(axis=0)
-    acc_avg = np.asarray(results['acc']).mean(axis=0)
-    if fld in ['u10', 'v10']:
-        for prefix in ['u10', 'v10']:
+    rmse_avg = np.asarray(results["rmse"]).mean(axis=0)
+    acc_avg = np.asarray(results["acc"]).mean(axis=0)
+    if fld in ["u10", "v10"]:
+        for prefix in ["u10", "v10"]:
             idx = idxes[prefix]
             for i in range(rmse_avg.shape[0]):
                 log_data = dict(
                     acc=float(acc_avg[i, idx]), rmse=float(rmse_avg[i, idx]))
                 log_writer.log_metrics(metrics=log_data, prefix=prefix, step=i)
     else:
-        for prefix in ['z500', '2m_temperature', 't850']:
+        for prefix in ["z500", "2m_temperature", "t850"]:
             idx = idxes[prefix]
             for i in range(rmse_avg.shape[0]):
                 log_data = dict(
@@ -373,22 +374,22 @@ if __name__ == '__main__':
     log_writer.close()
 
     #save predictions and loss
-    save_path = os.path.join(params['experiment_dir'],
-                             'autoregressive_predictions_' + fld + '.h5')
+    save_path = os.path.join(params["experiment_dir"],
+                             "autoregressive_predictions_" + fld + ".h5")
     if params.log_to_screen:
         logger.info("Saving files at {}".format(save_path))
-    with h5py.File(save_path, 'w') as f:
+    with h5py.File(save_path, "w") as f:
         for key, value in results.items():
             value = np.asarray(value)
-            if key == 'seq_real':
+            if key == "seq_real":
                 f.create_dataset(
-                    'ground_truth',
+                    "ground_truth",
                     data=value,
                     shape=value.shape,
                     dtype=np.float32)
-            elif key == 'seq_pred':
+            elif key == "seq_pred":
                 f.create_dataset(
-                    'predicted',
+                    "predicted",
                     data=value,
                     shape=value.shape,
                     dtype=np.float32)
@@ -398,5 +399,5 @@ if __name__ == '__main__':
 
     if vis:
         visu_wind(save_path,
-                  os.path.join(params['experiment_dir'], 'visu'), params.means,
+                  os.path.join(params["experiment_dir"], "visu"), params.means,
                   params.stds)

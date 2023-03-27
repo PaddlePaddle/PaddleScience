@@ -31,7 +31,7 @@ class YParams():
 
             for key, val in YAML().load(_file)[config_name].items():
                 if print_params: print(key, val)
-                if val == 'None': val = None
+                if val == "None": val = None
 
                 self.params[key] = val
                 self.__setattr__(key, val)
@@ -59,5 +59,5 @@ class YParams():
         logging.info("Configuration file: " + str(self._yaml_filename))
         logging.info("Configuration name: " + str(self._config_name))
         for key, val in self.params.items():
-            logging.info(str(key) + ' ' + str(val))
+            logging.info(str(key) + " " + str(val))
         logging.info("---------------------------------------------------")
