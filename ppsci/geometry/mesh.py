@@ -270,7 +270,7 @@ class Mesh(geometry.Geometry):
             while _size < n:
                 if evenly:
                     raise ValueError(
-                        f"Can't sample evenly on mesh now, please set evenly=False."
+                        "Can't sample evenly on mesh now, please set evenly=False."
                     )
                     # points, normal, area = self.uniform_boundary_points(n, False)
                 else:
@@ -290,7 +290,7 @@ class Mesh(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError(f"sample boundary failed")
+                    raise RuntimeError("sample boundary failed")
 
         normal_dict = misc.convert_to_dict(
             normal, [f"normal_{key}" for key in self.dim_keys if key != "t"]
@@ -348,7 +348,7 @@ class Mesh(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError(f"sample interior failed")
+                raise RuntimeError("sample interior failed")
 
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 
