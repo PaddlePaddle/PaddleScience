@@ -16,7 +16,6 @@ limitations under the License.
 import copy
 
 from ppsci.constraint.boundary_constraint import BoundaryConstraint
-from ppsci.constraint.boundary_constraint import SupervisedConstraint
 from ppsci.constraint.initial_constraint import InitialConstraint
 from ppsci.constraint.integral_constraint import IntegralConstraint
 from ppsci.constraint.interior_constraint import InteriorConstraint

@@ -53,9 +53,9 @@ class NavierStokes(base.PDE):
             momentum_x = (
                 u * jacobian(u, x)
                 + v * jacobian(u, y)
-                - nu / rho * hessian(u, x)
-                - nu / rho * hessian(u, y)
-                + 1 / rho * jacobian(p, x)
+                - self.nu / self.rho * hessian(u, x)
+                - self.nu / self.rho * hessian(u, y)
+                + 1 / self.rho * jacobian(p, x)
             )
             if self.time:
                 t = out["t"]
@@ -64,7 +64,7 @@ class NavierStokes(base.PDE):
                 z = out["z"]
                 w = out["w"]
                 momentum_x += w * jacobian(u, z)
-                momentum_x -= nu / rho * hessian(u, z)
+                momentum_x -= self.nu / self.rho * hessian(u, z)
             return momentum_x
 
         self.add_equation("momentum_x", momentum_x_compute_func)
@@ -75,9 +75,9 @@ class NavierStokes(base.PDE):
             momentum_y = (
                 u * jacobian(v, x)
                 + v * jacobian(v, y)
-                - nu / rho * hessian(v, x)
-                - nu / rho * hessian(v, y)
-                + 1 / rho * jacobian(p, y)
+                - self.nu / self.rho * hessian(v, x)
+                - self.nu / self.rho * hessian(v, y)
+                + 1 / self.rho * jacobian(p, y)
             )
             if self.time:
                 t = out["t"]
@@ -86,7 +86,7 @@ class NavierStokes(base.PDE):
                 z = out["z"]
                 w = out["w"]
                 momentum_y += w * jacobian(v, z)
-                momentum_y -= nu / rho * hessian(v, z)
+                momentum_y -= self.nu / self.rho * hessian(v, z)
             return momentum_y
 
         self.add_equation("momentum_y", momentum_y_compute_func)
@@ -99,9 +99,9 @@ class NavierStokes(base.PDE):
                 momentum_z = (
                     u * jacobian(w, x)
                     + v * jacobian(w, y)
-                    - nu / rho * hessian(w, x)
-                    - nu / rho * hessian(w, y)
-                    + 1 / rho * jacobian(p, z)
+                    - self.nu / self.rho * hessian(w, x)
+                    - self.nu / self.rho * hessian(w, y)
+                    + 1 / self.rho * jacobian(p, z)
                 )
                 if self.time:
                     t = out["t"]
@@ -110,7 +110,7 @@ class NavierStokes(base.PDE):
                     z = out["z"]
                     w = out["w"]
                     momentum_z += w * jacobian(w, z)
-                    momentum_z -= nu / rho * hessian(w, z)
+                    momentum_z -= self.nu / self.rho * hessian(w, z)
                 return momentum_z
 
             self.add_equation("momentum_z", momentum_z_compute_func)

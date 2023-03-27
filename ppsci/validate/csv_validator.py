@@ -81,7 +81,7 @@ class CSVValidator(base.Validator):
         self.input_keys = list(input.keys())
         self.output_keys = list(label.keys())
         self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-        self.num_timestamp = 1
+        self.num_timestamp = 1 if "t" not in input else len(np.unique(input["t"]))
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(

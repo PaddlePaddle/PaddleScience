@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from ppsci.utils import logger
+
 
 class InfiniteDataLoader(object):
     """A wrapper for infinite dataloader
@@ -21,11 +23,20 @@ class InfiniteDataLoader(object):
         dataloader (DataLoader): A finite dataloader to be wrapped.
     """
 
-    def __init__(self, dataloader):
+    def __init__(self, dataloader, cache=False):
         self.dataloader = dataloader
+        self.cache = cache
+        if self.cache:
+            logger.info("Dataloader cache enabled")
+        self.cache_data = None
 
     def __iter__(self):
         while True:
+            if self.cache and self.cache_data is not None:
+                yield self.cache_data
+                continue
             dataloader_iter = iter(self.dataloader)
             for batch in dataloader_iter:
                 yield batch
+                if self.cache and self.cache_data is None:
+                    self.cache_data = batch

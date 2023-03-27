@@ -68,12 +68,15 @@ class SupervisedConstraint(base.Constraint):
             if timestamps is not None:
                 if "t" in data:
                     raw_time_array = data["t"]
-                    mask = np.zeros((len(raw_time_array),), "bool")
+                    mask = []
                     for ti in timestamps:
-                        mask |= np.isclose(raw_time_array, ti).flatten()
+                        mask.append(
+                            np.nonzero(np.isclose(raw_time_array, ti).flatten())[0]
+                        )
                     data = misc.convert_to_array(
                         data, self.input_keys + self.output_keys
                     )
+                    mask = np.concatenate(mask, 0)
                     data = data[mask]
                     data = misc.convert_to_dict(
                         data, self.input_keys + self.output_keys

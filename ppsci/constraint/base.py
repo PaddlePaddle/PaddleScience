@@ -23,7 +23,13 @@ class Constraint:
 
     def __init__(self, dataset, dataloader_cfg, loss, name):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
-        self.data_loader = data.dataloader.InfiniteDataLoader(self.data_loader)
+        self.data_loader = data.dataloader.InfiniteDataLoader(
+            self.data_loader,
+            (
+                dataloader_cfg["iters_per_epoch"] == 1
+                and not dataloader_cfg["sampler"].get("shuffle", False)
+            ),
+        )
         self.data_iter = iter(self.data_loader)
         self.loss = loss
         self.name = name
