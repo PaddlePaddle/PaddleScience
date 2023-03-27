@@ -26,14 +26,14 @@ def load_data(inputs_labels_iter, var_type):
         _type_: _description_
     """
     inputs_labels = [None for _ in range(len(inputs_labels_iter))]
-    if var_type == 'dict':
+    if var_type == "dict":
         for i, input_iter in enumerate(inputs_labels_iter):
             inputs_labels[i] = next(input_iter)
     return inputs_labels
 
 
 def get_batch_iterator(bsize, num_samples, input_list):
-    """_summary_
+    """for each sort of input, create the corresponding iterator
 
     Args:
         bsize (int): _description_
@@ -45,16 +45,17 @@ def get_batch_iterator(bsize, num_samples, input_list):
     """
     dataset = EqDataSet(num_samples=num_samples, input_list=input_list)
     batch_sampler = paddle.io.BatchSampler(
-        dataset=dataset, shuffle=False, batch_size=bsize, drop_last=False)
+        dataset=dataset, shuffle=False, batch_size=bsize, drop_last=False
+    )
     loader = paddle.io.DataLoader(
-        dataset=dataset, batch_sampler=batch_sampler, num_workers=0)
+        dataset=dataset, batch_sampler=batch_sampler, num_workers=0
+    )
     loader = InfiniteDataLoader(loader)
     return iter(loader)
 
 
-class InfiniteDataLoader():
-    """_summary_
-    """
+class InfiniteDataLoader:
+    """_summary_"""
 
     def __init__(self, dataloader):
         self.dataloader = dataloader
@@ -66,8 +67,7 @@ class InfiniteDataLoader():
                 yield batch
 
     def method_one(self):
-        """_summary_
-        """
+        """_summary_"""
 
 
 class EqDataSet(paddle.io.Dataset):
