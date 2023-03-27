@@ -1,27 +1,28 @@
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import h5py
-import numpy as np
-from tqdm import tqdm
 import glob
 import os
-from multiprocessing import Pool
 import shutil
 import time
+from multiprocessing import Pool
 
-from paddle.io import Dataset, DistributedBatchSampler
+import h5py
+import numpy as np
+from paddle.io import Dataset
+from paddle.io import DistributedBatchSampler
+from tqdm import tqdm
 
 
 class GetDataset(Dataset):
@@ -44,9 +45,10 @@ class GetDataset(Dataset):
         with h5py.File(self.files_paths[0], "r") as _f:
             print("Getting file stats from {}".format(self.files_paths[0]))
             self.n_samples_per_year = _f["fields"].shape[0]
-            #original image shape (before padding)
-            self.img_shape_x = _f["fields"].shape[
-                2] - 1  #just get rid of one of the pixels
+            # original image shape (before padding)
+            self.img_shape_x = (
+                _f["fields"].shape[2] - 1
+            )  # just get rid of one of the pixels
             self.img_shape_y = _f["fields"].shape[3]
 
         self.n_samples_total = self.n_years * self.n_samples_per_year
@@ -55,41 +57,43 @@ class GetDataset(Dataset):
         print("Number of samples per year: {}".format(self.n_samples_per_year))
         print("Delta t: {} hours".format(6 * self.dt))
         print(
-            "Including {} hours of past history in training at a frequency of {} hours".
-            format(6 * self.dt * self.n_history, 6 * self.dt))
+            "Including {} hours of past history in training at a frequency of {} hours".format(
+                6 * self.dt * self.n_history, 6 * self.dt
+            )
+        )
 
     def _open_file(self, year_idx):
         _file = h5py.File(self.files_paths[year_idx], "r")
         self.files[year_idx] = _file["fields"]
         if self.precip:
-            self.precip_files[year_idx] = h5py.File(
-                self.precip_paths[year_idx], "r")["tp"]
+            self.precip_files[year_idx] = h5py.File(self.precip_paths[year_idx], "r")[
+                "tp"
+            ]
 
     def __len__(self):
         return self.n_samples_total
 
     def __getitem__(self, global_idx):
-        year_idx = int(global_idx /
-                       self.n_samples_per_year)  #which year we are on
+        year_idx = int(global_idx / self.n_samples_per_year)  # which year we are on
         local_idx = int(
             global_idx % self.n_samples_per_year
-        )  #which sample in that year we are on - determines indices for centering
+        )  # which sample in that year we are on - determines indices for centering
 
-        #open image file
+        # open image file
         if self.files[year_idx] is None:
             self._open_file(year_idx)
 
         if not self.precip:
-            #if we are not at least self.dt*n_history timesteps into the prediction
+            # if we are not at least self.dt*n_history timesteps into the prediction
             if local_idx < self.dt * self.n_history:
                 local_idx += self.dt * self.n_history
-            #if we are on the last image in a year predict identity, else predict next timestep
+            # if we are on the last image in a year predict identity, else predict next timestep
             step = 0 if local_idx >= self.n_samples_per_year - self.dt else self.dt
         else:
 
             inp_local_idx = local_idx
             tar_local_idx = local_idx
-            #if we are on the last image in a year predict identity, else predict next timestep
+            # if we are on the last image in a year predict identity, else predict next timestep
             step = 0 if tar_local_idx >= self.n_samples_per_year - self.dt else self.dt
             # first year has 2 missing samples in precip (they are first two time points)
             if year_idx == 0:
@@ -99,10 +103,10 @@ class GetDataset(Dataset):
                 tar_local_idx = local_idx
                 step = 0 if tar_local_idx >= lim - self.dt else self.dt
 
-        #if two_step_training flag is true then ensure that local_idx is not the last or last but one sample in a year
+        # if two_step_training flag is true then ensure that local_idx is not the last or last but one sample in a year
         if self.two_step_training:
             if local_idx >= self.n_samples_per_year - 2 * self.dt:
-                #set local_idx to last possible sample in a year that allows taking two steps forward
+                # set local_idx to last possible sample in a year that allows taking two steps forward
                 local_idx = self.n_samples_per_year - 3 * self.dt
 
         if self.precip:
@@ -120,19 +124,20 @@ class GetDataset(Dataset):
 
         else:
             if self.two_step_training:
-                inp = self.files[year_idx][(local_idx - self.dt * self.
-                                            n_history):(local_idx + 1):self.dt]
+                inp = self.files[year_idx][
+                    (local_idx - self.dt * self.n_history) : (local_idx + 1) : self.dt
+                ]
                 if len(np.shape(inp)) == 3:
                     inp = np.expand_dims(inp, 0)
 
-                tar = self.files[year_idx][local_idx + step:local_idx + step +
-                                           2]
+                tar = self.files[year_idx][local_idx + step : local_idx + step + 2]
                 if len(np.shape(tar)) == 3:
                     tar = np.expand_dims(tar, 0)
                 return np.concatenate([inp, tar], axis=0)
             else:
-                inp = self.files[year_idx][(local_idx - self.dt * self.
-                                            n_history):(local_idx + 1):self.dt]
+                inp = self.files[year_idx][
+                    (local_idx - self.dt * self.n_history) : (local_idx + 1) : self.dt
+                ]
                 if len(np.shape(inp)) == 3:
                     inp = np.expand_dims(inp, 0)
 
@@ -195,7 +200,8 @@ def sample_data_epoch(epoch):
         batch_size=1,
         shuffle=True,
         num_replicas=num_trainer,
-        rank=rank, )
+        rank=rank,
+    )
     batch_sampler.set_epoch(epoch)
     batch_idxs = []
     for data in tqdm(batch_sampler):
@@ -204,8 +210,9 @@ def sample_data_epoch(epoch):
     pool = Pool(processes=processes)  # set the processes max number 3
     for i in range(0, len(batch_idxs), len(batch_idxs) // (processes - 1)):
         end = i + len(batch_idxs) // (processes - 1)
-        result = pool.apply_async(fun, (train_data_path, save_path,
-                                        batch_idxs[i:end], precip_data_path))
+        result = pool.apply_async(
+            fun, (train_data_path, save_path, batch_idxs[i:end], precip_data_path)
+        )
     pool.close()
     pool.join()
     if result.successful():

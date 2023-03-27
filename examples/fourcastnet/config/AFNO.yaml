@@ -93,3 +93,4 @@ precip: &precip
   model_wind_path: "output/afno_backbone_finetune_paddle/00/training_checkpoints/best_ckpt.tar" # 
   precip_eps: !!float 1e-5
   prediction_length: 20 #applicable only if prediction_type == "iterative"
+

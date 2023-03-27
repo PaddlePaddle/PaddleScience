@@ -1,23 +1,24 @@
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ruamel.yaml import YAML
 import logging
 
+from ruamel.yaml import YAML
 
-class YParams():
-    """ Yaml file parser """
+
+class YParams:
+    """Yaml file parser"""
 
     def __init__(self, yaml_filename, config_name, print_params=False):
         self._yaml_filename = yaml_filename
@@ -30,8 +31,10 @@ class YParams():
         with open(yaml_filename) as _file:
 
             for key, val in YAML().load(_file)[config_name].items():
-                if print_params: print(key, val)
-                if val == "None": val = None
+                if print_params:
+                    print(key, val)
+                if val == "None":
+                    val = None
 
                 self.params[key] = val
                 self.__setattr__(key, val)
@@ -47,7 +50,7 @@ class YParams():
         self.__setattr__(key, val)
 
     def __contains__(self, key):
-        return (key in self.params)
+        return key in self.params
 
     def update_params(self, config):
         for key, val in config.items():

@@ -16,13 +16,14 @@ This code is refer from:
 https://github.com/WenmuZhou/PytorchOCR/blob/master/torchocr/utils/logging.py
 """
 
+import functools
+import logging
 import os
 import sys
-import logging
-import functools
-import paddle.distributed as dist
+from abc import ABC
+from abc import abstractmethod
 
-from abc import ABC, abstractmethod
+import paddle.distributed as dist
 from visualdl import LogWriter
 
 logger_initialized = {}
@@ -53,8 +54,8 @@ def get_logger(name="", log_file=None, log_level=logging.DEBUG):
             return logger
 
     formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
-        datefmt="%Y/%m/%d %H:%M:%S")
+        "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%Y/%m/%d %H:%M:%S"
+    )
 
     stream_handler = logging.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(formatter)

@@ -1,11 +1,11 @@
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,12 +13,13 @@
 # limitations under the License.
 
 from datetime import datetime
+
 import paddle
 
 
 def gaussian_perturb(x, level=0.01):
     noise = level * paddle.randn(x.shape)
-    return (x + noise)
+    return x + noise
 
 
 def load_model(model, checkpoint_file):
@@ -30,8 +31,7 @@ def load_model(model, checkpoint_file):
 
 
 def downsample(x, scale=0.125):
-    return paddle.nn.functional.interpolate(
-        x, scale_factor=scale, mode="bilinear")
+    return paddle.nn.functional.interpolate(x, scale_factor=scale, mode="bilinear")
 
 
 def date_to_hours(date):

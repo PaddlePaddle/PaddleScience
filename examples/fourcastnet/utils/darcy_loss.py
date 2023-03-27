@@ -23,12 +23,12 @@
 import paddle
 
 
-#loss function with rel/abs Lp loss
+# loss function with rel/abs Lp loss
 class LpLoss(object):
     def __init__(self, d=2, p=2, size_average=True, reduction=True):
         super(LpLoss, self).__init__()
 
-        #Dimension and Lp-norm type are postive
+        # Dimension and Lp-norm type are postive
         assert d > 0 and p > 0
 
         self.d = d
@@ -39,12 +39,12 @@ class LpLoss(object):
     def abs(self, x, y):
         num_examples = x.shape[0]
 
-        #Assume uniform mesh
+        # Assume uniform mesh
         h = 1.0 / (x.shape[1] - 1.0)
 
-        all_norms = (h**(self.d / self.p)) * paddle.norm(
-            x.reshape((num_examples, -1)) - y.reshape((num_examples, -1)),
-            self.p, 1)
+        all_norms = (h ** (self.d / self.p)) * paddle.norm(
+            x.reshape((num_examples, -1)) - y.reshape((num_examples, -1)), self.p, 1
+        )
 
         if self.reduction:
             if self.size_average:
@@ -58,8 +58,8 @@ class LpLoss(object):
         num_examples = x.shape[0]
 
         diff_norms = paddle.norm(
-            x.reshape((num_examples, -1)) - y.reshape((num_examples, -1)),
-            self.p, 1)
+            x.reshape((num_examples, -1)) - y.reshape((num_examples, -1)), self.p, 1
+        )
         y_norms = paddle.norm(y.reshape((num_examples, -1)), self.p, 1)
 
         if self.reduction:

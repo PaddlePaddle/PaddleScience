@@ -24,14 +24,14 @@ https://github.com/NVlabs/FourCastNet
 
 方式a： 当存储资源充足时，可以将全部训练数据存储到每台训练机器上，运行train.py启动训练程序，此时训练过程中数据的加载是使用全局shuffle的方式进行，如下图所示，每个batch中的训练数据数据是随机从全量数据集中抽取样本组成的。
 
-<div align="center">    
+<div align="center">  
 <img src="../../docs/source_cn/img/fourcastnet_global_shuffle.png" width = "400" align=center />
 </div>
 
 方式b：在存储资源有限时，可以使用sample_trainer_data.py将数据集平均分配存储到每个训练机器上，运行train_sampled.py启动训练程序，此时训练过程中数据的加载是使用局部shuffle的方式进行。如下图所示，将训练数据平均分配到了8台机器上，训练时随机从每台机器上抽取1/8个batch的数据组成1个完整的batch进行训练。在8机条件下，这种方式pretraining阶段每台机器需要约1.2T的存储资源，finetuning阶段每台机器需要约1.8T的存储资源。
 
 
-<div align="center">    
+<div align="center">  
 <img src="../../docs/source_cn/img/fourcastnet_local_shuffle.png" width = "400" align=center />
 </div>
 

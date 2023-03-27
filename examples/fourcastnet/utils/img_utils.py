@@ -33,27 +33,26 @@
 # Jaideep Pathak - NVIDIA Corporation
 # Shashank Subramanian - NERSC, Lawrence Berkeley National Laboratory
 # Peter Harrington - NERSC, Lawrence Berkeley National Laboratory
-# Sanjeev Raja - NERSC, Lawrence Berkeley National Laboratory 
-# Ashesh Chattopadhyay - Rice University 
-# Morteza Mardani - NVIDIA Corporation 
-# Thorsten Kurth - NVIDIA Corporation 
-# David Hall - NVIDIA Corporation 
-# Zongyi Li - California Institute of Technology, NVIDIA Corporation 
-# Kamyar Azizzadenesheli - Purdue University 
-# Pedram Hassanzadeh - Rice University 
-# Karthik Kashinath - NVIDIA Corporation 
+# Sanjeev Raja - NERSC, Lawrence Berkeley National Laboratory
+# Ashesh Chattopadhyay - Rice University
+# Morteza Mardani - NVIDIA Corporation
+# Thorsten Kurth - NVIDIA Corporation
+# David Hall - NVIDIA Corporation
+# Zongyi Li - California Institute of Technology, NVIDIA Corporation
+# Kamyar Azizzadenesheli - Purdue University
+# Pedram Hassanzadeh - Rice University
+# Karthik Kashinath - NVIDIA Corporation
 # Animashree Anandkumar - California Institute of Technology, NVIDIA Corporation
 
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
 import paddle
 
 
 class PeriodicPad2d(paddle.nn.Layer):
-    """ 
-        pad longitudinal (left-right) circular 
-        and pad latitude (top-bottom) with zeros
+    """
+    pad longitudinal (left-right) circular
+    and pad latitude (top-bottom) with zeros
     """
 
     def __init__(self, pad_width):
@@ -62,39 +61,42 @@ class PeriodicPad2d(paddle.nn.Layer):
 
     def forward(self, x):
         # pad left and right circular
-        out = paddle.nn.functional.pad(x,
-                                       (self.pad_width, self.pad_width, 0, 0),
-                                       mode="circular")
+        out = paddle.nn.functional.pad(
+            x, (self.pad_width, self.pad_width, 0, 0), mode="circular"
+        )
         # pad top and bottom zeros
-        out = paddle.nn.functional.pad(out, (0, 0, 0, 0, self.pad_width,
-                                             self.pad_width, 0, 0),
-                                       mode="constant",
-                                       value=0)
+        out = paddle.nn.functional.pad(
+            out,
+            (0, 0, 0, 0, self.pad_width, self.pad_width, 0, 0),
+            mode="constant",
+            value=0,
+        )
         return out
 
 
-def reshape_fields(img,
-                   inp_or_tar,
-                   crop_size_x,
-                   crop_size_y,
-                   rnd_x,
-                   rnd_y,
-                   params,
-                   y_roll,
-                   train,
-                   normalize=True,
-                   orog=None,
-                   add_noise=False):
+def reshape_fields(
+    img,
+    inp_or_tar,
+    crop_size_x,
+    crop_size_y,
+    rnd_x,
+    rnd_y,
+    params,
+    y_roll,
+    train,
+    normalize=True,
+    orog=None,
+    add_noise=False,
+):
 
     if len(np.shape(img)) == 3:
         img = np.expand_dims(img, 0)
 
-    img = img[:, :, 0:720]  #remove last pixel
+    img = img[:, :, 0:720]  # remove last pixel
     n_history = np.shape(img)[0] - 1
     img_shape_x = np.shape(img)[-2]
     img_shape_y = np.shape(img)[-1]
-    n_channels = np.shape(img)[
-        1]  #this will either be N_in_channels or N_out_channels
+    n_channels = np.shape(img)[1]  # this will either be N_in_channels or N_out_channels
     channels = params.in_channels if inp_or_tar == "inp" else params.out_channels
     means = np.load(params.global_means_path)[:, channels]
     stds = np.load(params.global_stds_path)[:, channels]
@@ -113,27 +115,26 @@ def reshape_fields(img,
     if params.add_grid:
         if inp_or_tar == "inp":
             if params.gridtype == "linear":
-                assert params.N_grid_channels == 2, "N_grid_channels must be set to 2 for gridtype linear"
+                assert (
+                    params.N_grid_channels == 2
+                ), "N_grid_channels must be set to 2 for gridtype linear"
                 x = np.meshgrid(np.linspace(-1, 1, img_shape_x))
                 y = np.meshgrid(np.linspace(-1, 1, img_shape_y))
                 grid_x, grid_y = np.meshgrid(y, x)
                 grid = np.stack((grid_x, grid_y), axis=0)
             elif params.gridtype == "sinusoidal":
-                assert params.N_grid_channels == 4, "N_grid_channels must be set to 4 for gridtype sinusoidal"
-                x1 = np.meshgrid(
-                    np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))
-                x2 = np.meshgrid(
-                    np.cos(np.linspace(0, 2 * np.pi, img_shape_x)))
-                y1 = np.meshgrid(
-                    np.sin(np.linspace(0, 2 * np.pi, img_shape_y)))
-                y2 = np.meshgrid(
-                    np.cos(np.linspace(0, 2 * np.pi, img_shape_y)))
+                assert (
+                    params.N_grid_channels == 4
+                ), "N_grid_channels must be set to 4 for gridtype sinusoidal"
+                x1 = np.meshgrid(np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))
+                x2 = np.meshgrid(np.cos(np.linspace(0, 2 * np.pi, img_shape_x)))
+                y1 = np.meshgrid(np.sin(np.linspace(0, 2 * np.pi, img_shape_y)))
+                y2 = np.meshgrid(np.cos(np.linspace(0, 2 * np.pi, img_shape_y)))
                 grid_x1, grid_y1 = np.meshgrid(y1, x1)
                 grid_x2, grid_y2 = np.meshgrid(y2, x2)
                 grid = np.expand_dims(
-                    np.stack(
-                        (grid_x1, grid_y1, grid_x2, grid_y2), axis=0),
-                    axis=0)
+                    np.stack((grid_x1, grid_y1, grid_x2, grid_y2), axis=0), axis=0
+                )
             img = np.concatenate((img, grid), axis=1)
 
     if params.orography and inp_or_tar == "inp":
@@ -144,11 +145,10 @@ def reshape_fields(img,
         img = np.roll(img, y_roll, axis=-1)
 
     if train and (crop_size_x or crop_size_y):
-        img = img[:, :, rnd_x:rnd_x + crop_size_x, rnd_y:rnd_y + crop_size_y]
+        img = img[:, :, rnd_x : rnd_x + crop_size_x, rnd_y : rnd_y + crop_size_y]
 
     if inp_or_tar == "inp":
-        img = np.reshape(img, (n_channels * (n_history + 1), crop_size_x,
-                               crop_size_y))
+        img = np.reshape(img, (n_channels * (n_history + 1), crop_size_x, crop_size_y))
     elif inp_or_tar == "tar":
         if params.two_step_training:
             img = np.reshape(img, (n_channels * 2, crop_size_x, crop_size_y))
@@ -161,16 +161,18 @@ def reshape_fields(img,
     return paddle.to_tensor(img)
 
 
-def reshape_precip(img,
-                   inp_or_tar,
-                   crop_size_x,
-                   crop_size_y,
-                   rnd_x,
-                   rnd_y,
-                   params,
-                   y_roll,
-                   train,
-                   normalize=True):
+def reshape_precip(
+    img,
+    inp_or_tar,
+    crop_size_x,
+    crop_size_y,
+    rnd_x,
+    rnd_y,
+    params,
+    y_roll,
+    train,
+    normalize=True,
+):
 
     if len(np.shape(img)) == 2:
         img = np.expand_dims(img, 0)
@@ -190,34 +192,33 @@ def reshape_precip(img,
     if params.add_grid:
         if inp_or_tar == "inp":
             if params.gridtype == "linear":
-                assert params.N_grid_channels == 2, "N_grid_channels must be set to 2 for gridtype linear"
+                assert (
+                    params.N_grid_channels == 2
+                ), "N_grid_channels must be set to 2 for gridtype linear"
                 x = np.meshgrid(np.linspace(-1, 1, img_shape_x))
                 y = np.meshgrid(np.linspace(-1, 1, img_shape_y))
                 grid_x, grid_y = np.meshgrid(y, x)
                 grid = np.stack((grid_x, grid_y), axis=0)
             elif params.gridtype == "sinusoidal":
-                assert params.N_grid_channels == 4, "N_grid_channels must be set to 4 for gridtype sinusoidal"
-                x1 = np.meshgrid(
-                    np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))
-                x2 = np.meshgrid(
-                    np.cos(np.linspace(0, 2 * np.pi, img_shape_x)))
-                y1 = np.meshgrid(
-                    np.sin(np.linspace(0, 2 * np.pi, img_shape_y)))
-                y2 = np.meshgrid(
-                    np.cos(np.linspace(0, 2 * np.pi, img_shape_y)))
+                assert (
+                    params.N_grid_channels == 4
+                ), "N_grid_channels must be set to 4 for gridtype sinusoidal"
+                x1 = np.meshgrid(np.sin(np.linspace(0, 2 * np.pi, img_shape_x)))
+                x2 = np.meshgrid(np.cos(np.linspace(0, 2 * np.pi, img_shape_x)))
+                y1 = np.meshgrid(np.sin(np.linspace(0, 2 * np.pi, img_shape_y)))
+                y2 = np.meshgrid(np.cos(np.linspace(0, 2 * np.pi, img_shape_y)))
                 grid_x1, grid_y1 = np.meshgrid(y1, x1)
                 grid_x2, grid_y2 = np.meshgrid(y2, x2)
                 grid = np.expand_dims(
-                    np.stack(
-                        (grid_x1, grid_y1, grid_x2, grid_y2), axis=0),
-                    axis=0)
+                    np.stack((grid_x1, grid_y1, grid_x2, grid_y2), axis=0), axis=0
+                )
             img = np.concatenate((img, grid), axis=1)
 
     if params.roll:
         img = np.roll(img, y_roll, axis=-1)
 
     if train and (crop_size_x or crop_size_y):
-        img = img[:, rnd_x:rnd_x + crop_size_x, rnd_y:rnd_y + crop_size_y]
+        img = img[:, rnd_x : rnd_x + crop_size_x, rnd_y : rnd_y + crop_size_y]
 
     img = np.reshape(img, (n_channels, crop_size_x, crop_size_y))
     return paddle.to_tensor(img)

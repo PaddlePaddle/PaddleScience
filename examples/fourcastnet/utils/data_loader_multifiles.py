@@ -33,57 +33,63 @@
 # Jaideep Pathak - NVIDIA Corporation
 # Shashank Subramanian - NERSC, Lawrence Berkeley National Laboratory
 # Peter Harrington - NERSC, Lawrence Berkeley National Laboratory
-# Sanjeev Raja - NERSC, Lawrence Berkeley National Laboratory 
-# Ashesh Chattopadhyay - Rice University 
-# Morteza Mardani - NVIDIA Corporation 
-# Thorsten Kurth - NVIDIA Corporation 
-# David Hall - NVIDIA Corporation 
-# Zongyi Li - California Institute of Technology, NVIDIA Corporation 
-# Kamyar Azizzadenesheli - Purdue University 
-# Pedram Hassanzadeh - Rice University 
-# Karthik Kashinath - NVIDIA Corporation 
+# Sanjeev Raja - NERSC, Lawrence Berkeley National Laboratory
+# Ashesh Chattopadhyay - Rice University
+# Morteza Mardani - NVIDIA Corporation
+# Thorsten Kurth - NVIDIA Corporation
+# David Hall - NVIDIA Corporation
+# Zongyi Li - California Institute of Technology, NVIDIA Corporation
+# Kamyar Azizzadenesheli - Purdue University
+# Pedram Hassanzadeh - Rice University
+# Karthik Kashinath - NVIDIA Corporation
 # Animashree Anandkumar - California Institute of Technology, NVIDIA Corporation
 
 import glob
 import os
 import random
-import numpy as np
+
 import h5py
-
+import numpy as np
 import paddle.distributed as dist
-from paddle.io import Dataset, DataLoader, BatchSampler, DistributedBatchSampler
-
-from utils.img_utils import reshape_fields, reshape_precip
+from paddle.io import BatchSampler
+from paddle.io import DataLoader
+from paddle.io import Dataset
+from paddle.io import DistributedBatchSampler
+from utils.img_utils import reshape_fields
+from utils.img_utils import reshape_precip
 
 
 def get_data_loader(params, files_pattern, distributed, train):
 
     dataset = GetDataset(params, files_pattern, train)
 
-    if distributed:  #train:
+    if distributed:  # train:
         # Distribute data to multiple cards
         batch_sampler = DistributedBatchSampler(
             dataset=dataset,
             batch_size=int(params.batch_size),
             shuffle=True if train else False,
-            drop_last=True if train else False)
+            drop_last=True if train else False,
+        )
     else:
         # Distribute data to single card
         batch_sampler = BatchSampler(
             dataset=dataset,
             batch_size=int(params.batch_size),
             shuffle=True if train else False,
-            drop_last=True if train else False)
+            drop_last=True if train else False,
+        )
     device = "gpu:{}".format(dist.ParallelEnv().dev_id)
     dataloader = DataLoader(
         dataset=dataset,
         batch_sampler=batch_sampler,
         places=device,
         num_workers=params.num_data_workers,
-        return_list=True, )
+        return_list=True,
+    )
 
     if train:
-        return dataloader, dataset, batch_sampler  #sampler
+        return dataloader, dataset, batch_sampler  # sampler
     else:
         return dataloader, dataset
 
@@ -116,7 +122,9 @@ class GetDataset(Dataset):
         try:
             self.normalize = params.normalize
         except:
-            self.normalize = True  #by default turn on normalization if not specified in config
+            self.normalize = (
+                True  # by default turn on normalization if not specified in config
+            )
 
         if self.orography:
             self.orography_path = params.orography_path
@@ -127,9 +135,10 @@ class GetDataset(Dataset):
         self.n_years = len(self.files_paths)
         with h5py.File(self.files_paths[0], "r") as _f:
             self.n_samples_per_year = _f["fields"].shape[0]
-            #original image shape (before padding)
-            self.img_shape_x = _f["fields"].shape[
-                2] - 1  #just get rid of one of the pixels
+            # original image shape (before padding)
+            self.img_shape_x = (
+                _f["fields"].shape[2] - 1
+            )  # just get rid of one of the pixels
             self.img_shape_y = _f["fields"].shape[3]
 
         self.n_samples_total = self.n_years * self.n_samples_per_year
@@ -143,37 +152,38 @@ class GetDataset(Dataset):
             _orog_file = h5py.File(self.orography_path, "r")
             self.orography_field = _orog_file["orog"]
         if self.precip:
-            self.precip_files[year_idx] = h5py.File(
-                self.precip_paths[year_idx], "r")["tp"]
+            self.precip_files[year_idx] = h5py.File(self.precip_paths[year_idx], "r")[
+                "tp"
+            ]
 
     def __len__(self):
         return self.n_samples_total
 
     def __getitem__(self, global_idx):
-        year_idx = int(global_idx /
-                       self.n_samples_per_year)  #which year we are on
+        year_idx = int(global_idx / self.n_samples_per_year)  # which year we are on
         local_idx = int(
             global_idx % self.n_samples_per_year
-        )  #which sample in that year we are on - determines indices for centering
+        )  # which sample in that year we are on - determines indices for centering
 
-        y_roll = np.random.randint(
-            0, 1440) if self.train else 0  #roll image in y direction
+        y_roll = (
+            np.random.randint(0, 1440) if self.train else 0
+        )  # roll image in y direction
 
-        #open image file
+        # open image file
         if self.files[year_idx] is None:
             self._open_file(year_idx)
 
         if not self.precip:
-            #if we are not at least self.dt*n_history timesteps into the prediction
+            # if we are not at least self.dt*n_history timesteps into the prediction
             if local_idx < self.dt * self.n_history:
                 local_idx += self.dt * self.n_history
 
-            #if we are on the last image in a year predict identity, else predict next timestep
+            # if we are on the last image in a year predict identity, else predict next timestep
             step = 0 if local_idx >= self.n_samples_per_year - self.dt else self.dt
         else:
             inp_local_idx = local_idx
             tar_local_idx = local_idx
-            #if we are on the last image in a year predict identity, else predict next timestep
+            # if we are on the last image in a year predict identity, else predict next timestep
             step = 0 if tar_local_idx >= self.n_samples_per_year - self.dt else self.dt
             # first year has 2 missing samples in precip (they are first two time points)
             if year_idx == 0:
@@ -183,10 +193,10 @@ class GetDataset(Dataset):
                 tar_local_idx = local_idx
                 step = 0 if tar_local_idx >= lim - self.dt else self.dt
 
-        #if two_step_training flag is true then ensure that local_idx is not the last or last but one sample in a year
+        # if two_step_training flag is true then ensure that local_idx is not the last or last but one sample in a year
         if self.two_step_training:
             if local_idx >= self.n_samples_per_year - 2 * self.dt:
-                #set local_idx to last possible sample in a year that allows taking two steps forward
+                # set local_idx to last possible sample in a year that allows taking two steps forward
                 local_idx = self.n_samples_per_year - 3 * self.dt
 
         if self.train and self.roll:
@@ -207,15 +217,94 @@ class GetDataset(Dataset):
             rnd_y = 0
 
         if self.precip:
-            return reshape_fields(self.files[year_idx][inp_local_idx, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train), \
-                      reshape_precip(self.precip_files[year_idx][tar_local_idx+step], "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train)
+            return reshape_fields(
+                self.files[year_idx][inp_local_idx, self.in_channels],
+                "inp",
+                self.crop_size_x,
+                self.crop_size_y,
+                rnd_x,
+                rnd_y,
+                self.params,
+                y_roll,
+                self.train,
+            ), reshape_precip(
+                self.precip_files[year_idx][tar_local_idx + step],
+                "tar",
+                self.crop_size_x,
+                self.crop_size_y,
+                rnd_x,
+                rnd_y,
+                self.params,
+                y_roll,
+                self.train,
+            )
         else:
             if self.two_step_training:
-                return reshape_fields(self.files[year_idx][(local_idx-self.dt*self.n_history):(local_idx+1):self.dt, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train, self.normalize, orog, self.add_noise), \
-                        reshape_fields(self.files[year_idx][local_idx + step:local_idx + step + 2, self.out_channels], "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train, self.normalize, orog)
+                return reshape_fields(
+                    self.files[year_idx][
+                        (local_idx - self.dt * self.n_history) : (
+                            local_idx + 1
+                        ) : self.dt,
+                        self.in_channels,
+                    ],
+                    "inp",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                    self.add_noise,
+                ), reshape_fields(
+                    self.files[year_idx][
+                        local_idx + step : local_idx + step + 2, self.out_channels
+                    ],
+                    "tar",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                )
             else:
-                return reshape_fields(self.files[year_idx][(local_idx-self.dt*self.n_history):(local_idx+1):self.dt, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train, self.normalize, orog, self.add_noise), \
-                        reshape_fields(self.files[year_idx][local_idx + step, self.out_channels], "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train, self.normalize, orog)
+                return reshape_fields(
+                    self.files[year_idx][
+                        (local_idx - self.dt * self.n_history) : (
+                            local_idx + 1
+                        ) : self.dt,
+                        self.in_channels,
+                    ],
+                    "inp",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                    self.add_noise,
+                ), reshape_fields(
+                    self.files[year_idx][local_idx + step, self.out_channels],
+                    "tar",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                )
 
 
 def get_data_loader_sampled(params, files_pattern, distributed, train):
@@ -231,14 +320,16 @@ def get_data_loader_sampled(params, files_pattern, distributed, train):
         shuffle=True if train else False,
         drop_last=True if train else False,
         num_replicas=card_count,
-        rank=dist.get_rank() % card_count)
+        rank=dist.get_rank() % card_count,
+    )
     device = "gpu:{}".format(dist.ParallelEnv().dev_id)
     dataloader = DataLoader(
         dataset=dataset,
         batch_sampler=batch_sampler,
         places=device,
         num_workers=params.num_data_workers,
-        return_list=True, )
+        return_list=True,
+    )
 
     return dataloader, dataset, batch_sampler
 
@@ -266,7 +357,9 @@ class GetDatasetSampled(Dataset):
         try:
             self.normalize = params.normalize
         except:
-            self.normalize = True  #by default turn on normalization if not specified in config
+            self.normalize = (
+                True  # by default turn on normalization if not specified in config
+            )
 
         if self.orography:
             self.orography_path = params.orography_path
@@ -276,9 +369,10 @@ class GetDatasetSampled(Dataset):
         self.files_paths.sort()
         self.n_samples_total = len(self.files_paths)
         with h5py.File(self.files_paths[0], "r") as _f:
-            #original image shape (before padding)
-            self.img_shape_x = _f["fields"].shape[
-                2] - 1  #just get rid of one of the pixels
+            # original image shape (before padding)
+            self.img_shape_x = (
+                _f["fields"].shape[2] - 1
+            )  # just get rid of one of the pixels
             self.img_shape_y = _f["fields"].shape[3]
 
         self.files = [None for _ in range(self.n_samples_total)]
@@ -291,9 +385,10 @@ class GetDatasetSampled(Dataset):
         return self.n_samples_total
 
     def __getitem__(self, global_idx):
-        y_roll = np.random.randint(
-            0, 1440) if self.train else 0  #roll image in y direction
-        #open image file
+        y_roll = (
+            np.random.randint(0, 1440) if self.train else 0
+        )  # roll image in y direction
+        # open image file
         if self.files[global_idx] is None:
             self._open_file(global_idx)
 
@@ -315,12 +410,81 @@ class GetDatasetSampled(Dataset):
             rnd_y = 0
 
         if self.precip:
-            return reshape_fields(self.files[global_idx][0, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train), \
-                    reshape_precip(self.files[global_idx][0, [c+21 for c in self.out_channels]].squeeze(0), "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train)
+            return reshape_fields(
+                self.files[global_idx][0, self.in_channels],
+                "inp",
+                self.crop_size_x,
+                self.crop_size_y,
+                rnd_x,
+                rnd_y,
+                self.params,
+                y_roll,
+                self.train,
+            ), reshape_precip(
+                self.files[global_idx][0, [c + 21 for c in self.out_channels]].squeeze(
+                    0
+                ),
+                "tar",
+                self.crop_size_x,
+                self.crop_size_y,
+                rnd_x,
+                rnd_y,
+                self.params,
+                y_roll,
+                self.train,
+            )
         else:
             if self.two_step_training:
-                return reshape_fields(self.files[global_idx][0, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train, self.normalize, orog, self.add_noise), \
-                        reshape_fields(self.files[global_idx][1:1 + 2, self.out_channels], "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train, self.normalize, orog)
+                return reshape_fields(
+                    self.files[global_idx][0, self.in_channels],
+                    "inp",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                    self.add_noise,
+                ), reshape_fields(
+                    self.files[global_idx][1 : 1 + 2, self.out_channels],
+                    "tar",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                )
             else:
-                return reshape_fields(self.files[global_idx][0, self.in_channels], "inp", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y,self.params, y_roll, self.train, self.normalize, orog, self.add_noise), \
-                        reshape_fields(self.files[global_idx][1, self.out_channels], "tar", self.crop_size_x, self.crop_size_y, rnd_x, rnd_y, self.params, y_roll, self.train, self.normalize, orog)
+                return reshape_fields(
+                    self.files[global_idx][0, self.in_channels],
+                    "inp",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                    self.add_noise,
+                ), reshape_fields(
+                    self.files[global_idx][1, self.out_channels],
+                    "tar",
+                    self.crop_size_x,
+                    self.crop_size_y,
+                    rnd_x,
+                    rnd_y,
+                    self.params,
+                    y_roll,
+                    self.train,
+                    self.normalize,
+                    orog,
+                )
