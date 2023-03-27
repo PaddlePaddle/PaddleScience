@@ -20,7 +20,7 @@ BENCHMARK_ROOT=${TEST_DIR}"/test_tipc/tools"
 source ${TEST_DIR}/test_tipc/common_func.sh
 echo -e "\n* [TEST_DIR] is now set : \n" ${TEST_DIR} "\n"
 echo -e "\n* [BENCHMARK_ROOT] is now set : \n" ${BENCHMARK_ROOT} "\n"
-# set env
+
 python=python3.7
 pip="python3.7 -m pip"
 echo -e "\n* [pip] is now set : \n" ${pip} "\n"
@@ -29,12 +29,6 @@ export model_commit=$(git log|head -n1|awk '{print $2}')
 export str_tmp=$(echo `${pip} list|grep paddlepaddle-gpu|awk -F ' ' '{print $2}'`)
 export frame_version=${str_tmp%%.post*}
 export frame_commit=$(echo `${python} -c "import paddle;print(paddle.version.commit)"`)
-
-# run benchmark sh 
-# Usage:
-# bash run_benchmark_train.sh config.txt params
-# or 
-# bash run_benchmark_train.sh config.txt
 
 function func_parser_params(){
     strs=$1
@@ -97,24 +91,16 @@ if [ ${MODE} = "benchmark_train" ];then
     export PYTHONPATH=${PDSC_DIR}
     echo -e "\n* [PYTHONPATH] is now set : \n" ${PYTHONPATH} "\n"
     python3.7 ${PDSC_DIR}/examples/cylinder/2d_unsteady_continuous/download_dataset.py
-    # unset PDSC_DIR
-    # unset MODE
 fi
 
 
 PARAMS=$3
-# bash test_tipc/benchmark_train.sh test_tipc/configs/det_mv3_db_v2_0/train_benchmark.txt  benchmark_train dynamic_bs8_null_DP_N1C1
 IFS=$'\n'
-# parser params from train_benchmark.txt
 dataline=`cat $FILENAME`
-# parser params
 IFS=$'\n'
 lines=(${dataline})
 model_name=$(func_parser_value "${lines[1]}")
-
-# 获取benchmark_params所在的行数
 line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
-# for train log parser
 batch_size=$(func_parser_value "${lines[line_num]}")
 line_num=`expr $line_num + 1`
 fp_items=$(func_parser_value "${lines[line_num]}")
@@ -128,7 +114,7 @@ profile_option="${profile_option_key}:${profile_option_params}"
 
 line_num=`expr $line_num + 1`
 flags_value=$(func_parser_value "${lines[line_num]}")
-# set flags
+
 IFS=";"
 flags_list=(${flags_value})
 for _flag in ${flags_list[*]}; do
@@ -136,13 +122,13 @@ for _flag in ${flags_list[*]}; do
     eval $cmd
 done
 
-# set log_name
+
 repo_name=$(get_repo_name )
-SAVE_LOG=${BENCHMARK_LOG_DIR:-$(pwd)}   # */benchmark_log
+SAVE_LOG=${BENCHMARK_LOG_DIR:-$(pwd)}   
 mkdir -p "${SAVE_LOG}/benchmark_log/"
 status_log="${SAVE_LOG}/benchmark_log/results.log"
 echo ${BENCHMARK_LOG_DIR}
-# The number of lines in which train params can be replaced.
+
 line_python=3
 line_gpuid=4
 line_precision=6
@@ -156,7 +142,6 @@ func_sed_params "$FILENAME" "${line_eval_py}" "null"
 func_sed_params "$FILENAME" "${line_export_py}" "null"
 func_sed_params "$FILENAME" "${line_python}"  "$python"
 
-# if params
 if  [ ! -n "$PARAMS" ] ;then
     # PARAMS input is not a word.
     IFS="|"
@@ -172,7 +157,6 @@ else
     batch_size=${params_list[1]}
     batch_size=`echo  ${batch_size} | tr -cd "[0-9]" `
     precision=${params_list[2]}
-    # run_process_type=${params_list[3]}
     run_mode=${params_list[3]}
     device_num=${params_list[4]}
     IFS=";"
@@ -185,7 +169,6 @@ else
     batch_size_list=($batch_size)
     device_num_list=($device_num)
 fi
-# echo -e '\n* ' ${batch_size_list}
 IFS="|"
 for batch_size in ${batch_size_list[*]}; do 
     for precision in ${fp_items_list[*]}; do
@@ -210,6 +193,7 @@ for batch_size in ${batch_size_list[*]}; do
                 echo $cmd
                 eval $cmd
                 eval "cat ${log_path}/${log_name}"
+                echo 'BKP1'
 
                 # without profile
                 log_path="$SAVE_LOG/train_log"
@@ -226,10 +210,8 @@ for batch_size in ${batch_size_list[*]}; do
                 job_et=`date '+%Y%m%d%H%M%S'`
                 export model_run_time=$((${job_et}-${job_bt}))
                 eval "cat ${log_path}/${log_name}"
-
                 # parser log
                 _model_name="${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}"
-                echo "Debug Here 1"
                 cmd="${python} ${BENCHMARK_ROOT}/scripts/analysis.py --filename ${log_path}/${log_name} \
                         --speed_log_file '${speed_log_path}/${speed_log_name}' \
                         --model_name ${_model_name} \
