@@ -37,9 +37,9 @@ def train(solver: ppsci.solver.Solver):
         "Arch": {"name": "MLP"},
     }
     solver.iters_per_epoch = 1
-    save_freq = 100
+    save_freq = 200
     eval_during_train = True
-    eval_freq = 100
+    eval_freq = 200
     start_eval_epoch = 1
 
     # init gradient accumulation config
@@ -68,7 +68,7 @@ def train(solver: ppsci.solver.Solver):
     checkpoint_path = None
     if checkpoint_path is not None:
         loaded_metric = save_load.load_checkpoint(
-            "checkpoint_path", solver.model, solver.optimizer
+            checkpoint_path, solver.model, solver.optimizer
         )
         if isinstance(loaded_metric, dict):
             best_metric.update(loaded_metric)
@@ -88,7 +88,7 @@ def train(solver: ppsci.solver.Solver):
                     "drop_last": False,
                     "shuffle": False,
                 },
-                "num_workers": 4,
+                "num_workers": 2,
                 "seed": 42,
                 "use_shared_memory": False,
             },
@@ -115,12 +115,12 @@ def train(solver: ppsci.solver.Solver):
             },
             ppsci.loss.MSELoss("mean"),
             criteria=lambda t, x, y: np.isclose(y, 0.5),
-            weight_dict={"u": 10.0, "v": 10.0},
+            weight_dict={"u": lambda input: 1.0 - 2.0 * input["x"]},
             name="BC_top",
         ),
         "BC_down": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-            {"u": 0, "v": 0},
+            {"u": 0.0, "v": 0.0},
             solver.geom["time_rect"],
             {
                 "dataset": "NamedArrayDataset",
@@ -142,7 +142,7 @@ def train(solver: ppsci.solver.Solver):
         ),
         "BC_left": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-            {"u": 0, "v": 0},
+            {"u": 0.0, "v": 0.0},
             solver.geom["time_rect"],
             {
                 "dataset": "NamedArrayDataset",
@@ -164,7 +164,7 @@ def train(solver: ppsci.solver.Solver):
         ),
         "BC_right": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-            {"u": 0, "v": 0},
+            {"u": 0.0, "v": 0.0},
             solver.geom["time_rect"],
             {
                 "dataset": "NamedArrayDataset",
@@ -186,7 +186,7 @@ def train(solver: ppsci.solver.Solver):
         ),
         "IC": ppsci.constraint.InitialConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-            {"u": 0, "v": 0},
+            {"u": 0.0, "v": 0.0},
             solver.geom["time_rect"],
             {
                 "dataset": "NamedArrayDataset",
@@ -197,7 +197,7 @@ def train(solver: ppsci.solver.Solver):
                     "drop_last": False,
                     "shuffle": False,
                 },
-                "num_workers": 2,
+                "num_workers": 1,
                 "seed": 42,
                 "use_shared_memory": False,
             },
@@ -231,7 +231,7 @@ def train(solver: ppsci.solver.Solver):
 
     # train epochs
     solver.global_step = 0
-    for epoch_id in range(1, epochs + 1):
+    for epoch_id in range(best_metric["epoch"] + 1, epochs + 1):
         solver.train_epoch_func(solver, epoch_id, solver.log_freq)
 
         # log training summation at end of a epoch
@@ -322,9 +322,12 @@ def eval(solver: ppsci.solver.Solver, epoch_id):
             "Residual": ppsci.validate.GeometryValidator(
                 solver.equation["NavierStokes"].equations,
                 {
-                    "u": 0,
-                    "v": 0,
-                    "p": 0,
+                    "momentum_x": 0,
+                    "continuity": 0,
+                    "momentum_y": 0,
+                    "u": 0.0,
+                    "v": 0.0,
+                    "p": 0.0,
                 },
                 solver.geom["time_rect"],
                 {
@@ -381,7 +384,7 @@ if __name__ == "__main__":
     random.seed(42 + solver.rank)
 
     # set output diretory
-    solver.output_dir = "./output_unsteady_debug"
+    solver.output_dir = "./output_unsteady_final"
 
     # initialize logger
     solver.log_freq = 10
