@@ -52,6 +52,7 @@ class GeometryValidator(base.Validator):
         if isinstance(geom, geometry.TimeXGeometry):
             if geom.timedomain.num_timestamp is not None:
                 if with_initial:
+                    # include t0
                     self.num_timestamp = geom.timedomain.num_timestamp
                     assert (
                         nx % self.num_timestamp == 0
