@@ -82,7 +82,7 @@ class GeometryValidator(base.Validator):
                     )
             else:
                 raise NotImplementedError(
-                    f"TimeXGeometry with random timestamp not implemented yet."
+                    "TimeXGeometry with random timestamp not implemented yet."
                 )
         else:
             input = geom.sample_interior(nx, random, criteria, evenly)
