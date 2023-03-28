@@ -79,7 +79,8 @@ function get_repo_name(){
     echo ${arr[-1]}
 }
 
-FILENAME=$1
+FILENAME=${PDSC_DIR}"/"$1
+echo -e "\n " $FILENAME " \n"
 # copy FILENAME as new
 new_filename="${TEST_DIR}/test_tipc/benchmark_train.txt"
 cmd=`yes|cp $FILENAME $new_filename`
