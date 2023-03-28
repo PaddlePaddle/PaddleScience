@@ -39,28 +39,6 @@ def update_eval_loss(trainer, loss_dict, batch_size):
         trainer.eval_output_info[key].update(float(loss_dict[key]), batch_size)
 
 
-# def update_train_metric(trainer, out, batch, batch_size):
-#     # compute metric
-#     if trainer.train_metric_func is not None:
-#         metric_dict = trainer.train_metric_func(out, batch[-1])
-#         for key in metric_dict:
-#             if key not in trainer.train_output_info:
-#                 trainer.train_output_info[key] = misc.AverageMeter(key, "7.5f")
-#             trainer.train_output_info[key].update(float(metric_dict[key]), batch_size)
-
-
-# def update_eval_metric(trainer, out, batch, batch_size):
-#     # compute metric
-#     if trainer.eval_metric_func is not None:
-#         metric_dict = trainer.eval_metric_func(out, batch[-1])
-#         for key in metric_dict:
-#             if key not in trainer.eval_output_info:
-#                 trainer.eval_output_info[key] = misc.AverageMeter(key, "7.5f")
-#             trainer.eval_output_info[key].update(
-#                 float(metric_dict[key]), batch_size
-#             )
-
-
 def log_train_info(trainer, batch_size, epoch_id, iter_id):
     lr_msg = f"lr: {trainer.lr_scheduler.get_lr():.8f}"
 

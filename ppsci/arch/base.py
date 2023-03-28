@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 from typing import Dict
-from typing import List
+from typing import Tuple
 
 import numpy as np
 import paddle
@@ -32,7 +32,7 @@ class NetBase(nn.Layer):
         self._output_transform = None
 
     def forward(self, *args, **kwargs):
-        raise NotImplementedError(f"NetBase.forward is not implemented")
+        raise NotImplementedError("NetBase.forward is not implemented")
 
     @property
     def num_params(self):
@@ -45,13 +45,13 @@ class NetBase(nn.Layer):
         return num
 
     def concat_to_tensor(
-        self, data_dict: Dict[str, paddle.Tensor], keys: List[str], axis=-1
-    ) -> List[paddle.Tensor]:
+        self, data_dict: Dict[str, paddle.Tensor], keys: Tuple[str, ...], axis=-1
+    ) -> Tuple[paddle.Tensor, ...]:
         data = [data_dict[key] for key in keys]
         return paddle.concat(data, axis)
 
     def split_to_dict(
-        self, data_tensor: paddle.Tensor, keys: List[str], axis=-1
+        self, data_tensor: paddle.Tensor, keys: Tuple[str, ...], axis=-1
     ) -> Dict[str, paddle.Tensor]:
         data = paddle.split(data_tensor, len(keys), axis=axis)
         return {key: data[i] for i, key in enumerate(keys)}
@@ -73,7 +73,8 @@ class NetBase(nn.Layer):
                 num_conv += 1
             elif isinstance(layer, (nn.BatchNorm, nn.BatchNorm2D, nn.BatchNorm3D)):
                 num_bn += 1
-        _str = ", ".join(
+
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"input_keys = {self.input_keys}",
@@ -84,4 +85,3 @@ class NetBase(nn.Layer):
                 f"num_params = {self.num_params}",
             ]
         )
-        return _str

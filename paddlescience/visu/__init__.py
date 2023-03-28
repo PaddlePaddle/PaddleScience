@@ -18,3 +18,5 @@ from .visu_trphysx import CylinderViz
 from .visu_trphysx import LorenzViz
 from .visu_trphysx import RosslerViz
 from .visu_vtk import __save_vtk_raw
+from .visu_vtk import save_npy
+from .visu_vtk import save_vtk

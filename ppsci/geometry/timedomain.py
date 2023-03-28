@@ -374,7 +374,7 @@ class TimeXGeometry(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError(f"sample initial interior failed")
+                raise RuntimeError("sample initial interior failed")
         return misc.convert_to_dict(x, self.dim_keys)
 
     def __str__(self) -> str:

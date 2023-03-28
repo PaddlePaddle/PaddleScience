@@ -23,7 +23,7 @@ from paddle import static
 
 from ppsci.utils import logger
 
-__all__ = ["get_config", "replace_shape_with_inputspec_"]
+__all__ = ["get_config", "replace_shape_with_inputspec_", "AttrDict"]
 
 
 class AttrDict(dict):
@@ -169,7 +169,7 @@ def get_config(fname, overrides=None, show=False):
     Read config from file
     """
     if not os.path.exists(fname):
-        raise ValueError(f"config file({fname}) is not exist")
+        raise FileNotFoundError(f"config file({fname}) is not exist")
     config = parse_config(fname)
     override_config(config, overrides)
     if show:

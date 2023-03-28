@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy as np
-
 from ppsci import data
 
 
 class Constraint:
-    """Base class for constraints"""
+    """Base class for constraint"""
 
     def __init__(self, dataset, dataloader_cfg, loss, name):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
@@ -29,7 +27,7 @@ class Constraint:
         self.name = name
 
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"name = {self.name}",
@@ -40,40 +38,3 @@ class Constraint:
                 f"loss = {self.loss}",
             ]
         )
-        return _str
-
-    def _load_csv_file(self, file_path, keys, alias_dict):
-        import pandas as pd
-
-        raw_data_frame = pd.read_csv(file_path)
-
-        # convert to numpy array
-        data_dict = {}
-        for key in keys:
-            if key in alias_dict:
-                data_dict[alias_dict[key]] = np.asarray(
-                    raw_data_frame[key], "float32"
-                ).reshape([-1, 1])
-            else:
-                data_dict[key] = np.asarray(raw_data_frame[key], "float32").reshape(
-                    [-1, 1]
-                )
-
-        return data_dict
-
-    def _load_mat_file(self, file_path, keys, alias_dict):
-        import scipy.io as sio
-
-        raw_data = sio.loadmat(file_path)
-
-        # convert to numpy array
-        data_dict = {}
-        for key in keys:
-            if key in alias_dict:
-                data_dict[alias_dict[key]] = np.asarray(
-                    raw_data[key], "float32"
-                ).reshape([-1, 1])
-            else:
-                data_dict[key] = np.asarray(raw_data[key], "float32").reshape([-1, 1])
-
-        return data_dict

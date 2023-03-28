@@ -15,13 +15,10 @@ limitations under the License.
 
 from ppsci.utils import logger
 from ppsci.utils import misc
-from ppsci.utils.config import get_config
+from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
-from ppsci.utils.misc import all_gather
-from ppsci.utils.misc import convert_to_array
-from ppsci.utils.misc import convert_to_dict
-from ppsci.utils.profiler import add_profiler_step
+from ppsci.utils.misc import set_random_seed
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
@@ -29,13 +26,10 @@ from ppsci.utils.save_load import save_checkpoint
 __all__ = [
     "logger",
     "misc",
-    "get_config",
+    "AttrDict",
     "ExpressionSolver",
     "AverageMeter",
-    "all_gather",
-    "convert_to_array",
-    "convert_to_dict",
-    "add_profiler_step",
+    "set_random_seed",
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
