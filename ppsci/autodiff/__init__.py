@@ -13,6 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ppsci.gradient.grad import clear
-from ppsci.gradient.grad import hessian
-from ppsci.gradient.grad import jacobian
+from ppsci.autodiff.ad import clear
+from ppsci.autodiff.ad import hessian
+from ppsci.autodiff.ad import jacobian
