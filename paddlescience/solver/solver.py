@@ -257,16 +257,16 @@ class Solver(object):
             if tipc_test_mode is True:  # tipc test
                 # N个Step打印1条日志时，reader_cost为N个Step数据加载用时的平均值，全量训练，N=1
                 N_print = 1
-                Rn = np.zeros((N_print, 1))  # 每Step reader用时为：R1, R2,...Rn
-                Tn = np.zeros((N_print, 1))  # 每Step训练用时：T1, T2,...Tn
-                Sn = np.zeros((N_print, 1))  # 每Step 单卡BatchSize 为S1, S2,...Sn
+                Rn = np.zeros((N_print,))  # 每Step reader用时为：R1, R2,...Rn
+                Tn = np.zeros((N_print,))  # 每Step训练用时：T1, T2,...Tn
+                Sn = np.zeros((N_print,))  # 每Step 单卡BatchSize 为S1, S2,...Sn
                 Sn[0] = 1  # Full batch training
                 time_point = np.zeros((num_epoch + 1, 1))
                 samples = 0  # samples代表上次打印到本次打印，新完成训练的样本数量
                 for i in range(ninputs):
                     samples += inputs[i].shape[0]
                 time_point[0] = time.perf_counter()
-                reader_cost = 0
+                reader_cost = 0  # modify it if loading data from file
 
             for epoch in range(num_epoch):
 
@@ -313,12 +313,12 @@ class Solver(object):
 
                 if tipc_test_mode is True:  # tipc test
                     print(
-                        f"..., ... , loss: \
-                        {float(loss)}, avg_reader_cost: \
-                        {avg_reader_cost} sec, avg_batch_cost: \
-                        {avg_batch_cost} sec, avg_samples: \
-                        {avg_samples}, ips: \
-                        {ips} samples/s"
+                        f"..., ... , loss: "
+                        f"{float(loss)}, avg_reader_cost: "
+                        f"{avg_reader_cost} sec, avg_batch_cost: "
+                        f"{avg_batch_cost} sec, avg_samples: "
+                        f"{avg_samples}, ips: "
+                        f"{ips} samples/s"
                     )
 
                 # write loss for visual DL

@@ -2,7 +2,7 @@
 model_name:cylinder2d_unsteady_train_newapi
 python:python3.7
 gpu_list:0
-Global.use_gpu:True|True
+Global.use_gpu:null
 Global.auto_cast:fp32
 Global.epoch_num:benchmark_train=20
 Global.save_model_dir:./output/
@@ -39,10 +39,10 @@ infer_export:tools/export_model.py -c null -o
 infer_quant:False
 inference:tools/infer/predict_det.py
 --use_gpu:True
---enable_mkldnn:True|False
---cpu_threads:1|6
+--enable_mkldnn:null
+--cpu_threads:null
 --rec_batch_num:1
---use_tensorrt:False|True
+--use_tensorrt:null
 --precision:fp32
 --det_model_dir:
 --image_dir:null
