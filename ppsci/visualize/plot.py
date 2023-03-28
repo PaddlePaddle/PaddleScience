@@ -157,7 +157,7 @@ cnames = [
 ]
 
 
-def save_prediction_plot(filename, data_dict, coord_key, value_keys):
+def save_pic_from_dict(filename, data_dict, coord_key, value_keys):
     if not isinstance(coord_key, str):
         raise ValueError(f"Type of coord({len(coord_key)}) should be str.")
 
