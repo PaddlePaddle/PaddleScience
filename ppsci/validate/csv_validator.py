@@ -51,8 +51,12 @@ class CSVValidator(base.Validator):
     ):
         # read data
         data_dict = misc.load_csv_file(csv_path, input_keys + label_keys, alias_dict)
-        self.input_keys = list(input.keys())
-        self.output_keys = list(label.keys())
+        self.input_keys = [
+            alias_dict[key] if key in alias_dict else key for key in input_keys
+        ]
+        self.output_keys = [
+            alias_dict[key] if key in alias_dict else key for key in input_keys
+        ]
 
         input = {}
         for key in self.input_keys:

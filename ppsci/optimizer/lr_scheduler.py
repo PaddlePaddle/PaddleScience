@@ -275,14 +275,11 @@ class ExponentialDecay(LRBase):
             last_epoch,
             by_epoch,
         )
-        # NOTE: arg `decay_steps` means exponential decay steps, which has
-        # duplication name with `self.decay_steps` for warmup settings, so
-        # it is renamed to `exp_decay_steps` there.
         self.decay_steps = decay_steps
         self.gamma = gamma
         self.warmup_steps = round(self.warmup_epoch * iters_per_epoch)
         if self.by_epoch:
-            self.decay_steps *= iters_per_epoch
+            self.decay_steps /= iters_per_epoch
 
     def __call__(self):
         learning_rate = lr.ExponentialDecay(

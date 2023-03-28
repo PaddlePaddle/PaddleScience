@@ -134,7 +134,7 @@ class PointCloud(geometry.Geometry):
     def uniform_boundary_points(self, n: int):
         """Compute the equispaced points on the boundary."""
         raise NotImplementedError(
-            f"PointCloud do not have 'uniform_boundary_points' method"
+            "PointCloud do not have 'uniform_boundary_points' method"
         )
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -161,32 +161,32 @@ class PointCloud(geometry.Geometry):
 
     def union(self, rhs):
         raise NotImplementedError(
-            f"Union operation for PointCloud is not supported yet."
+            "Union operation for PointCloud is not supported yet."
         )
 
     def __or__(self, rhs):
         raise NotImplementedError(
-            f"Union operation for PointCloud is not supported yet."
+            "Union operation for PointCloud is not supported yet."
         )
 
     def difference(self, rhs):
         raise NotImplementedError(
-            f"Subtraction operation for PointCloud is not supported yet."
+            "Subtraction operation for PointCloud is not supported yet."
         )
 
     def __sub__(self, rhs):
         raise NotImplementedError(
-            f"Subtraction operation for PointCloud is not supported yet."
+            "Subtraction operation for PointCloud is not supported yet."
         )
 
     def intersection(self, rhs):
         raise NotImplementedError(
-            f"Intersection operation for PointCloud is not supported yet."
+            "Intersection operation for PointCloud is not supported yet."
         )
 
     def __and__(self, rhs):
         raise NotImplementedError(
-            f"Intersection operation for PointCloud is not supported yet."
+            "Intersection operation for PointCloud is not supported yet."
         )
 
     def __str__(self) -> str:
