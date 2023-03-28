@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy as np
-
 from ppsci import data
 
 
 class Constraint:
-    """Base class for constraints"""
+    """Base class for constraint"""
 
     def __init__(self, dataset, dataloader_cfg, loss, name):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
