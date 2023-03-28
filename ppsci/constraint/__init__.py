@@ -15,6 +15,7 @@ limitations under the License.
 
 import copy
 
+from ppsci.constraint.base import Constraint
 from ppsci.constraint.boundary_constraint import BoundaryConstraint
 from ppsci.constraint.initial_constraint import InitialConstraint
 from ppsci.constraint.integral_constraint import IntegralConstraint
@@ -26,6 +27,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 
 __all__ = [
+    "Constraint",
     "BoundaryConstraint",
     "InitialConstraint",
     "IntegralConstraint",
@@ -46,6 +48,8 @@ def build_constraint(cfg, equation_dict, geom_dict):
     Returns:
         Dict[str, constraint]: Constraint(s) in dict.
     """
+    if cfg is None:
+        return None
     cfg = copy.deepcopy(cfg)
     global_dataloader_cfg = cfg["dataloader"]
     constraint_cfg = cfg["content"]
