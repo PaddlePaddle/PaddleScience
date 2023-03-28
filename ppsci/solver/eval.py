@@ -150,9 +150,7 @@ def eval_func(solver, epoch_id, log_freq):
             ), f"Target metric({type(tmp)}) should be a number"
             target_metric = tmp
 
-        visual_dir = osp.join(
-            solver.output_dir, solver.cfg["Arch"]["name"], "visual", f"epoch_{epoch_id}"
-        )
+        visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
         if solver.rank == 0:
             os.makedirs(visual_dir, exist_ok=True)
             visualize.save_vtu_from_dict(
