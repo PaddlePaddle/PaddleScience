@@ -14,17 +14,25 @@ limitations under the License.
 """
 
 import collections
+import csv
+import random
 
 import numpy as np
 import paddle
+import scipy.io as sio
+
+from ppsci.utils import logger
 
 __all__ = [
     "all_gather",
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
-    "concat_dict_list" "convert_to_array",
+    "concat_dict_list",
+    "convert_to_array",
     "convert_to_dict",
+    "load_csv_file",
+    "load_mat_file",
     "stack_dict_list",
     "combine_array_with_time",
 ]
@@ -149,3 +157,82 @@ def combine_array_with_time(x, t):
         tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
     tx = np.vstack(tx)
     return tx
+
+
+def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
+    try:
+        if alias_dict is None:
+            alias_dict = {}
+        # check if all keys in alias_dict are valid
+        for original_key in alias_dict:
+            if not original_key in keys:
+                raise ValueError(
+                    f"key({original_key}) in alias_dict "
+                    f"is not found in keys({keys})"
+                )
+        # read all data from csv file
+        with open(file_path, "r", encoding=encoding) as csv_file:
+            reader = csv.DictReader(csv_file)
+            raw_data_dict = collections.defaultdict(list)
+            for line_idx, line_dict in enumerate(reader):
+                for key, value in line_dict.items():
+                    raw_data_dict[key].append(value)
+
+                # check if all keys are available at first line
+                if line_idx == 0:
+                    for require_key in keys:
+                        if require_key not in line_dict:
+                            raise KeyError(
+                                f"key({require_key}) "
+                                f"not found in csvfile({file_path})"
+                            )
+
+            data_dict = {}
+            for key, value in raw_data_dict.items():
+                if key in alias_dict:
+                    data_dict[alias_dict[key]] = np.array(value, "float32").reshape(
+                        [-1, 1]
+                    )
+                else:
+                    data_dict[key] = np.array(value, "float32").reshape([-1, 1])
+
+        return data_dict
+    except Exception as e:
+        logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
+        raise
+
+
+def load_mat_file(file_path, keys, alias_dict=None):
+    try:
+        if alias_dict is None:
+            alias_dict = {}
+        # check if all keys in alias_dict are valid
+        for original_key in alias_dict:
+            if not original_key in keys:
+                raise ValueError(
+                    f"key({original_key}) in alias_dict "
+                    f"is not found in keys({keys})"
+                )
+
+        raw_data = sio.loadmat(file_path)
+        # convert to numpy array
+        data_dict = {}
+        for key in keys:
+            if key in alias_dict:
+                data_dict[alias_dict[key]] = np.asarray(
+                    raw_data[key], "float32"
+                ).reshape([-1, 1])
+            else:
+                data_dict[key] = np.asarray(raw_data[key], "float32").reshape([-1, 1])
+
+        return data_dict
+
+    except Exception as e:
+        logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
+        raise
+
+
+def set_random_seed(seed):
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)

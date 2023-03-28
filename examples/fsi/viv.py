@@ -67,7 +67,7 @@ def train(solver: ppsci.solver.Solver):
     checkpoint_path = None
     if checkpoint_path is not None:
         loaded_metric = save_load.load_checkpoint(
-            "checkpoint_path", solver.model, solver.optimizer
+            "checkpoint_path", solver.model, solver.optimizer, solver.scaler
         )
         if isinstance(loaded_metric, dict):
             best_metric.update(loaded_metric)
@@ -147,9 +147,9 @@ def train(solver: ppsci.solver.Solver):
                 save_load.save_checkpoint(
                     solver.model,
                     solver.optimizer,
+                    solver.scaler,
                     best_metric,
                     solver.output_dir,
-                    solver.model.__class__.__name__,
                     "best_model",
                 )
             logger.info(
@@ -166,9 +166,9 @@ def train(solver: ppsci.solver.Solver):
             save_load.save_checkpoint(
                 solver.model,
                 solver.optimizer,
+                solver.scaler,
                 {"metric": cur_metric, "epoch": epoch_id},
                 solver.output_dir,
-                solver.model.__class__.__name__,
                 f"epoch_{epoch_id}",
             )
 
@@ -176,9 +176,9 @@ def train(solver: ppsci.solver.Solver):
         save_load.save_checkpoint(
             solver.model,
             solver.optimizer,
+            solver.scaler,
             {"metric": cur_metric, "epoch": epoch_id},
             solver.output_dir,
-            solver.model.__class__.__name__,
             "latest",
         )
 
