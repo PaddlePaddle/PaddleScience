@@ -19,16 +19,18 @@ from ppsci.loss import build_loss
 from ppsci.metric import build_metric
 from ppsci.utils import logger
 from ppsci.utils import misc
+from ppsci.validate.base import Validator
 from ppsci.validate.csv_validator import CSVValidator
 from ppsci.validate.geo_validator import GeometryValidator
 
 __all__ = [
+    "Validator",
     "GeometryValidator",
     "CSVValidator",
 ]
 
 
-def build_validator(cfg, geom_dict, equation_dict):
+def build_validator(cfg, equation_dict, geom_dict):
     """Build validator(s).
 
     Args:
@@ -39,6 +41,8 @@ def build_validator(cfg, geom_dict, equation_dict):
     Returns:
         Dict[str, Validator]: Validator(s) in dict.
     """
+    if cfg is None:
+        return None
     cfg = copy.deepcopy(cfg)
     global_dataloader_cfg = cfg["dataloader"]
     validator_cfg = cfg["content"]

@@ -21,9 +21,15 @@ from ppsci.equation.pde import NormalDotVec
 from ppsci.equation.pde import Poisson
 from ppsci.equation.pde import Vibration
 from ppsci.utils import logger
-from ppsci.utils import misc
 
-__all__ = ["PDE", "NavierStokes", "Poisson", "NormalDotVec", "Vibration"]
+__all__ = [
+    "PDE",
+    "NavierStokes",
+    "Poisson",
+    "NormalDotVec",
+    "Vibration",
+    "build_equation",
+]
 
 
 def build_equation(cfg):
@@ -35,6 +41,8 @@ def build_equation(cfg):
     Returns:
         Dict[str, Equation]: Equation(s) in dict.
     """
+    if cfg is None:
+        return None
     cfg = copy.deepcopy(cfg)
     eq_dict = misc.PrettyOrderedDict()
     for _item in cfg:
