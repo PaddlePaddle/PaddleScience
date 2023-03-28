@@ -18,7 +18,7 @@ import copy
 from ppsci.arch.mlp import MLP
 from ppsci.utils import logger
 
-__all__ = ["MLP"]
+__all__ = ["MLP", "build_model"]
 
 
 def build_model(cfg):
