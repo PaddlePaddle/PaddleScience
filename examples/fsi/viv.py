@@ -19,7 +19,6 @@ import numpy as np
 import paddle
 import paddle.amp as amp
 import paddle.distributed as dist
-import paddle.nn as nn
 from packaging import version
 from paddle.distributed import fleet
 
@@ -200,7 +199,7 @@ def eval(solver: ppsci.solver.Solver, epoch_id):
         solver.global_step = 0
 
     # load pretrained model if specified
-    pretrained_model_path = "./output_unsteady/MLP/epoch_24000"
+    pretrained_model_path = None
     if pretrained_model_path is not None:
         save_load.load_pretrain(solver.model, pretrained_model_path)
 
@@ -269,7 +268,7 @@ if __name__ == "__main__":
     random.seed(42 + solver.rank)
 
     # set output diretory
-    solver.output_dir = "./output_unsteady"
+    solver.output_dir = "./output_viv"
 
     # initialize logger
     solver.log_freq = 10

@@ -162,10 +162,12 @@ def eval_func(solver, epoch_id, log_freq):
                 _validator.output_keys,
                 _validator.num_timestamp,
             )
+
+            ##  save 1D prediction
             # all_label = {
             #     "eta_pred": all_label["eta"]
             # }
-            # visualize.save_prediction_plot(
+            # visualize.save_pic_from_dict(
             #     osp.join(visual_dir, _validator.name),
             #     {**all_output, **all_input, **all_label},
             #     "t_f",
