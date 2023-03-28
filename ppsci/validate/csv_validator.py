@@ -13,12 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os.path as osp
-
 import numpy as np
-import pandas as pd
 
 from ppsci.data import dataset
+from ppsci.utils import misc
 from ppsci.validate import base
 
 
@@ -51,35 +49,23 @@ class CSVValidator(base.Validator):
         metric=None,
         name=None,
     ):
-        if not osp.exists(csv_path):
-            raise FileNotFoundError(f"csv_path({csv_path}) not exist.")
-
         # read data
-        raw_data_frame = pd.read_csv(csv_path)
+        data_dict = misc.load_csv_file(csv_path, input_keys + label_keys, alias_dict)
+        self.input_keys = [
+            alias_dict[key] if key in alias_dict else key for key in input_keys
+        ]
+        self.output_keys = [
+            alias_dict[key] if key in alias_dict else key for key in input_keys
+        ]
 
-        # convert to numpy array
         input = {}
-        for key in input_keys:
-            input[key] = np.asarray(raw_data_frame[key], "float32")
-            input[key] = input[key].reshape([-1, 1])
-        label = {}
-        for key in label_keys:
-            label[key] = np.asarray(raw_data_frame[key], "float32")
-            label[key] = label[key].reshape([-1, 1])
+        for key in self.input_keys:
+            input[key] = data_dict[key]
 
-        # replace key with alias
-        for key, alias in alias_dict.items():
-            if key in input_keys:
-                input[alias] = input.pop(key)
-            elif key in label_keys:
-                label[alias] = label.pop(key)
-            else:
-                raise ValueError(
-                    f"key({key}) in alias_dict didn't appear "
-                    f"in input_keys or label_keys"
-                )
-        self.input_keys = list(input.keys())
-        self.output_keys = list(label.keys())
+        label = {}
+        for key in self.output_keys:
+            label[key] = data_dict[key]
+
         self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         self.num_timestamp = 1
 
@@ -91,7 +77,7 @@ class CSVValidator(base.Validator):
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
 
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"name = {self.name}",
@@ -102,4 +88,3 @@ class CSVValidator(base.Validator):
                 f"metric = {list(self.metric.keys())}",
             ]
         )
-        return _str

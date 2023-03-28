@@ -14,11 +14,11 @@ limitations under the License.
 """
 
 from ppsci import arch
+from ppsci import autodiff
 from ppsci import constraint
 from ppsci import data
 from ppsci import equation
 from ppsci import geometry
-from ppsci import gradient
 from ppsci import loss
 from ppsci import metric
 from ppsci import optimizer
@@ -33,7 +33,7 @@ __all__ = [
     "data",
     "equation",
     "geometry",
-    "gradient",
+    "autodiff",
     "loss",
     "metric",
     "optimizer",

@@ -13,9 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import paddle.nn as nn
 import sympy
-
-# from sympy import printing
 
 
 class PDE(object):
@@ -24,6 +23,9 @@ class PDE(object):
     def __init__(self):
         super().__init__()
         self.equations = {}
+
+        # for PDE which has learnable parameter(s)
+        self.learnable_parameters = nn.ParameterList()
 
     def create_symbols(self, symbol_str):
         """Create symbols
@@ -51,9 +53,16 @@ class PDE(object):
     def add_equation(self, name, equation):
         self.equations.update({name: equation})
 
+    def parameters(self):
+        """Return parameters contained in PDE.
+
+        Returns:
+            List[Tensor]: A list of parameters.
+        """
+        return self.learnable_parameters.parameters()
+
     def __str__(self):
-        _str = ", ".join(
+        return ", ".join(
             [self.__class__.__name__]
             + [f"{name}: {eq}" for name, eq in self.equations.items()]
         )
-        return _str
