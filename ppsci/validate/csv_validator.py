@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import types
+
 import numpy as np
 
 from ppsci.data import dataset
@@ -47,6 +49,7 @@ class CSVValidator(base.Validator):
         loss,
         transforms=None,
         metric=None,
+        weight_dict=None,
         name=None,
     ):
         # read data
@@ -70,6 +73,20 @@ class CSVValidator(base.Validator):
         self.num_timestamp = 1
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        if weight_dict is not None:
+            for key, value in weight_dict.items():
+                if isinstance(value, (int, float)):
+                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                elif isinstance(value, types.FunctionType):
+                    func = value
+                    weight[key] = func(input)
+                    if isinstance(weight[key], (int, float)):
+                        weight[key] = np.full_like(
+                            next(iter(input.values())), float(weight[key])
+                        )
+                else:
+                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(
             input, label, weight, transforms
         )

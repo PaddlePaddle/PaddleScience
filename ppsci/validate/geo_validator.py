@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import types
+
 import numpy as np
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
@@ -35,6 +37,7 @@ class GeometryValidator(base.Validator):
         evenly=False,
         metric=None,
         with_initial=False,
+        weight_dict=None,
         name=None,
     ):
         self.label_expr = label_expr
@@ -105,6 +108,19 @@ class GeometryValidator(base.Validator):
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        if weight_dict is not None:
+            for key, value in weight_dict.items():
+                if isinstance(value, (int, float)):
+                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                elif isinstance(value, types.FunctionType):
+                    func = value
+                    weight[key] = func(input)
+                    if isinstance(weight[key], (int, float)):
+                        weight[key] = np.full_like(
+                            next(iter(input.values())), float(weight[key])
+                        )
+                else:
+                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
