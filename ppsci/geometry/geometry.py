@@ -197,7 +197,7 @@ class Geometry(object):
 
     def __str__(self) -> str:
         """Return the name of class"""
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"ndim = {self.ndim}",
@@ -206,4 +206,3 @@ class Geometry(object):
                 f"dim_keys = {self.dim_keys}",
             ]
         )
-        return _str
