@@ -86,6 +86,7 @@ class TimeXGeometry(geometry.Geometry):
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
             nt = self.timedomain.num_timestamp - 1
+            nx = int(np.ceil(n / nt))
         else:
             nx = int(
                 np.ceil(
@@ -105,13 +106,16 @@ class TimeXGeometry(geometry.Geometry):
         ):
             t = self.timedomain.uniform_points(nt, boundary=True)
         else:
-            t = np.linspace(
-                self.timedomain.t1,
-                self.timedomain.t0,
-                num=nt,
-                endpoint=boundary,
-                dtype="float32",
-            )[:, None][::-1]
+            if self.timedomain.time_step is not None:
+                t = np.linspace(
+                    self.timedomain.t1,
+                    self.timedomain.t0,
+                    num=nt,
+                    endpoint=boundary,
+                    dtype="float32",
+                )[:, None][::-1]
+            else:
+                t = self.timedomain.timestamps[1:]
         tx = []
         for ti in t:
             tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
@@ -120,7 +124,7 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_points(self, n, random="pseudo"):
+    def random_points(self, n, random="pseudo", criteria=None):
         # time evenly and geometry random, if time_step if specified
         if self.timedomain.time_step is not None:
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -133,8 +137,31 @@ class TimeXGeometry(geometry.Geometry):
             )[:, None][
                 ::-1
             ]  # [nt, 1]
+            # 1. sample nx points in static geometry with criteria
             nx = int(np.ceil(n / nt))
-            x = self.geometry.random_points(nx, random)
+            _size, _ntry, _nsuc = 0, 0, 0
+            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            while _size < nx:
+                _x = self.geometry.random_points(nx, random)
+                if criteria is not None:
+                    # fix arg 't' to None in criteria there
+                    criteria_mask = criteria(
+                        None, *np.split(_x, self.geometry.ndim, axis=1)
+                    ).flatten()
+                    _x = _x[criteria_mask]
+                if len(_x) > nx - _size:
+                    _x = _x[: nx - _size]
+                x[_size : _size + len(_x)] = _x
+
+                _size += len(_x)
+                _ntry += 1
+                if len(_x) > 0:
+                    _nsuc += 1
+
+                if _ntry >= 1000 and _nsuc == 0:
+                    raise RuntimeError(f"sample interior failed")
+
+            # 2. repeat spatial points along time
             tx = []
             for ti in t:
                 tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
@@ -146,7 +173,29 @@ class TimeXGeometry(geometry.Geometry):
             nt = self.timedomain.num_timestamp - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
-            x = self.geometry.random_points(nx, random)
+
+            _size, _ntry, _nsuc = 0, 0, 0
+            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            while _size < nx:
+                _x = self.geometry.random_points(nx, random)
+                if criteria is not None:
+                    # fix arg 't' to None in criteria there
+                    criteria_mask = criteria(
+                        None, *np.split(_x, self.geometry.ndim, axis=1)
+                    ).flatten()
+                    _x = _x[criteria_mask]
+                if len(_x) > nx - _size:
+                    _x = _x[: nx - _size]
+                x[_size : _size + len(_x)] = _x
+
+                _size += len(_x)
+                _ntry += 1
+                if len(_x) > 0:
+                    _nsuc += 1
+
+                if _ntry >= 1000 and _nsuc == 0:
+                    raise RuntimeError(f"sample interior failed")
+
             tx = []
             for ti in t:
                 tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
@@ -181,7 +230,7 @@ class TimeXGeometry(geometry.Geometry):
         t = np.random.permutation(t)
         return np.hstack((t, x))
 
-    def uniform_boundary_points(self, n):
+    def uniform_boundary_points(self, n, criteria=None):
         """Uniform boundary points on the spatio-temporal domain.
 
         Geometry surface area ~ bbox.
@@ -200,7 +249,29 @@ class TimeXGeometry(geometry.Geometry):
             )
             nx = int((n * s / self.timedomain.diam) ** 0.5)
         nt = int(np.ceil(n / nx))
-        x = self.geometry.uniform_boundary_points(nx)
+        # x = self.geometry.uniform_boundary_points(nx)
+        _size, _ntry, _nsuc = 0, 0, 0
+        x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+        while _size < nx:
+            _x = self.geometry.uniform_boundary_points(nx)
+            if criteria is not None:
+                # fix arg 't' to None in criteria there
+                criteria_mask = criteria(
+                    None, *np.split(_x, self.geometry.ndim, axis=1)
+                ).flatten()
+                _x = _x[criteria_mask]
+            if len(_x) > nx - _size:
+                _x = _x[: nx - _size]
+            x[_size : _size + len(_x)] = _x
+
+            _size += len(_x)
+            _ntry += 1
+            if len(_x) > 0:
+                _nsuc += 1
+
+            if _ntry >= 1000 and _nsuc == 0:
+                raise RuntimeError(f"sample interior failed")
+
         nx = len(x)
         t = np.linspace(
             self.timedomain.t1,
@@ -217,7 +288,7 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_boundary_points(self, n, random="pseudo"):
+    def random_boundary_points(self, n, random="pseudo", criteria=None):
         if self.timedomain.time_step is not None:
             # exclude start time t0
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -233,9 +304,28 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                x = self.geometry.random_boundary_points(nx, random=random)
-            # TODO(sensen): decouple uniform and random boundary sample.
-            # x = self.geometry.uniform_boundary_points(nx)
+                # x = self.geometry.random_boundary_points(nx, random=random)
+                _size, _ntry, _nsuc = 0, 0, 0
+                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                while _size < nx:
+                    _x = self.geometry.random_boundary_points(nx, random)
+                    if criteria is not None:
+                        # fix arg 't' to None in criteria there
+                        criteria_mask = criteria(
+                            None, *np.split(_x, self.geometry.ndim, axis=1)
+                        ).flatten()
+                        _x = _x[criteria_mask]
+                    if len(_x) > nx - _size:
+                        _x = _x[: nx - _size]
+                    x[_size : _size + len(_x)] = _x
+
+                    _size += len(_x)
+                    _ntry += 1
+                    if len(_x) > 0:
+                        _nsuc += 1
+
+                    if _ntry >= 1000 and _nsuc == 0:
+                        raise RuntimeError(f"sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
@@ -276,9 +366,28 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                x = self.geometry.random_boundary_points(nx, random=random)
-            # TODO(sensen): decouple uniform and random boundary sample.
-            # x = self.geometry.uniform_boundary_points(nx)
+                # x = self.geometry.random_boundary_points(nx, random=random)
+                _size, _ntry, _nsuc = 0, 0, 0
+                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                while _size < nx:
+                    _x = self.geometry.random_boundary_points(nx, random)
+                    if criteria is not None:
+                        # fix arg 't' to None in criteria there
+                        criteria_mask = criteria(
+                            None, *np.split(_x, self.geometry.ndim, axis=1)
+                        ).flatten()
+                        _x = _x[criteria_mask]
+                    if len(_x) > nx - _size:
+                        _x = _x[: nx - _size]
+                    x[_size : _size + len(_x)] = _x
+
+                    _size += len(_x)
+                    _ntry += 1
+                    if len(_x) > 0:
+                        _nsuc += 1
+
+                    if _ntry >= 1000 and _nsuc == 0:
+                        raise RuntimeError(f"sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
