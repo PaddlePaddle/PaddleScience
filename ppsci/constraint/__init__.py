@@ -20,6 +20,7 @@ from ppsci.constraint.boundary_constraint import BoundaryConstraint
 from ppsci.constraint.initial_constraint import InitialConstraint
 from ppsci.constraint.integral_constraint import IntegralConstraint
 from ppsci.constraint.interior_constraint import InteriorConstraint
+from ppsci.constraint.periodic_constraint import PeriodicConstraint
 from ppsci.constraint.supervised_constraint import SupervisedConstraint
 from ppsci.constraint.supervised_constraint import SupervisedInitialConstraint
 from ppsci.loss import build_loss
@@ -32,6 +33,7 @@ __all__ = [
     "InitialConstraint",
     "IntegralConstraint",
     "InteriorConstraint",
+    "PeriodicConstraint",
     "SupervisedConstraint",
     "SupervisedInitialConstraint",
 ]
