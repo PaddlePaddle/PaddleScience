@@ -40,7 +40,7 @@ def update_eval_loss(trainer, loss_dict, batch_size):
 
 
 def log_train_info(trainer, batch_size, epoch_id, iter_id):
-    lr_msg = f"lr: {trainer.lr_scheduler.get_lr():.8f}"
+    lr_msg = f"lr: {trainer.optimizer.get_lr():.8f}"
 
     metric_msg = ", ".join(
         [
@@ -70,7 +70,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
 
     logger.scaler(
         name="lr",
-        value=trainer.lr_scheduler.get_lr(),
+        value=trainer.optimizer.get_lr(),
         step=trainer.global_step,
         writer=trainer.vdl_writer,
     )
