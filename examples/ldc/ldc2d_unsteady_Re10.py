@@ -19,22 +19,28 @@ import ppsci
 
 if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
-    model = ppsci.arch.MLP(["x", "y"], ["u", "v", "p"], 9, 50, "tanh", False, False)
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
-    geom = {"rect": ppsci.geometry.Rectangle([-0.05, -0.05], [0.05, 0.05])}
+    model = ppsci.arch.MLP(
+        ["t", "x", "y"], ["u", "v", "p"], 9, 50, "tanh", False, False
+    )
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+    geom = {
+        "time_rect": ppsci.geometry.TimeXGeometry(
+            ppsci.geometry.TimeDomain(
+                0.0, 1.5, timestamps=np.linspace(0.0, 1.5, 16, endpoint=True)
+            ),
+            ppsci.geometry.Rectangle([-0.05, -0.05], [0.05, 0.05]),
+        )
+    }
     iters_per_epoch = 1
     constraint = {
         "EQ": ppsci.constraint.InteriorConstraint(
             equation["NavierStokes"].equations,
             {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
                 "iters_per_epoch": iters_per_epoch,
-                "batch_size": 9801,
-                "num_workers": 2,
-                "seed": 42,
-                "use_shared_memory": False,
+                "batch_size": 9801 * 15,
             },
             ppsci.loss.MSELoss("sum"),
             evenly=True,
@@ -48,67 +54,68 @@ if __name__ == "__main__":
         "BC_top": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
             {"u": 1.0, "v": 0.0},
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
                 "iters_per_epoch": iters_per_epoch,
-                "batch_size": 101,
-                "num_workers": 1,
-                "seed": 42,
-                "use_shared_memory": False,
+                "batch_size": 101 * 15,
             },
             ppsci.loss.MSELoss("sum"),
-            criteria=lambda x, y: np.isclose(y, 0.05),
+            criteria=lambda t, x, y: np.isclose(y, 0.05),
             weight_dict={"u": lambda input: 1.0 - 20.0 * input["x"]},
             name="BC_top",
         ),
         "BC_down": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
             {"u": 0.0, "v": 0.0},
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
                 "iters_per_epoch": iters_per_epoch,
-                "batch_size": 101,
-                "num_workers": 1,
-                "seed": 42,
-                "use_shared_memory": False,
+                "batch_size": 101 * 15,
             },
             ppsci.loss.MSELoss("sum"),
-            criteria=lambda x, y: np.isclose(y, -0.05),
+            criteria=lambda t, x, y: np.isclose(y, -0.05),
             name="BC_down",
         ),
         "BC_left": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
             {"u": 0.0, "v": 0.0},
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
                 "iters_per_epoch": iters_per_epoch,
-                "batch_size": 99,
-                "num_workers": 1,
-                "seed": 42,
-                "use_shared_memory": False,
+                "batch_size": 99 * 15,
             },
             ppsci.loss.MSELoss("sum"),
-            criteria=lambda x, y: np.isclose(x, -0.05),
+            criteria=lambda t, x, y: np.isclose(x, -0.05),
             name="BC_left",
         ),
         "BC_right": ppsci.constraint.BoundaryConstraint(
             {"u": lambda out: out["u"], "v": lambda out: out["v"]},
             {"u": 0.0, "v": 0.0},
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
                 "iters_per_epoch": iters_per_epoch,
-                "batch_size": 99,
-                "num_workers": 1,
-                "seed": 42,
-                "use_shared_memory": False,
+                "batch_size": 99 * 15,
             },
             ppsci.loss.MSELoss("sum"),
-            criteria=lambda x, y: np.isclose(x, 0.05),
+            criteria=lambda t, x, y: np.isclose(x, 0.05),
             name="BC_right",
+        ),
+        "IC": ppsci.constraint.InitialConstraint(
+            {"u": lambda out: out["u"], "v": lambda out: out["v"]},
+            {"u": 0.0, "v": 0.0},
+            geom["time_rect"],
+            {
+                "dataset": "IterableNamedArrayDataset",
+                "iters_per_epoch": iters_per_epoch,
+                "batch_size": 9801,
+            },
+            ppsci.loss.MSELoss("sum"),
+            evenly=True,
+            name="IC",
         ),
     }
     epochs = 20000
@@ -131,22 +138,20 @@ if __name__ == "__main__":
                 "v": 0.0,
                 "p": 0.0,
             },
-            geom["rect"],
+            geom["time_rect"],
             {
                 "dataset": "IterableNamedArrayDataset",
-                "total_size": 9801,
-                "num_workers": 0,
-                "seed": 42,
-                "use_shared_memory": False,
+                "total_size": 9801 * 16,
             },
             ppsci.loss.MSELoss("sum"),
             evenly=True,
             metric={"MSE": ppsci.metric.MSE()},
+            with_initial=True,
             name="Residual",
         )
     }
 
-    output_dir = "./ldc2d_steady_Re10"
+    output_dir = "./ldc2d_unsteady_Re10"
     train_solver = ppsci.solver.Solver(
         "train",
         model,
