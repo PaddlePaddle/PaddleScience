@@ -19,6 +19,7 @@ import time
 
 import paddle
 import paddle.amp as amp
+import paddle.io as io
 
 from ppsci import visualize
 from ppsci.solver import printer
@@ -43,7 +44,10 @@ def eval_func(solver, epoch_id, log_freq):
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
-        num_samples = len(_validator.data_loader.dataset)
+        if isinstance(_validator.data_loader, io.DataLoader):
+            num_samples = len(_validator.data_loader.dataset)
+        else:
+            num_samples = _validator.data_loader.num_samples
 
         loss_dict = misc.Prettydefaultdict(float)
         reader_tic = time.perf_counter()
@@ -52,7 +56,7 @@ def eval_func(solver, epoch_id, log_freq):
             input_dict, label_dict, _ = batch
 
             # profile code
-            profiler.add_profiler_step(solver.cfg["profiler_options"])
+            # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
                 # 5 step for warmup
                 for key in solver.eval_time_info:
