@@ -12,12 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import paddle
 from paddle import io
 
 
 class NamedArrayDataset(io.Dataset):
-    """Class for Named Array Dataset
+    """Class for Named Array Dataset.
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
@@ -35,6 +35,7 @@ class NamedArrayDataset(io.Dataset):
         self._len = len(next(iter(input.values())))
 
     def __getitem__(self, idx):
+
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
@@ -47,3 +48,31 @@ class NamedArrayDataset(io.Dataset):
 
     def __len__(self):
         return self._len
+
+
+class IterableNamedArrayDataset(io.IterableDataset):
+    """IterableNamedArrayDataset for full-data training, i.e.batch_size=len(data).
+    Args:
+        input (Dict[str, np.ndarray]): Input dict.
+        label (Dict[str, np.ndarray]): Label dict.
+        weight (Dict[str, np.ndarray]): Weight dict.
+        batch_size (int): Batch size. Defaults to None.
+        transforms (vision.Compose, optional): Compose object contains sample wise transform(s). Defaults to None.
+    """
+
+    def __init__(self, input, label, weight, transforms=None):
+        self.input = {k: paddle.to_tensor(v) for k, v in input.items()}
+        self.label = {k: paddle.to_tensor(v) for k, v in label.items()}
+        self.weight = {k: paddle.to_tensor(v) for k, v in weight.items()}
+        self._len = len(next(iter(self.input.values())))
+
+    @property
+    def num_samples(self):
+        """Number of samples within current dataset."""
+        return self._len
+
+    def __iter__(self):
+        yield self.input, self.label, self.weight
+
+    def __len__(self):
+        return 1
