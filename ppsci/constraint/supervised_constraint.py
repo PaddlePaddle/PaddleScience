@@ -58,18 +58,21 @@ class SupervisedConstraint(base.Constraint):
         ]
         if data_file.endswith(".csv"):
             # load data
-            data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
+            data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and timestamps is None:
                 raise ValueError("Time should be given by arg t0 or data itself.")
             if timestamps is not None:
                 if "t" in data:
                     raw_time_array = data["t"]
-                    mask = np.zeros((len(raw_time_array),), "bool")
+                    mask = []
                     for ti in timestamps:
-                        mask |= np.isclose(raw_time_array, ti).flatten()
+                        mask.append(
+                            np.nonzero(np.isclose(raw_time_array, ti).flatten())[0]
+                        )
                     data = misc.convert_to_array(
                         data, self.input_keys + self.output_keys
                     )
+                    mask = np.concatenate(mask, 0)
                     data = data[mask]
                     data = misc.convert_to_dict(
                         data, self.input_keys + self.output_keys

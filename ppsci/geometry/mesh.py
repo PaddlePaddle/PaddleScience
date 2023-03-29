@@ -19,7 +19,6 @@ import pysdf
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
-from ppsci.geometry import inflation
 from ppsci.geometry import sampler
 from ppsci.utils import misc
 
@@ -124,6 +123,8 @@ class Mesh(geometry.Geometry):
             raise ValueError(
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
+        from ppsci.geometry import inflation
+
         all_points = []
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
@@ -160,6 +161,8 @@ class Mesh(geometry.Geometry):
         all_points = []
         all_normal = []
         all_area = []
+        from ppsci.geometry import inflation
+
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
             triangle_areas = area_of_triangles(
