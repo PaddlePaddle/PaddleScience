@@ -165,6 +165,10 @@ class Solver(object):
             else:
                 self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
 
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
         self.world_size = dist.get_world_size()
