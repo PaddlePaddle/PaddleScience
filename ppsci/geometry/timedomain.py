@@ -341,8 +341,9 @@ class TimeXGeometry(geometry.Geometry):
         return np.hstack((np.full([n, 1], t, dtype="float32"), x))
 
     def periodic_point(self, x, component):
-        xp = self.geometry.periodic_point(x[:, 1:], component)
-        return np.hstack((x[:, :1], xp))
+        t, _x = x[:, :1], x[:, 1:]
+        xp = self.geometry.periodic_point(_x, component)
+        return np.vstack((x, np.hstack(t, xp)))
 
     def sample_initial_interior(
         self, n: int, random: str = "pseudo", criteria=None, evenly=False
@@ -375,7 +376,7 @@ class TimeXGeometry(geometry.Geometry):
 
     def __str__(self) -> str:
         """Return the name of class"""
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"ndim = {self.ndim}",
@@ -384,4 +385,3 @@ class TimeXGeometry(geometry.Geometry):
                 f"dim_keys = {self.dim_keys}",
             ]
         )
-        return _str
