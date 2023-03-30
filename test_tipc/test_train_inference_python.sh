@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; cd ..; pwd)
-TEST_DIR=${PDSC_DIR}/tests
 source ${TEST_DIR}/test_tipc/common_func.sh
 
 FILENAME=$1

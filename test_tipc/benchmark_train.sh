@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; cd ..; pwd)
-TEST_DIR="${PDSC_DIR}/tests"
+export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
+export TEST_DIR="${PDSC_DIR}"
+export TIPC_TEST="ON" # open tipc log in solver.py 
 BENCHMARK_ROOT=${TEST_DIR}"/test_tipc/tools"
 source ${TEST_DIR}/test_tipc/common_func.sh
 echo -e "\n* [TEST_DIR] is now set : \n" ${TEST_DIR} "\n"
@@ -80,7 +81,7 @@ function get_repo_name(){
 }
 
 FILENAME=${PDSC_DIR}"/"$1
-echo -e "\n " $FILENAME " \n"
+echo -e "\n* [FILENAME] is now set : \n" ${FILENAME} "\n"
 # copy FILENAME as new
 new_filename="${TEST_DIR}/test_tipc/benchmark_train.txt"
 cmd=`yes|cp $FILENAME $new_filename`
@@ -194,7 +195,6 @@ for batch_size in ${batch_size_list[*]}; do
                 echo $cmd
                 eval $cmd
                 eval "cat ${log_path}/${log_name}"
-                echo 'BKP1'
 
                 # without profile
                 log_path="$SAVE_LOG/train_log"

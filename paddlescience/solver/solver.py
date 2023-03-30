@@ -253,7 +253,11 @@ class Solver(object):
 
             # record time
             timer = utils.Timer()
-            tipc_test_mode = True
+            if os.getenv("TIPC_TEST") == "ON":  # script will turn this env variable one
+                tipc_test_mode = True
+            else:
+                tipc_test_mode = False
+
             if tipc_test_mode is True:  # tipc test
                 # N个Step打印1条日志时，reader_cost为N个Step数据加载用时的平均值，全量训练，N=1
                 N_print = 1
