@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os.path as osp
-
 import numpy as np
 
 from ppsci.geometry import geometry
@@ -52,7 +50,7 @@ class PointCloud(geometry.Geometry):
             self.interior = np.concatenate(self.interior, -1)
 
         # PointCloud from CSV file
-        if boundary_path is not None and boundary_path.endswith(".csv"):
+        if boundary_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_path, coord_keys)
 
@@ -65,7 +63,7 @@ class PointCloud(geometry.Geometry):
             self.boundary = None
 
         # PointCloud from CSV file
-        if boundary_normal_path is not None and boundary_normal_path.endswith(".csv"):
+        if boundary_normal_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
 
@@ -136,7 +134,7 @@ class PointCloud(geometry.Geometry):
     def uniform_boundary_points(self, n: int):
         """Compute the equispaced points on the boundary."""
         raise NotImplementedError(
-            f"PointCloud do not have 'uniform_boundary_points' method"
+            "PointCloud do not have 'uniform_boundary_points' method"
         )
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -163,37 +161,37 @@ class PointCloud(geometry.Geometry):
 
     def union(self, rhs):
         raise NotImplementedError(
-            f"Union operation for PointCloud is not supported yet."
+            "Union operation for PointCloud is not supported yet."
         )
 
     def __or__(self, rhs):
         raise NotImplementedError(
-            f"Union operation for PointCloud is not supported yet."
+            "Union operation for PointCloud is not supported yet."
         )
 
     def difference(self, rhs):
         raise NotImplementedError(
-            f"Subtraction operation for PointCloud is not supported yet."
+            "Subtraction operation for PointCloud is not supported yet."
         )
 
     def __sub__(self, rhs):
         raise NotImplementedError(
-            f"Subtraction operation for PointCloud is not supported yet."
+            "Subtraction operation for PointCloud is not supported yet."
         )
 
     def intersection(self, rhs):
         raise NotImplementedError(
-            f"Intersection operation for PointCloud is not supported yet."
+            "Intersection operation for PointCloud is not supported yet."
         )
 
     def __and__(self, rhs):
         raise NotImplementedError(
-            f"Intersection operation for PointCloud is not supported yet."
+            "Intersection operation for PointCloud is not supported yet."
         )
 
     def __str__(self) -> str:
         """Return the name of class"""
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"num_points = {len(self.interior)}",
@@ -202,4 +200,3 @@ class PointCloud(geometry.Geometry):
                 f"dim_keys = {self.dim_keys}",
             ]
         )
-        return _str

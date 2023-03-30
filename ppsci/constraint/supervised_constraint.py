@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os.path as osp
 import types
 
 import numpy as np
@@ -61,7 +60,7 @@ class SupervisedConstraint(base.Constraint):
             # load data
             data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and timestamps is None:
-                raise ValueError(f"must given time data from t0 or data itself.")
+                raise ValueError("Time should be given by arg t0 or data itself.")
             if timestamps is not None:
                 if "t" in data:
                     raw_time_array = data["t"]
@@ -95,7 +94,7 @@ class SupervisedConstraint(base.Constraint):
 
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
-            raise NotImplementedError(f"Only suppport .csv file now.")
+            raise NotImplementedError("Only suppport .csv file now.")
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
@@ -162,7 +161,7 @@ class SupervisedInitialConstraint(base.Constraint):
             # load data
             data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and t0 is None:
-                raise ValueError(f"must given time data from t0 or data itself.")
+                raise ValueError("Time should be given by arg t0 or data itself.")
             if t0 is not None:
                 data = misc.convert_to_array(data, self.input_keys + self.output_keys)
                 data = misc.combine_array_with_time(data, [t0])
@@ -178,7 +177,7 @@ class SupervisedInitialConstraint(base.Constraint):
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
             self.num_timestamp = 1
         else:
-            raise NotImplementedError(f"Only suppport .csv file now.")
+            raise NotImplementedError("Only suppport .csv file now.")
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:

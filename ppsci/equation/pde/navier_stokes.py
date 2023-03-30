@@ -94,23 +94,20 @@ class NavierStokes(base.PDE):
         if self.dim == 3:
 
             def momentum_z_compute_func(out):
-                x, y = out["x"], out["y"]
-                u, v, p = out["u"], out["v"], out["p"]
+                x, y, z = out["x"], out["y"], out["z"]
+                u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (
                     u * jacobian(w, x)
                     + v * jacobian(w, y)
+                    + w * jacobian(w, z)
                     - nu / rho * hessian(w, x)
                     - nu / rho * hessian(w, y)
+                    - nu / rho * hessian(w, z)
                     + 1 / rho * jacobian(p, z)
                 )
                 if self.time:
                     t = out["t"]
                     momentum_z += jacobian(w, t)
-                if self.dim == 3:
-                    z = out["z"]
-                    w = out["w"]
-                    momentum_z += w * jacobian(w, z)
-                    momentum_z -= nu / rho * hessian(w, z)
                 return momentum_z
 
             self.add_equation("momentum_z", momentum_z_compute_func)
