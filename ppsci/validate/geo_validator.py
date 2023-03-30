@@ -38,9 +38,9 @@ class GeometryValidator(base.Validator):
         name=None,
     ):
         self.label_expr = label_expr
-        for label_name, label_expr in self.label_expr.items():
-            if isinstance(label_expr, str):
-                self.label_expr[label_name] = sp_parser.parse_expr(label_expr)
+        for label_name, expr in self.label_expr.items():
+            if isinstance(expr, str):
+                self.label_expr[label_name] = sp_parser.parse_expr(expr)
 
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
@@ -52,6 +52,7 @@ class GeometryValidator(base.Validator):
         if isinstance(geom, geometry.TimeXGeometry):
             if geom.timedomain.num_timestamp is not None:
                 if with_initial:
+                    # include t0
                     self.num_timestamp = geom.timedomain.num_timestamp
                     assert (
                         nx % self.num_timestamp == 0
@@ -82,7 +83,7 @@ class GeometryValidator(base.Validator):
                     )
             else:
                 raise NotImplementedError(
-                    f"TimeXGeometry with random timestamp not implemented yet."
+                    "TimeXGeometry with random timestamp not implemented yet."
                 )
         else:
             input = geom.sample_interior(nx, random, criteria, evenly)
