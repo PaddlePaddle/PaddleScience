@@ -1,23 +1,29 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Union
 
 import numpy as np
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
+from typing_extensions import Literal
 
 from ppsci import geometry
+from ppsci import loss
 from ppsci.data import dataset
 from ppsci.validate import base
 
@@ -25,17 +31,17 @@ from ppsci.validate import base
 class GeometryValidator(base.Validator):
     def __init__(
         self,
-        label_expr,
-        label_dict,
-        geom,
-        dataloader_cfg,
-        loss,
-        random="pseudo",
-        criteria=None,
-        evenly=False,
+        label_expr: Dict[str, Callable],
+        label_dict: Dict[str, Union[float, Callable]],
+        geom: geometry.Geometry,
+        dataloader_cfg: Dict[str, Any],
+        loss: loss.LossBase,
+        random: Literal["pseudo", "LHS"] = "pseudo",
+        criteria: Callable = None,
+        evenly: bool = False,
         metric=None,
-        with_initial=False,
-        name=None,
+        with_initial: bool = False,
+        name: str = None,
     ):
         self.label_expr = label_expr
         for label_name, expr in self.label_expr.items():

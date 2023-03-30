@@ -1,24 +1,30 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import types
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Union
 
 import numpy as np
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
+from typing_extensions import Literal
 
+from ppsci import geometry
+from ppsci import loss
 from ppsci.constraint import base
 from ppsci.data import dataset
 
@@ -27,34 +33,30 @@ class InitialConstraint(base.Constraint):
     """Class for initial constraint.
 
     Args:
-        label_expr (Dict[str, sympy.Basic]): Expression of how to compute label.
-        label_dict (Dict[str, Union[float, sympy.Basic]]): Value of label.
-        geom (Geometry): Geometry which constraint applied on.
-        dataloader_cfg (AttrDict): Config of building a dataloader.
-        loss (LossBase): Loss object.
-        random (str, optional): Random method for sampling points in geometry.
-            Defaults to "pseudo".
-        criteria (Callable, optional): Criteria for finely define subdomain in geometry.
-            Defaults to None.
-        evenly (bool, optional): Whether to use envely distribution in sampling.
-            Defaults to False.
-        weight_dict (Dict[str, Union[float, sympy.Basic]], optional): Weight for label
-            if specified. Defaults to None.
+        label_expr (Dict[str, Callable]): Function of how to compute label.
+        label_dict (Dict[str, Union[float, Callable]]): Value(Function) of label.
+        geom (geometry.Geometry): Geometry which constraint applied on.
+        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
+        loss (loss.LossBase): Loss functor.
+        random (Literal["pseudo", "LHS"], optional): Random method for sampling points in geometry. Defaults to "pseudo".
+        criteria (Callable, optional): Criteria for finely define subdomain in geometry. Defaults to None.
+        evenly (bool, optional):  Whether to use envely distribution in sampling. Defaults to False.
+        weight_dict (Dict[str, Callable], optional): Weight for label. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "IC".
     """
 
     def __init__(
         self,
-        label_expr,
-        label_dict,
-        geom,
-        dataloader_cfg,
-        loss,
-        random="pseudo",
-        criteria=None,
-        evenly=False,
-        weight_dict=None,
-        name="IC",
+        label_expr: Dict[str, Callable],
+        label_dict: Dict[str, Union[float, Callable]],
+        geom: geometry.Geometry,
+        dataloader_cfg: Dict[str, Any],
+        loss: loss.LossBase,
+        random: Literal["pseudo", "LHS"] = "pseudo",
+        criteria: Callable = None,
+        evenly: bool = False,
+        weight_dict: Dict[str, Callable] = None,
+        name: str = "IC",
     ):
         self.label_expr = label_expr
         for label_name, expr in self.label_expr.items():
