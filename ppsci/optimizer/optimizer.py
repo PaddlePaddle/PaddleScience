@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import inspect
 
@@ -24,26 +23,24 @@ __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 
 
 class SGD(object):
-    """
+    """Stochastic Gradient Descent.
+
     Args:
-    learning_rate (float|Tensor|LearningRateDecay, optional): The learning rate used to update ``Parameter``.
-        It can be a float value, a ``Tensor`` with a float type or a LearningRateDecay. The default value is 0.001.
-    parameters (list|tuple, optional): List/Tuple of ``Tensor`` to update to minimize ``loss``. \
-        This parameter is required in dygraph mode. \
-        The default value is None in static mode, at this time all parameters will be updated.
-    weight_decay (float|WeightDecayRegularizer, optional): The strategy of regularization. \
-        It canbe a float value as coeff of L2 regularization or \
-        :ref:`api_fluid_regularizer_L1Decay`, :ref:`api_fluid_regularizer_L2Decay`.
-        If a parameter has set regularizer using :ref:`api_fluid_ParamAttr` already, \
-        the regularization setting here in optimizer will be ignored for this parameter. \
-        Otherwise, the regularization setting here in optimizer will take effect. \
-        Default None, meaning there is no regularization.
-    grad_clip (GradientClipBase, optional): Gradient cliping strategy, it's an instance of
-        some derived class of ``GradientClipBase`` . There are three cliping strategies
-        ( :ref:`api_fluid_clip_GradientClipByGlobalNorm` , :ref:`api_fluid_clip_GradientClipByNorm` ,
-        :ref:`api_fluid_clip_GradientClipByValue` ). Default None, meaning there is no gradient clipping.
-    name (str, optional): The default value is None. Normally there is no need for user
-            to set this property.
+        learning_rate (float|Tensor|LearningRateDecay, optional): The learning rate used to update ``Parameter``.
+            It can be a float value, a ``Tensor`` with a float type or a LearningRateDecay. The default value is 0.001.
+        weight_decay (float|WeightDecayRegularizer, optional): The strategy of regularization.
+            It canbe a float value as coeff of L2 regularization or
+            :ref:`api_fluid_regularizer_L1Decay`, :ref:`api_fluid_regularizer_L2Decay`.
+            If a parameter has set regularizer using :ref:`api_fluid_ParamAttr` already,
+            the regularization setting here in optimizer will be ignored for this parameter.
+            Otherwise, the regularization setting here in optimizer will take effect.
+            Default None, meaning there is no regularization.
+        grad_clip (GradientClipBase, optional): Gradient cliping strategy, it's an instance of
+            some derived class of ``GradientClipBase`` . There are three cliping strategies
+            ( :ref:`api_fluid_clip_GradientClipByGlobalNorm` , :ref:`api_fluid_clip_GradientClipByNorm` ,
+            :ref:`api_fluid_clip_GradientClipByValue` ). Default None, meaning there is no gradient clipping.
+        name (str, optional): The default value is None. Normally there is no need for user
+                to set this property.
     """
 
     def __init__(
@@ -87,13 +84,12 @@ class SGD(object):
 
 
 class Momentum(object):
-    """
-    Simple Momentum optimizer with velocity state.
+    """Simple Momentum optimizer with velocity state.
+
     Args:
-        learning_rate (float|Variable) - The learning rate used to update parameters.
+        learning_rate (float|Variable): The learning rate used to update parameters.
             Can be a float value or a Variable with one float value as data element.
-        momentum (float) - Momentum factor.
-        regularization (WeightDecayRegularizer, optional) - The strategy of regularization.
+        momentum (float): Momentum factor.
     """
 
     def __init__(
@@ -251,15 +247,14 @@ class LBFGS(object):
 
 
 class RMSProp(object):
-    """
-    Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
+    """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
+
     Args:
-        learning_rate (float|Variable) - The learning rate used to update parameters.
+        learning_rate (float|Variable): The learning rate used to update parameters.
             Can be a float value or a Variable with one float value as data element.
-        momentum (float) - Momentum factor.
-        rho (float) - rho value in equation.
-        epsilon (float) - avoid division by zero, default is 1e-6.
-        regularization (WeightDecayRegularizer, optional) - The strategy of regularization.
+        momentum (float): Momentum factor.
+        rho (float): rho value in equation.
+        epsilon (float): avoid division by zero, default is 1e-6.
     """
 
     def __init__(
