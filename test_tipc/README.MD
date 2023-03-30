@@ -3,12 +3,12 @@ TIPC功能测试的主程序为benchmark_train.sh，可以测试基于Python的�
 ## 1. Docker enviroment (运行环境)
 - docker image: registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda11.2-cudnn8-gcc82
 - paddle = 0.0.0
-- paddlescience = v1.0 Beta
+- paddlescience = 0.0.0
 - python = 3.7
 ## 2. 测试结论汇总
 | 算法名称 | 模型名称 | 单机单卡 | 单机多卡 | 多机多卡 | 模型压缩（单机多卡） |
 |  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |
-|  PINNs  | train_2d_unsteady_continuous.py | 正常训练 <br> FP32 | TBD <br> TBD | TBD <br> TBD | TBD <br> TBD |
+|  PINNs  | train_2d_unsteady_continuous.py | 正常训练 <br> FP32 | - <br> - | - <br> - | - <br> - |
 ## 3. 测试流程(以2d非定常圆柱绕流为例子)
 安装PaddlePaddle == 0.0.0
 
@@ -26,26 +26,25 @@ cd PaddleScience
 修改此目录下对应案例的txt参数文件，来生成不同log，注意对于训练epoch要修改训练py文件，
 
 ```
-./PaddleScience/tests/test_tipc/configs
+./PaddleScience/test_tipc/configs
 ```
 单卡:自动运行打开Profiling
 ```
 export CUDA_VISIBLE_DEVICES=0 
 ```
-在根目录下运行
-```
-bash tests/test_tipc/benchmark_train.sh ./tests/test_tipc/configs/train_2d_unsteady_continuous.txt benchmark_train
-```
-benchmark训练得到训练日志后，会自动保存训练日志并解析得到ips等信息，日志解析代码位于：
-- https://console.cloud.baidu-int.com/devops/icode/repos/baidu/paddle/benchmark-frame/blob/master/tools/scripts/analysis.py
-
 *在解析工具下载好之后，运行脚本
 ```
-cd ./tests/test_tipc/
+cd ./test_tipc/
 wget https://paddle-qa.bj.bcebos.com/benchmark/tools.tar.gz
 tar -zxvf tools.tar.gz
 export BENCHMARK_ROOT=$PWD/tools
 ```
+在根目录下运行
+```
+bash ./test_tipc/benchmark_train.sh ./test_tipc/configs/train_2d_unsteady_continuous.txt benchmark_train
+```
+benchmark训练得到训练日志后，会自动保存训练日志并解析得到ips等信息，日志解析代码位于：
+- https://console.cloud.baidu-int.com/devops/icode/repos/baidu/paddle/benchmark-frame/blob/master/tools/scripts/analysis.py
 运行成功会显示
 ```
 Run successfully with command
