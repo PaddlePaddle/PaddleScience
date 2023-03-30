@@ -33,6 +33,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 
 __all__ = [
+    "build_geometry",
     "Cuboid",
     "Disk",
     "Geometry",
@@ -59,6 +60,8 @@ def build_geometry(cfg):
     Returns:
         Dict[str, Geometry]: Geometry(ies) in dict.
     """
+    if cfg is None:
+        return None
     cfg = copy.deepcopy(cfg)
 
     geom_dict = misc.PrettyOrderedDict()
