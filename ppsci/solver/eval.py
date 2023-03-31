@@ -13,15 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import os.path as osp
 import time
 
 import paddle
 import paddle.amp as amp
 import paddle.io as io
 
-from ppsci import visualize
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
@@ -153,16 +150,5 @@ def eval_func(solver, epoch_id, log_freq):
                 tmp, (int, float)
             ), f"Target metric({type(tmp)}) should be a number"
             target_metric = tmp
-
-        visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-        if solver.rank == 0:
-            os.makedirs(visual_dir, exist_ok=True)
-            visualize.save_vtu_from_dict(
-                osp.join(visual_dir, _validator.name),
-                {**all_output, **all_input},
-                _validator.input_keys,
-                _validator.output_keys,
-                _validator.num_timestamp,
-            )
 
     return target_metric

@@ -13,32 +13,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ppsci import arch
-from ppsci import autodiff
-from ppsci import constraint
-from ppsci import data
-from ppsci import equation
-from ppsci import geometry
-from ppsci import loss
-from ppsci import metric
-from ppsci import optimizer
-from ppsci import solver
-from ppsci import utils
-from ppsci import validate
-from ppsci import visualize
+from ppsci import arch  # isort:skip
+from ppsci import autodiff  # isort:skip
+from ppsci import constraint  # isort:skip
+from ppsci import data  # isort:skip
+from ppsci import equation  # isort:skip
+from ppsci import geometry  # isort:skip
+from ppsci import loss  # isort:skip
+from ppsci import metric  # isort:skip
+from ppsci import optimizer  # isort:skip
+from ppsci import utils  # isort:skip
+from ppsci import visualize  # isort:skip
+from ppsci import validate  # isort:skip
+from ppsci import solver  # isort:skip
 
 __all__ = [
     "arch",
+    "autodiff",
     "constraint",
     "data",
     "equation",
     "geometry",
-    "autodiff",
     "loss",
     "metric",
     "optimizer",
-    "solver",
     "utils",
-    "validate",
     "visualize",
+    "validate",
+    "solver",
 ]
