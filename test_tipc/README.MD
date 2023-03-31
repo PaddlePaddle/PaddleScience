@@ -49,7 +49,7 @@ benchmark训练得到训练日志后，会自动保存训练日志并解析得�
 ```
 Run successfully with command
 ```
-如果运行成功会生成index文件夹，该目录下面生成jason文件[PaddleScience_cylinder2d_unsteady_train_newapi_bs1_fp32_SingleP_DP_N1C1_speed]，其中可以找到对应的ips数值
+如果运行成功会生成index文件夹，该目录下面生成json文件[PaddleScience_cylinder2d_unsteady_train_newapi_bs1_fp32_SingleP_DP_N1C1_speed]，其中可以找到对应的ips数值
 ```
 {"model_branch": "branch_test_1", "model_commit": "77723dd801a83fd9bcee94fec04fdcbdbb87d85a", "model_name": "cylinder2d_unsteady_train_newapi_bs1_fp32_SingleP_DP", "batch_size": 1, "fp_item": "fp32", "run_mode": "DP", "convergence_value": "207.94940185546875", "convergence_key": "loss:", "ips": 599765.06, "speed_unit": "samples/s", "device_num": "N1C1", "model_run_time": "19", "frame_commit": "caf2008b55fe0ee34cd6fa71090701517ac33eda", "frame_version": "0.0.0"}
 ```
