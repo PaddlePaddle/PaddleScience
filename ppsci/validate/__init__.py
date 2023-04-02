@@ -21,6 +21,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.validate.base import Validator
 from ppsci.validate.csv_validator import CSVValidator
+from ppsci.validate.data_validator import DataValidator
 from ppsci.validate.geo_validator import GeometryValidator
 
 __all__ = [

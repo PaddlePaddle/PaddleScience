@@ -14,8 +14,9 @@ limitations under the License.
 """
 
 import numpy as np
-import open3d
-import pymesh
+
+# import open3d
+# import pymesh
 
 
 def inflation(mesh, dis, direction=1):

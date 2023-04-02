@@ -56,7 +56,7 @@ class SupervisedConstraint(base.Constraint):
         self.output_keys = [
             alias_dict[key] if key in alias_dict else key for key in label_keys
         ]
-        if data_file.endswith(".csv"):
+        if str(data_file).endswith(".csv"):
             # load data
             data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and timestamps is None:
@@ -92,6 +92,11 @@ class SupervisedConstraint(base.Constraint):
                 label = {key: data[key] for key in self.output_keys}
                 self.num_timestamp = len(np.unique(data["t"]))
 
+            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
+        elif type(data_file) is dict:
+            data = data_file
+            input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
+            label = {key: data[input_keys[i]] for i, key in enumerate(self.output_keys)}
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
             raise NotImplementedError("Only suppport .csv file now.")
@@ -157,7 +162,7 @@ class SupervisedInitialConstraint(base.Constraint):
         self.output_keys = [
             alias_dict[key] if key in alias_dict else key for key in label_keys
         ]
-        if data_file.endswith(".csv"):
+        if str(data_file).endswith(".csv"):
             # load data
             data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and t0 is None:
@@ -176,6 +181,11 @@ class SupervisedInitialConstraint(base.Constraint):
 
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
             self.num_timestamp = 1
+        elif type(data_file) is dict:
+            data = data_file
+            input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
+            label = {key: data[input_keys[i]] for i, key in enumerate(self.output_keys)}
+            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
             raise NotImplementedError("Only suppport .csv file now.")
 

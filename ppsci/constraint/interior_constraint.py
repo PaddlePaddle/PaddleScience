@@ -63,48 +63,57 @@ class InteriorConstraint(base.Constraint):
                 self.label_expr[label_name] = sp_parser.parse_expr(label_expr)
 
         self.label_dict = label_dict
-        self.input_keys = geom.dim_keys
         self.output_keys = list(label_dict.keys())
-        # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+        if type(geom) is dict:
+            self.input_keys = ["x", "y", "z"][:3]
+            input = geom
+        else:
+            self.input_keys = geom.dim_keys
 
-        if isinstance(criteria, str):
-            criteria = eval(criteria)
+        if isinstance(geom, geometry.Geometry):
+            self.input_keys = geom.dim_keys
+            # "area" will be kept in "output_dict" for computation.
+            if isinstance(geom, geometry.Mesh):
+                self.output_keys += ["area"]
 
-        input = geom.sample_interior(
-            dataloader_cfg["sampler"]["batch_size"] * dataloader_cfg["iters_per_epoch"],
-            random,
-            criteria,
-            evenly,
-        )
-        if "area" in input:
-            input["area"] *= dataloader_cfg["iters_per_epoch"]
+                if isinstance(criteria, str):
+                    criteria = eval(criteria)
+
+                input = geom.sample_interior(
+                    dataloader_cfg["sampler"]["batch_size"]
+                    * dataloader_cfg["iters_per_epoch"],
+                    random,
+                    criteria,
+                    evenly,
+                )
+                if "area" in input:
+                    input["area"] *= dataloader_cfg["iters_per_epoch"]
 
         label = {}
-        for key, value in label_dict.items():
-            if isinstance(value, str):
-                value = sp_parser.parse_expr(value)
-            if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
-            elif isinstance(value, sympy.Basic):
-                func = sympy.lambdify(
-                    sympy.symbols(geom.dim_keys),
-                    value,
-                    [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
-                )
-                label[key] = func(
-                    **{k: v for k, v in input.items() if k in geom.dim_keys}
-                )
-            elif isinstance(value, types.FunctionType):
-                func = value
-                label[key] = func(input)
-                if isinstance(label[key], (int, float)):
-                    label[key] = np.full_like(
-                        next(iter(input.values())), float(label[key])
+        if type(geom) is not dict:
+            for key, value in label_dict.items():
+                if isinstance(value, str):
+                    value = sp_parser.parse_expr(value)
+                if isinstance(value, (int, float)):
+                    label[key] = np.full_like(next(iter(input.values())), float(value))
+                elif isinstance(value, sympy.Basic):
+                    func = sympy.lambdify(
+                        sympy.symbols(geom.dim_keys),
+                        value,
+                        [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
                     )
-            else:
-                raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+                    label[key] = func(
+                        **{k: v for k, v in input.items() if k in geom.dim_keys}
+                    )
+                elif isinstance(value, types.FunctionType):
+                    func = value
+                    label[key] = func(input)
+                    if isinstance(label[key], (int, float)):
+                        label[key] = np.full_like(
+                            next(iter(input.values())), float(label[key])
+                        )
+                else:
+                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:

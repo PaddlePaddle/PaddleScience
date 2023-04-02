@@ -52,16 +52,19 @@ def build_dataloader(_dataset, cfg):
 
     # build sampler
     sampler_cfg = cfg.pop("sampler")
-    sampler_cls = sampler_cfg.pop("name")
-    if sampler_cls == "BatchSampler":
-        world_size = dist.get_world_size()
-        if world_size > 1:
-            sampler_cls = "DistributedBatchSampler"
-            logger.warning(
-                f"Automatically use 'DistributedBatchSampler' instead of "
-                f"'BatchSampler' when world_size({world_size}) > 1"
-            )
-    sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+    if sampler_cfg is not None:
+        sampler_cls = sampler_cfg.pop("name")
+        if sampler_cls == "BatchSampler":
+            world_size = dist.get_world_size()
+            if world_size > 1:
+                sampler_cls = "DistributedBatchSampler"
+                logger.warning(
+                    f"Automatically use 'DistributedBatchSampler' instead of "
+                    f"'BatchSampler' when world_size({world_size}) > 1"
+                )
+        sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+    else:
+        sampler = None
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
@@ -72,13 +75,18 @@ def build_dataloader(_dataset, cfg):
         collate_fn = None
 
     # build init function
-    init_fn = partial(
-        worker_init_fn,
-        num_workers=cfg["num_workers"],
-        rank=dist.get_rank(),
-        base_seed=cfg.get("seed", 42),
-    )
-
+    if "num_workers" in cfg:
+        init_fn = partial(
+            worker_init_fn,
+            num_workers=cfg["num_workers"],
+            rank=dist.get_rank(),
+            base_seed=cfg.get("seed", 42),
+        )
+    else:
+        # default value
+        init_fn = None
+        cfg["num_workers"] = 0
+        cfg["use_shared_memory"] = True
     # build dataloader
     dataloader = io.DataLoader(
         dataset=_dataset,

@@ -45,7 +45,7 @@ def train_epoch_func(solver, epoch_id, log_freq):
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
             # profile code below
-            profiler.add_profiler_step(solver.cfg["profiler_options"])
+            # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
                 # 5 step for warmup
                 for key in solver.train_time_info:
@@ -96,7 +96,7 @@ def train_epoch_func(solver, epoch_id, log_freq):
             if iter_id % solver.update_freq == 0:
                 solver.optimizer.step()
                 solver.optimizer.clear_grad()
-                if not solver.lr_scheduler.by_epoch:
+                if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
                     solver.lr_scheduler.step()
 
         batch_cost += time.perf_counter() - batch_tic
