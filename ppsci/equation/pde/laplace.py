@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
@@ -25,8 +26,15 @@ class Laplace(base.PDE):
 
     def __init__(self, dim: int):
         super().__init__()
-        x, y, z = self.create_symbols("x y z")
-        invars = [x, y, z][:dim]
-        u = self.create_function("u", invars)
+        self.dim = dim
 
-        self.equations["laplace"] = u.diff(x, 2) + u.diff(y, 2) + u.diff(z, 2)
+        def laplace_compute_func(out):
+            x, y = out["x"], out["y"]
+            u = out["u"]
+            laplace = hessian(u, x) + hessian(u, y)
+            if self.dim == 3:
+                z = out["z"]
+                laplace += hessian(u, z)
+            return laplace
+
+        self.add_equation("laplace", laplace_compute_func)
