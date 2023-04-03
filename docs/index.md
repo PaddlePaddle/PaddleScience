@@ -13,9 +13,6 @@
 
     ```shell linenums="1"
     git clone https://github.com/PaddlePaddle/PaddleScience.git
-    cd PaddleScience
-
-    export PYTHONPATH=$PWD:$PYTHONPAT
     ```
 
 3. 安装必要的依赖包
@@ -27,25 +24,41 @@
     # pip install -r requirements.txt -i https://pypi.douban.com/simple/
     ```
 
+    ???+ Info "安装注意事项"
+
+        如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装 [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装） 和 [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）
+
 ## 使用
 
-请参考 [快速开始](./zh/quickstart.md)
-<!-- ## Commands
+1. 进入 PaddleScience 目录，并添加该目录到系统环境变量 PYTHONPATH 中
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+    ``` shell linenums="1"
+    cd PaddleScience
+    export PYTHONPATH=$PWD:$PYTHONPATH
+    ```
 
-## Project layout
+2. 运行案例
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files. -->
+    - 运行内置的案例（以 **ldc2d_unsteady_Re10.py** 为例）
 
-## 共同建设
+        ``` shell linenums="1"
+        cd examples/ldc/
+        python ./ldc2d_unsteady_Re10.py
+        ```
 
-PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共同建设基于飞桨的AI for Science领域顶尖开源项目, 打造活跃的前瞻性的AI for Science开源社区，建立产学研闭环，推动科研创新与产业赋能。
+    - 编写自己的案例（假设案例命为demo）
 
-了解 [飞桨AI for Science共创计划](https://www.paddlepaddle.org.cn/science) 加入我们
+        推荐在 `examples/` 下新建 `demo` 文件夹，然后在 `demo` 文件夹下新建 `demo.py`，最后在 `demo.py` 文件下使用 PaddleScience 提供的 [API](./zh/api/arch.md) 编写代码
+
+        ```py linenums="1" title="demo.py"
+        import ppsci
+
+        # write your code here...
+        ```
+
+        编写完毕后运行你的代码
+
+        ```shell linenums="1"
+        cd examples/demo
+        python demo.py
+        ```

@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
 
@@ -30,9 +29,9 @@ if __name__ == "__main__":
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
 
-    # timestamps including initial t0
+    # set timestamps(including initial t0)
     timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
-    # set time-eometry
+    # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(0.0, 1.5, timestamps=timestamps),
@@ -49,12 +48,12 @@ if __name__ == "__main__":
 
     # pde/bc constraint use t1~tn, initial constraint use t0
     ntime_all = len(timestamps)
-    npoint_pde, ntime_pde = 9801, ntime_all - 1
+    npoint_pde, ntime_pde = 99**2, ntime_all - 1
     npoint_top, ntime_top = 101, ntime_all - 1
     npoint_down, ntime_down = 101, ntime_all - 1
     npoint_left, ntime_left = 99, ntime_all - 1
     npoint_right, ntime_right = 99, ntime_all - 1
-    npoint_ic, ntime_ic = 9801, 1
+    npoint_ic, ntime_ic = 99**2, 1
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -78,7 +77,6 @@ if __name__ == "__main__":
         {**train_dataloader_cfg, **{"batch_size": npoint_top * ntime_top}},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, 0.05),
-        weight_dict={"u": lambda input: 1 - 20 * input["x"]},
         name="BC_top",
     )
     bc_down = ppsci.constraint.BoundaryConstraint(
@@ -117,6 +115,7 @@ if __name__ == "__main__":
         evenly=True,
         name="IC",
     )
+    # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
         bc_top.name: bc_top,
@@ -171,14 +170,14 @@ if __name__ == "__main__":
         npoint_bc * ntime_bc, evenly=True
     )
 
-    # concatenate interior points with boundary points
+    # manually collate input data for visualization,
+    # (interior+boundary) x all timestamps
     vis_initial_points = {
         key: np.concatenate(
             (vis_initial_points[key], vis_boundary_points[key][:npoint_bc])
         )
         for key in vis_initial_points
     }
-
     vis_points = vis_initial_points
     for t in range(ntime_pde):
         for key in vis_interior_points:
@@ -233,4 +232,5 @@ if __name__ == "__main__":
     )
     eval_solver.eval()
 
+    # visualize the prediction of final checkpoint
     eval_solver.visualize()
