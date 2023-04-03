@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import paddle
 from paddle import io
 
@@ -52,6 +53,7 @@ class NamedArrayDataset(io.Dataset):
 
 class IterableNamedArrayDataset(io.IterableDataset):
     """IterableNamedArrayDataset for full-data training, i.e.batch_size=len(data).
+
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
