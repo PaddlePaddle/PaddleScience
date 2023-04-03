@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import os.path as osp
 import time
 from typing import Any
 from typing import Dict
 
 import paddle
 import paddle.amp as amp
+import paddle.io as io
 
-from ppsci import visualize
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
@@ -44,7 +42,10 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
-        num_samples = len(_validator.data_loader.dataset)
+        if isinstance(_validator.data_loader, io.DataLoader):
+            num_samples = len(_validator.data_loader.dataset)
+        else:
+            num_samples = _validator.data_loader.num_samples
 
         loss_dict = misc.Prettydefaultdict(float)
         reader_tic = time.perf_counter()
@@ -53,7 +54,7 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
             input_dict, label_dict, _ = batch
 
             # profile code
-            profiler.add_profiler_step(solver.cfg["profiler_options"])
+            # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
                 # 5 step for warmup
                 for key in solver.eval_time_info:
@@ -150,16 +151,5 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
                 tmp, (int, float)
             ), f"Target metric({type(tmp)}) should be a number"
             target_metric = tmp
-
-        visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-        if solver.rank == 0:
-            os.makedirs(visual_dir, exist_ok=True)
-            visualize.save_vtu_from_dict(
-                osp.join(visual_dir, _validator.name),
-                {**all_output, **all_input},
-                _validator.input_keys,
-                _validator.output_keys,
-                _validator.num_timestamp,
-            )
 
     return target_metric

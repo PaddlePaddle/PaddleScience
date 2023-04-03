@@ -57,12 +57,11 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
     )
 
     eta_sec = (
-        (trainer.cfg["Global"]["epochs"] - epoch_id + 1) * trainer.iters_per_epoch
-        - iter_id
+        (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
     logger.info(
-        f"[Train][Epoch {epoch_id}/{trainer.cfg['Global']['epochs']}]"
+        f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
         f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )

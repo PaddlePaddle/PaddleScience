@@ -61,7 +61,10 @@ class Geometry(object):
             if evenly:
                 points = self.uniform_points(n)
             else:
-                points = self.random_points(n, random)
+                if misc.typename(self) == "TimeXGeometry":
+                    points = self.random_points(n, random, criteria)
+                else:
+                    points = self.random_points(n, random)
 
             if criteria is not None:
                 criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
@@ -90,9 +93,9 @@ class Geometry(object):
                     misc.typename(self) == "TimeXGeometry"
                     and misc.typename(self.geometry) == "Mesh"
                 ):
-                    points, normal, area = self.uniform_boundary_points(n, True)
+                    points, normal, area = self.uniform_boundary_points(n)
                 else:
-                    points = self.uniform_boundary_points(n, True)
+                    points = self.uniform_boundary_points(n)
             else:
                 if (
                     misc.typename(self) == "TimeXGeometry"
@@ -100,7 +103,10 @@ class Geometry(object):
                 ):
                     points, normal, area = self.random_boundary_points(n, random)
                 else:
-                    points = self.random_boundary_points(n, random)
+                    if misc.typename(self) == "TimeXGeometry":
+                        points = self.random_boundary_points(n, random, criteria)
+                    else:
+                        points = self.random_boundary_points(n, random)
 
             if criteria is not None:
                 criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
