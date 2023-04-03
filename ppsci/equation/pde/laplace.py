@@ -21,7 +21,7 @@ class Laplace(base.PDE):
     """Laplace
 
     Args:
-        dim (int): _description_
+        dim (int): Dimension of equation.
     """
 
     def __init__(self, dim: int):
