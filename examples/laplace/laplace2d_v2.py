@@ -18,7 +18,6 @@ import numpy as np
 import ppsci
 
 if __name__ == "__main__":
-
     output_dir = "./output/laplace2d"
     epochs = 20000
     iters_per_epoch = 1
@@ -53,7 +52,7 @@ if __name__ == "__main__":
     }
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["laplace"].equations,
-        {"laplace": lambda out: 0.0},
+        {"laplace": 0},
         geom["rect"],
         eq_dataloader_cfg,
         ppsci.loss.MSELoss("sum"),
