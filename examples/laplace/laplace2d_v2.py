@@ -19,7 +19,7 @@ import ppsci
 
 if __name__ == "__main__":
 
-    output_dir = "output/laplace2d"
+    output_dir = "./output/laplace2d"
     epochs = 20000
     iters_per_epoch = 1
 
@@ -32,13 +32,12 @@ if __name__ == "__main__":
     geom = {"rect": ppsci.geometry.Rectangle([0.0, 0.0], [1.0, 1.0])}
 
     # manually init equation(s)
-    laplace_equation = ppsci.equation.pde.Laplace(dim=2)
-    equation = {"laplace": laplace_equation}
+    equation = {"laplace": ppsci.equation.pde.Laplace(dim=2)}
 
     # maunally build constraint(s)
-    def u_solution_func(d):
+    def u_solution_func(out):
         """compute ground truth for u as label data"""
-        x, y = d["x"], d["y"]
+        x, y = out["x"], out["y"]
         return np.cos(x) * np.cosh(y)
 
     eq_dataloader_cfg = {
@@ -47,36 +46,35 @@ if __name__ == "__main__":
         "iters_per_epoch": iters_per_epoch,
     }
 
-    # init constraint(s)
     bc_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
         "batch_size": 400,
         "iters_per_epoch": iters_per_epoch,
     }
-
-    # maunally build constraint(s)
+    pde_constraint = ppsci.constraint.InteriorConstraint(
+        equation["laplace"].equations,
+        {"laplace": lambda out: 0.0},
+        geom["rect"],
+        eq_dataloader_cfg,
+        ppsci.loss.MSELoss("sum"),
+        evenly=True,
+        name="EQ",
+    )
+    bc = ppsci.constraint.BoundaryConstraint(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        bc_dataloader_cfg,
+        ppsci.loss.MSELoss("sum"),
+        criteria=lambda x, y: np.isclose(x, 0.0)
+        | np.isclose(x, 1.0)
+        | np.isclose(y, 0.0)
+        | np.isclose(y, 1.0),
+        name="BC",
+    )
     constraint = {
-        "EQ": ppsci.constraint.InteriorConstraint(
-            equation["laplace"].equations,
-            {"laplace": lambda d: 0.0},
-            geom["rect"],
-            eq_dataloader_cfg,
-            ppsci.loss.MSELoss("sum"),
-            evenly=True,
-            name="EQ",
-        ),
-        "BC": ppsci.constraint.BoundaryConstraint(
-            {"u": lambda d: d["u"]},
-            {"u": u_solution_func},
-            geom["rect"],
-            bc_dataloader_cfg,
-            ppsci.loss.MSELoss("sum"),
-            criteria=lambda x, y: np.isclose(x, 0.0)
-            | np.isclose(x, 1.0)
-            | np.isclose(y, 0.0)
-            | np.isclose(y, 1.0),
-            name="BC",
-        ),
+        pde_constraint.name: pde_constraint,
+        bc.name: bc,
     }
 
     # init optimizer
@@ -87,20 +85,18 @@ if __name__ == "__main__":
         "dataset": "IterableNamedArrayDataset",
         "total_size": 9800,
     }
-
-    validator = {
-        "MSE_Metric": ppsci.validate.GeometryValidator(
-            {"u": lambda d: d["u"]},
-            {"u": u_solution_func},
-            geom["rect"],
-            eval_dataloader,
-            ppsci.loss.MSELoss("mean"),
-            evenly=True,
-            metric={"MSE": ppsci.metric.MSE()},
-            with_initial=True,
-            name="MSE_Metric",
-        )
-    }
+    mse_metric = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        eval_dataloader,
+        ppsci.loss.MSELoss("mean"),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        with_initial=True,
+        name="MSE_Metric",
+    )
+    validator = {mse_metric.name: mse_metric}
 
     train_solver = ppsci.solver.Solver(
         "train",
@@ -126,6 +122,6 @@ if __name__ == "__main__":
         equation=equation,
         geom=geom,
         validator=validator,
-        pretrained_model_path=f"./{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     eval_solver.eval()
