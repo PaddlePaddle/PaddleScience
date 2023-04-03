@@ -16,7 +16,6 @@
 import numpy as np
 
 import ppsci
-from ppsci import autodiff
 
 if __name__ == "__main__":
 
@@ -33,18 +32,12 @@ if __name__ == "__main__":
     geom = {"rect": ppsci.geometry.Rectangle([0.0, 0.0], [1.0, 1.0])}
 
     # manually init equation(s)
-    def laplace_compute_func(d):
-        x, y = d["x"], d["y"]
-        u = d["u"]
-        laplace = autodiff.hessian(u, x) + autodiff.hessian(u, y)
-        return laplace
-
-    laplace_equation = ppsci.equation.pde.PDE()
-    laplace_equation.add_equation("laplace", laplace_compute_func)
+    laplace_equation = ppsci.equation.pde.Laplace(dim=2)
     equation = {"laplace": laplace_equation}
 
     # maunally build constraint(s)
-    def u_compute_func(d):
+    def u_solution_func(d):
+        """compute ground truth for u as label data"""
         x, y = d["x"], d["y"]
         return np.cos(x) * np.cosh(y)
 
@@ -74,7 +67,7 @@ if __name__ == "__main__":
         ),
         "BC": ppsci.constraint.BoundaryConstraint(
             {"u": lambda d: d["u"]},
-            {"u": u_compute_func},
+            {"u": u_solution_func},
             geom["rect"],
             bc_dataloader_cfg,
             ppsci.loss.MSELoss("sum"),
@@ -86,31 +79,26 @@ if __name__ == "__main__":
         ),
     }
 
-    # init optimizer and lr scheduler
-    lr_scheduler = ppsci.optimizer.lr_scheduler.ConstLR(
-        epochs, iters_per_epoch, 0.001, by_epoch=False
-    )()
-    optimizer = ppsci.optimizer.Adam(
-        lr_scheduler,
-    )([model])
+    # init optimizer
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)([model])
 
     # maunally build validator
-    dataloader_cfg = {
+    eval_dataloader = {
         "dataset": "IterableNamedArrayDataset",
         "total_size": 9800,
     }
 
     validator = {
-        "Residual": ppsci.validate.GeometryValidator(
+        "MSE_Metric": ppsci.validate.GeometryValidator(
             {"u": lambda d: d["u"]},
-            {"u": u_compute_func},
+            {"u": u_solution_func},
             geom["rect"],
-            dataloader_cfg,
+            eval_dataloader,
             ppsci.loss.MSELoss("mean"),
             evenly=True,
             metric={"MSE": ppsci.metric.MSE()},
             with_initial=True,
-            name="Residual",
+            name="MSE_Metric",
         )
     }
 
@@ -120,7 +108,6 @@ if __name__ == "__main__":
         constraint,
         output_dir,
         optimizer,
-        lr_scheduler,
         epochs=epochs,
         iters_per_epoch=iters_per_epoch,
         eval_during_train=True,

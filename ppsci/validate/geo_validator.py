@@ -107,7 +107,8 @@ class GeometryValidator(base.Validator):
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
                     label[key] = np.full(
-                        (next(iter(input.values())).shape[0], 1), float(label[key])
+                        (next(iter(input.values())).shape[0], 1),
+                        float(label[key], "float32"),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")

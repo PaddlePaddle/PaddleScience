@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 from ppsci.equation.pde.base import PDE
+from ppsci.equation.pde.laplace import Laplace
 from ppsci.equation.pde.navier_stokes import NavierStokes
 from ppsci.equation.pde.normal_dot_vec import NormalDotVec
 from ppsci.equation.pde.poisson import Poisson
@@ -23,4 +24,5 @@ __all__ = [
     "NavierStokes",
     "Poisson",
     "NormalDotVec",
+    "Laplace",
 ]
