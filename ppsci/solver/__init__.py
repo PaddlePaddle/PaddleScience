@@ -15,16 +15,12 @@ limitations under the License.
 
 from ppsci.solver import eval
 from ppsci.solver import train
-from ppsci.solver.eval import eval_func
+from ppsci.solver import visu
 from ppsci.solver.solver import Solver
-from ppsci.solver.train import train_epoch_func
-from ppsci.solver.train import train_LBFGS_epoch_func
 
 __all__ = [
     "eval",
     "train",
-    "eval_func",
+    "visu",
     "Solver",
-    "train_epoch_func",
-    "train_LBFGS_epoch_func",
 ]

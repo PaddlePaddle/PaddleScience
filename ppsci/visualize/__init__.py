@@ -13,7 +13,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ppsci.visualize.vtu import save_vtu_from_array
+import copy
+
+from ppsci.visualize.visualizer import Visualizer
+from ppsci.visualize.visualizer import VisualizerScatter1D
+from ppsci.visualize.visualizer import VisualizerVtu
 from ppsci.visualize.vtu import save_vtu_from_dict
 
-__all__ = ["save_vtu_from_array", "save_vtu_from_dict"]
+__all__ = ["Visualizer", "VisualizerScatter1D", "VisualizerVtu", "save_vtu_from_dict"]
+
+
+def build_visualizer(cfg):
+    """Build visualizer(s).
+
+    Args:
+        cfg (List[AttrDict]): Visualizer(s) config list.
+        geom_dict (Dct[str, Geometry]): Geometry(ies) in dict.
+        equation_dict (Dct[str, Equation]): Equation(s) in dict.
+
+    Returns:
+        Dict[str, Visualizer]: Visualizer(s) in dict.
+    """
+    if cfg is None:
+        return None
+    cfg = copy.deepcopy(cfg)
+
+    visualizer_dict = {}
+    for _item in cfg:
+        visualizer_cls = next(iter(_item.keys()))
+        visualizer_cfg = _item[visualizer_cls]
+        visualizer = eval(visualizer_cls)(**visualizer_cfg)
+
+        visualizer_name = visualizer_cfg.get("name", visualizer_cls)
+        if visualizer_name in visualizer_dict:
+            raise ValueError(f"Name of visualizer({visualizer_name}) should be unique")
+        visualizer_dict[visualizer_name] = visualizer
+
+    return visualizer_dict
