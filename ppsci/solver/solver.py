@@ -59,7 +59,8 @@ class Solver(object):
         device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]], optional): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]], optional): Geometry dict. Defaults to None.
-        validator (Optional[Dict[str, Any]], optional): Validator dict. Defaults to None.
+        validator (Optional[Dict[str, ppsci.validate.Validator]], optional): Validator dict. Defaults to None.
+        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]], optional): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str], optional): Pretrained model path. Defaults to None.
