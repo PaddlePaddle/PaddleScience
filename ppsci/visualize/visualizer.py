@@ -45,7 +45,7 @@ class Visualizer(object):
 
 
 class VisualizerScatter1D(Visualizer):
-    def __call__(self, input_dict, output_expr, num_timestamps=1, prefix="plot"):
+    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="plot"):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, data_dict, filename):
@@ -55,7 +55,7 @@ class VisualizerScatter1D(Visualizer):
 
 
 class VisualizerVtu(Visualizer):
-    def __call__(self, input_dict, output_expr, num_timestamps=1, prefix="vtu"):
+    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="vtu"):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
@@ -65,7 +65,7 @@ class VisualizerVtu(Visualizer):
 
 
 class Visualizer3D(Visualizer):
-    def __call__(self, input_dict, output_expr, num_timestamps=1, prefix="plot3d"):
+    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="plot3d"):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
