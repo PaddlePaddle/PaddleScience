@@ -74,7 +74,7 @@ class BoundaryConstraint(base.Constraint):
             criteria = eval(criteria)
 
         input = geom.sample_boundary(
-            dataloader_cfg["sampler"]["batch_size"] * dataloader_cfg["iters_per_epoch"],
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
             random,
             criteria,
             evenly,

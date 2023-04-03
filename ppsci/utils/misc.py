@@ -18,6 +18,7 @@ import random
 
 import numpy as np
 import paddle
+import paddle.distributed as dist
 
 from ppsci.utils import logger
 
@@ -32,6 +33,7 @@ __all__ = [
     "load_csv_file",
     "stack_dict_list",
     "combine_array_with_time",
+    "set_random_seed",
 ]
 
 
@@ -200,6 +202,7 @@ def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
 
 
 def set_random_seed(seed):
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    rank = dist.get_rank()
+    paddle.seed(seed + rank)
+    np.random.seed(seed + rank)
+    random.seed(seed + rank)

@@ -74,7 +74,7 @@ class InteriorConstraint(base.Constraint):
             criteria = eval(criteria)
 
         input = geom.sample_interior(
-            dataloader_cfg["sampler"]["batch_size"] * dataloader_cfg["iters_per_epoch"],
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
             random,
             criteria,
             evenly,

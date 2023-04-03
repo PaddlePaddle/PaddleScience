@@ -15,12 +15,13 @@
 from typing import Dict
 
 import numpy as np
+import paddle
 from paddle import io
 from paddle import vision
 
 
 class NamedArrayDataset(io.Dataset):
-    """Class for Named Array Dataset
+    """Class for Named Array Dataset.
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
@@ -56,3 +57,38 @@ class NamedArrayDataset(io.Dataset):
 
     def __len__(self):
         return self._len
+
+
+class IterableNamedArrayDataset(io.IterableDataset):
+    """IterableNamedArrayDataset for full-data training, i.e.batch_size=len(data).
+
+    Args:
+        input (Dict[str, np.ndarray]): Input dict.
+        label (Dict[str, np.ndarray]): Label dict.
+        weight (Dict[str, np.ndarray]): Weight dict.
+        batch_size (int): Batch size. Defaults to None.
+        transforms (vision.Compose, optional): Compose object contains sample wise transform(s). Defaults to None.
+    """
+
+    def __init__(
+        self,
+        input: Dict[str, np.ndarray],
+        label: Dict[str, np.ndarray],
+        weight: Dict[str, np.ndarray],
+        transforms: vision.Compose = None,
+    ):
+        self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
+        self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
+        self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}
+        self._len = len(next(iter(self.input.values())))
+
+    @property
+    def num_samples(self):
+        """Number of samples within current dataset."""
+        return self._len
+
+    def __iter__(self):
+        yield self.input, self.label, self.weight
+
+    def __len__(self):
+        return 1
