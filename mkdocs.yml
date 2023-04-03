@@ -93,6 +93,7 @@ theme:
 plugins:
   - include-markdown
   - search
+  - glightbox
   - mkdocstrings:
       handlers:
         python:
@@ -132,6 +133,8 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - attr_list
+  - md_in_html
   # - codehilite:
   #     use_pygments: true
 
