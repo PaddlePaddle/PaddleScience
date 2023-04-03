@@ -97,6 +97,20 @@ if __name__ == "__main__":
     )
     validator = {mse_metric.name: mse_metric}
 
+    # set visualizer(optional)
+    vis_points = geom["rect"].sample_interior(
+        eval_dataloader["total_size"], evenly=True
+    )
+
+    visualizer = {
+        "visulzie_u": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {"u": lambda d: d["u"]},
+            1,
+            "result_u",
+        )
+    }
+
     train_solver = ppsci.solver.Solver(
         "train",
         model,
@@ -110,6 +124,7 @@ if __name__ == "__main__":
         equation=equation,
         geom=geom,
         validator=validator,
+        visualizer=visualizer,
     )
     train_solver.train()
 
@@ -121,6 +136,9 @@ if __name__ == "__main__":
         equation=equation,
         geom=geom,
         validator=validator,
+        visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     eval_solver.eval()
+
+    eval_solver.visualize()
