@@ -19,3 +19,9 @@
   --md-code-hl-generic-color: #f92672;
   --md-code-hl-variable-color: #f8f8f2; */
 }
+
+.md-grid {
+  /* readable page width */
+  /* max-width: 1440px; */
+  max-width: 1440px;
+}
