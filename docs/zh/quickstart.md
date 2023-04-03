@@ -1,4 +1,3 @@
-
 # 快速开始
 
 接下来以一个简单的 PINNs 算例 **2D-LDC(Lid Driven Cavity Flow)瞬态问题求解** 作为入门教程，讲解如何使用 PaddleScience 来完成 2D-LDC 模型的训练、测试
@@ -103,7 +102,7 @@ $$
 ### 3.1 模型构建
 
 在 2D-LDC 问题中，对于每一个已知的坐标点 $(t, x, y)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力信息 $p$
-三个待求解的未知量，因此我们可以使用较为简单的 MLP(Multilayer Perceptron, 多层感知机) 来自动对这一过程进行建模
+三个待求解的未知量，因此我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来自动对这一过程进行建模
 即
 
 $$
@@ -116,25 +115,25 @@ $$
 model = ppsci.arch.MLP(["t", "x", "y"], ["u", "v", "p"], 9, 50, "tanh")
 ```
 
-为了在计算时，方便访问具体变量的值，我们首先指定网络模型的输入变量名是 "t", "x", "y"，输出变量名是"u", "v", "p"，这些命名与后续代码保持一致。
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["t", "x", "y"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了一个 9 层全连接层，每层神经元数为 50，使用 "tanh" 作为激活函数的神经网络模型。
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了一个拥有 9 层隐藏神经元，每层神经元数为 50，使用 "tanh" 作为激活函数的神经网络模型 `model`。
 
 ### 3.2 方程构建
 
-由于 2D-LDC 使用的是 NavierStokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`
+由于 2D-LDC 使用的是 Navier-Stokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`
 
 ``` py linenums="1"
 pde = ppsci.equation.NavierStokes(nu=0.01, rho=1.0, dim=2, time=True)
 equation = {"NavierStokes": pde}
 ```
 
-我们在实例化 NavierStokes 方程时指定了必要的参数 $\nu=0.01, \rho=1.0$
+在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu=0.01$, 流体密度 $\rho=1.0$
 
 ### 3.3 计算域构建
 
-本文中的 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，且时间区域为 16 个时刻 [0.0, 0.1, ..., 1.4, 1.5]
-因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间结合的 `TimeXGeometry` 计算域。
+本文中 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，且时间域为 16 个时刻 [0.0, 0.1, ..., 1.4, 1.5]
+因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
 ``` py linenums="1"
 time_rect = ppsci.geometry.TimeXGeometry(
@@ -148,9 +147,9 @@ geom = {"time_rect": time_rect}
 
 ### 3.4 约束构建
 
-根据 [2. 问题定义](#2-问题定义) 得到的无量纲公式和和边界条件，对应了模型在计算域中的两个约束条件
+根据 [2. 问题定义](#2) 得到的无量纲公式和和边界条件，对应了在计算域中指导模型训练的两个约束条件，即
 
-1. 施加在矩形内部点上的无量纲 NavierStokes 方程约束（经过简单移项）
+1. 施加在矩形内部点上的无量纲 Navier-Stokes 方程约束（经过简单移项）
 
     $$
     \frac{\partial U}{\partial X} + \frac{\partial U}{\partial Y} = 0
@@ -166,25 +165,25 @@ geom = {"time_rect": time_rect}
 
     上式左侧的结果分别记为 `continuity`, `momentum_x`, `momentum_y`
 
-2. 作用矩形上、下、左、右边界上的 Dirichlet 边界条件约束
+2. 施加在矩形上、下、左、右边界上的 Dirichlet 边界条件约束
 
     $$
-    u=1,v=0
-    $$
-
-    $$
-    u=0,v=0
+    上边界：u=1,v=0
     $$
 
     $$
-    u=0,v=0
+    下边界：u=0,v=0
     $$
 
     $$
-    u=0,v=0
+    左边界：u=0,v=0
     $$
 
-接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述约束条件
+    $$
+    右边界：u=0,v=0
+    $$
+
+接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述两种约束条件
 
 #### 3.4.1 内部点约束
 
@@ -212,11 +211,11 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 )
 ```
 
-`InteriorConstraint` 的第一个参数是约束方程，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32-方程构建) 章节中实例化好的 `equation["NavierStokes"].equations`；
+`InteriorConstraint` 的第一个参数是约束方程，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["NavierStokes"].equations`；
 
-第二个参数是约束变量的目标值，在本问题中我们希望 NavierStokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
+第二个参数是约束变量的目标值，在本问题中我们希望 Navier-Stokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
 
-第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33-计算域构建) 章节实例化好的 `geom["time_rect"]` 即可；
+第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33) 章节实例化好的 `geom["time_rect"]` 即可；
 
 第四个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 `dataset` 字段设置为 "IterableNamedArrayDataset" 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 9801(模拟99x99的等间隔网格)；
 
@@ -230,31 +229,31 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 #### 3.4.2 边界约束
 
-同理，我们还需要构建矩形的上、下、左、右四个边界的 Dirichlet 边界约束。但与构建 `InteriorConstraint` 约束不同的是，由于约束区域是边界，因此我们使用 `BoundaryConstraint` 类。
+同理，我们还需要构建矩形的上、下、左、右四个边界的 Dirichlet 边界约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类。
 
-其次约束的目标变量也不同，在边界上的 Dirichlet 条件约束对象是 MLP 模型输出 "u", "v"（本文不对 "p" 做约束），因此第一个参数使用 lambda 表达式直接返回 MLP 的输出结果 out["u"] 和 out["v"]。
+其次约束的目标变量也不同，Dirichlet 条件约束对象是 MLP 模型输出的 $u$ 和 $v$（本文不对 $p$ 做约束），因此第一个参数使用 lambda 表达式直接返回 MLP 的输出结果 `out["u"]` 和 `out["v"]` 作为程序运行时的约束对象。
 
-然后给 "u" 和 "v" 设置约束目标值，请注意在 `bc_top` 上边界中，需要给 "u" 的约束目标值设置为 1。
+然后给 $u$ 和 $v$ 设置约束目标值，请注意在 `bc_top` 上边界中，$u$ 的约束目标值要设置为 1。
 
-采样点与损失函数配置和 `InteriorConstraint` 类似。
+采样点与损失函数配置和 `InteriorConstraint` 类似，点数设置为 100 左右即可。
 
-由于 `BoundaryConstraint` 会在所有边界上进行采样，而我们需要对四个边界分别进行约束，因此还需要传入 `criteria`，进一步细化筛选出对应的点，如上边界就是符合 $y = 0.05$ 的点集
+由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别进行约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
 ```py linenums="1"
 bc_top = ppsci.constraint.BoundaryConstraint(
     {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-    {"u": 1.0, "v": 0.0},
+    {"u": 1, "v": 0},
     geom["time_rect"],
     {**dataloader_cfg, **{"batch_size": 101}},
     ppsci.loss.MSELoss("sum"),
     criteria=lambda x, y: np.isclose(y, 0.05),
-    weight_dict={"u": lambda input: 1.0 - 20.0 * input["x"]},
+    weight_dict={"u": lambda input: 1 - 20 * input["x"]},
     name="BC_top",
 )
 
 bc_down = ppsci.constraint.BoundaryConstraint(
     {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-    {"u": 0.0, "v": 0.0},
+    {"u": 0, "v": 0},
     geom["time_rect"],
     {**dataloader_cfg, **{"batch_size": 101}},
     ppsci.loss.MSELoss("sum"),
@@ -264,7 +263,7 @@ bc_down = ppsci.constraint.BoundaryConstraint(
 
 bc_left = ppsci.constraint.BoundaryConstraint(
     {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-    {"u": 0.0, "v": 0.0},
+    {"u": 0, "v": 0},
     geom["time_rect"],
     {**dataloader_cfg, **{"batch_size": 99}},
     ppsci.loss.MSELoss("sum"),
@@ -274,7 +273,7 @@ bc_left = ppsci.constraint.BoundaryConstraint(
 
 bc_right = ppsci.constraint.BoundaryConstraint(
     {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-    {"u": 0.0, "v": 0.0},
+    {"u": 0, "v": 0},
     geom["time_rect"],
     {**dataloader_cfg, **{"batch_size": 99}},
     ppsci.loss.MSELoss("sum"),
@@ -283,28 +282,28 @@ bc_right = ppsci.constraint.BoundaryConstraint(
 )
 ```
 
-在微分方程约束、边界条件约束构建完毕之后，将它们封装到一个字典中，方便后续访问。
+在微分方程约束、边界条件约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
 ```py linenums="1"
 constraint = {
-    "EQ": pde_constraint,
-    "BC_top": bc_top,
-    "BC_down": bc_down,
-    "BC_left": bc_left,
-    "BC_right": bc_right,
+    pde_constraint.name: pde_constraint,
+    bc_top.name: bc_top,
+    bc_down.name: bc_down,
+    bc_left.name: bc_left,
+    bc_right.name: bc_right,
 }
 ```
 
 ### 3.4 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验指定如下训练轮数和学习率
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和 Cosine 余弦衰减学习率
 
 ```py linenums="1"
 epochs = 20000
 lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
     epochs,
     iters_per_epoch,
-    0.001,
+    learning_rate=0.001,
     warmup_epoch=int(0.05 * epochs),
 )()
 ```
@@ -325,12 +324,9 @@ optimizer = ppsci.optimizer.Adam(lr_scheduler)([model])
 geom_validator = ppsci.validate.GeometryValidator(
     equation["NavierStokes"].equations,
     {
-        "momentum_x": 0.0,
-        "continuity": 0.0,
-        "momentum_y": 0.0,
-        "u": 0.0,
-        "v": 0.0,
-        "p": 0.0,
+        "momentum_x": 0,
+        "continuity": 0,
+        "momentum_y": 0,
     },
     geom["time_rect"],
     {
@@ -347,7 +343,7 @@ validator = {geom_validator.name: geom_validator}
 
 方程设置与约束构建章节的设置相同，表示如何计算所需评估的目标变量；
 
-此处我们为 momentum_x, continuity, momentum_y 三个目标变量设置目标值为0，但由于我们需要计算并保留 "u", "v", "p" 三个因变量，因此我们需为 "u", "v", "p" 设置了目标值 0，尽管它们并不具备约束意义；
+此处我们为 `momentum_x`, `continuity`, `momentum_y` 三个目标变量设置标签值为0
 
 计算域与约束构建章节的设置相同，表示在指定计算域上进行评估
 
@@ -363,35 +359,35 @@ validator = {geom_validator.name: geom_validator}
 
 ```py linenums="1"
 output_dir = "./ldc2d_steady_Re10"
-    train_solver = ppsci.solver.Solver(
-        "train",
-        model,
-        constraint,
-        output_dir,
-        optimizer,
-        lr_scheduler,
-        epochs,
-        iters_per_epoch,
-        eval_during_train=True,
-        eval_freq=200,
-        equation=equation,
-        geom=geom,
-        validator=validator,
-    )
-    train_solver.train()
+train_solver = ppsci.solver.Solver(
+    "train",
+    model,
+    constraint,
+    output_dir,
+    optimizer,
+    lr_scheduler,
+    epochs,
+    iters_per_epoch,
+    eval_during_train=True,
+    eval_freq=200,
+    equation=equation,
+    geom=geom,
+    validator=validator,
+)
+train_solver.train()
 
-    # evaluate the final checkpoint
-    eval_solver = ppsci.solver.Solver(
-        "eval",
-        model,
-        constraint,
-        output_dir,
-        equation=equation,
-        geom=geom,
-        validator=validator,
-        pretrained_model=f"./{output_dir}/checkpoints/epoch_{epochs}",
-    )
-    eval_solver.eval()
+# evaluate the final checkpoint
+eval_solver = ppsci.solver.Solver(
+    "eval",
+    model,
+    constraint,
+    output_dir,
+    equation=equation,
+    geom=geom,
+    validator=validator,
+    pretrained_model=f"./{output_dir}/checkpoints/epoch_{epochs}",
+)
+eval_solver.eval()
 ```
 
 ## 4. 完整代码
