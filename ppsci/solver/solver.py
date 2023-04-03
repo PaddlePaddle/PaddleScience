@@ -174,6 +174,7 @@ class Solver(object):
             self.model = fleet.distributed_model(self.model)
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
+        self.global_step = 0
 
         # log paddlepaddle's version
         paddle_version = (
