@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This *.py file is the solver class of PDSC"""
 import os
 import time
 
@@ -63,7 +64,7 @@ class ModelStatic(paddle.nn.Layer):
             inputs_attr=self.inputs_attr,
             nlabels=self.nlabels,
             labels_attr=self.labels_attr,
-            pde=self.pde
+            pde=self.pde,
         )
 
         auto.fetch(self.loss_details[0], "eq_loss")
@@ -185,12 +186,15 @@ class Solver(object):
         # Train the network with respect to num_epoch.
 
         # Parameters:
-        #     num_epoch(int): Optional, default 1000. Number of epochs.
-        #     batch_size(int|None): Under develop. Optional, default None. How many sample points are used as a batch during training.
-        #     checkpoint_freq(int): Under develop. Optional, default 1000. How many epochs to store the training status once.
+        #     -num_epoch(int): Optional, default 1000. Number of epochs.
+        #     -batch_size(int|None): Under develop. Optional, default None.
+        #       How many sample points are used as a batch during training.
+        #     -checkpoint_freq(int): Under develop. Optional, default 1000.
+        #       How many epochs to store the training status once.
 
         # Return:
-        #     solution(Callable): A python func functhion that takes a GeometryDiscrete as input and a numpy array as outputs.
+        #     solution(Callable):A python func functhion that takes
+        #       a GeometryDiscrete as input and a numpy array as outputs.
 
         # Example:
         #     >>> import paddlescience as psci
@@ -249,11 +253,30 @@ class Solver(object):
 
             # record time
             timer = utils.Timer()
+            if os.getenv("TIPC_TEST") == "ON":  # script will turn this env variable one
+                tipc_test_mode = True
+            else:
+                tipc_test_mode = False
+
+            if tipc_test_mode is True:  # tipc test
+                # N个Step打印1条日志时，reader_cost为N个Step数据加载用时的平均值，全量训练，N=1
+                N_print = 1
+                Rn = np.zeros((N_print,))  # 每Step reader用时为：R1, R2,...Rn
+                Tn = np.zeros((N_print,))  # 每Step训练用时：T1, T2,...Tn
+                Sn = np.zeros((N_print,))  # 每Step 单卡BatchSize 为S1, S2,...Sn
+                Sn[0] = 1  # Full batch training
+                time_point = np.zeros((num_epoch + 1, 1))
+                samples = 0  # samples代表上次打印到本次打印，新完成训练的样本数量
+                for i in range(ninputs):
+                    samples += inputs[i].shape[0]
+                time_point[0] = time.perf_counter()
+                reader_cost = 0  # modify it if loading data from file
 
             for epoch in range(num_epoch):
 
                 # TODO: error out num_epoch==0
-
+                # forward computation start, log the time for test_tipc
+                time_start = time.perf_counter()
                 loss, outs, loss_details = self.algo.compute(
                     None,
                     *inputs_labels,
@@ -261,8 +284,18 @@ class Solver(object):
                     inputs_attr=inputs_attr,
                     nlabels=nlabels,
                     labels_attr=labels_attr,
-                    pde=self.pde
+                    pde=self.pde,
                 )
+
+                if tipc_test_mode is True:  # tipc test
+                    time_end = time.perf_counter()
+                    time_forward_cost = time_end - time_start
+                    batch_cost = reader_cost + time_forward_cost
+                    avg_reader_cost = np.sum(Rn) / N_print
+                    Tn[0] = batch_cost
+                    avg_batch_cost = avg_reader_cost + np.sum(Tn) / N_print
+                    avg_samples = np.sum(Sn) / N_print
+                    ips = samples / batch_cost
 
                 loss.backward()
                 self.opt.step()
@@ -281,6 +314,16 @@ class Solver(object):
                     " data loss:",
                     float(loss_details[3]),
                 )
+
+                if tipc_test_mode is True:  # tipc test
+                    print(
+                        f"..., ... , loss: "
+                        f"{float(loss)}, avg_reader_cost: "
+                        f"{avg_reader_cost} sec, avg_batch_cost: "
+                        f"{avg_batch_cost} sec, avg_samples: "
+                        f"{avg_samples}, ips: "
+                        f"{ips} samples/s"
+                    )
 
                 # write loss for visual DL
                 if config.visualdl_enabled() == True:
@@ -334,7 +377,7 @@ class Solver(object):
                     inputs_attr=inputs_attr,
                     nlabels=nlabels,
                     labels_attr=labels_attr,
-                    pde=self.pde
+                    pde=self.pde,
                 )
                 return loss
 
@@ -399,7 +442,8 @@ class Solver(object):
             return self.outs
         else:
             print(
-                "Please specify the optimizer, now only the adam, lbfgs and bfgs optimizers are supported."
+                "Please specify the optimizer, now only the adam, "
+                "lbfgs and bfgs optimizers are supported."
             )
             exit()
 
@@ -574,7 +618,7 @@ class Solver(object):
                     inputs_attr=self.inputs_attr,
                     nlabels=nlabels,
                     labels_attr=self.labels_attr,
-                    pde=self.pde
+                    pde=self.pde,
                 )
 
                 if self.opt is minimize_lbfgs or self.opt is minimize_bfgs:
