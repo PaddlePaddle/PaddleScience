@@ -76,7 +76,7 @@ class IntegralConstraint(base.Constraint):
         # integral sample
         input_list = []
         for _ in range(
-            dataloader_cfg["sampler"]["batch_size"] * dataloader_cfg["iters_per_epoch"]
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
         ):
             input = geom.sample_boundary(
                 dataloader_cfg["integral_batch_size"], random, criteria, evenly
