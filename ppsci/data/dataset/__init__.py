@@ -13,11 +13,12 @@
 # limitations under the License.
 import copy
 
+from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
-__all__ = ["NamedArrayDataset", "build_dataset"]
+__all__ = ["IterableNamedArrayDataset", "NamedArrayDataset", "build_dataset"]
 
 
 def build_dataset(cfg):

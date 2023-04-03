@@ -19,7 +19,7 @@ from pyevtk import hl
 from ppsci.utils import logger
 
 
-def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
+def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
     """Save data to '*.vtu' file(s).
 
     Args:
@@ -82,7 +82,7 @@ def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
 
     if num_timestamp > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-1 ~ {filename}_t-{num_timestamp}"
+            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamp - 1}"
         )
     else:
         logger.info(f"Visualization result is saved to {filename}")
@@ -117,4 +117,4 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
             value = [x for x in value]
         value = np.concatenate(value, axis=1)
 
-    save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
+    _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)

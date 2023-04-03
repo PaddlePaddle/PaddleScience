@@ -88,7 +88,8 @@ class Solver(object):
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
-        validator: Optional[Dict[str, Any]] = None,
+        validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
+        visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
         amp_level: Literal["O1", "O2", "O0"] = "O0",
         pretrained_model_path: Optional[str] = None,
@@ -158,6 +159,9 @@ class Solver(object):
         # set validator
         self.validator = validator
 
+        # set visualizer
+        self.visualizer = visualizer
+
         # set automatic mixed precision(AMP) configuration
         self.use_amp = use_amp
         self.amp_level = amp_level
@@ -187,6 +191,10 @@ class Solver(object):
             else:
                 self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
 
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
         self.world_size = dist.get_world_size()
@@ -196,6 +204,8 @@ class Solver(object):
             self.model = fleet.distributed_model(self.model)
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
+
+        self.global_step = 0
 
         # log paddlepaddle's version
         paddle_version = (
@@ -245,7 +255,12 @@ class Solver(object):
         device = cfg["Global"].get("device", "gpu")
         validator = (
             ppsci.validate.build_validator(cfg.get("Validator", None), equation, geom)
-            if eval_during_train
+            if eval_during_train or mode == "eval"
+            else None
+        )
+        visualizer = (
+            ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
+            if eval_during_train or mode == "eval"
             else None
         )
         use_amp = "AMP" in cfg
@@ -278,6 +293,7 @@ class Solver(object):
             equation,
             geom,
             validator,
+            visualizer,
             use_amp,
             amp_level,
             pretrained_model_path,
@@ -324,6 +340,9 @@ class Solver(object):
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
+                if self.visualizer is not None:
+                    self.visualize(epoch_id)
+
             # update learning rate by epoch
             if self.lr_scheduler is not None and self.lr_scheduler.by_epoch:
                 self.lr_scheduler.step()
@@ -357,7 +376,7 @@ class Solver(object):
         """Evaluation"""
         self.model.eval()
 
-        # init train func
+        # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
         result = self.eval_func(self, epoch_id, self.log_freq)
@@ -369,6 +388,18 @@ class Solver(object):
 
         self.model.train()
         return result
+
+    def visualize(self, epoch_id=0):
+        """Visualization"""
+        self.model.eval()
+
+        # init train func
+        self.visu_func = ppsci.solver.visu.visualize_func
+
+        self.visu_func(self, epoch_id)
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
+
+        self.model.train()
 
     def predict(self, input_dict):
         """Prediction"""
