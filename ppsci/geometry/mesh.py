@@ -384,7 +384,7 @@ class Mesh(geometry.Geometry):
 
     def __str__(self) -> str:
         """Return the name of class"""
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"num_vertices = {self.num_vertices}",
@@ -393,7 +393,6 @@ class Mesh(geometry.Geometry):
                 f"dim_keys = {self.dim_keys}",
             ]
         )
-        return _str
 
 
 def area_of_triangles(v0, v1, v2):
