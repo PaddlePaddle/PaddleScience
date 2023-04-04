@@ -38,7 +38,11 @@ nav:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
       - ppsci.constraint: zh/api/constraint.md
-      - ppsci.data: zh/api/data.md
+      - ppsci.data:
+          - dataset: zh/api/data/dataset.md
+          - process:
+            - transform: zh/api/data/process/transform.md
+            - batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
       - ppsci.loss: zh/api/loss.md
@@ -72,6 +76,8 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
+    - navigation.instant
+    - navigation.expand
     - content.code.copy
     - content.code.select
     - search.highlight
@@ -142,8 +148,6 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
-  # - codehilite:
-  #     use_pygments: true
 
 extra_javascript:
   - javascripts/bd_statistics.js

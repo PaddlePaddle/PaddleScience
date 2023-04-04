@@ -5,11 +5,12 @@
     options:
       members:
         - LossBase
-        - IntegralLoss
         - L1Loss
-        - PeriodicL1Loss
         - L2Loss
-        - PeriodicL2Loss
         - MSELoss
+        - IntegralLoss
+        - PeriodicL1Loss
+        - PeriodicL2Loss
         - PeriodicMSELoss
       show_root_heading: false
+      heading_level: 3

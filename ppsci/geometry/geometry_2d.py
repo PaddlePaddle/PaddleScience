@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
-Code below is heavily based on https://github.com/lululxvi/deepxde
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from typing import Tuple
 
 import numpy as np
 from scipy import spatial
@@ -32,7 +34,7 @@ class Disk(geometry.Geometry):
         radius (float): Radius of disk.
     """
 
-    def __init__(self, center, radius: float):
+    def __init__(self, center: Tuple[float, float], radius: float):
         self.center = np.array(center, dtype="float32")
         self.radius = radius
         super().__init__(2, (self.center - radius, self.center + radius), 2 * radius)

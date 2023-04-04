@@ -18,7 +18,15 @@ from ppsci.loss import base
 
 
 class MSELoss(base.LossBase):
-    """Class for mean squared error loss.
+    r"""Class for mean squared error loss.
+
+    $$
+    L =
+    \begin{cases}
+        \frac{1}{N}\sum_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='mean'} \\
+        \sum_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='sum'}
+    \end{cases}
+    $$
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
@@ -50,6 +58,12 @@ class MSELoss(base.LossBase):
 
 
 class PeriodicMSELoss(base.LossBase):
+    """Class for periodic mean squared error loss.
+
+    Args:
+        reduction (str, optional): Reduction method. Defaults to "mean".
+    """
+
     def __init__(self, reduction="mean"):
         super().__init__()
         if reduction not in ["mean", "sum"]:

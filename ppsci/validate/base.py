@@ -12,13 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+from typing import Dict
+
+from paddle import io
+
 from ppsci import data
+from ppsci import loss
 
 
 class Validator(object):
-    """Base class for validators"""
+    """Base class for validators.
 
-    def __init__(self, dataset, dataloader_cfg, loss, metric, name):
+    Args:
+        dataset (io.Dataset): Dataset for validator.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
+        loss (loss.LossBase): Loss functor.
+        metric (Dict[str, Any]): Named metric functors in dict.
+        name (str): Name of validator.
+    """
+
+    def __init__(
+        self,
+        dataset: io.Dataset,
+        dataloader_cfg: Dict[str, Any],
+        loss: loss.LossBase,
+        metric: Dict[str, Any],
+        name: str,
+    ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
         self.data_iter = iter(self.data_loader)
         self.loss = loss

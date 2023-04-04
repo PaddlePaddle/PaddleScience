@@ -5,9 +5,10 @@
     options:
       members:
         - SGD
+        - Momentum
         - Adam
         - AdamW
-        - Momentum
         - RMSProp
         - LBFGS
       show_root_heading: false
+      heading_level: 3

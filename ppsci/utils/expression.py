@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import types
+from typing import Callable
 from typing import Union
 
 import paddle
@@ -27,8 +28,8 @@ class ExpressionSolver(paddle.nn.Layer):
     """Expression Solver
 
     Args:
-        input_keys (Dict[str]): List of string for input keys.
-        output_keys (Dict[str]): List of string for output keys.
+        input_keys (Dict[str]):Names of input keys.
+        output_keys (Dict[str]):Names of output keys.
         model (nn.Layer): Model to get output variables from input variables.
     """
 
@@ -42,7 +43,7 @@ class ExpressionSolver(paddle.nn.Layer):
 
     def solve_expr(self, expr: sympy.Basic) -> Union[float, paddle.Tensor]:
         """Evaluates the value of the expression recursively in the expression tree
-         by post-order traversal.
+            by post-order traversal.
 
         Args:
             expr (sympy.Basic): Expression.
@@ -143,7 +144,13 @@ class ExpressionSolver(paddle.nn.Layer):
 
         return {k: self.output_dict[k] for k in self.output_keys}
 
-    def add_target_expr(self, expr, expr_name):
+    def add_target_expr(self, expr: Callable, expr_name: str):
+        """Add an expression `expr` named `expr_name` to
+
+        Args:
+            expr (Callable): _description_
+            expr_name (str): _description_
+        """
         self.expr_dict[expr_name] = expr
 
     def __str__(self):

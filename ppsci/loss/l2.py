@@ -18,7 +18,12 @@ from ppsci.loss import base
 
 
 class L2Loss(base.LossBase):
-    """Class for L2 loss."""
+    r"""Class for l2 loss.
+
+    $$
+    L = \sum_{i=1}^{N}{(x_i-y_i)^2}
+    $$
+    """
 
     def __init__(self):
         super().__init__()
@@ -39,6 +44,8 @@ class L2Loss(base.LossBase):
 
 
 class PeriodicL2Loss(base.LossBase):
+    """Class for Periodic l2 loss."""
+
     def __init__(self, reduction="mean"):
         super().__init__()
         if reduction not in ["mean", "sum"]:

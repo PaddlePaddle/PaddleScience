@@ -16,10 +16,10 @@ from paddle import io
 
 
 class InfiniteDataLoader(object):
-    """A wrapper for infinite dataloader
+    """A wrapper for infinite dataloader.
 
     Args:
-        dataloader (DataLoader): A finite dataloader to be wrapped.
+        dataloader (DataLoader): A finite and iterable loader to be wrapped.
     """
 
     def __init__(self, dataloader: io.DataLoader):

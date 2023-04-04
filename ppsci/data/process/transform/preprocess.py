@@ -20,7 +20,8 @@ class Translate(object):
     """Translate class, a transform mainly for mesh.
 
     Args:
-        offset (Dict[str, Union[int, float]]]): A 3D vector to transform the geometry.
+        offset (Dict[str, float]): Shift the input data according to the variable name
+            and coefficient specified in offset.
     """
 
     def __init__(self, offset: Dict[str, Union[int, float]]):
@@ -36,7 +37,8 @@ class Scale(object):
     """Scale class, a transform mainly for mesh.
 
     Args:
-        scale (Dict[str, List[Union[int, float]]]): The scale parameter that is multiplied to the points/vertices of the geometry.
+        scale (Dict[str, float]): Scale the input data according to the variable name
+            and coefficient specified in scale.
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):

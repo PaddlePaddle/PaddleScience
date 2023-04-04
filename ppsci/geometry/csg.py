@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
 
+"""
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
+"""
 
 import numpy as np
 
@@ -27,7 +27,8 @@ class CSGUnion(geometry.Geometry):
     def __init__(self, geom1, geom2):
         if geom1.ndim != geom2.ndim:
             raise ValueError(
-                f"{geom1.idstr} | {geom2.idstr} failed (dimensions do not match)."
+                f"{geom1}.ndim({geom1.ndim}) should be equal to "
+                f"{geom2}.ndim({geom1.ndim})"
             )
         super().__init__(
             geom1.ndim,
@@ -122,7 +123,8 @@ class CSGDifference(geometry.Geometry):
     def __init__(self, geom1, geom2):
         if geom1.ndim != geom2.ndim:
             raise ValueError(
-                f"{geom1.idstr} - {geom2.idstr} failed (dimensions do not match)."
+                f"{geom1}.ndim({geom1.ndim}) should be equal to "
+                f"{geom2}.ndim({geom1.ndim})."
             )
         super().__init__(geom1.ndim, geom1.bbox, geom1.diam)
         self.geom1 = geom1
@@ -201,7 +203,8 @@ class CSGIntersection(geometry.Geometry):
     def __init__(self, geom1, geom2):
         if geom1.ndim != geom2.ndim:
             raise ValueError(
-                f"{geom1.idstr} & {geom2.idstr} failed (dimensions do not match)."
+                f"{geom1}.ndim({geom1.ndim}) should be equal to "
+                f"{geom2}.ndim({geom1.ndim})"
             )
         super().__init__(
             geom1.ndim,
