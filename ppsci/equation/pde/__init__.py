@@ -21,8 +21,8 @@ from ppsci.equation.pde.poisson import Poisson
 
 __all__ = [
     "PDE",
+    "Laplace",
     "NavierStokes",
     "Poisson",
     "NormalDotVec",
-    "Laplace",
 ]
