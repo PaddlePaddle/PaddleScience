@@ -21,7 +21,7 @@ class MSE(nn.Layer):
     r"""Mean square error
 
     $$
-    \frac{\sum_{i=1}^{N}{(x_i-y_i)^2}}{N}
+    metric = \frac{1}{N}\sum_{i=1}^{N}{(x_i-y_i)^2}
     $$
     """
 

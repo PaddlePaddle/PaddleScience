@@ -13,10 +13,11 @@
 # limitations under the License.
 
 """
-Code below is heavily based on https://github.com/lululxvi/deepxde
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
 import abc
+from typing import Tuple
 
 import numpy as np
 
@@ -25,7 +26,15 @@ from ppsci.utils import misc
 
 
 class Geometry(object):
-    def __init__(self, ndim: int, bbox, diam: float):
+    """Base class for geometry.
+
+    Args:
+        ndim (int): Number of geometry dimension.
+        bbox (Tuple[np.ndarray, np.ndarray]): Bounding box of upper and lower.
+        diam (float): Diameter of geometry.
+    """
+
+    def __init__(self, ndim: int, bbox: Tuple[np.ndarray, np.ndarray], diam: float):
         self.ndim = ndim
         self.bbox = bbox
         self.diam = min(diam, np.linalg.norm(bbox[1] - bbox[0]))

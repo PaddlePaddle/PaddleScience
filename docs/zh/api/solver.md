@@ -10,3 +10,4 @@
         - Solver
         - train_epoch_func
       show_root_heading: false
+      heading_level: 3

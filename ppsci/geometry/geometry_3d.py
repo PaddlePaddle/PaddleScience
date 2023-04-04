@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
 
+"""
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
+"""
 
 import itertools
+from typing import Tuple
 
 import numpy as np
 
@@ -32,7 +33,9 @@ class Cuboid(geometry_nd.Hypercube):
         xmax (Tuple[float, float, float]): Top right corner point [x1, y1, z1].
     """
 
-    def __init__(self, xmin, xmax):
+    def __init__(
+        self, xmin: Tuple[float, float, float], xmax: Tuple[float, float, float]
+    ):
         super().__init__(xmin, xmax)
         dx = self.xmax - self.xmin
         self.area = 2 * np.sum(dx * np.roll(dx, 2))

@@ -14,12 +14,19 @@
 
 import copy
 
-from ppsci.visualize.visualizer import Visualizer
+from ppsci.visualize.base import Visualizer
+from ppsci.visualize.visualizer import Visualizer3D
 from ppsci.visualize.visualizer import VisualizerScatter1D
 from ppsci.visualize.visualizer import VisualizerVtu
 from ppsci.visualize.vtu import save_vtu_from_dict
 
-__all__ = ["Visualizer", "VisualizerScatter1D", "VisualizerVtu", "save_vtu_from_dict"]
+__all__ = [
+    "Visualizer",
+    "VisualizerScatter1D",
+    "VisualizerVtu",
+    "Visualizer3D",
+    "save_vtu_from_dict",
+]
 
 
 def build_visualizer(cfg):

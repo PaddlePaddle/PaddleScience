@@ -18,7 +18,15 @@ from ppsci.loss import base
 
 
 class L1Loss(base.LossBase):
-    """Class for L1 loss.
+    r"""Class for l1 loss.
+
+    $$
+    L =
+    \begin{cases}
+        \frac{1}{N}\sum_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
+        \sum_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
+    \end{cases}
+    $$
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
@@ -50,6 +58,12 @@ class L1Loss(base.LossBase):
 
 
 class PeriodicL1Loss(base.LossBase):
+    """Class for periodic l1 loss.
+
+    Args:
+        reduction (str, optional): Reduction method. Defaults to "mean".
+    """
+
     def __init__(self, reduction="mean"):
         super().__init__()
         if reduction not in ["mean", "sum"]:

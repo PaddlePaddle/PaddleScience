@@ -4,13 +4,6 @@
     handler: python
     options:
       members:
+        - IterableNamedArrayDataset
         - NamedArrayDataset
-      show_root_heading: false
-
-::: ppsci.data.process.transform
-    handler: python
-    options:
-      members:
-        - Translate
-        - Scale
       show_root_heading: false

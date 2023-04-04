@@ -35,11 +35,13 @@ class SupervisedConstraint(base.Constraint):
         data_file (str): File path of data.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
-        alias_dict (Dict[str, str]): Dict of alias for input and label keys.
-        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
+        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
-        weight_dict (Dict[str, Callable], optional): Weight for label. Defaults to None.
-        timestamps (Tuple[float, ...], optional): Timestamps which data repeat with. Defaults to None.
+        weight_dict (Dict[str, Callable], optional): Define the weight of each
+            constraint variable. Defaults to None.
+        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
+            in the time dimension. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
     """
 
@@ -61,25 +63,33 @@ class SupervisedConstraint(base.Constraint):
         self.output_keys = [
             alias_dict[key] if key in alias_dict else key for key in label_keys
         ]
+
+        # load raw data, prepare input and label
         if data_file.endswith(".csv"):
-            # load data
             data = self._load_csv_file(data_file, input_keys + label_keys, alias_dict)
             if "t" not in data and timestamps is None:
-                raise ValueError("Time should be given by arg t0 or data itself.")
+                raise ValueError(
+                    "Time should be given by argument timestamps or data itself."
+                )
             if timestamps is not None:
                 if "t" in data:
+                    # filter data according to given timestamps
                     raw_time_array = data["t"]
-                    mask = np.zeros((len(raw_time_array),), "bool")
+                    mask = []
                     for ti in timestamps:
-                        mask |= np.isclose(raw_time_array, ti).flatten()
+                        mask.append(
+                            np.nonzero(np.isclose(raw_time_array, ti).flatten())[0]
+                        )
                     data = misc.convert_to_array(
                         data, self.input_keys + self.output_keys
                     )
+                    mask = np.concatenate(mask, 0)
                     data = data[mask]
                     data = misc.convert_to_dict(
                         data, self.input_keys + self.output_keys
                     )
                 else:
+                    # repeat data according to given timestamps
                     data = misc.convert_to_array(
                         data, self.input_keys + self.output_keys
                     )
@@ -92,7 +102,7 @@ class SupervisedConstraint(base.Constraint):
                 label = {key: data[key] for key in self.output_keys}
                 self.num_timestamp = len(timestamps)
             else:
-                # time already in data and "t" in input_keys
+                # use all input and label
                 input = {key: data[key] for key in self.input_keys}
                 label = {key: data[key] for key in self.output_keys}
                 self.num_timestamp = len(np.unique(data["t"]))
@@ -101,6 +111,7 @@ class SupervisedConstraint(base.Constraint):
         else:
             raise NotImplementedError("Only suppport .csv file now.")
 
+        # prepare weight
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
             for key, value in weight_dict.items():
@@ -125,8 +136,11 @@ class SupervisedConstraint(base.Constraint):
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+
+        # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
 
+        # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)
 
 
@@ -137,9 +151,9 @@ class SupervisedInitialConstraint(base.Constraint):
         data_file (str): File path of data.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
-        t0 (float, optional): Initial timestamp. Defaults to None.
+        t0 (float): Initial timestamp. Defaults to None.
         alias_dict (Dict[str, str]): Dict of alias for input and label keys.
-        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
         weight_dict (Dict[str, Callable], optional): Weight for label. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "SupIC".
@@ -147,11 +161,11 @@ class SupervisedInitialConstraint(base.Constraint):
 
     def __init__(
         self,
-        data_file,
-        input_keys,
-        label_keys,
-        t0,
-        alias_dict,
+        data_file: str,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        t0: float,
+        alias_dict: Dict[str, str],
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
         weight_dict: Dict[str, Callable] = None,
@@ -163,6 +177,8 @@ class SupervisedInitialConstraint(base.Constraint):
         self.output_keys = [
             alias_dict[key] if key in alias_dict else key for key in label_keys
         ]
+
+        # load raw data, prepare input and label
         if data_file.endswith(".csv"):
             # load data
             data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
@@ -185,6 +201,7 @@ class SupervisedInitialConstraint(base.Constraint):
         else:
             raise NotImplementedError("Only suppport .csv file now.")
 
+        # prepare weight
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
             for key, value in weight_dict.items():
@@ -209,5 +226,9 @@ class SupervisedInitialConstraint(base.Constraint):
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+
+        # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+
+        # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

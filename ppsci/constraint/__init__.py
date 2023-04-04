@@ -39,7 +39,7 @@ __all__ = [
 
 
 def build_constraint(cfg, equation_dict, geom_dict):
-    """Build constraint(s)
+    """Build constraint(s).
 
     Args:
         cfg (List[AttrDict]): Constraint config list.

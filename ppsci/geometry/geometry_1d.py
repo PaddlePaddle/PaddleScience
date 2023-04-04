@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
 
+"""
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
+"""
 
 import numpy as np
 
@@ -24,14 +24,14 @@ from ppsci.utils import misc
 
 
 class Interval(geometry.Geometry):
-    """Class for interval
+    """Class for interval.
 
     Args:
         l (float): Left position of interval.
         r (float): Right position of interval.
     """
 
-    def __init__(self, l, r):
+    def __init__(self, l: float, r: float):
         super().__init__(1, (np.array([[l]]), np.array([[r]])), r - l)
         self.l = l
         self.r = r

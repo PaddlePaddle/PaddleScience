@@ -22,11 +22,11 @@ from ppsci import loss
 
 
 class Constraint:
-    """Base class for constraint
+    """Base class for constraint.
 
     Args:
         dataset (io.Dataset): Dataset.
-        dataloader_cfg (Dict[str, Any]): Config of dataloader.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
         name (str): Name of constraint.
     """

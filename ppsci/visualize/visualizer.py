@@ -12,40 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
+from typing import Callable
+from typing import Dict
 
+import numpy as np
+
+from ppsci.visualize import base
 from ppsci.visualize import plot
 from ppsci.visualize import vtu
 
 
-class Visualizer(object):
-    def __init__(self, input_dict, output_expr, num_timestamps, prefix):
-        self.input_dict = input_dict
-        self.input_keys = list(input_dict.keys())
-        self.dim = len(self.input_keys)
-        self.output_expr = output_expr
-        self.output_keys = list(output_expr.keys())
-        self.num_timestamps = num_timestamps
-        self.prefix = prefix
+class VisualizerScatter1D(base.Visualizer):
+    """Visualizer for 1d scatter data.
 
-    @abc.abstractmethod
-    def save(self, data_dict):
-        """visualize result from data_dict and save as files"""
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        num_timestamps (int): Number of timestamps
+        prefix (str): Prefix for output file.
+    """
 
-    def __str__(self):
-        return ", ".join(
-            [
-                f"input_keys: {self.input_keys}",
-                f"dim: {self.dim}",
-                f"output_keys: {self.output_keys}",
-                f"output_expr: {self.output_expr}",
-                f"num_timestamps: {self.num_timestamps}",
-            ]
-        )
-
-
-class VisualizerScatter1D(Visualizer):
-    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="plot"):
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        num_timestamps: int = 1,
+        prefix: str = "plot",
+    ):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, data_dict, filename):
@@ -54,8 +47,23 @@ class VisualizerScatter1D(Visualizer):
         )
 
 
-class VisualizerVtu(Visualizer):
-    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="vtu"):
+class VisualizerVtu(base.Visualizer):
+    """Visualizer for 2D points data.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        num_timestamps (int): Number of timestamps
+        prefix (str): Prefix for output file.
+    """
+
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        num_timestamps: int = 1,
+        prefix: str = "vtu",
+    ):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
@@ -64,8 +72,23 @@ class VisualizerVtu(Visualizer):
         )
 
 
-class Visualizer3D(Visualizer):
-    def __init__(self, input_dict, output_expr, num_timestamps=1, prefix="plot3d"):
+class Visualizer3D(base.Visualizer):
+    """Visualizer for 3D plot data.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        num_timestamps (int): Number of timestamps
+        prefix (str): Prefix for output file.
+    """
+
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        num_timestamps: int = 1,
+        prefix: str = "plot3d",
+    ):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
