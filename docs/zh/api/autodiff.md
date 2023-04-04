@@ -4,6 +4,7 @@
     handler: python
     options:
       members:
-        - Jacobians
-        - Hessians
+        - jacobian
+        - hessian
       show_root_heading: false
+      heading_level: 3

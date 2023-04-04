@@ -33,16 +33,23 @@ class PeriodicConstraint(base.Constraint):
     """Class for periodic constraint.
 
     Args:
-        label_expr (Dict[str, Callable]): Function of how to compute label.
-        label_dict (Dict[str, Union[float, Callable]]): Value(Function) of label.
-        geom (geometry.Geometry): Geometry which constraint applied on.
-        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
-        periodic_key (str): Key dimension which has periodic.
+        label_expr (Dict[str, Callable]): Function in dict for computing output.
+            e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
+            will be multiplied by model output v and the result will be named "u_mul_v".
+        label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
+            label, which will be a reference value to participate in the loss calculation.
+        geom (geometry.Geometry): Geometry where data sampled from.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
+        periodic_key (str): name of dimension which periodic constraint applied to.
         loss (loss.LossBase): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling points in geometry. Defaults to "pseudo".
-        criteria (Callable, optional): Criteria for finely define subdomain in geometry. Defaults to None.
-        evenly (bool, optional):  Whether to use envely distribution in sampling. Defaults to False.
-        weight_dict (Dict[str, Callable], optional): Weight for label. Defaults to None.
+        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+            geometry. Defaults to "pseudo".
+        criteria (Callable, optional): Criteria for refining specified boundaries.
+            Defaults to None.
+        evenly (bool, optional):  Whether to use evenly distribution sampling.
+            Defaults to False.
+        weight_dict (Dict[str, Callable], optional): Define the weight of each
+            constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "PeriodicBC".
     """
 
@@ -51,7 +58,7 @@ class PeriodicConstraint(base.Constraint):
         label_expr: Dict[str, Callable],
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
-        periodic_key,
+        periodic_key: str,
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
         random: Literal["pseudo", "LHS"] = "pseudo",
@@ -81,6 +88,8 @@ class PeriodicConstraint(base.Constraint):
                 f"shuffle({dataloader_cfg['sampler']['batch_size']}) "
                 f"should be False when using PeriodicConstraint "
             )
+
+        # prepare input
         _bs_half = dataloader_cfg["sampler"]["batch_size"] // 2
         input = geom.sample_boundary(
             _bs_half * dataloader_cfg["iters_per_epoch"],
@@ -94,7 +103,6 @@ class PeriodicConstraint(base.Constraint):
             if isinstance(geom, geometry.TimeXGeometry)
             else geom.dim_keys.index(periodic_key),
         )
-
         # concatenate original data next to periodic data, i.e.
         # [orignal1, periodic1, orignal2, periodic2, ..., orignalN, periodicN]
         mixed_input = {}
@@ -109,7 +117,7 @@ class PeriodicConstraint(base.Constraint):
                 )
             mixed_input[key] = np.vstack(mixed_input[key])
 
-        # keep label the same shape as input_periodic
+        # prepare label, keep label the same shape as input_periodic
         label = {}
         for key, value in label_dict.items():
             # set all label's to zero for dummy data.
@@ -117,7 +125,7 @@ class PeriodicConstraint(base.Constraint):
                 (next(iter(mixed_input.values())).shape[0], 1), 0, "float32"
             )
 
-        # keep weight the same shape as input_periodic
+        # # prepare weight, keep weight the same shape as input_periodic
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
             for key, value in weight_dict.items():
@@ -143,7 +151,10 @@ class PeriodicConstraint(base.Constraint):
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
+        # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(
             mixed_input, label, weight
         )
+
+        # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

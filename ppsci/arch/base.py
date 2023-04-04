@@ -23,7 +23,7 @@ from ppsci.utils import logger
 
 
 class NetBase(nn.Layer):
-    """Base class for Network"""
+    """Base class for Network."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import os
 from typing import Any
@@ -217,7 +219,17 @@ class Solver(object):
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
-    def from_config(cfg: Dict[str, Any], mode: Literal["train", "eval"]):
+    def from_config(cfg: Dict[str, Any], mode: Literal["train", "eval"]) -> Solver:
+        """Initialize solver from given config.
+
+        Args:
+            cfg (Dict[str, Any]): Dict config, e.g. AttrDict parsed from yaml.
+            mode (Literal[\"train\", \"eval\"]): Mode of solver, only support train or
+                eval yet.
+
+        Returns:
+            Solver: Initialized solver object.
+        """
         config.print_config(cfg)
         # TODO(sensen): sanity check for config
         output_dir = cfg["Global"]["output_dir"]

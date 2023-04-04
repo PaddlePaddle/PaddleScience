@@ -5,5 +5,8 @@
     options:
       members:
         - PDE
+        - Laplace
         - NavierStokes
+        - NormalDotVec
       show_root_heading: false
+      heading_level: 3

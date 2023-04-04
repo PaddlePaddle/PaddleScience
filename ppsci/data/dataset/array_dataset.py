@@ -27,7 +27,8 @@ class NamedArrayDataset(io.Dataset):
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
         weight (Dict[str, np.ndarray], optional): Weight dict.
-        transforms (vision.Compose, optional): Compose object contains sample wise transform(s).
+        transforms (vision.Compose, optional): Compose object contains sample wise
+            transform(s).
     """
 
     def __init__(
@@ -60,14 +61,14 @@ class NamedArrayDataset(io.Dataset):
 
 
 class IterableNamedArrayDataset(io.IterableDataset):
-    """IterableNamedArrayDataset for full-data training, i.e.batch_size=len(data).
+    """IterableNamedArrayDataset for full-data loading.
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
         weight (Dict[str, np.ndarray]): Weight dict.
-        batch_size (int): Batch size. Defaults to None.
-        transforms (vision.Compose, optional): Compose object contains sample wise transform(s). Defaults to None.
+        transforms (vision.Compose, optional): Compose object contains sample wise
+            transform(s). Defaults to None.
     """
 
     def __init__(

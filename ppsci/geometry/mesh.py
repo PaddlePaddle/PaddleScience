@@ -28,7 +28,7 @@ from ppsci.utils import misc
 
 
 class Mesh(geometry.Geometry):
-    """A geometry represented by a mesh.
+    """Class for mesh geometry.
 
     Args:
         mesh(Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".

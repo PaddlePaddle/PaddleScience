@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import types
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Union
-
-import types
 
 import numpy as np
 import sympy
@@ -31,6 +30,26 @@ from ppsci.validate import base
 
 
 class GeometryValidator(base.Validator):
+    """Validator for geometry.
+
+    Args:
+        label_expr (Dict[str, Callable]): Function in dict for computing output.
+            e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
+            will be multiplied by model output v and the result will be named "u_mul_v".
+        label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
+            label, which will be a reference value to participate in the loss calculation.
+        geom (geometry.Geometry): Geometry where data sampled from.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
+        loss (loss.LossBase): Loss functor.
+        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+            geometry. Defaults to "pseudo".
+        criteria (Callable, optional): Criteria for refining specified domain. Defaults to None.
+        evenly (bool, optional): Whether to use evenly distribution sampling. Defaults to False.
+        metric (Dict[str, Any], optional): Named metric functors in dict. Defaults to None.
+        with_initial (bool, optional): Whether the data contains time t0. Defaults to False.
+        name (str, optional): Name of validator. Defaults to None.
+    """
+
     def __init__(
         self,
         label_expr: Dict[str, Callable],
@@ -41,7 +60,7 @@ class GeometryValidator(base.Validator):
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Callable = None,
         evenly: bool = False,
-        metric=None,
+        metric: Dict[str, Any] = None,
         with_initial: bool = False,
         name: str = None,
     ):

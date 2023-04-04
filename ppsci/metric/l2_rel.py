@@ -17,10 +17,10 @@ import paddle.nn as nn
 
 
 class L2Rel(nn.Layer):
-    r"""Class for L2 relative error.
+    r"""Class for l2 relative error.
 
     $$
-    \frac{\Vert x-y \Vert_2}{\Vert y \Vert_2}
+    metric = \frac{\Vert x-y \Vert_2}{\Vert y \Vert_2}
     $$
     """
 

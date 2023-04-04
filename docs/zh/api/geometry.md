@@ -18,8 +18,8 @@
         - PointCloud
         - TimeDomain
         - TimeXGeometry
-      heading_level: 2
       show_root_heading: false
+      heading_level: 3
 
 <!-- # Geometry
 

@@ -4,8 +4,9 @@
     handler: python
     options:
       members:
-        - L2Rel
         - MAE
         - MSE
         - RMSE
+        - L2Rel
       show_root_heading: false
+      heading_level: 3

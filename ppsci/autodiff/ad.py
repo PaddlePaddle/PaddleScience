@@ -13,8 +13,10 @@
 # limitations under the License.
 
 """
-Code below is adapted from https://github.com/lululxvi/deepxde
+This module is adapted from [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
+
+from typing import Optional
 
 import paddle
 
@@ -23,14 +25,15 @@ class Jacobian(object):
     """Compute Jacobian matrix J: J[i][j] = dy_i/dx_j, where i = 0, ..., dim_y-1 and
     j = 0, ..., dim_x - 1.
 
-    It is lazy evaluation, i.e., it only computes J[i][j] when needed.
+    It is lazy evaluation, i.e., it only computes J[i][j] when needed, and will cache
+    by output tensor(row index in jacobian matrix).
 
     Args:
-        ys: Output Tensor of shape (batch_size, dim_y).
-        xs: Input Tensor of shape (batch_size, dim_x).
+        ys (paddle.Tensor): Output Tensor of shape [batch_size, dim_y].
+        xs (paddle.Tensor): Input Tensor of shape [batch_size, dim_x].
     """
 
-    def __init__(self, ys, xs):
+    def __init__(self, ys: paddle.Tensor, xs: paddle.Tensor):
         self.ys = ys
         self.xs = xs
 
@@ -39,7 +42,7 @@ class Jacobian(object):
 
         self.J = {}
 
-    def __call__(self, i=0, j=None):
+    def __call__(self, i: int = 0, j: Optional[int] = None) -> paddle.Tensor:
         """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,
         J[i].
         """
@@ -66,7 +69,9 @@ class Jacobians(object):
     def __init__(self):
         self.Js = {}
 
-    def __call__(self, ys, xs, i=0, j=None):
+    def __call__(
+        self, ys: paddle.Tensor, xs: paddle.Tensor, i: int = 0, j: Optional[int] = None
+    ):
         key = (ys, xs)
         if key not in self.Js:
             self.Js[key] = Jacobian(ys, xs)
@@ -92,7 +97,13 @@ class Hessian(object):
             duplicate computation. `grad_y` can be computed from ``Jacobian``.
     """
 
-    def __init__(self, y, xs, component=None, grad_y=None):
+    def __init__(
+        self,
+        y: paddle.Tensor,
+        xs: paddle.Tensor,
+        component: Optional[int] = None,
+        grad_y: Optional[paddle.Tensor] = None,
+    ):
         dim_y = y.shape[1]
 
         if dim_y > 1:
@@ -112,7 +123,7 @@ class Hessian(object):
             grad_y = jacobian(y, xs, i=component, j=None)
         self.H = Jacobian(grad_y, xs)
 
-    def __call__(self, i=0, j=0):
+    def __call__(self, i: int = 0, j: int = 0):
         """Returns H[`i`][`j`]."""
         return self.H(i, j)
 
@@ -128,7 +139,15 @@ class Hessians(object):
     def __init__(self):
         self.Hs = {}
 
-    def __call__(self, ys, xs, component=None, i=0, j=0, grad_y=None):
+    def __call__(
+        self,
+        ys: paddle.Tensor,
+        xs: paddle.Tensor,
+        component: Optional[int] = None,
+        i: int = 0,
+        j: int = 0,
+        grad_y: Optional[paddle.Tensor] = None,
+    ):
         key = (ys, xs, component)
         if key not in self.Hs:
             self.Hs[key] = Hessian(ys, xs, component=component, grad_y=grad_y)
@@ -139,7 +158,7 @@ class Hessians(object):
         self.Hs = {}
 
 
-# Use high-order differentiation with ingleton pattern for convenient
+# Use high-order differentiation with singleton pattern for convenient
 jacobian = Jacobians()
 hessian = Hessians()
 

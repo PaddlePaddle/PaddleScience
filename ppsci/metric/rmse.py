@@ -21,7 +21,7 @@ class RMSE(nn.Layer):
     r"""Root mean square error
 
     $$
-    \sqrt{\frac{\sum_{i=1}^{N}{(x_i-y_i)^2}}{N}}
+    metric = \sqrt{\frac{1}{N}}\sum_{i=1}^{N}{(x_i-y_i)^2}
     $$
     """
 
