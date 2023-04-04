@@ -48,7 +48,7 @@ def get_batch_iterator(bsize, num_samples, input_list):
         dataset=dataset, shuffle=False, batch_size=bsize, drop_last=False
     )
     loader = paddle.io.DataLoader(
-        dataset=dataset, batch_sampler=batch_sampler, num_workers=0
+        dataset=dataset, batch_sampler=batch_sampler, num_workers=2
     )
     loader = InfiniteDataLoader(loader)
     return iter(loader)
