@@ -94,8 +94,8 @@ def build_dataloader(_dataset, cfg):
         return_list=True,
         batch_sampler=sampler,
         collate_fn=collate_fn,
-        num_workers=cfg["num_workers"],
-        use_shared_memory=cfg["use_shared_memory"],
+        num_workers=cfg.get("num_workers", 2),
+        use_shared_memory=cfg.get("use_shared_memory", False),
         worker_init_fn=init_fn,
     )
 

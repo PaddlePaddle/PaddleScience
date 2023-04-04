@@ -51,6 +51,7 @@ class InteriorConstraint(base.Constraint):
         geom,
         dataloader_cfg,
         loss,
+        weight_value=1.0,
         random="pseudo",
         criteria=None,
         evenly=False,
@@ -90,32 +91,34 @@ class InteriorConstraint(base.Constraint):
                     input["area"] *= dataloader_cfg["iters_per_epoch"]
 
         label = {}
-        if type(geom) is not dict:
-            for key, value in label_dict.items():
-                if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-                if isinstance(value, (int, float)):
-                    label[key] = np.full_like(next(iter(input.values())), float(value))
-                elif isinstance(value, sympy.Basic):
-                    func = sympy.lambdify(
-                        sympy.symbols(geom.dim_keys),
-                        value,
-                        [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
+        for key, value in label_dict.items():
+            if isinstance(value, str):
+                value = sp_parser.parse_expr(value)
+            if isinstance(value, (int, float)):
+                label[key] = np.full_like(next(iter(input.values())), float(value))
+            elif isinstance(value, sympy.Basic):
+                func = sympy.lambdify(
+                    sympy.symbols(geom.dim_keys),
+                    value,
+                    [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
+                )
+                label[key] = func(
+                    **{k: v for k, v in input.items() if k in geom.dim_keys}
+                )
+            elif isinstance(value, types.FunctionType):
+                func = value
+                label[key] = func(input)
+                if isinstance(label[key], (int, float)):
+                    label[key] = np.full_like(
+                        next(iter(input.values())), float(label[key])
                     )
-                    label[key] = func(
-                        **{k: v for k, v in input.items() if k in geom.dim_keys}
-                    )
-                elif isinstance(value, types.FunctionType):
-                    func = value
-                    label[key] = func(input)
-                    if isinstance(label[key], (int, float)):
-                        label[key] = np.full_like(
-                            next(iter(input.values())), float(label[key])
-                        )
-                else:
-                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+            else:
+                raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = {
+            key: weight_value * np.ones_like(next(iter(label.values())))
+            for key in label
+        }
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, str):

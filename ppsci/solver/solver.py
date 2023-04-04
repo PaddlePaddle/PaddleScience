@@ -276,6 +276,7 @@ class Solver(object):
             )
             logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
+            cur_metric = float("inf")
 
             # evaluate during training
             if (
@@ -302,7 +303,7 @@ class Solver(object):
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
             # update learning rate by epoch
-            if self.lr_scheduler.by_epoch:
+            if self.lr_scheduler is not None and self.lr_scheduler.by_epoch:
                 self.lr_scheduler.step()
 
             # save epoch model every save_freq epochs

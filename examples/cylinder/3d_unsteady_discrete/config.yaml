@@ -14,7 +14,7 @@
 
         "hidden size":512,
 
-        "layer number":6,
+        "layer number":5,
 
         "activation function":tanh,
 

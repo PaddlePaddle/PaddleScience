@@ -300,6 +300,26 @@ if __name__ == "__main__":
     pde = new_psci.equation.NavierStokes(nu=NU, rho=1.0, dim=3, time=True)
 
     constraint_dict = {}
+
+    int_constraint = new_psci.constraint.InteriorConstraint(
+        label_expr=pde.equations,
+        label_dict={"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
+        geom={"t": i_t, "x": i_x, "y": i_y, "z": i_z},
+        dataloader_cfg={
+            "dataset": "MiniBatchDataset",
+            "num_workers": 2,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "batch_size": bs["interior"],
+                "drop_last": False,
+            },
+        },
+        loss=new_psci.loss.MSELoss("mean"),
+        weight_value=eq_wgt,
+        name="INTERIOR",
+    )
+
     ic_constraint = new_psci.constraint.SupervisedInitialConstraint(
         data_file={
             "init_t": init_t,
@@ -309,10 +329,10 @@ if __name__ == "__main__":
             "init_u": init_u,
             "init_v": init_v,
             "init_w": init_w,
-            "init_p": init_p,
+            # "init_p": init_p,
         },
         input_keys=["init_t", "init_x", "init_y", "init_z"],
-        label_keys=["init_u", "init_v", "init_w", "init_p"],
+        label_keys=["init_u", "init_v", "init_w"],  # , "init_p"],
         t0=0,
         alias_dict={
             "init_t": "t",
@@ -322,10 +342,11 @@ if __name__ == "__main__":
             "init_u": "u",
             "init_v": "v",
             "init_w": "w",
-            "init_p": "p",
+            # "init_p": "p",
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -334,6 +355,7 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=ic_wgt,
         name="IC",
     )
 
@@ -346,10 +368,10 @@ if __name__ == "__main__":
             "sup_u": sup_u,
             "sup_v": sup_v,
             "sup_w": sup_w,
-            "sup_p": sup_p,
+            # "sup_p": sup_p,
         },
         input_keys=["sup_t", "sup_x", "sup_y", "sup_z"],
-        label_keys=["sup_u", "sup_v", "sup_w", "sup_p"],
+        label_keys=["sup_u", "sup_v", "sup_w"],  # , "sup_p"],
         alias_dict={
             "sup_t": "t",
             "sup_x": "x",
@@ -358,10 +380,11 @@ if __name__ == "__main__":
             "sup_u": "u",
             "sup_v": "v",
             "sup_w": "w",
-            "sup_p": "p",
+            # "sup_p": "p",
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -370,24 +393,8 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=sup_wgt,
         name="SUP",
-    )
-
-    int_constraint = new_psci.constraint.InteriorConstraint(
-        label_expr=pde.equations,
-        label_dict={"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
-        geom={"t": i_t, "x": i_x, "y": i_y, "z": i_z},
-        dataloader_cfg={
-            "dataset": "MiniBatchDataset",
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "batch_size": bs["interior"],
-                "drop_last": False,
-            },
-        },
-        loss=new_psci.loss.MSELoss("mean"),
-        name="INTERIOR",
     )
 
     inlet_constraint = new_psci.constraint.SupervisedConstraint(
@@ -414,6 +421,7 @@ if __name__ == "__main__":
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -422,6 +430,7 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=inlet_wgt,
         name="INLET",
     )
 
@@ -448,6 +457,7 @@ if __name__ == "__main__":
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -456,6 +466,7 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=cylinder_wgt,
         name="CYLINDER",
     )
 
@@ -478,6 +489,7 @@ if __name__ == "__main__":
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -486,6 +498,7 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=outlet_wgt,
         name="OUTLET",
     )
 
@@ -512,6 +525,7 @@ if __name__ == "__main__":
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -520,6 +534,7 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=top_wgt,
         name="TOP",
     )
 
@@ -546,6 +561,7 @@ if __name__ == "__main__":
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
+            "num_workers": 2,
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -554,17 +570,17 @@ if __name__ == "__main__":
             },
         },
         loss=new_psci.loss.MSELoss("mean"),
+        weight_value=bottom_wgt,
         name="BOTTOM",
     )
-
-    constraint_dict[ic_constraint.name] = ic_constraint
-    constraint_dict[sup_constraint.name] = sup_constraint
     constraint_dict[int_constraint.name] = int_constraint
     constraint_dict[inlet_constraint.name] = inlet_constraint
     constraint_dict[cylinder_constraint.name] = cylinder_constraint
     constraint_dict[outlet_constraint.name] = outlet_constraint
     constraint_dict[top_constraint.name] = top_constraint
     constraint_dict[bottom_constraint.name] = bottom_constraint
+    constraint_dict[ic_constraint.name] = ic_constraint
+    constraint_dict[sup_constraint.name] = sup_constraint
 
     model = new_psci.arch.MLP(
         input_keys=["t", "x", "y", "z"],
@@ -575,7 +591,15 @@ if __name__ == "__main__":
         skip_connection=False,
         weight_norm=False,
     )
-    optimizer = new_psci.optimizer.Adam(learning_rate=learning_rate)([model])
+
+    lr = new_psci.optimizer.lr_scheduler.Cosine(
+        epochs=num_epoch,
+        iters_per_epoch=1,
+        learning_rate=learning_rate,
+        warmup_epoch=w_epoch,
+    )()
+
+    optimizer = new_psci.optimizer.Adam(learning_rate=lr)([model])
 
     # Read validation reference for time step : 0, 99
     lbm_0_input, lbm_0_output = load_vtk(
@@ -634,20 +658,22 @@ if __name__ == "__main__":
     }
 
     # Solver
-    output_dir = "./outputs/"
+    output_dir = "./outputs_0404/"
     train_solver = new_psci.solver.Solver(
         mode="train",
         model=model,
         constraint=constraint_dict,
         output_dir=output_dir,
         optimizer=optimizer,
-        lr_scheduler=None,
+        lr_scheduler=lr,
         epochs=num_epoch,
         iters_per_epoch=1,
-        eval_during_train=True,
-        eval_freq=200,
+        save_freq=1000,
+        eval_during_train=False,
+        eval_freq=1000,
         equation=pde,
         geom=None,
         validator=validator,
+        checkpoint_path="./outputs_0404/checkpoints/latest",
     )
     train_solver.train()

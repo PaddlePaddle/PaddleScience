@@ -46,6 +46,7 @@ class SupervisedConstraint(base.Constraint):
         alias_dict,
         dataloader_cfg,
         loss,
+        weight_value=1.0,
         weight_dict=None,
         timestamps=None,
         name="SupBC",
@@ -96,12 +97,18 @@ class SupervisedConstraint(base.Constraint):
         elif type(data_file) is dict:
             data = data_file
             input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
-            label = {key: data[input_keys[i]] for i, key in enumerate(self.output_keys)}
+            label = {key: data[label_keys[i]] for i, key in enumerate(self.output_keys)}
+            for key, value in label.items():
+                if isinstance(value, (int, float)):
+                    label[key] = np.full_like(next(iter(input.values())), float(value))
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
             raise NotImplementedError("Only suppport .csv file now.")
 
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = {
+            key: weight_value * np.ones_like(next(iter(label.values())))
+            for key in label
+        }
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, str):
@@ -153,6 +160,7 @@ class SupervisedInitialConstraint(base.Constraint):
         alias_dict,
         dataloader_cfg,
         loss,
+        weight_value=1.0,
         weight_dict=None,
         name="SupIC",
     ):
@@ -184,12 +192,20 @@ class SupervisedInitialConstraint(base.Constraint):
         elif type(data_file) is dict:
             data = data_file
             input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
-            label = {key: data[input_keys[i]] for i, key in enumerate(self.output_keys)}
+            label = {key: data[label_keys[i]] for i, key in enumerate(self.output_keys)}
+
+            for key, value in label.items():
+                if isinstance(value, (int, float)):
+                    label[key] = np.full_like(next(iter(input.values())), float(value))
+
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
             raise NotImplementedError("Only suppport .csv file now.")
 
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = {
+            key: weight_value * np.ones_like(next(iter(label.values())))
+            for key in label
+        }
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, str):
