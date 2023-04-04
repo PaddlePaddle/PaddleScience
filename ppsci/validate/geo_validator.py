@@ -17,6 +17,8 @@ from typing import Callable
 from typing import Dict
 from typing import Union
 
+import types
+
 import numpy as np
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
@@ -107,6 +109,14 @@ class GeometryValidator(base.Validator):
                 label[key] = func(
                     **{k: v for k, v in input.items() if k in geom.dim_keys}
                 )
+            elif isinstance(value, types.FunctionType):
+                func = value
+                label[key] = func(input)
+                if isinstance(label[key], (int, float)):
+                    label[key] = np.full(
+                        (next(iter(input.values())).shape[0], 1),
+                        float(label[key], "float32"),
+                    )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
