@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import paddle
 from paddle import io
 
@@ -37,7 +36,6 @@ class NamedArrayDataset(io.Dataset):
         self._len = len(next(iter(input.values())))
 
     def __getitem__(self, idx):
-
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
