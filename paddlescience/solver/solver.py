@@ -308,13 +308,23 @@ class Solver(object):
                 with open(out_path + file_lbm[1], "w") as file:
                     w = csv.writer(file)
                     w.writerow(["epoch", "error u", "error v", "error w", "error p"])
+            batch_cost = np.zeros(
+                num_epoch,
+            )
+            reader_cost = np.zeros(
+                num_epoch,
+            )
+            batch_forward_cost = np.zeros(
+                num_epoch,
+            )
             for epoch in range(num_epoch):
+                batch_tic = time.perf_counter()
                 # TODO: error out num_epoch==0
                 if bs is not None:
                     inputs_labels = loader.load_data(
                         inputs_labels_iter, var_type=type(bs).__name__
                     )
-
+                reader_cost[epoch] = time.perf_counter() - batch_tic
                 # iterator works
                 loss, outs, loss_details = self.algo.compute(
                     None,
@@ -325,17 +335,17 @@ class Solver(object):
                     labels_attr=labels_attr,
                     pde=self.pde,
                 )
-
+                batch_forward_cost[epoch] = time.perf_counter() - batch_tic
                 loss.backward()
                 self.opt.step()
                 self.opt.clear_grad()
-
+                batch_cost[epoch] = time.perf_counter() - batch_tic
                 if not isinstance(self.opt._learning_rate, float):
                     self.opt._learning_rate.step()
 
                 print_str = (
                     f"epoch: {epoch + 1} "
-                    + f"lr: {self.opt.get_lr():.5f} "
+                    + f"lr: {self.opt.get_lr():.15f} "
                     + f"loss: {float(loss):.8f} "
                     + f"eq loss: {float(loss_details[0]):.8f} "
                     + f"bc loss: {float(loss_details[1]):.8f} "
@@ -364,15 +374,16 @@ class Solver(object):
                         residual.append(np.absolute(np.array(temp_list)))
                         temp_error = (np.array(residual[i])).sum(axis=0)
                         mean_error = (np.array(residual[i])).mean(axis=0)
-                        print(
-                            f" error: e_u = {temp_error[0]},  e_v = {temp_error[1]},  e_w = {temp_error[2]},  e_p = {temp_error[3]}"
-                        )
+                        # print(
+                        #     f" error: e_u = {temp_error[0]},  e_v = {temp_error[1]},  e_w = {temp_error[2]},  e_p = {temp_error[3]}"
+                        # )
                         with open(out_path + file_lbm[i], "a") as file0:
                             w = csv.writer(file0)
                             w.writerow([(epoch + 1)] + mean_error.tolist())
 
                 print(
                     "epoch: " + str(epoch + 1),
+                    f"lr: {self.opt.get_lr():.15f} ",
                     " loss:",
                     float(loss),
                     " eq loss:",
@@ -383,6 +394,12 @@ class Solver(object):
                     float(loss_details[2]),
                     " data loss:",
                     float(loss_details[3]),
+                    " batch_cost",
+                    float(batch_cost[epoch]),
+                    " reader_cost",
+                    float(reader_cost[epoch]),
+                    " batch_forward_cost",
+                    float(batch_forward_cost[epoch]),
                 )
 
                 # write loss for visual DL
