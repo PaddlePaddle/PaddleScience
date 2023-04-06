@@ -4,15 +4,15 @@
 
 1. 安装 PaddlePaddle
 
-    请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装对应版本的 **develop** 版的 PaddlePaddle
+    请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 **develop** 版的 PaddlePaddle
 
 2. 下载 PaddleScience
 
-    请按以下命令从 github 上克隆 PaddleScience 项目，进入到 PaddleScience 目录下，
-    并将 PaddleScience 目录添加到系统环境变量 `PYTHONPATH` 中。
+    请按以下命令从 github 上克隆 PaddleScience 项目，进入到 PaddleScience 目录下
 
     ```shell linenums="1"
     git clone https://github.com/PaddlePaddle/PaddleScience.git
+    cd PaddleScience
     ```
 
 3. 安装必要的依赖包
@@ -30,10 +30,9 @@
 
 ## 使用
 
-1. 进入 PaddleScience 目录，并添加该目录到系统环境变量 PYTHONPATH 中
+1. 添加 PaddleScience 目录到系统环境变量 PYTHONPATH 中
 
     ``` shell linenums="1"
-    cd PaddleScience
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
@@ -46,11 +45,11 @@
         python ./ldc2d_unsteady_Re10.py
         ```
 
-    - 编写自己的案例（假设案例命为demo）
+    - 编写自己的案例（假设案例名为demo）
 
-        推荐在 `examples/` 下新建 `demo` 文件夹，然后在 `demo` 文件夹下新建 `demo.py`，最后在 `demo.py` 文件下使用 PaddleScience 提供的 [API](./zh/api/arch.md) 编写代码
+        推荐在 `examples/` 下新建 `demo` 文件夹，然后在 `demo` 文件夹下新建 `demo.py`，最后在 `demo.py` 文件中使用 PaddleScience 提供的 [API](./zh/api/arch.md) 编写代码
 
-        ```py linenums="1" title="demo.py"
+        ```py linenums="1" title="examples/demo/demo.py"
         import ppsci
 
         # write your code here...
@@ -60,5 +59,5 @@
 
         ```shell linenums="1"
         cd examples/demo
-        python demo.py
+        python ./demo.py
         ```
