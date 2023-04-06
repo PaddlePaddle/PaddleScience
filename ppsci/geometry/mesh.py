@@ -1,17 +1,20 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
+from typing import Union
 
 import numpy as np
 import pymesh
@@ -25,13 +28,13 @@ from ppsci.utils import misc
 
 
 class Mesh(geometry.Geometry):
-    """A geometry represented by a mesh.
+    """Class for mesh geometry.
 
     Args:
-        mesh(str, Mesh): Mesh file path, such as "/path/to/mesh.stl".
+        mesh(Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
     """
 
-    def __init__(self, mesh):
+    def __init__(self, mesh: Union[Mesh, str]):
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
         elif isinstance(mesh, pymesh.Mesh):
