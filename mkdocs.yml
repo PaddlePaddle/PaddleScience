@@ -1,0 +1,171 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Project information
+site_name: PaddleScience Docs
+site_description: An out-of-the-box open source library for scientific computing based on deep learning.
+site_author: PaddlePaddle
+site_url: "https://github.com/PaddlePaddle/PaddleScience"
+strict: false
+
+# Repository
+repo_name: PaddleScience
+repo_url: "https://github.com/PaddlePaddle/PaddleScience"
+
+# Copyright
+copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
+
+# Page tree
+nav:
+  - 安装: index.md
+  - 经典案例:
+      - PINNs:
+        - LDC2d_unsteady: zh/examples/ldc2d_unsteady.md
+        - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+      # - xxxx: path/to/xxx.md
+  - API文档:
+      - ppsci.arch: zh/api/arch.md
+      - ppsci.autodiff: zh/api/autodiff.md
+      - ppsci.constraint: zh/api/constraint.md
+      - ppsci.data:
+          - dataset: zh/api/data/dataset.md
+          - process:
+            - transform: zh/api/data/process/transform.md
+            - batch_transform: zh/api/data/process/batch_transform.md
+      - ppsci.equation: zh/api/equation.md
+      - ppsci.geometry: zh/api/geometry.md
+      - ppsci.loss: zh/api/loss.md
+      - ppsci.metric: zh/api/metric.md
+      - ppsci.optimizer:
+          - ppsci.optimizer.optimizer: zh/api/optimizer.md
+          - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
+      - ppsci.solver: zh/api/solver.md
+      - ppsci.utils: zh/api/utils.md
+      - ppsci.validate: zh/api/validate.md
+      - ppsci.visualize: zh/api/visualize.md
+  - 技术稿件: zh/technical_doc.md
+  - 共创计划: zh/cooperation.md
+  - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
+
+# Configuration
+theme:
+  name: material
+  font:
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      tip: material/lightbulb
+  logo: ./images/icons/paddle.png
+  language: "zh"
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
+    - navigation.sections
+    - navigation.prune
+    - navigation.top
+    - navigation.instant
+    - navigation.expand
+    - content.code.copy
+    - content.code.select
+    - search.highlight
+    - content.code.annotate
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+# Plugins
+plugins:
+  - include-markdown
+  - search
+  - glightbox
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [./ppsci]
+  - mike:
+      # these fields are all optional; the defaults are as below...
+      version_selector: true   # set to false to leave out the version selector
+      css_dir: css             # the directory to put the version selector's CSS
+      javascript_dir: js       # the directory to put the version selector's JS
+      canonical_version: null  # the version for <link rel="canonical">; `null`
+                              # uses the version specified via `mike deploy`
+
+# palette:
+#   - scheme: default
+#     primary: indigo
+#     accent: indigo
+#     toggle:
+#       icon: material/brightness-7
+#       name: Switch to dark mode
+#   - scheme: slate
+#     primary: indigo
+#     accent: indigo
+#     toggle:
+#       icon: material/brightness-4
+#       name: Switch to light mode
+
+# social:
+#   - icon: "fontawesome/brands/github"
+#     link: "https://github.com/PaddlePaddle/PaddleScience"
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      linenums: true
+  - pymdownx.snippets:
+      dedent_subsections: true
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: ⚓︎
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - javascripts/bd_statistics.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+  - stylesheets/monokai.css
+
+extra:
+  version:
+    provider: mike
+  alternate:
+    - name: 简体中文
+      link: /zh/
+      lang: zh
+    - name: English
+      link: /en/
+      lang: en
