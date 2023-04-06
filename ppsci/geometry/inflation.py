@@ -1,33 +1,34 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
 import open3d
 import pymesh
 
 
-def inflation(mesh, dis, direction=1):
-    """Inflation the mesh
+def open3d_inflation(
+    mesh: open3d.geometry.TriangleMesh, distance: float, direction: int = 1
+) -> open3d.geometry.TriangleMesh:
+    """Inflate mesh geometry.
 
     Args:
-        mesh (open3d.geometry.TriangleMesh): Mesh to be inflated.
-        dis (float): Distance to inflate.
-        direction (int, optional): 1 for outer normal, -1 for inner normal. Defaults to 1.
+        mesh (open3d.geometry.TriangleMesh): Open3D mesh object.
+        distance (float): Distance along exterior normal to inflate.
+        direction (int): 1 for exterior normal, -1 for interior normal. Defaults to 1.
 
     Returns:
-        open3d.geometry.TriangleMesh: The inflated mesh.
+        open3d.geometry.TriangleMesh: Inflated mesh.
     """
     mesh.remove_duplicated_vertices()
     mesh.remove_degenerate_triangles()
@@ -52,13 +53,13 @@ def inflation(mesh, dis, direction=1):
     for i, point in enumerate(points):
         boolean_index = np.argwhere(triangles == i)[:, 0]
         normal = normals[boolean_index] * direction
-        d = np.ones(len(normal)) * dis
+        d = np.ones(len(normal)) * distance
 
         new_point = np.linalg.lstsq(normal, d, rcond=None)[0].squeeze()
         new_point = point + new_point
-        if np.linalg.norm(new_point - point) > dis * 2:
+        if np.linalg.norm(new_point - point) > distance * 2:
             # TODO : Find a better way to solve the bad inflation
-            new_point = point + dis * normal.mean(axis=0)
+            new_point = point + distance * normal.mean(axis=0)
 
         new_points.append(new_point)
 
@@ -76,8 +77,8 @@ def inflation(mesh, dis, direction=1):
     return new_mesh
 
 
-def pymesh_inflation(mesh, distance):
-    """Inflate mesh by distance
+def pymesh_inflation(mesh: pymesh.Mesh, distance: float) -> pymesh.Mesh:
+    """Inflate mesh by distance.
 
     Args:
         mesh (pymesh.Mesh): PyMesh object.
@@ -91,7 +92,7 @@ def pymesh_inflation(mesh, distance):
     open3d_mesh = open3d.geometry.TriangleMesh(
         open3d.utility.Vector3dVector(vertices), open3d.utility.Vector3iVector(faces)
     )
-    inflated_open3d_mesh = inflation(
+    inflated_open3d_mesh = open3d_inflation(
         open3d_mesh, abs(distance), 1.0 if distance >= 0.0 else -1.0
     )
     vertices = np.array(inflated_open3d_mesh.vertices).astype("float32")
@@ -100,12 +101,12 @@ def pymesh_inflation(mesh, distance):
     return inflated_pymesh
 
 
-def offset(mesh, dis):
+def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
     """Offset the 2D mesh
 
     Args:
         mesh (open3d.geometry.TriangleMesh): The mesh to be offset.
-        dis (float): The distance to offset.
+        distance (float): The distance to offset.
 
     Returns:
         open3d.geometry.TriangleMesh: Result mesh.
@@ -163,7 +164,7 @@ def offset(mesh, dis):
     for point in set(surface_edges.reshape(-1)):
         index = np.argwhere(surface_edges == point)[:, 0]
         normal = edges_normals[index]
-        d = np.ones(len(index)) * dis
+        d = np.ones(len(index)) * distance
         new_point = np.linalg.lstsq(normal, d, rcond=None)[0]
         new_point = vertices[point] + new_point
         new_vertices.append(new_point)

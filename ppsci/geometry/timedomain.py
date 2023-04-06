@@ -1,23 +1,23 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
-
 
 import itertools
+from typing import Tuple
 
 import numpy as np
 
@@ -31,7 +31,23 @@ from ppsci.utils import misc
 
 
 class TimeDomain(geometry_1d.Interval):
-    def __init__(self, t0, t1, time_step=None, timestamps=None):
+    """Class for timedomain, an special interval geometry.
+
+    Args:
+        t0 (float): Start of time.
+        t1 (float): End of time.
+        time_step (float, optional): Step interval of time. Defaults to None.
+        timestamps (Tuple[float, ...], optional): List of timestamps. Defaults to None.
+
+    """
+
+    def __init__(
+        self,
+        t0: float,
+        t1: float,
+        time_step: float = None,
+        timestamps: Tuple[float, ...] = None,
+    ):
         super().__init__(t0, t1)
         self.t0 = t0
         self.t1 = t1
@@ -39,10 +55,8 @@ class TimeDomain(geometry_1d.Interval):
         self.timestamps = np.array(timestamps).reshape([-1])
         if time_step is not None:
             if time_step <= 0:
-                raise ValueError(f"time_step({time_step}) must larger than 0.")
-            self.num_timestamp = (
-                None if time_step is None else (int(np.ceil(self.diam / time_step)) + 1)
-            )
+                raise ValueError(f"time_step({time_step}) must be larger than 0.")
+            self.num_timestamp = int(np.ceil((t1 - t0) / time_step)) + 1
         elif timestamps is not None:
             self.num_timestamp = len(timestamps)
 
@@ -51,7 +65,14 @@ class TimeDomain(geometry_1d.Interval):
 
 
 class TimeXGeometry(geometry.Geometry):
-    def __init__(self, timedomain, geometry):
+    """Class for combination of time and geometry.
+
+    Args:
+        timedomain (TimeDomain): TimeDomain object.
+        geometry (geometry.Geometry): Geometry object.
+    """
+
+    def __init__(self, timedomain: TimeDomain, geometry: geometry.Geometry):
         self.timedomain = timedomain
         self.geometry = geometry
         self.ndim = geometry.ndim + timedomain.ndim
@@ -61,15 +82,15 @@ class TimeXGeometry(geometry.Geometry):
         return ["t"] + self.geometry.dim_keys
 
     def on_boundary(self, x):
-        # [N, txyz]
+        # [N, ndim(txyz)]
         return self.geometry.on_boundary(x[:, 1:])
 
     def on_initial(self, x):
-        # [N, 1]
+        # [N, 1(t)]
         return self.timedomain.on_initial(x[:, :1])
 
     def boundary_normal(self, x):
-        # x: [N, txy(z)]
+        # x: [N, ndim(txyz)]
         normal = self.geometry.boundary_normal(x[:, 1:])
         return np.hstack((x[:, :1], normal))
 
