@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import Dict
 from typing import Tuple
@@ -24,7 +23,7 @@ from ppsci.utils import logger
 
 
 class NetBase(nn.Layer):
-    """Base class for Network"""
+    """Base class for Network."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,7 +34,12 @@ class NetBase(nn.Layer):
         raise NotImplementedError("NetBase.forward is not implemented")
 
     @property
-    def num_params(self):
+    def num_params(self) -> int:
+        """Return number of parameters within network.
+
+        Returns:
+            int: Number of parameters.
+        """
         num = 0
         for name, param in self.named_parameters():
             if hasattr(param, "shape"):
@@ -47,12 +51,32 @@ class NetBase(nn.Layer):
     def concat_to_tensor(
         self, data_dict: Dict[str, paddle.Tensor], keys: Tuple[str, ...], axis=-1
     ) -> Tuple[paddle.Tensor, ...]:
+        """Concatenate tensors from dict in the order of given keys.
+
+        Args:
+            data_dict (Dict[str, paddle.Tensor]): Dict contains tensor.
+            keys (Tuple[str, ...]): Keys tensor fetched from.
+            axis (int, optional): Axis concate at. Defaults to -1.
+
+        Returns:
+            Tuple[paddle.Tensor, ...]: Concatenated tensor.
+        """
         data = [data_dict[key] for key in keys]
         return paddle.concat(data, axis)
 
     def split_to_dict(
         self, data_tensor: paddle.Tensor, keys: Tuple[str, ...], axis=-1
     ) -> Dict[str, paddle.Tensor]:
+        """Split tensor and wrap into a dict by given keys.
+
+        Args:
+            data_tensor (Dict[str, paddle.Tensor]): Tensor to be split.
+            keys (Tuple[str, ...]): Keys tensor mapping to.
+            axis (int, optional): Axis split at. Defaults to -1.
+
+        Returns:
+            Dict[str, paddle.Tensor]: Dict contains tensor.
+        """
         data = paddle.split(data_tensor, len(keys), axis=axis)
         return {key: data[i] for i, key in enumerate(keys)}
 

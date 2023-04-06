@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
 import paddle
@@ -20,7 +19,7 @@ from pyevtk import hl
 from ppsci.utils import logger
 
 
-def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
+def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
     """Save data to '*.vtu' file(s).
 
     Args:
@@ -83,7 +82,7 @@ def save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
 
     if num_timestamp > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-1 ~ {filename}_t-{num_timestamp}"
+            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamp - 1}"
         )
     else:
         logger.info(f"Visualization result is saved to {filename}")
@@ -97,7 +96,6 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         coord_keys (List[str]): List of coord key. such as ["x", "y"].
         value_keys (List[str]): List of value key. such as ["u", "v"].
-        ndim (int): Number of coord dimension in data_dict.
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     if len(coord_keys) not in [2, 3, 4]:
@@ -119,4 +117,4 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
             value = [x for x in value]
         value = np.concatenate(value, axis=1)
 
-    save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
+    _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
