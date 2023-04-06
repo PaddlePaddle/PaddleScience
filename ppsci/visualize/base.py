@@ -13,15 +13,35 @@
 # limitations under the License.
 
 import abc
+from typing import Callable
+from typing import Dict
+
+import numpy as np
 
 
 class Visualizer(object):
-    def __init__(self, filename, coord_keys, values_keys, num_timestamps):
-        self.filename = filename
-        self.coord_keys = coord_keys
-        self.dim = len(coord_keys)
-        self.values_keys = values_keys
+    """Base class for visualizer.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        num_timestamps (int): Number of timestamps
+        prefix (str): Prefix for output file.
+    """
+
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        num_timestamps: int,
+        prefix: str,
+    ):
+        self.input_dict = input_dict
+        self.input_keys = list(input_dict.keys())
+        self.output_expr = output_expr
+        self.output_keys = list(output_expr.keys())
         self.num_timestamps = num_timestamps
+        self.prefix = prefix
 
     @abc.abstractmethod
     def save(self, data_dict):
@@ -30,10 +50,10 @@ class Visualizer(object):
     def __str__(self):
         return ", ".join(
             [
-                f"filename: {self.filename}",
-                f"coord_keys: {self.coord_keys}",
-                f"dim: {self.dim}",
-                f"values_keys: {self.values_keys}",
+                f"input_keys: {self.input_keys}",
+                f"output_keys: {self.output_keys}",
+                f"output_expr: {self.output_expr}",
                 f"num_timestamps: {self.num_timestamps}",
+                f"output file prefix: {self.prefix}",
             ]
         )
