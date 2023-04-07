@@ -45,9 +45,6 @@ if __name__ == "__main__":
         time_start, time_end, num_timestamps, endpoint=True
     ).astype("float32")
 
-    print(f"train_timestamps: {train_timestamps.tolist()}")
-    print(f"val_timestamps: {val_timestamps.tolist()}")
-
     # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
