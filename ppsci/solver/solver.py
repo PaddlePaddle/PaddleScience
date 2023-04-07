@@ -42,7 +42,6 @@ class Solver(object):
     """Class for solver.
 
     Args:
-        mode (Literal["train", "eval"]): Runtime mode.
         model (nn.Layer): Model.
         constraint (Dict[str, ppsci.constraint.Constraint], optional): Constraint(s) applied on model. Defaults to None.
         output_dir (str, optional): Output directory. Defaults to "./output/".
@@ -67,12 +66,10 @@ class Solver(object):
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str], optional): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str], optional): Checkpoint path. Defaults to None.
-        log_level (Literal["info", "debug"], optional): Logging level. Defaults to "info".
     """
 
     def __init__(
         self,
-        mode: Literal["train", "eval"],
         model: nn.Layer,
         constraint: Dict[str, ppsci.constraint.Constraint] = None,
         output_dir: str = "./output/",
@@ -97,18 +94,13 @@ class Solver(object):
         amp_level: Literal["O1", "O2", "O0"] = "O0",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
-        log_level: Literal["info", "debug"] = "info",
     ):
-        self.mode = mode
         # set model
         self.model = model
         # set constraint
         self.constraint = constraint
         # set output directory
         self.output_dir = output_dir
-
-        # initialize logger
-        logger.init_logger("ppsci", f"./{self.output_dir}/{self.mode}.log", log_level)
 
         # set optimizer
         self.optimizer = optimizer

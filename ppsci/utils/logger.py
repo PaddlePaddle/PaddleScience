@@ -90,6 +90,14 @@ def init_logger(name="ppsci", log_file=None, log_level=logging.INFO):
     _logger.propagate = False
 
 
+def set_log_level(log_level):
+    """Set log level."""
+    if dist.get_rank() == 0:
+        _logger.setLevel(log_level)
+    else:
+        _logger.setLevel(logging.ERROR)
+
+
 def log_at_trainer0(log):
     """
     logs will print multi-times when calling Fleet API.
