@@ -19,6 +19,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+import numpy as np
 import paddle
 import paddle.amp as amp
 import paddle.distributed as dist
@@ -348,9 +349,37 @@ class Solver(object):
         self.model.train()
         return result
 
-    def predict(self, input_dict):
+    @paddle.no_grad()
+    def predict(self, input_dict, splited_shares=1):
         """Prediction"""
-        pred_dict = self.model(input_dict)
+        input_is_large = True
+        if input_is_large == True:
+            input_split = {}
+            for key, value in input_dict.items():
+                input_split[key] = np.array_split(value, splited_shares)
+
+            pred_dict = {}
+            for i in range(splited_shares):
+                print("predict", i)
+                input_i = {}
+                for key in input_split.keys():
+                    input_i[key] = paddle.to_tensor(
+                        input_split[key][i], dtype=paddle.float32, stop_gradient=False
+                    )
+                output = self.model(input_i)
+                for key in output.keys():
+                    if i == 0:
+                        pred_dict[key] = output[key].numpy()
+                    else:
+                        pred_dict.update(
+                            {
+                                key: np.concatenate(
+                                    [pred_dict[key], output[key].numpy()], axis=0
+                                )
+                            }
+                        )
+        else:
+            pred_dict = self.model(input_dict)
         return pred_dict
 
     def export(self):

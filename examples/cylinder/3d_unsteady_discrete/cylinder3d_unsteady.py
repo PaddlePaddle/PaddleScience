@@ -21,7 +21,7 @@ import sys
 import numpy as np
 import paddle
 from load_baseline_data import Input
-from load_baseline_data import Output
+from load_baseline_data import Label
 from load_baseline_data import load_msh
 from load_baseline_data import load_sample_vtk
 from load_baseline_data import load_vtk
@@ -623,13 +623,14 @@ if __name__ == "__main__":
         Input.x: XYZ_STAR,
         Input.y: XYZ_STAR,
         Input.z: XYZ_STAR,
-        Output.u: UVW_STAR,
-        Output.v: UVW_STAR,
-        Output.w: UVW_STAR,
-        Output.p: p_star,
+        Label.u: UVW_STAR,
+        Label.v: UVW_STAR,
+        Label.w: UVW_STAR,
+        Label.p: p_star,
     }
-    lbm_0_input = normlization(factor_dict, lbm_0_input)
-    lbm_0_output = normlization(factor_dict, lbm_0_output)
+
+    lbm_0_input = normlization(factor_dict, lbm_0_input[0])
+    lbm_0_output = normlization(factor_dict, lbm_0_output[0])
     lbm_0_old = {}
     lbm_0_old.update(lbm_0_input)
     lbm_0_old.update(lbm_0_output)
@@ -674,6 +675,6 @@ if __name__ == "__main__":
         equation=pde,
         geom=None,
         validator=validator,
-        checkpoint_path="./outputs_0404/checkpoints/latest",
+        # checkpoint_path="./outputs_0404/checkpoints/latest",
     )
     train_solver.train()

@@ -28,7 +28,7 @@ class Input(Enum):
     z = "z"
 
 
-class Output(Enum):
+class Label(Enum):
     u = "u"
     v = "v"
     w = "w"
@@ -53,30 +53,46 @@ def load_vtk(
     Returns:
         list: txyzuvwp
     """
-    return_list = []
-    for i in time_list:
-        file = name_wt_time + f"{i}.vtu"
-        mesh = meshio.read(file)
-        n = mesh.points.shape[0]
-        part1, part2 = np.zeros((n, 4)), np.zeros((n, 4))
-        if load_txyz == True:
-            t = np.full((n, 1), int(i * t_step))
-            x = mesh.points[:, 0].reshape(n, 1)
-            y = mesh.points[:, 1].reshape(n, 1)
-            z = mesh.points[:, 2].reshape(n, 1)
-            part1 = np.concatenate((t, x, y, z), axis=1).astype(np.float32)
-        if load_uvwp == True:
-            u = np.array(mesh.point_data["1"])
-            v = np.array(mesh.point_data["2"])
-            w = np.array(mesh.point_data["3"])
-            p = np.array(mesh.point_data["4"])
-            part2 = np.concatenate((u, v, w, p), axis=1).astype(np.float32)
-        return_list.append(np.concatenate((part1, part2), axis=1).reshape(n, 8, 1))
     if load_in_dict_shape is True:
-        input = {Input.t: t, Input.x: x, Input.y: y, Input.z: z}
-        output = {Output.u: u, Output.v: v, Output.w: w, Output.p: p}
-        return input, output
+        input, label = [], []
+        for i in time_list:
+            file = name_wt_time + f"{i}.vtu"
+            mesh = meshio.read(file)
+            n = mesh.points.shape[0]
+            input_dict, label_dict = {}, {}
+            if load_txyz == True:
+                input_dict[Input.t] = np.full((n, 1), int(i * t_step))
+                input_dict[Input.x] = mesh.points[:, 0].reshape(n, 1)
+                input_dict[Input.y] = mesh.points[:, 1].reshape(n, 1)
+                input_dict[Input.z] = mesh.points[:, 2].reshape(n, 1)
+            if load_uvwp == True:
+                label_dict[Label.u] = np.array(mesh.point_data["1"])
+                label_dict[Label.v] = np.array(mesh.point_data["2"])
+                label_dict[Label.w] = np.array(mesh.point_data["3"])
+                label_dict[Label.p] = np.array(mesh.point_data["4"])
+            input.append(input_dict)
+            label.append(label_dict)
+        return input, label
     else:
+        return_list = []
+        for i in time_list:
+            file = name_wt_time + f"{i}.vtu"
+            mesh = meshio.read(file)
+            n = mesh.points.shape[0]
+            part1, part2 = np.zeros((n, 4)), np.zeros((n, 4))
+            if load_txyz == True:
+                t = np.full((n, 1), int(i * t_step))
+                x = mesh.points[:, 0].reshape(n, 1)
+                y = mesh.points[:, 1].reshape(n, 1)
+                z = mesh.points[:, 2].reshape(n, 1)
+                part1 = np.concatenate((t, x, y, z), axis=1).astype(np.float32)
+            if load_uvwp == True:
+                u = np.array(mesh.point_data["1"])
+                v = np.array(mesh.point_data["2"])
+                w = np.array(mesh.point_data["3"])
+                p = np.array(mesh.point_data["4"])
+                part2 = np.concatenate((u, v, w, p), axis=1).astype(np.float32)
+            return_list.append(np.concatenate((part1, part2), axis=1).reshape(n, 8, 1))
         return return_list
 
 
