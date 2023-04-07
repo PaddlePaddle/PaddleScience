@@ -53,7 +53,7 @@ def load_input(t_star, xyz_star, file_name, time_tmp, not_mesh):
     else:
         txyz_uvwpe_input, input_mesh = load_msh(file_name)
     num_time = time_tmp.shape[0]
-    num_nodes = txyz_uvwpe_input.shape[0]  # nodes number of every time
+    num_nodes = txyz_uvwpe_input.shape[0]  # nodes number of every time step
     num_nodes_all_time = num_time * num_nodes
     it = np.zeros((num_nodes_all_time, 1)).astype(np.float32)
     ix = np.zeros((num_nodes_all_time, 1)).astype(np.float32)
@@ -100,7 +100,7 @@ def xyz_denormalization(i_x, i_y, i_z, xyz_star, num_time):
     i_x = i_x * xyz_star
     i_y = i_y * xyz_star
     i_z = i_z * xyz_star
-    cord = np.stack((i_x[0:n], i_y[0:n], i_z[0:n]), axis=1)
+    cord = {Input.x: list(i_x), Input.y: list(i_y), Input.z: list(i_z)}
     return cord
 
 
@@ -209,13 +209,13 @@ if __name__ == "__main__":
     msh_file = dirname + r"/data/3d_cylinder.msh"
 
     Re = 3900
-    U0 = 0.1
-    Dcylinder = 80.0
+    U0 = 0.1  # characteristic velocity
+    L = 80.0  # characteristic length
     RHO = 1.0
-    NU = RHO * U0 * Dcylinder / Re
+    NU = RHO * U0 * L / Re
 
-    t_star = Dcylinder / U0  # 800
-    xyz_star = Dcylinder  # 80
+    t_star = L / U0  # 800
+    xyz_star = L  # 80
     uvw_star = U0  # 0.1
     p_star = RHO * U0 * U0  # 0.01
 
@@ -308,7 +308,10 @@ if __name__ == "__main__":
         for i in range(num_time):
             for key in solution.keys():
                 err_dict[Label[key]].append(
-                    lbm_uvwp[i][Label[key]] - solution[key][i * n : (i + 1) * n]
+                    lbm_uvwp[i][Label[key]]
+                    - solution[key][
+                        i * n : (i + 1) * n
+                    ]  # n : nodes number per time step
                 )
             print(
                 f"{time_list[i]} \
@@ -328,11 +331,19 @@ if __name__ == "__main__":
             write_vtu(
                 file=dirname + f"/vtk_mesh/0302_predict_with_mesh_{i+1}.vtu",
                 mesh=input_mesh,
-                solution=solution[0][i * n : (i + 1) * n],
+                coordinate=None,
+                label={
+                    key: solution[key][i * n : (i + 1) * n] for key in solution.keys()
+                },  # n : nodes number per time step
             )
         else:
-            psci.visu.__save_vtk_raw(
-                filename=dirname + f"/vtk/0302_predict_{i+1}",
-                cordinate=cord,
-                data=solution[0][i * n : (i + 1) * n],
+            write_vtu(
+                filename=dirname + f"/vtk/0302_predict_{i+1}.vtu",
+                mesh=None,
+                coordinates={
+                    key: cord[key][i * n : (i + 1) * n] for key in cord.keys()
+                },
+                label={
+                    key: solution[key][i * n : (i + 1) * n] for key in solution.keys()
+                },  # n : nodes number per time step
             )

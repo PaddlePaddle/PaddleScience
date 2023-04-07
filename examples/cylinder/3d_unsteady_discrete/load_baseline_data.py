@@ -15,6 +15,7 @@
 Created in Mar. 2023
 @author: Guan Wang
 """
+import os
 from enum import Enum
 
 import meshio
@@ -115,21 +116,27 @@ def load_msh(file):
     return cord, mesh
 
 
-def write_vtu(file, mesh, solution):
+def write_vtu(filename, mesh, label, coordinates):
     """write *.vtk file by concatenating mesh and solution
     Args:
-        file (str): output directory
+        filename (str): output file name and directory
         mesh (mesh): mesh object
-        solution (np.array): results matrix compose of result vectors like : velocity, pressure ...
+        label (dict): results dict which is compose of result vectors like : velocity, pressure ...
     """
-    point_data_dic = {}
-    point_data_dic["u"] = solution[:, 0]
-    point_data_dic["v"] = solution[:, 1]
-    point_data_dic["w"] = solution[:, 2]
-    point_data_dic["p"] = solution[:, 3]
-    mesh.point_data = point_data_dic
-    mesh.write(file)
-    print(f"vtk_raw file saved at [{file}]")
+    path = os.path.dirname(filename)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    if mesh is None:
+        n = len(next(iter(coordinates.values())))
+        m = len(coordinates)
+        # get the list variable transposed
+        points = np.stack((x for x in iter(coordinates.values()))).reshape(m, n)
+        mesh = meshio.Mesh(
+            points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))]
+        )
+    mesh.point_data = label
+    mesh.write(filename)
+    print(f"vtk_raw file saved at [{filename}]")
 
 
 def load_sample_vtk(file):
