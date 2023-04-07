@@ -14,6 +14,7 @@
 
 from ppsci.utils import logger
 from ppsci.utils import misc
+from ppsci.utils.checker import check_module
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
@@ -32,4 +33,5 @@ __all__ = [
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
+    "check_module",
 ]
