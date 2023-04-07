@@ -79,22 +79,22 @@ class InteriorConstraint(base.Constraint):
         else:
             self.input_keys = geom.dim_keys
 
-        # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+            # "area" will be kept in "output_dict" for computation.
+            if isinstance(geom, geometry.Mesh):
+                self.output_keys += ["area"]
 
-        if isinstance(criteria, str):
-            criteria = eval(criteria)
+            if isinstance(criteria, str):
+                criteria = eval(criteria)
 
-        # prepare input
-        input = geom.sample_interior(
-            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
-            random,
-            criteria,
-            evenly,
-        )
-        if "area" in input:
-            input["area"] *= dataloader_cfg["iters_per_epoch"]
+            # prepare input
+            input = geom.sample_interior(
+                dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
+                random,
+                criteria,
+                evenly,
+            )
+            if "area" in input:
+                input["area"] *= dataloader_cfg["iters_per_epoch"]
 
         # prepare label
         label = {}

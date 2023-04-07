@@ -70,7 +70,6 @@ def build_dataloader(_dataset, cfg):
                 f"'BatchSampler' when world_size({world_size}) > 1"
             )
 
-    sampler_cfg["batch_size"] = cfg["batch_size"]
     sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
 
     # build collate_fn if specified
