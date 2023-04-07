@@ -18,7 +18,7 @@ from ppsci.equation.pde import base
 
 
 class NormalDotVec(base.PDE):
-    """Poisson
+    """NormalDotVec.
 
     Args:
         velocity_keys (Tuple[str, ...]): Keys for velocity(ies).

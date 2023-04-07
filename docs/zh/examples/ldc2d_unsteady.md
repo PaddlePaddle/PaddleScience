@@ -141,7 +141,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:34:40
 --8<--
 ```
 
-???+ tip
+???+ tip "提示"
 
     `Rectangle` 和 `TimeDomain` 是两种可以单独使用的 `Geometry` 派生类。
 
@@ -249,7 +249,7 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
-```py linenums="73"
+``` py linenums="73"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:73:108
 --8<--
@@ -267,71 +267,71 @@ examples/ldc/ldc2d_unsteady_Re10.py:109:117
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-```py linenums="118"
+``` py linenums="118"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:118:126
 --8<--
 ```
 
-### 3.4 超参数设定
+### 3.5 超参数设定
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-```py linenums="128"
+``` py linenums="128"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:128:135
 --8<--
 ```
 
-### 3.5 优化器构建
+### 3.6 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-```py linenums="137"
+``` py linenums="137"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:137:138
 --8<--
 ```
 
-### 3.6 评估器构建
+### 3.7 评估器构建
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-```py linenums="140"
+``` py linenums="140"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:140:158
 --8<--
 ```
 
-方程设置与 [约束构建](#32) 的设置相同，表示如何计算所需评估的目标变量；
+方程设置与 [约束构建](#34) 的设置相同，表示如何计算所需评估的目标变量；
 
 此处我们为 `momentum_x`, `continuity`, `momentum_y` 三个目标变量设置标签值为 0；
 
-计算域与 [约束构建](#32) 的设置相同，表示在指定计算域上进行评估；
+计算域与 [约束构建](#34) 的设置相同，表示在指定计算域上进行评估；
 
 采样点配置则需要指定总的评估点数 `total_size`，此处我们设置为 9801 \* 16(99x99等间隔网格，共 16 个评估时刻)；
 
 评价指标 `metric` 选择 `ppsci.metric.MSE` 即可；
 
-其余配置与 [约束构建](#32) 的设置类似。
+其余配置与 [约束构建](#34) 的设置类似。
 
-### 3.7 可视化器构建
+### 3.8 可视化器构建
 
 在模型评估时，如果评估结果是可以可视化的数据，我们可以选择合适的可视化器来对输出结果进行可视化。
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i,y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 16 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-```py linenums="160"
+``` py linenums="160"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:160:199
 --8<--
 ```
 
-### 3.8 模型训练、评估与可视化
+### 3.9 模型训练、评估与可视化
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-```py linenums="201"
+``` py linenums="201"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py:201:
 --8<--
@@ -339,7 +339,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:201:
 
 ## 4. 完整代码
 
-```py linenums="1" title="ldc2d_steady_Re10.py"
+``` py linenums="1" title="ldc2d_steady_Re10.py"
 --8<--
 examples/ldc/ldc2d_unsteady_Re10.py
 --8<--
@@ -347,21 +347,21 @@ examples/ldc/ldc2d_unsteady_Re10.py
 
 ## 5. 结果展示
 
-???+ info
+???+ info "说明"
 
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
 <figure markdown>
-  ![u_pred_openfoam](../../images/ldc2d_unsteady/u_pred_openfoam.png)
+  ![u_pred_openfoam](../../images/ldc2d_unsteady/u_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 u ，右：OpenFOAM结果 u </figcaption>
 </figure>
 
 <figure markdown>
-  ![v_pred_openfoam](../../images/ldc2d_unsteady/v_pred_openfoam.png)
+  ![v_pred_openfoam](../../images/ldc2d_unsteady/v_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 v ，右：OpenFOAM结果 v </figcaption>
 </figure>
 
 <figure markdown>
-  ![p_pred_openfoam](../../images/ldc2d_unsteady/p_pred_openfoam.png)
+  ![p_pred_openfoam](../../images/ldc2d_unsteady/p_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 p ，右：OpenFOAM结果 p </figcaption>
 </figure>

@@ -28,10 +28,10 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - 安装: index.md
+  - 安装使用: index.md
   - 经典案例:
       - PINNs:
-        - LDC2d_unsteady: zh/examples/ldc2d_unsteady.md
+        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
       # - xxxx: path/to/xxx.md
   - API文档:
@@ -63,10 +63,6 @@ theme:
   name: material
   font:
     code: Roboto Mono
-  icon:
-    repo: fontawesome/brands/github
-    admonition:
-      tip: material/lightbulb
   logo: ./images/icons/paddle.png
   language: "zh"
   features:
@@ -76,11 +72,11 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
-    - navigation.instant
+    # - navigation.instant
     - navigation.expand
     - content.code.copy
     - content.code.select
-    - search.highlight
+    # - search.highlight
     - content.code.annotate
   palette:
     # Palette toggle for light mode
@@ -125,10 +121,6 @@ plugins:
 #     toggle:
 #       icon: material/brightness-4
 #       name: Switch to light mode
-
-# social:
-#   - icon: "fontawesome/brands/github"
-#     link: "https://github.com/PaddlePaddle/PaddleScience"
 
 markdown_extensions:
   - pymdownx.highlight:
