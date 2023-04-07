@@ -39,10 +39,13 @@ class Constraint:
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
-        self.data_loader = data.dataloader.InfiniteDataLoader(self.data_loader)
         self.data_iter = iter(self.data_loader)
         self.loss = loss
         self.name = name
+
+    def reset_data_iter(self):
+        if not isinstance(self.data_loader, data.dataloader.InfiniteDataLoader):
+            self.data_iter = iter(self.data_loader)
 
     def __str__(self):
         return ", ".join(

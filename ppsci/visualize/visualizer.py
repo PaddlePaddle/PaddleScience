@@ -47,6 +47,48 @@ class VisualizerScatter1D(base.Visualizer):
         )
 
 
+class VisualizerScatter3D(base.Visualizer):
+    """Visualizer for 3d scatter data.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        num_timestamps (int): Number of timestamps
+        prefix (str): Prefix for output file.
+    """
+
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        num_timestamps: int = 1,
+        prefix: str = "plot_3d",
+    ):
+        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+
+    def save(self, filename, data_dict):
+        data_dict = {
+            key: value for key, value in data_dict.items() if key in self.output_keys
+        }
+        value = data_dict[self.output_keys[0]]
+        dim = len(value.shape)
+        if dim == 3:
+            # B, T, 3
+            for i in range(value.shape[0]):
+                cur_data_dict = {key: value[i] for key, value in data_dict.items()}
+                plot.save_plot_from_3d_dict(
+                    filename + str(i),
+                    cur_data_dict,
+                    self.output_keys,
+                    self.num_timestamps,
+                )
+        else:
+            # T, 3
+            plot.save_plot_from_3d_dict(
+                filename, data_dict, self.output_keys, self.num_timestamps
+            )
+
+
 class VisualizerVtu(base.Visualizer):
     """Visualizer for 2D points data.
 

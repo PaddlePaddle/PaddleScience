@@ -21,6 +21,7 @@ import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io
 
+from ppsci import data
 from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
@@ -100,5 +101,8 @@ def build_dataloader(_dataset, cfg):
         use_shared_memory=cfg.get("use_shared_memory", False),
         worker_init_fn=init_fn,
     )
+    # wrap dataloader into InfiniteDataLoader if iters_per_epoch is not specified
+    if "iters_per_epoch" in cfg:
+        dataloader = data.dataloader.InfiniteDataLoader(dataloader)
 
     return dataloader

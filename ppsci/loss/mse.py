@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Optional
+
 import paddle.nn.functional as F
 
 from ppsci.loss import base
@@ -54,6 +57,52 @@ class MSELoss(base.LossBase):
             elif self.reduction == "mean":
                 loss = loss.mean()
             losses += loss
+        return losses
+
+
+class MSELossWithL2Decay(base.LossBase):
+    """MSELoss with L2 decay.
+
+    Args:
+        reduction (str, optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
+        regularization_dict (Dict[str, float], optional): Regularization dictionary. Defaults to None.
+
+    Raises:
+        ValueError: reduction should be 'mean' or 'sum'.
+    """
+
+    def __init__(
+        self,
+        reduction: str = "mean",
+        regularization_dict: Optional[Dict[str, float]] = None,
+    ):
+        super().__init__()
+        if reduction not in ["mean", "sum"]:
+            raise ValueError(
+                f"reduction should be 'mean' or 'sum', but got {reduction}"
+            )
+        self.reduction = reduction
+        self.regularization_dict = regularization_dict
+
+    def forward(self, output_dict, label_dict, weight_dict=None):
+        losses = 0.0
+        for key in label_dict:
+            loss = F.mse_loss(output_dict[key], label_dict[key], "none")
+            if weight_dict is not None:
+                loss *= weight_dict[key]
+            if "area" in output_dict:
+                loss *= output_dict["area"]
+
+            if self.reduction == "sum":
+                loss = loss.sum()
+            elif self.reduction == "mean":
+                loss = loss.mean()
+            losses += loss
+
+        if self.regularization_dict is not None:
+            for reg_key, reg_weight in self.regularization_dict.items():
+                loss = output_dict[reg_key].pow(2).sum()
+                losses += loss * reg_weight
         return losses
 
 
