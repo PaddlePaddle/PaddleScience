@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import collections
 import csv
@@ -19,6 +18,7 @@ import random
 
 import numpy as np
 import paddle
+import paddle.distributed as dist
 
 from ppsci.utils import logger
 
@@ -33,6 +33,7 @@ __all__ = [
     "load_csv_file",
     "stack_dict_list",
     "combine_array_with_time",
+    "set_random_seed",
 ]
 
 
@@ -163,7 +164,7 @@ def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
             alias_dict = {}
         # check if all keys in alias_dict are valid
         for original_key in alias_dict:
-            if not original_key in keys:
+            if original_key not in keys:
                 raise ValueError(
                     f"key({original_key}) in alias_dict "
                     f"is not found in keys({keys})"
@@ -201,6 +202,7 @@ def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
 
 
 def set_random_seed(seed):
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    rank = dist.get_rank()
+    paddle.seed(seed + rank)
+    np.random.seed(seed + rank)
+    random.seed(seed + rank)

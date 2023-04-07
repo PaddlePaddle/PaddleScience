@@ -133,3 +133,6 @@ FETCH_HEAD
 # vtk
 *.vtk
 *.vtu
+
+# mkdocs
+site/

@@ -1,19 +1,20 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import types
+from typing import Callable
+from typing import Union
 
 import paddle
 import sympy
@@ -27,8 +28,8 @@ class ExpressionSolver(paddle.nn.Layer):
     """Expression Solver
 
     Args:
-        input_keys (Dict[str]): List of string for input keys.
-        output_keys (Dict[str]): List of string for output keys.
+        input_keys (Dict[str]):Names of input keys.
+        output_keys (Dict[str]):Names of output keys.
         model (nn.Layer): Model to get output variables from input variables.
     """
 
@@ -40,15 +41,15 @@ class ExpressionSolver(paddle.nn.Layer):
         self.expr_dict = {}
         self.output_dict = {}
 
-    def solve_expr(self, expr):
+    def solve_expr(self, expr: sympy.Basic) -> Union[float, paddle.Tensor]:
         """Evaluates the value of the expression recursively in the expression tree
-         by post-order traversal.
+            by post-order traversal.
 
         Args:
             expr (sympy.Basic): Expression.
 
         Returns:
-            Union[float, Tensor]: Value of current expression `expr`
+            Union[float, paddle.Tensor]: Value of current expression `expr`.
         """
         # already computed in output_dict(including input data)
         if getattr(expr, "name", None) in self.output_dict:
@@ -138,12 +139,18 @@ class ExpressionSolver(paddle.nn.Layer):
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
 
-        # clear gradient cache
+        # clear differentiation cache
         clear()
 
         return {k: self.output_dict[k] for k in self.output_keys}
 
-    def add_target_expr(self, expr, expr_name):
+    def add_target_expr(self, expr: Callable, expr_name: str):
+        """Add an expression `expr` named `expr_name` to
+
+        Args:
+            expr (Callable): _description_
+            expr_name (str): _description_
+        """
         self.expr_dict[expr_name] = expr
 
     def __str__(self):

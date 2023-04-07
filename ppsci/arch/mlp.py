@@ -1,17 +1,19 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from typing import Tuple
+from typing import Union
 
 import paddle.nn as nn
 
@@ -23,26 +25,26 @@ class MLP(base.NetBase):
     """Multi layer perceptron network.
 
     Args:
-        input_keys (List[str]): Input keys, such as ["x", "y", "z"].
-        output_keys (List[str]): Output keys, such as ["u", "v", "w"].
-        num_layers (Optional[int]): Number of hidden layers.
-        hidden_size (Union[int, List[int]]): Number of hidden size.
+        input_keys (Tuple[str, ...]): Name of input keys, such as ["x", "y", "z"].
+        output_keys (Tuple[str, ...]): Name of output keys, such as ["u", "v", "w"].
+        num_layers (int): Number of hidden layers.
+        hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
+            An integer for all layers, or list of integer specify each layer's size.
         activation (str, optional): Name of activation function. Defaults to "tanh".
-        skip_connection (bool, optional): Whether to use skip connection.
-            Defaults to False.
-        weight_norm (bool, optional): Whether to apply weight norm on parameter(s).
-            Defaults to False.
+        skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
+        weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
+
     """
 
     def __init__(
         self,
-        input_keys,
-        output_keys,
-        num_layers,
-        hidden_size,
-        activation="tanh",
-        skip_connection=False,
-        weight_norm=False,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        num_layers: int,
+        hidden_size: Union[int, Tuple[int, ...]],
+        activation: str = "tanh",
+        skip_connection: bool = False,
+        weight_norm: bool = False,
     ):
         super().__init__()
         self.input_keys = input_keys

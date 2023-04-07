@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
 
@@ -20,7 +19,7 @@ from ppsci.utils import misc
 
 
 class PointCloud(geometry.Geometry):
-    """A geometry represented by a point cloud, i.e., a set of points in space.
+    """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
         interior_path (str): File which store interior points of a point cloud.
@@ -38,7 +37,7 @@ class PointCloud(geometry.Geometry):
         boundary_normal_path=None,
         alias_dict=None,
     ):
-        # PointCloud from CSV file
+        # Interior points from CSV file
         if interior_path.endswith(".csv"):
             # read data
             data_dict = misc.load_csv_file(interior_path, coord_keys)
@@ -49,8 +48,8 @@ class PointCloud(geometry.Geometry):
                 self.interior.append(data_dict[key])
             self.interior = np.concatenate(self.interior, -1)
 
-        # PointCloud from CSV file
-        if boundary_path is not None and boundary_path.endswith(".csv"):
+        # Boundary points from CSV file
+        if boundary_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_path, coord_keys)
 
@@ -62,8 +61,8 @@ class PointCloud(geometry.Geometry):
         else:
             self.boundary = None
 
-        # PointCloud from CSV file
-        if boundary_normal_path is not None and boundary_normal_path.endswith(".csv"):
+        # Normal of boundary points from CSV file
+        if boundary_normal_path is not None:
             # read data
             data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
 
@@ -191,7 +190,7 @@ class PointCloud(geometry.Geometry):
 
     def __str__(self) -> str:
         """Return the name of class"""
-        _str = ", ".join(
+        return ", ".join(
             [
                 self.__class__.__name__,
                 f"num_points = {len(self.interior)}",
@@ -200,4 +199,3 @@ class PointCloud(geometry.Geometry):
                 f"dim_keys = {self.dim_keys}",
             ]
         )
-        return _str
