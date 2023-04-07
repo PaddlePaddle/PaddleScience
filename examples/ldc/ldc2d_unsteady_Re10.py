@@ -15,12 +15,15 @@
 import numpy as np
 
 import ppsci
+from ppsci.utils import logger
 
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
     output_dir = "./ldc2d_unsteady_Re10"
+    # initialize logger
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(
@@ -198,9 +201,8 @@ if __name__ == "__main__":
         )
     }
 
-    # initialize train solver
-    train_solver = ppsci.solver.Solver(
-        "train",
+    # initialize solver
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -216,11 +218,14 @@ if __name__ == "__main__":
         visualizer=visualizer,
     )
     # train model
-    train_solver.train()
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
 
-    # evaluate the final checkpoint
-    eval_solver = ppsci.solver.Solver(
-        "eval",
+    # directly evaluate pretrained model(optional)
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -230,7 +235,6 @@ if __name__ == "__main__":
         visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
-    eval_solver.eval()
-
-    # visualize the prediction of final checkpoint
-    eval_solver.visualize()
+    solver.eval()
+    # visualize prediction for pretrained model(optional)
+    solver.visualize()
