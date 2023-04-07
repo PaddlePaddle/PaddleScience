@@ -31,7 +31,7 @@ class Mesh(geometry.Geometry):
     """Class for mesh geometry.
 
     Args:
-        mesh(Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
+        mesh (Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
     """
 
     def __init__(self, mesh: Union[Mesh, str]):
