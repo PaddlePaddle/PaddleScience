@@ -15,12 +15,15 @@
 import numpy as np
 
 import ppsci
+from ppsci.utils import logger
 
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
     output_dir = "./output_cylinder2d_unsteady"
+    # initialize logger
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(
@@ -44,6 +47,9 @@ if __name__ == "__main__":
     val_timestamps = np.linspace(
         time_start, time_end, num_timestamps, endpoint=True
     ).astype("float32")
+
+    logger.info(f"train_timestamps: {train_timestamps.tolist()}")
+    logger.info(f"val_timestamps: {val_timestamps.tolist()}")
 
     # set time-geometry
     geom = {
@@ -179,9 +185,8 @@ if __name__ == "__main__":
         )
     }
 
-    # initialize train solver
-    train_solver = ppsci.solver.Solver(
-        "train",
+    # initialize solver
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -197,11 +202,15 @@ if __name__ == "__main__":
         visualizer=visualizer,
     )
     # train model
-    train_solver.train()
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
 
-    # evaluate the final checkpoint
-    eval_solver = ppsci.solver.Solver(
-        "eval",
+    # directly evaluate model from pretrained_model_path(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -211,7 +220,6 @@ if __name__ == "__main__":
         visualizer=visualizer,
         pretrained_model_path=f"./{output_dir}/checkpoints/latest",
     )
-    eval_solver.eval()
-
-    # visualize the prediction of final checkpoint
-    eval_solver.visualize()
+    solver.eval()
+    # visualize prediction from pretrained_model_path(optional)
+    solver.visualize()
