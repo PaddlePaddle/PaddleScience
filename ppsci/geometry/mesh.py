@@ -14,10 +14,10 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Union
 
 import numpy as np
-import pymesh
 import pysdf
 
 from ppsci.geometry import geometry
@@ -35,6 +35,10 @@ class Mesh(geometry.Geometry):
     """
 
     def __init__(self, mesh: Union[Mesh, str]):
+        # check if pymesh is installed when using Mesh Class
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError()
+
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
         elif isinstance(mesh, pymesh.Mesh):
@@ -128,8 +132,8 @@ class Mesh(geometry.Geometry):
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
 
-        # check if open3d and pymesh are both installed for using inflation module
-        if not checker.check_module(["open3d", "pymesh"]):
+        # check if open3d is both installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
             raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
@@ -170,8 +174,8 @@ class Mesh(geometry.Geometry):
         all_normal = []
         all_area = []
 
-        # check if open3d and pymesh are both installed for using inflation module
-        if not checker.check_module(["open3d", "pymesh"]):
+        # check if open3d is installed before using inflation module
+        if not checker.dynamic_import_to_globals(["open3d"]):
             raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
