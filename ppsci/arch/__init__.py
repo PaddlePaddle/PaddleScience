@@ -15,10 +15,13 @@
 
 import copy
 
-from ppsci.arch.mlp import MLP
-from ppsci.utils import logger
+from ppsci.arch.mlp import MLP  # isort:skip
+from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
+from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
+from ppsci.utils import logger  # isort:skip
 
-__all__ = ["MLP", "build_model"]
+
+__all__ = ["MLP", "LorenzEmbedding", "PhysformerGPT2", "build_model"]
 
 
 def build_model(cfg):
