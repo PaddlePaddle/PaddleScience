@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import matplotlib
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
+from matplotlib.legend_handler import HandlerBase
+from matplotlib.patches import Rectangle
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 from ppsci.utils import logger
 
@@ -32,6 +36,27 @@ cnames = [
     "orchid",
     "palegoldenrod",
     "palegreen",
+]
+
+CMAPS = [
+    "Reds",
+    "Blues",
+    "Greys",
+    "Purples",
+    "Greens",
+    "Oranges",
+    "YlOrBr",
+    "YlOrRd",
+    "OrRd",
+    "PuRd",
+    "RdPu",
+    "BuPu",
+    "GnBu",
+    "PuBu",
+    "YlGnBu",
+    "PuBuGn",
+    "BuGn",
+    "YlGn",
 ]
 
 
@@ -113,3 +138,122 @@ def save_plot_from_1d_dict(
         value = np.concatenate(value, axis=1)
 
     _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp)
+
+
+# Interface to LineCollection:
+def _colorline3d(
+    x, y, z, t=None, cmap=plt.get_cmap("viridis"), linewidth=1, alpha=1.0, ax=None
+):
+    """
+    Plot a colored line with coordinates x and y
+    Optionally specify colors in the array z
+    Optionally specify a colormap, a norm function and a line width
+    https://stackoverflow.com/questions/52884221/how-to-plot-a-matplotlib-line-plot-using-colormap
+    """
+    # Default colors equally spaced on [0,1]:
+    if t is None:
+        t = np.linspace(0.25, 1.0, len(x))
+    if ax is None:
+        ax = plt.gca()
+
+    points = np.array([x, y, z]).T.reshape(-1, 1, 3)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+    colors = np.array([cmap(i) for i in t])
+    lc = Line3DCollection(segments, colors=colors, linewidth=linewidth, alpha=alpha)
+    ax.add_collection(lc)
+    ax.scatter(x, y, z, c=colors, marker="*", alpha=alpha)  # Adding line markers
+
+
+class HandlerColormap(HandlerBase):
+    """Class for creating colormap legend rectangles
+
+    Args:
+        cmap (matplotlib.cm): Matplotlib colormap
+        num_stripes (int): Number of countour levels (strips) in rectangle
+    """
+
+    def __init__(self, cmap: matplotlib.cm, num_stripes: int = 8, **kw):
+        HandlerBase.__init__(self, **kw)
+        self.cmap = cmap
+        self.num_stripes = num_stripes
+
+    def create_artists(
+        self, legend, orig_handle, xdescent, ydescent, width, height, fontsize, trans
+    ):
+        stripes = []
+        for i in range(self.num_stripes):
+            s = Rectangle(
+                [xdescent + i * width / self.num_stripes, ydescent],
+                width / self.num_stripes,
+                height,
+                fc=self.cmap((2 * i + 1) / (2 * self.num_stripes)),
+                transform=trans,
+            )
+            stripes.append(s)
+        return stripes
+
+
+def _save_plot_from_3d_array(filename, visu_data, visu_keys, num_timestamp=1):
+    """Save plot from given 3D data.
+
+    Args:
+        filename (str): Filename.
+        visu_data (List[np.ndarray]): Data that requires visualization.
+        visu_keys (List[str]): Keys for visualizing data. such as ["u", "v"].
+        num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
+    """
+
+    fig = plt.figure(figsize=(10, 10))
+    len_ts = len(visu_data[0]) // num_timestamp
+    for t in range(num_timestamp):
+        ax = fig.add_subplot(1, num_timestamp, t + 1, projection="3d")
+        st = t * len_ts
+        ed = (t + 1) * len_ts
+        visu_data_t = [data[st:ed] for data in visu_data]
+        cmaps = []
+        for i, data in enumerate(visu_data_t):
+            cmap = plt.get_cmap(CMAPS[i % len(CMAPS)])
+            _colorline3d(data[:, 0], data[:, 1], data[:, 2], cmap=cmap, ax=ax)
+            cmaps.append(cmap)
+        cmap_handles = [Rectangle((0, 0), 1, 1) for _ in visu_keys]
+        handler_map = dict(
+            zip(cmap_handles, [HandlerColormap(cm, num_stripes=8) for cm in cmaps])
+        )
+        # Create custom legend with color map rectangels
+        ax.legend(
+            handles=cmap_handles,
+            labels=visu_keys,
+            handler_map=handler_map,
+            loc="upper right",
+            framealpha=0.95,
+        )
+        if num_timestamp == 1:
+            fig.savefig(filename, dpi=300)
+        else:
+            fig.savefig(f"{filename}_{t}", dpi=300)
+
+    if num_timestamp == 1:
+        logger.info(f"1D result is saved to {filename}.png")
+    else:
+        logger.info(
+            f"1D result is saved to {filename}_0.png"
+            f" ~ {filename}_{num_timestamp - 1}.png"
+        )
+
+
+def save_plot_from_3d_dict(filename, data_dict, visu_keys, num_timestamp=1):
+    """Plot dict data as file.
+
+    Args:
+        filename (str): Output filename.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        visu_keys (List[str, ...]): Keys for visualizing data. such as ["u", "v"].
+        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+    """
+
+    visu_data = [data_dict[k] for k in visu_keys]
+    if isinstance(visu_data[0], paddle.Tensor):
+        visu_data = [x.numpy() for x in visu_data]
+
+    _save_plot_from_3d_array(filename, visu_data, visu_keys, num_timestamp)

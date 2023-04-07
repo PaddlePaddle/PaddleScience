@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+import math
 from typing import Tuple
 from typing import Union
 
@@ -27,6 +28,7 @@ __all__ = [
     "Piecewise",
     "MultiStepDecay",
     "ExponentialDecay",
+    "CosineWarmRestarts",
 ]
 
 
@@ -473,6 +475,144 @@ class MultiStepDecay(LRBase):
             milestones=self.milestones,
             gamma=self.gamma,
             last_epoch=self.last_epoch,
+        )
+
+        if self.warmup_steps > 0:
+            learning_rate = self.linear_warmup(learning_rate)
+
+        setattr(learning_rate, "by_epoch", self.by_epoch)
+        return learning_rate
+
+
+class CosineAnnealingWarmRestarts(lr.LRScheduler):
+    """The implementation of cosine annealing schedule with warm restarts.
+
+    Args:
+        learning_rate (float): _description_
+        T_0 (int): Number of iterations for the first restart.
+        T_mult (int, optional): A factor increases T_i after a restart. Defaults to 1.
+        eta_min (float, optional): Minimum learning rate. Defaults to 0.
+        last_epoch (int, optional): The index of last epoch. Defaults to -1.
+        verbose (bool, optional): If ``True``, prints a message to stdout for each update. Defaults to False.
+    """
+
+    def __init__(
+        self,
+        learning_rate: float,
+        T_0: int,
+        T_mult: int = 1,
+        eta_min: float = 0.0,
+        last_epoch: int = -1,
+        verbose: bool = False,
+    ):
+        if T_0 <= 0 or not isinstance(T_0, int):
+            raise ValueError("Expected positive integer T_0, but got {}".format(T_0))
+        if T_mult < 1 or not isinstance(T_mult, int):
+            raise ValueError("Expected integer T_mult >= 1, but got {}".format(T_mult))
+        self.T_0 = T_0
+        self.T_i = T_0
+        self.T_mult = T_mult
+        self.eta_min = eta_min
+        self.T_cur = last_epoch
+        super(CosineAnnealingWarmRestarts, self).__init__(
+            learning_rate, last_epoch, verbose
+        )
+
+    def get_lr(self):
+        return (
+            self.eta_min
+            + (self.base_lr - self.eta_min)
+            * (1 + math.cos(math.pi * self.T_cur / self.T_i))
+            / 2
+        )
+
+    def step(self, epoch=None):
+        if epoch is None and self.last_epoch < 0:
+            epoch = 0
+
+        if epoch is None:
+            epoch = self.last_epoch + 1
+            self.T_cur = self.T_cur + 1
+            if self.T_cur >= self.T_i:
+                self.T_cur = self.T_cur - self.T_i
+                self.T_i = self.T_i * self.T_mult
+        else:
+            if epoch < 0:
+                raise ValueError(
+                    "Expected non-negative epoch, but got {}".format(epoch)
+                )
+            if epoch >= self.T_0:
+                if self.T_mult == 1:
+                    self.T_cur = epoch % self.T_0
+                else:
+                    n = int(
+                        math.log(
+                            (epoch / self.T_0 * (self.T_mult - 1) + 1), self.T_mult
+                        )
+                    )
+                    self.T_cur = epoch - self.T_0 * (self.T_mult**n - 1) / (
+                        self.T_mult - 1
+                    )
+                    self.T_i = self.T_0 * self.T_mult ** (n)
+            else:
+                self.T_i = self.T_0
+                self.T_cur = epoch
+        self.last_epoch = math.floor(epoch)
+        self.last_lr = self.get_lr()
+
+
+class CosineWarmRestarts(LRBase):
+    """Set the learning rate using a cosine annealing schedule with warm restarts.
+
+    Args:
+        epochs (int): total epoch(s)
+        iters_per_epoch (int): number of iterations within an epoch
+        learning_rate (float): learning rate
+        T_0 (int): Number of iterations for the first restart.
+        T_mult (int): A factor increases T_i after a restart
+        eta_min (float, optional): Minimum learning rate. Defaults to 0.0.
+        warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
+        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): last epoch. Defaults to -1.
+        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
+    """
+
+    def __init__(
+        self,
+        epochs: int,
+        iters_per_epoch: int,
+        learning_rate: float,
+        T_0: int,
+        T_mult: int,
+        eta_min: float = 0.0,
+        warmup_epoch: int = 0,
+        warmup_start_lr: float = 0.0,
+        last_epoch: int = -1,
+        by_epoch: bool = False,
+    ):
+        super(CosineWarmRestarts, self).__init__(
+            epochs,
+            iters_per_epoch,
+            learning_rate,
+            warmup_epoch,
+            warmup_start_lr,
+            last_epoch,
+            by_epoch,
+        )
+        self.T_0 = T_0
+        self.T_mult = T_mult
+        self.eta_min = eta_min
+        if self.by_epoch is False:
+            self.T_0 = T_0 * iters_per_epoch
+
+    def __call__(self):
+        learning_rate = CosineAnnealingWarmRestarts(
+            learning_rate=self.learning_rate,
+            T_0=self.T_0,
+            T_mult=self.T_mult,
+            eta_min=self.eta_min,
+            last_epoch=self.last_epoch,
+            verbose=self.verbose,
         )
 
         if self.warmup_steps > 0:

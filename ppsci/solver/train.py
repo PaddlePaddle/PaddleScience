@@ -41,7 +41,11 @@ def train_epoch_func(solver, epoch_id, log_freq):
         batch_cost = 0
         reader_tic = time.perf_counter()
         for _, _constraint in solver.constraint.items():
-            input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            try:
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            except StopIteration:
+                _constraint.reset_data_iter()
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
             # profile code below
             # profiler.add_profiler_step(solver.cfg["profiler_options"])

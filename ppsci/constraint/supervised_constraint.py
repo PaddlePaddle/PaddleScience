@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import types
 from typing import Any
 from typing import Callable
@@ -109,37 +110,47 @@ class SupervisedConstraint(base.Constraint):
                 self.num_timestamp = len(np.unique(data["t"]))
 
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-        else:
-            raise NotImplementedError("Only suppport .csv file now.")
+            # prepare weight
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+            if weight_dict is not None:
+                for key, value in weight_dict.items():
+                    if isinstance(value, str):
+                        value = sp_parser.parse_expr(value)
 
-        # prepare weight
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
-        if weight_dict is not None:
-            for key, value in weight_dict.items():
-                if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-
-                if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
-                elif isinstance(value, sympy.Basic):
-                    func = sympy.lambdify(
-                        [sympy.Symbol(k) for k in self.input_keys],
-                        value,
-                        [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
-                    )
-                    weight[key] = func(**{k: input[k] for k in self.input_keys})
-                elif isinstance(value, types.FunctionType):
-                    func = value
-                    weight[key] = func(input)
-                    if isinstance(weight[key], (int, float)):
+                    if isinstance(value, (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(input.values())), float(weight[key])
+                            next(iter(label.values())), float(value)
                         )
-                else:
-                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
-
-        # wrap input, label, weight into a dataset
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+                    elif isinstance(value, sympy.Basic):
+                        func = sympy.lambdify(
+                            [sympy.Symbol(k) for k in self.input_keys],
+                            value,
+                            [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
+                        )
+                        weight[key] = func(**{k: input[k] for k in self.input_keys})
+                    elif isinstance(value, types.FunctionType):
+                        func = value
+                        weight[key] = func(input)
+                        if isinstance(weight[key], (int, float)):
+                            weight[key] = np.full_like(
+                                next(iter(input.values())), float(weight[key])
+                            )
+                    else:
+                        raise NotImplementedError(
+                            f"type of {type(value)} is invalid yet."
+                        )
+            # wrap input, label, weight into a dataset
+            _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+        elif data_file.endswith(".hdf5"):
+            cfg = copy.deepcopy(dataloader_cfg["dataset"])
+            dataset_name = cfg.pop("name")
+            cfg["input_keys"] = input_keys
+            cfg["label_keys"] = label_keys
+            cfg["weight_dict"] = weight_dict
+            _dataset = getattr(dataset, dataset_name)(**cfg)
+            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
+        else:
+            raise NotImplementedError("Only suppport .csv and .hdf5 file now.")
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)
