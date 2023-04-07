@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
     npoint_pde, ntime_pde = 9420, len(train_timestamps)
-    npoint_inlet, ntime_inlet = 161, len(train_timestamps)
+    npoint_inlet_cylinder, ntime_inlet_cylinder = 161, len(train_timestamps)
     npoint_outlet, ntime_outlet = 81, len(train_timestamps)
     npoint_sup, ntime_sup = 283, len(train_timestamps)
     npoint_ic, ntime_ic = 9420, len(t0)
@@ -95,16 +95,19 @@ if __name__ == "__main__":
         ppsci.loss.MSELoss("mean"),
         name="EQ",
     )
-    bc_inlet = ppsci.constraint.SupervisedConstraint(
+    bc_inlet_cylinder = ppsci.constraint.SupervisedConstraint(
         "./datasets/domain_inlet_cylinder.csv",
         ["Points:0", "Points:1"],
         ["U:0", "U:1"],
         {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
-        {**train_dataloader_cfg, **{"batch_size": npoint_inlet * ntime_inlet}},
+        {
+            **train_dataloader_cfg,
+            **{"batch_size": npoint_inlet_cylinder * ntime_inlet_cylinder},
+        },
         ppsci.loss.MSELoss("mean"),
         {"u": 10, "v": 10},
         timestamps=train_timestamps,
-        name="BC_inlet",
+        name="BC_inlet_cylinder",
     )
     bc_outlet = ppsci.constraint.SupervisedConstraint(
         "./datasets/domain_outlet.csv",
@@ -141,7 +144,7 @@ if __name__ == "__main__":
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
-        bc_inlet.name: bc_inlet,
+        bc_inlet_cylinder.name: bc_inlet_cylinder,
         bc_outlet.name: bc_outlet,
         ic.name: ic,
         sup_constraint.name: sup_constraint,
@@ -174,7 +177,7 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (npoint_pde + npoint_inlet + npoint_outlet) * num_timestamps
+        (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps
     )
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerVtu(

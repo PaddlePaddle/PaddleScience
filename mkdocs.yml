@@ -100,27 +100,6 @@ plugins:
       handlers:
         python:
           paths: [./ppsci]
-  - mike:
-      # these fields are all optional; the defaults are as below...
-      version_selector: true   # set to false to leave out the version selector
-      css_dir: css             # the directory to put the version selector's CSS
-      javascript_dir: js       # the directory to put the version selector's JS
-      canonical_version: null  # the version for <link rel="canonical">; `null`
-                              # uses the version specified via `mike deploy`
-
-# palette:
-#   - scheme: default
-#     primary: indigo
-#     accent: indigo
-#     toggle:
-#       icon: material/brightness-7
-#       name: Switch to dark mode
-#   - scheme: slate
-#     primary: indigo
-#     accent: indigo
-#     toggle:
-#       icon: material/brightness-4
-#       name: Switch to light mode
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -152,8 +131,6 @@ extra_css:
   - stylesheets/monokai.css
 
 extra:
-  version:
-    provider: mike
   alternate:
     - name: 简体中文
       link: /zh/
