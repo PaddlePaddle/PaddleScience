@@ -106,7 +106,6 @@ def train_epoch_func(solver, epoch_id, log_freq):
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        print(f"lr: {solver.lr_scheduler.get_lr():.15f}")
 
         if iter_id == 1 or iter_id % log_freq == 0:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)

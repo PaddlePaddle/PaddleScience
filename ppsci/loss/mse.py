@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle
+
 import paddle.nn.functional as F
 
 from ppsci.loss import base
 
 
 class MSELoss(base.LossBase):
-    r"""Class for mean squared error loss.
+    """Class for mean squared error loss.
 
     $$
     L =
