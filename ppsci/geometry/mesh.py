@@ -37,7 +37,7 @@ class Mesh(geometry.Geometry):
     def __init__(self, mesh: Union[Mesh, str]):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError()
+            raise ModuleNotFoundError
 
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
@@ -89,7 +89,10 @@ class Mesh(geometry.Geometry):
     def translate(self, translation, relative=True):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
-        import open3d
+
+        # check if open3d is installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -105,7 +108,10 @@ class Mesh(geometry.Geometry):
     def scale(self, scale, center=(0, 0, 0)):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
-        import open3d
+
+        # check if open3d is installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -132,7 +138,7 @@ class Mesh(geometry.Geometry):
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
 
-        # check if open3d is both installed before using inflation
+        # check if open3d is installed before using inflation
         if not checker.dynamic_import_to_globals(["open3d"]):
             raise ModuleNotFoundError
         from ppsci.geometry import inflation

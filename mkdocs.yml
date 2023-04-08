@@ -33,7 +33,6 @@ nav:
       - PINNs:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-      # - xxxx: path/to/xxx.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -64,6 +63,7 @@ theme:
   font:
     code: Roboto Mono
   logo: ./images/icons/paddle.png
+  favicon: ./images/icons/favcion.png
   language: "zh"
   features:
     - navigation.tabs
@@ -72,11 +72,9 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
-    # - navigation.instant
     - navigation.expand
     - content.code.copy
     - content.code.select
-    # - search.highlight
     - content.code.annotate
   palette:
     # Palette toggle for light mode
@@ -101,6 +99,7 @@ plugins:
         python:
           paths: [./ppsci]
 
+# Extensions
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -120,16 +119,19 @@ markdown_extensions:
   - attr_list
   - md_in_html
 
+# Extra javascripts
 extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
+# Extra css
 extra_css:
   - stylesheets/extra.css
   - stylesheets/monokai.css
 
+# Extra
 extra:
   alternate:
     - name: 简体中文

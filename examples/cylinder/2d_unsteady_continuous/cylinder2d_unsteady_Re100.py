@@ -158,7 +158,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(0.001)([model])
 
     # set validator
-    npoints_eval = npoint_pde * num_timestamps
+    npoints_eval = (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
