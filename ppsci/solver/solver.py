@@ -123,20 +123,18 @@ class Solver(object):
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        if self.mode == "train":
-            self.train_output_info = {}
-            self.train_time_info = {
-                "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
-                "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
-            }
+        self.train_output_info = {}
+        self.train_time_info = {
+            "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
+            "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
+        }
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        if self.mode == "eval" or self.eval_during_train:
-            self.eval_output_info = {}
-            self.eval_time_info = {
-                "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
-                "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
-            }
+        self.eval_output_info = {}
+        self.eval_time_info = {
+            "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
+            "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
+        }
 
         # fix seed for reproducibility
         self.seed = seed
@@ -180,11 +178,10 @@ class Solver(object):
                 self.best_metric.update(loaded_metric)
 
         # choosing an appropriate training function for different optimizers
-        if self.mode == "train":
-            if not isinstance(self.optimizer, incubate.optimizer.LBFGS):
-                self.train_epoch_func = ppsci.solver.train.train_epoch_func
-            else:
-                self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+        if not isinstance(self.optimizer, incubate.optimizer.LBFGS):
+            self.train_epoch_func = ppsci.solver.train.train_epoch_func
+        else:
+            self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
@@ -211,13 +208,11 @@ class Solver(object):
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
-    def from_config(cfg: Dict[str, Any], mode: Literal["train", "eval"]) -> Solver:
+    def from_config(cfg: Dict[str, Any]) -> Solver:
         """Initialize solver from given config.
 
         Args:
             cfg (Dict[str, Any]): Dict config, e.g. AttrDict parsed from yaml.
-            mode (Literal[\"train\", \"eval\"]): Mode of solver, only support train or
-                eval yet.
 
         Returns:
             Solver: Initialized solver object.
@@ -258,16 +253,10 @@ class Solver(object):
 
         log_freq = cfg["Global"].get("log_freq", 10)
         device = cfg["Global"].get("device", "gpu")
-        validator = (
-            ppsci.validate.build_validator(cfg.get("Validator", None), equation, geom)
-            if eval_during_train or mode == "eval"
-            else None
+        validator = ppsci.validate.build_validator(
+            cfg.get("Validator", None), equation, geom
         )
-        visualizer = (
-            ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
-            if eval_during_train or mode == "eval"
-            else None
-        )
+        visualizer = ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
         use_amp = "AMP" in cfg
         amp_level = cfg["AMP"].pop("level", "O1").upper() if use_amp else "O0"
 
@@ -275,10 +264,8 @@ class Solver(object):
         update_freq = cfg["Global"].get("update_freq", 1)
         pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
         checkpoint_path = cfg["Global"].get("checkpoint_path", None)
-        log_level = cfg["Global"].get("log_level", "info")
 
         return Solver(
-            mode,
             model,
             constraint,
             output_dir,
@@ -288,7 +275,7 @@ class Solver(object):
             iters_per_epoch,
             update_freq,
             save_freq,
-            log_level,
+            log_freq,
             eval_during_train,
             start_eval_epoch,
             eval_freq,
@@ -303,7 +290,6 @@ class Solver(object):
             amp_level,
             pretrained_model_path,
             checkpoint_path,
-            log_freq,
         )
 
     def train(self):
