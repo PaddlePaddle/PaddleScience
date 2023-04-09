@@ -21,7 +21,6 @@ from ppsci.constraint.integral_constraint import IntegralConstraint
 from ppsci.constraint.interior_constraint import InteriorConstraint
 from ppsci.constraint.periodic_constraint import PeriodicConstraint
 from ppsci.constraint.supervised_constraint import SupervisedConstraint
-from ppsci.constraint.supervised_constraint import SupervisedInitialConstraint
 from ppsci.loss import build_loss
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -34,7 +33,6 @@ __all__ = [
     "InteriorConstraint",
     "PeriodicConstraint",
     "SupervisedConstraint",
-    "SupervisedInitialConstraint",
 ]
 
 
