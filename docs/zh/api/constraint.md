@@ -11,6 +11,5 @@
         - InteriorConstraint
         - PeriodicConstraint
         - SupervisedConstraint
-        - SupervisedInitialConstraint
       show_root_heading: false
       heading_level: 3
