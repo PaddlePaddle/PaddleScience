@@ -13,12 +13,13 @@
 # limitations under the License.
 
 """
-Code below is heavily based on:[transformer-physx](https://github.com/zabaras/transformer-physx)
+Code below is heavily based on [transformer-physx](https://github.com/zabaras/transformer-physx)
 """
 
 from typing import Optional
 from typing import Tuple
 
+import numpy as np
 import paddle
 import paddle.nn as nn
 from paddle.nn.initializer import Constant
@@ -181,6 +182,267 @@ class LorenzEmbedding(base.NetBase):
 
         x = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.forward_tensor(x)
+        y = self.split_to_dict(y, self.output_keys)
+
+        if self._output_transform is not None:
+            y = self._output_transform(y)
+        return y
+
+
+class CylinderEmbedding(base.NetBase):
+    """Embedding Koopman model for the Cylinder system.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
+        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
+        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        embed_size (int, optional): Number of embedding size. Defaults to 128.
+        encoder_channles (Tuple[int,...]): Number of channels in encoder network. Defaults to None.
+        decoder_channles (Tuple[int,...]): Number of channels in decoder network. Defaults to None.
+        drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        embed_size: int = 128,
+        encoder_channles: Optional[Tuple[int, ...]] = None,
+        decoder_channles: Optional[Tuple[int, ...]] = None,
+        drop: float = 0.0,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        self.embed_size = embed_size
+
+        X, Y = np.meshgrid(np.linspace(-2, 14, 128), np.linspace(-4, 4, 64))
+        self.mask = paddle.to_tensor(np.sqrt(X**2 + Y**2)).unsqueeze(0).unsqueeze(0)
+
+        encoder_channles = (
+            [4, 16, 32, 64, 128] if encoder_channles is None else encoder_channles
+        )
+        decoder_channles = (
+            [embed_size // 32, 128, 64, 32, 16]
+            if decoder_channles is None
+            else decoder_channles
+        )
+        self.encoder_net = self.build_encoder(embed_size, encoder_channles, drop)
+        self.k_diag_net, self.k_ut_net, self.k_lt_net = self.build_koopman_operator(
+            embed_size
+        )
+        self.decoder_net = self.build_decoder(decoder_channles)
+
+        xidx = []
+        yidx = []
+        for i in range(1, 5):
+            yidx.append(np.arange(i, embed_size))
+            xidx.append(np.arange(0, embed_size - i))
+        self.xidx = paddle.to_tensor(np.concatenate(xidx), dtype="int64")
+        self.yidx = paddle.to_tensor(np.concatenate(yidx), dtype="int64")
+
+        mean = [0.0, 0.0, 0.0, 0.0] if mean is None else mean
+        std = [1.0, 1.0, 1.0, 1.0] if std is None else std
+        self.register_buffer("mean", paddle.to_tensor(mean).reshape([1, 4, 1, 1]))
+        self.register_buffer("std", paddle.to_tensor(std).reshape([1, 4, 1, 1]))
+
+        self.apply(self._init_weights)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            k = 1 / m.weight.shape[0]
+            uniform = Uniform(-(k**0.5), k**0.5)
+            uniform(m.weight)
+            if m.bias is not None:
+                uniform(m.bias)
+        elif isinstance(m, nn.LayerNorm):
+            zeros_(m.bias)
+            ones_(m.weight)
+        elif isinstance(m, nn.Conv2D):
+            k = 1 / (m.weight.shape[1] * m.weight.shape[2] * m.weight.shape[3])
+            uniform = Uniform(-(k**0.5), k**0.5)
+            uniform(m.weight)
+            if m.bias is not None:
+                uniform(m.bias)
+
+    def _build_conv_relu_list(
+        self, in_channles: Tuple[int, ...], out_channels: Tuple[int, ...]
+    ):
+        net_list = [
+            nn.Conv2D(
+                in_channles,
+                out_channels,
+                kernel_size=(3, 3),
+                stride=2,
+                padding=1,
+                padding_mode="replicate",
+            ),
+            nn.ReLU(),
+        ]
+        return net_list
+
+    def build_encoder(
+        self, embed_size: int, channles: Tuple[int, ...], drop: float = 0.0
+    ):
+
+        net = []
+        for i in range(1, len(channles)):
+            net.extend(self._build_conv_relu_list(channles[i - 1], channles[i]))
+        net.append(
+            nn.Conv2D(
+                channles[-1],
+                embed_size // 32,
+                kernel_size=(3, 3),
+                padding=1,
+                padding_mode="replicate",
+            )
+        )
+        net.append(
+            nn.LayerNorm(
+                (4, 4, 8),
+            )
+        )
+        net.append(nn.Dropout(drop))
+        net = nn.Sequential(*net)
+        return net
+
+    def _build_upsample_conv_relu(
+        self, in_channles: Tuple[int, ...], out_channels: Tuple[int, ...]
+    ):
+        net_list = [
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
+            nn.Conv2D(
+                in_channles,
+                out_channels,
+                kernel_size=(3, 3),
+                stride=1,
+                padding=1,
+                padding_mode="replicate",
+            ),
+            nn.ReLU(),
+        ]
+        return net_list
+
+    def build_decoder(self, channles: Tuple[int, ...]):
+        net = []
+        for i in range(1, len(channles)):
+            net.extend(self._build_upsample_conv_relu(channles[i - 1], channles[i]))
+        net.append(
+            nn.Conv2D(
+                channles[-1],
+                3,
+                kernel_size=(3, 3),
+                stride=1,
+                padding=1,
+                padding_mode="replicate",
+            ),
+        )
+        net = nn.Sequential(*net)
+        return net
+
+    def build_koopman_operator(self, embed_size: int):
+        # Learned Koopman operator parameters
+        k_diag_net = nn.Sequential(
+            nn.Linear(1, 50), nn.ReLU(), nn.Linear(50, embed_size)
+        )
+
+        k_ut_net = nn.Sequential(
+            nn.Linear(1, 50), nn.ReLU(), nn.Linear(50, 4 * embed_size - 10)
+        )
+        k_lt_net = nn.Sequential(
+            nn.Linear(1, 50), nn.ReLU(), nn.Linear(50, 4 * embed_size - 10)
+        )
+        return k_diag_net, k_ut_net, k_lt_net
+
+    def encoder(self, x: paddle.Tensor, viscosity: paddle.Tensor):
+        B, T, C, H, W = x.shape
+        x = x.reshape((B * T, C, H, W))
+        viscosity = viscosity.repeat_interleave(T, axis=1).reshape((B * T, 1))
+        x = paddle.concat(
+            [x, viscosity.unsqueeze(-1).unsqueeze(-1) * paddle.ones_like(x[:, :1])],
+            axis=1,
+        )
+        x = self._normalize(x)
+        g = self.encoder_net(x)
+        g = g.reshape([B, T, -1])
+        return g
+
+    def decoder(self, g: paddle.Tensor):
+        B, T, _ = g.shape
+        x = self.decoder_net(g.reshape([-1, self.embed_size // 32, 4, 8]))
+        x = self._unnormalize(x)
+        mask0 = (
+            self.mask.repeat_interleave(x.shape[1], axis=1).repeat_interleave(
+                x.shape[0], axis=0
+            )
+            < 1
+        )
+        x[mask0] = 0
+        _, C, H, W = x.shape
+        x = x.reshape([B, T, C, H, W])
+        return x
+
+    def get_koopman_matrix(self, g: paddle.Tensor, visc: paddle.Tensor):
+        # # Koopman operator
+        kMatrix = paddle.zeros([g.shape[0], self.embed_size, self.embed_size])
+        kMatrix.stop_gradient = False
+        # Populate the off diagonal terms
+        kMatrixUT_data = self.k_ut_net(100 * visc)
+        kMatrixLT_data = self.k_lt_net(100 * visc)
+
+        kMatrix = kMatrix.transpose([1, 2, 0])
+        kMatrixUT_data_t = kMatrixUT_data.transpose([1, 0])
+        kMatrixLT_data_t = kMatrixLT_data.transpose([1, 0])
+        kMatrix[self.xidx, self.yidx] = kMatrixUT_data_t
+        kMatrix[self.yidx, self.xidx] = kMatrixLT_data_t
+
+        # Populate the diagonal
+        ind = np.diag_indices(kMatrix.shape[1])
+        ind = paddle.to_tensor(ind, dtype="int64")
+
+        kMatrixDiag = self.k_diag_net(100 * visc)
+        kMatrixDiag_t = kMatrixDiag.transpose([1, 0])
+        kMatrix[ind[0], ind[1]] = kMatrixDiag_t
+        return kMatrix.transpose([2, 0, 1])
+
+    def koopman_operation(self, embed_data: paddle.Tensor, k_matrix: paddle.Tensor):
+        embed_pred_data = paddle.bmm(
+            k_matrix, embed_data.transpose([0, 2, 1])
+        ).transpose([0, 2, 1])
+        return embed_pred_data
+
+    def _normalize(self, x: paddle.Tensor):
+        x = (x - self.mean) / self.std
+        return x
+
+    def _unnormalize(self, x: paddle.Tensor):
+        return self.std[:, :3] * x + self.mean[:, :3]
+
+    def forward_tensor(self, states, visc):
+        # states.shape=(B, T, C, H, W)
+        embed_data = self.encoder(states, visc)
+        recover_data = self.decoder(embed_data)
+
+        k_matrix = self.get_koopman_matrix(embed_data, visc)
+        embed_pred_data = self.koopman_operation(embed_data, k_matrix)
+        pred_data = self.decoder(embed_pred_data)
+
+        return (pred_data[:, :-1], recover_data, k_matrix)
+
+    def split_to_dict(
+        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
+    ):
+        return {key: data_tensors[i] for i, key in enumerate(keys)}
+
+    def forward(self, x):
+
+        if self._input_transform is not None:
+            x = self._input_transform(x)
+
+        y = self.forward_tensor(**x)
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:

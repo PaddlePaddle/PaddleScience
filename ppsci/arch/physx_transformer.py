@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Code below is heavily based on:[transformer-physx](https://github.com/zabaras/transformer-physx)
+Code below is heavily based on [transformer-physx](https://github.com/zabaras/transformer-physx)
 """
 
 from typing import Optional
@@ -42,7 +42,7 @@ class MaskedAttention(nn.Layer):
         attn_drop (float, optional): The dropout probability used on attention
             weights to drop some attention targets. Defaults to 0.
         proj_drop (float, optional): The dropout probability used on output. Defaults to 0.
-        scale (bool, optional): whether to scale attention weights. Defaults to False.
+        scale (bool, optional): Whether to scale attention weights. Defaults to False.
     """
 
     def __init__(
@@ -327,8 +327,8 @@ class PhysformerGPT2(base.NetBase):
         cur_len = x.shape[1]
         if cur_len >= max_length:
             raise ValueError(
-                f"The input context is {cur_len}, but `max_length` is only {max_length}. "
-                f"Please make sure that `max_length` larger than the input"
+                f"max_length({max_length}) should be larger than "
+                f"the length of input context({cur_len})"
             )
 
         while cur_len < max_length:
@@ -342,7 +342,9 @@ class PhysformerGPT2(base.NetBase):
     @paddle.no_grad()
     def generate(self, x, max_length=256):
         if max_length <= 0:
-            raise ValueError("`max_length` should be a strictly positive integer.")
+            raise ValueError(
+                "max_length({max_length}) should be a strictly positive integer."
+            )
         outputs = self._generate_time_series(x, max_length)
         return outputs
 

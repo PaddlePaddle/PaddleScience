@@ -20,17 +20,18 @@
 # This file is based on PaddleScience/ppsci API.
 from typing import Dict
 
+import numpy as np
 import paddle
 
 import ppsci
 from ppsci.arch import base
 
 
-def build_embedding_model(embedding_model_path: str) -> ppsci.arch.LorenzEmbedding:
-    input_keys = ["states"]
+def build_embedding_model(embedding_model_path: str) -> ppsci.arch.CylinderEmbedding:
+    input_keys = ["states", "visc"]
     output_keys = ["pred_states", "recover_states"]
     regularization_key = "k_matrix"
-    model = ppsci.arch.LorenzEmbedding(input_keys, output_keys + [regularization_key])
+    model = ppsci.arch.CylinderEmbedding(input_keys, output_keys + [regularization_key])
     model.set_state_dict(paddle.load(embedding_model_path))
     return model
 
@@ -40,35 +41,32 @@ class OutputTransform(object):
         self.model = model
         self.model.eval()
 
-    def __call__(self, x: Dict[str, paddle.Tensor]):
+    def __call__(self, x: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         pred_embeds = x["pred_embeds"]
         pred_states = self.model.decoder(pred_embeds)
-
+        # pred_states.shape=(B, T, C, H, W)
         return pred_states
 
 
 if __name__ == "__main__":
-    # train time-series: 2048    time-steps: 256    block-size: 64  stride: 64
-    # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
-    # test  time-series: 256     time-steps: 1024
     ppsci.utils.set_random_seed(42)
 
-    num_layers = 4
-    num_ctx = 64
-    embed_size = 32
+    num_layers = 6
+    num_ctx = 16
+    embed_size = 128
     num_heads = 4
 
     epochs = 200
-    train_block_size = 64
+    train_block_size = 16
     valid_block_size = 256
     input_keys = ["embeds"]
     output_keys = ["pred_embeds"]
     weights = [1.0]
 
-    train_file_path = "/path/to/lorenz_training_rk.hdf5"
-    valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
-    embedding_model_path = "./output/lorenz_enn/checkpoints/latest.pdparams"
-    output_dir = "./output/lorenz_transformer"
+    train_file_path = "/path/to/cylinder_training.hdf5"
+    valid_file_path = "/path/to/cylinder_valid.hdf5"
+    embedding_model_path = "./output/cylinder_enn/checkpoints/latest.pdparams"
+    output_dir = "./output/cylinder_transformer"
 
     embedding_model = build_embedding_model(embedding_model_path)
     output_transform = OutputTransform(embedding_model)
@@ -76,10 +74,10 @@ if __name__ == "__main__":
     # maunally build constraint(s)
     train_dataloader = {
         "dataset": {
-            "name": "LorenzDataset",
+            "name": "CylinderDataset",
             "file_path": train_file_path,
             "block_size": train_block_size,
-            "stride": 64,
+            "stride": 4,
             "embedding_model": embedding_model,
         },
         "sampler": {
@@ -87,7 +85,7 @@ if __name__ == "__main__":
             "drop_last": True,
             "shuffle": True,
         },
-        "batch_size": 16,
+        "batch_size": 4,
         "num_workers": 4,
         "use_shared_memory": False,
     }
@@ -136,7 +134,7 @@ if __name__ == "__main__":
     # maunally build validator
     eval_dataloader = {
         "dataset": {
-            "name": "LorenzDataset",
+            "name": "CylinderDataset",
             "file_path": valid_file_path,
             "block_size": valid_block_size,
             "stride": 1024,
@@ -166,20 +164,30 @@ if __name__ == "__main__":
     # set visualizer(optional)
     states = mse_metric.data_loader.dataset.data
     embedding_data = mse_metric.data_loader.dataset.embedding_data
+
     vis_datas = {
-        "embeds": embedding_data[:16, :-1, :],
-        "states": states[:16, 1:, :],
+        "embeds": embedding_data[:1, :-1],
+        "states": states[:1, 1:],
     }
 
     visualizer = {
-        "visulzie_states": ppsci.visualize.VisualizerScatter3D(
+        "visulzie_states": ppsci.visualize.Visualizer2DPlot(
             vis_datas,
-            {
-                "pred_states": lambda d: output_transform(d),
-                "states": lambda d: d["states"],
-            },
-            1,
-            "result_states",
+            ppsci.utils.misc.PrettyOrderedDict(
+                [
+                    ("target_ux", lambda d: d["states"][:, :, 0]),
+                    ("pred_ux", lambda d: output_transform(d)[:, :, 0]),
+                    ("target_uy", lambda d: d["states"][:, :, 1]),
+                    ("pred_uy", lambda d: output_transform(d)[:, :, 1]),
+                    ("target_p", lambda d: d["states"][:, :, 2]),
+                    ("preds_p", lambda d: output_transform(d)[:, :, 2]),
+                ]
+            ),
+            num_timestamps=10,
+            stride=20,
+            xticks=np.linspace(-2, 14, 9),
+            yticks=np.linspace(-4, 4, 5),
+            prefix="result_states",
         )
     }
 

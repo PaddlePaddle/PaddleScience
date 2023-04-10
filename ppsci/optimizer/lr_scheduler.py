@@ -488,12 +488,12 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
     """The implementation of cosine annealing schedule with warm restarts.
 
     Args:
-        learning_rate (float): _description_
+        learning_rate (float): Learning rate
         T_0 (int): Number of iterations for the first restart.
         T_mult (int, optional): A factor increases T_i after a restart. Defaults to 1.
         eta_min (float, optional): Minimum learning rate. Defaults to 0.
         last_epoch (int, optional): The index of last epoch. Defaults to -1.
-        verbose (bool, optional): If ``True``, prints a message to stdout for each update. Defaults to False.
+        verbose (bool, optional): If `True`, prints a message to stdout for each update. Defaults to False.
     """
 
     def __init__(
@@ -506,9 +506,9 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
         verbose: bool = False,
     ):
         if T_0 <= 0 or not isinstance(T_0, int):
-            raise ValueError("Expected positive integer T_0, but got {}".format(T_0))
+            raise ValueError(f"Expected positive integer T_0, but got {T_0}")
         if T_mult < 1 or not isinstance(T_mult, int):
-            raise ValueError("Expected integer T_mult >= 1, but got {}".format(T_mult))
+            raise ValueError(f"Expected integer T_mult >= 1, but got {T_mult}")
         self.T_0 = T_0
         self.T_i = T_0
         self.T_mult = T_mult
@@ -538,9 +538,7 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
                 self.T_i = self.T_i * self.T_mult
         else:
             if epoch < 0:
-                raise ValueError(
-                    "Expected non-negative epoch, but got {}".format(epoch)
-                )
+                raise ValueError(f"Expected non-negative epoch, but got {epoch}")
             if epoch >= self.T_0:
                 if self.T_mult == 1:
                     self.T_cur = epoch % self.T_0
@@ -565,16 +563,16 @@ class CosineWarmRestarts(LRBase):
     """Set the learning rate using a cosine annealing schedule with warm restarts.
 
     Args:
-        epochs (int): total epoch(s)
-        iters_per_epoch (int): number of iterations within an epoch
-        learning_rate (float): learning rate
+        epochs (int): Total epoch(s)
+        iters_per_epoch (int): Number of iterations within an epoch
+        learning_rate (float): Learning rate
         T_0 (int): Number of iterations for the first restart.
         T_mult (int): A factor increases T_i after a restart
         eta_min (float, optional): Minimum learning rate. Defaults to 0.0.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
-        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
-        last_epoch (int, optional): last epoch. Defaults to -1.
-        by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
+        warmup_start_lr (float, optional): Start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
     """
 
     def __init__(

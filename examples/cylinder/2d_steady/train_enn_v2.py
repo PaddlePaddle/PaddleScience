@@ -16,78 +16,64 @@
 # 1. Train a embedding model by running train_enn_v2.py.
 # 2. Load pretrained embedding model and freeze it, then train a transformer model by running train_transformer_v2.py.
 
-# This file is for step2: training a transformer model, based on frozen pretrained embedding model.
+# This file is for step1: training a embedding model.
 # This file is based on PaddleScience/ppsci API.
-from typing import Dict
-
+import numpy as np
 import paddle
 
 import ppsci
-from ppsci.arch import base
 
 
-def build_embedding_model(embedding_model_path: str) -> ppsci.arch.LorenzEmbedding:
-    input_keys = ["states"]
-    output_keys = ["pred_states", "recover_states"]
-    regularization_key = "k_matrix"
-    model = ppsci.arch.LorenzEmbedding(input_keys, output_keys + [regularization_key])
-    model.set_state_dict(paddle.load(embedding_model_path))
-    return model
-
-
-class OutputTransform(object):
-    def __init__(self, model: base.NetBase):
-        self.model = model
-        self.model.eval()
-
-    def __call__(self, x: Dict[str, paddle.Tensor]):
-        pred_embeds = x["pred_embeds"]
-        pred_states = self.model.decoder(pred_embeds)
-
-        return pred_states
+def get_mean_std(data: np.ndarray, visc: np.ndarray):
+    mean = np.asarray(
+        [
+            np.mean(data[:, :, 0]),
+            np.mean(data[:, :, 1]),
+            np.mean(data[:, :, 2]),
+            np.mean(visc),
+        ]
+    ).reshape(1, 4, 1, 1)
+    std = np.asarray(
+        [
+            np.std(data[:, :, 0]),
+            np.std(data[:, :, 1]),
+            np.std(data[:, :, 2]),
+            np.std(visc),
+        ]
+    ).reshape(1, 4, 1, 1)
+    return mean, std
 
 
 if __name__ == "__main__":
-    # train time-series: 2048    time-steps: 256    block-size: 64  stride: 64
-    # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
-    # test  time-series: 256     time-steps: 1024
     ppsci.utils.set_random_seed(42)
 
-    num_layers = 4
-    num_ctx = 64
-    embed_size = 32
-    num_heads = 4
+    epochs = 300
+    train_block_size = 4
+    valid_block_size = 32
 
-    epochs = 200
-    train_block_size = 64
-    valid_block_size = 256
-    input_keys = ["embeds"]
-    output_keys = ["pred_embeds"]
-    weights = [1.0]
+    input_keys = ["states", "visc"]
+    output_keys = ["pred_states", "recover_states"]
+    weights = [10.0 * (train_block_size - 1), 10.0 * train_block_size]
+    regularization_key = "k_matrix"
 
-    train_file_path = "/path/to/lorenz_training_rk.hdf5"
-    valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
-    embedding_model_path = "./output/lorenz_enn/checkpoints/latest.pdparams"
-    output_dir = "./output/lorenz_transformer"
-
-    embedding_model = build_embedding_model(embedding_model_path)
-    output_transform = OutputTransform(embedding_model)
+    output_dir = "./output/cylinder_enn"
+    train_file_path = "/path/to/cylinder_training.hdf5"
+    valid_file_path = "/path/to/cylinder_valid.hdf5"
 
     # maunally build constraint(s)
     train_dataloader = {
         "dataset": {
-            "name": "LorenzDataset",
+            "name": "CylinderDataset",
             "file_path": train_file_path,
             "block_size": train_block_size,
-            "stride": 64,
-            "embedding_model": embedding_model,
+            "stride": 16,
         },
         "sampler": {
             "name": "BatchSampler",
             "drop_last": True,
-            "shuffle": True,
+            "shuffle": False,
         },
-        "batch_size": 16,
+        "batch_size": 64,
         "num_workers": 4,
         "use_shared_memory": False,
     }
@@ -95,37 +81,37 @@ if __name__ == "__main__":
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_file_path,
         input_keys,
-        output_keys,
+        output_keys + [regularization_key],
         {},
         train_dataloader,
-        ppsci.loss.MSELoss(),
+        ppsci.loss.MSELossWithL2Decay(
+            regularization_dict={regularization_key: 1e-2 * (train_block_size - 1)}
+        ),
         weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(constraint["Sup"].data_loader)
+    iters_per_epoch = len(sup_constraint.data_loader)
 
     # manually init model
-    model = ppsci.arch.PhysformerGPT2(
-        input_keys,
-        output_keys,
-        num_layers,
-        num_ctx,
-        embed_size,
-        num_heads,
+    mean, std = get_mean_std(
+        sup_constraint.data_loader.dataset.data, sup_constraint.data_loader.dataset.visc
+    )
+    model = ppsci.arch.CylinderEmbedding(
+        input_keys, output_keys + [regularization_key], mean, std
     )
 
     # init optimizer and lr scheduler
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
-    lr_scheduler = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(
+    lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         epochs,
         iters_per_epoch,
         0.001,
-        T_0=14,
-        T_mult=2,
-        eta_min=1e-9,
+        gamma=0.995,
+        decay_steps=iters_per_epoch,
+        by_epoch=True,
     )()
     optimizer = ppsci.optimizer.Adam(
         lr_scheduler,
@@ -134,20 +120,20 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
+    weights = [10.0 * (valid_block_size - 1), 10.0 * valid_block_size]
     eval_dataloader = {
         "dataset": {
-            "name": "LorenzDataset",
+            "name": "CylinderDataset",
             "file_path": valid_file_path,
             "block_size": valid_block_size,
-            "stride": 1024,
-            "embedding_model": embedding_model,
+            "stride": 32,
         },
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": 16,
+        "batch_size": 8,
         "num_workers": 4,
         "use_shared_memory": False,
     }
@@ -163,26 +149,6 @@ if __name__ == "__main__":
     )
     validator = {mse_metric.name: mse_metric}
 
-    # set visualizer(optional)
-    states = mse_metric.data_loader.dataset.data
-    embedding_data = mse_metric.data_loader.dataset.embedding_data
-    vis_datas = {
-        "embeds": embedding_data[:16, :-1, :],
-        "states": states[:16, 1:, :],
-    }
-
-    visualizer = {
-        "visulzie_states": ppsci.visualize.VisualizerScatter3D(
-            vis_datas,
-            {
-                "pred_states": lambda d: output_transform(d),
-                "states": lambda d: d["states"],
-            },
-            1,
-            "result_states",
-        )
-    }
-
     train_solver = ppsci.solver.Solver(
         "train",
         model,
@@ -192,22 +158,19 @@ if __name__ == "__main__":
         lr_scheduler,
         epochs,
         iters_per_epoch,
+        log_freq=1,
         eval_during_train=True,
         eval_freq=50,
         validator=validator,
-        visualizer=visualizer,
     )
     train_solver.train()
 
     eval_solver = ppsci.solver.Solver(
         "eval",
         model,
-        output_dir=output_dir,
+        constraint,
+        output_dir,
         validator=validator,
-        visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     eval_solver.eval()
-
-    # visualize the prediction of final checkpoint
-    eval_solver.visualize()
