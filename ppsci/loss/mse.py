@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from typing import Dict
 from typing import Optional
 
 import paddle.nn.functional as F
+from typing_extensions import Literal
 
 from ppsci.loss import base
 
@@ -64,8 +66,8 @@ class MSELossWithL2Decay(base.LossBase):
     """MSELoss with L2 decay.
 
     Args:
-        reduction (str, optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
-        regularization_dict (Dict[str, float], optional): Regularization dictionary. Defaults to None.
+        reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
+        regularization_dict (Optional[Dict[str, float]], optional): Regularization dictionary. Defaults to None.
 
     Raises:
         ValueError: reduction should be 'mean' or 'sum'.
@@ -73,7 +75,7 @@ class MSELossWithL2Decay(base.LossBase):
 
     def __init__(
         self,
-        reduction: str = "mean",
+        reduction: Literal["mean", "sum"] = "mean",
         regularization_dict: Optional[Dict[str, float]] = None,
     ):
         super().__init__()
