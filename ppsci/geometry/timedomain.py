@@ -270,7 +270,7 @@ class TimeXGeometry(geometry.Geometry):
             )
             nx = int((n * s / self.timedomain.diam) ** 0.5)
         nt = int(np.ceil(n / nx))
-        # x = self.geometry.uniform_boundary_points(nx)
+
         _size, _ntry, _nsuc = 0, 0, 0
         x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
         while _size < nx:
@@ -325,7 +325,6 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                # x = self.geometry.random_boundary_points(nx, random=random)
                 _size, _ntry, _nsuc = 0, 0, 0
                 x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
                 while _size < nx:
@@ -387,7 +386,6 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                # x = self.geometry.random_boundary_points(nx, random=random)
                 _size, _ntry, _nsuc = 0, 0, 0
                 x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
                 while _size < nx:

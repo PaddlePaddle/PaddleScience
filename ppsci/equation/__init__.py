@@ -17,11 +17,10 @@ import copy
 from ppsci.equation.pde import PDE
 from ppsci.equation.pde import NavierStokes
 from ppsci.equation.pde import NormalDotVec
-from ppsci.equation.pde import Poisson
 from ppsci.utils import logger
 from ppsci.utils import misc
 
-__all__ = ["build_equation", "PDE", "NavierStokes", "Poisson", "NormalDotVec"]
+__all__ = ["build_equation", "PDE", "NavierStokes", "NormalDotVec"]
 
 
 def build_equation(cfg):
