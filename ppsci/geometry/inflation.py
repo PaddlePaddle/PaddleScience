@@ -16,6 +16,10 @@ import numpy as np
 import open3d
 import pymesh
 
+__all__ = [
+    "pymesh_inflation",
+]
+
 
 def open3d_inflation(
     mesh: open3d.geometry.TriangleMesh, distance: float, direction: int = 1
