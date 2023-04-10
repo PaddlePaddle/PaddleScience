@@ -142,12 +142,12 @@ class SupervisedConstraint(base.Constraint):
             # wrap input, label, weight into a dataset
             _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
         elif data_file.endswith(".hdf5"):
-            cfg = copy.deepcopy(dataloader_cfg["dataset"])
-            dataset_name = cfg.pop("name")
-            cfg["input_keys"] = input_keys
-            cfg["label_keys"] = label_keys
-            cfg["weight_dict"] = weight_dict
-            _dataset = getattr(dataset, dataset_name)(**cfg)
+            dataset_cfg = copy.deepcopy(dataloader_cfg["dataset"])
+            dataset_name = dataset_cfg.pop("name")
+            dataset_cfg["input_keys"] = input_keys
+            dataset_cfg["label_keys"] = label_keys
+            dataset_cfg["weight_dict"] = weight_dict
+            _dataset = getattr(dataset, dataset_name)(**dataset_cfg)
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
         else:
             raise NotImplementedError("Only suppport .csv and .hdf5 file now.")

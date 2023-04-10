@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This code is based on PaddleScience/ppsci API
+# Two-stage training
+# 1. Train a embedding model by running train_enn_v2.py.
+# 2. Load pretrained embedding model and freeze it, then train a transformer model by running train_transformer_v2.py.
+
+# This file is for step1: training a embedding model.
+# This file is based on PaddleScience/ppsci API.
 import numpy as np
 import paddle
 
@@ -38,12 +43,12 @@ if __name__ == "__main__":
 
     input_keys = ["states"]
     output_keys = ["pred_states", "recover_states"]
-    weights = [1.0 * (train_block_size - 1), 1.0e4 * train_block_size]
+    weights = [1.0 * (train_block_size - 1), 1e4 * train_block_size]
     regularization_key = "k_matrix"
 
     output_dir = "./output/lorenz_enn"
-    train_file_path = "your data path/lorenz_training_rk.hdf5"
-    valid_file_path = "your data path/lorenz_valid_rk.hdf5"
+    train_file_path = "/path/to/lorenz_training_rk.hdf5"
+    valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
 
     # maunally build constraint(s)
     train_dataloader = {
@@ -103,7 +108,7 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    weights = [1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size]
+    weights = [1.0 * (valid_block_size - 1), 1e4 * valid_block_size]
     eval_dataloader = {
         "dataset": {
             "name": "LorenzDataset",
