@@ -28,12 +28,11 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - 安装: index.md
+  - 安装使用: index.md
   - 经典案例:
       - PINNs:
-        - LDC2d_unsteady: zh/examples/ldc2d_unsteady.md
+        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-      # - xxxx: path/to/xxx.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -63,11 +62,8 @@ theme:
   name: material
   font:
     code: Roboto Mono
-  icon:
-    repo: fontawesome/brands/github
-    admonition:
-      tip: material/lightbulb
   logo: ./images/icons/paddle.png
+  favicon: ./images/icons/favcion.png
   language: "zh"
   features:
     - navigation.tabs
@@ -76,11 +72,9 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
-    - navigation.instant
     - navigation.expand
     - content.code.copy
     - content.code.select
-    - search.highlight
     - content.code.annotate
   palette:
     # Palette toggle for light mode
@@ -104,32 +98,8 @@ plugins:
       handlers:
         python:
           paths: [./ppsci]
-  - mike:
-      # these fields are all optional; the defaults are as below...
-      version_selector: true   # set to false to leave out the version selector
-      css_dir: css             # the directory to put the version selector's CSS
-      javascript_dir: js       # the directory to put the version selector's JS
-      canonical_version: null  # the version for <link rel="canonical">; `null`
-                              # uses the version specified via `mike deploy`
 
-# palette:
-#   - scheme: default
-#     primary: indigo
-#     accent: indigo
-#     toggle:
-#       icon: material/brightness-7
-#       name: Switch to dark mode
-#   - scheme: slate
-#     primary: indigo
-#     accent: indigo
-#     toggle:
-#       icon: material/brightness-4
-#       name: Switch to light mode
-
-# social:
-#   - icon: "fontawesome/brands/github"
-#     link: "https://github.com/PaddlePaddle/PaddleScience"
-
+# Extensions
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -149,19 +119,20 @@ markdown_extensions:
   - attr_list
   - md_in_html
 
+# Extra javascripts
 extra_javascript:
   - javascripts/bd_statistics.js
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
+# Extra css
 extra_css:
   - stylesheets/extra.css
   - stylesheets/monokai.css
 
+# Extra
 extra:
-  version:
-    provider: mike
   alternate:
     - name: 简体中文
       link: /zh/
