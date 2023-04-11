@@ -189,6 +189,43 @@ class LorenzEmbedding(base.NetBase):
         return y
 
 
+class RosslerEmbedding(LorenzEmbedding):
+    """Embedding Koopman model for the Rossler ODE system.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("states",).
+        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
+        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        input_size (int, optional): Size of input data. Defaults to 3.
+        hidden_size (int, optional): Number of hidden size. Defaults to 500.
+        embed_size (int, optional): Number of embedding size. Defaults to 32.
+        drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        input_size: int = 3,
+        hidden_size: int = 500,
+        embed_size: int = 32,
+        drop: float = 0.0,
+    ):
+        super().__init__(
+            input_keys,
+            output_keys,
+            mean,
+            std,
+            input_size,
+            hidden_size,
+            embed_size,
+            drop,
+        )
+
+
 class CylinderEmbedding(base.NetBase):
     """Embedding Koopman model for the Cylinder system.
 
