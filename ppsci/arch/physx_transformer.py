@@ -27,7 +27,6 @@ from paddle.nn.initializer import Normal
 
 from ppsci.arch import base
 
-normal_ = Normal
 zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
 
@@ -319,11 +318,7 @@ class PhysformerGPT2(base.NetBase):
         )
         return position_embeds
 
-    def _generate_time_series(
-        self,
-        x,
-        max_length,
-    ):
+    def _generate_time_series(self, x, max_length):
         cur_len = x.shape[1]
         if cur_len >= max_length:
             raise ValueError(

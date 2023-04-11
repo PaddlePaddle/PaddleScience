@@ -114,6 +114,43 @@ class LorenzDataset(io.Dataset):
         return (input_item, label_item, weight_item)
 
 
+class RosslerDataset(LorenzDataset):
+    """Dataset for training Rossler model.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("states",).
+        label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
+        file_path (str): Data set path.
+        block_size (int): Data block size.
+        stride (int): Data stride.
+        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        file_path: str,
+        block_size: int,
+        stride: int,
+        ndata: Optional[int] = None,
+        weight_dict: Optional[Dict[str, float]] = None,
+        embedding_model: Optional[base.NetBase] = None,
+    ):
+        super(RosslerDataset, self).__init__(
+            input_keys,
+            label_keys,
+            file_path,
+            block_size,
+            stride,
+            ndata,
+            weight_dict,
+            embedding_model,
+        )
+
+
 class CylinderDataset(io.Dataset):
     """Dataset for training Cylinder model.
 
