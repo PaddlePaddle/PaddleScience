@@ -24,6 +24,7 @@ import paddle
 
 import ppsci
 from ppsci.arch import base
+from ppsci.utils import logger
 
 
 def build_embedding_model(embedding_model_path: str) -> ppsci.arch.LorenzEmbedding:
@@ -69,6 +70,8 @@ if __name__ == "__main__":
     valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
     embedding_model_path = "./output/lorenz_enn/checkpoints/latest.pdparams"
     output_dir = "./output/lorenz_transformer"
+    # initialize logger
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     embedding_model = build_embedding_model(embedding_model_path)
     output_transform = OutputTransform(embedding_model)
@@ -183,8 +186,7 @@ if __name__ == "__main__":
         )
     }
 
-    train_solver = ppsci.solver.Solver(
-        "train",
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -197,17 +199,21 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
     )
-    train_solver.train()
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
 
-    eval_solver = ppsci.solver.Solver(
-        "eval",
+    # directly evaluate pretrained model(optional)
+    solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
-    eval_solver.eval()
-
-    # visualize the prediction of final checkpoint
-    eval_solver.visualize()
+    solver.eval()
+    # visualize prediction for pretrained model(optional)
+    solver.visualize()

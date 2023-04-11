@@ -22,6 +22,7 @@ import numpy as np
 import paddle
 
 import ppsci
+from ppsci.utils import logger
 
 
 def get_mean_std(data: np.ndarray):
@@ -49,6 +50,8 @@ if __name__ == "__main__":
     output_dir = "./output/lorenz_enn"
     train_file_path = "/path/to/lorenz_training_rk.hdf5"
     valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
+    # initialize logger
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # maunally build constraint(s)
     train_dataloader = {
@@ -137,8 +140,8 @@ if __name__ == "__main__":
     )
     validator = {mse_metric.name: mse_metric}
 
-    train_solver = ppsci.solver.Solver(
-        "train",
+    # initialize solver
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -149,14 +152,16 @@ if __name__ == "__main__":
         eval_during_train=True,
         validator=validator,
     )
-    train_solver.train()
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
 
-    eval_solver = ppsci.solver.Solver(
-        "eval",
+    # directly evaluate pretrained model(optional)
+    solver = ppsci.solver.Solver(
         model,
-        constraint,
-        output_dir,
+        output_dir=output_dir,
         validator=validator,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
-    eval_solver.eval()
+    solver.eval()
