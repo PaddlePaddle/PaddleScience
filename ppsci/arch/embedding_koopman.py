@@ -324,7 +324,6 @@ class CylinderEmbedding(base.NetBase):
     def build_encoder(
         self, embed_size: int, channles: Tuple[int, ...], drop: float = 0.0
     ):
-
         net = []
         for i in range(1, len(channles)):
             net.extend(self._build_conv_relu_list(channles[i - 1], channles[i]))
