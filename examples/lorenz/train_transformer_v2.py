@@ -25,6 +25,7 @@ import paddle
 import ppsci
 from ppsci.arch import base
 from ppsci.utils import logger
+from ppsci.utils import save_load
 
 
 def build_embedding_model(embedding_model_path: str) -> ppsci.arch.LorenzEmbedding:
@@ -32,7 +33,7 @@ def build_embedding_model(embedding_model_path: str) -> ppsci.arch.LorenzEmbeddi
     output_keys = ["pred_states", "recover_states"]
     regularization_key = "k_matrix"
     model = ppsci.arch.LorenzEmbedding(input_keys, output_keys + [regularization_key])
-    model.set_state_dict(paddle.load(embedding_model_path))
+    save_load.load_pretrain(model, embedding_model_path)
     return model
 
 
@@ -66,9 +67,11 @@ if __name__ == "__main__":
     output_keys = ["pred_embeds"]
     weights = [1.0]
 
+    vis_data_nums = 16
+
     train_file_path = "/path/to/lorenz_training_rk.hdf5"
     valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
-    embedding_model_path = "./output/lorenz_enn/checkpoints/latest.pdparams"
+    embedding_model_path = "./output/lorenz_enn/checkpoints/latest"
     output_dir = "./output/lorenz_transformer"
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -155,23 +158,23 @@ if __name__ == "__main__":
         "use_shared_memory": False,
     }
 
-    mse_metric = ppsci.validate.SupervisedValidator(
+    mse_validator = ppsci.validate.SupervisedValidator(
         input_keys,
         output_keys,
         eval_dataloader,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
         weight_dict={key: value for key, value in zip(output_keys, weights)},
-        name="MSE_Metric",
+        name="MSE_Validator",
     )
-    validator = {mse_metric.name: mse_metric}
+    validator = {mse_validator.name: mse_validator}
 
     # set visualizer(optional)
-    states = mse_metric.data_loader.dataset.data
-    embedding_data = mse_metric.data_loader.dataset.embedding_data
+    states = mse_validator.data_loader.dataset.data
+    embedding_data = mse_validator.data_loader.dataset.embedding_data
     vis_datas = {
-        "embeds": embedding_data[:16, :-1, :],
-        "states": states[:16, 1:, :],
+        "embeds": embedding_data[:vis_data_nums, :-1, :],
+        "states": states[:vis_data_nums, 1:, :],
     }
 
     visualizer = {

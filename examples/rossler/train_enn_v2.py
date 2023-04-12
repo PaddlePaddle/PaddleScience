@@ -93,9 +93,9 @@ if __name__ == "__main__":
     iters_per_epoch = len(sup_constraint.data_loader)
 
     # manually init model
-    mean, std = get_mean_std(sup_constraint.data_loader.dataset.data)
+    data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
     model = ppsci.arch.RosslerEmbedding(
-        input_keys, output_keys + [regularization_key], mean, std
+        input_keys, output_keys + [regularization_key], data_mean, data_std
     )
 
     # init optimizer and lr scheduler
@@ -133,16 +133,16 @@ if __name__ == "__main__":
         "use_shared_memory": False,
     }
 
-    mse_metric = ppsci.validate.SupervisedValidator(
+    mse_validator = ppsci.validate.SupervisedValidator(
         input_keys,
         output_keys,
         eval_dataloader,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
         weight_dict={key: value for key, value in zip(output_keys, weights)},
-        name="MSE_Metric",
+        name="MSE_Validator",
     )
-    validator = {mse_metric.name: mse_metric}
+    validator = {mse_validator.name: mse_validator}
 
     solver = ppsci.solver.Solver(
         model,
