@@ -62,7 +62,7 @@ class MSELoss(base.LossBase):
         return losses
 
 
-class MSELossWithL2Decay(base.LossBase):
+class MSELossWithL2Decay(MSELoss):
     """MSELoss with L2 decay.
 
     Args:
@@ -78,28 +78,11 @@ class MSELossWithL2Decay(base.LossBase):
         reduction: Literal["mean", "sum"] = "mean",
         regularization_dict: Optional[Dict[str, float]] = None,
     ):
-        super().__init__()
-        if reduction not in ["mean", "sum"]:
-            raise ValueError(
-                f"reduction should be 'mean' or 'sum', but got {reduction}"
-            )
-        self.reduction = reduction
+        super(MSELossWithL2Decay, self).__init__(reduction)
         self.regularization_dict = regularization_dict
 
     def forward(self, output_dict, label_dict, weight_dict=None):
-        losses = 0.0
-        for key in label_dict:
-            loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict is not None:
-                loss *= weight_dict[key]
-            if "area" in output_dict:
-                loss *= output_dict["area"]
-
-            if self.reduction == "sum":
-                loss = loss.sum()
-            elif self.reduction == "mean":
-                loss = loss.mean()
-            losses += loss
+        losses = super().forward(output_dict, label_dict, weight_dict)
 
         if self.regularization_dict is not None:
             for reg_key, reg_weight in self.regularization_dict.items():

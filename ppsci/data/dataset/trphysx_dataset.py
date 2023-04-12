@@ -178,7 +178,6 @@ class CylinderDataset(io.Dataset):
         embedding_model: Optional[base.NetBase] = None,
         embedding_batch_size: int = 64,
     ):
-
         super(CylinderDataset, self).__init__()
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -208,7 +207,6 @@ class CylinderDataset(io.Dataset):
                 self.embedding_data = np.concatenate(embedding_data)
 
     def read_data(self, file_path: str, block_size: int, stride: int):
-
         data = []
         visc = []
         with h5py.File(file_path, "r") as f:

@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     input_keys = ["states"]
     output_keys = ["pred_states", "recover_states"]
-    weights = [1.0 * (train_block_size - 1), 1e4 * train_block_size]
+    weights = [1.0 * (train_block_size - 1), 1.0e4 * train_block_size]
     regularization_key = "k_matrix"
 
     output_dir = "./output/lorenz_enn"
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         {},
         train_dataloader,
         ppsci.loss.MSELossWithL2Decay(
-            regularization_dict={regularization_key: 1e-1 * (train_block_size - 1)}
+            regularization_dict={regularization_key: 1.0e-1 * (train_block_size - 1)}
         ),
         weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     iters_per_epoch = len(sup_constraint.data_loader)
 
     # manually init model
-    mean, std = get_mean_std(sup_constraint.data_loader.dataset.data)
+    data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
     model = ppsci.arch.LorenzEmbedding(
-        input_keys, output_keys + [regularization_key], mean, std
+        input_keys, output_keys + [regularization_key], data_mean, data_std
     )
 
     # init optimizer and lr scheduler
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    weights = [1.0 * (valid_block_size - 1), 1e4 * valid_block_size]
+    weights = [1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size]
     eval_dataloader = {
         "dataset": {
             "name": "LorenzDataset",
@@ -129,16 +129,16 @@ if __name__ == "__main__":
         "use_shared_memory": False,
     }
 
-    mse_metric = ppsci.validate.SupervisedValidator(
+    mse_validator = ppsci.validate.SupervisedValidator(
         input_keys,
         output_keys,
         eval_dataloader,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
         weight_dict={key: value for key, value in zip(output_keys, weights)},
-        name="MSE_Metric",
+        name="MSE_Validator",
     )
-    validator = {mse_metric.name: mse_metric}
+    validator = {mse_validator.name: mse_validator}
 
     # initialize solver
     solver = ppsci.solver.Solver(
