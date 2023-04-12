@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -58,12 +57,11 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
     )
 
     eta_sec = (
-        (trainer.cfg["Global"]["epochs"] - epoch_id + 1) * trainer.iters_per_epoch
-        - iter_id
+        (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
     logger.info(
-        f"[Train][Epoch {epoch_id}/{trainer.cfg['Global']['epochs']}]"
+        f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
         f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
