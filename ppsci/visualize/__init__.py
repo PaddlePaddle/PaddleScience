@@ -15,15 +15,21 @@
 import copy
 
 from ppsci.visualize.base import Visualizer
+from ppsci.visualize.visualizer import Visualizer2D
+from ppsci.visualize.visualizer import Visualizer2DPlot
 from ppsci.visualize.visualizer import Visualizer3D
 from ppsci.visualize.visualizer import VisualizerScatter1D
+from ppsci.visualize.visualizer import VisualizerScatter3D
 from ppsci.visualize.visualizer import VisualizerVtu
 from ppsci.visualize.vtu import save_vtu_from_dict
 
 __all__ = [
     "Visualizer",
     "VisualizerScatter1D",
+    "VisualizerScatter3D",
     "VisualizerVtu",
+    "Visualizer2D",
+    "Visualizer2DPlot",
     "Visualizer3D",
     "save_vtu_from_dict",
 ]
