@@ -78,7 +78,7 @@ class MSELossWithL2Decay(MSELoss):
         reduction: Literal["mean", "sum"] = "mean",
         regularization_dict: Optional[Dict[str, float]] = None,
     ):
-        super(MSELossWithL2Decay, self).__init__(reduction)
+        super().__init__(reduction)
         self.regularization_dict = regularization_dict
 
     def forward(self, output_dict, label_dict, weight_dict=None):

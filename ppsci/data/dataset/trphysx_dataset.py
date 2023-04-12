@@ -70,7 +70,7 @@ class LorenzDataset(io.Dataset):
         else:
             embedding_model.eval()
             with paddle.no_grad():
-                data_tensor = paddle.to_tensor(self.data)  # b,n,c = 8192, 64, 3
+                data_tensor = paddle.to_tensor(self.data)
                 embedding_data_tensor = embedding_model.encoder(data_tensor)
             self.embedding_data = embedding_data_tensor.numpy()
 
