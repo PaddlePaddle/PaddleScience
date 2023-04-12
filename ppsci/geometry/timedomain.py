@@ -1,23 +1,23 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
-
 
 import itertools
+from typing import Tuple
 
 import numpy as np
 
@@ -31,7 +31,23 @@ from ppsci.utils import misc
 
 
 class TimeDomain(geometry_1d.Interval):
-    def __init__(self, t0, t1, time_step=None, timestamps=None):
+    """Class for timedomain, an special interval geometry.
+
+    Args:
+        t0 (float): Start of time.
+        t1 (float): End of time.
+        time_step (float, optional): Step interval of time. Defaults to None.
+        timestamps (Tuple[float, ...], optional): List of timestamps. Defaults to None.
+
+    """
+
+    def __init__(
+        self,
+        t0: float,
+        t1: float,
+        time_step: float = None,
+        timestamps: Tuple[float, ...] = None,
+    ):
         super().__init__(t0, t1)
         self.t0 = t0
         self.t1 = t1
@@ -39,10 +55,8 @@ class TimeDomain(geometry_1d.Interval):
         self.timestamps = np.array(timestamps).reshape([-1])
         if time_step is not None:
             if time_step <= 0:
-                raise ValueError(f"time_step({time_step}) must larger than 0.")
-            self.num_timestamp = (
-                None if time_step is None else (int(np.ceil(self.diam / time_step)) + 1)
-            )
+                raise ValueError(f"time_step({time_step}) must be larger than 0.")
+            self.num_timestamp = int(np.ceil((t1 - t0) / time_step)) + 1
         elif timestamps is not None:
             self.num_timestamp = len(timestamps)
 
@@ -51,7 +65,14 @@ class TimeDomain(geometry_1d.Interval):
 
 
 class TimeXGeometry(geometry.Geometry):
-    def __init__(self, timedomain, geometry):
+    """Class for combination of time and geometry.
+
+    Args:
+        timedomain (TimeDomain): TimeDomain object.
+        geometry (geometry.Geometry): Geometry object.
+    """
+
+    def __init__(self, timedomain: TimeDomain, geometry: geometry.Geometry):
         self.timedomain = timedomain
         self.geometry = geometry
         self.ndim = geometry.ndim + timedomain.ndim
@@ -61,15 +82,15 @@ class TimeXGeometry(geometry.Geometry):
         return ["t"] + self.geometry.dim_keys
 
     def on_boundary(self, x):
-        # [N, txyz]
+        # [N, ndim(txyz)]
         return self.geometry.on_boundary(x[:, 1:])
 
     def on_initial(self, x):
-        # [N, 1]
+        # [N, 1(t)]
         return self.timedomain.on_initial(x[:, :1])
 
     def boundary_normal(self, x):
-        # x: [N, txy(z)]
+        # x: [N, ndim(txyz)]
         normal = self.geometry.boundary_normal(x[:, 1:])
         return np.hstack((x[:, :1], normal))
 
@@ -124,7 +145,7 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_points(self, n, random="pseudo"):
+    def random_points(self, n, random="pseudo", criteria=None):
         # time evenly and geometry random, if time_step if specified
         if self.timedomain.time_step is not None:
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -137,8 +158,31 @@ class TimeXGeometry(geometry.Geometry):
             )[:, None][
                 ::-1
             ]  # [nt, 1]
+            # 1. sample nx points in static geometry with criteria
             nx = int(np.ceil(n / nt))
-            x = self.geometry.random_points(nx, random)
+            _size, _ntry, _nsuc = 0, 0, 0
+            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            while _size < nx:
+                _x = self.geometry.random_points(nx, random)
+                if criteria is not None:
+                    # fix arg 't' to None in criteria there
+                    criteria_mask = criteria(
+                        None, *np.split(_x, self.geometry.ndim, axis=1)
+                    ).flatten()
+                    _x = _x[criteria_mask]
+                if len(_x) > nx - _size:
+                    _x = _x[: nx - _size]
+                x[_size : _size + len(_x)] = _x
+
+                _size += len(_x)
+                _ntry += 1
+                if len(_x) > 0:
+                    _nsuc += 1
+
+                if _ntry >= 1000 and _nsuc == 0:
+                    raise RuntimeError(f"sample interior failed")
+
+            # 2. repeat spatial points along time
             tx = []
             for ti in t:
                 tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
@@ -150,7 +194,29 @@ class TimeXGeometry(geometry.Geometry):
             nt = self.timedomain.num_timestamp - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
-            x = self.geometry.random_points(nx, random)
+
+            _size, _ntry, _nsuc = 0, 0, 0
+            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            while _size < nx:
+                _x = self.geometry.random_points(nx, random)
+                if criteria is not None:
+                    # fix arg 't' to None in criteria there
+                    criteria_mask = criteria(
+                        None, *np.split(_x, self.geometry.ndim, axis=1)
+                    ).flatten()
+                    _x = _x[criteria_mask]
+                if len(_x) > nx - _size:
+                    _x = _x[: nx - _size]
+                x[_size : _size + len(_x)] = _x
+
+                _size += len(_x)
+                _ntry += 1
+                if len(_x) > 0:
+                    _nsuc += 1
+
+                if _ntry >= 1000 and _nsuc == 0:
+                    raise RuntimeError(f"sample interior failed")
+
             tx = []
             for ti in t:
                 tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
@@ -185,7 +251,7 @@ class TimeXGeometry(geometry.Geometry):
         t = np.random.permutation(t)
         return np.hstack((t, x))
 
-    def uniform_boundary_points(self, n):
+    def uniform_boundary_points(self, n, criteria=None):
         """Uniform boundary points on the spatio-temporal domain.
 
         Geometry surface area ~ bbox.
@@ -204,7 +270,29 @@ class TimeXGeometry(geometry.Geometry):
             )
             nx = int((n * s / self.timedomain.diam) ** 0.5)
         nt = int(np.ceil(n / nx))
-        x = self.geometry.uniform_boundary_points(nx)
+
+        _size, _ntry, _nsuc = 0, 0, 0
+        x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+        while _size < nx:
+            _x = self.geometry.uniform_boundary_points(nx)
+            if criteria is not None:
+                # fix arg 't' to None in criteria there
+                criteria_mask = criteria(
+                    None, *np.split(_x, self.geometry.ndim, axis=1)
+                ).flatten()
+                _x = _x[criteria_mask]
+            if len(_x) > nx - _size:
+                _x = _x[: nx - _size]
+            x[_size : _size + len(_x)] = _x
+
+            _size += len(_x)
+            _ntry += 1
+            if len(_x) > 0:
+                _nsuc += 1
+
+            if _ntry >= 1000 and _nsuc == 0:
+                raise RuntimeError(f"sample interior failed")
+
         nx = len(x)
         t = np.linspace(
             self.timedomain.t1,
@@ -221,7 +309,7 @@ class TimeXGeometry(geometry.Geometry):
             tx = tx[:n]
         return tx
 
-    def random_boundary_points(self, n, random="pseudo"):
+    def random_boundary_points(self, n, random="pseudo", criteria=None):
         if self.timedomain.time_step is not None:
             # exclude start time t0
             nt = int(np.ceil(self.timedomain.diam / self.timedomain.time_step))
@@ -237,9 +325,27 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                x = self.geometry.random_boundary_points(nx, random=random)
-            # TODO(sensen): decouple uniform and random boundary sample.
-            # x = self.geometry.uniform_boundary_points(nx)
+                _size, _ntry, _nsuc = 0, 0, 0
+                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                while _size < nx:
+                    _x = self.geometry.random_boundary_points(nx, random)
+                    if criteria is not None:
+                        # fix arg 't' to None in criteria there
+                        criteria_mask = criteria(
+                            None, *np.split(_x, self.geometry.ndim, axis=1)
+                        ).flatten()
+                        _x = _x[criteria_mask]
+                    if len(_x) > nx - _size:
+                        _x = _x[: nx - _size]
+                    x[_size : _size + len(_x)] = _x
+
+                    _size += len(_x)
+                    _ntry += 1
+                    if len(_x) > 0:
+                        _nsuc += 1
+
+                    if _ntry >= 1000 and _nsuc == 0:
+                        raise RuntimeError(f"sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
@@ -280,9 +386,27 @@ class TimeXGeometry(geometry.Geometry):
             if isinstance(self.geometry, mesh.Mesh):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
-                x = self.geometry.random_boundary_points(nx, random=random)
-            # TODO(sensen): decouple uniform and random boundary sample.
-            # x = self.geometry.uniform_boundary_points(nx)
+                _size, _ntry, _nsuc = 0, 0, 0
+                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                while _size < nx:
+                    _x = self.geometry.random_boundary_points(nx, random)
+                    if criteria is not None:
+                        # fix arg 't' to None in criteria there
+                        criteria_mask = criteria(
+                            None, *np.split(_x, self.geometry.ndim, axis=1)
+                        ).flatten()
+                        _x = _x[criteria_mask]
+                    if len(_x) > nx - _size:
+                        _x = _x[: nx - _size]
+                    x[_size : _size + len(_x)] = _x
+
+                    _size += len(_x)
+                    _ntry += 1
+                    if len(_x) > 0:
+                        _nsuc += 1
+
+                    if _ntry >= 1000 and _nsuc == 0:
+                        raise RuntimeError(f"sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):

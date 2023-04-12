@@ -1,23 +1,23 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
+Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
-Code below is heavily based on https://github.com/lululxvi/deepxde
-"""
-
 
 import abc
+from typing import Tuple
 
 import numpy as np
 
@@ -26,7 +26,15 @@ from ppsci.utils import misc
 
 
 class Geometry(object):
-    def __init__(self, ndim: int, bbox, diam: float):
+    """Base class for geometry.
+
+    Args:
+        ndim (int): Number of geometry dimension.
+        bbox (Tuple[np.ndarray, np.ndarray]): Bounding box of upper and lower.
+        diam (float): Diameter of geometry.
+    """
+
+    def __init__(self, ndim: int, bbox: Tuple[np.ndarray, np.ndarray], diam: float):
         self.ndim = ndim
         self.bbox = bbox
         self.diam = min(diam, np.linalg.norm(bbox[1] - bbox[0]))
@@ -62,7 +70,10 @@ class Geometry(object):
             if evenly:
                 points = self.uniform_points(n)
             else:
-                points = self.random_points(n, random)
+                if misc.typename(self) == "TimeXGeometry":
+                    points = self.random_points(n, random, criteria)
+                else:
+                    points = self.random_points(n, random)
 
             if criteria is not None:
                 criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
@@ -91,9 +102,9 @@ class Geometry(object):
                     misc.typename(self) == "TimeXGeometry"
                     and misc.typename(self.geometry) == "Mesh"
                 ):
-                    points, normal, area = self.uniform_boundary_points(n, True)
+                    points, normal, area = self.uniform_boundary_points(n)
                 else:
-                    points = self.uniform_boundary_points(n, True)
+                    points = self.uniform_boundary_points(n)
             else:
                 if (
                     misc.typename(self) == "TimeXGeometry"
@@ -101,7 +112,10 @@ class Geometry(object):
                 ):
                     points, normal, area = self.random_boundary_points(n, random)
                 else:
-                    points = self.random_boundary_points(n, random)
+                    if misc.typename(self) == "TimeXGeometry":
+                        points = self.random_boundary_points(n, random, criteria)
+                    else:
+                        points = self.random_boundary_points(n, random)
 
             if criteria is not None:
                 criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
