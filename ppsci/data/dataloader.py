@@ -24,9 +24,13 @@ class InfiniteDataLoader(object):
 
     def __init__(self, dataloader: io.DataLoader):
         self.dataloader = dataloader
+        self.dataset = dataloader.dataset
 
     def __iter__(self):
         while True:
             dataloader_iter = iter(self.dataloader)
             for batch in dataloader_iter:
                 yield batch
+
+    def __len__(self):
+        return len(self.dataloader)
