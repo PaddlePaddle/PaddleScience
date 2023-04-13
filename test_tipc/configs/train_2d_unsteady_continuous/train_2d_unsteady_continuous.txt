@@ -1,11 +1,11 @@
 ===========================train_params===========================
 model_name:cylinder2d_unsteady_train_newapi
 python:python3.7
-gpu_list:0:
+gpu_list:0
 Global.use_gpu:null
 Global.auto_cast:fp32
 Global.epoch_num:benchmark_train=20
-Global.©:./output/
+Global.save_model_dir:./output/
 Train.loader.batch_size_per_card:null
 Global.pretrained_model:null
 train_model_name:latest
