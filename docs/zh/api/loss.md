@@ -8,6 +8,7 @@
         - L1Loss
         - L2Loss
         - MSELoss
+        - MSELossWithL2Decay
         - IntegralLoss
         - PeriodicL1Loss
         - PeriodicL2Loss
