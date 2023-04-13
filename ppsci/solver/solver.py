@@ -332,7 +332,6 @@ class Solver(object):
 
             cur_metric = float("inf")
             # evaluate during training
-            self.visualize(epoch_id)
             if (
                 self.eval_during_train
                 and epoch_id % self.eval_freq == 0

@@ -17,9 +17,7 @@ Created in Mar. 2023
 @author: Guan Wang
 """
 
-import os
 import os.path as osp
-import sys
 
 import numpy as np
 
@@ -47,7 +45,6 @@ def normalized_bc(origion_list, t_factor, xyz_factor):
 
 if __name__ == "__main__":
     # set output directory
-    output_dir = "./outputs_0404/"
     RENOLDS_NUMBER = 3900
     U0 = 0.1
     D_CYLINDER = 80
@@ -71,9 +68,11 @@ if __name__ == "__main__":
     }
 
     # read configuration file : config.yaml
-    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
     # dirname = "."
+    import os
+    import sys
 
+    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
     num_epoch = 400000  # number of epoch
     learning_rate = 0.001
     hidden_size = 512
@@ -92,8 +91,8 @@ if __name__ == "__main__":
     }  # batch size
 
     # losses weight
-    ic_wgt = 1
     eq_wgt = 1
+    ic_wgt = 5
     front_wgt = 2
     back_wgt = 2
     inlet_wgt = 2
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     bottom_wgt = 2
     cylinder_wgt = 5
     sup_wgt = 10
-    w_epoch = 5000  # simulated annealing
+    w_epoch = 50000  # simulated annealing
 
     # fix the random seed
     ppsci.utils.misc.set_random_seed(42)
@@ -498,7 +497,7 @@ if __name__ == "__main__":
         mode="train",
         model=model,
         constraint=constraint_dict,
-        output_dir=output_dir,
+        output_dir="./output",
         optimizer=optimizer,
         lr_scheduler=lr,
         epochs=num_epoch,
