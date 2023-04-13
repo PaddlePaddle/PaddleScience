@@ -15,9 +15,11 @@
 import os
 import os.path as osp
 
+import numpy as np
 import paddle
 import paddle.amp as amp
 
+import ppsci.data.dataset as dataset
 from ppsci.utils import expression
 from ppsci.utils import misc
 
@@ -79,3 +81,48 @@ def visualize_func(solver, epoch_id):
             _visualizer.save(
                 osp.join(visual_dir, _visualizer.prefix), {**all_input, **all_output}
             )
+
+
+@paddle.no_grad()
+def visualize_func_3D(solver, epoch_id):
+    """Visualization program, perform forward here
+
+    Args:
+        solver (Solver): Main Solver.
+        epoch_id (int): Epoch id.
+
+    """
+    # construct input
+    _visualizer = next(iter(solver.visualizer.values()))
+    input_dict, label, onestep_xyz = _visualizer.construct_input()
+
+    # reconstruct input
+    n = len(next(iter(input_dict.values())))
+    splited_shares = int(n / _visualizer.visualizer_batch_size)
+    input_split = {
+        key: paddle.to_tensor(
+            np.array_split(value, splited_shares),
+            dtype=paddle.float32,
+            stop_gradient=False,
+        )
+        for key, value in input_dict.items()
+    }
+
+    # forward and predict
+    solution = {key: np.zeros((n, 1)).astype(np.float32) for key in dataset.Label}
+    for i in range(splited_shares):
+        input_i = {key: value[i] for key, value in input_split.items()}
+        output = solver.model(input_i)
+        for key in output.keys():
+            m = output[key].shape[0]
+            solution[key][i * m : (i + 1) * m] = output[key].numpy()
+
+    solution = dataset.denormalization(solution, _visualizer.factor_dict)
+
+    # error analysis
+    _visualizer.quantitive_error(label, solution)
+
+    # save vtu
+    if solver.rank == 0:
+        visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
+    _visualizer.save(visual_dir, onestep_xyz, solution)

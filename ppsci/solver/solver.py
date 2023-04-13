@@ -332,6 +332,7 @@ class Solver(object):
 
             cur_metric = float("inf")
             # evaluate during training
+            self.visualize(epoch_id)
             if (
                 self.eval_during_train
                 and epoch_id % self.eval_freq == 0
@@ -409,44 +410,18 @@ class Solver(object):
         self.model.eval()
 
         # init train func
-        self.visu_func = ppsci.solver.visu.visualize_func
-
+        if self.visualizer["visulzie_uvwp"].time_list is None:
+            self.visu_func = ppsci.solver.visu.visualize_func
+        else:
+            self.visu_func = ppsci.solver.visu.visualize_func_3D
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
 
         self.model.train()
 
-    @paddle.no_grad()
-    def predict(self, input_dict, splited_shares=1):
+    def predict(self, input_dict):
         """Prediction"""
-        input_is_large = True
-        if input_is_large == True:
-            input_split = {}
-            for key, value in input_dict.items():
-                input_split[key] = np.array_split(value, splited_shares)
-
-            pred_dict = {}
-            for i in range(splited_shares):
-                print("predict", i)
-                input_i = {}
-                for key in input_split.keys():
-                    input_i[key] = paddle.to_tensor(
-                        input_split[key][i], dtype=paddle.float32, stop_gradient=False
-                    )
-                output = self.model(input_i)
-                for key in output.keys():
-                    if i == 0:
-                        pred_dict[key] = output[key].numpy()
-                    else:
-                        pred_dict.update(
-                            {
-                                key: np.concatenate(
-                                    [pred_dict[key], output[key].numpy()], axis=0
-                                )
-                            }
-                        )
-        else:
-            pred_dict = self.model(input_dict)
+        pred_dict = self.model(input_dict)
         return pred_dict
 
     def export(self):

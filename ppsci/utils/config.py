@@ -43,7 +43,7 @@ def create_attr_dict(yaml_config):
     from ast import literal_eval
 
     for key, value in yaml_config.items():
-        if type(value) is dict:
+        if isinstance(value, dict):
             yaml_config[key] = value = AttrDict(value)
         if isinstance(value, str):
             try:

@@ -58,6 +58,8 @@ class SupervisedConstraint(base.Constraint):
         timestamps: Tuple[float, ...] = None,
         name: str = "Sup",
     ):
+        if alias_dict is None:
+            alias_dict = {}
         self.input_keys = [
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]
@@ -109,7 +111,7 @@ class SupervisedConstraint(base.Constraint):
                 self.num_timestamp = len(np.unique(data["t"]))
 
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-        elif type(data_file) is dict:
+        elif isinstance(data_file, dict):
             data = data_file
             input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
             label = {key: data[label_keys[i]] for i, key in enumerate(self.output_keys)}
@@ -184,6 +186,8 @@ class SupervisedInitialConstraint(base.Constraint):
         weight_dict: Dict[str, Callable] = None,
         name: str = "SupIC",
     ):
+        if alias_dict is None:
+            alias_dict = {}
         self.input_keys = [
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]
@@ -209,7 +213,7 @@ class SupervisedInitialConstraint(base.Constraint):
 
             self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
             self.num_timestamp = 1
-        elif type(data_file) is dict:
+        elif isinstance(data_file, dict):
             data = data_file
             input = {key: data[input_keys[i]] for i, key in enumerate(self.input_keys)}
             label = {key: data[label_keys[i]] for i, key in enumerate(self.output_keys)}

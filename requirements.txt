@@ -12,3 +12,4 @@ pysdf
 pyyaml
 scikit-optimize
 h5py
+meshio==5.3.4

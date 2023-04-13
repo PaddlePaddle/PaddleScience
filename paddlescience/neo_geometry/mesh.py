@@ -43,13 +43,13 @@ class Mesh(Geometry):
     def __init__(self, mesh: Union[str, pymesh.Mesh]):
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
-        elif 1 is 1:
+        elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
             raise ValueError(f"type of mesh({type(mesh)} must be str or pymesh.Mesh")
 
-        self.vertices = self.py_mesh.points
-        self.faces = self.py_mesh.cells[0].data
+        self.vertices = self.py_mesh.vertices
+        self.faces = self.py_mesh.faces
         self.vectors = self.vertices[self.faces]
         super().__init__(
             self.vertices.shape[-1],
@@ -59,8 +59,8 @@ class Mesh(Geometry):
         self.v0 = self.vectors[:, 0]
         self.v1 = self.vectors[:, 1]
         self.v2 = self.vectors[:, 2]
-        self.num_vertices = self.vertices.shape[0]
-        self.num_faces = self.faces.shape[0]
+        self.num_vertices = self.py_mesh.num_vertices
+        self.num_faces = self.py_mesh.num_faces
         self.sdf = pysdf.SDF(self.vertices, self.faces)
         self.bounds = (
             ((np.min(self.vectors[:, :, 0])), np.max(self.vectors[:, :, 0])),

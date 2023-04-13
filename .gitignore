@@ -1,13 +1,9 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 __MACOSX
-examples/cylinder/2d_unsteady_continuous/datasets
-examples/cylinder/3d_unsteady_discrete/data
-examples/cylinder/3d_unsteady_discrete/vtk
-examples/cylinder/3d_unsteady_discrete/vtk_mesh
 *.py[cod]
 *$py.class
-git status
+
 # C extensions
 *.so
 

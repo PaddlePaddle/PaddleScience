@@ -73,7 +73,7 @@ class InteriorConstraint(base.Constraint):
 
         self.label_dict = label_dict
         self.output_keys = list(label_dict.keys())
-        if type(geom) is dict:
+        if isinstance(geom, dict):
             self.input_keys = ["x", "y", "z"][:3]
             input = geom
         else:
