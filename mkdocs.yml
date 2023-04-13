@@ -33,6 +33,7 @@ nav:
       - PINNs:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+        - Lorenz_transform_physx: zh/examples/lorenz.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
