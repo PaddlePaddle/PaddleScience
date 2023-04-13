@@ -51,8 +51,7 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
-            input_dict, label_dict, _ = batch
-
+            input_dict, label_dict, weight_dict = batch
             # profile code
             # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
@@ -73,11 +72,13 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
             if solver.use_amp:
                 with amp.auto_cast(level=solver.amp_level):
                     output_dict = evaluator(input_dict)
-                    validator_loss = _validator.loss(output_dict, label_dict)
+                    validator_loss = _validator.loss(
+                        output_dict, label_dict, weight_dict
+                    )
                     loss_dict[f"loss({_validator.name})"] = float(validator_loss)
             else:
                 output_dict = evaluator(input_dict)
-                validator_loss = _validator.loss(output_dict, label_dict)
+                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
                 loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
