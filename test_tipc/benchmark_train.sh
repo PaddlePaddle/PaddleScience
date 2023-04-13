@@ -92,7 +92,6 @@ if [ ${MODE} = "benchmark_train" ];then
     python3.7 -m pip install -r requirements.txt
     export PYTHONPATH=${PDSC_DIR}
     echo -e "\n* [PYTHONPATH] is now set : \n" ${PYTHONPATH} "\n"
-    python3.7 ${PDSC_DIR}/examples/cylinder/2d_unsteady_continuous/download_dataset.py
 fi
 
 
@@ -102,6 +101,10 @@ dataline=`cat $FILENAME`
 IFS=$'\n'
 lines=(${dataline})
 model_name=$(func_parser_value "${lines[1]}")
+
+data_set_dowload=$(func_parser_value "${lines[58]}")
+python3.7 ${PDSC_DIR}${data_set_dowload}
+echo -e "\n* [data_set_dowload] is now set : \n" ${data_set_dowload} "\n"
 line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
 batch_size=$(func_parser_value "${lines[line_num]}")
 line_num=`expr $line_num + 1`
