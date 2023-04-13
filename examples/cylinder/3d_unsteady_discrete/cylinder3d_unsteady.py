@@ -31,12 +31,12 @@ def normalized_bc(origion_list, t_factor, xyz_factor):
     """normalize bc data time and coordinates
 
     Args:
-        origion_list (_type_): _description_
-        t_factor (_type_): _description_
-        xyz_factor (_type_): _description_
+        origion_list (np.array): Array to be normalized
+        t_factor (float): Scaling factor for time
+        xyz_factor (float): Scaling factor for x y z
 
     Returns:
-        _type_: _description_
+        np.array: Normalized array
     """
     time = origion_list[:, 0] / t_factor
     x_cord = origion_list[:, 1] / xyz_factor
@@ -475,7 +475,6 @@ if __name__ == "__main__":
         dataset.Input.y: one_input[dataset.Input.y],
         dataset.Input.z: one_input[dataset.Input.z],
     }
-    # visualizer = ppsci.visualize.visualizer.Visualizer3D(TIME_STEP, time_list, None, factor_dict, ref_file, dirname, pretrained_model_path)
 
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
@@ -510,7 +509,5 @@ if __name__ == "__main__":
         equation=pde,
         geom=None,
         validator=validator,
-        visualizer=visualizer,
-        checkpoint_path="/workspace/wangguan/PaddleScience/examples/cylinder/3d_unsteady_discrete/checkpoints/epoch_302000",
     )
     train_solver.train()
