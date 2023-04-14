@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-source ./test_tipc/prepare.sh ./test_tipc/configs/train_2d_unsteady_continuous/prepare_2d_unsteady_continuous.txt 
+source ${TEST_DIR}/test_tipc/common_func.sh
 
 function func_parser_params(){
     strs=$1
@@ -94,7 +94,7 @@ profile_option="${profile_option_key}:${profile_option_params}"
 
 line_num=`expr $line_num + 1`
 flags_value=$(func_parser_value "${lines[line_num]}")
-
+echo -e "\n* [pip] is now set : \n" ${pip} "\n"
 export model_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 export model_commit=$(git log|head -n1|awk '{print $2}') 
 export str_tmp=$(echo `${pip} list|grep paddlepaddle-gpu|awk -F ' ' '{print $2}'`)
@@ -166,10 +166,10 @@ for batch_size in ${batch_size_list[*]}; do
             gpu_id=$(set_gpu_id $device_num)
 
             if [ ${#gpu_id} -le 1 ];then
-                run_process_type="SingleP"
+                # run_process_type="SingleP"
                 log_path="$SAVE_LOG/profiling_log"
                 mkdir -p $log_path
-                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}_${device_num}_profiling"
+                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_profiling"
                 func_sed_params "$FILENAME" "${line_gpuid}" "0"  # sed used gpu_id 
                 # set profile_option params
                 tmp=`sed -i "${line_profile}s/.*/${profile_option}/" "${FILENAME}"`
@@ -185,8 +185,8 @@ for batch_size in ${batch_size_list[*]}; do
                 speed_log_path="$SAVE_LOG/index"
                 mkdir -p $log_path
                 mkdir -p $speed_log_path
-                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}_${device_num}_log"
-                speed_log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}_${device_num}_speed"
+                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_log"
+                speed_log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_speed"
                 func_sed_params "$FILENAME" "${line_profile}" "null"  # sed profile_id as null
                 cmd="bash ${TEST_DIR}/test_tipc/test_train_inference_python.sh ${FILENAME} benchmark_train > ${log_path}/${log_name} 2>&1 "
                 echo $cmd
@@ -196,7 +196,7 @@ for batch_size in ${batch_size_list[*]}; do
                 export model_run_time=$((${job_et}-${job_bt}))
                 eval "cat ${log_path}/${log_name}"
                 # parser log
-                _model_name="${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}"
+                _model_name="${model_name}_bs${batch_size}_${precision}_${run_mode}"
                 cmd="${python} ${BENCHMARK_ROOT}/scripts/analysis.py --filename ${log_path}/${log_name} \
                         --speed_log_file '${speed_log_path}/${speed_log_name}' \
                         --model_name ${_model_name} \
