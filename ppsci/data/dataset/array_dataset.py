@@ -99,7 +99,6 @@ class MiniBatchDataset(io.Dataset):
         super().__init__()
         self.input = input
         self.label = label
-        self.weight = weight
         self.num_samples = self.check_input(input)
 
     def check_input(self, input):
@@ -114,9 +113,7 @@ class MiniBatchDataset(io.Dataset):
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
-        weight_item = {key: value[idx] for key, value in self.weight.items()}
-
-        return (input_item, label_item, weight_item)
+        return (input_item, label_item)
 
     def __len__(self):
         return self.num_samples

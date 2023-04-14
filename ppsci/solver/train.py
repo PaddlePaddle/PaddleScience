@@ -22,6 +22,15 @@ from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
+def new_next(iter_dicts, const_weight):
+    if const_weight is not None:
+        input_dict, label_dict = next(iter_dicts)
+        return input_dict, label_dict, {key: const_weight for key in label_dict.keys()}
+    else:
+        input_dict, label_dict, weight_dict = next(iter_dicts)
+        return (input_dict, label_dict, weight_dict)
+
+
 def train_epoch_func(solver, epoch_id, log_freq):
     """Train program for one epoch
 
@@ -41,7 +50,9 @@ def train_epoch_func(solver, epoch_id, log_freq):
         batch_cost = 0
         reader_tic = time.perf_counter()
         for _, _constraint in solver.constraint.items():
-            input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            input_dict, label_dict, weight_dict = new_next(
+                _constraint.data_iter, _constraint.loss.weight_expr
+            )
 
             # profile code below
             # profiler.add_profiler_step(solver.cfg["profiler_options"])

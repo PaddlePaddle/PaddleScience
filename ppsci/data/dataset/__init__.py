@@ -22,6 +22,9 @@ from ppsci.data.dataset.data_processor import Input
 from ppsci.data.dataset.data_processor import Label
 from ppsci.data.dataset.data_processor import denormalization
 from ppsci.data.dataset.data_processor import normalization
+from ppsci.data.dataset.trphysx_dataset import CylinderDataset
+from ppsci.data.dataset.trphysx_dataset import LorenzDataset
+from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
@@ -36,6 +39,10 @@ __all__ = [
     "Writer",
     "normalization",
     "denormalization",
+    "CylinderDataset",
+    "LorenzDataset",
+    "RosslerDataset",
+    "build_dataset",
 ]
 
 

@@ -62,7 +62,6 @@ class InteriorConstraint(base.Constraint):
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Callable = None,
         evenly: bool = False,
-        weight_value=1.0,
         weight_dict: Dict[str, Callable] = None,
         name: str = "EQ",
     ):
@@ -122,11 +121,8 @@ class InteriorConstraint(base.Constraint):
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
-        weight = {
-            key: weight_value * np.ones_like(next(iter(label.values())))
-            for key in label
-        }
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, str):
                     value = sp_parser.parse_expr(value)
@@ -151,7 +147,8 @@ class InteriorConstraint(base.Constraint):
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
-
+        else:
+            weight = None
         # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
 

@@ -17,22 +17,19 @@ https://github.com/zabaras/transformer-physx
 """
 
 ################################ 导入相关的库 ###############################################
-import os
 import random
+
 import numpy as np
-
 import paddle
-
-from paddlescience.data import build_dataloader
-from paddlescience.network.embedding_koopman import LorenzEmbedding
-from paddlescience.algorithm.algorithm_trphysx import TrPhysx
-from paddlescience.network.physx_transformer import PhysformerGPT2
-from paddlescience.optimizer.lr_sheduler import CosineAnnealingWarmRestarts
-
-from paddlescience.visu import LorenzViz
 
 import paddlescience as psci
 from paddlescience import config
+from paddlescience.algorithm.algorithm_trphysx import TrPhysx
+from paddlescience.data import build_dataloader
+from paddlescience.network.embedding_koopman import LorenzEmbedding
+from paddlescience.network.physx_transformer import PhysformerGPT2
+from paddlescience.optimizer.lr_sheduler import CosineAnnealingWarmRestarts
+from paddlescience.visu import LorenzViz
 
 config.enable_visualdl()
 
@@ -41,12 +38,12 @@ config.enable_visualdl()
 seed = 12345
 
 # dataset config
-train_data_path = 'your data path/lorenz_training_rk.hdf5'
+train_data_path = "/path/to/lorenz_training_rk.hdf5"
 train_block_size = 64
 train_stride = 64
 train_batch_size = 16
 
-valid_data_path = 'your data path/lorenz_valid_rk.hdf5'
+valid_data_path = "/path/to/lorenz_valid_rk.hdf5"
 valid_block_size = 256
 valid_stride = 1024
 valid_batch_size = 16
@@ -54,7 +51,7 @@ valid_batch_size = 16
 # embedding model config
 state_dims = [3]
 n_embd = 32
-embedding_model_params = './output/trphysx/lorenz/enn/dynamic_net_params_300.pdparams'
+embedding_model_params = "./output/trphysx/lorenz/enn/dynamic_net_params_300.pdparams"
 
 # transformer model config
 n_layer = 4
@@ -71,11 +68,11 @@ weight_decay = 1e-8
 
 # train config
 max_epochs = 200
-checkpoint_path = './output/trphysx/lorenz/transformer/'
+checkpoint_path = "./output/trphysx/lorenz/transformer/"
 
 
 def set_seed(seed=12345):
-    """ Set random seeds """
+    """Set random seeds"""
     random.seed(seed)
     np.random.seed(seed)
     paddle.seed(seed)
@@ -88,25 +85,29 @@ def main():
     dataset_args = dict(
         file_path=train_data_path,
         block_size=train_block_size,
-        stride=train_stride, )
+        stride=train_stride,
+    )
     train_dataloader = build_dataloader(
-        'LorenzDataset',
+        "LorenzDataset",
         batch_size=train_batch_size,
         shuffle=True,
         drop_last=True,
-        dataset_args=dataset_args)
+        dataset_args=dataset_args,
+    )
 
     dataset_args = dict(
         file_path=valid_data_path,
         block_size=valid_block_size,
         stride=valid_stride,
-        ndata=valid_batch_size, )
+        ndata=valid_batch_size,
+    )
     valid_dataloader = build_dataloader(
-        'LorenzDataset',
+        "LorenzDataset",
         batch_size=valid_batch_size,
         shuffle=False,
         drop_last=False,
-        dataset_args=dataset_args)
+        dataset_args=dataset_args,
+    )
 
     ################################ 定义模型 ###############################################
     embedding_net = LorenzEmbedding(state_dims=state_dims, n_embd=n_embd)
@@ -118,17 +119,18 @@ def main():
         n_head,
         embedding_net,
         pretrained_model=embedding_model_params,
-        viz=viz)
+        viz=viz,
+    )
 
     ################################ 优化器设置 ##############################################
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=clip_norm)
-    scheduler = CosineAnnealingWarmRestarts(
-        learning_rate, T_0, T_mult, eta_min=eta_min)
+    scheduler = CosineAnnealingWarmRestarts(learning_rate, T_0, T_mult, eta_min=eta_min)
     optimizer = paddle.optimizer.Adam(
         parameters=net.parameters(),
         learning_rate=scheduler,
         grad_clip=clip,
-        weight_decay=weight_decay)
+        weight_decay=weight_decay,
+    )
 
     ################################ 定义Solver并训练 #########################################
     algo = TrPhysx(net)
@@ -139,15 +141,15 @@ def main():
         opt=optimizer,
         data_driven=True,
         lr_scheduler=scheduler,
-        lr_update_method='step',
+        lr_update_method="step",
         train_dataloader=train_dataloader,
-        valid_dataloader=valid_dataloader, )
+        valid_dataloader=valid_dataloader,
+    )
 
     solver.solve(
-        num_epoch=max_epochs,
-        checkpoint_freq=25,
-        checkpoint_path=checkpoint_path)
+        num_epoch=max_epochs, checkpoint_freq=25, checkpoint_path=checkpoint_path
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

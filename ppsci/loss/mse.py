@@ -13,7 +13,11 @@
 # limitations under the License.
 
 
+from typing import Dict
+from typing import Optional
+
 import paddle.nn.functional as F
+from typing_extensions import Literal
 
 from ppsci.loss import base
 
@@ -33,20 +37,26 @@ class MSELoss(base.LossBase):
         reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
-    def __init__(self, reduction: str = "mean"):
+    def __init__(self, reduction: str = "mean", weight_expr: float = -1.0):
         super().__init__()
         if reduction not in ["mean", "sum"]:
             raise ValueError(
                 f"reduction should be 'mean' or 'sum', but got {reduction}"
             )
         self.reduction = reduction
+        if weight_expr == -1:
+            # use non uniform weight vector for loss
+            pass
+        elif weight_expr <= 0:
+            raise ValueError("weight_expr should be positive")
+        else:
+            self.weight_expr = weight_expr
 
     def forward(self, output_dict, label_dict, weight_dict=None):
         losses = 0.0
-        use_const_weight = True
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict is not None and use_const_weight is False:
+            if weight_dict is not None:
                 loss *= weight_dict[key]
             if "area" in output_dict:
                 loss *= output_dict["area"]
@@ -54,11 +64,37 @@ class MSELoss(base.LossBase):
             if self.reduction == "sum":
                 loss = loss.sum()
             elif self.reduction == "mean":
-                if use_const_weight is True:
-                    loss = loss.mean() * weight_dict[key][0]
-                else:
-                    loss = loss.mean()
+                loss = loss.mean()
             losses += loss
+        return losses
+
+
+class MSELossWithL2Decay(MSELoss):
+    """MSELoss with L2 decay.
+
+    Args:
+        reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
+        regularization_dict (Optional[Dict[str, float]], optional): Regularization dictionary. Defaults to None.
+
+    Raises:
+        ValueError: reduction should be 'mean' or 'sum'.
+    """
+
+    def __init__(
+        self,
+        reduction: Literal["mean", "sum"] = "mean",
+        regularization_dict: Optional[Dict[str, float]] = None,
+    ):
+        super().__init__(reduction)
+        self.regularization_dict = regularization_dict
+
+    def forward(self, output_dict, label_dict, weight_dict=None):
+        losses = super().forward(output_dict, label_dict, weight_dict)
+
+        if self.regularization_dict is not None:
+            for reg_key, reg_weight in self.regularization_dict.items():
+                loss = output_dict[reg_key].pow(2).sum()
+                losses += loss * reg_weight
         return losses
 
 

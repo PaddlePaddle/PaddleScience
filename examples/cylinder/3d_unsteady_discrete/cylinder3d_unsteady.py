@@ -45,6 +45,11 @@ def normalized_bc(origion_list, t_factor, xyz_factor):
 
 if __name__ == "__main__":
     # set output directory
+    output_dir = "./output"
+
+    # initialize logger
+    ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+
     RENOLDS_NUMBER = 3900
     U0 = 0.1
     D_CYLINDER = 80
@@ -67,12 +72,7 @@ if __name__ == "__main__":
         dataset.Label.p: P_STAR,
     }
 
-    # read configuration file : config.yaml
-    # dirname = "."
-    import os
-    import sys
-
-    dirname, filename = os.path.split(os.path.abspath(sys.argv[0]))
+    dirname = "."
     num_epoch = 400000  # number of epoch
     learning_rate = 0.001
     hidden_size = 512
@@ -218,16 +218,14 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=eq_wgt,
+        loss=ppsci.loss.MSELoss("mean", eq_wgt),
         name="INTERIOR",
     )
 
-    ic = ppsci.constraint.SupervisedInitialConstraint(
+    ic = ppsci.constraint.SupervisedConstraint(
         data_file=ic_dict,
         input_keys=input_keys,
         label_keys=label_keys_2,
-        t0=0,
         alias_dict=None,
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
@@ -239,8 +237,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=ic_wgt,
+        loss=ppsci.loss.MSELoss("mean", ic_wgt),
         name="IC",
     )
 
@@ -259,8 +256,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=sup_wgt,
+        loss=ppsci.loss.MSELoss("mean", sup_wgt),
         name="SUP",
     )
 
@@ -287,8 +283,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=inlet_wgt,
+        loss=ppsci.loss.MSELoss("mean", inlet_wgt),
         name="BC_INLET",
     )
 
@@ -315,8 +310,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=cylinder_wgt,
+        loss=ppsci.loss.MSELoss("mean", cylinder_wgt),
         name="BC_CYLINDER",
     )
 
@@ -341,8 +335,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=outlet_wgt,
+        loss=ppsci.loss.MSELoss("mean", outlet_wgt),
         name="BC_OUTLET",
     )
 
@@ -369,8 +362,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=top_wgt,
+        loss=ppsci.loss.MSELoss("mean", top_wgt),
         name="BC_TOP",
     )
 
@@ -397,8 +389,7 @@ if __name__ == "__main__":
                 "drop_last": False,
             },
         },
-        loss=ppsci.loss.MSELoss("mean"),
-        weight_value=bottom_wgt,
+        loss=ppsci.loss.MSELoss("mean", bottom_wgt),
         name="BC_BOTTOM",
     )
 
@@ -494,10 +485,9 @@ if __name__ == "__main__":
 
     # Solver
     train_solver = ppsci.solver.Solver(
-        mode="train",
         model=model,
         constraint=constraint_dict,
-        output_dir="./output",
+        output_dir=output_dir,
         optimizer=optimizer,
         lr_scheduler=lr,
         epochs=num_epoch,
