@@ -63,14 +63,14 @@ if __name__ == "__main__":
     P_STAR = RHO * U0 * U0  # 0.01
 
     factor_dict = {
-        dataset.Input.t: T_STAR,
-        dataset.Input.x: XYZ_STAR,
-        dataset.Input.y: XYZ_STAR,
-        dataset.Input.z: XYZ_STAR,
-        dataset.Label.u: UVW_STAR,
-        dataset.Label.v: UVW_STAR,
-        dataset.Label.w: UVW_STAR,
-        dataset.Label.p: P_STAR,
+        "t": T_STAR,
+        "x": XYZ_STAR,
+        "y": XYZ_STAR,
+        "z": XYZ_STAR,
+        "u": UVW_STAR,
+        "v": UVW_STAR,
+        "w": UVW_STAR,
+        "p": P_STAR,
     }
 
     num_epoch = 400000  # number of epoch
@@ -196,17 +196,17 @@ if __name__ == "__main__":
 
     # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
     pde = ppsci.equation.NavierStokes(nu=NU, rho=1.0, dim=3, time=True)
-    input_keys = [dataset.Input.t, dataset.Input.x, dataset.Input.y, dataset.Input.z]
-    label_keys_1 = [dataset.Label.u, dataset.Label.v, dataset.Label.w, dataset.Label.p]
-    label_keys_2 = [dataset.Label.u, dataset.Label.v, dataset.Label.w]
+    input_keys = ["t", "x", "y", "z"]
+    label_keys_1 = ["u", "v", "w", "p"]
+    label_keys_2 = ["u", "v", "w"]
     pde_constraint = ppsci.constraint.InteriorConstraint(
         label_expr=pde.equations,
         label_dict={"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
         geom={
-            dataset.Input.t: i_t,
-            dataset.Input.x: i_x,
-            dataset.Input.y: i_y,
-            dataset.Input.z: i_z,
+            "t": i_t,
+            "x": i_x,
+            "y": i_y,
+            "z": i_z,
         },
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
@@ -262,13 +262,13 @@ if __name__ == "__main__":
 
     bc_inlet = ppsci.constraint.SupervisedConstraint(
         data_file={
-            dataset.Input.t: b_inlet_t,
-            dataset.Input.x: b_inlet_x,
-            dataset.Input.y: b_inlet_y,
-            dataset.Input.z: b_inlet_z,
-            dataset.Label.u: 0.1 / UVW_STAR,
-            dataset.Label.v: 0,
-            dataset.Label.w: 0,
+            "t": b_inlet_t,
+            "x": b_inlet_x,
+            "y": b_inlet_y,
+            "z": b_inlet_z,
+            "u": 0.1 / UVW_STAR,
+            "v": 0,
+            "w": 0,
         },
         input_keys=input_keys,
         label_keys=label_keys_2,
@@ -289,13 +289,13 @@ if __name__ == "__main__":
 
     bc_cylinder = ppsci.constraint.SupervisedConstraint(
         data_file={
-            dataset.Input.t: b_cylinder_t,
-            dataset.Input.x: b_cylinder_x,
-            dataset.Input.y: b_cylinder_y,
-            dataset.Input.z: b_cylinder_z,
-            dataset.Label.u: 0,
-            dataset.Label.v: 0,
-            dataset.Label.w: 0,
+            "t": b_cylinder_t,
+            "x": b_cylinder_x,
+            "y": b_cylinder_y,
+            "z": b_cylinder_z,
+            "u": 0,
+            "v": 0,
+            "w": 0,
         },
         input_keys=input_keys,
         label_keys=label_keys_2,
@@ -316,14 +316,14 @@ if __name__ == "__main__":
 
     bc_outlet = ppsci.constraint.SupervisedConstraint(
         data_file={
-            dataset.Input.t: b_outlet_t,
-            dataset.Input.x: b_outlet_x,
-            dataset.Input.y: b_outlet_y,
-            dataset.Input.z: b_outlet_z,
-            dataset.Label.p: 0,
+            "t": b_outlet_t,
+            "x": b_outlet_x,
+            "y": b_outlet_y,
+            "z": b_outlet_z,
+            "p": 0,
         },
         input_keys=input_keys,
-        label_keys=[dataset.Label.p],
+        label_keys=["p"],
         alias_dict=None,
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
@@ -341,13 +341,13 @@ if __name__ == "__main__":
 
     bc_top = ppsci.constraint.SupervisedConstraint(
         data_file={
-            dataset.Input.t: b_top_t,
-            dataset.Input.x: b_top_x,
-            dataset.Input.y: b_top_y,
-            dataset.Input.z: b_top_z,
-            dataset.Label.u: 0.1 / UVW_STAR,
-            dataset.Label.v: 0,
-            dataset.Label.w: 0,
+            "t": b_top_t,
+            "x": b_top_x,
+            "y": b_top_y,
+            "z": b_top_z,
+            "u": 0.1 / UVW_STAR,
+            "v": 0,
+            "w": 0,
         },
         input_keys=input_keys,
         label_keys=label_keys_2,
@@ -368,13 +368,13 @@ if __name__ == "__main__":
 
     bc_bottom = ppsci.constraint.SupervisedConstraint(
         data_file={
-            dataset.Input.t: b_bottom_t,
-            dataset.Input.x: b_bottom_x,
-            dataset.Input.y: b_bottom_y,
-            dataset.Input.z: b_bottom_z,
-            dataset.Label.u: 0.1 / UVW_STAR,
-            dataset.Label.v: 0,
-            dataset.Label.w: 0,
+            "t": b_bottom_t,
+            "x": b_bottom_x,
+            "y": b_bottom_y,
+            "z": b_bottom_z,
+            "u": 0.1 / UVW_STAR,
+            "v": 0,
+            "w": 0,
         },
         input_keys=input_keys,
         label_keys=label_keys_2,
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     }
 
     model = ppsci.arch.MLP(
-        input_keys=[dataset.Input.t, dataset.Input.x, dataset.Input.y, dataset.Input.z],
+        input_keys=["t", "x", "y", "z"],
         output_keys=label_keys_1,
         num_layers=num_layers,
         hidden_size=hidden_size,
@@ -457,9 +457,9 @@ if __name__ == "__main__":
     pretrained_model_path = osp.join(dirname, "checkpoints/epoch_301000")
     one_input, _ = reader.vtk(time_point=0, filename_without_timeid=ref_file)
     cord = {
-        dataset.Input.x: one_input[dataset.Input.x],
-        dataset.Input.y: one_input[dataset.Input.y],
-        dataset.Input.z: one_input[dataset.Input.z],
+        "x": one_input["x"],
+        "y": one_input["y"],
+        "z": one_input["z"],
     }
 
     visualizer = {

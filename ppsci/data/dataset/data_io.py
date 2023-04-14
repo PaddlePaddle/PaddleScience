@@ -49,40 +49,30 @@ class Reader:
                 n = mesh.points.shape[0]
                 input_dict = {
                     var: np.zeros((len(time_index) * n, 1)).astype(np.float32)
-                    for var in dataset.Input
+                    for var in ["t", "x", "y", "z"]
                 }
                 label_dict = {
                     var: np.zeros((len(time_index) * n, 1)).astype(np.float32)
-                    for var in dataset.Label
+                    for var in ["u", "v", "w", "p"]
                 }
             if read_input == True:
-                input_dict[dataset.Input.t][i * n : (i + 1) * n] = np.full(
+                input_dict["t"][i * n : (i + 1) * n] = np.full(
                     (n, 1), int(t * time_step)
                 )
-                input_dict[dataset.Input.x][i * n : (i + 1) * n] = mesh.points[
-                    :, 0
-                ].reshape(n, 1)
-                input_dict[dataset.Input.y][i * n : (i + 1) * n] = mesh.points[
-                    :, 1
-                ].reshape(n, 1)
+                input_dict["x"][i * n : (i + 1) * n] = mesh.points[:, 0].reshape(n, 1)
+                input_dict["y"][i * n : (i + 1) * n] = mesh.points[:, 1].reshape(n, 1)
                 if dim == 3:
-                    input_dict[dataset.Input.z][i * n : (i + 1) * n] = mesh.points[
-                        :, 2
-                    ].reshape(n, 1)
+                    input_dict["z"][i * n : (i + 1) * n] = mesh.points[:, 2].reshape(
+                        n, 1
+                    )
             if read_label == True:
-                label_dict[dataset.Label.u][i * n : (i + 1) * n] = np.array(
-                    mesh.point_data["1"]
-                )
-                label_dict[dataset.Label.v][i * n : (i + 1) * n] = np.array(
-                    mesh.point_data["2"]
-                )
+                label_dict["u"][i * n : (i + 1) * n] = np.array(mesh.point_data["1"])
+                label_dict["v"][i * n : (i + 1) * n] = np.array(mesh.point_data["2"])
                 if dim == 3:
-                    label_dict[dataset.Label.w][i * n : (i + 1) * n] = np.array(
+                    label_dict["w"][i * n : (i + 1) * n] = np.array(
                         mesh.point_data["3"]
                     )
-                label_dict[dataset.Label.p][i * n : (i + 1) * n] = np.array(
-                    mesh.point_data["4"]
-                )
+                label_dict["p"][i * n : (i + 1) * n] = np.array(mesh.point_data["4"])
         return input_dict, label_dict
 
     def vtk_samples_with_time(self, file: str):

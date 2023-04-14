@@ -11,21 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import enum
-
-
-class Input(enum.Enum):
-    t = "t"
-    x = "x"
-    y = "y"
-    z = "z"
-
-
-class Label(enum.Enum):
-    u = "u"
-    v = "v"
-    w = "w"
-    p = "p"
 
 
 def normalization(input: dict, factor: dict):

@@ -251,17 +251,17 @@ class Visualizer3D(base.Visualizer):
         self.data_len_for_onestep = n
         input = {key: np.zeros((n * len(time_tmp), 1)) for key in one_input.keys()}
         for i, time in enumerate(time_tmp):
-            input[dataset.Input.t][i * n : (i + 1) * n] = np.full(
-                (n, 1), int(time)
-            ).astype(np.float32)
-            input[dataset.Input.x][i * n : (i + 1) * n] = one_input[dataset.Input.x]
-            input[dataset.Input.y][i * n : (i + 1) * n] = one_input[dataset.Input.y]
-            input[dataset.Input.z][i * n : (i + 1) * n] = one_input[dataset.Input.z]
+            input["t"][i * n : (i + 1) * n] = np.full((n, 1), int(time)).astype(
+                np.float32
+            )
+            input["x"][i * n : (i + 1) * n] = one_input["x"]
+            input["y"][i * n : (i + 1) * n] = one_input["y"]
+            input["z"][i * n : (i + 1) * n] = one_input["z"]
         input = dataset.normalization(input, self.factor_dict)
         onestep_xyz = {
-            dataset.Input.x: one_input[dataset.Input.x],
-            dataset.Input.y: one_input[dataset.Input.y],
-            dataset.Input.z: one_input[dataset.Input.z],
+            "x": one_input["x"],
+            "y": one_input["y"],
+            "z": one_input["z"],
         }
 
         return input, label, onestep_xyz
@@ -276,6 +276,7 @@ class Visualizer3D(base.Visualizer):
         # LBM baseline, output Error
         n = self.data_len_for_onestep
         err_dict = {key: [] for key in dataset.Label}
+        err_dict_key = "u"
         for i in range(len(self.time_list)):
             for key in solution.keys():
                 err_dict[key].append(
@@ -287,9 +288,9 @@ class Visualizer3D(base.Visualizer):
             print(
                 f"{self.time_list[i]} \
                 time = {self.time_step * self.time_list[i]} s, \
-                sum = {(np.absolute(err_dict[dataset.Label.u][i])).sum(axis=0)}，\
-                mean = {(np.absolute(err_dict[dataset.Label.u][i])).mean(axis=0)}, \
-                median = {np.median(np.absolute(err_dict[dataset.Label.u][i]), axis=0)}"
+                sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}，\
+                mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}, \
+                median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}"
             )
             # psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)  # output error being displayed in paraview
 

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import enum
-
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
@@ -36,18 +34,7 @@ class NavierStokes(base.PDE):
         self.dim = dim
         self.time = time
 
-        def check_enum(out):
-            if isinstance(next(iter(out)), enum.Enum) is True:
-                str_out = {}
-                for key, value in out.items():
-                    if isinstance(key, str) is False:
-                        str_out[key.value] = value
-                    else:
-                        str_out[key] = value
-                return str_out
-
         def continuity_compute_func(out):
-            out = check_enum(out)
             x, y = out["x"], out["y"]
             u, v = out["u"], out["v"]
             continuity = jacobian(u, x) + jacobian(v, y)
@@ -60,7 +47,6 @@ class NavierStokes(base.PDE):
         self.add_equation("continuity", continuity_compute_func)
 
         def momentum_x_compute_func(out):
-            out = check_enum(out)
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
@@ -83,7 +69,6 @@ class NavierStokes(base.PDE):
         self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
-            out = check_enum(out)
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
@@ -108,7 +93,6 @@ class NavierStokes(base.PDE):
         if self.dim == 3:
 
             def momentum_z_compute_func(out):
-                out = check_enum(out)
                 x, y, z = out["x"], out["y"], out["z"]
                 u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (
