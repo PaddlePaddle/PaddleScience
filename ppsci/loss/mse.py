@@ -15,6 +15,7 @@
 
 from typing import Dict
 from typing import Optional
+from typing import Union
 
 import paddle.nn.functional as F
 from typing_extensions import Literal
@@ -37,7 +38,7 @@ class MSELoss(base.LossBase):
         reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
-    def __init__(self, reduction: str = "mean", weight_expr: float = -1.0):
+    def __init__(self, reduction: str = "mean", weight_expr: Union[float, Dict] = -1.0):
         super().__init__()
         if reduction not in ["mean", "sum"]:
             raise ValueError(

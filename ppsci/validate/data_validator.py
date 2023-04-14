@@ -23,7 +23,7 @@ from ppsci.validate import base
 class DataValidator(base.Validator):
     def __init__(
         self,
-        data,
+        data_dict,
         input_keys,
         label_keys,
         alias_dict,
@@ -34,7 +34,6 @@ class DataValidator(base.Validator):
         name=None,
     ):
         # read data
-        data_dict = data
         self.input_keys = [
             alias_dict[key] if key in alias_dict else key for key in input_keys
         ]

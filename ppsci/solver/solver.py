@@ -300,9 +300,7 @@ class Solver(object):
             logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
             cur_metric = float("inf")
-
-            cur_metric = float("inf")
-            # evaluate during training
+            # evaluate during training∂
             if (
                 self.eval_during_train
                 and epoch_id % self.eval_freq == 0

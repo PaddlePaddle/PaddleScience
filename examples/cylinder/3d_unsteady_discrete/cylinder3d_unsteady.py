@@ -46,6 +46,7 @@ def normalized_bc(origion_list, t_factor, xyz_factor):
 if __name__ == "__main__":
     # set output directory
     output_dir = "./output"
+    dirname = "."
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -72,7 +73,6 @@ if __name__ == "__main__":
         dataset.Label.p: P_STAR,
     }
 
-    dirname = "."
     num_epoch = 400000  # number of epoch
     learning_rate = 0.001
     hidden_size = 512
@@ -439,19 +439,15 @@ if __name__ == "__main__":
     # Validator
     validator = {
         "Residual": ppsci.validate.DataValidator(
-            data=lbm_0_dict,
+            data_dict=lbm_0_dict,
             input_keys=input_keys,
             label_keys=label_keys_1,
             alias_dict={},
             dataloader_cfg={
                 "dataset": "NamedArrayDataset",
                 "total_size": len(next(iter(lbm_0_dict.values()))),
-                "batch_size": bs["bottom"],
-                "sampler": {
-                    "name": "BatchSampler",
-                    "shuffle": False,
-                    "drop_last": False,
-                },
+                "batch_size": 1024,
+                "sampler": {"name": "BatchSampler"},
             },
             loss=ppsci.loss.MSELoss("mean"),
             metric={"MSE": ppsci.metric.MSE()},
