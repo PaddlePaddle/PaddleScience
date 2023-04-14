@@ -13,23 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
-export TEST_DIR="${PDSC_DIR}"
-export TIPC_TEST="ON" # open tipc log in solver.py 
-BENCHMARK_ROOT=${TEST_DIR}"/test_tipc/tools"
-source ${TEST_DIR}/test_tipc/common_func.sh
-echo -e "\n* [TEST_DIR] is now set : \n" ${TEST_DIR} "\n"
-echo -e "\n* [BENCHMARK_ROOT] is now set : \n" ${BENCHMARK_ROOT} "\n"
-
-python=python3.7
-pip="python3.7 -m pip"
-echo -e "\n* [pip] is now set : \n" ${pip} "\n"
-export model_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-export model_commit=$(git log|head -n1|awk '{print $2}') 
-export str_tmp=$(echo `${pip} list|grep paddlepaddle-gpu|awk -F ' ' '{print $2}'`)
-export frame_version=${str_tmp%%.post*}
-export frame_commit=$(echo `${python} -c "import paddle;print(paddle.version.commit)"`)
+source ./test_tipc/prepare.sh ./test_tipc/configs/train_2d_unsteady_continuous/prepare_2d_unsteady_continuous.txt 
 
 function func_parser_params(){
     strs=$1
@@ -88,12 +72,6 @@ cmd=`yes|cp $FILENAME $new_filename`
 FILENAME=$new_filename
 # MODE must be one of ['benchmark_train']
 MODE=$2
-if [ ${MODE} = "benchmark_train" ];then
-    python3.7 -m pip install -r requirements.txt
-    export PYTHONPATH=${PDSC_DIR}
-    echo -e "\n* [PYTHONPATH] is now set : \n" ${PYTHONPATH} "\n"
-fi
-
 
 PARAMS=$3
 IFS=$'\n'
@@ -101,10 +79,7 @@ dataline=`cat $FILENAME`
 IFS=$'\n'
 lines=(${dataline})
 model_name=$(func_parser_value "${lines[1]}")
-
-data_set_dowload=$(func_parser_value "${lines[58]}")
-python3.7 ${PDSC_DIR}${data_set_dowload}
-echo -e "\n* [data_set_dowload] is now set : \n" ${data_set_dowload} "\n"
+python=$(func_parser_value "${lines[2]}")
 line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
 batch_size=$(func_parser_value "${lines[line_num]}")
 line_num=`expr $line_num + 1`
@@ -120,6 +95,12 @@ profile_option="${profile_option_key}:${profile_option_params}"
 line_num=`expr $line_num + 1`
 flags_value=$(func_parser_value "${lines[line_num]}")
 
+export model_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+export model_commit=$(git log|head -n1|awk '{print $2}') 
+export str_tmp=$(echo `${pip} list|grep paddlepaddle-gpu|awk -F ' ' '{print $2}'`)
+export frame_version=${str_tmp%%.post*}
+export frame_commit=$(echo `${python} -c "import paddle;print(paddle.version.commit)"`)
+exit
 IFS=";"
 flags_list=(${flags_value})
 for _flag in ${flags_list[*]}; do
