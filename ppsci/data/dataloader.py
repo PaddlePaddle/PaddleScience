@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
+
 from paddle import io
 
 
@@ -19,12 +21,19 @@ class InfiniteDataLoader(object):
     """A wrapper for infinite dataloader.
 
     Args:
-        dataloader (DataLoader): A finite and iterable loader to be wrapped.
+        dataloader (Union[io.DataLoader, io.IterableDataset]): A finite and iterable loader or iterable dataset to be wrapped.
     """
 
-    def __init__(self, dataloader: io.DataLoader):
+    def __init__(self, dataloader: Union[io.DataLoader, io.IterableDataset]):
         self.dataloader = dataloader
-        self.dataset = dataloader.dataset
+        if isinstance(dataloader, io.DataLoader):
+            self.dataset = dataloader.dataset
+        elif isinstance(dataloader, io.IterableDataset):
+            self.dataset = dataloader
+        else:
+            raise TypeError(
+                f"dataloader should be io.DataLoader or io.IterableDataset, but got {type(dataloader)}"
+            )
 
     def __iter__(self):
         while True:
