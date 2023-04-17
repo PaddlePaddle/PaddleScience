@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-
 from ppsci.data import dataset
-from ppsci.utils import misc
 from ppsci.validate import base
 
 
@@ -38,49 +35,25 @@ class CSVValidator(base.Validator):
 
     def __init__(
         self,
-        file_path,
-        input_keys,
-        label_keys,
-        alias_dict,
+        label_expr,
         dataloader_cfg,
         loss,
-        transforms=None,
         metric=None,
         name=None,
     ):
-        # read data
-        if file_path.endswith(".csv"):
-            data_dict = misc.load_csv_file(
-                file_path, input_keys + label_keys, alias_dict
+        self.label_expr = label_expr
+
+        # build dataset
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
+
+        self.input_keys = _dataset.input_keys
+        self.input_keys = _dataset.input_keys
+        self.output_keys = list(label_expr.keys())
+        if self.output_keys != _dataset.label_keys:
+            raise ValueError(
+                f"keys of label_expr({self.output_keys}) "
+                f"should be same as _dataset.label_keys({_dataset.label_keys})"
             )
-        elif file_path.endswith(".mat"):
-            data_dict = misc.load_mat_file(
-                file_path, input_keys + label_keys, alias_dict
-            )
-        else:
-            raise NotImplementedError(f"file({file_path}) is not supported yet.")
-        self.input_keys = [
-            alias_dict[key] if key in alias_dict else key for key in input_keys
-        ]
-        self.output_keys = [
-            alias_dict[key] if key in alias_dict else key for key in input_keys
-        ]
-
-        input = {}
-        for key in self.input_keys:
-            input[key] = data_dict[key]
-
-        label = {}
-        for key in self.output_keys:
-            label[key] = data_dict[key]
-
-        self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-        self.num_timestamp = 1
-
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(
-            input, label, weight, transforms
-        )
 
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
 
