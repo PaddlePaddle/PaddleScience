@@ -18,29 +18,25 @@ Created in Mar. 2023
 """
 
 import os.path as osp
+import sys
 
 import numpy as np
 
 import ppsci
-import ppsci.data.dataset as dataset
+import ppsci.utils.misc as misc
 
 
-def normalized_bc(origion_list, t_factor, xyz_factor):
-    """normalize bc data time and coordinates
+def normalize(input: dict, factor: dict):
+    for key, value in factor.items():
+        if abs(value) < sys.float_info.min:
+            raise ValueError(f"{key} in factor dict is zero")
+    normolized_input = {key: value / factor[key] for key, value in input.items()}
+    return normolized_input
 
-    Args:
-        origion_list (np.array): Array to be normalized
-        t_factor (float): Scaling factor for time
-        xyz_factor (float): Scaling factor for x y z
 
-    Returns:
-        np.array: Normalized array
-    """
-    time = origion_list[:, 0] / t_factor
-    x_cord = origion_list[:, 1] / xyz_factor
-    y_cord = origion_list[:, 2] / xyz_factor
-    z_cord = origion_list[:, 3] / xyz_factor
-    return time, x_cord, y_cord, z_cord
+def denormalize(input: dict, factor: dict):
+    denormolized_input = {key: value * factor[key] for key, value in input.items()}
+    return denormolized_input
 
 
 if __name__ == "__main__":
@@ -123,76 +119,89 @@ if __name__ == "__main__":
     time_index.sort()
     time_array = time_index * TIME_STEP
 
-    # Data reader
-    reader = dataset.Reader(time_index=time_index, time_step=TIME_STEP)
-
     # initial value
     ref_file = osp.join(dirname, "data/LBM_result/cylinder3d_2023_1_31_LBM_")
-    ic_name = ref_file
-    ic_input, ic_label = reader.vtk(time_point=0, filename_without_timeid=ic_name)
-
+    ic_input, ic_label = misc.load_vtk_file(ref_file, TIME_STEP, [0])
     ic_dict = {}
-    ic_dict.update(dataset.normalization(ic_input, factor_dict))
-    ic_dict.update(dataset.normalization(ic_label, factor_dict))
+    ic_dict.update(normalize(ic_input, factor_dict))
+    ic_dict.update(normalize(ic_label, factor_dict))
 
     # supervised data
     sup_name = osp.join(dirname, "data/sup_data/supervised_")
-    sup_input, sup_label = reader.vtk(filename_without_timeid=sup_name)
-
+    sup_input, sup_label = misc.load_vtk_file(sup_name, TIME_STEP, time_index)
     sup_dict = {}
-    sup_dict.update(dataset.normalization(sup_input, factor_dict))
-    sup_dict.update(dataset.normalization(sup_label, factor_dict))
+    sup_dict.update(normalize(sup_input, factor_dict))
+    sup_dict.update(normalize(sup_label, factor_dict))
 
-    # num of interior points
-    NUM_POINTS = 10000
-    inlet_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/inlet_txyz.vtu")
-    )
-    outlet_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/outlet_txyz.vtu")
-    )
-    top_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/top_txyz.vtu")
-    )
-    bottom_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/bottom_txyz.vtu")
-    )
-    cylinder_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/cylinder_txyz.vtu")
-    )
-    interior_txyz = reader.vtk_samples_with_time(
-        osp.join(dirname, "data/sample_points/interior_txyz.vtu")
+    # interior data
+    interior_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/interior_txyz.vtu")  # input
     )
 
-    # interior nodes discre
-    i_t, i_x, i_y, i_z = normalized_bc(
-        interior_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
+    # inlet data
+    inlet_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/inlet_txyz.vtu")  # input
     )
+    inlet_data.update(
+        {
+            "u": 0.1,
+            "v": 0,
+            "w": 0,
+        }
+    )  # label
 
-    # bc inlet nodes discre
-    b_inlet_t, b_inlet_x, b_inlet_y, b_inlet_z = normalized_bc(
-        inlet_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
+    # cylinder data
+    cylinder_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/cylinder_txyz.vtu")  # input
     )
+    cylinder_data.update(
+        {
+            "u": 0,
+            "v": 0,
+            "w": 0,
+        }
+    )  # label
 
-    # bc outlet nodes discre
-    b_outlet_t, b_outlet_x, b_outlet_y, b_outlet_z = normalized_bc(
-        outlet_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
+    # outlet data
+    outlet_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/outlet_txyz.vtu")  # input
     )
+    outlet_data.update(
+        {
+            "p": 0,
+        }
+    )  # label
 
-    # bc cylinder nodes discre
-    b_cylinder_t, b_cylinder_x, b_cylinder_y, b_cylinder_z = normalized_bc(
-        cylinder_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
+    # top data
+    top_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/top_txyz.vtu")  # input
     )
+    top_data.update(
+        {
+            "u": 0.1,
+            "v": 0,
+            "w": 0,
+        }
+    )  # label
 
-    # bc-top nodes discre
-    b_top_t, b_top_x, b_top_y, b_top_z = normalized_bc(
-        top_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
+    # bottom data
+    bottom_data = misc.load_vtk_withtime_file(
+        osp.join(dirname, "data/sample_points/bottom_txyz.vtu")  # input
     )
+    bottom_data.update(
+        {
+            "u": 0.1,
+            "v": 0,
+            "w": 0,
+        }
+    )  # label
 
-    # bc-bottom nodes discre
-    b_bottom_t, b_bottom_x, b_bottom_y, b_bottom_z = normalized_bc(
-        bottom_txyz, t_factor=T_STAR, xyz_factor=XYZ_STAR
-    )
+    interior_data = normalize(interior_data, factor_dict)
+    bc_inlet_data = normalize(inlet_data, factor_dict)
+    bc_cylinder_data = normalize(cylinder_data, factor_dict)
+    bc_outlet_data = normalize(outlet_data, factor_dict)
+    bc_top_data = normalize(top_data, factor_dict)
+    bc_bottom_data = normalize(bottom_data, factor_dict)
 
     # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
     pde = ppsci.equation.NavierStokes(nu=NU, rho=1.0, dim=3, time=True)
@@ -202,12 +211,7 @@ if __name__ == "__main__":
     pde_constraint = ppsci.constraint.InteriorConstraint(
         label_expr=pde.equations,
         label_dict={"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
-        geom={
-            "t": i_t,
-            "x": i_x,
-            "y": i_y,
-            "z": i_z,
-        },
+        geom=interior_data,
         dataloader_cfg={
             "dataset": "MiniBatchDataset",
             "num_workers": 1,
@@ -261,15 +265,7 @@ if __name__ == "__main__":
     )
 
     bc_inlet = ppsci.constraint.SupervisedConstraint(
-        data_file={
-            "t": b_inlet_t,
-            "x": b_inlet_x,
-            "y": b_inlet_y,
-            "z": b_inlet_z,
-            "u": 0.1 / UVW_STAR,
-            "v": 0,
-            "w": 0,
-        },
+        data_file=bc_inlet_data,
         input_keys=input_keys,
         label_keys=label_keys_2,
         alias_dict=None,
@@ -288,15 +284,7 @@ if __name__ == "__main__":
     )
 
     bc_cylinder = ppsci.constraint.SupervisedConstraint(
-        data_file={
-            "t": b_cylinder_t,
-            "x": b_cylinder_x,
-            "y": b_cylinder_y,
-            "z": b_cylinder_z,
-            "u": 0,
-            "v": 0,
-            "w": 0,
-        },
+        data_file=bc_cylinder_data,
         input_keys=input_keys,
         label_keys=label_keys_2,
         alias_dict=None,
@@ -315,13 +303,7 @@ if __name__ == "__main__":
     )
 
     bc_outlet = ppsci.constraint.SupervisedConstraint(
-        data_file={
-            "t": b_outlet_t,
-            "x": b_outlet_x,
-            "y": b_outlet_y,
-            "z": b_outlet_z,
-            "p": 0,
-        },
+        data_file=bc_outlet_data,
         input_keys=input_keys,
         label_keys=["p"],
         alias_dict=None,
@@ -340,15 +322,7 @@ if __name__ == "__main__":
     )
 
     bc_top = ppsci.constraint.SupervisedConstraint(
-        data_file={
-            "t": b_top_t,
-            "x": b_top_x,
-            "y": b_top_y,
-            "z": b_top_z,
-            "u": 0.1 / UVW_STAR,
-            "v": 0,
-            "w": 0,
-        },
+        data_file=bc_top_data,
         input_keys=input_keys,
         label_keys=label_keys_2,
         alias_dict=None,
@@ -367,15 +341,7 @@ if __name__ == "__main__":
     )
 
     bc_bottom = ppsci.constraint.SupervisedConstraint(
-        data_file={
-            "t": b_bottom_t,
-            "x": b_bottom_x,
-            "y": b_bottom_y,
-            "z": b_bottom_z,
-            "u": 0.1 / UVW_STAR,
-            "v": 0,
-            "w": 0,
-        },
+        data_file=bc_bottom_data,
         input_keys=input_keys,
         label_keys=label_keys_2,
         alias_dict=None,
@@ -424,14 +390,12 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(learning_rate=lr)([model])
 
     # Read validation reference for time step : 0, 99
-    lbm_0_input, lbm_0_label = reader.vtk(
-        time_point=0, filename_without_timeid=ref_file
-    )
-    lbm_99_input, lbm_99_label = reader.vtk(
-        time_point=99, filename_without_timeid=ref_file
-    )
-    lbm_0_input = dataset.normalization(lbm_0_input, factor_dict)
-    lbm_0_label = dataset.normalization(lbm_0_label, factor_dict)
+
+    lbm_0_input, lbm_0_label = misc.load_vtk_file(ref_file, TIME_STEP, [0])
+    lbm_99_input, lbm_99_label = misc.load_vtk_file(ref_file, TIME_STEP, [99])
+
+    lbm_0_input = normalize(lbm_0_input, factor_dict)
+    lbm_0_label = normalize(lbm_0_label, factor_dict)
     lbm_0_dict = {}
     lbm_0_dict.update(lbm_0_input)
     lbm_0_dict.update(lbm_0_label)
@@ -455,12 +419,8 @@ if __name__ == "__main__":
         ),
     }
     pretrained_model_path = osp.join(dirname, "checkpoints/epoch_301000")
-    one_input, _ = reader.vtk(time_point=0, filename_without_timeid=ref_file)
-    cord = {
-        "x": one_input["x"],
-        "y": one_input["y"],
-        "z": one_input["z"],
-    }
+    one_input, _ = misc.load_vtk_file(ref_file, TIME_STEP, [0])
+    cord = {"x": one_input["x"], "y": one_input["y"], "z": one_input["z"]}
 
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
@@ -494,5 +454,6 @@ if __name__ == "__main__":
         equation=pde,
         geom=None,
         validator=validator,
+        visualizer=visualizer,
     )
     train_solver.train()

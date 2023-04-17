@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os.path as osp
+import sys
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -23,6 +24,7 @@ from typing import Union
 import numpy as np
 
 import ppsci.data.dataset as dataset
+import ppsci.utils.misc as misc
 from ppsci.visualize import base
 from ppsci.visualize import plot
 from ppsci.visualize import vtu
@@ -240,13 +242,12 @@ class Visualizer3D(base.Visualizer):
         time_list = self.time_list
         time_step = self.time_step
         time_tmp = time_step * time_list
-        # Data reader
-        reader = dataset.Reader(time_index=time_list, time_step=time_step)
+
         # Construct Input for prediction
-        _, label = reader.vtk(
-            read_input=False, filename_without_timeid=self.ref_file
+        _, label = misc.load_vtk_file(
+            self.ref_file, time_step, time_list, read_input=False
         )  # using referece sampling points coordinates[t\x\y\z] as input
-        one_input, _ = reader.vtk(time_point=0, filename_without_timeid=self.ref_file)
+        one_input, _ = misc.load_vtk_file(self.ref_file, time_step, [0])
         n = len(next(iter(one_input.values())))
         self.data_len_for_onestep = n
         input = {key: np.zeros((n * len(time_tmp), 1)) for key in one_input.keys()}
@@ -257,7 +258,13 @@ class Visualizer3D(base.Visualizer):
             input["x"][i * n : (i + 1) * n] = one_input["x"]
             input["y"][i * n : (i + 1) * n] = one_input["y"]
             input["z"][i * n : (i + 1) * n] = one_input["z"]
-        input = dataset.normalization(input, self.factor_dict)
+
+        # Normalize
+        for key, value in self.factor_dict.items():
+            if abs(value) < sys.float_info.min:
+                raise ValueError(f"{key} in factor dict is zero")
+        input = {key: value / self.factor_dict[key] for key, value in input.items()}
+
         onestep_xyz = {
             "x": one_input["x"],
             "y": one_input["y"],
@@ -275,7 +282,7 @@ class Visualizer3D(base.Visualizer):
         """
         # LBM baseline, output Error
         n = self.data_len_for_onestep
-        err_dict = {key: [] for key in dataset.Label}
+        err_dict = {key: [] for key in ["u", "v", "w", "p"]}
         err_dict_key = "u"
         for i in range(len(self.time_list)):
             for key in solution.keys():
@@ -302,14 +309,12 @@ class Visualizer3D(base.Visualizer):
             cord (Dict): points coordinates
             solution (Dict): predicted result
         """
-        writer = dataset.Writer()
         n = self.data_len_for_onestep
         for i in range(len(self.time_list)):
-            writer.vtk(
+            vtu.save_vtu(
                 filename=osp.join(dirname, f"predict_{i+1}.vtu"),
                 label={
-                    key.value: solution[key][i * n : (i + 1) * n]
-                    for key in solution.keys()
+                    key: solution[key][i * n : (i + 1) * n] for key in solution.keys()
                 },  # n : nodes number per time step
                 coordinates=cord,
             )

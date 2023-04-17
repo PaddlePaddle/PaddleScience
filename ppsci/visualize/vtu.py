@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import meshio
 import numpy as np
 import paddle
 from pyevtk import hl
@@ -118,3 +121,18 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
         value = np.concatenate(value, axis=1)
 
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
+
+
+def save_vtu(filename, label, coordinates):
+    path = os.path.dirname(filename)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    n = len(next(iter(coordinates.values())))
+    m = len(coordinates)
+    # get the list variable transposed
+    points = np.stack((x for x in iter(coordinates.values()))).reshape(m, n)
+    mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
+    mesh.point_data = label
+    mesh.write(filename)
+    print(f"vtk_raw file saved at [{filename}]")

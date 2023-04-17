@@ -16,6 +16,7 @@ import collections
 import csv
 import random
 
+import meshio
 import numpy as np
 import paddle
 import paddle.distributed as dist
@@ -30,6 +31,7 @@ __all__ = [
     "concat_dict_list",
     "convert_to_array",
     "convert_to_dict",
+    "load_vtk_file" "load_vtk_withtime_file",
     "load_csv_file",
     "stack_dict_list",
     "combine_array_with_time",
@@ -156,6 +158,54 @@ def combine_array_with_time(x, t):
         tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
     tx = np.vstack(tx)
     return tx
+
+
+def load_vtk_file(
+    filename_without_timeid: str,
+    time_step,
+    time_index,
+    read_input: bool = True,
+    read_label: bool = True,
+    dim=3,
+):
+    for i, t in enumerate(time_index):
+        file = filename_without_timeid + f"{t}.vtu"
+        mesh = meshio.read(file)
+        if i == 0:
+            n = mesh.points.shape[0]
+            input_dict = {
+                var: np.zeros((len(time_index) * n, 1)).astype(np.float32)
+                for var in ["t", "x", "y", "z"]
+            }
+            label_dict = {
+                var: np.zeros((len(time_index) * n, 1)).astype(np.float32)
+                for var in ["u", "v", "w", "p"]
+            }
+        if read_input == True:
+            input_dict["t"][i * n : (i + 1) * n] = np.full((n, 1), int(t * time_step))
+            input_dict["x"][i * n : (i + 1) * n] = mesh.points[:, 0].reshape(n, 1)
+            input_dict["y"][i * n : (i + 1) * n] = mesh.points[:, 1].reshape(n, 1)
+            if dim == 3:
+                input_dict["z"][i * n : (i + 1) * n] = mesh.points[:, 2].reshape(n, 1)
+        if read_label == True:
+            label_dict["u"][i * n : (i + 1) * n] = np.array(mesh.point_data["1"])
+            label_dict["v"][i * n : (i + 1) * n] = np.array(mesh.point_data["2"])
+            if dim == 3:
+                label_dict["w"][i * n : (i + 1) * n] = np.array(mesh.point_data["3"])
+            label_dict["p"][i * n : (i + 1) * n] = np.array(mesh.point_data["4"])
+    return input_dict, label_dict
+
+
+def load_vtk_withtime_file(file: str):
+    mesh = meshio.read(file)
+    n = mesh.points.shape[0]
+    t = np.array(mesh.point_data["time"])
+    x = mesh.points[:, 0].reshape(n, 1)
+    y = mesh.points[:, 1].reshape(n, 1)
+    z = mesh.points[:, 2].reshape(n, 1)
+    txyz = np.concatenate((t, x, y, z), axis=1).astype(np.float32).reshape(n, 4, 1)
+    input_dict = {"t": t, "x": x, "y": y, "z": z}
+    return input_dict
 
 
 def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):

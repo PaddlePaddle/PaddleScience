@@ -130,6 +130,13 @@ class Solver(object):
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
 
+        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        self.eval_output_info = {}
+        self.eval_time_info = {
+            "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
+            "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
+        }
+
         # fix seed for reproducibility
         self.seed = seed
 
@@ -300,7 +307,7 @@ class Solver(object):
             logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
             cur_metric = float("inf")
-            # evaluate during training∂
+            # evaluate during training
             if (
                 self.eval_during_train
                 and epoch_id % self.eval_freq == 0

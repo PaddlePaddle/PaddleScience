@@ -21,6 +21,7 @@ from ppsci.visualize.visualizer import Visualizer3D
 from ppsci.visualize.visualizer import VisualizerScatter1D
 from ppsci.visualize.visualizer import VisualizerScatter3D
 from ppsci.visualize.visualizer import VisualizerVtu
+from ppsci.visualize.vtu import save_vtu
 from ppsci.visualize.vtu import save_vtu_from_dict
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "Visualizer2DPlot",
     "Visualizer3D",
     "save_vtu_from_dict",
+    "save_vtu",
 ]
 
 

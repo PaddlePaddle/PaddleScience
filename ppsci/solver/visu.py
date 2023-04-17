@@ -109,7 +109,9 @@ def visualize_func_3D(solver, epoch_id):
     }
 
     # forward and predict
-    solution = {key: np.zeros((n, 1)).astype(np.float32) for key in dataset.Label}
+    solution = {
+        key: np.zeros((n, 1)).astype(np.float32) for key in ["u", "v", "w", "p"]
+    }
     for i in range(splited_shares):
         input_i = {key: value[i] for key, value in input_split.items()}
         output = solver.model(input_i)
@@ -117,8 +119,11 @@ def visualize_func_3D(solver, epoch_id):
             m = output[key].shape[0]
             solution[key][i * m : (i + 1) * m] = output[key].numpy()
 
-    solution = dataset.denormalization(solution, _visualizer.factor_dict)
-
+    # denormalize
+    solution = {
+        key: value * _visualizer.factor_dict[key] for key, value in solution.items()
+    }
+    _visualizer.quantitive_error(solution, label)
     # save vtu
     if solver.rank == 0:
         visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
