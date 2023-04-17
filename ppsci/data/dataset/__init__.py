@@ -18,14 +18,20 @@ from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
+from ppsci.data.dataset.trphysx_dataset import CylinderDataset
+from ppsci.data.dataset.trphysx_dataset import LorenzDataset
+from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
 __all__ = [
     "IterableNamedArrayDataset",
-    "MatDataset",
-    "CSVDataset",
     "NamedArrayDataset",
+    "CSVDataset",
+    "MatDataset",
+    "CylinderDataset",
+    "LorenzDataset",
+    "RosslerDataset",
     "build_dataset",
 ]
 
