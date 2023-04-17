@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import reader

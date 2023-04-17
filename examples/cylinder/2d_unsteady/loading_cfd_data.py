@@ -12,27 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import math
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
 class DataLoader:
-    def __init__(self,
-                 path=None,
-                 N_f=20000,
-                 N_b=1000,
-                 time_start=0,
-                 time_end=0.5,
-                 time_nsteps=31):
-        '''
+    def __init__(
+        self, path=None, N_f=20000, N_b=1000, time_start=0, time_end=0.5, time_nsteps=31
+    ):
+        """
         N_f: Num of residual points
         N_b: Num of boundary points
         time_start: unsteady time start point
         time_end: unsteady time end point
         time_nsteps: interval of time sampling
-        '''
+        """
 
         self.N_f = N_f
         self.N_b = N_b
@@ -47,8 +44,9 @@ class DataLoader:
         self.path = path
         # * 100 to adapt the probe8.*.csv filename
         self.scale = 1
-        time_points = np.linspace(
-            time_start, time_end, time_nsteps, endpoint=True) * self.scale
+        time_points = (
+            np.linspace(time_start, time_end, time_nsteps, endpoint=True) * self.scale
+        )
         self.discretized_time = time_points.astype(int)
 
     def select_discretized_time(self, num_time=20, reused=True):
@@ -56,8 +54,7 @@ class DataLoader:
         if self.random_time_steps and reused:
             return self.random_time_steps
         else:
-            self.random_time_steps = np.random.choice(self.discretized_time,
-                                                      num_time)
+            self.random_time_steps = np.random.choice(self.discretized_time, num_time)
         self.random_time_steps.sort()
         return self.random_time_steps
 
@@ -70,7 +67,7 @@ class DataLoader:
 
     def reading_data_from_csv(self, path, filename):
         full_filename = path + filename
-        data_pd = pd.read_csv(full_filename, encoding='gbk')
+        data_pd = pd.read_csv(full_filename, encoding="gbk")
         return data_pd
 
     def replicate_time_list(self, time_list, domain_shape, spatial_data):
@@ -91,13 +88,12 @@ class DataLoader:
 
         return replicated_t, spatial_data
 
-    def loading_train_inside_domain_data(self,
-                                         time_list,
-                                         flatten=False,
-                                         dtype='float32'):
+    def loading_train_inside_domain_data(
+        self, time_list, flatten=False, dtype="float32"
+    ):
         # load train_domain points
         # domain_train.csv, title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
-        filename = 'domain_train.csv'
+        filename = "domain_train.csv"
         path = self.path
         domain_data_from_pd = self.reading_data_from_csv(path, filename)
         # p,U:0,U:1,U:2,Points:0,Points:1,Points:2
@@ -106,8 +102,8 @@ class DataLoader:
         # domain_data = domain_data[idx]
 
         # t, x, y
-        #x = np.concatenate((x, domain_data[:,4].reshape((-1,1))))
-        #y = np.concatenate((y, domain_data[:,5].reshape((-1,1))))
+        # x = np.concatenate((x, domain_data[:,4].reshape((-1,1))))
+        # y = np.concatenate((y, domain_data[:,5].reshape((-1,1))))
 
         # t, x, y
         x = domain_data[:, 4].reshape((-1, 1))
@@ -122,8 +118,8 @@ class DataLoader:
         else:
             return t, xy[0], xy[1]
 
-    def loading_outlet_data(self, time_list, flatten=False, dtype='float32'):
-        filename = 'domain_outlet.csv'
+    def loading_outlet_data(self, time_list, flatten=False, dtype="float32"):
+        filename = "domain_outlet.csv"
         path = self.path
 
         outlet_data_from_pd = self.reading_data_from_csv(path, filename)
@@ -136,8 +132,7 @@ class DataLoader:
         y = outlet_data[:, 5].reshape((-1, 1))
 
         print("outlet data shape:", outlet_data.shape[0])
-        t, pxy = self.replicate_time_list(time_list, outlet_data.shape[0],
-                                          [p, x, y])
+        t, pxy = self.replicate_time_list(time_list, outlet_data.shape[0], [p, x, y])
 
         pxy[0] = pxy[0].astype(dtype)
         pxy[1] = pxy[1].astype(dtype)
@@ -145,37 +140,34 @@ class DataLoader:
         t = t.astype(dtype)
 
         if flatten == True:
-            return pxy[0].flatten(), t.flatten(), pxy[1].flatten(), pxy[
-                2].flatten()
+            return pxy[0].flatten(), t.flatten(), pxy[1].flatten(), pxy[2].flatten()
         else:
             return pxy[0], t, pxy[1], pxy[2]
 
     def loading_inlet_data(self, time_list, path):
         #  title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
-        filename = 'domain_inlet.csv'
+        filename = "domain_inlet.csv"
 
         # u, v, x, y
         return self.loading_data(time_list, path, filename)
 
     def loading_cylinder_data(self, time_list, path):
         #  title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
-        filename = 'domain_cylinder.csv'
+        filename = "domain_cylinder.csv"
 
         # u, v, x, y
         return self.loading_data(time_list, path, filename)
 
     def loading_side_data(self, time_list, path):
         #  title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
-        filename = 'domain_side.csv'
+        filename = "domain_side.csv"
 
         # u, v, x, y
         return self.loading_data(time_list, path, filename)
 
-    def loading_boundary_data(self,
-                              time_list,
-                              num_random=None,
-                              flatten=False,
-                              dtype='float32'):
+    def loading_boundary_data(
+        self, time_list, num_random=None, flatten=False, dtype="float32"
+    ):
         inlet_bc = self.loading_inlet_data(time_list, self.path)
         # side_bc = self.loading_side_data(time_list, self.path)
         cylinder_bc = self.loading_cylinder_data(time_list, self.path)
@@ -193,15 +185,20 @@ class DataLoader:
         uvxy[3] = uvxy[3].astype(dtype)
 
         if flatten == True:
-            return uvxy[0].flatten(), uvxy[1].flatten(), t.flatten(), uvxy[
-                2].flatten(), uvxy[3].flatten()
+            return (
+                uvxy[0].flatten(),
+                uvxy[1].flatten(),
+                t.flatten(),
+                uvxy[2].flatten(),
+                uvxy[3].flatten(),
+            )
         else:
             return uvxy[0], uvxy[1], t, uvxy[2], uvxy[3]
 
     def loading_data(self, time_list, path, filename, num_random=None):
         # boudnary datra: cylinder/inlet/side
         # domain_xx.csv, title is p,U:0,U:1,U:2,Points:0,Points:1,Points:2
-        #path = self.path
+        # path = self.path
 
         boundary_data = None
         data_from_pd = self.reading_data_from_csv(path, filename)
@@ -209,8 +206,7 @@ class DataLoader:
         boundary_data = np.array(data_from_pd)
 
         if num_random:
-            idx = np.random.choice(
-                boundary_data.shape[0], num_random, replace=False)
+            idx = np.random.choice(boundary_data.shape[0], num_random, replace=False)
             boundary_data = boundary_data[idx]
         # u, v, t, x, y
         u = boundary_data[:, 1].reshape((-1, 1))
@@ -221,32 +217,26 @@ class DataLoader:
         print("boundary  data shape:", boundary_data.shape[0])
         return u, v, x, y
 
-    def loading_supervised_data(self,
-                                time_list,
-                                flatten=False,
-                                dtype='float32'):
+    def loading_supervised_data(self, time_list, flatten=False, dtype="float32"):
         path = self.path
 
         supervised_data = None
         full_supervised_data = None
         for time in time_list:
-            filename = '/probe/probe0.' + str(time) + '.csv'
+            filename = "/probe/probe0." + str(time) + ".csv"
             data_from_pd = self.reading_data_from_csv(path, filename)
             # p,U:0,U:1,U:2,Points:0,Points:1,Points:2
 
             t_len = data_from_pd.shape[0]
-            supervised_t = np.array([time / self.scale] * t_len).reshape(
-                (-1, 1))
+            supervised_t = np.array([time / self.scale] * t_len).reshape((-1, 1))
             if supervised_data is None:
                 supervised_data = np.array(data_from_pd)
-                t_data = np.concatenate(
-                    (supervised_t, supervised_data), axis=1)
+                t_data = np.concatenate((supervised_t, supervised_data), axis=1)
                 full_supervised_data = t_data
             else:
                 next_data = np.array(data_from_pd)
                 t_data = np.concatenate((supervised_t, next_data), axis=1)
-                full_supervised_data = np.concatenate(
-                    (full_supervised_data, t_data))
+                full_supervised_data = np.concatenate((full_supervised_data, t_data))
 
         print("supervised data shape:", full_supervised_data.shape[0])
         # p, u, v, t, x, y
@@ -258,18 +248,24 @@ class DataLoader:
         y = full_supervised_data[:, 7].reshape((-1, 1)).astype(dtype)
 
         if flatten == True:
-            return p.flatten(), u.flatten(), v.flatten(), t.flatten(
-            ), x.flatten(), y.flatten()
+            return (
+                p.flatten(),
+                u.flatten(),
+                v.flatten(),
+                t.flatten(),
+                x.flatten(),
+                y.flatten(),
+            )
         else:
             return p, u, v, t, x, y
 
-    def loading_initial_data(self, time_list, flatten=False, dtype='float32'):
+    def loading_initial_data(self, time_list, flatten=False, dtype="float32"):
         # "p","U:0","U:1","U:2","vtkOriginalPointIds","Points:0","Points:1","Points:2"
         path = self.path
 
         initial_data = None
         time = time_list[0]
-        filename = '/initial/ic0.' + str(time) + '.csv'
+        filename = "/initial/ic0." + str(time) + ".csv"
         data_from_pd = self.reading_data_from_csv(path, filename)
         t_len = data_from_pd.shape[0]
         initial_t = np.array([time / self.scale] * t_len).reshape((-1, 1))
@@ -285,7 +281,13 @@ class DataLoader:
         x = initial_t_data[:, 5].reshape((-1, 1)).astype(dtype)
         y = initial_t_data[:, 6].reshape((-1, 1)).astype(dtype)
         if flatten == True:
-            return p.flatten(), u.flatten(), v.flatten(), t.flatten(
-            ), x.flatten(), y.flatten()
+            return (
+                p.flatten(),
+                u.flatten(),
+                v.flatten(),
+                t.flatten(),
+                x.flatten(),
+                y.flatten(),
+            )
         else:
             return p, u, v, t, x, y

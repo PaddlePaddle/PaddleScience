@@ -20,14 +20,11 @@ class CSVValidator(base.Validator):
     """Validator for csv file
 
     Args:
-        file_path (str): CSV file path.
-        input_keys (List[str]): Input keys in csv file, such as ["X:0", "X:1"].
-        label_keys (List[str]): Label keys in csv file, such as ["U:0", "U:1"].
-        alias_dict (Dict[str, str]): Alias name for input/label keys, such as
-            {"X:0": "x", "X:1": "y", "U:0": "u", "U:1": "v"}.
+        label_expr (Dict[str, Callable]): Function in dict for computing output.
+            e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
+            will be multiplied by model output v and the result will be named "u_mul_v".
         dataloader_cfg (Dict): Config of building a dataloader
         loss (LossBase): Loss functor.
-        transforms (vision.Compose): Composed transforms.
         metric (Dict[str, Metric], optional): Named metric functors in dict.
             Defaults to None.
         name (str, optional): Name of validator. Defaults to None.
