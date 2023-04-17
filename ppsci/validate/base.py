@@ -15,7 +15,6 @@
 from typing import Any
 from typing import Dict
 
-import numpy as np
 from paddle import io
 
 from ppsci import data
