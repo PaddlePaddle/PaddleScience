@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import types
+from typing import Callable
 from typing import Dict
 from typing import Tuple
 from typing import Union
@@ -29,11 +30,12 @@ class CSVDataset(io.Dataset):
     """Dataset class for .csv file.
 
     Args:
-        input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
+        file_path (str): CSV file path.
+        input_keys (Tuple[str, ...]): List of input keys.
+        label_keys (Tuple[str, ...]): List of input keys.
         alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
-            constraint variable. Defaults to None.
+        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of
+            each constraint variable. Defaults to None.
         timestamps (Tuple[float, ...], optional): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (vision.Compose, optional): Compose object contains sample wise
@@ -43,11 +45,11 @@ class CSVDataset(io.Dataset):
     def __init__(
         self,
         file_path: str,
-        input_keys: Dict[str, np.ndarray],
-        label_keys: Dict[str, np.ndarray],
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
         alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, float] = None,
-        timestamps: Tuple[Union[int, float], ...] = None,
+        weight_dict: Dict[str, Union[Callable, float]] = None,
+        timestamps: Tuple[float, ...] = None,
         transforms: vision.Compose = None,
     ):
         super().__init__()
@@ -78,10 +80,14 @@ class CSVDataset(io.Dataset):
                 )
             else:
                 # repeat data according to given timestamps
-                data = misc.convert_to_array(data, self.input_keys + self.output_keys)
-                data = misc.combine_array_with_time(data, timestamps)
+                raw_data = misc.convert_to_array(
+                    raw_data, self.input_keys + self.output_keys
+                )
+                raw_data = misc.combine_array_with_time(raw_data, timestamps)
                 self.input_keys = ["t"] + self.input_keys
-                data = misc.convert_to_dict(data, self.input_keys + self.output_keys)
+                raw_data = misc.convert_to_dict(
+                    raw_data, self.input_keys + self.output_keys
+                )
 
         # fetch input data
         self.input = {
