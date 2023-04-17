@@ -180,7 +180,7 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError(f"sample interior failed")
+                    raise RuntimeError("sample interior failed")
 
             # 2. repeat spatial points along time
             tx = []
@@ -215,7 +215,7 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError(f"sample interior failed")
+                    raise RuntimeError("sample interior failed")
 
             tx = []
             for ti in t:
@@ -291,7 +291,7 @@ class TimeXGeometry(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError(f"sample interior failed")
+                raise RuntimeError("sample interior failed")
 
         nx = len(x)
         t = np.linspace(

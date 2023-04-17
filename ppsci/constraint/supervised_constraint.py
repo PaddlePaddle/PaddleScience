@@ -26,15 +26,9 @@ class SupervisedConstraint(base.Constraint):
 
     Args:
         data_file (str): File path of data.
-        input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
+        label_expr (Dict[str, Callable]): List of label expression.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
-            constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
-            in the time dimension. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
     """
 

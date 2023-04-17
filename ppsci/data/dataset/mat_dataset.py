@@ -18,6 +18,7 @@ from typing import Tuple
 from typing import Union
 
 import numpy as np
+import paddle
 from paddle import io
 from paddle import vision
 
@@ -29,10 +30,10 @@ class MatDataset(io.Dataset):
     """Dataset class for .mat file.
 
     Args:
-        input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
+        input (Tuple[str, ...]): List of input keys.
+        label (Tuple[str, ...]): List of input keys.
         alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
+        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of each
             constraint variable. Defaults to None.
         timestamps (Tuple[float, ...], optional): The number of repetitions of the data
             in the time dimension. Defaults to None.
@@ -61,9 +62,7 @@ class MatDataset(io.Dataset):
             alias_dict,
         )
         # filter raw data by given timestamps if specified
-        self.num_timestamp = 1
         if timestamps is not None:
-            self.num_timestamp = len(timestamps)
             if "t" in raw_data:
                 # filter data according to given timestamps
                 raw_time_array = raw_data["t"]
@@ -71,19 +70,23 @@ class MatDataset(io.Dataset):
                 for ti in timestamps:
                     mask.append(np.nonzero(np.isclose(raw_time_array, ti).flatten())[0])
                 raw_data = misc.convert_to_array(
-                    raw_data, self.input_keys + self.output_keys
+                    raw_data, self.input_keys + self.label_keys
                 )
                 mask = np.concatenate(mask, 0)
                 raw_data = raw_data[mask]
                 raw_data = misc.convert_to_dict(
-                    raw_data, self.input_keys + self.output_keys
+                    raw_data, self.input_keys + self.label_keys
                 )
             else:
                 # repeat data according to given timestamps
-                data = misc.convert_to_array(data, self.input_keys + self.output_keys)
-                data = misc.combine_array_with_time(data, timestamps)
+                raw_data = misc.convert_to_array(
+                    raw_data, self.input_keys + self.label_keys
+                )
+                raw_data = misc.combine_array_with_time(raw_data, timestamps)
                 self.input_keys = ["t"] + self.input_keys
-                data = misc.convert_to_dict(data, self.input_keys + self.output_keys)
+                raw_data = misc.convert_to_dict(
+                    raw_data, self.input_keys + self.label_keys
+                )
 
         # fetch input data
         self.input = {
@@ -130,3 +133,115 @@ class MatDataset(io.Dataset):
 
     def __len__(self):
         return self._len
+
+
+class IterableMatDataset(io.Dataset):
+    """IterableCSVDataset for full-data loading.
+
+    Args:
+        input (Tuple[str, ...]): List of input keys.
+        label (Tuple[str, ...]): List of input keys.
+        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
+        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of each
+            constraint variable. Defaults to None.
+        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
+            in the time dimension. Defaults to None.
+        transforms (vision.Compose, optional): Compose object contains sample wise
+            transform(s).
+    """
+
+    def __init__(
+        self,
+        file_path: str,
+        input_keys: Dict[str, np.ndarray],
+        label_keys: Dict[str, np.ndarray],
+        alias_dict: Dict[str, str] = None,
+        weight_dict: Dict[str, float] = None,
+        timestamps: Tuple[Union[int, float], ...] = None,
+        transforms: vision.Compose = None,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.label_keys = label_keys
+
+        # read raw data from file
+        raw_data = reader.load_mat_file(
+            file_path,
+            input_keys + label_keys,
+            alias_dict,
+        )
+        # filter raw data by given timestamps if specified
+        if timestamps is not None:
+            if "t" in raw_data:
+                # filter data according to given timestamps
+                raw_time_array = raw_data["t"]
+                mask = []
+                for ti in timestamps:
+                    mask.append(np.nonzero(np.isclose(raw_time_array, ti).flatten())[0])
+                raw_data = misc.convert_to_array(
+                    raw_data, self.input_keys + self.label_keys
+                )
+                mask = np.concatenate(mask, 0)
+                raw_data = raw_data[mask]
+                raw_data = misc.convert_to_dict(
+                    raw_data, self.input_keys + self.label_keys
+                )
+            else:
+                # repeat data according to given timestamps
+                raw_data = misc.convert_to_array(
+                    raw_data, self.input_keys + self.label_keys
+                )
+                raw_data = misc.combine_array_with_time(raw_data, timestamps)
+                self.input_keys = ["t"] + self.input_keys
+                raw_data = misc.convert_to_dict(
+                    raw_data, self.input_keys + self.label_keys
+                )
+
+        # fetch input data
+        self.input = {
+            key: value for key, value in raw_data.items() if key in self.input_keys
+        }
+        # fetch label data
+        self.label = {
+            key: value for key, value in raw_data.items() if key in self.label_keys
+        }
+
+        # prepare weights
+        self.weight = {
+            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
+        }
+        if weight_dict is not None:
+            for key, value in weight_dict.items():
+                if isinstance(value, (int, float)):
+                    self.weight[key] = np.full_like(
+                        next(iter(self.label.values())), float(value)
+                    )
+                elif isinstance(value, types.FunctionType):
+                    func = value
+                    self.weight[key] = func(self.input)
+                    if isinstance(self.weight[key], (int, float)):
+                        self.weight[key] = np.full_like(
+                            next(iter(self.label.values())), float(self.weight[key])
+                        )
+                else:
+                    raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+
+        self.input = {key: paddle.to_tensor(value) for key, value in self.input.items()}
+        self.label = {key: paddle.to_tensor(value) for key, value in self.label.items()}
+        self.weight = {
+            key: paddle.to_tensor(value) for key, value in self.weight.items()
+        }
+
+        self.transforms = transforms
+        self._len = len(next(iter(self.input.values())))
+
+    @property
+    def num_samples(self):
+        """Number of samples within current dataset."""
+        return self._len
+
+    def __iter__(self):
+        yield self.input, self.label, self.weight
+
+    def __len__(self):
+        return 1

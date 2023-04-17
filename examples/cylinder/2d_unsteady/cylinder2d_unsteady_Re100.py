@@ -66,7 +66,7 @@ if __name__ == "__main__":
             ),
         ),
         "time_rect_eval": ppsci.geometry.PointCloud(
-            "./datasets/domain_eval.csv",
+            "./datasets/cylinder2d_eval_points.csv",
             ["t", "x", "y"],
             alias_dict={},
         ),
@@ -74,71 +74,91 @@ if __name__ == "__main__":
 
     # set dataloader config
     iters_per_epoch = 1
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
-    }
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
     npoint_pde, ntime_pde = 9420, len(train_timestamps)
-    npoint_inlet_cylinder, ntime_inlet_cylinder = 161, len(train_timestamps)
-    npoint_outlet, ntime_outlet = 81, len(train_timestamps)
-    npoint_sup, ntime_sup = 283, len(train_timestamps)
-    npoint_ic, ntime_ic = 9420, len(t0)
+    npoint_inlet_cylinder = 161
+    npoint_outlet = 81
+    alias_dict = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_pde * ntime_pde}},
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "batch_size": npoint_pde * ntime_pde,
+            "iters_per_epoch": iters_per_epoch,
+        },
         ppsci.loss.MSELoss("mean"),
         name="EQ",
     )
     bc_inlet_cylinder = ppsci.constraint.SupervisedConstraint(
-        "./datasets/domain_inlet_cylinder.csv",
-        ["Points:0", "Points:1"],
-        ["U:0", "U:1"],
-        {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
+        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {
-            **train_dataloader_cfg,
-            **{"batch_size": npoint_inlet_cylinder * ntime_inlet_cylinder},
+            "dataset": {
+                "name": "IterableCSVDataset",
+                "file_path": "./datasets/domain_inlet_cylinder.csv",
+                "input_keys": ["x", "y"],
+                "label_keys": ["u", "v"],
+                "alias_dict": alias_dict,
+                "weight_dict": {"u": 10, "v": 10},
+                "timestamps": train_timestamps,
+            },
         },
         ppsci.loss.MSELoss("mean"),
-        {"u": 10, "v": 10},
-        timestamps=train_timestamps,
         name="BC_inlet_cylinder",
     )
     bc_outlet = ppsci.constraint.SupervisedConstraint(
-        "./datasets/domain_outlet.csv",
-        ["Points:0", "Points:1"],
-        ["p"],
-        {"Points:0": "x", "Points:1": "y"},
-        {**train_dataloader_cfg, **{"batch_size": npoint_outlet * ntime_outlet}},
+        {"p": lambda out: out["p"]},
+        {
+            "dataset": {
+                "name": "IterableCSVDataset",
+                "file_path": "./datasets/domain_outlet.csv",
+                "input_keys": ["x", "y"],
+                "label_keys": ["p"],
+                "alias_dict": alias_dict,
+                "timestamps": train_timestamps,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
-        timestamps=train_timestamps,
         name="BC_outlet",
     )
     ic = ppsci.constraint.SupervisedConstraint(
-        "./datasets/initial/ic0.1.csv",
-        ["Points:0", "Points:1"],
-        ["U:0", "U:1", "p"],
-        {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
-        {**train_dataloader_cfg, **{"batch_size": npoint_ic * ntime_ic}},
+        {
+            "u": lambda out: out["u"],
+            "v": lambda out: out["v"],
+            "p": lambda out: out["p"],
+        },
+        {
+            "dataset": {
+                "name": "IterableCSVDataset",
+                "file_path": "./datasets/initial/ic0.1.csv",
+                "input_keys": ["x", "y"],
+                "label_keys": ["u", "v", "p"],
+                "alias_dict": alias_dict,
+                "weight_dict": {"u": 10, "v": 10, "p": 10},
+                "timestamps": t0,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
-        {"u": 10, "v": 10, "p": 10},
-        timestamps=t0,
         name="IC",
     )
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        "./datasets/probe/probe1_50.csv",
-        ["t", "Points:0", "Points:1"],
-        ["U:0", "U:1"],
-        {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
-        {**train_dataloader_cfg, **{"batch_size": npoint_sup * ntime_sup}},
+        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
+        {
+            "dataset": {
+                "name": "IterableCSVDataset",
+                "file_path": "./datasets/probe/probe1_50.csv",
+                "input_keys": ["t", "x", "y"],
+                "label_keys": ["u", "v"],
+                "alias_dict": alias_dict,
+                "weight_dict": {"u": 10, "v": 10},
+                "timestamps": train_timestamps,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
-        {"u": 10, "v": 10},
-        timestamps=train_timestamps,
         name="Sup",
     )
     # wrap constraints together
