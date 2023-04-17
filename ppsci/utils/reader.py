@@ -80,7 +80,7 @@ def load_mat_file(file_path, keys, alias_dict=None):
 
     # check if all target keys exist in keys
     for target_key, original_key in alias_dict.items():
-        if not target_key in keys:
+        if target_key not in keys:
             raise ValueError(
                 f"target_key({target_key}) in alias_dict "
                 f"is not found in keys({keys}) for mapping"

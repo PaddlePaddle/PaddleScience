@@ -1,4 +1,4 @@
-# Copyright (c) xxx Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,22 @@
 
 import copy
 
-from ppsci.arch.mlp import MLP
-from ppsci.utils import logger
+from ppsci.arch.mlp import MLP  # isort:skip
+from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
+from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
+from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
+from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
+from ppsci.utils import logger  # isort:skip
 
-__all__ = ["MLP", "build_model"]
+
+__all__ = [
+    "MLP",
+    "LorenzEmbedding",
+    "RosslerEmbedding",
+    "CylinderEmbedding",
+    "PhysformerGPT2",
+    "build_model",
+]
 
 
 def build_model(cfg):

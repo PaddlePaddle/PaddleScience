@@ -29,10 +29,10 @@ class MatDataset(io.Dataset):
     """Dataset class for .mat file.
 
     Args:
-        input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
+        input (Tuple[str, ...]): List of input keys.
+        label (Tuple[str, ...]): List of input keys.
         alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
+        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of each
             constraint variable. Defaults to None.
         timestamps (Tuple[float, ...], optional): The number of repetitions of the data
             in the time dimension. Defaults to None.
@@ -61,9 +61,7 @@ class MatDataset(io.Dataset):
             alias_dict,
         )
         # filter raw data by given timestamps if specified
-        self.num_timestamp = 1
         if timestamps is not None:
-            self.num_timestamp = len(timestamps)
             if "t" in raw_data:
                 # filter data according to given timestamps
                 raw_time_array = raw_data["t"]
@@ -80,10 +78,14 @@ class MatDataset(io.Dataset):
                 )
             else:
                 # repeat data according to given timestamps
-                data = misc.convert_to_array(data, self.input_keys + self.output_keys)
-                data = misc.combine_array_with_time(data, timestamps)
+                raw_data = misc.convert_to_array(
+                    raw_data, self.input_keys + self.output_keys
+                )
+                raw_data = misc.combine_array_with_time(raw_data, timestamps)
                 self.input_keys = ["t"] + self.input_keys
-                data = misc.convert_to_dict(data, self.input_keys + self.output_keys)
+                raw_data = misc.convert_to_dict(
+                    raw_data, self.input_keys + self.output_keys
+                )
 
         # fetch input data
         self.input = {
