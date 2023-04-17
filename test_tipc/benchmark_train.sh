@@ -13,6 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
+export TEST_DIR="${PDSC_DIR}"
+export TIPC_TEST="ON" # open tipc log in solver.py 
+export PYTHONPATH=${PDSC_DIR}
+BENCHMARK_ROOT=${TEST_DIR}"/test_tipc/tools"
 source ${TEST_DIR}/test_tipc/common_func.sh
 
 function func_parser_params(){
@@ -86,7 +91,7 @@ line_num=`expr $line_num + 1`
 fp_items=$(func_parser_value "${lines[line_num]}")
 line_num=`expr $line_num + 1`
 epoch=$(func_parser_value "${lines[line_num]}")
-
+pip=$(func_parser_value "${lines[59]}")
 line_num=`expr $line_num + 1`
 profile_option_key=$(func_parser_key "${lines[line_num]}")
 profile_option_params=$(func_parser_value "${lines[line_num]}")
@@ -197,6 +202,9 @@ for batch_size in ${batch_size_list[*]}; do
                 eval "cat ${log_path}/${log_name}"
                 # parser log
                 _model_name="${model_name}_bs${batch_size}_${precision}_${run_mode}"
+
+                echo -e "\n* [BENCHMARK_ROOT] is now set : \n" ${BENCHMARK_ROOT} "\n"
+
                 cmd="${python} ${BENCHMARK_ROOT}/scripts/analysis.py --filename ${log_path}/${log_name} \
                         --speed_log_file '${speed_log_path}/${speed_log_name}' \
                         --model_name ${_model_name} \

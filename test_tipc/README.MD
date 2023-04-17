@@ -42,10 +42,9 @@ cd ..
 ```
 在PaddleScience主目录下运行
 ```
-export prepare_params=./test_tipc/configs/train_2d_unsteady_continuous/prepare_2d_unsteady_continuous.txt 
-export train_params=./test_tipc/configs/train_2d_unsteady_continuous/train_2d_unsteady_continuous.txt
-source ./test_tipc/prepare.sh $prepare_params benchmark_train
-bash ./test_tipc/benchmark_train.sh  $train_params benchmark_train
+export script_path=./test_tipc/configs/train_2d_unsteady_continuous/train_2d_unsteady_continuous.txt
+bash ./test_tipc/prepare.sh $script_path benchmark_train
+bash ./test_tipc/benchmark_train.sh  $script_path benchmark_train
 ```
 benchmark训练得到训练日志后，会自动保存训练日志并解析得到ips等信息，日志解析代码位于：
 - https://console.cloud.baidu-int.com/devops/icode/repos/baidu/paddle/benchmark-frame/blob/master/tools/scripts/analysis.py
