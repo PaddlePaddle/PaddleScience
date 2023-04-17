@@ -38,7 +38,7 @@ class MSELoss(base.LossBase):
         reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
-    def __init__(self, reduction: str = "mean", weight_expr: Union[float, Dict] = -1.0):
+    def __init__(self, reduction: str = "mean", weight_expr: Union[float, Dict] = -1):
         super().__init__()
         if reduction not in ["mean", "sum"]:
             raise ValueError(
