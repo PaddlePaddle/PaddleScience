@@ -19,6 +19,7 @@ from ppsci.equation.pde import NavierStokes
 from ppsci.equation.pde import NormalDotVec
 from ppsci.equation.pde import Vibration
 from ppsci.utils import logger
+from ppsci.utils import misc
 
 __all__ = [
     "PDE",
