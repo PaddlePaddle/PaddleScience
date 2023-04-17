@@ -145,7 +145,7 @@ class Solver(object):
         # set running device
         self.device = paddle.set_device(device)
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
-        self.equation = {} if equation is None else equation
+        self.equation = equation
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
@@ -162,7 +162,7 @@ class Solver(object):
 
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path)
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -172,7 +172,7 @@ class Solver(object):
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path, self.model, self.optimizer, self.scaler
+                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -324,6 +324,7 @@ class Solver(object):
                         self.best_metric,
                         self.output_dir,
                         "best_model",
+                        self.equation,
                     )
                 logger.info(
                     f"[Eval][Epoch {epoch_id}]"
@@ -347,6 +348,7 @@ class Solver(object):
                     {"metric": cur_metric, "epoch": epoch_id},
                     self.output_dir,
                     f"epoch_{epoch_id}",
+                    self.equation,
                 )
 
             # always save the latest model for convenient resume training
@@ -357,6 +359,7 @@ class Solver(object):
                 {"metric": cur_metric, "epoch": epoch_id},
                 self.output_dir,
                 "latest",
+                self.equation,
             )
 
         # close VisualDL
@@ -401,7 +404,7 @@ class Solver(object):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
         if pretrained_path is not None:
-            save_load.load_pretrain(self.model, pretrained_path)
+            save_load.load_pretrain(self.model, pretrained_path, self.equation)
 
         self.model.eval()
 

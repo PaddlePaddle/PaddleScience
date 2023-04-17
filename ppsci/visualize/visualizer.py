@@ -35,15 +35,17 @@ class VisualizerScatter1D(base.Visualizer):
     def __init__(
         self,
         input_dict: Dict[str, np.ndarray],
+        coord_keys: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
         num_timestamps: int = 1,
         prefix: str = "plot",
     ):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        self.coord_keys = coord_keys
 
-    def save(self, data_dict, filename):
+    def save(self, filename, data_dict):
         plot.save_plot_from_1d_dict(
-            filename, data_dict, self.input_keys, self.output_keys, self.num_timestamps
+            filename, data_dict, self.coord_keys, self.output_keys, self.num_timestamps
         )
 
 

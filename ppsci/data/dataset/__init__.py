@@ -11,14 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import copy
 
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
+from ppsci.data.dataset.csv_dataset import CSVDataset
+from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
-__all__ = ["IterableNamedArrayDataset", "NamedArrayDataset", "build_dataset"]
+__all__ = [
+    "IterableNamedArrayDataset",
+    "MatDataset",
+    "CSVDataset",
+    "NamedArrayDataset",
+    "build_dataset",
+]
 
 
 def build_dataset(cfg):

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Tuple
 
@@ -71,11 +72,16 @@ class PDE(object):
         """
         return self.learnable_parameters.parameters()
 
+    def state_dict(self) -> Dict[str, paddle.Tensor]:
+        """Return named parameters in dict."""
+        return self.learnable_parameters.state_dict()
+
+    def set_state_dict(self, state_dict):
+        """Set state dict from dict."""
+        self.learnable_parameters.set_state_dict(state_dict)
+
     def __str__(self):
         return ", ".join(
             [self.__class__.__name__]
             + [f"{name}: {eq}" for name, eq in self.equations.items()]
         )
-
-    def parameters(self):
-        return self.learnable_parameters.parameters()

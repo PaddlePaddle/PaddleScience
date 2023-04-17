@@ -52,13 +52,12 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
         st = t * len_ts
         ed = (t + 1) * len_ts
         coord_t = coord[st:ed]
-        sorted_index = np.argsort(coord, axis=0).squeeze()
 
         for i, key in enumerate(value_keys):
             _value_t: np.ndarray = value[st:ed, i]
-            a[i][t].plot(
+            a[i][t].scatter(
                 coord_t,
-                _value_t[sorted_index],
+                _value_t,
                 color=cnames[i],
                 label=key,
             )

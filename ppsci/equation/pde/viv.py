@@ -16,9 +16,9 @@ limitations under the License.
 import paddle
 from paddle.nn import initializer
 
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
-from ppsci.gradient import hessian
-from ppsci.gradient import jacobian
 
 
 class Vibration(base.PDE):
@@ -45,11 +45,6 @@ class Vibration(base.PDE):
         )
         self.learnable_parameters.append(self.k1)
         self.learnable_parameters.append(self.k2)
-
-        def eta_compute_func(out):
-            return out["eta"]
-
-        self.add_equation("eta", eta_compute_func)
 
         def f_compute_func(out):
             eta, t = out["eta"], out["t_f"]

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
+from ppsci.utils import reader
 from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
@@ -26,6 +28,8 @@ from ppsci.utils.save_load import save_checkpoint
 __all__ = [
     "logger",
     "misc",
+    "reader",
+    "dynamic_import_to_globals",
     "AttrDict",
     "ExpressionSolver",
     "AverageMeter",
@@ -33,5 +37,5 @@ __all__ = [
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
-    "dynamic_import_to_globals",
+    "initializer",
 ]
