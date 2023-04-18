@@ -62,6 +62,7 @@ theme:
   name: material
   font:
     code: Roboto Mono
+    text: Noto Serif SC
   logo: ./images/icons/paddle.png
   favicon: ./images/icons/favcion.png
   language: "zh"
