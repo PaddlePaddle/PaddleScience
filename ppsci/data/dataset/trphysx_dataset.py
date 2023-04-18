@@ -32,9 +32,9 @@ class LorenzDataset(io.Dataset):
     """Dataset for training Lorenz model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
         ndata (Optional[int], optional): Number of data series to use. Defaults to None.
@@ -44,9 +44,9 @@ class LorenzDataset(io.Dataset):
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -54,10 +54,10 @@ class LorenzDataset(io.Dataset):
         embedding_model: Optional[base.NetBase] = None,
     ):
         super(LorenzDataset, self).__init__()
+        self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
 
-        self.file_path = file_path
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
@@ -118,9 +118,9 @@ class RosslerDataset(LorenzDataset):
     """Dataset for training Rossler model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
         ndata (Optional[int], optional): Number of data series to use. Defaults to None.
@@ -130,9 +130,9 @@ class RosslerDataset(LorenzDataset):
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -140,9 +140,9 @@ class RosslerDataset(LorenzDataset):
         embedding_model: Optional[base.NetBase] = None,
     ):
         super(RosslerDataset, self).__init__(
+            file_path,
             input_keys,
             label_keys,
-            file_path,
             block_size,
             stride,
             ndata,
@@ -155,9 +155,9 @@ class CylinderDataset(io.Dataset):
     """Dataset for training Cylinder model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states","visc").
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
         ndata (Optional[int], optional): Number of data series to use. Defaults to None.
@@ -168,9 +168,9 @@ class CylinderDataset(io.Dataset):
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -179,10 +179,10 @@ class CylinderDataset(io.Dataset):
         embedding_batch_size: int = 64,
     ):
         super(CylinderDataset, self).__init__()
+        self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
 
-        self.file_path = file_path
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata

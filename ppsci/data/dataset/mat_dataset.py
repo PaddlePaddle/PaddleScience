@@ -157,7 +157,7 @@ class IterableMatDataset(io.Dataset):
         input_keys: Dict[str, np.ndarray],
         label_keys: Dict[str, np.ndarray],
         alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[Union[Callable, float]] = None,
+        weight_dict: Dict[str, Union[Callable, float]] = None,
         timestamps: Tuple[Union[int, float], ...] = None,
         transforms: vision.Compose = None,
     ):
