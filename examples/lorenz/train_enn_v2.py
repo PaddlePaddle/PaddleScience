@@ -57,6 +57,8 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
+            "input_keys": input_keys,
+            "output_keys": output_keys + [regularization_key],
             "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 16,
@@ -72,10 +74,11 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_file_path,
-        input_keys,
-        output_keys + [regularization_key],
-        {},
+        {
+            "pred_states": lambda out: out["pred_states"],
+            "recover_states": lambda out: out["recover_states"],
+            "k_matrix": lambda out: out["k_matrix"],
+        },
         train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1.0e-1 * (train_block_size - 1)}
