@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import types
+from typing import Callable
 from typing import Dict
 from typing import Tuple
 from typing import Union
@@ -156,7 +157,7 @@ class IterableMatDataset(io.Dataset):
         input_keys: Dict[str, np.ndarray],
         label_keys: Dict[str, np.ndarray],
         alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, float] = None,
+        weight_dict: Dict[Union[Callable, float]] = None,
         timestamps: Tuple[Union[int, float], ...] = None,
         transforms: vision.Compose = None,
     ):
