@@ -9,15 +9,11 @@ Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹�
 洛伦兹系统的状态方程：
 
 $$
-\frac{\partial x}{\partial t} = \sigma(y - x)
-$$
-
-$$
-\frac{\partial y}{\partial t} = x(\rho - z) - y
-$$
-
-$$
-\frac{\partial z}{\partial t} = xy - \beta z
+\begin{cases}
+  \dfrac{\partial x}{\partial t} = \sigma(y - x), & \\
+  \dfrac{\partial y}{\partial t} = x(\rho - z) - y, & \\
+  \dfrac{\partial z}{\partial t} = xy - \beta z
+\end{cases}
 $$
 
 当参数取以下值时，系统表现出经典的混沌特性：
@@ -34,7 +30,7 @@ $$\rho = 28, \sigma = 10, \beta = \frac{8}{3}$$
 
 Transformer 结构在 NLP、CV 领域中取得了巨大的成功，但是其在建模物理系统方面还没有得到更多的探索。在 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 这篇文章中，作者提出了基于 Transformer 的网络结构用于建模物理系统。实验结果表明，提出的方法能够准确的建模不同的动态系统，并且比其他传统的方法更好。
 
-如下图所示，该方法主要包含两个网络模型：Embedding 模型和 Transformer 模型。其中，Embedding 模型的 Encoder 模块负责将物理状态变量进行编码映射为编码向量，Decoder 模块则负责将编码向量映射为物理状态变量；Transformer 模型作用于编码空间，其输入是 Embedding 模型 Encoder 模块的输出，利用当前时刻的编码向量预测下一时刻的编码向量，由预测的编码向量可以通过 Embedding 模型的 Decoder 模块得到对应的物理状态变量。在模型训练时，首先训练 Embedding 模型，然后将 Embedding 模型的参数冻结训练 Transformer 模型。关于该方法的详细细节请参考论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957)。
+如下图所示，该方法主要包含两个网络模型：Embedding 模型和 Transformer 模型。其中，Embedding 模型的 Encoder 模块负责将物理状态变量进行编码映射为编码向量，Decoder 模块则负责将编码向量映射为物理状态变量；Transformer 模型作用于编码空间，其输入是 Embedding 模型 Encoder 模块的输出，利用当前时刻的编码向量预测下一时刻的编码向量，预测得到的编码向量可以被 Embedding 模型的 Decoder 模块解码，得到对应的物理状态变量。在模型训练时，首先训练 Embedding 模型，然后将 Embedding 模型的参数冻结训练 Transformer 模型。关于该方法的细节请参考论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957)。
 
 <figure markdown>
   ![trphysx-arch](../../images/lorenz/trphysx-arch.png){ loading=lazy }
@@ -43,7 +39,7 @@ Transformer 结构在 NLP、CV 领域中取得了巨大的成功，但是其在�
 
 ### 3.2 数据集介绍
 
-数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集中的数据使用龙格－库塔（Runge-Kutta）传统数值求解法求得，每个时间步大小为0.01，初始位置随机从以下的范围中选取：
+数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集使用龙格－库塔（Runge-Kutta）传统数值求解方法得到，每个时间步大小为0.01，初始位置从以下范围中随机选取：
 
 $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
@@ -59,7 +55,7 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
 ### 3.3 Embedding 模型
 
-首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
+首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
 ``` py linenums="41" title="examples/lorenz/train_enn_v2.py"
 --8<--
@@ -85,7 +81,7 @@ examples/lorenz/train_enn_v2.py:56:72
 
 "sampler" 字段定义了使用的 `Sampler` 类名为 `BatchSampler`，另外还指定了该类初始化时参数 `drop_last`、`shuffle` 均为 `True`。
 
-`train_dataloader` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
+`train_dataloader_cfg` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
 
 定义监督约束的代码如下：
 
@@ -103,7 +99,7 @@ examples/lorenz/train_enn_v2.py:74:86
 
 第四个参数此处没有用到，传入空字典；
 
-第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader`；
+第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader_cfg`；
 
 第六个参数是损失函数的定义，这里使用带有 L2Decay 的 MSELoss，类名为 `MSELossWithL2Decay`，`regularization_dict` 设置了正则化的变量名称和对应的权重；
 
@@ -212,7 +208,7 @@ examples/lorenz/train_transformer_v2.py:116:124
 --8<--
 ```
 
-类 `PhysformerGPT2` 除了需要填入 `input_keys` `output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为4、64、32、4。
+类 `PhysformerGPT2` 除了需要填入 `input_keys`、`output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为4、64、32、4。
 
 #### 3.4.3 学习率与优化器构建
 
