@@ -25,7 +25,6 @@ class SupervisedConstraint(base.Constraint):
     """Class for supervised constraint.
 
     Args:
-        data_file (str): File path of data.
         label_expr (Dict[str, Callable]): List of label expression.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.

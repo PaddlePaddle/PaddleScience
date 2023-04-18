@@ -84,7 +84,8 @@ if __name__ == "__main__":
         "dataset": {
             "name": "LorenzDataset",
             "input_keys": input_keys,
-            "output_keys": output_keys,
+            "label_keys": output_keys,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 64,
@@ -104,7 +105,6 @@ if __name__ == "__main__":
         {"pred_embeds": lambda out: out["pred_embeds"]},
         train_dataloader_cfg,
         ppsci.loss.MSELoss(),
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
