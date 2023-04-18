@@ -19,7 +19,5 @@ download_dataset=$(func_parser_value "${lines[61]}")
 python=$(func_parser_value "${lines[2]}")
 export pip=$(func_parser_value "${lines[62]}")
 
-echo -e "\n* [download_dataset] is now set : \n" ${download_dataset} "\n"
-
 ${pip} install -r requirements.txt
 ${python} ${PDSC_DIR}${download_dataset}
