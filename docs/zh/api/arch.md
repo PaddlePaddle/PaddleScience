@@ -5,5 +5,9 @@
     options:
       members:
         - MLP
+        - LorenzEmbedding
+        - RosslerEmbedding
+        - CylinderEmbedding
+        - PhysformerGPT2
       show_root_heading: false
       heading_level: 3
