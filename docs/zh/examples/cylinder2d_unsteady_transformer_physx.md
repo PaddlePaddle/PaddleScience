@@ -93,7 +93,7 @@ $$
 
 ### 3.1 数据集介绍
 
-数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集中的数据使用 OpenFOAM 求得，每个时间步大小为0.5，$Re$ 随机从以下的范围中选取：
+数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集中的数据使用 OpenFOAM 求得，每个时间步大小为0.5，$Re$ 从以下范围中随机选取：
 
 $$Re \sim(100, 750)$$
 
@@ -109,7 +109,7 @@ $$Re \sim(100, 750)$$
 
 ### 3.2 Embedding 模型
 
-首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
+首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
 ``` py linenums="51" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn_v2.py"
 --8<--
@@ -135,7 +135,7 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn_v2.py:67:82
 
 "sampler" 字段定义了使用的 `Sampler` 类名为 `BatchSampler`，另外还指定了该类初始化时参数 `drop_last`、`shuffle` 均为 `True`。
 
-`train_dataloader` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
+`train_dataloader_cfg` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
 
 定义监督约束的代码如下：
 
@@ -153,7 +153,7 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn_v2.py:84:96
 
 第四个参数此处没有用到，传入空字典；
 
-第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader`；
+第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader_cfg`；
 
 第六个参数是损失函数的定义，这里使用带有 L2Decay 的 MSELoss，类名为 `MSELossWithL2Decay`，`regularization_dict` 设置了正则化的变量名称和对应的权重；
 
@@ -262,7 +262,7 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py:115:122
 --8<--
 ```
 
-类 `PhysformerGPT2` 除了需要填入 `input_keys` `output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为6、16、128、4。
+类 `PhysformerGPT2` 除了需要填入 `input_keys`、`output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为6、16、128、4。
 
 #### 3.3.3 学习率与优化器构建
 

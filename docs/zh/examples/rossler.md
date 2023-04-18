@@ -32,7 +32,7 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 ### 3.1 数据集介绍
 
-数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集中的数据使用龙格－库塔（Runge-Kutta）传统数值求解法求得，数据集的划分如下：
+数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集使用龙格－库塔（Runge-Kutta）传统数值求解方法得到，数据集的划分如下：
 
 |数据集 |时间序列的数量|时间步的数量|
 |:----:|:---------:|:--------:|
@@ -43,7 +43,7 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 ### 3.2 Embedding 模型
 
-首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
+首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
 ``` py linenums="45" title="examples/rossler/train_enn_v2.py"
 --8<--
@@ -69,7 +69,7 @@ examples/rossler/train_enn_v2.py:60:76
 
 "sampler" 字段定义了使用的 `Sampler` 类名为 `BatchSampler`，另外还指定了该类初始化时参数 `drop_last`、`shuffle` 均为 `True`。
 
-`train_dataloader` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
+`train_dataloader_cfg` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
 
 定义监督约束的代码如下：
 
@@ -87,7 +87,7 @@ examples/rossler/train_enn_v2.py:78:90
 
 第四个参数此处没有用到，传入空字典；
 
-第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader`；
+第五个参数是数据的加载方式，这里使用上文中定义的 `train_dataloader_cfg`；
 
 第六个参数是损失函数的定义，这里使用带有 L2Decay 的 MSELoss，类名为 `MSELossWithL2Decay`，`regularization_dict` 设置了正则化的变量名称和对应的权重；
 
@@ -196,7 +196,7 @@ examples/rossler/train_transformer_v2.py:114:121
 --8<--
 ```
 
-类 `PhysformerGPT2` 除了需要填入 `input_keys` `output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为4、64、32、4。
+类 `PhysformerGPT2` 除了需要填入 `input_keys`、`output_keys` 外，还需要设置 Transformer 模型的层数 `num_layers`、上下文的大小 `num_ctx`、输入的 Embedding 向量的长度 `embed_size`、多头注意力机制的参数 `num_heads`，在这里填入的数值为4、64、32、4。
 
 #### 3.3.3 学习率与优化器构建
 
