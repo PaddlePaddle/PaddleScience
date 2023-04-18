@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # maunally build constraint(s)
-    train_dataloader = {
+    train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
             "file_path": train_file_path,
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         input_keys,
         output_keys + [regularization_key],
         {},
-        train_dataloader,
+        train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1e-1 * (train_block_size - 1)}
         ),
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     # maunally build validator
     weights = [1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size]
-    eval_dataloader = {
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
             "file_path": valid_file_path,
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     mse_validator = ppsci.validate.SupervisedValidator(
         input_keys,
         output_keys,
-        eval_dataloader,
+        eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
         weight_dict={key: value for key, value in zip(output_keys, weights)},
