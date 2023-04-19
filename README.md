@@ -31,7 +31,6 @@ PaddleScience currently focuses on the PINNs model. The core components are as f
 
 - Visualization, an easy access to the graph drawing utilities.
 
-
 # Getting started
 
 ## Prerequisites
@@ -60,7 +59,7 @@ pip install -r requirements.txt
 
 Some examples are baked in for quick demonstration. Please find them in the `examples` directory. To run an example, just enter the subdirectory and run the demo code in Python commandline.
 
-``` python
+``` shell
 # Darcy flow (Poisson equation)
 cd examples/darcy
 python darcy2d.py
