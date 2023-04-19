@@ -20,7 +20,7 @@ class L2Rel(nn.Layer):
     r"""Class for l2 relative error.
 
     $$
-    metric = \frac{\Vert x-y \Vert_2}{\Vert y \Vert_2}
+    metric = \dfrac{\Vert x-y \Vert_2}{\Vert y \Vert_2}
     $$
     """
 
