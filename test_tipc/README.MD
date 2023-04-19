@@ -38,10 +38,13 @@ cd ./test_tipc/
 wget https://paddle-qa.bj.bcebos.com/benchmark/tools.tar.gz
 tar -zxvf tools.tar.gz
 export BENCHMARK_ROOT=$PWD/tools
+cd ..
 ```
-在根目录下运行
+在PaddleScience主目录下运行
 ```
-bash ./test_tipc/benchmark_train.sh ./test_tipc/configs/train_2d_unsteady_continuous.txt benchmark_train
+export script_path=./test_tipc/configs/train_2d_unsteady_continuous/train_2d_unsteady_continuous.txt
+bash ./test_tipc/prepare.sh $script_path benchmark_train
+bash ./test_tipc/benchmark_train.sh  $script_path benchmark_train
 ```
 benchmark训练得到训练日志后，会自动保存训练日志并解析得到ips等信息，日志解析代码位于：
 - https://console.cloud.baidu-int.com/devops/icode/repos/baidu/paddle/benchmark-frame/blob/master/tools/scripts/analysis.py
@@ -49,7 +52,7 @@ benchmark训练得到训练日志后，会自动保存训练日志并解析得�
 ```
 Run successfully with command
 ```
-如果运行成功会生成index文件夹，该目录下面生成json文件[PaddleScience_cylinder2d_unsteady_train_newapi_bs1_fp32_SingleP_DP_N1C1_speed]，其中可以找到对应的ips数值
+如果运行成功会生成index文件夹，该目录下面生成json文件[PaddleScience_cylinder2d_unsteady_train_newapi_bs1_fp32_DP_N1C1_speed]，其中可以找到对应的ips数值
 ```
-{"model_branch": "branch_test_1", "model_commit": "77723dd801a83fd9bcee94fec04fdcbdbb87d85a", "model_name": "cylinder2d_unsteady_train_newapi_bs1_fp32_SingleP_DP", "batch_size": 1, "fp_item": "fp32", "run_mode": "DP", "convergence_value": "207.94940185546875", "convergence_key": "loss:", "ips": 599765.06, "speed_unit": "samples/s", "device_num": "N1C1", "model_run_time": "19", "frame_commit": "caf2008b55fe0ee34cd6fa71090701517ac33eda", "frame_version": "0.0.0"}
+{"model_branch": "tipc_fix", "model_commit": "51558e06db7b58d5683a0fccc67d77f4340719d4", "model_name": "cylinder2d_unsteady_train_newapi_bs1_fp32_DP", "batch_size": 1, "fp_item": "fp32", "run_mode": "DP", "convergence_value": "207.94940185546875", "convergence_key": "loss:", "ips": 775299.78, "speed_unit": "samples/s", "device_num": "N1C1", "model_run_time": "15", "frame_commit": "5c19bfc8015b79f861aae9be6c98371de7ccef19", "frame_version": "0.0.0"}
 ```
