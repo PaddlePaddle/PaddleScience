@@ -6,4 +6,7 @@
       members:
         - IterableNamedArrayDataset
         - NamedArrayDataset
+        - CylinderDataset
+        - LorenzDataset
+        - RosslerDataset
       show_root_heading: false

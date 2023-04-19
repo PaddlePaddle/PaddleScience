@@ -104,7 +104,7 @@ $$
 
 ``` py linenums="32"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:32:35
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:32:35
 --8<--
 ```
 
@@ -118,7 +118,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:32:35
 
 ``` py linenums="36"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:36:37
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
 --8<--
 ```
 
@@ -158,13 +158,13 @@ geom = {
         ),
         ppsci.geometry.PointCloud(
             "./datasets/domain_train.csv",
-            ["Points:0", "Points:1"],
+            ("Points:0", "Points:1"),
             alias_dict={"Points:0": "x", "Points:1": "y"},
         ),
     ),
     "time_rect_eval": ppsci.geometry.PointCloud( # (1)
         "./datasets/domain_eval.csv",
-        ["t", "x", "y"],
+        ("t", "x", "y"),
         alias_dict={},
     ),
 }
@@ -232,7 +232,7 @@ geom = {
 
 ``` py linenums="79"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:79:91
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:79:84
 --8<--
 ```
 
@@ -242,7 +242,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:79:91
 
 ``` py linenums="93"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:93:101
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:93:101
 --8<--
 ```
 
@@ -282,7 +282,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:93:101
 
 ``` py linenums="102"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:102:125
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:102:125
 --8<--
 ```
 
@@ -292,7 +292,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:102:125
 
 ``` py linenums="126"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:126:136
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:126:136
 --8<--
 ```
 
@@ -302,7 +302,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:126:136
 
 ``` py linenums="137"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:137:147
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:133:143
 --8<--
 ```
 
@@ -310,7 +310,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:137:147
 
 ``` py linenums="148"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:148:155
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:148:155
 --8<--
 ```
 
@@ -320,7 +320,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:148:155
 
 ``` py linenums="157"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:157:159
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:157:159
 --8<--
 ```
 
@@ -330,7 +330,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:157:159
 
 ``` py linenums="161"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:161:162
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:161:162
 --8<--
 ```
 
@@ -340,7 +340,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:161:162
 
 ``` py linenums="164"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:164:180
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:164:180
 --8<--
 ```
 
@@ -364,7 +364,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:164:180
 
 ``` py linenums="182"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:182:193
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:182:193
 --8<--
 ```
 
@@ -374,7 +374,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:182:193
 
 ``` py linenums="195"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:195:
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:195:
 --8<--
 ```
 
@@ -382,7 +382,7 @@ examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py:195:
 
 ``` py linenums="1" title="cylinder2d_unsteady_Re100.py"
 --8<--
-examples/cylinder/2d_unsteady_continuous/cylinder2d_unsteady_Re100.py
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py
 --8<--
 ```
 
