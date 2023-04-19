@@ -15,9 +15,9 @@ source ${TEST_DIR}/test_tipc/common_func.sh
 PREPARE_PARAM_FILE=$1
 dataline=`cat $PREPARE_PARAM_FILE`
 lines=(${dataline})
-download_dataset=$(func_parser_value "${lines[1]}")
+download_dataset=$(func_parser_value "${lines[61]}")
 python=$(func_parser_value "${lines[2]}")
-export pip=$(func_parser_value "${lines[3]}")
+export pip=$(func_parser_value "${lines[62]}")
 
 ${pip} install -r requirements.txt
 ${python} ${PDSC_DIR}${download_dataset}
