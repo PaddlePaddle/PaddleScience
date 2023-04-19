@@ -28,8 +28,8 @@ class MSELoss(base.LossBase):
     $$
     L =
     \begin{cases}
-        \frac{1}{N}\sum_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='mean'} \\
-        \sum_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='sum'}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='sum'}
     \end{cases}
     $$
 
@@ -67,7 +67,7 @@ class MSELossWithL2Decay(MSELoss):
 
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
-        regularization_dict (Optional[Dict[str, float]], optional): Regularization dictionary. Defaults to None.
+        regularization_dict (Optional[Dict[str, float]]): Regularization dictionary. Defaults to None.
 
     Raises:
         ValueError: reduction should be 'mean' or 'sum'.
