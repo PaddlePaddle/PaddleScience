@@ -43,18 +43,18 @@ class Solver(object):
 
     Args:
         model (nn.Layer): Model.
-        constraint (Dict[str, ppsci.constraint.Constraint], optional): Constraint(s) applied on model. Defaults to None.
+        constraint (Optional[Dict[str, ppsci.constraint.Constraint]], optional): Constraint(s) applied on model. Defaults to None.
         output_dir (str, optional): Output directory. Defaults to "./output/".
         optimizer (Optional[optimizer.Optimizer], optional): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler], optional): Learning rate scheduler. Defaults to None.
-        epochs (Optional[int], optional): Training epoch(s). Defaults to 5.
-        iters_per_epoch (Optional[int], optional): Number of iterations within an epoch. Defaults to 20.
-        update_freq (Optional[int], optional): Update frequency of parameters. Defaults to 1.
+        epochs (int, optional): Training epoch(s). Defaults to 5.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+        update_freq (int, optional): Update frequency of parameters. Defaults to 1.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
         log_freq (int, optional): Logging frequency. Defaults to 10.
         eval_during_train (bool, optional): Whether evaluate model during training. Defaults to False.
-        start_eval_epoch (Optional[int], optional): Epoch number evaluation applied begin after. Defaults to 1.
-        eval_freq (Optional[int], optional): Evaluation frequency. Defaults to 1.
+        start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
+        eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
         vdl_writer (Optional[vdl.LogWriter], optional): VisualDL writer object. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
@@ -71,18 +71,18 @@ class Solver(object):
     def __init__(
         self,
         model: nn.Layer,
-        constraint: Dict[str, ppsci.constraint.Constraint] = None,
+        constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
         output_dir: str = "./output/",
         optimizer: Optional[optimizer.Optimizer] = None,
         lr_scheduler: Optional[optimizer.lr.LRScheduler] = None,
-        epochs: Optional[int] = 5,
-        iters_per_epoch: Optional[int] = 20,
-        update_freq: Optional[int] = 1,
+        epochs: int = 5,
+        iters_per_epoch: int = 20,
+        update_freq: int = 1,
         save_freq: int = 0,
         log_freq: int = 10,
         eval_during_train: bool = False,
-        start_eval_epoch: Optional[int] = 1,
-        eval_freq: Optional[int] = 1,
+        start_eval_epoch: int = 1,
+        eval_freq: int = 1,
         seed: int = 42,
         vdl_writer: Optional[vdl.LogWriter] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
