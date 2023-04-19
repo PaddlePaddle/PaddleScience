@@ -21,7 +21,7 @@ class MAE(nn.Layer):
     r"""Mean absolute error
 
     $$
-    metric = \frac{1}{N}\sum_{i=1}^{N}{|x_i-y_i|}
+    metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
     $$
     """
 
