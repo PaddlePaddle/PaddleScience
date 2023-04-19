@@ -144,8 +144,8 @@ class Visualizer2DPlot(Visualizer2D):
         output_expr (Dict[str, Callable]): Output expression.
         num_timestamps (int): Number of timestamps.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]], optional): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]], optional): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
         prefix (str): Prefix for output file. Defaults to "plot2d".
     """
 
