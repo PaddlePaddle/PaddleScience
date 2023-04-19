@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # set model
     model = ppsci.arch.MLP(
-        ["t", "x", "y"], ["u", "v", "p"], 9, 50, "tanh", False, False
+        ("t", "x", "y"), ("u", "v", "p"), 9, 50, "tanh", False, False
     )
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(0.0, 1.5, timestamps=timestamps),
-            ppsci.geometry.Rectangle([-0.05, -0.05], [0.05, 0.05]),
+            ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05)),
         )
     }
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_pde * ntime_pde}},
+        {**train_dataloader_cfg, "batch_size": npoint_pde * ntime_pde},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         weight_dict={
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 1, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_top * ntime_top}},
+        {**train_dataloader_cfg, "batch_size": npoint_top * ntime_top},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, 0.05),
         name="BC_top",
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_down * ntime_down}},
+        {**train_dataloader_cfg, "batch_size": npoint_down * ntime_down},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, -0.05),
         name="BC_down",
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_left * ntime_left}},
+        {**train_dataloader_cfg, "batch_size": npoint_left * ntime_left},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, -0.05),
         name="BC_left",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_right * ntime_right}},
+        {**train_dataloader_cfg, "batch_size": npoint_right * ntime_right},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, 0.05),
         name="BC_right",
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_ic * ntime_ic}},
+        {**train_dataloader_cfg, "batch_size": npoint_ic * ntime_ic},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="IC",
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)([model])
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # set validator
     npoints_eval = npoint_pde * ntime_all
