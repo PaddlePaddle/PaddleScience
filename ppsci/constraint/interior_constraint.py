@@ -44,11 +44,11 @@ class InteriorConstraint(base.Constraint):
         loss (loss.LossBase): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
-        criteria (Optional[Callable], optional): Criteria for refining specified boundaries.
+        criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling.
             Defaults to False.
-        weight_dict (Optional[Dict[str, Union[Callable, float]]], optional): Define the
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the
             weight of each constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "EQ".
     """

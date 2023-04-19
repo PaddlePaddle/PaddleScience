@@ -60,12 +60,14 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
+  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:
   name: material
   font:
     code: Roboto Mono
+    text: Noto Serif SC
   logo: ./images/icons/paddle.png
   favicon: ./images/icons/favcion.png
   language: "zh"

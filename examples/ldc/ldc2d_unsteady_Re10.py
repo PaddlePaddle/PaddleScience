@@ -138,7 +138,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)([model])
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # set validator
     npoints_eval = npoint_pde * ntime_all
