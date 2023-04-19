@@ -1,34 +1,32 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import os
-import os.path as osp
 import time
+from typing import Any
+from typing import Dict
 
 import paddle
 import paddle.amp as amp
 import paddle.io as io
 
-from ppsci import visualize
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def eval_func(solver, epoch_id, log_freq):
+def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
     """Evaluation program
 
     Args:
@@ -53,8 +51,7 @@ def eval_func(solver, epoch_id, log_freq):
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
-            input_dict, label_dict, _ = batch
-
+            input_dict, label_dict, weight_dict = batch
             # profile code
             # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
@@ -75,11 +72,13 @@ def eval_func(solver, epoch_id, log_freq):
             if solver.use_amp:
                 with amp.auto_cast(level=solver.amp_level):
                     output_dict = evaluator(input_dict)
-                    validator_loss = _validator.loss(output_dict, label_dict)
+                    validator_loss = _validator.loss(
+                        output_dict, label_dict, weight_dict
+                    )
                     loss_dict[f"loss({_validator.name})"] = float(validator_loss)
             else:
                 output_dict = evaluator(input_dict)
-                validator_loss = _validator.loss(output_dict, label_dict)
+                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
                 loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
@@ -153,16 +152,5 @@ def eval_func(solver, epoch_id, log_freq):
                 tmp, (int, float)
             ), f"Target metric({type(tmp)}) should be a number"
             target_metric = tmp
-
-        visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-        if solver.rank == 0:
-            os.makedirs(visual_dir, exist_ok=True)
-            visualize.save_vtu_from_dict(
-                osp.join(visual_dir, _validator.name),
-                {**all_output, **all_input},
-                _validator.input_keys,
-                _validator.output_keys,
-                _validator.num_timestamp,
-            )
 
     return target_metric
