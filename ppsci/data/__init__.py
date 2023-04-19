@@ -21,7 +21,6 @@ import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io
 
-from ppsci import data
 from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
