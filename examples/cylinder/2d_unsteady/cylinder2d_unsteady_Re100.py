@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # set model
     model = ppsci.arch.MLP(
-        ["t", "x", "y"], ["u", "v", "p"], 5, 50, "tanh", False, False
+        ("t", "x", "y"), ("u", "v", "p"), 5, 50, "tanh", False, False
     )
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
@@ -101,8 +101,8 @@ if __name__ == "__main__":
     )
     bc_inlet_cylinder = ppsci.constraint.SupervisedConstraint(
         "./datasets/domain_inlet_cylinder.csv",
-        ["Points:0", "Points:1"],
-        ["U:0", "U:1"],
+        ("Points:0", "Points:1"),
+        ("U:0", "U:1"),
         {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
         {
             **train_dataloader_cfg,
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     )
     bc_outlet = ppsci.constraint.SupervisedConstraint(
         "./datasets/domain_outlet.csv",
-        ["Points:0", "Points:1"],
-        ["p"],
+        ("Points:0", "Points:1"),
+        ("p"),
         {"Points:0": "x", "Points:1": "y"},
         {**train_dataloader_cfg, **{"batch_size": npoint_outlet * ntime_outlet}},
         ppsci.loss.MSELoss("mean"),
@@ -125,8 +125,8 @@ if __name__ == "__main__":
     )
     ic = ppsci.constraint.SupervisedConstraint(
         "./datasets/initial/ic0.1.csv",
-        ["Points:0", "Points:1"],
-        ["U:0", "U:1", "p"],
+        ("Points:0", "Points:1"),
+        ("U:0", "U:1", "p"),
         {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
         {**train_dataloader_cfg, **{"batch_size": npoint_ic * ntime_ic}},
         ppsci.loss.MSELoss("mean"),
@@ -136,8 +136,8 @@ if __name__ == "__main__":
     )
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         "./datasets/probe/probe1_50.csv",
-        ["t", "Points:0", "Points:1"],
-        ["U:0", "U:1"],
+        ("t", "Points:0", "Points:1"),
+        ("U:0", "U:1"),
         {"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"},
         {**train_dataloader_cfg, **{"batch_size": npoint_sup * ntime_sup}},
         ppsci.loss.MSELoss("mean"),
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     eval_freq = 400
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(0.001)([model])
+    optimizer = ppsci.optimizer.Adam(0.001)((model,))
 
     # set validator
     npoints_eval = (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps
