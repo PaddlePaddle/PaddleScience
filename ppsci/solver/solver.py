@@ -43,10 +43,10 @@ class Solver(object):
 
     Args:
         model (nn.Layer): Model.
-        constraint (Optional[Dict[str, ppsci.constraint.Constraint]], optional): Constraint(s) applied on model. Defaults to None.
+        constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
         output_dir (str, optional): Output directory. Defaults to "./output/".
-        optimizer (Optional[optimizer.Optimizer], optional): Optimizer object. Defaults to None.
-        lr_scheduler (Optional[optimizer.lr.LRScheduler], optional): Learning rate scheduler. Defaults to None.
+        optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
+        lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
         epochs (int, optional): Training epoch(s). Defaults to 5.
         iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
         update_freq (int, optional): Update frequency of parameters. Defaults to 1.
@@ -56,16 +56,16 @@ class Solver(object):
         start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
-        vdl_writer (Optional[vdl.LogWriter], optional): VisualDL writer object. Defaults to None.
+        vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
-        equation (Optional[Dict[str, ppsci.equation.PDE]], optional): Equation dict. Defaults to None.
-        geom (Optional[Dict[str, ppsci.geometry.Geometry]], optional): Geometry dict. Defaults to None.
-        validator (Optional[Dict[str, ppsci.validate.Validator]], optional): Validator dict. Defaults to None.
-        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]], optional): Visualizer dict. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
+        geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
+        validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
+        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
-        pretrained_model_path (Optional[str], optional): Pretrained model path. Defaults to None.
-        checkpoint_path (Optional[str], optional): Checkpoint path. Defaults to None.
+        pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
+        checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
     """
 
     def __init__(

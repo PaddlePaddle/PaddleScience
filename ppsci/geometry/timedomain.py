@@ -37,8 +37,8 @@ class TimeDomain(geometry_1d.Interval):
     Args:
         t0 (float): Start of time.
         t1 (float): End of time.
-        time_step (Optional[float], optional): Step interval of time. Defaults to None.
-        timestamps (Optional[Tuple[float, ...]], optional): List of timestamps.
+        time_step (Optional[float]): Step interval of time. Defaults to None.
+        timestamps (Optional[Tuple[float, ...]]): List of timestamps.
             Defaults to None.
 
     """
