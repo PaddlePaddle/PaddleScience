@@ -17,6 +17,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import itertools
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -36,8 +37,9 @@ class TimeDomain(geometry_1d.Interval):
     Args:
         t0 (float): Start of time.
         t1 (float): End of time.
-        time_step (float, optional): Step interval of time. Defaults to None.
-        timestamps (Tuple[float, ...], optional): List of timestamps. Defaults to None.
+        time_step (Optional[float], optional): Step interval of time. Defaults to None.
+        timestamps (Optional[Tuple[float, ...]], optional): List of timestamps.
+            Defaults to None.
 
     """
 
@@ -45,8 +47,8 @@ class TimeDomain(geometry_1d.Interval):
         self,
         t0: float,
         t1: float,
-        time_step: float = None,
-        timestamps: Tuple[float, ...] = None,
+        time_step: Optional[float] = None,
+        timestamps: Optional[Tuple[float, ...]] = None,
     ):
         super().__init__(t0, t1)
         self.t0 = t0
@@ -180,7 +182,7 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError(f"sample interior failed")
+                    raise RuntimeError("sample interior failed")
 
             # 2. repeat spatial points along time
             tx = []
@@ -215,7 +217,7 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError(f"sample interior failed")
+                    raise RuntimeError("sample interior failed")
 
             tx = []
             for ti in t:
@@ -291,7 +293,7 @@ class TimeXGeometry(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError(f"sample interior failed")
+                raise RuntimeError("sample interior failed")
 
         nx = len(x)
         t = np.linspace(
@@ -345,7 +347,7 @@ class TimeXGeometry(geometry.Geometry):
                         _nsuc += 1
 
                     if _ntry >= 1000 and _nsuc == 0:
-                        raise RuntimeError(f"sample interior failed")
+                        raise RuntimeError("sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
@@ -406,7 +408,7 @@ class TimeXGeometry(geometry.Geometry):
                         _nsuc += 1
 
                     if _ntry >= 1000 and _nsuc == 0:
-                        raise RuntimeError(f"sample interior failed")
+                        raise RuntimeError("sample interior failed")
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
