@@ -6,7 +6,6 @@
       members:
         - Validator
         - GeometryValidator
-        - CSVValidator
         - SupervisedValidator
       show_root_heading: false
       heading_level: 3

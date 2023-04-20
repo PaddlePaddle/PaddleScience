@@ -143,6 +143,8 @@ if __name__ == "__main__":
         "dataset": {
             "name": "LorenzDataset",
             "file_path": valid_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 1024,
             "embedding_model": embedding_model,
@@ -158,8 +160,6 @@ if __name__ == "__main__":
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        input_keys,
-        output_keys,
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},

@@ -159,7 +159,6 @@ if __name__ == "__main__":
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        {"pred_embeds": lambda out: out["pred_embeds"]},
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},

@@ -126,8 +126,8 @@ if __name__ == "__main__":
             "input_keys": input_keys,
             "label_keys": output_keys,
             "block_size": valid_block_size,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "stride": 32,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
         "sampler": {
             "name": "BatchSampler",
@@ -140,10 +140,6 @@ if __name__ == "__main__":
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        {
-            "pred_states": lambda out: out["pred_states"],
-            "recover_states": lambda out: out["recover_states"],
-        },
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
