@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+
+from ppsci import loss
+from ppsci import metric
 from ppsci.data import dataset
 from ppsci.validate import base
 
@@ -20,23 +27,23 @@ class CSVValidator(base.Validator):
     """Validator for csv file
 
     Args:
-        label_expr (Dict[str, Callable]): Function in dict for computing output.
+        dataloader_cfg (Dict[str, Any]): Config of building a dataloader
+        loss (loss.LossBase): Loss functor.
+        label_expr (Optional[Dict[str, Callable]]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
             will be multiplied by model output v and the result will be named "u_mul_v".
-        dataloader_cfg (Dict): Config of building a dataloader
-        loss (LossBase): Loss functor.
-        metric (Dict[str, Metric], optional): Named metric functors in dict.
+        metric (Optional[Dict[str, metric.MetricBase]], optional): Named metric functors in dict.
             Defaults to None.
         name (str, optional): Name of validator. Defaults to None.
     """
 
     def __init__(
         self,
-        label_expr,
-        dataloader_cfg,
-        loss,
-        metric=None,
-        name=None,
+        dataloader_cfg: Dict[str, Any],
+        loss: loss.LossBase,
+        label_expr: Optional[Dict[str, Callable]] = None,
+        metric: Optional[Dict[str, metric.MetricBase]] = None,
+        name: str = None,
     ):
         self.label_expr = label_expr
 
@@ -44,14 +51,16 @@ class CSVValidator(base.Validator):
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         self.input_keys = _dataset.input_keys
-        self.input_keys = _dataset.input_keys
-        self.output_keys = list(label_expr.keys())
-        if self.output_keys != _dataset.label_keys:
-            raise ValueError(
-                f"keys of label_expr({self.output_keys}) "
-                f"should be same as _dataset.label_keys({_dataset.label_keys})"
-            )
+        self.output_keys = (
+            list(label_expr.keys()) if label_expr is not None else _dataset.output_keys
+        )
 
+        if self.label_expr is None:
+            self.label_expr = {
+                key: lambda out, k=key: out[k] for key in self.output_keys
+            }
+
+        # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
 
     def __str__(self):

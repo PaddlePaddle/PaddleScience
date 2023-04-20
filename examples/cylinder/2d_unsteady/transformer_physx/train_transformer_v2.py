@@ -81,12 +81,12 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
+            "file_path": train_file_path,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
-            "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 4,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {
@@ -140,12 +140,12 @@ if __name__ == "__main__":
     eval_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
+            "file_path": valid_file_path,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "file_path": valid_file_path,
             "block_size": valid_block_size,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "stride": 1024,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {

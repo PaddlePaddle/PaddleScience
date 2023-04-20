@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "seed": 42,
         "use_shared_memory": False,
     }
-    # set dataloader config
+    # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         train_dataloader_cfg,
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         constraint,
         output_dir,
         optimizer,
-        None,
+        lr_scheduler,
         epochs,
         iters_per_epoch,
         eval_during_train=True,

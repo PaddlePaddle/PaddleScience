@@ -33,7 +33,7 @@ class CSVDataset(io.Dataset):
     Args:
         file_path (str): CSV file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of input keys.
+        label_keys (Tuple[str, ...]): List of label keys.
         alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
         weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of
             each constraint variable. Defaults to None.
@@ -143,7 +143,7 @@ class IterableCSVDataset(io.IterableDataset):
     Args:
         file_path (str): CSV file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of input keys.
+        label_keys (Tuple[str, ...]): List of label keys.
         alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
         weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of
             each constraint variable. Defaults to None.

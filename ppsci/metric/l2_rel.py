@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import paddle
-import paddle.nn as nn
+
+from ppsci.metric import base
 
 
-class L2Rel(nn.Layer):
+class L2Rel(base.MetricBase):
     r"""Class for l2 relative error.
 
     $$
