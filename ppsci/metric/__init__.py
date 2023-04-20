@@ -22,10 +22,12 @@ from ppsci.metric.rmse import RMSE
 from ppsci.utils import misc
 
 __all__ = [
+    "MetricBase",
     "L2Rel",
     "MAE",
     "MSE",
     "RMSE",
+    "build_metric",
 ]
 
 
