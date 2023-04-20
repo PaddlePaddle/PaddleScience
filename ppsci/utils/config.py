@@ -1,21 +1,19 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import argparse
 import copy
-import logging
 import os
 
 import yaml
@@ -179,29 +177,9 @@ def get_config(fname, overrides=None, show=False):
 
 def parse_args():
     parser = argparse.ArgumentParser("paddlescience running script")
-    parser.add_argument("-c", "--config", type=str, help="config file path")
-    parser.add_argument(
-        "-o",
-        "--override",
-        action="append",
-        default=[],
-        help="config options to be overridden",
-    )
-    parser.add_argument(
-        "-p",
-        "--profiler_options",
-        type=str,
-        default=None,
-        help='The option of profiler, which should be in format "key1=value1;key2=value2;key3=value3".',
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_const",
-        const=logging.DEBUG,
-        default=logging.INFO,
-        help="Print more details when --debug is enabled.",
-    )
+    parser.add_argument("-e", "--epochs", type=int, help="training epochs")
+    parser.add_argument("-o", "--output_dir", type=str, help="output directory")
+
     args = parser.parse_args()
     return args
 

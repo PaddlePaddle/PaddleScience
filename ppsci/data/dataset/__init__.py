@@ -1,24 +1,43 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import copy
 
+from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
+from ppsci.data.dataset.csv_dataset import CSVDataset
+from ppsci.data.dataset.csv_dataset import IterableCSVDataset
+from ppsci.data.dataset.mat_dataset import IterableMatDataset
+from ppsci.data.dataset.mat_dataset import MatDataset
+from ppsci.data.dataset.trphysx_dataset import CylinderDataset
+from ppsci.data.dataset.trphysx_dataset import LorenzDataset
+from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
-__all__ = ["NamedArrayDataset", "build_dataset"]
+__all__ = [
+    "IterableNamedArrayDataset",
+    "NamedArrayDataset",
+    "CSVDataset",
+    "IterableCSVDataset",
+    "IterableMatDataset",
+    "MatDataset",
+    "CylinderDataset",
+    "LorenzDataset",
+    "RosslerDataset",
+    "build_dataset",
+]
 
 
 def build_dataset(cfg):

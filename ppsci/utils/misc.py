@@ -1,26 +1,23 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import collections
-import csv
 import random
 
 import numpy as np
 import paddle
-
-from ppsci.utils import logger
+import paddle.distributed as dist
 
 __all__ = [
     "all_gather",
@@ -30,9 +27,9 @@ __all__ = [
     "concat_dict_list",
     "convert_to_array",
     "convert_to_dict",
-    "load_csv_file",
     "stack_dict_list",
     "combine_array_with_time",
+    "set_random_seed",
 ]
 
 
@@ -157,50 +154,8 @@ def combine_array_with_time(x, t):
     return tx
 
 
-def load_csv_file(file_path, keys, alias_dict=None, encoding="utf-8"):
-    try:
-        if alias_dict is None:
-            alias_dict = {}
-        # check if all keys in alias_dict are valid
-        for original_key in alias_dict:
-            if not original_key in keys:
-                raise ValueError(
-                    f"key({original_key}) in alias_dict "
-                    f"is not found in keys({keys})"
-                )
-        # read all data from csv file
-        with open(file_path, "r", encoding=encoding) as csv_file:
-            reader = csv.DictReader(csv_file)
-            raw_data_dict = collections.defaultdict(list)
-            for line_idx, line_dict in enumerate(reader):
-                for key, value in line_dict.items():
-                    raw_data_dict[key].append(value)
-
-                # check if all keys are available at first line
-                if line_idx == 0:
-                    for require_key in keys:
-                        if require_key not in line_dict:
-                            raise KeyError(
-                                f"key({require_key}) "
-                                f"not found in csvfile({file_path})"
-                            )
-
-            data_dict = {}
-            for key, value in raw_data_dict.items():
-                if key in alias_dict:
-                    data_dict[alias_dict[key]] = np.array(value, "float32").reshape(
-                        [-1, 1]
-                    )
-                else:
-                    data_dict[key] = np.array(value, "float32").reshape([-1, 1])
-
-        return data_dict
-    except Exception as e:
-        logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
-        raise
-
-
 def set_random_seed(seed):
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    rank = dist.get_rank()
+    paddle.seed(seed + rank)
+    np.random.seed(seed + rank)
+    random.seed(seed + rank)

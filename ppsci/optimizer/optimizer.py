@@ -1,22 +1,26 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import inspect
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
+from paddle import nn
 from paddle import optimizer as optim
+from paddle import regularizer
 from paddle.incubate import optimizer as incubate_optim
+from typing_extensions import Literal
 
 from ppsci.utils import logger
 
@@ -24,100 +28,84 @@ __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 
 
 class SGD(object):
-    """
+    """Stochastic Gradient Descent.
+
     Args:
-    learning_rate (float|Tensor|LearningRateDecay, optional): The learning rate used to update ``Parameter``.
-        It can be a float value, a ``Tensor`` with a float type or a LearningRateDecay. The default value is 0.001.
-    parameters (list|tuple, optional): List/Tuple of ``Tensor`` to update to minimize ``loss``. \
-        This parameter is required in dygraph mode. \
-        The default value is None in static mode, at this time all parameters will be updated.
-    weight_decay (float|WeightDecayRegularizer, optional): The strategy of regularization. \
-        It canbe a float value as coeff of L2 regularization or \
-        :ref:`api_fluid_regularizer_L1Decay`, :ref:`api_fluid_regularizer_L2Decay`.
-        If a parameter has set regularizer using :ref:`api_fluid_ParamAttr` already, \
-        the regularization setting here in optimizer will be ignored for this parameter. \
-        Otherwise, the regularization setting here in optimizer will take effect. \
-        Default None, meaning there is no regularization.
-    grad_clip (GradientClipBase, optional): Gradient cliping strategy, it's an instance of
-        some derived class of ``GradientClipBase`` . There are three cliping strategies
-        ( :ref:`api_fluid_clip_GradientClipByGlobalNorm` , :ref:`api_fluid_clip_GradientClipByNorm` ,
-        :ref:`api_fluid_clip_GradientClipByValue` ). Default None, meaning there is no gradient clipping.
-    name (str, optional): The default value is None. Normally there is no need for user
-            to set this property.
+        learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
+            used to update parameter(s). Defaults to 0.001.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
+            Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
+            Gradient cliping strategy. Defaults to None.
     """
 
     def __init__(
         self,
-        learning_rate=0.001,
-        weight_decay=None,
-        grad_clip=None,
-        multi_precision=False,
-        name=None,
+        learning_rate: Union[float, optim.lr.LRScheduler] = 0.001,
+        weight_decay: Optional[
+            Union[float, regularizer.L1Decay, regularizer.L2Decay]
+        ] = None,
+        grad_clip: Optional[
+            Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
+        ] = None,
     ):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
-        self.multi_precision = multi_precision
-        self.name = name
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
-        argspec = inspect.getargspec(optim.SGD.__init__).args
-        if "multi_precision" in argspec:
-            opt = optim.SGD(
-                learning_rate=self.learning_rate,
-                parameters=parameters,
-                weight_decay=self.weight_decay,
-                grad_clip=self.grad_clip,
-                multi_precision=self.multi_precision,
-                name=self.name,
-            )
-        else:
-            opt = optim.SGD(
-                learning_rate=self.learning_rate,
-                parameters=parameters,
-                weight_decay=self.weight_decay,
-                grad_clip=self.grad_clip,
-                name=self.name,
-            )
+        opt = optim.SGD(
+            learning_rate=self.learning_rate,
+            parameters=parameters,
+            weight_decay=self.weight_decay,
+            grad_clip=self.grad_clip,
+        )
         return opt
 
 
 class Momentum(object):
-    """
-    Simple Momentum optimizer with velocity state.
+    """Simple Momentum optimizer with velocity state.
+
     Args:
-        learning_rate (float|Variable) - The learning rate used to update parameters.
-            Can be a float value or a Variable with one float value as data element.
-        momentum (float) - Momentum factor.
-        regularization (WeightDecayRegularizer, optional) - The strategy of regularization.
+        learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
+            used to update parameter(s).
+        momentum (float): Momentum factor.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
+            Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
+            Gradient cliping strategy. Defaults to None.
+        use_nesterov (bool, optional): Whether to use nesterov momentum. Defaults to False.
+        no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
     """
 
     def __init__(
         self,
-        learning_rate,
-        momentum,
-        weight_decay=None,
-        grad_clip=None,
-        use_nesterov=False,
-        multi_precision=True,
-        no_weight_decay_name=None,
+        learning_rate: Union[float, optim.lr.LRScheduler],
+        momentum: float,
+        weight_decay: Optional[
+            Union[float, regularizer.L1Decay, regularizer.L2Decay]
+        ] = None,
+        grad_clip: Optional[
+            Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
+        ] = None,
+        use_nesterov: bool = False,
+        no_weight_decay_name: Optional[str] = None,
     ):
         super().__init__()
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
-        self.multi_precision = multi_precision
         self.use_nesterov = use_nesterov
         self.no_weight_decay_name_list = (
             no_weight_decay_name.split() if no_weight_decay_name else []
         )
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = None
         if len(self.no_weight_decay_name_list) > 0:
@@ -149,7 +137,6 @@ class Momentum(object):
             momentum=self.momentum,
             weight_decay=self.weight_decay,
             grad_clip=self.grad_clip,
-            multi_precision=self.multi_precision,
             use_nesterov=self.use_nesterov,
             parameters=parameters,
         )
@@ -159,7 +146,6 @@ class Momentum(object):
                 momentum=self.momentum,
                 weight_decay=self.weight_decay,
                 grad_clip=self.grad_clip,
-                multi_precision=self.multi_precision,
                 parameters=parameters,
                 use_nesterov=self.use_nesterov,
                 use_multi_tensor=True,
@@ -168,32 +154,43 @@ class Momentum(object):
 
 
 class Adam(object):
+    """Adam: A Method for Stochastic Optimization.
+
+    Args:
+        learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
+            used to update parameter(s). Defaults to 0.001.
+        beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
+        beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
+        epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-08.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
+        lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
+    """
+
     def __init__(
         self,
-        learning_rate=0.001,
-        beta1=0.9,
-        beta2=0.999,
-        epsilon=1e-08,
-        parameter_list=None,
-        weight_decay=None,
-        grad_clip=None,
-        name=None,
-        lazy_mode=False,
-        multi_precision=False,
+        learning_rate: Union[float, optim.lr.LRScheduler] = 0.001,
+        beta1: float = 0.9,
+        beta2: float = 0.999,
+        epsilon: float = 1e-08,
+        weight_decay: Optional[
+            Union[float, regularizer.L1Decay, regularizer.L2Decay]
+        ] = None,
+        grad_clip: Optional[
+            Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
+        ] = None,
+        lazy_mode: bool = False,
     ):
         self.learning_rate = learning_rate
         self.beta1 = beta1
         self.beta2 = beta2
         self.epsilon = epsilon
-        self.parameter_list = parameter_list
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
-        self.name = name
         self.lazy_mode = lazy_mode
-        self.multi_precision = multi_precision
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
@@ -205,24 +202,41 @@ class Adam(object):
             epsilon=self.epsilon,
             weight_decay=self.weight_decay,
             grad_clip=self.grad_clip,
-            name=self.name,
             lazy_mode=self.lazy_mode,
-            multi_precision=self.multi_precision,
             parameters=parameters,
         )
         return opt
 
 
 class LBFGS(object):
+    """The L-BFGS is a quasi-Newton method for solving an unconstrained optimization
+        problem over a differentiable function. Closely related is the Newton method for minimization.
+
+    Args:
+        learning_rate (float, optional): The learning rate
+            used to update parameter(s). Defaults to 1.0.
+        max_iter (int, optional): Maximal number of iterations per optimization step.
+            Defaults to 1.
+        max_eval (Optional[int]): Maximal number of function evaluations per
+            optimization step. Defaults to None.
+        tolerance_grad (float, optional): Termination tolerance on first order optimality.
+            Defaults to 1e-07.
+        tolerance_change (float, optional): termination tolerance on function
+            value/parameterchanges. Defaults to 1e-09.
+        history_size (int, optional): Update history size. Defaults to 100.
+        line_search_fn (Optional[Literal["strong_wolfe"]]): Either 'strong_wolfe' or None.
+            Defaults to "strong_wolfe".
+    """
+
     def __init__(
         self,
-        learning_rate=1.0,
-        max_iter=1,
-        max_eval=None,
-        tolerance_grad=1e-07,
-        tolerance_change=1e-09,
-        history_size=100,
-        line_search_fn="strong_wolfe",
+        learning_rate: float = 1.0,
+        max_iter: int = 1,
+        max_eval: Optional[int] = None,
+        tolerance_grad: float = 1e-07,
+        tolerance_change: float = 1e-09,
+        history_size: int = 100,
+        line_search_fn: Optional[Literal["strong_wolfe"]] = "strong_wolfe",
     ):
         self.lr = learning_rate
         self.max_iter = max_iter
@@ -232,7 +246,7 @@ class LBFGS(object):
         self.history_size = history_size
         self.line_search_fn = line_search_fn
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
@@ -251,26 +265,32 @@ class LBFGS(object):
 
 
 class RMSProp(object):
-    """
-    Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
+    """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
+
     Args:
-        learning_rate (float|Variable) - The learning rate used to update parameters.
-            Can be a float value or a Variable with one float value as data element.
-        momentum (float) - Momentum factor.
-        rho (float) - rho value in equation.
-        epsilon (float) - avoid division by zero, default is 1e-6.
-        regularization (WeightDecayRegularizer, optional) - The strategy of regularization.
+        learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
+            used to update parameter(s)
+        rho (float, optional): Factor ρ in equation. Defaults to 0.95.
+        epsilon (float, optional): Factor ϵ in equation as a smoothing term. Defaults to 1e-6.
+        momentum (float, optional):β in equation is the momentum term. Defaults to 0.0.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
+            Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
+            Gradient cliping strategy. Defaults to None.
     """
 
     def __init__(
         self,
-        learning_rate,
-        momentum=0.0,
-        rho=0.95,
-        epsilon=1e-6,
-        weight_decay=None,
-        grad_clip=None,
-        multi_precision=False,
+        learning_rate: Union[float, optim.lr.LRScheduler],
+        rho: float = 0.95,
+        epsilon: float = 1e-6,
+        momentum: float = 0.0,
+        weight_decay: Optional[
+            Union[float, regularizer.L1Decay, regularizer.L2Decay]
+        ] = None,
+        grad_clip: Optional[
+            Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
+        ] = None,
     ):
         super().__init__()
         self.learning_rate = learning_rate
@@ -280,7 +300,7 @@ class RMSProp(object):
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
@@ -298,18 +318,34 @@ class RMSProp(object):
 
 
 class AdamW(object):
+    """AdamW is implemented based on DECOUPLED WEIGHT DECAY REGULARIZATION.
+
+    Args:
+        learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
+            used to update parameter(s). Defaults to 0.001.
+        beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
+        beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
+        epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-8.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
+        no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
+        one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
+    """
+
     def __init__(
         self,
-        learning_rate=0.001,
-        beta1=0.9,
-        beta2=0.999,
-        epsilon=1e-8,
-        weight_decay=None,
-        multi_precision=False,
-        grad_clip=None,
-        no_weight_decay_name=None,
-        one_dim_param_no_weight_decay=False,
-        **args
+        learning_rate: Union[float, optim.lr.LRScheduler] = 0.001,
+        beta1: float = 0.9,
+        beta2: float = 0.999,
+        epsilon: float = 1e-8,
+        weight_decay: Optional[
+            Union[float, regularizer.L1Decay, regularizer.L2Decay]
+        ] = None,
+        grad_clip: Optional[
+            Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
+        ] = None,
+        no_weight_decay_name: Optional[str] = None,
+        one_dim_param_no_weight_decay: bool = False,
     ):
         super().__init__()
         self.learning_rate = learning_rate
@@ -318,13 +354,12 @@ class AdamW(object):
         self.epsilon = epsilon
         self.grad_clip = grad_clip
         self.weight_decay = weight_decay
-        self.multi_precision = multi_precision
         self.no_weight_decay_name_list = (
             no_weight_decay_name.split() if no_weight_decay_name else []
         )
         self.one_dim_param_no_weight_decay = one_dim_param_no_weight_decay
 
-    def __call__(self, model_list):
+    def __call__(self, model_list: Tuple[nn.Layer, ...]):
         # model_list is None in static graph
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
@@ -370,7 +405,6 @@ class AdamW(object):
             epsilon=self.epsilon,
             parameters=parameters,
             weight_decay=self.weight_decay,
-            multi_precision=self.multi_precision,
             grad_clip=self.grad_clip,
             apply_decay_param_fun=self._apply_decay_param_fun,
         )

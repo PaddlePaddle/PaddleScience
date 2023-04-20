@@ -1,17 +1,18 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
 
 import copy
 import os
@@ -38,51 +39,68 @@ from ppsci.utils import save_load
 
 
 class Solver(object):
-    """Base class for solver.
+    """Class for solver.
 
     Args:
-        cfg (AttrDict): Configuration parsed from yaml.
-        mode (str, optional): Running mode. Defaults to "train".
+        model (nn.Layer): Model.
+        constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
+        output_dir (str, optional): Output directory. Defaults to "./output/".
+        optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
+        lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
+        epochs (int, optional): Training epoch(s). Defaults to 5.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+        update_freq (int, optional): Update frequency of parameters. Defaults to 1.
+        save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
+        log_freq (int, optional): Logging frequency. Defaults to 10.
+        eval_during_train (bool, optional): Whether evaluate model during training. Defaults to False.
+        start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
+        eval_freq (int, optional): Evaluation frequency. Defaults to 1.
+        seed (int, optional): Random seed. Defaults to 42.
+        vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
+        device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
+        geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
+        validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
+        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
+        use_amp (bool, optional): Whether use AMP. Defaults to False.
+        amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+        pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
+        checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
     """
 
     def __init__(
         self,
-        mode: Literal["train", "eval"],
         model: nn.Layer,
-        constraint: Dict[str, ppsci.constraint.Constraint] = None,
+        constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
         output_dir: str = "./output/",
         optimizer: Optional[optimizer.Optimizer] = None,
         lr_scheduler: Optional[optimizer.lr.LRScheduler] = None,
-        epochs: Optional[int] = 5,
-        iters_per_epoch: Optional[int] = 20,
-        update_freq: Optional[int] = 1,
+        epochs: int = 5,
+        iters_per_epoch: int = 20,
+        update_freq: int = 1,
         save_freq: int = 0,
         log_freq: int = 10,
         eval_during_train: bool = False,
-        start_eval_epoch: Optional[int] = 1,
-        eval_freq: Optional[int] = 1,
+        start_eval_epoch: int = 1,
+        eval_freq: int = 1,
         seed: int = 42,
         vdl_writer: Optional[vdl.LogWriter] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
-        validator: Optional[Dict[str, Any]] = None,
+        validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
+        visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: str = "O0",
+        amp_level: Literal["O1", "O2", "O0"] = "O0",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
-        log_level: Literal["info", "debug"] = "info",
     ):
-        self.mode = mode
         # set model
         self.model = model
         # set constraint
         self.constraint = constraint
         # set output directory
         self.output_dir = output_dir
-
-        # initialize logger
-        logger.init_logger("ppsci", f"./{self.output_dir}/{self.mode}.log", log_level)
 
         # set optimizer
         self.optimizer = optimizer
@@ -105,20 +123,18 @@ class Solver(object):
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        if self.mode == "train":
-            self.train_output_info = {}
-            self.train_time_info = {
-                "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
-                "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
-            }
+        self.train_output_info = {}
+        self.train_time_info = {
+            "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
+            "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
+        }
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        if self.mode == "eval" or self.eval_during_train:
-            self.eval_output_info = {}
-            self.eval_time_info = {
-                "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
-                "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
-            }
+        self.eval_output_info = {}
+        self.eval_time_info = {
+            "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
+            "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
+        }
 
         # fix seed for reproducibility
         self.seed = seed
@@ -129,12 +145,15 @@ class Solver(object):
         # set running device
         self.device = paddle.set_device(device)
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
-        self.equation = {} if equation is None else equation
+        self.equation = equation
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
         # set validator
         self.validator = validator
+
+        # set visualizer
+        self.visualizer = visualizer
 
         # set automatic mixed precision(AMP) configuration
         self.use_amp = use_amp
@@ -143,7 +162,7 @@ class Solver(object):
 
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path)
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -153,17 +172,20 @@ class Solver(object):
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path, self.model, self.optimizer, self.scaler
+                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
         # choosing an appropriate training function for different optimizers
-        if self.mode == "train":
-            if not isinstance(self.optimizer, incubate.optimizer.LBFGS):
-                self.train_epoch_func = ppsci.solver.train.train_epoch_func
-            else:
-                self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+        if not isinstance(self.optimizer, incubate.optimizer.LBFGS):
+            self.train_epoch_func = ppsci.solver.train.train_epoch_func
+        else:
+            self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
@@ -175,6 +197,8 @@ class Solver(object):
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
 
+        self.global_step = 0
+
         # log paddlepaddle's version
         paddle_version = (
             paddle.__version__
@@ -184,7 +208,15 @@ class Solver(object):
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
-    def from_config(cfg: Dict[str, Any], mode: Literal["train", "eval"]):
+    def from_config(cfg: Dict[str, Any]) -> Solver:
+        """Initialize solver from given config.
+
+        Args:
+            cfg (Dict[str, Any]): Dict config, e.g. AttrDict parsed from yaml.
+
+        Returns:
+            Solver: Initialized solver object.
+        """
         config.print_config(cfg)
         # TODO(sensen): sanity check for config
         output_dir = cfg["Global"]["output_dir"]
@@ -221,11 +253,10 @@ class Solver(object):
 
         log_freq = cfg["Global"].get("log_freq", 10)
         device = cfg["Global"].get("device", "gpu")
-        validator = (
-            ppsci.validate.build_validator(cfg.get("Validator", None), equation, geom)
-            if eval_during_train
-            else None
+        validator = ppsci.validate.build_validator(
+            cfg.get("Validator", None), equation, geom
         )
+        visualizer = ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
         use_amp = "AMP" in cfg
         amp_level = cfg["AMP"].pop("level", "O1").upper() if use_amp else "O0"
 
@@ -233,10 +264,8 @@ class Solver(object):
         update_freq = cfg["Global"].get("update_freq", 1)
         pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
         checkpoint_path = cfg["Global"].get("checkpoint_path", None)
-        log_level = cfg["Global"].get("log_level", "info")
 
         return Solver(
-            mode,
             model,
             constraint,
             output_dir,
@@ -246,7 +275,7 @@ class Solver(object):
             iters_per_epoch,
             update_freq,
             save_freq,
-            log_level,
+            log_freq,
             eval_during_train,
             start_eval_epoch,
             eval_freq,
@@ -256,11 +285,11 @@ class Solver(object):
             equation,
             geom,
             validator,
+            visualizer,
             use_amp,
             amp_level,
             pretrained_model_path,
             checkpoint_path,
-            log_freq,
         )
 
     def train(self):
@@ -295,12 +324,16 @@ class Solver(object):
                         self.best_metric,
                         self.output_dir,
                         "best_model",
+                        self.equation,
                     )
                 logger.info(
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
+
+                if self.visualizer is not None:
+                    self.visualize(epoch_id)
 
             # update learning rate by epoch
             if self.lr_scheduler is not None and self.lr_scheduler.by_epoch:
@@ -315,6 +348,7 @@ class Solver(object):
                     {"metric": cur_metric, "epoch": epoch_id},
                     self.output_dir,
                     f"epoch_{epoch_id}",
+                    self.equation,
                 )
 
             # always save the latest model for convenient resume training
@@ -325,6 +359,7 @@ class Solver(object):
                 {"metric": cur_metric, "epoch": epoch_id},
                 self.output_dir,
                 "latest",
+                self.equation,
             )
 
         # close VisualDL
@@ -335,7 +370,7 @@ class Solver(object):
         """Evaluation"""
         self.model.eval()
 
-        # init train func
+        # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
         result = self.eval_func(self, epoch_id, self.log_freq)
@@ -348,6 +383,18 @@ class Solver(object):
         self.model.train()
         return result
 
+    def visualize(self, epoch_id=0):
+        """Visualization"""
+        self.model.eval()
+
+        # init train func
+        self.visu_func = ppsci.solver.visu.visualize_func
+
+        self.visu_func(self, epoch_id)
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
+
+        self.model.train()
+
     def predict(self, input_dict):
         """Prediction"""
         pred_dict = self.model(input_dict)
@@ -357,7 +404,7 @@ class Solver(object):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
         if pretrained_path is not None:
-            save_load.load_pretrain(self.model, pretrained_path)
+            save_load.load_pretrain(self.model, pretrained_path, self.equation)
 
         self.model.eval()
 

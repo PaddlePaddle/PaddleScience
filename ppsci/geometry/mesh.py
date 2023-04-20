@@ -1,37 +1,43 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
+from typing import Union
 
 import numpy as np
-import pymesh
 import pysdf
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
-from ppsci.geometry import inflation
 from ppsci.geometry import sampler
+from ppsci.utils import checker
 from ppsci.utils import misc
 
 
 class Mesh(geometry.Geometry):
-    """A geometry represented by a mesh.
+    """Class for mesh geometry.
 
     Args:
-        mesh(str, Mesh): Mesh file path, such as "/path/to/mesh.stl".
+        mesh (Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
     """
 
-    def __init__(self, mesh):
+    def __init__(self, mesh: Union[Mesh, str]):
+        # check if pymesh is installed when using Mesh Class
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
         elif isinstance(mesh, pymesh.Mesh):
@@ -82,7 +88,10 @@ class Mesh(geometry.Geometry):
     def translate(self, translation, relative=True):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
-        import open3d
+
+        # check if open3d is installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -98,7 +107,10 @@ class Mesh(geometry.Geometry):
     def scale(self, scale, center=(0, 0, 0)):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
-        import open3d
+
+        # check if open3d is installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -124,6 +136,12 @@ class Mesh(geometry.Geometry):
             raise ValueError(
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
+
+        # check if open3d is installed before using inflation
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
+        from ppsci.geometry import inflation
+
         all_points = []
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
@@ -160,6 +178,12 @@ class Mesh(geometry.Geometry):
         all_points = []
         all_normal = []
         all_area = []
+
+        # check if open3d is installed before using inflation module
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
+        from ppsci.geometry import inflation
+
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
             triangle_areas = area_of_triangles(
@@ -290,7 +314,10 @@ class Mesh(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError("sample boundary failed")
+                    raise ValueError(
+                        "Sample boundary points failed, "
+                        "please check correctness of geometry and given creteria."
+                    )
 
         normal_dict = misc.convert_to_dict(
             normal, [f"normal_{key}" for key in self.dim_keys if key != "t"]
@@ -348,7 +375,10 @@ class Mesh(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample interior failed")
+                raise ValueError(
+                    "Sample interior points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
 
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 

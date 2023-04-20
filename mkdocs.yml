@@ -1,0 +1,148 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Project information
+site_name: PaddleScience Docs
+site_description: An out-of-the-box open source library for scientific computing based on deep learning.
+site_author: PaddlePaddle
+site_url: "https://github.com/PaddlePaddle/PaddleScience"
+strict: false
+
+# Repository
+repo_name: PaddleScience
+repo_url: "https://github.com/PaddlePaddle/PaddleScience"
+
+# Copyright
+copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
+
+# Page tree
+nav:
+  - 安装使用: index.md
+  - 经典案例:
+      - PINNs:
+        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
+        - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+      - 数据驱动:
+        - Lorenz_transform_physx: zh/examples/lorenz.md
+        - Rossler_transform_physx: zh/examples/rossler.md
+        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+  - API文档:
+      - ppsci.arch: zh/api/arch.md
+      - ppsci.autodiff: zh/api/autodiff.md
+      - ppsci.constraint: zh/api/constraint.md
+      - ppsci.data:
+          - dataset: zh/api/data/dataset.md
+          - process:
+            - transform: zh/api/data/process/transform.md
+            - batch_transform: zh/api/data/process/batch_transform.md
+      - ppsci.equation: zh/api/equation.md
+      - ppsci.geometry: zh/api/geometry.md
+      - ppsci.loss: zh/api/loss.md
+      - ppsci.metric: zh/api/metric.md
+      - ppsci.optimizer:
+          - ppsci.optimizer.optimizer: zh/api/optimizer.md
+          - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
+      - ppsci.solver: zh/api/solver.md
+      - ppsci.utils: zh/api/utils.md
+      - ppsci.validate: zh/api/validate.md
+      - ppsci.visualize: zh/api/visualize.md
+  - 技术稿件: zh/technical_doc.md
+  - 共创计划: zh/cooperation.md
+  - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
+  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
+
+# Configuration
+theme:
+  name: material
+  font:
+    code: Roboto Mono
+    text: Noto Serif SC
+  logo: ./images/icons/paddle.png
+  favicon: ./images/icons/favcion.png
+  language: "zh"
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
+    - navigation.sections
+    - navigation.prune
+    - navigation.top
+    - navigation.expand
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+# Plugins
+plugins:
+  - include-markdown
+  - search
+  - glightbox
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [./ppsci]
+
+# Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      linenums: true
+  - pymdownx.snippets:
+      dedent_subsections: true
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: ⚓︎
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+# Extra javascripts
+extra_javascript:
+  - javascripts/bd_statistics.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Extra css
+extra_css:
+  - stylesheets/extra.css
+  - stylesheets/monokai.css
+
+# Extra
+extra:
+  alternate:
+    - name: 简体中文
+      link: /zh/
+      lang: zh
+    - name: English
+      link: /en/
+      lang: en

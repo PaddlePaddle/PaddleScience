@@ -1,17 +1,16 @@
-"""Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import copy
 import random
@@ -48,19 +47,29 @@ def worker_init_fn(worker_id, num_workers, rank, base_seed):
 
 
 def build_dataloader(_dataset, cfg):
+    world_size = dist.get_world_size()
+    # just return IterableDataset as datalaoder
+    if isinstance(_dataset, io.IterableDataset):
+        if world_size > 1:
+            raise ValueError(
+                f"world_size({world_size}) should be 1 when using IterableDataset"
+            )
+        return _dataset
+
     cfg = copy.deepcopy(cfg)
 
     # build sampler
     sampler_cfg = cfg.pop("sampler")
     sampler_cls = sampler_cfg.pop("name")
     if sampler_cls == "BatchSampler":
-        world_size = dist.get_world_size()
         if world_size > 1:
             sampler_cls = "DistributedBatchSampler"
             logger.warning(
                 f"Automatically use 'DistributedBatchSampler' instead of "
                 f"'BatchSampler' when world_size({world_size}) > 1"
             )
+
+    sampler_cfg["batch_size"] = cfg["batch_size"]
     sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
 
     # build collate_fn if specified
@@ -74,7 +83,7 @@ def build_dataloader(_dataset, cfg):
     # build init function
     init_fn = partial(
         worker_init_fn,
-        num_workers=cfg["num_workers"],
+        num_workers=cfg.get("num_workers", 0),
         rank=dist.get_rank(),
         base_seed=cfg.get("seed", 42),
     )
@@ -86,8 +95,8 @@ def build_dataloader(_dataset, cfg):
         return_list=True,
         batch_sampler=sampler,
         collate_fn=collate_fn,
-        num_workers=cfg["num_workers"],
-        use_shared_memory=cfg["use_shared_memory"],
+        num_workers=cfg.get("num_workers", 0),
+        use_shared_memory=cfg.get("use_shared_memory", False),
         worker_init_fn=init_fn,
     )
 
