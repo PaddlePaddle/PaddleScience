@@ -61,7 +61,10 @@ class LorenzDataset(io.Dataset):
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
-        self.weight_dict = weight_dict
+        if weight_dict is not None:
+            self.weight_dict = weight_dict
+        else:
+            self.weight_dict = {key: 1.0 for key in self.label_keys}
 
         self.data = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
@@ -186,7 +189,10 @@ class CylinderDataset(io.Dataset):
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
-        self.weight_dict = weight_dict
+        if weight_dict is not None:
+            self.weight_dict = weight_dict
+        else:
+            self.weight_dict = {key: 1.0 for key in self.label_keys}
 
         self.data, self.visc = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
@@ -235,21 +241,22 @@ class CylinderDataset(io.Dataset):
 
     def __getitem__(self, i):
         if self.embedding_data is None:
+            data_item = self.data[i]
             input_item = {
-                self.input_keys[0]: self.data[i],
+                self.input_keys[0]: data_item,
                 self.input_keys[1]: self.visc[i],
             }
             label_item = {
-                self.label_keys[0]: self.data[i][1:],
-                self.label_keys[1]: self.data[i],
+                self.label_keys[0]: data_item[1:],
+                self.label_keys[1]: data_item,
             }
         else:
             data_item = self.embedding_data[i]
             input_item = {self.input_keys[0]: data_item[:-1, :]}
             label_item = {self.label_keys[0]: data_item[1:, :]}
             if len(self.label_keys) == 2:
-                label_item[self.label_keys[1]] = self.data[i][1:, :]
-        weight_shape = [1] * len(self.data[i].shape)
+                label_item[self.label_keys[1]] = data_item[1:, :]
+        weight_shape = [1] * len(data_item.shape)
         weight_item = {
             key: np.ones(weight_shape) * value
             for key, value in self.weight_dict.items()

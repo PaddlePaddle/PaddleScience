@@ -58,8 +58,8 @@ if __name__ == "__main__":
     regularization_key = "k_matrix"
 
     output_dir = "./output/cylinder_enn"
-    train_file_path = "/path/to/cylinder_training.hdf5"
-    valid_file_path = "/path/to/cylinder_valid.hdf5"
+    train_file_path = "./datasets/cylinder_training.hdf5"
+    valid_file_path = "./datasets/cylinder_valid.hdf5"
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
@@ -67,12 +67,12 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
-            "input_keys": input_keys,
-            "label_keys": output_keys + [regularization_key],
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "file_path": train_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": train_block_size,
             "stride": 16,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
         "sampler": {
             "name": "BatchSampler",
@@ -89,6 +89,7 @@ if __name__ == "__main__":
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1.0e-2 * (train_block_size - 1)}
         ),
+        {key: lambda out, k=key: out[k] for key in output_keys + [regularization_key]},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
