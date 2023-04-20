@@ -80,6 +80,9 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 16,
@@ -96,13 +99,8 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_file_path,
-        input_keys,
-        output_keys,
-        {},
         train_dataloader_cfg,
         ppsci.loss.MSELoss(),
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -141,8 +139,11 @@ if __name__ == "__main__":
         "dataset": {
             "name": "RosslerDataset",
             "file_path": valid_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 1024,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {
@@ -156,12 +157,9 @@ if __name__ == "__main__":
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        input_keys,
-        output_keys,
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="MSE_Validator",
     )
     validator = {mse_validator.name: mse_validator}
