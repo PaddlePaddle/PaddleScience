@@ -65,12 +65,11 @@ if __name__ == "__main__":
     valid_block_size = 256
     input_keys = ["embeds"]
     output_keys = ["pred_embeds"]
-    weights = [1.0]
 
     vis_data_nums = 16
 
-    train_file_path = "/path/to/lorenz_training_rk.hdf5"
-    valid_file_path = "/path/to/lorenz_valid_rk.hdf5"
+    train_file_path = "./datasets/lorenz_training_rk.hdf5"
+    valid_file_path = "./datasets/lorenz_valid_rk.hdf5"
     embedding_model_path = "./output/lorenz_enn/checkpoints/latest"
     output_dir = "./output/lorenz_transformer"
     # initialize logger
@@ -85,7 +84,6 @@ if __name__ == "__main__":
             "name": "LorenzDataset",
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 64,
@@ -146,7 +144,6 @@ if __name__ == "__main__":
             "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 1024,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {
