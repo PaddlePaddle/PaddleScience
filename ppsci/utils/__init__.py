@@ -36,5 +36,4 @@ __all__ = [
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
-    "initializer",
 ]

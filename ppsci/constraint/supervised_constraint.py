@@ -15,6 +15,7 @@
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 
 from ppsci import loss
 from ppsci.constraint import base
@@ -25,17 +26,18 @@ class SupervisedConstraint(base.Constraint):
     """Class for supervised constraint.
 
     Args:
-        label_expr (Dict[str, Callable]): List of label expression.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
+        label_expr (Optional[Dict[str, Callable]]): List of label expression.
+            Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
     """
 
     def __init__(
         self,
-        label_expr: Dict[str, Callable],
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
+        label_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
         self.label_expr = label_expr
@@ -44,12 +46,14 @@ class SupervisedConstraint(base.Constraint):
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         self.input_keys = _dataset.input_keys
-        self.output_keys = list(label_expr.keys())
-        if self.output_keys != _dataset.label_keys:
-            raise ValueError(
-                f"keys of label_expr({self.output_keys}) "
-                f"should be same as _dataset.label_keys({_dataset.label_keys})"
-            )
+        self.output_keys = (
+            list(label_expr.keys()) if label_expr is not None else _dataset.output_keys
+        )
+
+        if self.label_expr is None:
+            self.label_expr = {
+                key: lambda out, k=key: out[k] for key in self.output_keys
+            }
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)
