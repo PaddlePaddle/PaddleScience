@@ -50,9 +50,9 @@ if __name__ == "__main__":
     }
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         train_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
+        {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         name="EQ",
     )
     # wrap constraints together
@@ -88,10 +88,10 @@ if __name__ == "__main__":
         "use_shared_memory": False,
     }
     # set validator
-    eta_mse_validator = ppsci.validate.CSVValidator(
-        {"eta": lambda out: out["eta"], **equation["VIV"].equations},
+    eta_mse_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
+        {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         metric={"MSE": ppsci.metric.MSE()},
         name="eta_mse",
     )
