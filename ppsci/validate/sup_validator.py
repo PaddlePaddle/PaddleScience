@@ -49,7 +49,7 @@ class SupervisedValidator(base.Validator):
 
         self.input_keys = _dataset.input_keys
         self.output_keys = (
-            list(label_expr.keys()) if label_expr is not None else _dataset.output_keys
+            list(label_expr.keys()) if label_expr is not None else _dataset.label_keys
         )
 
         if self.label_expr is None:

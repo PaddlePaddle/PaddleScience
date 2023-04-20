@@ -85,11 +85,6 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        {
-            "pred_states": lambda out: out["pred_states"],
-            "recover_states": lambda out: out["recover_states"],
-            "k_matrix": lambda out: out["k_matrix"],
-        },
         train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1.0e-2 * (train_block_size - 1)}
