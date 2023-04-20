@@ -12,28 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle
-import paddle.nn.functional as F
-
-from ppsci.metric import base
+import paddle.nn as nn
 
 
-class MAE(base.MetricBase):
-    r"""Mean absolute error
-
-    $$
-    metric = \frac{1}{N}\sum_{i=1}^{N}{|x_i-y_i|}
-    $$
-    """
+class MetricBase(nn.Layer):
+    """Base class for metric."""
 
     def __init__(self):
         super().__init__()
-
-    @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
-        metric_dict = {}
-        for key in output_dict:
-            mae = F.l1_loss(output_dict[key], label_dict[key], "mean")
-            metric_dict[key] = float(mae)
-
-        return metric_dict

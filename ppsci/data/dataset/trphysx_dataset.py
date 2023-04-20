@@ -37,9 +37,9 @@ class LorenzDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
     """
 
     def __init__(
@@ -123,9 +123,9 @@ class RosslerDataset(LorenzDataset):
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
     """
 
     def __init__(
@@ -160,9 +160,9 @@ class CylinderDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
     """
 

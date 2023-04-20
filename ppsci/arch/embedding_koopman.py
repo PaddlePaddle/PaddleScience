@@ -37,8 +37,8 @@ class LorenzEmbedding(base.NetBase):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         input_size (int, optional): Size of input data. Defaults to 3.
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
@@ -195,8 +195,8 @@ class RosslerEmbedding(LorenzEmbedding):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         input_size (int, optional): Size of input data. Defaults to 3.
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
@@ -232,8 +232,8 @@ class CylinderEmbedding(base.NetBase):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         embed_size (int, optional): Number of embedding size. Defaults to 128.
         encoder_channels (Tuple[int,...]): Number of channels in encoder network. Defaults to None.
         decoder_channels (Tuple[int,...]): Number of channels in decoder network. Defaults to None.

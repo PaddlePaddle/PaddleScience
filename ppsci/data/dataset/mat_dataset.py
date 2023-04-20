@@ -15,6 +15,7 @@
 import types
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -32,13 +33,13 @@ class MatDataset(io.Dataset):
 
     Args:
         input (Tuple[str, ...]): List of input keys.
-        label (Tuple[str, ...]): List of input keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of each
+        label (Tuple[str, ...]): List of label keys.
+        alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each
             constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
+        timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
     """
 
@@ -47,10 +48,10 @@ class MatDataset(io.Dataset):
         file_path: str,
         input_keys: Dict[str, np.ndarray],
         label_keys: Dict[str, np.ndarray],
-        alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, float] = None,
-        timestamps: Tuple[Union[int, float], ...] = None,
-        transforms: vision.Compose = None,
+        alias_dict: Optional[Dict[str, str]] = None,
+        weight_dict: Optional[Dict[str, float]] = None,
+        timestamps: Optional[Tuple[Union[int, float], ...]] = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -136,18 +137,18 @@ class MatDataset(io.Dataset):
         return self._len
 
 
-class IterableMatDataset(io.Dataset):
+class IterableMatDataset(io.IterableDataset):
     """IterableCSVDataset for full-data loading.
 
     Args:
         input (Tuple[str, ...]): List of input keys.
-        label (Tuple[str, ...]): List of input keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of each
+        label (Tuple[str, ...]): List of label keys.
+        alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each
             constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
+        timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
     """
 
@@ -156,10 +157,10 @@ class IterableMatDataset(io.Dataset):
         file_path: str,
         input_keys: Dict[str, np.ndarray],
         label_keys: Dict[str, np.ndarray],
-        alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, Union[Callable, float]] = None,
-        timestamps: Tuple[Union[int, float], ...] = None,
-        transforms: vision.Compose = None,
+        alias_dict: Optional[Dict[str, str]] = None,
+        weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
+        timestamps: Optional[Tuple[Union[int, float], ...]] = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
