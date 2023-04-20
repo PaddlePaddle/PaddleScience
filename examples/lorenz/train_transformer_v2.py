@@ -102,7 +102,6 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        {"pred_embeds": lambda out: out["pred_embeds"]},
         train_dataloader_cfg,
         ppsci.loss.MSELoss(),
         name="Sup",
@@ -147,6 +146,7 @@ if __name__ == "__main__":
             "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 1024,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {
@@ -163,7 +163,6 @@ if __name__ == "__main__":
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="MSE_Validator",
     )
     validator = {mse_validator.name: mse_validator}

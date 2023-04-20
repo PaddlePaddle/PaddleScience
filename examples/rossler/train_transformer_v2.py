@@ -99,7 +99,6 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        {"pred_embeds": lambda out: out["pred_embeds"]},
         train_dataloader_cfg,
         ppsci.loss.MSELoss(),
         name="Sup",

@@ -99,7 +99,6 @@ if __name__ == "__main__":
         name="EQ",
     )
     bc_inlet_cylinder = ppsci.constraint.SupervisedConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {
             "dataset": {
                 "name": "IterableCSVDataset",
@@ -115,7 +114,6 @@ if __name__ == "__main__":
         name="BC_inlet_cylinder",
     )
     bc_outlet = ppsci.constraint.SupervisedConstraint(
-        {"p": lambda out: out["p"]},
         {
             "dataset": {
                 "name": "IterableCSVDataset",
@@ -131,11 +129,6 @@ if __name__ == "__main__":
     )
     ic = ppsci.constraint.SupervisedConstraint(
         {
-            "u": lambda out: out["u"],
-            "v": lambda out: out["v"],
-            "p": lambda out: out["p"],
-        },
-        {
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/initial/ic0.1.csv",
@@ -150,7 +143,6 @@ if __name__ == "__main__":
         name="IC",
     )
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {
             "dataset": {
                 "name": "IterableCSVDataset",
