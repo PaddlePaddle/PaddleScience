@@ -61,6 +61,9 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
+            "input_keys": input_keys,
+            "label_keys": output_keys + [regularization_key],
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 16,
@@ -76,15 +79,10 @@ if __name__ == "__main__":
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_file_path,
-        input_keys,
-        output_keys + [regularization_key],
-        {},
         train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1e-1 * (train_block_size - 1)}
         ),
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -120,8 +118,11 @@ if __name__ == "__main__":
         "dataset": {
             "name": "RosslerDataset",
             "file_path": valid_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 32,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
         "sampler": {
             "name": "BatchSampler",
@@ -134,12 +135,9 @@ if __name__ == "__main__":
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        input_keys,
-        output_keys,
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="MSE_Validator",
     )
     validator = {mse_validator.name: mse_validator}
