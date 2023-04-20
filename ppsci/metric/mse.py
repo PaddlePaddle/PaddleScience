@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import paddle
-import paddle.nn as nn
 import paddle.nn.functional as F
 
+from ppsci.metric import base
 
-class MSE(nn.Layer):
+
+class MSE(base.MetricBase):
     r"""Mean square error
 
     $$

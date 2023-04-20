@@ -15,7 +15,7 @@
 import numpy as np
 
 from ppsci.geometry import geometry
-from ppsci.utils import misc
+from ppsci.utils import reader
 
 
 class PointCloud(geometry.Geometry):
@@ -40,7 +40,7 @@ class PointCloud(geometry.Geometry):
         # Interior points from CSV file
         if interior_path.endswith(".csv"):
             # read data
-            data_dict = misc.load_csv_file(interior_path, coord_keys)
+            data_dict = reader.load_csv_file(interior_path, coord_keys)
 
             # convert to numpy array
             self.interior = []
@@ -51,7 +51,7 @@ class PointCloud(geometry.Geometry):
         # Boundary points from CSV file
         if boundary_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_path, coord_keys)
+            data_dict = reader.load_csv_file(boundary_path, coord_keys)
 
             # convert to numpy array
             self.boundary = {}
@@ -64,7 +64,7 @@ class PointCloud(geometry.Geometry):
         # Normal of boundary points from CSV file
         if boundary_normal_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
+            data_dict = reader.load_csv_file(boundary_normal_path, coord_keys)
 
             # convert to numpy array
             self.normal = {}
