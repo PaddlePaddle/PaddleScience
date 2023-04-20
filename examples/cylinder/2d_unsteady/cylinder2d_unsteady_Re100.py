@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # set model
     model = ppsci.arch.MLP(
-        ["t", "x", "y"], ["u", "v", "p"], 5, 50, "tanh", False, False
+        ("t", "x", "y"), ("u", "v", "p"), 5, 50, "tanh", False, False
     )
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     eval_freq = 400
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(0.001)([model])
+    optimizer = ppsci.optimizer.Adam(0.001)((model,))
 
     # set validator
     npoints_eval = (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps

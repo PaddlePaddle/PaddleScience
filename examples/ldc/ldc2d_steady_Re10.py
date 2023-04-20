@@ -21,26 +21,18 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./ldc2d_unsteady_Re10"
+    output_dir = "./ldc2d_steady_Re10"
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(
-        ["t", "x", "y"], ["u", "v", "p"], 9, 50, "tanh", False, False
-    )
-    # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+    model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh", False, False)
 
-    # set timestamps(including initial t0)
-    timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
-    # set time-geometry
-    geom = {
-        "time_rect": ppsci.geometry.TimeXGeometry(
-            ppsci.geometry.TimeDomain(0.0, 1.5, timestamps=timestamps),
-            ppsci.geometry.Rectangle([-0.05, -0.05], [0.05, 0.05]),
-        )
-    }
+    # set equation
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
+
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
 
     # set dataloader config
     iters_per_epoch = 1
@@ -49,21 +41,18 @@ if __name__ == "__main__":
         "iters_per_epoch": iters_per_epoch,
     }
 
-    # pde/bc constraint use t1~tn, initial constraint use t0
-    ntime_all = len(timestamps)
-    npoint_pde, ntime_pde = 99**2, ntime_all - 1
-    npoint_top, ntime_top = 101, ntime_all - 1
-    npoint_down, ntime_down = 101, ntime_all - 1
-    npoint_left, ntime_left = 99, ntime_all - 1
-    npoint_right, ntime_right = 99, ntime_all - 1
-    npoint_ic, ntime_ic = 99**2, 1
+    npoint_pde = 99**2
+    npoint_top = 101
+    npoint_bottom = 101
+    npoint_left = 99
+    npoint_right = 99
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_pde * ntime_pde}},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": npoint_pde},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         weight_dict={
@@ -76,56 +65,46 @@ if __name__ == "__main__":
     bc_top = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 1, "v": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_top * ntime_top}},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": npoint_top},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda t, x, y: np.isclose(y, 0.05),
+        criteria=lambda x, y: np.isclose(y, 0.05),
         name="BC_top",
     )
-    bc_down = ppsci.constraint.BoundaryConstraint(
+    bc_bottom = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_down * ntime_down}},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": npoint_bottom},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda t, x, y: np.isclose(y, -0.05),
-        name="BC_down",
+        criteria=lambda x, y: np.isclose(y, -0.05),
+        name="BC_bottom",
     )
     bc_left = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_left * ntime_left}},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": npoint_left},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda t, x, y: np.isclose(x, -0.05),
+        criteria=lambda x, y: np.isclose(x, -0.05),
         name="BC_left",
     )
     bc_right = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_right * ntime_right}},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": npoint_right},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda t, x, y: np.isclose(x, 0.05),
+        criteria=lambda x, y: np.isclose(x, 0.05),
         name="BC_right",
-    )
-    ic = ppsci.constraint.InitialConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-        {"u": 0, "v": 0},
-        geom["time_rect"],
-        {**train_dataloader_cfg, **{"batch_size": npoint_ic * ntime_ic}},
-        ppsci.loss.MSELoss("sum"),
-        evenly=True,
-        name="IC",
     )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
         bc_top.name: bc_top,
-        bc_down.name: bc_down,
+        bc_bottom.name: bc_bottom,
         bc_left.name: bc_left,
         bc_right.name: bc_right,
-        ic.name: ic,
     }
 
     # set training hyper-parameters
@@ -141,11 +120,11 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # set validator
-    npoints_eval = npoint_pde * ntime_all
+    npoints_eval = npoint_pde
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
-        geom["time_rect"],
+        geom["rect"],
         {
             "dataset": "NamedArrayDataset",
             "total_size": npoints_eval,
@@ -155,49 +134,28 @@ if __name__ == "__main__":
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         metric={"MSE": ppsci.metric.MSE()},
-        with_initial=True,
         name="Residual",
     )
     validator = {residual_validator.name: residual_validator}
 
     # set visualizer(optional)
-    npoint_bc = npoint_top + npoint_down + npoint_left + npoint_right
-    ntime_bc = ntime_top
-    vis_initial_points = geom["time_rect"].sample_initial_interior(
-        npoint_ic, evenly=True
-    )
-    vis_interior_points = geom["time_rect"].sample_interior(
-        npoint_pde * ntime_pde, evenly=True
-    )
-    vis_boundary_points = geom["time_rect"].sample_boundary(
-        npoint_bc * ntime_bc, evenly=True
-    )
+    npoint_bc = npoint_top + npoint_bottom + npoint_left + npoint_right
+    vis_interior_points = geom["rect"].sample_interior(npoint_pde, evenly=True)
+    vis_boundary_points = geom["rect"].sample_boundary(npoint_bc, evenly=True)
 
     # manually collate input data for visualization,
-    # (interior+boundary) x all timestamps
-    vis_initial_points = {
-        key: np.concatenate(
-            (vis_initial_points[key], vis_boundary_points[key][:npoint_bc])
+    # interior+boundary
+    vis_points = {}
+    for key in vis_interior_points:
+        vis_points[key] = np.concatenate(
+            (vis_interior_points[key], vis_boundary_points[key])
         )
-        for key in vis_initial_points
-    }
-    vis_points = vis_initial_points
-    for t in range(ntime_pde):
-        for key in vis_interior_points:
-            vis_points[key] = np.concatenate(
-                (
-                    vis_points[key],
-                    vis_interior_points[key][t * npoint_pde : (t + 1) * npoint_pde],
-                    vis_boundary_points[key][t * npoint_bc : (t + 1) * npoint_bc],
-                )
-            )
 
     visualizer = {
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            ntime_all,
-            "result_u_v",
+            prefix="result_u_v",
         )
     }
 

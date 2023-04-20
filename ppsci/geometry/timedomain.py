@@ -17,6 +17,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import itertools
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -36,8 +37,9 @@ class TimeDomain(geometry_1d.Interval):
     Args:
         t0 (float): Start of time.
         t1 (float): End of time.
-        time_step (float, optional): Step interval of time. Defaults to None.
-        timestamps (Tuple[float, ...], optional): List of timestamps. Defaults to None.
+        time_step (Optional[float]): Step interval of time. Defaults to None.
+        timestamps (Optional[Tuple[float, ...]]): List of timestamps.
+            Defaults to None.
 
     """
 
@@ -45,8 +47,8 @@ class TimeDomain(geometry_1d.Interval):
         self,
         t0: float,
         t1: float,
-        time_step: float = None,
-        timestamps: Tuple[float, ...] = None,
+        time_step: Optional[float] = None,
+        timestamps: Optional[Tuple[float, ...]] = None,
     ):
         super().__init__(t0, t1)
         self.t0 = t0
@@ -180,7 +182,10 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError("sample interior failed")
+                    raise ValueError(
+                        "Sample points failed, "
+                        "please check correctness of geometry and given creteria."
+                    )
 
             # 2. repeat spatial points along time
             tx = []
@@ -215,7 +220,10 @@ class TimeXGeometry(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError("sample interior failed")
+                    raise ValueError(
+                        "Sample interior points failed, "
+                        "please check correctness of geometry and given creteria."
+                    )
 
             tx = []
             for ti in t:
@@ -291,7 +299,10 @@ class TimeXGeometry(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample interior failed")
+                raise ValueError(
+                    "Sample boundary points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
 
         nx = len(x)
         t = np.linspace(
@@ -345,7 +356,10 @@ class TimeXGeometry(geometry.Geometry):
                         _nsuc += 1
 
                     if _ntry >= 1000 and _nsuc == 0:
-                        raise RuntimeError(f"sample interior failed")
+                        raise ValueError(
+                            "Sample boundary points failed, "
+                            "please check correctness of geometry and given creteria."
+                        )
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
@@ -406,7 +420,10 @@ class TimeXGeometry(geometry.Geometry):
                         _nsuc += 1
 
                     if _ntry >= 1000 and _nsuc == 0:
-                        raise RuntimeError(f"sample interior failed")
+                        raise ValueError(
+                            "Sample boundary points failed, "
+                            "please check correctness of geometry and given creteria."
+                        )
 
             t_x = []
             if isinstance(self.geometry, mesh.Mesh):
@@ -499,7 +516,10 @@ class TimeXGeometry(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample initial interior failed")
+                raise ValueError(
+                    "Sample initial interior points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
         return misc.convert_to_dict(x, self.dim_keys)
 
     def __str__(self) -> str:

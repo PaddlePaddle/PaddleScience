@@ -33,9 +33,9 @@ class SGD(object):
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
     """
 
@@ -74,9 +74,9 @@ class Momentum(object):
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s).
         momentum (float): Momentum factor.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
         use_nesterov (bool, optional): Whether to use nesterov momentum. Defaults to False.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
@@ -217,7 +217,7 @@ class LBFGS(object):
             used to update parameter(s). Defaults to 1.0.
         max_iter (int, optional): Maximal number of iterations per optimization step.
             Defaults to 1.
-        max_eval (Optional[int], optional): Maximal number of function evaluations per
+        max_eval (Optional[int]): Maximal number of function evaluations per
             optimization step. Defaults to None.
         tolerance_grad (float, optional): Termination tolerance on first order optimality.
             Defaults to 1e-07.
@@ -273,9 +273,9 @@ class RMSProp(object):
         rho (float, optional): Factor ρ in equation. Defaults to 0.95.
         epsilon (float, optional): Factor ϵ in equation as a smoothing term. Defaults to 1e-6.
         momentum (float, optional):β in equation is the momentum term. Defaults to 0.0.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
     """
 

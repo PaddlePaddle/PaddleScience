@@ -33,6 +33,10 @@ nav:
       - PINNs:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+      - 数据驱动:
+        - Lorenz_transform_physx: zh/examples/lorenz.md
+        - Rossler_transform_physx: zh/examples/rossler.md
+        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -56,6 +60,7 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
+  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:

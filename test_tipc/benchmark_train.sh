@@ -13,6 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
+export TEST_DIR="${PDSC_DIR}"
+export TIPC_TEST="ON" # open tipc log in solver.py 
+export PYTHONPATH=${PDSC_DIR}
 source ${TEST_DIR}/test_tipc/common_func.sh
 
 function func_parser_params(){
@@ -86,7 +90,7 @@ line_num=`expr $line_num + 1`
 fp_items=$(func_parser_value "${lines[line_num]}")
 line_num=`expr $line_num + 1`
 epoch=$(func_parser_value "${lines[line_num]}")
-
+pip=$(func_parser_value "${lines[59]}")
 line_num=`expr $line_num + 1`
 profile_option_key=$(func_parser_key "${lines[line_num]}")
 profile_option_params=$(func_parser_value "${lines[line_num]}")
