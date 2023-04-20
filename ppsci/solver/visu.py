@@ -92,9 +92,8 @@ def visualize_func_3D(solver, epoch_id):
         epoch_id (int): Epoch id.
 
     """
-    # construct input
     _visualizer = next(iter(solver.visualizer.values()))
-    input_dict, label, onestep_xyz = _visualizer.construct_input()
+    input_dict = _visualizer.input_dict
 
     # reconstruct input
     n = len(next(iter(input_dict.values())))
@@ -121,11 +120,10 @@ def visualize_func_3D(solver, epoch_id):
 
     # denormalize
     solution = _visualizer.transforms["denormalize"](solution)
-    # solution = {
-    #     key: value * _visualizer.factor_dict[key] for key, value in solution.items()
-    # }
-    _visualizer.quantitive_error(solution, label)
+
+    _visualizer.quantitive_error(solution, _visualizer.label)
     # save vtu
     if solver.rank == 0:
         visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-    _visualizer.save(visual_dir, onestep_xyz, solution)
+
+    _visualizer.save(visual_dir, solution)

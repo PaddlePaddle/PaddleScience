@@ -18,13 +18,12 @@ Created in Mar. 2023
 """
 
 import os.path as osp
-import sys
 
 import numpy as np
 
 import ppsci
-import ppsci.utils.misc as misc
-from ppsci.data.process.transform.preprocess import Scale
+import ppsci.data.process.transform as transform
+import ppsci.utils.reader as reader
 
 if __name__ == "__main__":
     # fix the random seed
@@ -115,9 +114,9 @@ if __name__ == "__main__":
     label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
 
     # interior data
-    interior_data = misc.load_vtk_withtime_file(interior_file)
-    normalize = Scale({key: 1 / value for key, value in factor_dict.items()})
-    denormalize = Scale(factor_dict)
+    interior_data = reader.load_vtk_withtime_file(interior_file)
+    normalize = transform.Scale({key: 1 / value for key, value in factor_dict.items()})
+    denormalize = transform.Scale(factor_dict)
     interior_geom = ppsci.geometry.PointCloud(
         coord_dict=normalize(interior_data), extra_data=None, data_key=input_keys
     )
@@ -335,8 +334,8 @@ if __name__ == "__main__":
 
     # Read validation reference for time step : 0, 99
 
-    lbm_0_input, lbm_0_label = misc.load_vtk_file(ref_file, TIME_STEP, [0])
-    lbm_99_input, lbm_99_label = misc.load_vtk_file(ref_file, TIME_STEP, [99])
+    lbm_0_input, lbm_0_label = reader.load_vtk_file(ref_file, TIME_STEP, [0])
+    lbm_99_input, lbm_99_label = reader.load_vtk_file(ref_file, TIME_STEP, [99])
 
     lbm_0_input = normalize(lbm_0_input)
     lbm_0_label = normalize(lbm_0_label)
@@ -362,16 +361,12 @@ if __name__ == "__main__":
             name="Residual",
         ),
     }
-    pretrained_model_path = osp.join(dirname, "checkpoints/epoch_301000")
-    one_input, _ = misc.load_vtk_file(ref_file, TIME_STEP, [0])
-    cord = {"x": one_input["x"], "y": one_input["y"], "z": one_input["z"]}
 
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
             time_step=TIME_STEP,
             time_list=time_list,
-            factor_dict=factor_dict,
-            input_dict=cord,
+            input_dict=None,
             output_expr={
                 "u": lambda d: d["u"],
                 "v": lambda d: d["v"],
