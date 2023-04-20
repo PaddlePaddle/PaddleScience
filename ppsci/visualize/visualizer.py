@@ -225,6 +225,7 @@ class Visualizer3D(base.Visualizer):
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
         ref_file: str,
+        transforms=None,
         visualizer_batch_size: int = 4e5,
         num_timestamps: int = 1,
         prefix: str = "vtu",
@@ -235,6 +236,7 @@ class Visualizer3D(base.Visualizer):
         self.time_step = time_step
         self.factor_dict = factor_dict
         self.ref_file = ref_file
+        self.transforms = transforms
         self.visualizer_batch_size = visualizer_batch_size
 
     def construct_input(self):
@@ -260,10 +262,11 @@ class Visualizer3D(base.Visualizer):
             input["z"][i * n : (i + 1) * n] = one_input["z"]
 
         # Normalize
-        for key, value in self.factor_dict.items():
-            if abs(value) < sys.float_info.min:
-                raise ValueError(f"{key} in factor dict is zero")
-        input = {key: value / self.factor_dict[key] for key, value in input.items()}
+        input = self.transforms["normalize"](input)
+        # for key, value in self.factor_dict.items():
+        #     if abs(value) < sys.float_info.min:
+        #         raise ValueError(f"{key} in factor dict is zero")
+        # input = {key: value / self.factor_dict[key] for key, value in input.items()}
 
         onestep_xyz = {
             "x": one_input["x"],

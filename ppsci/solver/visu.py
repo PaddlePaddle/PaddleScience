@@ -120,9 +120,10 @@ def visualize_func_3D(solver, epoch_id):
             solution[key][i * m : (i + 1) * m] = output[key].numpy()
 
     # denormalize
-    solution = {
-        key: value * _visualizer.factor_dict[key] for key, value in solution.items()
-    }
+    solution = _visualizer.transforms["denormalize"](solution)
+    # solution = {
+    #     key: value * _visualizer.factor_dict[key] for key, value in solution.items()
+    # }
     _visualizer.quantitive_error(solution, label)
     # save vtu
     if solver.rank == 0:

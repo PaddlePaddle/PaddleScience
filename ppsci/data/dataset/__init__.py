@@ -19,6 +19,7 @@ from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset
+from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
 
@@ -30,6 +31,7 @@ __all__ = [
     "CylinderDataset",
     "LorenzDataset",
     "RosslerDataset",
+    "VtuDataset",
     "build_dataset",
 ]
 

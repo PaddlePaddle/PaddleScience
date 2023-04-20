@@ -16,6 +16,7 @@ import types
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -43,12 +44,12 @@ class InteriorConstraint(base.Constraint):
         loss (loss.LossBase): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
-        criteria (Callable, optional): Criteria for refining specified boundaries.
+        criteria (Optional[Callable], optional): Criteria for refining specified boundaries.
             Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling.
             Defaults to False.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
-            constraint variable. Defaults to None.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]], optional): Define the
+            weight of each constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "EQ".
     """
 
@@ -60,9 +61,9 @@ class InteriorConstraint(base.Constraint):
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
         random: Literal["pseudo", "LHS"] = "pseudo",
-        criteria: Callable = None,
+        criteria: Optional[Callable] = None,
         evenly: bool = False,
-        weight_dict: Dict[str, Callable] = None,
+        weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         name: str = "EQ",
     ):
         self.label_expr = label_expr
@@ -71,29 +72,24 @@ class InteriorConstraint(base.Constraint):
                 self.label_expr[label_name] = sp_parser.parse_expr(expr)
 
         self.label_dict = label_dict
+        self.input_keys = geom.dim_keys
         self.output_keys = list(label_dict.keys())
-        if isinstance(geom, dict):
-            self.input_keys = ["x", "y", "z"][:3]
-            input = geom
-        else:
-            self.input_keys = geom.dim_keys
+        # "area" will be kept in "output_dict" for computation.
+        if isinstance(geom, geometry.Mesh):
+            self.output_keys += ["area"]
 
-            # "area" will be kept in "output_dict" for computation.
-            if isinstance(geom, geometry.Mesh):
-                self.output_keys += ["area"]
+        if isinstance(criteria, str):
+            criteria = eval(criteria)
 
-            if isinstance(criteria, str):
-                criteria = eval(criteria)
-
-            # prepare input
-            input = geom.sample_interior(
-                dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
-                random,
-                criteria,
-                evenly,
-            )
-            if "area" in input:
-                input["area"] *= dataloader_cfg["iters_per_epoch"]
+        # prepare input
+        input = geom.sample_interior(
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
+            random,
+            criteria,
+            evenly,
+        )
+        if "area" in input:
+            input["area"] *= dataloader_cfg["iters_per_epoch"]
 
         # prepare label
         label = {}
@@ -121,8 +117,9 @@ class InteriorConstraint(base.Constraint):
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
+        # prepare weight
+        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
-            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, str):
                     value = sp_parser.parse_expr(value)
@@ -147,8 +144,7 @@ class InteriorConstraint(base.Constraint):
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
-        else:
-            weight = None
+
         # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
 

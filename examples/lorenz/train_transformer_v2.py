@@ -80,7 +80,7 @@ if __name__ == "__main__":
     output_transform = OutputTransform(embedding_model)
 
     # maunally build constraint(s)
-    train_dataloader = {
+    train_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
             "file_path": train_file_path,
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         input_keys,
         output_keys,
         {},
-        train_dataloader,
+        train_dataloader_cfg,
         ppsci.loss.MSELoss(),
         weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="Sup",
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    eval_dataloader = {
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
             "file_path": valid_file_path,
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     mse_validator = ppsci.validate.SupervisedValidator(
         input_keys,
         output_keys,
-        eval_dataloader,
+        eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
         weight_dict={key: value for key, value in zip(output_keys, weights)},

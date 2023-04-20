@@ -42,9 +42,11 @@ class Scale(object):
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):
+
         self.scale = scale
 
     def __call__(self, data_dict):
         for key in self.scale:
-            data_dict[key] *= self.scale[key]
+            if key in data_dict.keys():
+                data_dict[key] *= self.scale[key]
         return data_dict

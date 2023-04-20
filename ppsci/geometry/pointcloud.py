@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Union
+
 import numpy as np
 
 from ppsci.geometry import geometry
@@ -22,40 +25,47 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        interior_path (str): File which store interior points of a point cloud.
+        coord_dict (str): File which store interior points of a point cloud.
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
-        coord_keys (List[str]): List of coordinate keys, such as ["x", "y"].
+        data_key (List[str]): List of coordinate keys, such as ["x", "y"].
         alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
     """
 
     def __init__(
         self,
-        interior_path,
-        coord_keys,
+        coord_dict: Union[
+            str, Dict
+        ],  #  1. 改造PointCloud，在支持从文件读入数据的情况下，同时支持直接使用给定内存中的数据
+        extra_data: Dict,  # 2. 支持额外信息点
+        data_key,
         boundary_path=None,
         boundary_normal_path=None,
         alias_dict=None,
     ):
         # Interior points from CSV file
-        if interior_path.endswith(".csv"):
+        if str(coord_dict).endswith(".csv"):
             # read data
-            data_dict = misc.load_csv_file(interior_path, coord_keys)
+            data_dict = misc.load_csv_file(coord_dict, data_key)
+        elif isinstance(coord_dict, dict):
+            data_dict = coord_dict
+            if extra_data is not None:
+                data_dict.update(extra_data)
 
-            # convert to numpy array
-            self.interior = []
-            for key in coord_keys:
-                self.interior.append(data_dict[key])
-            self.interior = np.concatenate(self.interior, -1)
-
+        # convert to numpy array
+        self.interior = []
+        for key in data_key:
+            self.interior.append(data_dict[key])
+        self.interior = np.concatenate(self.interior, -1)
+        self.len = self.interior.shape[0]
         # Boundary points from CSV file
         if boundary_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_path, coord_keys)
+            data_dict = misc.load_csv_file(boundary_path, data_key)
 
             # convert to numpy array
             self.boundary = {}
-            for key in coord_keys:
+            for key in data_key:
                 self.boundary.append(data_dict[key])
             self.boundary = np.concatenate(self.boundary, -1)
         else:
@@ -64,25 +74,25 @@ class PointCloud(geometry.Geometry):
         # Normal of boundary points from CSV file
         if boundary_normal_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_normal_path, coord_keys)
+            data_dict = misc.load_csv_file(boundary_normal_path, data_key)
 
             # convert to numpy array
             self.normal = {}
-            for key in coord_keys:
+            for key in data_key:
                 self.normal.append(data_dict[key])
             self.normal = np.concatenate(self.normal, -1)
         else:
             self.normal = None
 
         self.input_keys = []
-        for key in coord_keys:
-            if key in alias_dict:
+        for key in data_key:
+            if alias_dict is not None and key in alias_dict:
                 self.input_keys.append(alias_dict[key])
             else:
                 self.input_keys.append(key)
 
         super().__init__(
-            len(coord_keys),
+            len(data_key),
             (np.amin(self.interior, axis=0), np.amax(self.interior, axis=0)),
             np.inf,
         )
@@ -147,6 +157,15 @@ class PointCloud(geometry.Geometry):
         )
         return self.boundary[
             np.random.choice(len(self.boundary), size=n, replace=False)
+        ]
+
+    def random_points(self, n, random="pseudo"):
+        assert n <= len(self.interior), (
+            f"number of sample points({n}) "
+            f"can't be more than that in points({len(self.interior)})"
+        )
+        return self.interior[
+            np.random.choice(len(self.interior), size=n, replace=False)
         ]
 
     def random_points(self, n, random="pseudo"):

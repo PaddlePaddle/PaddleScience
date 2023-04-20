@@ -24,25 +24,18 @@ import numpy as np
 
 import ppsci
 import ppsci.utils.misc as misc
-
-
-def normalize(input: dict, factor: dict):
-    for key, value in factor.items():
-        if abs(value) < sys.float_info.min:
-            raise ValueError(f"{key} in factor dict is zero")
-    normolized_input = {key: value / factor[key] for key, value in input.items()}
-    return normolized_input
-
-
-def denormalize(input: dict, factor: dict):
-    denormolized_input = {key: value * factor[key] for key, value in input.items()}
-    return denormolized_input
-
+from ppsci.data.process.transform.preprocess import Scale
 
 if __name__ == "__main__":
-    # set output directory
-    output_dir = "./output"
+    # fix the random seed
+    ppsci.utils.misc.set_random_seed(42)
+
+    # set directories
     dirname = "."
+    output_dir = "./output"
+    ref_file = osp.join(dirname, "data/LBM_result/cylinder3d_2023_1_31_LBM_")
+    sup_file = osp.join(dirname, "data/sup_data/supervised_")
+    interior_file = osp.join(dirname, "data/sample_points/interior_txyz.vtu")
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -99,9 +92,6 @@ if __name__ == "__main__":
     sup_wgt = 10
     w_epoch = 50000  # simulated annealing
 
-    # fix the random seed
-    ppsci.utils.misc.set_random_seed(42)
-
     # time array
     INITIAL_TIME = 200000
     START_TIME = 200050
@@ -119,100 +109,31 @@ if __name__ == "__main__":
     time_index.sort()
     time_array = time_index * TIME_STEP
 
-    # initial value
-    ref_file = osp.join(dirname, "data/LBM_result/cylinder3d_2023_1_31_LBM_")
-    ic_input, ic_label = misc.load_vtk_file(ref_file, TIME_STEP, [0])
-    ic_dict = {}
-    ic_dict.update(normalize(ic_input, factor_dict))
-    ic_dict.update(normalize(ic_label, factor_dict))
-
-    # supervised data
-    sup_name = osp.join(dirname, "data/sup_data/supervised_")
-    sup_input, sup_label = misc.load_vtk_file(sup_name, TIME_STEP, time_index)
-    sup_dict = {}
-    sup_dict.update(normalize(sup_input, factor_dict))
-    sup_dict.update(normalize(sup_label, factor_dict))
-
-    # interior data
-    interior_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/interior_txyz.vtu")  # input
-    )
-
-    # inlet data
-    inlet_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/inlet_txyz.vtu")  # input
-    )
-    inlet_data.update(
-        {
-            "u": 0.1,
-            "v": 0,
-            "w": 0,
-        }
-    )  # label
-
-    # cylinder data
-    cylinder_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/cylinder_txyz.vtu")  # input
-    )
-    cylinder_data.update(
-        {
-            "u": 0,
-            "v": 0,
-            "w": 0,
-        }
-    )  # label
-
-    # outlet data
-    outlet_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/outlet_txyz.vtu")  # input
-    )
-    outlet_data.update(
-        {
-            "p": 0,
-        }
-    )  # label
-
-    # top data
-    top_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/top_txyz.vtu")  # input
-    )
-    top_data.update(
-        {
-            "u": 0.1,
-            "v": 0,
-            "w": 0,
-        }
-    )  # label
-
-    # bottom data
-    bottom_data = misc.load_vtk_withtime_file(
-        osp.join(dirname, "data/sample_points/bottom_txyz.vtu")  # input
-    )
-    bottom_data.update(
-        {
-            "u": 0.1,
-            "v": 0,
-            "w": 0,
-        }
-    )  # label
-
-    interior_data = normalize(interior_data, factor_dict)
-    bc_inlet_data = normalize(inlet_data, factor_dict)
-    bc_cylinder_data = normalize(cylinder_data, factor_dict)
-    bc_outlet_data = normalize(outlet_data, factor_dict)
-    bc_top_data = normalize(top_data, factor_dict)
-    bc_bottom_data = normalize(bottom_data, factor_dict)
-
-    # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
-    pde = ppsci.equation.NavierStokes(nu=NU, rho=1.0, dim=3, time=True)
     input_keys = ["t", "x", "y", "z"]
     label_keys_1 = ["u", "v", "w", "p"]
     label_keys_2 = ["u", "v", "w"]
+    label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
+
+    # interior data
+    interior_data = misc.load_vtk_withtime_file(interior_file)
+    normalize = Scale({key: 1 / value for key, value in factor_dict.items()})
+    denormalize = Scale(factor_dict)
+    interior_geom = ppsci.geometry.PointCloud(
+        coord_dict=normalize(interior_data), extra_data=None, data_key=input_keys
+    )
+
+    # N-S, Re=3900, D=80, u=0.1, nu=80/3900; nu = rho u D / Re = 1.0 * 0.1 * 80 / 3900
+    pde = ppsci.equation.NavierStokes(nu=NU, rho=1.0, dim=3, time=True)
+    _normalize = {
+        "Scale": {"scale": {key: 1 / value for key, value in factor_dict.items()}}
+    }
     pde_constraint = ppsci.constraint.InteriorConstraint(
         label_expr=pde.equations,
         label_dict={"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
-        geom=interior_data,
+        geom=interior_geom,
+        evenly=True,
         dataloader_cfg={
+            "iters_per_epoch": int(interior_geom.len / bs["interior"]),
             "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["interior"],
@@ -227,14 +148,18 @@ if __name__ == "__main__":
     )
 
     ic = ppsci.constraint.SupervisedConstraint(
-        data_file=ic_dict,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["ic"],
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": ref_file,
+                "label_keys": label_keys_2,
+                "time_step": TIME_STEP,
+                "time_index": [0],
+                "transforms": [_normalize],
+            },
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -246,14 +171,18 @@ if __name__ == "__main__":
     )
 
     sup = ppsci.constraint.SupervisedConstraint(
-        data_file=sup_dict,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["supervised"],
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": sup_file,
+                "label_keys": label_keys_2,
+                "time_step": TIME_STEP,
+                "time_index": time_index,
+                "transforms": [_normalize],
+            },
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -265,14 +194,17 @@ if __name__ == "__main__":
     )
 
     bc_inlet = ppsci.constraint.SupervisedConstraint(
-        data_file=bc_inlet_data,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["inlet"],
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": osp.join(dirname, "data/sample_points/inlet_txyz.vtu"),
+                "label_keys": label_keys_2,
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [_normalize],
+            },
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -284,14 +216,17 @@ if __name__ == "__main__":
     )
 
     bc_cylinder = ppsci.constraint.SupervisedConstraint(
-        data_file=bc_cylinder_data,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["cylinder"],
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": osp.join(dirname, "data/sample_points/cylinder_txyz.vtu"),
+                "label_keys": label_keys_2,
+                "labels": {"u": 0, "v": 0, "w": 0},
+                "transforms": [_normalize],
+            },
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -303,14 +238,17 @@ if __name__ == "__main__":
     )
 
     bc_outlet = ppsci.constraint.SupervisedConstraint(
-        data_file=bc_outlet_data,
-        input_keys=input_keys,
-        label_keys=["p"],
-        alias_dict=None,
+        label_expr={"p": lambda d: d["p"]},
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
             "num_workers": 1,
             "batch_size": bs["outlet"],
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": osp.join(dirname, "data/sample_points/outlet_txyz.vtu"),
+                "label_keys": ["p"],
+                "labels": {"p": 0},
+                "transforms": [_normalize],
+            },
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": False,
@@ -322,12 +260,15 @@ if __name__ == "__main__":
     )
 
     bc_top = ppsci.constraint.SupervisedConstraint(
-        data_file=bc_top_data,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": osp.join(dirname, "data/sample_points/top_txyz.vtu"),
+                "label_keys": label_keys_2,
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [_normalize],
+            },
             "num_workers": 1,
             "batch_size": bs["top"],
             "sampler": {
@@ -341,12 +282,15 @@ if __name__ == "__main__":
     )
 
     bc_bottom = ppsci.constraint.SupervisedConstraint(
-        data_file=bc_bottom_data,
-        input_keys=input_keys,
-        label_keys=label_keys_2,
-        alias_dict=None,
+        label_expr=label_expr,
         dataloader_cfg={
-            "dataset": "MiniBatchDataset",
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": osp.join(dirname, "data/sample_points/bottom_txyz.vtu"),
+                "label_keys": label_keys_2,
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [_normalize],
+            },
             "num_workers": 1,
             "batch_size": bs["bottom"],
             "sampler": {
@@ -371,7 +315,7 @@ if __name__ == "__main__":
     }
 
     model = ppsci.arch.MLP(
-        input_keys=["t", "x", "y", "z"],
+        input_keys=input_keys,
         output_keys=label_keys_1,
         num_layers=num_layers,
         hidden_size=hidden_size,
@@ -394,8 +338,8 @@ if __name__ == "__main__":
     lbm_0_input, lbm_0_label = misc.load_vtk_file(ref_file, TIME_STEP, [0])
     lbm_99_input, lbm_99_label = misc.load_vtk_file(ref_file, TIME_STEP, [99])
 
-    lbm_0_input = normalize(lbm_0_input, factor_dict)
-    lbm_0_label = normalize(lbm_0_label, factor_dict)
+    lbm_0_input = normalize(lbm_0_input)
+    lbm_0_label = normalize(lbm_0_label)
     lbm_0_dict = {}
     lbm_0_dict.update(lbm_0_input)
     lbm_0_dict.update(lbm_0_label)
@@ -435,6 +379,7 @@ if __name__ == "__main__":
                 "p": lambda d: d["p"],
             },
             ref_file=ref_file,
+            transforms={"denormalize": denormalize, "normalize": normalize},
             prefix="result_uvwp",
         )
     }
