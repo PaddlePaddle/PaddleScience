@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import importlib
 from typing import Union
 
 import numpy as np
@@ -315,7 +314,10 @@ class Mesh(geometry.Geometry):
                     _nsuc += 1
 
                 if _ntry >= 1000 and _nsuc == 0:
-                    raise RuntimeError("sample boundary failed")
+                    raise ValueError(
+                        "Sample boundary points failed, "
+                        "please check correctness of geometry and given creteria."
+                    )
 
         normal_dict = misc.convert_to_dict(
             normal, [f"normal_{key}" for key in self.dim_keys if key != "t"]
@@ -373,7 +375,10 @@ class Mesh(geometry.Geometry):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample interior failed")
+                raise ValueError(
+                    "Sample interior points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
 
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 

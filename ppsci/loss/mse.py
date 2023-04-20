@@ -75,7 +75,7 @@ class MSELossWithL2Decay(MSELoss):
 
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
-        regularization_dict (Optional[Dict[str, float]], optional): Regularization dictionary. Defaults to None.
+        regularization_dict (Optional[Dict[str, float]]): Regularization dictionary. Defaults to None.
 
     Raises:
         ValueError: reduction should be 'mean' or 'sum'.

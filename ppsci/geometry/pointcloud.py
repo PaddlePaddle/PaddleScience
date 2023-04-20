@@ -18,7 +18,7 @@ from typing import Union
 import numpy as np
 
 from ppsci.geometry import geometry
-from ppsci.utils import misc
+from ppsci.utils import reader
 
 
 class PointCloud(geometry.Geometry):
@@ -46,7 +46,7 @@ class PointCloud(geometry.Geometry):
         # Interior points from CSV file
         if str(coord_dict).endswith(".csv"):
             # read data
-            data_dict = misc.load_csv_file(coord_dict, data_key)
+            data_dict = reader.load_csv_file(coord_dict, data_key)
         elif isinstance(coord_dict, dict):
             data_dict = coord_dict
             if extra_data is not None:
@@ -61,7 +61,7 @@ class PointCloud(geometry.Geometry):
         # Boundary points from CSV file
         if boundary_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_path, data_key)
+            data_dict = reader.load_csv_file(boundary_path, data_key)
 
             # convert to numpy array
             self.boundary = {}
@@ -74,7 +74,7 @@ class PointCloud(geometry.Geometry):
         # Normal of boundary points from CSV file
         if boundary_normal_path is not None:
             # read data
-            data_dict = misc.load_csv_file(boundary_normal_path, data_key)
+            data_dict = reader.load_csv_file(boundary_normal_path, data_key)
 
             # convert to numpy array
             self.normal = {}

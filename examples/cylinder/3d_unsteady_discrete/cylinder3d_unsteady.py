@@ -345,13 +345,16 @@ if __name__ == "__main__":
 
     # Validator
     validator = {
-        "Residual": ppsci.validate.DataValidator(
-            data_dict=lbm_0_dict,
-            input_keys=input_keys,
-            label_keys=label_keys_1,
-            alias_dict={},
+        "Residual": ppsci.validate.SupervisedValidator(
             dataloader_cfg={
-                "dataset": "NamedArrayDataset",
+                "dataset": {
+                    "name": "VtuDataset",
+                    "file_path": ref_file,
+                    "label_keys": label_keys_2,
+                    "time_step": TIME_STEP,
+                    "time_index": [0],
+                    "transforms": [_normalize],
+                },
                 "total_size": len(next(iter(lbm_0_dict.values()))),
                 "batch_size": 1024,
                 "sampler": {"name": "BatchSampler"},
@@ -391,7 +394,7 @@ if __name__ == "__main__":
         save_freq=1000,
         eval_during_train=False,
         eval_freq=1000,
-        equation=pde,
+        equation={"NS": pde},
         geom=None,
         validator=validator,
         visualizer=visualizer,

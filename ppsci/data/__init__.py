@@ -21,7 +21,6 @@ import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io
 
-from ppsci import data
 from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
@@ -49,12 +48,11 @@ def worker_init_fn(worker_id, num_workers, rank, base_seed):
 
 def build_dataloader(_dataset, cfg):
     world_size = dist.get_world_size()
-    # just return IterableNamedArrayDataset as datalaoder
-    if isinstance(_dataset, dataset.IterableNamedArrayDataset):
+    # just return IterableDataset as datalaoder
+    if isinstance(_dataset, io.IterableDataset):
         if world_size > 1:
             raise ValueError(
-                f"world_size({world_size}) should be "
-                f"1 when using IterableNamedArrayDataset"
+                f"world_size({world_size}) should be 1 when using IterableDataset"
             )
         return _dataset
 

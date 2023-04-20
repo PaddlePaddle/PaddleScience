@@ -14,7 +14,6 @@
 
 import argparse
 import copy
-import logging
 import os
 
 import yaml
@@ -178,29 +177,9 @@ def get_config(fname, overrides=None, show=False):
 
 def parse_args():
     parser = argparse.ArgumentParser("paddlescience running script")
-    parser.add_argument("-c", "--config", type=str, help="config file path")
-    parser.add_argument(
-        "-o",
-        "--override",
-        action="append",
-        default=[],
-        help="config options to be overridden",
-    )
-    parser.add_argument(
-        "-p",
-        "--profiler_options",
-        type=str,
-        default=None,
-        help='The option of profiler, which should be in format "key1=value1;key2=value2;key3=value3".',
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_const",
-        const=logging.DEBUG,
-        default=logging.INFO,
-        help="Print more details when --debug is enabled.",
-    )
+    parser.add_argument("-e", "--epochs", type=int, help="training epochs")
+    parser.add_argument("-o", "--output_dir", type=str, help="output directory")
+
     args = parser.parse_args()
     return args
 

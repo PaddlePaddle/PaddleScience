@@ -86,7 +86,10 @@ class Geometry(object):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample interior failed")
+                raise ValueError(
+                    "Sample interior points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
         return misc.convert_to_dict(x, self.dim_keys)
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
@@ -128,7 +131,10 @@ class Geometry(object):
                 _nsuc += 1
 
             if _ntry >= 1000 and _nsuc == 0:
-                raise RuntimeError("sample boundary failed")
+                raise ValueError(
+                    "Sample boundary points failed, "
+                    "please check correctness of geometry and given creteria."
+                )
 
         if not (
             misc.typename(self) == "TimeXGeometry"
