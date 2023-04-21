@@ -24,7 +24,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(["t_f"], ["eta"], 5, 50, "tanh", False, False)
+    model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh", False, False)
     # set equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
@@ -34,8 +34,8 @@ if __name__ == "__main__":
         "dataset": {
             "name": "MatDataset",
             "file_path": "./VIV_Training_Neta100.mat",
-            "input_keys": ["t_f"],
-            "label_keys": ["eta", "f"],
+            "input_keys": ("t_f",),
+            "label_keys": ("eta", "f"),
             "weight_dict": {"eta": 100},
         },
         "batch_size": 150,
@@ -44,9 +44,6 @@ if __name__ == "__main__":
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 0,
-        "seed": 42,
-        "use_shared_memory": False,
     }
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -74,8 +71,8 @@ if __name__ == "__main__":
         "dataset": {
             "name": "MatDataset",
             "file_path": "./VIV_Training_Neta100.mat",
-            "input_keys": ["t_f"],
-            "label_keys": ["eta", "f"],
+            "input_keys": ("t_f",),
+            "label_keys": ("eta", "f"),
         },
         "batch_size": 32,
         "sampler": {
@@ -83,9 +80,6 @@ if __name__ == "__main__":
             "drop_last": False,
             "shuffle": False,
         },
-        "num_workers": 0,
-        "seed": 42,
-        "use_shared_memory": False,
     }
     # set validator
     eta_mse_validator = ppsci.validate.SupervisedValidator(
@@ -99,12 +93,12 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
-        "./VIV_Training_Neta100.mat", ["t_f", "eta_gt"], alias_dict={"eta_gt": "eta"}
+        "./VIV_Training_Neta100.mat", ("t_f", "eta_gt"), alias_dict={"eta_gt": "eta"}
     )
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerScatter1D(
             visu_mat,
-            ["t_f"],
+            ("t_f",),
             {"eta_pred": lambda d: d["eta"], "eta_gt": lambda d: d["eta_gt"]},
             1,
             "viv_pred",
