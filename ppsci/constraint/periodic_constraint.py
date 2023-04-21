@@ -49,7 +49,7 @@ class PeriodicConstraint(base.Constraint):
             Defaults to None.
         evenly (bool, optional):  Whether to use evenly distribution sampling.
             Defaults to False.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
+        weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
             constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "PeriodicBC".
     """

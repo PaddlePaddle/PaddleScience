@@ -47,7 +47,7 @@ class IntegralConstraint(base.Constraint):
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
+        weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
             constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "IgC".
     """
