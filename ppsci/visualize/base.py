@@ -19,7 +19,7 @@ from typing import Dict
 import numpy as np
 
 
-class Visualizer(object):
+class Visualizer:
     """Base class for visualizer.
 
     Args:
