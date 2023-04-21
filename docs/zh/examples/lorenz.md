@@ -84,7 +84,7 @@ examples/lorenz/train_enn_v2.py:57:74
 
 "sampler" 字段定义了使用的 `Sampler` 类名为 `BatchSampler`，另外还指定了该类初始化时参数 `drop_last`、`shuffle` 均为 `True`。
 
-`train_dataloader_cfg` 还定义了 `batch_size`、`num_workers`、`use_shared_memory` 的值。
+`train_dataloader_cfg` 还定义了 `batch_size`、`num_workers` 的值。
 
 定义监督约束的代码如下：
 
