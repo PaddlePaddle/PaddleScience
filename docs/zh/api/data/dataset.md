@@ -9,4 +9,6 @@
         - CylinderDataset
         - LorenzDataset
         - RosslerDataset
+        - CSVDataset
+        - MatDataset
       show_root_heading: false
