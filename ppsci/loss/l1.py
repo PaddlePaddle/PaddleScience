@@ -23,8 +23,8 @@ class L1Loss(base.LossBase):
     $$
     L =
     \begin{cases}
-        \frac{1}{N}\sum_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
-        \sum_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
     \end{cases}
     $$
 

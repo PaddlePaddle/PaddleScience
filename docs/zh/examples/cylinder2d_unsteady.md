@@ -9,24 +9,24 @@
 质量守恒：
 
 $$
-\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} = 0
+\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} = 0
 $$
 
 $x$ 动量守恒：
 
 $$
-\frac{\partial u}{\partial t} + u\frac{\partial u}{\partial x} + v\frac{\partial u}{\partial y} = -\frac{1}{\rho}\frac{\partial p}{\partial x} + \nu(\frac{\partial ^2 u}{\partial x ^2} + \frac{\partial ^2 u}{\partial y ^2})
+\dfrac{\partial u}{\partial t} + u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial x} + \nu(\dfrac{\partial ^2 u}{\partial x ^2} + \dfrac{\partial ^2 u}{\partial y ^2})
 $$
 
 $y$ 动量守恒：
 
 $$
-\frac{\partial v}{\partial t} + u\frac{\partial v}{\partial x} + v\frac{\partial v}{\partial y} = -\frac{1}{\rho}\frac{\partial p}{\partial y} + \nu(\frac{\partial ^2 v}{\partial x ^2} + \frac{\partial ^2 v}{\partial y ^2})
+\dfrac{\partial v}{\partial t} + u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial y} + \nu(\dfrac{\partial ^2 v}{\partial x ^2} + \dfrac{\partial ^2 v}{\partial y ^2})
 $$
 
 **令：**
 
-$t^* = \frac{L}{U_0}$
+$t^* = \dfrac{L}{U_0}$
 
 $x^*=y^* = L$
 
@@ -36,34 +36,34 @@ $p^* = \rho {U_0}^2$
 
 **定义：**
 
-无量纲时间 $\tau = \frac{t}{t^*}$
+无量纲时间 $\tau = \dfrac{t}{t^*}$
 
-无量纲坐标 $x：X = \frac{x}{x^*}$；无量纲坐标 $y：Y = \frac{y}{y^*}$
+无量纲坐标 $x：X = \dfrac{x}{x^*}$；无量纲坐标 $y：Y = \dfrac{y}{y^*}$
 
-无量纲速度 $x：U = \frac{u}{u^*}$；无量纲速度 $y：V = \frac{v}{u^*}$
+无量纲速度 $x：U = \dfrac{u}{u^*}$；无量纲速度 $y：V = \dfrac{v}{u^*}$
 
-无量纲压力 $P = \frac{p}{p^*}$
+无量纲压力 $P = \dfrac{p}{p^*}$
 
-雷诺数 $Re = \frac{L U_0}{\nu}$
+雷诺数 $Re = \dfrac{L U_0}{\nu}$
 
 则可获得如下无量纲Navier-Stokes方程，施加于流体域内部：
 
 质量守恒：
 
 $$
-\frac{\partial U}{\partial X} + \frac{\partial U}{\partial Y} = 0
+\dfrac{\partial U}{\partial X} + \dfrac{\partial U}{\partial Y} = 0
 $$
 
 $x$ 动量守恒：
 
 $$
-\frac{\partial U}{\partial \tau} + U\frac{\partial U}{\partial X} + V\frac{\partial U}{\partial Y} = -\frac{\partial P}{\partial X} + \frac{1}{Re}(\frac{\partial ^2 U}{\partial X^2} + \frac{\partial ^2 U}{\partial Y^2})
+\dfrac{\partial U}{\partial \tau} + U\dfrac{\partial U}{\partial X} + V\dfrac{\partial U}{\partial Y} = -\dfrac{\partial P}{\partial X} + \dfrac{1}{Re}(\dfrac{\partial ^2 U}{\partial X^2} + \dfrac{\partial ^2 U}{\partial Y^2})
 $$
 
 $y$ 动量守恒：
 
 $$
-\frac{\partial V}{\partial \tau} + U\frac{\partial V}{\partial X} + V\frac{\partial V}{\partial Y} = -\frac{\partial P}{\partial Y} + \frac{1}{Re}(\frac{\partial ^2 V}{\partial X^2} + \frac{\partial ^2 V}{\partial Y^2})
+\dfrac{\partial V}{\partial \tau} + U\dfrac{\partial V}{\partial X} + V\dfrac{\partial V}{\partial Y} = -\dfrac{\partial P}{\partial Y} + \dfrac{1}{Re}(\dfrac{\partial ^2 V}{\partial X^2} + \dfrac{\partial ^2 V}{\partial Y^2})
 $$
 
 对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
@@ -187,15 +187,15 @@ geom = {
 1. 施加在流体域内部点上的无量纲 Navier-Stokes 方程约束（经过简单移项）
 
     $$
-    \frac{\partial U}{\partial X} + \frac{\partial U}{\partial Y} = 0
+    \dfrac{\partial U}{\partial X} + \dfrac{\partial U}{\partial Y} = 0
     $$
 
     $$
-    \frac{\partial U}{\partial \tau} + U\frac{\partial U}{\partial X} + V\frac{\partial U}{\partial Y} + \frac{\partial P}{\partial X} - \frac{1}{Re}(\frac{\partial ^2 U}{\partial X^2} + \frac{\partial ^2 U}{\partial Y^2}) = 0
+    \dfrac{\partial U}{\partial \tau} + U\dfrac{\partial U}{\partial X} + V\dfrac{\partial U}{\partial Y} + \dfrac{\partial P}{\partial X} - \dfrac{1}{Re}(\dfrac{\partial ^2 U}{\partial X^2} + \dfrac{\partial ^2 U}{\partial Y^2}) = 0
     $$
 
     $$
-    \frac{\partial V}{\partial \tau} + U\frac{\partial V}{\partial X} + V\frac{\partial V}{\partial Y} + \frac{\partial P}{\partial Y} - \frac{1}{Re}(\frac{\partial ^2 V}{\partial X^2} + \frac{\partial ^2 V}{\partial Y^2}) = 0
+    \dfrac{\partial V}{\partial \tau} + U\dfrac{\partial V}{\partial X} + V\dfrac{\partial V}{\partial Y} + \dfrac{\partial P}{\partial Y} - \dfrac{1}{Re}(\dfrac{\partial ^2 V}{\partial X^2} + \dfrac{\partial ^2 V}{\partial Y^2}) = 0
     $$
 
     为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。

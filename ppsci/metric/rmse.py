@@ -22,7 +22,7 @@ class RMSE(base.MetricBase):
     r"""Root mean square error
 
     $$
-    metric = \sqrt{\frac{1}{N}}\sum_{i=1}^{N}{(x_i-y_i)^2}
+    metric = \sqrt{\dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}}
     $$
     """
 
