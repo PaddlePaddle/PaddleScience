@@ -21,7 +21,7 @@ from ppsci import data
 from ppsci import loss
 
 
-class Validator(object):
+class Validator:
     """Base class for validators.
 
     Args:
