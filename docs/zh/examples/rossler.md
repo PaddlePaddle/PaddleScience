@@ -53,7 +53,7 @@ examples/rossler/train_enn_v2.py:45:56
 
 ``` py linenums="61" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:61:79
+examples/rossler/train_enn_v2.py:61:78
 --8<--
 ```
 
@@ -72,9 +72,9 @@ examples/rossler/train_enn_v2.py:61:79
 
 定义监督约束的代码如下：
 
-``` py linenums="81" title="examples/rossler/train_enn_v2.py"
+``` py linenums="80" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:81:89
+examples/rossler/train_enn_v2.py:80:88
 --8<--
 ```
 
@@ -82,7 +82,7 @@ examples/rossler/train_enn_v2.py:81:89
 
 第二个参数是损失函数的定义，这里使用带有 L2Decay 的 MSELoss，类名为 `MSELossWithL2Decay`，`regularization_dict` 设置了正则化的变量名称和对应的权重；
 
-第三个参数在本案例中代表对模型输出的变换规则，此处直接使用网络模型的输出数据；
+第三个参数表示在训练时如何计算需要被约束的中间变量，此处我们约束的变量就是网络的输出；
 
 第四个参数是约束条件的名字，方便后续对其索引。此处命名为 "Sup"。
 
@@ -97,9 +97,9 @@ examples/rossler/train_enn_v2.py:81:89
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="94" title="examples/rossler/train_enn_v2.py"
+``` py linenums="93" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:94:98
+examples/rossler/train_enn_v2.py:93:97
 --8<--
 ```
 
@@ -115,9 +115,9 @@ examples/rossler/train_enn_v2.py:28:39
 
 本案例中使用的学习率方法为 `ExponentialDecay` ，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下
 
-``` py linenums="100" title="examples/rossler/train_enn_v2.py"
+``` py linenums="99" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:100:114
+examples/rossler/train_enn_v2.py:99:113
 --8<--
 ```
 
@@ -125,20 +125,21 @@ examples/rossler/train_enn_v2.py:100:114
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="116" title="examples/rossler/train_enn_v2.py"
+``` py linenums="115" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:116:144
+examples/rossler/train_enn_v2.py:115:142
 --8<--
 ```
 
 `SupervisedValidator` 评估器与 `SupervisedConstraint` 比较相似，不同的是评估器需要设置评价指标 `metric`，在这里使用 `ppsci.metric.MSE` 。
 
 #### 3.2.5 模型训练与评估
+
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="146" title="examples/rossler/train_enn_v2.py"
+``` py linenums="144" title="examples/rossler/train_enn_v2.py"
 --8<--
-examples/rossler/train_enn_v2.py:146:169
+examples/rossler/train_enn_v2.py:144:
 --8<--
 ```
 
@@ -153,11 +154,12 @@ examples/rossler/train_transformer_v2.py:55:71
 ```
 
 #### 3.3.1 约束构建
+
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
 ``` py linenums="79" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:79:97
+examples/rossler/train_transformer_v2.py:79:96
 --8<--
 ```
 
@@ -165,13 +167,14 @@ examples/rossler/train_transformer_v2.py:79:97
 
 定义监督约束的代码如下：
 
-``` py linenums="99" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="98" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:99:104
+examples/rossler/train_transformer_v2.py:98:103
 --8<--
 ```
 
 #### 3.3.2 模型构建
+
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
@@ -181,9 +184,9 @@ examples/rossler/train_transformer_v2.py:99:104
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="109" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="108" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:109:117
+examples/rossler/train_transformer_v2.py:108:116
 --8<--
 ```
 
@@ -193,9 +196,9 @@ examples/rossler/train_transformer_v2.py:109:117
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="119" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="118" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:119:132
+examples/rossler/train_transformer_v2.py:118:132
 --8<--
 ```
 
@@ -203,9 +206,9 @@ examples/rossler/train_transformer_v2.py:119:132
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="135" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="134" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:135:162
+examples/rossler/train_transformer_v2.py:134:160
 --8<--
 ```
 
@@ -231,20 +234,21 @@ examples/rossler/train_transformer_v2.py:75:76
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="164" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="162" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:164:182
+examples/rossler/train_transformer_v2.py:162:180
 --8<--
 ```
 
 首先使用上文中的 `mse_validator` 中的数据集进行可视化，另外还引入了 `vis_data_nums` 变量用于控制需要可视化样本的数量。最后通过 `VisualizerScatter3D` 构建可视化器。
 
 #### 3.3.5 模型训练、评估与可视化
+
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="184" title="examples/rossler/train_transformer_v2.py"
+``` py linenums="182" title="examples/rossler/train_transformer_v2.py"
 --8<--
-examples/rossler/train_transformer_v2.py:184:214
+examples/rossler/train_transformer_v2.py:182:
 --8<--
 ```
 
