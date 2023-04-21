@@ -138,15 +138,16 @@ class MatDataset(io.Dataset):
 
 
 class IterableMatDataset(io.IterableDataset):
-    """IterableCSVDataset for full-data loading.
+    """IterableMatDataset for full-data loading.
 
     Args:
-        input (Tuple[str, ...]): List of input keys.
-        label (Tuple[str, ...]): List of label keys.
+        file_path (str): Mat file path.
+        input_keys (Tuple[str, ...]): List of input keys.
+        label_keys (Tuple[str, ...]): List of label keys.
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
-        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of each
-            constraint variable. Defaults to None.
-        timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
+            each constraint variable. Defaults to None.
+        timestamps (Optioanl[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
@@ -155,8 +156,8 @@ class IterableMatDataset(io.IterableDataset):
     def __init__(
         self,
         file_path: str,
-        input_keys: Dict[str, np.ndarray],
-        label_keys: Dict[str, np.ndarray],
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[Union[int, float], ...]] = None,
