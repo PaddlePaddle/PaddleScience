@@ -111,8 +111,7 @@ class LorenzDataset(io.Dataset):
 
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.ones(weight_shape) * value
-            for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)
 
@@ -258,7 +257,6 @@ class CylinderDataset(io.Dataset):
                 label_item[self.label_keys[1]] = data_item[1:, :]
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.ones(weight_shape) * value
-            for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)
