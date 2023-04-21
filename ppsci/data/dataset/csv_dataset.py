@@ -34,12 +34,12 @@ class CSVDataset(io.Dataset):
         file_path (str): CSV file path.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of
+        alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+        weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
+        timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
     """
 
@@ -147,7 +147,7 @@ class IterableCSVDataset(io.IterableDataset):
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
-        timestamps (Optioanl[Tuple[float, ...]]): The number of repetitions of the data
+        timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
