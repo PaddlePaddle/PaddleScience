@@ -22,7 +22,7 @@ import paddle.nn as nn
 import sympy
 
 
-class PDE(object):
+class PDE:
     """Base class for Partial Differential Equation"""
 
     def __init__(self):
