@@ -15,11 +15,11 @@
 import types
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
 import numpy as np
-import paddle
 from paddle import io
 from paddle import vision
 
@@ -48,10 +48,10 @@ class CSVDataset(io.Dataset):
         file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, Union[Callable, float]] = None,
-        timestamps: Tuple[float, ...] = None,
-        transforms: vision.Compose = None,
+        alias_dict: Optional[Dict[str, str]] = None,
+        weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
+        timestamps: Optional[Tuple[float, ...]] = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -159,7 +159,7 @@ class IterableCSVDataset(io.IterableDataset):
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
         alias_dict: Dict[str, str] = None,
-        weight_dict: Dict[str, Union[Callable, float]] = None,
+        weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Tuple[float, ...] = None,
         transforms: vision.Compose = None,
     ):
