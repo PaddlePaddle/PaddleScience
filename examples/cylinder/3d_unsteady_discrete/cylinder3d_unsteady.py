@@ -27,9 +27,7 @@ from ppsci.utils import logger
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-    import os
 
-    os.chdir("/workspace/wangguan/PaddleScience/examples/cylinder/3d_unsteady_discrete")
     # set output directory
     output_dir = "./output_cylinder3d_unsteady_Re3900"
 
