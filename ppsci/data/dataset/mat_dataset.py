@@ -46,8 +46,8 @@ class MatDataset(io.Dataset):
     def __init__(
         self,
         file_path: str,
-        input_keys: Dict[str, np.ndarray],
-        label_keys: Dict[str, np.ndarray],
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, float]] = None,
         timestamps: Optional[Tuple[Union[int, float], ...]] = None,
@@ -155,8 +155,8 @@ class IterableMatDataset(io.IterableDataset):
     def __init__(
         self,
         file_path: str,
-        input_keys: Dict[str, np.ndarray],
-        label_keys: Dict[str, np.ndarray],
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[Union[int, float], ...]] = None,
