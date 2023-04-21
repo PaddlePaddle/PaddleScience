@@ -42,9 +42,9 @@ if __name__ == "__main__":
     train_block_size = 16
     valid_block_size = 32
 
-    input_keys = ["states"]
-    output_keys = ["pred_states", "recover_states"]
-    weights = [1.0 * (train_block_size - 1), 1.0e4 * train_block_size]
+    input_keys = ("states",)
+    output_keys = ("pred_states", "recover_states")
+    weights = (1.0 * (train_block_size - 1), 1.0e4 * train_block_size)
     regularization_key = "k_matrix"
 
     output_dir = "./output/lorenz_enn"
@@ -71,7 +71,6 @@ if __name__ == "__main__":
         },
         "batch_size": 512,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -79,7 +78,7 @@ if __name__ == "__main__":
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1.0e-1 * (train_block_size - 1)}
         ),
-        {key: lambda out, k=key: out[k] for key in output_keys + [regularization_key]},
+        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     # manually init model
     data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
     model = ppsci.arch.LorenzEmbedding(
-        input_keys, output_keys + [regularization_key], data_mean, data_std
+        input_keys, output_keys + (regularization_key,), data_mean, data_std
     )
 
     # init optimizer and lr scheduler
@@ -110,7 +109,7 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    weights = [1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size]
+    weights = (1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size)
     eval_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
@@ -157,6 +156,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,

@@ -29,10 +29,10 @@ from ppsci.utils import save_load
 
 
 def build_embedding_model(embedding_model_path: str) -> ppsci.arch.RosslerEmbedding:
-    input_keys = ["states"]
-    output_keys = ["pred_states", "recover_states"]
+    input_keys = ("states",)
+    output_keys = ("pred_states", "recover_states")
     regularization_key = "k_matrix"
-    model = ppsci.arch.RosslerEmbedding(input_keys, output_keys + [regularization_key])
+    model = ppsci.arch.RosslerEmbedding(input_keys, output_keys + (regularization_key,))
     save_load.load_pretrain(model, embedding_model_path)
     return model
 
@@ -60,8 +60,8 @@ if __name__ == "__main__":
     epochs = 200
     train_block_size = 32
     valid_block_size = 256
-    input_keys = ["embeds"]
-    output_keys = ["pred_embeds"]
+    input_keys = ("embeds",)
+    output_keys = ("pred_embeds",)
 
     vis_data_nums = 16
 
@@ -93,7 +93,6 @@ if __name__ == "__main__":
         },
         "batch_size": 64,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -150,7 +149,6 @@ if __name__ == "__main__":
         },
         "batch_size": 16,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
@@ -202,6 +200,7 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,
