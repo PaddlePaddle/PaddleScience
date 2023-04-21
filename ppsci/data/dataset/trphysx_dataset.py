@@ -61,10 +61,9 @@ class LorenzDataset(io.Dataset):
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
+        self.weight_dict = {key: 1.0 for key in self.label_keys}
         if weight_dict is not None:
-            self.weight_dict = weight_dict
-        else:
-            self.weight_dict = {key: 1.0 for key in self.label_keys}
+            self.weight_dict.update(weight_dict)
 
         self.data = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
@@ -188,10 +187,9 @@ class CylinderDataset(io.Dataset):
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
+        self.weight_dict = {key: 1.0 for key in self.label_keys}
         if weight_dict is not None:
-            self.weight_dict = weight_dict
-        else:
-            self.weight_dict = {key: 1.0 for key in self.label_keys}
+            self.weight_dict.update(weight_dict)
 
         self.data, self.visc = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
