@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
+from typing import Optional
 
 import numpy as np
 import paddle
@@ -67,7 +68,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
         weight (Dict[str, np.ndarray]): Weight dict.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
     """
 
@@ -76,7 +77,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
         weight: Dict[str, np.ndarray],
-        transforms: vision.Compose = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
