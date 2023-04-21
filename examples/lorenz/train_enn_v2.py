@@ -127,7 +127,6 @@ if __name__ == "__main__":
         },
         "batch_size": 512,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
