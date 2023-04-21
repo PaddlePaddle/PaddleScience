@@ -16,6 +16,7 @@ import types
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -44,7 +45,7 @@ class PeriodicConstraint(base.Constraint):
         loss (loss.LossBase): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
-        criteria (Callable, optional): Criteria for refining specified boundaries.
+        criteria (Optional[Callable]): Criteria for refining specified boundaries.
             Defaults to None.
         evenly (bool, optional):  Whether to use evenly distribution sampling.
             Defaults to False.
@@ -62,9 +63,9 @@ class PeriodicConstraint(base.Constraint):
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
         random: Literal["pseudo", "LHS"] = "pseudo",
-        criteria: Callable = None,
+        criteria: Optional[Callable] = None,
         evenly: bool = False,
-        weight_dict: Dict[str, Callable] = None,
+        weight_dict: Optional[Dict[str, Callable]] = None,
         name: str = "PeriodicBC",
     ):
         self.label_expr = label_expr

@@ -47,7 +47,7 @@ def _load_pretrain_from_path(model, path, equation=None):
     Args:
         model (nn.Layer): Model with parameters.
         path (str, optional): Pretrained model path.
-        equation (Dict[str, ppsci.equation.PDE], optional): Equations. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
     """
     if not (os.path.isdir(path) or os.path.exists(path + ".pdparams")):
         raise FileNotFoundError(
@@ -70,7 +70,7 @@ def load_pretrain(model, path, equation=None):
     Args:
         model (nn.Layer): Model with parameters.
         path (str): Pretrained model url.
-        equation (Dict[str, ppsci.equation.PDE], optional): Equations. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
     """
     if path.startswith("http"):
         path = download.get_weights_path_from_url(path).replace(".pdparams", "")
@@ -86,8 +86,8 @@ def load_checkpoint(
         path (AttrDict): Path for checkpoint.
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer, optional): Optimizer for model.
-        grad_scaler (amp.GradScaler, optional): GradScaler for AMP. Defaults to None.
-        equation (Dict[str, ppsci.equation.PDE], optional): Equations. Defaults to None.
+        grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
 
     Returns:
         Dict[str, Any]: Loaded metric information.
@@ -129,11 +129,11 @@ def save_checkpoint(
     Args:
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer): Optimizer for model.
-        grad_scaler (amp.GradScaler, optional): GradScaler for AMP. Defaults to None.
+        grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         metric (Dict[str, Any]): Metric information, such as {"RMSE": ...}.
         model_dir (str): Directory for chekpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "ppsci".
-        equation (Dict[str, ppsci.equation.PDE], optional): Equations. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
     """
     if paddle.distributed.get_rank() != 0:
         return
