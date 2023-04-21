@@ -17,7 +17,7 @@ from typing import Union
 from paddle import io
 
 
-class InfiniteDataLoader(object):
+class InfiniteDataLoader:
     """A wrapper for infinite dataloader.
 
     Args:

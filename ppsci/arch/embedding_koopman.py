@@ -235,8 +235,8 @@ class CylinderEmbedding(base.NetBase):
         mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
         std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         embed_size (int, optional): Number of embedding size. Defaults to 128.
-        encoder_channels (Tuple[int,...]): Number of channels in encoder network. Defaults to None.
-        decoder_channels (Tuple[int,...]): Number of channels in decoder network. Defaults to None.
+        encoder_channels (Optional[Tuple[int, ...]]): Number of channels in encoder network. Defaults to None.
+        decoder_channels (Optional[Tuple[int, ...]]): Number of channels in decoder network. Defaults to None.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
     """
 
