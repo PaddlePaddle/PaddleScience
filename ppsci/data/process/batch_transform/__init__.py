@@ -16,8 +16,7 @@ import copy
 from typing import Any
 from typing import List
 
-import numpy as np
-
+from ppsci.data import _default_collate_fn_allow_none
 from ppsci.data.process import transform
 
 __all__ = ["build_batch_transforms"]
@@ -27,25 +26,10 @@ def build_batch_transforms(cfg):
     cfg = copy.deepcopy(cfg)
     batch_transforms = transform.build_transforms(cfg)
 
-    def collate_fn_batch_transforms(batch_data_list: List[Any]):
-        # batch_data_list: [(Di, Dl, Dw), (Di, Dl, Dw), ..., (Di, Dl, Dw)]
-        batch_data_list = batch_transforms(batch_data_list)
-
-        # batch each field
-        collated_data = []
-        num_components = len(batch_data_list[0])
-
-        # compose batch for every component
-        for component_idx in range(num_components):
-            # [Dx, Dx, ..., Dx]
-            component_list = [batch[component_idx] for batch in batch_data_list]
-            batched_component = {}
-            # compose each key in current component
-            for key in component_list[0]:
-                batched_component[key] = np.stack(
-                    [sample[key] for sample in component_list], axis=0
-                )
-            collated_data.append(batched_component)
-        return collated_data
+    def collate_fn_batch_transforms(batch: List[Any]):
+        # apply batch transform on uncollated data
+        batch = batch_transforms(batch)
+        # then do collate
+        return _default_collate_fn_allow_none(batch)
 
     return collate_fn_batch_transforms
