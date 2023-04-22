@@ -32,9 +32,17 @@ from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
 from ppsci.data.process import batch_transform
+from ppsci.data.process import transform
 from ppsci.utils import logger
 
-__all__ = ["dataset", "process", "dataloader", "build_dataloader"]
+__all__ = [
+    "dataset",
+    "process",
+    "dataloader",
+    "build_dataloader",
+    "transform",
+    "batch_transform",
+]
 
 
 def _default_collate_fn_allow_none(batch: List[Any]) -> Any:
@@ -143,7 +151,6 @@ def build_dataloader(_dataset, cfg):
     dataloader = io.DataLoader(
         dataset=_dataset,
         places=device.get_device(),
-        return_list=True,
         batch_sampler=sampler,
         collate_fn=collate_fn,
         num_workers=cfg.get("num_workers", 0),
