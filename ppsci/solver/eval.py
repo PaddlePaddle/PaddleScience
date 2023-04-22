@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import time
-from typing import Any
-from typing import Dict
 
 import paddle
 import paddle.amp as amp
@@ -26,7 +24,7 @@ from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
+def eval_func(solver, epoch_id, log_freq) -> float:
     """Evaluation program
 
     Args:
@@ -35,9 +33,9 @@ def eval_func(solver, epoch_id, log_freq) -> Dict[str, Any]:
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        Dict[str, Any]: Metric collected during evaluation.
+        float: Target metric computed during evaluation.
     """
-    target_metric = None
+    target_metric: float = None
     for _, _validator in solver.validator.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
