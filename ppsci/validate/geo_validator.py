@@ -16,6 +16,7 @@ import types
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -43,11 +44,11 @@ class GeometryValidator(base.Validator):
         loss (loss.LossBase): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
-        criteria (Callable, optional): Criteria for refining specified domain. Defaults to None.
+        criteria (Optional[Callable]): Criteria for refining specified domain. Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling. Defaults to False.
-        metric (Dict[str, Any], optional): Named metric functors in dict. Defaults to None.
+        metric (Optional[Dict[str, Any]]): Named metric functors in dict. Defaults to None.
         with_initial (bool, optional): Whether the data contains time t0. Defaults to False.
-        name (str, optional): Name of validator. Defaults to None.
+        name (Optional[str]): Name of validator. Defaults to None.
     """
 
     def __init__(
@@ -58,11 +59,11 @@ class GeometryValidator(base.Validator):
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
         random: Literal["pseudo", "LHS"] = "pseudo",
-        criteria: Callable = None,
+        criteria: Optional[Callable] = None,
         evenly: bool = False,
-        metric: Dict[str, Any] = None,
+        metric: Optional[Dict[str, Any]] = None,
         with_initial: bool = False,
-        name: str = None,
+        name: Optional[str] = None,
     ):
         self.label_expr = label_expr
         for label_name, expr in self.label_expr.items():

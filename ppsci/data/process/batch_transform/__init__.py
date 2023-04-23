@@ -13,39 +13,73 @@
 # limitations under the License.
 
 import copy
+import numbers
+from collections.abc import Mapping
+from collections.abc import Sequence
 from typing import Any
 from typing import List
 
 import numpy as np
+import paddle
+from paddle.fluid import core
 
 from ppsci.data.process import transform
 
-__all__ = ["build_batch_transforms"]
+__all__ = ["build_batch_transforms", "default_collate_fn_allow_none"]
+
+
+def default_collate_fn_allow_none(batch: List[Any]) -> Any:
+    """Modified collate function to allow some fields to be None, such as weight field.
+
+    ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/dataloader/collate.py#L24
+
+    Args:
+        batch (List[Any]): Batch of samples to be collated.
+
+    Returns:
+        Any: Collated batch data.
+    """
+    sample = batch[0]
+
+    # allow field to be None
+    if sample is None:
+        return None
+
+    if isinstance(sample, np.ndarray):
+        batch = np.stack(batch, axis=0)
+        return batch
+    elif isinstance(sample, (paddle.Tensor, core.eager.Tensor)):
+        return paddle.stack(batch, axis=0)
+    elif isinstance(sample, numbers.Number):
+        batch = np.array(batch)
+        return batch
+    elif isinstance(sample, (str, bytes)):
+        return batch
+    elif isinstance(sample, Mapping):
+        return {
+            key: default_collate_fn_allow_none([d[key] for d in batch])
+            for key in sample
+        }
+    elif isinstance(sample, Sequence):
+        sample_fields_num = len(sample)
+        if not all(len(sample) == sample_fields_num for sample in iter(batch)):
+            raise RuntimeError("fileds number not same among samples in a batch")
+        return [default_collate_fn_allow_none(fields) for fields in zip(*batch)]
+
+    raise TypeError(
+        "batch data can only contains: tensor, numpy.ndarray, "
+        f"dict, list, number, None, but got {type(sample)}"
+    )
 
 
 def build_batch_transforms(cfg):
     cfg = copy.deepcopy(cfg)
     batch_transforms = transform.build_transforms(cfg)
 
-    def collate_fn_batch_transforms(batch_data_list: List[Any]):
-        # batch_data_list: [(Di, Dl, Dw), (Di, Dl, Dw), ..., (Di, Dl, Dw)]
-        batch_data_list = batch_transforms(batch_data_list)
-
-        # batch each field
-        collated_data = []
-        num_components = len(batch_data_list[0])
-
-        # compose batch for every component
-        for component_idx in range(num_components):
-            # [Dx, Dx, ..., Dx]
-            component_list = [batch[component_idx] for batch in batch_data_list]
-            batched_component = {}
-            # compose each key in current component
-            for key in component_list[0]:
-                batched_component[key] = np.stack(
-                    [sample[key] for sample in component_list], axis=0
-                )
-            collated_data.append(batched_component)
-        return collated_data
+    def collate_fn_batch_transforms(batch: List[Any]):
+        # apply batch transform on uncollated data
+        batch = batch_transforms(batch)
+        # then do collate
+        return default_collate_fn_allow_none(batch)
 
     return collate_fn_batch_transforms

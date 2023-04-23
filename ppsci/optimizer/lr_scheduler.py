@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-class LRBase(object):
+class LRBase:
     """Base class for custom learning rates.
 
     Args:

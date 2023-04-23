@@ -27,7 +27,7 @@ from ppsci.utils import logger
 __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 
 
-class SGD(object):
+class SGD:
     """Stochastic Gradient Descent.
 
     Args:
@@ -67,7 +67,7 @@ class SGD(object):
         return opt
 
 
-class Momentum(object):
+class Momentum:
     """Simple Momentum optimizer with velocity state.
 
     Args:
@@ -153,7 +153,7 @@ class Momentum(object):
         return opt
 
 
-class Adam(object):
+class Adam:
     """Adam: A Method for Stochastic Optimization.
 
     Args:
@@ -208,7 +208,7 @@ class Adam(object):
         return opt
 
 
-class LBFGS(object):
+class LBFGS:
     """The L-BFGS is a quasi-Newton method for solving an unconstrained optimization
         problem over a differentiable function. Closely related is the Newton method for minimization.
 
@@ -264,7 +264,7 @@ class LBFGS(object):
         return opt
 
 
-class RMSProp(object):
+class RMSProp:
     """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
 
     Args:
@@ -317,7 +317,7 @@ class RMSProp(object):
         return opt
 
 
-class AdamW(object):
+class AdamW:
     """AdamW is implemented based on DECOUPLED WEIGHT DECAY REGULARIZATION.
 
     Args:
