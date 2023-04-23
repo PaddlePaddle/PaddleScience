@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.equation.pde.base import PDE
-from ppsci.equation.pde.euler_beam import EulerBeam
-from ppsci.equation.pde.laplace import Laplace
-from ppsci.equation.pde.navier_stokes import NavierStokes
-from ppsci.equation.pde.normal_dot_vec import NormalDotVec
-from ppsci.equation.pde.viv import Vibration
+from ppsci.autodiff import hessian
+from ppsci.equation.pde import base
 
-__all__ = [
-    "PDE",
-    "EulerBeam",
-    "Laplace",
-    "NavierStokes",
-    "NormalDotVec",
-    "Vibration",
-]
+
+class EulerBeam(base.PDE):
+    """Euler Beam equation."""
+
+    def __init__(self):
+        super().__init__()
+
+        def eulerbeam_compute_func(out):
+            x = out["x"]
+            u = out["u"]
+            eulerbeam = hessian(hessian(u, x), x) + 1
+            return eulerbeam
+
+        self.add_equation("euler_beam", eulerbeam_compute_func)
