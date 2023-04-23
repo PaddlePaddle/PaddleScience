@@ -25,7 +25,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 
 
-class Geometry(object):
+class Geometry:
     """Base class for geometry.
 
     Args:

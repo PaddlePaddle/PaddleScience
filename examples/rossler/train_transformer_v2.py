@@ -29,10 +29,10 @@ from ppsci.utils import save_load
 
 
 def build_embedding_model(embedding_model_path: str) -> ppsci.arch.RosslerEmbedding:
-    input_keys = ["states"]
-    output_keys = ["pred_states", "recover_states"]
+    input_keys = ("states",)
+    output_keys = ("pred_states", "recover_states")
     regularization_key = "k_matrix"
-    model = ppsci.arch.RosslerEmbedding(input_keys, output_keys + [regularization_key])
+    model = ppsci.arch.RosslerEmbedding(input_keys, output_keys + (regularization_key,))
     save_load.load_pretrain(model, embedding_model_path)
     return model
 
@@ -60,14 +60,13 @@ if __name__ == "__main__":
     epochs = 200
     train_block_size = 32
     valid_block_size = 256
-    input_keys = ["embeds"]
-    output_keys = ["pred_embeds"]
-    weights = [1.0]
+    input_keys = ("embeds",)
+    output_keys = ("pred_embeds",)
 
     vis_data_nums = 16
 
-    train_file_path = "/path/to/rossler_training.hdf5"
-    valid_file_path = "/path/to/rossler_valid.hdf5"
+    train_file_path = "./datasets/rossler_training.hdf5"
+    valid_file_path = "./datasets/rossler_valid.hdf5"
     embedding_model_path = "./output/rossler_enn/checkpoints/latest"
     output_dir = "./output/rossler_transformer"
     # initialize logger
@@ -80,10 +79,9 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
+            "file_path": train_file_path,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
-            "file_path": train_file_path,
             "block_size": train_block_size,
             "stride": 16,
             "embedding_model": embedding_model,
@@ -95,7 +93,6 @@ if __name__ == "__main__":
         },
         "batch_size": 64,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -143,7 +140,6 @@ if __name__ == "__main__":
             "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 1024,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
             "embedding_model": embedding_model,
         },
         "sampler": {
@@ -153,7 +149,6 @@ if __name__ == "__main__":
         },
         "batch_size": 16,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
@@ -205,6 +200,7 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,

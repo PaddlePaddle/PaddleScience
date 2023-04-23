@@ -25,7 +25,7 @@ __all__ = ["Scale", "Translate", "build_transforms"]
 
 def build_transforms(cfg):
     if not cfg:
-        return None
+        return vision.Compose([])
     cfg = copy.deepcopy(cfg)
 
     transform_list = []

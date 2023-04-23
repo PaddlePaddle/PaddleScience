@@ -21,7 +21,7 @@ from typing import Optional
 import paddle
 
 
-class Jacobian(object):
+class Jacobian:
     """Compute Jacobian matrix J: J[i][j] = dy_i/dx_j, where i = 0, ..., dim_y-1 and
     j = 0, ..., dim_x - 1.
 
@@ -58,7 +58,7 @@ class Jacobian(object):
         return self.J[i] if j is None or self.dim_x == 1 else self.J[i][:, j : j + 1]
 
 
-class Jacobians(object):
+class Jacobians:
     """Compute multiple Jacobians.
 
     A new instance will be created for a new pair of (output, input). For the (output,
@@ -82,7 +82,7 @@ class Jacobians(object):
         self.Js = {}
 
 
-class Hessian(object):
+class Hessian:
     """Compute Hessian matrix H: H[i][j] = d^2y / dx_i dx_j, where i,j = 0,..., dim_x-1.
 
     It is lazy evaluation, i.e., it only computes H[i][j] when needed.
@@ -128,7 +128,7 @@ class Hessian(object):
         return self.H(i, j)
 
 
-class Hessians(object):
+class Hessians:
     """Compute multiple Hessians.
 
     A new instance will be created for a new pair of (output, input). For the (output,

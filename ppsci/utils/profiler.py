@@ -24,7 +24,7 @@ _profiler_step_id = 0
 _profiler_options = None
 
 
-class ProfilerOptions(object):
+class ProfilerOptions:
     """
     Use a string to initialize a ProfilerOptions.
     The string should be in the format: "key1=value1;key2=value;key3=value3".
