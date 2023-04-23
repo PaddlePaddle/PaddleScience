@@ -14,6 +14,8 @@
 
 from typing import Tuple
 
+from paddle import nn
+
 from ppsci.arch import base
 
 
@@ -38,7 +40,7 @@ class ModelList(base.NetBase):
                 )
             output_keys_set = output_keys_set | set(model.output_keys)
 
-        self.model_list = model_list
+        self.model_list = nn.LayerList(model_list)
 
     def forward(self, x):
         y_all = {}
