@@ -14,6 +14,7 @@
 import copy
 
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
+from ppsci.data.dataset.array_dataset import MiniBatchDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
@@ -24,6 +25,7 @@ from ppsci.utils import logger
 __all__ = [
     "IterableNamedArrayDataset",
     "NamedArrayDataset",
+    "MiniBatchDataset",
     "CylinderDataset",
     "LorenzDataset",
     "RosslerDataset",

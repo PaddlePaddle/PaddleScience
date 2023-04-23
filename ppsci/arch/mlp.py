@@ -102,6 +102,9 @@ class MLP(base.NetBase):
 
     def forward(self, x):
         if self._input_transform is not None:
+            import copy
+
+            x_old = copy.copy(x)
             x = self._input_transform(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
@@ -109,5 +112,5 @@ class MLP(base.NetBase):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(y, x_old)
         return y
