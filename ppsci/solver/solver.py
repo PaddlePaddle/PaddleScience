@@ -39,7 +39,7 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 
-class Solver(object):
+class Solver:
     """Class for solver.
 
     Args:

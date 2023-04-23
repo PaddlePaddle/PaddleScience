@@ -16,7 +16,7 @@ from typing import Dict
 from typing import Union
 
 
-class Translate(object):
+class Translate:
     """Translate class, a transform mainly for mesh.
 
     Args:
@@ -33,7 +33,7 @@ class Translate(object):
         return data_dict
 
 
-class Scale(object):
+class Scale:
     """Scale class, a transform mainly for mesh.
 
     Args:

@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-class AverageMeter(object):
+class AverageMeter:
     """
     Computes and stores the average and current value
     Code was based on https://github.com/pytorch/examples/blob/master/imagenet/main.py
