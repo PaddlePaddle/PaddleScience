@@ -105,10 +105,10 @@ if __name__ == "__main__":
             visu_mat,
             ("t_f",),
             {
-                "eta": lambda d: d["eta"],
-                "eta_gt": lambda d: d["eta_gt"],
-                "f_gt": lambda d: d["f_gt"],
-                **equation["VIV"].equations,
+                r"$\eta$": lambda d: d["eta"],  # plot with latex title
+                r"$\eta_{gt}$": lambda d: d["eta_gt"],  # plot with latex title
+                r"$f$": equation["VIV"].equations["f"],  # plot with latex title
+                r"$f_{gt}$": lambda d: d["f_gt"],  # plot with latex title
             },
             1,
             "viv_pred",
