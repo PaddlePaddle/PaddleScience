@@ -237,12 +237,16 @@ class Visualizer3D(base.Visualizer):
         self.transforms = transforms
         self.visualizer_batch_size = visualizer_batch_size
 
-        onestep_cord, self.data_len_for_onestep = self.construct_onestep_cord(ref_file)
+        onestep_cord, self.data_len_for_onestep = self.construct_onestep_cord(
+            ref_file, input_dict.keys()
+        )
         self.onestep_cord = onestep_cord
         self.data_len_for_onestep = len(next(iter(onestep_cord.values())))
         # input = cord(one step) + time + scale
         input_dict = self.construct_input(onestep_cord, time_step * time_list)
-        self.label = self.construct_label(ref_file, time_step, time_list)
+        self.label = self.construct_label(
+            ref_file, time_step, time_list, input_dict.keys(), output_expr.keys()
+        )
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
 
     def construct_input(self, onestep_cord, time):
@@ -260,16 +264,16 @@ class Visualizer3D(base.Visualizer):
         input = self.transforms["normalize"](input)
         return input
 
-    def construct_onestep_cord(self, ref_file):
-        onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0])
+    def construct_onestep_cord(self, ref_file, input_keys):
+        onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], input_keys)
         del onestep_input["t"]
         n = len(next(iter(onestep_input.values())))
         return onestep_input, n
 
-    def construct_label(self, ref_file, time_step, time_list):
+    def construct_label(self, ref_file, time_step, time_list, input_keys, label_keys):
         # using referece sampling points coordinates[t\x\y\z] as input
         _, label = reader.load_vtk_file(
-            ref_file, time_step, time_list, read_input=False
+            ref_file, time_step, time_list, input_keys, label_keys
         )
         return label
 

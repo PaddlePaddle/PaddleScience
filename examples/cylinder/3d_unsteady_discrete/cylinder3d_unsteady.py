@@ -25,11 +25,17 @@ import ppsci.utils.reader as reader
 from ppsci.utils import logger
 
 if __name__ == "__main__":
+
+    import time
+
+    t_start = time.time()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
+    import os
 
+    os.chdir("/workspace/wangguan/PaddleScience/examples/cylinder/3d_unsteady_discrete")
     # set output directory
-    output_dir = "./output_cylinder3d_unsteady_Re3900"
+    output_dir = "./output_debug"
 
     ref_file = "data/LBM_result/cylinder3d_2023_1_31_LBM_"
 
@@ -75,8 +81,8 @@ if __name__ == "__main__":
     )
     geom = {
         "interior": ppsci.geometry.PointCloud(
-            coord_dict=normalize(interior_data),
-            extra_data=None,
+            interior=normalize(interior_data),
+            attributes=None,
             data_key=("t", "x", "y", "z"),
         )
     }
@@ -108,7 +114,16 @@ if __name__ == "__main__":
     time_index.sort()
     time_array = time_index * TIME_STEP
 
+    input_keys = ["t", "x", "y", "z"]
+    label_keys = ["u", "v", "w", "p"]
+
     label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
+    label_expr_2 = {
+        "u": lambda d: d["u"],
+        "v": lambda d: d["v"],
+        "w": lambda d: d["w"],
+        "p": lambda d: d["p"],
+    }
 
     # set constraint
     _normalize = {
@@ -141,6 +156,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": ref_file,
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
                 "time_index": [0],
@@ -164,6 +180,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sup_data/supervised_",
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
                 "time_index": time_index,
@@ -187,6 +204,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/inlet_txyz.vtu",
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [_normalize],
@@ -209,6 +227,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/cylinder_txyz.vtu",
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0, "v": 0, "w": 0},
                 "transforms": [_normalize],
@@ -231,6 +250,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/outlet_txyz.vtu",
+                "input_keys": input_keys,
                 "label_keys": ["p"],
                 "labels": {"p": 0},
                 "transforms": [_normalize],
@@ -253,6 +273,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/top_txyz.vtu",
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [_normalize],
@@ -275,6 +296,7 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/bottom_txyz.vtu",
+                "input_keys": input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [_normalize],
@@ -315,8 +337,12 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(learning_rate=lr_scheduler)((model,))
 
     # Read validation reference for time step : 0, 99
-    lbm_0_input, lbm_0_label = reader.load_vtk_file(ref_file, TIME_STEP, [0])
-    lbm_99_input, lbm_99_label = reader.load_vtk_file(ref_file, TIME_STEP, [99])
+    lbm_0_input, lbm_0_label = reader.load_vtk_file(
+        ref_file, TIME_STEP, [0], input_keys, label_keys
+    )
+    lbm_99_input, lbm_99_label = reader.load_vtk_file(
+        ref_file, TIME_STEP, [99], input_keys, label_keys
+    )
 
     lbm_0_input = normalize(lbm_0_input)
     lbm_0_label = normalize(lbm_0_label)
@@ -329,6 +355,7 @@ if __name__ == "__main__":
                 "dataset": {
                     "name": "VtuDataset",
                     "file_path": ref_file,
+                    "input_keys": input_keys,
                     "label_keys": ("u", "v", "w"),
                     "time_step": TIME_STEP,
                     "time_index": [0],
@@ -355,7 +382,7 @@ if __name__ == "__main__":
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
             time_step=TIME_STEP,
             time_list=time_list,
-            input_dict=None,
+            input_dict={key: None for key in input_keys},
             output_expr={
                 "u": lambda out: out["u"],
                 "v": lambda out: out["v"],
@@ -385,5 +412,7 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
     )
+    t_end = time.time()
+    print(f"time cost {t_end - t_start}")
     # train model
     solver.train()

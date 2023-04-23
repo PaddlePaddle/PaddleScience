@@ -42,7 +42,6 @@ class Scale(object):
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):
-
         self.scale = scale
 
     def __call__(self, data_dict):

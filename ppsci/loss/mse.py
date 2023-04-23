@@ -24,7 +24,7 @@ from ppsci.loss import base
 
 
 class MSELoss(base.LossBase):
-    """Class for mean squared error loss.
+    r"""Class for mean squared error loss.
 
     $$
     L =

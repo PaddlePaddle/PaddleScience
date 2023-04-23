@@ -309,6 +309,7 @@ class Solver(object):
             )
             logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
+
             cur_metric = float("inf")
 
             # evaluate during training

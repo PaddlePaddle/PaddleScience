@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
-from typing import Callable
-from typing import Dict
-from typing import Tuple
-from typing import Union
+from typing import List
 
 import numpy as np
-import paddle
 from paddle import io
 from paddle import vision
 
-from ppsci.utils import misc
 from ppsci.utils import reader
 
 
@@ -34,11 +28,9 @@ class VtuDataset(io.Dataset):
         file_path (str): *.vtu file path.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of input keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
-        weight_dict (Dict[str, Union[Callable, float]], optional): Define the weight of
-            each constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
-            in the time dimension. Defaults to None.
+        time_step (int): Time step with unit second
+        time_index (List): Time index list in increasing order
+        labels : Temporary interface for [load_vtk_withtime_file]
         transforms (vision.Compose, optional): Compose object contains sample wise
             transform(s).
     """
@@ -46,19 +38,22 @@ class VtuDataset(io.Dataset):
     def __init__(
         self,
         file_path: str,
-        label_keys,
-        time_step=None,
-        time_index=None,
+        input_keys: List = None,
+        label_keys: List = None,
+        time_step: int = None,
+        time_index: List = None,
         labels=None,
         transforms: vision.Compose = None,
     ):
         super().__init__()
 
         # load data from file
-        if labels is None:
-            _input, _label = reader.load_vtk_file(file_path, time_step, time_index)
+        if time_step is not None and time_index is not None:
+            _input, _label = reader.load_vtk_file(
+                file_path, time_step, time_index, input_keys, label_keys
+            )
             _label = {key: _label[key] for key in label_keys}
-        else:
+        elif time_step is None and time_index is None:
             _input = reader.load_vtk_withtime_file(file_path)
             _label = {}
             for key, value in labels.items():
@@ -68,6 +63,10 @@ class VtuDataset(io.Dataset):
                     )
                 else:
                     _label[key] = value
+        else:
+            raise ValueError(
+                "Error, read vtu with time_step and time_index, or neither"
+            )
 
         # transform
         _input = transforms(_input)
@@ -75,7 +74,7 @@ class VtuDataset(io.Dataset):
 
         self.input = _input
         self.label = _label
-        self.input_keys = [key for key in self.input]
+        self.input_keys = input_keys
         self.label_keys = label_keys
 
         # prepare weights
@@ -83,16 +82,7 @@ class VtuDataset(io.Dataset):
             key: np.ones_like(next(iter(self.label.values()))) for key in self.label
         }
         self.transforms = transforms
-        self.num_samples = self.check_input(self.input)
-
-    def check_input(self, input):
-        len_input = set()
-        for _, value in input.items():
-            len_input.add(len(value))
-        if len(len_input) is not 1:
-            raise AttributeError("Input dimension mismatch")
-        else:
-            return list(len_input)[0]
+        self.num_samples = len(next(iter(self.input.values())))
 
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}

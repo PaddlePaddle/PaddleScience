@@ -25,32 +25,34 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        coord_dict (str): File which store interior points of a point cloud.
+        interior (Union[str, Dict]): File or Dict, which store interior points of a point cloud.
+        attributes(Dict): Dict stores informations except coordinates
+        data_key (List[str]): List of coordinate keys, such as ["x", "y"].
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
-        data_key (List[str]): List of coordinate keys, such as ["x", "y"].
         alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
     """
 
     def __init__(
         self,
-        coord_dict: Union[
-            str, Dict
-        ],  #  1. 改造PointCloud，在支持从文件读入数据的情况下，同时支持直接使用给定内存中的数据
-        extra_data: Dict,  # 2. 支持额外信息点
+        interior: Union[str, Dict],
+        attributes: Dict,
         data_key,
         boundary_path=None,
         boundary_normal_path=None,
         alias_dict=None,
     ):
         # Interior points from CSV file
-        if str(coord_dict).endswith(".csv"):
-            # read data
-            data_dict = reader.load_csv_file(coord_dict, data_key)
-        elif isinstance(coord_dict, dict):
-            data_dict = coord_dict
-            if extra_data is not None:
-                data_dict.update(extra_data)
+        if isinstance(interior, dict):
+            data_dict = interior
+            if attributes is not None:
+                data_dict.update(attributes)
+        elif isinstance(interior, str):
+            if interior.endswith(".csv"):
+                # read data
+                data_dict = reader.load_csv_file(interior, data_key)
+            else:
+                raise NotImplementedError(f"file type : {interior} is invalid yet.")
 
         # convert to numpy array
         self.interior = []
@@ -168,14 +170,9 @@ class PointCloud(geometry.Geometry):
             np.random.choice(len(self.interior), size=n, replace=False)
         ]
 
-    def random_points(self, n, random="pseudo"):
-        assert n <= len(self.interior), (
-            f"number of sample points({n}) "
-            f"can't be more than that in points({len(self.interior)})"
-        )
-        return self.interior[
-            np.random.choice(len(self.interior), size=n, replace=False)
-        ]
+    def uniform_points(self, n: int, boundary=True):
+        """Compute the equispaced points in the geometry."""
+        return self.interior
 
     def union(self, rhs):
         raise NotImplementedError(

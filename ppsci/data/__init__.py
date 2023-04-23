@@ -27,7 +27,7 @@ from ppsci.data import process
 from ppsci.data.process import batch_transform
 from ppsci.utils import logger
 
-__all__ = ["dataset", "process", "dataloader", "dataio", "build_dataloader"]
+__all__ = ["dataset", "process", "dataloader", "build_dataloader"]
 
 
 def worker_init_fn(worker_id, num_workers, rank, base_seed):

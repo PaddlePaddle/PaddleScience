@@ -57,7 +57,10 @@ class Geometry(object):
 
     def uniform_points(self, n: int, boundary=True):
         """Compute the equispaced points in the geometry."""
-        return self.interior
+        logger.warning(
+            f"{self}.uniform_points not implemented. " f"Use random_points instead."
+        )
+        return self.random_points(n)
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
