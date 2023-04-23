@@ -43,10 +43,9 @@ nav:
       - ppsci.autodiff: zh/api/autodiff.md
       - ppsci.constraint: zh/api/constraint.md
       - ppsci.data:
-          - dataset: zh/api/data/dataset.md
-          - process:
-            - transform: zh/api/data/process/transform.md
-            - batch_transform: zh/api/data/process/batch_transform.md
+          - ppsci.data.dataset: zh/api/data/dataset.md
+          - ppsci.data.transform: zh/api/data/process/transform.md
+          - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
       - ppsci.loss: zh/api/loss.md
