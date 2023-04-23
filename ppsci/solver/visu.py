@@ -125,5 +125,4 @@ def visualize_func_3D(solver, epoch_id):
     # save vtu
     if solver.rank == 0:
         visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-
     _visualizer.save(visual_dir, solution)

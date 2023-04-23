@@ -302,7 +302,6 @@ class Solver(object):
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
             # log training summation at end of a epoch
             metric_msg = ", ".join(
                 [self.train_output_info[key].avg_info for key in self.train_output_info]

@@ -26,14 +26,9 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
 
-    import time
-
-    t_start = time.time()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-    import os
 
-    os.chdir("/workspace/wangguan/PaddleScience/examples/cylinder/3d_unsteady_discrete")
     # set output directory
     output_dir = "./output_debug"
 
@@ -412,7 +407,5 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
     )
-    t_end = time.time()
-    print(f"time cost {t_end - t_start}")
     # train model
     solver.train()
