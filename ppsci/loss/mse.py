@@ -59,6 +59,9 @@ class MSELoss(base.LossBase):
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict is not None:
                 loss *= weight_dict[key]
+            else:
+                loss *= self.weight_expr
+
             if "area" in output_dict:
                 loss *= output_dict["area"]
 

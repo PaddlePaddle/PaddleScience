@@ -13,20 +13,13 @@
 # limitations under the License.
 
 import copy
-import numbers
 import random
-from collections.abc import Mapping
-from collections.abc import Sequence
 from functools import partial
-from typing import Any
-from typing import List
 
 import numpy as np
-import paddle
 import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io
-from paddle.fluid import core
 
 from ppsci.data import dataloader
 from ppsci.data import dataset
@@ -43,50 +36,6 @@ __all__ = [
     "transform",
     "batch_transform",
 ]
-
-
-def _default_collate_fn_allow_none(batch: List[Any]) -> Any:
-    """Modified collate function to allow some fields to be None, such as weight field.
-
-    ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/dataloader/collate.py#L24
-
-    Args:
-        batch (List[Any]): Batch of samples to be collated.
-
-    Returns:
-        Any: Collated batch data.
-    """
-    sample = batch[0]
-
-    # allow field to be None
-    if sample is None:
-        return None
-
-    if isinstance(sample, np.ndarray):
-        batch = np.stack(batch, axis=0)
-        return batch
-    elif isinstance(sample, (paddle.Tensor, core.eager.Tensor)):
-        return paddle.stack(batch, axis=0)
-    elif isinstance(sample, numbers.Number):
-        batch = np.array(batch)
-        return batch
-    elif isinstance(sample, (str, bytes)):
-        return batch
-    elif isinstance(sample, Mapping):
-        return {
-            key: default_collate_fn_allow_none([d[key] for d in batch])
-            for key in sample
-        }
-    elif isinstance(sample, Sequence):
-        sample_fields_num = len(sample)
-        if not all(len(sample) == sample_fields_num for sample in iter(batch)):
-            raise RuntimeError("fileds number not same among samples in a batch")
-        return [default_collate_fn_allow_none(fields) for fields in zip(*batch)]
-
-    raise TypeError(
-        "batch data can only contains: tensor, numpy.ndarray, "
-        f"dict, list, number, None, but got {type(sample)}"
-    )
 
 
 def worker_init_fn(worker_id, num_workers, rank, base_seed):
@@ -137,7 +86,7 @@ def build_dataloader(_dataset, cfg):
     if isinstance(batch_transforms_cfg, dict) and batch_transforms_cfg:
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
     else:
-        collate_fn = _default_collate_fn_allow_none
+        collate_fn = batch_transform.default_collate_fn_allow_none
 
     # build init function
     init_fn = partial(
