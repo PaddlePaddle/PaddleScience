@@ -13,18 +13,21 @@
 # limitations under the License.
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
+    args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_viv_refactor"
+    output_dir = "./output_viv" if args.output_dir is None else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh", False, False)
+
     # set equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
@@ -50,7 +53,7 @@ if __name__ == "__main__":
         train_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
-        name="EQ",
+        name="Sup",
     )
     # wrap constraints together
     constraint = {
@@ -58,15 +61,16 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 100000
+    epochs = 100000 if args.epochs is None else args.epochs
     eval_freq = 1000
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Step(
         epochs, iters_per_epoch, 0.001, step_size=20000, gamma=0.9
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)([model] + list(equation.values()))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
+    # set validator
     valida_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
@@ -81,7 +85,6 @@ if __name__ == "__main__":
             "shuffle": False,
         },
     }
-    # set validator
     eta_mse_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
@@ -93,13 +96,20 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
-        "./VIV_Training_Neta100.mat", ("t_f", "eta_gt"), alias_dict={"eta_gt": "eta"}
+        "./VIV_Training_Neta100.mat",
+        ("t_f", "eta_gt", "f_gt"),
+        alias_dict={"eta_gt": "eta", "f_gt": "f"},
     )
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerScatter1D(
             visu_mat,
             ("t_f",),
-            {"eta_pred": lambda d: d["eta"], "eta_gt": lambda d: d["eta_gt"]},
+            {
+                r"$\eta$": lambda d: d["eta"],  # plot with latex title
+                r"$\eta_{gt}$": lambda d: d["eta_gt"],  # plot with latex title
+                r"$f$": equation["VIV"].equations["f"],  # plot with latex title
+                r"$f_{gt}$": lambda d: d["f_gt"],  # plot with latex title
+            },
             1,
             "viv_pred",
         )
@@ -136,7 +146,7 @@ if __name__ == "__main__":
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"./{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
