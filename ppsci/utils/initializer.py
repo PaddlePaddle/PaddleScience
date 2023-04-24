@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This code is based on [https://github.com/pytorch/pytorch/blob/master/torch/nn/init.py]
-# Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
+"""
+The initialization method under this module is aligned with pytorch initialization.
+If you need to use the initialization method of PaddlePaddle, please refer to
+[paddle.nn.initializer](https://github.com/PaddlePaddle/Paddle/tree/develop/python/paddle/nn/initializer)
+
+This code is based on [torch.nn.init](https://github.com/pytorch/pytorch/blob/main/torch/nn/init.py)
+Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
+"""
 
 import math
 
