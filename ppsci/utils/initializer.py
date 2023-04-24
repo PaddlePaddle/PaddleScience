@@ -303,7 +303,7 @@ def linear_init_(module: nn.Layer):
         uniform_(module.bias, -bound, bound)
 
 
-def conv_init_(module):
+def conv_init_(module: nn.Layer):
     """Initialize module's weight and bias as it is a conv layer.
 
     Args:
