@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This code is based on https://github.com/pytorch/pytorch/blob/master/torch/nn/init.py
+# This code is based on [https://github.com/pytorch/pytorch/blob/master/torch/nn/init.py]
 # Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
-
 
 import math
 
@@ -43,11 +42,13 @@ def _no_grad_uniform_(tensor, a, b):
         tensor.set_value(
             paddle.uniform(shape=tensor.shape, dtype=tensor.dtype, min=a, max=b)
         )
+        return tensor
 
 
 def _no_grad_normal_(tensor, mean=0.0, std=1.0):
     with paddle.no_grad():
         tensor.set_value(paddle.normal(mean=mean, std=std, shape=tensor.shape))
+        return tensor
 
 
 def _no_grad_fill_(tensor, value=0.0):
@@ -62,8 +63,11 @@ def uniform_(tensor: paddle.Tensor, a: float, b: float):
         tensor (paddle.Tensor): Paddle Tensor.
         a (float): min value.
         b (float): max value.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
-    _no_grad_uniform_(tensor, a, b)
+    return _no_grad_uniform_(tensor, a, b)
 
 
 def normal_(tensor: paddle.Tensor, mean: float = 0.0, std: float = 1.0):
@@ -73,8 +77,11 @@ def normal_(tensor: paddle.Tensor, mean: float = 0.0, std: float = 1.0):
         tensor (paddle.Tensor): Paddle Tensor.
         mean (float, optional): mean value. Defaults to 0.0.
         std (float, optional): std value. Defaults to 1.0.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
-    _no_grad_normal_(tensor, mean, std)
+    return _no_grad_normal_(tensor, mean, std)
 
 
 def constant_(tensor: paddle.Tensor, value: float = 0.0):
@@ -84,7 +91,7 @@ def constant_(tensor: paddle.Tensor, value: float = 0.0):
         tensor (paddle.Tensor): Paddle Tensor.
         value (float, optional): value to fill tensor. Defaults to 0.0.
     """
-    _no_grad_fill_(tensor, value)
+    return _no_grad_fill_(tensor, value)
 
 
 def ones_(tensor: paddle.Tensor):
@@ -92,8 +99,11 @@ def ones_(tensor: paddle.Tensor):
 
     Args:
         tensor (paddle.Tensor): Paddle Tensor.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
-    _no_grad_fill_(tensor, 1)
+    return _no_grad_fill_(tensor, 1)
 
 
 def zeros_(tensor: paddle.Tensor):
@@ -102,7 +112,7 @@ def zeros_(tensor: paddle.Tensor):
     Args:
         tensor (paddle.Tensor): Paddle Tensor.
     """
-    _no_grad_fill_(tensor, 0)
+    return _no_grad_fill_(tensor, 0)
 
 
 def _calculate_fan_in_and_fan_out(tensor, reverse=False):
@@ -146,11 +156,14 @@ def xavier_uniform_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = Fa
         gain (float, optional): Hyperparameter. Defaults to 1.0.
         reverse (bool, optional): Tensor data format order, False by default as
             [fout, fin, ...].. Defaults to False.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor, reverse=reverse)
     std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
     k = math.sqrt(3.0) * std
-    _no_grad_uniform_(tensor, -k, k)
+    return _no_grad_uniform_(tensor, -k, k)
 
 
 def xavier_normal_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = False):
@@ -164,7 +177,7 @@ def xavier_normal_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = Fal
     """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor, reverse=reverse)
     std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
-    _no_grad_normal_(tensor, 0, std)
+    return _no_grad_normal_(tensor, 0, std)
 
 
 # reference: https://pytorch.org/docs/stable/_modules/torch/nn/init.html
@@ -234,12 +247,15 @@ def kaiming_uniform_(
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): tensor data format order, False by default as
             [fout, fin, ...].. Defaults to False.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
     fan = _calculate_correct_fan(tensor, mode, reverse)
     gain = _calculate_gain(nonlinearity, a)
     std = gain / math.sqrt(fan)
     k = math.sqrt(3.0) * std
-    _no_grad_uniform_(tensor, -k, k)
+    return _no_grad_uniform_(tensor, -k, k)
 
 
 def kaiming_normal_(
@@ -259,11 +275,14 @@ def kaiming_normal_(
             'fan_in' (default) or 'fan_out'. Defaults to "fan_in".
         nonlinearity (str, optional): Nonlinearity method name. Defaults to "leaky_relu".
         reverse (bool, optional): Tensor data format order. Defaults to False.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
     """
     fan = _calculate_correct_fan(tensor, mode, reverse)
     gain = _calculate_gain(nonlinearity, a)
     std = gain / math.sqrt(fan)
-    _no_grad_normal_(tensor, 0, std)
+    return _no_grad_normal_(tensor, 0, std)
 
 
 def linear_init_(module: nn.Layer):
