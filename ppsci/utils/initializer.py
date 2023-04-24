@@ -35,7 +35,6 @@ __all__ = [
     "kaiming_normal_",
     "linear_init_",
     "conv_init_",
-    "reset_initialized_parameter",
 ]
 
 
