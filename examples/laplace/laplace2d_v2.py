@@ -16,45 +16,48 @@
 import numpy as np
 
 import ppsci
+from ppsci.utils import config
+from ppsci.utils import logger
 
 if __name__ == "__main__":
-    output_dir = "./output/laplace2d"
-    epochs = 20000
-    iters_per_epoch = 1
-
+    args = config.parse_args()
+    # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
+    # set training hyper-parameters
+    epochs = 20000 if not args.epochs else args.epochs
+    iters_per_epoch = 1
+    eval_freq = 200
 
-    # manually init model
-    model = ppsci.arch.MLP(["x", "y"], ["u"], 5, 20, "tanh")
+    # set output directory
+    output_dir = "./output/laplace2d" if not args.output_dir else args.output_dir
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
-    # manually init geometry(ies)
-    geom = {"rect": ppsci.geometry.Rectangle([0.0, 0.0], [1.0, 1.0])}
+    # set model
+    model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
 
-    # manually init equation(s)
+    # set equation
     equation = {"laplace": ppsci.equation.pde.Laplace(dim=2)}
 
-    # maunally build constraint(s)
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+
+    # compute ground truth function
     def u_solution_func(out):
         """compute ground truth for u as label data"""
         x, y = out["x"], out["y"]
         return np.cos(x) * np.cosh(y)
 
-    eq_dataloader_cfg = {
+    # set train dataloader config
+    train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "batch_size": 9800,
         "iters_per_epoch": iters_per_epoch,
     }
-
-    bc_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "batch_size": 400,
-        "iters_per_epoch": iters_per_epoch,
-    }
+    # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["laplace"].equations,
         {"laplace": 0},
         geom["rect"],
-        eq_dataloader_cfg,
+        {**train_dataloader_cfg, "batch_size": 9800},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -63,7 +66,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        bc_dataloader_cfg,
+        {**train_dataloader_cfg, "batch_size": 400},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(x, 0.0)
         | np.isclose(x, 1.0)
@@ -71,25 +74,26 @@ if __name__ == "__main__":
         | np.isclose(y, 1.0),
         name="BC",
     )
+    # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
         bc.name: bc,
     }
 
-    # init optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)([model])
+    # set optimizer
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
-    # maunally build validator
-    eval_dataloader = {
-        "dataset": "IterableNamedArrayDataset",
-        "total_size": 9800,
-    }
+    # set validator
+    total_size = 9800
     mse_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        eval_dataloader,
-        ppsci.loss.MSELoss("mean"),
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": total_size,
+        },
+        ppsci.loss.MSELoss(),
         evenly=True,
         metric={"MSE": ppsci.metric.MSE()},
         with_initial=True,
@@ -98,10 +102,7 @@ if __name__ == "__main__":
     validator = {mse_metric.name: mse_metric}
 
     # set visualizer(optional)
-    vis_points = geom["rect"].sample_interior(
-        eval_dataloader["total_size"], evenly=True
-    )
-
+    vis_points = geom["rect"].sample_interior(total_size, evenly=True)
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerVtu(
             vis_points,
@@ -111,8 +112,8 @@ if __name__ == "__main__":
         )
     }
 
-    train_solver = ppsci.solver.Solver(
-        "train",
+    # initialize solver
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
@@ -120,25 +121,30 @@ if __name__ == "__main__":
         epochs=epochs,
         iters_per_epoch=iters_per_epoch,
         eval_during_train=True,
-        eval_freq=200,
+        eval_freq=eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
     )
-    train_solver.train()
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
 
-    eval_solver = ppsci.solver.Solver(
-        "eval",
+    # directly evaluate model from pretrained_model_path(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    solver = ppsci.solver.Solver(
         model,
         constraint,
         output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
-    eval_solver.eval()
-
-    eval_solver.visualize()
+    solver.eval()
+    # visualize prediction from pretrained_model_path(optional)
+    solver.visualize()
