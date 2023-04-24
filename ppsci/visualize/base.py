@@ -25,7 +25,8 @@ class Visualizer:
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        num_timestamps (int): Number of timestamps
+        batch_size (int): Batch size of data when computing result in visu.py.
+        num_timestamps (int): Number of timestamps.
         prefix (str): Prefix for output file.
     """
 
@@ -33,13 +34,15 @@ class Visualizer:
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int,
         num_timestamps: int,
         prefix: str,
     ):
         self.input_dict = input_dict
-        self.input_keys = list(input_dict.keys())
+        self.input_keys = tuple(input_dict.keys())
         self.output_expr = output_expr
-        self.output_keys = list(output_expr.keys())
+        self.output_keys = tuple(output_expr.keys())
+        self.batch_size = batch_size
         self.num_timestamps = num_timestamps
         self.prefix = prefix
 
@@ -53,6 +56,7 @@ class Visualizer:
                 f"input_keys: {self.input_keys}",
                 f"output_keys: {self.output_keys}",
                 f"output_expr: {self.output_expr}",
+                f"batch_size: {self.batch_size}",
                 f"num_timestamps: {self.num_timestamps}",
                 f"output file prefix: {self.prefix}",
             ]
