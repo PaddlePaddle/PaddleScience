@@ -130,7 +130,7 @@ def convert_to_array(dict, keys):
 def concat_dict_list(dict_list):
     ret = {}
     for key in dict_list[0].keys():
-        ret[key] = np.concat([_dict[key] for _dict in dict_list], axis=0)
+        ret[key] = np.concatenate([_dict[key] for _dict in dict_list], axis=0)
     return ret
 
 

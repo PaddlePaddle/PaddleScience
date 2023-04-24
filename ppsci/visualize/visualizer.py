@@ -40,10 +40,11 @@ class VisualizerScatter1D(base.Visualizer):
         input_dict: Dict[str, np.ndarray],
         coord_keys: Tuple[str, ...],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "plot",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
         self.coord_keys = coord_keys
 
     def save(self, filename, data_dict):
@@ -66,10 +67,11 @@ class VisualizerScatter3D(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "plot3d_scatter",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
         data_dict = {
@@ -108,10 +110,11 @@ class VisualizerVtu(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "vtu",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
         vtu.save_vtu_from_dict(
@@ -133,10 +136,11 @@ class Visualizer2D(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "plot2d",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
 
 class Visualizer2DPlot(Visualizer2D):
@@ -156,13 +160,14 @@ class Visualizer2DPlot(Visualizer2D):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         stride: int = 1,
         xticks: Optional[Tuple[float, ...]] = None,
         yticks: Optional[Tuple[float, ...]] = None,
         prefix: str = "plot2d",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
         self.stride = stride
         self.xticks = xticks
         self.yticks = yticks
@@ -213,10 +218,11 @@ class Visualizer3D(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
+        batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "plot3d",
     ):
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def save(self, filename, data_dict):
         vtu.save_vtu_from_dict(
