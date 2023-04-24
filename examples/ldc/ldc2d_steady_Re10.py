@@ -15,13 +15,15 @@
 import numpy as np
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
+    args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./ldc2d_steady_Re10"
+    output_dir = "./ldc2d_steady_Re10" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 20000
+    epochs = 20000 if not args.epochs else args.epochs
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         epochs,
         iters_per_epoch,
