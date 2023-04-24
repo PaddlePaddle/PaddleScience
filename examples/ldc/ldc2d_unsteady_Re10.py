@@ -198,8 +198,8 @@ if __name__ == "__main__":
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            ntime_all,
-            "result_u_v",
+            num_timestamps=ntime_all,
+            prefix="result_u_v",
         )
     }
 
