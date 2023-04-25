@@ -110,8 +110,8 @@ if __name__ == "__main__":
                 r"$f$": equation["VIV"].equations["f"],  # plot with latex title
                 r"$f_{gt}$": lambda d: d["f_gt"],  # plot with latex title
             },
-            1,
-            "viv_pred",
+            num_timestamps=1,
+            prefix="viv_pred",
         )
     }
 
