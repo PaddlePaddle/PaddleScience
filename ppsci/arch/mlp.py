@@ -15,6 +15,7 @@
 from typing import Tuple
 from typing import Union
 
+import paddle
 import paddle.nn as nn
 
 from ppsci.arch import activation as act_mod
@@ -45,6 +46,9 @@ class MLP(base.NetBase):
         activation: str = "tanh",
         skip_connection: bool = False,
         weight_norm: bool = False,
+        weight_init=None,
+        bias_init=None,
+        net_special_name: str = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -69,14 +73,29 @@ class MLP(base.NetBase):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys)
-        for _size in hidden_size:
-            self.linears.append(nn.Linear(cur_size, _size))
+        for i, _size in enumerate(hidden_size):
+            w_para = paddle.nn.initializer.Assign(weight_init[f"w_{i}"])
+            b_para = paddle.nn.initializer.Assign(bias_init[f"b_{i}"])
+            self.linears.append(
+                nn.Linear(
+                    cur_size,
+                    _size,
+                    weight_attr=paddle.ParamAttr(initializer=w_para),
+                    bias_attr=paddle.ParamAttr(initializer=b_para),
+                )
+            )
             if weight_norm:
                 self.linears[-1] = nn.utils.weight_norm(self.linears[-1], dim=1)
             cur_size = _size
         self.linears = nn.LayerList(self.linears)
-
-        self.last_fc = nn.Linear(cur_size, len(self.output_keys))
+        w_para = paddle.nn.initializer.Assign(weight_init[f"w_{num_layers}"])
+        b_para = paddle.nn.initializer.Assign(bias_init[f"b_{num_layers}"])
+        self.last_fc = nn.Linear(
+            cur_size,
+            len(self.output_keys),
+            weight_attr=paddle.ParamAttr(initializer=w_para),
+            bias_attr=paddle.ParamAttr(initializer=b_para),
+        )
 
         # initialize activation function
         self.act = act_mod.get_activation(activation)
@@ -102,15 +121,13 @@ class MLP(base.NetBase):
 
     def forward(self, x):
         if self._input_transform is not None:
-            import copy
-
-            x_old = copy.copy(x)
-            x = self._input_transform(x)
-
-        y = self.concat_to_tensor(x, self.input_keys, axis=-1)
+            _x = self._input_transform(x)
+        else:
+            _x = x
+        y = self.concat_to_tensor(_x, self.input_keys, axis=1)
         y = self.forward_tensor(y)
-        y = self.split_to_dict(y, self.output_keys, axis=-1)
+        y = self.split_to_dict(y, self.output_keys, axis=1)
 
         if self._output_transform is not None:
-            y = self._output_transform(y, x_old)
+            y = self._output_transform(y, x)
         return y

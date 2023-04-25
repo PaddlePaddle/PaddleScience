@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import copy
 
 from ppsci.arch.mlp import MLP  # isort:skip
@@ -20,6 +19,7 @@ from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
+from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -29,6 +29,7 @@ __all__ = [
     "RosslerEmbedding",
     "CylinderEmbedding",
     "PhysformerGPT2",
+    "ModelList",
     "build_model",
 ]
 

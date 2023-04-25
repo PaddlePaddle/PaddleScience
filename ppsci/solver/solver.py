@@ -38,51 +38,51 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 
-class Solver(object):
+class Solver:
     """Class for solver.
 
     Args:
         model (nn.Layer): Model.
-        constraint (Dict[str, ppsci.constraint.Constraint], optional): Constraint(s) applied on model. Defaults to None.
+        constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
         output_dir (str, optional): Output directory. Defaults to "./output/".
-        optimizer (Optional[optimizer.Optimizer], optional): Optimizer object. Defaults to None.
-        lr_scheduler (Optional[optimizer.lr.LRScheduler], optional): Learning rate scheduler. Defaults to None.
-        epochs (Optional[int], optional): Training epoch(s). Defaults to 5.
-        iters_per_epoch (Optional[int], optional): Number of iterations within an epoch. Defaults to 20.
-        update_freq (Optional[int], optional): Update frequency of parameters. Defaults to 1.
+        optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
+        lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
+        epochs (int, optional): Training epoch(s). Defaults to 5.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+        update_freq (int, optional): Update frequency of parameters. Defaults to 1.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
         log_freq (int, optional): Logging frequency. Defaults to 10.
         eval_during_train (bool, optional): Whether evaluate model during training. Defaults to False.
-        start_eval_epoch (Optional[int], optional): Epoch number evaluation applied begin after. Defaults to 1.
-        eval_freq (Optional[int], optional): Evaluation frequency. Defaults to 1.
+        start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
+        eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
-        vdl_writer (Optional[vdl.LogWriter], optional): VisualDL writer object. Defaults to None.
+        vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
-        equation (Optional[Dict[str, ppsci.equation.PDE]], optional): Equation dict. Defaults to None.
-        geom (Optional[Dict[str, ppsci.geometry.Geometry]], optional): Geometry dict. Defaults to None.
-        validator (Optional[Dict[str, ppsci.validate.Validator]], optional): Validator dict. Defaults to None.
-        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]], optional): Visualizer dict. Defaults to None.
+        equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
+        geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
+        validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
+        visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
-        pretrained_model_path (Optional[str], optional): Pretrained model path. Defaults to None.
-        checkpoint_path (Optional[str], optional): Checkpoint path. Defaults to None.
+        pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
+        checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
     """
 
     def __init__(
         self,
         model: nn.Layer,
-        constraint: Dict[str, ppsci.constraint.Constraint] = None,
+        constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
         output_dir: str = "./output/",
         optimizer: Optional[optimizer.Optimizer] = None,
         lr_scheduler: Optional[optimizer.lr.LRScheduler] = None,
-        epochs: Optional[int] = 5,
-        iters_per_epoch: Optional[int] = 20,
-        update_freq: Optional[int] = 1,
+        epochs: int = 5,
+        iters_per_epoch: int = 20,
+        update_freq: int = 1,
         save_freq: int = 0,
         log_freq: int = 10,
         eval_during_train: bool = False,
-        start_eval_epoch: Optional[int] = 1,
-        eval_freq: Optional[int] = 1,
+        start_eval_epoch: int = 1,
+        eval_freq: int = 1,
         seed: int = 42,
         vdl_writer: Optional[vdl.LogWriter] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
@@ -145,7 +145,7 @@ class Solver(object):
         # set running device
         self.device = paddle.set_device(device)
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
-        self.equation = {} if equation is None else equation
+        self.equation = equation
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
@@ -162,7 +162,7 @@ class Solver(object):
 
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path)
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -172,7 +172,7 @@ class Solver(object):
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path, self.model, self.optimizer, self.scaler
+                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
@@ -324,6 +324,7 @@ class Solver(object):
                         self.best_metric,
                         self.output_dir,
                         "best_model",
+                        self.equation,
                     )
                 logger.info(
                     f"[Eval][Epoch {epoch_id}]"
@@ -347,6 +348,7 @@ class Solver(object):
                     {"metric": cur_metric, "epoch": epoch_id},
                     self.output_dir,
                     f"epoch_{epoch_id}",
+                    self.equation,
                 )
 
             # always save the latest model for convenient resume training
@@ -357,6 +359,7 @@ class Solver(object):
                 {"metric": cur_metric, "epoch": epoch_id},
                 self.output_dir,
                 "latest",
+                self.equation,
             )
 
         # close VisualDL
@@ -401,7 +404,7 @@ class Solver(object):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
         if pretrained_path is not None:
-            save_load.load_pretrain(self.model, pretrained_path)
+            save_load.load_pretrain(self.model, pretrained_path, self.equation)
 
         self.model.eval()
 

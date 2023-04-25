@@ -52,45 +52,43 @@ if __name__ == "__main__":
     train_block_size = 4
     valid_block_size = 32
 
-    input_keys = ["states", "visc"]
-    output_keys = ["pred_states", "recover_states"]
-    weights = [10.0 * (train_block_size - 1), 10.0 * train_block_size]
+    input_keys = ("states", "visc")
+    output_keys = ("pred_states", "recover_states")
+    weights = (10.0 * (train_block_size - 1), 10.0 * train_block_size)
     regularization_key = "k_matrix"
 
     output_dir = "./output/cylinder_enn"
-    train_file_path = "/path/to/cylinder_training.hdf5"
-    valid_file_path = "/path/to/cylinder_valid.hdf5"
+    train_file_path = "./datasets/cylinder_training.hdf5"
+    valid_file_path = "./datasets/cylinder_valid.hdf5"
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # maunally build constraint(s)
-    train_dataloader = {
+    train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
             "file_path": train_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": train_block_size,
             "stride": 16,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
         "sampler": {
             "name": "BatchSampler",
             "drop_last": True,
-            "shuffle": False,
+            "shuffle": True,
         },
         "batch_size": 64,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_file_path,
-        input_keys,
-        output_keys + [regularization_key],
-        {},
-        train_dataloader,
+        train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
             regularization_dict={regularization_key: 1.0e-2 * (train_block_size - 1)}
         ),
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
+        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -103,7 +101,7 @@ if __name__ == "__main__":
         sup_constraint.data_loader.dataset.data, sup_constraint.data_loader.dataset.visc
     )
     model = ppsci.arch.CylinderEmbedding(
-        input_keys, output_keys + [regularization_key], data_mean, data_std
+        input_keys, output_keys + (regularization_key,), data_mean, data_std
     )
 
     # init optimizer and lr scheduler
@@ -123,13 +121,16 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    weights = [10.0 * (valid_block_size - 1), 10.0 * valid_block_size]
-    eval_dataloader = {
+    weights = (10.0 * (valid_block_size - 1), 10.0 * valid_block_size)
+    eval_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
             "file_path": valid_file_path,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
             "block_size": valid_block_size,
             "stride": 32,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
         "sampler": {
             "name": "BatchSampler",
@@ -138,16 +139,12 @@ if __name__ == "__main__":
         },
         "batch_size": 8,
         "num_workers": 4,
-        "use_shared_memory": False,
     }
 
     mse_validator = ppsci.validate.SupervisedValidator(
-        input_keys,
-        output_keys,
-        eval_dataloader,
+        eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         metric={"MSE": ppsci.metric.MSE()},
-        weight_dict={key: value for key, value in zip(output_keys, weights)},
         name="MSE_Validator",
     )
     validator = {mse_validator.name: mse_validator}
@@ -171,6 +168,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         output_dir=output_dir,

@@ -70,7 +70,6 @@ class MaskedAttention(nn.Layer):
         self.out_proj = nn.Linear(embed_dim, embed_dim)
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.pruned_heads = set()
 
     def _attn(
         self,
@@ -154,8 +153,8 @@ class MLP(nn.Layer):
 
     Args:
         in_features (int): Number of the input features.
-        hidden_features (int, optional): Number of the hidden size. Defaults to None.
-        out_features (int, optional): Number of the output features. Defaults to None.
+        hidden_features (Optional[int]): Number of the hidden size. Defaults to None.
+        out_features (Optional[int]): Number of the output features. Defaults to None.
         drop (float, optional): Probability of dropout the units. Defaults to 0.
     """
 

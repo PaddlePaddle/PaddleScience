@@ -9,24 +9,24 @@ Lid Driven Cavity Flow，中文名称可译作“顶盖驱动方腔流”，一�
 质量守恒：
 
 $$
-\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} = 0
+\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} = 0
 $$
 
 $x$ 动量守恒：
 
 $$
-\frac{\partial u}{\partial t} + u\frac{\partial u}{\partial x} + v\frac{\partial u}{\partial y} = -\frac{1}{\rho}\frac{\partial p}{\partial x} + \nu(\frac{\partial ^2 u}{\partial x ^2} + \frac{\partial ^2 u}{\partial y ^2})
+\dfrac{\partial u}{\partial t} + u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial x} + \nu(\dfrac{\partial ^2 u}{\partial x ^2} + \dfrac{\partial ^2 u}{\partial y ^2})
 $$
 
 $y$ 动量守恒：
 
 $$
-\frac{\partial v}{\partial t} + u\frac{\partial v}{\partial x} + v\frac{\partial v}{\partial y} = -\frac{1}{\rho}\frac{\partial p}{\partial y} + \nu(\frac{\partial ^2 v}{\partial x ^2} + \frac{\partial ^2 v}{\partial y ^2})
+\dfrac{\partial v}{\partial t} + u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial y} + \nu(\dfrac{\partial ^2 v}{\partial x ^2} + \dfrac{\partial ^2 v}{\partial y ^2})
 $$
 
 **令：**
 
-$t^* = \frac{L}{U_0}$
+$t^* = \dfrac{L}{U_0}$
 
 $x^*=y^* = L$
 
@@ -36,34 +36,34 @@ $p^* = \rho {U_0}^2$
 
 **定义：**
 
-无量纲时间 $\tau = \frac{t}{t^*}$
+无量纲时间 $\tau = \dfrac{t}{t^*}$
 
-无量纲坐标 $x：X = \frac{x}{x^*}$；无量纲坐标 $y：Y = \frac{y}{y^*}$
+无量纲坐标 $x：X = \dfrac{x}{x^*}$；无量纲坐标 $y：Y = \dfrac{y}{y^*}$
 
-无量纲速度 $x：U = \frac{u}{u^*}$；无量纲速度 $y：V = \frac{v}{u^*}$
+无量纲速度 $x：U = \dfrac{u}{u^*}$；无量纲速度 $y：V = \dfrac{v}{u^*}$
 
-无量纲压力 $P = \frac{p}{p^*}$
+无量纲压力 $P = \dfrac{p}{p^*}$
 
-雷诺数 $Re = \frac{L U_0}{\nu}$
+雷诺数 $Re = \dfrac{L U_0}{\nu}$
 
 则可获得如下无量纲Navier-Stokes方程，施加于方腔内部：
 
 质量守恒：
 
 $$
-\frac{\partial U}{\partial X} + \frac{\partial U}{\partial Y} = 0
+\dfrac{\partial U}{\partial X} + \dfrac{\partial U}{\partial Y} = 0
 $$
 
 $x$ 动量守恒：
 
 $$
-\frac{\partial U}{\partial \tau} + U\frac{\partial U}{\partial X} + V\frac{\partial U}{\partial Y} = -\frac{\partial P}{\partial X} + \frac{1}{Re}(\frac{\partial ^2 U}{\partial X^2} + \frac{\partial ^2 U}{\partial Y^2})
+\dfrac{\partial U}{\partial \tau} + U\dfrac{\partial U}{\partial X} + V\dfrac{\partial U}{\partial Y} = -\dfrac{\partial P}{\partial X} + \dfrac{1}{Re}(\dfrac{\partial ^2 U}{\partial X^2} + \dfrac{\partial ^2 U}{\partial Y^2})
 $$
 
 $y$ 动量守恒：
 
 $$
-\frac{\partial V}{\partial \tau} + U\frac{\partial V}{\partial X} + V\frac{\partial V}{\partial Y} = -\frac{\partial P}{\partial Y} + \frac{1}{Re}(\frac{\partial ^2 V}{\partial X^2} + \frac{\partial ^2 V}{\partial Y^2})
+\dfrac{\partial V}{\partial \tau} + U\dfrac{\partial V}{\partial X} + V\dfrac{\partial V}{\partial Y} = -\dfrac{\partial P}{\partial Y} + \dfrac{1}{Re}(\dfrac{\partial ^2 V}{\partial X^2} + \dfrac{\partial ^2 V}{\partial Y^2})
 $$
 
 对于方腔边界，则需施加 Dirichlet 边界条件：
@@ -108,9 +108,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="28"
+``` py linenums="30"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:28:31
+examples/ldc/ldc2d_unsteady_Re10.py:30:33
 --8<--
 ```
 
@@ -122,9 +122,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:28:31
 
 由于 2D-LDC 使用的是 Navier-Stokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="32"
+``` py linenums="34"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:32:33
+examples/ldc/ldc2d_unsteady_Re10.py:34:35
 --8<--
 ```
 
@@ -135,9 +135,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:32:33
 本文中 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，且时间域为 16 个时刻 [0.0, 0.1, ..., 1.4, 1.5]，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
-``` py linenums="35"
+``` py linenums="37"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:35:43
+examples/ldc/ldc2d_unsteady_Re10.py:37:45
 --8<--
 ```
 
@@ -156,15 +156,15 @@ examples/ldc/ldc2d_unsteady_Re10.py:35:43
 1. 施加在矩形内部点上的无量纲 Navier-Stokes 方程约束（经过简单移项）
 
     $$
-    \frac{\partial U}{\partial X} + \frac{\partial U}{\partial Y} = 0
+    \dfrac{\partial U}{\partial X} + \dfrac{\partial U}{\partial Y} = 0
     $$
 
     $$
-    \frac{\partial U}{\partial \tau} + U\frac{\partial U}{\partial X} + V\frac{\partial U}{\partial Y} + \frac{\partial P}{\partial X} - \frac{1}{Re}(\frac{\partial ^2 U}{\partial X^2} + \frac{\partial ^2 U}{\partial Y^2}) = 0
+    \dfrac{\partial U}{\partial \tau} + U\dfrac{\partial U}{\partial X} + V\dfrac{\partial U}{\partial Y} + \dfrac{\partial P}{\partial X} - \dfrac{1}{Re}(\dfrac{\partial ^2 U}{\partial X^2} + \dfrac{\partial ^2 U}{\partial Y^2}) = 0
     $$
 
     $$
-    \frac{\partial V}{\partial \tau} + U\frac{\partial V}{\partial X} + V\frac{\partial V}{\partial Y} + \frac{\partial P}{\partial Y} - \frac{1}{Re}(\frac{\partial ^2 V}{\partial X^2} + \frac{\partial ^2 V}{\partial Y^2}) = 0
+    \dfrac{\partial V}{\partial \tau} + U\dfrac{\partial V}{\partial X} + V\dfrac{\partial V}{\partial Y} + \dfrac{\partial P}{\partial Y} - \dfrac{1}{Re}(\dfrac{\partial ^2 V}{\partial X^2} + \dfrac{\partial ^2 V}{\partial Y^2}) = 0
     $$
 
     为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。
@@ -191,9 +191,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:35:43
 
 在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
 
-``` py linenums="45"
+``` py linenums="47"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:45:59
+examples/ldc/ldc2d_unsteady_Re10.py:47:61
 --8<--
 ```
 
@@ -201,13 +201,13 @@ examples/ldc/ldc2d_unsteady_Re10.py:45:59
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="61"
+``` py linenums="63"
 # set constraint
 pde_constraint = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
     {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
     geom["time_rect"],
-    {**train_dataloader_cfg, **{"batch_size": npoint_pde * ntime_pde}},
+    {**train_dataloader_cfg, "batch_size": npoint_pde * ntime_pde},
     ppsci.loss.MSELoss("sum"),
     evenly=True,
     weight_dict={
@@ -249,9 +249,9 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
-``` py linenums="76"
+``` py linenums="78"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:76:111
+examples/ldc/ldc2d_unsteady_Re10.py:78:113
 --8<--
 ```
 
@@ -259,17 +259,17 @@ examples/ldc/ldc2d_unsteady_Re10.py:76:111
 
 最后我们还需要对 $t=t_0$ 时刻的矩形内部点施加 N-S 方程约束，代码如下：
 
-``` py linenums="112"
+``` py linenums="114"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:112:120
+examples/ldc/ldc2d_unsteady_Re10.py:114:122
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="121"
+``` py linenums="123"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:121:129
+examples/ldc/ldc2d_unsteady_Re10.py:123:131
 --8<--
 ```
 
@@ -277,9 +277,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:121:129
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="131"
+``` py linenums="133"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:131:138
+examples/ldc/ldc2d_unsteady_Re10.py:133:140
 --8<--
 ```
 
@@ -287,9 +287,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:131:138
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="140"
+``` py linenums="142"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:140:141
+examples/ldc/ldc2d_unsteady_Re10.py:142:143
 --8<--
 ```
 
@@ -297,9 +297,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:140:141
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="143"
+``` py linenums="145"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:143:161
+examples/ldc/ldc2d_unsteady_Re10.py:145:163
 --8<--
 ```
 
@@ -321,9 +321,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:143:161
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i,y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 16 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="163"
+``` py linenums="165"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:163:202
+examples/ldc/ldc2d_unsteady_Re10.py:165:204
 --8<--
 ```
 
@@ -331,9 +331,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:163:202
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="204"
+``` py linenums="206"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:204:
+examples/ldc/ldc2d_unsteady_Re10.py:206:
 --8<--
 ```
 

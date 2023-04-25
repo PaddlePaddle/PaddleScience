@@ -5,5 +5,10 @@
     options:
       members:
         - MLP
+        - LorenzEmbedding
+        - RosslerEmbedding
+        - CylinderEmbedding
+        - PhysformerGPT2
+        - ModelList
       show_root_heading: false
       heading_level: 3

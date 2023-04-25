@@ -27,15 +27,15 @@ from ppsci.utils import logger
 __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 
 
-class SGD(object):
+class SGD:
     """Stochastic Gradient Descent.
 
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
     """
 
@@ -67,19 +67,19 @@ class SGD(object):
         return opt
 
 
-class Momentum(object):
+class Momentum:
     """Simple Momentum optimizer with velocity state.
 
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s).
         momentum (float): Momentum factor.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
         use_nesterov (bool, optional): Whether to use nesterov momentum. Defaults to False.
-        no_weight_decay_name (Optional[str], optional): List of names of no weight decay parameters split by white space. Defaults to None.
+        no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
     """
 
     def __init__(
@@ -153,7 +153,7 @@ class Momentum(object):
         return opt
 
 
-class Adam(object):
+class Adam:
     """Adam: A Method for Stochastic Optimization.
 
     Args:
@@ -162,8 +162,8 @@ class Adam(object):
         beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
         beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
         epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-08.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional): Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional): Gradient cliping strategy. Defaults to None.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
         lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
     """
 
@@ -208,7 +208,7 @@ class Adam(object):
         return opt
 
 
-class LBFGS(object):
+class LBFGS:
     """The L-BFGS is a quasi-Newton method for solving an unconstrained optimization
         problem over a differentiable function. Closely related is the Newton method for minimization.
 
@@ -217,14 +217,14 @@ class LBFGS(object):
             used to update parameter(s). Defaults to 1.0.
         max_iter (int, optional): Maximal number of iterations per optimization step.
             Defaults to 1.
-        max_eval (Optional[int], optional): Maximal number of function evaluations per
+        max_eval (Optional[int]): Maximal number of function evaluations per
             optimization step. Defaults to None.
         tolerance_grad (float, optional): Termination tolerance on first order optimality.
             Defaults to 1e-07.
         tolerance_change (float, optional): termination tolerance on function
             value/parameterchanges. Defaults to 1e-09.
         history_size (int, optional): Update history size. Defaults to 100.
-        line_search_fn (Optional[Literal["strong_wolfe"]], optional): Either 'strong_wolfe' or None.
+        line_search_fn (Optional[Literal["strong_wolfe"]]): Either 'strong_wolfe' or None.
             Defaults to "strong_wolfe".
     """
 
@@ -264,7 +264,7 @@ class LBFGS(object):
         return opt
 
 
-class RMSProp(object):
+class RMSProp:
     """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
 
     Args:
@@ -273,9 +273,9 @@ class RMSProp(object):
         rho (float, optional): Factor ρ in equation. Defaults to 0.95.
         epsilon (float, optional): Factor ϵ in equation as a smoothing term. Defaults to 1e-6.
         momentum (float, optional):β in equation is the momentum term. Defaults to 0.0.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional):
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional):
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
     """
 
@@ -317,7 +317,7 @@ class RMSProp(object):
         return opt
 
 
-class AdamW(object):
+class AdamW:
     """AdamW is implemented based on DECOUPLED WEIGHT DECAY REGULARIZATION.
 
     Args:
@@ -326,9 +326,9 @@ class AdamW(object):
         beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
         beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
         epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-8.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]], optional): Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]], optional): Gradient cliping strategy. Defaults to None.
-        no_weight_decay_name (Optional[str], optional): List of names of no weight decay parameters split by white space. Defaults to None.
+        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
+        no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
         one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
     """
 

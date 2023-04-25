@@ -21,7 +21,7 @@ class L2Loss(base.LossBase):
     r"""Class for l2 loss.
 
     $$
-    L = \sum_{i=1}^{N}{(x_i-y_i)^2}
+    L = \sum\limits_{i=1}^{N}{(x_i-y_i)^2}
     $$
     """
 

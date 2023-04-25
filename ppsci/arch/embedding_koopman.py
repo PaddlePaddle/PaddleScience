@@ -37,8 +37,8 @@ class LorenzEmbedding(base.NetBase):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         input_size (int, optional): Size of input data. Defaults to 3.
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
@@ -195,8 +195,8 @@ class RosslerEmbedding(LorenzEmbedding):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         input_size (int, optional): Size of input data. Defaults to 3.
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
@@ -232,11 +232,11 @@ class CylinderEmbedding(base.NetBase):
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        mean (Optional[Tuple[float, ...]], optional): Mean of training dataset. Defaults to None.
-        std (Optional[Tuple[float, ...]], optional): Standard Deviation of training dataset. Defaults to None.
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         embed_size (int, optional): Number of embedding size. Defaults to 128.
-        encoder_channles (Tuple[int,...]): Number of channels in encoder network. Defaults to None.
-        decoder_channles (Tuple[int,...]): Number of channels in decoder network. Defaults to None.
+        encoder_channels (Optional[Tuple[int, ...]]): Number of channels in encoder network. Defaults to None.
+        decoder_channels (Optional[Tuple[int, ...]]): Number of channels in decoder network. Defaults to None.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
     """
 
@@ -247,8 +247,8 @@ class CylinderEmbedding(base.NetBase):
         mean: Optional[Tuple[float, ...]] = None,
         std: Optional[Tuple[float, ...]] = None,
         embed_size: int = 128,
-        encoder_channles: Optional[Tuple[int, ...]] = None,
-        decoder_channles: Optional[Tuple[int, ...]] = None,
+        encoder_channels: Optional[Tuple[int, ...]] = None,
+        decoder_channels: Optional[Tuple[int, ...]] = None,
         drop: float = 0.0,
     ):
         super().__init__()
@@ -259,19 +259,19 @@ class CylinderEmbedding(base.NetBase):
         X, Y = np.meshgrid(np.linspace(-2, 14, 128), np.linspace(-4, 4, 64))
         self.mask = paddle.to_tensor(np.sqrt(X**2 + Y**2)).unsqueeze(0).unsqueeze(0)
 
-        encoder_channles = (
-            [4, 16, 32, 64, 128] if encoder_channles is None else encoder_channles
+        encoder_channels = (
+            [4, 16, 32, 64, 128] if encoder_channels is None else encoder_channels
         )
-        decoder_channles = (
+        decoder_channels = (
             [embed_size // 32, 128, 64, 32, 16]
-            if decoder_channles is None
-            else decoder_channles
+            if decoder_channels is None
+            else decoder_channels
         )
-        self.encoder_net = self.build_encoder(embed_size, encoder_channles, drop)
+        self.encoder_net = self.build_encoder(embed_size, encoder_channels, drop)
         self.k_diag_net, self.k_ut_net, self.k_lt_net = self.build_koopman_operator(
             embed_size
         )
-        self.decoder_net = self.build_decoder(decoder_channles)
+        self.decoder_net = self.build_decoder(decoder_channels)
 
         xidx = []
         yidx = []
@@ -306,11 +306,11 @@ class CylinderEmbedding(base.NetBase):
                 uniform(m.bias)
 
     def _build_conv_relu_list(
-        self, in_channles: Tuple[int, ...], out_channels: Tuple[int, ...]
+        self, in_channels: Tuple[int, ...], out_channels: Tuple[int, ...]
     ):
         net_list = [
             nn.Conv2D(
-                in_channles,
+                in_channels,
                 out_channels,
                 kernel_size=(3, 3),
                 stride=2,
@@ -322,14 +322,14 @@ class CylinderEmbedding(base.NetBase):
         return net_list
 
     def build_encoder(
-        self, embed_size: int, channles: Tuple[int, ...], drop: float = 0.0
+        self, embed_size: int, channels: Tuple[int, ...], drop: float = 0.0
     ):
         net = []
-        for i in range(1, len(channles)):
-            net.extend(self._build_conv_relu_list(channles[i - 1], channles[i]))
+        for i in range(1, len(channels)):
+            net.extend(self._build_conv_relu_list(channels[i - 1], channels[i]))
         net.append(
             nn.Conv2D(
-                channles[-1],
+                channels[-1],
                 embed_size // 32,
                 kernel_size=(3, 3),
                 padding=1,
@@ -346,12 +346,12 @@ class CylinderEmbedding(base.NetBase):
         return net
 
     def _build_upsample_conv_relu(
-        self, in_channles: Tuple[int, ...], out_channels: Tuple[int, ...]
+        self, in_channels: Tuple[int, ...], out_channels: Tuple[int, ...]
     ):
         net_list = [
             nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
             nn.Conv2D(
-                in_channles,
+                in_channels,
                 out_channels,
                 kernel_size=(3, 3),
                 stride=1,
@@ -362,13 +362,13 @@ class CylinderEmbedding(base.NetBase):
         ]
         return net_list
 
-    def build_decoder(self, channles: Tuple[int, ...]):
+    def build_decoder(self, channels: Tuple[int, ...]):
         net = []
-        for i in range(1, len(channles)):
-            net.extend(self._build_upsample_conv_relu(channles[i - 1], channles[i]))
+        for i in range(1, len(channels)):
+            net.extend(self._build_upsample_conv_relu(channels[i - 1], channels[i]))
         net.append(
             nn.Conv2D(
-                channles[-1],
+                channels[-1],
                 3,
                 kernel_size=(3, 3),
                 stride=1,

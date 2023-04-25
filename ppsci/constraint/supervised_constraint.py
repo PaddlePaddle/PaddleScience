@@ -12,145 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
-import types
 from typing import Any
 from typing import Callable
 from typing import Dict
-from typing import Tuple
-
-import numpy as np
-import sympy
-from sympy.parsing import sympy_parser as sp_parser
+from typing import Optional
 
 from ppsci import loss
 from ppsci.constraint import base
 from ppsci.data import dataset
-from ppsci.utils import misc
 
 
 class SupervisedConstraint(base.Constraint):
     """Class for supervised constraint.
 
     Args:
-        data_file (str): File path of data.
-        input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
-        alias_dict (Dict[str, str]): Dict of alias(es) for input and label keys.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
-        weight_dict (Dict[str, Callable], optional): Define the weight of each
-            constraint variable. Defaults to None.
-        timestamps (Tuple[float, ...], optional): The number of repetitions of the data
-            in the time dimension. Defaults to None.
+        label_expr (Optional[Dict[str, Callable]]): List of label expression.
+            Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
     """
 
     def __init__(
         self,
-        data_file: str,
-        input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
-        alias_dict: Dict[str, str],
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
-        weight_dict: Dict[str, Callable] = None,
-        timestamps: Tuple[float, ...] = None,
+        label_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
-        self.input_keys = [
-            alias_dict[key] if key in alias_dict else key for key in input_keys
-        ]
-        self.output_keys = [
-            alias_dict[key] if key in alias_dict else key for key in label_keys
-        ]
+        self.label_expr = label_expr
 
-        # load raw data, prepare input and label
-        if data_file.endswith(".csv"):
-            # load data
-            data = misc.load_csv_file(data_file, input_keys + label_keys, alias_dict)
-            if "t" not in data and timestamps is None:
-                raise ValueError(
-                    "Time should be given by argument timestamps or data itself."
-                )
-            if timestamps is not None:
-                if "t" in data:
-                    # filter data according to given timestamps
-                    raw_time_array = data["t"]
-                    mask = []
-                    for ti in timestamps:
-                        mask.append(
-                            np.nonzero(np.isclose(raw_time_array, ti).flatten())[0]
-                        )
-                    data = misc.convert_to_array(
-                        data, self.input_keys + self.output_keys
-                    )
-                    mask = np.concatenate(mask, 0)
-                    data = data[mask]
-                    data = misc.convert_to_dict(
-                        data, self.input_keys + self.output_keys
-                    )
-                else:
-                    # repeat data according to given timestamps
-                    data = misc.convert_to_array(
-                        data, self.input_keys + self.output_keys
-                    )
-                    data = misc.combine_array_with_time(data, timestamps)
-                    self.input_keys = ["t"] + self.input_keys
-                    data = misc.convert_to_dict(
-                        data, self.input_keys + self.output_keys
-                    )
-                input = {key: data[key] for key in self.input_keys}
-                label = {key: data[key] for key in self.output_keys}
-                self.num_timestamp = len(timestamps)
-            else:
-                # use all input and label
-                input = {key: data[key] for key in self.input_keys}
-                label = {key: data[key] for key in self.output_keys}
-                self.num_timestamp = len(np.unique(data["t"]))
+        # build dataset
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
-            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-            # prepare weight
-            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
-            if weight_dict is not None:
-                for key, value in weight_dict.items():
-                    if isinstance(value, str):
-                        value = sp_parser.parse_expr(value)
+        self.input_keys = _dataset.input_keys
+        self.output_keys = (
+            list(label_expr.keys()) if label_expr is not None else _dataset.label_keys
+        )
 
-                    if isinstance(value, (int, float)):
-                        weight[key] = np.full_like(
-                            next(iter(label.values())), float(value)
-                        )
-                    elif isinstance(value, sympy.Basic):
-                        func = sympy.lambdify(
-                            [sympy.Symbol(k) for k in self.input_keys],
-                            value,
-                            [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
-                        )
-                        weight[key] = func(**{k: input[k] for k in self.input_keys})
-                    elif isinstance(value, types.FunctionType):
-                        func = value
-                        weight[key] = func(input)
-                        if isinstance(weight[key], (int, float)):
-                            weight[key] = np.full_like(
-                                next(iter(input.values())), float(weight[key])
-                            )
-                    else:
-                        raise NotImplementedError(
-                            f"type of {type(value)} is invalid yet."
-                        )
-            # wrap input, label, weight into a dataset
-            _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
-        elif data_file.endswith(".hdf5"):
-            dataset_cfg = copy.deepcopy(dataloader_cfg["dataset"])
-            dataset_name = dataset_cfg.pop("name")
-            dataset_cfg["input_keys"] = input_keys
-            dataset_cfg["label_keys"] = label_keys
-            dataset_cfg["weight_dict"] = weight_dict
-            _dataset = getattr(dataset, dataset_name)(**dataset_cfg)
-            self.label_expr = {key: (lambda d, k=key: d[k]) for key in self.output_keys}
-        else:
-            raise NotImplementedError("Only suppport .csv and .hdf5 file now.")
+        if self.label_expr is None:
+            self.label_expr = {
+                key: lambda out, k=key: out[k] for key in self.output_keys
+            }
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

@@ -29,23 +29,26 @@ class VisualizerScatter1D(base.Visualizer):
 
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
+        coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
         output_expr (Dict[str, Callable]): Output expression.
-        num_timestamps (int): Number of timestamps
-        prefix (str): Prefix for output file.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot".
     """
 
     def __init__(
         self,
         input_dict: Dict[str, np.ndarray],
+        coord_keys: Tuple[str, ...],
         output_expr: Dict[str, Callable],
         num_timestamps: int = 1,
         prefix: str = "plot",
     ):
         super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        self.coord_keys = coord_keys
 
-    def save(self, data_dict, filename):
+    def save(self, filename, data_dict):
         plot.save_plot_from_1d_dict(
-            filename, data_dict, self.input_keys, self.output_keys, self.num_timestamps
+            filename, data_dict, self.coord_keys, self.output_keys, self.num_timestamps
         )
 
 
@@ -144,8 +147,8 @@ class Visualizer2DPlot(Visualizer2D):
         output_expr (Dict[str, Callable]): Output expression.
         num_timestamps (int): Number of timestamps.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]], optional): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]], optional): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
         prefix (str): Prefix for output file. Defaults to "plot2d".
     """
 

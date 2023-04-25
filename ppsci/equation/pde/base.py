@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Tuple
 
@@ -21,7 +22,7 @@ import paddle.nn as nn
 import sympy
 
 
-class PDE(object):
+class PDE:
     """Base class for Partial Differential Equation"""
 
     def __init__(self):
@@ -70,6 +71,14 @@ class PDE(object):
             List[Tensor]: A list of parameters.
         """
         return self.learnable_parameters.parameters()
+
+    def state_dict(self) -> Dict[str, paddle.Tensor]:
+        """Return named parameters in dict."""
+        return self.learnable_parameters.state_dict()
+
+    def set_state_dict(self, state_dict):
+        """Set state dict from dict."""
+        self.learnable_parameters.set_state_dict(state_dict)
 
     def __str__(self):
         return ", ".join(

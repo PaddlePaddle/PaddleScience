@@ -17,18 +17,26 @@ import random
 from functools import partial
 
 import numpy as np
+import paddle
 import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io
 
-from ppsci import data
 from ppsci.data import dataloader
 from ppsci.data import dataset
 from ppsci.data import process
 from ppsci.data.process import batch_transform
+from ppsci.data.process import transform
 from ppsci.utils import logger
 
-__all__ = ["dataset", "process", "dataloader", "build_dataloader"]
+__all__ = [
+    "dataset",
+    "process",
+    "dataloader",
+    "build_dataloader",
+    "transform",
+    "batch_transform",
+]
 
 
 def worker_init_fn(worker_id, num_workers, rank, base_seed):
@@ -49,12 +57,11 @@ def worker_init_fn(worker_id, num_workers, rank, base_seed):
 
 def build_dataloader(_dataset, cfg):
     world_size = dist.get_world_size()
-    # just return IterableNamedArrayDataset as datalaoder
-    if isinstance(_dataset, dataset.IterableNamedArrayDataset):
+    # just return IterableDataset as datalaoder
+    if isinstance(_dataset, io.IterableDataset):
         if world_size > 1:
             raise ValueError(
-                f"world_size({world_size}) should be "
-                f"1 when using IterableNamedArrayDataset"
+                f"world_size({world_size}) should be 1 when using IterableDataset"
             )
         return _dataset
 
@@ -80,7 +87,7 @@ def build_dataloader(_dataset, cfg):
     if isinstance(batch_transforms_cfg, dict) and batch_transforms_cfg:
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
     else:
-        collate_fn = None
+        collate_fn = batch_transform.default_collate_fn_allow_none
 
     # build init function
     init_fn = partial(
@@ -94,7 +101,6 @@ def build_dataloader(_dataset, cfg):
     dataloader = io.DataLoader(
         dataset=_dataset,
         places=device.get_device(),
-        return_list=True,
         batch_sampler=sampler,
         collate_fn=collate_fn,
         num_workers=cfg.get("num_workers", 0),

@@ -32,21 +32,21 @@ class LorenzDataset(io.Dataset):
     """Dataset for training Lorenz model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
     """
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -54,14 +54,16 @@ class LorenzDataset(io.Dataset):
         embedding_model: Optional[base.NetBase] = None,
     ):
         super(LorenzDataset, self).__init__()
+        self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
 
-        self.file_path = file_path
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
-        self.weight_dict = weight_dict
+        self.weight_dict = {key: 1.0 for key in self.label_keys}
+        if weight_dict is not None:
+            self.weight_dict.update(weight_dict)
 
         self.data = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
@@ -108,8 +110,7 @@ class LorenzDataset(io.Dataset):
 
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.ones(weight_shape) * value
-            for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)
 
@@ -118,21 +119,21 @@ class RosslerDataset(LorenzDataset):
     """Dataset for training Rossler model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
     """
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -140,9 +141,9 @@ class RosslerDataset(LorenzDataset):
         embedding_model: Optional[base.NetBase] = None,
     ):
         super(RosslerDataset, self).__init__(
+            file_path,
             input_keys,
             label_keys,
-            file_path,
             block_size,
             stride,
             ndata,
@@ -155,22 +156,22 @@ class CylinderDataset(io.Dataset):
     """Dataset for training Cylinder model.
 
     Args:
+        file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states","visc").
         label_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
-        file_path (str): Data set path.
         block_size (int): Data block size.
         stride (int): Data stride.
-        ndata (Optional[int], optional): Number of data series to use. Defaults to None.
-        weight_dict (Optional[Dict[str, float]], optional): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase], optional): Embedding model. Defaults to None.
+        ndata (Optional[int]): Number of data series to use. Defaults to None.
+        weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
+        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
     """
 
     def __init__(
         self,
+        file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        file_path: str,
         block_size: int,
         stride: int,
         ndata: Optional[int] = None,
@@ -179,14 +180,16 @@ class CylinderDataset(io.Dataset):
         embedding_batch_size: int = 64,
     ):
         super(CylinderDataset, self).__init__()
+        self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
 
-        self.file_path = file_path
         self.block_size = block_size
         self.stride = stride
         self.ndata = ndata
-        self.weight_dict = weight_dict
+        self.weight_dict = {key: 1.0 for key in self.label_keys}
+        if weight_dict is not None:
+            self.weight_dict.update(weight_dict)
 
         self.data, self.visc = self.read_data(file_path, block_size, stride)
         self.embedding_model = embedding_model
@@ -235,23 +238,23 @@ class CylinderDataset(io.Dataset):
 
     def __getitem__(self, i):
         if self.embedding_data is None:
+            data_item = self.data[i]
             input_item = {
-                self.input_keys[0]: self.data[i],
+                self.input_keys[0]: data_item,
                 self.input_keys[1]: self.visc[i],
             }
             label_item = {
-                self.label_keys[0]: self.data[i][1:],
-                self.label_keys[1]: self.data[i],
+                self.label_keys[0]: data_item[1:],
+                self.label_keys[1]: data_item,
             }
         else:
             data_item = self.embedding_data[i]
             input_item = {self.input_keys[0]: data_item[:-1, :]}
             label_item = {self.label_keys[0]: data_item[1:, :]}
             if len(self.label_keys) == 2:
-                label_item[self.label_keys[1]] = self.data[i][1:, :]
-        weight_shape = [1] * len(self.data[i].shape)
+                label_item[self.label_keys[1]] = data_item[1:, :]
+        weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.ones(weight_shape) * value
-            for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)

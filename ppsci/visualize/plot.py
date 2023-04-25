@@ -83,13 +83,12 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
         st = t * len_ts
         ed = (t + 1) * len_ts
         coord_t = coord[st:ed]
-        sorted_index = np.argsort(coord, axis=0).squeeze()
 
         for i, key in enumerate(value_keys):
             _value_t: np.ndarray = value[st:ed, i]
-            a[i][t].plot(
+            a[i][t].scatter(
                 coord_t,
-                _value_t[sorted_index],
+                _value_t,
                 color=cnames[i],
                 label=key,
             )
@@ -163,8 +162,8 @@ def _save_plot_from_2d_array(
         visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ["u", "v"].
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]], optional): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]], optional): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
     """
 
     plt.close("all")
@@ -233,8 +232,8 @@ def save_plot_from_2d_dict(
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ["u", "v"].
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]], optional): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]], optional): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
     """
     visu_data = [data_dict[k] for k in visu_keys]
     if isinstance(visu_data[0], paddle.Tensor):

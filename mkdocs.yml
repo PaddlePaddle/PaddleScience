@@ -33,15 +33,18 @@ nav:
       - PINNs:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+      - 数据驱动:
+        - Lorenz_transform_physx: zh/examples/lorenz.md
+        - Rossler_transform_physx: zh/examples/rossler.md
+        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
       - ppsci.constraint: zh/api/constraint.md
       - ppsci.data:
-          - dataset: zh/api/data/dataset.md
-          - process:
-            - transform: zh/api/data/process/transform.md
-            - batch_transform: zh/api/data/process/batch_transform.md
+          - ppsci.data.dataset: zh/api/data/dataset.md
+          - ppsci.data.transform: zh/api/data/process/transform.md
+          - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
       - ppsci.loss: zh/api/loss.md
@@ -56,12 +59,14 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
+  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:
   name: material
   font:
     code: Roboto Mono
+    text: Noto Serif SC
   logo: ./images/icons/paddle.png
   favicon: ./images/icons/favcion.png
   language: "zh"
