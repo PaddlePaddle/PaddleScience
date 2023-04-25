@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -27,20 +28,20 @@ class PointCloud(geometry.Geometry):
     Args:
         interior (Union[str, Dict]): File or Dict, which store interior points of a point cloud.
         attributes(Dict): Dict stores informations except coordinates
-        data_key (List[str]): List of coordinate keys, such as ["x", "y"].
+        data_key (Tuple[str]): Tuple of coordinate keys, such as ["x", "y"].
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
-        alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+        alias_dict (Tuple[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
     """
 
     def __init__(
         self,
         interior: Union[str, Dict],
         attributes: Dict,
-        data_key,
-        boundary_path=None,
-        boundary_normal_path=None,
-        alias_dict=None,
+        data_key: Tuple[str],
+        boundary_path: str = None,
+        boundary_normal_path: str = None,
+        alias_dict: Tuple[str] = None,
     ):
         # Interior points from CSV file
         if isinstance(interior, dict):
@@ -172,7 +173,7 @@ class PointCloud(geometry.Geometry):
 
     def uniform_points(self, n: int, boundary=True):
         """Compute the equispaced points in the geometry."""
-        return self.interior
+        return self.interior[:n]
 
     def union(self, rhs):
         raise NotImplementedError(

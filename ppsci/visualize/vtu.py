@@ -125,8 +125,7 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
 
 def save_vtu(filename, label, coordinates):
     path = os.path.dirname(filename)
-    if not os.path.exists(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
 
     n = len(next(iter(coordinates.values())))
     m = len(coordinates)
@@ -135,4 +134,3 @@ def save_vtu(filename, label, coordinates):
     mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
     mesh.point_data = label
     mesh.write(filename)
-    print(f"vtk_raw file saved at [{filename}]")

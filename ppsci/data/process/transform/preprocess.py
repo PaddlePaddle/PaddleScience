@@ -46,6 +46,6 @@ class Scale:
 
     def __call__(self, data_dict):
         for key in self.scale:
-            if key in data_dict.keys():
+            if key in data_dict:
                 data_dict[key] *= self.scale[key]
         return data_dict

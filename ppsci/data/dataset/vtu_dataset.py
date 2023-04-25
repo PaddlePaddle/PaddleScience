@@ -76,11 +76,6 @@ class VtuDataset(io.Dataset):
         self.label = _label
         self.input_keys = input_keys
         self.label_keys = label_keys
-
-        # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
         self.transforms = transforms
         self.num_samples = len(next(iter(self.input.values())))
 

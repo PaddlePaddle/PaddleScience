@@ -15,7 +15,6 @@
 import collections
 import random
 
-import meshio
 import numpy as np
 import paddle
 import paddle.distributed as dist

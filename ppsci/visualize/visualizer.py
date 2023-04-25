@@ -226,7 +226,7 @@ class Visualizer3D(base.Visualizer):
         output_expr: Dict[str, Callable],
         ref_file: str,
         transforms=None,
-        visualizer_batch_size: int = 4e5,
+        visualizer_batch_size: int = 400000,
         num_timestamps: int = 1,
         prefix: str = "vtu",
     ):
@@ -235,7 +235,7 @@ class Visualizer3D(base.Visualizer):
         self.time_step = time_step
         self.ref_file = ref_file
         self.transforms = transforms
-        self.visualizer_batch_size = visualizer_batch_size
+        self.batch_size = visualizer_batch_size
 
         onestep_cord, self.data_len_for_onestep = self.construct_onestep_cord(
             ref_file, input_dict.keys()
@@ -253,9 +253,12 @@ class Visualizer3D(base.Visualizer):
         """construct input dic by baseline file"""
         # Construct Input for prediction
         n = self.data_len_for_onestep
-        input = {key: np.zeros((n * len(time), 1)) for key in ["t", "x", "y", "z"]}
+        input = {
+            key: np.zeros((n * len(time), 1)).astype(np.float32)
+            for key in ["t", "x", "y", "z"]
+        }
         for i, t in enumerate(time):
-            input["t"][i * n : (i + 1) * n] = np.full((n, 1), int(t)).astype(np.float32)
+            input["t"][i * n : (i + 1) * n] = np.full((n, 1), int(t))
             input["x"][i * n : (i + 1) * n] = onestep_cord["x"]
             input["y"][i * n : (i + 1) * n] = onestep_cord["y"]
             input["z"][i * n : (i + 1) * n] = onestep_cord["z"]
@@ -291,10 +294,12 @@ class Visualizer3D(base.Visualizer):
         for i in range(len(self.time_list)):
             for key in solution.keys():
                 err_dict[key].append(
-                    label[key][i * n : (i + 1) * n]  # n : nodes number per time step
-                    - solution[key][
-                        i * n : (i + 1) * n
-                    ]  # n : nodes number per time step
+                    (
+                        label[key][
+                            i * n : (i + 1) * n
+                        ]  # n : nodes number per time step
+                        - solution[key][i * n : (i + 1) * n]
+                    ).numpy()  # n : nodes number per time step
                 )
             print(
                 f"{self.time_list[i]} \
@@ -312,12 +317,18 @@ class Visualizer3D(base.Visualizer):
             dirname (str): Output file name with directory
             solution (Dict): predicted result
         """
-        n = self.data_len_for_onestep
-        for i in range(len(self.time_list)):
-            vtu.save_vtu(
-                filename=osp.join(dirname, f"predict_{i+1}.vtu"),
-                label={
-                    key: solution[key][i * n : (i + 1) * n] for key in solution.keys()
-                },  # n : nodes number per time step
-                coordinates=self.onestep_cord,
+        if self.onestep_cord is not None:
+            n = self.data_len_for_onestep
+            for i in range(len(self.time_list)):
+                vtu.save_vtu(
+                    filename=osp.join(dirname, f"predict_{i+1}.vtu"),
+                    label={
+                        key: (solution[key][i * n : (i + 1) * n]).numpy()
+                        for key in self.output_expr
+                    },  # n : nodes number per time step
+                    coordinates=self.onestep_cord,
+                )
+        else:
+            raise NotImplementedError(
+                "Only one step coordinates for saving vtu is implemented"
             )

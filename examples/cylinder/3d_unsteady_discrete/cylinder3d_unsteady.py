@@ -25,13 +25,13 @@ import ppsci.utils.reader as reader
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
     output_dir = "./output_debug"
 
+    # set reference file name without time index
     ref_file = "data/LBM_result/cylinder3d_2023_1_31_LBM_"
 
     # initialize logger
@@ -109,8 +109,8 @@ if __name__ == "__main__":
     time_index.sort()
     time_array = time_index * TIME_STEP
 
-    input_keys = ["t", "x", "y", "z"]
-    label_keys = ["u", "v", "w", "p"]
+    input_keys = ("t", "x", "y", "z")
+    label_keys = ("u", "v", "w", "p")
 
     label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
     label_expr_2 = {
@@ -121,9 +121,6 @@ if __name__ == "__main__":
     }
 
     # set constraint
-    _normalize = {
-        "Scale": {"scale": {key: 1 / value for key, value in norm_factor.items()}}
-    }
     # interior data
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -145,6 +142,125 @@ if __name__ == "__main__":
         name="INTERIOR",
     )
 
+    norm_cfg = {
+        "Scale": {"scale": {key: 1 / value for key, value in norm_factor.items()}}
+    }
+
+    bc_inlet = ppsci.constraint.SupervisedConstraint(
+        label_expr=label_expr,
+        dataloader_cfg={
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": "data/sample_points/inlet_txyz.vtu",
+                "input_keys": input_keys,
+                "label_keys": ("u", "v", "w"),
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [norm_cfg],
+            },
+            "batch_size": batchsize_inlet,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+            "num_workers": 1,
+        },
+        loss=ppsci.loss.MSELoss("mean", 2),
+        name="BC_INLET",
+    )
+
+    bc_cylinder = ppsci.constraint.SupervisedConstraint(
+        label_expr=label_expr,
+        dataloader_cfg={
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": "data/sample_points/cylinder_txyz.vtu",
+                "input_keys": input_keys,
+                "label_keys": ("u", "v", "w"),
+                "labels": {"u": 0, "v": 0, "w": 0},
+                "transforms": [norm_cfg],
+            },
+            "num_workers": 1,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+            "batch_size": batchsize_cylinder,
+        },
+        loss=ppsci.loss.MSELoss("mean", 5),
+        name="BC_CYLINDER",
+    )
+
+    bc_outlet = ppsci.constraint.SupervisedConstraint(
+        label_expr={"p": lambda d: d["p"]},
+        dataloader_cfg={
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": "data/sample_points/outlet_txyz.vtu",
+                "input_keys": input_keys,
+                "label_keys": ["p"],
+                "labels": {"p": 0},
+                "transforms": [norm_cfg],
+            },
+            "batch_size": batchsize_outlet,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+            "num_workers": 1,
+        },
+        loss=ppsci.loss.MSELoss("mean", 1),
+        name="BC_OUTLET",
+    )
+
+    bc_top = ppsci.constraint.SupervisedConstraint(
+        label_expr=label_expr,
+        dataloader_cfg={
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": "data/sample_points/top_txyz.vtu",
+                "input_keys": input_keys,
+                "label_keys": ("u", "v", "w"),
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [norm_cfg],
+            },
+            "batch_size": batchsize_top,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+            "num_workers": 1,
+        },
+        loss=ppsci.loss.MSELoss("mean", 2),
+        name="BC_TOP",
+    )
+
+    bc_bottom = ppsci.constraint.SupervisedConstraint(
+        label_expr=label_expr,
+        dataloader_cfg={
+            "dataset": {
+                "name": "VtuDataset",
+                "file_path": "data/sample_points/bottom_txyz.vtu",
+                "input_keys": input_keys,
+                "label_keys": ("u", "v", "w"),
+                "labels": {"u": 0.1, "v": 0, "w": 0},
+                "transforms": [norm_cfg],
+            },
+            "batch_size": batchsize_bottom,
+            "sampler": {
+                "name": "BatchSampler",
+                "shuffle": False,
+                "drop_last": False,
+            },
+            "num_workers": 1,
+        },
+        loss=ppsci.loss.MSELoss("mean", 2),
+        name="BC_BOTTOM",
+    )
+
     ic = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
@@ -155,7 +271,7 @@ if __name__ == "__main__":
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
                 "time_index": [0],
-                "transforms": [_normalize],
+                "transforms": [norm_cfg],
             },
             "batch_size": batchsize_ic,
             "sampler": {
@@ -179,7 +295,7 @@ if __name__ == "__main__":
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
                 "time_index": time_index,
-                "transforms": [_normalize],
+                "transforms": [norm_cfg],
             },
             "batch_size": batchsize_supervised,
             "sampler": {
@@ -193,120 +309,6 @@ if __name__ == "__main__":
         name="SUP",
     )
 
-    bc_inlet = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
-        dataloader_cfg={
-            "dataset": {
-                "name": "VtuDataset",
-                "file_path": "data/sample_points/inlet_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ("u", "v", "w"),
-                "labels": {"u": 0.1, "v": 0, "w": 0},
-                "transforms": [_normalize],
-            },
-            "batch_size": batchsize_inlet,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
-        },
-        loss=ppsci.loss.MSELoss("mean", 2),
-        name="BC_INLET",
-    )
-
-    bc_cylinder = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
-        dataloader_cfg={
-            "dataset": {
-                "name": "VtuDataset",
-                "file_path": "data/sample_points/cylinder_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ("u", "v", "w"),
-                "labels": {"u": 0, "v": 0, "w": 0},
-                "transforms": [_normalize],
-            },
-            "num_workers": 1,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "batch_size": batchsize_cylinder,
-        },
-        loss=ppsci.loss.MSELoss("mean", 5),
-        name="BC_CYLINDER",
-    )
-
-    bc_outlet = ppsci.constraint.SupervisedConstraint(
-        label_expr={"p": lambda d: d["p"]},
-        dataloader_cfg={
-            "dataset": {
-                "name": "VtuDataset",
-                "file_path": "data/sample_points/outlet_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ["p"],
-                "labels": {"p": 0},
-                "transforms": [_normalize],
-            },
-            "batch_size": batchsize_outlet,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
-        },
-        loss=ppsci.loss.MSELoss("mean", 1),
-        name="BC_OUTLET",
-    )
-
-    bc_top = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
-        dataloader_cfg={
-            "dataset": {
-                "name": "VtuDataset",
-                "file_path": "data/sample_points/top_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ("u", "v", "w"),
-                "labels": {"u": 0.1, "v": 0, "w": 0},
-                "transforms": [_normalize],
-            },
-            "batch_size": batchsize_top,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
-        },
-        loss=ppsci.loss.MSELoss("mean", 2),
-        name="BC_TOP",
-    )
-
-    bc_bottom = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
-        dataloader_cfg={
-            "dataset": {
-                "name": "VtuDataset",
-                "file_path": "data/sample_points/bottom_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ("u", "v", "w"),
-                "labels": {"u": 0.1, "v": 0, "w": 0},
-                "transforms": [_normalize],
-            },
-            "batch_size": batchsize_bottom,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
-        },
-        loss=ppsci.loss.MSELoss("mean", 2),
-        name="BC_BOTTOM",
-    )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
@@ -354,7 +356,7 @@ if __name__ == "__main__":
                     "label_keys": ("u", "v", "w"),
                     "time_step": TIME_STEP,
                     "time_index": [0],
-                    "transforms": [_normalize],
+                    "transforms": [norm_cfg],
                 },
                 "total_size": len(next(iter(lbm_0_dict.values()))),
                 "batch_size": 1024,

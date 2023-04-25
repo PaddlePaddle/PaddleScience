@@ -18,6 +18,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import meshio
 import numpy as np
@@ -56,7 +57,6 @@ def load_csv_file(
                 for key, value in line_dict.items():
                     raw_data[key].append(value)
     except Exception as e:
-
         logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
         exit(0)
 
@@ -109,11 +109,23 @@ def load_mat_file(
 
 def load_vtk_file(
     filename_without_timeid: str,
-    time_step,
-    time_index,
+    time_step: Union[float, int],
+    time_index: List,
     input_keys: List = [],
     label_keys: List = [],
-):
+) -> Dict[str, np.ndarray]:
+    """load coordinates and attached label from the vtu file
+
+    Args:
+        filename_without_timeid (str): File name without time id
+        time_step (Union[float, Dict]): Physical time step
+        time_index (List): Physical time indexes
+        input_keys (List, optional): Input coordinates name keys. Defaults to [].
+        label_keys (List, optional): Input label name keys. Defaults to [].
+
+    Returns:
+        Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
+    """
     input_dict = {var: [] for var in input_keys}
     label_dict = {var: [] for var in label_keys}
     for index in time_index:
@@ -139,14 +151,14 @@ def load_vtk_file(
     return input_dict, label_dict
 
 
-def load_vtk_withtime_file(file: str):
+def load_vtk_withtime_file(file: str) -> Dict[str, np.ndarray]:
     """Temporary interface for points cloud, will be banished sooner
 
     Args:
-        file (str): _description_
+        file (str): input file name
 
     Returns:
-        _type_: _description_
+        Dict[str, np.ndarray]: Input coordinates dict
     """
     mesh = meshio.read(file)
     n = mesh.points.shape[0]

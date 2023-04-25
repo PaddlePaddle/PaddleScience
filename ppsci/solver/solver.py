@@ -20,7 +20,6 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-import numpy as np
 import paddle
 import paddle.amp as amp
 import paddle.distributed as dist
@@ -392,10 +391,7 @@ class Solver:
         self.model.eval()
 
         # init train func
-        if self.visualizer["visulzie_uvwp"].time_list is None:
-            self.visu_func = ppsci.solver.visu.visualize_func
-        else:
-            self.visu_func = ppsci.solver.visu.visualize_func_3D
+        self.visu_func = ppsci.solver.visu.visualize_func
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
 

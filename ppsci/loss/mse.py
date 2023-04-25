@@ -38,29 +38,23 @@ class MSELoss(base.LossBase):
         reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
-    def __init__(self, reduction: str = "mean", weight_expr: Union[float, Dict] = -1):
+    def __init__(self, reduction: str = "mean", weight_expr: Union[float, Dict] = 1):
         super().__init__()
         if reduction not in ["mean", "sum"]:
             raise ValueError(
                 f"reduction should be 'mean' or 'sum', but got {reduction}"
             )
         self.reduction = reduction
-        if weight_expr == -1:
-            # use non uniform weight vector for loss
-            pass
-        elif weight_expr <= 0:
-            raise ValueError("weight_expr should be positive")
-        else:
-            self.weight_expr = weight_expr
+        self.weight_expr = float(weight_expr)
 
     def forward(self, output_dict, label_dict, weight_dict=None):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict is not None:
-                loss *= weight_dict[key]
-            else:
+            if isinstance(self.weight_expr, float):
                 loss *= self.weight_expr
+            elif isinstance(self.weight_expr, dict) and key in self.weight:
+                loss *= self.weight_expr[key]
 
             if "area" in output_dict:
                 loss *= output_dict["area"]
