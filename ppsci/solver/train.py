@@ -58,7 +58,8 @@ def train_epoch_func(solver, epoch_id, log_freq):
                 _constraint.input_keys, _constraint.output_keys, solver.model
             )
             for label_name, label_formula in _constraint.label_expr.items():
-                evaluator.add_target_expr(label_formula, label_name)
+                if label_name in label_dict:
+                    evaluator.add_target_expr(label_formula, label_name)
 
             # forward for every constraint
             if solver.use_amp:

@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Union
 
 import numpy as np
+import pymesh
 import pysdf
 
 from ppsci.geometry import geometry
@@ -388,13 +389,24 @@ class Mesh(geometry.Geometry):
         return {**x_dict, **area_dict}
 
     def union(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+        import pymesh
+
         csg = pymesh.CSGTree({"union": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]})
         return Mesh(csg.mesh)
 
     def __or__(self, rhs):
         return self.union(rhs)
 
+    def __add__(self, rhs):
+        return self.union(rhs)
+
     def difference(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+        import pymesh
+
         csg = pymesh.CSGTree(
             {"difference": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
         )
@@ -404,6 +416,10 @@ class Mesh(geometry.Geometry):
         return self.difference(rhs)
 
     def intersection(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+        import pymesh
+
         csg = pymesh.CSGTree(
             {"intersection": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
         )

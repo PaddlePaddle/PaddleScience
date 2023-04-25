@@ -64,7 +64,8 @@ def eval_func(solver, epoch_id, log_freq) -> float:
                 _validator.input_keys, _validator.output_keys, solver.model
             )
             for label_name, label_formula in _validator.label_expr.items():
-                evaluator.add_target_expr(label_formula, label_name)
+                if label_name in label_dict:
+                    evaluator.add_target_expr(label_formula, label_name)
 
             # forward
             if solver.use_amp:

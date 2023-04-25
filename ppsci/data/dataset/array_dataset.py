@@ -28,7 +28,7 @@ class NamedArrayDataset(io.Dataset):
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
         weight (Dict[str, np.ndarray], optional): Weight dict.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
     """
 
@@ -37,11 +37,13 @@ class NamedArrayDataset(io.Dataset):
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
         weight: Dict[str, np.ndarray],
-        transforms: vision.Compose = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = input
         self.label = label
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
         self.weight = weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))

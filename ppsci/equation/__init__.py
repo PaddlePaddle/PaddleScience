@@ -15,6 +15,7 @@
 import copy
 
 from ppsci.equation.pde import PDE
+from ppsci.equation.pde import LinearElasticity
 from ppsci.equation.pde import NavierStokes
 from ppsci.equation.pde import NormalDotVec
 from ppsci.equation.pde import Vibration
@@ -23,6 +24,7 @@ from ppsci.utils import misc
 
 __all__ = [
     "PDE",
+    "LinearElasticity",
     "NavierStokes",
     "NormalDotVec",
     "Vibration",
