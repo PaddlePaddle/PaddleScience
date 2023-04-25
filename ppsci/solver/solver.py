@@ -301,6 +301,7 @@ class Solver:
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
+
             # log training summation at end of a epoch
             metric_msg = ", ".join(
                 [self.train_output_info[key].avg_info for key in self.train_output_info]
@@ -309,7 +310,6 @@ class Solver:
             self.train_output_info.clear()
 
             cur_metric = float("inf")
-
             # evaluate during training
             if (
                 self.eval_during_train
@@ -392,6 +392,7 @@ class Solver:
 
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
+
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
 

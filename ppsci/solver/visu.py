@@ -15,7 +15,6 @@
 import os
 import os.path as osp
 
-import numpy as np
 import paddle
 import paddle.amp as amp
 
@@ -26,9 +25,11 @@ from ppsci.utils import misc
 
 def visualize_func(solver, epoch_id):
     """Visualization program
+
     Args:
         solver (Solver): Main Solver.
         epoch_id (int): Epoch id.
+
     Returns:
         Dict[str, Any]: Metric collected during visualization.
     """
@@ -57,6 +58,7 @@ def visualize_func(solver, epoch_id):
             evaluator = expression.ExpressionSolver(
                 _visualizer.input_keys, _visualizer.output_keys, solver.model
             )
+
             for output_key, output_expr in _visualizer.output_expr.items():
                 evaluator.add_target_expr(output_expr, output_key)
 
