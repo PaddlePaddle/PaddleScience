@@ -315,9 +315,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py:165:193
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="195" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py"
+``` py linenums="193" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py:195:
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer_v2.py:193:
 --8<--
 ```
 

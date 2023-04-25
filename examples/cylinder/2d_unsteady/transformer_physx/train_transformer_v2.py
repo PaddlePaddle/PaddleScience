@@ -174,16 +174,15 @@ if __name__ == "__main__":
     visualizer = {
         "visulzie_states": ppsci.visualize.Visualizer2DPlot(
             vis_datas,
-            ppsci.utils.misc.PrettyOrderedDict(
-                [
-                    ("target_ux", lambda d: d["states"][:, :, 0]),
-                    ("pred_ux", lambda d: output_transform(d)[:, :, 0]),
-                    ("target_uy", lambda d: d["states"][:, :, 1]),
-                    ("pred_uy", lambda d: output_transform(d)[:, :, 1]),
-                    ("target_p", lambda d: d["states"][:, :, 2]),
-                    ("preds_p", lambda d: output_transform(d)[:, :, 2]),
-                ]
-            ),
+            {
+                "target_ux": lambda d: d["states"][:, :, 0],
+                "pred_ux": lambda d: output_transform(d)[:, :, 0],
+                "target_uy": lambda d: d["states"][:, :, 1],
+                "pred_uy": lambda d: output_transform(d)[:, :, 1],
+                "target_p": lambda d: d["states"][:, :, 2],
+                "preds_p": lambda d: output_transform(d)[:, :, 2],
+            },
+            batch_size=1,
             num_timestamps=10,
             stride=20,
             xticks=np.linspace(-2, 14, 9),
