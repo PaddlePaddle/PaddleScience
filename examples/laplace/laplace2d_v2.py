@@ -52,12 +52,17 @@ if __name__ == "__main__":
         "dataset": "IterableNamedArrayDataset",
         "iters_per_epoch": iters_per_epoch,
     }
+
+    npoint_interior = 99**2
+    npoint_bc = 400
+    npoint_total = npoint_interior + npoint_bc
+
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["laplace"].equations,
         {"laplace": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": 9800},
+        {**train_dataloader_cfg, "batch_size": npoint_total},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -66,7 +71,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": 400},
+        {**train_dataloader_cfg, "batch_size": npoint_bc},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(x, 0.0)
         | np.isclose(x, 1.0)
@@ -84,14 +89,13 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
     # set validator
-    total_size = 9800
     mse_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": total_size,
+            "total_size": npoint_total,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     validator = {mse_metric.name: mse_metric}
 
     # set visualizer(optional)
-    vis_points = geom["rect"].sample_interior(total_size, evenly=True)
+    vis_points = geom["rect"].sample_interior(npoint_total, evenly=True)
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerVtu(
             vis_points,
