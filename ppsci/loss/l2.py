@@ -23,6 +23,11 @@ class L2Loss(base.LossBase):
     $$
     L = \sum\limits_{i=1}^{N}{(x_i-y_i)^2}
     $$
+
+    Examples:
+        ``` python
+        >>> loss = ppsci.geometry.L2Loss()
+        ```
     """
 
     def __init__(self):

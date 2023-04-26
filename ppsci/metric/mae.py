@@ -24,6 +24,11 @@ class MAE(base.MetricBase):
     $$
     metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
     $$
+
+    Examples:
+        ``` python
+        >>> metric = ppsci.metric.MAE()
+        ```
     """
 
     def __init__(self):

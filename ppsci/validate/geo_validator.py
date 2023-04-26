@@ -33,6 +33,21 @@ from ppsci.validate import base
 class GeometryValidator(base.Validator):
     """Validator for geometry.
 
+    Examples:
+        ``` python
+        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> geom_validator = ppsci.validate.GeometryValidator(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ... )
+        ```
     Args:
         label_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u

@@ -27,6 +27,21 @@ from ppsci.visualize import vtu
 class VisualizerScatter1D(base.Visualizer):
     """Visualizer for 1d scatter data.
 
+    Examples:
+        ``` python
+        >>> visualizer = {
+        ...     "visulzie_u": ppsci.visualize.VisualizerScatter1D(
+        ...         visu_mat,
+        ...         ("t_f",),
+        ...         {
+        ...             "eta": lambda d: d["eta"],  # plot with latex title
+        ...             "eta_gt": lambda d: d["eta_gt"],  # plot with latex title
+        ...         },
+        ...         num_timestamps=1,
+        ...         prefix="viv_pred",
+        ...     )
+        ... }
+        ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
@@ -57,6 +72,20 @@ class VisualizerScatter1D(base.Visualizer):
 class VisualizerScatter3D(base.Visualizer):
     """Visualizer for 3d scatter data.
 
+    Examples:
+        ``` python
+        >>> visualizer = {
+        ...     "visulzie_states": ppsci.visualize.VisualizerScatter3D(
+        ...         vis_datas,
+        ...         {
+        ...             "pred_states": lambda d: output_transform(d),
+        ...             "states": lambda d: d["states"],
+        ...         },
+        ...         num_timestamps=1,
+        ...         prefix="result_states",
+        ...     )
+        ... }
+        ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
@@ -101,6 +130,17 @@ class VisualizerScatter3D(base.Visualizer):
 class VisualizerVtu(base.Visualizer):
     """Visualizer for 2D points data.
 
+    Examples:
+        ``` python
+        >>> visualizer = {
+        ...     "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        ...         vis_points,
+        ...         {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
+        ...         num_timestamps=ntime_all,
+        ...         prefix="result_u_v",
+        ...     )
+        ... }
+        ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
@@ -128,6 +168,17 @@ class VisualizerVtu(base.Visualizer):
 class Visualizer2D(base.Visualizer):
     """Visualizer for 2D data.
 
+    Examples:
+        ``` python
+        >>> visualizer = {
+        ...     "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        ...         vis_points,
+        ...         {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
+        ...         num_timestamps=ntime_all,
+        ...         prefix="result_u_v",
+        ...     )
+        ... }
+        ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
@@ -150,6 +201,26 @@ class Visualizer2D(base.Visualizer):
 class Visualizer2DPlot(Visualizer2D):
     """Visualizer for 2D data use matplotlib.
 
+    Examples:
+        ``` python
+        >>> visulzie_states = ppsci.visualize.Visualizer2DPlot(
+        ...     vis_datas,
+        ...     {
+        ...         "target_ux": lambda d: d["states"][:, :, 0],
+        ...         "pred_ux": lambda d: output_transform(d)[:, :, 0],
+        ...         "target_uy": lambda d: d["states"][:, :, 1],
+        ...         "pred_uy": lambda d: output_transform(d)[:, :, 1],
+        ...         "target_p": lambda d: d["states"][:, :, 2],
+        ...         "preds_p": lambda d: output_transform(d)[:, :, 2],
+        ...     },
+        ...     batch_size=1,
+        ...     num_timestamps=10,
+        ...     stride=20,
+        ...     xticks=np.linspace(-2, 14, 9),
+        ...     yticks=np.linspace(-4, 4, 5),
+        ...     prefix="result_states",
+        ... )
+        ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.

@@ -34,6 +34,22 @@ from ppsci.utils import misc
 class IntegralConstraint(base.Constraint):
     """Class for integral constraint.
 
+    Examples:
+        ``` python
+        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> igc = ppsci.constraint.IntegralConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="IgC",
+        ... )
+        ```
     Args:
         label_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u

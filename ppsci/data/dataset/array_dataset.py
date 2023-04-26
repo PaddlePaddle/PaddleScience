@@ -23,7 +23,13 @@ from paddle import vision
 
 class NamedArrayDataset(io.Dataset):
     """Class for Named Array Dataset.
-
+    Examples:
+        ``` python
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> output = {"x": np.random.randn(100, 1)}
+        >>> weight = {"x": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
+        ```
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
@@ -64,6 +70,13 @@ class NamedArrayDataset(io.Dataset):
 class IterableNamedArrayDataset(io.IterableDataset):
     """IterableNamedArrayDataset for full-data loading.
 
+    Examples:
+        ``` python
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> output = {"x": np.random.randn(100, 1)}
+        >>> weight = {"x": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, output, weight)
+        ```
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.

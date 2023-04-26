@@ -239,6 +239,10 @@ class Block(nn.Layer):
 class PhysformerGPT2(base.NetBase):
     """Transformer decoder model for modeling physics.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        ```
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("embeds",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_embeds",).
