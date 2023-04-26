@@ -33,6 +33,10 @@ class MSELoss(base.LossBase):
     \end{cases}
     $$
 
+    Examples:
+        ``` python
+        >>> loss = ppsci.loss.MSELoss("mean")
+        ```
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
     """

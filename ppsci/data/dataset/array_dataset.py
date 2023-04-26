@@ -23,12 +23,18 @@ from paddle import vision
 
 class NamedArrayDataset(io.Dataset):
     """Class for Named Array Dataset.
-
+    Examples:
+        ``` python
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> output = {"u": np.random.randn(100, 1)}
+        >>> weight = {"u": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
+        ```
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
         weight (Dict[str, np.ndarray], optional): Weight dict.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
     """
 
@@ -37,7 +43,7 @@ class NamedArrayDataset(io.Dataset):
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
         weight: Dict[str, np.ndarray],
-        transforms: vision.Compose = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = input
@@ -64,6 +70,13 @@ class NamedArrayDataset(io.Dataset):
 class IterableNamedArrayDataset(io.IterableDataset):
     """IterableNamedArrayDataset for full-data loading.
 
+    Examples:
+        ``` python
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> label = {"u": np.random.randn(100, 1)}
+        >>> weight = {"u": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
+        ```
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
