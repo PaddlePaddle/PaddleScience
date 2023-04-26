@@ -13,17 +13,15 @@
 # limitations under the License.
 
 import os.path as osp
-import sys
 from typing import Callable
 from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import numpy as np
 
-import ppsci.utils.reader as reader
+from ppsci.utils import logger
+from ppsci.utils import misc
 from ppsci.visualize import base
 from ppsci.visualize import plot
 from ppsci.visualize import vtu
@@ -236,6 +234,7 @@ class Visualizer3D(base.Visualizer):
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def quantitive_error(self, label: Dict, solution: Dict):
+        raise NotImplementedError("code to be refined.")
         """Caculate quantitive error
 
         Args:
@@ -244,7 +243,7 @@ class Visualizer3D(base.Visualizer):
         """
         # LBM baseline, output Error
         n = self.data_len_for_onestep
-        err_dict = {key: [] for key in ["u", "v", "w", "p"]}
+        err_dict = misc.Prettydefaultdict(list)
         err_dict_key = "u"
         for i in range(len(self.time_list)):
             for key in solution.keys():
@@ -256,33 +255,37 @@ class Visualizer3D(base.Visualizer):
                         - solution[key][i * n : (i + 1) * n]
                     ).numpy()  # n : nodes number per time step
                 )
-            print(
-                f"{self.time_list[i]} \
-                time = {self.time_step * self.time_list[i]} s, \
-                sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}，\
-                mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}, \
-                median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}"
+            logger.info(
+                ", ".join(
+                    [
+                        f"{self.time_list[i]}",
+                        f"time = {self.time_step * self.time_list[i]} s",
+                        f"sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}: .5f",
+                        f"mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}: .5f",
+                        f"median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}: .5f",
+                    ]
+                )
             )
 
-    def save(self, dirname: str, solution: Dict):
+    def save(self, filename: str, data_dict: Dict):
         """Save points result
 
         Args:
-            dirname (str): Output file name with directory
-            solution (Dict): predicted result
+            filename (str): Output file name with directory
+            data_dict (Dict): predicted result
         """
         if self.onestep_cord is not None:
             n = self.data_len_for_onestep
             for i in range(len(self.time_list)):
                 vtu.save_vtu(
-                    filename=osp.join(dirname, f"predict_{i+1}.vtu"),
+                    filename=osp.join(filename, f"predict_{i+1}.vtu"),
                     label={
-                        key: (solution[key][i * n : (i + 1) * n]).numpy()
+                        key: (data_dict[key][i * n : (i + 1) * n]).numpy()
                         for key in self.output_expr
                     },  # n : nodes number per time step
                     coordinates=self.onestep_cord,
                 )
         else:
             raise NotImplementedError(
-                "Only one step coordinates for saving vtu is implemented"
+                "Only one step coordinates for saving vtu is implemented."
             )

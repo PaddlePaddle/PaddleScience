@@ -172,10 +172,7 @@ class Solver:
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
             loaded_metric = save_load.load_checkpoint(
-                checkpoint_path,
-                self.model,
-                self.optimizer,
-                self.scaler,  # , self.equation
+                checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)

@@ -322,13 +322,8 @@ if __name__ == "__main__":
         ),
     }
 
-    # interior+boundary
-    # manually collate input data for visualization,
-    denormalize = transform.Scale(norm_factor)
-
+    # set visualizer(optional)
     def construct_input(onestep_cord, time):
-        """construct input dict by baseline file"""
-        # Construct Input for prediction
         n = data_len_for_onestep
         input = {
             "t": np.concatenate([np.full((n, 1), int(t)) for t in time], axis=1),
@@ -336,7 +331,6 @@ if __name__ == "__main__":
             "y": np.tile(onestep_cord["y"], (len(time), 1)),
             "z": np.tile(onestep_cord["z"], (len(time), 1)),
         }
-        # Normalize
         input = normalize(input)
         return input
 
@@ -347,7 +341,6 @@ if __name__ == "__main__":
         return onestep_input, n
 
     def construct_label(ref_file, time_step, time_list, input_keys, label_keys):
-        # using referece sampling points coordinates[t\x\y\z] as input
         _, label = reader.load_vtk_file(
             ref_file, time_step, time_list, input_keys, label_keys
         )
@@ -363,10 +356,16 @@ if __name__ == "__main__":
         ref_file, TIME_STEP, time_list, model.input_keys, model.output_keys
     )
 
+    denormalize = transform.Scale(norm_factor)
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
             input_dict,
-            {**label_expr, "p": lambda out: out["p"]},
+            {
+                "u": lambda out: denormalize(out["u"]),
+                "v": lambda out: denormalize(out["v"]),
+                "w": lambda out: denormalize(out["w"]),
+                "p": lambda out: denormalize(out["p"]),
+            },
             num_timestamps=len(time_list),
             prefix="result_uvwp",
         )

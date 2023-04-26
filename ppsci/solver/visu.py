@@ -18,7 +18,6 @@ import os.path as osp
 import paddle
 import paddle.amp as amp
 
-import ppsci.data.dataset as dataset
 from ppsci.utils import expression
 from ppsci.utils import misc
 
