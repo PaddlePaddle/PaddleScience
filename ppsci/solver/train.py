@@ -57,8 +57,8 @@ def train_epoch_func(solver, epoch_id, log_freq):
             evaluator = expression.ExpressionSolver(
                 _constraint.input_keys, _constraint.output_keys, solver.model
             )
-            for label_name, label_formula in _constraint.label_expr.items():
-                evaluator.add_target_expr(label_formula, label_name)
+            for output_name, output_formula in _constraint.output_expr.items():
+                evaluator.add_target_expr(output_formula, output_name)
 
             # forward for every constraint
             if solver.use_amp:
@@ -155,8 +155,8 @@ def train_LBFGS_epoch_func(solver, epoch_id, log_freq):
                 evaluator = expression.ExpressionSolver(
                     _constraint.input_keys, _constraint.output_keys, solver.model
                 )
-                for label_name, label_formula in _constraint.label_expr.items():
-                    evaluator.add_target_expr(label_formula, label_name)
+                for output_name, output_formula in _constraint.output_expr.items():
+                    evaluator.add_target_expr(output_formula, output_name)
 
                 # forward for every constraint
                 output_dict_i = evaluator(input_dict_list[i])

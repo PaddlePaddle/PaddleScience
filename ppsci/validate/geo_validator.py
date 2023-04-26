@@ -49,7 +49,7 @@ class GeometryValidator(base.Validator):
         ... )
         ```
     Args:
-        label_expr (Dict[str, Callable]): Function in dict for computing output.
+        output_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
             will be multiplied by model output v and the result will be named "u_mul_v".
         label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
@@ -68,7 +68,7 @@ class GeometryValidator(base.Validator):
 
     def __init__(
         self,
-        label_expr: Dict[str, Callable],
+        output_expr: Dict[str, Callable],
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
@@ -80,10 +80,10 @@ class GeometryValidator(base.Validator):
         with_initial: bool = False,
         name: Optional[str] = None,
     ):
-        self.label_expr = label_expr
-        for label_name, expr in self.label_expr.items():
+        self.output_expr = output_expr
+        for label_name, expr in self.output_expr.items():
             if isinstance(expr, str):
-                self.label_expr[label_name] = sp_parser.parse_expr(expr)
+                self.output_expr[label_name] = sp_parser.parse_expr(expr)
 
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
