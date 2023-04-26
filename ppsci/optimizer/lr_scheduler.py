@@ -588,7 +588,7 @@ class CosineWarmRestarts(LRBase):
 
     Examples:
         ``` python
-        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(10, 1, 1e-3, 0, 0.5)
+        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)
         ```
     Args:
         epochs (int): Total epoch(s)

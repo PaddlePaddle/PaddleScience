@@ -36,7 +36,7 @@ class InteriorConstraint(base.Constraint):
     Examples:
         ``` python
         >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> bc = ppsci.constraint.InteriorConstraint(
+        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
         ...     {"u": 0},
         ...     rect,
@@ -46,7 +46,7 @@ class InteriorConstraint(base.Constraint):
         ...         "batch_size": 16,
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
-        ...     name="BC",
+        ...     name="EQ",
         ... )
         ```
     Args:

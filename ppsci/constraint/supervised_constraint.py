@@ -31,8 +31,8 @@ class SupervisedConstraint(base.Constraint):
         ...         "dataset": {
         ...             "name": "IterableCSVDataset",
         ...             "file_path": "/path/to/file.csv",
-        ...             "input_keys": ["x", "y"],
-        ...             "label_keys": ["u", "v"],
+        ...             "input_keys": ("x", "y"),
+        ...             "label_keys": ("u", "v"),
         ...         },
         ...     },
         ...     ppsci.loss.MSELoss("mean"),

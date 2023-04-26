@@ -26,7 +26,7 @@ class L2Loss(base.LossBase):
 
     Examples:
         ``` python
-        >>> loss = ppsci.geometry.L2Loss()
+        >>> loss = ppsci.loss.L2Loss()
         ```
     """
 
