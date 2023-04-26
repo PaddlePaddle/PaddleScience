@@ -29,6 +29,10 @@ from ppsci.utils import misc
 class Mesh(geometry.Geometry):
     """Class for mesh geometry.
 
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")
+        ```
     Args:
         mesh (Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
     """

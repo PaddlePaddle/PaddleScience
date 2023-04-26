@@ -31,6 +31,14 @@ from ppsci.utils import reader
 class MatDataset(io.Dataset):
     """Dataset class for .mat file.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.MatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
@@ -141,6 +149,14 @@ class MatDataset(io.Dataset):
 class IterableMatDataset(io.IterableDataset):
     """IterableMatDataset for full-data loading.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.IterableMatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.

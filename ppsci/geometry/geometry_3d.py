@@ -28,6 +28,10 @@ from ppsci.geometry import geometry_nd
 class Cuboid(geometry_nd.Hypercube):
     """Class for Cuboid
 
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Cuboid((0, 0, 0), (1, 1, 1))
+        ```
     Args:
         xmin (Tuple[float, float, float]): Bottom left corner point [x0, y0, z0].
         xmax (Tuple[float, float, float]): Top right corner point [x1, y1, z1].
