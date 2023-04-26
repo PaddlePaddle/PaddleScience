@@ -26,6 +26,10 @@ from ppsci.utils import misc
 class Interval(geometry.Geometry):
     """Class for interval.
 
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Interval(-1, 1)
+        ```
     Args:
         l (float): Left position of interval.
         r (float): Right position of interval.

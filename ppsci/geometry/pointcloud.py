@@ -21,6 +21,10 @@ from ppsci.utils import reader
 class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.PointCloud("/path/to/pointcloud_file", ("x",))
+        ```
     Args:
         interior_path (str): File which store interior points of a point cloud.
         boundary_path (str): File which store boundary points of a point cloud.

@@ -30,6 +30,11 @@ __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 class SGD:
     """Stochastic Gradient Descent.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
+        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
@@ -70,6 +75,11 @@ class SGD:
 class Momentum:
     """Simple Momentum optimizer with velocity state.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
+        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s).
@@ -156,6 +166,11 @@ class Momentum:
 class Adam:
     """Adam: A Method for Stochastic Optimization.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.Momentum(1e-3)((model,))
+        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
@@ -212,6 +227,11 @@ class LBFGS:
     """The L-BFGS is a quasi-Newton method for solving an unconstrained optimization
         problem over a differentiable function. Closely related is the Newton method for minimization.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
+        ```
     Args:
         learning_rate (float, optional): The learning rate
             used to update parameter(s). Defaults to 1.0.
@@ -267,6 +287,11 @@ class LBFGS:
 class RMSProp:
     """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
+        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s)
@@ -320,6 +345,11 @@ class RMSProp:
 class AdamW:
     """AdamW is implemented based on DECOUPLED WEIGHT DECAY REGULARIZATION.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
