@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from ppsci.equation.pde.base import PDE
-from ppsci.equation.pde.euler_beam import EulerBeam
+from ppsci.equation.pde.biharmonic import Biharmonic
 from ppsci.equation.pde.laplace import Laplace
 from ppsci.equation.pde.navier_stokes import NavierStokes
 from ppsci.equation.pde.normal_dot_vec import NormalDotVec
@@ -21,7 +21,7 @@ from ppsci.equation.pde.viv import Vibration
 
 __all__ = [
     "PDE",
-    "EulerBeam",
+    "Biharmonic",
     "Laplace",
     "NavierStokes",
     "NormalDotVec",
