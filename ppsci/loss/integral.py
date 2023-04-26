@@ -22,7 +22,7 @@ class IntegralLoss(base.LossBase):
 
     Examples:
         ``` python
-        >>> loss = ppsci.geometry.IntegralLoss("mean")
+        >>> loss = ppsci.loss.IntegralLoss("mean")
         ```
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".

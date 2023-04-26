@@ -73,9 +73,9 @@ class IterableNamedArrayDataset(io.IterableDataset):
     Examples:
         ``` python
         >>> input = {"x": np.random.randn(100, 1)}
-        >>> output = {"x": np.random.randn(100, 1)}
+        >>> label = {"x": np.random.randn(100, 1)}
         >>> weight = {"x": np.random.randn(100, 1)}
-        >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, output, weight)
+        >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
         ```
     Args:
         input (Dict[str, np.ndarray]): Input dict.

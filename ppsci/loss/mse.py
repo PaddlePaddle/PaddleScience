@@ -35,7 +35,7 @@ class MSELoss(base.LossBase):
 
     Examples:
         ``` python
-        >>> loss = ppsci.geometry.MSELoss("mean")
+        >>> loss = ppsci.loss.MSELoss("mean")
         ```
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".

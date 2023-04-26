@@ -32,7 +32,7 @@ class SGD:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
         ```
     Args:
@@ -77,7 +77,7 @@ class Momentum:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
         ```
     Args:
@@ -168,7 +168,7 @@ class Adam:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.Momentum(1e-3)((model,))
         ```
     Args:
@@ -229,7 +229,7 @@ class LBFGS:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
         ```
     Args:
@@ -289,7 +289,7 @@ class RMSProp:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
         ```
     Args:
@@ -347,7 +347,7 @@ class AdamW:
 
     Examples:
         ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u"), 5, 20)
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
         ```
     Args:
