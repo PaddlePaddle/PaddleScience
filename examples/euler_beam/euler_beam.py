@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle
+from regex import D
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -22,12 +23,16 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
     args = config.parse_args()
+    # enable computation for fourth-order differentiation of matmul
     paddle.fluid.core.set_prim_eager_enabled(True)
+    # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-
+    # set training hyper-parameters
     iters_per_epoch = 1
     epochs = 10000 if not args.epochs else args.epochs
+    # set output directory
     output_dir = "./output/euler_beam" if not args.output_dir else args.output_dir
+    # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
@@ -37,7 +42,7 @@ if __name__ == "__main__":
     geom = {"interval": ppsci.geometry.Interval(0, 1)}
 
     # set equation(s)
-    equation = {"euler_beam": ppsci.equation.pde.EulerBeam()}
+    equation = {"biharmonic": ppsci.equation.pde.Biharmonic(dim=1, q=-1.0, D=1.0)}
 
     # set dataloader config
     dataloader_cfg = {
@@ -46,8 +51,8 @@ if __name__ == "__main__":
     }
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["euler_beam"].equations,
-        {"euler_beam": 0},
+        equation["biharmonic"].equations,
+        {"biharmonic": 0},
         geom["interval"],
         {**dataloader_cfg, "batch_size": 100},
         ppsci.loss.MSELoss(),
@@ -56,12 +61,12 @@ if __name__ == "__main__":
     )
     bc = ppsci.constraint.BoundaryConstraint(
         {
-            "u0": lambda out: out["u"][0:1],
-            "du_dx": lambda out: jacobian(out["u"], out["x"])[1:2],
-            "du_dxx": lambda out: hessian(out["u"], out["x"])[2:3],
-            "du_dxxx": lambda out: jacobian(hessian(out["u"], out["x"]), out["x"])[3:4],
+            "u0": lambda d: d["u"][0:1],
+            "u__x": lambda d: jacobian(d["u"], d["x"])[1:2],
+            "u__x__x": lambda d: hessian(d["u"], d["x"])[2:3],
+            "u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])[3:4],
         },
-        {"u0": 0, "du_dx": 0, "du_dxx": 0, "du_dxxx": 0},
+        {"u0": 0, "u__x": 0, "u__x__x": 0, "u__x__x__x": 0},
         geom["interval"],
         {**dataloader_cfg, "batch_size": 4},
         ppsci.loss.MSELoss("sum"),
@@ -76,7 +81,7 @@ if __name__ == "__main__":
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)([model])
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
     def u_solution_func(out):
         """compute ground truth for u as label data"""
@@ -143,7 +148,7 @@ if __name__ == "__main__":
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"./{output_dir}/checkpoints/best_model",
+        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
