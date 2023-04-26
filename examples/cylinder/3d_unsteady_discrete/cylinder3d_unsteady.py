@@ -127,7 +127,7 @@ if __name__ == "__main__":
         dataloader_cfg={
             **train_dataloader_cfg,
             "iters_per_epoch": int(geom["interior"].len / batchsize_interior),
-            "dataset": "MiniBatchDataset",
+            "dataset": "NamedArrayDataset",
             "batch_size": batchsize_interior,
         },
         loss=ppsci.loss.MSELoss("mean", 1),
@@ -325,14 +325,49 @@ if __name__ == "__main__":
     # interior+boundary
     # manually collate input data for visualization,
     denormalize = transform.Scale(norm_factor)
+
+    def construct_input(onestep_cord, time):
+        """construct input dict by baseline file"""
+        # Construct Input for prediction
+        n = data_len_for_onestep
+        input = {
+            "t": np.concatenate([np.full((n, 1), int(t)) for t in time], axis=1),
+            "x": np.tile(onestep_cord["x"], (len(time), 1)),
+            "y": np.tile(onestep_cord["y"], (len(time), 1)),
+            "z": np.tile(onestep_cord["z"], (len(time), 1)),
+        }
+        # Normalize
+        input = normalize(input)
+        return input
+
+    def construct_onestep_cord(ref_file, input_keys):
+        onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], input_keys)
+        del onestep_input["t"]
+        n = len(next(iter(onestep_input.values())))
+        return onestep_input, n
+
+    def construct_label(ref_file, time_step, time_list, input_keys, label_keys):
+        # using referece sampling points coordinates[t\x\y\z] as input
+        _, label = reader.load_vtk_file(
+            ref_file, time_step, time_list, input_keys, label_keys
+        )
+        return label
+
+    onestep_cord, data_len_for_onestep = construct_onestep_cord(
+        ref_file, model.input_keys
+    )
+    onestep_cord = onestep_cord
+    data_len_for_onestep = len(next(iter(onestep_cord.values())))
+    input_dict = construct_input(onestep_cord, TIME_STEP * time_list)
+    label = construct_label(
+        ref_file, TIME_STEP, time_list, model.input_keys, model.output_keys
+    )
+
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
-            ref_file,
-            TIME_STEP,
-            time_list,
-            {key: None for key in model.input_keys},
+            input_dict,
             {**label_expr, "p": lambda out: out["p"]},
-            transforms={"denormalize": denormalize, "normalize": normalize},
+            num_timestamps=len(time_list),
             prefix="result_uvwp",
         )
     }

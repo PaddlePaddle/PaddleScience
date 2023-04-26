@@ -88,11 +88,6 @@ def visualize_func(solver, epoch_id):
         for key in all_output:
             all_output[key] = paddle.concat(all_output[key])
 
-        # # denormalize
-        # if _visualizer.transforms["denormalize"] is not None:
-        #     all_output = _visualizer.transforms["denormalize"](all_output)
-        # _visualizer.quantitive_error(all_output, _visualizer.label)
-
         # save visualization
         if solver.rank == 0:
             visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")

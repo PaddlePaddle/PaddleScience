@@ -218,74 +218,22 @@ class Visualizer3D(base.Visualizer):
     """Visualizer for 3D plot data.
 
     Args:
-        time_step (Union[int, float, None]): Time step to predict.
-        time_list (List[int]): Time index list to predict
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        ref_file (str): Baseline file dir
-        visualizer_batch_size (int): Split input dict to fit GPU cache
+        batch_size (int): Batch size of data when computing result in visu.py.
         num_timestamps (int): Number of timestamps
         prefix (str): Prefix for output file.
     """
 
     def __init__(
         self,
-        ref_file: str,
-        time_step: Union[int, float, None],
-        time_list: List[int],
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
         batch_size: int = 64,
-        transforms=None,
-        visualizer_batch_size: int = 400000,
         num_timestamps: int = 1,
         prefix: str = "vtu",
     ):
-
-        self.time_list = time_list
-        self.time_step = time_step
-        self.ref_file = ref_file
-        self.transforms = transforms
-        self.batch_size = visualizer_batch_size
-
-        onestep_cord, self.data_len_for_onestep = self.construct_onestep_cord(
-            ref_file, input_dict.keys()
-        )
-        self.onestep_cord = onestep_cord
-        self.data_len_for_onestep = len(next(iter(onestep_cord.values())))
-        # input = cord(one step) + time + scale
-        input_dict = self.construct_input(onestep_cord, time_step * time_list)
-        self.label = self.construct_label(
-            ref_file, time_step, time_list, input_dict.keys(), output_expr.keys()
-        )
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
-
-    def construct_input(self, onestep_cord, time):
-        """construct input dic by baseline file"""
-        # Construct Input for prediction
-        n = self.data_len_for_onestep
-        input = {
-            "t": np.concatenate([np.full((n, 1), int(t)) for t in time], axis=1),
-            "x": np.tile(onestep_cord["x"], (len(time), 1)),
-            "y": np.tile(onestep_cord["y"], (len(time), 1)),
-            "z": np.tile(onestep_cord["z"], (len(time), 1)),
-        }
-        # Normalize
-        input = self.transforms["normalize"](input)
-        return input
-
-    def construct_onestep_cord(self, ref_file, input_keys):
-        onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], input_keys)
-        del onestep_input["t"]
-        n = len(next(iter(onestep_input.values())))
-        return onestep_input, n
-
-    def construct_label(self, ref_file, time_step, time_list, input_keys, label_keys):
-        # using referece sampling points coordinates[t\x\y\z] as input
-        _, label = reader.load_vtk_file(
-            ref_file, time_step, time_list, input_keys, label_keys
-        )
-        return label
 
     def quantitive_error(self, label: Dict, solution: Dict):
         """Caculate quantitive error
