@@ -109,18 +109,15 @@ if __name__ == "__main__":
     time_index.sort()
     time_array = time_index * TIME_STEP
 
-    input_keys = ("t", "x", "y", "z")
-    label_keys = ("u", "v", "w", "p")
-
-    label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
-    label_expr_2 = {
-        "u": lambda d: d["u"],
-        "v": lambda d: d["v"],
-        "w": lambda d: d["w"],
-        "p": lambda d: d["p"],
-    }
-
     # set constraint
+    train_dataloader_cfg = {
+        "sampler": {
+            "name": "BatchSampler",
+            "shuffle": False,
+            "drop_last": False,
+        },
+        "num_workers": 1,
+    }
     # interior data
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -128,88 +125,66 @@ if __name__ == "__main__":
         geom["interior"],
         evenly=True,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "iters_per_epoch": int(geom["interior"].len / batchsize_interior),
             "dataset": "MiniBatchDataset",
-            "num_workers": 1,
             "batch_size": batchsize_interior,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
         },
         loss=ppsci.loss.MSELoss("mean", 1),
         name="INTERIOR",
     )
 
+    label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
     norm_cfg = {
         "Scale": {"scale": {key: 1 / value for key, value in norm_factor.items()}}
     }
-
     bc_inlet = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/inlet_txyz.vtu",
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [norm_cfg],
             },
             "batch_size": batchsize_inlet,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 2),
         name="BC_INLET",
     )
-
     bc_cylinder = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/cylinder_txyz.vtu",
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0, "v": 0, "w": 0},
                 "transforms": [norm_cfg],
-            },
-            "num_workers": 1,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
             },
             "batch_size": batchsize_cylinder,
         },
         loss=ppsci.loss.MSELoss("mean", 5),
         name="BC_CYLINDER",
     )
-
     bc_outlet = ppsci.constraint.SupervisedConstraint(
         label_expr={"p": lambda d: d["p"]},
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/outlet_txyz.vtu",
-                "input_keys": input_keys,
-                "label_keys": ["p"],
+                "input_keys": model.input_keys,
+                "label_keys": ("p",),
                 "labels": {"p": 0},
                 "transforms": [norm_cfg],
             },
             "batch_size": batchsize_outlet,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 1),
         name="BC_OUTLET",
@@ -218,21 +193,16 @@ if __name__ == "__main__":
     bc_top = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/top_txyz.vtu",
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [norm_cfg],
             },
             "batch_size": batchsize_top,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 2),
         name="BC_TOP",
@@ -241,74 +211,56 @@ if __name__ == "__main__":
     bc_bottom = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sample_points/bottom_txyz.vtu",
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "labels": {"u": 0.1, "v": 0, "w": 0},
                 "transforms": [norm_cfg],
             },
             "batch_size": batchsize_bottom,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 2),
         name="BC_BOTTOM",
     )
-
     ic = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": ref_file,
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
-                "time_index": [0],
+                "time_index": (0,),
                 "transforms": [norm_cfg],
             },
             "batch_size": batchsize_ic,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 5),
         name="IC",
     )
-
     sup = ppsci.constraint.SupervisedConstraint(
         label_expr=label_expr,
         dataloader_cfg={
+            **train_dataloader_cfg,
             "dataset": {
                 "name": "VtuDataset",
                 "file_path": "data/sup_data/supervised_",
-                "input_keys": input_keys,
+                "input_keys": model.input_keys,
                 "label_keys": ("u", "v", "w"),
                 "time_step": TIME_STEP,
                 "time_index": time_index,
-                "transforms": [norm_cfg],
+                "transforms": (norm_cfg,),
             },
             "batch_size": batchsize_supervised,
-            "sampler": {
-                "name": "BatchSampler",
-                "shuffle": False,
-                "drop_last": False,
-            },
-            "num_workers": 1,
         },
         loss=ppsci.loss.MSELoss("mean", 10),
         name="SUP",
     )
-
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
@@ -335,36 +287,34 @@ if __name__ == "__main__":
 
     # Read validation reference for time step : 0, 99
     lbm_0_input, lbm_0_label = reader.load_vtk_file(
-        ref_file, TIME_STEP, [0], input_keys, label_keys
+        ref_file, TIME_STEP, (0,), model.input_keys, model.output_keys
     )
-    lbm_99_input, lbm_99_label = reader.load_vtk_file(
-        ref_file, TIME_STEP, [99], input_keys, label_keys
-    )
-
-    lbm_0_input = normalize(lbm_0_input)
-    lbm_0_label = normalize(lbm_0_label)
-    lbm_0_dict = {**lbm_0_input, **lbm_0_label}
+    lbm_0_dict = {**normalize(lbm_0_input), **normalize(lbm_0_label)}
 
     # set visualizer(optional)
+    eval_dataloader_cfg = {
+        "sampler": {
+            "name": "BatchSampler",
+            "shuffle": False,
+            "drop_last": False,
+        },
+        "num_workers": 0,
+    }
     validator = {
         "Residual": ppsci.validate.SupervisedValidator(
             dataloader_cfg={
+                **eval_dataloader_cfg,
                 "dataset": {
                     "name": "VtuDataset",
                     "file_path": ref_file,
-                    "input_keys": input_keys,
+                    "input_keys": model.input_keys,
                     "label_keys": ("u", "v", "w"),
                     "time_step": TIME_STEP,
-                    "time_index": [0],
+                    "time_index": (0,),
                     "transforms": [norm_cfg],
                 },
                 "total_size": len(next(iter(lbm_0_dict.values()))),
                 "batch_size": 1024,
-                "sampler": {
-                    "name": "BatchSampler",
-                    "shuffle": False,
-                    "drop_last": False,
-                },
             },
             loss=ppsci.loss.MSELoss("mean"),
             metric={"MSE": ppsci.metric.MSE()},
@@ -377,16 +327,11 @@ if __name__ == "__main__":
     denormalize = transform.Scale(norm_factor)
     visualizer = {
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
-            time_step=TIME_STEP,
-            time_list=time_list,
-            input_dict={key: None for key in input_keys},
-            output_expr={
-                "u": lambda out: out["u"],
-                "v": lambda out: out["v"],
-                "w": lambda out: out["w"],
-                "p": lambda out: out["p"],
-            },
-            ref_file=ref_file,
+            ref_file,
+            TIME_STEP,
+            time_list,
+            {key: None for key in model.input_keys},
+            {**label_expr, "p": lambda out: out["p"]},
             transforms={"denormalize": denormalize, "normalize": normalize},
             prefix="result_uvwp",
         )

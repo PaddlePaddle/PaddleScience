@@ -27,8 +27,8 @@ class NamedArrayDataset(io.Dataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray], optional): Weight dict.
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
+        transforms (Optional[vision.Compose], optional): Compose object contains sample wise
             transform(s).
     """
 
@@ -36,8 +36,8 @@ class NamedArrayDataset(io.Dataset):
         self,
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
-        weight: Dict[str, np.ndarray],
-        transforms: vision.Compose = None,
+        weight: Optional[Dict[str, np.ndarray]] = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = input
@@ -49,7 +49,11 @@ class NamedArrayDataset(io.Dataset):
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
-        weight_item = {key: value[idx] for key, value in self.weight.items()}
+        weight_item = (
+            {key: value[idx] for key, value in self.weight.items()}
+            if self.weight is not None
+            else None
+        )
 
         # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
@@ -94,28 +98,3 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     def __len__(self):
         return 1
-
-
-class MiniBatchDataset(io.Dataset):
-    def __init__(self, input, label, weight):
-        super().__init__()
-        self.input = input
-        self.label = label
-        self.num_samples = self.check_input(input)
-
-    def check_input(self, input):
-        len_input = set()
-        for _, value in input.items():
-            len_input.add(len(value))
-        if len(len_input) is not 1:
-            raise AttributeError("Input dimension mismatch")
-        else:
-            return list(len_input)[0]
-
-    def __getitem__(self, idx):
-        input_item = {key: value[idx] for key, value in self.input.items()}
-        label_item = {key: value[idx] for key, value in self.label.items()}
-        return (input_item, label_item, None)
-
-    def __len__(self):
-        return self.num_samples

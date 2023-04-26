@@ -12,14 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Optional
+from typing import Union
+
 import paddle.nn as nn
 
 
 class LossBase(nn.Layer):
-    """Base class for loss."""
+    """Base class for loss.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    Args:
+        reduction (str): Reduction method.
+        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+    """
+
+    def __init__(
+        self, reduction: str, weight: Optional[Union[Dict[str, float], float]] = None
+    ):
+        super().__init__()
+        self.reduction = reduction
+        self.weight = weight
 
     def __str__(self):
-        return f"{self.__class__.__name__}(reduction={self.reduction})"
+        return f"{self.__class__.__name__}(reduction={self.reduction}, weight={self.weight})"

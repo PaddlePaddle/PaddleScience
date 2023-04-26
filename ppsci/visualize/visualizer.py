@@ -230,11 +230,12 @@ class Visualizer3D(base.Visualizer):
 
     def __init__(
         self,
+        ref_file: str,
         time_step: Union[int, float, None],
         time_list: List[int],
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
-        ref_file: str,
+        batch_size: int = 64,
         transforms=None,
         visualizer_batch_size: int = 400000,
         num_timestamps: int = 1,
@@ -257,22 +258,18 @@ class Visualizer3D(base.Visualizer):
         self.label = self.construct_label(
             ref_file, time_step, time_list, input_dict.keys(), output_expr.keys()
         )
-        super().__init__(input_dict, output_expr, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def construct_input(self, onestep_cord, time):
         """construct input dic by baseline file"""
         # Construct Input for prediction
         n = self.data_len_for_onestep
         input = {
-            key: np.zeros((n * len(time), 1)).astype(np.float32)
-            for key in ["t", "x", "y", "z"]
+            "t": np.concatenate([np.full((n, 1), int(t)) for t in time], axis=1),
+            "x": np.tile(onestep_cord["x"], (len(time), 1)),
+            "y": np.tile(onestep_cord["y"], (len(time), 1)),
+            "z": np.tile(onestep_cord["z"], (len(time), 1)),
         }
-        for i, t in enumerate(time):
-            input["t"][i * n : (i + 1) * n] = np.full((n, 1), int(t))
-            input["x"][i * n : (i + 1) * n] = onestep_cord["x"]
-            input["y"][i * n : (i + 1) * n] = onestep_cord["y"]
-            input["z"][i * n : (i + 1) * n] = onestep_cord["z"]
-
         # Normalize
         input = self.transforms["normalize"](input)
         return input
@@ -318,7 +315,6 @@ class Visualizer3D(base.Visualizer):
                 mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}, \
                 median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}"
             )
-            # psci.visu.__save_vtk_raw(filename = dirname + f"/vtk/0302_error_{i+1}", cordinate=cord, data=temp_list)  # output error being displayed in paraview
 
     def save(self, dirname: str, solution: Dict):
         """Save points result
