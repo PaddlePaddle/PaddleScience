@@ -35,6 +35,7 @@ nav:
         - LDC2D_steady: zh/examples/ldc2d_steady.md
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+        - Laplace2D: zh/examples/laplace2d.md
       - 数据驱动:
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - Rossler_transform_physx: zh/examples/rossler.md
