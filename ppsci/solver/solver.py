@@ -41,6 +41,31 @@ from ppsci.utils import save_load
 class Solver:
     """Class for solver.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> bc = ppsci.constraint.InteriorConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="BC",
+        ... )
+        >>> solver = Solver(
+        ...     model,
+        ...     {"BC": bc},
+        ...     "./output",
+        ...     opt,
+        ...     None,
+        ... )
+        ```
     Args:
         model (nn.Layer): Model.
         constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.

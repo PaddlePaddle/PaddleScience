@@ -26,6 +26,30 @@ from ppsci.validate import base
 class SupervisedValidator(base.Validator):
     """Validator for supervised models.
 
+    Examples:
+        ``` python
+        >>> valida_dataloader_cfg = {
+        ...     "dataset": {
+        ...         "name": "MatDataset",
+        ...         "file_path": "/path/to/file.mat",
+        ...         "input_keys": ("t_f",),
+        ...         "label_keys": ("eta", "f"),
+        ...     },
+        ...     "batch_size": 32,
+        ...     "sampler": {
+        ...         "name": "BatchSampler",
+        ...         "drop_last": False,
+        ...         "shuffle": False,
+        ...     },
+        ... }
+        >>> eta_mse_validator = ppsci.validate.SupervisedValidator(
+        ...     valida_dataloader_cfg,
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     {"eta": lambda out: out["eta"]},
+        ...     metric={"MSE": ppsci.metric.MSE()},
+        ...     name="eta_mse",
+        ... )
+        ```
     Args:
         dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
         loss (loss.LossBase): Loss functor.

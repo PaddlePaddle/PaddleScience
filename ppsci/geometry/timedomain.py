@@ -34,6 +34,10 @@ from ppsci.utils import misc
 class TimeDomain(geometry_1d.Interval):
     """Class for timedomain, an special interval geometry.
 
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.TimeDomain(0, 1)
+        ```
     Args:
         t0 (float): Start of time.
         t1 (float): End of time.
@@ -69,6 +73,12 @@ class TimeDomain(geometry_1d.Interval):
 class TimeXGeometry(geometry.Geometry):
     """Class for combination of time and geometry.
 
+    Examples:
+        ``` python
+        >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
+        ```
     Args:
         timedomain (TimeDomain): TimeDomain object.
         geometry (geometry.Geometry): Geometry object.

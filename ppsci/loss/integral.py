@@ -20,6 +20,10 @@ from ppsci.loss import base
 class IntegralLoss(base.LossBase):
     """Class for integral loss.
 
+    Examples:
+        ``` python
+        >>> loss = ppsci.geometry.IntegralLoss("mean")
+        ```
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
     """

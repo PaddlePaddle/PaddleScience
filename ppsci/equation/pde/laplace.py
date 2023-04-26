@@ -19,6 +19,10 @@ from ppsci.equation.pde import base
 class Laplace(base.PDE):
     """Laplace
 
+    Examples:
+        ``` python
+        >>> pde = ppsci.equation.Laplace(2)
+        ```
     Args:
         dim (int): Dimension of equation.
     """

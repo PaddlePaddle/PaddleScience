@@ -23,6 +23,10 @@ from ppsci.equation.pde import base
 class Vibration(base.PDE):
     """Vortex induced vibration equation.
 
+    Examples:
+        ``` python
+        >>> pde = ppsci.equation.Vibration(1.0, 4.0, -1.0)
+        ```
     Args:
         rho (float): Generalized mass.
         k1 (float): Learnable paremters for modal damping.

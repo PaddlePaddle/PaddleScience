@@ -33,6 +33,25 @@ from ppsci.data import dataset
 class InitialConstraint(base.Constraint):
     """Class for initial constraint.
 
+    Examples:
+        ``` python
+        >>> rect = ppsci.geometry.TimeXGeometry(
+        ...     ppsci.geometry.TimeDomain(0, 1),
+        ...     ppsci.geometry.Rectangle((0, 0), (1, 1)),
+        ... )
+        >>> ic = ppsci.constraint.InitialConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="IC",
+        ... )
+        ```
     Args:
         label_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
