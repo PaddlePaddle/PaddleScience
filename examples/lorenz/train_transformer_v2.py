@@ -177,8 +177,8 @@ if __name__ == "__main__":
                 "pred_states": lambda d: output_transform(d),
                 "states": lambda d: d["states"],
             },
-            1,
-            "result_states",
+            num_timestamps=1,
+            prefix="result_states",
         )
     }
 

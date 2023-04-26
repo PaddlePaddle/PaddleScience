@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import reader
@@ -25,6 +26,7 @@ from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
 
 __all__ = [
+    "initializer",
     "logger",
     "misc",
     "reader",

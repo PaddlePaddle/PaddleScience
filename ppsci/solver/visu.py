@@ -58,7 +58,6 @@ def visualize_func(solver, epoch_id):
             evaluator = expression.ExpressionSolver(
                 _visualizer.input_keys, _visualizer.output_keys, solver.model
             )
-
             for output_key, output_expr in _visualizer.output_expr.items():
                 evaluator.add_target_expr(output_expr, output_key)
 
@@ -89,10 +88,10 @@ def visualize_func(solver, epoch_id):
         for key in all_output:
             all_output[key] = paddle.concat(all_output[key])
 
-        # denormalize
-        if _visualizer.transforms["denormalize"] is not None:
-            all_output = _visualizer.transforms["denormalize"](all_output)
-        _visualizer.quantitive_error(all_output, _visualizer.label)
+        # # denormalize
+        # if _visualizer.transforms["denormalize"] is not None:
+        #     all_output = _visualizer.transforms["denormalize"](all_output)
+        # _visualizer.quantitive_error(all_output, _visualizer.label)
 
         # save visualization
         if solver.rank == 0:
