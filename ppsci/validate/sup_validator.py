@@ -53,7 +53,7 @@ class SupervisedValidator(base.Validator):
     Args:
         dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
         loss (loss.LossBase): Loss functor.
-        label_expr (Optional[Dict[str, Callable]]): List of label expression.
+        output_expr (Optional[Dict[str, Callable]]): List of label expression.
         metric (Optional[Dict[str, metric.MetricBase]]): Named metric functors in dict. Defaults to None.
         name (Optional[str]): Name of validator. Defaults to None.
     """
@@ -62,22 +62,22 @@ class SupervisedValidator(base.Validator):
         self,
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
-        label_expr: Optional[Dict[str, Callable]] = None,
+        output_expr: Optional[Dict[str, Callable]] = None,
         metric: Optional[Dict[str, metric.MetricBase]] = None,
         name: Optional[str] = None,
     ):
-        self.label_expr = label_expr
+        self.output_expr = output_expr
 
         # build dataset
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         self.input_keys = _dataset.input_keys
         self.output_keys = (
-            list(label_expr.keys()) if label_expr is not None else _dataset.label_keys
+            list(output_expr.keys()) if output_expr is not None else _dataset.label_keys
         )
 
-        if self.label_expr is None:
-            self.label_expr = {
+        if self.output_expr is None:
+            self.output_expr = {
                 key: lambda out, k=key: out[k] for key in self.output_keys
             }
 
