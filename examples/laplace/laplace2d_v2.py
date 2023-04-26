@@ -145,6 +145,7 @@ if __name__ == "__main__":
         constraint,
         output_dir,
         equation=equation,
+        geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{output_dir}/checkpoints/latest",
