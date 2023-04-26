@@ -134,6 +134,10 @@ class Constant(lr.LRScheduler):
 class Linear(LRBase):
     """Linear learning rate decay.
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
+        ```
     Args:
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
@@ -200,6 +204,10 @@ class Linear(LRBase):
 class ExponentialDecay(LRBase):
     """ExponentialDecay learning rate decay.
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
+        ```
     Args:
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
@@ -252,10 +260,14 @@ class ExponentialDecay(LRBase):
 
 
 class Cosine(LRBase):
-    """Cosine learning rate decay.
+    r"""Cosine learning rate decay.
 
-    ``lr = 0.05 * (math.cos(epoch * (math.pi / epochs)) + 1)``
+    lr = 0.05 * (math.cos(epoch * (math.pi / epochs)) + 1)
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)
+        ```
     Args:
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
@@ -315,6 +327,10 @@ class Cosine(LRBase):
 class Step(LRBase):
     """Step learning rate decay.
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
+        ```
     Args:
         epochs (int): total epoch(s)
         iters_per_epoch (int): number of iterations within an epoch
@@ -373,6 +389,10 @@ class Step(LRBase):
 class Piecewise(LRBase):
     """Piecewise learning rate decay
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(10, 1, 2, (1e-3, 1e-4))
+        ```
     Args:
         epochs (int): total epoch(s)
         iters_per_epoch (int): number of iterations within an epoch
@@ -429,6 +449,10 @@ class Piecewise(LRBase):
 class MultiStepDecay(LRBase):
     """MultiStepDecay learning rate decay
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))
+        ```
     Args:
         epochs (int): total epoch(s)
         iters_per_epoch (int): number of iterations within an epoch
@@ -562,6 +586,10 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
 class CosineWarmRestarts(LRBase):
     """Set the learning rate using a cosine annealing schedule with warm restarts.
 
+    Examples:
+        ``` python
+        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(10, 1, 1e-3, 0, 0.5)
+        ```
     Args:
         epochs (int): Total epoch(s)
         iters_per_epoch (int): Number of iterations within an epoch

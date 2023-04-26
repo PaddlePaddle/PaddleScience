@@ -29,6 +29,17 @@ from ppsci.utils import misc
 
 
 class Hypercube(geometry.Geometry):
+    """Multi-dimensional hyper cube.
+
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Hypercube((0, 0, 0, 0), (1, 1, 1, 1))
+        ```
+    Args:
+        xmin (Tuple[float, ...]): Lower corner point.
+        xmax (Tuple[float, ...]): Upper corner point.
+    """
+
     def __init__(self, xmin: Tuple[float, ...], xmax: Tuple[float, ...]):
         if len(xmin) != len(xmax):
             raise ValueError("Dimensions of xmin and xmax do not match.")
@@ -122,6 +133,17 @@ class Hypercube(geometry.Geometry):
 
 
 class Hypersphere(geometry.Geometry):
+    """Multi-dimensional hyper sphere.
+
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Hypersphere((0, 0, 0, 0), (1, 1, 1, 1))
+        ```
+    Args:
+        center (Tuple[float, ...]): Center point coordinate.
+        radius (Tuple[float, ...]): Radius along each dimension.
+    """
+
     def __init__(self, center, radius):
         self.center = np.array(center, dtype="float32")
         self.radius = radius

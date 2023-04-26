@@ -31,6 +31,16 @@ from ppsci.arch import base
 class LorenzDataset(io.Dataset):
     """Dataset for training Lorenz model.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.LorenzDataset(
+        ...     "file_path": "/path/to/LorenzDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )
+        ```
     Args:
         file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
@@ -118,6 +128,16 @@ class LorenzDataset(io.Dataset):
 class RosslerDataset(LorenzDataset):
     """Dataset for training Rossler model.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.RosslerDataset(
+        ...     "file_path": "/path/to/RosslerDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )
+        ```
     Args:
         file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
@@ -155,6 +175,16 @@ class RosslerDataset(LorenzDataset):
 class CylinderDataset(io.Dataset):
     """Dataset for training Cylinder model.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.CylinderDataset(
+        ...     "file_path": "/path/to/CylinderDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )
+        ```
     Args:
         file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("states","visc").

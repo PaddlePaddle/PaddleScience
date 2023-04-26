@@ -24,7 +24,21 @@ from ppsci.data import dataset
 
 class SupervisedConstraint(base.Constraint):
     """Class for supervised constraint.
-
+        Examples:
+        ``` python
+        >>> bc_sup = ppsci.constraint.SupervisedConstraint(
+        ...     {
+        ...         "dataset": {
+        ...             "name": "IterableCSVDataset",
+        ...             "file_path": "/path/to/file.csv",
+        ...             "input_keys": ["x", "y"],
+        ...             "label_keys": ["u", "v"],
+        ...         },
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="bc_sup",
+        ... )
+        ```
     Args:
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.

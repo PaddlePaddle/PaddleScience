@@ -30,6 +30,14 @@ from ppsci.utils import reader
 class CSVDataset(io.Dataset):
     """Dataset class for .csv file.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.CSVDataset(
+        ...     "/path/to/file.csv"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     Args:
         file_path (str): CSV file path.
         input_keys (Tuple[str, ...]): List of input keys.
@@ -140,6 +148,14 @@ class CSVDataset(io.Dataset):
 class IterableCSVDataset(io.IterableDataset):
     """IterableCSVDataset for full-data loading.
 
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.IterableCSVDataset(
+        ...     "/path/to/file.csv"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     Args:
         file_path (str): CSV file path.
         input_keys (Tuple[str, ...]): List of input keys.
