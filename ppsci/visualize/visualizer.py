@@ -29,24 +29,20 @@ class VisualizerScatter1D(base.Visualizer):
 
     Examples:
         ``` python
-        >>> visualizer = {
-        ...     "visulzie_u": ppsci.visualize.VisualizerScatter1D(
-        ...         visu_mat,
-        ...         ("t_f",),
-        ...         {
-        ...             "eta": lambda d: d["eta"],  # plot with latex title
-        ...             "eta_gt": lambda d: d["eta_gt"],  # plot with latex title
-        ...         },
-        ...         num_timestamps=1,
-        ...         prefix="viv_pred",
-        ...     )
-        ... }
+        >>> visu_mat = {"t_f": np.random.randn(16, 1), "eta": np.random.randn(16, 1)}
+        >>> visualizer_eta = ppsci.visualize.VisualizerScatter1D(
+        ...     visu_mat,
+        ...     ("t_f",),
+        ...     {"eta": lambda d: d["eta"]},
+        ...     num_timestamps=1,
+        ...     prefix="viv_pred",
+        ... )
         ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int, optional): Number of timestamps. Defaults to 1.
         prefix (str, optional): Prefix for output file. Defaults to "plot".
     """
@@ -74,22 +70,18 @@ class VisualizerScatter3D(base.Visualizer):
 
     Examples:
         ``` python
-        >>> visualizer = {
-        ...     "visulzie_states": ppsci.visualize.VisualizerScatter3D(
-        ...         vis_datas,
-        ...         {
-        ...             "pred_states": lambda d: output_transform(d),
-        ...             "states": lambda d: d["states"],
-        ...         },
-        ...         num_timestamps=1,
-        ...         prefix="result_states",
-        ...     )
-        ... }
+        >>> vis_datas = {"states": np.random.randn(16, 1)}
+        >>> visualizer = ppsci.visualize.VisualizerScatter3D(
+        ...     vis_datas,
+        ...     {"states": lambda d: d["states"]},
+        ...     num_timestamps=1,
+        ...     prefix="result_states",
+        ... )
         ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int): Number of timestamps. Defaults to 1.
         prefix (str): Prefix for output file. Defaults to "plot3d_scatter".
     """
@@ -132,19 +124,23 @@ class VisualizerVtu(base.Visualizer):
 
     Examples:
         ``` python
-        >>> visualizer = {
-        ...     "visulzie_u_v": ppsci.visualize.VisualizerVtu(
-        ...         vis_points,
-        ...         {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-        ...         num_timestamps=ntime_all,
-        ...         prefix="result_u_v",
-        ...     )
+        >>> vis_points = {
+        ...     "x": np.random.randn(128, 1),
+        ...     "y": np.random.randn(128, 1),
+        ...     "u": np.random.randn(128, 1),
+        ...     "v": np.random.randn(128, 1),
         ... }
+        >>> visualizer_u_v =  ppsci.visualize.VisualizerVtu(
+        ...     vis_points,
+        ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
+        ...     num_timestamps=1,
+        ...     prefix="result_u_v",
+        ... )
         ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int): Number of timestamps
         prefix (str): Prefix for output file.
     """
@@ -170,19 +166,23 @@ class Visualizer2D(base.Visualizer):
 
     Examples:
         ``` python
-        >>> visualizer = {
-        ...     "visulzie_u_v": ppsci.visualize.VisualizerVtu(
-        ...         vis_points,
-        ...         {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-        ...         num_timestamps=ntime_all,
-        ...         prefix="result_u_v",
-        ...     )
+        >>> vis_points = {
+        ...     "x": np.random.randn(128, 1),
+        ...     "y": np.random.randn(128, 1),
+        ...     "u": np.random.randn(128, 1),
+        ...     "v": np.random.randn(128, 1),
         ... }
+        >>> visualizer_u_v = {ppsci.visualize.Visualizer2D(
+        ...     vis_points,
+        ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
+        ...     num_timestamps=ntime_all,
+        ...     prefix="result_u_v",
+        ... )
         ```
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int): Number of timestamps. Defaults to 1.
         prefix (str): Prefix for output file. Defaults to "plot2d".
     """
@@ -203,15 +203,15 @@ class Visualizer2DPlot(Visualizer2D):
 
     Examples:
         ``` python
-        >>> visulzie_states = ppsci.visualize.Visualizer2DPlot(
+        >>> vis_datas = {
+        ...     "target_ux": np.random.randn(128, 20, 1),
+        ...     "pred_ux": np.random.randn(128, 20, 1),
+        ... }
+        >>> visualizer_states = ppsci.visualize.Visualizer2DPlot(
         ...     vis_datas,
         ...     {
         ...         "target_ux": lambda d: d["states"][:, :, 0],
         ...         "pred_ux": lambda d: output_transform(d)[:, :, 0],
-        ...         "target_uy": lambda d: d["states"][:, :, 1],
-        ...         "pred_uy": lambda d: output_transform(d)[:, :, 1],
-        ...         "target_p": lambda d: d["states"][:, :, 2],
-        ...         "preds_p": lambda d: output_transform(d)[:, :, 2],
         ...     },
         ...     batch_size=1,
         ...     num_timestamps=10,
@@ -224,7 +224,7 @@ class Visualizer2DPlot(Visualizer2D):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int): Number of timestamps.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
@@ -286,7 +286,7 @@ class Visualizer3D(base.Visualizer):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int): Number of timestamps
         prefix (str): Prefix for output file.
     """

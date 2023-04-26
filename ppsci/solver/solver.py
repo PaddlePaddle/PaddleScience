@@ -46,7 +46,7 @@ class Solver:
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> bc = ppsci.constraint.InteriorConstraint(
+        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
         ...     {"u": 0},
         ...     rect,
@@ -56,11 +56,11 @@ class Solver:
         ...         "batch_size": 16,
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
-        ...     name="BC",
+        ...     name="EQ",
         ... )
-        >>> solver = Solver(
+        >>> solver = ppsci.solver.Solver(
         ...     model,
-        ...     {"BC": bc},
+        ...     {"EQ": pde_constraint},
         ...     "./output",
         ...     opt,
         ...     None,

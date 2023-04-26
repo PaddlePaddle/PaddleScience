@@ -25,7 +25,7 @@ class ModelList(base.NetBase):
     Examples:
         ``` python
         >>> model1 = ppsci.arch.MLP(("x", "y"), ("u", "v"), 10, 128)
-        >>> model2 = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
+        >>> model2 = ppsci.arch.MLP(("x", "y"), ("w", "p"), 5, 128)
         >>> model = ppsci.arch.ModelList((model1, model2))
         ```
     Args:
