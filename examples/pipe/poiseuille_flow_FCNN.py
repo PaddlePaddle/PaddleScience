@@ -124,13 +124,14 @@ if __name__ == "__main__":
 
     os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/pipe")
     # set output directory
-    output_dir = "./output_pipe"
-    initial_bias_u = np.load("./data/init_net_params/initial_bias_u.npz")
-    initial_bias_v = np.load("./data/init_net_params/initial_bias_v.npz")
-    initial_bias_p = np.load("./data/init_net_params/initial_bias_p.npz")
-    initial_weight_u = np.load("./data/init_net_params/initial_weight_u.npz")
-    initial_weight_v = np.load("./data/init_net_params/initial_weight_v.npz")
-    initial_weight_p = np.load("./data/init_net_params/initial_weight_p.npz")
+    output_dir = "./output_pipe_1"
+    dir = "/workspace/wangguan/LabelFree-DNN-Surrogate/net_params"
+    initial_bias_u = np.load(dir + f"/bias_u_epoch_1.npz")
+    initial_bias_v = np.load(dir + f"/bias_v_epoch_1.npz")
+    initial_bias_p = np.load(dir + f"/bias_p_epoch_1.npz")
+    initial_weight_u = np.load(dir + f"/weight_u_epoch_1.npz")
+    initial_weight_v = np.load(dir + f"/weight_v_epoch_1.npz")
+    initial_weight_p = np.load(dir + f"/weight_p_epoch_1.npz")
 
     from paddle.fluid import core
 
@@ -182,10 +183,13 @@ if __name__ == "__main__":
     data_1d_nu = np.linspace(nuStart, nuEnd, N_p, endpoint=True)
 
     print("train_nu is", data_1d_nu)
-
+    np.savez("train_nu", nu_1d=data_1d_nu)
     data_2d_xy_before = np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu))
     data_2d_xy_before_reshape = data_2d_xy_before.reshape(3, -1)
     data_2d_xy = data_2d_xy_before_reshape.T
+    import copy
+
+    data_2d_xy_old = copy.deepcopy(data_2d_xy)
     np.random.shuffle(data_2d_xy)
 
     input_x = data_2d_xy[:, 0].reshape(data_2d_xy.shape[0], 1).astype("float32")
@@ -266,7 +270,6 @@ if __name__ == "__main__":
     def input_transform(input):
         if periodicBC == True:
             x, y = input["x"], input["y"]
-            print(x.stop_gradient, y.stop_gradient)
             nu = input["nu"]
             b = 2 * np.pi / (X_OUT - X_IN)
             c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
@@ -328,18 +331,80 @@ if __name__ == "__main__":
         optimizer,
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
+        eval_during_train=False,
+        save_freq=10,
         log_freq=LOG_FREQ,
-        eval_freq=EVAL_FREQ,
         equation=equation,
-        visualizer=visualizer,
+        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/output_pipe/checkpoints/epoch_3000",
     )
 
-    # train model
-    solver.train()
+    def predict(
+        input_dict,
+        solver,
+    ):
+        for key, val in input_dict.items():
+            input_dict[key] = paddle.to_tensor(val, dtype="float32")
+        evaluator = ppsci.utils.expression.ExpressionSolver(
+            input_dict.keys(), ["u", "v", "p"], solver.model
+        )
+        output_expr_dict = {
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"],
+        }
+        for output_key, output_expr in output_expr_dict.items():
+            evaluator.add_target_expr(output_expr, output_key)
+        output_dict = evaluator(input_dict)
+        return output_dict
 
-    # evaluate after finished training
-    solver.eval()
+    data_2d_xy = data_2d_xy_old
+    input_dict = {
+        "x": data_2d_xy[:, 0:1],
+        "y": data_2d_xy[:, 1:2],
+        "nu": data_2d_xy[:, 2:3],
+    }
+    output_dict = predict(input_dict, solver)
 
-    # visualize prediction after finished training
-    solver.visualize()
+    # analytical solution
+    N_pTest = 500
+    uSolaM = np.zeros([N_y, N_x, N_p])
+    dP = P_IN - P_OUT
+    for i in range(N_p):
+        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
+        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+    uMax_a = np.zeros([1, N_pTest])
+
+    data_1d_nuDist = np.random.normal(nuMean, 0.2 * nuMean, N_pTest)
+    data_2d_xy_before_test = np.array(
+        np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nuDist)
+    )
+    data_2d_xy_before_test_reshape = data_2d_xy_before_test.reshape(3, -1)
+    data_2d_xy_test = data_2d_xy_before_test_reshape.T
+    data_2d_xy_test = data_2d_xy_before_test_reshape.T
+
+    u_pred_2d_xy = output_dict["u"].numpy()
+    v_pred_2d_xy = output_dict["v"].numpy()
+    p_pred_2d_xy = output_dict["p"].numpy()
+    u_pred_2d_xy_mesh = u_pred_2d_xy.reshape(N_y, N_x, N_p)
+    v_pred_2d_xy_mesh = v_pred_2d_xy.reshape(N_y, N_x, N_p)
+    p_pred_2d_xy_mesh = p_pred_2d_xy.reshape(N_y, N_x, N_p)
+
+    input_dict_test = {
+        "x": data_2d_xy_test[:, 0:1],
+        "y": data_2d_xy_test[:, 1:2],
+        "nu": data_2d_xy_test[:, 2:3],
+    }
+    output_dict_test = predict(input_dict_test, solver)
+
+    uMax_pred = output_dict_test["u"].numpy()
+
+    np.savez(
+        "pred_poiseuille_para_0425",
+        mesh=data_2d_xy_before,
+        u=u_pred_2d_xy_mesh,
+        v=v_pred_2d_xy_mesh,
+        p=p_pred_2d_xy_mesh,
+        ut=uSolaM,
+        uMaxP=uMax_pred,
+        uMaxA=uMax_a,
+    )

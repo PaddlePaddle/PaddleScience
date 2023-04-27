@@ -80,7 +80,6 @@ def train_epoch_func(solver, epoch_id, log_freq):
         if solver.update_freq > 1:
             total_loss = total_loss / solver.update_freq
         loss_dict["loss"] = float(total_loss)
-
         # backward
         if solver.use_amp:
             total_loss_scaled = solver.scaler.scale(total_loss)
@@ -92,6 +91,65 @@ def train_epoch_func(solver, epoch_id, log_freq):
                     solver.lr_scheduler.step()
         else:
             total_loss.backward()
+            # import numpy as np
+            # dir = "/workspace/wangguan/LabelFree-DNN-Surrogate/net_params"
+            # bias_u = np.load(dir + f"/bias_u_epoch_{iter_id}.npz")
+            # bias_v = np.load(dir + f"/bias_v_epoch_{iter_id}.npz")
+            # bias_p = np.load(dir + f"/bias_p_epoch_{iter_id}.npz")
+            # weight_u = np.load(dir + f"/weight_u_epoch_{iter_id}.npz")
+            # weight_v = np.load(dir + f"/weight_v_epoch_{iter_id}.npz")
+            # weight_p = np.load(dir + f"/weight_p_epoch_{iter_id}.npz")
+            # weight_grad_u = np.load(dir + f"/weight_grad_u_epoch_{iter_id}.npz")
+            # weight_grad_v = np.load(dir + f"/weight_grad_v_epoch_{iter_id}.npz")
+            # weight_grad_p = np.load(dir + f"/weight_grad_p_epoch_{iter_id}.npz")
+            # # u
+            # print("w0_u is close:", np.allclose(solver.model.model_list[0].linears[0].weight.numpy(), weight_u[f"w_0"]))
+            # print("w1_u is close:", np.allclose(solver.model.model_list[0].linears[1].weight.numpy(), weight_u[f"w_1"]))
+            # print("w2_u is close:", np.allclose(solver.model.model_list[0].linears[2].weight.numpy(), weight_u[f"w_2"]))
+            # print("w3_u is close:", np.allclose(solver.model.model_list[0].last_fc.weight.numpy(), weight_u[f"w_3"]))
+
+            # print("b0_u is close:", np.allclose(solver.model.model_list[0].linears[0].bias.numpy(), bias_u[f"b_0"]))
+            # print("b1_u is close:", np.allclose(solver.model.model_list[0].linears[1].bias.numpy(), bias_u[f"b_1"]))
+            # print("b2_u is close:", np.allclose(solver.model.model_list[0].linears[2].bias.numpy(), bias_u[f"b_2"]))
+            # print("b3_u is close:", np.allclose(solver.model.model_list[0].last_fc.bias.numpy(), bias_u[f"b_3"]))
+
+            # print("w0_u grad is close:", np.allclose(solver.model.model_list[0].linears[0].weight.grad.numpy(), weight_grad_u[f"w_0"]))
+            # print("w1_u grad is close:", np.allclose(solver.model.model_list[0].linears[1].weight.grad.numpy(), weight_grad_u[f"w_1"]))
+            # print("w2_u grad is close:", np.allclose(solver.model.model_list[0].linears[2].weight.grad.numpy(), weight_grad_u[f"w_2"]))
+            # print("w3_u grad is close:", np.allclose(solver.model.model_list[0].last_fc.weight.grad.numpy(), weight_grad_u[f"w_3"]))
+
+            # #v
+            # print("w0_v is close:", np.allclose(solver.model.model_list[1].linears[0].weight.numpy(), weight_v[f"w_0"]))
+            # print("w1_v is close:", np.allclose(solver.model.model_list[1].linears[1].weight.numpy(), weight_v[f"w_1"]))
+            # print("w2_v is close:", np.allclose(solver.model.model_list[1].linears[2].weight.numpy(), weight_v[f"w_2"]))
+            # print("w3_v is close:", np.allclose(solver.model.model_list[1].last_fc.weight.numpy(), weight_v[f"w_3"]))
+
+            # print("b0_v is close:", np.allclose(solver.model.model_list[1].linears[0].bias.numpy(), bias_v[f"b_0"]))
+            # print("b1_v is close:", np.allclose(solver.model.model_list[1].linears[1].bias.numpy(), bias_v[f"b_1"]))
+            # print("b2_v is close:", np.allclose(solver.model.model_list[1].linears[2].bias.numpy(), bias_v[f"b_2"]))
+            # print("b3_v is close:", np.allclose(solver.model.model_list[1].last_fc.bias.numpy(), bias_v[f"b_3"]))
+
+            # print("w0_v grad is close:", np.allclose(solver.model.model_list[1].linears[0].weight.grad.numpy(), weight_grad_v[f"w_0"]))
+            # print("w1_v grad is close:", np.allclose(solver.model.model_list[1].linears[1].weight.grad.numpy(), weight_grad_v[f"w_1"]))
+            # print("w2_v grad is close:", np.allclose(solver.model.model_list[1].linears[2].weight.grad.numpy(), weight_grad_v[f"w_2"]))
+            # print("w3_v grad is close:", np.allclose(solver.model.model_list[1].last_fc.weight.grad.numpy(), weight_grad_v[f"w_3"]))
+
+            # #p
+            # print("w0_p is close:", np.allclose(solver.model.model_list[2].linears[0].weight.numpy(), weight_p[f"w_0"]))
+            # print("w1_p is close:", np.allclose(solver.model.model_list[2].linears[1].weight.numpy(), weight_p[f"w_1"]))
+            # print("w2_p is close:", np.allclose(solver.model.model_list[2].linears[2].weight.numpy(), weight_p[f"w_2"]))
+            # print("w3_p is close:", np.allclose(solver.model.model_list[2].last_fc.weight.numpy(), weight_p[f"w_3"]))
+
+            # print("b0_p is close:", np.allclose(solver.model.model_list[2].linears[0].bias.numpy(), bias_p[f"b_0"]))
+            # print("b1_p is close:", np.allclose(solver.model.model_list[2].linears[1].bias.numpy(), bias_p[f"b_1"]))
+            # print("b2_p is close:", np.allclose(solver.model.model_list[2].linears[2].bias.numpy(), bias_p[f"b_2"]))
+            # print("b3_p is close:", np.allclose(solver.model.model_list[2].last_fc.bias.numpy(), bias_p[f"b_3"]))
+
+            # print("w0_p grad is close:", np.allclose(solver.model.model_list[2].linears[0].weight.grad.numpy(), weight_grad_p[f"w_0"]))
+            # print("w1_p grad is close:", np.allclose(solver.model.model_list[2].linears[1].weight.grad.numpy(), weight_grad_p[f"w_1"]))
+            # print("w2_p grad is close:", np.allclose(solver.model.model_list[2].linears[2].weight.grad.numpy(), weight_grad_p[f"w_2"]))
+            # print("w3_p grad is close:", np.allclose(solver.model.model_list[2].last_fc.weight.grad.numpy(), weight_grad_p[f"w_3"]))
+
             if iter_id % solver.update_freq == 0:
                 solver.optimizer.step()
                 solver.optimizer.clear_grad()
@@ -109,6 +167,8 @@ def train_epoch_func(solver, epoch_id, log_freq):
         if iter_id == 1 or iter_id % log_freq == 0:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
+        # real_loss = float(loss_dict["loss"])
+        # print(f"{(epoch_id - 1) * 195 + iter_id} step: loss is {real_loss}")
         batch_tic = time.perf_counter()
 
 

@@ -303,7 +303,7 @@ class Solver:
             metric_msg = ", ".join(
                 [self.train_output_info[key].avg_info for key in self.train_output_info]
             )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
+            # logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")

@@ -43,7 +43,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
 
     metric_msg = ", ".join(
         [
-            f"{key}: {trainer.train_output_info[key].avg:.5f}"
+            f"{key}: {trainer.train_output_info[key].val:.9f}"
             for key in trainer.train_output_info
         ]
     )
