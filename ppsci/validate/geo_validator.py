@@ -51,7 +51,7 @@ class GeometryValidator(base.Validator):
         name (Optional[str]): Name of validator. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> geom_validator = ppsci.validate.GeometryValidator(
         ...     {"u": lambda out: out["u"]},
@@ -60,11 +60,11 @@ class GeometryValidator(base.Validator):
         ...     {
         ...         "dataset": "IterableNamedArrayDataset",
         ...         "iters_per_epoch": 1,
+        ...         "total_size": 32,
         ...         "batch_size": 16,
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ... )
-        ```
     """
 
     def __init__(

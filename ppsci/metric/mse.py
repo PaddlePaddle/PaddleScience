@@ -26,9 +26,8 @@ class MSE(base.MetricBase):
     $$
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> metric = ppsci.metric.MSE()
-        ```
     """
 
     def __init__(self):

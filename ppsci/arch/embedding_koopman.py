@@ -45,9 +45,8 @@ class LorenzEmbedding(base.NetBase):
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
-        ```
     """
 
     def __init__(
@@ -208,9 +207,8 @@ class RosslerEmbedding(LorenzEmbedding):
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
-        ```
     """
 
     def __init__(
@@ -250,9 +248,8 @@ class CylinderEmbedding(base.NetBase):
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
-        ```
     """
 
     def __init__(

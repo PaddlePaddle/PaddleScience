@@ -35,9 +35,8 @@ class MLP(base.NetBase):
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
-        ```
     """
 
     def __init__(

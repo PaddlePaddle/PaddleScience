@@ -36,7 +36,7 @@ class VisualizerScatter1D(base.Visualizer):
         prefix (str, optional): Prefix for output file. Defaults to "plot".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> visu_mat = {"t_f": np.random.randn(16, 1), "eta": np.random.randn(16, 1)}
         >>> visualizer_eta = ppsci.visualize.VisualizerScatter1D(
         ...     visu_mat,
@@ -45,7 +45,6 @@ class VisualizerScatter1D(base.Visualizer):
         ...     num_timestamps=1,
         ...     prefix="viv_pred",
         ... )
-        ```
     """
 
     def __init__(
@@ -77,7 +76,7 @@ class VisualizerScatter3D(base.Visualizer):
         prefix (str, optional): Prefix for output file. Defaults to "plot3d_scatter".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> vis_datas = {"states": np.random.randn(16, 1)}
         >>> visualizer = ppsci.visualize.VisualizerScatter3D(
         ...     vis_datas,
@@ -85,7 +84,6 @@ class VisualizerScatter3D(base.Visualizer):
         ...     num_timestamps=1,
         ...     prefix="result_states",
         ... )
-        ```
     """
 
     def __init__(
@@ -132,7 +130,7 @@ class VisualizerVtu(base.Visualizer):
         prefix (str, optional): Prefix for output file.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> vis_points = {
         ...     "x": np.random.randn(128, 1),
         ...     "y": np.random.randn(128, 1),
@@ -145,7 +143,6 @@ class VisualizerVtu(base.Visualizer):
         ...     num_timestamps=1,
         ...     prefix="result_u_v",
         ... )
-        ```
     """
 
     def __init__(
@@ -175,20 +172,19 @@ class Visualizer2D(base.Visualizer):
         prefix (str, optional): Prefix for output file. Defaults to "plot2d".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> vis_points = {
         ...     "x": np.random.randn(128, 1),
         ...     "y": np.random.randn(128, 1),
         ...     "u": np.random.randn(128, 1),
         ...     "v": np.random.randn(128, 1),
         ... }
-        >>> visualizer_u_v = {ppsci.visualize.Visualizer2D(
+        >>> visualizer_u_v = ppsci.visualize.Visualizer2D(
         ...     vis_points,
         ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
-        ...     num_timestamps=ntime_all,
+        ...     num_timestamps=1,
         ...     prefix="result_u_v",
         ... )
-        ```
     """
 
     def __init__(
@@ -216,7 +212,7 @@ class Visualizer2DPlot(Visualizer2D):
         prefix (str, optional): Prefix for output file. Defaults to "plot2d".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> vis_datas = {
         ...     "target_ux": np.random.randn(128, 20, 1),
         ...     "pred_ux": np.random.randn(128, 20, 1),
@@ -234,7 +230,6 @@ class Visualizer2DPlot(Visualizer2D):
         ...     yticks=np.linspace(-4, 4, 5),
         ...     prefix="result_states",
         ... )
-        ```
     """
 
     def __init__(
