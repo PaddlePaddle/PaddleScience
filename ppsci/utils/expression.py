@@ -28,15 +28,16 @@ from ppsci.autodiff import jacobian
 class ExpressionSolver(nn.Layer):
     """Expression Solver
 
+    Args:
+        input_keys (Dict[str]):Names of input keys.
+        output_keys (Dict[str]):Names of output keys.
+        model (nn.Layer): Model to get output variables from input variables.
+
     Examples:
         ``` python
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
         >>> expr_solver = ExpressionSolver(("x", "y"), ("u", "v"), model)
         ```
-    Args:
-        input_keys (Dict[str]):Names of input keys.
-        output_keys (Dict[str]):Names of output keys.
-        model (nn.Layer): Model to get output variables from input variables.
     """
 
     def __init__(self, input_keys, output_keys, model):

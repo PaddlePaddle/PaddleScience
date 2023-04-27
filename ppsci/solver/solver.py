@@ -41,31 +41,6 @@ from ppsci.utils import save_load
 class Solver:
     """Class for solver.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
-        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
-        ...     {"u": lambda out: out["u"]},
-        ...     {"u": 0},
-        ...     rect,
-        ...     {
-        ...         "dataset": "IterableNamedArrayDataset",
-        ...         "iters_per_epoch": 1,
-        ...         "batch_size": 16,
-        ...     },
-        ...     ppsci.loss.MSELoss("mean"),
-        ...     name="EQ",
-        ... )
-        >>> solver = ppsci.solver.Solver(
-        ...     model,
-        ...     {"EQ": pde_constraint},
-        ...     "./output",
-        ...     opt,
-        ...     None,
-        ... )
-        ```
     Args:
         model (nn.Layer): Model.
         constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
@@ -91,6 +66,32 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="EQ",
+        ... )
+        >>> solver = ppsci.solver.Solver(
+        ...     model,
+        ...     {"EQ": pde_constraint},
+        ...     "./output",
+        ...     opt,
+        ...     None,
+        ... )
+        ```
     """
 
     def __init__(

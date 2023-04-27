@@ -74,13 +74,6 @@ class Jacobians:
     ) -> paddle.Tensor:
         """Compute jacobians for given ys and xs.
 
-        Examples:
-            ``` python
-            >>> x = paddle.randn([4, 3])
-            >>> x.stop_gradient = False
-            >>> y = (x * x).sum()
-            >>> dy_dx = ppsci.autodiff.jacoian(y, x)
-            ```
         Args:
             ys (paddle.Tensor): Output tensor.
             xs (paddle.Tensor): Input tensor.
@@ -89,6 +82,14 @@ class Jacobians:
 
         Returns:
             paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
+
+        Examples:
+            ``` python
+            >>> x = paddle.randn([4, 3])
+            >>> x.stop_gradient = False
+            >>> y = (x * x).sum()
+            >>> dy_dx = ppsci.autodiff.jacoian(y, x)
+            ```
         """
         key = (ys, xs)
         if key not in self.Js:
@@ -168,13 +169,6 @@ class Hessians:
     ) -> paddle.Tensor:
         """compute hessian matrix for given ys and xs.
 
-        Examples:
-            ``` python
-            >>> x = paddle.randn([4, 3])
-            >>> x.stop_gradient = False
-            >>> y = (x * x).sin()
-            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
-            ```
         Args:
             ys (paddle.Tensor): Output tensor.
             xs (paddle.Tensor): Input tensor.
@@ -188,6 +182,14 @@ class Hessians:
 
         Returns:
             paddle.Tensor: Hessian matrix.
+
+        Examples:
+            ``` python
+            >>> x = paddle.randn([4, 3])
+            >>> x.stop_gradient = False
+            >>> y = (x * x).sin()
+            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
+            ```
         """
         key = (ys, xs, component)
         if key not in self.Hs:
