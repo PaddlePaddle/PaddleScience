@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os.path as osp
-
 import numpy as np
 import paddle
 
@@ -125,7 +123,7 @@ if __name__ == "__main__":
     os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/pipe")
     # set output directory
     output_dir = "./output_pipe_1"
-    dir = "/workspace/wangguan/LabelFree-DNN-Surrogate/net_params"
+    dir = "./data/net_params"
     initial_bias_u = np.load(dir + f"/bias_u_epoch_1.npz")
     initial_bias_v = np.load(dir + f"/bias_v_epoch_1.npz")
     initial_bias_p = np.load(dir + f"/bias_p_epoch_1.npz")
@@ -365,21 +363,12 @@ if __name__ == "__main__":
     }
     output_dict = predict(input_dict, solver)
 
-    # analytical solution
     N_pTest = 500
-    uSolaM = np.zeros([N_y, N_x, N_p])
-    dP = P_IN - P_OUT
-    for i in range(N_p):
-        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
-        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
-    uMax_a = np.zeros([1, N_pTest])
-
     data_1d_nuDist = np.random.normal(nuMean, 0.2 * nuMean, N_pTest)
     data_2d_xy_before_test = np.array(
         np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nuDist)
     )
     data_2d_xy_before_test_reshape = data_2d_xy_before_test.reshape(3, -1)
-    data_2d_xy_test = data_2d_xy_before_test_reshape.T
     data_2d_xy_test = data_2d_xy_before_test_reshape.T
 
     u_pred_2d_xy = output_dict["u"].numpy()
@@ -398,6 +387,18 @@ if __name__ == "__main__":
 
     uMax_pred = output_dict_test["u"].numpy()
 
+    # analytical solution
+    uSolaM = np.zeros([N_y, N_x, N_p])
+    dP = P_IN - P_OUT
+
+    for i in range(N_p):
+        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
+        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+    uMax_a = np.zeros([N_pTest, 1])
+    for i in range(N_pTest):
+        uMax_a[i] = (R**2) * dP / (2 * L * data_1d_nuDist[i] * RHO)
+
+    # save result for post process
     np.savez(
         "pred_poiseuille_para_0425",
         mesh=data_2d_xy_before,
@@ -408,3 +409,5 @@ if __name__ == "__main__":
         uMaxP=uMax_pred,
         uMaxA=uMax_a,
     )
+
+    # data_1d_nuDist = np.random.normal(2e-4, 1.9e-3, 20)

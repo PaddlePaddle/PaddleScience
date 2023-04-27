@@ -113,21 +113,22 @@ ax1.set_xlim([-0.05, 0.05])
 ax1.set_ylim([0.0, 0.62])
 figureName = "pipe_uProfiles_nuIdx_.png"
 plt.savefig(figureName, bbox_inches="tight")
-exit()
 
 print("Re is", Re)
 np.savez("test_Re", Re=Re)
 plt.figure(2)
 plt.clf()
 ax1 = plt.subplot(111)
-sns.kdeplot(uMaxA[0, :], shade=True, label="Analytical", linestyle="-", linewidth=3)
 sns.kdeplot(
-    uMaxP[0, :],
-    shade=False,
+    uMaxA, fill=True, color="black", label="Analytical", linestyle="-", linewidth=3
+)
+sns.kdeplot(
+    uMaxP,
+    fill=False,
+    color="red",
     label="DNN",
     linestyle="--",
     linewidth=3.5,
-    color="darkred",
 )
 plt.legend(prop={"size": 16})
 plt.xlabel(r"$u_c$", fontsize=16)
