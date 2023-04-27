@@ -21,16 +21,17 @@ from ppsci.utils import reader
 class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
-    Examples:
-        ``` python
-        >>> geom = ppsci.geometry.PointCloud("/path/to/pointcloud_file", ("x",))
-        ```
     Args:
         interior_path (str): File which store interior points of a point cloud.
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
         coord_keys (List[str]): List of coordinate keys, such as ["x", "y"].
         alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.PointCloud("/path/to/pointcloud_file", ("x",))
+        ```
     """
 
     def __init__(

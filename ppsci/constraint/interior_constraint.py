@@ -33,22 +33,6 @@ from ppsci.data import dataset
 class InteriorConstraint(base.Constraint):
     """Class for integral constraint.
 
-    Examples:
-        ``` python
-        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
-        ...     {"u": lambda out: out["u"]},
-        ...     {"u": 0},
-        ...     rect,
-        ...     {
-        ...         "dataset": "IterableNamedArrayDataset",
-        ...         "iters_per_epoch": 1,
-        ...         "batch_size": 16,
-        ...     },
-        ...     ppsci.loss.MSELoss("mean"),
-        ...     name="EQ",
-        ... )
-        ```
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
@@ -67,6 +51,23 @@ class InteriorConstraint(base.Constraint):
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the
             weight of each constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "EQ".
+
+    Examples:
+        ``` python
+        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="EQ",
+        ... )
+        ```
     """
 
     def __init__(

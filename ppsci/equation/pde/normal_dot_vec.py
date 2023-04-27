@@ -20,12 +20,13 @@ from ppsci.equation.pde import base
 class NormalDotVec(base.PDE):
     """NormalDotVec.
 
+    Args:
+        velocity_keys (Tuple[str, ...]): Keys for velocity(ies).
+
     Examples:
         ``` python
         >>> pde = ppsci.equation.NormalDotVec(("u", "v", "w"))
         ```
-    Args:
-        velocity_keys (Tuple[str, ...]): Keys for velocity(ies).
     """
 
     def __init__(self, velocity_keys: Tuple[str, ...]):

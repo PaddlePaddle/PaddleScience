@@ -26,6 +26,13 @@ from ppsci.validate import base
 class SupervisedValidator(base.Validator):
     """Validator for supervised models.
 
+    Args:
+        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
+        loss (loss.LossBase): Loss functor.
+        output_expr (Optional[Dict[str, Callable]]): List of label expression.
+        metric (Optional[Dict[str, metric.MetricBase]]): Named metric functors in dict. Defaults to None.
+        name (Optional[str]): Name of validator. Defaults to None.
+
     Examples:
         ``` python
         >>> valida_dataloader_cfg = {
@@ -50,12 +57,6 @@ class SupervisedValidator(base.Validator):
         ...     name="eta_mse",
         ... )
         ```
-    Args:
-        dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
-        loss (loss.LossBase): Loss functor.
-        output_expr (Optional[Dict[str, Callable]]): List of label expression.
-        metric (Optional[Dict[str, metric.MetricBase]]): Named metric functors in dict. Defaults to None.
-        name (Optional[str]): Name of validator. Defaults to None.
     """
 
     def __init__(
