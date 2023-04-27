@@ -32,7 +32,9 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
-    disp_net = ppsci.arch.MLP(("x", "y", "z"), ("u", "v", "w"), 6, 512, "silu", True)
+    disp_net = ppsci.arch.MLP(
+        ("x", "y", "z"), ("u", "v", "w"), 6, 512, "silu", weight_norm=True
+    )
 
     stress_net = ppsci.arch.MLP(
         ("x", "y", "z"),
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     curve_upper = aux_upper - cylinder_upper
     geo = support + bracket + curve_lower + curve_upper - cylinder_hole
 
-    geom = {"geo": ppsci.geometry.Mesh(geo)}
+    geom = {"geo": geo}
 
     # set dataloader config
     iters_per_epoch = 1000
@@ -112,7 +114,7 @@ if __name__ == "__main__":
     bc_back = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
         {"u": 1, "v": 0, "w": 0},
-        geom["rect"],
+        geom["geo"],
         {**train_dataloader_cfg, "batch_size": 1024},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y, z: np.isclose(x, support_origin[0]),
@@ -122,7 +124,7 @@ if __name__ == "__main__":
     bc_front = ppsci.constraint.BoundaryConstraint(
         equation["LinearElasticity"].equations,
         {"traction_x": 0, "traction_y": 0, "traction_z": T},
-        geom["rect"],
+        geom["geo"],
         {**train_dataloader_cfg, "batch_size": 128},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y, z: np.isclose(x, bracket_origin[0] + bracket_dim[0]),
@@ -131,7 +133,7 @@ if __name__ == "__main__":
     bc_surface = ppsci.constraint.BoundaryConstraint(
         equation["LinearElasticity"].equations,
         {"traction_x": 0, "traction_y": 0, "traction_z": 0},
-        geom["rect"],
+        geom["geo"],
         {**train_dataloader_cfg, "batch_size": 4096},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y, z: np.logical_and(
@@ -152,7 +154,7 @@ if __name__ == "__main__":
             "stress_disp_xz": 0,
             "stress_disp_yz": 0,
         },
-        geom["rect"],
+        geom["geo"],
         {**train_dataloader_cfg, "batch_size": 2048},
         ppsci.loss.MSELoss("sum"),
         # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
@@ -181,7 +183,7 @@ if __name__ == "__main__":
             "stress_disp_xz": 0,
             "stress_disp_yz": 0,
         },
-        geom["rect"],
+        geom["geo"],
         {**train_dataloader_cfg, "batch_size": 2048},
         ppsci.loss.MSELoss("sum"),
         # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
@@ -348,6 +350,7 @@ if __name__ == "__main__":
         epochs,
         iters_per_epoch,
         eval_during_train=True,
+        log_freq=1,
         eval_freq=200,
         equation=equation,
         geom=geom,
@@ -356,6 +359,7 @@ if __name__ == "__main__":
     )
     # train model
     solver.train()
+    exit()
     # evaluate after finished training
     solver.eval()
     # visualize prediction after finished training

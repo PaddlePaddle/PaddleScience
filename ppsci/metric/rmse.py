@@ -24,6 +24,11 @@ class RMSE(base.MetricBase):
     $$
     metric = \sqrt{\dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}}
     $$
+
+    Examples:
+        ``` python
+        >>> metric = ppsci.metric.RMSE()
+        ```
     """
 
     def __init__(self):

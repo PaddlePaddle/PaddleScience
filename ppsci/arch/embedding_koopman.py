@@ -34,6 +34,10 @@ ones_ = Constant(value=1.0)
 class LorenzEmbedding(base.NetBase):
     """Embedding Koopman model for the Lorenz ODE system.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+        ```
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
@@ -192,6 +196,10 @@ class LorenzEmbedding(base.NetBase):
 class RosslerEmbedding(LorenzEmbedding):
     """Embedding Koopman model for the Rossler ODE system.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
+        ```
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
@@ -229,6 +237,10 @@ class RosslerEmbedding(LorenzEmbedding):
 class CylinderEmbedding(base.NetBase):
     """Embedding Koopman model for the Cylinder system.
 
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
+        ```
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").

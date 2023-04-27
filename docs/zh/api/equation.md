@@ -5,6 +5,7 @@
     options:
       members:
         - PDE
+        - Biharmonic
         - Laplace
         - NavierStokes
         - NormalDotVec

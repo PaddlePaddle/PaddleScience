@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from ppsci.equation.pde.base import PDE
+from ppsci.equation.pde.biharmonic import Biharmonic
 from ppsci.equation.pde.laplace import Laplace
 from ppsci.equation.pde.linear_elasticity import LinearElasticity
 from ppsci.equation.pde.navier_stokes import NavierStokes
@@ -21,6 +22,7 @@ from ppsci.equation.pde.viv import Vibration
 
 __all__ = [
     "PDE",
+    "Biharmonic",
     "Laplace",
     "LinearElasticity",
     "NavierStokes",
