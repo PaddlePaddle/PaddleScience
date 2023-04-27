@@ -27,6 +27,14 @@ from ppsci.visualize import vtu
 class VisualizerScatter1D(base.Visualizer):
     """Visualizer for 1d scatter data.
 
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
+        output_expr (Dict[str, Callable]): Output expression.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot".
+
     Examples:
         ``` python
         >>> visu_mat = {"t_f": np.random.randn(16, 1), "eta": np.random.randn(16, 1)}
@@ -38,13 +46,6 @@ class VisualizerScatter1D(base.Visualizer):
         ...     prefix="viv_pred",
         ... )
         ```
-    Args:
-        input_dict (Dict[str, np.ndarray]): Input dict.
-        coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
-        output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
-        prefix (str, optional): Prefix for output file. Defaults to "plot".
     """
 
     def __init__(
@@ -68,6 +69,13 @@ class VisualizerScatter1D(base.Visualizer):
 class VisualizerScatter3D(base.Visualizer):
     """Visualizer for 3d scatter data.
 
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot3d_scatter".
+
     Examples:
         ``` python
         >>> vis_datas = {"states": np.random.randn(16, 1)}
@@ -78,12 +86,6 @@ class VisualizerScatter3D(base.Visualizer):
         ...     prefix="result_states",
         ... )
         ```
-    Args:
-        input_dict (Dict[str, np.ndarray]): Input dict.
-        output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
-        prefix (str, optional): Prefix for output file. Defaults to "plot3d_scatter".
     """
 
     def __init__(
@@ -122,6 +124,13 @@ class VisualizerScatter3D(base.Visualizer):
 class VisualizerVtu(base.Visualizer):
     """Visualizer for 2D points data.
 
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps
+        prefix (str, optional): Prefix for output file.
+
     Examples:
         ``` python
         >>> vis_points = {
@@ -137,12 +146,6 @@ class VisualizerVtu(base.Visualizer):
         ...     prefix="result_u_v",
         ... )
         ```
-    Args:
-        input_dict (Dict[str, np.ndarray]): Input dict.
-        output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps
-        prefix (str, optional): Prefix for output file.
     """
 
     def __init__(
@@ -164,6 +167,13 @@ class VisualizerVtu(base.Visualizer):
 class Visualizer2D(base.Visualizer):
     """Visualizer for 2D data.
 
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
+
     Examples:
         ``` python
         >>> vis_points = {
@@ -179,12 +189,6 @@ class Visualizer2D(base.Visualizer):
         ...     prefix="result_u_v",
         ... )
         ```
-    Args:
-        input_dict (Dict[str, np.ndarray]): Input dict.
-        output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
-        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
     """
 
     def __init__(
@@ -200,6 +204,16 @@ class Visualizer2D(base.Visualizer):
 
 class Visualizer2DPlot(Visualizer2D):
     """Visualizer for 2D data use matplotlib.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps.
+        stride (int, optional): The time stride of visualization. Defaults to 1.
+        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
+        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
 
     Examples:
         ``` python
@@ -221,15 +235,6 @@ class Visualizer2DPlot(Visualizer2D):
         ...     prefix="result_states",
         ... )
         ```
-    Args:
-        input_dict (Dict[str, np.ndarray]): Input dict.
-        output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps.
-        stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
-        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
     """
 
     def __init__(
