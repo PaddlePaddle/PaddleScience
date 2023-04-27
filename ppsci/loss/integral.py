@@ -20,12 +20,13 @@ from ppsci.loss import base
 class IntegralLoss(base.LossBase):
     """Class for integral loss.
 
+    Args:
+        reduction (str, optional): Reduction method. Defaults to "mean".
+
     Examples:
         ``` python
         >>> loss = ppsci.loss.IntegralLoss("mean")
         ```
-    Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
     def __init__(self, reduction: str = "mean"):

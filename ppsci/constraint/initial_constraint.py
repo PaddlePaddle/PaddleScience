@@ -33,6 +33,25 @@ from ppsci.data import dataset
 class InitialConstraint(base.Constraint):
     """Class for initial constraint.
 
+    Args:
+        output_expr (Dict[str, Callable]): Function in dict for computing output.
+            e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
+            will be multiplied by model output v and the result will be named "u_mul_v".
+        label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
+            label, which will be a reference value to participate in the loss calculation.
+        geom (geometry.Geometry): Geometry where data sampled from.
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
+        loss (loss.LossBase): Loss functor.
+        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
+            geometry. Defaults to "pseudo".
+        criteria (Optional[Callable]): Criteria for refining specified boundaries.
+            Defaults to None.
+        evenly (bool, optional): Whether to use evenly distribution sampling.
+            Defaults to False.
+        weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
+            constraint variable. Defaults to None.
+        name (str, optional): Name of constraint object. Defaults to "IC".
+
     Examples:
         ``` python
         >>> rect = ppsci.geometry.TimeXGeometry(
@@ -52,24 +71,6 @@ class InitialConstraint(base.Constraint):
         ...     name="IC",
         ... )
         ```
-    Args:
-        output_expr (Dict[str, Callable]): Function in dict for computing output.
-            e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
-            will be multiplied by model output v and the result will be named "u_mul_v".
-        label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
-            label, which will be a reference value to participate in the loss calculation.
-        geom (geometry.Geometry): Geometry where data sampled from.
-        dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
-        random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
-            geometry. Defaults to "pseudo".
-        criteria (Optional[Callable]): Criteria for refining specified boundaries.
-            Defaults to None.
-        evenly (bool, optional): Whether to use evenly distribution sampling.
-            Defaults to False.
-        weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
-            constraint variable. Defaults to None.
-        name (str, optional): Name of constraint object. Defaults to "IC".
     """
 
     def __init__(

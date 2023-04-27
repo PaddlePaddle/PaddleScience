@@ -239,10 +239,6 @@ class Block(nn.Layer):
 class PhysformerGPT2(base.NetBase):
     """Transformer decoder model for modeling physics.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
-        ```
     Args:
         input_keys (Tuple[str, ...]): Input keys, such as ("embeds",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_embeds",).
@@ -254,6 +250,11 @@ class PhysformerGPT2(base.NetBase):
         attn_pdrop (float, optional): The dropout probability used on attention weights. Defaults to 0.0.
         resid_pdrop (float, optional): The dropout probability used on block outputs. Defaults to 0.0.
         initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        ```
     """
 
     def __init__(

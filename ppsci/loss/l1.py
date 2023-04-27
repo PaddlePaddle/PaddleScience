@@ -28,12 +28,13 @@ class L1Loss(base.LossBase):
     \end{cases}
     $$
 
+    Args:
+        reduction (str, optional): Reduction method. Defaults to "mean".
+
     Examples:
         ``` python
         >>> loss = ppsci.loss.L1Loss("mean")
         ```
-    Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
     def __init__(self, reduction: str = "mean"):
