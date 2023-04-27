@@ -25,9 +25,8 @@ class L2Rel(base.MetricBase):
     $$
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> metric = ppsci.metric.L2Rel()
-        ```
     """
 
     def __init__(self):

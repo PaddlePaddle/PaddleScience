@@ -32,12 +32,11 @@ class NamedArrayDataset(io.Dataset):
             transform(s).
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> input = {"x": np.random.randn(100, 1)}
         >>> output = {"u": np.random.randn(100, 1)}
         >>> weight = {"u": np.random.randn(100, 1)}
         >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
-        ```
     """
 
     def __init__(
@@ -82,12 +81,11 @@ class IterableNamedArrayDataset(io.IterableDataset):
             transform(s). Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> input = {"x": np.random.randn(100, 1)}
         >>> label = {"u": np.random.randn(100, 1)}
         >>> weight = {"u": np.random.randn(100, 1)}
         >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
-        ```
     """
 
     def __init__(

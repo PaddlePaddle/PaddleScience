@@ -33,7 +33,7 @@ class SupervisedConstraint(base.Constraint):
         name (str, optional): Name of constraint object. Defaults to "Sup".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> bc_sup = ppsci.constraint.SupervisedConstraint(
         ...     {
         ...         "dataset": {
@@ -45,8 +45,7 @@ class SupervisedConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="bc_sup",
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

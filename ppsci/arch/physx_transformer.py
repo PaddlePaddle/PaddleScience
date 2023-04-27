@@ -252,9 +252,8 @@ class PhysformerGPT2(base.NetBase):
         initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
-        ```
     """
 
     def __init__(

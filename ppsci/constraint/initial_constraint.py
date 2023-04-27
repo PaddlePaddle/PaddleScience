@@ -53,7 +53,7 @@ class InitialConstraint(base.Constraint):
         name (str, optional): Name of constraint object. Defaults to "IC".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> rect = ppsci.geometry.TimeXGeometry(
         ...     ppsci.geometry.TimeDomain(0, 1),
         ...     ppsci.geometry.Rectangle((0, 0), (1, 1)),
@@ -70,7 +70,6 @@ class InitialConstraint(base.Constraint):
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IC",
         ... )
-        ```
     """
 
     def __init__(

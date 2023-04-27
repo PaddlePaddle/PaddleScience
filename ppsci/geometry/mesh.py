@@ -34,9 +34,8 @@ class Mesh(geometry.Geometry):
         mesh (Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
 
     Examples:
-        ``` python
-        >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")
-        ```
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")  # doctest: +SKIP
     """
 
     def __init__(self, mesh: Union[Mesh, str]):

@@ -53,7 +53,7 @@ class BoundaryConstraint(base.Constraint):
         name (str, optional): Name of constraint object. Defaults to "BC".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> bc = ppsci.constraint.BoundaryConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -67,7 +67,6 @@ class BoundaryConstraint(base.Constraint):
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="BC",
         ... )
-        ```
     """
 
     def __init__(

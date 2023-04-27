@@ -43,13 +43,12 @@ class CSVDataset(io.Dataset):
             transform(s).
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.CSVDataset(
         ...     "/path/to/file.csv"
         ...     ("x",),
         ...     ("u",),
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -162,13 +161,12 @@ class IterableCSVDataset(io.IterableDataset):
             transform(s).
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.IterableCSVDataset(
         ...     "/path/to/file.csv"
         ...     ("x",),
         ...     ("u",),
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
