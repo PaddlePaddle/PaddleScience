@@ -25,8 +25,8 @@ from ppsci.utils import misc
 
 __all__ = [
     "PDE",
-    "Laplace",
     "Biharmonic",
+    "Laplace",
     "NavierStokes",
     "NormalDotVec",
     "Vibration",
