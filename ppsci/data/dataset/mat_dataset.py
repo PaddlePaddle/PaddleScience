@@ -31,14 +31,6 @@ from ppsci.utils import reader
 class MatDataset(io.Dataset):
     """Dataset class for .mat file.
 
-    Examples:
-        ``` python
-        >>> dataset = ppsci.data.dataset.MatDataset(
-        ...     "/path/to/file.mat"
-        ...     ("x",),
-        ...     ("u",),
-        ... )
-        ```
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
@@ -50,6 +42,16 @@ class MatDataset(io.Dataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+
+        ``` python
+        >>> dataset = ppsci.data.dataset.MatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     """
 
     def __init__(
@@ -149,14 +151,6 @@ class MatDataset(io.Dataset):
 class IterableMatDataset(io.IterableDataset):
     """IterableMatDataset for full-data loading.
 
-    Examples:
-        ``` python
-        >>> dataset = ppsci.data.dataset.IterableMatDataset(
-        ...     "/path/to/file.mat"
-        ...     ("x",),
-        ...     ("u",),
-        ... )
-        ```
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
@@ -168,6 +162,15 @@ class IterableMatDataset(io.IterableDataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        ``` python
+        >>> dataset = ppsci.data.dataset.IterableMatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )
+        ```
     """
 
     def __init__(
