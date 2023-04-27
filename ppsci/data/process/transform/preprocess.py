@@ -19,13 +19,14 @@ from typing import Union
 class Translate:
     """Translate class, a transform mainly for mesh.
 
+    Args:
+        offset (Dict[str, float]): Shift the input data according to the variable name
+            and coefficient specified in offset.
+
     Examples:
         ``` python
         >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
         ```
-    Args:
-        offset (Dict[str, float]): Shift the input data according to the variable name
-            and coefficient specified in offset.
     """
 
     def __init__(self, offset: Dict[str, Union[int, float]]):
@@ -40,13 +41,14 @@ class Translate:
 class Scale:
     """Scale class, a transform mainly for mesh.
 
+    Args:
+        scale (Dict[str, float]): Scale the input data according to the variable name
+            and coefficient specified in scale.
+
     Examples:
         ``` python
         >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
         ```
-    Args:
-        scale (Dict[str, float]): Scale the input data according to the variable name
-            and coefficient specified in scale.
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):

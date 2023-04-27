@@ -29,13 +29,14 @@ from ppsci.geometry import sampler
 class Disk(geometry.Geometry):
     """Class for disk geometry
 
+    Args:
+        center (Tuple[float, float]): Center point of disk [x0, y0].
+        radius (float): Radius of disk.
+
     Examples:
         ``` python
         >>> geom = ppsci.geometry.Disk((0.0, 0.0), 1.0)
         ```
-    Args:
-        center (Tuple[float, float]): Center point of disk [x0, y0].
-        radius (float): Radius of disk.
     """
 
     def __init__(self, center: Tuple[float, float], radius: float):
@@ -77,13 +78,14 @@ class Disk(geometry.Geometry):
 class Rectangle(geometry_nd.Hypercube):
     """Class for rectangle geometry
 
+    Args:
+        xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
+        xmax (Tuple[float, float]): Top right corner point, [x1, y1].
+
     Examples:
         ``` python
         >>> geom = ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))
         ```
-    Args:
-        xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
-        xmax (Tuple[float, float]): Top right corner point, [x1, y1].
     """
 
     def __init__(self, xmin, xmax):
@@ -167,14 +169,15 @@ class Triangle(geometry.Geometry):
     The order of vertices can be in a clockwise or counterclockwise direction. The
     vertices will be re-ordered in counterclockwise (right hand rule).
 
-    Examples:
-        ``` python
-        >>> geom = ppsci.geometry.Triangle((0, 0), (1, 0), (0, 1))
-        ```
     Args:
         x1 (Tuple[float, float]): First point of Triangle [x0, y0].
         x2 (Tuple[float, float]): Second point of Triangle [x1, y1].
         x3 (Tuple[float, float]): Third point of Triangle [x2, y2].
+
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Triangle((0, 0), (1, 0), (0, 1))
+        ```
     """
 
     def __init__(self, x1, x2, x3):
@@ -324,14 +327,15 @@ class Triangle(geometry.Geometry):
 class Polygon(geometry.Geometry):
     """Class for simple polygon.
 
-    Examples:
-        ``` python
-        >>> geom = ppsci.geometry.Polygon((0, 0), (1, 0), (1, 1), (0, 1))
-        ```
     Args:
         vertices (List[Tuple[float, float]]): The order of vertices can be in a
             clockwise or counterclockwisedirection. The vertices will be re-ordered in
             counterclockwise (right hand rule).
+
+    Examples:
+        ``` python
+        >>> geom = ppsci.geometry.Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+        ```
     """
 
     def __init__(self, vertices):

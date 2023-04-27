@@ -30,11 +30,6 @@ __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 class SGD:
     """Stochastic Gradient Descent.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
-        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
@@ -42,6 +37,12 @@ class SGD:
             Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
+        ```
     """
 
     def __init__(
@@ -75,11 +76,6 @@ class SGD:
 class Momentum:
     """Simple Momentum optimizer with velocity state.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
-        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s).
@@ -90,6 +86,12 @@ class Momentum:
             Gradient cliping strategy. Defaults to None.
         use_nesterov (bool, optional): Whether to use nesterov momentum. Defaults to False.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
+        ```
     """
 
     def __init__(
@@ -166,11 +168,6 @@ class Momentum:
 class Adam:
     """Adam: A Method for Stochastic Optimization.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.Momentum(1e-3)((model,))
-        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
@@ -180,6 +177,12 @@ class Adam:
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
         lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.Momentum(1e-3)((model,))
+        ```
     """
 
     def __init__(
@@ -227,11 +230,6 @@ class LBFGS:
     """The L-BFGS is a quasi-Newton method for solving an unconstrained optimization
         problem over a differentiable function. Closely related is the Newton method for minimization.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
-        ```
     Args:
         learning_rate (float, optional): The learning rate
             used to update parameter(s). Defaults to 1.0.
@@ -246,6 +244,12 @@ class LBFGS:
         history_size (int, optional): Update history size. Defaults to 100.
         line_search_fn (Optional[Literal["strong_wolfe"]]): Either 'strong_wolfe' or None.
             Defaults to "strong_wolfe".
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
+        ```
     """
 
     def __init__(
@@ -287,11 +291,6 @@ class LBFGS:
 class RMSProp:
     """Root Mean Squared Propagation (RMSProp) is an unpublished, adaptive learning rate method.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
-        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler]): The learning rate
             used to update parameter(s)
@@ -302,6 +301,12 @@ class RMSProp:
             Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
             Gradient cliping strategy. Defaults to None.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
+        ```
     """
 
     def __init__(
@@ -345,11 +350,6 @@ class RMSProp:
 class AdamW:
     """AdamW is implemented based on DECOUPLED WEIGHT DECAY REGULARIZATION.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
-        ```
     Args:
         learning_rate (Union[float, optim.lr.LRScheduler], optional): The learning rate
             used to update parameter(s). Defaults to 0.001.
@@ -360,6 +360,12 @@ class AdamW:
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
         one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        ```
     """
 
     def __init__(

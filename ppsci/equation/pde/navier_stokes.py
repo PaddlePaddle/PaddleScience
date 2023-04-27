@@ -20,15 +20,16 @@ from ppsci.equation.pde import base
 class NavierStokes(base.PDE):
     """Class for navier-stokes equation.
 
-    Examples:
-        ``` python
-        >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
-        ```
     Args:
         nu (float): Dynamic viscosity.
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
+
+    Examples:
+        ``` python
+        >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
+        ```
     """
 
     def __init__(self, nu: float, rho: float, dim: int, time: bool):

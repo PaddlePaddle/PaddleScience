@@ -22,14 +22,15 @@ from ppsci.arch import base
 class ModelList(base.NetBase):
     """ModelList layer which wrap more than one model that shares inputs.
 
+    Args:
+        model_list (Tuple[base.NetBase, ...]): Model(s) nesteed in tuple.
+
     Examples:
         ``` python
         >>> model1 = ppsci.arch.MLP(("x", "y"), ("u", "v"), 10, 128)
         >>> model2 = ppsci.arch.MLP(("x", "y"), ("w", "p"), 5, 128)
         >>> model = ppsci.arch.ModelList((model1, model2))
         ```
-    Args:
-        model_list (Tuple[base.NetBase, ...]): Model(s) nesteed in tuple.
     """
 
     def __init__(
