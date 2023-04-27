@@ -84,12 +84,11 @@ class Jacobians:
             paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
 
         Examples:
-            ``` python
+            >>> import ppsci
             >>> x = paddle.randn([4, 3])
             >>> x.stop_gradient = False
             >>> y = (x * x).sum()
-            >>> dy_dx = ppsci.autodiff.jacoian(y, x)
-            ```
+            >>> dy_dx = ppsci.autodiff.jacoian(y, x)  # doctest: +SKIP
         """
         key = (ys, xs)
         if key not in self.Js:
@@ -184,12 +183,11 @@ class Hessians:
             paddle.Tensor: Hessian matrix.
 
         Examples:
-            ``` python
+            >>> import ppsci
             >>> x = paddle.randn([4, 3])
             >>> x.stop_gradient = False
             >>> y = (x * x).sin()
-            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
-            ```
+            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)  # doctest: +SKIP
         """
         key = (ys, xs, component)
         if key not in self.Hs:

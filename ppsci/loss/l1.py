@@ -32,9 +32,8 @@ class L1Loss(base.LossBase):
         reduction (str, optional): Reduction method. Defaults to "mean".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> loss = ppsci.loss.L1Loss("mean")
-        ```
     """
 
     def __init__(self, reduction: str = "mean"):

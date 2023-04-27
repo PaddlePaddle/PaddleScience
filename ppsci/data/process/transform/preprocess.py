@@ -24,9 +24,8 @@ class Translate:
             and coefficient specified in offset.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
-        ```
     """
 
     def __init__(self, offset: Dict[str, Union[int, float]]):
@@ -46,9 +45,8 @@ class Scale:
             and coefficient specified in scale.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
-        ```
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):

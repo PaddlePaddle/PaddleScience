@@ -36,9 +36,8 @@ class Hypercube(geometry.Geometry):
         xmax (Tuple[float, ...]): Upper corner point.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> geom = ppsci.geometry.Hypercube((0, 0, 0, 0), (1, 1, 1, 1))
-        ```
     """
 
     def __init__(self, xmin: Tuple[float, ...], xmax: Tuple[float, ...]):
@@ -141,9 +140,8 @@ class Hypersphere(geometry.Geometry):
         radius (Tuple[float, ...]): Radius along each dimension.
 
     Examples:
-        ``` python
-        >>> geom = ppsci.geometry.Hypersphere((0, 0, 0, 0), (1, 1, 1, 1))
-        ```
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Hypersphere((0, 0, 0, 0), 1.0)
     """
 
     def __init__(self, center, radius):

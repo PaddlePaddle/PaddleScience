@@ -34,10 +34,9 @@ class ExpressionSolver(nn.Layer):
         model (nn.Layer): Model to get output variables from input variables.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
         >>> expr_solver = ExpressionSolver(("x", "y"), ("u", "v"), model)
-        ```
     """
 
     def __init__(self, input_keys, output_keys, model):

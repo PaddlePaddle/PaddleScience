@@ -44,14 +44,12 @@ class MatDataset(io.Dataset):
             transform(s).
 
     Examples:
-
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.MatDataset(
         ...     "/path/to/file.mat"
         ...     ("x",),
         ...     ("u",),
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -164,13 +162,12 @@ class IterableMatDataset(io.IterableDataset):
             transform(s).
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.IterableMatDataset(
         ...     "/path/to/file.mat"
         ...     ("x",),
         ...     ("u",),
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
