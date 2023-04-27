@@ -15,6 +15,8 @@
 import copy
 
 from ppsci.equation.pde import PDE
+from ppsci.equation.pde import Biharmonic
+from ppsci.equation.pde import Laplace
 from ppsci.equation.pde import NavierStokes
 from ppsci.equation.pde import NormalDotVec
 from ppsci.equation.pde import Vibration
@@ -23,6 +25,8 @@ from ppsci.utils import misc
 
 __all__ = [
     "PDE",
+    "Biharmonic",
+    "Laplace",
     "NavierStokes",
     "NormalDotVec",
     "Vibration",

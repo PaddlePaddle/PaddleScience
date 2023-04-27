@@ -24,9 +24,8 @@ class NormalDotVec(base.PDE):
         velocity_keys (Tuple[str, ...]): Keys for velocity(ies).
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> pde = ppsci.equation.NormalDotVec(("u", "v", "w"))
-        ```
     """
 
     def __init__(self, velocity_keys: Tuple[str, ...]):

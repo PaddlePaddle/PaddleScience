@@ -68,14 +68,14 @@ class Solver:
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
         ...     {"u": 0},
-        ...     rect,
+        ...     geom,
         ...     {
         ...         "dataset": "IterableNamedArrayDataset",
         ...         "iters_per_epoch": 1,
@@ -91,7 +91,6 @@ class Solver:
         ...     opt,
         ...     None,
         ... )
-        ```
     """
 
     def __init__(
@@ -231,7 +230,8 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        if logger._logger is not None:
+            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:

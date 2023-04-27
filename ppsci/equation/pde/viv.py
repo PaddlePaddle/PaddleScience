@@ -29,9 +29,8 @@ class Vibration(base.PDE):
         k2 (float): Learnable paremters for generalized stiffness.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> pde = ppsci.equation.Vibration(1.0, 4.0, -1.0)
-        ```
     """
 
     def __init__(self, rho: float, k1: float, k2: float):
