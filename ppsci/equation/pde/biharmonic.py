@@ -23,6 +23,10 @@ class Biharmonic(base.PDE):
         dim (int): Dimension of equation.
         q (float): Load.
         D (float): Rigidity.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
     """
 
     def __init__(self, dim: int, q: float, D: float):
