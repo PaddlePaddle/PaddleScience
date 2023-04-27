@@ -52,15 +52,7 @@ class ModelList(base.NetBase):
     def forward(self, x):
         y_all = {}
         for model in self.model_list:
-            if model._input_transform is not None:
-                x = model._input_transform(x)
-
-            y = model.concat_to_tensor(x, model.input_keys, axis=-1)
-            y = model.forward_tensor(y)
-            y = model.split_to_dict(y, model.output_keys, axis=-1)
-
-            if model._output_transform is not None:
-                y = model._output_transform(y)
+            y = model(x)
             y_all.update(y)
 
         return y_all
