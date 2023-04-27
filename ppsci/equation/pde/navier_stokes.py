@@ -27,9 +27,8 @@ class NavierStokes(base.PDE):
         time (bool): Whether the euqation is time-dependent.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
-        ```
     """
 
     def __init__(self, nu: float, rho: float, dim: int, time: bool):

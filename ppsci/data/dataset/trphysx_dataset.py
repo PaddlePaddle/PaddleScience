@@ -42,15 +42,14 @@ class LorenzDataset(io.Dataset):
         embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.LorenzDataset(
         ...     "file_path": "/path/to/LorenzDataset",
         ...     "input_keys": ("x",),
         ...     "label_keys": ("v",),
         ...     "block_size": 32,
         ...     "stride": 16,
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -140,15 +139,14 @@ class RosslerDataset(LorenzDataset):
         embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.RosslerDataset(
         ...     "file_path": "/path/to/RosslerDataset",
         ...     "input_keys": ("x",),
         ...     "label_keys": ("v",),
         ...     "block_size": 32,
         ...     "stride": 16,
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -189,15 +187,14 @@ class CylinderDataset(io.Dataset):
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> dataset = ppsci.data.dataset.CylinderDataset(
         ...     "file_path": "/path/to/CylinderDataset",
         ...     "input_keys": ("x",),
         ...     "label_keys": ("v",),
         ...     "block_size": 32,
         ...     "stride": 16,
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

@@ -146,9 +146,8 @@ class Linear(LRBase):
         by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
-        ```
     """
 
     def __init__(
@@ -215,9 +214,8 @@ class ExponentialDecay(LRBase):
         by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
-        ```
     """
 
     def __init__(
@@ -278,9 +276,8 @@ class Cosine(LRBase):
             else by iter. Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)
-        ```
     """
 
     def __init__(
@@ -330,14 +327,10 @@ class Cosine(LRBase):
 class Step(LRBase):
     """Step learning rate decay.
 
-    Examples:
-        ``` python
-        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
-        ```
     Args:
-        epochs (int): total epoch(s)
-        iters_per_epoch (int): number of iterations within an epoch
-        learning_rate (float): learning rate
+        epochs (int): total epoch(s).
+        iters_per_epoch (int): number of iterations within an epoch.
+        learning_rate (float): learning rate.
         step_size (int): the interval to update.
         gamma (float, optional): The Ratio that the learning rate will be reduced.
             ``new_lr = origin_lr * gamma``. It should be less than 1.0. Default: 0.1.
@@ -346,6 +339,10 @@ class Step(LRBase):
         last_epoch (int, optional): last epoch. Defaults to -1.
         by_epoch (bool, optional): learning rate decays by epoch when by_epoch is True,
             else by iter. Defaults to False.
+
+    Examples:
+        >>> import ppsci
+        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
     """
 
     def __init__(
@@ -395,7 +392,7 @@ class Piecewise(LRBase):
     Args:
         epochs (int): total epoch(s)
         iters_per_epoch (int): number of iterations within an epoch
-        decay_epochs (List[int]): A list of steps numbers. The type of element in the
+        decay_epochs (Tuple[int, ...]): A list of steps numbers. The type of element in the
             list is python int.
         values (List[float]): A list of learning rate values that will be picked during
             different epoch boundaries.
@@ -406,16 +403,15 @@ class Piecewise(LRBase):
             else by iter. Defaults to False.
 
     Examples:
-        ``` python
-        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(10, 1, 2, (1e-3, 1e-4))
-        ```
+        >>> import ppsci
+        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(10, 1, [2, 4], (1e-3, 1e-4))
     """
 
     def __init__(
         self,
         epochs: int,
         iters_per_epoch: int,
-        decay_epochs: int,
+        decay_epochs: Tuple[int, ...],
         values: Tuple[float, ...],
         warmup_epoch: int = 0,
         warmup_start_lr: float = 0.0,
@@ -467,9 +463,8 @@ class MultiStepDecay(LRBase):
             else by iter. Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))
-        ```
     """
 
     def __init__(
@@ -604,9 +599,8 @@ class CosineWarmRestarts(LRBase):
         by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)
-        ```
     """
 
     def __init__(

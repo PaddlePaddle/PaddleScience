@@ -34,9 +34,8 @@ class Disk(geometry.Geometry):
         radius (float): Radius of disk.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> geom = ppsci.geometry.Disk((0.0, 0.0), 1.0)
-        ```
     """
 
     def __init__(self, center: Tuple[float, float], radius: float):
@@ -83,9 +82,8 @@ class Rectangle(geometry_nd.Hypercube):
         xmax (Tuple[float, float]): Top right corner point, [x1, y1].
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> geom = ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))
-        ```
     """
 
     def __init__(self, xmin, xmax):
@@ -175,9 +173,8 @@ class Triangle(geometry.Geometry):
         x3 (Tuple[float, float]): Third point of Triangle [x2, y2].
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> geom = ppsci.geometry.Triangle((0, 0), (1, 0), (0, 1))
-        ```
     """
 
     def __init__(self, x1, x2, x3):
@@ -333,9 +330,8 @@ class Polygon(geometry.Geometry):
             counterclockwise (right hand rule).
 
     Examples:
-        ``` python
-        >>> geom = ppsci.geometry.Polygon((0, 0), (1, 0), (1, 1), (0, 1))
-        ```
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Polygon(((0, 0), (1, 0), (2, 1), (2, 2), (0, 2)))
     """
 
     def __init__(self, vertices):

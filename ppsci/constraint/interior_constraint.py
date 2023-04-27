@@ -53,7 +53,7 @@ class InteriorConstraint(base.Constraint):
         name (str, optional): Name of constraint object. Defaults to "EQ".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -67,7 +67,6 @@ class InteriorConstraint(base.Constraint):
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
         ... )
-        ```
     """
 
     def __init__(
