@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import paddle
-from regex import D
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -73,7 +72,6 @@ if __name__ == "__main__":
         evenly=True,
         name="BC",
     )
-
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
@@ -83,13 +81,14 @@ if __name__ == "__main__":
     # set optimizer
     optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
+    # set validator
+    total_size = 100
+
     def u_solution_func(out):
         """compute ground truth for u as label data"""
         x = out["x"]
         return -(x**4) / 24 + x**3 / 6 - x**2 / 4
 
-    # set validator
-    total_size = 100
     l2_rel_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
