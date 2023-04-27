@@ -26,9 +26,8 @@ class RMSE(base.MetricBase):
     $$
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> metric = ppsci.metric.RMSE()
-        ```
     """
 
     def __init__(self):

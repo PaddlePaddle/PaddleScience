@@ -25,9 +25,8 @@ class L2Loss(base.LossBase):
     $$
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> loss = ppsci.loss.L2Loss()
-        ```
     """
 
     def __init__(self):

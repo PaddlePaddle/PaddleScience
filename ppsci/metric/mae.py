@@ -26,9 +26,8 @@ class MAE(base.MetricBase):
     $$
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> metric = ppsci.metric.MAE()
-        ```
     """
 
     def __init__(self):
