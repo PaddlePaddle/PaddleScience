@@ -23,9 +23,8 @@ class Laplace(base.PDE):
         dim (int): Dimension of equation.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> pde = ppsci.equation.Laplace(2)
-        ```
     """
 
     def __init__(self, dim: int):

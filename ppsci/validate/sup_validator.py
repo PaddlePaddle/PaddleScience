@@ -34,7 +34,7 @@ class SupervisedValidator(base.Validator):
         name (Optional[str]): Name of validator. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> valida_dataloader_cfg = {
         ...     "dataset": {
         ...         "name": "MatDataset",
@@ -48,15 +48,14 @@ class SupervisedValidator(base.Validator):
         ...         "drop_last": False,
         ...         "shuffle": False,
         ...     },
-        ... }
+        ... }  # doctest: +SKIP
         >>> eta_mse_validator = ppsci.validate.SupervisedValidator(
         ...     valida_dataloader_cfg,
         ...     ppsci.loss.MSELoss("mean"),
         ...     {"eta": lambda out: out["eta"]},
         ...     metric={"MSE": ppsci.metric.MSE()},
         ...     name="eta_mse",
-        ... )
-        ```
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

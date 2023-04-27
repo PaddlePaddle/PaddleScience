@@ -52,7 +52,7 @@ class IntegralConstraint(base.Constraint):
         name (str, optional): Name of constraint object. Defaults to "IgC".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> igc = ppsci.constraint.IntegralConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -62,11 +62,11 @@ class IntegralConstraint(base.Constraint):
         ...         "dataset": "IterableNamedArrayDataset",
         ...         "iters_per_epoch": 1,
         ...         "batch_size": 16,
+        ...         "integral_batch_size": 8,
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IgC",
         ... )
-        ```
     """
 
     def __init__(

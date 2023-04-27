@@ -39,10 +39,9 @@ class SGD:
             Gradient cliping strategy. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
-        ```
     """
 
     def __init__(
@@ -88,10 +87,9 @@ class Momentum:
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
-        ```
     """
 
     def __init__(
@@ -179,10 +177,9 @@ class Adam:
         lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.Momentum(1e-3)((model,))
-        ```
+        >>> opt = ppsci.optimizer.Adam(1e-3)((model,))
     """
 
     def __init__(
@@ -246,10 +243,9 @@ class LBFGS:
             Defaults to "strong_wolfe".
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
-        ```
     """
 
     def __init__(
@@ -275,16 +271,28 @@ class LBFGS:
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
-        opt = incubate_optim.LBFGS(
-            lr=self.lr,
-            max_iter=self.max_iter,
-            max_eval=self.max_eval,
-            tolerance_grad=self.tolerance_grad,
-            tolerance_change=self.tolerance_change,
-            history_size=self.history_size,
-            line_search_fn=self.line_search_fn,
-            parameters=parameters,
-        )
+        try:
+            opt = getattr(optim, "LBFGS")(
+                learning_rate=self.lr,
+                max_iter=self.max_iter,
+                max_eval=self.max_eval,
+                tolerance_grad=self.tolerance_grad,
+                tolerance_change=self.tolerance_change,
+                history_size=self.history_size,
+                line_search_fn=self.line_search_fn,
+                parameters=parameters,
+            )
+        except AttributeError as e:
+            opt = getattr(incubate_optim, "LBFGS")(
+                learning_rate=self.lr,
+                max_iter=self.max_iter,
+                max_eval=self.max_eval,
+                tolerance_grad=self.tolerance_grad,
+                tolerance_change=self.tolerance_change,
+                history_size=self.history_size,
+                line_search_fn=self.line_search_fn,
+                parameters=parameters,
+            )
         return opt
 
 
@@ -303,10 +311,9 @@ class RMSProp:
             Gradient cliping strategy. Defaults to None.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
-        ```
     """
 
     def __init__(
@@ -356,16 +363,15 @@ class AdamW:
         beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
         beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
         epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-8.
-        weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
+        weight_decay (float, optional): Regularization cofficient. Defaults to 0.01.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
         one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
 
     Examples:
-        ``` python
+        >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
         >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
-        ```
     """
 
     def __init__(
@@ -374,9 +380,7 @@ class AdamW:
         beta1: float = 0.9,
         beta2: float = 0.999,
         epsilon: float = 1e-8,
-        weight_decay: Optional[
-            Union[float, regularizer.L1Decay, regularizer.L2Decay]
-        ] = None,
+        weight_decay: float = 0.001,
         grad_clip: Optional[
             Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]
         ] = None,
