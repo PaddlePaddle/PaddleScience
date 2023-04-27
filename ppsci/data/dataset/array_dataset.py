@@ -23,6 +23,14 @@ from paddle import vision
 
 class NamedArrayDataset(io.Dataset):
     """Class for Named Array Dataset.
+
+    Args:
+        input (Dict[str, np.ndarray]): Input dict.
+        label (Dict[str, np.ndarray]): Label dict.
+        weight (Dict[str, np.ndarray], optional): Weight dict.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s).
+
     Examples:
         ``` python
         >>> input = {"x": np.random.randn(100, 1)}
@@ -30,12 +38,6 @@ class NamedArrayDataset(io.Dataset):
         >>> weight = {"u": np.random.randn(100, 1)}
         >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
         ```
-    Args:
-        input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray], optional): Weight dict.
-        transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s).
     """
 
     def __init__(
@@ -72,6 +74,13 @@ class NamedArrayDataset(io.Dataset):
 class IterableNamedArrayDataset(io.IterableDataset):
     """IterableNamedArrayDataset for full-data loading.
 
+    Args:
+        input (Dict[str, np.ndarray]): Input dict.
+        label (Dict[str, np.ndarray]): Label dict.
+        weight (Dict[str, np.ndarray]): Weight dict.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
+
     Examples:
         ``` python
         >>> input = {"x": np.random.randn(100, 1)}
@@ -79,12 +88,6 @@ class IterableNamedArrayDataset(io.IterableDataset):
         >>> weight = {"u": np.random.randn(100, 1)}
         >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
         ```
-    Args:
-        input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray]): Weight dict.
-        transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s). Defaults to None.
     """
 
     def __init__(

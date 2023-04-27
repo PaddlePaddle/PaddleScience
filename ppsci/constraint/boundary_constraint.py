@@ -33,22 +33,6 @@ from ppsci.data import dataset
 class BoundaryConstraint(base.Constraint):
     """Class for boundary constraint.
 
-    Examples:
-        ``` python
-        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> bc = ppsci.constraint.BoundaryConstraint(
-        ...     {"u": lambda out: out["u"]},
-        ...     {"u": 0},
-        ...     rect,
-        ...     {
-        ...         "dataset": "IterableNamedArrayDataset",
-        ...         "iters_per_epoch": 1,
-        ...         "batch_size": 16,
-        ...     },
-        ...     ppsci.loss.MSELoss("mean"),
-        ...     name="BC",
-        ... )
-        ```
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
@@ -67,12 +51,29 @@ class BoundaryConstraint(base.Constraint):
         weight_dict (Optional[Dict[str, Union[float, Callable]]]): Define the weight of each
             constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "BC".
+
+    Examples:
+        ``` python
+        >>> rect = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> bc = ppsci.constraint.BoundaryConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="BC",
+        ... )
+        ```
     """
 
     def __init__(
         self,
         output_expr: Dict[str, Callable],
-        label_dict: Dict[str, Union[float, Callable]],
+        label_dict: Dict[str, Union[int, float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,

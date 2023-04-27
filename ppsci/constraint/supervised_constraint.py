@@ -24,7 +24,15 @@ from ppsci.data import dataset
 
 class SupervisedConstraint(base.Constraint):
     """Class for supervised constraint.
-        Examples:
+
+    Args:
+        dataloader_cfg (Dict[str, Any]): Dataloader config.
+        loss (loss.LossBase): Loss functor.
+        output_expr (Optional[Dict[str, Callable]]): List of label expression.
+            Defaults to None.
+        name (str, optional): Name of constraint object. Defaults to "Sup".
+
+    Examples:
         ``` python
         >>> bc_sup = ppsci.constraint.SupervisedConstraint(
         ...     {
@@ -39,12 +47,6 @@ class SupervisedConstraint(base.Constraint):
         ...     name="bc_sup",
         ... )
         ```
-    Args:
-        dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
-        output_expr (Optional[Dict[str, Callable]]): List of label expression.
-            Defaults to None.
-        name (str, optional): Name of constraint object. Defaults to "Sup".
     """
 
     def __init__(

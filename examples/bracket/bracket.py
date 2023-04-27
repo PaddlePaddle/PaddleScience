@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import paddle
 from paddle import fluid
 
 import ppsci
@@ -46,6 +47,46 @@ if __name__ == "__main__":
     )
     # wrap to a model_list
     model = ppsci.arch.ModelList((disp_net, stress_net))
+
+    model.load_dict(
+        paddle.load(
+            "/workspace/hesensen/PaddleScience_docs/examples/bracket/converted_bracket_initial_ckpt.pdparams"
+        )
+    )
+    logger.info("load pytorch's init weight")
+
+    rand_input = {
+        "x": paddle.to_tensor(
+            np.load(
+                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/x.npy"
+            ),
+            stop_gradient=False,
+        ),
+        "y": paddle.to_tensor(
+            np.load(
+                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/y.npy"
+            ),
+            stop_gradient=False,
+        ),
+        "z": paddle.to_tensor(
+            np.load(
+                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/z.npy"
+            ),
+            stop_gradient=False,
+        ),
+    }
+    output_disp = disp_net(rand_input)
+    for k, v in output_disp.items():
+        print(
+            f"disp_net: {k} {tuple(v.shape)} {v.min().item():.10f} {v.max().item():.10f} {v.mean().item():.10f} {v.std().item():.10f}"
+        )
+
+    output_stress = stress_net(rand_input)
+    for k, v in output_stress.items():
+        print(
+            f"stress_net: {k} {tuple(v.shape)} {v.min().item():.10f} {v.max().item():.10f} {v.mean().item():.10f} {v.std().item():.10f}"
+        )
+    exit()
 
     # Specify parameters
     nu = 0.3

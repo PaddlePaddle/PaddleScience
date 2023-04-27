@@ -41,31 +41,6 @@ from ppsci.utils import save_load
 class Solver:
     """Class for solver.
 
-    Examples:
-        ``` python
-        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
-        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
-        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
-        ...     {"u": lambda out: out["u"]},
-        ...     {"u": 0},
-        ...     rect,
-        ...     {
-        ...         "dataset": "IterableNamedArrayDataset",
-        ...         "iters_per_epoch": 1,
-        ...         "batch_size": 16,
-        ...     },
-        ...     ppsci.loss.MSELoss("mean"),
-        ...     name="EQ",
-        ... )
-        >>> solver = ppsci.solver.Solver(
-        ...     model,
-        ...     {"EQ": pde_constraint},
-        ...     "./output",
-        ...     opt,
-        ...     None,
-        ... )
-        ```
     Args:
         model (nn.Layer): Model.
         constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
@@ -91,6 +66,32 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
+
+    Examples:
+        ``` python
+        >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> pde_constraint = ppsci.constraint.InteriorConstraint(
+        ...     {"u": lambda out: out["u"]},
+        ...     {"u": 0},
+        ...     rect,
+        ...     {
+        ...         "dataset": "IterableNamedArrayDataset",
+        ...         "iters_per_epoch": 1,
+        ...         "batch_size": 16,
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="EQ",
+        ... )
+        >>> solver = ppsci.solver.Solver(
+        ...     model,
+        ...     {"EQ": pde_constraint},
+        ...     "./output",
+        ...     opt,
+        ...     None,
+        ... )
+        ```
     """
 
     def __init__(
@@ -393,7 +394,9 @@ class Solver:
 
     def eval(self, epoch_id=0):
         """Evaluation"""
-        self.model.eval()
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
 
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
@@ -405,12 +408,15 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        self.model.train()
+        if train_state:
+            self.model.train()
         return result
 
     def visualize(self, epoch_id=0):
         """Visualization"""
-        self.model.eval()
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
 
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
@@ -418,11 +424,61 @@ class Solver:
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
 
-        self.model.train()
+        if train_state:
+            self.model.train()
 
-    def predict(self, input_dict):
-        """Prediction"""
-        pred_dict = self.model(input_dict)
+    @paddle.no_grad()
+    def predict(self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64):
+        """Pure prediction using model.forward(...), support single device prediction yet.
+
+        Args:
+            input_dict (Dict[str, paddle.Tensor]): Input data in dict.
+            batch_size (int, optional): Predicting by batch size. Defaults to 64.
+
+        Returns:
+            Dict[str, paddle.Tensor]: Prediction in dict.
+        """
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
+
+        if self.world_size > 1:
+            raise NotImplementedError(
+                "Solver.predict only support single device yet, "
+                f"but got {self.world_size} devices."
+            )
+
+        num_samples = len(next(iter(input_dict.values())))
+        batch_num = (num_samples + (batch_size - 1)) // batch_size
+        pred_dict = misc.Prettydefaultdict(list)
+        for batch_id in range(batch_num):
+            batch_input_dict = {}
+            st = batch_id * batch_size
+            ed = min(num_samples, (batch_id + 1) * batch_size)
+
+            # prepare batch input dict
+            for key in input_dict:
+                if not paddle.is_tensor(input_dict[key]):
+                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                else:
+                    batch_input_dict[key] = input_dict[key][st:ed]
+                batch_input_dict[key].stop_gradient = False
+
+            # forward
+            if self.use_amp:
+                with amp.auto_cast(level=self.amp_level):
+                    batch_output_dict = self.model(batch_input_dict)
+            else:
+                batch_output_dict = self.model(batch_input_dict)
+
+            # collect batch data
+            for key, batch_output in batch_output_dict.items():
+                pred_dict[key].append(batch_output)
+
+        pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
+
+        if train_state:
+            self.model.train()
         return pred_dict
 
     def export(self):
