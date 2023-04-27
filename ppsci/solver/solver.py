@@ -464,9 +464,7 @@ class Solver:
             for key, batch_output in batch_output_dict.items():
                 pred_dict[key].append(batch_output)
 
-        pred_dict = {
-            key: paddle.concat(value, axis=-1) for key, value in pred_dict.items()
-        }
+        pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
         return pred_dict
 
