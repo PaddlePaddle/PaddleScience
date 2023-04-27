@@ -420,9 +420,54 @@ class Solver:
 
         self.model.train()
 
-    def predict(self, input_dict):
-        """Prediction"""
-        pred_dict = self.model(input_dict)
+    @paddle.no_grad()
+    def predict(self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64):
+        """Pure prediction using model.forward(...), support single device prediction yet.
+
+        Args:
+            input_dict (Dict[str, paddle.Tensor]): Input data in dict.
+            batch_size (int, optional): Predicting by batch size. Defaults to 64.
+
+        Returns:
+            Dict[str, paddle.Tensor]: Prediction in dict.
+        """
+        if self.world_size > 1:
+            raise NotImplementedError(
+                "Solver.predict only support single device yet, "
+                f"but got {self.world_size} devices."
+            )
+
+        num_samples = len(next(iter(input_dict.values())))
+        batch_num = (num_samples + (batch_size - 1)) // batch_size
+        pred_dict = misc.Prettydefaultdict(list)
+        for batch_id in range(batch_num):
+            batch_input_dict = {}
+            st = batch_id * batch_size
+            ed = min(num_samples, (batch_id + 1) * batch_size)
+
+            # prepare batch input dict
+            for key in input_dict:
+                if not paddle.is_tensor(input_dict[key]):
+                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                else:
+                    batch_input_dict[key] = input_dict[key][st:ed]
+                batch_input_dict[key].stop_gradient = False
+
+            # forward
+            if self.use_amp:
+                with amp.auto_cast(level=self.amp_level):
+                    batch_output_dict = self.model(batch_input_dict)
+            else:
+                batch_output_dict = self.model(batch_input_dict)
+
+            # collect batch data
+            for key, batch_output in batch_output_dict.items():
+                pred_dict[key].append(batch_output)
+
+        pred_dict = {
+            key: paddle.concat(value, axis=-1) for key, value in pred_dict.items()
+        }
+
         return pred_dict
 
     def export(self):
