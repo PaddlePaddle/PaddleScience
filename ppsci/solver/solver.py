@@ -393,7 +393,9 @@ class Solver:
 
     def eval(self, epoch_id=0):
         """Evaluation"""
-        self.model.eval()
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
 
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
@@ -405,12 +407,15 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        self.model.train()
+        if train_state:
+            self.model.train()
         return result
 
     def visualize(self, epoch_id=0):
         """Visualization"""
-        self.model.eval()
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
 
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
@@ -418,7 +423,8 @@ class Solver:
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
 
-        self.model.train()
+        if train_state:
+            self.model.train()
 
     @paddle.no_grad()
     def predict(self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64):
@@ -431,6 +437,10 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
+        train_state = self.model.training
+        if train_state:
+            self.model.eval()
+
         if self.world_size > 1:
             raise NotImplementedError(
                 "Solver.predict only support single device yet, "
@@ -466,6 +476,8 @@ class Solver:
 
         pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
+        if train_state:
+            self.model.train()
         return pred_dict
 
     def export(self):
