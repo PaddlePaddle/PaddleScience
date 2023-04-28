@@ -34,9 +34,20 @@ class VisualizerScatter1D(base.Visualizer):
         input_dict (Dict[str, np.ndarray]): Input dict.
         coord_keys (Tuple[str, ...]): Coordinate keys, such as ("x", "y").
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         num_timestamps (int, optional): Number of timestamps. Defaults to 1.
         prefix (str, optional): Prefix for output file. Defaults to "plot".
+
+    Examples:
+        >>> import ppsci
+        >>> visu_mat = {"t_f": np.random.randn(16, 1), "eta": np.random.randn(16, 1)}
+        >>> visualizer_eta = ppsci.visualize.VisualizerScatter1D(
+        ...     visu_mat,
+        ...     ("t_f",),
+        ...     {"eta": lambda d: d["eta"]},
+        ...     num_timestamps=1,
+        ...     prefix="viv_pred",
+        ... )
     """
 
     def __init__(
@@ -63,9 +74,19 @@ class VisualizerScatter3D(base.Visualizer):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
-        num_timestamps (int): Number of timestamps. Defaults to 1.
-        prefix (str): Prefix for output file. Defaults to "plot3d_scatter".
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot3d_scatter".
+
+    Examples:
+        >>> import ppsci
+        >>> vis_datas = {"states": np.random.randn(16, 1)}
+        >>> visualizer = ppsci.visualize.VisualizerScatter3D(
+        ...     vis_datas,
+        ...     {"states": lambda d: d["states"]},
+        ...     num_timestamps=1,
+        ...     prefix="result_states",
+        ... )
     """
 
     def __init__(
@@ -107,9 +128,24 @@ class VisualizerVtu(base.Visualizer):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
-        num_timestamps (int): Number of timestamps
-        prefix (str): Prefix for output file.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps
+        prefix (str, optional): Prefix for output file.
+
+    Examples:
+        >>> import ppsci
+        >>> vis_points = {
+        ...     "x": np.random.randn(128, 1),
+        ...     "y": np.random.randn(128, 1),
+        ...     "u": np.random.randn(128, 1),
+        ...     "v": np.random.randn(128, 1),
+        ... }
+        >>> visualizer_u_v =  ppsci.visualize.VisualizerVtu(
+        ...     vis_points,
+        ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
+        ...     num_timestamps=1,
+        ...     prefix="result_u_v",
+        ... )
     """
 
     def __init__(
@@ -134,9 +170,24 @@ class Visualizer2D(base.Visualizer):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
-        num_timestamps (int): Number of timestamps. Defaults to 1.
-        prefix (str): Prefix for output file. Defaults to "plot2d".
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
+
+    Examples:
+        >>> import ppsci
+        >>> vis_points = {
+        ...     "x": np.random.randn(128, 1),
+        ...     "y": np.random.randn(128, 1),
+        ...     "u": np.random.randn(128, 1),
+        ...     "v": np.random.randn(128, 1),
+        ... }
+        >>> visualizer_u_v = ppsci.visualize.Visualizer2D(
+        ...     vis_points,
+        ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
+        ...     num_timestamps=1,
+        ...     prefix="result_u_v",
+        ... )
     """
 
     def __init__(
@@ -156,12 +207,32 @@ class Visualizer2DPlot(Visualizer2D):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
-        num_timestamps (int): Number of timestamps.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
         yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
-        prefix (str): Prefix for output file. Defaults to "plot2d".
+        prefix (str, optional): Prefix for output file. Defaults to "plot2d".
+
+    Examples:
+        >>> import ppsci
+        >>> vis_datas = {
+        ...     "target_ux": np.random.randn(128, 20, 1),
+        ...     "pred_ux": np.random.randn(128, 20, 1),
+        ... }
+        >>> visualizer_states = ppsci.visualize.Visualizer2DPlot(
+        ...     vis_datas,
+        ...     {
+        ...         "target_ux": lambda d: d["states"][:, :, 0],
+        ...         "pred_ux": lambda d: output_transform(d)[:, :, 0],
+        ...     },
+        ...     batch_size=1,
+        ...     num_timestamps=10,
+        ...     stride=20,
+        ...     xticks=np.linspace(-2, 14, 9),
+        ...     yticks=np.linspace(-4, 4, 5),
+        ...     prefix="result_states",
+        ... )
     """
 
     def __init__(
@@ -218,9 +289,9 @@ class Visualizer3D(base.Visualizer):
     Args:
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
-        batch_size (int): Batch size of data when computing result in visu.py.
-        num_timestamps (int): Number of timestamps
-        prefix (str): Prefix for output file.
+        batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
+        num_timestamps (int, optional): Number of timestamps
+        prefix (str, optional): Prefix for output file.
     """
 
     def __init__(

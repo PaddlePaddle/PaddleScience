@@ -16,28 +16,32 @@ from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
-class Laplace(base.PDE):
-    """Laplace
+class Biharmonic(base.PDE):
+    """Biharmonic equation.
 
     Args:
         dim (int): Dimension of equation.
+        q (float): Load.
+        D (float): Rigidity.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.Laplace(2)
+        >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
     """
 
-    def __init__(self, dim: int):
+    def __init__(self, dim: int, q: float, D: float):
         super().__init__()
         self.dim = dim
+        self.q = q
+        self.D = D
 
-        def laplace_compute_func(out):
-            x, y = out["x"], out["y"]
+        def biharmonic_compute_func(out):
             u = out["u"]
-            laplace = hessian(u, x) + hessian(u, y)
-            if self.dim == 3:
-                z = out["z"]
-                laplace += hessian(u, z)
-            return laplace
+            biharmonic = -self.q / self.D
+            invars = ("x", "y", "z")[: self.dim]
+            for invar_i in invars:
+                for invar_j in invars:
+                    biharmonic += hessian(hessian(u, invar_i), invar_j)
+            return biharmonic
 
-        self.add_equation("laplace", laplace_compute_func)
+        self.add_equation("biharmonic", biharmonic_compute_func)

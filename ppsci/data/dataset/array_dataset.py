@@ -27,16 +27,23 @@ class NamedArrayDataset(io.Dataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
-        transforms (Optional[vision.Compose], optional): Compose object contains sample wise
+        weight (Dict[str, np.ndarray], optional): Weight dict.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        >>> import ppsci
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> output = {"u": np.random.randn(100, 1)}
+        >>> weight = {"u": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
     """
 
     def __init__(
         self,
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
-        weight: Optional[Dict[str, np.ndarray]] = None,
+        weight: Dict[str, np.ndarray],
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
@@ -74,6 +81,13 @@ class IterableNamedArrayDataset(io.IterableDataset):
         weight (Dict[str, np.ndarray]): Weight dict.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> label = {"u": np.random.randn(100, 1)}
+        >>> weight = {"u": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
     """
 
     def __init__(

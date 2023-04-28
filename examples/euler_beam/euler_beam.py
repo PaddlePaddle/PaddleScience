@@ -12,71 +12,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This code is based on PaddleScience/ppsci API
-import numpy as np
+import paddle
 
 import ppsci
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
     args = config.parse_args()
+    # enable computation for fourth-order differentiation of matmul
+    paddle.fluid.core.set_prim_eager_enabled(True)
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    epochs = 20000 if not args.epochs else args.epochs
     iters_per_epoch = 1
-    eval_freq = 200
-
+    epochs = 10000 if not args.epochs else args.epochs
     # set output directory
-    output_dir = "./output/laplace2d" if not args.output_dir else args.output_dir
+    output_dir = "./output/euler_beam" if not args.output_dir else args.output_dir
+    # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
-
-    # set equation
-    equation = {"laplace": ppsci.equation.pde.Laplace(dim=2)}
+    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+    geom = {"interval": ppsci.geometry.Interval(0, 1)}
 
-    # compute ground truth function
-    def u_solution_func(out):
-        """compute ground truth for u as label data"""
-        x, y = out["x"], out["y"]
-        return np.cos(x) * np.cosh(y)
+    # set equation(s)
+    equation = {"biharmonic": ppsci.equation.pde.Biharmonic(dim=1, q=-1.0, D=1.0)}
 
-    # set train dataloader config
-    train_dataloader_cfg = {
+    # set dataloader config
+    dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
         "iters_per_epoch": iters_per_epoch,
     }
-
-    npoint_interior = 99**2
-    npoint_bc = 400
-    npoint_total = npoint_interior + npoint_bc
-
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["laplace"].equations,
-        {"laplace": 0},
-        geom["rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_total},
-        ppsci.loss.MSELoss("sum"),
-        evenly=True,
+        equation["biharmonic"].equations,
+        {"biharmonic": 0},
+        geom["interval"],
+        {**dataloader_cfg, "batch_size": 100},
+        ppsci.loss.MSELoss(),
+        random="Hammersley",
         name="EQ",
     )
     bc = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda out: out["u"]},
-        {"u": u_solution_func},
-        geom["rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_bc},
+        {
+            "u0": lambda d: d["u"][0:1],
+            "u__x": lambda d: jacobian(d["u"], d["x"])[1:2],
+            "u__x__x": lambda d: hessian(d["u"], d["x"])[2:3],
+            "u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])[3:4],
+        },
+        {"u0": 0, "u__x": 0, "u__x__x": 0, "u__x__x__x": 0},
+        geom["interval"],
+        {**dataloader_cfg, "batch_size": 4},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, 0.0)
-        | np.isclose(x, 1.0)
-        | np.isclose(y, 0.0)
-        | np.isclose(y, 1.0),
+        evenly=True,
         name="BC",
     )
     # wrap constraints together
@@ -89,30 +82,37 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
     # set validator
-    mse_metric = ppsci.validate.GeometryValidator(
+    total_size = 100
+
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x = out["x"]
+        return -(x**4) / 24 + x**3 / 6 - x**2 / 4
+
+    l2_rel_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
-        geom["rect"],
+        geom["interval"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": npoint_total,
+            "total_size": total_size,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
-        metric={"MSE": ppsci.metric.MSE()},
-        with_initial=True,
-        name="MSE_Metric",
+        metric={"L2Rel": ppsci.metric.L2Rel()},
+        name="L2Rel_Metric",
     )
-    validator = {mse_metric.name: mse_metric}
+    validator = {l2_rel_metric.name: l2_rel_metric}
 
     # set visualizer(optional)
-    vis_points = geom["rect"].sample_interior(npoint_total, evenly=True)
+    visu_points = geom["interval"].sample_interior(total_size, evenly=True)
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
-            vis_points,
+        "visulzie_u": ppsci.visualize.VisualizerScatter1D(
+            visu_points,
+            ("x",),
             {"u": lambda d: d["u"]},
-            num_timestamps=1,
-            prefix="result_u",
+            1,
+            "result_u",
         )
     }
 
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         epochs=epochs,
         iters_per_epoch=iters_per_epoch,
         eval_during_train=True,
-        eval_freq=eval_freq,
+        eval_freq=1000,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -145,10 +145,9 @@ if __name__ == "__main__":
         constraint,
         output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

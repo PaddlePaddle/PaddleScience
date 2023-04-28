@@ -60,9 +60,9 @@ def build_constraint(cfg, equation_dict, geom_dict):
         constraint_name = _constraint_cfg.get("name", constraint_cls)
 
         # select equation
-        if isinstance(_constraint_cfg["label_expr"], str):
-            equation_name = _constraint_cfg.pop("label_expr")
-            _constraint_cfg["label_expr"] = equation_dict[equation_name].equations
+        if isinstance(_constraint_cfg["output_expr"], str):
+            equation_name = _constraint_cfg.pop("output_expr")
+            _constraint_cfg["output_expr"] = equation_dict[equation_name].equations
 
         # select geometry
         geom_name = _constraint_cfg.pop("geom")

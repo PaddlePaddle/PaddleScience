@@ -250,6 +250,10 @@ class PhysformerGPT2(base.NetBase):
         attn_pdrop (float, optional): The dropout probability used on attention weights. Defaults to 0.0.
         resid_pdrop (float, optional): The dropout probability used on block outputs. Defaults to 0.0.
         initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
     """
 
     def __init__(

@@ -42,6 +42,14 @@ class MatDataset(io.Dataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.MatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -152,6 +160,14 @@ class IterableMatDataset(io.IterableDataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.IterableMatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

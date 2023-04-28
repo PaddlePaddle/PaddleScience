@@ -31,6 +31,10 @@ class Cuboid(geometry_nd.Hypercube):
     Args:
         xmin (Tuple[float, float, float]): Bottom left corner point [x0, y0, z0].
         xmax (Tuple[float, float, float]): Top right corner point [x1, y1, z1].
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Cuboid((0, 0, 0), (1, 1, 1))
     """
 
     def __init__(

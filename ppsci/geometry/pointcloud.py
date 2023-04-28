@@ -32,6 +32,10 @@ class PointCloud(geometry.Geometry):
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
         alias_dict (Tuple[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.PointCloud("/path/to/pointcloud_file", ("x",))  # doctest: +SKIP
     """
 
     def __init__(

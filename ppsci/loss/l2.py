@@ -30,6 +30,10 @@ class L2Loss(base.LossBase):
 
     Args:
         weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> loss = ppsci.loss.L2Loss()
     """
 
     def __init__(self, weight: Optional[Union[Dict[str, float], float]] = None):

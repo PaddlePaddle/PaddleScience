@@ -237,7 +237,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"./{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

@@ -27,6 +27,10 @@ class IntegralLoss(base.LossBase):
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> loss = ppsci.loss.IntegralLoss("mean")
     """
 
     def __init__(

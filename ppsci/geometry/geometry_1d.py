@@ -29,6 +29,10 @@ class Interval(geometry.Geometry):
     Args:
         l (float): Left position of interval.
         r (float): Right position of interval.
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Interval(-1, 1)
     """
 
     def __init__(self, l: float, r: float):
