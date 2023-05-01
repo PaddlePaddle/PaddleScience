@@ -22,12 +22,13 @@ Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE
 """
 
 import math
-import warnings
 
 import numpy as np
 import paddle
 import paddle.nn as nn
 from typing_extensions import Literal
+
+from ppsci.utils import logger
 
 __all__ = [
     "uniform_",
@@ -66,8 +67,8 @@ def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=2.0, b=2.0):
         return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
     if (mean < a - 2 * std) or (mean > b + 2 * std):
-        warnings.warn(
-            "mean is more than 2 std from [a, b] in nn.init.trunc_normal_. "
+        logger.warning(
+            f"mean({mean}) is more than 2 std({std}) from [a, b]([{a}, {b}]) in _no_grad_trunc_normal_. "
             "The distribution of values may be incorrect.",
             stacklevel=2,
         )
