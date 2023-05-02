@@ -163,7 +163,7 @@ def _save_plot_from_2d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float, ...]]): The Tuple of xtick locations. Defaults to None.
@@ -233,7 +233,7 @@ def save_plot_from_2d_dict(
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
@@ -312,7 +312,7 @@ def _save_plot_from_3d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
 
@@ -365,7 +365,7 @@ def save_plot_from_3d_dict(
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
 
