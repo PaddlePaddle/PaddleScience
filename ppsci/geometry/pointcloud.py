@@ -25,8 +25,8 @@ class PointCloud(geometry.Geometry):
         interior_path (str): File which store interior points of a point cloud.
         boundary_path (str): File which store boundary points of a point cloud.
         boundary_normal_path (str): File which store boundary normals of a point cloud.
-        coord_keys (List[str]): List of coordinate keys, such as ["x", "y"].
-        alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+        coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
+        alias_dict (Tuple[str, ...]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
 
     Examples:
         >>> import ppsci

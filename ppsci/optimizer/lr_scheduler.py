@@ -394,7 +394,7 @@ class Piecewise(LRBase):
         iters_per_epoch (int): number of iterations within an epoch
         decay_epochs (Tuple[int, ...]): A list of steps numbers. The type of element in the
             list is python int.
-        values (List[float]): A list of learning rate values that will be picked during
+        values (Tuple[float, ...]): Tuple of learning rate values that will be picked during
             different epoch boundaries.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
         warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
@@ -453,7 +453,7 @@ class MultiStepDecay(LRBase):
         epochs (int): total epoch(s)
         iters_per_epoch (int): number of iterations within an epoch
         learning_rate (float): learning rate
-        milestones (List[int]): List of each boundaries. should be increasing.
+        milestones (Tuple[int, ...]): Tuple of each boundaries. should be increasing.
         gamma (float, optional): The Ratio that the learning rate will be reduced.
             `new_lr = origin_lr * gamma`. It should be less than 1.0. Defaults to 0.1.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
