@@ -67,7 +67,17 @@ class MSELoss(base.LossBase):
 
 
 class MSELossWithL2Decay(MSELoss):
-    """MSELoss with L2 decay.
+    r"""MSELoss with L2 decay.
+
+    $$
+    L =
+    \begin{cases}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2} + \sum\limits_{j=1}^{M}{\Vert r_j \Vert_2^2}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{(x_i-y_i)^2} + \sum\limits_{j=1}^{M}{\Vert r_j \Vert_2^2}, & \text{if reduction='sum'}
+    \end{cases}
+    $$
+
+    $M$ is the number of variables which apply regularization on.
 
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
@@ -75,6 +85,10 @@ class MSELossWithL2Decay(MSELoss):
 
     Raises:
         ValueError: reduction should be 'mean' or 'sum'.
+
+    Examples:
+        >>> import ppsci
+        >>> loss = ppsci.loss.MSELossWithL2Decay("mean", {"k_matrix": 2.0})
     """
 
     def __init__(
