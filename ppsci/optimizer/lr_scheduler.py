@@ -39,7 +39,7 @@ class LRBase:
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
         learning_rate (float): learning rate.
-        warmup_epoch (int): number of warmup epoch(s).
+        warmup_epoch (int): number of warmup epochs.
         warmup_start_lr (float): start learning rate within warmup.
         last_epoch (int): last epoch.
         by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
@@ -140,7 +140,7 @@ class Linear(LRBase):
         learning_rate (float): learning rate.
         end_lr (float, optional): The minimum final learning rate. Defaults to 0.0.
         power (float, optional): Power of polynomial. Defaults to 1.0.
-        warmup_epoch (int): number of warmup epoch(s).
+        warmup_epoch (int): number of warmup epochs.
         warmup_start_lr (float): start learning rate within warmup.
         last_epoch (int): last epoch.
         by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
@@ -208,7 +208,7 @@ class ExponentialDecay(LRBase):
         epochs (int): total epoch(s).
         iters_per_epoch (int): number of iterations within an epoch.
         learning_rate (float): learning rate.
-        warmup_epoch (int): number of warmup epoch(s).
+        warmup_epoch (int): number of warmup epochs.
         warmup_start_lr (float): start learning rate within warmup.
         last_epoch (int): last epoch.
         by_epoch (bool): learning rate decays by epoch when by_epoch is True, else by iter.
