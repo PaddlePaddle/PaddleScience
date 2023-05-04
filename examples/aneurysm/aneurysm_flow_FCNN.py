@@ -116,7 +116,7 @@ class NavierStokes(ppsci.equation.pde.base.PDE):
 
 
 os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
-output_dir = "./output_0428"
+output_dir = "./output_0504"
 ppsci.utils.misc.set_random_seed(42)
 
 # initialize logger
@@ -244,15 +244,6 @@ model_4 = ppsci.arch.MLP(
     np.load(f"data/net4_params/weight_epoch_0.npz"),
     np.load(f"data/net4_params/bias_epoch_0.npz"),
 )
-optimizer2 = ppsci.optimizer.Adam(LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15)(
-    [model_2]
-)
-optimizer3 = ppsci.optimizer.Adam(LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15)(
-    [model_3]
-)
-optimizer4 = ppsci.optimizer.Adam(LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15)(
-    [model_4]
-)
 
 h = None
 
@@ -301,6 +292,9 @@ model_3.register_output_transform(shared_transform)
 model_4.register_output_transform(shared_transform)
 model = ppsci.arch.ModelList([model_2, model_3, model_4])
 
+optimizer2 = ppsci.optimizer.Adam(
+    LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=10**-15
+)([model])
 
 equation = {"NavierStokes": NavierStokes(RHO, 2, False)}
 

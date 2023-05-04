@@ -92,16 +92,17 @@ def train_epoch_func(solver, epoch_id, log_freq):
         else:
             total_loss.backward()
             # import numpy as np
-            # dir = "/workspace/wangguan/LabelFree-DNN-Surrogate/net_params"
-            # bias_u = np.load(dir + f"/bias_u_epoch_{iter_id}.npz")
-            # bias_v = np.load(dir + f"/bias_v_epoch_{iter_id}.npz")
-            # bias_p = np.load(dir + f"/bias_p_epoch_{iter_id}.npz")
-            # weight_u = np.load(dir + f"/weight_u_epoch_{iter_id}.npz")
-            # weight_v = np.load(dir + f"/weight_v_epoch_{iter_id}.npz")
-            # weight_p = np.load(dir + f"/weight_p_epoch_{iter_id}.npz")
-            # weight_grad_u = np.load(dir + f"/weight_grad_u_epoch_{iter_id}.npz")
-            # weight_grad_v = np.load(dir + f"/weight_grad_v_epoch_{iter_id}.npz")
-            # weight_grad_p = np.load(dir + f"/weight_grad_p_epoch_{iter_id}.npz")
+            # # import os
+            # bias_u = np.load("./data/net2_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
+            # bias_v = np.load("./data/net3_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
+            # bias_p = np.load("./data/net4_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
+            # weight_u = np.load("./data/net2_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
+            # weight_v = np.load("./data/net3_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
+            # weight_p = np.load("./data/net4_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
+
+            # weight_grad_u = np.load("./data/net2_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
+            # weight_grad_v = np.load("./data/net3_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
+            # weight_grad_p = np.load("./data/net4_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
             # # u
             # print("w0_u is close:", np.allclose(solver.model.model_list[0].linears[0].weight.numpy(), weight_u[f"w_0"]))
             # print("w1_u is close:", np.allclose(solver.model.model_list[0].linears[1].weight.numpy(), weight_u[f"w_1"]))
