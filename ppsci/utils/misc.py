@@ -155,7 +155,6 @@ def combine_array_with_time(x, t):
 
 
 def set_random_seed(seed):
-    rank = dist.get_rank()
-    paddle.seed(seed + rank)
-    np.random.seed(seed + rank)
-    random.seed(seed + rank)
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
