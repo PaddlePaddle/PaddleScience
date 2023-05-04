@@ -21,7 +21,7 @@
     solution_filename: 'output_laplace2d'
     vtk_filename: 'output_laplace2d'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/laplace2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/laplace2d_dynamic.npy"
 
 - test: 1
   Dir: '../../examples/laplace/laplace2d.py'
@@ -46,7 +46,7 @@
     solution_filename: 'laplace2d_static'
     vtk_filename: 'output_laplace2d'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/laplace2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/laplace2d_static.npy"
 
 - test: 2
   Dir: '../../examples/laplace/laplace2d.py'
@@ -71,4 +71,4 @@
     solution_filename: 'laplace2d_new_ad'
     vtk_filename: 'output_laplace2d'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/laplace2d.npz"
+    solution_save_dir: "../standard_data/ci_standard/laplace2d_new_ad.npy"

@@ -21,7 +21,7 @@
     solution_filename: 'ldc2d_steady_train_dynamic'
     vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady0.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_train_dynamic.npy"
 
 - test: 1
   Dir: '../../examples/ldc/ldc2d_steady_train.py'
@@ -43,10 +43,10 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'ldc2d_steady_train_static'
+    solution_filename: 'ldc2d_steady_train_static_10'
     vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady0.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_train_static_10.npy"
 
 - test: 2
   Dir: '../../examples/ldc/ldc2d_steady_train.py'
@@ -68,10 +68,10 @@
     lr:
       learning_rate: 0.001
   Post-processing:
-    solution_filename: 'ldc2d_steady_train_static'
+    solution_filename: 'ldc2d_steady_train_static_16'
     vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady1.npz"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_train_static_16.npy"
 
 
 - test: 3
@@ -97,4 +97,4 @@
     solution_filename: 'ldc2d_steady_train_new_ad'
     vtk_filename: 'ldc2d_steady_train'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_new_ad.npy"
+    solution_save_dir: "../standard_data/ci_standard/ldc2d_steady_train_new_ad.npy"
