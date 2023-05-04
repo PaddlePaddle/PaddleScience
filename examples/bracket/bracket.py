@@ -360,7 +360,7 @@ if __name__ == "__main__":
         lr_scheduler,
         epochs,
         iters_per_epoch,
-        save_freq=20,
+        save_freq=10,
         eval_during_train=True,
         log_freq=20,
         eval_freq=10,
@@ -368,6 +368,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        checkpoint_path="./output_bracket/checkpoints/epoch_20",
     )
     # train model
     solver.train()
