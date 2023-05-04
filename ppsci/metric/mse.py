@@ -18,7 +18,7 @@ import paddle.nn.functional as F
 from ppsci.metric import base
 
 
-class MSE(base.MetricBase):
+class MSE(base.Metric):
     r"""Mean square error
 
     $$

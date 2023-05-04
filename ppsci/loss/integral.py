@@ -17,7 +17,7 @@ import paddle.nn.functional as F
 from ppsci.loss import base
 
 
-class IntegralLoss(base.LossBase):
+class IntegralLoss(base.Loss):
     """Class for integral loss.
 
     Args:
