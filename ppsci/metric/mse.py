@@ -24,6 +24,10 @@ class MSE(base.MetricBase):
     $$
     metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}
     $$
+
+    Examples:
+        >>> import ppsci
+        >>> metric = ppsci.metric.MSE()
     """
 
     def __init__(self):

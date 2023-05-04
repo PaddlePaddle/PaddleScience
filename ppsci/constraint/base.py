@@ -51,7 +51,7 @@ class Constraint(object):
                 f"name = {self.name}",
                 f"input_keys = {self.input_keys}",
                 f"output_keys = {self.output_keys}",
-                f"label_expr = {self.label_expr}",
+                f"output_expr = {self.output_expr}",
                 f"label_dict = {self.label_dict}",
                 f"loss = {self.loss}",
             ]

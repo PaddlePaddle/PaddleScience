@@ -31,6 +31,10 @@ class Mesh(geometry.Geometry):
 
     Args:
         mesh (Union[str, Mesh]): Mesh file path or mesh object, such as "/path/to/mesh.stl".
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")  # doctest: +SKIP
     """
 
     def __init__(self, mesh: Union[Mesh, str]):

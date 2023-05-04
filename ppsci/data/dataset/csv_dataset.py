@@ -41,6 +41,14 @@ class CSVDataset(io.Dataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.CSVDataset(
+        ...     "/path/to/file.csv"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -151,6 +159,14 @@ class IterableCSVDataset(io.IterableDataset):
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s).
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.IterableCSVDataset(
+        ...     "/path/to/file.csv"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

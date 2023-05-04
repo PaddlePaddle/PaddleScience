@@ -41,6 +41,9 @@ class TimeDomain(geometry_1d.Interval):
         timestamps (Optional[Tuple[float, ...]]): List of timestamps.
             Defaults to None.
 
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.TimeDomain(0, 1)
     """
 
     def __init__(
@@ -72,6 +75,12 @@ class TimeXGeometry(geometry.Geometry):
     Args:
         timedomain (TimeDomain): TimeDomain object.
         geometry (geometry.Geometry): Geometry object.
+
+    Examples:
+        >>> import ppsci
+        >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
     """
 
     def __init__(self, timedomain: TimeDomain, geometry: geometry.Geometry):

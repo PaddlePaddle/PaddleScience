@@ -24,6 +24,12 @@ class ModelList(base.NetBase):
 
     Args:
         model_list (Tuple[base.NetBase, ...]): Model(s) nesteed in tuple.
+
+    Examples:
+        >>> import ppsci
+        >>> model1 = ppsci.arch.MLP(("x", "y"), ("u", "v"), 10, 128)
+        >>> model2 = ppsci.arch.MLP(("x", "y"), ("w", "p"), 5, 128)
+        >>> model = ppsci.arch.ModelList((model1, model2))
     """
 
     def __init__(
@@ -45,15 +51,7 @@ class ModelList(base.NetBase):
     def forward(self, x):
         y_all = {}
         for model in self.model_list:
-            if model._input_transform is not None:
-                x = model._input_transform(x)
-
-            y = model.concat_to_tensor(x, model.input_keys, axis=-1)
-            y = model.forward_tensor(y)
-            y = model.split_to_dict(y, model.output_keys, axis=-1)
-
-            if model._output_transform is not None:
-                y = model._output_transform(y)
+            y = model(x)
             y_all.update(y)
 
         return y_all
