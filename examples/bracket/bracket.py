@@ -55,39 +55,6 @@ if __name__ == "__main__":
     )
     logger.info("load pytorch's init weight")
 
-    rand_input = {
-        "x": paddle.to_tensor(
-            np.load(
-                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/x.npy"
-            ),
-            stop_gradient=False,
-        ),
-        "y": paddle.to_tensor(
-            np.load(
-                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/y.npy"
-            ),
-            stop_gradient=False,
-        ),
-        "z": paddle.to_tensor(
-            np.load(
-                "/workspace/hesensen/modulus/examples/bracket/outputs/bracket/z.npy"
-            ),
-            stop_gradient=False,
-        ),
-    }
-    output_disp = disp_net(rand_input)
-    for k, v in output_disp.items():
-        print(
-            f"disp_net: {k} {tuple(v.shape)} {v.min().item():.10f} {v.max().item():.10f} {v.mean().item():.10f} {v.std().item():.10f}"
-        )
-
-    output_stress = stress_net(rand_input)
-    for k, v in output_stress.items():
-        print(
-            f"stress_net: {k} {tuple(v.shape)} {v.min().item():.10f} {v.max().item():.10f} {v.mean().item():.10f} {v.std().item():.10f}"
-        )
-    exit()
-
     # Specify parameters
     nu = 0.3
     E = 100.0e9
@@ -133,6 +100,7 @@ if __name__ == "__main__":
             "drop_last": False,
             "shuffle": True,
         },
+        "num_workers": 2,
     }
 
     support_origin = (-1, -1, -1)
@@ -154,7 +122,7 @@ if __name__ == "__main__":
     # set constraint
     bc_back = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
-        {"u": 1, "v": 0, "w": 0},
+        {"u": 0, "v": 0, "w": 0},
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 1024},
         ppsci.loss.MSELoss("sum"),
@@ -199,17 +167,18 @@ if __name__ == "__main__":
         {**train_dataloader_cfg, "batch_size": 2048},
         ppsci.loss.MSELoss("sum"),
         # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
-        # lambda_weighting={
-        #     "equilibrium_x": Symbol("sdf"),
-        #     "equilibrium_y": Symbol("sdf"),
-        #     "equilibrium_z": Symbol("sdf"),
-        #     "stress_disp_xx": Symbol("sdf"),
-        #     "stress_disp_yy": Symbol("sdf"),
-        #     "stress_disp_zz": Symbol("sdf"),
-        #     "stress_disp_xy": Symbol("sdf"),
-        #     "stress_disp_xz": Symbol("sdf"),
-        #     "stress_disp_yz": Symbol("sdf"),
+        # weight={
+        #     "equilibrium_x": "sdf",
+        #     "equilibrium_y": "sdf",
+        #     "equilibrium_z": "sdf",
+        #     "stress_disp_xx": "sdf",
+        #     "stress_disp_yy": "sdf",
+        #     "stress_disp_zz": "sdf",
+        #     "stress_disp_xy": "sdf",
+        #     "stress_disp_xz": "sdf",
+        #     "stress_disp_yz": "sdf",
         # }
+        name="support_interior",
     )
     bracket_interior_constraint = ppsci.constraint.InteriorConstraint(
         equation["LinearElasticity"].equations,
@@ -225,20 +194,21 @@ if __name__ == "__main__":
             "stress_disp_yz": 0,
         },
         geom["geo"],
-        {**train_dataloader_cfg, "batch_size": 2048},
+        {**train_dataloader_cfg, "batch_size": 1024},
         ppsci.loss.MSELoss("sum"),
         # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
-        # lambda_weighting={
-        #     "equilibrium_x": Symbol("sdf"),
-        #     "equilibrium_y": Symbol("sdf"),
-        #     "equilibrium_z": Symbol("sdf"),
-        #     "stress_disp_xx": Symbol("sdf"),
-        #     "stress_disp_yy": Symbol("sdf"),
-        #     "stress_disp_zz": Symbol("sdf"),
-        #     "stress_disp_xy": Symbol("sdf"),
-        #     "stress_disp_xz": Symbol("sdf"),
-        #     "stress_disp_yz": Symbol("sdf"),
+        # weight={
+        #     "equilibrium_x": "sdf",
+        #     "equilibrium_y": "sdf",
+        #     "equilibrium_z": "sdf",
+        #     "stress_disp_xx": "sdf",
+        #     "stress_disp_yy": "sdf",
+        #     "stress_disp_zz": "sdf",
+        #     "stress_disp_xy": "sdf",
+        #     "stress_disp_xz": "sdf",
+        #     "stress_disp_yz": "sdf",
         # }
+        name="bracket_interior",
     )
     # wrap constraints together
     constraint = {
@@ -390,9 +360,10 @@ if __name__ == "__main__":
         lr_scheduler,
         epochs,
         iters_per_epoch,
+        save_freq=20,
         eval_during_train=True,
-        log_freq=1,
-        eval_freq=200,
+        log_freq=20,
+        eval_freq=10,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -400,23 +371,23 @@ if __name__ == "__main__":
     )
     # train model
     solver.train()
-    exit()
+
     # evaluate after finished training
     solver.eval()
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate pretrained model(optional)
-    solver = ppsci.solver.Solver(
-        model,
-        constraint,
-        output_dir,
-        equation=equation,
-        geom=geom,
-        validator=validator,
-        visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
-    )
-    solver.eval()
-    # visualize prediction for pretrained model(optional)
-    solver.visualize()
+    # # directly evaluate pretrained model(optional)
+    # solver = ppsci.solver.Solver(
+    #     model,
+    #     constraint,
+    #     output_dir,
+    #     equation=equation,
+    #     geom=geom,
+    #     validator=validator,
+    #     visualizer=visualizer,
+    #     pretrained_model_path=f"{output_dir}/checkpoints/latest",
+    # )
+    # solver.eval()
+    # # visualize prediction for pretrained model(optional)
+    # solver.visualize()

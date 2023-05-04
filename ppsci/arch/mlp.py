@@ -15,10 +15,37 @@
 from typing import Tuple
 from typing import Union
 
+import paddle
 import paddle.nn as nn
 
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
+from ppsci.utils import initializer
+
+
+class WeightNormLinear(nn.Layer):
+    def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight_v = paddle.create_parameter((in_features, out_features), "float32")
+        self.weight_g = paddle.create_parameter((out_features,), "float32")
+        if bias:
+            self.bias = paddle.create_parameter((out_features,), "float32")
+        else:
+            self.bias = None
+        self.reset_parameters()
+
+    def reset_parameters(self) -> None:
+        initializer.xavier_uniform_(self.weight_v)
+        initializer.constant_(self.weight_g, 1.0)
+        if self.bias is not None:
+            initializer.constant_(self.bias, 0.0)
+
+    def forward(self, input):
+        norm = self.weight_v.norm(p=2, axis=0, keepdim=True)
+        weight = self.weight_g * self.weight_v / norm
+        return nn.functional.linear(input, weight, self.bias)
 
 
 class MLP(base.NetBase):
@@ -75,7 +102,8 @@ class MLP(base.NetBase):
         for _size in hidden_size:
             self.linears.append(nn.Linear(cur_size, _size))
             if weight_norm:
-                self.linears[-1] = nn.utils.weight_norm(self.linears[-1], dim=1)
+                # self.linears[-1] = nn.utils.weight_norm(self.linears[-1], dim=1)
+                self.linears[-1] = WeightNormLinear(cur_size, _size)
             cur_size = _size
         self.linears = nn.LayerList(self.linears)
 
