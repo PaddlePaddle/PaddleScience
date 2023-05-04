@@ -22,7 +22,7 @@ from typing_extensions import Literal
 from ppsci.loss import base
 
 
-class MSELoss(base.LossBase):
+class MSELoss(base.Loss):
     r"""Class for mean squared error loss.
 
     $$
@@ -95,7 +95,7 @@ class MSELossWithL2Decay(MSELoss):
         return losses
 
 
-class PeriodicMSELoss(base.LossBase):
+class PeriodicMSELoss(base.Loss):
     """Class for periodic mean squared error loss.
 
     Args:
