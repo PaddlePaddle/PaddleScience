@@ -199,8 +199,8 @@ if __name__ == "__main__":
         "visulzie_u": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            num_timestamps,
-            "result_u",
+            num_timestamps=num_timestamps,
+            prefix="result_u",
         )
     }
 
@@ -237,7 +237,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"./{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{output_dir}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

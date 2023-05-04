@@ -77,6 +77,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
     fig, a = plt.subplots(len(value_keys), num_timestamp, squeeze=False)
+    fig.subplots_adjust(hspace=0.8)
 
     len_ts = len(coord) // num_timestamp
     for t in range(num_timestamp):
@@ -92,7 +93,10 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
                 color=cnames[i],
                 label=key,
             )
-            a[i][t].set_title(f"{key}(t={t})")
+            if num_timestamp > 1:
+                a[i][t].set_title(f"{key}(t={t})")
+            else:
+                a[i][t].set_title(f"{key}")
             a[i][t].grid()
             a[i][t].legend()
 

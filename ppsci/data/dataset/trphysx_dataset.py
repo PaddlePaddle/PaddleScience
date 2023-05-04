@@ -40,6 +40,16 @@ class LorenzDataset(io.Dataset):
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.LorenzDataset(
+        ...     "file_path": "/path/to/LorenzDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -127,6 +137,16 @@ class RosslerDataset(LorenzDataset):
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.RosslerDataset(
+        ...     "file_path": "/path/to/RosslerDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -165,6 +185,16 @@ class CylinderDataset(io.Dataset):
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.CylinderDataset(
+        ...     "file_path": "/path/to/CylinderDataset",
+        ...     "input_keys": ("x",),
+        ...     "label_keys": ("v",),
+        ...     "block_size": 32,
+        ...     "stride": 16,
+        ... )  # doctest: +SKIP
     """
 
     def __init__(

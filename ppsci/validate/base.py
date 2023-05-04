@@ -53,7 +53,7 @@ class Validator:
                 f"name = {self.name}",
                 f"input_keys = {self.input_keys}",
                 f"output_keys = {self.output_keys}",
-                f"label_expr = {self.label_expr}",
+                f"output_expr = {self.output_expr}",
                 f"label_dict = {self.label_dict}",
                 f"len(dataloader) = {len(self.data_loader)}",
                 f"loss = {self.loss}",
