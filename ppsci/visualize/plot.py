@@ -166,8 +166,8 @@ def _save_plot_from_2d_array(
         visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float, ...]]): The Tuple of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float, ...]]): The Tuple of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float, ...]]): Tuple of ytick locations. Defaults to None.
     """
 
     plt.close("all")
