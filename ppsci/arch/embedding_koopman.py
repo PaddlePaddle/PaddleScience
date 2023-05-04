@@ -43,6 +43,10 @@ class LorenzEmbedding(base.NetBase):
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
     """
 
     def __init__(
@@ -201,6 +205,10 @@ class RosslerEmbedding(LorenzEmbedding):
         hidden_size (int, optional): Number of hidden size. Defaults to 500.
         embed_size (int, optional): Number of embedding size. Defaults to 32.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
     """
 
     def __init__(
@@ -238,6 +246,10 @@ class CylinderEmbedding(base.NetBase):
         encoder_channels (Optional[Tuple[int, ...]]): Number of channels in encoder network. Defaults to None.
         decoder_channels (Optional[Tuple[int, ...]]): Number of channels in decoder network. Defaults to None.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
     """
 
     def __init__(

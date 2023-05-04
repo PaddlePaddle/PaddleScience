@@ -37,42 +37,57 @@ def visualize_func(solver, epoch_id):
         all_output = misc.Prettydefaultdict(list)
 
         input_dict = _visualizer.input_dict
-        for key in input_dict:
-            if not paddle.is_tensor(input_dict[key]):
-                input_dict[key] = paddle.to_tensor(input_dict[key], stop_gradient=False)
+        batch_size = _visualizer.batch_size
+        num_samples = len(next(iter(input_dict.values())))
+        batch_num = (num_samples + (batch_size - 1)) // batch_size
 
-        evaluator = expression.ExpressionSolver(
-            _visualizer.input_keys, _visualizer.output_keys, solver.model
-        )
-        for output_key, output_expr in _visualizer.output_expr.items():
-            evaluator.add_target_expr(output_expr, output_key)
+        for batch_id in range(batch_num):
+            batch_input_dict = {}
+            st = batch_id * batch_size
+            ed = min(num_samples, (batch_id + 1) * batch_size)
 
-        # forward
-        if solver.use_amp:
-            with amp.auto_cast(level=solver.amp_level):
-                output_dict = evaluator(input_dict)
-        else:
-            output_dict = evaluator(input_dict)
+            # prepare batch input dict
+            for key in input_dict:
+                if not paddle.is_tensor(input_dict[key]):
+                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                else:
+                    batch_input_dict[key] = input_dict[key][st:ed]
+                batch_input_dict[key].stop_gradient = False
 
-        # collect batch data
-        for key, input in input_dict.items():
-            all_input[key].append(
-                input.detach()
-                if solver.world_size == 1
-                else misc.all_gather(input.detach())
+            evaluator = expression.ExpressionSolver(
+                _visualizer.input_keys, _visualizer.output_keys, solver.model
             )
-        for key, output in output_dict.items():
-            all_output[key].append(
-                output.detach()
-                if solver.world_size == 1
-                else misc.all_gather(output.detach())
-            )
+            for output_key, output_expr in _visualizer.output_expr.items():
+                evaluator.add_target_expr(output_expr, output_key)
 
+            # forward
+            if solver.use_amp:
+                with amp.auto_cast(level=solver.amp_level):
+                    batch_output_dict = evaluator(batch_input_dict)
+            else:
+                batch_output_dict = evaluator(batch_input_dict)
+
+            # collect batch data
+            for key, batch_input in batch_input_dict.items():
+                all_input[key].append(
+                    batch_input.detach()
+                    if solver.world_size == 1
+                    else misc.all_gather(batch_input.detach())
+                )
+            for key, batch_output in batch_output_dict.items():
+                all_output[key].append(
+                    batch_output.detach()
+                    if solver.world_size == 1
+                    else misc.all_gather(batch_output.detach())
+                )
+
+        # concate all data
         for key in all_input:
             all_input[key] = paddle.concat(all_input[key])
         for key in all_output:
             all_output[key] = paddle.concat(all_output[key])
 
+        # save visualization
         if solver.rank == 0:
             visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
             os.makedirs(visual_dir, exist_ok=True)

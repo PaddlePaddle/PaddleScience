@@ -25,8 +25,8 @@ class MLP(base.NetBase):
     """Multi layer perceptron network.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ["x", "y", "z"].
-        output_keys (Tuple[str, ...]): Name of output keys, such as ["u", "v", "w"].
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
         num_layers (int): Number of hidden layers.
         hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
             An integer for all layers, or list of integer specify each layer's size.
@@ -34,6 +34,9 @@ class MLP(base.NetBase):
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
 
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
     """
 
     def __init__(

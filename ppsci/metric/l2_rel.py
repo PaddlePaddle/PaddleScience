@@ -23,6 +23,10 @@ class L2Rel(base.MetricBase):
     $$
     metric = \dfrac{\Vert x-y \Vert_2}{\Vert y \Vert_2}
     $$
+
+    Examples:
+        >>> import ppsci
+        >>> metric = ppsci.metric.L2Rel()
     """
 
     def __init__(self):

@@ -18,19 +18,25 @@ from typing import Union
 
 import paddle
 import sympy
+from paddle import nn
 
 from ppsci.autodiff import clear
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 
 
-class ExpressionSolver(paddle.nn.Layer):
+class ExpressionSolver(nn.Layer):
     """Expression Solver
 
     Args:
         input_keys (Dict[str]):Names of input keys.
         output_keys (Dict[str]):Names of output keys.
         model (nn.Layer): Model to get output variables from input variables.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
+        >>> expr_solver = ExpressionSolver(("x", "y"), ("u", "v"), model)
     """
 
     def __init__(self, input_keys, output_keys, model):

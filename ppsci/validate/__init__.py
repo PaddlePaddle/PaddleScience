@@ -60,9 +60,11 @@ def build_validator(cfg, equation_dict, geom_dict):
         local_dataloader_cfg.update(global_dataloader_cfg)
 
         # select equation
-        for name, expr in _validator_cfg["label_expr"].items():
+        for name, expr in _validator_cfg["output_expr"].items():
             if isinstance(expr, str) and expr in equation_dict:
-                _validator_cfg["label_expr"][name] = equation_dict[expr].equations[name]
+                _validator_cfg["output_expr"][name] = equation_dict[expr].equations[
+                    name
+                ]
 
         # build loss
         _validator_cfg["loss"] = build_loss(_validator_cfg["loss"])

@@ -22,6 +22,10 @@ class Translate:
     Args:
         offset (Dict[str, float]): Shift the input data according to the variable name
             and coefficient specified in offset.
+
+    Examples:
+        >>> import ppsci
+        >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
     """
 
     def __init__(self, offset: Dict[str, Union[int, float]]):
@@ -39,6 +43,10 @@ class Scale:
     Args:
         scale (Dict[str, float]): Scale the input data according to the variable name
             and coefficient specified in scale.
+
+    Examples:
+        >>> import ppsci
+        >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
     """
 
     def __init__(self, scale: Dict[str, Union[int, float]]):

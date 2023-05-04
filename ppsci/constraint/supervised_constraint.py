@@ -28,30 +28,45 @@ class SupervisedConstraint(base.Constraint):
     Args:
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.LossBase): Loss functor.
-        label_expr (Optional[Dict[str, Callable]]): List of label expression.
+        output_expr (Optional[Dict[str, Callable]]): List of label expression.
             Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
+
+    Examples:
+        >>> import ppsci
+        >>> bc_sup = ppsci.constraint.SupervisedConstraint(
+        ...     {
+        ...         "dataset": {
+        ...             "name": "IterableCSVDataset",
+        ...             "file_path": "/path/to/file.csv",
+        ...             "input_keys": ("x", "y"),
+        ...             "label_keys": ("u", "v"),
+        ...         },
+        ...     },
+        ...     ppsci.loss.MSELoss("mean"),
+        ...     name="bc_sup",
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
         loss: loss.LossBase,
-        label_expr: Optional[Dict[str, Callable]] = None,
+        output_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
-        self.label_expr = label_expr
+        self.output_expr = output_expr
 
         # build dataset
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         self.input_keys = _dataset.input_keys
         self.output_keys = (
-            list(label_expr.keys()) if label_expr is not None else _dataset.label_keys
+            list(output_expr.keys()) if output_expr is not None else _dataset.label_keys
         )
 
-        if self.label_expr is None:
-            self.label_expr = {
+        if self.output_expr is None:
+            self.output_expr = {
                 key: lambda out, k=key: out[k] for key in self.output_keys
             }
 

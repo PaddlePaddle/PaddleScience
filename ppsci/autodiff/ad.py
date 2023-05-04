@@ -71,7 +71,25 @@ class Jacobians:
 
     def __call__(
         self, ys: paddle.Tensor, xs: paddle.Tensor, i: int = 0, j: Optional[int] = None
-    ):
+    ) -> paddle.Tensor:
+        """Compute jacobians for given ys and xs.
+
+        Args:
+            ys (paddle.Tensor): Output tensor.
+            xs (paddle.Tensor): Input tensor.
+            i (int, optional): i-th output variable. Defaults to 0.
+            j (Optional[int]): j-th input variable. Defaults to None.
+
+        Returns:
+            paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
+
+        Examples:
+            >>> import ppsci
+            >>> x = paddle.randn([4, 3])
+            >>> x.stop_gradient = False
+            >>> y = (x * x).sum()
+            >>> dy_dx = ppsci.autodiff.jacoian(y, x)  # doctest: +SKIP
+        """
         key = (ys, xs)
         if key not in self.Js:
             self.Js[key] = Jacobian(ys, xs)
@@ -147,7 +165,30 @@ class Hessians:
         i: int = 0,
         j: int = 0,
         grad_y: Optional[paddle.Tensor] = None,
-    ):
+    ) -> paddle.Tensor:
+        """compute hessian matrix for given ys and xs.
+
+        Args:
+            ys (paddle.Tensor): Output tensor.
+            xs (paddle.Tensor): Input tensor.
+            component (Optional[int], optional): If `y` has the shape (batch_size, dim_y > 1), then `y[:, component]`
+                is used to compute the Hessian. Do not use if `y` has the shape (batch_size,
+                1). Defaults to None.
+            i (int, optional): i-th input variable. Defaults to 0.
+            j (int, optional): j-th input variable. Defaults to 0.
+            grad_y (Optional[paddle.Tensor], optional): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
+                duplicate computation. Defaults to None.
+
+        Returns:
+            paddle.Tensor: Hessian matrix.
+
+        Examples:
+            >>> import ppsci
+            >>> x = paddle.randn([4, 3])
+            >>> x.stop_gradient = False
+            >>> y = (x * x).sin()
+            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)  # doctest: +SKIP
+        """
         key = (ys, xs, component)
         if key not in self.Hs:
             self.Hs[key] = Hessian(ys, xs, component=component, grad_y=grad_y)
