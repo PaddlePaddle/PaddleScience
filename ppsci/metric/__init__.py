@@ -14,7 +14,7 @@
 
 import copy
 
-from ppsci.metric.base import MetricBase
+from ppsci.metric.base import Metric
 from ppsci.metric.l2_rel import L2Rel
 from ppsci.metric.mae import MAE
 from ppsci.metric.mse import MSE
@@ -22,7 +22,7 @@ from ppsci.metric.rmse import RMSE
 from ppsci.utils import misc
 
 __all__ = [
-    "MetricBase",
+    "Metric",
     "L2Rel",
     "MAE",
     "MSE",

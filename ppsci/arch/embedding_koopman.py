@@ -31,7 +31,7 @@ zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
 
 
-class LorenzEmbedding(base.NetBase):
+class LorenzEmbedding(base.Arch):
     """Embedding Koopman model for the Lorenz ODE system.
 
     Args:
@@ -234,7 +234,7 @@ class RosslerEmbedding(LorenzEmbedding):
         )
 
 
-class CylinderEmbedding(base.NetBase):
+class CylinderEmbedding(base.Arch):
     """Embedding Koopman model for the Cylinder system.
 
     Args:
