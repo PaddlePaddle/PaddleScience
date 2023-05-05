@@ -39,7 +39,7 @@ class LorenzDataset(io.Dataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -61,7 +61,7 @@ class LorenzDataset(io.Dataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
     ):
         super(LorenzDataset, self).__init__()
         self.file_path = file_path
@@ -136,7 +136,7 @@ class RosslerDataset(LorenzDataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -158,7 +158,7 @@ class RosslerDataset(LorenzDataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
     ):
         super(RosslerDataset, self).__init__(
             file_path,
@@ -183,7 +183,7 @@ class CylinderDataset(io.Dataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
 
     Examples:
@@ -206,7 +206,7 @@ class CylinderDataset(io.Dataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
         embedding_batch_size: int = 64,
     ):
         super(CylinderDataset, self).__init__()
