@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
 import numpy as np
 
 from ppsci.geometry import geometry
@@ -23,10 +27,10 @@ class PointCloud(geometry.Geometry):
 
     Args:
         interior_path (str): File which store interior points of a point cloud.
-        boundary_path (str): File which store boundary points of a point cloud.
-        boundary_normal_path (str): File which store boundary normals of a point cloud.
-        coord_keys (List[str]): List of coordinate keys, such as ["x", "y"].
-        alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+        coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
+        boundary_path (Optional[str]): File which store boundary points of a point cloud. Defaults to None.
+        boundary_normal_path (Optional[str]): File which store boundary normals of a point cloud. Defaults to None.
+        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -35,11 +39,11 @@ class PointCloud(geometry.Geometry):
 
     def __init__(
         self,
-        interior_path,
-        coord_keys,
-        boundary_path=None,
-        boundary_normal_path=None,
-        alias_dict=None,
+        interior_path: str,
+        coord_keys: Tuple[str, ...],
+        boundary_path: Optional[str] = None,
+        boundary_normal_path: Optional[str] = None,
+        alias_dict: Optional[Dict[str, str]] = None,
     ):
         # Interior points from CSV file
         if interior_path.endswith(".csv"):

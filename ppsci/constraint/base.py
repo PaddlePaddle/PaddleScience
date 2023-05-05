@@ -21,7 +21,7 @@ from ppsci import data
 from ppsci import loss
 
 
-class Constraint(object):
+class Constraint:
     """Base class for constraint.
 
     Args:

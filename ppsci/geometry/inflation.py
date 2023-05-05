@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import numpy as np
-import open3d
-import pymesh
+
+from ppsci.utils import checker
+
+if not checker.dynamic_import_to_globals(["pymesh", "open3d"]):
+    raise ModuleNotFoundError
 
 __all__ = [
     "pymesh_inflation",
