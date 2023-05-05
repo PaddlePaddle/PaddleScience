@@ -17,7 +17,7 @@ import paddle.nn.functional as F
 from ppsci.loss import base
 
 
-class L2Loss(base.LossBase):
+class L2Loss(base.Loss):
     r"""Class for l2 loss.
 
     $$
@@ -47,7 +47,7 @@ class L2Loss(base.LossBase):
         return losses
 
 
-class PeriodicL2Loss(base.LossBase):
+class PeriodicL2Loss(base.Loss):
     """Class for Periodic l2 loss."""
 
     def __init__(self, reduction="mean"):

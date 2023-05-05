@@ -17,7 +17,7 @@ from typing import Union
 
 
 class Translate:
-    """Translate class, a transform mainly for mesh.
+    """Translate class.
 
     Args:
         offset (Dict[str, float]): Shift the input data according to the variable name
@@ -38,7 +38,7 @@ class Translate:
 
 
 class Scale:
-    """Scale class, a transform mainly for mesh.
+    """Scale class.
 
     Args:
         scale (Dict[str, float]): Scale the input data according to the variable name

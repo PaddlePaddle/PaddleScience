@@ -27,7 +27,7 @@ class Constraint:
     Args:
         dataset (io.Dataset): Dataset.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         name (str): Name of constraint.
     """
 
@@ -35,7 +35,7 @@ class Constraint:
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)

@@ -18,7 +18,7 @@ import paddle.nn.functional as F
 from ppsci.metric import base
 
 
-class RMSE(base.MetricBase):
+class RMSE(base.Metric):
     r"""Root mean square error
 
     $$

@@ -41,7 +41,7 @@ def build_embedding_model(embedding_model_path: str) -> ppsci.arch.CylinderEmbed
 
 
 class OutputTransform(object):
-    def __init__(self, model: base.NetBase):
+    def __init__(self, model: base.Arch):
         self.model = model
         self.model.eval()
 
