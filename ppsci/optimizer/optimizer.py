@@ -282,7 +282,7 @@ class LBFGS:
                 line_search_fn=self.line_search_fn,
                 parameters=parameters,
             )
-        except AttributeError as e:
+        except AttributeError:
             opt = getattr(incubate_optim, "LBFGS")(
                 learning_rate=self.lr,
                 max_iter=self.max_iter,
