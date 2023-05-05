@@ -48,7 +48,7 @@ def build_optimizer(cfg, model_list, epochs, iters_per_epoch):
 
     Args:
         cfg (AttrDict): Learing rate scheduler config.
-        model_list (List[nn.Layer]): List of model(s).
+        model_list (Tuple[nn.Layer, ...]): Tuple of model(s).
         epochs (int): Total epochs.
         iters_per_epoch (int): Number of iterations of one epoch.
 
