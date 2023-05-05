@@ -236,7 +236,7 @@ class Block(nn.Layer):
         return outputs
 
 
-class PhysformerGPT2(base.NetBase):
+class PhysformerGPT2(base.Arch):
     """Transformer decoder model for modeling physics.
 
     Args:

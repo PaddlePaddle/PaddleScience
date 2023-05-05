@@ -21,7 +21,7 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 
 
-class MLP(base.NetBase):
+class MLP(base.Arch):
     """Multi layer perceptron network.
 
     Args:
