@@ -1,26 +1,27 @@
+import math
 from math import pi
-from math import sqrt
 
 import numpy as np
+import paddle
 import torch
 
 
-def det_test(x, y, nu, dP, mu, sigma, scale, epochs, path1, device, caseIdx):
-
+def det_test(x, y, dP, mu, sigma, scale, path1, caseIdx):
     R = (
         scale
         * 1
-        / sqrt(2 * np.pi * sigma**2)
+        / math.sqrt(2 * np.pi * sigma**2)
         * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
     )
     rInlet = 0.05
     yUp = rInlet - R
-    xt = torch.FloatTensor(x).to(device)
-    yt = torch.FloatTensor(y).to(device)
+    xt = paddle.to_tensor(xt, dtype="float32")
+    yt = paddle.to_tensor(xt, dtype="float32")
+    scalet = paddle.to_tensor(xt, dtype="float32")
     xt = xt.view(len(xt), -1)
     yt = yt.view(len(yt), -1)
-    scalet = scale * torch.ones_like(xt)
-    Rt = torch.FloatTensor(yUp).to(device)
+    scalet = scale * paddle.ones_like(xt)
+    Rt = paddle.to_tensor(yUp, dtype="float32")
     Rt = Rt.view(len(Rt), -1)
     xt.requires_grad = True
     yt.requires_grad = True
@@ -40,9 +41,9 @@ def det_test(x, y, nu, dP, mu, sigma, scale, epochs, path1, device, caseIdx):
         + 0 * yt
         + (xStart - xt) * (xEnd - xt) * P_t
     )
-    u_hard = u_hard.cpu().data.numpy()
-    v_hard = v_hard.cpu().data.numpy()
-    P_hard = P_hard.cpu().data.numpy()
+    u_hard = u_hard.numpy()
+    v_hard = v_hard.numpy()
+    P_hard = P_hard.numpy()
 
     np.savez(
         path1 + str(int(caseIdx)) + "ML_WallStress_uvp",

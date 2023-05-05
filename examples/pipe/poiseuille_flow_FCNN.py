@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+import seaborn as sns
+from paddle.fluid import core
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -115,41 +121,47 @@ class NavierStokes(base.PDE):
             self.add_equation("momentum_z", momentum_z_compute_func)
 
 
+def predict(
+    input_dict,
+    solver,
+):
+    for key, val in input_dict.items():
+        input_dict[key] = paddle.to_tensor(val, dtype="float32")
+    evaluator = ppsci.utils.expression.ExpressionSolver(
+        input_dict.keys(), ["u", "v", "p"], solver.model
+    )
+    output_expr_dict = {
+        "u": lambda d: d["u"],
+        "v": lambda d: d["v"],
+        "p": lambda d: d["p"],
+    }
+    for output_key, output_expr in output_expr_dict.items():
+        evaluator.add_target_expr(output_expr, output_key)
+    output_dict = evaluator(input_dict)
+    return output_dict
+
+
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-    import os
 
     os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/pipe")
     # set output directory
-    output_dir = "./output_pipe_1"
+    output_dir = "./output"
     dir = "./data/net_params"
-    initial_bias_u = np.load(dir + f"/bias_u_epoch_1.npz")
-    initial_bias_v = np.load(dir + f"/bias_v_epoch_1.npz")
-    initial_bias_p = np.load(dir + f"/bias_p_epoch_1.npz")
-    initial_weight_u = np.load(dir + f"/weight_u_epoch_1.npz")
-    initial_weight_v = np.load(dir + f"/weight_v_epoch_1.npz")
-    initial_weight_p = np.load(dir + f"/weight_p_epoch_1.npz")
-
-    from paddle.fluid import core
 
     core.set_prim_eager_enabled(True)
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
-    re = 200.0  # Reynolds number re = U(2R)/nu
-    nuMean = 0.001
-    nuStd = 0.9
+    NU_MEAN = 0.001
+    NU_STD = 0.9
     L = 1.0  # length of pipe
     R = 0.05  # radius of pipe
     RHO = 1  # density
     P_OUT = 0  # pressure at the outlet of pipe
     P_IN = 0.1  # pressure at the inlet of pipe
-    periodicBC = True  # or false
-
-    eps = 1e-4
-    coef_reg = 1e-5
 
     N_x = 10
     N_y = 50
@@ -168,25 +180,19 @@ if __name__ == "__main__":
 
     X_IN = 0
     X_OUT = X_IN + L
-
-    yStart = -R
-    yEnd = yStart + 2 * R
-
-    nuStart = nuMean - nuMean * nuStd  # 0.0001
-    nuEnd = nuMean + nuMean * nuStd  # 0.1
+    Y_START = -R
+    Y_END = Y_START + 2 * R
+    NU_START = NU_MEAN - NU_MEAN * NU_STD  # 0.0001
+    NU_END = NU_MEAN + NU_MEAN * NU_STD  # 0.1
 
     ## prepare data with (?, 2)
     data_1d_x = np.linspace(X_IN, X_OUT, N_x, endpoint=True)
-    data_1d_y = np.linspace(yStart, yEnd, N_y, endpoint=True)
-    data_1d_nu = np.linspace(nuStart, nuEnd, N_p, endpoint=True)
+    data_1d_y = np.linspace(Y_START, Y_END, N_y, endpoint=True)
+    data_1d_nu = np.linspace(NU_START, NU_END, N_p, endpoint=True)
 
-    print("train_nu is", data_1d_nu)
-    np.savez("train_nu", nu_1d=data_1d_nu)
-    data_2d_xy_before = np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu))
-    data_2d_xy_before_reshape = data_2d_xy_before.reshape(3, -1)
-    data_2d_xy = data_2d_xy_before_reshape.T
-    import copy
-
+    data_2d_xy = (
+        np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu)).reshape(3, -1).T
+    )
     data_2d_xy_old = copy.deepcopy(data_2d_xy)
     np.random.shuffle(data_2d_xy)
 
@@ -200,7 +206,7 @@ if __name__ == "__main__":
         extra_data={"nu": input_nu},
         data_key=["x", "y", "nu"],
     )
-    np.savez("./data/input/input_x_y_nu", x=input_x, y=input_y, nu=input_nu)
+
     # set model
     model_u = ppsci.arch.MLP(
         ["sin(x)", "cos(x)", "y", "nu"],
@@ -210,8 +216,8 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        initial_weight_u,
-        initial_bias_u,
+        np.load(dir + f"/weight_u_epoch_1.npz"),
+        np.load(dir + f"/bias_u_epoch_1.npz"),
     )
 
     model_v = ppsci.arch.MLP(
@@ -222,8 +228,8 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        initial_weight_v,
-        initial_bias_v,
+        np.load(dir + f"/weight_v_epoch_1.npz"),
+        np.load(dir + f"/bias_v_epoch_1.npz"),
     )
 
     model_p = ppsci.arch.MLP(
@@ -234,8 +240,8 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        initial_weight_p,
-        initial_bias_p,
+        np.load(dir + f"/weight_p_epoch_1.npz"),
+        np.load(dir + f"/bias_p_epoch_1.npz"),
     )
 
     def output_transform(out, input):
@@ -253,7 +259,6 @@ if __name__ == "__main__":
         elif next(iter(out.keys())) == "p":
             p = out["p"]
             # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
-            # new_out["p"] =  (x - X_IN) / L * P_IN + (x - X_OUT) / L * P_OUT + (x - X_IN) * (X_OUT - x) * p
             new_out["p"] = (
                 (X_IN - x) * 0
                 + (P_IN - P_OUT) * (X_OUT - x) / L
@@ -266,16 +271,13 @@ if __name__ == "__main__":
         return new_out
 
     def input_transform(input):
-        if periodicBC == True:
-            x, y = input["x"], input["y"]
-            nu = input["nu"]
-            b = 2 * np.pi / (X_OUT - X_IN)
-            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-            sin_x = X_IN * paddle.sin(b * x + c)
-            cos_x = X_IN * paddle.cos(b * x + c)
-            return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
-        else:
-            pass
+        x, y = input["x"], input["y"]
+        nu = input["nu"]
+        b = 2 * np.pi / (X_OUT - X_IN)
+        c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
+        sin_x = X_IN * paddle.sin(b * x + c)
+        cos_x = X_IN * paddle.cos(b * x + c)
+        return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
 
     model_u.register_input_transform(input_transform)
     model_v.register_input_transform(input_transform)
@@ -333,50 +335,79 @@ if __name__ == "__main__":
         save_freq=10,
         log_freq=LOG_FREQ,
         equation=equation,
-        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/output_pipe/checkpoints/epoch_3000",
+        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/output/checkpoints/epoch_3000",
     )
 
-    def predict(
-        input_dict,
-        solver,
-    ):
-        for key, val in input_dict.items():
-            input_dict[key] = paddle.to_tensor(val, dtype="float32")
-        evaluator = ppsci.utils.expression.ExpressionSolver(
-            input_dict.keys(), ["u", "v", "p"], solver.model
-        )
-        output_expr_dict = {
-            "u": lambda d: d["u"],
-            "v": lambda d: d["v"],
-            "p": lambda d: d["p"],
-        }
-        for output_key, output_expr in output_expr_dict.items():
-            evaluator.add_target_expr(output_expr, output_key)
-        output_dict = evaluator(input_dict)
-        return output_dict
-
-    data_2d_xy = data_2d_xy_old
+    # Cross-section velocity profiles of 4 different viscosity sample
+    # Predicted result
     input_dict = {
-        "x": data_2d_xy[:, 0:1],
-        "y": data_2d_xy[:, 1:2],
-        "nu": data_2d_xy[:, 2:3],
+        "x": data_2d_xy_old[:, 0:1],
+        "y": data_2d_xy_old[:, 1:2],
+        "nu": data_2d_xy_old[:, 2:3],
     }
     output_dict = predict(input_dict, solver)
+    u_pred = output_dict["u"].numpy().reshape(N_y, N_x, N_p)
+    v_pred = output_dict["v"].numpy().reshape(N_y, N_x, N_p)
+    p_pred = output_dict["p"].numpy().reshape(N_y, N_x, N_p)
 
+    # Analytical result, y = data_1d_y
+    uSolaM = np.zeros([N_y, N_x, N_p])
+    dP = P_IN - P_OUT
+
+    for i in range(N_p):
+        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
+        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+
+    fontsize = 16
+    idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
+    nu_index = [3, 6, 14, 49]  # pick 4 nu samples
+    ytext = [0.45, 0.28, 0.1, 0.01]
+
+    # Plot
+    plt.figure(1)
+    plt.clf()
+    for idxP in range(len(nu_index)):
+        ax1 = plt.subplot(111)
+        plt.plot(
+            data_1d_y,
+            uSolaM[:, idx_X, nu_index[idxP]],
+            color="darkblue",
+            linestyle="-",
+            lw=3.0,
+            alpha=1.0,
+        )
+        plt.plot(
+            data_1d_y,
+            u_pred[:, idx_X, nu_index[idxP]],
+            color="red",
+            linestyle="--",
+            dashes=(5, 5),
+            lw=2.0,
+            alpha=1.0,
+        )
+        nu_current = float("{0:.5f}".format(data_1d_nu[nu_index[idxP]]))
+        plt.text(
+            -0.012,
+            ytext[idxP],
+            r"$\nu = $" + str(nu_current),
+            {"color": "k", "fontsize": fontsize},
+        )
+
+    plt.ylabel(r"$u(y)$", fontsize=fontsize)
+    plt.xlabel(r"$y$", fontsize=fontsize)
+    ax1.tick_params(axis="x", labelsize=fontsize)
+    ax1.tick_params(axis="y", labelsize=fontsize)
+    ax1.set_xlim([-0.05, 0.05])
+    ax1.set_ylim([0.0, 0.62])
+    plt.savefig("pipe_uProfiles.png", bbox_inches="tight")
+
+    # Distribution of center velocity
+    # Predicted result
     N_pTest = 500
-    data_1d_nuDist = np.random.normal(nuMean, 0.2 * nuMean, N_pTest)
-    data_2d_xy_before_test = np.array(
-        np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nuDist)
+    data_1d_nuDist = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, N_pTest)
+    data_2d_xy_test = (
+        np.array(np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nuDist)).reshape(3, -1).T
     )
-    data_2d_xy_before_test_reshape = data_2d_xy_before_test.reshape(3, -1)
-    data_2d_xy_test = data_2d_xy_before_test_reshape.T
-
-    u_pred_2d_xy = output_dict["u"].numpy()
-    v_pred_2d_xy = output_dict["v"].numpy()
-    p_pred_2d_xy = output_dict["p"].numpy()
-    u_pred_2d_xy_mesh = u_pred_2d_xy.reshape(N_y, N_x, N_p)
-    v_pred_2d_xy_mesh = v_pred_2d_xy.reshape(N_y, N_x, N_p)
-    p_pred_2d_xy_mesh = p_pred_2d_xy.reshape(N_y, N_x, N_p)
 
     input_dict_test = {
         "x": data_2d_xy_test[:, 0:1],
@@ -384,30 +415,31 @@ if __name__ == "__main__":
         "nu": data_2d_xy_test[:, 2:3],
     }
     output_dict_test = predict(input_dict_test, solver)
-
     uMax_pred = output_dict_test["u"].numpy()
 
-    # analytical solution
-    uSolaM = np.zeros([N_y, N_x, N_p])
-    dP = P_IN - P_OUT
-
-    for i in range(N_p):
-        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
-        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+    # Analytical result, y = 0
     uMax_a = np.zeros([N_pTest, 1])
     for i in range(N_pTest):
         uMax_a[i] = (R**2) * dP / (2 * L * data_1d_nuDist[i] * RHO)
 
-    # save result for post process
-    np.savez(
-        "pred_poiseuille_para_0425",
-        mesh=data_2d_xy_before,
-        u=u_pred_2d_xy_mesh,
-        v=v_pred_2d_xy_mesh,
-        p=p_pred_2d_xy_mesh,
-        ut=uSolaM,
-        uMaxP=uMax_pred,
-        uMaxA=uMax_a,
+    # Plot
+    plt.figure(2)
+    plt.clf()
+    ax1 = plt.subplot(111)
+    sns.kdeplot(
+        uMax_a, fill=True, color="black", label="Analytical", linestyle="-", linewidth=3
     )
-
-    # data_1d_nuDist = np.random.normal(2e-4, 1.9e-3, 20)
+    sns.kdeplot(
+        uMax_pred,
+        fill=False,
+        color="red",
+        label="DNN",
+        linestyle="--",
+        linewidth=3.5,
+    )
+    plt.legend(prop={"size": fontsize})
+    plt.xlabel(r"$u_c$", fontsize=fontsize)
+    plt.ylabel(r"PDF", fontsize=fontsize)
+    ax1.tick_params(axis="x", labelsize=fontsize)
+    ax1.tick_params(axis="y", labelsize=fontsize)
+    plt.savefig("pipe_unformUQ.png", bbox_inches="tight")

@@ -11,7 +11,7 @@ from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 
 
-def ThreeD_mesh(x_1d, x_2d, tmp_1d, sigma, mu):
+def ThreeD_mesh(x_2d, tmp_1d):
     tmp_3d = np.expand_dims(np.tile(tmp_1d, len(x_2d)), 1).astype("float")
     x = []
     for x0 in x_2d:
@@ -116,7 +116,7 @@ class NavierStokes(ppsci.equation.pde.base.PDE):
 
 
 os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
-output_dir = "./output_0504"
+output_dir = "./output_0504_debug"
 ppsci.utils.misc.set_random_seed(42)
 
 # initialize logger
@@ -124,31 +124,25 @@ ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 core.set_prim_eager_enabled(True)
 
 EPOCHS = 500
-
 L = 1
 X_IN = 0
 X_OUT = X_IN + L
 P_OUT = 0  # pressure at the outlet of pipe
 P_IN = 0.1  # pressure at the inlet of pipe
 rInlet = 0.05
-
 nPt = 100
 unique_x = np.linspace(X_IN, X_OUT, nPt)
 mu = 0.5 * (X_OUT - X_IN)
-
 N_y = 20
 x_2d = np.tile(unique_x, N_y)
 x_2d = np.reshape(x_2d, (len(x_2d), 1))
-
 nu = 1e-3
-
 sigma = 0.1
-
 scaleStart = -0.02
 scaleEnd = 0
 Ng = 50
 scale_1d = np.linspace(scaleStart, scaleEnd, Ng, endpoint=True)
-x, scale = ThreeD_mesh(unique_x, x_2d, scale_1d, sigma, mu)
+x, scale = ThreeD_mesh(x_2d, scale_1d)
 
 # axisymetric boundary
 R = (
@@ -161,7 +155,6 @@ R = (
 # Generate stenosis
 yUp = (rInlet - R) * np.ones_like(x)
 yDown = (-rInlet + R) * np.ones_like(x)
-
 idx = np.where(scale == scaleStart)
 plt.figure()
 plt.scatter(x[idx], yUp[idx])
@@ -174,25 +167,14 @@ y = np.zeros([len(x), 1])
 for x0 in unique_x:
     index = np.where(x[:, 0] == x0)[0]
     Rsec = max(yUp[index])
-    # print('shape of index',index.shape)
     tmpy = np.linspace(-Rsec, Rsec, len(index)).reshape(len(index), -1)
-    # print('shape of tmpy',tmpy.shape)
     y[index] = tmpy
 
-print("shape of x", x.shape)
-print("shape of y", y.shape)
-print("shape of sacle", scale.shape)
 
-g = 9.8
 RHO = 1
-
 BATCH_SIZE = 50
 LEARNING_RATE = 1e-3
 LAYER_NUMBER = 4 - 1
-
-path = "Cases/"
-
-h_nD = 30
 HIDDEN_SIZE = 20
 
 index = [i for i in range(x.shape[0])]
@@ -244,8 +226,6 @@ model_4 = ppsci.arch.MLP(
     np.load(f"data/net4_params/weight_epoch_0.npz"),
     np.load(f"data/net4_params/bias_epoch_0.npz"),
 )
-
-h = None
 
 
 class Output_transform:
@@ -331,6 +311,181 @@ solver = ppsci.solver.Solver(
     save_freq=10,
     log_freq=1,
     equation=equation,
-    # checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/output_pipe/checkpoints/epoch_3000",
+    checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0504/checkpoints/epoch_280",
 )
-solver.train()
+
+# solver.train()
+def predict(
+    input_dict,
+    solver,
+):
+    for key, val in input_dict.items():
+        input_dict[key] = paddle.to_tensor(val, dtype="float32")
+    evaluator = ppsci.utils.expression.ExpressionSolver(
+        input_dict.keys(), ["u", "v", "p"], solver.model
+    )
+    output_expr_dict = {
+        "u": lambda d: d["u"],
+        "v": lambda d: d["v"],
+        "p": lambda d: d["p"],
+    }
+    for output_key, output_expr in output_expr_dict.items():
+        evaluator.add_target_expr(output_expr, output_key)
+    output_dict = evaluator(input_dict)
+    return output_dict
+
+
+def single_test(x, y, scale, caseIdx):
+    xt = paddle.to_tensor(x, dtype="float32")
+    yt = paddle.to_tensor(y, dtype="float32")
+    scalet = scale * paddle.ones_like(xt)
+    net_in = {"x": xt, "y": yt, "scale": scalet}
+    output_dict = predict(net_in, solver)
+    np.savez(
+        "./" + str(int(caseIdx)) + "ML_WallStress_uvp",
+        x_center=x,
+        y_center=y,
+        u_center=output_dict["u"],
+        v_center=output_dict["v"],
+        p_center=output_dict["p"],
+    )
+    return output_dict
+
+
+scale_test = np.load("aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")["scale"]
+os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
+caseCount = [1.0, 151.0, 486.0]
+W_ctl = np.zeros([len(scale_test), 1])
+W_ctl_Ml = np.zeros([len(scale_test), 1])
+plot_x = 0.8
+plot_y = 0.06
+fontsize = 14
+axis_limit = [0, 1, -0.15, 0.15]
+path = "./data/cases/"
+for caseIdx in caseCount:
+    scale = scale_test[int(caseIdx - 1)]
+    Data_CFD = np.load(path + str(caseIdx) + "CFD_contour.npz")
+    Data_NN = np.load(path + str(caseIdx) + "NN_contour.npz")
+    x = Data_CFD["x"]
+    y = Data_CFD["y"]
+    U_CFD = Data_CFD["U"]
+    U = Data_NN["U"]
+    n = len(x)
+    output_dict = single_test(
+        x.reshape(n, 1), y.reshape(n, 1), np.ones((n, 1)) * scale, caseIdx
+    )
+    u, v, p = output_dict["u"], output_dict["v"], output_dict["p"]
+    w = np.zeros_like(u)
+    U = np.concatenate([u, v, w], axis=1)
+
+    # velocity U
+    plt.figure()
+    plt.subplot(212)
+    plt.scatter(x, y, c=U[:, 0], vmin=min(U_CFD[:, 0]), vmax=max(U_CFD[:, 0]))
+    plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
+    plt.axis(axis_limit)
+    plt.colorbar()
+    plt.subplot(211)
+    plt.scatter(x, y, c=U_CFD[:, 0], vmin=min(U_CFD[:, 0]), vmax=max(U_CFD[:, 0]))
+    plt.colorbar()
+    plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
+    plt.axis(axis_limit)
+    plt.savefig(
+        "plot/" + str(int(caseIdx)) + "_scale_" + str(scale) + "_uContour_test.png",
+        bbox_inches="tight",
+    )
+
+    # velocity V
+    plt.figure()
+    plt.subplot(212)
+    plt.scatter(x, y, c=U[:, 1], vmin=min(U_CFD[:, 1]), vmax=max(U_CFD[:, 1]))
+    plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
+    plt.axis(axis_limit)
+    plt.colorbar()
+    plt.subplot(211)
+    plt.scatter(x, y, c=U_CFD[:, 1], vmin=min(U_CFD[:, 1]), vmax=max(U_CFD[:, 1]))
+    plt.colorbar()
+    plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
+    plt.axis(axis_limit)
+    plt.savefig(
+        "plot/" + str(int(caseIdx)) + "_scale_" + str(scale) + "_vContour_test.png",
+        bbox_inches="tight",
+    )
+    plt.close("all")
+
+    # wall shear stress
+    Data_CFD_wss = np.load(path + str(caseIdx) + "CFD_wss.npz")
+    unique_x = Data_CFD_wss["x"]
+    wall_shear_mag_up = Data_CFD_wss["wss"]
+    Data_NN_wss = np.load(path + str(caseIdx) + "NN_wss.npz")
+    NNwall_shear_mag_up = Data_NN_wss["wss"]
+
+    plt.figure()
+    plt.plot(
+        unique_x,
+        wall_shear_mag_up,
+        label="CFD",
+        color="darkblue",
+        linestyle="-",
+        lw=3.0,
+        alpha=1.0,
+    )
+    plt.plot(
+        unique_x,
+        NNwall_shear_mag_up,
+        label="DNN",
+        color="red",
+        linestyle="--",
+        dashes=(5, 5),
+        lw=2.0,
+        alpha=1.0,
+    )
+    plt.xlabel(r"x", fontsize=16)
+    plt.ylabel(r"$\tau_{c}$", fontsize=16)
+    plt.legend(prop={"size": 16})
+    plt.savefig(
+        "plot/" + str(int(caseIdx)) + "_nu_" + str(nu) + "_wallshear_test.png",
+        bbox_inches="tight",
+    )
+    plt.close("all")
+
+    # x_centerline = np.linspace(X_IN, X_OUT, 100, endpoint=True).reshape(100, 1)
+    # y_centerline = np.zeros((100, 1))
+    # output_dict_centerline = single_test(
+    #     x_centerline, y_centerline, np.ones((100, 1)) * scale, caseIdx
+    # )
+    # y_cfd = Data_CFD["y"]
+    # index = np.where(abs(y_cfd) < 0.001002)
+    # x_cfd = Data_CFD["x"][index]
+    # p_cfd = Data_CFD["P"][index]
+    # index = np.argsort(x_cfd)
+    # x_cfd = x_cfd[index]
+    # y_cfd = y_cfd[index]
+    # p_cfd = p_cfd[index]
+    # plt.figure()
+    # plt.plot(
+    #     x_cfd,
+    #     p_cfd,
+    #     label="CFD",
+    #     color="darkblue",
+    #     linestyle="-",
+    #     lw=3.0,
+    #     alpha=1.0,
+    # )
+    # plt.plot(
+    #     x_centerline,
+    #     output_dict_centerline['p'],
+    #     label="DNN",
+    #     color="red",
+    #     linestyle="--",
+    #     lw=3.0,
+    #     alpha=1.0,
+    # )
+    # plt.xlabel(r"x", fontsize=16)
+    # plt.ylabel(r"$p_{c}$", fontsize=16)
+    # plt.legend(prop={"size": 16})
+    # plt.savefig(
+    #     "plot/" + str(int(caseIdx)) + "_nu_" + str(nu) + "_center_pressure.png",
+    #     bbox_inches="tight",
+    # )
+    # plt.close("all")
