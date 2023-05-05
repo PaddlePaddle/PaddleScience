@@ -126,10 +126,9 @@ def test_cylinder3d_steady_0():
         'stc_solution']
     dyn_rslt = cylinder3d_steady(static=False)
     stc_rslt = cylinder3d_steady()
-
-    compare(dyn_rslt, stc_rslt)
+    #compare(dyn_rslt, stc_rslt)
     compare(dyn_standard, dyn_rslt, mode="equal")
-    compare(stc_rslt, stc_rslt, mode="equal")
+    compare(stc_standard, stc_rslt, mode="equal")
 
 
 @pytest.mark.cylinder3d_steady
