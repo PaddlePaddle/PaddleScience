@@ -84,12 +84,12 @@ model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
 1. 在 `ppsci/arch` 下新建模型文件，以 `new_model.py` 为例
 2. 在 `new_model.py` 文件中导入 PaddleScience 的模型基类所在模块 `base`，并让创建的新模型类（以
-`Class NewModel` 为例）从 `base.NetBase` 继承。
+`Class NewModel` 为例）从 `base.Arch` 继承。
 
     ``` python title="ppsci/arch/new_model.py"
     from ppsci.arch import base
 
-    class NewModel(base.NetBase):
+    class NewModel(base.Arch):
         def __init__(self, ...):
             ...
             # init
