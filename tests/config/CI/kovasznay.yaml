@@ -21,7 +21,7 @@
     solution_filename: 'kovasznay_dynamic'
     vtk_filename: 'output_kovasznay'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/kovasznay.npz"
+    solution_save_dir: "../standard_data/ci_standard/kovasznay_dynamic.npy"
 
 
 - input: 1
@@ -47,7 +47,7 @@
     solution_filename: 'kovasznay_static'
     vtk_filename: 'output_kovasznay'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/kovasznay.npz"
+    solution_save_dir: "../standard_data/ci_standard/kovasznay_static.npy"
 
 
 - input: 2
@@ -73,4 +73,4 @@
     solution_filename: 'kovasznay_new_ad'
     vtk_filename: 'output_kovasznay'
     checkpoint_path: 'checkpoints'
-    solution_save_dir: "../standard_data/ci_standard/kovasznay.npz"
+    solution_save_dir: "../standard_data/ci_standard/kovasznay_new_ad.npy"
