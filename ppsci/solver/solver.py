@@ -428,7 +428,9 @@ class Solver:
             self.model.train()
 
     @paddle.no_grad()
-    def predict(self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64):
+    def predict(
+        self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64
+    ) -> Dict[str, paddle.Tensor]:
         """Pure prediction using model.forward(...), support single device prediction yet.
 
         Args:

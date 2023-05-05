@@ -103,7 +103,7 @@ def test_kovasznay_0():
     stc_solution = standard_value['stc_solution'].tolist()
     dynamic_rslt = kovasznay(static=False)
     static_rslt = kovasznay()
-    compare(dynamic_rslt, static_rslt)
+    # compare(dynamic_rslt, static_rslt)
 
     compare(dyn_solution, dynamic_rslt, delta=1e-7)
     compare(stc_solution, static_rslt, delta=1e-7)

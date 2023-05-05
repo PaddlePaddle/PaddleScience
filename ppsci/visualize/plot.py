@@ -73,7 +73,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
         filename (str): Filename.
         coord (np.ndarray): Coordinate array.
         value (Dict[str, np.ndarray]): Dict of value array.
-        value_keys (List[str]): Value keys.
+        value_keys (Tuple[str, ...]): Value keys.
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
     fig, a = plt.subplots(len(value_keys), num_timestamp, squeeze=False)
@@ -122,8 +122,8 @@ def save_plot_from_1d_dict(
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        coord_keys (List[str]): List of coord key. such as ["x", "y"].
-        value_keys (List[str]): List of value key. such as ["u", "v"].
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     space_ndim = len(coord_keys) - int("t" in coord_keys)
@@ -163,11 +163,11 @@ def _save_plot_from_2d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
-        xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
-        yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
+        xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
+        yticks (Optional[Tuple[float, ...]]): Tuple of ytick locations. Defaults to None.
     """
 
     plt.close("all")
@@ -233,7 +233,7 @@ def save_plot_from_2d_dict(
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
@@ -312,7 +312,7 @@ def _save_plot_from_3d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
 
@@ -365,7 +365,7 @@ def save_plot_from_3d_dict(
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ["u", "v"].
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
 
