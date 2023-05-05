@@ -17,7 +17,7 @@ import paddle
 from ppsci.metric import base
 
 
-class L2Rel(base.MetricBase):
+class L2Rel(base.Metric):
     r"""Class for l2 relative error.
 
     $$
