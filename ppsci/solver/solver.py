@@ -323,7 +323,6 @@ class Solver:
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
-            self.visualize(epoch_id)
             self.train_epoch_func(self, epoch_id, self.log_freq)
 
             # log training summation at end of a epoch
