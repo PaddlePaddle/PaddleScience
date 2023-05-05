@@ -4,7 +4,7 @@
     handler: python
     options:
       members:
-        - LossBase
+        - Loss
         - L1Loss
         - L2Loss
         - MSELoss
