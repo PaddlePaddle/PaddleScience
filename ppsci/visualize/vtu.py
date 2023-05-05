@@ -26,7 +26,7 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
         filename (str): Output filename.
         coord (np.ndarray): Coordinate points with shape of [N, 2] or [N, 3].
         value (np.ndarray): Value of each coord points with shape of [N, M].
-        value_keys (List[str]): Names of each dimension of value, such as ["u", "v"].
+        value_keys (Tuple[str, ...]): Names of each dimension of value, such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp over coord and value.
             Defaults to 1.
     """
@@ -94,8 +94,8 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        coord_keys (List[str]): List of coord key. such as ["x", "y"].
-        value_keys (List[str]): List of value key. such as ["u", "v"].
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
         num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     if len(coord_keys) not in [2, 3, 4]:

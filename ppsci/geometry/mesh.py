@@ -93,8 +93,7 @@ class Mesh(geometry.Geometry):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
+        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
             raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
@@ -112,8 +111,7 @@ class Mesh(geometry.Geometry):
         vertices = np.array(self.vertices)
         faces = np.array(self.faces)
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
+        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
             raise ModuleNotFoundError
 
         open3d_mesh = open3d.geometry.TriangleMesh(
@@ -141,9 +139,6 @@ class Mesh(geometry.Geometry):
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
         all_points = []
@@ -183,9 +178,6 @@ class Mesh(geometry.Geometry):
         all_normal = []
         all_area = []
 
-        # check if open3d is installed before using inflation module
-        if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
         for _n, _dist in zip(n, distance):
@@ -392,6 +384,9 @@ class Mesh(geometry.Geometry):
         return {**x_dict, **area_dict}
 
     def union(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+
         csg = pymesh.CSGTree({"union": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]})
         return Mesh(csg.mesh)
 
@@ -399,6 +394,9 @@ class Mesh(geometry.Geometry):
         return self.union(rhs)
 
     def difference(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+
         csg = pymesh.CSGTree(
             {"difference": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
         )
@@ -408,6 +406,9 @@ class Mesh(geometry.Geometry):
         return self.difference(rhs)
 
     def intersection(self, rhs):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+
         csg = pymesh.CSGTree(
             {"intersection": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
         )

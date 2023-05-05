@@ -5,6 +5,8 @@
     options:
       members:
         - jacobian
+        - Jacobians
         - hessian
+        - Hessians
       show_root_heading: false
       heading_level: 3
