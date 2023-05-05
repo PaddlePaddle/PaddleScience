@@ -15,7 +15,7 @@
 import paddle.nn as nn
 
 
-class MetricBase(nn.Layer):
+class Metric(nn.Layer):
     """Base class for metric."""
 
     def __init__(self):

@@ -19,11 +19,11 @@ from paddle import nn
 from ppsci.arch import base
 
 
-class ModelList(base.NetBase):
+class ModelList(base.Arch):
     """ModelList layer which wrap more than one model that shares inputs.
 
     Args:
-        model_list (Tuple[base.NetBase, ...]): Model(s) nesteed in tuple.
+        model_list (Tuple[base.Arch, ...]): Model(s) nesteed in tuple.
 
     Examples:
         >>> import ppsci
@@ -34,7 +34,7 @@ class ModelList(base.NetBase):
 
     def __init__(
         self,
-        model_list: Tuple[base.NetBase, ...],
+        model_list: Tuple[base.Arch, ...],
     ):
         super().__init__()
         output_keys_set = set()
