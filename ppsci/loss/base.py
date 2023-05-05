@@ -15,7 +15,7 @@
 import paddle.nn as nn
 
 
-class LossBase(nn.Layer):
+class Loss(nn.Layer):
     """Base class for loss."""
 
     def __init__(self, *args, **kwargs):

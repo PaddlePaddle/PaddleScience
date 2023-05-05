@@ -59,6 +59,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+  - 贡献指南: zh/contribute.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15

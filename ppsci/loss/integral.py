@@ -17,8 +17,18 @@ import paddle.nn.functional as F
 from ppsci.loss import base
 
 
-class IntegralLoss(base.LossBase):
-    """Class for integral loss.
+class IntegralLoss(base.Loss):
+    r"""Class for integral loss with monte carlo integration algorithm.
+
+    $$
+    L =
+    \begin{cases}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='sum'}
+    \end{cases}
+    $$
+
+    $M$ is the number of samples in monte carlo integration.
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".

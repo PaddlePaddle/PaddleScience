@@ -141,8 +141,8 @@ def stack_dict_list(dict_list):
     return ret
 
 
-def typename(object):
-    return object.__class__.__name__
+def typename(obj):
+    return obj.__class__.__name__
 
 
 def combine_array_with_time(x, t):
