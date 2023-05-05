@@ -134,12 +134,10 @@ if __name__ == "__main__":
         name="INTERIOR",
     )
 
-    label_expr = {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]}
     norm_cfg = {
         "Scale": {"scale": {key: 1 / value for key, value in norm_factor.items()}}
     }
     bc_inlet = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -156,7 +154,6 @@ if __name__ == "__main__":
         name="BC_INLET",
     )
     bc_cylinder = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -173,7 +170,6 @@ if __name__ == "__main__":
         name="BC_CYLINDER",
     )
     bc_outlet = ppsci.constraint.SupervisedConstraint(
-        label_expr={"p": lambda d: d["p"]},
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -191,7 +187,6 @@ if __name__ == "__main__":
     )
 
     bc_top = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -209,7 +204,6 @@ if __name__ == "__main__":
     )
 
     bc_bottom = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -226,7 +220,6 @@ if __name__ == "__main__":
         name="BC_BOTTOM",
     )
     ic = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -244,7 +237,6 @@ if __name__ == "__main__":
         name="IC",
     )
     sup = ppsci.constraint.SupervisedConstraint(
-        label_expr=label_expr,
         dataloader_cfg={
             **train_dataloader_cfg,
             "dataset": {
@@ -323,36 +315,18 @@ if __name__ == "__main__":
     }
 
     # set visualizer(optional)
-    def construct_input(onestep_cord, time):
-        n = data_len_for_onestep
-        input = {
-            "t": np.concatenate([np.full((n, 1), int(t)) for t in time], axis=1),
-            "x": np.tile(onestep_cord["x"], (len(time), 1)),
-            "y": np.tile(onestep_cord["y"], (len(time), 1)),
-            "z": np.tile(onestep_cord["z"], (len(time), 1)),
-        }
-        input = normalize(input)
-        return input
-
-    def construct_onestep_cord(ref_file, input_keys):
-        onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], input_keys)
-        del onestep_input["t"]
-        n = len(next(iter(onestep_input.values())))
-        return onestep_input, n
-
-    def construct_label(ref_file, time_step, time_list, input_keys, label_keys):
-        _, label = reader.load_vtk_file(
-            ref_file, time_step, time_list, input_keys, label_keys
-        )
-        return label
-
-    onestep_cord, data_len_for_onestep = construct_onestep_cord(
-        ref_file, model.input_keys
-    )
-    onestep_cord = onestep_cord
-    data_len_for_onestep = len(next(iter(onestep_cord.values())))
-    input_dict = construct_input(onestep_cord, TIME_STEP * time_list)
-    label = construct_label(
+    onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], model.input_keys)
+    data_len_for_onestep = len(next(iter(onestep_input.values())))
+    input_dict = {
+        "t": np.concatenate(
+            [np.full((data_len_for_onestep, 1), int(t)) for t in time_tmp], axis=0
+        ).astype("float32"),
+        "x": np.tile(onestep_input["x"], (len(time_tmp), 1)),
+        "y": np.tile(onestep_input["y"], (len(time_tmp), 1)),
+        "z": np.tile(onestep_input["z"], (len(time_tmp), 1)),
+    }
+    input_dict = normalize(input_dict)
+    _, label = reader.load_vtk_file(
         ref_file, TIME_STEP, time_list, model.input_keys, model.output_keys
     )
 
@@ -361,13 +335,18 @@ if __name__ == "__main__":
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
             input_dict,
             {
-                "u": lambda out: denormalize(out["u"]),
-                "v": lambda out: denormalize(out["v"]),
-                "w": lambda out: denormalize(out["w"]),
-                "p": lambda out: denormalize(out["p"]),
+                "u": lambda out: out["u"],
+                "v": lambda out: out["v"],
+                "w": lambda out: out["w"],
+                "p": lambda out: out["p"],
             },
-            num_timestamps=len(time_list),
-            prefix="result_uvwp",
+            label,
+            {"denormalize": transform.Scale(norm_factor)},
+            time_list,
+            600000,
+            len(time_list),
+            "result_uvwp",
+            data_len_for_onestep,
         )
     }
 
@@ -386,7 +365,6 @@ if __name__ == "__main__":
         equation=equation,
         geom=None,
         validator=validator,
-        visualizer=visualizer,
     )
     # train model
     solver.train()

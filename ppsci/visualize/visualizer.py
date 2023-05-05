@@ -15,6 +15,7 @@
 import os.path as osp
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
@@ -298,14 +299,21 @@ class Visualizer3D(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
-        batch_size: int = 64,
+        label_dict: Dict[str, np.ndarray] = None,
+        transforms=None,
+        time_list: List = None,
+        batch_size: int = 128,
         num_timestamps: int = 1,
         prefix: str = "vtu",
+        data_len_for_onestep: int = None,
     ):
+        self.label = label_dict
+        self.transforms = transforms
+        self.time_list = time_list
+        self.data_len_for_onestep = data_len_for_onestep
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def quantitive_error(self, label: Dict, solution: Dict):
-        raise NotImplementedError("code to be refined.")
         """Caculate quantitive error
 
         Args:
@@ -330,7 +338,6 @@ class Visualizer3D(base.Visualizer):
                 ", ".join(
                     [
                         f"{self.time_list[i]}",
-                        f"time = {self.time_step * self.time_list[i]} s",
                         f"sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}: .5f",
                         f"mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}: .5f",
                         f"median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}: .5f",
@@ -345,18 +352,19 @@ class Visualizer3D(base.Visualizer):
             filename (str): Output file name with directory
             data_dict (Dict): predicted result
         """
-        if self.onestep_cord is not None:
-            n = self.data_len_for_onestep
-            for i in range(len(self.time_list)):
-                vtu.save_vtu(
-                    filename=osp.join(filename, f"predict_{i+1}.vtu"),
-                    label={
-                        key: (data_dict[key][i * n : (i + 1) * n]).numpy()
-                        for key in self.output_expr
-                    },  # n : nodes number per time step
-                    coordinates=self.onestep_cord,
-                )
-        else:
-            raise NotImplementedError(
-                "Only one step coordinates for saving vtu is implemented."
+        n = self.data_len_for_onestep
+        data_dict = self.transforms["denormalize"](data_dict)
+        del self.input_dict["t"]
+        coord_key = self.input_dict.keys()
+        for i in range(len(self.time_list)):
+            vtu.save_vtu(
+                filename=osp.join(filename, f"predict_{i+1}.vtu"),
+                label={
+                    key: (data_dict[key][i * n : (i + 1) * n]).numpy()
+                    for key in self.output_expr
+                },  # n : nodes number per time step
+                coordinates={
+                    key: (data_dict[key][i * n : (i + 1) * n]).numpy()
+                    for key in coord_key
+                },
             )

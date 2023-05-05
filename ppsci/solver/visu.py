@@ -22,15 +22,13 @@ from ppsci.utils import expression
 from ppsci.utils import misc
 
 
-def visualize_func(solver, epoch_id):
+@paddle.no_grad()
+def visualize_func(solver, epoch_id: int):
     """Visualization program
 
     Args:
         solver (Solver): Main Solver.
         epoch_id (int): Epoch id.
-
-    Returns:
-        Dict[str, Any]: Metric collected during visualization.
     """
     for _, _visualizer in solver.visualizer.items():
         all_input = misc.Prettydefaultdict(list)

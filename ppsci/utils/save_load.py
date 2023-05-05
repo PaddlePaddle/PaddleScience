@@ -105,17 +105,17 @@ def load_checkpoint(
     metric_dict = paddle.load(path + ".pdstates")
     if grad_scaler is not None:
         scaler_dict = paddle.load(path + ".pdscaler")
-    if equation is not None:
-        equation_dict = paddle.load(path + ".pdeqn")
+    # if equation is not None:
+    # equation_dict = paddle.load(path + ".pdeqn")
 
     # set state dict
     model.set_state_dict(param_dict)
     optimizer.set_state_dict(optim_dict)
     if grad_scaler is not None:
         grad_scaler.load_state_dict(scaler_dict)
-    if equation is not None:
-        for name, _equation in equation.items():
-            _equation.set_state_dict(equation_dict[name])
+    # if equation is not None:
+    #     for name, _equation in equation.items():
+    #         _equation.set_state_dict(equation_dict[name])
 
     logger.info(f"Finish loading checkpoint from {path}")
     return metric_dict
