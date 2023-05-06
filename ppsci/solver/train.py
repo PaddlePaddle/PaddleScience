@@ -16,17 +16,18 @@ import time
 
 import paddle.amp as amp
 
+from ppsci import solver
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def train_epoch_func(solver, epoch_id, log_freq):
+def train_epoch_func(solver: solver.Solver, epoch_id: int, log_freq: int):
     """Train program for one epoch
 
     Args:
-        solver (Solver): Main solver.
+        solver (solver.Solver): Main solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log training information every `log_freq` steps.
     """
@@ -112,11 +113,11 @@ def train_epoch_func(solver, epoch_id, log_freq):
         batch_tic = time.perf_counter()
 
 
-def train_LBFGS_epoch_func(solver, epoch_id, log_freq):
+def train_LBFGS_epoch_func(solver: solver.Solver, epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
 
     Args:
-        solver (Solver): Main solver.
+        solver (solver.Solver): Main solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log training information every `log_freq` steps.
     """
