@@ -56,8 +56,8 @@ def load_csv_file(
             for _, line_dict in enumerate(reader):
                 for key, value in line_dict.items():
                     raw_data[key].append(value)
-    except Exception as e:
-        logger.error(f"{repr(e)}, {file_path} isn't a valid csv file.")
+    except FileNotFoundError:
+        logger.error(f"{file_path} isn't a valid csv file.")
         exit(0)
 
     # convert to numpy array
@@ -92,8 +92,8 @@ def load_mat_file(
     try:
         # read all data from mat file
         raw_data = sio.loadmat(file_path)
-    except Exception as e:
-        logger.error(f"{repr(e)}, {file_path} isn't a valid mat file.")
+    except FileNotFoundError:
+        logger.error(f"{file_path} isn't a valid mat file.")
         raise
 
     # convert to numpy array

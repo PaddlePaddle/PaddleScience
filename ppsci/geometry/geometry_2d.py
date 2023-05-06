@@ -325,7 +325,7 @@ class Polygon(geometry.Geometry):
     """Class for simple polygon.
 
     Args:
-        vertices (List[Tuple[float, float]]): The order of vertices can be in a
+        vertices (Tuple[Tuple[float, float], ...]): The order of vertices can be in a
             clockwise or counterclockwisedirection. The vertices will be re-ordered in
             counterclockwise (right hand rule).
 

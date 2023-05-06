@@ -18,7 +18,7 @@ import paddle.nn.functional as F
 from ppsci.metric import base
 
 
-class MAE(base.MetricBase):
+class MAE(base.Metric):
     r"""Mean absolute error
 
     $$

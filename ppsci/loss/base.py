@@ -19,13 +19,8 @@ from typing import Union
 import paddle.nn as nn
 
 
-class LossBase(nn.Layer):
-    """Base class for loss.
-
-    Args:
-        reduction (str): Reduction method.
-        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
-    """
+class Loss(nn.Layer):
+    """Base class for loss."""
 
     def __init__(
         self, reduction: str, weight: Optional[Union[Dict[str, float], float]] = None
