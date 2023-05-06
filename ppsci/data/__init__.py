@@ -17,7 +17,6 @@ import random
 from functools import partial
 
 import numpy as np
-import paddle
 import paddle.device as device
 import paddle.distributed as dist
 import paddle.io as io

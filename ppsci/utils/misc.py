@@ -17,7 +17,6 @@ import random
 
 import numpy as np
 import paddle
-import paddle.distributed as dist
 
 __all__ = [
     "all_gather",
