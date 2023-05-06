@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    output_dir = "./output_debug"
+    output_dir = "./output_cylinder3d_unsteady_Re3900"
 
     # set reference file name without time index
     ref_file = "data/LBM_result/cylinder3d_2023_1_31_LBM_"
@@ -319,8 +319,8 @@ if __name__ == "__main__":
     data_len_for_onestep = len(next(iter(onestep_input.values())))
     input_dict = {
         "t": np.concatenate(
-            [np.full((data_len_for_onestep, 1), int(t)) for t in time_tmp], axis=0
-        ).astype("float32"),
+            [np.full((data_len_for_onestep, 1), t, "float32") for t in time_tmp], axis=0
+        ),
         "x": np.tile(onestep_input["x"], (len(time_tmp), 1)),
         "y": np.tile(onestep_input["y"], (len(time_tmp), 1)),
         "z": np.tile(onestep_input["z"], (len(time_tmp), 1)),

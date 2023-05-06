@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import List
+from typing import Tuple
 
 import numpy as np
 from paddle import io
@@ -38,8 +39,8 @@ class VtuDataset(io.Dataset):
     def __init__(
         self,
         file_path: str,
-        input_keys: List = None,
-        label_keys: List = None,
+        input_keys: Tuple[str, ...] = None,
+        label_keys: Tuple[str, ...] = None,
         time_step: int = None,
         time_index: List = None,
         labels=None,

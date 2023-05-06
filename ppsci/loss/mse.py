@@ -60,7 +60,7 @@ class MSELoss(base.LossBase):
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict is not None:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
