@@ -28,7 +28,10 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - 安装使用: index.md
+  - 安装使用:
+      - 主页: index.md
+      - 功能介绍: overview.md
+      - 开始使用: install_setup.md
   - 经典案例:
       - PINNs:
         - ViV: zh/examples/viv.md
