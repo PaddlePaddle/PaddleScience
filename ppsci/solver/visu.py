@@ -18,15 +18,17 @@ import os.path as osp
 import paddle
 import paddle.amp as amp
 
+from ppsci import solver
 from ppsci.utils import expression
 from ppsci.utils import misc
 
 
-def visualize_func(solver, epoch_id):
+@paddle.no_grad()
+def visualize_func(solver: solver.Solver, epoch_id: int):
     """Visualization program
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
 
     Returns:
@@ -49,7 +51,9 @@ def visualize_func(solver, epoch_id):
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False
