@@ -20,6 +20,7 @@ from typing import Tuple
 from typing import Union
 
 import numpy as np
+import paddle
 from paddle import io
 from paddle import vision
 

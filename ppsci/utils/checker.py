@@ -103,7 +103,7 @@ def run_check() -> None:
             "Paddle's version and PaddleScience's version are both correct."
         )
     else:
-        print(f"PaddleScience is installed successfully.✨ 🍰 ✨")
+        print("PaddleScience is installed successfully.✨ 🍰 ✨")
 
 
 def dynamic_import_to_globals(

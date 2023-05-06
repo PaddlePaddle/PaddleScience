@@ -61,7 +61,7 @@ ppsci.utils.run_check()
 
 - 运行内置的案例（以 **ldc2d_unsteady_Re10.py** 为例）
 
-    ``` shell linenums="1"
+    ``` shell
     cd examples/ldc/
     python ./ldc2d_unsteady_Re10.py
     ```
@@ -78,7 +78,7 @@ ppsci.utils.run_check()
 
     编写完毕后运行你的代码
 
-    ``` shell linenums="1"
+    ``` shell
     cd examples/demo
     python ./demo.py
     ```
