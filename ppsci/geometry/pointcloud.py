@@ -27,11 +27,11 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        interior (Union[str, Dict]): File or Dict, which store interior points of a point cloud.
-        attributes(Dict): Dict stores informations except coordinates
-        data_key (Tuple[str]): Tuple of coordinate keys, such as ["x", "y"].
-        boundary_path (str): File which store boundary points of a point cloud.
-        boundary_normal_path (str): File which store boundary normals of a point cloud.
+        interior (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store interior points of a point cloud.
+        attributes(Dict): Dict stores informations except coordinates.
+        coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
+        boundary (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary points of a point cloud.
+        boundary_normal (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary normal points of a point cloud.
         alias_dict (Tuple[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
 
     Examples:
@@ -41,10 +41,10 @@ class PointCloud(geometry.Geometry):
 
     def __init__(
         self,
-        interior: Union[str, Dict],
+        interior: Union[str, Dict[str, np.ndarray]],
         attributes: Dict,
-        data_key: Tuple[str],
-        boundary_path: str = None,
+        coord_keys: Tuple[str, ...],
+        boundary: Union[str, Dict[str, np.ndarray]] = None,
         boundary_normal_path: str = None,
         alias_dict: Tuple[str] = None,
     ):
@@ -56,24 +56,24 @@ class PointCloud(geometry.Geometry):
         elif isinstance(interior, str):
             if interior.endswith(".csv"):
                 # read data
-                data_dict = reader.load_csv_file(interior, data_key)
+                data_dict = reader.load_csv_file(interior, coord_keys)
             else:
                 raise NotImplementedError(f"file type : {interior} is invalid yet.")
 
         # convert to numpy array
         self.interior = []
-        for key in data_key:
+        for key in coord_keys:
             self.interior.append(data_dict[key])
         self.interior = np.concatenate(self.interior, -1)
         self.len = self.interior.shape[0]
         # Boundary points from CSV file
-        if boundary_path is not None:
+        if boundary is not None:
             # read data
-            data_dict = reader.load_csv_file(boundary_path, data_key)
+            data_dict = reader.load_csv_file(boundary, coord_keys)
 
             # convert to numpy array
             self.boundary = {}
-            for key in data_key:
+            for key in coord_keys:
                 self.boundary.append(data_dict[key])
             self.boundary = np.concatenate(self.boundary, -1)
         else:
@@ -82,25 +82,25 @@ class PointCloud(geometry.Geometry):
         # Normal of boundary points from CSV file
         if boundary_normal_path is not None:
             # read data
-            data_dict = reader.load_csv_file(boundary_normal_path, data_key)
+            data_dict = reader.load_csv_file(boundary_normal_path, coord_keys)
 
             # convert to numpy array
             self.normal = {}
-            for key in data_key:
+            for key in coord_keys:
                 self.normal.append(data_dict[key])
             self.normal = np.concatenate(self.normal, -1)
         else:
             self.normal = None
 
         self.input_keys = []
-        for key in data_key:
+        for key in coord_keys:
             if alias_dict is not None and key in alias_dict:
                 self.input_keys.append(alias_dict[key])
             else:
                 self.input_keys.append(key)
 
         super().__init__(
-            len(data_key),
+            len(coord_keys),
             (np.amin(self.interior, axis=0), np.amax(self.interior, axis=0)),
             np.inf,
         )

@@ -15,11 +15,11 @@
 import os.path as osp
 from typing import Callable
 from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Tuple
 
 import numpy as np
+import paddle
 
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -291,21 +291,25 @@ class Visualizer3D(base.Visualizer):
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
         batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps
+        label_dict (Dict[str, np.ndarray]): Label dict.
+        transforms (Optional[Dict[str, ]]): Transformer dict.
+        time_list (Optional[Tuple[float, ...]]): Time list.
+        num_timestamps (int, optional): Number of timestamps.
         prefix (str, optional): Prefix for output file.
+        data_len_for_onestep (Optional[int]): Data length for one time step.
     """
 
     def __init__(
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
-        label_dict: Dict[str, np.ndarray] = None,
-        transforms=None,
-        time_list: List = None,
-        batch_size: int = 128,
+        batch_size: int = 64,
+        label_dict: Optional[Dict[str, np.ndarray]] = None,
+        transforms: Optional[Dict] = None,
+        time_list: Optional[Tuple[float, ...]] = None,
         num_timestamps: int = 1,
         prefix: str = "vtu",
-        data_len_for_onestep: int = None,
+        data_len_for_onestep: Optional[int] = None,
     ):
         self.label = label_dict
         self.transforms = transforms
@@ -313,51 +317,19 @@ class Visualizer3D(base.Visualizer):
         self.data_len_for_onestep = data_len_for_onestep
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
-    def quantitive_error(self, label: Dict, solution: Dict):
-        """Caculate quantitive error
-
-        Args:
-            label (Dict): reference baseline result
-            solution (Dict): predicted result
-        """
-        # LBM baseline, output Error
-        n = self.data_len_for_onestep
-        err_dict = misc.Prettydefaultdict(list)
-        err_dict_key = "u"
-        for i in range(len(self.time_list)):
-            for key in solution.keys():
-                err_dict[key].append(
-                    (
-                        label[key][
-                            i * n : (i + 1) * n
-                        ]  # n : nodes number per time step
-                        - solution[key][i * n : (i + 1) * n]
-                    ).numpy()  # n : nodes number per time step
-                )
-            logger.info(
-                ", ".join(
-                    [
-                        f"{self.time_list[i]}",
-                        f"sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}: .5f",
-                        f"mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}: .5f",
-                        f"median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}: .5f",
-                    ]
-                )
-            )
-
-    def save(self, filename: str, data_dict: Dict):
+    def save(self, filename: str, data_dict: Dict[str, paddle.Tensor]):
         """Save points result
 
         Args:
-            filename (str): Output file name with directory
-            data_dict (Dict): predicted result
+            filename (str): Output file name with directory.
+            data_dict (Dict[str, paddle.Tensor]): Predicted result.
         """
         n = self.data_len_for_onestep
         data_dict = self.transforms["denormalize"](data_dict)
         del self.input_dict["t"]
         coord_key = self.input_dict.keys()
         for i in range(len(self.time_list)):
-            vtu.save_vtu(
+            vtu.save_vtu_to_mesh(
                 filename=osp.join(filename, f"predict_{i+1}.vtu"),
                 label={
                     key: (data_dict[key][i * n : (i + 1) * n]).numpy()

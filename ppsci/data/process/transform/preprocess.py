@@ -33,7 +33,8 @@ class Translate:
 
     def __call__(self, data_dict):
         for key in self.offset:
-            data_dict[key] += self.offset[key]
+            if key in data_dict:
+                data_dict[key] += self.offset[key]
         return data_dict
 
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -27,22 +27,22 @@ class VtuDataset(io.Dataset):
 
     Args:
         file_path (str): *.vtu file path.
-        input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of input keys.
-        time_step (int): Time step with unit second
-        time_index (List): Time index list in increasing order
-        labels : Temporary interface for [load_vtk_withtime_file]
-        transforms (vision.Compose, optional): Compose object contains sample wise
+        input_keys (Optional[Tuple[str, ...]]): List of input keys.
+        label_keys (Optional[Tuple[str, ...]]): List of label keys.
+        time_step (int): Time step with unit second.
+        time_index (List): Time index list in increasing order.
+        labels : Temporary variable for [load_vtk_with_time_file].
+        transforms (vision.Compose, optional): Compose object contains sample wise.
             transform(s).
     """
 
     def __init__(
         self,
         file_path: str,
-        input_keys: Tuple[str, ...] = None,
-        label_keys: Tuple[str, ...] = None,
+        input_keys: Optional[Tuple[str, ...]] = None,
+        label_keys: Optional[Tuple[str, ...]] = None,
         time_step: int = None,
-        time_index: List = None,
+        time_index: Optional[Tuple[int, ...]] = None,
         labels=None,
         transforms: vision.Compose = None,
     ):
@@ -55,12 +55,12 @@ class VtuDataset(io.Dataset):
             )
             _label = {key: _label[key] for key in label_keys}
         elif time_step is None and time_index is None:
-            _input = reader.load_vtk_withtime_file(file_path)
+            _input = reader.load_vtk_with_time_file(file_path)
             _label = {}
             for key, value in labels.items():
                 if isinstance(value, (int, float)):
                     _label[key] = np.full_like(
-                        next(iter(_input.values())), float(value), "float32"
+                        next(iter(_input.values())), value, "float32"
                     )
                 else:
                     _label[key] = value

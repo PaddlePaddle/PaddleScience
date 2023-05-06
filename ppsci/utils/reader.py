@@ -15,7 +15,6 @@
 import collections
 import csv
 from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -110,18 +109,18 @@ def load_mat_file(
 def load_vtk_file(
     filename_without_timeid: str,
     time_step: Union[float, int],
-    time_index: List,
-    input_keys: List = [],
-    label_keys: List = [],
+    time_index: Tuple[int, ...],
+    input_keys: Tuple[str, ...],
+    label_keys: Optional[Tuple[str, ...]] = (),
 ) -> Dict[str, np.ndarray]:
     """load coordinates and attached label from the vtu file
 
     Args:
-        filename_without_timeid (str): File name without time id
-        time_step (Union[float, Dict]): Physical time step
-        time_index (List): Physical time indexes
-        input_keys (List, optional): Input coordinates name keys. Defaults to [].
-        label_keys (List, optional): Input label name keys. Defaults to [].
+        filename_without_timeid (str): File name without time id.
+        time_step (Union[float, Dict]): Physical time step.
+        time_index (Tuple[int, ...]): Physical time indexes.
+        input_keys (Tuple[str, ...]): Input coordinates name keys.
+        label_keys (Optional[Tuple[str, ...]]): Input label name keys.
 
     Returns:
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
@@ -135,30 +134,30 @@ def load_vtk_file(
         i = 0
         for key in input_dict:
             if key == "t":
-                input_dict[key].append(np.full((n, 1), float(index * time_step)))
+                input_dict[key].append(np.full((n, 1), index * time_step, "float32"))
             else:
-                input_dict[key].append(mesh.points[:, i].reshape(n, 1))
-                i = i + 1
+                input_dict[key].append(
+                    mesh.points[:, i].reshape(n, 1).astype("float32")
+                )
+                i += 1
         for i, key in enumerate(label_dict):
-            label_dict[key].append(np.array(mesh.point_data[key]))
+            label_dict[key].append(np.array(mesh.point_data[key], "float32"))
     for key in input_dict:
-        if input_keys is not None:
-            input_dict[key] = np.concatenate(input_dict[key], axis=0).astype("float32")
+        input_dict[key] = np.concatenate(input_dict[key])
     for key in label_dict:
-        if label_keys is not None:
-            label_dict[key] = np.concatenate(label_dict[key], axis=0).astype("float32")
+        label_dict[key] = np.concatenate(label_dict[key])
 
     return input_dict, label_dict
 
 
-def load_vtk_withtime_file(file: str) -> Dict[str, np.ndarray]:
-    """Temporary interface for points cloud, will be banished sooner
+def load_vtk_with_time_file(file: str) -> Dict[str, np.ndarray]:
+    """Temporary interface for points cloud, will be banished sooner.
 
     Args:
-        file (str): input file name
+        file (str): input file name.
 
     Returns:
-        Dict[str, np.ndarray]: Input coordinates dict
+        Dict[str, np.ndarray]: Input coordinates dict.
     """
     mesh = meshio.read(file)
     n = mesh.points.shape[0]

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from typing import Dict
 
 import meshio
 import numpy as np
@@ -123,7 +124,16 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
 
 
-def save_vtu(filename, label, coordinates):
+def save_vtu_to_mesh(
+    filename: str, label: Dict[str, np.ndarray], coordinates: Dict[str, np.ndarray]
+):
+    """Save data into .vtu format by meshio.
+
+    Args:
+        filename (str): File name.
+        label (Dict[str, np.ndarray]): Physical information.
+        coordinates (Dict[str, np.ndarray]): Coordinates of points.
+    """
     path = os.path.dirname(filename)
     os.makedirs(path, exist_ok=True)
 

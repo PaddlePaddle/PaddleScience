@@ -71,14 +71,14 @@ if __name__ == "__main__":
         "p": P_STAR,
     }
     normalize = transform.Scale({key: 1 / value for key, value in norm_factor.items()})
-    interior_data = reader.load_vtk_withtime_file(
+    interior_data = reader.load_vtk_with_time_file(
         "data/sample_points/interior_txyz.vtu"
     )
     geom = {
         "interior": ppsci.geometry.PointCloud(
             interior=normalize(interior_data),
             attributes=None,
-            data_key=("t", "x", "y", "z"),
+            coord_keys=("t", "x", "y", "z"),
         )
     }
 
