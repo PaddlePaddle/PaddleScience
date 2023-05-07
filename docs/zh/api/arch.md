@@ -10,5 +10,6 @@
         - CylinderEmbedding
         - PhysformerGPT2
         - ModelList
+        - AFNONet
       show_root_heading: false
       heading_level: 3
