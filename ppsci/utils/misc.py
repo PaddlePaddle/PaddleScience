@@ -17,7 +17,6 @@ import random
 
 import numpy as np
 import paddle
-import paddle.distributed as dist
 
 __all__ = [
     "all_gather",
@@ -141,8 +140,8 @@ def stack_dict_list(dict_list):
     return ret
 
 
-def typename(obj):
-    return obj.__class__.__name__
+def typename(object):
+    return object.__class__.__name__
 
 
 def combine_array_with_time(x, t):
@@ -155,7 +154,6 @@ def combine_array_with_time(x, t):
 
 
 def set_random_seed(seed):
-    rank = dist.get_rank()
-    paddle.seed(seed + rank)
-    np.random.seed(seed + rank)
-    random.seed(seed + rank)
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
