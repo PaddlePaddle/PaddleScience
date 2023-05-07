@@ -23,7 +23,7 @@ from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def train_epoch_func(solver: solver.Solver, epoch_id: int, log_freq: int):
+def train_epoch_func(solver, epoch_id: int, log_freq: int):
     """Train program for one epoch
 
     Args:
@@ -113,7 +113,7 @@ def train_epoch_func(solver: solver.Solver, epoch_id: int, log_freq: int):
         batch_tic = time.perf_counter()
 
 
-def train_LBFGS_epoch_func(solver: solver.Solver, epoch_id: int, log_freq: int):
+def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
 
     Args:
