@@ -17,6 +17,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import reader
 from ppsci.utils.checker import dynamic_import_to_globals
+from ppsci.utils.checker import run_check
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
@@ -31,6 +32,7 @@ __all__ = [
     "misc",
     "reader",
     "dynamic_import_to_globals",
+    "run_check",
     "AttrDict",
     "ExpressionSolver",
     "AverageMeter",
