@@ -18,7 +18,6 @@ site_description: An out-of-the-box open source library for scientific computing
 site_author: PaddlePaddle
 site_url: "https://github.com/PaddlePaddle/PaddleScience"
 strict: false
-edit_uri: edit/main/docs # 编辑按钮跳转的链接
 
 # Repository
 repo_name: PaddleScience
@@ -32,7 +31,7 @@ nav:
   - PaddleScience:
       - 主页: index.md
       - 功能介绍: overview.md
-      - 开始使用: install_setup.md
+      - 安装使用: install_setup.md
   - 经典案例:
       - PINNs:
         - ViV: zh/examples/viv.md
@@ -144,7 +143,6 @@ extra_javascript:
 # Extra css
 extra_css:
   - stylesheets/extra.css
-  - stylesheets/monokai.css
 
 # Extra
 extra:
