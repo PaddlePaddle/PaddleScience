@@ -18,18 +18,17 @@ import paddle
 import paddle.amp as amp
 import paddle.io as io
 
-from ppsci import solver
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def eval_func(solver: solver.Solver, epoch_id: int, log_freq: int) -> float:
+def eval_func(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 

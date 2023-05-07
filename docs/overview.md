@@ -1,20 +1,14 @@
 # PaddleScience 模块介绍
 
-PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习工作流的角度来看，这 12 个模块分别负责构建输入数据、构建神经网络模型、构建损失函数、构建优化器，训练、评估、可视化等功能。从科学计算角度来看，部分模块承担了不同于 CV、NLP 任务的功能，比如用于物理机理驱动的 Equation 模块，定义方程公式和辅助高阶微分计算；用于涉及几何场景采样的 Geometry 模块，定义简单、复杂几何形状并在其内部、边界采样构造数据；Constraint 模块将不同的优化目标视为一种“约束”，使得套件能用一套训练代码统一物理机理驱动（无监督训练）、数据驱动（监督训练）、数理融合（半监督训练）三种不同的求解流程。
+PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习工作流的角度来看，这 12 个模块分别负责构建输入数据、构建神经网络模型、构建损失函数、构建优化器，训练、评估、可视化等功能。从科学计算角度来看，部分模块承担了不同于 CV、NLP 任务的功能，比如用于物理机理驱动的 Equation 模块，定义方程公式和辅助高阶微分计算；用于涉及几何场景采样的 Geometry 模块，定义简单、复杂几何形状并在其内部、边界采样构造数据；Constraint 模块将不同的优化目标视为一种“约束”，使得套件能用一套训练代码统一物理机理驱动、数据驱动、数理融合三种不同的求解流程。
 
 ## 1. 整体工作流
 
 <figure markdown>
-  ![TODO](workflow.jpg){ loading=lazy }
-  <figcaption> workflow of PaddleScience </figcaption>
+  ![workflow](./images/overview/workflow.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 ## 2. 模块简介
-
-<figure markdown>
-  ![TODO](modules.jpg){ loading=lazy }
-  <figcaption> Relation of different modules </figcaption>
-</figure>
 
 ### 2.1 [Arch](./zh/api/arch.md)
 
@@ -25,6 +19,10 @@ Arch 模块负责各种神经网络模型的组网、参数初始化、前向计
 AutoDiff 模块负责计算高阶微分功能，内置基于 Paddle 自动微分机制的全局单例 `jacobian`、`hessian` 供用户使用。
 
 ### 2.3 [Constraint](./zh/api/constraint.md)
+
+<figure markdown>
+  ![constraint](./images/overview/constraint.jpg){ loading=lazy style="height:50%;width:50%"}
+</figure>
 
 为了在套件中统一物理信息驱动、数据驱动、数理融合三种求解方式，我们将数据构造、输入到输出的计算过程、损失函数等必要接口在其定义完毕之后，统一记录在 Constraint 这一模块中，有了这些接口，Constraint 就能表示不同的训练目标，如：
 
@@ -53,9 +51,17 @@ BatchTransform 模块存放各种基于批样本的数据预处理方法。
 
 ### 2.5 [Equation](./zh/api/equation.md)
 
+<figure markdown>
+  ![equation](./images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%" align="center" }
+</figure>
+
 Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes` 表示 N-S 方程，`Vibration` 表示振动方程，每个方程内部含有相关变量的计算函数。
 
 ### 2.6 [Geometry](./zh/api/geometry.md)
+
+<figure markdown>
+  ![geometry](./images/overview/geometry.jpg#center){ loading=lazy style="height:50%;width:50%" }
+</figure>
 
 Geometry 模块负责定义各种常见的几何形状，如 `Interval` 线段几何、`Rectangle` 矩形几何、`Sphere` 球面几何。
 
