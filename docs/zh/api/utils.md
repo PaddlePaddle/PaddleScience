@@ -4,8 +4,11 @@
     handler: python
     options:
       members:
+        - initializer
         - logger
         - misc
+        - reader
+        - run_check
         - AttrDict
         - ExpressionSolver
         - AverageMeter
