@@ -38,7 +38,8 @@ class Biharmonic(base.PDE):
         def biharmonic_compute_func(out):
             u = out["u"]
             biharmonic = -self.q / self.D
-            invars = ("x", "y", "z")[: self.dim]
+            invars_name = ("x", "y", "z")[: self.dim]
+            invars = [out[name] for name in invars_name]
             for invar_i in invars:
                 for invar_j in invars:
                     biharmonic += hessian(hessian(u, invar_i), invar_j)
