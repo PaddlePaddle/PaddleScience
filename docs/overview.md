@@ -8,6 +8,17 @@ PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习�
   ![workflow](./images/overview/workflow.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
+上图是 PaddleScience 的 workflow 示意图（以基于几何的问题求解为例），流程描述如下
+
+1. Geometry 负责构建几何并在几何上采样，完成数据构建；
+2. 用 Model 模块接受输入，得到模型输出；
+3. 科学计算任务具有特殊性，模型输出往往并不是前向计算的终点，还需要进一步按照 Equation，计算出方程公式所需的变量；
+4. 计算损失函数，并利用框架的自动微分机制，求出所有参数的梯度；
+5. 上述的优化目标可以施加在几何的不同区域上，比如interior、boundary区域，因此上图中的 Constraint 可以有多个；
+6. 将所有 Constraint 贡献的梯度累加，并用于更新模型参数；
+7. 训练过程中如果开启了评估和可视化功能，则会按一定频率自动对当前模型进行评估和预测结果可视化；
+8. Solver 是整个套件运行的全局调度模块，负责将上述过程按用户指定的轮数和频率重复运行。
+
 ## 2. 模块简介
 
 ### 2.1 [Arch](./zh/api/arch.md)
