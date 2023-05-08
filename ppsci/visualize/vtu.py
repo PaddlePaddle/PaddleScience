@@ -14,6 +14,7 @@
 
 import os
 from typing import Dict
+from typing import Tuple
 
 import meshio
 import numpy as np
@@ -125,22 +126,28 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
 
 
 def save_vtu_to_mesh(
-    filename: str, label: Dict[str, np.ndarray], coordinates: Dict[str, np.ndarray]
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    value_keys: Tuple[str, ...],
+    coord_keys: Tuple[str, ...],
+    num_timestamp: int = 1,
 ):
     """Save data into .vtu format by meshio.
 
     Args:
         filename (str): File name.
-        label (Dict[str, np.ndarray]): Physical information.
-        coordinates (Dict[str, np.ndarray]): Coordinates of points.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     path = os.path.dirname(filename)
     os.makedirs(path, exist_ok=True)
 
-    n = len(next(iter(coordinates.values())))
-    m = len(coordinates)
+    n = len(next(iter(data_dict.values())))
+    m = len(coord_keys)
     # get the list variable transposed
-    points = np.stack((x for x in iter(coordinates.values()))).reshape(m, n)
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(m, n)
     mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
-    mesh.point_data = label
+    mesh.point_data = {key: data_dict[key] for key in value_keys}
     mesh.write(filename)

@@ -335,18 +335,16 @@ if __name__ == "__main__":
         "visulzie_uvwp": ppsci.visualize.Visualizer3D(
             input_dict,
             {
-                "u": lambda out: out["u"],
-                "v": lambda out: out["v"],
-                "w": lambda out: out["w"],
-                "p": lambda out: out["p"],
+                "u": lambda out: out["u"] * norm_factor["u"],
+                "v": lambda out: out["v"] * norm_factor["v"],
+                "w": lambda out: out["w"] * norm_factor["w"],
+                "p": lambda out: out["p"] * norm_factor["p"],
             },
-            label,
-            {"denormalize": transform.Scale(norm_factor)},
-            time_list,
             600000,
+            label,
+            time_list,
             len(time_list),
             "result_uvwp",
-            data_len_for_onestep,
         )
     }
 

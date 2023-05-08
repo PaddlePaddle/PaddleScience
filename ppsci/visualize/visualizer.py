@@ -296,7 +296,6 @@ class Visualizer3D(base.Visualizer):
         time_list (Optional[Tuple[float, ...]]): Time list.
         num_timestamps (int, optional): Number of timestamps.
         prefix (str, optional): Prefix for output file.
-        data_len_for_onestep (Optional[int]): Data length for one time step.
     """
 
     def __init__(
@@ -305,16 +304,12 @@ class Visualizer3D(base.Visualizer):
         output_expr: Dict[str, Callable],
         batch_size: int = 64,
         label_dict: Optional[Dict[str, np.ndarray]] = None,
-        transforms: Optional[Dict] = None,
         time_list: Optional[Tuple[float, ...]] = None,
         num_timestamps: int = 1,
         prefix: str = "vtu",
-        data_len_for_onestep: Optional[int] = None,
     ):
         self.label = label_dict
-        self.transforms = transforms
         self.time_list = time_list
-        self.data_len_for_onestep = data_len_for_onestep
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
 
     def save(self, filename: str, data_dict: Dict[str, paddle.Tensor]):
@@ -324,19 +319,16 @@ class Visualizer3D(base.Visualizer):
             filename (str): Output file name with directory.
             data_dict (Dict[str, paddle.Tensor]): Predicted result.
         """
-        n = self.data_len_for_onestep
-        data_dict = self.transforms["denormalize"](data_dict)
-        del self.input_dict["t"]
-        coord_key = self.input_dict.keys()
+
+        n = int((next(iter(data_dict.values()))).shape[0] / self.num_timestamps)
+        coord_keys = list(filter(lambda x: x != "t", self.input_dict))
         for i in range(len(self.time_list)):
             vtu.save_vtu_to_mesh(
                 filename=osp.join(filename, f"predict_{i+1}.vtu"),
-                label={
-                    key: (data_dict[key][i * n : (i + 1) * n]).numpy()
-                    for key in self.output_expr
-                },  # n : nodes number per time step
-                coordinates={
-                    key: (data_dict[key][i * n : (i + 1) * n]).numpy()
-                    for key in coord_key
+                data_dict={
+                    key: (data_dict[key].numpy()[i * n : (i + 1) * n])
+                    for key in data_dict
                 },
+                value_keys=self.output_expr,
+                coord_keys=coord_keys,
             )
