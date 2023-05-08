@@ -66,7 +66,7 @@ class Normalize:
 
     Args:
         mean (Union[np.array, Tuple[float, ...]]): Mean of training dataset.
-        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset
+        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
         apply_list (Tuple[str, ...], optional): Which data is the normalization method applied to. Defaults to ("input_item", "label_item").
 
     Examples:
