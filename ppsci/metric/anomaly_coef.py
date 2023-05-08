@@ -18,42 +18,17 @@ from typing import Union
 
 import numpy as np
 import paddle
-import paddle.nn.functional as F
 from typing_extensions import Literal
 
 from ppsci.metric import base
 
 
-class RMSE(base.Metric):
-    r"""Root mean square error
+class LatitudeWeightedACC(base.Metric):
+    r"""Latitude weighted anomaly correlation coefficient.
 
     $$
-    metric = \sqrt{\dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}}
-    $$
-
-    Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.RMSE()
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    @paddle.no_grad()
-    def forward(self, output_dict, label_dict):
-        metric_dict = {}
-        for key in label_dict:
-            rmse = F.mse_loss(output_dict[key], label_dict[key], "mean") ** 0.5
-            metric_dict[key] = float(rmse)
-
-        return metric_dict
-
-
-class LatitudeWeightedRMSE(base.Metric):
-    r"""Latitude weighted root mean square error.
-
-    $$
-    metric =\sqrt{\dfrac{1}{MN}\sum\limits_{m=1}^{M}\sum\limits_{n=1}^{N}L(m)(X[m,n]-Y[m,n])^{2}}
+    metric =
+        \dfrac{\sum\limits_{m,n}{L(m)X[m, n]Y[m, n]}}{\sqrt{\sum\limits_{m,n}{L(m)X[m, n]^{2}}\sum\limits_{m,n}{L(m)Y[m, n]^{2}}}}
     $$
 
     $$
@@ -65,7 +40,7 @@ class LatitudeWeightedRMSE(base.Metric):
 
     Args:
         num_lat (int): Number of latitude.
-        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
+        mean (Union[np.array, Tuple[float, ...]]): Mean of training data.
         reduction (Literal[mean, none], optional): Reduction method. Defaults to "mean".
         variable_dict (Dict[str, int], optional): Variable dictionary. Defaults to None.
         unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
@@ -74,14 +49,14 @@ class LatitudeWeightedRMSE(base.Metric):
     Examples:
         >>> import numpy as np
         >>> import ppsci
-        >>> std = np.random.randn(20, 1, 1)
-        >>> metric = ppsci.metric.LatitudeWeightedRMSE(720, std=std)
+        >>> mean = np.random.randn(20, 720, 1440)
+        >>> metric = ppsci.metric.LatitudeWeightedACC(720, mean=mean)
     """
 
     def __init__(
         self,
         num_lat: int,
-        std: Union[np.array, Tuple[float, ...]],
+        mean: Union[np.array, Tuple[float, ...]],
         reduction: Literal["mean", "none"] = "mean",
         variable_dict: Dict[str, int] = None,
         unlog: bool = False,
@@ -89,7 +64,7 @@ class LatitudeWeightedRMSE(base.Metric):
     ):
         super().__init__()
         self.num_lat = num_lat
-        self.std = paddle.to_tensor(std).reshape((1, -1))
+        self.mean = paddle.to_tensor(mean)
         self.reduction = reduction
         self.variable_dict = variable_dict
         self.unlog = unlog
@@ -122,9 +97,16 @@ class LatitudeWeightedRMSE(base.Metric):
                 else label_dict[key]
             )
 
-            mse = F.mse_loss(output, label, "none")
-            rmse = (mse * self.weight).mean(axis=(-1, -2)) ** 0.5
-            rmse = rmse * self.std
+            output = output if self.mean is None else output - self.mean
+            label = label if self.mean is None else label - self.mean
+
+            rmse = paddle.sum(
+                self.weight * output * label, axis=(-1, -2)
+            ) / paddle.sqrt(
+                paddle.sum(self.weight * output * output, axis=(-1, -2))
+                * paddle.sum(self.weight * label * label, axis=(-1, -2))
+            )
+
             if self.variable_dict is not None:
                 for variable_name, idx in self.variable_dict.items():
                     if self.reduction == "mean":
@@ -140,5 +122,4 @@ class LatitudeWeightedRMSE(base.Metric):
                 elif self.reduction == "none":
                     rmse = rmse.mean(axis=1)
                     metric_dict[key] = rmse
-
         return metric_dict
