@@ -28,7 +28,10 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - 安装使用: index.md
+  - PaddleScience:
+      - 主页: index.md
+      - 功能介绍: overview.md
+      - 安装使用: install_setup.md
   - 经典案例:
       - PINNs:
         - ViV: zh/examples/viv.md
@@ -81,6 +84,7 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
+    - search.suggest
     - navigation.instant
     - navigation.expand
     - content.code.copy
@@ -121,7 +125,7 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - toc:
-      permalink: ⚓︎
+      permalink: true
   - pymdownx.inlinehilite
   - pymdownx.superfences
   - admonition
@@ -139,7 +143,6 @@ extra_javascript:
 # Extra css
 extra_css:
   - stylesheets/extra.css
-  - stylesheets/monokai.css
 
 # Extra
 extra:
