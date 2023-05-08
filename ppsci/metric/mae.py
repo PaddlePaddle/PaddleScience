@@ -19,10 +19,14 @@ from ppsci.metric import base
 
 
 class MAE(base.Metric):
-    r"""Mean absolute error
+    r"""Mean absolute error.
 
     $$
-    metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
+    metric =
+    \begin{cases}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
+        \limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
+    \end{cases}
     $$
 
     Examples:
@@ -30,14 +34,20 @@ class MAE(base.Metric):
         >>> metric = ppsci.metric.MAE()
     """
 
-    def __init__(self):
+    def __init__(self, reduction="mean"):
         super().__init__()
+        self.reduction = reduction
 
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
-        for key in output_dict:
-            mae = F.l1_loss(output_dict[key], label_dict[key], "mean")
-            metric_dict[key] = float(mae)
+        for key in label_dict:
+            mae = F.l1_loss(output_dict[key], label_dict[key], "none")
+            if self.reduction == "none":
+                axis = [i for i in range(1, mae.dim())]
+                mae = mae.mean(axis=axis)
+                metric_dict[key] = mae
+            else:
+                metric_dict[key] = float(mae.mean())
 
         return metric_dict
