@@ -65,7 +65,7 @@ ppsci.utils.run_check()
 
 - 编写自己的案例（假设案例名为demo）
 
-    推荐在 `examples/` 下新建 `demo` 文件夹，然后在 `demo` 文件夹下新建 `demo.py`，最后在 `demo.py` 文件中使用 PaddleScience 提供的 [API](./zh/api/arch.md) 编写代码
+    推荐在 `examples/` 下新建 `demo` 文件夹，然后在 `demo` 文件夹下新建 `demo.py`，最后在 `demo.py` 文件中使用 PaddleScience 提供的 [API](./api/arch.md) 编写代码
 
     ``` py linenums="1" title="examples/demo/demo.py"
     import ppsci
