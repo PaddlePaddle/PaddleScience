@@ -19,6 +19,7 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
+import paddle
 import scipy.io as sio
 
 from ppsci.utils import logger
@@ -63,7 +64,9 @@ def load_csv_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(raw_data[fetch_key], "float32").reshape([-1, 1])
+        data_dict[key] = np.asarray(
+            raw_data[fetch_key], paddle.get_default_dtype()
+        ).reshape([-1, 1])
 
     return data_dict
 
@@ -99,6 +102,8 @@ def load_mat_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(raw_data[fetch_key], "float32").reshape([-1, 1])
+        data_dict[key] = np.asarray(
+            raw_data[fetch_key], paddle.get_default_dtype()
+        ).reshape([-1, 1])
 
     return data_dict

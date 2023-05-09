@@ -19,6 +19,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 from typing import Tuple
 
 import numpy as np
+import paddle
 from scipy import spatial
 
 from ppsci.geometry import geometry
@@ -39,7 +40,7 @@ class Disk(geometry.Geometry):
     """
 
     def __init__(self, center: Tuple[float, float], radius: float):
-        self.center = np.array(center, dtype="float32")
+        self.center = np.array(center, dtype=paddle.get_default_dtype())
         self.radius = radius
         super().__init__(2, (self.center - radius, self.center + radius), 2 * radius)
 
@@ -52,7 +53,9 @@ class Disk(geometry.Geometry):
     def boundary_normal(self, x):
         ox = x - self.center
         ox_len = np.linalg.norm(ox, axis=1, keepdims=True)
-        ox = (ox / ox_len) * np.isclose(ox_len, self.radius).astype("float32")
+        ox = (ox / ox_len) * np.isclose(ox_len, self.radius).astype(
+            paddle.get_default_dtype()
+        )
         return ox
 
     def random_points(self, n, random="pseudo"):
@@ -64,7 +67,9 @@ class Disk(geometry.Geometry):
         return self.radius * np.stack((x, y), axis=1) + self.center
 
     def uniform_boundary_points(self, n):
-        theta = np.linspace(0, 2 * np.pi, num=n, endpoint=False)
+        theta = np.linspace(
+            0, 2 * np.pi, num=n, endpoint=False, dtype=paddle.get_default_dtype()
+        )
         X = np.stack((np.cos(theta), np.sin(theta)), axis=1)
         return self.radius * X + self.center
 
@@ -95,30 +100,42 @@ class Rectangle(geometry_nd.Hypercube):
         nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
         bottom = np.hstack(
             (
-                np.linspace(self.xmin[0], self.xmax[0], nx, endpoint=False).reshape(
-                    [nx, 1]
-                ),
-                np.full([nx, 1], self.xmin[1], dtype="float32"),
+                np.linspace(
+                    self.xmin[0],
+                    self.xmax[0],
+                    nx,
+                    endpoint=False,
+                    dtype=paddle.get_default_dtype(),
+                ).reshape([nx, 1]),
+                np.full([nx, 1], self.xmin[1], dtype=paddle.get_default_dtype()),
             )
         )
         right = np.hstack(
             (
-                np.full([ny, 1], self.xmax[0], dtype="float32"),
-                np.linspace(self.xmin[1], self.xmax[1], ny, endpoint=False).reshape(
-                    [ny, 1]
-                ),
+                np.full([ny, 1], self.xmax[0], dtype=paddle.get_default_dtype()),
+                np.linspace(
+                    self.xmin[1],
+                    self.xmax[1],
+                    ny,
+                    endpoint=False,
+                    dtype=paddle.get_default_dtype(),
+                ).reshape([ny, 1]),
             )
         )
         top = np.hstack(
             (
-                np.linspace(self.xmin[0], self.xmax[0], nx + 1)[1:].reshape([nx, 1]),
-                np.full([nx, 1], self.xmax[1], dtype="float32"),
+                np.linspace(
+                    self.xmin[0], self.xmax[0], nx + 1, dtype=paddle.get_default_dtype()
+                )[1:].reshape([nx, 1]),
+                np.full([nx, 1], self.xmax[1], dtype=paddle.get_default_dtype()),
             )
         )
         left = np.hstack(
             (
-                np.full([ny, 1], self.xmin[0], dtype="float32"),
-                np.linspace(self.xmin[1], self.xmax[1], ny + 1)[1:].reshape([ny, 1]),
+                np.full([ny, 1], self.xmin[0], dtype=paddle.get_default_dtype()),
+                np.linspace(
+                    self.xmin[1], self.xmax[1], ny + 1, dtype=paddle.get_default_dtype()
+                )[1:].reshape([ny, 1]),
             )
         )
         x = np.vstack((bottom, right, top, left))
@@ -184,9 +201,9 @@ class Triangle(geometry.Geometry):
             self.area = -self.area
             x2, x3 = x3, x2
 
-        self.x1 = np.array(x1, dtype="float32")
-        self.x2 = np.array(x2, dtype="float32")
-        self.x3 = np.array(x3, dtype="float32")
+        self.x1 = np.array(x1, dtype=paddle.get_default_dtype())
+        self.x2 = np.array(x2, dtype=paddle.get_default_dtype())
+        self.x3 = np.array(x3, dtype=paddle.get_default_dtype())
 
         self.v12 = self.x2 - self.x1
         self.v23 = self.x3 - self.x2
@@ -277,23 +294,35 @@ class Triangle(geometry.Geometry):
     def uniform_boundary_points(self, n):
         density = n / self.perimeter
         x12 = (
-            np.linspace(0, 1, num=int(np.ceil(density * self.l12)), endpoint=False)[
-                :, None
-            ]
+            np.linspace(
+                0,
+                1,
+                num=int(np.ceil(density * self.l12)),
+                endpoint=False,
+                dtype=paddle.get_default_dtype(),
+            )[:, None]
             * self.v12
             + self.x1
         )
         x23 = (
-            np.linspace(0, 1, num=int(np.ceil(density * self.l23)), endpoint=False)[
-                :, None
-            ]
+            np.linspace(
+                0,
+                1,
+                num=int(np.ceil(density * self.l23)),
+                endpoint=False,
+                dtype=paddle.get_default_dtype(),
+            )[:, None]
             * self.v23
             + self.x2
         )
         x31 = (
-            np.linspace(0, 1, num=int(np.ceil(density * self.l31)), endpoint=False)[
-                :, None
-            ]
+            np.linspace(
+                0,
+                1,
+                num=int(np.ceil(density * self.l31)),
+                endpoint=False,
+                dtype=paddle.get_default_dtype(),
+            )[:, None]
             * self.v31
             + self.x3
         )
@@ -335,7 +364,7 @@ class Polygon(geometry.Geometry):
     """
 
     def __init__(self, vertices):
-        self.vertices = np.array(vertices, dtype="float32")
+        self.vertices = np.array(vertices, dtype=paddle.get_default_dtype())
         if len(vertices) == 3:
             raise ValueError("The polygon is a triangle. Use Triangle instead.")
         if Rectangle.is_valid(self.vertices):
@@ -360,7 +389,8 @@ class Polygon(geometry.Geometry):
             [self.diagonals[i, i + 1] for i in range(-1, self.nvertices - 1)]
         )
         self.bbox = np.array(
-            [np.min(self.vertices, axis=0), np.max(self.vertices, axis=0)]
+            [np.min(self.vertices, axis=0), np.max(self.vertices, axis=0)],
+            dtype=paddle.get_default_dtype(),
         )
 
         self.segments = self.vertices[1:] - self.vertices[:-1]
@@ -422,7 +452,7 @@ class Polygon(geometry.Geometry):
         return _on > 0
 
     def random_points(self, n, random="pseudo"):
-        x = np.empty((0, 2), dtype="float32")
+        x = np.empty((0, 2), dtype=paddle.get_default_dtype())
         vbbox = self.bbox[1] - self.bbox[0]
         while len(x) < n:
             x_new = sampler.sample(n, 2, sampler="pseudo") * vbbox + self.bbox[0]
@@ -439,6 +469,7 @@ class Polygon(geometry.Geometry):
                     1,
                     num=int(np.ceil(density * self.diagonals[i, i + 1])),
                     endpoint=False,
+                    dtype=paddle.get_default_dtype(),
                 )[:, None]
                 * (self.vertices[i + 1] - self.vertices[i])
                 + self.vertices[i]
@@ -488,8 +519,8 @@ def polygon_signed_area(vertices):
         float: The (signed) area of a simple polygon.
     """
     x, y = zip(*vertices)
-    x = np.array(list(x) + [x[0]])
-    y = np.array(list(y) + [y[0]])
+    x = np.array(list(x) + [x[0]], dtype=paddle.get_default_dtype())
+    y = np.array(list(y) + [y[0]], dtype=paddle.get_default_dtype())
     return 0.5 * (np.sum(x[:-1] * y[1:]) - np.sum(x[1:] * y[:-1]))
 
 
@@ -502,7 +533,7 @@ def clockwise_rotation_90(v):
     Returns:
         np.ndarray: Rotated vector with shape of [2, N].
     """
-    return np.array([v[1], -v[0]])
+    return np.array([v[1], -v[0]], dtype=paddle.get_default_dtype())
 
 
 def is_left(P0, P1, P2):

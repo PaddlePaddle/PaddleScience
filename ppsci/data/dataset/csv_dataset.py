@@ -116,14 +116,14 @@ class CSVDataset(io.Dataset):
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     self.weight[key] = np.full_like(
-                        next(iter(self.label.values())), float(value)
+                        next(iter(self.label.values())), value
                     )
                 elif isinstance(value, types.FunctionType):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
                         self.weight[key] = np.full_like(
-                            next(iter(self.label.values())), float(self.weight[key])
+                            next(iter(self.label.values())), self.weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
@@ -234,14 +234,14 @@ class IterableCSVDataset(io.IterableDataset):
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     self.weight[key] = np.full_like(
-                        next(iter(self.label.values())), float(value)
+                        next(iter(self.label.values())), value
                     )
                 elif isinstance(value, types.FunctionType):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
                         self.weight[key] = np.full_like(
-                            next(iter(self.label.values())), float(self.weight[key])
+                            next(iter(self.label.values())), self.weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

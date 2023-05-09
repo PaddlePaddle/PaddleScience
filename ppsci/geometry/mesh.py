@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Union
 
 import numpy as np
+import paddle
 import pysdf
 
 from ppsci.geometry import geometry
@@ -90,7 +91,7 @@ class Mesh(geometry.Geometry):
         return np.isclose(x_sdf, 0.0)
 
     def translate(self, translation, relative=True):
-        vertices = np.array(self.vertices)
+        vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
 
         if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
@@ -102,14 +103,14 @@ class Mesh(geometry.Geometry):
         )
         open3d_mesh = open3d_mesh.translate(translation, relative)
         self.py_mesh = pymesh.form_mesh(
-            np.asarray(open3d_mesh.vertices, dtype="float32"), faces
+            np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
         self.init_mesh()
         return self
 
     def scale(self, scale, center=(0, 0, 0)):
-        vertices = np.array(self.vertices)
-        faces = np.array(self.faces)
+        vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
+        faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
         if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
             raise ModuleNotFoundError
@@ -120,7 +121,7 @@ class Mesh(geometry.Geometry):
         )
         open3d_mesh.scale(scale, center)
         self.py_mesh = pymesh.form_mesh(
-            np.asarray(open3d_mesh.vertices, dtype="float32"), faces
+            np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
         self.init_mesh()
         return self
@@ -212,18 +213,28 @@ class Mesh(geometry.Geometry):
                 all_normal_n.append(normal)
                 all_area_n.append(area)
 
-            all_points_n = np.concatenate(all_points_n, axis=0, dtype="float32")
-            all_normal_n = np.concatenate(all_normal_n, axis=0, dtype="float32")
-            all_area_n = np.concatenate(all_area_n, axis=0, dtype="float32")
+            all_points_n = np.concatenate(
+                all_points_n, axis=0, dtype=paddle.get_default_dtype()
+            )
+            all_normal_n = np.concatenate(
+                all_normal_n, axis=0, dtype=paddle.get_default_dtype()
+            )
+            all_area_n = np.concatenate(
+                all_area_n, axis=0, dtype=paddle.get_default_dtype()
+            )
             all_area_n = np.full_like(all_area_n, all_area_n.sum() / _n)
 
             all_points.append(all_points_n)
             all_normal.append(all_normal_n)
             all_area.append(all_area_n)
 
-        all_points = np.concatenate(all_points, axis=0, dtype="float32")
-        all_normal = np.concatenate(all_normal, axis=0, dtype="float32")
-        all_area = np.concatenate(all_area, axis=0, dtype="float32")
+        all_points = np.concatenate(
+            all_points, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_normal = np.concatenate(
+            all_normal, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
         return all_points, all_normal, all_area
 
     def _approximate_area(self, n_appr, random="pseudo") -> float:
@@ -239,10 +250,14 @@ class Mesh(geometry.Geometry):
         for index, nr_p in enumerate(points_per_triangle):
             if nr_p == 0:
                 continue
-            area = np.full([nr_p, 1], triangle_areas[index] / nr_p)
+            area = np.full(
+                [nr_p, 1],
+                triangle_areas[index] / nr_p,
+                dtype=paddle.get_default_dtype(),
+            )
             all_area.append(area)
 
-        all_area = np.concatenate(all_area, axis=0, dtype="float32")
+        all_area = np.concatenate(all_area, axis=0)
         return all_area.sum()
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -264,15 +279,23 @@ class Mesh(geometry.Geometry):
                 self.v0[index], self.v1[index], self.v2[index], nr_p, random
             )
             normal = np.tile(self.face_normal[index], [nr_p, 1])
-            area = np.full([nr_p, 1], triangle_areas[index] / nr_p)
+            area = np.full(
+                [nr_p, 1],
+                triangle_areas[index] / nr_p,
+                dtype=paddle.get_default_dtype(),
+            )
 
             all_points.append(sampled_points)
             all_normal.append(normal)
             all_area.append(area)
 
-        all_points = np.concatenate(all_points, axis=0, dtype="float32")
-        all_normal = np.concatenate(all_normal, axis=0, dtype="float32")
-        all_area = np.concatenate(all_area, axis=0, dtype="float32")
+        all_points = np.concatenate(
+            all_points, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_normal = np.concatenate(
+            all_normal, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
         all_area = np.full_like(all_area, all_area.sum() / n)
         return all_points, all_normal, all_area
 
@@ -285,7 +308,7 @@ class Mesh(geometry.Geometry):
                 n, inflation_dist, random
             )
         else:
-            x = np.empty(shape=(n, self.ndim), dtype="float32")
+            x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
             _size, _ntry, _nsuc = 0, 0, 0
             while _size < n:
                 if evenly:
@@ -345,7 +368,7 @@ class Mesh(geometry.Geometry):
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
         while _size < n:
             if evenly:
@@ -378,8 +401,11 @@ class Mesh(geometry.Geometry):
 
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 
-        volume = np.prod([bound[1] - bound[0] for bound in self.bounds])
-        area = np.full((n, 1), volume / n, "float32")
+        volume = np.prod(
+            [bound[1] - bound[0] for bound in self.bounds],
+            dtype=paddle.get_default_dtype(),
+        )
+        area = np.full((n, 1), volume / n, paddle.get_default_dtype())
         area_dict = misc.convert_to_dict(area, ["area"])
         return {**x_dict, **area_dict}
 

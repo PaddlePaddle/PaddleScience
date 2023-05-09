@@ -17,6 +17,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import numpy as np
+import paddle
 import skopt
 from typing_extensions import Literal
 
@@ -47,8 +48,10 @@ def pseudorandom(n_samples: int, ndim: int) -> np.ndarray:
     # If random seed is set, then the rng based code always returns the same random
     # number, which may not be what we expect.
     # rng = np.random.default_rng(config.random_seed)
-    # return rng.random(size=(n_samples, ndim), dtype="float32")
-    return np.random.random(size=(n_samples, ndim)).astype("float32")
+    # return rng.random(size=(n_samples, ndim), dtype=dtype=paddle.get_default_dtype())
+    return np.random.random(size=(n_samples, ndim)).astype(
+        dtype=paddle.get_default_dtype()
+    )
 
 
 def quasirandom(
@@ -80,4 +83,7 @@ def quasirandom(
         else:
             skip = 2
     space = [(0.0, 1.0)] * ndim
-    return np.asarray(sampler.generate(space, n_samples + skip)[skip:], dtype="float32")
+    return np.asarray(
+        sampler.generate(space, n_samples + skip)[skip:],
+        dtype=paddle.get_default_dtype(),
+    )
