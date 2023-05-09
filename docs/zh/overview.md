@@ -5,7 +5,7 @@ PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习�
 ## 1. 整体工作流
 
 <figure markdown>
-  ![workflow](./images/overview/workflow.jpg){ loading=lazy style="height:80%;width:80%"}
+  ![workflow](../images/overview/workflow.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 上图是 PaddleScience 的 workflow 示意图（以基于几何的问题求解为例），流程描述如下
@@ -21,18 +21,18 @@ PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习�
 
 ## 2. 模块简介
 
-### 2.1 [Arch](./zh/api/arch.md)
+### 2.1 [Arch](./api/arch.md)
 
 Arch 模块负责各种神经网络模型的组网、参数初始化、前向计算等功能，内置了多种模型供用户使用。
 
-### 2.2 [AutoDiff](./zh/api/autodiff.md)
+### 2.2 [AutoDiff](./api/autodiff.md)
 
 AutoDiff 模块负责计算高阶微分功能，内置基于 Paddle 自动微分机制的全局单例 `jacobian`、`hessian` 供用户使用。
 
-### 2.3 [Constraint](./zh/api/constraint.md)
+### 2.3 [Constraint](./api/constraint.md)
 
 <figure markdown>
-  ![constraint](./images/overview/constraint.jpg){ loading=lazy style="height:50%;width:50%"}
+  ![constraint](../images/overview/constraint.jpg){ loading=lazy style="height:50%;width:50%"}
 </figure>
 
 为了在套件中统一物理信息驱动、数据驱动、数理融合三种求解方式，我们将数据构造、输入到输出的计算过程、损失函数等必要接口在其定义完毕之后，统一记录在 Constraint 这一模块中，有了这些接口，Constraint 就能表示不同的训练目标，如：
@@ -48,54 +48,54 @@ AutoDiff 模块负责计算高阶微分功能，内置基于 Paddle 自动微分
 
 Data 模块负责数据的读取、包装和预处理，由以下 3 个子模块分别负责。
 
-#### 2.4.1 [Dataset](./zh/api/data/dataset.md)
+#### 2.4.1 [Dataset](./api/data/dataset.md)
 
 Dataset 模块存放各种数据集的包装类，将数据包装成统一的结构再用于读取。
 
-#### 2.4.2 [Transform](./zh/api/data/process/transform.md)
+#### 2.4.2 [Transform](./api/data/process/transform.md)
 
 Transform 模块存放各种基于单样本的数据预处理方法，包括数据平移 `Translate` 和数据缩放 `Scale`，一般与 `data.dataset` 结合使用。
 
-#### 2.4.3 [BatchTransform](./zh/api/data/process/batch_transform.md)
+#### 2.4.3 [BatchTransform](./api/data/process/batch_transform.md)
 
 BatchTransform 模块存放各种基于批样本的数据预处理方法。
 
-### 2.5 [Equation](./zh/api/equation.md)
+### 2.5 [Equation](./api/equation.md)
 
 <figure markdown>
-  ![equation](./images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes` 表示 N-S 方程，`Vibration` 表示振动方程，每个方程内部含有相关变量的计算函数。
 
-### 2.6 [Geometry](./zh/api/geometry.md)
+### 2.6 [Geometry](./api/geometry.md)
 
 <figure markdown>
-  ![geometry](./images/overview/geometry.jpg#center){ loading=lazy style="height:50%;width:50%" }
+  ![geometry](../images/overview/geometry.jpg#center){ loading=lazy style="height:50%;width:50%" }
 </figure>
 
 Geometry 模块负责定义各种常见的几何形状，如 `Interval` 线段几何、`Rectangle` 矩形几何、`Sphere` 球面几何。
 
-### 2.7 [Loss](./zh/api/loss.md)
+### 2.7 [Loss](./api/loss.md)
 
 Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕后，将结果与参考值计算损失值，供后续的梯度优化算法使用。
 
-### 2.8 [Optimizer](./zh/api/optimizer.md)
+### 2.8 [Optimizer](./api/optimizer.md)
 
 Optimizer 模块负责定义各种优化器，如 `SGD`、`Adam`、`LBFGS`。
 
-### 2.9 [Solver](./zh/api/solver.md)
+### 2.9 [Solver](./api/solver.md)
 
 Solver 模块负责定义求解器，作为训练、评估、推理、可视化的启动和管理引擎。
 
-### 2.10 [Utils](./zh/api/utils.md)
+### 2.10 [Utils](./api/utils.md)
 
 Utils 模块内部存放了一些适用于多种场景下的工具类、函数，如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
 
-### 2.11 [Validate](./zh/api/validate.md)
+### 2.11 [Validate](./api/validate.md)
 
 Validator 模块负责定义各种评估器，用于模型训练完一个 epoch 后自动在指定数据上进行评估（可选，默认不开启训练时评估）并得到评估指标。
 
-### 2.12 [Visualize](./zh/api/visualize.md)
+### 2.12 [Visualize](./api/visualize.md)
 
 Visualizer 模块负责定义各种可视化器，用于模型评估完后在指定数据上进行预测（可选，默认不开启训练时可视化）并将结果保存成可视化的文件。
