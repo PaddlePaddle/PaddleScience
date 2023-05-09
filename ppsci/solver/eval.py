@@ -15,7 +15,6 @@
 import time
 
 import paddle
-import paddle.amp as amp
 import paddle.io as io
 
 from ppsci.solver import printer
