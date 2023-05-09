@@ -472,10 +472,7 @@ class Solver:
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            if self.use_amp:
-                with amp.auto_cast(level=self.amp_level):
-                    batch_output_dict = self.model(batch_input_dict)
-            else:
+            with self._autocast_context_manager():
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
