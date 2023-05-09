@@ -15,7 +15,7 @@
 import time
 
 import paddle
-import paddle.io as io
+from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import expression

@@ -25,7 +25,7 @@ import math
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 from typing_extensions import Literal
 
 from ppsci.utils import logger
