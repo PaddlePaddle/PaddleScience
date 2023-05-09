@@ -15,8 +15,8 @@
 from typing import Callable
 
 import paddle
-import paddle.nn as nn
 import paddle.nn.functional as F
+from paddle import nn
 
 act_func_dict = {
     "elu": F.elu,
