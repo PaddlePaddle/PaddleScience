@@ -16,7 +16,6 @@ import time
 
 import paddle.amp as amp
 
-from ppsci import solver
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
