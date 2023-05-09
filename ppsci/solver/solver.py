@@ -14,11 +14,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
+from typing import Union
 
 import paddle
 import paddle.amp as amp
@@ -501,3 +504,20 @@ class Solver:
         save_path = os.path.join(export_dir, "inference")
         paddle.jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}.")
+
+    def _autocast_context_manager(self) -> contextlib.AbstractContextManager:
+        """Autocast context manager for Auto Mix Precision.
+
+        Returns:
+            Union[contextlib.AbstractContextManager]: Context manager.
+        """
+        if self.use_amp:
+            ctx_manager = amp.auto_cast(level=self.amp_level)
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
+
+        return ctx_manager
