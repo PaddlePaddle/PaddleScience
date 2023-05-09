@@ -21,7 +21,6 @@ import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
-from typing import Union
 
 import paddle
 import paddle.amp as amp
@@ -60,7 +59,7 @@ class Solver:
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
         vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
-        device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
+        device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
