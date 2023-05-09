@@ -23,13 +23,13 @@ from typing import Dict
 from typing import Optional
 
 import paddle
-import paddle.amp as amp
 import paddle.distributed as dist
-import paddle.incubate as incubate
-import paddle.nn as nn
-import paddle.optimizer as optimizer
 import visualdl as vdl
 from packaging import version
+from paddle import amp
+from paddle import incubate
+from paddle import nn
+from paddle import optimizer
 from paddle.distributed import fleet
 from typing_extensions import Literal
 

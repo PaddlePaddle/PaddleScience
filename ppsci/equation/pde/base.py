@@ -18,8 +18,8 @@ from typing import List
 from typing import Tuple
 
 import paddle
-import paddle.nn as nn
 import sympy
+from paddle import nn
 
 
 class PDE:
