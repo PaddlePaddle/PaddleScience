@@ -28,7 +28,7 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program by dataset.
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
