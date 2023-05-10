@@ -118,7 +118,7 @@ class MatDataset(io.Dataset):
                     self.weight[key] = np.full_like(
                         next(iter(self.label.values())), float(value)
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
@@ -236,7 +236,7 @@ class IterableMatDataset(io.IterableDataset):
                     self.weight[key] = np.full_like(
                         next(iter(self.label.values())), float(value)
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):

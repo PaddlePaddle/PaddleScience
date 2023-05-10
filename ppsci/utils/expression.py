@@ -134,16 +134,14 @@ class ExpressionSolver(nn.Layer):
 
     def forward(self, input_dict):
         self.output_dict = input_dict
-        if isinstance(
-            next(iter(self.expr_dict.values())), (types.FunctionType, functools.partial)
-        ):
+        if callable(next(iter(self.expr_dict.values()))):
             model_output_dict = self.model(input_dict)
             self.output_dict.update(model_output_dict)
 
         for name, expr in self.expr_dict.items():
             if isinstance(expr, sympy.Basic):
                 self.output_dict[name] = self.solve_expr(expr)
-            elif isinstance(expr, (types.FunctionType, functools.partial)):
+            elif callable(next(iter(self.expr_dict.values()))):
                 self.output_dict[name] = expr(self.output_dict)
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
