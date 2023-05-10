@@ -90,13 +90,13 @@ class L2RelLoss(base.Loss):
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{\dfrac{l2norm(x_i-y_i)}{l2norm(y_i)}}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{\dfrac{l2norm(x_i-y_i)}{l2norm(y_i)}}, & \text{if reduction='sum'}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{\dfrac{\Vert x_i-y_i\Vert_2}{\Vert y_i\Vert_2}}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{\dfrac{\Vert x_i-y_i\Vert_2}{\Vert y_i\Vert_2}}, & \text{if reduction='sum'}
     \end{cases}
     $$
 
     Args:
-        reduction (Literal[mean, sum], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
     
     Examples:
         >>> import ppsci

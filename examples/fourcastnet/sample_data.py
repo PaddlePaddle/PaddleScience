@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import shutil
 from multiprocessing import Pool
@@ -42,7 +43,7 @@ def sample_func(
     dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
     for idx in tqdm(batch_idxs):
         input_dict, label_dict, weight_dict = dataset.getitem(idx)
-        fdest = h5py.File("{}/{:0>8d}.h5".format(save_path, idx), "w")
+        fdest = h5py.File(f"{save_path}/{idx:0>8d}.h5", "w")
         for key, value in input_dict.items():
             fdest.create_dataset(f"input_dict/{key}", data=value, dtype="f")
         for key, value in label_dict.items():
@@ -76,25 +77,21 @@ def sample_data_epoch(epoch: int):
     rank = 0
     processes = 16
 
-    if os.path.exists(tmp_save_path):
-        shutil.rmtree(tmp_save_path)
-        logger.info(f"tmp_save_path({tmp_save_path}) is arrelady exists! remove it")
-    if os.path.exists(save_path):
-        shutil.rmtree(save_path)
-        logger.info(f"save_path({save_path}) is arrelady exists! remove it")
-    os.makedirs(tmp_save_path)
+    if len(glob.glob(tmp_save_path + "/*.h5")):
+        raise ValueError(
+            f"tmp_save_path({tmp_save_path}) is not an empty folder, please specify an empty folder."
+        )
+    if len(glob.glob(save_path + "/*.h5")):
+        raise ValueError(
+            f"save_path({save_path}) is not an empty folder, please specify an empty folder."
+        )
+    os.makedirs(tmp_save_path, exist_ok=True)
 
     data_mean, data_std = get_mean_std(data_mean_path, data_std_path, vars_channel)
     transforms = [
-        {
-            "SqueezeData": {},
-        },
-        {
-            "CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)},
-        },
-        {
-            "Normalize": {"mean": data_mean, "std": data_std},
-        },
+        {"SqueezeData": {}},
+        {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},
+        {"Normalize": {"mean": data_mean, "std": data_std}},
     ]
     dataset_cfg = {
         "name": "ERA5Dataset",

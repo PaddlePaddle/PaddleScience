@@ -19,6 +19,7 @@ from typing import Tuple
 
 import h5py
 import numpy as np
+import paddle
 from paddle import io
 from paddle import vision
 
@@ -30,13 +31,13 @@ class ERA5Dataset(io.Dataset):
         file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
-        precip_file_path (str, optional): Precipitation data set path. Defaults to None.
+        precip_file_path (Optional[str]): Precipitation data set path. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        vars_channel (Tuple[int, ...], optional): The variable channel index in ERA5 dataset. Defaults to None.
-        label_timestamp (int, optional): Number of label timestamp. Defaults to 1.
+        vars_channel (Optional[Tuple[int, ...]]): The variable channel index in ERA5 dataset. Defaults to None.
+        num_label_timestamp (int, optional): Number of timestamp of label. Defaults to 1.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
-        train (bool, optional): Whether in train mode. Defaults to True.
+        training (bool, optional): Whether in train mode. Defaults to True.
 
     Examples:
         >>> import ppsci
@@ -52,38 +53,36 @@ class ERA5Dataset(io.Dataset):
         file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        precip_file_path: str = None,
+        precip_file_path: Optional[str] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        vars_channel: Tuple[int, ...] = None,
-        label_timestamp: int = 1,
+        vars_channel: Optional[Tuple[int, ...]] = None,
+        num_label_timestamp: int = 1,
         transforms: Optional[vision.Compose] = None,
-        train: bool = True,
+        training: bool = True,
     ):
         super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.precip_file_path = precip_file_path
-        self.precip = False if precip_file_path is None else True
 
         self.weight_dict = weight_dict
         if weight_dict is not None:
             self.weight_dict = {key: 1.0 for key in self.label_keys}
             self.weight_dict.update(weight_dict)
 
-        if vars_channel is None:
-            self.vars_channel = [i for i in range(20)]
-        else:
-            self.vars_channel = vars_channel
-        self.label_timestamp = label_timestamp
+        self.vars_channel = (
+            vars_channel if vars_channel is not None else [i for i in range(20)]
+        )
+        self.num_label_timestamp = num_label_timestamp
         self.transforms = transforms
-        self.train = train
+        self.training = training
 
         self.files = self.read_data(file_path)
         self.n_years = len(self.files)
         self.n_samples_per_year = self.files[0].shape[0]
         self.n_samples_total = self.n_years * self.n_samples_per_year
-        if self.precip is True:
+        if self.precip_file_path is not None:
             self.precip_files = self.read_data(precip_file_path, "tp")
 
     def read_data(self, path: str, var="fields"):
@@ -103,13 +102,17 @@ class ERA5Dataset(io.Dataset):
         local_idx = global_idx % self.n_samples_per_year
         step = 0 if local_idx >= self.n_samples_per_year - 1 else 1
 
-        if self.label_timestamp > 1:
-            if local_idx >= self.n_samples_per_year - self.label_timestamp:
-                local_idx = self.n_samples_per_year - self.label_timestamp - 1
+        if self.num_label_timestamp > 1:
+            if local_idx >= self.n_samples_per_year - self.num_label_timestamp:
+                local_idx = self.n_samples_per_year - self.num_label_timestamp - 1
 
         input_file = self.files[year_idx]
-        label_file = self.precip_files[year_idx] if self.precip else input_file
-        if self.precip is True and year_idx == 0 and self.train:
+        label_file = (
+            self.precip_files[year_idx]
+            if self.precip_file_path is not None
+            else input_file
+        )
+        if self.precip_file_path is not None and year_idx == 0 and self.training:
             # first year has 2 missing samples in precip (they are first two time points)
             lim = self.n_samples_per_year - 2
             local_idx = local_idx % lim
@@ -121,8 +124,8 @@ class ERA5Dataset(io.Dataset):
 
         input_item = {self.input_keys[0]: input_file[input_idx, self.vars_channel]}
         label_item = {}
-        for i in range(self.label_timestamp):
-            if self.precip is True:
+        for i in range(self.num_label_timestamp):
+            if self.precip_file_path is not None:
                 label_item[self.label_keys[i]] = np.expand_dims(
                     label_file[label_idx + i], 0
                 )
@@ -134,17 +137,18 @@ class ERA5Dataset(io.Dataset):
         if self.weight_dict is not None:
             weight_shape = [1] * len(next(iter(label_item.values)).shape)
             weight_item = {
-                key: np.full(weight_shape, value)
+                key: np.full(weight_shape, value, paddle.get_default_dtype())
                 for key, value in self.weight_dict.items()
             }
         else:
             weight_item = None
 
-        data = (input_item, label_item, weight_item)
         if self.transforms is not None:
-            data = self.transforms(data)
+            input_item, label_item, weight_item = self.transforms(
+                (input_item, label_item, weight_item)
+            )
 
-        return data
+        return input_item, label_item, weight_item
 
     def getitem(self, global_idx):
         return self.__getitem__(global_idx)
@@ -159,7 +163,7 @@ class ERA5SampledDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
-
+            transform(s). Defaults to None.
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.ERA5SampledDataset(
@@ -175,7 +179,7 @@ class ERA5SampledDataset(io.Dataset):
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
         weight_dict: Optional[Dict[str, float]] = None,
-        transforms=None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.file_path = file_path
@@ -209,22 +213,27 @@ class ERA5SampledDataset(io.Dataset):
 
         input_item = {}
         for key in _file["input_dict"]:
-            input_item[key] = np.asarray(_file["input_dict"][key])
+            input_item[key] = np.asarray(
+                _file["input_dict"][key], paddle.get_default_dtype()
+            )
         label_item = {}
         for key in _file["label_dict"]:
-            label_item[key] = np.asarray(_file["label_dict"][key])
+            label_item[key] = np.asarray(
+                _file["label_dict"][key], paddle.get_default_dtype()
+            )
 
         if self.weight_dict is not None:
             weight_shape = [1] * len(next(iter(label_item.values)).shape)
             weight_item = {
-                key: np.full(weight_shape, value)
+                key: np.full(weight_shape, value, paddle.get_default_dtype())
                 for key, value in self.weight_dict.items()
             }
         else:
             weight_item = None
 
-        data = (input_item, label_item, weight_item)
         if self.transforms is not None:
-            data = self.transforms(data)
+            input_item, label_item, weight_item = self.transforms(
+                (input_item, label_item, weight_item)
+            )
 
-        return data
+        return input_item, label_item, weight_item
