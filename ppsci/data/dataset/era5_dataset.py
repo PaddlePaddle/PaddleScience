@@ -34,7 +34,7 @@ class ERA5Dataset(io.Dataset):
         precip_file_path (Optional[str]): Precipitation data set path. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         vars_channel (Optional[Tuple[int, ...]]): The variable channel index in ERA5 dataset. Defaults to None.
-        num_label_timestamp (int, optional): Number of timestamp of label. Defaults to 1.
+        num_label_timestamps (int, optional): Number of timestamp of label. Defaults to 1.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
         training (bool, optional): Whether in train mode. Defaults to True.
@@ -56,7 +56,7 @@ class ERA5Dataset(io.Dataset):
         precip_file_path: Optional[str] = None,
         weight_dict: Optional[Dict[str, float]] = None,
         vars_channel: Optional[Tuple[int, ...]] = None,
-        num_label_timestamp: int = 1,
+        num_label_timestamps: int = 1,
         transforms: Optional[vision.Compose] = None,
         training: bool = True,
     ):
@@ -74,7 +74,7 @@ class ERA5Dataset(io.Dataset):
         self.vars_channel = (
             vars_channel if vars_channel is not None else [i for i in range(20)]
         )
-        self.num_label_timestamp = num_label_timestamp
+        self.num_label_timestamps = num_label_timestamps
         self.transforms = transforms
         self.training = training
 
@@ -102,9 +102,9 @@ class ERA5Dataset(io.Dataset):
         local_idx = global_idx % self.n_samples_per_year
         step = 0 if local_idx >= self.n_samples_per_year - 1 else 1
 
-        if self.num_label_timestamp > 1:
-            if local_idx >= self.n_samples_per_year - self.num_label_timestamp:
-                local_idx = self.n_samples_per_year - self.num_label_timestamp - 1
+        if self.num_label_timestamps > 1:
+            if local_idx >= self.n_samples_per_year - self.num_label_timestamps:
+                local_idx = self.n_samples_per_year - self.num_label_timestamps - 1
 
         input_file = self.files[year_idx]
         label_file = (
@@ -124,7 +124,7 @@ class ERA5Dataset(io.Dataset):
 
         input_item = {self.input_keys[0]: input_file[input_idx, self.vars_channel]}
         label_item = {}
-        for i in range(self.num_label_timestamp):
+        for i in range(self.num_label_timestamps):
             if self.precip_file_path is not None:
                 label_item[self.label_keys[i]] = np.expand_dims(
                     label_file[label_idx + i], 0

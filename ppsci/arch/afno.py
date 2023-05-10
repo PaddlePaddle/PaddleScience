@@ -422,7 +422,7 @@ class AFNONet(base.Arch):
         num_blocks (int, optional): Number of blocks. Defaults to 8.
         sparsity_threshold (float, optional): The value of threshold for softshrink. Defaults to 0.01.
         hard_thresholding_fraction (float, optional): The value of threshold for keep mode. Defaults to 1.0.
-        num_timestamp (int, optional): Number of timestamp. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamp. Defaults to 1.
 
     Examples:
         >>> import ppsci
@@ -445,7 +445,7 @@ class AFNONet(base.Arch):
         num_blocks: int = 8,
         sparsity_threshold: float = 0.01,
         hard_thresholding_fraction: float = 1.0,
-        num_timestamp: int = 1,
+        num_timestamps: int = 1,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -457,7 +457,7 @@ class AFNONet(base.Arch):
         self.out_channels = out_channels
         self.embed_dim = embed_dim
         self.num_blocks = num_blocks
-        self.num_timestamp = num_timestamp
+        self.num_timestamps = num_timestamps
         norm_layer = partial(nn.LayerNorm, epsilon=1e-6)
 
         self.patch_embed = PatchEmbed(
@@ -555,7 +555,7 @@ class AFNONet(base.Arch):
 
         y = []
         input = x
-        for i in range(self.num_timestamp):
+        for i in range(self.num_timestamps):
             out = self.forward_tensor(input)
             y.append(out)
             input = out
