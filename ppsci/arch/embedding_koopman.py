@@ -21,7 +21,7 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 from paddle.nn.initializer import Constant
 from paddle.nn.initializer import Uniform
 

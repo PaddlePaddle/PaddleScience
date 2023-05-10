@@ -14,6 +14,7 @@
 
 import collections
 import csv
+import sys
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -56,7 +57,7 @@ def load_csv_file(
                     raw_data[key].append(value)
     except FileNotFoundError:
         logger.error(f"{file_path} isn't a valid csv file.")
-        exit(0)
+        sys.exit()
 
     # convert to numpy array
     data_dict = {}
