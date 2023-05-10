@@ -29,21 +29,24 @@ class MAE(base.Metric):
     \end{cases}
     $$
 
+    Args:
+        keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
+
     Examples:
         >>> import ppsci
         >>> metric = ppsci.metric.MAE()
     """
 
-    def __init__(self, reduction="mean"):
+    def __init__(self, keep_batch: bool = False):
         super().__init__()
-        self.reduction = reduction
+        self.keep_batch = keep_batch
 
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
             mae = F.l1_loss(output_dict[key], label_dict[key], "none")
-            if self.reduction == "none":
+            if self.keep_batch is True:
                 axis = [i for i in range(1, mae.dim())]
                 mae = mae.mean(axis=axis)
                 metric_dict[key] = mae

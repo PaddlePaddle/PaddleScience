@@ -53,7 +53,7 @@ def drop_path(
         return x
     keep_prob = 1 - drop_prob
     shape = (x.shape[0],) + (1,) * (x.ndim - 1)
-    random_tensor = paddle.full(shape, keep_prob)
+    random_tensor = paddle.full(shape, keep_prob, x.dtype)
     random_tensor = paddle.bernoulli(random_tensor)
     if keep_prob > 0.0 and scale_by_keep:
         random_tensor = random_tensor / keep_prob
@@ -112,7 +112,7 @@ class MLP(nn.Layer):
         hidden_features (Optional[int]): Number of the hidden size. Defaults to None.
         out_features (Optional[int]): Number of the output features. Defaults to None.
         activation (str, optional): Name of activation function. Defaults to "gelu".
-        drop (float, optional): Probability of dropout the units. Defaults to 0.
+        drop (float, optional): Probability of dropout the units. Defaults to 0.0.
     """
 
     def __init__(
@@ -550,6 +550,7 @@ class AFNONet(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
+
         x = self.concat_to_tensor(x, self.input_keys)
 
         y = []
@@ -559,6 +560,7 @@ class AFNONet(base.Arch):
             y.append(out)
             input = out
         y = self.split_to_dict(y, self.output_keys)
+
         if self._output_transform is not None:
             y = self._output_transform(y)
         return y

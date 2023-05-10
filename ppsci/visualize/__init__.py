@@ -15,12 +15,13 @@
 import copy
 
 from ppsci.visualize.base import Visualizer  # isort:skip
-from ppsci.visualize.visualizer import Visualizer2D  # isort:skip
-from ppsci.visualize.visualizer import Visualizer2DPlot  # isort:skip
-from ppsci.visualize.visualizer import Visualizer3D  # isort:skip
 from ppsci.visualize.visualizer import VisualizerScatter1D  # isort:skip
 from ppsci.visualize.visualizer import VisualizerScatter3D  # isort:skip
 from ppsci.visualize.visualizer import VisualizerVtu  # isort:skip
+from ppsci.visualize.visualizer import Visualizer2D  # isort:skip
+from ppsci.visualize.visualizer import Visualizer2DPlot  # isort:skip
+from ppsci.visualize.visualizer import Visualizer3D  # isort:skip
+from ppsci.visualize.visualizer import VisualizerWeather  # isort:skip
 from ppsci.visualize.vtu import save_vtu_from_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_1d_dict  # isort:skip
 from ppsci.visualize.plot import save_plot_from_3d_dict  # isort:skip
@@ -34,6 +35,7 @@ __all__ = [
     "Visualizer2D",
     "Visualizer2DPlot",
     "Visualizer3D",
+    "VisualizerWeather",
     "save_vtu_from_dict",
     "save_plot_from_1d_dict",
     "save_plot_from_3d_dict",
