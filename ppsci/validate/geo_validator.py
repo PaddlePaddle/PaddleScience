@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -152,7 +153,7 @@ class GeometryValidator(base.Validator):
                     label[key] = np.full(
                         (next(iter(input.values())).shape[0], 1),
                         label[key],
-                        "float32",
+                        paddle.get_default_dtype(),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
