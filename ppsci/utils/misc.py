@@ -148,7 +148,11 @@ def combine_array_with_time(x, t):
     nx = len(x)
     tx = []
     for ti in t:
-        tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+        tx.append(
+            np.hstack(
+                (np.full([nx, 1], float(ti), dtype=paddle.get_default_dtype()), x)
+            )
+        )
     tx = np.vstack(tx)
     return tx
 

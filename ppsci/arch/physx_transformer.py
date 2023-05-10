@@ -308,7 +308,9 @@ class PhysformerGPT2(base.Arch):
 
     def get_position_embed(self, x):
         B, N, _ = x.shape
-        position_ids = paddle.arange(0, N, dtype="float32").reshape([1, N, 1])
+        position_ids = paddle.arange(0, N, dtype=paddle.get_default_dtype()).reshape(
+            [1, N, 1]
+        )
         position_ids = position_ids.repeat_interleave(B, axis=0)
 
         position_embeds = paddle.zeros_like(x)
