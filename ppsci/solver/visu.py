@@ -16,9 +16,7 @@ import os
 import os.path as osp
 
 import paddle
-import paddle.amp as amp
 
-from ppsci import solver
 from ppsci.utils import expression
 from ppsci.utils import misc
 
@@ -65,12 +63,8 @@ def visualize_func(solver, epoch_id: int):
                 evaluator.add_target_expr(output_expr, output_key)
 
             # forward
-            with solver._no_grad_context_manager():
-                if solver.use_amp:
-                    with amp.auto_cast(level=solver.amp_level):
-                        batch_output_dict = evaluator(batch_input_dict)
-                else:
-                    batch_output_dict = evaluator(batch_input_dict)
+            with solver._autocast_context_manager():
+                batch_output_dict = evaluator(batch_input_dict)
 
             # collect batch data
             for key, batch_input in batch_input_dict.items():
