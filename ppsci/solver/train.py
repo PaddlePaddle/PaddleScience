@@ -18,7 +18,6 @@ import paddle.amp as amp
 
 from ppsci.solver import printer
 from ppsci.utils import expression
-from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
@@ -94,32 +93,6 @@ def train_epoch_func(solver, epoch_id, log_freq):
                     solver.lr_scheduler.step()
         else:
             total_loss.backward()
-            max_grad = None
-            max_grad_name = None
-            max_param = None
-            max_param_name = None
-            for name, param in solver.model.named_parameters():
-                if hasattr(param, "grad") and param.grad is not None:
-                    if max_grad is None or param.grad.abs().max().item() > max_grad:
-                        max_grad = param.grad.abs().max().item()
-                        max_grad_name = name
-                if max_param is None or param.abs().max().item() > max_param:
-                    max_param = param.abs().max().item()
-                    max_param_name = name
-            if max_grad > 1e3:
-                logger.warning(
-                    f"current max_grad ({max_grad:.5f}) is bigger than 1e3, "
-                    f"layer name is {max_grad_name}"
-                )
-            if max_param > 1e5:
-                logger.warning(
-                    f"current max_param ({max_param:.5f}) is bigger than 1e5, "
-                    f"layer name is {max_param_name}"
-                )
-                # exit()
-            # else:
-            #     logger.info(f"max_grad = {max_grad:.10f} at layer name {max_grad_name}")
-
             if iter_id % solver.update_freq == 0:
                 solver.optimizer.step()
                 solver.optimizer.clear_grad()

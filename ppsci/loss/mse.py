@@ -21,6 +21,8 @@ from typing_extensions import Literal
 
 from ppsci.loss import base
 
+# import paddle
+
 
 class MSELoss(base.LossBase):
     r"""Class for mean squared error loss.
@@ -53,6 +55,8 @@ class MSELoss(base.LossBase):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
+            # loss = paddle.abs(output_dict[key] - label_dict[key]).pow(2)
+
             if weight_dict is not None:
                 loss *= weight_dict[key]
             if "area" in output_dict:

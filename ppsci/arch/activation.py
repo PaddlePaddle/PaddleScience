@@ -18,15 +18,23 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
+
+def stable_silu(x):
+    """
+    numeric stable silu, prevent from Nan in backward.
+    """
+    return x * F.sigmoid(x)
+
+
 act_func_dict = {
     "elu": F.elu,
     "relu": F.relu,
     "selu": F.selu,
     "sigmoid": F.sigmoid,
-    "silu": F.silu,
+    "silu": stable_silu,
     "sin": paddle.sin,
     "cos": paddle.cos,
-    "swish": F.silu,
+    "swish": stable_silu,
     "tanh": F.tanh,
     "identity": nn.Identity(),
 }

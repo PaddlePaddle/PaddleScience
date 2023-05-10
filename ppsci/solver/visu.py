@@ -49,7 +49,9 @@ def visualize_func(solver, epoch_id):
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False

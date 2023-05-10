@@ -28,15 +28,21 @@ class WeightNormLinear(nn.Layer):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight_v = paddle.create_parameter((in_features, out_features), "float32")
-        self.weight_g = paddle.create_parameter((out_features,), "float32")
+        self.weight_v = paddle.create_parameter(
+            (in_features, out_features), paddle.get_default_dtype()
+        )
+        self.weight_g = paddle.create_parameter(
+            (out_features,), paddle.get_default_dtype()
+        )
         if bias:
-            self.bias = paddle.create_parameter((out_features,), "float32")
+            self.bias = paddle.create_parameter(
+                (out_features,), paddle.get_default_dtype()
+            )
         else:
             self.bias = None
-        self.reset_parameters()
+        self._init_weights()
 
-    def reset_parameters(self) -> None:
+    def _init_weights(self) -> None:
         initializer.xavier_uniform_(self.weight_v)
         initializer.constant_(self.weight_g, 1.0)
         if self.bias is not None:

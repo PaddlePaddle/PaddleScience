@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Reference: https://www.mathworks.com/help/pde/ug/deflection-analysis-of-a-bracket.html
+"""
+
 import numpy as np
 import paddle
 from paddle import fluid
@@ -25,16 +29,24 @@ if __name__ == "__main__":
     fluid.core.set_prim_eager_enabled(True)
 
     args = config.parse_args()
+    # paddle.set_default_dtype("float64")
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_bracket" if not args.output_dir else args.output_dir
+    output_dir = (
+        "./output_bracket_eager_True_mse_stable_silu"
+        if not args.output_dir
+        else args.output_dir
+    )
+    # output_dir = "./output_bracket_eager_True_mse_paddle_WN_lr_decay" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
+    act_str = "silu"
+    wn = True
     disp_net = ppsci.arch.MLP(
-        ("x", "y", "z"), ("u", "v", "w"), 6, 512, "silu", weight_norm=True
+        ("x", "y", "z"), ("u", "v", "w"), 6, 512, act_str, weight_norm=wn
     )
 
     stress_net = ppsci.arch.MLP(
@@ -42,8 +54,8 @@ if __name__ == "__main__":
         ("sigma_xx", "sigma_yy", "sigma_zz", "sigma_xy", "sigma_xz", "sigma_yz"),
         6,
         512,
-        "silu",
-        weight_norm=True,
+        act_str,
+        weight_norm=wn,
     )
     # wrap to a model_list
     model = ppsci.arch.ModelList((disp_net, stress_net))
@@ -97,29 +109,17 @@ if __name__ == "__main__":
         "iters_per_epoch": iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
+            "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 2,
+        "num_workers": 1,
     }
 
+    # set constraint
     support_origin = (-1, -1, -1)
-    support_dim = (0.25, 2, 2)
     bracket_origin = (-0.75, -1, -0.1)
     bracket_dim = (1.75, 2, 0.2)
     cylinder_radius = 0.1
-    cylinder_height = 2.0
-    aux_lower_origin = (-0.75, -1, -0.1 - cylinder_radius)
-    aux_lower_dim = (cylinder_radius, 2, cylinder_radius)
-    aux_upper_origin = (-0.75, -1, 0.1)
-    aux_upper_dim = (cylinder_radius, 2, cylinder_radius)
-    cylinder_lower_center = (-0.75 + cylinder_radius, 0, 0)
-    cylinder_upper_center = (-0.75 + cylinder_radius, 0, 0)
-    cylinder_hole_radius = 0.7
-    cylinder_hole_height = 0.5
-    cylinder_hole_center = (0.125, 0, 0)
-
-    # set constraint
     bc_back = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
         {"u": 0, "v": 0, "w": 0},
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         epochs,
         iters_per_epoch,
-        1.0e-3,
+        0.001,
         0.95,
         15000,
         by_epoch=False,
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # set validator
-    std_xyzu = ppsci.utils.reader.load_csv_file(
+    ref_xyzu = ppsci.utils.reader.load_csv_file(
         "./data/deformation_x.txt",
         ("x", "y", "z", "u"),
         {
@@ -245,71 +245,72 @@ if __name__ == "__main__":
         },
         "\t",
     )
-    std_v = ppsci.utils.reader.load_csv_file(
+    ref_v = ppsci.utils.reader.load_csv_file(
         "./data/deformation_y.txt",
         ("v",),
         {"v": "Directional Deformation (m)"},
         "\t",
     )
-    std_w = ppsci.utils.reader.load_csv_file(
+    ref_w = ppsci.utils.reader.load_csv_file(
         "./data/deformation_z.txt",
         ("w",),
         {"w": "Directional Deformation (m)"},
         "\t",
     )
 
-    std_sxx = ppsci.utils.reader.load_csv_file(
-        "./data/normal_y.txt",
+    ref_sxx = ppsci.utils.reader.load_csv_file(
+        "./data/normal_x.txt",
         ("sigma_xx",),
         {"sigma_xx": "Normal Stress (Pa)"},
         "\t",
     )
-    std_syy = ppsci.utils.reader.load_csv_file(
+    ref_syy = ppsci.utils.reader.load_csv_file(
         "./data/normal_y.txt",
         ("sigma_yy",),
         {"sigma_yy": "Normal Stress (Pa)"},
         "\t",
     )
-    std_szz = ppsci.utils.reader.load_csv_file(
+    ref_szz = ppsci.utils.reader.load_csv_file(
         "./data/normal_z.txt",
         ("sigma_zz",),
         {"sigma_zz": "Normal Stress (Pa)"},
         "\t",
     )
 
-    std_sxy = ppsci.utils.reader.load_csv_file(
+    ref_sxy = ppsci.utils.reader.load_csv_file(
         "./data/shear_xy.txt",
         ("sigma_xy",),
         {"sigma_xy": "Shear Stress (Pa)"},
         "\t",
     )
-    std_sxz = ppsci.utils.reader.load_csv_file(
+    ref_sxz = ppsci.utils.reader.load_csv_file(
         "./data/shear_xz.txt",
         ("sigma_xz",),
         {"sigma_xz": "Shear Stress (Pa)"},
         "\t",
     )
-    std_syz = ppsci.utils.reader.load_csv_file(
+    ref_syz = ppsci.utils.reader.load_csv_file(
         "./data/shear_yz.txt",
         ("sigma_yz",),
         {"sigma_yz": "Shear Stress (Pa)"},
         "\t",
     )
+
     input_dict = {
-        "x": std_xyzu["x"],
-        "y": std_xyzu["y"],
-        "z": std_xyzu["z"],
+        "x": ref_xyzu["x"],
+        "y": ref_xyzu["y"],
+        "z": ref_xyzu["z"],
     }
     label_dict = {
-        "u": std_xyzu["u"] / characteristic_displacement,
-        "v": std_v["v"] / characteristic_displacement,
-        "w": std_w["w"] / characteristic_displacement,
-        "sigma_xx": std_sxx["sigma_xx"] * sigma_normalization,
-        "sigma_yy": std_syy["sigma_yy"] * sigma_normalization,
-        "sigma_zz": std_szz["sigma_zz"] * sigma_normalization,
-        "sigma_xy": std_sxy["sigma_xy"] * sigma_normalization,
-        "sigma_xz": std_sxz["sigma_xz"] * sigma_normalization,
-        "sigma_yz": std_syz["sigma_yz"] * sigma_normalization,
+        "u": ref_xyzu["u"] / characteristic_displacement,
+        "v": ref_v["v"] / characteristic_displacement,
+        "w": ref_w["w"] / characteristic_displacement,
+        "sigma_xx": ref_sxx["sigma_xx"] * sigma_normalization,
+        "sigma_yy": ref_syy["sigma_yy"] * sigma_normalization,
+        "sigma_zz": ref_szz["sigma_zz"] * sigma_normalization,
+        "sigma_xy": ref_sxy["sigma_xy"] * sigma_normalization,
+        "sigma_xz": ref_sxz["sigma_xz"] * sigma_normalization,
+        "sigma_yz": ref_syz["sigma_yz"] * sigma_normalization,
     }
     eval_dataloader_cfg = {
         "dataset": {
@@ -339,6 +340,7 @@ if __name__ == "__main__":
             "sigma_yz": lambda out: out["sigma_yz"],
         },
         metric={"MSE": ppsci.metric.MSE()},
+        name="commercial_ref_u_v_w_sigma",
     )
     validator = {sup_validator.name: sup_validator}
 
@@ -360,15 +362,14 @@ if __name__ == "__main__":
         lr_scheduler,
         epochs,
         iters_per_epoch,
-        save_freq=10,
+        save_freq=20,
         eval_during_train=True,
         log_freq=20,
-        eval_freq=10,
+        eval_freq=20,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path="./output_bracket/checkpoints/epoch_20",
     )
     # train model
     solver.train()
