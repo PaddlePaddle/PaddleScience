@@ -46,8 +46,8 @@ class MAE(base.Metric):
         metric_dict = {}
         for key in label_dict:
             mae = F.l1_loss(output_dict[key], label_dict[key], "none")
-            if self.keep_batch is True:
-                axis = [i for i in range(1, mae.dim())]
+            if self.keep_batch:
+                axis = [i for i in range(1, mae.ndim)]
                 mae = mae.mean(axis=axis)
                 metric_dict[key] = mae
             else:

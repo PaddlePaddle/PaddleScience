@@ -18,7 +18,6 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
-from typing_extensions import Self
 
 from ppsci.visualize import base
 from ppsci.visualize import plot
