@@ -15,8 +15,7 @@
 import time
 
 import paddle
-import paddle.amp as amp
-import paddle.io as io
+from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import expression
@@ -67,17 +66,13 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            if solver.use_amp:
-                with amp.auto_cast(level=solver.amp_level):
+            with solver._no_grad_context_manager():
+                with solver._autocast_context_manager():
                     output_dict = evaluator(input_dict)
                     validator_loss = _validator.loss(
                         output_dict, label_dict, weight_dict
                     )
                     loss_dict[f"loss({_validator.name})"] = float(validator_loss)
-            else:
-                output_dict = evaluator(input_dict)
-                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
-                loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
             for key, input in input_dict.items():
@@ -165,18 +160,6 @@ def eval_by_batch(solver, epoch_id, log_freq) -> float:
     Returns:
         float: Target metric computed during evaluation.
     """
-
-    def eval_forward(solver, _validator, evaluator):
-        # forward
-        if solver.use_amp:
-            with amp.auto_cast(level=solver.amp_level):
-                output_dict = evaluator(input_dict)
-                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
-        else:
-            output_dict = evaluator(input_dict)
-            validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
-        return output_dict, validator_loss
-
     target_metric: float = None
     for _, _validator in solver.validator.items():
         if isinstance(_validator.data_loader, io.DataLoader):
@@ -209,10 +192,12 @@ def eval_by_batch(solver, epoch_id, log_freq) -> float:
 
             # forward
             with solver._no_grad_context_manager():
-                output_dict, validator_loss = eval_forward(
-                    solver, _validator, evaluator
-                )
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+                with solver._autocast_context_manager():
+                    output_dict = evaluator(input_dict)
+                    validator_loss = _validator.loss(
+                        output_dict, label_dict, weight_dict
+                    )
+                    loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             for metric_name, metric_func in _validator.metric.items():
                 metric_dict = metric_func(output_dict, label_dict)
@@ -277,7 +262,6 @@ def eval_func(solver, epoch_id, log_freq) -> float:
     Returns:
         float: Target metric computed during evaluation.
     """
-
     if solver.compute_metric_by_batch is True:
         return eval_by_batch(solver, epoch_id, log_freq)
     return eval_by_dataset(solver, epoch_id, log_freq)

@@ -14,9 +14,6 @@
 
 import time
 
-import paddle.amp as amp
-
-from ppsci import solver
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
@@ -62,14 +59,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward for every constraint
-            if solver.use_amp:
-                with amp.auto_cast(level=solver.amp_level):
-                    output_dict = evaluator(input_dict)
-                    constraint_loss = _constraint.loss(
-                        output_dict, label_dict, weight_dict
-                    )
-                    total_loss += constraint_loss
-            else:
+            with solver._autocast_context_manager():
                 output_dict = evaluator(input_dict)
                 constraint_loss = _constraint.loss(output_dict, label_dict, weight_dict)
                 total_loss += constraint_loss
