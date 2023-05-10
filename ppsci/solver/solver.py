@@ -69,7 +69,8 @@ class Solver:
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
-        no_grad (bool, optional): Whether retain the gradient during evaluate. Defaults to False.
+        eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
+            involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -124,7 +125,7 @@ class Solver:
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
-        no_grad: bool = False,
+        eval_with_no_grad: bool = False,
     ):
         # set model
         self.model = model
@@ -197,8 +198,8 @@ class Solver:
 
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
-        # whether retain the gradient during evaluate
-        self.no_grad = no_grad
+        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
+        self.eval_with_no_grad = eval_with_no_grad
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -302,7 +303,7 @@ class Solver:
         pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
         checkpoint_path = cfg["Global"].get("checkpoint_path", None)
         compute_metric_by_batch = cfg["Global"].get("compute_metric_by_batch", False)
-        no_grad = cfg["Global"].get("no_grad", False)
+        eval_with_no_grad = cfg["Global"].get("eval_with_no_grad", False)
 
         return Solver(
             model,
@@ -330,7 +331,7 @@ class Solver:
             pretrained_model_path,
             checkpoint_path,
             compute_metric_by_batch,
-            no_grad,
+            eval_with_no_grad,
         )
 
     def train(self):
@@ -534,7 +535,7 @@ class Solver:
         Returns:
             Union[contextlib.AbstractContextManager]: Context manager.
         """
-        if self.no_grad:
+        if self.eval_with_no_grad:
             ctx_manager = paddle.no_grad()
         else:
             ctx_manager = (

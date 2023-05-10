@@ -66,13 +66,11 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            with solver._no_grad_context_manager():
-                with solver._autocast_context_manager():
-                    output_dict = evaluator(input_dict)
-                    validator_loss = _validator.loss(
-                        output_dict, label_dict, weight_dict
-                    )
-                    loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            with solver._autocast_context_manager(), solver._no_grad_context_manager():
+                output_dict = evaluator(input_dict)
+                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
+
+            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
             for key, input in input_dict.items():
@@ -191,25 +189,23 @@ def eval_by_batch(solver, epoch_id, log_freq) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            with solver._no_grad_context_manager():
-                with solver._autocast_context_manager():
-                    output_dict = evaluator(input_dict)
-                    validator_loss = _validator.loss(
-                        output_dict, label_dict, weight_dict
-                    )
-                    loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            with solver._autocast_context_manager(), solver._no_grad_context_manager():
+                output_dict = evaluator(input_dict)
+                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
 
+            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+
+            # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
                 metric_dict = metric_func(output_dict, label_dict)
                 if metric_name not in metric:
                     metric[metric_name] = misc.Prettydefaultdict(list)
                 for var_name, metric_value in metric_dict.items():
-                    metric_value = (
-                        metric_value.detach()
+                    metric[metric_name][var_name].append(
+                        metric_value
                         if solver.world_size == 1
-                        else misc.all_gather(metric_value.detach())
+                        else misc.all_gather(metric_value)
                     )
-                    metric[metric_name][var_name].append(metric_value)
 
             batch_cost = time.perf_counter() - batch_tic
             solver.eval_time_info["reader_cost"].update(reader_cost)
@@ -227,6 +223,7 @@ def eval_by_batch(solver, epoch_id, log_freq) -> float:
             reader_tic = time.perf_counter()
             batch_tic = time.perf_counter()
 
+        # gather all metric
         for metric_name, metric_dict in metric.items():
             for var_name, metric_value in metric_dict.items():
                 metric_value = paddle.concat(metric_value)[:num_samples]
