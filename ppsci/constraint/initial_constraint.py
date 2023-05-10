@@ -120,7 +120,7 @@ class InitialConstraint(base.Constraint):
                 label[key] = func(
                     **{k: v for k, v in input.items() if k in geom.dim_keys}
                 )
-            elif isinstance(value, types.FunctionType):
+            elif callable(value):
                 func = value
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
@@ -147,7 +147,7 @@ class InitialConstraint(base.Constraint):
                     weight[key] = func(
                         **{k: v for k, v in input.items() if k in geom.dim_keys}
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     weight[key] = func(input)
                     if isinstance(weight[key], (int, float)):
