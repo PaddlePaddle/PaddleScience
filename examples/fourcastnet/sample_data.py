@@ -78,11 +78,11 @@ def sample_data_epoch(epoch: int):
     processes = 16
 
     if len(glob.glob(tmp_save_path + "/*.h5")):
-        raise ValueError(
+        raise FileExistsError(
             f"tmp_save_path({tmp_save_path}) is not an empty folder, please specify an empty folder."
         )
     if len(glob.glob(save_path + "/*.h5")):
-        raise ValueError(
+        raise FileExistsError(
             f"save_path({save_path}) is not an empty folder, please specify an empty folder."
         )
     os.makedirs(tmp_save_path, exist_ok=True)
