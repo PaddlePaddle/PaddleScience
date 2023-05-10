@@ -15,7 +15,7 @@
 from typing import Tuple
 from typing import Union
 
-import paddle.nn as nn
+from paddle import nn
 
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
