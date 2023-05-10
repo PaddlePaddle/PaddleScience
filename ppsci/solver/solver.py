@@ -14,20 +14,22 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
 
 import paddle
-import paddle.amp as amp
 import paddle.distributed as dist
-import paddle.incubate as incubate
-import paddle.nn as nn
-import paddle.optimizer as optimizer
 import visualdl as vdl
 from packaging import version
+from paddle import amp
+from paddle import incubate
+from paddle import nn
+from paddle import optimizer
 from paddle.distributed import fleet
 from typing_extensions import Literal
 
@@ -57,7 +59,7 @@ class Solver:
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
         vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
-        device (Literal["cpu", "gpu", "xpu"], optional): _description_. Defaults to "gpu".
+        device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
@@ -392,7 +394,7 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
-    def eval(self, epoch_id=0):
+    def eval(self, epoch_id: int = 0):
         """Evaluation"""
         train_state = self.model.training
         if train_state:
@@ -412,7 +414,7 @@ class Solver:
             self.model.train()
         return result
 
-    def visualize(self, epoch_id=0):
+    def visualize(self, epoch_id: int = 0):
         """Visualization"""
         train_state = self.model.training
         if train_state:
@@ -461,16 +463,15 @@ class Solver:
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            if self.use_amp:
-                with amp.auto_cast(level=self.amp_level):
-                    batch_output_dict = self.model(batch_input_dict)
-            else:
+            with self._autocast_context_manager():
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
@@ -499,3 +500,20 @@ class Solver:
         save_path = os.path.join(export_dir, "inference")
         paddle.jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}.")
+
+    def _autocast_context_manager(self) -> contextlib.AbstractContextManager:
+        """Autocast context manager for Auto Mix Precision.
+
+        Returns:
+            Union[contextlib.AbstractContextManager]: Context manager.
+        """
+        if self.use_amp:
+            ctx_manager = amp.auto_cast(level=self.amp_level)
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
+
+        return ctx_manager

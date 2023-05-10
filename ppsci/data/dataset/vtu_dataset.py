@@ -27,8 +27,8 @@ class VtuDataset(io.Dataset):
 
     Args:
         file_path (str): *.vtu file path.
-        input_keys (Optional[Tuple[str, ...]]): Tuple of input keys.
-        label_keys (Optional[Tuple[str, ...]]): Tuple of label keys.
+        input_keys (Optional[Tuple[str, ...]]): Tuple of input keys. Defaults to None.
+        label_keys (Optional[Tuple[str, ...]]): Tuple of label keys. Defaults to None.
         time_step (int): Time step with unit second.
         time_index (Optional[Tuple[int, ...]]): Time index tuple in increasing order.
         labels : Temporary variable for [load_vtk_with_time_file].

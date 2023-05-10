@@ -84,8 +84,8 @@ class GradNorm(NetworkBase):
         norms = []
         for i in range(losses.shape[0]):
             grad = paddle.autograd.grad(losses[i], W, retain_graph=True)
-            norms.append(paddle.norm(self.loss_weights[i] * grad[0], p=2))
-        norms = paddle.concat(norms)
+            norms.append(paddle.norm(self.loss_weights[i] * grad[0], p=2).reshape([]))
+        norms = paddle.stack(norms)
 
         # calculate the inverse train rate
         loss_ratio = losses.numpy() / self.initial_losses
