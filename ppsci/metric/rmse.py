@@ -53,20 +53,20 @@ class LatitudeWeightedRMSE(base.Metric):
     r"""Latitude weighted root mean square error.
 
     $$
-    metric =\sqrt{\dfrac{1}{MN}\sum\limits_{m=1}^{M}\sum\limits_{n=1}^{N}L(m)(X[m,n]-Y[m,n])^{2}}
+    metric =\sqrt{\dfrac{1}{MN}\sum\limits_{m=1}^{M}\sum\limits_{n=1}^{N}L_m(X_{mn}-Y_{mn})^{2}}
     $$
 
     $$
-    L(m) = N_{lat}\dfrac{cos(lat(m))}{\sum\limits_{j=1}^{N_{lat}}cos(lat(j))}
+    L_m = N_{lat}\dfrac{cos(lat_m)}{\sum\limits_{j=1}^{N_{lat}}cos(lat_j)}
     $$
 
-    $lat(m)$ is the latitude at m.
+    $lat_m$ is the latitude at m.
     $N_{lat}$ is the number of latitude set by `num_lat`.
 
     Args:
         num_lat (int): Number of latitude.
         std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
-        reduction (Literal[mean, none], optional): Reduction method. Defaults to "mean".
+        keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
         variable_dict (Dict[str, int], optional): Variable dictionary. Defaults to None.
         unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
         scale (float, optional): The scale value used after expm1. Defaults to 1e-5.
@@ -82,7 +82,7 @@ class LatitudeWeightedRMSE(base.Metric):
         self,
         num_lat: int,
         std: Union[np.array, Tuple[float, ...]],
-        reduction: Literal["mean", "none"] = "mean",
+        keep_batch: bool = False,
         variable_dict: Dict[str, int] = None,
         unlog: bool = False,
         scale: float = 1e-5,
@@ -90,7 +90,7 @@ class LatitudeWeightedRMSE(base.Metric):
         super().__init__()
         self.num_lat = num_lat
         self.std = paddle.to_tensor(std).reshape((1, -1))
-        self.reduction = reduction
+        self.keep_batch = keep_batch
         self.variable_dict = variable_dict
         self.unlog = unlog
         self.scale = scale
@@ -127,17 +127,17 @@ class LatitudeWeightedRMSE(base.Metric):
             rmse = rmse * self.std
             if self.variable_dict is not None:
                 for variable_name, idx in self.variable_dict.items():
-                    if self.reduction == "mean":
+                    if self.keep_batch is False:
                         metric_dict[f"{key}.{variable_name}"] = float(
                             rmse[:, idx].mean()
                         )
-                    elif self.reduction == "none":
+                    else:
                         metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
             else:
-                if self.reduction == "mean":
+                if self.keep_batch is False:
                     rmse = rmse.mean()
                     metric_dict[key] = float(rmse)
-                elif self.reduction == "none":
+                else:
                     rmse = rmse.mean(axis=1)
                     metric_dict[key] = rmse
 

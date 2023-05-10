@@ -14,8 +14,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -66,8 +68,8 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
-        calc_batch_metric (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
-        eval_no_grad (bool, optional): Whether retain the gradient during evaluate. Defaults to False.
+        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
+        no_grad (bool, optional): Whether retain the gradient during evaluate. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -121,8 +123,8 @@ class Solver:
         amp_level: Literal["O1", "O2", "O0"] = "O0",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
-        calc_batch_metric: bool = False,
-        eval_no_grad: bool = False,
+        compute_metric_by_batch: bool = False,
+        no_grad: bool = False,
     ):
         # set model
         self.model = model
@@ -194,9 +196,9 @@ class Solver:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # whether calculate metrics after each batch during evaluate
-        self.calc_batch_metric = calc_batch_metric
+        self.compute_metric_by_batch = compute_metric_by_batch
         # whether retain the gradient during evaluate
-        self.eval_no_grad = eval_no_grad
+        self.no_grad = no_grad
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -299,8 +301,8 @@ class Solver:
         update_freq = cfg["Global"].get("update_freq", 1)
         pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
         checkpoint_path = cfg["Global"].get("checkpoint_path", None)
-        calc_batch_metric = cfg["Global"].get("calc_batch_metric", False)
-        eval_no_grad = cfg["Global"].get("eval_no_grad", False)
+        compute_metric_by_batch = cfg["Global"].get("compute_metric_by_batch", False)
+        no_grad = cfg["Global"].get("no_grad", False)
 
         return Solver(
             model,
@@ -327,8 +329,8 @@ class Solver:
             amp_level,
             pretrained_model_path,
             checkpoint_path,
-            calc_batch_metric,
-            eval_no_grad,
+            compute_metric_by_batch,
+            no_grad,
         )
 
     def train(self):
@@ -512,3 +514,19 @@ class Solver:
         save_path = os.path.join(export_dir, "inference")
         paddle.jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}.")
+
+    def _no_grad_context_manager(self) -> contextlib.AbstractContextManager:
+        """No grad manager.
+        Returns:
+            Union[contextlib.AbstractContextManager]: Context manager.
+        """
+        if self.no_grad:
+            ctx_manager = paddle.no_grad()
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
+
+        return ctx_manager

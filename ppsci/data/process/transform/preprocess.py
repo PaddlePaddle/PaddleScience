@@ -67,7 +67,7 @@ class Normalize:
     Args:
         mean (Union[np.array, Tuple[float, ...]]): Mean of training dataset.
         std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
-        apply_list (Tuple[str, ...], optional): Which data is the normalization method applied to. Defaults to ("input_item", "label_item").
+        apply_keys (Tuple[str, ...], optional): Which data is the normalization method applied to. Defaults to ("input", "label").
 
     Examples:
         >>> import ppsci
@@ -78,18 +78,18 @@ class Normalize:
         self,
         mean: Union[np.array, Tuple[float, ...]],
         std: Union[np.array, Tuple[float, ...]],
-        apply_list: Tuple[str, ...] = ("input_item", "label_item"),
+        apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
         self.mean = mean
         self.std = std
-        self.apply_list = apply_list
+        self.apply_keys = apply_keys
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        if "input_item" in self.apply_list:
+        if "input" in self.apply_keys:
             for key, value in input_item.items():
                 input_item[key] = (value - self.mean) / self.std
-        if "label_item" in self.apply_list:
+        if "label" in self.apply_keys:
             for key, value in label_item.items():
                 label_item[key] = (value - self.mean) / self.std
         return input_item, label_item, weight_item
@@ -100,7 +100,7 @@ class Log1p:
 
     Args:
         scale (float, optional): Scale data. Defaults to 1.0.
-        apply_list (Tuple[str, ...], optional): Which data is the log1p method applied to. Defaults to ["input_item", "label_item"].
+        apply_keys (Tuple[str, ...], optional): Which data is the log1p method applied to. Defaults to ("input", "label").
 
     Examples:
         >>> import ppsci
@@ -110,17 +110,17 @@ class Log1p:
     def __init__(
         self,
         scale: float = 1.0,
-        apply_list: Tuple[str, ...] = ("input_item", "label_item"),
+        apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
         self.scale = scale
-        self.apply_list = apply_list
+        self.apply_keys = apply_keys
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        if "input_item" in self.apply_list:
+        if "input" in self.apply_keys:
             for key, value in input_item.items():
                 input_item[key] = np.log1p(value / self.scale)
-        if "label_item" in self.apply_list:
+        if "label" in self.apply_keys:
             for key, value in label_item.items():
                 label_item[key] = np.log1p(value / self.scale)
         return input_item, label_item, weight_item
@@ -132,7 +132,7 @@ class CropData:
     Args:
         xmin (Tuple[int, ...]): Bottom left corner point, [x0, y0].
         xmax (Tuple[int, ...]): Top right corner point, [x1, y1].
-        apply_list (Tuple[str, ...], optional): Which data is the crop method applied to. Defaults to ("input_item", "label_item").
+        apply_keys (Tuple[str, ...], optional): Which data is the crop method applied to. Defaults to ("input", "label").
 
     Examples:
         >>> import ppsci
@@ -143,20 +143,20 @@ class CropData:
         self,
         xmin: Tuple[int, ...],
         xmax: Tuple[int, ...],
-        apply_list: Tuple[str, ...] = ("input_item", "label_item"),
+        apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
         self.xmin = xmin
         self.xmax = xmax
-        self.apply_list = apply_list
+        self.apply_keys = apply_keys
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        if "input_item" in self.apply_list:
+        if "input" in self.apply_keys:
             for key, value in input_item.items():
                 input_item[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
                 ]
-        if "label_item" in self.apply_list:
+        if "label" in self.apply_keys:
             for key, value in label_item.items():
                 label_item[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
@@ -168,24 +168,24 @@ class SqueezeData:
     """Squeeze data clsss.
 
     Args:
-        apply_list (Tuple[str, ...], optional): Which data is the squeeze method applied to. Defaults to ("input_item", "label_item").
+        apply_keys (Tuple[str, ...], optional): Which data is the squeeze method applied to. Defaults to ("input", "label").
 
     Examples:
         >>> import ppsci
         >>> squeeze_data = ppsci.data.transform.SqueezeData()
     """
 
-    def __init__(self, apply_list: Tuple[str, ...] = ("input_item", "label_item")):
-        self.apply_list = apply_list
+    def __init__(self, apply_keys: Tuple[str, ...] = ("input", "label")):
+        self.apply_keys = apply_keys
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        if "input_item" in self.apply_list:
+        if "input" in self.apply_keys:
             for key, value in input_item.items():
                 if len(value.shape) == 4:
                     B, C, H, W = value.shape
                     input_item[key] = value.reshape((B * C, H, W))
-        if "label_item" in self.apply_list:
+        if "label" in self.apply_keys:
             for key, value in label_item.items():
                 if len(value.shape) == 4:
                     B, C, H, W = value.shape
