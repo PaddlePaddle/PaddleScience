@@ -157,8 +157,8 @@ class ExpressionSolver(nn.Layer):
         """Add an expression `expr` named `expr_name` to
 
         Args:
-            expr (Callable): _description_
-            expr_name (str): _description_
+            expr (Callable): Callable function for computing an expression.
+            expr_name (str): Name of expression.
         """
         self.expr_dict[expr_name] = expr
 
