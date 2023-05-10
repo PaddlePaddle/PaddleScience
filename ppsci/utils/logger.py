@@ -158,15 +158,15 @@ def advertise():
     ===========================================================
 
     """
-    copyright = "PaddleScience is powered by PaddlePaddle !"
+    _copyright = "PaddleScience is powered by PaddlePaddle !"
     ad = "For more info please go to the following website."
     website = "https://github.com/PaddlePaddle/PaddleScience"
-    AD_LEN = 6 + len(max([copyright, ad, website], key=len))
+    AD_LEN = 6 + len(max([_copyright, ad, website], key=len))
 
     info(
         "\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n".format(
             "=" * (AD_LEN + 4),
-            "=={}==".format(copyright.center(AD_LEN)),
+            "=={}==".format(_copyright.center(AD_LEN)),
             "=" * (AD_LEN + 4),
             "=={}==".format(" " * AD_LEN),
             "=={}==".format(ad.center(AD_LEN)),

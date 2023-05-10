@@ -15,8 +15,7 @@
 import time
 
 import paddle
-import paddle.amp as amp
-import paddle.io as io
+from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import expression
@@ -67,14 +66,7 @@ def eval_func(solver, epoch_id: int, log_freq: int) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            if solver.use_amp:
-                with amp.auto_cast(level=solver.amp_level):
-                    output_dict = evaluator(input_dict)
-                    validator_loss = _validator.loss(
-                        output_dict, label_dict, weight_dict
-                    )
-                    loss_dict[f"loss({_validator.name})"] = float(validator_loss)
-            else:
+            with solver._autocast_context_manager():
                 output_dict = evaluator(input_dict)
                 validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
                 loss_dict[f"loss({_validator.name})"] = float(validator_loss)
