@@ -532,6 +532,7 @@ class Solver:
 
     def _no_grad_context_manager(self) -> contextlib.AbstractContextManager:
         """No grad manager.
+
         Returns:
             Union[contextlib.AbstractContextManager]: Context manager.
         """
