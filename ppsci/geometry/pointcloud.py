@@ -30,7 +30,7 @@ class PointCloud(geometry.Geometry):
         coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
         boundary_path (Optional[str]): File which store boundary points of a point cloud. Defaults to None.
         boundary_normal_path (Optional[str]): File which store boundary normals of a point cloud. Defaults to None.
-        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}. Defaults to None.
+        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"x": "X:0", "y": "X:1"}. Defaults to None.
 
     Examples:
         >>> import ppsci

@@ -38,7 +38,7 @@ def load_csv_file(
         file_path (str): CSV file path.
         keys (Tuple[str, ...]): Required fetching keys.
         alias_dict (Optional[Dict[str, str]]): Alias for keys,
-            i.e. {original_key: original_key}. Defaults to None.
+            i.e. {inner_key: outer_key}. Defaults to None.
         encoding (str, optional): Encoding code when open file. Defaults to "utf-8".
 
     Returns:

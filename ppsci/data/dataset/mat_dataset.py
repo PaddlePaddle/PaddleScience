@@ -36,12 +36,13 @@ class MatDataset(io.Dataset):
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+            i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
         timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s).
+            transform(s). Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -154,12 +155,13 @@ class IterableMatDataset(io.IterableDataset):
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...]): List of label keys.
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+            i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
         timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s).
+            transform(s). Defaults to None.
 
     Examples:
         >>> import ppsci
