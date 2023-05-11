@@ -110,7 +110,7 @@ class InitialConstraint(base.Constraint):
             if isinstance(value, str):
                 value = sp_parser.parse_expr(value)
             if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
+                label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
                     sympy.symbols(geom.dim_keys),
@@ -124,9 +124,7 @@ class InitialConstraint(base.Constraint):
                 func = value
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
-                    label[key] = np.full_like(
-                        next(iter(input.values())), float(label[key])
-                    )
+                    label[key] = np.full_like(next(iter(input.values())), label[key])
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
@@ -137,7 +135,7 @@ class InitialConstraint(base.Constraint):
                 if isinstance(value, str):
                     value = sp_parser.parse_expr(value)
                 if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                    weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
                         sympy.symbols(geom.dim_keys),
@@ -152,7 +150,7 @@ class InitialConstraint(base.Constraint):
                     weight[key] = func(input)
                     if isinstance(weight[key], (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(input.values())), float(weight[key])
+                            next(iter(input.values())), weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

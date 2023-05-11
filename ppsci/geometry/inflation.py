@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import paddle
 
 from ppsci.utils import checker
 
@@ -51,16 +52,16 @@ def open3d_inflation(
             remove_ids.append(i)
     mesh.remove_vertices_by_index(remove_ids)
 
-    points = np.asarray(mesh.vertices)
+    points = np.asarray(mesh.vertices, dtype=paddle.get_default_dtype())
     mesh.compute_triangle_normals()
-    normals = np.asarray(mesh.triangle_normals)
+    normals = np.asarray(mesh.triangle_normals, dtype=paddle.get_default_dtype())
     mesh.orient_triangles()
-    triangles = np.asarray(mesh.triangles)
+    triangles = np.asarray(mesh.triangles, dtype=paddle.get_default_dtype())
     new_points = []
     for i, point in enumerate(points):
         boolean_index = np.argwhere(triangles == i)[:, 0]
         normal = normals[boolean_index] * direction
-        d = np.ones(len(normal)) * distance
+        d = np.ones(len(normal), dtype=paddle.get_default_dtype()) * distance
 
         new_point = np.linalg.lstsq(normal, d, rcond=None)[0].squeeze()
         new_point = point + new_point
@@ -70,7 +71,7 @@ def open3d_inflation(
 
         new_points.append(new_point)
 
-    new_points = np.array(new_points)
+    new_points = np.array(new_points, dtype=paddle.get_default_dtype())
     new_mesh = open3d.geometry.TriangleMesh(
         open3d.utility.Vector3dVector(new_points),
         open3d.utility.Vector3iVector(triangles),
@@ -94,7 +95,7 @@ def pymesh_inflation(mesh: pymesh.Mesh, distance: float) -> pymesh.Mesh:
     Returns:
         pymesh.Mesh: Inflated mesh.
     """
-    vertices = np.array(mesh.vertices)
+    vertices = np.array(mesh.vertices, dtype=paddle.get_default_dtype())
     faces = np.array(mesh.faces)
     open3d_mesh = open3d.geometry.TriangleMesh(
         open3d.utility.Vector3dVector(vertices), open3d.utility.Vector3iVector(faces)
@@ -102,7 +103,7 @@ def pymesh_inflation(mesh: pymesh.Mesh, distance: float) -> pymesh.Mesh:
     inflated_open3d_mesh = open3d_inflation(
         open3d_mesh, abs(distance), 1.0 if distance >= 0.0 else -1.0
     )
-    vertices = np.array(inflated_open3d_mesh.vertices).astype("float32")
+    vertices = np.array(inflated_open3d_mesh.vertices, dtype=paddle.get_default_dtype())
     faces = np.array(inflated_open3d_mesh.triangles)
     inflated_pymesh = pymesh.form_mesh(vertices, faces)
     return inflated_pymesh
@@ -120,7 +121,7 @@ def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
     """
     # check if the mesh is 2D
     mesh.compute_triangle_normals()
-    normals = np.asarray(mesh.triangle_normals)
+    normals = np.asarray(mesh.triangle_normals, dtype=paddle.get_default_dtype())
     if not np.allclose(normals[:, :-1], 0):
         raise ValueError("The mesh is not 2D")
 
@@ -128,7 +129,7 @@ def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
     mesh.remove_degenerate_triangles()
     mesh.remove_duplicated_triangles()
     mesh.remove_unreferenced_vertices()
-    triangles = np.asarray(mesh.triangles)
+    triangles = np.asarray(mesh.triangles, dtype=paddle.get_default_dtype())
 
     edges = np.vstack(
         [triangles[:, [0, 1]], triangles[:, [1, 2]], triangles[:, [2, 0]]]
@@ -136,7 +137,7 @@ def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
     edges = set(map(tuple, edges))
     edges = np.array(list(edges))
 
-    vertices = np.asarray(mesh.vertices)[:, :-1]
+    vertices = np.asarray(mesh.vertices, dtype=paddle.get_default_dtype())[:, :-1]
     edges_in_triangle = np.array(
         [
             np.intersect1d(
@@ -163,7 +164,7 @@ def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
         edge_normal = edge_normal - other_point
         edges_normals.append(edge_normal)
 
-    edges_normals = np.array(edges_normals)
+    edges_normals = np.array(edges_normals, dtype=paddle.get_default_dtype())
     edges_normals = edges_normals / np.linalg.norm(edges_normals, axis=1)[:, None]
 
     new_mesh = open3d.geometry.TriangleMesh()
@@ -171,12 +172,17 @@ def offset(mesh, distance) -> open3d.geometry.TriangleMesh:
     for point in set(surface_edges.reshape(-1)):
         index = np.argwhere(surface_edges == point)[:, 0]
         normal = edges_normals[index]
-        d = np.ones(len(index)) * distance
+        d = np.ones(len(index), dtype=paddle.get_default_dtype()) * distance
         new_point = np.linalg.lstsq(normal, d, rcond=None)[0]
         new_point = vertices[point] + new_point
         new_vertices.append(new_point)
 
-    new_vertices = np.hstack((np.array(new_vertices), np.zeros((len(new_vertices), 1))))
+    new_vertices = np.hstack(
+        (
+            np.array(new_vertices, dtype=paddle.get_default_dtype()),
+            np.zeros((len(new_vertices), 1), dtype=paddle.get_default_dtype()),
+        )
+    )
     new_mesh.vertices = open3d.utility.Vector3dVector(new_vertices)
     new_mesh.triangles = open3d.utility.Vector3iVector(triangles)
     new_mesh.compute_triangle_normals()

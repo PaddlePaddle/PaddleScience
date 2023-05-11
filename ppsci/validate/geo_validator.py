@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -135,7 +136,7 @@ class GeometryValidator(base.Validator):
         label = {}
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
+                label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
                     sympy.symbols(geom.dim_keys),
@@ -151,7 +152,8 @@ class GeometryValidator(base.Validator):
                 if isinstance(label[key], (int, float)):
                     label[key] = np.full(
                         (next(iter(input.values())).shape[0], 1),
-                        float(label[key], "float32"),
+                        label[key],
+                        paddle.get_default_dtype(),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
