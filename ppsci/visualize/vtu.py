@@ -63,7 +63,7 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
         if coord_ndim == 2:
             axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
             axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
-            axis_z = np.zeros([nx], dtype="float32")
+            axis_z = np.zeros([nx], dtype=paddle.get_default_dtype())
         elif coord_ndim == 3:
             axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
             axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
