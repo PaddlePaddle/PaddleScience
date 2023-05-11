@@ -25,16 +25,9 @@ import numpy as np
 from paddle.io import DistributedBatchSampler
 from tqdm import tqdm
 
+import examples.fourcastnet.utils as fourcast_utils
 import ppsci
 from ppsci.utils import logger
-
-
-def get_mean_std(mean_path: str, std_path: str, vars_channel: Tuple[int, ...]):
-    mean = np.load(mean_path).squeeze(0).astype(np.float32)
-    mean = mean[vars_channel]
-    std = np.load(std_path).squeeze(0).astype(np.float32)
-    std = std[vars_channel]
-    return mean, std
 
 
 def sample_func(
@@ -87,7 +80,9 @@ def sample_data_epoch(epoch: int):
         )
     os.makedirs(tmp_save_path, exist_ok=True)
 
-    data_mean, data_std = get_mean_std(data_mean_path, data_std_path, vars_channel)
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        data_mean_path, data_std_path, vars_channel
+    )
     transforms = [
         {"SqueezeData": {}},
         {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},

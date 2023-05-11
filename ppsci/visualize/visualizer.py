@@ -320,6 +320,7 @@ class VisualizerWeather(base.Visualizer):
         vmin (float): Minimum value that the colormap covers.
         vmax (float): Maximal value that the colormap covers.
         colorbar_label (str, optional): The colorbar label. Defaults to "".
+        log_norm (bool, optional): Whether use log norm. Defaults to False.
         batch_size (int, optional): : Batch size of data when computing result in visu.py. Defaults to 1.
         num_timestamps (int, optional): Number of timestamps. Defaults to 1.
         prefix (str, optional): Prefix for output file. Defaults to "plot_weather".
@@ -357,7 +358,8 @@ class VisualizerWeather(base.Visualizer):
         yticklabels: Tuple[str, ...],
         vmin: float,
         vmax: float,
-        colorbar_label="",
+        colorbar_label: str = "",
+        log_norm: bool = False,
         batch_size: int = 1,
         num_timestamps: int = 1,
         prefix: str = "plot_weather",
@@ -370,6 +372,7 @@ class VisualizerWeather(base.Visualizer):
         self.vmin = vmin
         self.vmax = vmax
         self.colorbar_label = colorbar_label
+        self.log_norm = log_norm
 
     def save(self, filename, data_dict):
         data_dict = {key: data_dict[key] for key in self.output_keys}
@@ -387,6 +390,7 @@ class VisualizerWeather(base.Visualizer):
                 self.yticklabels,
                 self.vmin,
                 self.vmax,
-                self.num_timestamps,
                 self.colorbar_label,
+                self.log_norm,
+                self.num_timestamps,
             )

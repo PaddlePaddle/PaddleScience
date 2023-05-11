@@ -486,8 +486,9 @@ def save_plot_weather_from_dict(
     yticklabels: Tuple[str, ...],
     vmin: float,
     vmax: float,
-    num_timestamps: int = 1,
     colorbar_label: str = "",
+    log_norm: bool = False,
+    num_timestamps: int = 1,
 ):
     """Plot weather result as file from dict data.
 
@@ -501,8 +502,9 @@ def save_plot_weather_from_dict(
         yticklabels (Tuple[str, ...]): The yaxis' tick labels.
         vmin (float): Minimum value that the colormap covers.
         vmax (float): Maximal value that the colormap covers.
-        num_timestamps (int): Number of timestamp in data_dict. Defaults to 1.
         colorbar_label (str, optional): The colorbar label. Defaults to "".
+        log_norm (bool, optional): Whether use log norm. Defaults to False.
+        num_timestamps (int): Number of timestamp in data_dict. Defaults to 1.
     """
     os.makedirs(flodername, exist_ok=True)
 
@@ -529,6 +531,7 @@ def save_plot_weather_from_dict(
             vmin=vmin,
             vmax=vmax,
             colorbar_label=colorbar_label,
+            log_norm=log_norm,
         )
         frames.append(imageio.imread(filename_t))
     filename = os.path.join(flodername, "result.gif")
