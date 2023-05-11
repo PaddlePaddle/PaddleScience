@@ -126,16 +126,9 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     epochs = 10000 if not args.epochs else args.epochs
-    lr_scheduler = ppsci.optimizer.lr_scheduler.MultiStepDecay(
-        epochs,
-        ITERS_PER_EPOCH,
-        0.001,
-        (4000, 6000, 8000),
-        0.1,
-    )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(1e-3)((model,))
 
     # set validator
     NPOINTS_EVAL = NPOINT_PDE
@@ -183,7 +176,7 @@ if __name__ == "__main__":
         constraint,
         output_dir,
         optimizer,
-        lr_scheduler,
+        None,
         epochs,
         ITERS_PER_EPOCH,
         eval_during_train=True,
