@@ -50,51 +50,51 @@ def sample_data_epoch(epoch: int):
     # initialize logger
     logger.init_logger("ppsci")
     # set dataset path and save path
-    train_file_path = "./datasets/era5/train"
-    precip_file_path = None
-    data_mean_path = "./datasets/era5/stat/global_means.npy"
-    data_std_path = "./datasets/era5/stat/global_stds.npy"
-    tmp_save_path = "./datasets/era5/train_split_rank0/epoch_tmp"
+    TRAIN_FILE_PATH = "./datasets/era5/train"
+    PRECIP_FILE_PATH = None
+    DATA_MEAN_PATH = "./datasets/era5/stat/global_means.npy"
+    DATA_STD_PATH = "./datasets/era5/stat/global_stds.npy"
+    TMP_SAVE_PATH = "./datasets/era5/train_split_rank0/epoch_tmp"
     save_path = f"./datasets/era5/train_split_rank0/epoch_{epoch}"
     # set hyper-parameters
-    input_keys = ["input"]
-    output_keys = ["output"]
-    img_h, img_w = 720, 1440
+    input_keys = ("input",)
+    output_keys = ("output",)
+    IMG_H, IMG_W = 720, 1440
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
     # The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
     # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
     # You can obtain detailed information about each variable from
     # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    vars_channel = [i for i in range(20)]
-    num_trainer = 1
-    rank = 0
-    processes = 16
+    VARS_CHANNEL = list(range(20))
+    NUM_TRAINER = 1
+    RANK = 0
+    PROCESSES = 16
 
-    if len(glob.glob(tmp_save_path + "/*.h5")):
+    if len(glob.glob(TMP_SAVE_PATH + "/*.h5")):
         raise FileExistsError(
-            f"tmp_save_path({tmp_save_path}) is not an empty folder, please specify an empty folder."
+            f"TMP_SAVE_PATH({TMP_SAVE_PATH}) is not an empty folder, please specify an empty folder."
         )
     if len(glob.glob(save_path + "/*.h5")):
         raise FileExistsError(
             f"save_path({save_path}) is not an empty folder, please specify an empty folder."
         )
-    os.makedirs(tmp_save_path, exist_ok=True)
+    os.makedirs(TMP_SAVE_PATH, exist_ok=True)
 
     data_mean, data_std = fourcast_utils.get_mean_std(
-        data_mean_path, data_std_path, vars_channel
+        DATA_MEAN_PATH, DATA_STD_PATH, VARS_CHANNEL
     )
     transforms = [
         {"SqueezeData": {}},
-        {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},
+        {"CropData": {"xmin": (0, 0), "xmax": (IMG_H, IMG_W)}},
         {"Normalize": {"mean": data_mean, "std": data_std}},
     ]
     dataset_cfg = {
         "name": "ERA5Dataset",
-        "file_path": train_file_path,
+        "file_path": TRAIN_FILE_PATH,
         "input_keys": input_keys,
         "label_keys": output_keys,
-        "precip_file_path": precip_file_path,
-        "vars_channel": vars_channel,
+        "PRECIP_FILE_PATH": PRECIP_FILE_PATH,
+        "vars_channel": VARS_CHANNEL,
         "transforms": transforms,
     }
     dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
@@ -103,35 +103,35 @@ def sample_data_epoch(epoch: int):
         dataset=dataset,
         batch_size=1,
         shuffle=False,
-        num_replicas=num_trainer,
-        rank=rank,
+        num_replicas=NUM_TRAINER,
+        rank=RANK,
     )
     batch_sampler.set_epoch(epoch)
     batch_idxs = []
     for data in tqdm(batch_sampler):
         batch_idxs += data
 
-    pool = Pool(processes=processes)
-    for st in range(0, len(batch_idxs), len(batch_idxs) // (processes - 1)):
-        end = st + len(batch_idxs) // (processes - 1)
+    pool = Pool(processes=PROCESSES)
+    for st in range(0, len(batch_idxs), len(batch_idxs) // (PROCESSES - 1)):
+        end = st + len(batch_idxs) // (PROCESSES - 1)
         result = pool.apply_async(
-            sample_func, (dataset_cfg, tmp_save_path, batch_idxs[st:end])
+            sample_func, (dataset_cfg, TMP_SAVE_PATH, batch_idxs[st:end])
         )
     pool.close()
     pool.join()
     if result.successful():
         logger.info("successful")
-        shutil.move(tmp_save_path, save_path)
-        logger.info(f"move {tmp_save_path} to {save_path}")
+        shutil.move(TMP_SAVE_PATH, save_path)
+        logger.info(f"move {TMP_SAVE_PATH} to {save_path}")
 
 
 def main():
-    epoch = 0
-    sample_data_epoch(epoch)
+    EPOCHS = 0
+    sample_data_epoch(EPOCHS)
 
     # if you want to sample every 5 epochs, you can use the following code
-    # epoch = 150
-    # for i in range(0, epoch, 5):
+    # EPOCHS = 150
+    # for epoch in range(0, EPOCHS, 5):
     #     sample_data_epoch(epoch)
 
 
