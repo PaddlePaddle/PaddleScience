@@ -64,47 +64,46 @@ if __name__ == "__main__":
     dist.init_parallel_env()
 
     # set wind dataset path
-    wind_train_file_path = "./datasets/era5/train"
-    wind_valid_file_path = "./datasets/era5/test"
-    wind_test_file_path = "./datasets/era5/out_of_sample/2018.h5"
-    wind_mean_path = "./datasets/era5/stat/global_means.npy"
-    wind_std_path = "./datasets/era5/stat/global_stds.npy"
-    wind_time_mean_path = "./datasets/era5/stat/time_means.npy"
+    WIND_TRAIN_FILE_PATH = "./datasets/era5/train"
+    WIND_VALID_FILE_PATH = "./datasets/era5/test"
+    WIND_TEST_FILE_PATH = "./datasets/era5/out_of_sample/2018.h5"
+    WIND_MEAN_PATH = "./datasets/era5/stat/global_means.npy"
+    WIND_STD_PATH = "./datasets/era5/stat/global_stds.npy"
+    WIND_TIME_MEAN_PATH = "./datasets/era5/stat/time_means.npy"
     # set dataset path
-    train_file_path = "./datasets/era5/precip/train"
-    valid_file_path = "./datasets/era5/precip/test"
-    test_file_path = "./datasets/era5/precip/out_of_sample/2018.h5"
-    time_mean_path = "./datasets/era5/stat/precip/time_means.npy"
+    TRAIN_FILE_PATH = "./datasets/era5/precip/train"
+    VALID_FILE_PATH = "./datasets/era5/precip/test"
+    TEST_FILE_PATH = "./datasets/era5/precip/out_of_sample/2018.h5"
+    TIME_MEAN_PATH = "./datasets/era5/stat/precip/time_means.npy"
 
     # set training hyper-parameters
     input_keys = ("input",)
     output_keys = ("output",)
-    img_h, img_w = 720, 1440
-    epochs = 25 if not args.epochs else args.epochs
+    IMG_H, IMG_W = 720, 1440
+    EPOCHS = 25 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
     # The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
     # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
     # You can obtain detailed information about each variable from
     # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    vars_channel = list(range(20))
+    VARS_CHANNEL = list(range(20))
     # set output directory
-    output_dir = (
+    OUTPUT_DIR = (
         "./output/fourcastnet/precip" if not args.output_dir else args.output_dir
     )
-    wind_model_path = "./output/fourcastnet/finetune/checkpoints/latest"
-    pretrained_model_path = "/root/ssd3/zhangzhimin04/workspaces/FourCastNet_Paddle/model_precip/00/training_checkpoints/best_ckpt"
+    WIND_MODEL_PATH = "./output/fourcastnet/finetune/checkpoints/latest"
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     wind_data_mean, wind_data_std = fourcast_utils.get_mean_std(
-        wind_mean_path, wind_std_path, vars_channel
+        WIND_MEAN_PATH, WIND_STD_PATH, VARS_CHANNEL
     )
-    data_time_mean = fourcast_utils.get_time_mean(time_mean_path, img_h, img_w)
+    data_time_mean = fourcast_utils.get_time_mean(TIME_MEAN_PATH, IMG_H, IMG_W)
 
     # set train transforms
     transforms = [
         {"SqueezeData": {}},
-        {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},
+        {"CropData": {"xmin": (0, 0), "xmax": (IMG_H, IMG_W)}},
         {
             "Normalize": {
                 "mean": wind_data_mean,
@@ -119,11 +118,11 @@ if __name__ == "__main__":
     train_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": wind_train_file_path,
+            "file_path": WIND_TRAIN_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "vars_channel": vars_channel,
-            "precip_file_path": train_file_path,
+            "vars_channel": VARS_CHANNEL,
+            "precip_file_path": TRAIN_FILE_PATH,
             "transforms": transforms,
         },
         "sampler": {
@@ -143,17 +142,17 @@ if __name__ == "__main__":
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(sup_constraint.data_loader)
+    ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # set eval dataloader config
     eval_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": wind_valid_file_path,
+            "file_path": WIND_VALID_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "vars_channel": vars_channel,
-            "precip_file_path": valid_file_path,
+            "vars_channel": VARS_CHANNEL,
+            "precip_file_path": VALID_FILE_PATH,
             "transforms": transforms,
             "training": False,
         },
@@ -169,10 +168,10 @@ if __name__ == "__main__":
     metric = {
         "MAE": ppsci.metric.MAE(keep_batch=True),
         "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-            num_lat=img_h, keep_batch=True, unlog=True
+            num_lat=IMG_H, keep_batch=True, unlog=True
         ),
         "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-            num_lat=img_h, mean=data_time_mean, keep_batch=True, unlog=True
+            num_lat=IMG_H, mean=data_time_mean, keep_batch=True, unlog=True
         ),
     }
 
@@ -187,13 +186,13 @@ if __name__ == "__main__":
 
     # set model
     wind_model = ppsci.arch.AFNONet(input_keys, output_keys)
-    ppsci.utils.save_load.load_pretrain(wind_model, path=wind_model_path)
+    ppsci.utils.save_load.load_pretrain(wind_model, path=WIND_MODEL_PATH)
     model = ppsci.arch.PrecipNet(input_keys, output_keys, wind_model=wind_model)
 
     # init optimizer and lr scheduler
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         5e-4,
         by_epoch=True,
     )()
@@ -203,11 +202,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         log_freq=1,
         validator=validator,
@@ -231,9 +230,9 @@ if __name__ == "__main__":
     # update eval dataloader config
     eval_dataloader_cfg["dataset"].update(
         {
-            "file_path": wind_test_file_path,
+            "file_path": WIND_TEST_FILE_PATH,
             "label_keys": output_keys,
-            "precip_file_path": test_file_path,
+            "precip_file_path": TEST_FILE_PATH,
             "num_label_timestamps": num_timestamps,
             "stride": 8,
         }
@@ -249,14 +248,14 @@ if __name__ == "__main__":
     validator = {sup_validator.name: sup_validator}
 
     # set set visualizer datas
-    date_strings = ("2018-04-04 00:00:00",)
+    DATE_STRINGS = ("2018-04-04 00:00:00",)
     vis_datas = get_vis_datas(
-        wind_test_file_path,
-        test_file_path,
-        date_strings,
+        WIND_TEST_FILE_PATH,
+        TEST_FILE_PATH,
+        DATE_STRINGS,
         num_timestamps,
-        vars_channel,
-        img_h,
+        VARS_CHANNEL,
+        IMG_H,
         wind_data_mean,
         wind_data_std,
     )
@@ -295,14 +294,14 @@ if __name__ == "__main__":
     }
 
     # directly evaluate pretrained model
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
-        output_dir=output_dir,
+        output_dir=OUTPUT_DIR,
         log_freq=1,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=pretrained_model_path,
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
     )

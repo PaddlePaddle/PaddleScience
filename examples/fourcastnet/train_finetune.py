@@ -62,38 +62,38 @@ if __name__ == "__main__":
     dist.init_parallel_env()
 
     # set dataset path
-    train_file_path = "./datasets/era5/train"
-    valid_file_path = "./datasets/era5/test"
-    test_file_path = "./datasets/era5/out_of_sample/2018.h5"
-    data_mean_path = "./datasets/era5/stat/global_means.npy"
-    data_std_path = "./datasets/era5/stat/global_stds.npy"
-    data_time_mean_path = "./datasets/era5/stat/time_means.npy"
+    TRAIN_FILE_PATH = "./datasets/era5/train"
+    VALID_FILE_PATH = "./datasets/era5/test"
+    TEST_FILE_PATH = "./datasets/era5/out_of_sample/2018.h5"
+    DATA_MEAN_PATH = "./datasets/era5/stat/global_means.npy"
+    DATA_STD_PATH = "./datasets/era5/stat/global_stds.npy"
+    DATA_TIME_MEAN_PATH = "./datasets/era5/stat/time_means.npy"
 
     # set training hyper-parameters
     num_timestamps = 2
     input_keys = ("input",)
     output_keys = tuple([f"output_{i}" for i in range(num_timestamps)])
-    img_h, img_w = 720, 1440
-    epochs = 50 if not args.epochs else args.epochs
+    IMG_H, IMG_W = 720, 1440
+    EPOCHS = 50 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
     # The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
     # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
     # You can obtain detailed information about each variable from
     # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    vars_channel = list(range(20))
+    VARS_CHANNEL = list(range(20))
     # set output directory
-    output_dir = (
+    OUTPUT_DIR = (
         "./output/fourcastnet/finetune" if not args.output_dir else args.output_dir
     )
-    pretrained_model_path = "./output/fourcastnet/pretrain/checkpoints/latest"
+    PRETRAINED_MODEL_PATH = "./output/fourcastnet/pretrain/checkpoints/latest"
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     data_mean, data_std = fourcast_utils.get_mean_std(
-        data_mean_path, data_std_path, vars_channel
+        DATA_MEAN_PATH, DATA_STD_PATH, VARS_CHANNEL
     )
     data_time_mean = fourcast_utils.get_time_mean(
-        data_time_mean_path, img_h, img_w, vars_channel
+        DATA_TIME_MEAN_PATH, IMG_H, IMG_W, VARS_CHANNEL
     )
     data_time_mean_normalize = np.expand_dims(
         (data_time_mean[0] - data_mean) / data_std, 0
@@ -102,17 +102,17 @@ if __name__ == "__main__":
     # set train transforms
     transforms = [
         {"SqueezeData": {}},
-        {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},
+        {"CropData": {"xmin": (0, 0), "xmax": (IMG_H, IMG_W)}},
         {"Normalize": {"mean": data_mean, "std": data_std}},
     ]
     # set train dataloader config
     train_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": train_file_path,
+            "file_path": TRAIN_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "vars_channel": vars_channel,
+            "vars_channel": VARS_CHANNEL,
             "num_label_timestamps": num_timestamps,
             "transforms": transforms,
         },
@@ -133,16 +133,16 @@ if __name__ == "__main__":
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(sup_constraint.data_loader)
+    ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # set eval dataloader config
     eval_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": valid_file_path,
+            "file_path": VALID_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "vars_channel": vars_channel,
+            "vars_channel": VARS_CHANNEL,
             "transforms": transforms,
             "num_label_timestamps": num_timestamps,
             "training": False,
@@ -159,13 +159,13 @@ if __name__ == "__main__":
     metric = {
         "MAE": ppsci.metric.MAE(keep_batch=True),
         "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-            num_lat=img_h,
+            num_lat=IMG_H,
             std=data_std,
             keep_batch=True,
             variable_dict={"u10": 0, "v10": 1},
         ),
         "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-            num_lat=img_h,
+            num_lat=IMG_H,
             mean=data_time_mean_normalize,
             keep_batch=True,
             variable_dict={"u10": 0, "v10": 1},
@@ -186,8 +186,8 @@ if __name__ == "__main__":
 
     # init optimizer and lr scheduler
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         5e-4,
         by_epoch=True,
     )()
@@ -197,15 +197,15 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         log_freq=1,
         validator=validator,
-        pretrained_model_path=pretrained_model_path,
+        pretrained_model_path=PRETRAINED_MODEL_PATH,
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
     )
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     # update eval dataloader config
     eval_dataloader_cfg["dataset"].update(
         {
-            "file_path": test_file_path,
+            "file_path": TEST_FILE_PATH,
             "label_keys": output_keys,
             "num_label_timestamps": num_timestamps,
             "stride": 8,
@@ -241,13 +241,13 @@ if __name__ == "__main__":
     validator = {sup_validator.name: sup_validator}
 
     # set visualizer datas
-    date_strings = ("2018-09-08 00:00:00",)
+    DATE_STRINGS = ("2018-09-08 00:00:00",)
     vis_datas = get_vis_datas(
-        test_file_path,
-        date_strings,
+        TEST_FILE_PATH,
+        DATE_STRINGS,
         num_timestamps,
-        vars_channel,
-        img_h,
+        VARS_CHANNEL,
+        IMG_H,
         data_mean,
         data_std,
     )
@@ -288,14 +288,14 @@ if __name__ == "__main__":
     }
 
     # directly evaluate pretrained model
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
-        output_dir=output_dir,
+        output_dir=OUTPUT_DIR,
         log_freq=1,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
     )
