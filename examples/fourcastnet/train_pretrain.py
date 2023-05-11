@@ -15,20 +15,10 @@
 import numpy as np
 import paddle.distributed as dist
 
+import examples.fourcastnet.utils as fourcast_utils
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
-
-
-def get_mean_std(mean_path, std_path, time_mean_path, vars_channel, img_h, img_w):
-    mean = np.load(mean_path).squeeze(0).astype(np.float32)
-    mean = mean[vars_channel]
-    std = np.load(std_path).squeeze(0).astype(np.float32)
-    std = std[vars_channel]
-    time_mean = np.load(time_mean_path).astype(np.float32)
-    time_mean = time_mean[:, vars_channel, :img_h, :img_w]
-    return mean, std, time_mean
-
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -45,8 +35,8 @@ if __name__ == "__main__":
     data_time_mean_path = "./datasets/era5/stat/time_means.npy"
 
     # set training hyper-parameters
-    input_keys = ["input"]
-    output_keys = ["output"]
+    input_keys = ("input",)
+    output_keys = ("output",)
     img_h, img_w = 720, 1440
     epochs = 150 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
@@ -54,7 +44,7 @@ if __name__ == "__main__":
     # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
     # You can obtain detailed information about each variable from
     # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    vars_channel = [i for i in range(20)]
+    vars_channel = list(range(20))
     # set output directory
     output_dir = (
         "./output/fourcastnet/pretrain" if not args.output_dir else args.output_dir
@@ -62,8 +52,14 @@ if __name__ == "__main__":
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
-    data_mean, data_std, data_time_mean = get_mean_std(
-        data_mean_path, data_std_path, data_time_mean_path, vars_channel, img_h, img_w
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        data_mean_path, data_std_path, vars_channel
+    )
+    data_time_mean = fourcast_utils.get_time_mean(
+        data_time_mean_path, img_h, img_w, vars_channel
+    )
+    data_time_mean_normalize = np.expand_dims(
+        (data_time_mean[0] - data_mean) / data_std, 0
     )
     # set train transforms
     transforms = [
@@ -139,7 +135,6 @@ if __name__ == "__main__":
             "shuffle": False,
         },
         "batch_size": 8,
-        "num_workers": 0,
     }
 
     # set validator
@@ -156,7 +151,7 @@ if __name__ == "__main__":
             ),
             "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
                 num_lat=img_h,
-                mean=data_time_mean,
+                mean=data_time_mean_normalize,
                 keep_batch=True,
                 variable_dict={"u10": 0, "v10": 1},
             ),

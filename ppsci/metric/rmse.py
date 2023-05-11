@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -65,7 +66,7 @@ class LatitudeWeightedRMSE(base.Metric):
 
     Args:
         num_lat (int): Number of latitude.
-        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
+        std (Optional[Union[np.array, Tuple[float, ...]]]): Standard Deviation of training dataset. Defaults to None.
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
         variable_dict (Dict[str, int], optional): Variable dictionary. Defaults to None.
         unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
@@ -81,7 +82,7 @@ class LatitudeWeightedRMSE(base.Metric):
     def __init__(
         self,
         num_lat: int,
-        std: Union[np.array, Tuple[float, ...]],
+        std: Optional[Union[np.array, Tuple[float, ...]]] = None,
         keep_batch: bool = False,
         variable_dict: Dict[str, int] = None,
         unlog: bool = False,
@@ -89,7 +90,7 @@ class LatitudeWeightedRMSE(base.Metric):
     ):
         super().__init__()
         self.num_lat = num_lat
-        self.std = paddle.to_tensor(std).reshape((1, -1))
+        self.std = paddle.to_tensor(std).reshape((1, -1)) if std is not None else None
         self.keep_batch = keep_batch
         self.variable_dict = variable_dict
         self.unlog = unlog
@@ -124,7 +125,8 @@ class LatitudeWeightedRMSE(base.Metric):
 
             mse = F.mse_loss(output, label, "none")
             rmse = (mse * self.weight).mean(axis=(-1, -2)) ** 0.5
-            rmse = rmse * self.std
+            if self.std is not None:
+                rmse = rmse * self.std
             if self.variable_dict is not None:
                 for variable_name, idx in self.variable_dict.items():
                     if self.keep_batch is False:
