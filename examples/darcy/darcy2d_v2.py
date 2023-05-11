@@ -150,18 +150,9 @@ if __name__ == "__main__":
     validator = {residual_validator.name: residual_validator}
 
     # set visualizer(optional)
-    NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
-    vis_interior_points = geom["rect"].sample_interior(NPOINT_PDE, evenly=True)
-    vis_boundary_points = geom["rect"].sample_boundary(NPOINT_BC, evenly=True)
-
     # manually collate input data for visualization,
-    # interior+boundary
-    vis_points = {}
-    for key in vis_interior_points:
-        vis_points[key] = np.concatenate(
-            (vis_interior_points[key], vis_boundary_points[key])
-        )
-
+    NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
+    vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
@@ -194,6 +185,7 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,

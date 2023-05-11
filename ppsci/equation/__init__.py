@@ -30,8 +30,8 @@ __all__ = [
     "Laplace",
     "NavierStokes",
     "NormalDotVec",
-    "Vibration",
     "Poisson",
+    "Vibration",
     "build_equation",
 ]
 
