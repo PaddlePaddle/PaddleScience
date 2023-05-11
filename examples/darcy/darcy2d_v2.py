@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_darcy2d_coslr" if not args.output_dir else args.output_dir
+    output_dir = "./output_darcy2d" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
@@ -50,14 +50,17 @@ if __name__ == "__main__":
     NPOINT_RIGHT = 99
 
     # set constraint
-    pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["Poisson"].equations,
-        {
-            "poisson": lambda _in: 8.0
-            * np.pi**2
+    def poisson_ref_compute_func(_in):
+        return (
+            -8.0
+            * (np.pi**2)
             * np.sin(2.0 * np.pi * _in["x"])
             * np.cos(2.0 * np.pi * _in["y"])
-        },
+        )
+
+    pde_constraint = ppsci.constraint.InteriorConstraint(
+        equation["Poisson"].equations,
+        {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
@@ -123,11 +126,12 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     epochs = 10000 if not args.epochs else args.epochs
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
+    lr_scheduler = ppsci.optimizer.lr_scheduler.MultiStepDecay(
         epochs,
         ITERS_PER_EPOCH,
         0.001,
-        warmup_epoch=int(0.05 * epochs),
+        (4000, 6000, 8000),
+        0.1,
     )()
 
     # set optimizer
@@ -137,12 +141,7 @@ if __name__ == "__main__":
     NPOINTS_EVAL = NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
-        {
-            "poisson": lambda _in: 8.0
-            * np.pi**2
-            * np.sin(2.0 * np.pi * _in["x"])
-            * np.cos(2.0 * np.pi * _in["y"])
-        },
+        {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
