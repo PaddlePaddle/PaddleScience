@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -123,7 +124,9 @@ class PeriodicConstraint(base.Constraint):
         for key, value in label_dict.items():
             # set all label's to zero for dummy data.
             label[key] = np.full(
-                (next(iter(mixed_input.values())).shape[0], 1), 0, "float32"
+                (next(iter(mixed_input.values())).shape[0], 1),
+                0,
+                paddle.get_default_dtype(),
             )
 
         # # prepare weight, keep weight the same shape as input_periodic
@@ -134,7 +137,7 @@ class PeriodicConstraint(base.Constraint):
                     value = sp_parser.parse_expr(value)
 
                 if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                    weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
                         [sympy.Symbol(k) for k in geom.dim_keys],
@@ -147,7 +150,7 @@ class PeriodicConstraint(base.Constraint):
                     weight[key] = func(mixed_input)
                     if isinstance(weight[key], (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(mixed_input.values())), float(weight[key])
+                            next(iter(mixed_input.values())), weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

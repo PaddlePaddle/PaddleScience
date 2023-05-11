@@ -29,9 +29,9 @@ class PointCloud(geometry.Geometry):
     Args:
         interior (Dict[str, np.ndarray]): Dict data, which store interior points of a point cloud.
         coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
-        boundary (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary points of a point cloud.
-        boundary_normal (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary normal points of a point cloud.
-        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+        boundary_path (Optional[str]): File which store boundary points of a point cloud. Defaults to None.
+        boundary_normal_path (Optional[str]): File which store boundary normals of a point cloud. Defaults to None.
+        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"x": "X:0", "y": "X:1"}. Defaults to None.
 
     Examples:
         >>> import ppsci

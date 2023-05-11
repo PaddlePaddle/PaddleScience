@@ -38,12 +38,12 @@ class Vibration(base.PDE):
         self.rho = rho
         self.k1 = paddle.create_parameter(
             shape=[1],
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k1),
         )
         self.k2 = paddle.create_parameter(
             shape=[1],
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k2),
         )
         self.learnable_parameters.append(self.k1)

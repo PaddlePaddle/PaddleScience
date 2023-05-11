@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -91,19 +92,19 @@ class GeometryValidator(base.Validator):
         self.output_keys = list(label_dict.keys())
 
         nx = dataloader_cfg["total_size"]
-        self.num_timestamp = 1
+        self.num_timestamps = 1
         # TODO(sensen): simplify code below
         if isinstance(geom, geometry.TimeXGeometry):
-            if geom.timedomain.num_timestamp is not None:
+            if geom.timedomain.num_timestamps is not None:
                 if with_initial:
                     # include t0
-                    self.num_timestamp = geom.timedomain.num_timestamp
+                    self.num_timestamps = geom.timedomain.num_timestamps
                     assert (
-                        nx % self.num_timestamp == 0
-                    ), f"{nx} % {self.num_timestamp} != 0"
-                    nx //= self.num_timestamp
+                        nx % self.num_timestamps == 0
+                    ), f"{nx} % {self.num_timestamps} != 0"
+                    nx //= self.num_timestamps
                     input = geom.sample_interior(
-                        nx * (geom.timedomain.num_timestamp - 1),
+                        nx * (geom.timedomain.num_timestamps - 1),
                         random,
                         criteria,
                         evenly,
@@ -114,13 +115,13 @@ class GeometryValidator(base.Validator):
                     }
                 else:
                     # exclude t0
-                    self.num_timestamp = geom.timedomain.num_timestamp - 1
+                    self.num_timestamps = geom.timedomain.num_timestamps - 1
                     assert (
-                        nx % self.num_timestamp == 0
-                    ), f"{nx} % {self.num_timestamp} != 0"
-                    nx //= self.num_timestamp
+                        nx % self.num_timestamps == 0
+                    ), f"{nx} % {self.num_timestamps} != 0"
+                    nx //= self.num_timestamps
                     input = geom.sample_interior(
-                        nx * (geom.timedomain.num_timestamp - 1),
+                        nx * (geom.timedomain.num_timestamps - 1),
                         random,
                         criteria,
                         evenly,
@@ -135,7 +136,7 @@ class GeometryValidator(base.Validator):
         label = {}
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
+                label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
                     sympy.symbols(geom.dim_keys),
@@ -151,7 +152,8 @@ class GeometryValidator(base.Validator):
                 if isinstance(label[key], (int, float)):
                     label[key] = np.full(
                         (next(iter(input.values())).shape[0], 1),
-                        float(label[key], "float32"),
+                        label[key],
+                        paddle.get_default_dtype(),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")

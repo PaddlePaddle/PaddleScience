@@ -20,6 +20,7 @@ import abc
 from typing import Tuple
 
 import numpy as np
+import paddle
 
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -64,7 +65,7 @@ class Geometry:
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
         while _size < n:
             if evenly:
@@ -97,7 +98,7 @@ class Geometry:
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
         while _size < n:
             if evenly:
