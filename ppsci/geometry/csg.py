@@ -17,6 +17,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import numpy as np
+import paddle
 
 from ppsci.geometry import geometry
 
@@ -62,7 +63,7 @@ class CSGUnion(geometry.Geometry):
         )
 
     def random_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             points = (
@@ -78,7 +79,7 @@ class CSGUnion(geometry.Geometry):
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             geom1_boundary_points = self.geom1.random_boundary_points(n, random=random)
@@ -151,7 +152,7 @@ class CSGDifference(geometry.Geometry):
         )
 
     def random_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             tmp = self.geom1.random_points(n, random=random)
@@ -164,7 +165,7 @@ class CSGDifference(geometry.Geometry):
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             geom1_boundary_points = self.geom1.random_boundary_points(n, random=random)
@@ -238,7 +239,7 @@ class CSGIntersection(geometry.Geometry):
         )
 
     def random_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             points = self.geom1.random_points(n, random=random)
@@ -251,7 +252,7 @@ class CSGIntersection(geometry.Geometry):
         return x
 
     def random_boundary_points(self, n, random="pseudo"):
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
             geom1_boundary_points = self.geom1.random_boundary_points(n, random=random)
