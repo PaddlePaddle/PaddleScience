@@ -117,14 +117,14 @@ class LorenzEmbedding(base.Arch):
         data = paddle.linspace(1, 0, embed_size)
         k_diag = paddle.create_parameter(
             shape=data.shape,
-            dtype=data.dtype,
+            dtype=paddle.get_default_dtype(),
             default_initializer=nn.initializer.Assign(data),
         )
 
         data = 0.1 * paddle.rand([2 * embed_size - 3])
         k_ut = paddle.create_parameter(
             shape=data.shape,
-            dtype=data.dtype,
+            dtype=paddle.get_default_dtype(),
             default_initializer=nn.initializer.Assign(data),
         )
         return k_diag, k_ut
