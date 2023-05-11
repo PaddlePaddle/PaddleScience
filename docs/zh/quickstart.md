@@ -66,6 +66,10 @@ model = ppsci.arch.MLP(("x",), ("u",), 3, 64)
 然后我们定义已知的 $u=sin(x)$ 计算函数，作为 `ppsci.constraint.InteriorConstraint` 的参数，用于生成标签数据，`InteriorConstraint` 表示以给定的几何形状或数据集中的数据作为输入，联合给定的标签数据，指导模型进行优化。
 
 ``` py
+# standard solution of sin(x)
+def sin_compute_func(data: dict):
+    return np.sin(data["x"])
+
 # set constraint on 1D-geometry([-π, π])
 iters_per_epoch = 100
 interior_constraint = ppsci.constraint.InteriorConstraint(

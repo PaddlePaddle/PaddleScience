@@ -15,11 +15,11 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 支持
 
-- 如使用过程中遇到问题或想提出开发建议，欢迎在 [Issue](https://github.com/PaddlePaddle/PaddleScience/issues/new) 页面新建 issue。
+- 如使用过程中遇到问题或想提出开发建议，欢迎在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new) 页面新建 issue。
 
 ## 贡献代码
 
-PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [贡献指南](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
 
 ## 证书
 
