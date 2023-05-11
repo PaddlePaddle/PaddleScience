@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -114,7 +115,9 @@ class IntegralConstraint(base.Constraint):
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
                 label[key] = np.full(
-                    (next(iter(input.values())).shape[0], 1), float(value), "float32"
+                    (next(iter(input.values())).shape[0], 1),
+                    value,
+                    paddle.get_default_dtype(),
                 )
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
@@ -130,7 +133,9 @@ class IntegralConstraint(base.Constraint):
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
                     label[key] = np.full(
-                        (next(iter(input.values())).shape[0], 1), float(label[key])
+                        (next(iter(input.values())).shape[0], 1),
+                        label[key],
+                        paddle.get_default_dtype(),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
@@ -144,7 +149,7 @@ class IntegralConstraint(base.Constraint):
                     value = sp_parser.parse_expr(value)
 
                 if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                    weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
                         sympy.symbols(geom.dim_keys),
@@ -159,7 +164,7 @@ class IntegralConstraint(base.Constraint):
                     weight[key] = func(input)
                     if isinstance(weight[key], (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(input.values())), float(weight[key])
+                            next(iter(input.values())), weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
