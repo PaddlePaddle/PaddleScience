@@ -38,6 +38,7 @@ class ERA5Dataset(io.Dataset):
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
         training (bool, optional): Whether in train mode. Defaults to True.
+        stride (int, optional): Stride of sampling data. Defaults to 1.
 
     Examples:
         >>> import ppsci
@@ -59,6 +60,7 @@ class ERA5Dataset(io.Dataset):
         num_label_timestamps: int = 1,
         transforms: Optional[vision.Compose] = None,
         training: bool = True,
+        stride: int = 1,
     ):
         super().__init__()
         self.file_path = file_path
@@ -77,6 +79,7 @@ class ERA5Dataset(io.Dataset):
         self.num_label_timestamps = num_label_timestamps
         self.transforms = transforms
         self.training = training
+        self.stride = stride
 
         self.files = self.read_data(file_path)
         self.n_years = len(self.files)
@@ -86,7 +89,7 @@ class ERA5Dataset(io.Dataset):
             self.precip_files = self.read_data(precip_file_path, "tp")
 
     def read_data(self, path: str, var="fields"):
-        paths = glob.glob(path + "/*.h5")
+        paths = [path] if path.endswith(".h5") else glob.glob(path + "/*.h5")
         paths.sort()
         files = []
         for path in paths:
@@ -95,9 +98,10 @@ class ERA5Dataset(io.Dataset):
         return files
 
     def __len__(self):
-        return self.n_samples_total
+        return self.n_samples_total // self.stride
 
     def __getitem__(self, global_idx):
+        global_idx *= self.stride
         year_idx = global_idx // self.n_samples_per_year
         local_idx = global_idx % self.n_samples_per_year
         step = 0 if local_idx >= self.n_samples_per_year - 1 else 1
