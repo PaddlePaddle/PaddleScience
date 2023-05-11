@@ -112,7 +112,7 @@ def load_vtk_file(
     time_step: Union[float, int],
     time_index: Tuple[int, ...],
     input_keys: Tuple[str, ...],
-    label_keys: Optional[Tuple[str, ...]] = (),
+    label_keys: Optional[Tuple[str, ...]],
 ) -> Dict[str, np.ndarray]:
     """load coordinates and attached label from the vtu file
 

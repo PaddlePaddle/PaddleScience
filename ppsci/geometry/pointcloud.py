@@ -27,8 +27,7 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        interior (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store interior points of a point cloud.
-        attributes(Dict): Dict stores informations except coordinates.
+        interior (Dict[str, np.ndarray]): Dict data, which store interior points of a point cloud.
         coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
         boundary (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary points of a point cloud.
         boundary_normal (Union[str, Dict[str, np.ndarray]]): Filepath or dict data, which store boundary normal points of a point cloud.
@@ -41,24 +40,14 @@ class PointCloud(geometry.Geometry):
 
     def __init__(
         self,
-        interior: Union[str, Dict[str, np.ndarray]],
-        attributes: Dict,
+        interior: Dict[str, np.ndarray],
         coord_keys: Tuple[str, ...],
         boundary: Union[str, Dict[str, np.ndarray]] = None,
         boundary_normal_path: str = None,
         alias_dict: Optional[Dict[str, str]] = None,
     ):
         # Interior points from CSV file
-        if isinstance(interior, dict):
-            data_dict = interior
-            if attributes is not None:
-                data_dict.update(attributes)
-        elif isinstance(interior, str):
-            if interior.endswith(".csv"):
-                # read data
-                data_dict = reader.load_csv_file(interior, coord_keys)
-            else:
-                raise NotImplementedError(f"file type : {interior} is invalid yet.")
+        data_dict = interior
 
         # convert to numpy array
         self.interior = []

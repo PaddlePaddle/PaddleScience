@@ -77,7 +77,6 @@ if __name__ == "__main__":
     geom = {
         "interior": ppsci.geometry.PointCloud(
             interior=normalize(interior_data),
-            attributes=None,
             coord_keys=("t", "x", "y", "z"),
         )
     }
@@ -315,7 +314,7 @@ if __name__ == "__main__":
     }
 
     # set visualizer(optional)
-    onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], model.input_keys)
+    onestep_input, _ = reader.load_vtk_file(ref_file, 0, [0], model.input_keys, ())
     data_len_for_onestep = len(next(iter(onestep_input.values())))
     input_dict = {
         "t": np.concatenate(
