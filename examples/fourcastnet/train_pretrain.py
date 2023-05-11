@@ -28,35 +28,35 @@ if __name__ == "__main__":
     dist.init_parallel_env()
 
     # set dataset path
-    train_file_path = "./datasets/era5/train"
-    valid_file_path = "./datasets/era5/test"
-    data_mean_path = "./datasets/era5/stat/global_means.npy"
-    data_std_path = "./datasets/era5/stat/global_stds.npy"
-    data_time_mean_path = "./datasets/era5/stat/time_means.npy"
+    TRAIN_FILE_PATH = "./datasets/era5/train"
+    VALID_FILE_PATH = "./datasets/era5/test"
+    DATA_MEAN_PATH = "./datasets/era5/stat/global_means.npy"
+    DATA_STD_PATH = "./datasets/era5/stat/global_stds.npy"
+    DATA_TIME_MEAN_PATH = "./datasets/era5/stat/time_means.npy"
 
     # set training hyper-parameters
     input_keys = ("input",)
     output_keys = ("output",)
-    img_h, img_w = 720, 1440
-    epochs = 150 if not args.epochs else args.epochs
+    IMG_H, IMG_W = 720, 1440
+    EPOCHS = 150 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
     # The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
     # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
     # You can obtain detailed information about each variable from
     # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    vars_channel = list(range(20))
+    VARS_CHANNEL = list(range(20))
     # set output directory
-    output_dir = (
+    OUTPUT_DIR = (
         "./output/fourcastnet/pretrain" if not args.output_dir else args.output_dir
     )
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     data_mean, data_std = fourcast_utils.get_mean_std(
-        data_mean_path, data_std_path, vars_channel
+        DATA_MEAN_PATH, DATA_STD_PATH, VARS_CHANNEL
     )
     data_time_mean = fourcast_utils.get_time_mean(
-        data_time_mean_path, img_h, img_w, vars_channel
+        DATA_TIME_MEAN_PATH, IMG_H, IMG_W, VARS_CHANNEL
     )
     data_time_mean_normalize = np.expand_dims(
         (data_time_mean[0] - data_mean) / data_std, 0
@@ -64,20 +64,20 @@ if __name__ == "__main__":
     # set train transforms
     transforms = [
         {"SqueezeData": {}},
-        {"CropData": {"xmin": (0, 0), "xmax": (img_h, img_w)}},
+        {"CropData": {"xmin": (0, 0), "xmax": (IMG_H, IMG_W)}},
         {"Normalize": {"mean": data_mean, "std": data_std}},
     ]
 
     # set train dataloader config
-    use_sampled_data = False
-    if not use_sampled_data:
+    USE_SAMPLED_DATA = False
+    if not USE_SAMPLED_DATA:
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5Dataset",
-                "file_path": train_file_path,
+                "file_path": TRAIN_FILE_PATH,
                 "input_keys": input_keys,
                 "label_keys": output_keys,
-                "vars_channel": vars_channel,
+                "vars_channel": VARS_CHANNEL,
                 "transforms": transforms,
             },
             "sampler": {
@@ -89,11 +89,11 @@ if __name__ == "__main__":
             "num_workers": 8,
         }
     else:
-        num_gpus_per_node = 8
+        NUM_GPUS_PER_NODE = 8
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
-                "file_path": train_file_path,
+                "file_path": TRAIN_FILE_PATH,
                 "input_keys": input_keys,
                 "label_keys": output_keys,
             },
@@ -101,8 +101,8 @@ if __name__ == "__main__":
                 "name": "DistributedBatchSampler",
                 "drop_last": True,
                 "shuffle": True,
-                "num_replicas": num_gpus_per_node,
-                "rank": dist.get_rank() % num_gpus_per_node,
+                "num_replicas": NUM_GPUS_PER_NODE,
+                "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
             },
             "batch_size": 1,
             "num_workers": 8,
@@ -116,16 +116,16 @@ if __name__ == "__main__":
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(sup_constraint.data_loader)
+    ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # set eval dataloader config
     eval_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": valid_file_path,
+            "file_path": VALID_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "vars_channel": vars_channel,
+            "vars_channel": VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
         },
@@ -144,13 +144,13 @@ if __name__ == "__main__":
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
             "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-                num_lat=img_h,
+                num_lat=IMG_H,
                 std=data_std,
                 keep_batch=True,
                 variable_dict={"u10": 0, "v10": 1},
             ),
             "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-                num_lat=img_h,
+                num_lat=IMG_H,
                 mean=data_time_mean_normalize,
                 keep_batch=True,
                 variable_dict={"u10": 0, "v10": 1},
@@ -165,8 +165,8 @@ if __name__ == "__main__":
 
     # init optimizer and lr scheduler
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         5e-4,
         by_epoch=True,
     )()
@@ -176,11 +176,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         log_freq=1,
         validator=validator,
@@ -193,14 +193,14 @@ if __name__ == "__main__":
     solver.eval()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         log_freq=1,
         validator=validator,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
     )
