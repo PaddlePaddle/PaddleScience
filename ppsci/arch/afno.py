@@ -564,3 +564,129 @@ class AFNONet(base.Arch):
         if self._output_transform is not None:
             y = self._output_transform(y)
         return y
+
+
+class PrecipNet(base.Arch):
+    """Precipitation Network.
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
+        wind_model (base.Arch): Wind model.
+        img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
+        patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
+        in_channels (int, optional): The input tensor channels. Defaults to 20.
+        out_channels (int, optional): The output tensor channels. Defaults to 1.
+        embed_dim (int, optional): The embedding dimension for PatchEmbed. Defaults to 768.
+        depth (int, optional): Number of transformer depth. Defaults to 12.
+        mlp_ratio (float, optional): Number of ratio used in MLP. Defaults to 4.0.
+        drop_rate (float, optional): The drop ratio used in MLP. Defaults to 0.0.
+        drop_path_rate (float, optional): The drop ratio used in DropPath. Defaults to 0.0.
+        num_blocks (int, optional): Number of blocks. Defaults to 8.
+        sparsity_threshold (float, optional): The value of threshold for softshrink. Defaults to 0.01.
+        hard_thresholding_fraction (float, optional): The value of threshold for keep mode. Defaults to 1.0.
+        num_timestamps (int, optional): Number of timestamp. Defaults to 1.
+
+    Examples:
+        >>> import ppsci
+        >>> wind_model = ppsci.arch.AFNONet(("input", ), ("output", ))
+        >>> model = ppsci.arch.PrecipNet(("input", ), ("output", ), wind_model)
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        wind_model: base.Arch,
+        img_size: Tuple[int, ...] = (720, 1440),
+        patch_size: Tuple[int, ...] = (8, 8),
+        in_channels: int = 20,
+        out_channels: int = 1,
+        embed_dim: int = 768,
+        depth: int = 12,
+        mlp_ratio: float = 4.0,
+        drop_rate: float = 0.0,
+        drop_path_rate: float = 0.0,
+        num_blocks: int = 8,
+        sparsity_threshold: float = 0.01,
+        hard_thresholding_fraction: float = 1.0,
+        num_timestamps=1,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.embed_dim = embed_dim
+        self.num_blocks = num_blocks
+        self.num_timestamps = num_timestamps
+        self.backbone = AFNONet(
+            ("input",),
+            ("output",),
+            img_size=img_size,
+            patch_size=patch_size,
+            in_channels=in_channels,
+            out_channels=out_channels,
+            embed_dim=embed_dim,
+            depth=depth,
+            mlp_ratio=mlp_ratio,
+            drop_rate=drop_rate,
+            drop_path_rate=drop_path_rate,
+            num_blocks=num_blocks,
+            sparsity_threshold=sparsity_threshold,
+            hard_thresholding_fraction=hard_thresholding_fraction,
+        )
+        self.ppad = PeriodicPad2d(1)
+        self.conv = nn.Conv2D(
+            self.out_channels, self.out_channels, kernel_size=3, stride=1, padding=0
+        )
+        self.act = nn.ReLU()
+        self.apply(self._init_weights)
+        self.wind_model = wind_model
+        self.wind_model.eval()
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            initializer.trunc_normal_(m.weight, std=0.02)
+            if m.bias is not None:
+                initializer.zeros_(m.bias)
+        elif isinstance(m, nn.LayerNorm):
+            initializer.ones_(m.weight)
+            initializer.zeros_(m.bias)
+        elif isinstance(m, nn.Conv2D):
+            initializer.conv_init_(m)
+
+    def forward_tensor(self, x):
+        x = self.backbone.forward_tensor(x)
+        x = self.ppad(x)
+        x = self.conv(x)
+        x = self.act(x)
+        return x
+
+    def split_to_dict(
+        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
+    ):
+        return {key: data_tensors[i] for i, key in enumerate(keys)}
+
+    def forward(self, x):
+        if self._input_transform is not None:
+            x = self._input_transform(x)
+
+        x = self.concat_to_tensor(x, self.input_keys)
+
+        input_wind = x
+        y = []
+        for i in range(self.num_timestamps):
+            with paddle.no_grad():
+                out_wind = self.wind_model.forward_tensor(input_wind)
+            out = self.forward_tensor(out_wind)
+            y.append(out)
+            input_wind = out_wind
+        y = self.split_to_dict(y, self.output_keys)
+
+        if self._output_transform is not None:
+            y = self._output_transform(y)
+        return y
