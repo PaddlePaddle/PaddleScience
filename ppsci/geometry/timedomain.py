@@ -64,9 +64,9 @@ class TimeDomain(geometry_1d.Interval):
         if time_step is not None:
             if time_step <= 0:
                 raise ValueError(f"time_step({time_step}) must be larger than 0.")
-            self.num_timestamp = int(np.ceil((t1 - t0) / time_step)) + 1
+            self.num_timestamps = int(np.ceil((t1 - t0) / time_step)) + 1
         elif timestamps is not None:
-            self.num_timestamp = len(timestamps)
+            self.num_timestamps = len(timestamps)
 
     def on_initial(self, t):
         return np.isclose(t, self.t0).flatten()
@@ -120,7 +120,7 @@ class TimeXGeometry(geometry.Geometry):
             nx = int(np.ceil(n / nt))
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             nx = int(np.ceil(n / nt))
         else:
             nx = int(
@@ -216,7 +216,7 @@ class TimeXGeometry(geometry.Geometry):
                 tx = tx[:n]
             return tx
         elif self.timedomain.timestamps is not None:
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
 
@@ -431,7 +431,7 @@ class TimeXGeometry(geometry.Geometry):
                 return t_x
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
 
