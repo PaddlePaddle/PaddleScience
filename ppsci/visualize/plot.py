@@ -66,7 +66,7 @@ CMAPS = [
 ]
 
 
-def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1):
+def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=1):
     """Save plot from given 1D data.
 
     Args:
@@ -74,13 +74,13 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
         coord (np.ndarray): Coordinate array.
         value (Dict[str, np.ndarray]): Dict of value array.
         value_keys (Tuple[str, ...]): Value keys.
-        num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
-    fig, a = plt.subplots(len(value_keys), num_timestamp, squeeze=False)
+    fig, a = plt.subplots(len(value_keys), num_timestamps, squeeze=False)
     fig.subplots_adjust(hspace=0.8)
 
-    len_ts = len(coord) // num_timestamp
-    for t in range(num_timestamp):
+    len_ts = len(coord) // num_timestamps
+    for t in range(num_timestamps):
         st = t * len_ts
         ed = (t + 1) * len_ts
         coord_t = coord[st:ed]
@@ -93,29 +93,29 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp=1
                 color=cnames[i],
                 label=key,
             )
-            if num_timestamp > 1:
+            if num_timestamps > 1:
                 a[i][t].set_title(f"{key}(t={t})")
             else:
                 a[i][t].set_title(f"{key}")
             a[i][t].grid()
             a[i][t].legend()
 
-        if num_timestamp == 1:
+        if num_timestamps == 1:
             fig.savefig(filename, dpi=300)
         else:
             fig.savefig(f"{filename}_{t}", dpi=300)
 
-    if num_timestamp == 1:
+    if num_timestamps == 1:
         logger.info(f"1D result is saved to {filename}.png")
     else:
         logger.info(
             f"1D result is saved to {filename}_0.png"
-            f" ~ {filename}_{num_timestamp - 1}.png"
+            f" ~ {filename}_{num_timestamps - 1}.png"
         )
 
 
 def save_plot_from_1d_dict(
-    filename, data_dict, coord_keys, value_keys, num_timestamp=1
+    filename, data_dict, coord_keys, value_keys, num_timestamps=1
 ):
     """Plot dict data as file.
 
@@ -124,7 +124,7 @@ def save_plot_from_1d_dict(
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     space_ndim = len(coord_keys) - int("t" in coord_keys)
     if space_ndim not in [1, 2, 3]:
@@ -146,14 +146,14 @@ def save_plot_from_1d_dict(
             value = [x for x in value]
         value = np.concatenate(value, axis=1)
 
-    _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamp)
+    _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps)
 
 
 def _save_plot_from_2d_array(
     filename: str,
     visu_data: Tuple[np.ndarray, ...],
     visu_keys: Tuple[str, ...],
-    num_timestamp: int = 1,
+    num_timestamps: int = 1,
     stride: int = 1,
     xticks: Optional[Tuple[float, ...]] = None,
     yticks: Optional[Tuple[float, ...]] = None,
@@ -164,7 +164,7 @@ def _save_plot_from_2d_array(
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
         visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
         yticks (Optional[Tuple[float, ...]]): Tuple of ytick locations. Defaults to None.
@@ -176,10 +176,10 @@ def _save_plot_from_2d_array(
 
     fig, ax = plt.subplots(
         len(visu_keys),
-        num_timestamp,
+        num_timestamps,
         squeeze=False,
         sharey=True,
-        figsize=(num_timestamp, len(visu_keys)),
+        figsize=(num_timestamps, len(visu_keys)),
     )
     fig.subplots_adjust(hspace=0.3)
     target_flag = any(["target" in key for key in visu_keys])
@@ -188,7 +188,7 @@ def _save_plot_from_2d_array(
             c_max = np.amax(data)
             c_min = np.amin(data)
 
-        for t_idx in range(num_timestamp):
+        for t_idx in range(num_timestamps):
             t = t_idx * stride
             ax[i, t_idx].imshow(
                 data[t, :, :],
@@ -223,7 +223,7 @@ def save_plot_from_2d_dict(
     filename: str,
     data_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
     visu_keys: Tuple[str, ...],
-    num_timestamp: int = 1,
+    num_timestamps: int = 1,
     stride: int = 1,
     xticks: Optional[Tuple[float, ...]] = None,
     yticks: Optional[Tuple[float, ...]] = None,
@@ -234,7 +234,7 @@ def save_plot_from_2d_dict(
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float,...]]): The list of xtick locations. Defaults to None.
         yticks (Optional[Tuple[float,...]]): The list of ytick locations. Defaults to None.
@@ -243,7 +243,7 @@ def save_plot_from_2d_dict(
     if isinstance(visu_data[0], paddle.Tensor):
         visu_data = [x.numpy() for x in visu_data]
     _save_plot_from_2d_array(
-        filename, visu_data, visu_keys, num_timestamp, stride, xticks, yticks
+        filename, visu_data, visu_keys, num_timestamps, stride, xticks, yticks
     )
 
 
@@ -305,7 +305,7 @@ def _save_plot_from_3d_array(
     filename: str,
     visu_data: Tuple[np.ndarray, ...],
     visu_keys: Tuple[str, ...],
-    num_timestamp: int = 1,
+    num_timestamps: int = 1,
 ):
     """Save plot from given 3D data.
 
@@ -313,13 +313,13 @@ def _save_plot_from_3d_array(
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
         visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamps coord/value contains. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
 
     fig = plt.figure(figsize=(10, 10))
-    len_ts = len(visu_data[0]) // num_timestamp
-    for t in range(num_timestamp):
-        ax = fig.add_subplot(1, num_timestamp, t + 1, projection="3d")
+    len_ts = len(visu_data[0]) // num_timestamps
+    for t in range(num_timestamps):
+        ax = fig.add_subplot(1, num_timestamps, t + 1, projection="3d")
         st = t * len_ts
         ed = (t + 1) * len_ts
         visu_data_t = [data[st:ed] for data in visu_data]
@@ -340,17 +340,17 @@ def _save_plot_from_3d_array(
             loc="upper right",
             framealpha=0.95,
         )
-        if num_timestamp == 1:
+        if num_timestamps == 1:
             fig.savefig(filename, dpi=300)
         else:
             fig.savefig(f"{filename}_{t}", dpi=300)
 
-    if num_timestamp == 1:
+    if num_timestamps == 1:
         logger.info(f"3D result is saved to {filename}.png")
     else:
         logger.info(
             f"3D result is saved to {filename}_0.png"
-            f" ~ {filename}_{num_timestamp - 1}.png"
+            f" ~ {filename}_{num_timestamps - 1}.png"
         )
 
 
@@ -358,7 +358,7 @@ def save_plot_from_3d_dict(
     filename: str,
     data_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
     visu_keys: Tuple[str, ...],
-    num_timestamp: int = 1,
+    num_timestamps: int = 1,
 ):
     """Plot dict data as file.
 
@@ -366,11 +366,11 @@ def save_plot_from_3d_dict(
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
 
     visu_data = [data_dict[k] for k in visu_keys]
     if isinstance(visu_data[0], paddle.Tensor):
         visu_data = [x.numpy() for x in visu_data]
 
-    _save_plot_from_3d_array(filename, visu_data, visu_keys, num_timestamp)
+    _save_plot_from_3d_array(filename, visu_data, visu_keys, num_timestamps)
