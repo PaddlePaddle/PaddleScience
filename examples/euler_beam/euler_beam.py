@@ -27,12 +27,12 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    iters_per_epoch = 1
-    epochs = 10000 if not args.epochs else args.epochs
+    ITERS_PER_EPOCH = 1
+    EPOCHS = 10000 if not args.epochs else args.epochs
     # set output directory
-    output_dir = "./output/euler_beam" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output/euler_beam" if not args.output_dir else args.output_dir
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # set dataloader config
     dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
     }
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
     # set validator
-    total_size = 100
+    TOTAL_SIZE = 100
 
     def u_solution_func(out):
         """compute ground truth for u as label data"""
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         geom["interval"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": total_size,
+            "total_size": TOTAL_SIZE,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     validator = {l2_rel_metric.name: l2_rel_metric}
 
     # set visualizer(optional)
-    visu_points = geom["interval"].sample_interior(total_size, evenly=True)
+    visu_points = geom["interval"].sample_interior(TOTAL_SIZE, evenly=True)
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
@@ -120,10 +120,10 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
-        epochs=epochs,
-        iters_per_epoch=iters_per_epoch,
+        epochs=EPOCHS,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=1000,
         equation=equation,
@@ -139,15 +139,15 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

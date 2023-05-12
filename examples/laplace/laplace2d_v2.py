@@ -24,13 +24,13 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    epochs = 20000 if not args.epochs else args.epochs
-    iters_per_epoch = 1
-    eval_freq = 200
+    EPOCHS = 20000 if not args.epochs else args.epochs
+    ITERS_PER_EPOCH = 1
+    EVAL_FREQ = 200
 
     # set output directory
-    output_dir = "./output/laplace2d" if not args.output_dir else args.output_dir
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    OUTPUT_DIR = "./output/laplace2d" if not args.output_dir else args.output_dir
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
@@ -50,19 +50,19 @@ if __name__ == "__main__":
     # set train dataloader config
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
     }
 
-    npoint_interior = 99**2
-    npoint_bc = 400
-    npoint_total = npoint_interior + npoint_bc
+    NPOINT_INTERIOR = 99**2
+    NPOINT_BC = 400
+    NPOINT_TOTAL = NPOINT_INTERIOR + NPOINT_BC
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["laplace"].equations,
         {"laplace": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_total},
+        {**train_dataloader_cfg, "batch_size": NPOINT_TOTAL},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_bc},
+        {**train_dataloader_cfg, "batch_size": NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(x, 0.0)
         | np.isclose(x, 1.0)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         geom["rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": npoint_total,
+            "total_size": NPOINT_TOTAL,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     validator = {mse_metric.name: mse_metric}
 
     # set visualizer(optional)
-    vis_points = geom["rect"].sample_interior(npoint_total, evenly=True)
+    vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerVtu(
             vis_points,
@@ -120,12 +120,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
-        epochs=epochs,
-        iters_per_epoch=iters_per_epoch,
+        epochs=EPOCHS,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=eval_freq,
+        eval_freq=EVAL_FREQ,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -139,16 +139,16 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
