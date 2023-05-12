@@ -42,29 +42,29 @@ def get_mean_std(data: np.ndarray):
 if __name__ == "__main__":
     ppsci.utils.set_random_seed(42)
 
-    epochs = 300
-    train_block_size = 16
-    valid_block_size = 32
+    EPOCHS = 300
+    TRAIN_BLOCK_SIZE = 16
+    VALID_BLOCK_SIZE = 32
 
     input_keys = ("states",)
     output_keys = ("pred_states", "recover_states")
-    weights = (1.0 * (train_block_size - 1), 1.0e3 * train_block_size)
+    weights = (1.0 * (TRAIN_BLOCK_SIZE - 1), 1.0e3 * TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
 
-    output_dir = "./output/rossler_enn"
-    train_file_path = "./datasets/rossler_training.hdf5"
-    valid_file_path = "./datasets/rossler_valid.hdf5"
+    OUTPUT_DIR = "./output/rossler_enn"
+    TRAIN_FILE_PATH = "./datasets/rossler_training.hdf5"
+    VALID_FILE_PATH = "./datasets/rossler_valid.hdf5"
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # maunally build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
-            "file_path": train_file_path,
+            "file_path": TRAIN_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "block_size": train_block_size,
+            "block_size": TRAIN_BLOCK_SIZE,
             "stride": 16,
             "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
-            regularization_dict={regularization_key: 1e-1 * (train_block_size - 1)}
+            regularization_dict={regularization_key: 1e-1 * (TRAIN_BLOCK_SIZE - 1)}
         ),
         {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
         name="Sup",
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(sup_constraint.data_loader)
+    ITERS_PER_EPOCH = len(sup_constraint.data_loader)
 
     # manually init model
     data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
@@ -99,11 +99,11 @@ if __name__ == "__main__":
     # init optimizer and lr scheduler
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         0.001,
         gamma=0.995,
-        decay_steps=iters_per_epoch,
+        decay_steps=ITERS_PER_EPOCH,
         by_epoch=True,
     )()
     optimizer = ppsci.optimizer.Adam(
@@ -113,14 +113,14 @@ if __name__ == "__main__":
     )([model])
 
     # maunally build validator
-    weights = (1.0 * (valid_block_size - 1), 1.0e4 * valid_block_size)
+    weights = (1.0 * (VALID_BLOCK_SIZE - 1), 1.0e4 * VALID_BLOCK_SIZE)
     eval_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
-            "file_path": valid_file_path,
+            "file_path": VALID_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "block_size": valid_block_size,
+            "block_size": VALID_BLOCK_SIZE,
             "stride": 32,
             "weight_dict": {key: value for key, value in zip(output_keys, weights)},
         },
@@ -144,11 +144,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         validator=validator,
     )
@@ -158,11 +158,11 @@ if __name__ == "__main__":
     solver.eval()
 
     # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
-        output_dir=output_dir,
+        output_dir=OUTPUT_DIR,
         validator=validator,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
