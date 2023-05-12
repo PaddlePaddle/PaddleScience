@@ -58,7 +58,7 @@ class LRBase:
         verbose: bool = False,
     ) -> None:
         """Initialize and record the necessary parameters"""
-        super(LRBase, self).__init__()
+        super().__init__()
         if warmup_epoch >= epochs:
             msg = (
                 "When using warm up, the value of 'Global.epochs' should be greater "
@@ -124,7 +124,7 @@ class Constant(lr.LRScheduler):
     def __init__(self, learning_rate: float, last_epoch: int = -1):
         self.learning_rate = learning_rate
         self.last_epoch = last_epoch
-        super(Constant, self).__init__()
+        super().__init__()
 
     def get_lr(self) -> float:
         """always return the same learning rate"""
@@ -163,7 +163,7 @@ class Linear(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(Linear, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
@@ -230,7 +230,7 @@ class ExponentialDecay(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(ExponentialDecay, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
@@ -291,7 +291,7 @@ class Cosine(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(Cosine, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
@@ -357,7 +357,7 @@ class Step(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(Step, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
@@ -418,7 +418,7 @@ class Piecewise(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(Piecewise, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             values[0],
@@ -479,7 +479,7 @@ class MultiStepDecay(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(MultiStepDecay, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
@@ -538,9 +538,7 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
         self.T_mult = T_mult
         self.eta_min = eta_min
         self.T_cur = last_epoch
-        super(CosineAnnealingWarmRestarts, self).__init__(
-            learning_rate, last_epoch, verbose
-        )
+        super().__init__(learning_rate, last_epoch, verbose)
 
     def get_lr(self):
         return (
@@ -616,7 +614,7 @@ class CosineWarmRestarts(LRBase):
         last_epoch: int = -1,
         by_epoch: bool = False,
     ):
-        super(CosineWarmRestarts, self).__init__(
+        super().__init__(
             epochs,
             iters_per_epoch,
             learning_rate,
