@@ -19,6 +19,7 @@ from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import Laplace
 from ppsci.equation.pde import NavierStokes
 from ppsci.equation.pde import NormalDotVec
+from ppsci.equation.pde import Poisson
 from ppsci.equation.pde import Vibration
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -29,6 +30,7 @@ __all__ = [
     "Laplace",
     "NavierStokes",
     "NormalDotVec",
+    "Poisson",
     "Vibration",
     "build_equation",
 ]
