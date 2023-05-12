@@ -17,7 +17,7 @@ from ppsci.equation.pde import base
 
 
 class Poisson(base.PDE):
-    """Poisson
+    """Class for poisson equation.
 
     Args:
         dim (int): Dimension of equation.

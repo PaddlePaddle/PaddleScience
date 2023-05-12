@@ -17,7 +17,7 @@ from ppsci.equation.pde import base
 
 
 class Laplace(base.PDE):
-    """Laplace
+    """Class for laplace equation.
 
     Args:
         dim (int): Dimension of equation.
