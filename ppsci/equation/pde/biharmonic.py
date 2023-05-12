@@ -17,7 +17,7 @@ from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    """Biharmonic equation.
+    """Class for biharmonic equation.
 
     Args:
         dim (int): Dimension of equation.
