@@ -21,9 +21,9 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_viv" if args.output_dir is None else args.output_dir
+    OUTPUT_DIR = "./output_viv" if args.output_dir is None else args.output_dir
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh", False, False)
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
     # set dataloader config
-    iters_per_epoch = 1
+    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
@@ -61,12 +61,12 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 100000 if args.epochs is None else args.epochs
-    eval_freq = 1000
+    EPOCHS = 100000 if args.epochs is None else args.epochs
+    EVAL_FREQ = 1000
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Step(
-        epochs, iters_per_epoch, 0.001, step_size=20000, gamma=0.9
+        EPOCHS, ITERS_PER_EPOCH, 0.001, step_size=20000, gamma=0.9
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
@@ -119,13 +119,13 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=eval_freq,
+        eval_freq=EVAL_FREQ,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
@@ -138,15 +138,15 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
