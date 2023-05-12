@@ -55,37 +55,37 @@ class OutputTransform(object):
 if __name__ == "__main__":
     ppsci.utils.set_random_seed(42)
 
-    num_layers = 6
-    num_ctx = 16
-    embed_size = 128
-    num_heads = 4
+    NUM_LAYERS = 6
+    NUM_CTX = 16
+    EMBED_SIZE = 128
+    NUM_HEADS = 4
 
-    epochs = 200
-    train_block_size = 16
-    valid_block_size = 256
+    EPOCHS = 200
+    TRAIN_BLOCK_SIZE = 16
+    VALID_BLOCK_SIZE = 256
     input_keys = ("embeds",)
     output_keys = ("pred_embeds",)
 
-    vis_data_nums = 1
+    VIS_DATA_NUMS = 1
 
-    train_file_path = "./datasets/cylinder_training.hdf5"
-    valid_file_path = "./datasets/cylinder_valid.hdf5"
-    embedding_model_path = "./output/cylinder_enn/checkpoints/latest"
-    output_dir = "./output/cylinder_transformer"
+    TRAIN_FILE_PATH = "./datasets/cylinder_training.hdf5"
+    VALID_FILE_PATH = "./datasets/cylinder_valid.hdf5"
+    EMBEDDING_MODEL_PATH = "./output/cylinder_enn/checkpoints/latest"
+    OUTPUT_DIR = "./output/cylinder_transformer"
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
-    embedding_model = build_embedding_model(embedding_model_path)
+    embedding_model = build_embedding_model(EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
     # maunally build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
-            "file_path": train_file_path,
+            "file_path": TRAIN_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "block_size": train_block_size,
+            "block_size": TRAIN_BLOCK_SIZE,
             "stride": 4,
             "embedding_model": embedding_model,
         },
@@ -106,23 +106,23 @@ if __name__ == "__main__":
     constraint = {sup_constraint.name: sup_constraint}
 
     # set iters_per_epoch by dataloader length
-    iters_per_epoch = len(constraint["Sup"].data_loader)
+    ITERS_PER_EPOCH = len(constraint["Sup"].data_loader)
 
     # manually init model
     model = ppsci.arch.PhysformerGPT2(
         input_keys,
         output_keys,
-        num_layers,
-        num_ctx,
-        embed_size,
-        num_heads,
+        NUM_LAYERS,
+        NUM_CTX,
+        EMBED_SIZE,
+        NUM_HEADS,
     )
 
     # init optimizer and lr scheduler
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
     lr_scheduler = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         0.001,
         T_0=14,
         T_mult=2,
@@ -138,10 +138,10 @@ if __name__ == "__main__":
     eval_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
-            "file_path": valid_file_path,
+            "file_path": VALID_FILE_PATH,
             "input_keys": input_keys,
             "label_keys": output_keys,
-            "block_size": valid_block_size,
+            "block_size": VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,
         },
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     embedding_data = mse_validator.data_loader.dataset.embedding_data
 
     vis_datas = {
-        "embeds": embedding_data[:vis_data_nums, :-1],
-        "states": states[:vis_data_nums, 1:],
+        "embeds": embedding_data[:VIS_DATA_NUMS, :-1],
+        "states": states[:VIS_DATA_NUMS, 1:],
     }
 
     visualizer = {
@@ -194,11 +194,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=50,
         validator=validator,
@@ -212,13 +212,13 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
-        output_dir=output_dir,
+        output_dir=OUTPUT_DIR,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

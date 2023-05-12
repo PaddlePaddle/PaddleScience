@@ -16,28 +16,26 @@ from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
-class Laplace(base.PDE):
-    """Class for laplace equation.
+class Poisson(base.PDE):
+    """Class for poisson equation.
 
     Args:
         dim (int): Dimension of equation.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.Laplace(2)
+        >>> pde = ppsci.equation.Poisson(2)
     """
 
     def __init__(self, dim: int):
         super().__init__()
         self.dim = dim
 
-        def laplace_compute_func(out):
-            x, y = out["x"], out["y"]
-            u = out["u"]
-            laplace = hessian(u, x) + hessian(u, y)
-            if self.dim == 3:
-                z = out["z"]
-                laplace += hessian(u, z)
-            return laplace
+        def poisson_compute_func(out):
+            invars = ("x", "y", "z")[: self.dim]
+            poisson = 0
+            for invar in invars:
+                poisson += hessian(out["p"], out[invar])
+            return poisson
 
-        self.add_equation("laplace", laplace_compute_func)
+        self.add_equation("poisson", poisson_compute_func)

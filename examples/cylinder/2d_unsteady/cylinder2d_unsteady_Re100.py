@@ -23,11 +23,11 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = (
+    OUTPUT_DIR = (
         "./output_cylinder2d_unsteady" if not args.output_dir else args.output_dir
     )
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(
@@ -37,19 +37,19 @@ if __name__ == "__main__":
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
 
     # set timestamps
-    time_start, time_end = 1, 50
-    num_timestamps = 50
-    train_num_timestamps = 30
+    TIME_START, TIME_END = 1, 50
+    NUM_TIMESTAMPS = 50
+    TRAIN_NUM_TIMESTAMPS = 30
 
     train_timestamps = np.linspace(
-        time_start, time_end, num_timestamps, endpoint=True
+        TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
-    train_timestamps = np.random.choice(train_timestamps, train_num_timestamps)
+    train_timestamps = np.random.choice(train_timestamps, TRAIN_NUM_TIMESTAMPS)
     train_timestamps.sort()
-    t0 = np.array([time_start], dtype="float32")
+    t0 = np.array([TIME_START], dtype="float32")
 
     val_timestamps = np.linspace(
-        time_start, time_end, num_timestamps, endpoint=True
+        TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
 
     logger.info(f"train_timestamps: {train_timestamps.tolist()}")
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(
-                time_start,
-                time_end,
+                TIME_START,
+                TIME_END,
                 timestamps=np.concatenate((t0, train_timestamps), axis=0),
             ),
             ppsci.geometry.PointCloud(
@@ -77,13 +77,13 @@ if __name__ == "__main__":
     }
 
     # set dataloader config
-    iters_per_epoch = 1
+    ITERS_PER_EPOCH = 1
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
-    npoint_pde, ntime_pde = 9420, len(train_timestamps)
-    npoint_inlet_cylinder = 161
-    npoint_outlet = 81
-    alias_dict = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
+    NPOINT_PDE, ntime_pde = 9420, len(train_timestamps)
+    NPOINT_INLET_CYLINDER = 161
+    NPOINT_OUTLET = 81
+    ALIAS_DICT = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -92,8 +92,8 @@ if __name__ == "__main__":
         geom["time_rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "batch_size": npoint_pde * ntime_pde,
-            "iters_per_epoch": iters_per_epoch,
+            "batch_size": NPOINT_PDE * ntime_pde,
+            "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
         name="EQ",
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 "file_path": "./datasets/domain_inlet_cylinder.csv",
                 "input_keys": ["x", "y"],
                 "label_keys": ["u", "v"],
-                "alias_dict": alias_dict,
+                "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
             },
@@ -120,7 +120,7 @@ if __name__ == "__main__":
                 "file_path": "./datasets/domain_outlet.csv",
                 "input_keys": ["x", "y"],
                 "label_keys": ["p"],
-                "alias_dict": alias_dict,
+                "alias_dict": ALIAS_DICT,
                 "timestamps": train_timestamps,
             },
         },
@@ -134,7 +134,7 @@ if __name__ == "__main__":
                 "file_path": "./datasets/initial/ic0.1.csv",
                 "input_keys": ["x", "y"],
                 "label_keys": ["u", "v", "p"],
-                "alias_dict": alias_dict,
+                "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10, "p": 10},
                 "timestamps": t0,
             },
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 "file_path": "./datasets/probe/probe1_50.csv",
                 "input_keys": ["t", "x", "y"],
                 "label_keys": ["u", "v"],
-                "alias_dict": alias_dict,
+                "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
             },
@@ -167,14 +167,14 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 40000 if not args.epochs else args.epochs
-    eval_freq = 400
+    EPOCHS = 40000 if not args.epochs else args.epochs
+    EVAL_FREQ = 400
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(0.001)((model,))
 
     # set validator
-    npoints_eval = (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps
+    npoints_eval = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -193,13 +193,13 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (npoint_pde + npoint_inlet_cylinder + npoint_outlet) * num_timestamps
+        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
     )
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            num_timestamps=num_timestamps,
+            num_timestamps=NUM_TIMESTAMPS,
             prefix="result_u",
         )
     }
@@ -208,13 +208,13 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         None,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=eval_freq,
+        eval_freq=EVAL_FREQ,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -228,16 +228,16 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
