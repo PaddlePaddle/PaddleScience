@@ -23,9 +23,9 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_darcy2d" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_darcy2d" if not args.output_dir else args.output_dir
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "tanh", False, False)
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 10000 if not args.epochs else args.epochs
+    EPOCHS = 10000 if not args.epochs else args.epochs
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(1e-3)((model,))
@@ -165,10 +165,10 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         None,
-        epochs,
+        EPOCHS,
         ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=200,
@@ -185,16 +185,16 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)
