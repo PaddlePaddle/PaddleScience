@@ -63,7 +63,7 @@ class LorenzDataset(io.Dataset):
         weight_dict: Optional[Dict[str, float]] = None,
         embedding_model: Optional[base.Arch] = None,
     ):
-        super(LorenzDataset, self).__init__()
+        super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -160,7 +160,7 @@ class RosslerDataset(LorenzDataset):
         weight_dict: Optional[Dict[str, float]] = None,
         embedding_model: Optional[base.Arch] = None,
     ):
-        super(RosslerDataset, self).__init__(
+        super().__init__(
             file_path,
             input_keys,
             label_keys,
@@ -209,7 +209,7 @@ class CylinderDataset(io.Dataset):
         embedding_model: Optional[base.Arch] = None,
         embedding_batch_size: int = 64,
     ):
-        super(CylinderDataset, self).__init__()
+        super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
