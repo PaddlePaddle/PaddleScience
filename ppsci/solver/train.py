@@ -59,7 +59,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward for every constraint
-            with solver._autocast_context_manager():
+            with solver.autocast_context_manager():
                 output_dict = evaluator(input_dict)
                 constraint_loss = _constraint.loss(output_dict, label_dict, weight_dict)
                 total_loss += constraint_loss
@@ -114,16 +114,16 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
-        reader_cost = 0
-        batch_cost = 0
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
+        total_batch_size = []
+        reader_cost = 0
+        batch_cost = 0
+        reader_tic = time.perf_counter()
+
         input_dict_list = []
         label_dict_list = []
         weight_dict_list = []
-        batch_cost = 0
-        total_batch_size = []
-        reader_tic = time.perf_counter()
         for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
@@ -133,10 +133,9 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
             label_dict_list.append(label_dict)
             weight_dict_list.append(weight_dict)
             total_batch_size.append(next(iter(input_dict.values())).shape[0])
-        total_batch_size = sum(total_batch_size)
 
         def closure():
-            """Closure function for LBFGS optimizer.
+            """Forward-backward closure function for LBFGS optimizer.
 
             Returns:
                 Tensor: Computed loss.
@@ -149,21 +148,25 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
                 for output_name, output_formula in _constraint.output_expr.items():
                     evaluator.add_target_expr(output_formula, output_name)
 
-                # forward for every constraint
-                output_dict_i = evaluator(input_dict_list[i])
-                constraint_loss = _constraint.loss(
-                    output_dict_i, label_dict_list[i], weight_dict_list[i]
-                )
-                total_loss += constraint_loss
+                # forward for every batched data dict
+                with solver.autocast_context_manager():
+                    output_dict_i = evaluator(input_dict_list[i])
+                    constraint_loss = _constraint.loss(
+                        output_dict_i, label_dict_list[i], weight_dict_list[i]
+                    )
+                    total_loss += constraint_loss
 
                 loss_dict[_constraint.name] += float(constraint_loss)
 
             total_loss.backward()
+            loss_dict["loss"] = float(total_loss)
 
             return total_loss
 
+        reader_tic = time.perf_counter()
+
         solver.optimizer.step(closure)
-        if not getattr(solver.lr_scheduler, "by_epoch", False):
+        if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
         batch_cost += time.perf_counter() - batch_tic
