@@ -174,14 +174,14 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(0.001)((model,))
 
     # set validator
-    npoints_eval = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
+    NPOINTS_EVAL = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect_eval"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": npoints_eval,
+            "total_size": NPOINTS_EVAL,
             "batch_size": 10240,
             "sampler": {"name": "BatchSampler"},
         },
