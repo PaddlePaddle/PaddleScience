@@ -30,7 +30,7 @@ $$
 
 ``` py linenums="35"
 --8<--
-examples/laplace/laplace2d_v2.py:35:36
+examples/laplace/laplace2d.py:35:36
 --8<--
 ```
 
@@ -44,7 +44,7 @@ examples/laplace/laplace2d_v2.py:35:36
 
 ``` py linenums="38"
 --8<--
-examples/laplace/laplace2d_v2.py:38:39
+examples/laplace/laplace2d.py:38:39
 --8<--
 ```
 
@@ -55,7 +55,7 @@ examples/laplace/laplace2d_v2.py:38:39
 
 ``` py linenums="41"
 --8<--
-examples/laplace/laplace2d_v2.py:41:42
+examples/laplace/laplace2d.py:41:42
 --8<--
 ```
 
@@ -67,7 +67,7 @@ examples/laplace/laplace2d_v2.py:41:42
 
 ``` py linenums="56"
 --8<--
-examples/laplace/laplace2d_v2.py:56:58
+examples/laplace/laplace2d.py:56:58
 --8<--
 ```
 
@@ -77,7 +77,7 @@ examples/laplace/laplace2d_v2.py:56:58
 
 ``` py linenums="61"
 --8<--
-examples/laplace/laplace2d_v2.py:61:69
+examples/laplace/laplace2d.py:61:69
 --8<--
 ```
 
@@ -101,7 +101,7 @@ examples/laplace/laplace2d_v2.py:61:69
 
 ``` py linenums="70"
 --8<--
-examples/laplace/laplace2d_v2.py:70:81
+examples/laplace/laplace2d.py:70:81
 --8<--
 ```
 
@@ -111,7 +111,7 @@ examples/laplace/laplace2d_v2.py:70:81
 
 ``` py linenums="44"
 --8<--
-examples/laplace/laplace2d_v2.py:44:48
+examples/laplace/laplace2d.py:44:48
 --8<--
 ```
 
@@ -123,7 +123,7 @@ examples/laplace/laplace2d_v2.py:44:48
 
 ``` py linenums="26"
 --8<--
-examples/laplace/laplace2d_v2.py:26:29
+examples/laplace/laplace2d.py:26:29
 --8<--
 ```
 
@@ -133,7 +133,7 @@ examples/laplace/laplace2d_v2.py:26:29
 
 ``` py linenums="88"
 --8<--
-examples/laplace/laplace2d_v2.py:88:89
+examples/laplace/laplace2d.py:88:89
 --8<--
 ```
 
@@ -143,7 +143,7 @@ examples/laplace/laplace2d_v2.py:88:89
 
 ``` py linenums="91"
 --8<--
-examples/laplace/laplace2d_v2.py:91:106
+examples/laplace/laplace2d.py:91:106
 --8<--
 ```
 
@@ -155,7 +155,7 @@ examples/laplace/laplace2d_v2.py:91:106
 
 ``` py linenums="108"
 --8<--
-examples/laplace/laplace2d_v2.py:108:117
+examples/laplace/laplace2d.py:108:117
 --8<--
 ```
 
@@ -165,15 +165,15 @@ examples/laplace/laplace2d_v2.py:108:117
 
 ``` py linenums="119"
 --8<--
-examples/laplace/laplace2d_v2.py:119:
+examples/laplace/laplace2d.py:119:
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="laplace2d_v2.py"
+``` py linenums="1" title="laplace2d.py"
 --8<--
-examples/laplace/laplace2d_v2.py
+examples/laplace/laplace2d.py
 --8<--
 ```
 
