@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
-import types
 from typing import Callable
 from typing import Union
 
@@ -141,7 +139,7 @@ class ExpressionSolver(nn.Layer):
         for name, expr in self.expr_dict.items():
             if isinstance(expr, sympy.Basic):
                 self.output_dict[name] = self.solve_expr(expr)
-            elif callable(next(iter(self.expr_dict.values()))):
+            elif callable(expr):
                 self.output_dict[name] = expr(self.output_dict)
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")

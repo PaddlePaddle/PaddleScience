@@ -408,7 +408,7 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
-    def eval(self, epoch_id=0):
+    def eval(self, epoch_id: int = 0):
         """Evaluation"""
         train_state = self.model.training
         if train_state:
@@ -428,7 +428,7 @@ class Solver:
             self.model.train()
         return result
 
-    def visualize(self, epoch_id=0):
+    def visualize(self, epoch_id: int = 0):
         """Visualization"""
         train_state = self.model.training
         if train_state:
@@ -477,7 +477,9 @@ class Solver:
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False

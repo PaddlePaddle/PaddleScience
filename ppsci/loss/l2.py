@@ -14,7 +14,6 @@
 
 import paddle
 import paddle.nn.functional as F
-from pandas import concat
 from typing_extensions import Literal
 
 from ppsci.loss import base

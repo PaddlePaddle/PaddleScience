@@ -19,7 +19,6 @@ from typing import Union
 
 import numpy as np
 import paddle
-from typing_extensions import Literal
 
 from ppsci.metric import base
 
@@ -43,7 +42,8 @@ class LatitudeWeightedACC(base.Metric):
         num_lat (int): Number of latitude.
         mean (Optional[Union[np.array, Tuple[float, ...]]]): Mean of training data. Defaults to None.
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
-        variable_dict (Optional[Dict[str, int]]): Variable dictionary. Defaults to None.
+        variable_dict (Optional[Dict[str, int]]): Variable dictionary, the key is the name of a variable and
+            the value is its index. Defaults to None.
         unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
         scale (float, optional): The scale value used after expm1. Defaults to 1e-5.
 
@@ -65,16 +65,15 @@ class LatitudeWeightedACC(base.Metric):
     ):
         super().__init__()
         self.num_lat = num_lat
-        self.mean = paddle.to_tensor(mean) if mean is not None else None
+        self.mean = (
+            None if mean is None else paddle.to_tensor(mean, paddle.get_default_dtype())
+        )
         self.keep_batch = keep_batch
         self.variable_dict = variable_dict
         self.unlog = unlog
         self.scale = scale
 
         self.weight = self.get_latitude_weight(num_lat)
-
-    def expm1_data(self, x: paddle.Tensor):
-        return self.scale * paddle.expm1(x)
 
     def get_latitude_weight(self, num_lat: int = 720):
         lat_t = paddle.linspace(start=0, stop=1, num=num_lat)
@@ -83,20 +82,17 @@ class LatitudeWeightedACC(base.Metric):
         weight = weight.reshape((1, 1, -1, 1))
         return weight
 
+    def expm1_data(self, x: paddle.Tensor):
+        return self.scale * paddle.expm1(x)
+
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
             output = (
-                self.expm1_data(output_dict[key])
-                if self.unlog is True
-                else output_dict[key]
+                self.expm1_data(output_dict[key]) if self.unlog else output_dict[key]
             )
-            label = (
-                self.expm1_data(label_dict[key])
-                if self.unlog is True
-                else label_dict[key]
-            )
+            label = self.expm1_data(label_dict[key]) if self.unlog else label_dict[key]
 
             if self.mean is not None:
                 output = output - self.mean
@@ -105,23 +101,23 @@ class LatitudeWeightedACC(base.Metric):
             rmse = paddle.sum(
                 self.weight * output * label, axis=(-1, -2)
             ) / paddle.sqrt(
-                paddle.sum(self.weight * output * output, axis=(-1, -2))
-                * paddle.sum(self.weight * label * label, axis=(-1, -2))
+                paddle.sum(self.weight * output**2, axis=(-1, -2))
+                * paddle.sum(self.weight * label**2, axis=(-1, -2))
             )
 
             if self.variable_dict is not None:
                 for variable_name, idx in self.variable_dict.items():
-                    if self.keep_batch is False:
+                    if self.keep_batch:
+                        metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
+                    else:
                         metric_dict[f"{key}.{variable_name}"] = float(
                             rmse[:, idx].mean()
                         )
-                    else:
-                        metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
             else:
-                if self.keep_batch is False:
-                    rmse = rmse.mean()
-                    metric_dict[key] = float(rmse)
-                else:
+                if self.keep_batch:
                     rmse = rmse.mean(axis=1)
                     metric_dict[key] = rmse
+                else:
+                    rmse = rmse.mean()
+                    metric_dict[key] = float(rmse)
         return metric_dict
