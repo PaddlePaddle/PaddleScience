@@ -82,7 +82,7 @@ class LatitudeWeightedACC(base.Metric):
         weight = weight.reshape((1, 1, -1, 1))
         return weight
 
-    def expm1_data(self, x: paddle.Tensor):
+    def scale_expm1(self, x: paddle.Tensor):
         return self.scale * paddle.expm1(x)
 
     @paddle.no_grad()
@@ -90,9 +90,9 @@ class LatitudeWeightedACC(base.Metric):
         metric_dict = {}
         for key in label_dict:
             output = (
-                self.expm1_data(output_dict[key]) if self.unlog else output_dict[key]
+                self.scale_expm1(output_dict[key]) if self.unlog else output_dict[key]
             )
-            label = self.expm1_data(label_dict[key]) if self.unlog else label_dict[key]
+            label = self.scale_expm1(label_dict[key]) if self.unlog else label_dict[key]
 
             if self.mean is not None:
                 output = output - self.mean
