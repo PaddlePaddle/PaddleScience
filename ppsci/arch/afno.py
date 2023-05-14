@@ -175,45 +175,31 @@ class AFNO2D(nn.Layer):
         self.hidden_size_factor = hidden_size_factor
         self.scale = scale
 
-        w1 = self.scale * paddle.randn(
-            (
+        self.w1 = self.create_parameter(
+            shape=(
                 2,
                 self.num_blocks,
                 self.block_size,
                 self.block_size * self.hidden_size_factor,
-            )
-        )
-        self.w1 = self.create_parameter(
-            shape=w1.shape,
-            dtype=w1.dtype,
-            default_initializer=nn.initializer.Assign(w1),
-        )
-        b1 = self.scale * paddle.randn(
-            (2, self.num_blocks, self.block_size * self.hidden_size_factor)
+            ),
+            default_initializer=nn.initializer.Normal(std=self.scale),
         )
         self.b1 = self.create_parameter(
-            shape=b1.shape,
-            dtype=b1.dtype,
-            default_initializer=nn.initializer.Assign(b1),
+            shape=(2, self.num_blocks, self.block_size * self.hidden_size_factor),
+            default_initializer=nn.initializer.Normal(std=self.scale),
         )
-        w2 = self.scale * paddle.randn(
-            (
+        self.w2 = self.create_parameter(
+            shape=(
                 2,
                 self.num_blocks,
                 self.block_size * self.hidden_size_factor,
                 self.block_size,
-            )
+            ),
+            default_initializer=nn.initializer.Normal(std=self.scale),
         )
-        self.w2 = self.create_parameter(
-            shape=w2.shape,
-            dtype=w2.dtype,
-            default_initializer=paddle.nn.initializer.Assign(w2),
-        )
-        b2 = self.scale * paddle.randn((2, self.num_blocks, self.block_size))
         self.b2 = self.create_parameter(
-            shape=b2.shape,
-            dtype=b2.dtype,
-            default_initializer=paddle.nn.initializer.Assign(b2),
+            shape=(2, self.num_blocks, self.block_size),
+            default_initializer=nn.initializer.Normal(std=self.scale),
         )
 
     def forward(self, x):

@@ -83,8 +83,8 @@ class ERA5Dataset(io.Dataset):
 
         self.files = self.read_data(file_path)
         self.n_years = len(self.files)
-        self.n_samples_per_year = self.files[0].shape[0]
-        self.n_samples_total = self.n_years * self.n_samples_per_year
+        self.num_samples_per_year = self.files[0].shape[0]
+        self.num_samples = self.n_years * self.num_samples_per_year
         if self.precip_file_path is not None:
             self.precip_files = self.read_data(precip_file_path, "tp")
 
@@ -98,17 +98,17 @@ class ERA5Dataset(io.Dataset):
         return files
 
     def __len__(self):
-        return self.n_samples_total // self.stride
+        return self.num_samples // self.stride
 
     def __getitem__(self, global_idx):
         global_idx *= self.stride
-        year_idx = global_idx // self.n_samples_per_year
-        local_idx = global_idx % self.n_samples_per_year
-        step = 0 if local_idx >= self.n_samples_per_year - 1 else 1
+        year_idx = global_idx // self.num_samples_per_year
+        local_idx = global_idx % self.num_samples_per_year
+        step = 0 if local_idx >= self.num_samples_per_year - 1 else 1
 
         if self.num_label_timestamps > 1:
-            if local_idx >= self.n_samples_per_year - self.num_label_timestamps:
-                local_idx = self.n_samples_per_year - self.num_label_timestamps - 1
+            if local_idx >= self.num_samples_per_year - self.num_label_timestamps:
+                local_idx = self.num_samples_per_year - self.num_label_timestamps - 1
 
         input_file = self.files[year_idx]
         label_file = (
@@ -118,7 +118,7 @@ class ERA5Dataset(io.Dataset):
         )
         if self.precip_file_path is not None and year_idx == 0 and self.training:
             # first year has 2 missing samples in precip (they are first two time points)
-            lim = self.n_samples_per_year - 2
+            lim = self.num_samples_per_year - 2
             local_idx = local_idx % lim
             step = 0 if local_idx >= lim - 1 else 1
             input_idx = local_idx + 2
@@ -153,9 +153,6 @@ class ERA5Dataset(io.Dataset):
             )
 
         return input_item, label_item, weight_item
-
-    def getitem(self, global_idx):
-        return self.__getitem__(global_idx)
 
 
 class ERA5SampledDataset(io.Dataset):
@@ -198,7 +195,7 @@ class ERA5SampledDataset(io.Dataset):
         self.transforms = transforms
 
         self.files = self.read_data(file_path)
-        self.n_samples_total = len(self.files)
+        self.num_samples = len(self.files)
 
     def read_data(self, path: str):
         paths = glob.glob(path + "/*.h5")
@@ -210,7 +207,7 @@ class ERA5SampledDataset(io.Dataset):
         return files
 
     def __len__(self):
-        return self.n_samples_total
+        return self.num_samples
 
     def __getitem__(self, global_idx):
         _file = self.files[global_idx]

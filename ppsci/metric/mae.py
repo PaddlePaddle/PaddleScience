@@ -22,11 +22,7 @@ class MAE(base.Metric):
     r"""Mean absolute error.
 
     $$
-    metric =
-    \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
-        \limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
-    \end{cases}
+    metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
     $$
 
     Args:
@@ -47,9 +43,7 @@ class MAE(base.Metric):
         for key in label_dict:
             mae = F.l1_loss(output_dict[key], label_dict[key], "none")
             if self.keep_batch:
-                axis = [i for i in range(1, mae.ndim)]
-                mae = mae.mean(axis=axis)
-                metric_dict[key] = mae
+                metric_dict[key] = mae.mean(axis=tuple(range(1, mae.ndim)))
             else:
                 metric_dict[key] = float(mae.mean())
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import partial
+import functools
 from typing import Tuple
 
 import h5py
@@ -70,9 +70,9 @@ if __name__ == "__main__":
     DATA_TIME_MEAN_PATH = "./datasets/era5/stat/time_means.npy"
 
     # set training hyper-parameters
-    num_timestamps = 2
+    NUM_TIMESTAMPS = 2
     input_keys = ("input",)
-    output_keys = tuple([f"output_{i}" for i in range(num_timestamps)])
+    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
     IMG_H, IMG_W = 720, 1440
     EPOCHS = 50 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             "input_keys": input_keys,
             "label_keys": output_keys,
             "vars_channel": VARS_CHANNEL,
-            "num_label_timestamps": num_timestamps,
+            "num_label_timestamps": NUM_TIMESTAMPS,
             "transforms": transforms,
         },
         "sampler": {
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             "label_keys": output_keys,
             "vars_channel": VARS_CHANNEL,
             "transforms": transforms,
-            "num_label_timestamps": num_timestamps,
+            "num_label_timestamps": NUM_TIMESTAMPS,
             "training": False,
         },
         "sampler": {
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     validator = {sup_validator.name: sup_validator}
 
     # set model
-    model = ppsci.arch.AFNONet(input_keys, output_keys, num_timestamps=num_timestamps)
+    model = ppsci.arch.AFNONet(input_keys, output_keys, num_timestamps=NUM_TIMESTAMPS)
 
     # init optimizer and lr scheduler
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
@@ -203,7 +203,6 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         eval_during_train=True,
-        log_freq=1,
         validator=validator,
         pretrained_model_path=PRETRAINED_MODEL_PATH,
         compute_metric_by_batch=True,
@@ -215,18 +214,18 @@ if __name__ == "__main__":
     solver.eval()
 
     # set testing hyper-parameters
-    num_timestamps = 32
-    output_keys = tuple([f"output_{i}" for i in range(num_timestamps)])
+    NUM_TIMESTAMPS = 32
+    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
 
     # set model for testing
-    model = ppsci.arch.AFNONet(input_keys, output_keys, num_timestamps=num_timestamps)
+    model = ppsci.arch.AFNONet(input_keys, output_keys, num_timestamps=NUM_TIMESTAMPS)
 
     # update eval dataloader config
     eval_dataloader_cfg["dataset"].update(
         {
             "file_path": TEST_FILE_PATH,
             "label_keys": output_keys,
-            "num_label_timestamps": num_timestamps,
+            "num_label_timestamps": NUM_TIMESTAMPS,
             "stride": 8,
         }
     )
@@ -245,7 +244,7 @@ if __name__ == "__main__":
     vis_datas = get_vis_datas(
         TEST_FILE_PATH,
         DATE_STRINGS,
-        num_timestamps,
+        NUM_TIMESTAMPS,
         VARS_CHANNEL,
         IMG_H,
         data_mean,
@@ -257,16 +256,16 @@ if __name__ == "__main__":
         wind_data = []
         for i in range(output.shape[0]):
             wind_data.append((output[i][0] ** 2 + output[i][1] ** 2) ** 0.5)
-        return paddle.to_tensor(wind_data)
+        return paddle.to_tensor(wind_data, paddle.get_default_dtype())
 
     vis_output_expr = {}
-    for i in range(num_timestamps):
+    for i in range(NUM_TIMESTAMPS):
         hour = (i + 1) * 6
-        vis_output_expr[f"output_{hour}h"] = partial(
+        vis_output_expr[f"output_{hour}h"] = functools.partial(
             output_wind_func,
             var_name=f"output_{i}",
-            data_mean=paddle.to_tensor(data_mean),
-            data_std=paddle.to_tensor(data_std),
+            data_mean=paddle.to_tensor(data_mean, paddle.get_default_dtype()),
+            data_std=paddle.to_tensor(data_std, paddle.get_default_dtype()),
         )
         vis_output_expr[f"target_{hour}h"] = lambda d, hour=hour: d[f"target_{hour}h"]
     # set visualizer
@@ -282,7 +281,7 @@ if __name__ == "__main__":
             vmax=25,
             colorbar_label="m\s",
             batch_size=1,
-            num_timestamps=num_timestamps,
+            num_timestamps=NUM_TIMESTAMPS,
             prefix="wind",
         )
     }
@@ -292,7 +291,6 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         output_dir=OUTPUT_DIR,
-        log_freq=1,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
