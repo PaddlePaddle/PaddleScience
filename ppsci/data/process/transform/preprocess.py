@@ -80,6 +80,10 @@ class Normalize:
         std: Union[np.array, Tuple[float, ...]],
         apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
+        if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:
+            raise ValueError(
+                f"apply_keys should be a non empty subset of ('input', 'label'), but got {apply_keys}"
+            )
         self.mean = mean
         self.std = std
         self.apply_keys = apply_keys
@@ -112,6 +116,10 @@ class Log1p:
         scale: float = 1.0,
         apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
+        if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:
+            raise ValueError(
+                f"apply_keys should be a non empty subset of ('input', 'label'), but got {apply_keys}"
+            )
         self.scale = scale
         self.apply_keys = apply_keys
 
@@ -145,6 +153,10 @@ class CropData:
         xmax: Tuple[int, ...],
         apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
+        if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:
+            raise ValueError(
+                f"apply_keys should be a non empty subset of ('input', 'label'), but got {apply_keys}"
+            )
         self.xmin = xmin
         self.xmax = xmax
         self.apply_keys = apply_keys
@@ -176,18 +188,30 @@ class SqueezeData:
     """
 
     def __init__(self, apply_keys: Tuple[str, ...] = ("input", "label")):
+        if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:
+            raise ValueError(
+                f"apply_keys should be a non empty subset of ('input', 'label'), but got {apply_keys}"
+            )
         self.apply_keys = apply_keys
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
         if "input" in self.apply_keys:
             for key, value in input_item.items():
-                if len(value.shape) == 4:
+                if value.ndim == 4:
                     B, C, H, W = value.shape
                     input_item[key] = value.reshape((B * C, H, W))
+                if value.ndim != 3:
+                    raise ValueError(
+                        "Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
+                    )
         if "label" in self.apply_keys:
             for key, value in label_item.items():
-                if len(value.shape) == 4:
+                if value.ndim == 4:
                     B, C, H, W = value.shape
                     label_item[key] = value.reshape((B * C, H, W))
+                if value.ndim != 3:
+                    raise ValueError(
+                        "Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
+                    )
         return input_item, label_item, weight_item

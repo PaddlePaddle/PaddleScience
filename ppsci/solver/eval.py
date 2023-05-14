@@ -147,11 +147,11 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
     return target_metric
 
 
-def eval_by_batch(solver, epoch_id, log_freq) -> float:
+def eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program by batch.
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
@@ -248,17 +248,17 @@ def eval_by_batch(solver, epoch_id, log_freq) -> float:
     return target_metric
 
 
-def eval_func(solver, epoch_id, log_freq) -> float:
+def eval_func(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
         float: Target metric computed during evaluation.
     """
-    if solver.compute_metric_by_batch is True:
+    if solver.compute_metric_by_batch:
         return eval_by_batch(solver, epoch_id, log_freq)
     return eval_by_dataset(solver, epoch_id, log_freq)

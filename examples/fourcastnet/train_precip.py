@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import partial
+import functools
 from typing import Tuple
 
 import h5py
@@ -208,7 +208,6 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         eval_during_train=True,
-        log_freq=1,
         validator=validator,
         compute_metric_by_batch=True,
         eval_with_no_grad=True,
@@ -219,12 +218,12 @@ if __name__ == "__main__":
     solver.eval()
 
     # set testing hyper-parameters
-    num_timestamps = 6
-    output_keys = tuple([f"output_{i}" for i in range(num_timestamps)])
+    NUM_TIMESTAMPS = 6
+    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
 
     # set model for testing
     model = ppsci.arch.PrecipNet(
-        input_keys, output_keys, num_timestamps=num_timestamps, wind_model=wind_model
+        input_keys, output_keys, num_timestamps=NUM_TIMESTAMPS, wind_model=wind_model
     )
 
     # update eval dataloader config
@@ -233,7 +232,7 @@ if __name__ == "__main__":
             "file_path": WIND_TEST_FILE_PATH,
             "label_keys": output_keys,
             "precip_file_path": TEST_FILE_PATH,
-            "num_label_timestamps": num_timestamps,
+            "num_label_timestamps": NUM_TIMESTAMPS,
             "stride": 8,
         }
     )
@@ -253,7 +252,7 @@ if __name__ == "__main__":
         WIND_TEST_FILE_PATH,
         TEST_FILE_PATH,
         DATE_STRINGS,
-        num_timestamps,
+        NUM_TIMESTAMPS,
         VARS_CHANNEL,
         IMG_H,
         wind_data_mean,
@@ -265,9 +264,9 @@ if __name__ == "__main__":
         return output
 
     visu_output_expr = {}
-    for i in range(num_timestamps):
+    for i in range(NUM_TIMESTAMPS):
         hour = (i + 1) * 6
-        visu_output_expr[f"output_{hour}h"] = partial(
+        visu_output_expr[f"output_{hour}h"] = functools.partial(
             output_precip_func,
             var_name=f"output_{i}",
         )
@@ -288,7 +287,7 @@ if __name__ == "__main__":
             colorbar_label="mm",
             log_norm=True,
             batch_size=1,
-            num_timestamps=num_timestamps,
+            num_timestamps=NUM_TIMESTAMPS,
             prefix="precip",
         )
     }
@@ -298,7 +297,6 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         output_dir=OUTPUT_DIR,
-        log_freq=1,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",

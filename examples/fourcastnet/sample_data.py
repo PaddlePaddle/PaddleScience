@@ -21,8 +21,7 @@ from typing import Dict
 from typing import Tuple
 
 import h5py
-import numpy as np
-from paddle.io import DistributedBatchSampler
+from paddle import io
 from tqdm import tqdm
 
 import examples.fourcastnet.utils as fourcast_utils
@@ -35,7 +34,7 @@ def sample_func(
 ):
     dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
     for idx in tqdm(batch_idxs):
-        input_dict, label_dict, weight_dict = dataset.getitem(idx)
+        input_dict, label_dict, weight_dict = dataset[idx]
         fdest = h5py.File(f"{save_path}/{idx:0>8d}.h5", "w")
         for key, value in input_dict.items():
             fdest.create_dataset(f"input_dict/{key}", data=value, dtype="f")
@@ -99,7 +98,7 @@ def sample_data_epoch(epoch: int):
     }
     dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
 
-    batch_sampler = DistributedBatchSampler(
+    batch_sampler = io.DistributedBatchSampler(
         dataset=dataset,
         batch_size=1,
         shuffle=False,

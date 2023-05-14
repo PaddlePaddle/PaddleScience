@@ -20,7 +20,6 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.nn.functional as F
-from typing_extensions import Literal
 
 from ppsci.metric import base
 
@@ -68,7 +67,8 @@ class LatitudeWeightedRMSE(base.Metric):
         num_lat (int): Number of latitude.
         std (Optional[Union[np.array, Tuple[float, ...]]]): Standard Deviation of training dataset. Defaults to None.
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
-        variable_dict (Dict[str, int], optional): Variable dictionary. Defaults to None.
+        variable_dict (Optional[Dict[str, int]]): Variable dictionary, the key is the name of a variable and
+            the value is its index. Defaults to None.
         unlog (bool, optional): whether calculate expm1 for all elements in the array. Defaults to False.
         scale (float, optional): The scale value used after expm1. Defaults to 1e-5.
 
@@ -90,16 +90,17 @@ class LatitudeWeightedRMSE(base.Metric):
     ):
         super().__init__()
         self.num_lat = num_lat
-        self.std = paddle.to_tensor(std).reshape((1, -1)) if std is not None else None
+        self.std = (
+            None
+            if std is None
+            else paddle.to_tensor(std, paddle.get_default_dtype()).reshape((1, -1))
+        )
         self.keep_batch = keep_batch
         self.variable_dict = variable_dict
         self.unlog = unlog
         self.scale = scale
 
         self.weight = self.get_latitude_weight(num_lat)
-
-    def expm1_data(self, x: paddle.Tensor):
-        return self.scale * paddle.expm1(x)
 
     def get_latitude_weight(self, num_lat: int = 720):
         lat_t = paddle.linspace(start=0, stop=1, num=num_lat)
@@ -108,20 +109,17 @@ class LatitudeWeightedRMSE(base.Metric):
         weight = weight.reshape((1, 1, -1, 1))
         return weight
 
+    def expm1_data(self, x: paddle.Tensor):
+        return self.scale * paddle.expm1(x)
+
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
             output = (
-                self.expm1_data(output_dict[key])
-                if self.unlog is True
-                else output_dict[key]
+                self.expm1_data(output_dict[key]) if self.unlog else output_dict[key]
             )
-            label = (
-                self.expm1_data(label_dict[key])
-                if self.unlog is True
-                else label_dict[key]
-            )
+            label = self.expm1_data(label_dict[key]) if self.unlog else label_dict[key]
 
             mse = F.mse_loss(output, label, "none")
             rmse = (mse * self.weight).mean(axis=(-1, -2)) ** 0.5
@@ -129,18 +127,18 @@ class LatitudeWeightedRMSE(base.Metric):
                 rmse = rmse * self.std
             if self.variable_dict is not None:
                 for variable_name, idx in self.variable_dict.items():
-                    if self.keep_batch is False:
+                    if self.keep_batch:
+                        metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
+                    else:
                         metric_dict[f"{key}.{variable_name}"] = float(
                             rmse[:, idx].mean()
                         )
-                    else:
-                        metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
             else:
-                if self.keep_batch is False:
-                    rmse = rmse.mean()
-                    metric_dict[key] = float(rmse)
-                else:
+                if self.keep_batch:
                     rmse = rmse.mean(axis=1)
                     metric_dict[key] = rmse
+                else:
+                    rmse = rmse.mean()
+                    metric_dict[key] = float(rmse)
 
         return metric_dict
