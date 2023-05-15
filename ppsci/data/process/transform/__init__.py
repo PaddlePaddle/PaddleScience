@@ -17,10 +17,22 @@ import copy
 
 from paddle import vision
 
+from ppsci.data.process.transform.preprocess import CropData
+from ppsci.data.process.transform.preprocess import Log1p
+from ppsci.data.process.transform.preprocess import Normalize
 from ppsci.data.process.transform.preprocess import Scale
+from ppsci.data.process.transform.preprocess import SqueezeData
 from ppsci.data.process.transform.preprocess import Translate
 
-__all__ = ["Scale", "Translate", "build_transforms"]
+__all__ = [
+    "CropData",
+    "Log1p",
+    "Normalize",
+    "Scale",
+    "SqueezeData",
+    "Translate",
+    "build_transforms",
+]
 
 
 def build_transforms(cfg):
