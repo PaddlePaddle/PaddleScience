@@ -16,32 +16,26 @@ from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
-class Biharmonic(base.PDE):
-    """Class for biharmonic equation.
+class Poisson(base.PDE):
+    """Class for poisson equation.
 
     Args:
         dim (int): Dimension of equation.
-        q (float): Load.
-        D (float): Rigidity.
 
     Examples:
         >>> import ppsci
-        >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
+        >>> pde = ppsci.equation.Poisson(2)
     """
 
-    def __init__(self, dim: int, q: float, D: float):
+    def __init__(self, dim: int):
         super().__init__()
         self.dim = dim
-        self.q = q
-        self.D = D
 
-        def biharmonic_compute_func(out):
-            u = out["u"]
-            biharmonic = -self.q / self.D
+        def poisson_compute_func(out):
             invars = ("x", "y", "z")[: self.dim]
-            for invar_i in invars:
-                for invar_j in invars:
-                    biharmonic += hessian(hessian(u, out[invar_i]), out[invar_j])
-            return biharmonic
+            poisson = 0
+            for invar in invars:
+                poisson += hessian(out["p"], out[invar])
+            return poisson
 
-        self.add_equation("biharmonic", biharmonic_compute_func)
+        self.add_equation("poisson", poisson_compute_func)

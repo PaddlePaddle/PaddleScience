@@ -23,18 +23,18 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    OUTPUT_DIR = "./ldc2d_steady_Re10" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_darcy2d" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh", False, False)
+    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "tanh", False, False)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
+    equation = {"Poisson": ppsci.equation.Poisson(2)}
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
+    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
 
     # set dataloader config
     ITERS_PER_EPOCH = 1
@@ -50,54 +50,69 @@ if __name__ == "__main__":
     NPOINT_RIGHT = 99
 
     # set constraint
+    def poisson_ref_compute_func(_in):
+        return (
+            -8.0
+            * (np.pi**2)
+            * np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        )
+
     pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["NavierStokes"].equations,
-        {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
+        equation["Poisson"].equations,
+        {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
-        weight_dict={
-            "continuity": 0.0001,
-            "momentum_x": 0.0001,
-            "momentum_y": 0.0001,
-        },
         name="EQ",
     )
     bc_top = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-        {"u": 1, "v": 0},
+        {"p": lambda out: out["p"]},
+        {
+            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        },
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_TOP},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(y, 0.05),
+        criteria=lambda x, y: np.isclose(y, 1.0),
         name="BC_top",
     )
     bc_bottom = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-        {"u": 0, "v": 0},
+        {"p": lambda out: out["p"]},
+        {
+            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        },
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_BOTTOM},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(y, -0.05),
+        criteria=lambda x, y: np.isclose(y, 0.0),
         name="BC_bottom",
     )
     bc_left = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-        {"u": 0, "v": 0},
+        {"p": lambda out: out["p"]},
+        {
+            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        },
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_LEFT},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, -0.05),
+        criteria=lambda x, y: np.isclose(x, 0.0),
         name="BC_left",
     )
     bc_right = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda out: out["u"], "v": lambda out: out["v"]},
-        {"u": 0, "v": 0},
+        {"p": lambda out: out["p"]},
+        {
+            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        },
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, 0.05),
+        criteria=lambda x, y: np.isclose(x, 1.0),
         name="BC_right",
     )
     # wrap constraints together
@@ -110,22 +125,16 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    EPOCHS = 20000 if not args.epochs else args.epochs
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        0.001,
-        warmup_epoch=int(0.05 * EPOCHS),
-    )()
+    EPOCHS = 10000 if not args.epochs else args.epochs
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(1e-3)((model,))
 
     # set validator
     NPOINTS_EVAL = NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
-        equation["NavierStokes"].equations,
-        {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
+        equation["Poisson"].equations,
+        {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
@@ -147,7 +156,7 @@ if __name__ == "__main__":
     visualizer = {
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
-            {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
+            {"p": lambda d: d["p"]},
             prefix="result_u_v",
         )
     }
@@ -158,7 +167,7 @@ if __name__ == "__main__":
         constraint,
         OUTPUT_DIR,
         optimizer,
-        lr_scheduler,
+        None,
         EPOCHS,
         ITERS_PER_EPOCH,
         eval_during_train=True,

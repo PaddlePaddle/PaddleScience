@@ -14,19 +14,23 @@
 
 import copy
 
+from ppsci.metric.anomaly_coef import LatitudeWeightedACC
 from ppsci.metric.base import Metric
 from ppsci.metric.l2_rel import L2Rel
 from ppsci.metric.mae import MAE
 from ppsci.metric.mse import MSE
 from ppsci.metric.rmse import RMSE
+from ppsci.metric.rmse import LatitudeWeightedRMSE
 from ppsci.utils import misc
 
 __all__ = [
+    "LatitudeWeightedACC",
     "Metric",
     "L2Rel",
     "MAE",
     "MSE",
     "RMSE",
+    "LatitudeWeightedRMSE",
     "build_metric",
 ]
 
