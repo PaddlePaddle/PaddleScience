@@ -393,7 +393,7 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
 <figure markdown>
-  ![u_pred.gif](https://kefu.cckefu1.com/app/upload/temp/202304_p/06/06_168079163055700009257b95d.gif){ loading=lazy }
+  ![u_pred.gif](../../images/cylinder2d_unsteady/cylinder_2d_unsteady_Re100.gif){ loading=lazy }
   <figcaption>模型预测结果 u</figcaption>
 </figure>
 </figure>
