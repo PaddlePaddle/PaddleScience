@@ -19,6 +19,7 @@ from typing import Union
 
 import numpy as np
 
+import ppsci.utils.misc as misc
 from ppsci.geometry import geometry
 from ppsci.utils import reader
 
@@ -27,67 +28,47 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        interior (Dict[str, np.ndarray]): Dict data, which store interior points of a point cloud.
+        interior (Dict[str, np.ndarray]): Filepath or dict data, which store interior points of a point cloud, such as {"x": np.ndarray, "y": np.ndarray}.
         coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
-        boundary_path (Optional[str]): File which store boundary points of a point cloud. Defaults to None.
-        boundary_normal_path (Optional[str]): File which store boundary normals of a point cloud. Defaults to None.
-        alias_dict (Optional[Dict[str, str]]): Alias name for coord key, such as {"x": "X:0", "y": "X:1"}. Defaults to None.
+        boundary (Dict[str, np.ndarray]): Boundary points of a point cloud. Defaults to None.
+        boundary_normal (Dict[str, np.ndarray]): Boundary normal points of a point cloud. Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> geom = ppsci.geometry.PointCloud("/path/to/pointcloud_file", ("x",))  # doctest: +SKIP
+        >>> import numpy as np
+        >>> interior_points = {"x": np.linspace(-1, 1, dtype="float32").reshape((-1, 1))}
+        >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
     """
 
     def __init__(
         self,
         interior: Dict[str, np.ndarray],
         coord_keys: Tuple[str, ...],
-        boundary: Union[str, Dict[str, np.ndarray]] = None,
-        boundary_normal_path: str = None,
-        alias_dict: Optional[Dict[str, str]] = None,
+        boundary: Optional[Dict[str, np.ndarray]] = None,
+        boundary_normal: Optional[Dict[str, np.ndarray]] = None,
     ):
-        # Interior points from CSV file
-        data_dict = interior
-
-        # convert to numpy array
-        self.interior = []
-        for key in coord_keys:
-            self.interior.append(data_dict[key])
-        self.interior = np.concatenate(self.interior, -1)
+        # Interior points
+        self.interior = misc.convert_to_array(interior, coord_keys)
         self.len = self.interior.shape[0]
-        # Boundary points from CSV file
-        if boundary is not None:
-            # read data
-            data_dict = reader.load_csv_file(boundary, coord_keys)
 
-            # convert to numpy array
-            self.boundary = {}
-            for key in coord_keys:
-                self.boundary.append(data_dict[key])
-            self.boundary = np.concatenate(self.boundary, -1)
-        else:
-            self.boundary = None
+        # Boundary points
+        self.boundary = boundary
+        if self.boundary is not None:
+            self.boundary = misc.convert_to_array(self.boundary, coord_keys)
 
-        # Normal of boundary points from CSV file
-        if boundary_normal_path is not None:
-            # read data
-            data_dict = reader.load_csv_file(boundary_normal_path, coord_keys)
+        # Boundary normal points
+        self.normal = boundary_normal
+        if self.normal is not None:
+            self.normal = misc.convert_to_array(
+                self.normal, tuple(f"{key}_normal" for key in coord_keys)
+            )
+            if list(self.normal.shape) != list(self.boundary.shape):
+                raise ValueError(
+                    f"boundary's shape({self.boundary.shape}) must equal "
+                    f"to normal's shape({self.normal.shape})"
+                )
 
-            # convert to numpy array
-            self.normal = {}
-            for key in coord_keys:
-                self.normal.append(data_dict[key])
-            self.normal = np.concatenate(self.normal, -1)
-        else:
-            self.normal = None
-
-        self.input_keys = []
-        for key in coord_keys:
-            if alias_dict is not None and key in alias_dict:
-                self.input_keys.append(alias_dict[key])
-            else:
-                self.input_keys.append(key)
-
+        self.input_keys = coord_keys
         super().__init__(
             len(coord_keys),
             (np.amin(self.interior, axis=0), np.amax(self.interior, axis=0)),
