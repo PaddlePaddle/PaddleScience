@@ -154,10 +154,10 @@ if __name__ == "__main__":
     NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visulzie_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"p": lambda d: d["p"]},
-            prefix="result_u_v",
+            prefix="result_p",
         )
     }
 
