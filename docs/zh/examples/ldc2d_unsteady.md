@@ -209,7 +209,7 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
     {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
     geom["time_rect"],
-    {**train_dataloader_cfg, "batch_size": npoint_pde * ntime_pde},
+    {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
     ppsci.loss.MSELoss("sum"),
     evenly=True,
     weight_dict={
@@ -325,7 +325,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:145:163
 
 ``` py linenums="165"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:165:204
+examples/ldc/ldc2d_unsteady_Re10.py:165:196
 --8<--
 ```
 
@@ -333,9 +333,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:165:204
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="206"
+``` py linenums="198"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:206:
+examples/ldc/ldc2d_unsteady_Re10.py:198:
 --8<--
 ```
 
