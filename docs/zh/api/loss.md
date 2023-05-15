@@ -7,6 +7,7 @@
         - Loss
         - L1Loss
         - L2Loss
+        - L2RelLoss
         - MSELoss
         - MSELossWithL2Decay
         - IntegralLoss

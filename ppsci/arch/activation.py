@@ -22,6 +22,7 @@ act_func_dict = {
     "elu": F.elu,
     "relu": F.relu,
     "selu": F.selu,
+    "gelu": F.gelu,
     "sigmoid": F.sigmoid,
     "silu": F.silu,
     "sin": paddle.sin,
