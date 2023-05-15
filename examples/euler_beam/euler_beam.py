@@ -111,8 +111,8 @@ if __name__ == "__main__":
             visu_points,
             ("x",),
             {"u": lambda d: d["u"]},
-            1,
-            "result_u",
+            num_timestamps=1,
+            prefix="result_u",
         )
     }
 
