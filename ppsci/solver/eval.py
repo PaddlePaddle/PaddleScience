@@ -66,7 +66,7 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            with solver._autocast_context_manager(), solver._no_grad_context_manager():
+            with solver.autocast_context_manager(), solver.no_grad_context_manager():
                 output_dict = evaluator(input_dict)
                 validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
 
@@ -189,7 +189,7 @@ def eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
                 evaluator.add_target_expr(output_formula, output_name)
 
             # forward
-            with solver._autocast_context_manager(), solver._no_grad_context_manager():
+            with solver.autocast_context_manager(), solver.no_grad_context_manager():
                 output_dict = evaluator(input_dict)
                 validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
 
