@@ -28,7 +28,7 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
     ITERS_PER_EPOCH = 1
-    EPOCHS = 20 if not args.epochs else args.epochs
+    EPOCHS = 10000 if not args.epochs else args.epochs
     # set output directory
     OUTPUT_DIR = "./output/euler_beam" if not args.output_dir else args.output_dir
     # initialize logger
