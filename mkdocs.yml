@@ -36,6 +36,7 @@ nav:
   - 经典案例:
       - PINNs:
         - ViV: zh/examples/viv.md
+        - Darcy2D: zh/examples/darcy2d.md
         - LDC2D_steady: zh/examples/ldc2d_steady.md
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
