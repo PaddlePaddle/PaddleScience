@@ -1,5 +1,7 @@
 # 2D-Laplace
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 2D-Laplace，在本文中代表拉普拉斯方程的2维形式。拉普拉斯方程因为由法国数学家拉普拉斯首先提出而得名。求解拉普拉斯方程是电磁学、天文学和流体力学等领域经常遇到的一类重要的数学问题，因为这种方程以势函数的形式描写了电场、引力场和流场等物理对象（一般统称为“保守场”或“有势场”）的性质。
