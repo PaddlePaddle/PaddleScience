@@ -35,7 +35,7 @@ class L2Rel(base.Metric):
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
-        for key in output_dict:
+        for key in label_dict:
             rel_l2 = paddle.norm(label_dict[key] - output_dict[key]) / paddle.norm(
                 label_dict[key]
             )

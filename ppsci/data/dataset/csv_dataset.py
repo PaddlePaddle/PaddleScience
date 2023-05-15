@@ -119,7 +119,7 @@ class CSVDataset(io.Dataset):
                     self.weight[key] = np.full_like(
                         next(iter(self.label.values())), value
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
@@ -238,7 +238,7 @@ class IterableCSVDataset(io.IterableDataset):
                     self.weight[key] = np.full_like(
                         next(iter(self.label.values())), value
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
