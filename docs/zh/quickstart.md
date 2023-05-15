@@ -37,10 +37,10 @@ from ppsci.utils import logger
 ppsci.utils.misc.set_random_seed(42)
 
 # set output directory
-output_dir = "./output_quick_start"
+OUTPUT_DIR = "./output_quick_start"
 
 # initialize logger
-logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 ```
 
 接下来正式开始撰写代码。
@@ -71,14 +71,14 @@ def sin_compute_func(data: dict):
     return np.sin(data["x"])
 
 # set constraint on 1D-geometry([-π, π])
-iters_per_epoch = 100
+ITERS_PER_EPOCH = 100
 interior_constraint = ppsci.constraint.InteriorConstraint(
     output_expr={"u": lambda out: out["u"]},
     label_dict={"u": sin_compute_func},
     geom=geom["domain"],
     dataloader_cfg={
         "dataset": "NamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
             "shuffle": True,
@@ -97,7 +97,7 @@ constraint = {interior_constraint.name: interior_constraint}
 
 ``` py
 # set training hyper-parameters
-epochs = 10
+EPOCHS = 10
 # set optimizer
 optimizer = ppsci.optimizer.Adam(1e-3)((model,))
 ```
@@ -125,10 +125,10 @@ visualizer = {
 solver = ppsci.solver.Solver(
     model,
     constraint,
-    output_dir,
+    OUTPUT_DIR,
     optimizer,
-    epochs=epochs,
-    iters_per_epoch=iters_per_epoch,
+    epochs=EPOCHS,
+    iters_per_epoch=ITERS_PER_EPOCH,
     geom=geom,
     visualizer=visualizer,
 )
@@ -202,7 +202,7 @@ interior_constraint = ppsci.constraint.InteriorConstraint(
     geom=geom["domain"],
     dataloader_cfg={
         "dataset": "NamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
             "shuffle": True,
