@@ -8,6 +8,7 @@ wget
 scipy
 visualdl
 pyvista==0.37.0
+pybind11==2.9.2
 pysdf
 pyyaml
 scikit-optimize

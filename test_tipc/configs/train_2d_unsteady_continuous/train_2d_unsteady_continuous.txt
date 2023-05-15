@@ -1,6 +1,6 @@
 ===========================train_params===========================
 model_name:cylinder2d_unsteady_train_newapi
-python:python3.7
+python:python3.10
 gpu_list:0
 Global.use_gpu:null
 Global.auto_cast:fp32
