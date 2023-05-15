@@ -19,25 +19,32 @@ from ppsci.metric import base
 
 
 class MAE(base.Metric):
-    r"""Mean absolute error
+    r"""Mean absolute error.
 
     $$
     metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
     $$
+
+    Args:
+        keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
         >>> import ppsci
         >>> metric = ppsci.metric.MAE()
     """
 
-    def __init__(self):
+    def __init__(self, keep_batch: bool = False):
         super().__init__()
+        self.keep_batch = keep_batch
 
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
-        for key in output_dict:
-            mae = F.l1_loss(output_dict[key], label_dict[key], "mean")
-            metric_dict[key] = float(mae)
+        for key in label_dict:
+            mae = F.l1_loss(output_dict[key], label_dict[key], "none")
+            if self.keep_batch:
+                metric_dict[key] = mae.mean(axis=tuple(range(1, mae.ndim)))
+            else:
+                metric_dict[key] = float(mae.mean())
 
         return metric_dict
