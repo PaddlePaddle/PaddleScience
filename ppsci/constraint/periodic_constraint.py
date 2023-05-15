@@ -145,7 +145,7 @@ class PeriodicConstraint(base.Constraint):
                         [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
                     )
                     weight[key] = func(**{k: mixed_input[k] for k in geom.dim_keys})
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     weight[key] = func(mixed_input)
                     if isinstance(weight[key], (int, float)):
