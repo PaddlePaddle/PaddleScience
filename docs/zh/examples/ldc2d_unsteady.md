@@ -1,5 +1,7 @@
 # 2D-LDC(2D Lid Driven Cavity Flow)
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6160749?contributionType=1&sUid=438690&shared=1&ts=1683961132625" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 Lid Driven Cavity Flow，中文名称可译作“顶盖驱动方腔流”，一般指顶部平板以恒定速度驱动规则区域内封闭的不可压流体（例如水）的流动。在方腔流中可以观察到几乎所有可能发生在不可压流体中的流动现象，是一种典型的流体案例。
