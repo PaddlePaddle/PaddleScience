@@ -1,5 +1,7 @@
 # VIV(vortex induced vibration)
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 当涡流脱落频率接近结构的固有频率时，圆柱会发生涡激振动，VIV系统相当于一个弹簧-阻尼系统：
