@@ -10,6 +10,7 @@
         - Visualizer2D
         - Visualizer2DPlot
         - Visualizer3D
+        - VisualizerWeather
         - save_vtu_from_dict
         - save_plot_from_1d_dict
         - save_plot_from_3d_dict

@@ -6,4 +6,8 @@
       members:
         - Translate
         - Scale
+        - Normalize
+        - Log1p
+        - CropData
+        - SqueezeData
       show_root_heading: false
