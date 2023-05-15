@@ -132,19 +132,19 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
 
 ``` py linenums="39"
 # set timestamps
-time_start, time_end = 1, 50
-num_timestamps = 50
-train_num_timestamps = 30
+TIME_START, TIME_END = 1, 50
+NUM_TIMESTAMPS = 50
+TRAIN_NUM_TIMESTAMPS = 30
 
 train_timestamps = np.linspace(
-    time_start, time_end, num_timestamps, endpoint=True
+    TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
 ).astype("float32")
-train_timestamps = np.random.choice(train_timestamps, train_num_timestamps)
+train_timestamps = np.random.choice(train_timestamps, TRAIN_NUM_TIMESTAMPS)
 train_timestamps.sort()
-t0 = np.array([time_start], dtype="float32")
+t0 = np.array([TIME_START], dtype="float32")
 
 val_timestamps = np.linspace(
-    time_start, time_end, num_timestamps, endpoint=True
+    TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
 ).astype("float32")
 
 logger.info(f"train_timestamps: {train_timestamps.tolist()}")
@@ -154,8 +154,8 @@ logger.info(f"val_timestamps: {val_timestamps.tolist()}")
 geom = {
     "time_rect": ppsci.geometry.TimeXGeometry(
         ppsci.geometry.TimeDomain(
-            time_start,
-            time_end,
+            TIME_START,
+            TIME_END,
             timestamps=np.concatenate((t0, train_timestamps), axis=0),
         ),
         ppsci.geometry.PointCloud(
