@@ -68,6 +68,9 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
+        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
+        eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
+            involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -121,6 +124,8 @@ class Solver:
         amp_level: Literal["O1", "O2", "O0"] = "O0",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
+        compute_metric_by_batch: bool = False,
+        eval_with_no_grad: bool = False,
     ):
         # set model
         self.model = model
@@ -190,6 +195,11 @@ class Solver:
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+
+        # whether calculate metrics after each batch during evaluate
+        self.compute_metric_by_batch = compute_metric_by_batch
+        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
+        self.eval_with_no_grad = eval_with_no_grad
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -292,6 +302,8 @@ class Solver:
         update_freq = cfg["Global"].get("update_freq", 1)
         pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
         checkpoint_path = cfg["Global"].get("checkpoint_path", None)
+        compute_metric_by_batch = cfg["Global"].get("compute_metric_by_batch", False)
+        eval_with_no_grad = cfg["Global"].get("eval_with_no_grad", False)
 
         return Solver(
             model,
@@ -318,6 +330,8 @@ class Solver:
             amp_level,
             pretrained_model_path,
             checkpoint_path,
+            compute_metric_by_batch,
+            eval_with_no_grad,
         )
 
     def train(self):
@@ -509,6 +523,23 @@ class Solver:
         """
         if self.use_amp:
             ctx_manager = amp.auto_cast(level=self.amp_level)
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
+
+        return ctx_manager
+
+    def _no_grad_context_manager(self) -> contextlib.AbstractContextManager:
+        """No grad manager.
+
+        Returns:
+            Union[contextlib.AbstractContextManager]: Context manager.
+        """
+        if self.eval_with_no_grad:
+            ctx_manager = paddle.no_grad()
         else:
             ctx_manager = (
                 contextlib.nullcontext()
