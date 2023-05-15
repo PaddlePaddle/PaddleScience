@@ -188,7 +188,7 @@ if __name__ == "__main__":
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         EPOCHS,
         ITERS_PER_EPOCH,
-        5e-4,
+        1e-4,
         by_epoch=True,
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
