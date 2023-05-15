@@ -44,6 +44,7 @@ nav:
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - Rossler_transform_physx: zh/examples/rossler.md
         - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+        - FourCastNet: zh/examples/fourcastnet.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
