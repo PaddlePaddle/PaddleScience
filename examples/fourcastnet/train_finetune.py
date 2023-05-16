@@ -72,7 +72,7 @@ if __name__ == "__main__":
     # set training hyper-parameters
     NUM_TIMESTAMPS = 2
     input_keys = ("input",)
-    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
+    output_keys = tuple(f"output_{i}" for i in range(NUM_TIMESTAMPS))
     IMG_H, IMG_W = 720, 1440
     EPOCHS = 50 if not args.epochs else args.epochs
     # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
     # set testing hyper-parameters
     NUM_TIMESTAMPS = 32
-    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
+    output_keys = tuple(f"output_{i}" for i in range(NUM_TIMESTAMPS))
 
     # set model for testing
     model = ppsci.arch.AFNONet(input_keys, output_keys, num_timestamps=NUM_TIMESTAMPS)

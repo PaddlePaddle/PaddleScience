@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
     # set testing hyper-parameters
     NUM_TIMESTAMPS = 6
-    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
+    output_keys = tuple(f"output_{i}" for i in range(NUM_TIMESTAMPS))
 
     # set model for testing
     model = ppsci.arch.PrecipNet(
