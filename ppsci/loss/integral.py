@@ -62,7 +62,7 @@ class IntegralLoss(base.Loss):
                 label_dict[key],
                 "none",
             )
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
             if isinstance(self.weight, float):
                 loss *= self.weight
