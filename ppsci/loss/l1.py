@@ -34,7 +34,7 @@ class L1Loss(base.Loss):
     $$
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -85,7 +85,7 @@ class PeriodicL1Loss(base.Loss):
     """Class for periodic l1 loss.
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
     """
 
     def __init__(
