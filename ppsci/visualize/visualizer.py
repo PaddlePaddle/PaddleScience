@@ -321,7 +321,7 @@ class Visualizer3D(base.Visualizer):
         """
 
         n = int((next(iter(data_dict.values()))).shape[0] / self.num_timestamps)
-        coord_keys = list(filter(lambda x: x != "t", self.input_dict))
+        coord_keys = [x for x in self.input_dict if x != "t"]
         for i in range(len(self.time_list)):
             vtu.save_vtu_to_mesh(
                 filename=osp.join(filename, f"predict_{i+1}.vtu"),

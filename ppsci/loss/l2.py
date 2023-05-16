@@ -114,8 +114,7 @@ class L2RelLoss(base.Loss):
     """
 
     def __init__(self, reduction: Literal["mean", "sum"] = "mean"):
-        super().__init__()
-        self.reduction = reduction
+        super().__init__(reduction)
 
     def rel_loss(self, x, y):
         batch_size = x.shape[0]

@@ -44,7 +44,7 @@ class VtuDataset(io.Dataset):
         time_step: int = None,
         time_index: Optional[Tuple[int, ...]] = None,
         labels=None,
-        transforms: vision.Compose = None,
+        transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
 
