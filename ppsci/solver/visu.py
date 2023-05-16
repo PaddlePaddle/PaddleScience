@@ -28,9 +28,6 @@ def visualize_func(solver, epoch_id: int):
     Args:
         solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
-
-    Returns:
-        Dict[str, Any]: Metric collected during visualization.
     """
     for _, _visualizer in solver.visualizer.items():
         all_input = misc.Prettydefaultdict(list)
