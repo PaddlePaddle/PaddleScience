@@ -34,7 +34,7 @@ class MatDataset(io.Dataset):
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
+        label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
             i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
@@ -57,7 +57,7 @@ class MatDataset(io.Dataset):
         self,
         file_path: str,
         input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...] = (),
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[float, ...]] = None,
@@ -153,7 +153,7 @@ class IterableMatDataset(io.IterableDataset):
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
+        label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
             i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
@@ -176,7 +176,7 @@ class IterableMatDataset(io.IterableDataset):
         self,
         file_path: str,
         input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...] = (),
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[Union[int, float], ...]] = None,
