@@ -29,61 +29,48 @@ if __name__ == "__main__":
     fluid.core.set_prim_eager_enabled(True)
 
     args = config.parse_args()
-    # paddle.set_default_dtype("float64")
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = (
-        "./output_bracket_eager_True_mse_stable_silu"
-        if not args.output_dir
-        else args.output_dir
-    )
-    # output_dir = "./output_bracket_eager_True_mse_paddle_WN_lr_decay" if not args.output_dir else args.output_dir
+    output_dir = "./output_bracket" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     # set model
-    act_str = "silu"
-    wn = True
     disp_net = ppsci.arch.MLP(
-        ("x", "y", "z"), ("u", "v", "w"), 6, 512, act_str, weight_norm=wn
+        ("x", "y", "z"), ("u", "v", "w"), 6, 512, "silu", weight_norm=True
     )
-
     stress_net = ppsci.arch.MLP(
         ("x", "y", "z"),
         ("sigma_xx", "sigma_yy", "sigma_zz", "sigma_xy", "sigma_xz", "sigma_yz"),
         6,
         512,
-        act_str,
-        weight_norm=wn,
+        "silu",
+        weight_norm=True,
     )
     # wrap to a model_list
     model = ppsci.arch.ModelList((disp_net, stress_net))
 
-    model.load_dict(
-        paddle.load(
-            "/workspace/hesensen/PaddleScience_docs/examples/bracket/converted_bracket_initial_ckpt.pdparams"
-        )
-    )
+    model.load_dict(paddle.load("./converted_bracket_initial_ckpt.pdparams"))
     logger.info("load pytorch's init weight")
 
     # Specify parameters
-    nu = 0.3
+    NU = 0.3
     E = 100.0e9
-    lambda_ = nu * E / ((1 + nu) * (1 - 2 * nu))
-    mu = E / (2 * (1 + nu))
-    mu_c = 0.01 * mu
-    lambda_ = lambda_ / mu_c
-    mu = mu / mu_c
-    characteristic_length = 1.0
-    characteristic_displacement = 1.0e-4
-    sigma_normalization = characteristic_length / (characteristic_displacement * mu_c)
-    T = -4.0e4 * sigma_normalization
+    LAMBDA_ = NU * E / ((1 + NU) * (1 - 2 * NU))
+    MU = E / (2 * (1 + NU))
+    MU_C = 0.01 * MU
+    LAMBDA_ = LAMBDA_ / MU_C
+    MU = MU / MU_C
+    CHARACTERISTIC_LENGTH = 1.0
+    CHARACTERISTIC_DISPLACEMENT = 1.0e-4
+    SIGMA_NORMALIZATION = CHARACTERISTIC_LENGTH / (CHARACTERISTIC_DISPLACEMENT * MU_C)
+    T = -4.0e4 * SIGMA_NORMALIZATION
 
     # set equation
     equation = {
         "LinearElasticity": ppsci.equation.LinearElasticity(
-            E=None, nu=None, lambda_=lambda_, mu=mu, dim=3
+            E=None, nu=None, lambda_=LAMBDA_, mu=MU, dim=3
         )
     }
 
@@ -302,22 +289,22 @@ if __name__ == "__main__":
         "z": ref_xyzu["z"],
     }
     label_dict = {
-        "u": ref_xyzu["u"] / characteristic_displacement,
-        "v": ref_v["v"] / characteristic_displacement,
-        "w": ref_w["w"] / characteristic_displacement,
-        "sigma_xx": ref_sxx["sigma_xx"] * sigma_normalization,
-        "sigma_yy": ref_syy["sigma_yy"] * sigma_normalization,
-        "sigma_zz": ref_szz["sigma_zz"] * sigma_normalization,
-        "sigma_xy": ref_sxy["sigma_xy"] * sigma_normalization,
-        "sigma_xz": ref_sxz["sigma_xz"] * sigma_normalization,
-        "sigma_yz": ref_syz["sigma_yz"] * sigma_normalization,
+        "u": ref_xyzu["u"] / CHARACTERISTIC_DISPLACEMENT,
+        "v": ref_v["v"] / CHARACTERISTIC_DISPLACEMENT,
+        "w": ref_w["w"] / CHARACTERISTIC_DISPLACEMENT,
+        "sigma_xx": ref_sxx["sigma_xx"] * SIGMA_NORMALIZATION,
+        "sigma_yy": ref_syy["sigma_yy"] * SIGMA_NORMALIZATION,
+        "sigma_zz": ref_szz["sigma_zz"] * SIGMA_NORMALIZATION,
+        "sigma_xy": ref_sxy["sigma_xy"] * SIGMA_NORMALIZATION,
+        "sigma_xz": ref_sxz["sigma_xz"] * SIGMA_NORMALIZATION,
+        "sigma_yz": ref_syz["sigma_yz"] * SIGMA_NORMALIZATION,
     }
     eval_dataloader_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
             "input": input_dict,
             "label": label_dict,
-            "weight": {key: np.ones_like(label_dict[key]) for key in label_dict},
+            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {
             "name": "BatchSampler",
@@ -346,10 +333,20 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
-            {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
-            prefix="result_u_v_w",
+            {
+                "u": lambda d: d["u"],
+                "v": lambda d: d["v"],
+                "w": lambda d: d["w"],
+                "sigma_xx": lambda out: out["sigma_xx"],
+                "sigma_yy": lambda out: out["sigma_yy"],
+                "sigma_zz": lambda out: out["sigma_zz"],
+                "sigma_xy": lambda out: out["sigma_xy"],
+                "sigma_xz": lambda out: out["sigma_xz"],
+                "sigma_yz": lambda out: out["sigma_yz"],
+            },
+            prefix="result_u_v_w_sigmas",
         )
     }
 
@@ -371,25 +368,26 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
     )
-    # train model
+    # # train model
     solver.train()
 
-    # evaluate after finished training
+    # # evaluate after finished training
     solver.eval()
-    # visualize prediction after finished training
+    # # visualize prediction after finished training
     solver.visualize()
 
     # # directly evaluate pretrained model(optional)
-    # solver = ppsci.solver.Solver(
-    #     model,
-    #     constraint,
-    #     output_dir,
-    #     equation=equation,
-    #     geom=geom,
-    #     validator=validator,
-    #     visualizer=visualizer,
-    #     pretrained_model_path=f"{output_dir}/checkpoints/latest",
-    # )
-    # solver.eval()
-    # # visualize prediction for pretrained model(optional)
-    # solver.visualize()
+    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        output_dir,
+        equation=equation,
+        geom=geom,
+        validator=validator,
+        visualizer=visualizer,
+        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
+    )
+    solver.eval()
+    # visualize prediction for pretrained model(optional)
+    solver.visualize()
