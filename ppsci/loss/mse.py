@@ -36,7 +36,7 @@ class MSELoss(base.Loss):
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
-        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -45,8 +45,8 @@ class MSELoss(base.Loss):
 
     def __init__(
         self,
-        reduction: str = "mean",
-        weight: Optional[Union[Dict[str, float], float]] = None,
+        reduction: Literal["mean", "sum"] = "mean",
+        weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         if reduction not in ["mean", "sum"]:
             raise ValueError(
@@ -72,6 +72,11 @@ class MSELoss(base.Loss):
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
+            if isinstance(self.weight, float):
+                loss *= self.weight
+            elif isinstance(self.weight, dict) and key in self.weight:
+                loss *= self.weight[key]
+
             losses += loss
         return losses
 
@@ -105,8 +110,13 @@ class MSELossWithL2Decay(MSELoss):
         self,
         reduction: Literal["mean", "sum"] = "mean",
         regularization_dict: Optional[Dict[str, float]] = None,
+        weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
-        super().__init__(reduction)
+        if reduction not in ["mean", "sum"]:
+            raise ValueError(
+                f"reduction should be 'mean' or 'sum', but got {reduction}"
+            )
+        super().__init__(reduction, weight)
         self.regularization_dict = regularization_dict
 
     def forward(self, output_dict, label_dict, weight_dict=None):
@@ -126,13 +136,16 @@ class PeriodicMSELoss(base.Loss):
         reduction (str, optional): Reduction method. Defaults to "mean".
     """
 
-    def __init__(self, reduction="mean"):
-        super().__init__()
+    def __init__(
+        self,
+        reduction: Literal["mean", "sum"] = "mean",
+        weight: Optional[Union[float, Dict[str, float]]] = None,
+    ):
         if reduction not in ["mean", "sum"]:
             raise ValueError(
                 f"reduction should be 'mean' or 'sum', but got {reduction}"
             )
-        self.reduction = reduction
+        super().__init__(reduction, weight)
 
     def forward(self, output_dict, label_dict, weight_dict=None):
         losses = 0.0
@@ -156,5 +169,11 @@ class PeriodicMSELoss(base.Loss):
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
+
+            if isinstance(self.weight, float):
+                loss *= self.weight
+            elif isinstance(self.weight, dict) and key in self.weight:
+                loss *= self.weight[key]
+
             losses += loss
         return losses
