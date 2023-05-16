@@ -47,10 +47,6 @@ class L2Loss(base.Loss):
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict is not None:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
-                loss *= self.weight
-            elif isinstance(self.weight, dict) and key in self.weight:
-                loss *= self.weight[key]
 
             if "area" in output_dict:
                 loss *= output_dict["area"]
@@ -120,6 +116,7 @@ class L2RelLoss(base.Loss):
 
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
         >>> import ppsci
