@@ -11,148 +11,215 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-This code is refer from: 
-https://github.com/zabaras/transformer-physx
-"""
-################################ 导入相关的库 ###############################################
-import random
+
+# Two-stage training
+# 1. Train a embedding model by running train_enn.py.
+# 2. Load pretrained embedding model and freeze it, then train a transformer model by running train_transformer.py.
+
+# This file is for step2: training a transformer model, based on frozen pretrained embedding model.
+# This file is based on PaddleScience/ppsci API.
+from typing import Dict
 
 import numpy as np
 import paddle
 
-import paddlescience as psci
-from paddlescience import config
-from paddlescience.algorithm.algorithm_trphysx import TrPhysx
-from paddlescience.data import build_dataloader
-from paddlescience.network.embedding_koopman import CylinderEmbedding
-from paddlescience.network.physx_transformer import PhysformerGPT2
-from paddlescience.optimizer.lr_sheduler import CosineAnnealingWarmRestarts
-from paddlescience.visu import CylinderViz
-
-config.enable_visualdl()
-
-################################ 设置超参数 ##################################################
-# hyper parameters
-seed = 12345
-
-# dataset config
-train_data_path = "/path/to/cylinder_training.hdf5"
-train_block_size = 16
-train_stride = 4
-train_batch_size = 4
-train_ndata = 27
-
-valid_data_path = "/path/to/cylinder_valid.hdf5"
-valid_block_size = 256
-valid_stride = 1024
-valid_batch_size = 16
-valid_ndata = 6
-
-# embedding model config
-state_dims = [3, 64, 128]
-n_embd = 128
-embedding_model_params = "./output/trphysx/cylinder/enn/dynamic_net_params_300.pdparams"
-
-# transformer model config
-n_layer = 6
-n_ctx = 16
-n_head = 4
-
-# optimize config
-clip_norm = 0.1
-learning_rate = 0.001
-T_0 = 14
-T_mult = 2
-eta_min = 1e-9
-weight_decay = 1e-10
-
-# train config
-max_epochs = 200
-checkpoint_path = "./output/trphysx/cylinder/transformer/"
+import ppsci
+from ppsci.arch import base
+from ppsci.utils import logger
+from ppsci.utils import save_load
 
 
-def set_seed(seed=12345):
-    """Set random seeds"""
-    random.seed(seed)
-    np.random.seed(seed)
-    paddle.seed(seed)
-
-
-def main():
-    set_seed()
-    ################################ 定义数据集 ##############################################
-    dataset_args = dict(
-        file_path=train_data_path,
-        block_size=train_block_size,
-        stride=train_stride,
-        ndata=train_ndata,
+def build_embedding_model(embedding_model_path: str) -> ppsci.arch.CylinderEmbedding:
+    input_keys = ("states", "visc")
+    output_keys = ("pred_states", "recover_states")
+    regularization_key = "k_matrix"
+    model = ppsci.arch.CylinderEmbedding(
+        input_keys, output_keys + (regularization_key,)
     )
-    train_dataloader = build_dataloader(
-        "CylinderDataset",
-        batch_size=train_batch_size,
-        num_workers=0,
-        shuffle=True,
-        drop_last=True,
-        dataset_args=dataset_args,
-    )
+    save_load.load_pretrain(model, embedding_model_path)
+    return model
 
-    dataset_args = dict(
-        file_path=valid_data_path,
-        block_size=valid_block_size,
-        stride=valid_stride,
-        ndata=valid_ndata,
-    )
-    valid_dataloader = build_dataloader(
-        "CylinderDataset",
-        batch_size=valid_batch_size,
-        num_workers=0,
-        shuffle=False,
-        drop_last=False,
-        dataset_args=dataset_args,
-    )
 
-    ################################ 定义模型 ###############################################
-    embedding_net = CylinderEmbedding(state_dims=state_dims, n_embd=n_embd)
-    viz = CylinderViz(checkpoint_path)
-    net = PhysformerGPT2(
-        n_layer,
-        n_ctx,
-        n_embd,
-        n_head,
-        embedding_net,
-        pretrained_model=embedding_model_params,
-        viz=viz,
-    )
+class OutputTransform(object):
+    def __init__(self, model: base.Arch):
+        self.model = model
+        self.model.eval()
 
-    ################################ 优化器设置 ##############################################
-    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=clip_norm)
-    scheduler = CosineAnnealingWarmRestarts(learning_rate, T_0, T_mult, eta_min=eta_min)
-    optimizer = paddle.optimizer.Adam(
-        parameters=net.parameters(),
-        learning_rate=scheduler,
-        grad_clip=clip,
-        weight_decay=weight_decay,
-    )
-
-    ################################ 定义Solver并训练 #########################################
-    algo = TrPhysx(net)
-
-    solver = psci.solver.Solver(
-        pde=None,
-        algo=algo,
-        opt=optimizer,
-        data_driven=True,
-        lr_scheduler=scheduler,
-        lr_update_method="step",
-        train_dataloader=train_dataloader,
-        valid_dataloader=valid_dataloader,
-    )
-
-    solver.solve(
-        num_epoch=max_epochs, checkpoint_freq=25, checkpoint_path=checkpoint_path
-    )
+    def __call__(self, x: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
+        pred_embeds = x["pred_embeds"]
+        pred_states = self.model.decoder(pred_embeds)
+        # pred_states.shape=(B, T, C, H, W)
+        return pred_states
 
 
 if __name__ == "__main__":
-    main()
+    ppsci.utils.set_random_seed(42)
+
+    NUM_LAYERS = 6
+    NUM_CTX = 16
+    EMBED_SIZE = 128
+    NUM_HEADS = 4
+
+    EPOCHS = 200
+    TRAIN_BLOCK_SIZE = 16
+    VALID_BLOCK_SIZE = 256
+    input_keys = ("embeds",)
+    output_keys = ("pred_embeds",)
+
+    VIS_DATA_NUMS = 1
+
+    TRAIN_FILE_PATH = "./datasets/cylinder_training.hdf5"
+    VALID_FILE_PATH = "./datasets/cylinder_valid.hdf5"
+    EMBEDDING_MODEL_PATH = "./output/cylinder_enn/checkpoints/latest"
+    OUTPUT_DIR = "./output/cylinder_transformer"
+    # initialize logger
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
+    embedding_model = build_embedding_model(EMBEDDING_MODEL_PATH)
+    output_transform = OutputTransform(embedding_model)
+
+    # maunally build constraint(s)
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "CylinderDataset",
+            "file_path": TRAIN_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "block_size": TRAIN_BLOCK_SIZE,
+            "stride": 4,
+            "embedding_model": embedding_model,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": True,
+            "shuffle": True,
+        },
+        "batch_size": 4,
+        "num_workers": 4,
+    }
+
+    sup_constraint = ppsci.constraint.SupervisedConstraint(
+        train_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        name="Sup",
+    )
+    constraint = {sup_constraint.name: sup_constraint}
+
+    # set iters_per_epoch by dataloader length
+    ITERS_PER_EPOCH = len(constraint["Sup"].data_loader)
+
+    # manually init model
+    model = ppsci.arch.PhysformerGPT2(
+        input_keys,
+        output_keys,
+        NUM_LAYERS,
+        NUM_CTX,
+        EMBED_SIZE,
+        NUM_HEADS,
+    )
+
+    # init optimizer and lr scheduler
+    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
+    lr_scheduler = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        0.001,
+        T_0=14,
+        T_mult=2,
+        eta_min=1e-9,
+    )()
+    optimizer = ppsci.optimizer.Adam(
+        lr_scheduler,
+        weight_decay=1e-8,
+        grad_clip=clip,
+    )([model])
+
+    # maunally build validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "CylinderDataset",
+            "file_path": VALID_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "block_size": VALID_BLOCK_SIZE,
+            "stride": 1024,
+            "embedding_model": embedding_model,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 16,
+        "num_workers": 4,
+    }
+
+    mse_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        metric={"MSE": ppsci.metric.MSE()},
+        name="MSE_Validator",
+    )
+    validator = {mse_validator.name: mse_validator}
+
+    # set visualizer(optional)
+    states = mse_validator.data_loader.dataset.data
+    embedding_data = mse_validator.data_loader.dataset.embedding_data
+
+    vis_datas = {
+        "embeds": embedding_data[:VIS_DATA_NUMS, :-1],
+        "states": states[:VIS_DATA_NUMS, 1:],
+    }
+
+    visualizer = {
+        "visulzie_states": ppsci.visualize.Visualizer2DPlot(
+            vis_datas,
+            {
+                "target_ux": lambda d: d["states"][:, :, 0],
+                "pred_ux": lambda d: output_transform(d)[:, :, 0],
+                "target_uy": lambda d: d["states"][:, :, 1],
+                "pred_uy": lambda d: output_transform(d)[:, :, 1],
+                "target_p": lambda d: d["states"][:, :, 2],
+                "preds_p": lambda d: output_transform(d)[:, :, 2],
+            },
+            batch_size=1,
+            num_timestamps=10,
+            stride=20,
+            xticks=np.linspace(-2, 14, 9),
+            yticks=np.linspace(-4, 4, 5),
+            prefix="result_states",
+        )
+    }
+
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        OUTPUT_DIR,
+        optimizer,
+        lr_scheduler,
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        eval_during_train=True,
+        eval_freq=50,
+        validator=validator,
+        visualizer=visualizer,
+    )
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
+
+    # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=OUTPUT_DIR,
+        validator=validator,
+        visualizer=visualizer,
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+    )
+    solver.eval()
+    # visualize prediction for pretrained model(optional)
+    solver.visualize()
