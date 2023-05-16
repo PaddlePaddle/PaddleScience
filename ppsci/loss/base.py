@@ -17,13 +17,16 @@ from typing import Optional
 from typing import Union
 
 import paddle.nn as nn
+from typing_extensions import Literal
 
 
 class Loss(nn.Layer):
     """Base class for loss."""
 
     def __init__(
-        self, reduction: str, weight: Optional[Union[Dict[str, float], float]] = None
+        self,
+        reduction: Literal["mean", "sum"],
+        weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         super().__init__()
         self.reduction = reduction
