@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
@@ -34,7 +35,7 @@ class PeriodicConstraint(base.Constraint):
     """Class for periodic constraint.
 
     Args:
-        label_expr (Dict[str, Callable]): Function in dict for computing output.
+        output_expr (Dict[str, Callable]): Function in dict for computing output.
             e.g. {"u_mul_v": lambda out: out["u"] * out["v"]} means the model output u
             will be multiplied by model output v and the result will be named "u_mul_v".
         label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
@@ -42,7 +43,7 @@ class PeriodicConstraint(base.Constraint):
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         periodic_key (str): name of dimension which periodic constraint applied to.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
@@ -56,25 +57,25 @@ class PeriodicConstraint(base.Constraint):
 
     def __init__(
         self,
-        label_expr: Dict[str, Callable],
+        output_expr: Dict[str, Callable],
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         periodic_key: str,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Callable]] = None,
         name: str = "PeriodicBC",
     ):
-        self.label_expr = label_expr
-        for label_name, expr in self.label_expr.items():
+        self.output_expr = output_expr
+        for label_name, expr in self.output_expr.items():
             if isinstance(expr, str):
-                self.label_expr[label_name] = sp_parser.parse_expr(expr)
+                self.output_expr[label_name] = sp_parser.parse_expr(expr)
 
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_expr.keys())
+        self.output_keys = list(output_expr.keys())
 
         if isinstance(criteria, str):
             criteria = eval(criteria)
@@ -123,7 +124,9 @@ class PeriodicConstraint(base.Constraint):
         for key, value in label_dict.items():
             # set all label's to zero for dummy data.
             label[key] = np.full(
-                (next(iter(mixed_input.values())).shape[0], 1), 0, "float32"
+                (next(iter(mixed_input.values())).shape[0], 1),
+                0,
+                paddle.get_default_dtype(),
             )
 
         # # prepare weight, keep weight the same shape as input_periodic
@@ -134,7 +137,7 @@ class PeriodicConstraint(base.Constraint):
                     value = sp_parser.parse_expr(value)
 
                 if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                    weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
                         [sympy.Symbol(k) for k in geom.dim_keys],
@@ -142,12 +145,12 @@ class PeriodicConstraint(base.Constraint):
                         [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
                     )
                     weight[key] = func(**{k: mixed_input[k] for k in geom.dim_keys})
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     weight[key] = func(mixed_input)
                     if isinstance(weight[key], (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(mixed_input.values())), float(weight[key])
+                            next(iter(mixed_input.values())), weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from typing import Dict
+from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
 
+import ppsci.utils.misc as misc
 from ppsci.geometry import geometry
 from ppsci.utils import reader
 
@@ -25,73 +28,49 @@ class PointCloud(geometry.Geometry):
     """Class for point cloud geometry, i.e. a set of points from given file or array.
 
     Args:
-        coord_dict (str): File which store interior points of a point cloud.
-        boundary_path (str): File which store boundary points of a point cloud.
-        boundary_normal_path (str): File which store boundary normals of a point cloud.
-        data_key (List[str]): List of coordinate keys, such as ["x", "y"].
-        alias_dict (List[str]): Alias name for coord key, such as {"X:0": "x", "X:1": "y"}.
+        interior (Dict[str, np.ndarray]): Filepath or dict data, which store interior points of a point cloud, such as {"x": np.ndarray, "y": np.ndarray}.
+        coord_keys (Tuple[str, ...]): Tuple of coordinate keys, such as ("x", "y").
+        boundary (Dict[str, np.ndarray]): Boundary points of a point cloud. Defaults to None.
+        boundary_normal (Dict[str, np.ndarray]): Boundary normal points of a point cloud. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> interior_points = {"x": np.linspace(-1, 1, dtype="float32").reshape((-1, 1))}
+        >>> geom = ppsci.geometry.PointCloud(interior_points, ("x",))
     """
 
     def __init__(
         self,
-        coord_dict: Union[
-            str, Dict
-        ],  #  1. 改造PointCloud，在支持从文件读入数据的情况下，同时支持直接使用给定内存中的数据
-        extra_data: Dict,  # 2. 支持额外信息点
-        data_key,
-        boundary_path=None,
-        boundary_normal_path=None,
-        alias_dict=None,
+        interior: Dict[str, np.ndarray],
+        coord_keys: Tuple[str, ...],
+        boundary: Optional[Dict[str, np.ndarray]] = None,
+        boundary_normal: Optional[Dict[str, np.ndarray]] = None,
     ):
-        # Interior points from CSV file
-        if str(coord_dict).endswith(".csv"):
-            # read data
-            data_dict = reader.load_csv_file(coord_dict, data_key)
-        elif isinstance(coord_dict, dict):
-            data_dict = coord_dict
-            data_dict.update(extra_data)
+        # Interior points
+        self.interior = misc.convert_to_array(interior, coord_keys)
+        self.len = self.interior.shape[0]
 
-        # convert to numpy array
-        self.interior = []
-        for key in data_key:
-            self.interior.append(data_dict[key])
-        self.interior = np.concatenate(self.interior, -1)
+        # Boundary points
+        self.boundary = boundary
+        if self.boundary is not None:
+            self.boundary = misc.convert_to_array(self.boundary, coord_keys)
 
-        # Boundary points from CSV file
-        if boundary_path is not None:
-            # read data
-            data_dict = reader.load_csv_file(boundary_path, data_key)
+        # Boundary normal points
+        self.normal = boundary_normal
+        if self.normal is not None:
+            self.normal = misc.convert_to_array(
+                self.normal, tuple(f"{key}_normal" for key in coord_keys)
+            )
+            if list(self.normal.shape) != list(self.boundary.shape):
+                raise ValueError(
+                    f"boundary's shape({self.boundary.shape}) must equal "
+                    f"to normal's shape({self.normal.shape})"
+                )
 
-            # convert to numpy array
-            self.boundary = {}
-            for key in data_key:
-                self.boundary.append(data_dict[key])
-            self.boundary = np.concatenate(self.boundary, -1)
-        else:
-            self.boundary = None
-
-        # Normal of boundary points from CSV file
-        if boundary_normal_path is not None:
-            # read data
-            data_dict = reader.load_csv_file(boundary_normal_path, data_key)
-
-            # convert to numpy array
-            self.normal = {}
-            for key in data_key:
-                self.normal.append(data_dict[key])
-            self.normal = np.concatenate(self.normal, -1)
-        else:
-            self.normal = None
-
-        self.input_keys = []
-        for key in data_key:
-            if alias_dict is not None and key in alias_dict:
-                self.input_keys.append(alias_dict[key])
-            else:
-                self.input_keys.append(key)
-
+        self.input_keys = coord_keys
         super().__init__(
-            len(data_key),
+            len(coord_keys),
             (np.amin(self.interior, axis=0), np.amax(self.interior, axis=0)),
             np.inf,
         )
@@ -169,7 +148,7 @@ class PointCloud(geometry.Geometry):
 
     def uniform_points(self, n: int, boundary=True):
         """Compute the equispaced points in the geometry."""
-        return self.interior
+        return self.interior[:n]
 
     def union(self, rhs):
         raise NotImplementedError(

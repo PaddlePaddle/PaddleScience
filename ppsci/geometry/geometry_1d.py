@@ -17,6 +17,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import numpy as np
+import paddle
 
 from ppsci.geometry import geometry
 from ppsci.geometry.sampler import sample
@@ -29,6 +30,10 @@ class Interval(geometry.Geometry):
     Args:
         l (float): Left position of interval.
         r (float): Right position of interval.
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Interval(-1, 1)
     """
 
     def __init__(self, l: float, r: float):
@@ -43,32 +48,38 @@ class Interval(geometry.Geometry):
         return (np.isclose(x, self.l) | np.isclose(x, self.r)).flatten()
 
     def boundary_normal(self, x: np.ndarray):
-        return -np.isclose(x, self.l).astype("float32") + np.isclose(x, self.r).astype(
-            "float32"
-        )
+        return -np.isclose(x, self.l).astype(paddle.get_default_dtype()) + np.isclose(
+            x, self.r
+        ).astype(paddle.get_default_dtype())
 
     def uniform_points(self, n: int, boundary: bool = True):
         if boundary:
-            return np.linspace(self.l, self.r, n, dtype="float32").reshape([-1, 1])
-        return np.linspace(self.l, self.r, n + 1, endpoint=False, dtype="float32")[
-            1:
-        ].reshape([-1, 1])
+            return np.linspace(
+                self.l, self.r, n, dtype=paddle.get_default_dtype()
+            ).reshape([-1, 1])
+        return np.linspace(
+            self.l, self.r, n + 1, endpoint=False, dtype=paddle.get_default_dtype()
+        )[1:].reshape([-1, 1])
 
     def random_points(self, n: int, random: str = "pseudo"):
         x = sample(n, 1, random)
-        return (self.l + x * self.diam).astype("float32")
+        return (self.l + x * self.diam).astype(paddle.get_default_dtype())
 
     def uniform_boundary_points(self, n: int):
         if n == 1:
-            return np.array([[self.l]], dtype="float32")
-        xl = np.full([n // 2, 1], self.l, dtype="float32")
-        xr = np.full([n - n // 2, 1], self.r, dtype="float32")
+            return np.array([[self.l]], dtype=paddle.get_default_dtype())
+        xl = np.full([n // 2, 1], self.l, dtype=paddle.get_default_dtype())
+        xr = np.full([n - n // 2, 1], self.r, dtype=paddle.get_default_dtype())
         return np.concatenate((xl, xr), axis=0)
 
     def random_boundary_points(self, n: int, random: str = "pseudo"):
         if n == 2:
-            return np.array([[self.l], [self.r]], dtype="float32")
-        return np.random.choice([self.l, self.r], n).reshape([-1, 1]).astype("float32")
+            return np.array([[self.l], [self.r]], dtype=paddle.get_default_dtype())
+        return (
+            np.random.choice([self.l, self.r], n)
+            .reshape([-1, 1])
+            .astype(paddle.get_default_dtype())
+        )
 
     def periodic_point(self, x: np.ndarray, component: int = 0):
         x_array = misc.convert_to_array(x, self.dim_keys)

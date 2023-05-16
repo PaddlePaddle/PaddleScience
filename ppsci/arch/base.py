@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
 from typing import Dict
 from typing import Tuple
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 
 from ppsci.utils import logger
 
 
-class NetBase(nn.Layer):
+class Arch(nn.Layer):
     """Base class for Network."""
 
     def __init__(self, *args, **kwargs):
@@ -31,7 +32,7 @@ class NetBase(nn.Layer):
         self._output_transform = None
 
     def forward(self, *args, **kwargs):
-        raise NotImplementedError("NetBase.forward is not implemented")
+        raise NotImplementedError("Arch.forward is not implemented")
 
     @property
     def num_params(self) -> int:
@@ -80,10 +81,28 @@ class NetBase(nn.Layer):
         data = paddle.split(data_tensor, len(keys), axis=axis)
         return {key: data[i] for i, key in enumerate(keys)}
 
-    def register_input_transform(self, transform):
+    def register_input_transform(
+        self,
+        transform: Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]],
+    ):
+        """Register input transform.
+
+        Args:
+            transform (Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
+                Input transform of network, receive a single tensor dict and return a single tensor dict.
+        """
         self._input_transform = transform
 
-    def register_output_transform(self, transform):
+    def register_output_transform(
+        self,
+        transform: Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]],
+    ):
+        """Register output transform.
+
+        Args:
+            transform (Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
+                Output transform of network, receive a single tensor dict and return a single tensor dict.
+        """
         self._output_transform = transform
 
     def __str__(self):

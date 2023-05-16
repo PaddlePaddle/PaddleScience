@@ -12,25 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
 from typing import Callable
 from typing import Union
 
 import paddle
 import sympy
+from paddle import nn
 
 from ppsci.autodiff import clear
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 
 
-class ExpressionSolver(paddle.nn.Layer):
+class ExpressionSolver(nn.Layer):
     """Expression Solver
 
     Args:
         input_keys (Dict[str]):Names of input keys.
         output_keys (Dict[str]):Names of output keys.
         model (nn.Layer): Model to get output variables from input variables.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
+        >>> expr_solver = ExpressionSolver(("x", "y"), ("u", "v"), model)
     """
 
     def __init__(self, input_keys, output_keys, model):
@@ -127,14 +132,14 @@ class ExpressionSolver(paddle.nn.Layer):
 
     def forward(self, input_dict):
         self.output_dict = input_dict
-        if isinstance(next(iter(self.expr_dict.values())), types.FunctionType):
+        if callable(next(iter(self.expr_dict.values()))):
             model_output_dict = self.model(input_dict)
             self.output_dict.update(model_output_dict)
 
         for name, expr in self.expr_dict.items():
             if isinstance(expr, sympy.Basic):
                 self.output_dict[name] = self.solve_expr(expr)
-            elif isinstance(expr, types.FunctionType):
+            elif callable(expr):
                 self.output_dict[name] = expr(self.output_dict)
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
@@ -148,8 +153,8 @@ class ExpressionSolver(paddle.nn.Layer):
         """Add an expression `expr` named `expr_name` to
 
         Args:
-            expr (Callable): _description_
-            expr_name (str): _description_
+            expr (Callable): Callable function for computing an expression.
+            expr_name (str): Name of expression.
         """
         self.expr_dict[expr_name] = expr
 

@@ -23,9 +23,9 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./ldc2d_unsteady_Re10" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./ldc2d_unsteady_Re10" if not args.output_dir else args.output_dir
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(
@@ -45,27 +45,27 @@ if __name__ == "__main__":
     }
 
     # set dataloader config
-    iters_per_epoch = 1
+    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
     }
 
     # pde/bc constraint use t1~tn, initial constraint use t0
-    ntime_all = len(timestamps)
-    npoint_pde, ntime_pde = 99**2, ntime_all - 1
-    npoint_top, ntime_top = 101, ntime_all - 1
-    npoint_down, ntime_down = 101, ntime_all - 1
-    npoint_left, ntime_left = 99, ntime_all - 1
-    npoint_right, ntime_right = 99, ntime_all - 1
-    npoint_ic, ntime_ic = 99**2, 1
+    NTIME_ALL = len(timestamps)
+    NPOINT_PDE, NTIME_PDE = 99**2, NTIME_ALL - 1
+    NPOINT_TOP, NTIME_TOP = 101, NTIME_ALL - 1
+    NPOINT_DOWN, NTIME_DOWN = 101, NTIME_ALL - 1
+    NPOINT_LEFT, NTIME_LEFT = 99, NTIME_ALL - 1
+    NPOINT_RIGHT, NTIME_RIGHT = 99, NTIME_ALL - 1
+    NPOINT_IC, NTIME_IC = 99**2, 1
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_pde * ntime_pde},
+        {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         weight_dict={
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 1, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_top * ntime_top},
+        {**train_dataloader_cfg, "batch_size": NPOINT_TOP * NTIME_TOP},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, 0.05),
         name="BC_top",
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_down * ntime_down},
+        {**train_dataloader_cfg, "batch_size": NPOINT_DOWN * NTIME_DOWN},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, -0.05),
         name="BC_down",
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_left * ntime_left},
+        {**train_dataloader_cfg, "batch_size": NPOINT_LEFT * NTIME_LEFT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, -0.05),
         name="BC_left",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_right * ntime_right},
+        {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT * NTIME_RIGHT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, 0.05),
         name="BC_right",
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": npoint_ic * ntime_ic},
+        {**train_dataloader_cfg, "batch_size": NPOINT_IC * NTIME_IC},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="IC",
@@ -131,26 +131,26 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 20000 if not args.epochs else args.epochs
+    EPOCHS = 20000 if not args.epochs else args.epochs
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         0.001,
-        warmup_epoch=int(0.05 * epochs),
+        warmup_epoch=int(0.05 * EPOCHS),
     )()
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # set validator
-    npoints_eval = npoint_pde * ntime_all
+    NPOINT_EVAL = NPOINT_PDE * NTIME_ALL
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
         geom["time_rect"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": npoints_eval,
+            "total_size": NPOINT_EVAL,
             "batch_size": 8192,
             "sampler": {"name": "BatchSampler"},
         },
@@ -163,34 +163,26 @@ if __name__ == "__main__":
     validator = {residual_validator.name: residual_validator}
 
     # set visualizer(optional)
-    npoint_bc = npoint_top + npoint_down + npoint_left + npoint_right
-    ntime_bc = ntime_top
+    NPOINT_BC = NPOINT_TOP + NPOINT_DOWN + NPOINT_LEFT + NPOINT_RIGHT
     vis_initial_points = geom["time_rect"].sample_initial_interior(
-        npoint_ic, evenly=True
+        (NPOINT_IC + NPOINT_BC), evenly=True
     )
-    vis_interior_points = geom["time_rect"].sample_interior(
-        npoint_pde * ntime_pde, evenly=True
+    vis_pde_points = geom["time_rect"].sample_interior(
+        (NPOINT_PDE + NPOINT_BC) * NTIME_PDE, evenly=True
     )
-    vis_boundary_points = geom["time_rect"].sample_boundary(
-        npoint_bc * ntime_bc, evenly=True
-    )
-
+    vis_points = vis_initial_points
     # manually collate input data for visualization,
     # (interior+boundary) x all timestamps
-    vis_initial_points = {
-        key: np.concatenate(
-            (vis_initial_points[key], vis_boundary_points[key][:npoint_bc])
-        )
-        for key in vis_initial_points
-    }
-    vis_points = vis_initial_points
-    for t in range(ntime_pde):
-        for key in vis_interior_points:
+    for t in range(NTIME_PDE):
+        for key in vis_points:
             vis_points[key] = np.concatenate(
                 (
                     vis_points[key],
-                    vis_interior_points[key][t * npoint_pde : (t + 1) * npoint_pde],
-                    vis_boundary_points[key][t * npoint_bc : (t + 1) * npoint_bc],
+                    vis_pde_points[key][
+                        t
+                        * (NPOINT_PDE + NPOINT_BC) : (t + 1)
+                        * (NPOINT_PDE + NPOINT_BC)
+                    ],
                 )
             )
 
@@ -198,8 +190,8 @@ if __name__ == "__main__":
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            ntime_all,
-            "result_u_v",
+            num_timestamps=NTIME_ALL,
+            prefix="result_u_v",
         )
     }
 
@@ -207,11 +199,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=200,
         equation=equation,
@@ -230,12 +222,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/latest",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

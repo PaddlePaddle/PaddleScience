@@ -27,7 +27,7 @@ class Validator:
     Args:
         dataset (io.Dataset): Dataset for validator.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         metric (Dict[str, Any]): Named metric functors in dict.
         name (str): Name of validator.
     """
@@ -36,7 +36,7 @@ class Validator:
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         metric: Dict[str, Any],
         name: str,
     ):
@@ -53,7 +53,7 @@ class Validator:
                 f"name = {self.name}",
                 f"input_keys = {self.input_keys}",
                 f"output_keys = {self.output_keys}",
-                f"label_expr = {self.label_expr}",
+                f"output_expr = {self.output_expr}",
                 f"label_dict = {self.label_dict}",
                 f"len(dataloader) = {len(self.data_loader)}",
                 f"loss = {self.loss}",

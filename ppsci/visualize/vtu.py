@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from typing import Dict
+from typing import Tuple
+
+import meshio
 import numpy as np
 import paddle
 from pyevtk import hl
@@ -19,15 +24,15 @@ from pyevtk import hl
 from ppsci.utils import logger
 
 
-def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
+def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
     """Save data to '*.vtu' file(s).
 
     Args:
         filename (str): Output filename.
         coord (np.ndarray): Coordinate points with shape of [N, 2] or [N, 3].
         value (np.ndarray): Value of each coord points with shape of [N, M].
-        value_keys (List[str]): Names of each dimension of value, such as ["u", "v"].
-        num_timestamp (int, optional): Number of timestamp over coord and value.
+        value_keys (Tuple[str, ...]): Names of each dimension of value, such as ("u", "v").
+        num_timestamps (int, optional): Number of timestamp over coord and value.
             Defaults to 1.
     """
     if not isinstance(coord, np.ndarray):
@@ -38,10 +43,10 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
         raise ValueError(
             f"coord length({len(coord)}) should be equal to value length({len(value)})"
         )
-    if len(coord) % num_timestamp != 0:
+    if len(coord) % num_timestamps != 0:
         raise ValueError(
             f"coord length({len(coord)}) should be an integer multiple of "
-            f"num_timestamp({num_timestamp})"
+            f"num_timestamps({num_timestamps})"
         )
     if coord.shape[1] not in [2, 3]:
         raise ValueError(f"ndim of coord({coord.shape[1]}) should be 2 or 3.")
@@ -57,13 +62,13 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
         value_keys = ["dummy_key"]
 
     data_ndim = value.shape[1]
-    nx = npoint // num_timestamp
-    for t in range(num_timestamp):
+    nx = npoint // num_timestamps
+    for t in range(num_timestamps):
         # NOTE: each array in data_vtu should be 1-dim, i.e. [N, 1] will occur error.
         if coord_ndim == 2:
             axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
             axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
-            axis_z = np.zeros([nx], dtype="float32")
+            axis_z = np.zeros([nx], dtype=paddle.get_default_dtype())
         elif coord_ndim == 3:
             axis_x = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 0])
             axis_y = np.ascontiguousarray(coord[t * nx : (t + 1) * nx, 1])
@@ -75,28 +80,28 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
                 value[t * nx : (t + 1) * nx, j]
             )
 
-        if num_timestamp > 1:
+        if num_timestamps > 1:
             hl.pointsToVTK(f"{filename}_t-{t}", axis_x, axis_y, axis_z, data=data_vtu)
         else:
             hl.pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtu)
 
-    if num_timestamp > 1:
+    if num_timestamps > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamp - 1}"
+            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamps - 1}"
         )
     else:
         logger.info(f"Visualization result is saved to {filename}")
 
 
-def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamp=1):
+def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamps=1):
     """Save dict data to '*.vtu' file.
 
     Args:
         filename (str): Output filename.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
-        coord_keys (List[str]): List of coord key. such as ["x", "y"].
-        value_keys (List[str]): List of value key. such as ["u", "v"].
-        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+        num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
     if len(coord_keys) not in [2, 3, 4]:
         raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 2, 3 or 4")
@@ -117,4 +122,32 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
             value = [x for x in value]
         value = np.concatenate(value, axis=1)
 
-    _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
+    _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps)
+
+
+def save_vtu_to_mesh(
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    value_keys: Tuple[str, ...],
+    coord_keys: Tuple[str, ...],
+    num_timestamps: int = 1,
+):
+    """Save data into .vtu format by meshio.
+
+    Args:
+        filename (str): File name.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+    """
+    path = os.path.dirname(filename)
+    os.makedirs(path, exist_ok=True)
+
+    n = len(next(iter(data_dict.values())))
+    m = len(coord_keys)
+    # get the list variable transposed
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(m, n)
+    mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
+    mesh.point_data = {key: data_dict[key] for key in value_keys}
+    mesh.write(filename)

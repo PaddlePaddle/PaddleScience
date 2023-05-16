@@ -12,25 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Optional
+from typing import Union
+
 import paddle.nn.functional as F
 
 from ppsci.loss import base
 
 
-class IntegralLoss(base.LossBase):
-    """Class for integral loss.
+class IntegralLoss(base.Loss):
+    r"""Class for integral loss with monte carlo integration algorithm.
+
+    $$
+    L =
+    \begin{cases}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='sum'}
+    \end{cases}
+    $$
+
+    $M$ is the number of samples in monte carlo integration.
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
+        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> loss = ppsci.loss.IntegralLoss("mean")
     """
 
-    def __init__(self, reduction: str = "mean"):
-        super().__init__()
+    def __init__(
+        self,
+        reduction: str = "mean",
+        weight: Optional[Union[Dict[str, float], float]] = None,
+    ):
         if reduction not in ["mean", "sum"]:
             raise ValueError(
                 f"reduction should be 'mean' or 'sum', but got {reduction}"
             )
-        self.reduction = reduction
+        super().__init__(reduction, weight)
 
     def forward(self, output_dict, label_dict, weight_dict=None):
         losses = 0.0
@@ -40,8 +62,12 @@ class IntegralLoss(base.LossBase):
                 label_dict[key],
                 "none",
             )
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
+            if isinstance(self.weight, float):
+                loss *= self.weight
+            elif isinstance(self.weight, dict) and key in self.weight:
+                loss *= self.weight[key]
 
             if self.reduction == "sum":
                 loss = loss.sum()

@@ -25,6 +25,10 @@ class NavierStokes(base.PDE):
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
     def __init__(self, nu: float, rho: float, dim: int, time: bool):

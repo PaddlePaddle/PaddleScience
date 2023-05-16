@@ -17,10 +17,14 @@ from ppsci.equation.pde import base
 
 
 class Laplace(base.PDE):
-    """Laplace
+    """Class for laplace equation.
 
     Args:
         dim (int): Dimension of equation.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.Laplace(2)
     """
 
     def __init__(self, dim: int):

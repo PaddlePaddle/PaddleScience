@@ -27,6 +27,10 @@ class Vibration(base.PDE):
         rho (float): Generalized mass.
         k1 (float): Learnable paremters for modal damping.
         k2 (float): Learnable paremters for generalized stiffness.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.Vibration(1.0, 4.0, -1.0)
     """
 
     def __init__(self, rho: float, k1: float, k2: float):
@@ -34,12 +38,12 @@ class Vibration(base.PDE):
         self.rho = rho
         self.k1 = paddle.create_parameter(
             shape=[1],
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k1),
         )
         self.k2 = paddle.create_parameter(
             shape=[1],
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k2),
         )
         self.learnable_parameters.append(self.k1)

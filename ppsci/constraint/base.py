@@ -21,13 +21,13 @@ from ppsci import data
 from ppsci import loss
 
 
-class Constraint(object):
+class Constraint:
     """Base class for constraint.
 
     Args:
         dataset (io.Dataset): Dataset.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         name (str): Name of constraint.
     """
 
@@ -35,7 +35,7 @@ class Constraint(object):
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
@@ -51,7 +51,7 @@ class Constraint(object):
                 f"name = {self.name}",
                 f"input_keys = {self.input_keys}",
                 f"output_keys = {self.output_keys}",
-                f"label_expr = {self.label_expr}",
+                f"output_expr = {self.output_expr}",
                 f"label_dict = {self.label_dict}",
                 f"loss = {self.loss}",
             ]

@@ -12,29 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
 import paddle
-import paddle.nn as nn
+from paddle import nn
 
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 
 
-class MLP(base.NetBase):
+class MLP(base.Arch):
     """Multi layer perceptron network.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ["x", "y", "z"].
-        output_keys (Tuple[str, ...]): Name of output keys, such as ["u", "v", "w"].
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
         num_layers (int): Number of hidden layers.
         hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
             An integer for all layers, or list of integer specify each layer's size.
         activation (str, optional): Name of activation function. Defaults to "tanh".
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
+        input_dim (Optional[int], optional): Number of input's dimension. Defaults to None.
 
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
     """
 
     def __init__(
@@ -49,6 +54,7 @@ class MLP(base.NetBase):
         weight_init=None,
         bias_init=None,
         net_special_name: str = None,
+        input_dim: Optional[int] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -72,30 +78,36 @@ class MLP(base.NetBase):
             )
 
         # initialize FC layer(s)
-        cur_size = len(self.input_keys)
+        cur_size = len(self.input_keys) if input_dim is None else input_dim
         for i, _size in enumerate(hidden_size):
-            w_para = paddle.nn.initializer.Assign(weight_init[f"w_{i}"])
-            b_para = paddle.nn.initializer.Assign(bias_init[f"b_{i}"])
-            self.linears.append(
-                nn.Linear(
-                    cur_size,
-                    _size,
-                    weight_attr=paddle.ParamAttr(initializer=w_para),
-                    bias_attr=paddle.ParamAttr(initializer=b_para),
+            if weight_init is not None:
+                w_para = paddle.nn.initializer.Assign(weight_init[f"w_{i}"])
+                b_para = paddle.nn.initializer.Assign(bias_init[f"b_{i}"])
+                self.linears.append(
+                    nn.Linear(
+                        cur_size,
+                        _size,
+                        weight_attr=paddle.ParamAttr(initializer=w_para),
+                        bias_attr=paddle.ParamAttr(initializer=b_para),
+                    )
                 )
-            )
+            else:
+                self.linears.append(nn.Linear(cur_size, _size))
             if weight_norm:
                 self.linears[-1] = nn.utils.weight_norm(self.linears[-1], dim=1)
             cur_size = _size
         self.linears = nn.LayerList(self.linears)
-        w_para = paddle.nn.initializer.Assign(weight_init[f"w_{num_layers}"])
-        b_para = paddle.nn.initializer.Assign(bias_init[f"b_{num_layers}"])
-        self.last_fc = nn.Linear(
-            cur_size,
-            len(self.output_keys),
-            weight_attr=paddle.ParamAttr(initializer=w_para),
-            bias_attr=paddle.ParamAttr(initializer=b_para),
-        )
+        if weight_init is not None:
+            w_para = paddle.nn.initializer.Assign(weight_init[f"w_{num_layers}"])
+            b_para = paddle.nn.initializer.Assign(bias_init[f"b_{num_layers}"])
+            self.last_fc = nn.Linear(
+                cur_size,
+                len(self.output_keys),
+                weight_attr=paddle.ParamAttr(initializer=w_para),
+                bias_attr=paddle.ParamAttr(initializer=b_para),
+            )
+        else:
+            self.last_fc = nn.Linear(cur_size, len(self.output_keys))
 
         # initialize activation function
         self.act = act_mod.get_activation(activation)

@@ -17,7 +17,6 @@ import random
 
 import numpy as np
 import paddle
-import paddle.distributed as dist
 
 __all__ = [
     "all_gather",
@@ -130,7 +129,7 @@ def convert_to_array(dict, keys):
 def concat_dict_list(dict_list):
     ret = {}
     for key in dict_list[0].keys():
-        ret[key] = np.concat([_dict[key] for _dict in dict_list], axis=0)
+        ret[key] = np.concatenate([_dict[key] for _dict in dict_list], axis=0)
     return ret
 
 
@@ -149,13 +148,16 @@ def combine_array_with_time(x, t):
     nx = len(x)
     tx = []
     for ti in t:
-        tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+        tx.append(
+            np.hstack(
+                (np.full([nx, 1], float(ti), dtype=paddle.get_default_dtype()), x)
+            )
+        )
     tx = np.vstack(tx)
     return tx
 
 
 def set_random_seed(seed):
-    rank = dist.get_rank()
-    paddle.seed(seed + rank)
-    np.random.seed(seed + rank)
-    random.seed(seed + rank)
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)

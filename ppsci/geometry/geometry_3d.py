@@ -20,6 +20,7 @@ import itertools
 from typing import Tuple
 
 import numpy as np
+import paddle
 
 from ppsci.geometry import geometry_2d
 from ppsci.geometry import geometry_nd
@@ -31,6 +32,10 @@ class Cuboid(geometry_nd.Hypercube):
     Args:
         xmin (Tuple[float, float, float]): Bottom left corner point [x0, y0, z0].
         xmax (Tuple[float, float, float]): Top right corner point [x1, y1, z1].
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.Cuboid((0, 0, 0), (1, 1, 1))
     """
 
     def __init__(
@@ -46,15 +51,31 @@ class Cuboid(geometry_nd.Hypercube):
         rect = geometry_2d.Rectangle(self.xmin[:-1], self.xmax[:-1])
         for z in [self.xmin[-1], self.xmax[-1]]:
             u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
-            pts.append(np.hstack((u, np.full((len(u), 1), z))))
+            pts.append(
+                np.hstack(
+                    (u, np.full((len(u), 1), z, dtype=paddle.get_default_dtype()))
+                )
+            )
         rect = geometry_2d.Rectangle(self.xmin[::2], self.xmax[::2])
         for y in [self.xmin[1], self.xmax[1]]:
             u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
-            pts.append(np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:])))
+            pts.append(
+                np.hstack(
+                    (
+                        u[:, 0:1],
+                        np.full((len(u), 1), y, dtype=paddle.get_default_dtype()),
+                        u[:, 1:],
+                    )
+                )
+            )
         rect = geometry_2d.Rectangle(self.xmin[1:], self.xmax[1:])
         for x in [self.xmin[0], self.xmax[0]]:
             u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
-            pts.append(np.hstack((np.full((len(u), 1), x), u)))
+            pts.append(
+                np.hstack(
+                    (np.full((len(u), 1), x, dtype=paddle.get_default_dtype()), u)
+                )
+            )
         pts = np.vstack(pts)
         if len(pts) > n:
             return pts[np.random.choice(len(pts), size=n, replace=False)]
@@ -63,22 +84,47 @@ class Cuboid(geometry_nd.Hypercube):
     def uniform_boundary_points(self, n):
         h = (self.area / n) ** 0.5
         nx, ny, nz = np.ceil((self.xmax - self.xmin) / h).astype(int) + 1
-        x = np.linspace(self.xmin[0], self.xmax[0], num=nx)
-        y = np.linspace(self.xmin[1], self.xmax[1], num=ny)
-        z = np.linspace(self.xmin[2], self.xmax[2], num=nz)
+        x = np.linspace(
+            self.xmin[0], self.xmax[0], num=nx, dtype=paddle.get_default_dtype()
+        )
+        y = np.linspace(
+            self.xmin[1], self.xmax[1], num=ny, dtype=paddle.get_default_dtype()
+        )
+        z = np.linspace(
+            self.xmin[2], self.xmax[2], num=nz, dtype=paddle.get_default_dtype()
+        )
 
         pts = []
         for v in [self.xmin[-1], self.xmax[-1]]:
             u = list(itertools.product(x, y))
-            pts.append(np.hstack((u, np.full((len(u), 1), v))))
+            pts.append(
+                np.hstack(
+                    (u, np.full((len(u), 1), v, dtype=paddle.get_default_dtype()))
+                )
+            )
         if nz > 2:
             for v in [self.xmin[1], self.xmax[1]]:
-                u = np.array(list(itertools.product(x, z[1:-1])))
-                pts.append(np.hstack((u[:, 0:1], np.full((len(u), 1), v), u[:, 1:])))
+                u = np.array(
+                    list(itertools.product(x, z[1:-1])),
+                    dtype=paddle.get_default_dtype(),
+                )
+                pts.append(
+                    np.hstack(
+                        (
+                            u[:, 0:1],
+                            np.full((len(u), 1), v, dtype=paddle.get_default_dtype()),
+                            u[:, 1:],
+                        )
+                    )
+                )
         if ny > 2 and nz > 2:
             for v in [self.xmin[0], self.xmax[0]]:
                 u = list(itertools.product(y[1:-1], z[1:-1]))
-                pts.append(np.hstack((np.full((len(u), 1), v), u)))
+                pts.append(
+                    np.hstack(
+                        (np.full((len(u), 1), v, dtype=paddle.get_default_dtype()), u)
+                    )
+                )
         pts = np.vstack(pts)
         if len(pts) > n:
             return pts[np.random.choice(len(pts), size=n, replace=False)]
@@ -97,7 +143,7 @@ class Sphere(geometry_nd.Hypersphere):
         super().__init__(center, radius)
 
     def uniform_boundary_points(self, n: int):
-        nl = np.arange(1, n + 1).astype("float32")
+        nl = np.arange(1, n + 1).astype(paddle.get_default_dtype())
         g = (np.sqrt(5) - 1) / 2
         z = (2 * nl - 1) / n - 1
         x = np.sqrt(1 - z**2) * np.cos(2 * np.pi * nl * g)

@@ -34,21 +34,30 @@ class MatDataset(io.Dataset):
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
+        label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+            i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
         timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s).
+            transform(s). Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.MatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
         self,
         file_path: str,
         input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...] = (),
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[float, ...]] = None,
@@ -108,14 +117,14 @@ class MatDataset(io.Dataset):
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     self.weight[key] = np.full_like(
-                        next(iter(self.label.values())), float(value)
+                        next(iter(self.label.values())), value
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
                         self.weight[key] = np.full_like(
-                            next(iter(self.label.values())), float(self.weight[key])
+                            next(iter(self.label.values())), self.weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
@@ -144,21 +153,30 @@ class IterableMatDataset(io.IterableDataset):
     Args:
         file_path (str): Mat file path.
         input_keys (Tuple[str, ...]): List of input keys.
-        label_keys (Tuple[str, ...]): List of label keys.
+        label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
+            i.e. {inner_key: outer_key}. Defaults to None.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the weight of
             each constraint variable. Defaults to None.
         timestamps (Optional[Tuple[float, ...]]): The number of repetitions of the data
             in the time dimension. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
-            transform(s).
+            transform(s). Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.IterableMatDataset(
+        ...     "/path/to/file.mat"
+        ...     ("x",),
+        ...     ("u",),
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
         self,
         file_path: str,
         input_keys: Tuple[str, ...],
-        label_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...] = (),
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         timestamps: Optional[Tuple[Union[int, float], ...]] = None,
@@ -218,14 +236,14 @@ class IterableMatDataset(io.IterableDataset):
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     self.weight[key] = np.full_like(
-                        next(iter(self.label.values())), float(value)
+                        next(iter(self.label.values())), value
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     self.weight[key] = func(self.input)
                     if isinstance(self.weight[key], (int, float)):
                         self.weight[key] = np.full_like(
-                            next(iter(self.label.values())), float(self.weight[key])
+                            next(iter(self.label.values())), self.weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

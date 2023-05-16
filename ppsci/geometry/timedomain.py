@@ -21,6 +21,7 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
+import paddle
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_1d
@@ -41,6 +42,9 @@ class TimeDomain(geometry_1d.Interval):
         timestamps (Optional[Tuple[float, ...]]): List of timestamps.
             Defaults to None.
 
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.TimeDomain(0, 1)
     """
 
     def __init__(
@@ -54,13 +58,15 @@ class TimeDomain(geometry_1d.Interval):
         self.t0 = t0
         self.t1 = t1
         self.time_step = time_step
-        self.timestamps = np.array(timestamps).reshape([-1])
+        self.timestamps = np.array(
+            timestamps, dtype=paddle.get_default_dtype()
+        ).reshape([-1])
         if time_step is not None:
             if time_step <= 0:
                 raise ValueError(f"time_step({time_step}) must be larger than 0.")
-            self.num_timestamp = int(np.ceil((t1 - t0) / time_step)) + 1
+            self.num_timestamps = int(np.ceil((t1 - t0) / time_step)) + 1
         elif timestamps is not None:
-            self.num_timestamp = len(timestamps)
+            self.num_timestamps = len(timestamps)
 
     def on_initial(self, t):
         return np.isclose(t, self.t0).flatten()
@@ -72,6 +78,12 @@ class TimeXGeometry(geometry.Geometry):
     Args:
         timedomain (TimeDomain): TimeDomain object.
         geometry (geometry.Geometry): Geometry object.
+
+    Examples:
+        >>> import ppsci
+        >>> timedomain = ppsci.geometry.TimeDomain(0, 1)
+        >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
+        >>> time_geom = ppsci.geometry.TimeXGeometry(timedomain, geom)
     """
 
     def __init__(self, timedomain: TimeDomain, geometry: geometry.Geometry):
@@ -108,7 +120,7 @@ class TimeXGeometry(geometry.Geometry):
             nx = int(np.ceil(n / nt))
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             nx = int(np.ceil(n / nt))
         else:
             nx = int(
@@ -135,13 +147,15 @@ class TimeXGeometry(geometry.Geometry):
                     self.timedomain.t0,
                     num=nt,
                     endpoint=boundary,
-                    dtype="float32",
+                    dtype=paddle.get_default_dtype(),
                 )[:, None][::-1]
             else:
                 t = self.timedomain.timestamps[1:]
         tx = []
         for ti in t:
-            tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+            tx.append(
+                np.hstack((np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x))
+            )
         tx = np.vstack(tx)
         if len(tx) > n:
             tx = tx[:n]
@@ -156,14 +170,16 @@ class TimeXGeometry(geometry.Geometry):
                 self.timedomain.t0,
                 num=nt,
                 endpoint=False,
-                dtype="float32",
+                dtype=paddle.get_default_dtype(),
             )[:, None][
                 ::-1
             ]  # [nt, 1]
             # 1. sample nx points in static geometry with criteria
             nx = int(np.ceil(n / nt))
             _size, _ntry, _nsuc = 0, 0, 0
-            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            x = np.empty(
+                shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
+            )
             while _size < nx:
                 _x = self.geometry.random_points(nx, random)
                 if criteria is not None:
@@ -190,18 +206,24 @@ class TimeXGeometry(geometry.Geometry):
             # 2. repeat spatial points along time
             tx = []
             for ti in t:
-                tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                tx.append(
+                    np.hstack(
+                        (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x)
+                    )
+                )
             tx = np.vstack(tx)
             if len(tx) > n:
                 tx = tx[:n]
             return tx
         elif self.timedomain.timestamps is not None:
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
 
             _size, _ntry, _nsuc = 0, 0, 0
-            x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+            x = np.empty(
+                shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
+            )
             while _size < nx:
                 _x = self.geometry.random_points(nx, random)
                 if criteria is not None:
@@ -227,7 +249,11 @@ class TimeXGeometry(geometry.Geometry):
 
             tx = []
             for ti in t:
-                tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                tx.append(
+                    np.hstack(
+                        (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x)
+                    )
+                )
             tx = np.vstack(tx)
             if len(tx) > n:
                 tx = tx[:n]
@@ -280,7 +306,7 @@ class TimeXGeometry(geometry.Geometry):
         nt = int(np.ceil(n / nx))
 
         _size, _ntry, _nsuc = 0, 0, 0
-        x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+        x = np.empty(shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype())
         while _size < nx:
             _x = self.geometry.uniform_boundary_points(nx)
             if criteria is not None:
@@ -310,11 +336,13 @@ class TimeXGeometry(geometry.Geometry):
             self.timedomain.t0,
             num=nt,
             endpoint=False,
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
         )[:, None][::-1]
         tx = []
         for ti in t:
-            tx.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+            tx.append(
+                np.hstack((np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x))
+            )
         tx = np.vstack(tx)
         if len(tx) > n:
             tx = tx[:n]
@@ -329,7 +357,7 @@ class TimeXGeometry(geometry.Geometry):
                 self.timedomain.t0,
                 num=nt,
                 endpoint=False,
-                dtype="float32",
+                dtype=paddle.get_default_dtype(),
             )[:, None][::-1]
             nx = int(np.ceil(n / nt))
 
@@ -337,7 +365,9 @@ class TimeXGeometry(geometry.Geometry):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
                 _size, _ntry, _nsuc = 0, 0, 0
-                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                x = np.empty(
+                    shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
+                )
                 while _size < nx:
                     _x = self.geometry.random_boundary_points(nx, random)
                     if criteria is not None:
@@ -367,13 +397,21 @@ class TimeXGeometry(geometry.Geometry):
                 t_area = []
 
             for ti in t:
-                t_x.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                t_x.append(
+                    np.hstack(
+                        (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x)
+                    )
+                )
                 if isinstance(self.geometry, mesh.Mesh):
                     t_normal.append(
-                        np.hstack((np.full([nx, 1], float(ti), dtype="float32"), _n))
+                        np.hstack(
+                            (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), _n)
+                        )
                     )
                     t_area.append(
-                        np.hstack((np.full([nx, 1], float(ti), dtype="float32"), a))
+                        np.hstack(
+                            (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), a)
+                        )
                     )
 
             t_x = np.vstack(t_x)
@@ -393,7 +431,7 @@ class TimeXGeometry(geometry.Geometry):
                 return t_x
         elif self.timedomain.timestamps is not None:
             # exclude start time t0
-            nt = self.timedomain.num_timestamp - 1
+            nt = self.timedomain.num_timestamps - 1
             t = self.timedomain.timestamps[1:]
             nx = int(np.ceil(n / nt))
 
@@ -401,7 +439,9 @@ class TimeXGeometry(geometry.Geometry):
                 x, _n, a = self.geometry.random_boundary_points(nx, random=random)
             else:
                 _size, _ntry, _nsuc = 0, 0, 0
-                x = np.empty(shape=(nx, self.geometry.ndim), dtype="float32")
+                x = np.empty(
+                    shape=(nx, self.geometry.ndim), dtype=paddle.get_default_dtype()
+                )
                 while _size < nx:
                     _x = self.geometry.random_boundary_points(nx, random)
                     if criteria is not None:
@@ -431,13 +471,21 @@ class TimeXGeometry(geometry.Geometry):
                 t_area = []
 
             for ti in t:
-                t_x.append(np.hstack((np.full([nx, 1], float(ti), dtype="float32"), x)))
+                t_x.append(
+                    np.hstack(
+                        (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), x)
+                    )
+                )
                 if isinstance(self.geometry, mesh.Mesh):
                     t_normal.append(
-                        np.hstack((np.full([nx, 1], float(ti), dtype="float32"), _n))
+                        np.hstack(
+                            (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), _n)
+                        )
                     )
                     t_area.append(
-                        np.hstack((np.full([nx, 1], float(ti), dtype="float32"), a))
+                        np.hstack(
+                            (np.full([nx, 1], ti, dtype=paddle.get_default_dtype()), a)
+                        )
                     )
 
             t_x = np.vstack(t_x)
@@ -478,12 +526,12 @@ class TimeXGeometry(geometry.Geometry):
         t = self.timedomain.t0
         if len(x) > n:
             x = x[:n]
-        return np.hstack((np.full([n, 1], t, dtype="float32"), x))
+        return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
     def random_initial_points(self, n, random="pseudo"):
         x = self.geometry.random_points(n, random=random)
         t = self.timedomain.t0
-        return np.hstack((np.full([n, 1], t, dtype="float32"), x))
+        return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
     def periodic_point(self, x, component):
         t, _x = x[:, :1], x[:, 1:]
@@ -494,7 +542,7 @@ class TimeXGeometry(geometry.Geometry):
         self, n: int, random: str = "pseudo", criteria=None, evenly=False
     ):
         """Sample random points in the time-geometry and return those meet criteria."""
-        x = np.empty(shape=(n, self.ndim), dtype="float32")
+        x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
         while _size < n:
             if evenly:
