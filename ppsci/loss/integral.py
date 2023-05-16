@@ -65,10 +65,6 @@ class IntegralLoss(base.Loss):
             )
             if weight_dict is not None:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
-                loss *= self.weight
-            elif isinstance(self.weight, dict) and key in self.weight:
-                loss *= self.weight[key]
 
             if self.reduction == "sum":
                 loss = loss.sum()
