@@ -17,6 +17,7 @@ from typing import Optional
 from typing import Union
 
 import paddle.nn.functional as F
+from typing_extensions import Literal
 
 from ppsci.loss import base
 
@@ -35,8 +36,8 @@ class IntegralLoss(base.Loss):
     $M$ is the number of samples in monte carlo integration.
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
-        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -45,8 +46,8 @@ class IntegralLoss(base.Loss):
 
     def __init__(
         self,
-        reduction: str = "mean",
-        weight: Optional[Union[Dict[str, float], float]] = None,
+        reduction: Literal["mean", "sum"] = "mean",
+        weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
         if reduction not in ["mean", "sum"]:
             raise ValueError(
@@ -64,14 +65,16 @@ class IntegralLoss(base.Loss):
             )
             if weight_dict:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
-                loss *= self.weight
-            elif isinstance(self.weight, dict) and key in self.weight:
-                loss *= self.weight[key]
 
             if self.reduction == "sum":
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
+
+            if isinstance(self.weight, float):
+                loss *= self.weight
+            elif isinstance(self.weight, dict) and key in self.weight:
+                loss *= self.weight[key]
+
             losses += loss
         return losses
