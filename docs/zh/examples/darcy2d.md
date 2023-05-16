@@ -6,13 +6,13 @@
 
 ## 2. 问题定义
 
-假设达西流模型中，每个位置 $(x,y)$ 上的流速 $\bold{u}$ 和压力 $p$ 之间满足以下关系式：
+假设达西流模型中，每个位置 $(x,y)$ 上的流速 $\mathbf{u}$ 和压力 $p$ 之间满足以下关系式：
 
 $$
 \begin{cases}
 \begin{aligned}
-\bold{u}+\nabla p =& 0,(x,y)\in (0,1)\times (0,1) \\
-\nabla \cdot \bold{u} =& f,(x,y)\in (0,1)\times (0,1) \\
+\mathbf{u}+\nabla p =& 0,(x,y)\in (0,1)\times (0,1) \\
+\nabla \cdot \mathbf{u} =& f,(x,y)\in (0,1)\times (0,1) \\
 p(x,y) =& \sin(2 \pi x )\cos(2 \pi y), x=1 \lor  y=1
 \end{aligned}
 \end{cases}
@@ -36,7 +36,7 @@ $$
 
 ``` py linenums="30"
 --8<--
-examples/darcy/darcy2d_v2.py:30:31
+examples/darcy/darcy2d.py:30:31
 --8<--
 ```
 
@@ -50,7 +50,7 @@ examples/darcy/darcy2d_v2.py:30:31
 
 ``` py linenums="33"
 --8<--
-examples/darcy/darcy2d_v2.py:33:34
+examples/darcy/darcy2d.py:33:34
 --8<--
 ```
 
@@ -61,7 +61,7 @@ examples/darcy/darcy2d_v2.py:33:34
 
 ``` py linenums="36"
 --8<--
-examples/darcy/darcy2d_v2.py:36:37
+examples/darcy/darcy2d.py:36:37
 --8<--
 ```
 
@@ -73,7 +73,7 @@ examples/darcy/darcy2d_v2.py:36:37
 
 ``` py linenums="39"
 --8<--
-examples/darcy/darcy2d_v2.py:39:50
+examples/darcy/darcy2d.py:39:50
 --8<--
 ```
 
@@ -83,7 +83,7 @@ examples/darcy/darcy2d_v2.py:39:50
 
 ``` py linenums="52"
 --8<--
-examples/darcy/darcy2d_v2.py:52:69
+examples/darcy/darcy2d.py:52:69
 --8<--
 ```
 
@@ -107,7 +107,7 @@ examples/darcy/darcy2d_v2.py:52:69
 
 ``` py linenums="70"
 --8<--
-examples/darcy/darcy2d_v2.py:70:81
+examples/darcy/darcy2d.py:70:81
 --8<--
 ```
 
@@ -127,7 +127,7 @@ lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 
 ``` py linenums="127"
 --8<--
-examples/darcy/darcy2d_v2.py:127:128
+examples/darcy/darcy2d.py:127:128
 --8<--
 ```
 
@@ -137,7 +137,7 @@ examples/darcy/darcy2d_v2.py:127:128
 
 ``` py linenums="130"
 --8<--
-examples/darcy/darcy2d_v2.py:130:131
+examples/darcy/darcy2d.py:130:131
 --8<--
 ```
 
@@ -147,7 +147,7 @@ examples/darcy/darcy2d_v2.py:130:131
 
 ``` py linenums="133"
 --8<--
-examples/darcy/darcy2d_v2.py:133:150
+examples/darcy/darcy2d.py:133:150
 --8<--
 ```
 
@@ -159,7 +159,7 @@ examples/darcy/darcy2d_v2.py:133:150
 
 ``` py linenums="152"
 --8<--
-examples/darcy/darcy2d_v2.py:152:162
+examples/darcy/darcy2d.py:152:162
 --8<--
 ```
 
@@ -169,15 +169,15 @@ examples/darcy/darcy2d_v2.py:152:162
 
 ``` py linenums="164"
 --8<--
-examples/darcy/darcy2d_v2.py:164:
+examples/darcy/darcy2d.py:164:
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="darcy2d_v2.py"
+``` py linenums="1" title="darcy2d.py"
 --8<--
-examples/darcy/darcy2d_v2.py
+examples/darcy/darcy2d.py
 --8<--
 ```
 
@@ -185,5 +185,5 @@ examples/darcy/darcy2d_v2.py
 
 <figure markdown>
   ![darcy 2d](../../images/darcy2d/darcy2d.png){ loading=lazy }
-  <figcaption>模型预测结果</figcaption>
+  <figcaption>模型预测压力 p</figcaption>
 </figure>
