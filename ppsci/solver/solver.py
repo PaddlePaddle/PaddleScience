@@ -21,15 +21,16 @@ import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
+from typing import Union
 
+import numpy as np
 import paddle
 import paddle.distributed as dist
 import visualdl as vdl
 from packaging import version
 from paddle import amp
-from paddle import incubate
 from paddle import nn
-from paddle import optimizer
+from paddle import optimizer as optim
 from paddle.distributed import fleet
 from typing_extensions import Literal
 
@@ -103,8 +104,8 @@ class Solver:
         model: nn.Layer,
         constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
         output_dir: str = "./output/",
-        optimizer: Optional[optimizer.Optimizer] = None,
-        lr_scheduler: Optional[optimizer.lr.LRScheduler] = None,
+        optimizer: Optional[optim.Optimizer] = None,
+        lr_scheduler: Optional[optim.lr.LRScheduler] = None,
         epochs: int = 5,
         iters_per_epoch: int = 20,
         update_freq: int = 1,
@@ -215,10 +216,10 @@ class Solver:
                 self.best_metric.update(loaded_metric)
 
         # choosing an appropriate training function for different optimizers
-        if not isinstance(self.optimizer, incubate.optimizer.LBFGS):
-            self.train_epoch_func = ppsci.solver.train.train_epoch_func
-        else:
+        if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+        else:
+            self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
@@ -445,12 +446,14 @@ class Solver:
 
     @paddle.no_grad()
     def predict(
-        self, input_dict: Dict[str, paddle.Tensor], batch_size: int = 64
+        self,
+        input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
+        batch_size: int = 64,
     ) -> Dict[str, paddle.Tensor]:
         """Pure prediction using model.forward(...), support single device prediction yet.
 
         Args:
-            input_dict (Dict[str, paddle.Tensor]): Input data in dict.
+            input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Input data in dict.
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
 
         Returns:
@@ -485,7 +488,7 @@ class Solver:
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            with self._autocast_context_manager():
+            with self.autocast_context_manager():
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
@@ -515,7 +518,7 @@ class Solver:
         paddle.jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}.")
 
-    def _autocast_context_manager(self) -> contextlib.AbstractContextManager:
+    def autocast_context_manager(self) -> contextlib.AbstractContextManager:
         """Autocast context manager for Auto Mix Precision.
 
         Returns:
@@ -532,7 +535,7 @@ class Solver:
 
         return ctx_manager
 
-    def _no_grad_context_manager(self) -> contextlib.AbstractContextManager:
+    def no_grad_context_manager(self) -> contextlib.AbstractContextManager:
         """No grad manager.
 
         Returns:

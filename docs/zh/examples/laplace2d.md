@@ -1,5 +1,7 @@
 # 2D-Laplace
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 2D-Laplace，在本文中代表拉普拉斯方程的2维形式。拉普拉斯方程因为由法国数学家拉普拉斯首先提出而得名。求解拉普拉斯方程是电磁学、天文学和流体力学等领域经常遇到的一类重要的数学问题，因为这种方程以势函数的形式描写了电场、引力场和流场等物理对象（一般统称为“保守场”或“有势场”）的性质。
@@ -30,7 +32,7 @@ $$
 
 ``` py linenums="35"
 --8<--
-examples/laplace/laplace2d_v2.py:35:36
+examples/laplace/laplace2d.py:35:36
 --8<--
 ```
 
@@ -44,7 +46,7 @@ examples/laplace/laplace2d_v2.py:35:36
 
 ``` py linenums="38"
 --8<--
-examples/laplace/laplace2d_v2.py:38:39
+examples/laplace/laplace2d.py:38:39
 --8<--
 ```
 
@@ -55,7 +57,7 @@ examples/laplace/laplace2d_v2.py:38:39
 
 ``` py linenums="41"
 --8<--
-examples/laplace/laplace2d_v2.py:41:42
+examples/laplace/laplace2d.py:41:42
 --8<--
 ```
 
@@ -67,7 +69,7 @@ examples/laplace/laplace2d_v2.py:41:42
 
 ``` py linenums="56"
 --8<--
-examples/laplace/laplace2d_v2.py:56:58
+examples/laplace/laplace2d.py:56:58
 --8<--
 ```
 
@@ -77,7 +79,7 @@ examples/laplace/laplace2d_v2.py:56:58
 
 ``` py linenums="61"
 --8<--
-examples/laplace/laplace2d_v2.py:61:69
+examples/laplace/laplace2d.py:61:69
 --8<--
 ```
 
@@ -101,7 +103,7 @@ examples/laplace/laplace2d_v2.py:61:69
 
 ``` py linenums="70"
 --8<--
-examples/laplace/laplace2d_v2.py:70:81
+examples/laplace/laplace2d.py:70:81
 --8<--
 ```
 
@@ -111,7 +113,7 @@ examples/laplace/laplace2d_v2.py:70:81
 
 ``` py linenums="44"
 --8<--
-examples/laplace/laplace2d_v2.py:44:48
+examples/laplace/laplace2d.py:44:48
 --8<--
 ```
 
@@ -123,7 +125,7 @@ examples/laplace/laplace2d_v2.py:44:48
 
 ``` py linenums="26"
 --8<--
-examples/laplace/laplace2d_v2.py:26:29
+examples/laplace/laplace2d.py:26:29
 --8<--
 ```
 
@@ -133,7 +135,7 @@ examples/laplace/laplace2d_v2.py:26:29
 
 ``` py linenums="88"
 --8<--
-examples/laplace/laplace2d_v2.py:88:89
+examples/laplace/laplace2d.py:88:89
 --8<--
 ```
 
@@ -143,7 +145,7 @@ examples/laplace/laplace2d_v2.py:88:89
 
 ``` py linenums="91"
 --8<--
-examples/laplace/laplace2d_v2.py:91:106
+examples/laplace/laplace2d.py:91:106
 --8<--
 ```
 
@@ -155,7 +157,7 @@ examples/laplace/laplace2d_v2.py:91:106
 
 ``` py linenums="108"
 --8<--
-examples/laplace/laplace2d_v2.py:108:117
+examples/laplace/laplace2d.py:108:117
 --8<--
 ```
 
@@ -165,15 +167,15 @@ examples/laplace/laplace2d_v2.py:108:117
 
 ``` py linenums="119"
 --8<--
-examples/laplace/laplace2d_v2.py:119:
+examples/laplace/laplace2d.py:119:
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="laplace2d_v2.py"
+``` py linenums="1" title="laplace2d.py"
 --8<--
-examples/laplace/laplace2d_v2.py
+examples/laplace/laplace2d.py
 --8<--
 ```
 
