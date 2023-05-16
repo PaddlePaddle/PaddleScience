@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
 from typing import Callable
 from typing import Dict
 from typing import Optional
