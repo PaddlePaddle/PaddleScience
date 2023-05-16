@@ -60,10 +60,6 @@ class MSELoss(base.Loss):
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict is not None:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, (float, int)):
-                loss *= self.weight
-            elif isinstance(self.weight, dict) and key in self.weight:
-                loss *= self.weight[key]
 
             if "area" in output_dict:
                 loss *= output_dict["area"]
@@ -97,6 +93,7 @@ class MSELossWithL2Decay(MSELoss):
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
         regularization_dict (Optional[Dict[str, float]]): Regularization dictionary. Defaults to None.
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Raises:
         ValueError: reduction should be 'mean' or 'sum'.
@@ -134,6 +131,7 @@ class PeriodicMSELoss(base.Loss):
 
     Args:
         reduction (str, optional): Reduction method. Defaults to "mean".
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
     """
 
     def __init__(
