@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Optional
+from typing import Union
+
 import paddle
 import paddle.nn.functional as F
 from typing_extensions import Literal
@@ -26,14 +30,16 @@ class L2Loss(base.Loss):
     L = \sum\limits_{i=1}^{N}{(x_i-y_i)^2}
     $$
 
+    Args:
+        weight (Optional[Union[Dict[str, float], float]]): Weight for loss. Defaults to None.
+
     Examples:
         >>> import ppsci
         >>> loss = ppsci.loss.L2Loss()
     """
 
-    def __init__(self):
-        super().__init__()
-        self.reduction = "sum"
+    def __init__(self, weight: Optional[Union[Dict[str, float], float]] = None):
+        super().__init__("sum", weight)
 
     def forward(self, output_dict, label_dict, weight_dict=None):
         losses = 0.0
@@ -41,6 +47,11 @@ class L2Loss(base.Loss):
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
             if weight_dict is not None:
                 loss *= weight_dict[key]
+            if isinstance(self.weight, float):
+                loss *= self.weight
+            elif isinstance(self.weight, dict) and key in self.weight:
+                loss *= self.weight[key]
+
             if "area" in output_dict:
                 loss *= output_dict["area"]
 
@@ -103,8 +114,7 @@ class L2RelLoss(base.Loss):
     """
 
     def __init__(self, reduction: Literal["mean", "sum"] = "mean"):
-        super().__init__()
-        self.reduction = reduction
+        super().__init__(reduction)
 
     def rel_loss(self, x, y):
         batch_size = x.shape[0]

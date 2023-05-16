@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from typing import Dict
+from typing import Tuple
+
+import meshio
 import numpy as np
 import paddle
 from pyevtk import hl
@@ -118,3 +123,31 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
         value = np.concatenate(value, axis=1)
 
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps)
+
+
+def save_vtu_to_mesh(
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    value_keys: Tuple[str, ...],
+    coord_keys: Tuple[str, ...],
+    num_timestamps: int = 1,
+):
+    """Save data into .vtu format by meshio.
+
+    Args:
+        filename (str): File name.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
+    """
+    path = os.path.dirname(filename)
+    os.makedirs(path, exist_ok=True)
+
+    n = len(next(iter(data_dict.values())))
+    m = len(coord_keys)
+    # get the list variable transposed
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(m, n)
+    mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
+    mesh.point_data = {key: data_dict[key] for key in value_keys}
+    mesh.write(filename)
