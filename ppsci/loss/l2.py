@@ -109,8 +109,8 @@ class L2RelLoss(base.Loss):
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{\dfrac{\Vert \bm{X_i}-\bm{Y_i}\Vert_2}{\Vert \bm{Y_i}\Vert_2}}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{\dfrac{\Vert \bm{X_i}-\bm{Y_i}\Vert_2}{\Vert \bm{Y_i}\Vert_2}}, & \text{if reduction='sum'}
+        \dfrac{1}{N}\sum\limits_{i=1}^{N}{\dfrac{\Vert \mathbf{X_i}-\mathbf{Y_i}\Vert_2}{\Vert \mathbf{Y_i}\Vert_2}}, & \text{if reduction='mean'} \\
+        \sum\limits_{i=1}^{N}{\dfrac{\Vert \mathbf{X_i}-\mathbf{Y_i}\Vert_2}{\Vert \mathbf{Y_i}\Vert_2}}, & \text{if reduction='sum'}
     \end{cases}
     $$
 

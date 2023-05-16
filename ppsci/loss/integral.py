@@ -36,7 +36,7 @@ class IntegralLoss(base.Loss):
     $M$ is the number of samples in monte carlo integration.
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:

@@ -35,7 +35,7 @@ class MSELoss(base.Loss):
     $$
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -130,7 +130,7 @@ class PeriodicMSELoss(base.Loss):
     """Class for periodic mean squared error loss.
 
     Args:
-        reduction (str, optional): Reduction method. Defaults to "mean".
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
     """
 

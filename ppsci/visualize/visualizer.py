@@ -292,7 +292,6 @@ class Visualizer3D(base.Visualizer):
         output_expr (Dict[str, Callable]): Output expression.
         batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         label_dict (Dict[str, np.ndarray]): Label dict.
-        transforms (Optional[Dict[str, ]]): Transformer dict.
         time_list (Optional[Tuple[float, ...]]): Time list.
         num_timestamps (int, optional): Number of timestamps.
         prefix (str, optional): Prefix for output file.
