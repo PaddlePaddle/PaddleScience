@@ -39,7 +39,7 @@ class LorenzDataset(io.Dataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -61,9 +61,9 @@ class LorenzDataset(io.Dataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
     ):
-        super(LorenzDataset, self).__init__()
+        super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -91,7 +91,7 @@ class LorenzDataset(io.Dataset):
         with h5py.File(file_path, "r") as f:
             data_num = 0
             for key in f.keys():
-                data_series = np.asarray(f[key], dtype="float32")
+                data_series = np.asarray(f[key], dtype=paddle.get_default_dtype())
                 for i in range(0, data_series.shape[0] - block_size + 1, stride):
                     data.append(data_series[i : i + block_size])
                 data_num += 1
@@ -136,7 +136,7 @@ class RosslerDataset(LorenzDataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -158,9 +158,9 @@ class RosslerDataset(LorenzDataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
     ):
-        super(RosslerDataset, self).__init__(
+        super().__init__(
             file_path,
             input_keys,
             label_keys,
@@ -183,7 +183,7 @@ class CylinderDataset(io.Dataset):
         stride (int): Data stride.
         ndata (Optional[int]): Number of data series to use. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
-        embedding_model (Optional[base.NetBase]): Embedding model. Defaults to None.
+        embedding_model (Optional[base.Arch]): Embedding model. Defaults to None.
         embedding_batch_size (int, optional): The batch size of embedding model. Defaults to 64.
 
     Examples:
@@ -206,10 +206,10 @@ class CylinderDataset(io.Dataset):
         stride: int,
         ndata: Optional[int] = None,
         weight_dict: Optional[Dict[str, float]] = None,
-        embedding_model: Optional[base.NetBase] = None,
+        embedding_model: Optional[base.Arch] = None,
         embedding_batch_size: int = 64,
     ):
-        super(CylinderDataset, self).__init__()
+        super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -246,9 +246,9 @@ class CylinderDataset(io.Dataset):
             data_num = 0
             for key in f.keys():
                 visc0 = 2.0 / float(key)
-                ux = np.asarray(f[key + "/ux"], dtype="float32")
-                uy = np.asarray(f[key + "/uy"], dtype="float32")
-                p = np.asarray(f[key + "/p"], dtype="float32")
+                ux = np.asarray(f[key + "/ux"], dtype=paddle.get_default_dtype())
+                uy = np.asarray(f[key + "/uy"], dtype=paddle.get_default_dtype())
+                p = np.asarray(f[key + "/p"], dtype=paddle.get_default_dtype())
                 data_series = np.stack([ux, uy, p], axis=1)
 
                 for i in range(0, data_series.shape[0] - block_size + 1, stride):
@@ -260,7 +260,7 @@ class CylinderDataset(io.Dataset):
                     break
 
         data = np.asarray(data)
-        visc = np.asarray(visc, dtype="float32")
+        visc = np.asarray(visc, dtype=paddle.get_default_dtype())
         return data, visc
 
     def __len__(self):

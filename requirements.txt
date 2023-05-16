@@ -12,3 +12,5 @@ pysdf
 pyyaml
 scikit-optimize
 h5py
+tqdm
+imageio

@@ -9,5 +9,6 @@
         - Laplace
         - NavierStokes
         - NormalDotVec
+        - Poisson
       show_root_heading: false
       heading_level: 3

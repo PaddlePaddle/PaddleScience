@@ -58,7 +58,7 @@ def run_check() -> None:
             "iters_per_epoch": iters_per_epoch,
         }
 
-        npoint_pde = 99**2
+        npoint_pde = 8**2
         pde_constraint = ppsci.constraint.InteriorConstraint(
             equation["NavierStokes"].equations,
             {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -103,7 +103,7 @@ def run_check() -> None:
             "Paddle's version and PaddleScience's version are both correct."
         )
     else:
-        print(f"PaddleScience is installed successfully.✨ 🍰 ✨")
+        print("PaddleScience is installed successfully.✨ 🍰 ✨")
 
 
 def dynamic_import_to_globals(

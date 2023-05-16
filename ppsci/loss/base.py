@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.nn as nn
+from paddle import nn
 
 
-class LossBase(nn.Layer):
+class Loss(nn.Layer):
     """Base class for loss."""
 
     def __init__(self, *args, **kwargs):

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle
+import numpy as np
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -22,17 +22,15 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
     args = config.parse_args()
-    # enable computation for fourth-order differentiation of matmul
-    paddle.fluid.core.set_prim_eager_enabled(True)
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    iters_per_epoch = 1
-    epochs = 10000 if not args.epochs else args.epochs
+    ITERS_PER_EPOCH = 1
+    EPOCHS = 10000 if not args.epochs else args.epochs
     # set output directory
-    output_dir = "./output/euler_beam" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output/euler_beam" if not args.output_dir else args.output_dir
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
@@ -46,7 +44,7 @@ if __name__ == "__main__":
     # set dataloader config
     dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
     }
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -58,31 +56,56 @@ if __name__ == "__main__":
         random="Hammersley",
         name="EQ",
     )
-    bc = ppsci.constraint.BoundaryConstraint(
-        {
-            "u0": lambda d: d["u"][0:1],
-            "u__x": lambda d: jacobian(d["u"], d["x"])[1:2],
-            "u__x__x": lambda d: hessian(d["u"], d["x"])[2:3],
-            "u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])[3:4],
-        },
-        {"u0": 0, "u__x": 0, "u__x__x": 0, "u__x__x__x": 0},
+    bc1 = ppsci.constraint.BoundaryConstraint(
+        {"u0": lambda d: d["u"]},
+        {"u0": 0},
         geom["interval"],
-        {**dataloader_cfg, "batch_size": 4},
+        {**dataloader_cfg, "batch_size": 1},
         ppsci.loss.MSELoss("sum"),
-        evenly=True,
-        name="BC",
+        criteria=lambda x: np.isclose(x, 0.0),
+        name="BC1",
+    )
+    bc2 = ppsci.constraint.BoundaryConstraint(
+        {"u__x": lambda d: jacobian(d["u"], d["x"])},
+        {"u__x": 0},
+        geom["interval"],
+        {**dataloader_cfg, "batch_size": 1},
+        ppsci.loss.MSELoss("sum"),
+        criteria=lambda x: np.isclose(x, 0.0),
+        name="BC2",
+    )
+    bc3 = ppsci.constraint.BoundaryConstraint(
+        {"u__x__x": lambda d: hessian(d["u"], d["x"])},
+        {"u__x__x": 0},
+        geom["interval"],
+        {**dataloader_cfg, "batch_size": 1},
+        ppsci.loss.MSELoss("sum"),
+        criteria=lambda x: np.isclose(x, 1.0),
+        name="BC3",
+    )
+    bc4 = ppsci.constraint.BoundaryConstraint(
+        {"u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])},
+        {"u__x__x__x": 0},
+        geom["interval"],
+        {**dataloader_cfg, "batch_size": 1},
+        ppsci.loss.MSELoss("sum"),
+        criteria=lambda x: np.isclose(x, 1.0),
+        name="BC4",
     )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
-        bc.name: bc,
+        bc1.name: bc1,
+        bc2.name: bc2,
+        bc3.name: bc3,
+        bc4.name: bc4,
     }
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
 
     # set validator
-    total_size = 100
+    TOTAL_SIZE = 100
 
     def u_solution_func(out):
         """compute ground truth for u as label data"""
@@ -95,7 +118,7 @@ if __name__ == "__main__":
         geom["interval"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": total_size,
+            "total_size": TOTAL_SIZE,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
@@ -105,14 +128,14 @@ if __name__ == "__main__":
     validator = {l2_rel_metric.name: l2_rel_metric}
 
     # set visualizer(optional)
-    visu_points = geom["interval"].sample_interior(total_size, evenly=True)
+    visu_points = geom["interval"].sample_interior(TOTAL_SIZE, evenly=True)
     visualizer = {
         "visulzie_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
             ("x",),
             {"u": lambda d: d["u"]},
-            1,
-            "result_u",
+            num_timestamps=1,
+            prefix="result_u",
         )
     }
 
@@ -120,10 +143,10 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
-        epochs=epochs,
-        iters_per_epoch=iters_per_epoch,
+        epochs=EPOCHS,
+        iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=1000,
         equation=equation,
@@ -139,15 +162,15 @@ if __name__ == "__main__":
     solver.visualize()
 
     # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

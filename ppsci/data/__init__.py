@@ -17,10 +17,9 @@ import random
 from functools import partial
 
 import numpy as np
-import paddle
-import paddle.device as device
 import paddle.distributed as dist
-import paddle.io as io
+from paddle import device
+from paddle import io
 
 from ppsci.data import dataloader
 from ppsci.data import dataset

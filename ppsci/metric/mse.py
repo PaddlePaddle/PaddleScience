@@ -18,7 +18,7 @@ import paddle.nn.functional as F
 from ppsci.metric import base
 
 
-class MSE(base.MetricBase):
+class MSE(base.Metric):
     r"""Mean square error
 
     $$
@@ -36,7 +36,7 @@ class MSE(base.MetricBase):
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
-        for key in output_dict:
+        for key in label_dict:
             mse = F.mse_loss(output_dict[key], label_dict[key], "mean")
             metric_dict[key] = float(mse)
 

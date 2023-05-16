@@ -17,12 +17,12 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 
 from ppsci.utils import logger
 
 
-class NetBase(nn.Layer):
+class Arch(nn.Layer):
     """Base class for Network."""
 
     def __init__(self, *args, **kwargs):
@@ -31,7 +31,7 @@ class NetBase(nn.Layer):
         self._output_transform = None
 
     def forward(self, *args, **kwargs):
-        raise NotImplementedError("NetBase.forward is not implemented")
+        raise NotImplementedError("Arch.forward is not implemented")
 
     @property
     def num_params(self) -> int:

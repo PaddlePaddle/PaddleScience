@@ -25,7 +25,7 @@ import math
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 from typing_extensions import Literal
 
 from ppsci.utils import logger
@@ -101,9 +101,10 @@ def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=2.0, b=2.0):
 def _no_grad_fill_(tensor, value=0.0):
     with paddle.no_grad():
         tensor.set_value(paddle.full_like(tensor, value, dtype=tensor.dtype))
+        return tensor
 
 
-def uniform_(tensor: paddle.Tensor, a: float, b: float):
+def uniform_(tensor: paddle.Tensor, a: float, b: float) -> paddle.Tensor:
     """Modify tensor inplace using uniform_.
 
     Args:
@@ -113,11 +114,19 @@ def uniform_(tensor: paddle.Tensor, a: float, b: float):
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.uniform_(param, -1, 1)
     """
     return _no_grad_uniform_(tensor, a, b)
 
 
-def normal_(tensor: paddle.Tensor, mean: float = 0.0, std: float = 1.0):
+def normal_(
+    tensor: paddle.Tensor, mean: float = 0.0, std: float = 1.0
+) -> paddle.Tensor:
     """Modify tensor inplace using normal_.
 
     Args:
@@ -127,6 +136,12 @@ def normal_(tensor: paddle.Tensor, mean: float = 0.0, std: float = 1.0):
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.normal_(param, 0, 1)
     """
     return _no_grad_normal_(tensor, mean, std)
 
@@ -137,7 +152,7 @@ def trunc_normal_(
     std: float = 1.0,
     a: float = -2.0,
     b: float = 2.0,
-):
+) -> paddle.Tensor:
     """Modify tensor inplace using trunc_normal_.
 
     Args:
@@ -149,21 +164,36 @@ def trunc_normal_(
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.trunc_normal_(param, 0.0, 1.0)
     """
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
 
 
-def constant_(tensor: paddle.Tensor, value: float = 0.0):
+def constant_(tensor: paddle.Tensor, value: float = 0.0) -> paddle.Tensor:
     """Modify tensor inplace using constant_.
 
     Args:
         tensor (paddle.Tensor): Paddle Tensor.
         value (float, optional): value to fill tensor. Defaults to 0.0.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.constant_(param, 2)
     """
     return _no_grad_fill_(tensor, value)
 
 
-def ones_(tensor: paddle.Tensor):
+def ones_(tensor: paddle.Tensor) -> paddle.Tensor:
     """Modify tensor inplace using ones_.
 
     Args:
@@ -171,15 +201,30 @@ def ones_(tensor: paddle.Tensor):
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.ones_(param)
     """
     return _no_grad_fill_(tensor, 1)
 
 
-def zeros_(tensor: paddle.Tensor):
+def zeros_(tensor: paddle.Tensor) -> paddle.Tensor:
     """Modify tensor inplace using zeros_.
 
     Args:
         tensor (paddle.Tensor): Paddle Tensor.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.zeros_(param)
     """
     return _no_grad_fill_(tensor, 0)
 
@@ -217,7 +262,9 @@ def _calculate_fan_in_and_fan_out(tensor, reverse=False):
     return fan_in, fan_out
 
 
-def xavier_uniform_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = False):
+def xavier_uniform_(
+    tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = False
+) -> paddle.Tensor:
     """Modify tensor inplace using xavier_uniform_.
 
     Args:
@@ -228,6 +275,12 @@ def xavier_uniform_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = Fa
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.xavier_uniform_(param)
     """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor, reverse=reverse)
     std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
@@ -235,7 +288,9 @@ def xavier_uniform_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = Fa
     return _no_grad_uniform_(tensor, -k, k)
 
 
-def xavier_normal_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = False):
+def xavier_normal_(
+    tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = False
+) -> paddle.Tensor:
     """Modify tensor inplace using xavier_normal_.
 
     Args:
@@ -243,6 +298,15 @@ def xavier_normal_(tensor: paddle.Tensor, gain: float = 1.0, reverse: bool = Fal
         gain (float, optional): Hyperparameter. Defaults to 1.0.
         reverse (bool, optional): tensor data format order, False by
             default as [fout, fin, ...]. Defaults to False.
+
+    Returns:
+        paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.xavier_normal_(param)
     """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor, reverse=reverse)
     std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
@@ -304,7 +368,7 @@ def kaiming_uniform_(
     mode: Literal["fan_in", "fan_out"] = "fan_in",
     nonlinearity: str = "leaky_relu",
     reverse: bool = False,
-):
+) -> paddle.Tensor:
     """Modify tensor inplace using kaiming_uniform method.
 
     Args:
@@ -319,6 +383,12 @@ def kaiming_uniform_(
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.kaiming_uniform_(param)
     """
     fan = _calculate_correct_fan(tensor, mode, reverse)
     gain = _calculate_gain(nonlinearity, a)
@@ -333,7 +403,7 @@ def kaiming_normal_(
     mode: Literal["fan_in", "fan_out"] = "fan_in",
     nonlinearity: str = "leaky_relu",
     reverse: bool = False,
-):
+) -> paddle.Tensor:
     """Modify tensor inplace using kaiming_normal_.
 
     Args:
@@ -347,6 +417,12 @@ def kaiming_normal_(
 
     Returns:
         paddle.Tensor: Initialized tensor.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> param = paddle.empty((128, 256), "float32")
+        >>> param = ppsci.utils.initializer.kaiming_normal_(param)
     """
     fan = _calculate_correct_fan(tensor, mode, reverse)
     gain = _calculate_gain(nonlinearity, a)
@@ -354,7 +430,7 @@ def kaiming_normal_(
     return _no_grad_normal_(tensor, 0, std)
 
 
-def linear_init_(module: nn.Layer):
+def linear_init_(module: nn.Layer) -> None:
     """Initialize module's weight and bias as it is a linear layer.
 
     Args:
@@ -366,7 +442,7 @@ def linear_init_(module: nn.Layer):
         uniform_(module.bias, -bound, bound)
 
 
-def conv_init_(module: nn.Layer):
+def conv_init_(module: nn.Layer) -> None:
     """Initialize module's weight and bias as it is a conv layer.
 
     Args:

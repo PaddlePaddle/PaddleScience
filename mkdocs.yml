@@ -28,7 +28,11 @@ copyright: Copyright &copy; 2022 - 2023 PaddlePaddle
 
 # Page tree
 nav:
-  - 安装使用: index.md
+  - PaddleScience:
+      - 主页: index.md
+      - 功能介绍: zh/overview.md
+      - 安装使用: zh/install_setup.md
+      - 快速开始: zh/quickstart.md
   - 经典案例:
       - PINNs:
         - ViV: zh/examples/viv.md
@@ -59,6 +63,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+  - 贡献指南: zh/contribute.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
@@ -80,10 +85,13 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.top
+    - search.suggest
+    - navigation.instant
     - navigation.expand
     - content.code.copy
     - content.code.select
     - content.code.annotate
+    - search.highlight
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -118,7 +126,7 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - toc:
-      permalink: ⚓︎
+      permalink: true
   - pymdownx.inlinehilite
   - pymdownx.superfences
   - admonition
@@ -136,7 +144,6 @@ extra_javascript:
 # Extra css
 extra_css:
   - stylesheets/extra.css
-  - stylesheets/monokai.css
 
 # Extra
 extra:

@@ -16,17 +16,17 @@ import os
 import os.path as osp
 
 import paddle
-import paddle.amp as amp
 
 from ppsci.utils import expression
 from ppsci.utils import misc
 
 
-def visualize_func(solver, epoch_id):
+@paddle.no_grad()
+def visualize_func(solver, epoch_id: int):
     """Visualization program
 
     Args:
-        solver (Solver): Main Solver.
+        solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
 
     Returns:
@@ -49,7 +49,9 @@ def visualize_func(solver, epoch_id):
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False
@@ -61,10 +63,7 @@ def visualize_func(solver, epoch_id):
                 evaluator.add_target_expr(output_expr, output_key)
 
             # forward
-            if solver.use_amp:
-                with amp.auto_cast(level=solver.amp_level):
-                    batch_output_dict = evaluator(batch_input_dict)
-            else:
+            with solver.autocast_context_manager():
                 batch_output_dict = evaluator(batch_input_dict)
 
             # collect batch data

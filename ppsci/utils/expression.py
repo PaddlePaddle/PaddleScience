@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
 from typing import Callable
 from typing import Union
 
@@ -133,14 +132,14 @@ class ExpressionSolver(nn.Layer):
 
     def forward(self, input_dict):
         self.output_dict = input_dict
-        if isinstance(next(iter(self.expr_dict.values())), types.FunctionType):
+        if callable(next(iter(self.expr_dict.values()))):
             model_output_dict = self.model(input_dict)
             self.output_dict.update(model_output_dict)
 
         for name, expr in self.expr_dict.items():
             if isinstance(expr, sympy.Basic):
                 self.output_dict[name] = self.solve_expr(expr)
-            elif isinstance(expr, types.FunctionType):
+            elif callable(expr):
                 self.output_dict[name] = expr(self.output_dict)
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
@@ -154,8 +153,8 @@ class ExpressionSolver(nn.Layer):
         """Add an expression `expr` named `expr_name` to
 
         Args:
-            expr (Callable): _description_
-            expr_name (str): _description_
+            expr (Callable): Callable function for computing an expression.
+            expr_name (str): Name of expression.
         """
         self.expr_dict[expr_name] = expr
 

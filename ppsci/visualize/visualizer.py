@@ -305,3 +305,92 @@ class Visualizer3D(base.Visualizer):
         vtu.save_vtu_from_dict(
             filename, data_dict, self.input_keys, self.output_keys, self.num_timestamps
         )
+
+
+class VisualizerWeather(base.Visualizer):
+    """Visualizer for weather data use matplotlib.
+
+    Args:
+        input_dict (Dict[str, np.ndarray]): Input dict.
+        output_expr (Dict[str, Callable]): Output expression.
+        xticks (Tuple[float, ...]): The list of xtick locations.
+        xticklabels (Tuple[str, ...]): The xaxis' tick labels.
+        yticks (Tuple[float, ...]): The list of ytick locations.
+        yticklabels (Tuple[str, ...]): The yaxis' tick labels.
+        vmin (float): Minimum value that the colormap covers.
+        vmax (float): Maximal value that the colormap covers.
+        colorbar_label (str, optional): The colorbar label. Defaults to "".
+        log_norm (bool, optional): Whether use log norm. Defaults to False.
+        batch_size (int, optional): : Batch size of data when computing result in visu.py. Defaults to 1.
+        num_timestamps (int, optional): Number of timestamps. Defaults to 1.
+        prefix (str, optional): Prefix for output file. Defaults to "plot_weather".
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> vis_datas = {
+        ...     "output_6h": np.random.randn(1, 720, 1440),
+        ...     "target_6h": np.random.randn(1, 720, 1440),
+        ... }
+        >>> visualizer_weather = ppsci.visualize.VisualizerWeather(
+        ...     vis_datas,
+        ...     {
+        ...         "output_6h": lambda d: d["output_6h"],
+        ...         "target_6h": lambda d: d["target_6h"],
+        ...     },
+        ...     xticks=np.linspace(0, 1439, 13),
+        ...     xticklabels=[str(i) for i in range(360, -1, -30)],
+        ...     yticks=np.linspace(0, 719, 7),
+        ...     yticklabels=[str(i) for i in range(90, -91, -30)],
+        ...     vmin=0,
+        ...     vmax=25,
+        ...     prefix="result_states",
+        ... )
+    """
+
+    def __init__(
+        self,
+        input_dict: Dict[str, np.ndarray],
+        output_expr: Dict[str, Callable],
+        xticks: Tuple[float, ...],
+        xticklabels: Tuple[str, ...],
+        yticks: Tuple[float, ...],
+        yticklabels: Tuple[str, ...],
+        vmin: float,
+        vmax: float,
+        colorbar_label: str = "",
+        log_norm: bool = False,
+        batch_size: int = 1,
+        num_timestamps: int = 1,
+        prefix: str = "plot_weather",
+    ):
+        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
+        self.xticks = xticks
+        self.xticklabels = xticklabels
+        self.yticks = yticks
+        self.yticklabels = yticklabels
+        self.vmin = vmin
+        self.vmax = vmax
+        self.colorbar_label = colorbar_label
+        self.log_norm = log_norm
+
+    def save(self, filename, data_dict):
+        data_dict = {key: data_dict[key] for key in self.output_keys}
+        value = data_dict[self.output_keys[0]]
+        # value.shape=(B, H, W)
+        for i in range(value.shape[0]):
+            cur_data_dict = {key: value[i] for key, value in data_dict.items()}
+            plot.save_plot_weather_from_dict(
+                filename + str(i),
+                cur_data_dict,
+                self.output_keys,
+                self.xticks,
+                self.xticklabels,
+                self.yticks,
+                self.yticklabels,
+                self.vmin,
+                self.vmax,
+                self.colorbar_label,
+                self.log_norm,
+                self.num_timestamps,
+            )
