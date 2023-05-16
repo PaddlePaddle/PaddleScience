@@ -72,3 +72,15 @@ class SupervisedConstraint(base.Constraint):
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)
+
+    def __str__(self):
+        return ", ".join(
+            [
+                self.__class__.__name__,
+                f"name = {self.name}",
+                f"input_keys = {self.input_keys}",
+                f"output_keys = {self.output_keys}",
+                f"output_expr = {self.output_expr}",
+                f"loss = {self.loss}",
+            ]
+        )

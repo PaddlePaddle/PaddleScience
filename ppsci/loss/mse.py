@@ -53,7 +53,7 @@ class MSELoss(base.Loss):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
             if "area" in output_dict:
                 loss *= output_dict["area"]
