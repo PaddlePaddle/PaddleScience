@@ -17,6 +17,7 @@ import numpy as np
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
+from ppsci.utils import reader
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -64,15 +65,20 @@ if __name__ == "__main__":
                 timestamps=np.concatenate((t0, train_timestamps), axis=0),
             ),
             ppsci.geometry.PointCloud(
-                "./datasets/domain_train.csv",
-                ["Points:0", "Points:1"],
-                alias_dict={"Points:0": "x", "Points:1": "y"},
+                reader.load_csv_file(
+                    "./datasets/domain_train.csv",
+                    ["x", "y"],
+                    alias_dict={"x": "Points:0", "y": "Points:1"},
+                ),
+                ["x", "y"],
             ),
         ),
         "time_rect_eval": ppsci.geometry.PointCloud(
-            "./datasets/cylinder2d_eval_points.csv",
+            reader.load_csv_file(
+                "./datasets/domain_eval.csv",
+                ["t", "x", "y"],
+            ),
             ["t", "x", "y"],
-            alias_dict={},
         ),
     }
 
