@@ -1,7 +1,7 @@
 - input: 0
   Global:
     use_visualdl: False
-    static_enable: True
+    static_enable: False
     prim_enable: False
     epochs: 20000
   Geometry:
