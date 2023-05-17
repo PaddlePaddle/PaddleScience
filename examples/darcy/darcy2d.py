@@ -131,14 +131,14 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(1e-3)((model,))
 
     # set validator
-    NPOINTS_EVAL = NPOINT_PDE
+    NPOINT_EVAL = NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": NPOINTS_EVAL,
+            "total_size": NPOINT_EVAL,
             "batch_size": 8192,
             "sampler": {"name": "BatchSampler"},
         },
