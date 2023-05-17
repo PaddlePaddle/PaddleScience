@@ -95,7 +95,7 @@ class MatDataset(io.Dataset):
                     raw_data, self.input_keys + self.label_keys
                 )
                 raw_data = misc.combine_array_with_time(raw_data, timestamps)
-                self.input_keys = ["t"] + self.input_keys
+                self.input_keys = ("t",) + tuple(self.input_keys)
                 raw_data = misc.convert_to_dict(
                     raw_data, self.input_keys + self.label_keys
                 )
@@ -214,7 +214,7 @@ class IterableMatDataset(io.IterableDataset):
                     raw_data, self.input_keys + self.label_keys
                 )
                 raw_data = misc.combine_array_with_time(raw_data, timestamps)
-                self.input_keys = ["t"] + self.input_keys
+                self.input_keys = ("t",) + tuple(self.input_keys)
                 raw_data = misc.convert_to_dict(
                     raw_data, self.input_keys + self.label_keys
                 )
