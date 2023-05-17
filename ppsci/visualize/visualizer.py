@@ -21,8 +21,6 @@ from typing import Tuple
 import numpy as np
 import paddle
 
-from ppsci.utils import logger
-from ppsci.utils import misc
 from ppsci.visualize import base
 from ppsci.visualize import plot
 from ppsci.visualize import vtu
