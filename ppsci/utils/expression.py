@@ -36,22 +36,23 @@ class ExpressionSolver(nn.Layer):
         super().__init__()
 
     @jit.to_static
-    def forward(self, expr_dict, input_dict, model):
-        output_dict = {k: v for k, v in input_dict.items()}
+    def forward(self, expr_dict_list, input_dict_list, model):
+        output_dict_list = []
+        for i, expr_dict in enumerate(expr_dict_list):
+            # model forward
+            if callable(next(iter(expr_dict.values()))):
+                output_dict = model(input_dict_list[i])
 
-        # model forward
-        if callable(next(iter(expr_dict.values()))):
-            model_output_dict = model(input_dict)
-            output_dict.update(model_output_dict)
+            # equation forward
+            for name, expr in expr_dict.items():
+                if callable(expr):
+                    output_dict[name] = expr({**output_dict, **input_dict_list[i]})
+                else:
+                    raise TypeError(f"expr type({type(expr)}) is invalid")
 
-        # equation forward
-        for name, expr in expr_dict.items():
-            if callable(expr):
-                output_dict[name] = expr(output_dict)
-            else:
-                raise TypeError(f"expr type({type(expr)}) is invalid")
+            output_dict_list.append(output_dict)
 
-        # clear differentiation cache
-        clear()
+            # clear differentiation cache
+            clear()
 
-        return output_dict
+        return output_dict_list
