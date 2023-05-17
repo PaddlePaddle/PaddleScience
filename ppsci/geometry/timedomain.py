@@ -93,7 +93,7 @@ class TimeXGeometry(geometry.Geometry):
 
     @property
     def dim_keys(self):
-        return ["t"] + self.geometry.dim_keys
+        return ("t",) + self.geometry.dim_keys
 
     def on_boundary(self, x):
         # [N, ndim(txyz)]
