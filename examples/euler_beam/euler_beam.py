@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from paddle import fluid
 
 import ppsci
@@ -22,9 +21,10 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-    fluid.core._set_prim_all_enabled(True)
-
     args = config.parse_args()
+    # enable computation for fourth-order differentiation of matmul
+    fluid.core.set_prim_eager_enabled(True)
+    fluid.core._set_prim_all_enabled(True)
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
@@ -59,49 +59,24 @@ if __name__ == "__main__":
         random="Hammersley",
         name="EQ",
     )
-    bc1 = ppsci.constraint.BoundaryConstraint(
-        {"u0": lambda d: d["u"]},
-        {"u0": 0},
+    bc = ppsci.constraint.BoundaryConstraint(
+        {
+            "u0": lambda d: d["u"][0:1],
+            "u__x": lambda d: jacobian(d["u"], d["x"])[1:2],
+            "u__x__x": lambda d: hessian(d["u"], d["x"])[2:3],
+            "u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])[3:4],
+        },
+        {"u0": 0, "u__x": 0, "u__x__x": 0, "u__x__x__x": 0},
         geom["interval"],
-        {**dataloader_cfg, "batch_size": 1},
+        {**dataloader_cfg, "batch_size": 4},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x: np.isclose(x, 0.0),
-        name="BC1",
-    )
-    bc2 = ppsci.constraint.BoundaryConstraint(
-        {"u__x": lambda d: jacobian(d["u"], d["x"])},
-        {"u__x": 0},
-        geom["interval"],
-        {**dataloader_cfg, "batch_size": 1},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x: np.isclose(x, 0.0),
-        name="BC2",
-    )
-    bc3 = ppsci.constraint.BoundaryConstraint(
-        {"u__x__x": lambda d: hessian(d["u"], d["x"])},
-        {"u__x__x": 0},
-        geom["interval"],
-        {**dataloader_cfg, "batch_size": 1},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x: np.isclose(x, 1.0),
-        name="BC3",
-    )
-    bc4 = ppsci.constraint.BoundaryConstraint(
-        {"u__x__x__x": lambda d: jacobian(hessian(d["u"], d["x"]), d["x"])},
-        {"u__x__x__x": 0},
-        geom["interval"],
-        {**dataloader_cfg, "batch_size": 1},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x: np.isclose(x, 1.0),
-        name="BC4",
+        evenly=True,
+        name="BC",
     )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
-        bc1.name: bc1,
-        bc2.name: bc2,
-        bc3.name: bc3,
-        bc4.name: bc4,
+        bc.name: bc,
     }
 
     # set optimizer
