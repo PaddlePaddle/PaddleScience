@@ -13,12 +13,15 @@
 # limitations under the License.
 
 import numpy as np
+from paddle import fluid
 
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
+    fluid.core._set_prim_all_enabled(True)
+
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
