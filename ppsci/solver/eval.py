@@ -59,15 +59,12 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
 
             for v in input_dict.values():
                 v.stop_gradient = False
-            evaluator = expression.ExpressionSolver(
-                _validator.input_keys, _validator.output_keys, solver.model
-            )
-            for output_name, output_formula in _validator.output_expr.items():
-                evaluator.add_target_expr(output_formula, output_name)
 
             # forward
             with solver.autocast_context_manager(), solver.no_grad_context_manager():
-                output_dict = evaluator(input_dict)
+                output_dict = solver.expr_helper(
+                    _validator.output_expr, input_dict, solver.model
+                )
                 validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
 
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)

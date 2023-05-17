@@ -52,15 +52,12 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
 
             for v in input_dict.values():
                 v.stop_gradient = False
-            evaluator = expression.ExpressionSolver(
-                _constraint.input_keys, _constraint.output_keys, solver.model
-            )
-            for output_name, output_formula in _constraint.output_expr.items():
-                evaluator.add_target_expr(output_formula, output_name)
 
             # forward for every constraint
             with solver.autocast_context_manager():
-                output_dict = evaluator(input_dict)
+                output_dict = solver.expr_helper(
+                    _constraint.output_expr, input_dict, solver.model
+                )
                 constraint_loss = _constraint.loss(output_dict, label_dict, weight_dict)
                 total_loss += constraint_loss
 
