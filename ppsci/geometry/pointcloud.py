@@ -15,13 +15,11 @@
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import numpy as np
 
 import ppsci.utils.misc as misc
 from ppsci.geometry import geometry
-from ppsci.utils import reader
 
 
 class PointCloud(geometry.Geometry):
