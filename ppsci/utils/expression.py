@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
-from typing import Union
-
+from paddle import jit
 from paddle import nn
 
 from ppsci.autodiff import clear
@@ -37,6 +35,7 @@ class ExpressionSolver(nn.Layer):
     def __init__(self):
         super().__init__()
 
+    @jit.to_static
     def forward(self, expr_dict, input_dict, model):
         output_dict = {k: v for k, v in input_dict.items()}
 
