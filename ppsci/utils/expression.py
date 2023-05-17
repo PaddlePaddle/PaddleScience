@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
 from paddle import jit
 from paddle import nn
 
@@ -38,15 +39,33 @@ class ExpressionSolver(nn.Layer):
     @jit.to_static
     def forward(self, expr_dict_list, input_dict_list, model):
         output_dict_list = []
+        intput_dict_total = {}
+        beg_end = [
+            0,
+        ]
+        for i, input_dict in enumerate(input_dict_list):
+            for k, v in input_dict.items():
+                if k not in intput_dict_total:
+                    intput_dict_total[k] = v
+                else:
+                    intput_dict_total[k] = paddle.concat(
+                        (intput_dict_total[k], v), axis=0
+                    )
+            beg_end.append(beg_end[-1] + (next(iter(input_dict.values())).shape[0]))
+
+        output_dict_total = model(intput_dict_total)
+
         for i, expr_dict in enumerate(expr_dict_list):
             # model forward
             if callable(next(iter(expr_dict.values()))):
-                output_dict = model(input_dict_list[i])
+                beg, end = beg_end[i], beg_end[i + 1]
+                output_dict = {k: v[beg:end] for k, v in output_dict_total.items()}
 
             # equation forward
             for name, expr in expr_dict.items():
                 if callable(expr):
-                    output_dict[name] = expr({**output_dict, **input_dict_list[i]})
+                    output_tensor = expr({**output_dict, **input_dict_list[i]})
+                    output_dict[name] = output_tensor
                 else:
                     raise TypeError(f"expr type({type(expr)}) is invalid")
 
