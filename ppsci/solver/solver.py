@@ -36,6 +36,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
@@ -245,6 +246,8 @@ class Solver:
         )
         if logger._logger is not None:
             logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+
+        self.expr_helper = expression.ExpressionSolver()
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
