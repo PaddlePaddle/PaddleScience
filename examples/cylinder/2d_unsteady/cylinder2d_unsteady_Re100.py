@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+from paddle import fluid
 
 import ppsci
 from ppsci.utils import config
@@ -20,6 +21,8 @@ from ppsci.utils import logger
 from ppsci.utils import reader
 
 if __name__ == "__main__":
+    fluid.core.set_prim_eager_enabled(True)
+
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
@@ -67,18 +70,18 @@ if __name__ == "__main__":
             ppsci.geometry.PointCloud(
                 reader.load_csv_file(
                     "./datasets/domain_train.csv",
-                    ["x", "y"],
+                    ("x", "y"),
                     alias_dict={"x": "Points:0", "y": "Points:1"},
                 ),
-                ["x", "y"],
+                ("x", "y"),
             ),
         ),
         "time_rect_eval": ppsci.geometry.PointCloud(
             reader.load_csv_file(
                 "./datasets/domain_eval.csv",
-                ["t", "x", "y"],
+                ("t", "x", "y"),
             ),
-            ["t", "x", "y"],
+            ("t", "x", "y"),
         ),
     }
 
@@ -109,8 +112,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/domain_inlet_cylinder.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["u", "v"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("u", "v"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
@@ -124,8 +127,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/domain_outlet.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["p"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("p",),
                 "alias_dict": ALIAS_DICT,
                 "timestamps": train_timestamps,
             },
@@ -138,8 +141,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/initial/ic0.1.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["u", "v", "p"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("u", "v", "p"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10, "p": 10},
                 "timestamps": t0,
@@ -153,8 +156,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/probe/probe1_50.csv",
-                "input_keys": ["t", "x", "y"],
-                "label_keys": ["u", "v"],
+                "input_keys": ("t", "x", "y"),
+                "label_keys": ("u", "v"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
