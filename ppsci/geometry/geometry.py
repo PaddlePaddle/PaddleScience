@@ -42,7 +42,7 @@ class Geometry:
 
     @property
     def dim_keys(self):
-        return ["x", "y", "z"][: self.ndim]
+        return ("x", "y", "z")[: self.ndim]
 
     @abc.abstractmethod
     def is_inside(self, x):
