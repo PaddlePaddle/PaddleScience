@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-from paddle import fluid
 
 import ppsci
 from ppsci.utils import config
@@ -21,8 +20,7 @@ from ppsci.utils import logger
 from ppsci.utils import reader
 
 if __name__ == "__main__":
-    fluid.core.set_prim_eager_enabled(True)
-
+    # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
@@ -89,7 +87,7 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
-    NPOINT_PDE, ntime_pde = 9420, len(train_timestamps)
+    NPOINT_PDE, NTIME_PDE = 9420, len(train_timestamps)
     NPOINT_INLET_CYLINDER = 161
     NPOINT_OUTLET = 81
     ALIAS_DICT = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
@@ -101,7 +99,7 @@ if __name__ == "__main__":
         geom["time_rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "batch_size": NPOINT_PDE * ntime_pde,
+            "batch_size": NPOINT_PDE * NTIME_PDE,
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
@@ -202,14 +200,15 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
+        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS,
+        evenly=True,
     )
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
+        "visulzie_u_v_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             num_timestamps=NUM_TIMESTAMPS,
-            prefix="result_u",
+            prefix="result_u_v_p",
         )
     }
 
