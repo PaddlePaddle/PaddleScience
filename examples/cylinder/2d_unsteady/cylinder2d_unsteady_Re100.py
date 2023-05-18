@@ -20,7 +20,6 @@ from ppsci.utils import logger
 from ppsci.utils import reader
 
 if __name__ == "__main__":
-    # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
