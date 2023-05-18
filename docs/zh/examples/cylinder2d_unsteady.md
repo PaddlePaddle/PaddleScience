@@ -161,18 +161,18 @@ geom = {
         ppsci.geometry.PointCloud(
             reader.load_csv_file(
                 "./datasets/domain_train.csv",
-                ["x", "y"],
+                ("x", "y"),
                 alias_dict={"x": "Points:0", "y": "Points:1"},
             ),
-            ["x", "y"],
+            ("x", "y"),
         ),
     ),
     "time_rect_eval": ppsci.geometry.PointCloud(
         reader.load_csv_file(
             "./datasets/domain_eval.csv",
-            ["t", "x", "y"],
+            ("t", "x", "y"),
         ),
-        ["t", "x", "y"],
+        ("t", "x", "y"),
     ),
 }
 ```
@@ -375,7 +375,7 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:182:198
 
 ``` py linenums="200"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:200:211
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:200:212
 --8<--
 ```
 
@@ -383,9 +383,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:200:211
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="213"
+``` py linenums="214"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:213:
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:214:
 --8<--
 ```
 
