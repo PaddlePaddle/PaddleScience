@@ -82,14 +82,10 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
                     solver.lr_scheduler.step()
         else:
-            # _t = time.perf_counter()
             total_loss.backward()
-            # print(f"backward.cost = {time.perf_counter() - _t:.5f}")
             if iter_id % solver.update_freq == 0:
-                # _t = time.perf_counter()
                 solver.optimizer.step()
                 solver.optimizer.clear_grad()
-                # print(f"opt.cost = {time.perf_counter() - _t:.5f}")
                 if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
                     solver.lr_scheduler.step()
 

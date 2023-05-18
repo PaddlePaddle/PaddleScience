@@ -87,10 +87,10 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
 
     if num_timestamps > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamps - 1}"
+            f"Visualization results are saved to {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
         )
     else:
-        logger.info(f"Visualization result is saved to {filename}")
+        logger.info(f"Visualization result is saved to {filename}.vtu")
 
 
 def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamps=1):
