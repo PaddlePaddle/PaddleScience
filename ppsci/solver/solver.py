@@ -439,7 +439,7 @@ class Solver:
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
-        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
         if train_state:
             self.model.train()
@@ -516,7 +516,7 @@ class Solver:
         export_dir = self.cfg["Global"]["save_inference_dir"]
         save_path = os.path.join(export_dir, "inference")
         paddle.jit.save(static_model, save_path)
-        logger.info(f"The inference model has been exported to {export_dir}.")
+        logger.info(f"The inference model has been exported to {export_dir}")
 
     def autocast_context_manager(self) -> contextlib.AbstractContextManager:
         """Autocast context manager for Auto Mix Precision.
