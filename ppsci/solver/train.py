@@ -64,7 +64,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 constraint_loss = _constraint.loss(output_dict, label_dict, weight_dict)
                 total_loss += constraint_loss
 
-            loss_dict[_constraint.name] += float(constraint_loss)
+            loss_dict[_constraint.name] = float(constraint_loss)
 
             reader_tic = time.perf_counter()
 
@@ -156,8 +156,9 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
                     )
                     total_loss += constraint_loss
 
-                loss_dict[_constraint.name] += float(constraint_loss)
+                loss_dict[_constraint.name] = float(constraint_loss)
 
+            solver.optimizer.clear_grad()
             total_loss.backward()
             loss_dict["loss"] = float(total_loss)
 
