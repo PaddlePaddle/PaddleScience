@@ -66,19 +66,18 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
 
         # forward for every constraint, including model and equation expression
         with solver.autocast_context_manager():
-            output_dict_list = solver.expr_helper(
+            constraint_losses = solver.expr_helper(
                 [_constraint.output_expr for _constraint in solver.constraint.values()],
                 input_dict_list,
                 solver.model,
+                solver.constraint,
+                label_dict_list,
+                weight_dict_list,
             )
 
         # compute loss for each constraint according to its' own output, label and weight
         for i, (_, _constraint) in enumerate(solver.constraint.items()):
-            constraint_loss = _constraint.loss(
-                output_dict_list[i],
-                label_dict_list[i],
-                weight_dict_list[i],
-            )
+            constraint_loss = constraint_losses[i]
             total_loss += constraint_loss
             loss_dict[_constraint.name] += float(constraint_loss)
 
