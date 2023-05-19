@@ -36,7 +36,15 @@ class ExpressionSolver(nn.Layer):
         super().__init__()
 
     @jit.to_static
-    def forward(self, expr_dict_list, input_dict_list, model):
+    def forward(
+        self,
+        expr_dict_list,
+        input_dict_list,
+        model,
+        constraint,
+        label_dict_list,
+        weight_dict_list,
+    ):
         output_dict_list = []
         for i, expr_dict in enumerate(expr_dict_list):
             # model forward
@@ -55,4 +63,13 @@ class ExpressionSolver(nn.Layer):
             # clear differentiation cache
             clear()
 
-        return output_dict_list
+        # compute loss for each constraint according to its' own output, label and weight
+        constraint_losses = []
+        for i, (_, _constraint) in enumerate(constraint.items()):
+            constraint_loss = _constraint.loss(
+                output_dict_list[i],
+                label_dict_list[i],
+                weight_dict_list[i],
+            )
+            constraint_losses.append(constraint_loss)
+        return constraint_losses
