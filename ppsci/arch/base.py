@@ -62,6 +62,8 @@ class Arch(nn.Layer):
         Returns:
             Tuple[paddle.Tensor, ...]: Concatenated tensor.
         """
+        if len(keys) == 1:
+            return data_dict[keys[0]]
         data = [data_dict[key] for key in keys]
         return paddle.concat(data, axis)
 
@@ -78,6 +80,8 @@ class Arch(nn.Layer):
         Returns:
             Dict[str, paddle.Tensor]: Dict contains tensor.
         """
+        if len(keys) == 1:
+            return {keys[0]: data_tensor}
         data = paddle.split(data_tensor, len(keys), axis=axis)
         return {key: data[i] for i, key in enumerate(keys)}
 
