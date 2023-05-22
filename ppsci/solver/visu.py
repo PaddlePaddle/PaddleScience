@@ -21,7 +21,6 @@ from ppsci.utils import expression
 from ppsci.utils import misc
 
 
-@paddle.no_grad()
 def visualize_func(solver, epoch_id: int):
     """Visualization program
 
