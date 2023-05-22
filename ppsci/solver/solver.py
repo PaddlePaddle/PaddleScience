@@ -29,6 +29,7 @@ import paddle.distributed as dist
 import visualdl as vdl
 from packaging import version
 from paddle import amp
+from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
@@ -218,6 +219,11 @@ class Solver:
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+            if self.update_freq != 1:
+                self.update_freq = 1
+                logger.warning(
+                    f"Set update_freq from {self.update_freq} to 1 when using L-BFGS optimizer."
+                )
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
@@ -511,11 +517,11 @@ class Solver:
 
         input_spec = copy.deepcopy(self.cfg["Export"]["input_shape"])
         config.replace_shape_with_inputspec_(input_spec)
-        static_model = paddle.jit.to_static(self.model, input_spec=input_spec)
+        static_model = jit.to_static(self.model, input_spec=input_spec)
 
         export_dir = self.cfg["Global"]["save_inference_dir"]
         save_path = os.path.join(export_dir, "inference")
-        paddle.jit.save(static_model, save_path)
+        jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}")
 
     def autocast_context_manager(self) -> contextlib.AbstractContextManager:
