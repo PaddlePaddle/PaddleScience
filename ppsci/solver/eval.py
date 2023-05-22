@@ -134,7 +134,9 @@ def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
                     )
-                solver.eval_output_info[metric_str].update(metric_value, num_samples)
+                solver.eval_output_info[metric_str].update(
+                    float(metric_value), num_samples
+                )
 
         if target_metric is None:
             tmp = metric
