@@ -25,13 +25,13 @@ from paddle.fluid import core
 
 from ppsci.data.process import transform
 
-__all__ = ["build_batch_transforms", "default_collate_fn_allow_none"]
+__all__ = ["build_batch_transforms"]
 
 
-def default_collate_fn_allow_none(batch: List[Any]) -> Any:
-    """Modified collate function to allow some fields to be None, such as weight field.
+def default_collate_fn(batch: List[Any]) -> Any:
+    """Default_collate_fn for paddle dataloader.
 
-    ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/dataloader/collate.py#L24
+    ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/io/dataloader/collate.py#L25
 
     Args:
         batch (List[Any]): Batch of samples to be collated.
@@ -40,11 +40,6 @@ def default_collate_fn_allow_none(batch: List[Any]) -> Any:
         Any: Collated batch data.
     """
     sample = batch[0]
-
-    # allow field to be None
-    if sample is None:
-        return None
-
     if isinstance(sample, np.ndarray):
         batch = np.stack(batch, axis=0)
         return batch
@@ -56,15 +51,12 @@ def default_collate_fn_allow_none(batch: List[Any]) -> Any:
     elif isinstance(sample, (str, bytes)):
         return batch
     elif isinstance(sample, Mapping):
-        return {
-            key: default_collate_fn_allow_none([d[key] for d in batch])
-            for key in sample
-        }
+        return {key: default_collate_fn([d[key] for d in batch]) for key in sample}
     elif isinstance(sample, Sequence):
         sample_fields_num = len(sample)
         if not all(len(sample) == sample_fields_num for sample in iter(batch)):
             raise RuntimeError("fileds number not same among samples in a batch")
-        return [default_collate_fn_allow_none(fields) for fields in zip(*batch)]
+        return [default_collate_fn(fields) for fields in zip(*batch)]
 
     raise TypeError(
         "batch data can only contains: tensor, numpy.ndarray, "
@@ -80,6 +72,6 @@ def build_batch_transforms(cfg):
         # apply batch transform on uncollated data
         batch = batch_transforms(batch)
         # then do collate
-        return default_collate_fn_allow_none(batch)
+        return default_collate_fn(batch)
 
     return collate_fn_batch_transforms
