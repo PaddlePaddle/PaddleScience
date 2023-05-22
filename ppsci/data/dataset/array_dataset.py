@@ -56,11 +56,7 @@ class NamedArrayDataset(io.Dataset):
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
-        weight_item = (
-            {key: value[idx] for key, value in self.weight.items()}
-            if self.weight is not None
-            else None
-        )
+        weight_item = {key: value[idx] for key, value in self.weight.items()}
 
         # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
