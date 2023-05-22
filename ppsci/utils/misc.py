@@ -157,7 +157,7 @@ def combine_array_with_time(x, t):
     return tx
 
 
-def set_random_seed(seed):
+def set_random_seed(seed: int):
     paddle.seed(seed)
     np.random.seed(seed)
     random.seed(seed)
