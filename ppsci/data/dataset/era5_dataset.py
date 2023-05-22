@@ -68,14 +68,12 @@ class ERA5Dataset(io.Dataset):
         self.label_keys = label_keys
         self.precip_file_path = precip_file_path
 
-        self.weight_dict = weight_dict
+        self.weight_dict = {} if weight_dict is None else weight_dict
         if weight_dict is not None:
             self.weight_dict = {key: 1.0 for key in self.label_keys}
             self.weight_dict.update(weight_dict)
 
-        self.vars_channel = (
-            vars_channel if vars_channel is not None else [i for i in range(20)]
-        )
+        self.vars_channel = list(range(20)) if vars_channel is None else vars_channel
         self.num_label_timestamps = num_label_timestamps
         self.transforms = transforms
         self.training = training
@@ -127,6 +125,7 @@ class ERA5Dataset(io.Dataset):
             input_idx, label_idx = local_idx, local_idx + step
 
         input_item = {self.input_keys[0]: input_file[input_idx, self.vars_channel]}
+
         label_item = {}
         for i in range(self.num_label_timestamps):
             if self.precip_file_path is not None:
@@ -138,14 +137,11 @@ class ERA5Dataset(io.Dataset):
                     label_idx + i, self.vars_channel
                 ]
 
-        if self.weight_dict is not None:
-            weight_shape = [1] * len(next(iter(label_item.values)).shape)
-            weight_item = {
-                key: np.full(weight_shape, value, paddle.get_default_dtype())
-                for key, value in self.weight_dict.items()
-            }
-        else:
-            weight_item = None
+        weight_shape = [1] * len(next(iter(label_item.values)).shape)
+        weight_item = {
+            key: np.full(weight_shape, value, paddle.get_default_dtype())
+            for key, value in self.weight_dict.items()
+        }
 
         if self.transforms is not None:
             input_item, label_item, weight_item = self.transforms(
@@ -187,7 +183,7 @@ class ERA5SampledDataset(io.Dataset):
         self.input_keys = input_keys
         self.label_keys = label_keys
 
-        self.weight_dict = weight_dict
+        self.weight_dict = {} if weight_dict is None else weight_dict
         if weight_dict is not None:
             self.weight_dict = {key: 1.0 for key in self.label_keys}
             self.weight_dict.update(weight_dict)
@@ -201,8 +197,8 @@ class ERA5SampledDataset(io.Dataset):
         paths = glob.glob(path + "/*.h5")
         paths.sort()
         files = []
-        for path in paths:
-            _file = h5py.File(path, "r")
+        for _path in paths:
+            _file = h5py.File(_path, "r")
             files.append(_file)
         return files
 
@@ -217,20 +213,18 @@ class ERA5SampledDataset(io.Dataset):
             input_item[key] = np.asarray(
                 _file["input_dict"][key], paddle.get_default_dtype()
             )
+
         label_item = {}
         for key in _file["label_dict"]:
             label_item[key] = np.asarray(
                 _file["label_dict"][key], paddle.get_default_dtype()
             )
 
-        if self.weight_dict is not None:
-            weight_shape = [1] * len(next(iter(label_item.values)).shape)
-            weight_item = {
-                key: np.full(weight_shape, value, paddle.get_default_dtype())
-                for key, value in self.weight_dict.items()
-            }
-        else:
-            weight_item = None
+        weight_shape = [1] * len(next(iter(label_item.values)).shape)
+        weight_item = {
+            key: np.full(weight_shape, value, paddle.get_default_dtype())
+            for key, value in self.weight_dict.items()
+        }
 
         if self.transforms is not None:
             input_item, label_item, weight_item = self.transforms(

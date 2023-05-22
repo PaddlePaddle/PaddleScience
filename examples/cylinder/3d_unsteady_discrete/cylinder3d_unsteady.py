@@ -342,7 +342,6 @@ if __name__ == "__main__":
             600000,
             label,
             time_list,
-            len(time_list),
             "result_uvwp",
         )
     }
