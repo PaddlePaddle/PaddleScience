@@ -19,7 +19,6 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
-import paddle
 
 from ppsci.visualize import base
 from ppsci.visualize import plot

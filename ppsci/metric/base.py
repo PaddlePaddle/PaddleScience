@@ -18,5 +18,6 @@ from paddle import nn
 class Metric(nn.Layer):
     """Base class for metric."""
 
-    def __init__(self):
+    def __init__(self, keep_batch: str = False):
         super().__init__()
+        self.keep_batch = keep_batch

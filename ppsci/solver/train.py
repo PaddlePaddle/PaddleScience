@@ -169,6 +169,8 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
             return total_loss
 
         solver.optimizer.step(closure)
+
+        # update learning rate by step
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
