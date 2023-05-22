@@ -23,7 +23,7 @@ from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
+def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program by dataset.
 
     Args:
@@ -63,7 +63,8 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                 _validator.input_keys, _validator.output_keys, solver.model
             )
             for output_name, output_formula in _validator.output_expr.items():
-                evaluator.add_target_expr(output_formula, output_name)
+                if output_name in label_dict:
+                    evaluator.add_target_expr(output_formula, output_name)
 
             # forward
             with solver.autocast_context_manager(), solver.no_grad_context_manager():
@@ -147,7 +148,7 @@ def eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
     return target_metric
 
 
-def eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
+def _eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
     """Evaluation program by batch.
 
     Args:
@@ -260,5 +261,5 @@ def eval_func(solver, epoch_id: int, log_freq: int) -> float:
         float: Target metric computed during evaluation.
     """
     if solver.compute_metric_by_batch:
-        return eval_by_batch(solver, epoch_id, log_freq)
-    return eval_by_dataset(solver, epoch_id, log_freq)
+        return _eval_by_batch(solver, epoch_id, log_freq)
+    return _eval_by_dataset(solver, epoch_id, log_freq)
