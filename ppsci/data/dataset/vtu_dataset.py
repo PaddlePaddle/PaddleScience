@@ -83,7 +83,7 @@ class VtuDataset(io.Dataset):
     def __getitem__(self, idx):
         input_item = {key: value[idx] for key, value in self.input.items()}
         label_item = {key: value[idx] for key, value in self.label.items()}
-        return (input_item, label_item, None)
+        return (input_item, label_item, {})
 
     def __len__(self):
         return self.num_samples
