@@ -221,9 +221,7 @@ class Solver:
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
-                logger.warning(
-                    f"Set update_freq from {self.update_freq} to 1 when using L-BFGS optimizer."
-                )
+                logger.warning("Set update_freq to to 1 when using L-BFGS optimizer.")
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 

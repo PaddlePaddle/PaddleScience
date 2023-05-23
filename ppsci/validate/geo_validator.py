@@ -26,6 +26,7 @@ from typing_extensions import Literal
 
 from ppsci import geometry
 from ppsci import loss
+from ppsci import metric
 from ppsci.data import dataset
 from ppsci.validate import base
 
@@ -46,7 +47,7 @@ class GeometryValidator(base.Validator):
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified domain. Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling. Defaults to False.
-        metric (Optional[Dict[str, Any]]): Named metric functors in dict. Defaults to None.
+        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
         with_initial (bool, optional): Whether the data contains time t0. Defaults to False.
         name (Optional[str]): Name of validator. Defaults to None.
 
@@ -77,7 +78,7 @@ class GeometryValidator(base.Validator):
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
-        metric: Optional[Dict[str, Any]] = None,
+        metric: Optional[Dict[str, metric.Metric]] = None,
         with_initial: bool = False,
         name: Optional[str] = None,
     ):

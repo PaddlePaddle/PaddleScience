@@ -33,7 +33,7 @@ class L2Rel(base.Metric):
     """
 
     def __init__(self, keep_batch: bool = False):
-        if keep_batch is not False:
+        if keep_batch:
             raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
         super().__init__(keep_batch)
 
