@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import itertools
 import os
 import sys
 from typing import Any
@@ -200,6 +201,16 @@ class Solver:
 
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
+        if validator is not None:
+            for metric in itertools.chain(
+                *[_v.metric.values() for _v in self.validator.values()]
+            ):
+                if metric.keep_batch ^ compute_metric_by_batch:
+                    raise ValueError(
+                        f"{misc.typename(metric)}.keep_batch should be "
+                        f"{compute_metric_by_batch} when compute_metric_by_batch="
+                        f"{compute_metric_by_batch}."
+                    )
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
