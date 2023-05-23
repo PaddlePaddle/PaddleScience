@@ -63,12 +63,11 @@ class LatitudeWeightedACC(base.Metric):
         unlog: bool = False,
         scale: float = 1e-5,
     ):
-        super().__init__()
+        super().__init__(keep_batch)
         self.num_lat = num_lat
         self.mean = (
             None if mean is None else paddle.to_tensor(mean, paddle.get_default_dtype())
         )
-        self.keep_batch = keep_batch
         self.variable_dict = variable_dict
         self.unlog = unlog
         self.scale = scale
@@ -110,14 +109,10 @@ class LatitudeWeightedACC(base.Metric):
                     if self.keep_batch:
                         metric_dict[f"{key}.{variable_name}"] = rmse[:, idx]
                     else:
-                        metric_dict[f"{key}.{variable_name}"] = float(
-                            rmse[:, idx].mean()
-                        )
+                        metric_dict[f"{key}.{variable_name}"] = rmse[:, idx].mean()
             else:
                 if self.keep_batch:
-                    rmse = rmse.mean(axis=1)
-                    metric_dict[key] = rmse
+                    metric_dict[key] = rmse.mean(axis=1)
                 else:
-                    rmse = rmse.mean()
-                    metric_dict[key] = float(rmse)
+                    metric_dict[key] = rmse.mean()
         return metric_dict
