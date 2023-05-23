@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Reference: https://www.mathworks.com/help/pde/ug/deflection-analysis-of-a-bracket.html
+Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html
 """
 
 import numpy as np
@@ -25,17 +25,12 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-    # enable prim_eager mode for high-order autodiff
     # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    OUTPUT_DIR = (
-        "./output_bracket_pdsci_mesh_prim_silu_nan_debug"
-        if not args.output_dir
-        else args.output_dir
-    )
+    OUTPUT_DIR = "./output_bracket" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
@@ -53,9 +48,6 @@ if __name__ == "__main__":
     )
     # wrap to a model_list
     model = ppsci.arch.ModelList((disp_net, stress_net))
-
-    model.load_dict(paddle.load("./converted_bracket_initial_ckpt.pdparams"))
-    logger.info("load pytorch's init weight")
 
     # Specify parameters
     NU = 0.3
@@ -102,7 +94,7 @@ if __name__ == "__main__":
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
+        "num_workers": 2,
     }
 
     # set constraint
@@ -350,7 +342,7 @@ if __name__ == "__main__":
             "sigma_yz": lambda out: out["sigma_yz"],
         },
         metric={"MSE": ppsci.metric.MSE()},
-        name="commercial_ref_u_v_w_sigma",
+        name="commercial_ref_u_v_w_sigmas",
     )
     validator = {sup_validator.name: sup_validator}
 

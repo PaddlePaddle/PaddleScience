@@ -65,6 +65,10 @@ class Mesh(geometry.Geometry):
             self.py_mesh.add_attribute("face_area")
         self.face_area = self.py_mesh.get_attribute("face_area").reshape([-1])
 
+        if not checker.dynamic_import_to_globals(["open3d"]):
+            raise ModuleNotFoundError
+        import open3d
+
         self.open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(np.array(self.py_mesh.vertices)),
             open3d.utility.Vector3iVector(np.array(self.py_mesh.faces)),
@@ -107,6 +111,10 @@ class Mesh(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+        import pymesh
+
         sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
         sdf = sdf[..., np.newaxis]
         return sdf
@@ -394,6 +402,7 @@ class Mesh(geometry.Geometry):
         while _size < n:
             random_points = cuboid.random_points(n, random)
             valid_mask = self.is_inside(random_points)
+
             if criteria:
                 valid_mask &= criteria(
                     *np.split(random_points, self.ndim, axis=1)

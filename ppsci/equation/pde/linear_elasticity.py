@@ -1,5 +1,16 @@
-"""Equations related to linear elasticity
-"""
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import Optional
 
@@ -53,13 +64,13 @@ class LinearElasticity(base.PDE):
             )
             sigma_xx = out["sigma_xx"]
             stress_disp_xx = (
-                self.lambda_ * (jacobian(u, x) + jacobian(v, y) + jacobian(w, z))
+                self.lambda_ * (jacobian(u, x) + jacobian(v, y))
                 + 2 * self.mu * jacobian(u, x)
                 - sigma_xx
             )
-            # if self.dim == 3:
-            #     z, w = out["z"], out["w"]
-            #     stress_disp_xx += self.lambda_ * jacobian(w, z)
+            if self.dim == 3:
+                z, w = out["z"], out["w"]
+                stress_disp_xx += self.lambda_ * jacobian(w, z)
             return stress_disp_xx
 
         self.add_equation("stress_disp_xx", stress_disp_xx_compute_func)
@@ -75,13 +86,13 @@ class LinearElasticity(base.PDE):
             )
             sigma_yy = out["sigma_yy"]
             stress_disp_yy = (
-                self.lambda_ * (jacobian(u, x) + jacobian(v, y) + jacobian(w, z))
+                self.lambda_ * (jacobian(u, x) + jacobian(v, y))
                 + 2 * self.mu * jacobian(v, y)
                 - sigma_yy
             )
-            # if self.dim == 3:
-            #     z, w = out["z"], out["w"]
-            #     stress_disp_yy += self.lambda_ * jacobian(w, z)
+            if self.dim == 3:
+                z, w = out["z"], out["w"]
+                stress_disp_yy += self.lambda_ * jacobian(w, z)
             return stress_disp_yy
 
         self.add_equation("stress_disp_yy", stress_disp_yy_compute_func)
@@ -136,18 +147,11 @@ class LinearElasticity(base.PDE):
         # Equations of equilibrium
         def equilibrium_x_compute_func(out):
             x, y, z = out["x"], out["y"], out["z"]
-            sigma_xx, sigma_xy, sigma_xz = (
-                out["sigma_xx"],
-                out["sigma_xy"],
-                out["sigma_xz"],
-            )
-            equilibrium_x = -(
-                jacobian(sigma_xx, x) + jacobian(sigma_xy, y) + jacobian(sigma_xz, z)
-            )
-            # if self.dim == 3:
-            #     z = out["z"]
-            #     sigma_xz = out["sigma_xz"]
-            #     equilibrium_x -= jacobian(sigma_xz, z)
+            sigma_xx, sigma_xy = out["sigma_xx"], out["sigma_xy"]
+            equilibrium_x = -jacobian(sigma_xx, x) - jacobian(sigma_xy, y)
+            if self.dim == 3:
+                z, sigma_xz = out["z"], out["sigma_xz"]
+                equilibrium_x -= jacobian(sigma_xz, z)
             if self.time:
                 t, u = out["t"], out["u"]
                 equilibrium_x += self.rho * hessian(u, t)
@@ -162,13 +166,10 @@ class LinearElasticity(base.PDE):
                 out["sigma_yy"],
                 out["sigma_yz"],
             )
-            equilibrium_y = -(
-                jacobian(sigma_xy, x) + jacobian(sigma_yy, y) + jacobian(sigma_yz, z)
-            )
-            # if self.dim == 3:
-            #     z = out["z"]
-            #     sigma_yz = out["sigma_yz"]
-            #     equilibrium_y -= jacobian(sigma_yz, z)
+            equilibrium_y = -jacobian(sigma_xy, x) - jacobian(sigma_yy, y)
+            if self.dim == 3:
+                z, sigma_yz = out["z"], out["sigma_yz"]
+                equilibrium_y -= jacobian(sigma_yz, z)
             if self.time:
                 t, v = out["t"], out["v"]
                 equilibrium_y += self.rho * hessian(v, t)
@@ -185,10 +186,10 @@ class LinearElasticity(base.PDE):
                     out["sigma_yz"],
                     out["sigma_zz"],
                 )
-                equilibrium_z = -(
-                    jacobian(sigma_xz, x)
-                    + jacobian(sigma_yz, y)
-                    + jacobian(sigma_zz, z)
+                equilibrium_z = (
+                    -jacobian(sigma_xz, x)
+                    - jacobian(sigma_yz, y)
+                    - jacobian(sigma_zz, z)
                 )
                 if self.time:
                     t, w = out["t"], out["w"]
@@ -199,41 +200,35 @@ class LinearElasticity(base.PDE):
 
         # Traction equations
         def traction_x_compute_func(out):
-            normal_x, normal_y, normal_z = (
+            normal_x, normal_y = (
                 out["normal_x"],
                 out["normal_y"],
-                out["normal_z"],
             )
-            sigma_xx, sigma_xy, sigma_xz = (
+            sigma_xx, sigma_xy = (
                 out["sigma_xx"],
                 out["sigma_xy"],
-                out["sigma_xz"],
             )
-            traction_x = normal_x * sigma_xx + normal_y * sigma_xy + normal_z * sigma_xz
-            # if self.dim == 3:
-            #     normal_z = out["normal_z"]
-            #     sigma_xz = out["sigma_xz"]
-            #     traction_x += normal_z * sigma_xz
+            traction_x = normal_x * sigma_xx + normal_y * sigma_xy
+            if self.dim == 3:
+                normal_z, sigma_xz = out["normal_z"], out["sigma_xz"]
+                traction_x += normal_z * sigma_xz
             return traction_x
 
         self.add_equation("traction_x", traction_x_compute_func)
 
         def traction_y_compute_func(out):
-            normal_x, normal_y, normal_z = (
+            normal_x, normal_y = (
                 out["normal_x"],
                 out["normal_y"],
-                out["normal_z"],
             )
-            sigma_xy, sigma_yy, sigma_yz = (
+            sigma_xy, sigma_yy = (
                 out["sigma_xy"],
                 out["sigma_yy"],
-                out["sigma_yz"],
             )
-            traction_y = normal_x * sigma_xy + normal_y * sigma_yy + normal_z * sigma_yz
-            # if self.dim == 3:
-            #     normal_z = out["normal_z"]
-            #     sigma_yz = out["sigma_yz"]
-            #     traction_y += normal_z * sigma_yz
+            traction_y = normal_x * sigma_xy + normal_y * sigma_yy
+            if self.dim == 3:
+                normal_z, sigma_yz = out["normal_z"], out["sigma_yz"]
+                traction_y += normal_z * sigma_yz
             return traction_y
 
         self.add_equation("traction_y", traction_y_compute_func)
@@ -256,23 +251,21 @@ class LinearElasticity(base.PDE):
 
         # Navier equations
         def navier_x_compute_func(out):
-            x, y, z, u, v, w = (
+            x, y, u, v = (
                 out["x"],
                 out["y"],
-                out["z"],
                 out["u"],
                 out["v"],
-                out["w"],
             )
-            # duxvywz = jacobian(u, x) + jacobian(v, y)
-            # duxxuyyuzz = hessian(u, x) + hessian(u, y)
-            # if self.dim == 3:
-            #     z, w = out["z"], out["w"]
-            #     duxvywz += jacobian(w, z)
-            #     duxxuyyuzz += hessian(u, z)
-            navier_x = -(self.lambda_ + self.mu) * (
-                jacobian(jacobian(u, x) + jacobian(v, y) + jacobian(w, z), x)
-            ) - self.mu * (hessian(u, x) + hessian(u, y) + hessian(u, z))
+            duxvywz = jacobian(u, x) + jacobian(v, y)
+            duxxuyyuzz = hessian(u, x) + hessian(u, y)
+            if self.dim == 3:
+                z, w = out["z"], out["w"]
+                duxvywz += jacobian(w, z)
+                duxxuyyuzz += hessian(u, z)
+            navier_x = (
+                -(self.lambda_ + self.mu) * jacobian(duxvywz, x) - self.mu * duxxuyyuzz
+            )
             if self.time:
                 t = out["t"]
                 navier_x += rho * hessian(u, t)
@@ -281,23 +274,21 @@ class LinearElasticity(base.PDE):
         self.add_equation("navier_x", navier_x_compute_func)
 
         def navier_y_compute_func(out):
-            x, y, z, u, v, w = (
+            x, y, u, v = (
                 out["x"],
                 out["y"],
-                out["z"],
                 out["u"],
                 out["v"],
-                out["w"],
             )
-            # duxvywz = jacobian(u, x) + jacobian(v, y)
-            # dvxxvyyvzz = hessian(v, x) + hessian(v, y)
-            # if self.dim == 3:
-            #     z, w = out["z"], out["w"]
-            #     duxvywz += jacobian(w, z)
-            #     dvxxvyyvzz += hessian(v, z)
-            navier_y = -(self.lambda_ + self.mu) * (
-                jacobian(jacobian(u, x) + jacobian(v, y) + jacobian(w, z), y)
-            ) - self.mu * (hessian(v, x) + hessian(v, y) + hessian(v, z))
+            duxvywz = jacobian(u, x) + jacobian(v, y)
+            dvxxvyyvzz = hessian(v, x) + hessian(v, y)
+            if self.dim == 3:
+                z, w = out["z"], out["w"]
+                duxvywz += jacobian(w, z)
+                dvxxvyyvzz += hessian(v, z)
+            navier_y = (
+                -(self.lambda_ + self.mu) * jacobian(duxvywz, y) - self.mu * dvxxvyyvzz
+            )
             if self.time:
                 t = out["t"]
                 navier_y += rho * hessian(v, t)
@@ -316,11 +307,12 @@ class LinearElasticity(base.PDE):
                     out["v"],
                     out["w"],
                 )
-                # duxvywz = jacobian(u, x) + jacobian(v, y) + jacobian(w, z)
-                # dwxxvyyvzz = hessian(w, x) + hessian(w, y) + hessian(w, z)
-                navier_z = -(self.lambda_ + self.mu) * (
-                    jacobian(jacobian(u, x) + jacobian(v, y) + jacobian(w, z), z)
-                ) - self.mu * (hessian(w, x) + hessian(w, y) + hessian(w, z))
+                duxvywz = jacobian(u, x) + jacobian(v, y) + jacobian(w, z)
+                dwxxvyyvzz = hessian(w, x) + hessian(w, y) + hessian(w, z)
+                navier_z = (
+                    -(self.lambda_ + self.mu) * jacobian(duxvywz, z)
+                    - self.mu * dwxxvyyvzz
+                )
                 if self.time:
                     t = out["t"]
                     navier_z += rho * hessian(w, t)
