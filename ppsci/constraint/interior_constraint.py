@@ -98,66 +98,51 @@ class InteriorConstraint(base.Constraint):
             criteria = eval(criteria)
 
         # prepare input
-        # input = geom.sample_interior(
-        #     dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
-        #     random,
-        #     criteria,
-        #     evenly,
-        # )
-        input = np.load(
-            f"/workspace/hesensen/modulus/examples/bracket/outputs/bracket/{name}.input.npz"
+        input = geom.sample_interior(
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
+            random,
+            criteria,
+            evenly,
         )
-        input = dict(input)
-        for k in input:
-            input[k] = input[k].astype("float32")
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
 
-        # for v in input:
-        #     print(f"InteriorConstraint.input: {v} {input[v].shape} {input[v].mean().item():.10f} {input[v].std().item():.10f}")
-
         # prepare label
         label = {}
-        # for key, value in label_dict.items():
-        #     if isinstance(value, str):
-        #         value = sp_parser.parse_expr(value)
-        #     if isinstance(value, (int, float)):
-        #         label[key] = np.full_like(next(iter(input.values())), float(value))
-        #     elif isinstance(value, sympy.Basic):
-        #         func = sympy.lambdify(
-        #             sympy.symbols(geom.dim_keys),
-        #             value,
-        #             [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
-        #         )
-        #         label[key] = func(
-        #             **{k: v for k, v in input.items() if k in geom.dim_keys}
-        #         )
-        #     elif isinstance(value, types.FunctionType):
-        #         func = value
-        #         label[key] = func(input)
-        #         if isinstance(label[key], (int, float)):
-        #             label[key] = np.full_like(
-        #                 next(iter(input.values())), float(label[key])
-        #             )
-        #     else:
-        #         raise NotImplementedError(f"type of {type(value)} is invalid yet.")
-        label = np.load(
-            f"/workspace/hesensen/modulus/examples/bracket/outputs/bracket/{name}.label.npz"
-        )
-        label = dict(label)
-        for k in label:
-            label[k] = label[k].astype("float32")
+        for key, value in label_dict.items():
+            if isinstance(value, str):
+                value = sp_parser.parse_expr(value)
+            if isinstance(value, (int, float)):
+                label[key] = np.full_like(next(iter(input.values())), float(value))
+            elif isinstance(value, sympy.Basic):
+                func = sympy.lambdify(
+                    sympy.symbols(geom.dim_keys),
+                    value,
+                    [{"amax": lambda xy, _: np.maximum(xy[0], xy[1])}, "numpy"],
+                )
+                label[key] = func(
+                    **{k: v for k, v in input.items() if k in geom.dim_keys}
+                )
+            elif isinstance(value, types.FunctionType):
+                func = value
+                label[key] = func(input)
+                if isinstance(label[key], (int, float)):
+                    label[key] = np.full_like(
+                        next(iter(input.values())), float(label[key])
+                    )
+            else:
+                raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # prepare weight
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
-        weight = {key: input["sdf"].astype("float32") for key in weight}
-        input.pop("sdf")
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-
-                if isinstance(value, (int, float)):
+                    if value == "sdf":
+                        weight[key] = input["sdf"]
+                    else:
+                        raise NotImplementedError(f"string {value} is invalid yet.")
+                elif isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), float(value))
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
@@ -177,6 +162,9 @@ class InteriorConstraint(base.Constraint):
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+
+        if "sdf" in input:
+            input.pop("sdf")
 
         # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)

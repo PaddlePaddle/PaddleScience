@@ -26,15 +26,18 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
     # enable prim_eager mode for high-order autodiff
-    fluid.core.set_prim_eager_enabled(True)
-
+    # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    output_dir = "./output_bracket" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = (
+        "./output_bracket_pdsci_mesh_prim_silu_nan_debug"
+        if not args.output_dir
+        else args.output_dir
+    )
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     disp_net = ppsci.arch.MLP(
@@ -90,10 +93,10 @@ if __name__ == "__main__":
     geom = {"geo": geo}
 
     # set dataloader config
-    iters_per_epoch = 1000
+    ITERS_PER_EPOCH = 1000
     train_dataloader_cfg = {
         "dataset": "NamedArrayDataset",
-        "iters_per_epoch": iters_per_epoch,
+        "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": True,
@@ -103,17 +106,23 @@ if __name__ == "__main__":
     }
 
     # set constraint
-    support_origin = (-1, -1, -1)
-    bracket_origin = (-0.75, -1, -0.1)
-    bracket_dim = (1.75, 2, 0.2)
-    cylinder_radius = 0.1
+    SUPPORT_ORIGIN = (-1, -1, -1)
+    BRACKET_ORIGIN = (-0.75, -1, -0.1)
+    BRACKET_DIM = (1.75, 2, 0.2)
+    BOUNDS_SUPPORT_X = (-1, -0.65)
+    BOUNDS_SUPPORT_Y = (-1, 1)
+    BOUNDS_SUPPORT_Z = (-1, 1)
+    BOUNDS_BRACKET_X = (-0.65, 1)
+    BOUNDS_BRACKET_Y = (-1, 1)
+    BOUNDS_BRACKET_Z = (-0.1, 0.1)
+
     bc_back = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
         {"u": 0, "v": 0, "w": 0},
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 1024},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y, z: np.isclose(x, support_origin[0]),
+        criteria=lambda x, y, z: x == SUPPORT_ORIGIN[0],
         weight_dict={"u": 10, "v": 10, "w": 10},
         name="BC_BACK",
     )
@@ -123,7 +132,7 @@ if __name__ == "__main__":
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 128},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y, z: np.isclose(x, bracket_origin[0] + bracket_dim[0]),
+        criteria=lambda x, y, z: x == BRACKET_ORIGIN[0] + BRACKET_DIM[0],
         name="BC_FRONT",
     )
     bc_surface = ppsci.constraint.BoundaryConstraint(
@@ -133,7 +142,7 @@ if __name__ == "__main__":
         {**train_dataloader_cfg, "batch_size": 4096},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y, z: np.logical_and(
-            x > support_origin[0], x < bracket_origin[0] + bracket_dim[0]
+            x > SUPPORT_ORIGIN[0] + 1e-7, x < BRACKET_ORIGIN[0] + BRACKET_DIM[0] - 1e-7
         ),
         name="BC_SURFACE",
     )
@@ -153,18 +162,25 @@ if __name__ == "__main__":
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 2048},
         ppsci.loss.MSELoss("sum"),
-        # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
-        # weight={
-        #     "equilibrium_x": "sdf",
-        #     "equilibrium_y": "sdf",
-        #     "equilibrium_z": "sdf",
-        #     "stress_disp_xx": "sdf",
-        #     "stress_disp_yy": "sdf",
-        #     "stress_disp_zz": "sdf",
-        #     "stress_disp_xy": "sdf",
-        #     "stress_disp_xz": "sdf",
-        #     "stress_disp_yz": "sdf",
-        # }
+        criteria=lambda x, y, z: (
+            (BOUNDS_SUPPORT_X[0] < x)
+            & (x < BOUNDS_SUPPORT_X[1])
+            & (BOUNDS_SUPPORT_Y[0] < y)
+            & (y < BOUNDS_SUPPORT_Y[1])
+            & (BOUNDS_SUPPORT_Z[0] < z)
+            & (z < BOUNDS_SUPPORT_Z[1])
+        ),
+        weight_dict={
+            "equilibrium_x": "sdf",
+            "equilibrium_y": "sdf",
+            "equilibrium_z": "sdf",
+            "stress_disp_xx": "sdf",
+            "stress_disp_yy": "sdf",
+            "stress_disp_zz": "sdf",
+            "stress_disp_xy": "sdf",
+            "stress_disp_xz": "sdf",
+            "stress_disp_yz": "sdf",
+        },
         name="support_interior",
     )
     bracket_interior_constraint = ppsci.constraint.InteriorConstraint(
@@ -183,18 +199,25 @@ if __name__ == "__main__":
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 1024},
         ppsci.loss.MSELoss("sum"),
-        # bounds={x: bounds_bracket_x, y: bounds_bracket_y, z: bounds_bracket_z}
-        # weight={
-        #     "equilibrium_x": "sdf",
-        #     "equilibrium_y": "sdf",
-        #     "equilibrium_z": "sdf",
-        #     "stress_disp_xx": "sdf",
-        #     "stress_disp_yy": "sdf",
-        #     "stress_disp_zz": "sdf",
-        #     "stress_disp_xy": "sdf",
-        #     "stress_disp_xz": "sdf",
-        #     "stress_disp_yz": "sdf",
-        # }
+        criteria=lambda x, y, z: (
+            (BOUNDS_BRACKET_X[0] < x)
+            & (x < BOUNDS_BRACKET_X[1])
+            & (BOUNDS_BRACKET_Y[0] < y)
+            & (y < BOUNDS_BRACKET_Y[1])
+            & (BOUNDS_BRACKET_Z[0] < z)
+            & (z < BOUNDS_BRACKET_Z[1])
+        ),
+        weight_dict={
+            "equilibrium_x": "sdf",
+            "equilibrium_y": "sdf",
+            "equilibrium_z": "sdf",
+            "stress_disp_xx": "sdf",
+            "stress_disp_yy": "sdf",
+            "stress_disp_zz": "sdf",
+            "stress_disp_xy": "sdf",
+            "stress_disp_xz": "sdf",
+            "stress_disp_yz": "sdf",
+        },
         name="bracket_interior",
     )
     # wrap constraints together
@@ -207,10 +230,10 @@ if __name__ == "__main__":
     }
 
     # set training hyper-parameters
-    epochs = 2000 if not args.epochs else args.epochs
+    EPOCHS = 2000 if not args.epochs else args.epochs
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         0.001,
         0.95,
         15000,
@@ -354,11 +377,11 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         lr_scheduler,
-        epochs,
-        iters_per_epoch,
+        EPOCHS,
+        ITERS_PER_EPOCH,
         save_freq=20,
         eval_during_train=True,
         log_freq=20,
@@ -377,16 +400,16 @@ if __name__ == "__main__":
     solver.visualize()
 
     # # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{output_dir}/eval.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        output_dir,
+        OUTPUT_DIR,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{output_dir}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

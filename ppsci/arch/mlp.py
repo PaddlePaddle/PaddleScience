@@ -28,15 +28,15 @@ class WeightNormLinear(nn.Layer):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight_v = paddle.create_parameter(
-            (in_features, out_features), paddle.get_default_dtype()
+        self.weight_v = self.create_parameter(
+            (in_features, out_features), dtype=paddle.get_default_dtype()
         )
-        self.weight_g = paddle.create_parameter(
-            (out_features,), paddle.get_default_dtype()
+        self.weight_g = self.create_parameter(
+            (out_features,), dtype=paddle.get_default_dtype()
         )
         if bias:
-            self.bias = paddle.create_parameter(
-                (out_features,), paddle.get_default_dtype()
+            self.bias = self.create_parameter(
+                (out_features,), dtype=paddle.get_default_dtype()
             )
         else:
             self.bias = None
@@ -106,10 +106,11 @@ class MLP(base.NetBase):
         # initialize FC layer(s)
         cur_size = len(self.input_keys)
         for _size in hidden_size:
-            self.linears.append(nn.Linear(cur_size, _size))
-            if weight_norm:
-                # self.linears[-1] = nn.utils.weight_norm(self.linears[-1], dim=1)
-                self.linears[-1] = WeightNormLinear(cur_size, _size)
+            self.linears.append(
+                WeightNormLinear(cur_size, _size)
+                if weight_norm
+                else nn.Linear(cur_size, _size)
+            )
             cur_size = _size
         self.linears = nn.LayerList(self.linears)
 

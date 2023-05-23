@@ -14,8 +14,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -461,16 +463,15 @@ class Solver:
             # prepare batch input dict
             for key in input_dict:
                 if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(input_dict[key][st:ed])
+                    batch_input_dict[key] = paddle.to_tensor(
+                        input_dict[key][st:ed], paddle.get_default_dtype()
+                    )
                 else:
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            if self.use_amp:
-                with amp.auto_cast(level=self.amp_level):
-                    batch_output_dict = self.model(batch_input_dict)
-            else:
+            with self.autocast_context_manager():
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
@@ -499,3 +500,20 @@ class Solver:
         save_path = os.path.join(export_dir, "inference")
         paddle.jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}.")
+
+    def autocast_context_manager(self) -> contextlib.AbstractContextManager:
+        """Autocast context manager for Auto Mix Precision.
+
+        Returns:
+            Union[contextlib.AbstractContextManager]: Context manager.
+        """
+        if self.use_amp:
+            ctx_manager = amp.auto_cast(level=self.amp_level)
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
+
+        return ctx_manager

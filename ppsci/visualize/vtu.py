@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+from typing import Tuple
+
+import meshio
 import numpy as np
 import paddle
 from pyevtk import hl
@@ -82,10 +86,10 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp=1):
 
     if num_timestamp > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamp - 1}"
+            f"Visualization results are saved to {filename}_t-0.vtu ~ {filename}_t-{num_timestamp - 1}.vtu"
         )
     else:
-        logger.info(f"Visualization result is saved to {filename}")
+        logger.info(f"Visualization result is saved to {filename}.vtu")
 
 
 def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamp=1):
@@ -118,3 +122,28 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
         value = np.concatenate(value, axis=1)
 
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamp)
+
+
+def save_vtu_to_mesh(
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    coord_keys: Tuple[str, ...],
+    value_keys: Tuple[str, ...],
+):
+    """Save data into .vtu format by meshio.
+
+    Args:
+        filename (str): File name.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
+        value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+    """
+    ndim = len(coord_keys)
+    npoint = len(next(iter(data_dict.values())))
+    # get the list variable transposed
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(ndim, npoint)
+    mesh = meshio.Mesh(
+        points=points.T, cells=[("vertex", np.arange(npoint).reshape(npoint, 1))]
+    )
+    mesh.point_data = {key: data_dict[key] for key in value_keys}
+    mesh.write(filename)
