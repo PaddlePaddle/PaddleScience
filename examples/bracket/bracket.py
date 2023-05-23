@@ -17,7 +17,6 @@ Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide
 """
 
 import numpy as np
-import paddle
 from paddle import fluid
 
 import ppsci

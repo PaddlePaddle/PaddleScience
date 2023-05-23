@@ -122,7 +122,7 @@ def load_mat_file(
 
 def load_vtk_file(
     filename_without_timeid: str,
-    time_step: Union[float, int],
+    time_step: float,
     time_index: Tuple[int, ...],
     input_keys: Tuple[str, ...],
     label_keys: Optional[Tuple[str, ...]],
@@ -131,7 +131,7 @@ def load_vtk_file(
 
     Args:
         filename_without_timeid (str): File name without time id.
-        time_step (Union[float, Dict]): Physical time step.
+        time_step (float): Physical time step.
         time_index (Tuple[int, ...]): Physical time indexes.
         input_keys (Tuple[str, ...]): Input coordinates name keys.
         label_keys (Optional[Tuple[str, ...]]): Input label name keys.

@@ -71,7 +71,7 @@ class BoundaryConstraint(base.Constraint):
     def __init__(
         self,
         output_expr: Dict[str, Callable],
-        label_dict: Dict[str, Union[int, float, Callable]],
+        label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
         loss: loss.Loss,
