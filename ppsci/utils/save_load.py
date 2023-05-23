@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import errno
 import os
 from typing import Any
 from typing import Dict
@@ -23,22 +22,6 @@ from ppsci.utils import download
 from ppsci.utils import logger
 
 __all__ = ["load_checkpoint", "save_checkpoint", "load_pretrain"]
-
-
-def _mkdir_if_not_exist(path):
-    """mkdir if not exists, ignore the exception when multiprocess mkdir together
-
-    Args:
-        path (str): Path for makedir
-    """
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except OSError as os_err:
-            if os_err.errno == errno.EEXIST and os.path.isdir(path):
-                logger.warning(f"{path} already created.")
-            else:
-                raise OSError(f"Failed to mkdir {path}.")
 
 
 def _load_pretrain_from_path(model, path, equation=None):
@@ -137,7 +120,7 @@ def save_checkpoint(
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
-        metric (Dict[str, Any]): Metric information, such as {"RMSE": ...}.
+        metric (Dict[str, float]): Metric information, such as {"RMSE": ...}.
         model_dir (str): Directory for chekpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "ppsci".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
@@ -145,7 +128,7 @@ def save_checkpoint(
     if paddle.distributed.get_rank() != 0:
         return
     model_dir = os.path.join(model_dir, "checkpoints")
-    _mkdir_if_not_exist(model_dir)
+    os.makedirs(model_dir, exist_ok=True)
     model_path = os.path.join(model_dir, prefix)
 
     paddle.save(model.state_dict(), f"{model_path}.pdparams")
