@@ -227,7 +227,9 @@ class Solver:
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
-            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+            self.model, self.optimizer = amp.decorate(
+                self.model, self.optimizer, self.amp_level
+            )
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
@@ -247,8 +249,9 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        if logger._logger is not None:
-            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        if logger._logger is None:
+            logger.init_logger("ppsci")
+        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -379,6 +382,7 @@ class Solver:
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
+                # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
 
@@ -398,7 +402,7 @@ class Solver:
                     self.equation,
                 )
 
-            # always save the latest model for convenient resume training
+            # save the latest model for convenient resume training
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
@@ -413,12 +417,9 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
+    @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0):
         """Evaluation"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -429,26 +430,19 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        if train_state:
-            self.model.train()
         return result
 
+    @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
         """Visualization"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
-        if train_state:
-            self.model.train()
-
     @paddle.no_grad()
+    @misc.run_on_eval_mode
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
@@ -463,10 +457,6 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         if self.world_size > 1:
             raise NotImplementedError(
                 "Solver.predict only support single device yet, "
@@ -501,10 +491,9 @@ class Solver:
 
         pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
-        if train_state:
-            self.model.train()
         return pred_dict
 
+    @misc.run_on_eval_mode
     def export(self):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
