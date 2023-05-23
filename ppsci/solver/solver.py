@@ -492,7 +492,7 @@ class Solver:
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            with self.autocast_context_manager():
+            with self.autocast_context_manager(self.use_amp, self.amp_level):
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
@@ -522,30 +522,40 @@ class Solver:
         jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}")
 
-    def autocast_context_manager(self) -> contextlib.AbstractContextManager:
-        """Autocast context manager for Auto Mix Precision.
+    def autocast_context_manager(
+        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+    ) -> contextlib.AbstractContextManager:
+        """Smart autocast context manager for Auto Mix Precision.
+
+        Args:
+            enable (bool): Enable autocast.
+            level (Literal["O0", "O1", "O2"]): Autocast level.
 
         Returns:
-            Union[contextlib.AbstractContextManager]: Context manager.
+            contextlib.AbstractContextManager: Smart autocast context manager.
         """
-        if self.use_amp:
-            ctx_manager = amp.auto_cast(level=self.amp_level)
+        if enable:
+            ctx_manager = amp.auto_cast(level=level)
         else:
             ctx_manager = (
                 contextlib.nullcontext()
                 if sys.version_info >= (3, 7)
                 else contextlib.suppress()
             )
-
         return ctx_manager
 
-    def no_grad_context_manager(self) -> contextlib.AbstractContextManager:
-        """No grad manager.
+    def no_grad_context_manager(
+        self, enable: bool
+    ) -> contextlib.AbstractContextManager:
+        """Smart no_grad context manager.
+
+        Args:
+            enable (bool): Enable no_grad.
 
         Returns:
-            Union[contextlib.AbstractContextManager]: Context manager.
+            contextlib.AbstractContextManager: Smart no_grad context manager.
         """
-        if self.eval_with_no_grad:
+        if enable:
             ctx_manager = paddle.no_grad()
         else:
             ctx_manager = (
@@ -553,5 +563,33 @@ class Solver:
                 if sys.version_info >= (3, 7)
                 else contextlib.suppress()
             )
+        return ctx_manager
 
+    def no_sync_context_manager(
+        self,
+        enable: bool,
+        ddp_model: paddle.DataParallel,
+    ) -> contextlib.AbstractContextManager:
+        """Smart no_sync context manager for given model.
+        NOTE: Only `paddle.DataParallel` object has `no_sync` interface.
+
+        Args:
+            enable (bool): Enable no_sync.
+
+        Returns:
+            contextlib.AbstractContextManager: Smart no_sync context manager.
+        """
+        if enable:
+            if not isinstance(ddp_model, paddle.DataParallel):
+                raise TypeError(
+                    "no_sync interface is only for model with type paddle.DataParallel, "
+                    f"but got type {type(ddp_model)}"
+                )
+            ctx_manager = ddp_model.no_sync()
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
         return ctx_manager

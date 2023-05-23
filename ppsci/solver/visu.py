@@ -59,7 +59,9 @@ def visualize_func(solver, epoch_id: int):
                 evaluator.add_target_expr(output_expr, output_key)
 
             # forward
-            with solver.autocast_context_manager(), solver.no_grad_context_manager():
+            with solver.autocast_context_manager(False), solver.no_grad_context_manager(
+                solver.eval_with_no_grad
+            ):
                 batch_output_dict = evaluator(batch_input_dict)
 
             # collect batch data
