@@ -15,8 +15,8 @@
 from typing import Callable
 
 import paddle
-import paddle.nn as nn
 import paddle.nn.functional as F
+from paddle import nn
 
 
 def silu(x):
@@ -28,6 +28,7 @@ act_func_dict = {
     "elu": F.elu,
     "relu": F.relu,
     "selu": F.selu,
+    "gelu": F.gelu,
     "sigmoid": F.sigmoid,
     "silu": silu,
     "sin": paddle.sin,

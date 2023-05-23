@@ -27,7 +27,7 @@ class SupervisedConstraint(base.Constraint):
 
     Args:
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         output_expr (Optional[Dict[str, Callable]]): List of label expression.
             Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "Sup".
@@ -51,7 +51,7 @@ class SupervisedConstraint(base.Constraint):
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         output_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
@@ -72,3 +72,15 @@ class SupervisedConstraint(base.Constraint):
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)
+
+    def __str__(self):
+        return ", ".join(
+            [
+                self.__class__.__name__,
+                f"name = {self.name}",
+                f"input_keys = {self.input_keys}",
+                f"output_keys = {self.output_keys}",
+                f"output_expr = {self.output_expr}",
+                f"loss = {self.loss}",
+            ]
+        )

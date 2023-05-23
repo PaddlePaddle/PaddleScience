@@ -4,7 +4,6 @@
     handler: python
     options:
       members:
-        - ConstLR
         - Linear
         - Cosine
         - Step

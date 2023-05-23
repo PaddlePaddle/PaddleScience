@@ -6,9 +6,14 @@
       members:
         - IterableNamedArrayDataset
         - NamedArrayDataset
+        - CSVDataset
+        - IterableCSVDataset
+        - ERA5Dataset
+        - ERA5SampledDataset
+        - IterableMatDataset
+        - MatDataset
         - CylinderDataset
         - LorenzDataset
         - RosslerDataset
-        - CSVDataset
-        - MatDataset
+        - VtuDataset
       show_root_heading: false

@@ -21,7 +21,7 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-import paddle.nn as nn
+from paddle import nn
 from paddle.nn.initializer import Constant
 from paddle.nn.initializer import Uniform
 
@@ -31,7 +31,7 @@ zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
 
 
-class LorenzEmbedding(base.NetBase):
+class LorenzEmbedding(base.Arch):
     """Embedding Koopman model for the Lorenz ODE system.
 
     Args:
@@ -117,14 +117,14 @@ class LorenzEmbedding(base.NetBase):
         data = paddle.linspace(1, 0, embed_size)
         k_diag = paddle.create_parameter(
             shape=data.shape,
-            dtype=data.dtype,
+            dtype=paddle.get_default_dtype(),
             default_initializer=nn.initializer.Assign(data),
         )
 
         data = 0.1 * paddle.rand([2 * embed_size - 3])
         k_ut = paddle.create_parameter(
             shape=data.shape,
-            dtype=data.dtype,
+            dtype=paddle.get_default_dtype(),
             default_initializer=nn.initializer.Assign(data),
         )
         return k_diag, k_ut
@@ -234,7 +234,7 @@ class RosslerEmbedding(LorenzEmbedding):
         )
 
 
-class CylinderEmbedding(base.NetBase):
+class CylinderEmbedding(base.Arch):
     """Embedding Koopman model for the Cylinder system.
 
     Args:

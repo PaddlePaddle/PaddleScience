@@ -19,9 +19,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
-import open3d
 import paddle
-import pymesh
 import pysdf
 
 from ppsci.geometry import geometry
@@ -46,6 +44,7 @@ class Mesh(geometry.Geometry):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
+        import pymesh
 
         if isinstance(mesh, str):
             self.py_mesh = pymesh.meshio.load_mesh(mesh)
@@ -120,12 +119,13 @@ class Mesh(geometry.Geometry):
         return np.isclose(self.sdf_func(x), 0.0).flatten()
 
     def translate(self, translation, relative=True):
-        vertices = np.array(self.vertices)
+        vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
+        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
             raise ModuleNotFoundError
+        import open3d
+        import pymesh
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -133,18 +133,19 @@ class Mesh(geometry.Geometry):
         )
         open3d_mesh = open3d_mesh.translate(translation, relative)
         self.py_mesh = pymesh.form_mesh(
-            np.asarray(open3d_mesh.vertices, dtype="float32"), faces
+            np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
         self.init_mesh()
         return self
 
     def scale(self, scale, center=(0, 0, 0)):
-        vertices = np.array(self.vertices)
-        faces = np.array(self.faces)
+        vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
+        faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
+        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
             raise ModuleNotFoundError
+        import open3d
+        import pymesh
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -152,7 +153,7 @@ class Mesh(geometry.Geometry):
         )
         open3d_mesh.scale(scale, center)
         self.py_mesh = pymesh.form_mesh(
-            np.asarray(open3d_mesh.vertices, dtype="float32"), faces
+            np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
         self.init_mesh()
         return self
@@ -171,9 +172,6 @@ class Mesh(geometry.Geometry):
                 f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
             )
 
-        # check if open3d is installed before using inflation
-        if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
         all_points = []
@@ -213,9 +211,6 @@ class Mesh(geometry.Geometry):
         all_normal = []
         all_area = []
 
-        # check if open3d is installed before using inflation module
-        if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
         from ppsci.geometry import inflation
 
         for _n, _dist in zip(n, distance):
@@ -250,18 +245,28 @@ class Mesh(geometry.Geometry):
                 all_normal_n.append(normal)
                 all_area_n.append(area)
 
-            all_points_n = np.concatenate(all_points_n, axis=0, dtype="float32")
-            all_normal_n = np.concatenate(all_normal_n, axis=0, dtype="float32")
-            all_area_n = np.concatenate(all_area_n, axis=0, dtype="float32")
+            all_points_n = np.concatenate(
+                all_points_n, axis=0, dtype=paddle.get_default_dtype()
+            )
+            all_normal_n = np.concatenate(
+                all_normal_n, axis=0, dtype=paddle.get_default_dtype()
+            )
+            all_area_n = np.concatenate(
+                all_area_n, axis=0, dtype=paddle.get_default_dtype()
+            )
             all_area_n = np.full_like(all_area_n, all_area_n.sum() / _n)
 
             all_points.append(all_points_n)
             all_normal.append(all_normal_n)
             all_area.append(all_area_n)
 
-        all_points = np.concatenate(all_points, axis=0, dtype="float32")
-        all_normal = np.concatenate(all_normal, axis=0, dtype="float32")
-        all_area = np.concatenate(all_area, axis=0, dtype="float32")
+        all_points = np.concatenate(
+            all_points, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_normal = np.concatenate(
+            all_normal, axis=0, dtype=paddle.get_default_dtype()
+        )
+        all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
         return all_points, all_normal, all_area
 
     def _approximate_area(
@@ -332,7 +337,11 @@ class Mesh(geometry.Geometry):
                 self.v0[index], self.v1[index], self.v2[index], nr_p, random, criteria
             )
             normal = np.tile(self.face_normal[index], [nr_p, 1])
-            area = np.full([nr_p, 1], triangle_areas[index] / nr_p)
+            area = np.full(
+                [nr_p, 1],
+                triangle_areas[index] / nr_p,
+                dtype=paddle.get_default_dtype(),
+            )
 
             all_points.append(sampled_points)
             all_normal.append(normal)
@@ -345,7 +354,7 @@ class Mesh(geometry.Geometry):
             all_normal, axis=0, dtype=paddle.get_default_dtype()
         )
         all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
-        all_area = np.full_like(all_area, all_area.mean())
+        all_area = np.full_like(all_area, all_area.sum() / n)
         return all_points, all_normal, all_area
 
     def sample_boundary(

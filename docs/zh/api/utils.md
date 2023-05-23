@@ -4,8 +4,13 @@
     handler: python
     options:
       members:
+        - initializer
         - logger
         - misc
+        - load_csv_file
+        - load_mat_file
+        - load_vtk_file
+        - run_check
         - AttrDict
         - ExpressionSolver
         - AverageMeter

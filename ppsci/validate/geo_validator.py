@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -20,12 +19,14 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import paddle
 import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
 from ppsci import loss
+from ppsci import metric
 from ppsci.data import dataset
 from ppsci.validate import base
 
@@ -41,12 +42,12 @@ class GeometryValidator(base.Validator):
             label, which will be a reference value to participate in the loss calculation.
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified domain. Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling. Defaults to False.
-        metric (Optional[Dict[str, Any]]): Named metric functors in dict. Defaults to None.
+        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
         with_initial (bool, optional): Whether the data contains time t0. Defaults to False.
         name (Optional[str]): Name of validator. Defaults to None.
 
@@ -73,11 +74,11 @@ class GeometryValidator(base.Validator):
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
-        metric: Optional[Dict[str, Any]] = None,
+        metric: Optional[Dict[str, metric.Metric]] = None,
         with_initial: bool = False,
         name: Optional[str] = None,
     ):
@@ -91,19 +92,19 @@ class GeometryValidator(base.Validator):
         self.output_keys = list(label_dict.keys())
 
         nx = dataloader_cfg["total_size"]
-        self.num_timestamp = 1
+        self.num_timestamps = 1
         # TODO(sensen): simplify code below
         if isinstance(geom, geometry.TimeXGeometry):
-            if geom.timedomain.num_timestamp is not None:
+            if geom.timedomain.num_timestamps is not None:
                 if with_initial:
                     # include t0
-                    self.num_timestamp = geom.timedomain.num_timestamp
+                    self.num_timestamps = geom.timedomain.num_timestamps
                     assert (
-                        nx % self.num_timestamp == 0
-                    ), f"{nx} % {self.num_timestamp} != 0"
-                    nx //= self.num_timestamp
+                        nx % self.num_timestamps == 0
+                    ), f"{nx} % {self.num_timestamps} != 0"
+                    nx //= self.num_timestamps
                     input = geom.sample_interior(
-                        nx * (geom.timedomain.num_timestamp - 1),
+                        nx * (geom.timedomain.num_timestamps - 1),
                         random,
                         criteria,
                         evenly,
@@ -114,13 +115,13 @@ class GeometryValidator(base.Validator):
                     }
                 else:
                     # exclude t0
-                    self.num_timestamp = geom.timedomain.num_timestamp - 1
+                    self.num_timestamps = geom.timedomain.num_timestamps - 1
                     assert (
-                        nx % self.num_timestamp == 0
-                    ), f"{nx} % {self.num_timestamp} != 0"
-                    nx //= self.num_timestamp
+                        nx % self.num_timestamps == 0
+                    ), f"{nx} % {self.num_timestamps} != 0"
+                    nx //= self.num_timestamps
                     input = geom.sample_interior(
-                        nx * (geom.timedomain.num_timestamp - 1),
+                        nx * (geom.timedomain.num_timestamps - 1),
                         random,
                         criteria,
                         evenly,
@@ -135,7 +136,7 @@ class GeometryValidator(base.Validator):
         label = {}
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
+                label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
                     sympy.symbols(geom.dim_keys),
@@ -145,13 +146,14 @@ class GeometryValidator(base.Validator):
                 label[key] = func(
                     **{k: v for k, v in input.items() if k in geom.dim_keys}
                 )
-            elif isinstance(value, types.FunctionType):
+            elif callable(value):
                 func = value
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
                     label[key] = np.full(
                         (next(iter(input.values())).shape[0], 1),
-                        float(label[key], "float32"),
+                        label[key],
+                        paddle.get_default_dtype(),
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")

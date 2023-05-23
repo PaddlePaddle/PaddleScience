@@ -1,5 +1,7 @@
 # 2D-LDC(2D Lid Driven Cavity Flow)
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 Lid Driven Cavity Flow，中文名称可译作“顶盖驱动方腔流”，一般指顶部平板以恒定速度驱动规则区域内封闭的不可压流体（例如水）的流动。在方腔流中可以观察到几乎所有可能发生在不可压流体中的流动现象，是一种典型的流体案例。
@@ -301,7 +303,7 @@ examples/ldc/ldc2d_steady_Re10.py:124:141
 
 ``` py linenums="143"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:143:162
+examples/ldc/ldc2d_steady_Re10.py:143:153
 --8<--
 ```
 
@@ -309,9 +311,9 @@ examples/ldc/ldc2d_steady_Re10.py:143:162
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="164"
+``` py linenums="155"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:164:
+examples/ldc/ldc2d_steady_Re10.py:155:
 --8<--
 ```
 

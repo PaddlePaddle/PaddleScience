@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import types
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -41,7 +40,7 @@ class InitialConstraint(base.Constraint):
             label, which will be a reference value to participate in the loss calculation.
         geom (geometry.Geometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
             geometry. Defaults to "pseudo".
         criteria (Optional[Callable]): Criteria for refining specified boundaries.
@@ -78,7 +77,7 @@ class InitialConstraint(base.Constraint):
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
@@ -110,7 +109,7 @@ class InitialConstraint(base.Constraint):
             if isinstance(value, str):
                 value = sp_parser.parse_expr(value)
             if isinstance(value, (int, float)):
-                label[key] = np.full_like(next(iter(input.values())), float(value))
+                label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):
                 func = sympy.lambdify(
                     sympy.symbols(geom.dim_keys),
@@ -120,13 +119,11 @@ class InitialConstraint(base.Constraint):
                 label[key] = func(
                     **{k: v for k, v in input.items() if k in geom.dim_keys}
                 )
-            elif isinstance(value, types.FunctionType):
+            elif callable(value):
                 func = value
                 label[key] = func(input)
                 if isinstance(label[key], (int, float)):
-                    label[key] = np.full_like(
-                        next(iter(input.values())), float(label[key])
-                    )
+                    label[key] = np.full_like(next(iter(input.values())), label[key])
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
@@ -137,7 +134,7 @@ class InitialConstraint(base.Constraint):
                 if isinstance(value, str):
                     value = sp_parser.parse_expr(value)
                 if isinstance(value, (int, float)):
-                    weight[key] = np.full_like(next(iter(label.values())), float(value))
+                    weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
                     func = sympy.lambdify(
                         sympy.symbols(geom.dim_keys),
@@ -147,12 +144,12 @@ class InitialConstraint(base.Constraint):
                     weight[key] = func(
                         **{k: v for k, v in input.items() if k in geom.dim_keys}
                     )
-                elif isinstance(value, types.FunctionType):
+                elif callable(value):
                     func = value
                     weight[key] = func(input)
                     if isinstance(weight[key], (int, float)):
                         weight[key] = np.full_like(
-                            next(iter(input.values())), float(weight[key])
+                            next(iter(input.values())), weight[key]
                         )
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")

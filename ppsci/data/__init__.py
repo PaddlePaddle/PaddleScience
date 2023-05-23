@@ -17,9 +17,9 @@ import random
 from functools import partial
 
 import numpy as np
-import paddle.device as device
 import paddle.distributed as dist
-import paddle.io as io
+from paddle import device
+from paddle import io
 
 from ppsci.data import dataloader
 from ppsci.data import dataset
@@ -83,10 +83,9 @@ def build_dataloader(_dataset, cfg):
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
 
+    collate_fn = None
     if isinstance(batch_transforms_cfg, dict) and batch_transforms_cfg:
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
-    else:
-        collate_fn = batch_transform.default_collate_fn_allow_none
 
     # build init function
     init_fn = partial(
@@ -97,7 +96,7 @@ def build_dataloader(_dataset, cfg):
     )
 
     # build dataloader
-    dataloader = io.DataLoader(
+    dataloader_ = io.DataLoader(
         dataset=_dataset,
         places=device.get_device(),
         batch_sampler=sampler,
@@ -107,4 +106,4 @@ def build_dataloader(_dataset, cfg):
         worker_init_fn=init_fn,
     )
 
-    return dataloader
+    return dataloader_

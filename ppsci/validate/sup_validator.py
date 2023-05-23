@@ -28,9 +28,9 @@ class SupervisedValidator(base.Validator):
 
     Args:
         dataloader_cfg (Dict[str, Any]): Config of building a dataloader.
-        loss (loss.LossBase): Loss functor.
+        loss (loss.Loss): Loss functor.
         output_expr (Optional[Dict[str, Callable]]): List of label expression.
-        metric (Optional[Dict[str, metric.MetricBase]]): Named metric functors in dict. Defaults to None.
+        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict. Defaults to None.
         name (Optional[str]): Name of validator. Defaults to None.
 
     Examples:
@@ -61,9 +61,9 @@ class SupervisedValidator(base.Validator):
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
+        loss: loss.Loss,
         output_expr: Optional[Dict[str, Callable]] = None,
-        metric: Optional[Dict[str, metric.MetricBase]] = None,
+        metric: Optional[Dict[str, metric.Metric]] = None,
         name: Optional[str] = None,
     ):
         self.output_expr = output_expr
@@ -83,3 +83,17 @@ class SupervisedValidator(base.Validator):
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
+
+    def __str__(self):
+        return ", ".join(
+            [
+                self.__class__.__name__,
+                f"name = {self.name}",
+                f"input_keys = {self.input_keys}",
+                f"output_keys = {self.output_keys}",
+                f"output_expr = {self.output_expr}",
+                f"len(dataloader) = {len(self.data_loader)}",
+                f"loss = {self.loss}",
+                f"metric = {list(self.metric.keys())}",
+            ]
+        )

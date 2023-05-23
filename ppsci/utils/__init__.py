@@ -17,10 +17,15 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import reader
 from ppsci.utils.checker import dynamic_import_to_globals
+from ppsci.utils.checker import run_check
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
+from ppsci.utils.reader import load_csv_file
+from ppsci.utils.reader import load_mat_file
+from ppsci.utils.reader import load_vtk_file
+from ppsci.utils.reader import load_vtk_with_time_file
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
@@ -30,7 +35,12 @@ __all__ = [
     "logger",
     "misc",
     "reader",
+    "load_csv_file",
+    "load_mat_file",
+    "load_vtk_file",
+    "load_vtk_with_time_file",
     "dynamic_import_to_globals",
+    "run_check",
     "AttrDict",
     "ExpressionSolver",
     "AverageMeter",

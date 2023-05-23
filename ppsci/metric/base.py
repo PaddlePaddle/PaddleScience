@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.nn as nn
+from paddle import nn
 
 
-class MetricBase(nn.Layer):
+class Metric(nn.Layer):
     """Base class for metric."""
 
-    def __init__(self):
+    def __init__(self, keep_batch: bool = False):
         super().__init__()
+        self.keep_batch = keep_batch

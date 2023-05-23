@@ -19,6 +19,7 @@ from paddle import io
 
 from ppsci import data
 from ppsci import loss
+from ppsci import metric
 
 
 class Validator:
@@ -27,8 +28,8 @@ class Validator:
     Args:
         dataset (io.Dataset): Dataset for validator.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
-        loss (loss.LossBase): Loss functor.
-        metric (Dict[str, Any]): Named metric functors in dict.
+        loss (loss.Loss): Loss functor.
+        metric (Dict[str, metric.Metric]): Named metric functors in dict.
         name (str): Name of validator.
     """
 
@@ -36,8 +37,8 @@ class Validator:
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.LossBase,
-        metric: Dict[str, Any],
+        loss: loss.Loss,
+        metric: Dict[str, metric.Metric],
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)

@@ -17,7 +17,7 @@ from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    """Biharmonic equation.
+    """Class for biharmonic equation.
 
     Args:
         dim (int): Dimension of equation.
@@ -41,7 +41,7 @@ class Biharmonic(base.PDE):
             invars = ("x", "y", "z")[: self.dim]
             for invar_i in invars:
                 for invar_j in invars:
-                    biharmonic += hessian(hessian(u, invar_i), invar_j)
+                    biharmonic += hessian(hessian(u, out[invar_i]), out[invar_j])
             return biharmonic
 
         self.add_equation("biharmonic", biharmonic_compute_func)
