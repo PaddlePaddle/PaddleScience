@@ -132,9 +132,7 @@ def _download(url, path, md5sum=None):
             req = requests.get(url, stream=True)
         except Exception as e:  # requests.exceptions.ConnectionError
             logger.info(
-                "Downloading {} from {} failed {} times with exception {}".format(
-                    fname, url, retry_cnt + 1, str(e)
-                )
+                f"Downloading {fname} from {url} failed {retry_cnt + 1} times with exception {str(e)}"
             )
             time.sleep(1)
             continue

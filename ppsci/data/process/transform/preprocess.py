@@ -36,7 +36,8 @@ class Translate:
 
     def __call__(self, data_dict):
         for key in self.offset:
-            data_dict[key] += self.offset[key]
+            if key in data_dict:
+                data_dict[key] += self.offset[key]
         return data_dict
 
 
@@ -57,7 +58,8 @@ class Scale:
 
     def __call__(self, data_dict):
         for key in self.scale:
-            data_dict[key] *= self.scale[key]
+            if key in data_dict:
+                data_dict[key] *= self.scale[key]
         return data_dict
 
 
@@ -203,7 +205,7 @@ class SqueezeData:
                     input_item[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
-                        "Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
+                        f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
         if "label" in self.apply_keys:
             for key, value in label_item.items():
@@ -212,6 +214,6 @@ class SqueezeData:
                     label_item[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
-                        "Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
+                        f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
         return input_item, label_item, weight_item

@@ -14,6 +14,8 @@
 
 import copy
 
+from ppsci.visualize.vtu import save_vtu_to_mesh
+
 from ppsci.visualize.base import Visualizer  # isort:skip
 from ppsci.visualize.visualizer import VisualizerScatter1D  # isort:skip
 from ppsci.visualize.visualizer import VisualizerScatter3D  # isort:skip
@@ -37,6 +39,7 @@ __all__ = [
     "Visualizer3D",
     "VisualizerWeather",
     "save_vtu_from_dict",
+    "save_vtu_to_mesh",
     "save_plot_from_1d_dict",
     "save_plot_from_3d_dict",
 ]

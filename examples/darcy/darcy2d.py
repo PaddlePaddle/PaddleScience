@@ -131,14 +131,14 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(1e-3)((model,))
 
     # set validator
-    NPOINTS_EVAL = NPOINT_PDE
+    NPOINT_EVAL = NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": NPOINTS_EVAL,
+            "total_size": NPOINT_EVAL,
             "batch_size": 8192,
             "sampler": {"name": "BatchSampler"},
         },
@@ -154,10 +154,10 @@ if __name__ == "__main__":
     NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visulzie_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"p": lambda d: d["p"]},
-            prefix="result_u_v",
+            prefix="result_p",
         )
     }
 
