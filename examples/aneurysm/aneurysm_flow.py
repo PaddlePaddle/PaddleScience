@@ -1,5 +1,4 @@
 import math
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,8 +6,6 @@ import paddle
 from paddle.fluid import core
 
 import ppsci
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
 
 
 def ThreeD_mesh(x_2d, tmp_1d):
@@ -19,100 +16,6 @@ def ThreeD_mesh(x_2d, tmp_1d):
         x.append(tmpx)
     x = np.reshape(x, (len(tmp_3d), 1))
     return x, tmp_3d
-
-
-class NavierStokes(ppsci.equation.pde.base.PDE):
-    """Class for navier-stokes equation.
-
-    Args:
-        rho (float): Density.
-        dim (int): Dimension of equation.
-        time (bool): Whether the euqation is time-dependent.
-    """
-
-    def __init__(self, rho: float, dim: int, time: bool):
-        super().__init__()
-        self.rho = rho
-        self.dim = dim
-        self.time = time
-
-        def continuity_compute_func(out):
-            x, y = out["x"], out["y"]
-            u, v = out["u"], out["v"]
-            continuity = jacobian(u, x) + jacobian(v, y)
-
-            if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
-                continuity += jacobian(w, z)
-            return continuity
-
-        self.add_equation("continuity", continuity_compute_func)
-
-        def momentum_x_compute_func(out):
-            x, y = out["x"], out["y"]
-            u, v, p = out["u"], out["v"], out["p"]
-            momentum_x = (
-                u * jacobian(u, x)
-                + v * jacobian(u, y)
-                - NU / rho * hessian(u, x)
-                - NU / rho * hessian(u, y)
-                + 1 / rho * jacobian(p, x)
-            )
-            if self.time:
-                t = out["t"]
-                momentum_x += jacobian(u, t)
-            if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
-                momentum_x += w * jacobian(u, z)
-                momentum_x -= NU / rho * hessian(u, z)
-            return momentum_x
-
-        self.add_equation("momentum_x", momentum_x_compute_func)
-
-        def momentum_y_compute_func(out):
-            x, y = out["x"], out["y"]
-            u, v, p = out["u"], out["v"], out["p"]
-            momentum_y = (
-                u * jacobian(v, x)
-                + v * jacobian(v, y)
-                - NU / rho * hessian(v, x)
-                - NU / rho * hessian(v, y)
-                + 1 / rho * jacobian(p, y)
-            )
-            if self.time:
-                t = out["t"]
-                momentum_y += jacobian(v, t)
-            if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
-                momentum_y += w * jacobian(v, z)
-                momentum_y -= NU / rho * hessian(v, z)
-            return momentum_y
-
-        self.add_equation("momentum_y", momentum_y_compute_func)
-
-        if self.dim == 3:
-
-            def momentum_z_compute_func(out):
-                x, y = out["x"], out["y"]
-                u, v, w, p = out["u"], out["v"], out["w"], out["p"]
-                momentum_z = (
-                    u * jacobian(w, x)
-                    + v * jacobian(w, y)
-                    + w * jacobian(w, z)
-                    - NU / rho * hessian(w, x)
-                    - NU / rho * hessian(w, y)
-                    - NU / rho * hessian(w, z)
-                    + 1 / rho * jacobian(p, z)
-                )
-                if self.time:
-                    t = out["t"]
-                    momentum_z += jacobian(w, t)
-                return momentum_z
-
-            self.add_equation("momentum_z", momentum_z_compute_func)
 
 
 def predict(
@@ -136,12 +39,11 @@ def predict(
 
 
 if __name__ == "__main__":
-    os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    output_dir = "./output_0504_debug"
+    output_dir = "./output_aneurysm_debug"
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -212,45 +114,20 @@ if __name__ == "__main__":
     scale = np.array(scale).astype(float)
 
     interior_geom = ppsci.geometry.PointCloud(
-        coord_dict={"x": x, "y": y},
-        extra_data={"scale": scale},
-        data_key=["x", "y", "scale"],
+        interior={"x": x, "y": y, "scale": scale},
+        coord_keys=["x", "y", "scale"],
     )
 
     model_2 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["u"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-        np.load(f"data/net2_params/weight_epoch_0.npz"),
-        np.load(f"data/net2_params/bias_epoch_0.npz"),
+        ["x", "y", "scale"], ["u"], LAYER_NUMBER, HIDDEN_SIZE, "swish", False, False
     )
 
     model_3 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["v"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-        np.load(f"data/net3_params/weight_epoch_0.npz"),
-        np.load(f"data/net3_params/bias_epoch_0.npz"),
+        ["x", "y", "scale"], ["v"], LAYER_NUMBER, HIDDEN_SIZE, "swish", False, False
     )
 
     model_4 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["p"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-        np.load(f"data/net4_params/weight_epoch_0.npz"),
-        np.load(f"data/net4_params/bias_epoch_0.npz"),
+        ["x", "y", "scale"], ["p"], LAYER_NUMBER, HIDDEN_SIZE, "swish", False, False
     )
 
     class Output_transform:
@@ -300,7 +177,7 @@ if __name__ == "__main__":
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=10**-15
     )([model])
 
-    equation = {"NavierStokes": NavierStokes(RHO, 2, False)}
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -335,10 +212,9 @@ if __name__ == "__main__":
         save_freq=10,
         log_freq=1,
         equation=equation,
-        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0504/checkpoints/epoch_500",
     )
 
-    # solver.train()
+    solver.train()
 
     def single_test(x, y, scale, solver):
         xt = paddle.to_tensor(x, dtype="float32")
@@ -351,7 +227,6 @@ if __name__ == "__main__":
     scale_test = np.load("./data/aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")[
         "scale"
     ]
-    os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
     caseCount = [1.0, 151.0, 486.0]
     W_ctl = np.zeros([len(scale_test), 1])
     W_ctl_Ml = np.zeros([len(scale_test), 1])

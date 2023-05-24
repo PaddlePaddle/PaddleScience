@@ -145,10 +145,8 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
-    os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/pipe")
     # set output directory
-    output_dir = "./output"
-    dir = "./data/net_params"
+    output_dir = "./output_poiseuille_flow"
 
     core.set_prim_eager_enabled(True)
 
@@ -202,9 +200,8 @@ if __name__ == "__main__":
 
     interior_data = {"x": input_x, "y": input_y, "nu": input_nu}
     interior_geom = ppsci.geometry.PointCloud(
-        coord_dict={"x": input_x, "y": input_y},
-        extra_data={"nu": input_nu},
-        data_key=["x", "y", "nu"],
+        interior={"x": input_x, "y": input_y, "nu": input_nu},
+        coord_keys=["x", "y", "nu"],
     )
 
     # set model
@@ -216,8 +213,6 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        np.load(dir + f"/weight_u_epoch_1.npz"),
-        np.load(dir + f"/bias_u_epoch_1.npz"),
     )
 
     model_v = ppsci.arch.MLP(
@@ -228,8 +223,6 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        np.load(dir + f"/weight_v_epoch_1.npz"),
-        np.load(dir + f"/bias_v_epoch_1.npz"),
     )
 
     model_p = ppsci.arch.MLP(
@@ -240,8 +233,8 @@ if __name__ == "__main__":
         "swish_beta",
         False,
         False,
-        np.load(dir + f"/weight_p_epoch_1.npz"),
-        np.load(dir + f"/bias_p_epoch_1.npz"),
+        # np.load(dir + f"/weight_p_epoch_1.npz"),
+        # np.load(dir + f"/bias_p_epoch_1.npz"),
     )
 
     def output_transform(out, input):
@@ -335,8 +328,9 @@ if __name__ == "__main__":
         save_freq=10,
         log_freq=LOG_FREQ,
         equation=equation,
-        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/output/checkpoints/epoch_3000",
     )
+
+    solver.train()
 
     # Cross-section velocity profiles of 4 different viscosity sample
     # Predicted result
@@ -351,12 +345,12 @@ if __name__ == "__main__":
     p_pred = output_dict["p"].numpy().reshape(N_y, N_x, N_p)
 
     # Analytical result, y = data_1d_y
-    uSolaM = np.zeros([N_y, N_x, N_p])
+    u_analytical = np.zeros([N_y, N_x, N_p])
     dP = P_IN - P_OUT
 
     for i in range(N_p):
         uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
-        uSolaM[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+        u_analytical[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
 
     fontsize = 16
     idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
@@ -370,7 +364,7 @@ if __name__ == "__main__":
         ax1 = plt.subplot(111)
         plt.plot(
             data_1d_y,
-            uSolaM[:, idx_X, nu_index[idxP]],
+            u_analytical[:, idx_X, nu_index[idxP]],
             color="darkblue",
             linestyle="-",
             lw=3.0,
@@ -403,10 +397,12 @@ if __name__ == "__main__":
 
     # Distribution of center velocity
     # Predicted result
-    N_pTest = 500
-    data_1d_nuDist = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, N_pTest)
+    num_test = 500
+    data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
     data_2d_xy_test = (
-        np.array(np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nuDist)).reshape(3, -1).T
+        np.array(np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution))
+        .reshape(3, -1)
+        .T
     )
 
     input_dict_test = {
@@ -415,22 +411,27 @@ if __name__ == "__main__":
         "nu": data_2d_xy_test[:, 2:3],
     }
     output_dict_test = predict(input_dict_test, solver)
-    uMax_pred = output_dict_test["u"].numpy()
+    u_max_pred = output_dict_test["u"].numpy()
 
     # Analytical result, y = 0
-    uMax_a = np.zeros([N_pTest, 1])
-    for i in range(N_pTest):
-        uMax_a[i] = (R**2) * dP / (2 * L * data_1d_nuDist[i] * RHO)
+    u_max_a = np.zeros([num_test, 1])
+    for i in range(num_test):
+        u_max_a[i] = (R**2) * dP / (2 * L * data_1d_nu_distribution[i] * RHO)
 
     # Plot
     plt.figure(2)
     plt.clf()
     ax1 = plt.subplot(111)
     sns.kdeplot(
-        uMax_a, fill=True, color="black", label="Analytical", linestyle="-", linewidth=3
+        u_max_a,
+        fill=True,
+        color="black",
+        label="Analytical",
+        linestyle="-",
+        linewidth=3,
     )
     sns.kdeplot(
-        uMax_pred,
+        u_max_pred,
         fill=False,
         color="red",
         label="DNN",
