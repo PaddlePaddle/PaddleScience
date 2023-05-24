@@ -25,6 +25,7 @@ import paddle
 
 import ppsci
 from ppsci.arch import base
+from ppsci.utils import config
 from ppsci.utils import logger
 from ppsci.utils import save_load
 
@@ -53,14 +54,16 @@ class OutputTransform(object):
 
 
 if __name__ == "__main__":
-    ppsci.utils.set_random_seed(42)
-
+    args = config.parse_args()
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(42)
+    # set training hyper-parameters
     NUM_LAYERS = 6
     NUM_CTX = 16
     EMBED_SIZE = 128
     NUM_HEADS = 4
 
-    EPOCHS = 200
+    EPOCHS = 200 if not args.epochs else args.epochs
     TRAIN_BLOCK_SIZE = 16
     VALID_BLOCK_SIZE = 256
     input_keys = ("embeds",)
@@ -71,7 +74,9 @@ if __name__ == "__main__":
     TRAIN_FILE_PATH = "./datasets/cylinder_training.hdf5"
     VALID_FILE_PATH = "./datasets/cylinder_valid.hdf5"
     EMBEDDING_MODEL_PATH = "./output/cylinder_enn/checkpoints/latest"
-    OUTPUT_DIR = "./output/cylinder_transformer"
+    OUTPUT_DIR = (
+        "./output/cylinder_transformer" if not args.output_dir else args.output_dir
+    )
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
