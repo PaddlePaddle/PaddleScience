@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from typing import Dict
 from typing import Tuple
 
@@ -87,18 +86,24 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
 
     if num_timestamps > 1:
         logger.info(
-            f"Visualization results are saved to {filename}_t-0 ~ {filename}_t-{num_timestamps - 1}"
+            f"Visualization results are saved to {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
         )
     else:
-        logger.info(f"Visualization result is saved to {filename}")
+        logger.info(f"Visualization result is saved to {filename}.vtu")
 
 
-def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestamps=1):
+def save_vtu_from_dict(
+    filename: str,
+    data_dict: Dict[str, np.ndarray],
+    coord_keys: Tuple[str, ...],
+    value_keys: Tuple[str, ...],
+    num_timestamps: int = 1,
+):
     """Save dict data to '*.vtu' file.
 
     Args:
         filename (str): Output filename.
-        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        data_dict (Dict[str, np.ndarray]): Data in dict.
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
@@ -109,17 +114,9 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
     coord = [data_dict[k] for k in coord_keys if k != "t"]
     value = [data_dict[k] for k in value_keys] if value_keys else None
 
-    if isinstance(coord[0], paddle.Tensor):
-        coord = [x.numpy() for x in coord]
-    else:
-        coord = [x for x in coord]
     coord = np.concatenate(coord, axis=1)
 
     if value is not None:
-        if isinstance(value[0], paddle.Tensor):
-            value = [x.numpy() for x in value]
-        else:
-            value = [x for x in value]
         value = np.concatenate(value, axis=1)
 
     _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps)
@@ -128,26 +125,26 @@ def save_vtu_from_dict(filename, data_dict, coord_keys, value_keys, num_timestam
 def save_vtu_to_mesh(
     filename: str,
     data_dict: Dict[str, np.ndarray],
-    value_keys: Tuple[str, ...],
     coord_keys: Tuple[str, ...],
-    num_timestamps: int = 1,
+    value_keys: Tuple[str, ...],
 ):
     """Save data into .vtu format by meshio.
 
     Args:
         filename (str): File name.
-        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
+        data_dict (Dict[str, np.ndarray]): Data in dict.
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
-        num_timestamp (int, optional): Number of timestamp in data_dict. Defaults to 1.
     """
-    path = os.path.dirname(filename)
-    os.makedirs(path, exist_ok=True)
+    npoint = len(next(iter(data_dict.values())))
+    coord_ndim = len(coord_keys)
 
-    n = len(next(iter(data_dict.values())))
-    m = len(coord_keys)
     # get the list variable transposed
-    points = np.stack((data_dict[key] for key in coord_keys)).reshape(m, n)
-    mesh = meshio.Mesh(points=points.T, cells=[("vertex", np.arange(n).reshape(n, 1))])
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(
+        coord_ndim, npoint
+    )
+    mesh = meshio.Mesh(
+        points=points.T, cells=[("vertex", np.arange(npoint).reshape(npoint, 1))]
+    )
     mesh.point_data = {key: data_dict[key] for key in value_keys}
     mesh.write(filename)
