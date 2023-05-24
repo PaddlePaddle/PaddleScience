@@ -39,9 +39,9 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         batch_cost = 0
         reader_tic = time.perf_counter()
 
-        input_dict_list = []
-        label_dict_list = []
-        weight_dict_list = []
+        input_dicts = []
+        label_dicts = []
+        weight_dicts = []
         for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             # profile code below
@@ -51,35 +51,31 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 for key in solver.train_time_info:
                     solver.train_time_info[key].reset()
             reader_cost += time.perf_counter() - reader_tic
-            total_batch_size += next(iter(input_dict.values())).shape[0]
+            for v in input_dict.values():
+                v.stop_gradient = False
 
             # gather each constraint's input, label, weight to a list
-            input_dict_list.append(input_dict)
-            label_dict_list.append(label_dict)
-            weight_dict_list.append(weight_dict)
-
+            input_dicts.append(input_dict)
+            label_dicts.append(label_dict)
+            weight_dicts.append(weight_dict)
+            total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
-
-        for x in input_dict_list:
-            for v in x.values():
-                v.stop_gradient = False
 
         # forward for every constraint, including model and equation expression
         with solver.autocast_context_manager():
-            constraint_losses = solver.expr_helper(
+            constraint_losses = solver.forward_helper.train_forward(
                 [_constraint.output_expr for _constraint in solver.constraint.values()],
-                input_dict_list,
+                input_dicts,
                 solver.model,
                 solver.constraint,
-                label_dict_list,
-                weight_dict_list,
+                label_dicts,
+                weight_dicts,
             )
 
         # compute loss for each constraint according to its' own output, label and weight
-        for i, (_, _constraint) in enumerate(solver.constraint.items()):
-            constraint_loss = constraint_losses[i]
-            total_loss += constraint_loss
-            loss_dict[_constraint.name] += float(constraint_loss)
+        for i, _constraint in enumerate(solver.constraint.values()):
+            total_loss += constraint_losses[i]
+            loss_dict[_constraint.name] += float(constraint_losses[i])
 
         if solver.update_freq > 1:
             total_loss = total_loss / solver.update_freq

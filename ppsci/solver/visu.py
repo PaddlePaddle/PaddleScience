@@ -17,7 +17,6 @@ import os.path as osp
 
 import paddle
 
-from ppsci.utils import expression
 from ppsci.utils import misc
 
 
@@ -54,7 +53,7 @@ def visualize_func(solver, epoch_id: int):
 
             # forward
             with solver.no_grad_context_manager():
-                batch_output_dict = solver.expr_helper(
+                batch_output_dict = solver.forward_helper.visu_forward(
                     _visualizer.output_expr, batch_input_dict, solver.model
                 )
 
