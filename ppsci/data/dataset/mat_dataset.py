@@ -178,7 +178,7 @@ class IterableMatDataset(io.IterableDataset):
         label_keys: Tuple[str, ...] = (),
         alias_dict: Optional[Dict[str, str]] = None,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
-        timestamps: Optional[Tuple[Union[int, float], ...]] = None,
+        timestamps: Optional[Tuple[float, ...]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
