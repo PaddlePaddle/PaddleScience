@@ -126,11 +126,12 @@ if __name__ == "__main__":
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=1000,
+        eval_freq=10,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        to_static=args.to_static,
     )
     # train model
     solver.train()

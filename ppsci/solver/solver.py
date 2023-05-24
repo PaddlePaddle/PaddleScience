@@ -74,6 +74,7 @@ class Solver:
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
+        to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -129,6 +130,7 @@ class Solver:
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
+        to_static: bool = False,
     ):
         # set model
         self.model = model
@@ -253,7 +255,12 @@ class Solver:
         if logger._logger is not None:
             logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
-        self.expr_helper = expression.ExpressionSolver()
+        self.forward_helper = expression.ExpressionSolver()
+
+        # whether enable static for forward pass, default to Fals
+        if to_static:
+            jit.enable_to_static(to_static)
+            logger.info("Enable to_static for forward computation.")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
