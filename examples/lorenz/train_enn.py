@@ -11,118 +11,155 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-This code is refer from: 
-https://github.com/zabaras/transformer-physx
-"""
-################################ 导入相关的库 ###############################################
+
+# Two-stage training
+# 1. Train a embedding model by running train_enn.py.
+# 2. Load pretrained embedding model and freeze it, then train a transformer model by running train_transformer.py.
+
+# This file is for step1: training a embedding model.
+# This file is based on PaddleScience/ppsci API.
+import numpy as np
 import paddle
-from paddle.optimizer.lr import ExponentialDecay
 
-import paddlescience as psci
-from paddlescience import config
-from paddlescience.algorithm.algorithm_trphysx import TrPhysx
-from paddlescience.data import build_dataloader
-from paddlescience.network.embedding_koopman import LorenzEmbedding
-
-config.enable_visualdl()
-
-################################ 设置超参数 ##################################################
-# hyper parameters
-seed = 12345
-
-# dataset config
-train_data_path = "/path/to/lorenz_training_rk.hdf5"
-train_block_size = 16
-train_stride = 16
-train_batch_size = 512
-
-valid_data_path = "/path/to/lorenz_valid_rk.hdf5"
-valid_block_size = 32
-valid_stride = 1025
-valid_batch_size = 8
-
-# embedding model config
-state_dims = [3]
-n_embd = 32
-
-# optimize config
-clip_norm = 0.1
-learning_rate = 0.001
-gamma = 0.995
-weight_decay = 1e-8
-
-# train config
-max_epochs = 300
-checkpoint_path = "./output/trphysx/lorenz/enn/"
+import ppsci
+from ppsci.utils import logger
 
 
-def main():
-
-    ################################ 定义数据集 ##############################################
-    # create train dataloader
-    dataset_args = dict(
-        file_path=train_data_path,
-        block_size=train_block_size,
-        stride=train_stride,
-    )
-    train_dataloader = build_dataloader(
-        "LorenzDataset",
-        batch_size=train_batch_size,
-        shuffle=True,
-        drop_last=True,
-        dataset_args=dataset_args,
-    )
-    # create test dataloader
-    dataset_args = dict(
-        file_path=valid_data_path,
-        block_size=valid_block_size,
-        stride=valid_stride,
-        ndata=valid_batch_size,
-    )
-    valid_dataloader = build_dataloader(
-        "LorenzDataset",
-        batch_size=valid_batch_size,
-        shuffle=False,
-        drop_last=False,
-        dataset_args=dataset_args,
-    )
-
-    ################################ 定义模型 ###############################################
-    # create model
-    net = LorenzEmbedding(state_dims=state_dims, n_embd=n_embd)
-    # set the mean and std of the dataset
-    net.mu = paddle.to_tensor(train_dataloader.dataset.mu)
-    net.std = paddle.to_tensor(train_dataloader.dataset.std)
-
-    ################################ 优化器设置 ##############################################
-    # optimizer for training
-    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=clip_norm)
-    scheduler = ExponentialDecay(learning_rate=learning_rate, gamma=gamma)
-    optimizer = paddle.optimizer.Adam(
-        parameters=net.parameters(),
-        learning_rate=scheduler,
-        grad_clip=clip,
-        weight_decay=weight_decay,
-    )
-
-    ################################ 定义Solver并训练 #########################################
-    algo = TrPhysx(net)
-
-    solver = psci.solver.Solver(
-        pde=None,
-        algo=algo,
-        opt=optimizer,
-        data_driven=True,
-        lr_scheduler=scheduler,
-        train_dataloader=train_dataloader,
-        valid_dataloader=valid_dataloader,
-    )
-
-    solver.solve(
-        num_epoch=max_epochs, checkpoint_freq=10, checkpoint_path=checkpoint_path
-    )
+def get_mean_std(data: np.ndarray):
+    mean = np.asarray(
+        [np.mean(data[:, :, 0]), np.mean(data[:, :, 1]), np.mean(data[:, :, 2])]
+    ).reshape(1, 3)
+    std = np.asarray(
+        [np.std(data[:, :, 0]), np.std(data[:, :, 1]), np.std(data[:, :, 2])]
+    ).reshape(1, 3)
+    return mean, std
 
 
 if __name__ == "__main__":
-    main()
+    ppsci.utils.set_random_seed(42)
+
+    EPOCHS = 300
+    TRAIN_BLOCK_SIZE = 16
+    VALID_BLOCK_SIZE = 32
+
+    input_keys = ("states",)
+    output_keys = ("pred_states", "recover_states")
+    weights = (1.0 * (TRAIN_BLOCK_SIZE - 1), 1.0e4 * TRAIN_BLOCK_SIZE)
+    regularization_key = "k_matrix"
+
+    OUTPUT_DIR = "./output/lorenz_enn"
+    TRAIN_FILE_PATH = "./datasets/lorenz_training_rk.hdf5"
+    VALID_FILE_PATH = "./datasets/lorenz_valid_rk.hdf5"
+    # initialize logger
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
+    # maunally build constraint(s)
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "LorenzDataset",
+            "file_path": TRAIN_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "block_size": TRAIN_BLOCK_SIZE,
+            "stride": 16,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": True,
+            "shuffle": True,
+        },
+        "batch_size": 512,
+        "num_workers": 4,
+    }
+
+    sup_constraint = ppsci.constraint.SupervisedConstraint(
+        train_dataloader_cfg,
+        ppsci.loss.MSELossWithL2Decay(
+            regularization_dict={regularization_key: 1.0e-1 * (TRAIN_BLOCK_SIZE - 1)}
+        ),
+        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
+        name="Sup",
+    )
+    constraint = {sup_constraint.name: sup_constraint}
+
+    # set iters_per_epoch by dataloader length
+    ITERS_PER_EPOCH = len(sup_constraint.data_loader)
+
+    # manually init model
+    data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
+    model = ppsci.arch.LorenzEmbedding(
+        input_keys, output_keys + (regularization_key,), data_mean, data_std
+    )
+
+    # init optimizer and lr scheduler
+    clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
+    lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        0.001,
+        gamma=0.995,
+        decay_steps=ITERS_PER_EPOCH,
+        by_epoch=True,
+    )()
+    optimizer = ppsci.optimizer.Adam(
+        lr_scheduler,
+        weight_decay=1e-8,
+        grad_clip=clip,
+    )([model])
+
+    # maunally build validator
+    weights = (1.0 * (VALID_BLOCK_SIZE - 1), 1.0e4 * VALID_BLOCK_SIZE)
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "LorenzDataset",
+            "file_path": VALID_FILE_PATH,
+            "input_keys": input_keys,
+            "label_keys": output_keys,
+            "block_size": VALID_BLOCK_SIZE,
+            "stride": 32,
+            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 512,
+        "num_workers": 4,
+    }
+
+    mse_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        metric={"MSE": ppsci.metric.MSE()},
+        name="MSE_Validator",
+    )
+    validator = {mse_validator.name: mse_validator}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        OUTPUT_DIR,
+        optimizer,
+        lr_scheduler,
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        eval_during_train=True,
+        validator=validator,
+    )
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+
+    # directly evaluate pretrained model(optional)
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=OUTPUT_DIR,
+        validator=validator,
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+    )
+    solver.eval()

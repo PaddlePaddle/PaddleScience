@@ -58,7 +58,7 @@ def run_check() -> None:
             "iters_per_epoch": iters_per_epoch,
         }
 
-        npoint_pde = 99**2
+        npoint_pde = 8**2
         pde_constraint = ppsci.constraint.InteriorConstraint(
             equation["NavierStokes"].equations,
             {"continuity": 0, "momentum_x": 0, "momentum_y": 0},

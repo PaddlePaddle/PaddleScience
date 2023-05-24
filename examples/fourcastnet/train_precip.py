@@ -193,7 +193,7 @@ if __name__ == "__main__":
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         EPOCHS,
         ITERS_PER_EPOCH,
-        5e-4,
+        2.5e-4,
         by_epoch=True,
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
     # set testing hyper-parameters
     NUM_TIMESTAMPS = 6
-    output_keys = tuple([f"output_{i}" for i in range(NUM_TIMESTAMPS)])
+    output_keys = tuple(f"output_{i}" for i in range(NUM_TIMESTAMPS))
 
     # set model for testing
     model = ppsci.arch.PrecipNet(
