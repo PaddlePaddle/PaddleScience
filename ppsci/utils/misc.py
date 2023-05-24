@@ -255,10 +255,12 @@ def run_on_eval_mode(func: Callable) -> Callable:
             self.model.eval()
 
         # run func in eval mode
-        func(self, *args, **kwargs)
+        result = func(self, *args, **kwargs)
 
         # restore state
         if train_state:
             self.model.train()
+
+        return result
 
     return function_with_eval_state

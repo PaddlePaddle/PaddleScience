@@ -18,7 +18,6 @@ import paddle
 from paddle import io
 
 from ppsci.solver import printer
-from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
@@ -62,10 +61,14 @@ def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
 
             # forward
             with solver.autocast_context_manager(), solver.no_grad_context_manager():
-                output_dict = solver.expr_helper(
-                    _validator.output_expr, input_dict, solver.model
+                output_dict, validator_loss = solver.forward_helper.eval_forward(
+                    _validator.output_expr,
+                    input_dict,
+                    solver.model,
+                    _validator,
+                    label_dict,
+                    weight_dict,
                 )
-                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
 
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
@@ -179,16 +182,16 @@ def _eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
 
             for v in input_dict.values():
                 v.stop_gradient = False
-            evaluator = expression.ExpressionSolver(
-                _validator.input_keys, _validator.output_keys, solver.model
-            )
-            for output_name, output_formula in _validator.output_expr.items():
-                evaluator.add_target_expr(output_formula, output_name)
-
             # forward
             with solver.autocast_context_manager(), solver.no_grad_context_manager():
-                output_dict = evaluator(input_dict)
-                validator_loss = _validator.loss(output_dict, label_dict, weight_dict)
+                output_dict, validator_loss = solver.forward_helper.eval_forward(
+                    _validator.output_expr,
+                    input_dict,
+                    solver.model,
+                    _validator,
+                    label_dict,
+                    weight_dict,
+                )
 
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
