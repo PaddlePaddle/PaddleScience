@@ -21,7 +21,6 @@ from ppsci.utils import expression
 from ppsci.utils import misc
 
 
-@paddle.no_grad()
 def visualize_func(solver, epoch_id: int):
     """Visualization program
 
@@ -60,7 +59,7 @@ def visualize_func(solver, epoch_id: int):
                 evaluator.add_target_expr(output_expr, output_key)
 
             # forward
-            with solver.autocast_context_manager():
+            with solver.autocast_context_manager(), solver.no_grad_context_manager():
                 batch_output_dict = evaluator(batch_input_dict)
 
             # collect batch data

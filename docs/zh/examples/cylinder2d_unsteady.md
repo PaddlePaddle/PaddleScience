@@ -104,9 +104,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="32"
+``` py linenums="33"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:32:35
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:33:36
 --8<--
 ```
 
@@ -118,9 +118,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:32:35
 
 由于 2D-Cylinder 使用的是 Navier-Stokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="36"
+``` py linenums="37"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:37:38
 --8<--
 ```
 
@@ -130,7 +130,7 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
 
 本文中 2D-Cylinder 的计算域由 CSV 文件储存的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
-``` py linenums="39"
+``` py linenums="40"
 # set timestamps
 TIME_START, TIME_END = 1, 50
 NUM_TIMESTAMPS = 50
@@ -159,15 +159,20 @@ geom = {
             timestamps=np.concatenate((t0, train_timestamps), axis=0),
         ),
         ppsci.geometry.PointCloud(
-            "./datasets/domain_train.csv",
-            ("Points:0", "Points:1"),
-            alias_dict={"Points:0": "x", "Points:1": "y"},
+            reader.load_csv_file(
+                "./datasets/domain_train.csv",
+                ("x", "y"),
+                alias_dict={"x": "Points:0", "y": "Points:1"},
+            ),
+            ("x", "y"),
         ),
     ),
-    "time_rect_eval": ppsci.geometry.PointCloud( # (1)
-        "./datasets/domain_eval.csv",
+    "time_rect_eval": ppsci.geometry.PointCloud(
+        reader.load_csv_file(
+            "./datasets/domain_eval.csv",
+            ("t", "x", "y"),
+        ),
         ("t", "x", "y"),
-        alias_dict={},
     ),
 }
 ```
@@ -232,9 +237,9 @@ geom = {
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="79"
+``` py linenums="85"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:79:86
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:85:92
 --8<--
 ```
 
@@ -242,9 +247,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:79:86
 
 以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="88"
+``` py linenums="94"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:88:100
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:94:106
 --8<--
 ```
 
@@ -262,29 +267,33 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:88:100
 
 #### 3.4.2 边界约束
 
-同理，我们还需要构建流体域的流入边界、流出边界、圆周边界共三个边界的 Dirichlet 边界约束。以 `bc_inlet_cylinder` 边界约束为例，由于作用区域是边界且边界上的数据由 CSV 文件记录，因此我们使用 `SupervisedConstraint` 类，并指定第一个参数为 CSV 文件的路径 `./datasets/domain_inlet_cylinder.csv`；
+同理，我们还需要构建流体域的流入边界、流出边界、圆周边界共三个边界的 Dirichlet 边界约束。以 `bc_inlet_cylinder` 边界约束为例，由于作用区域是边界且边界上的数据由 CSV 文件记录，因此我们使用 `SupervisedConstraint` 类，并按照如下规则指定第一个参数 `dataloader_cfg` 配置字典：
 
-第二个参数指定数据输入 $x$ 和 $y$ 在 CSV 文件中的字段名，分别为 `"Points:0"` 和 `"Points:1"`；
+- 该配置字典的第一个参数为包含 CSV 文件的路径 `./datasets/domain_inlet_cylinder.csv` 在内的配置字典；
 
-第三个参数指定约束目标值 $u$ 和 $v$ 在 CSV 文件中的字段名，分别为 `"U:0"` 和 `"U:1"`；
+- 该配置字典的第一个参数指定数据加载方式，此处我们使用 `IterableCSVDataset` 作为全量数据加载器；
 
-考虑到同一个变量在不同 CSV 文件中可能具有不同的字段名，而且有的字段名过长在编写代码时容易写错，因此第四个参数用于指定字段别名，此处为 `{"Points:0": "x", "Points:1": "y", "U:0": "u", "U:1": "v"}`，表示读取数据后，将 `"Points:0"` 关键字重新命名为 `"x"`，将 `"Points:1"` 关键字重新命名为 `"y"`，将 `"U:0"` 关键字重新命名为 `"u"`，将 `"U:1"` 关键字重新命名为 `"v"`；
+- 该配置字典的第二个参数指定数据的加载路径，此处填写 `./datasets/domain_inlet_cylinder.csv`；
 
-第五个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 `dataset` 字段设置为 "IterableNamedArrayDataset" 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 161 * 30(表示一个时刻产生 161 个数据点，共有 30 个时刻)；
+- 该配置字典的第三个参数指定要从文件中读取的输入列，对应转换后关键字，此处填写为 `("x", "y")`；
 
-第六个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项求和取平均；
+- 该配置字典的第四个参数指定要从文件中读取的标签列，对应转换后关键字，此处填写为 `("u", "v")`；
 
-第七个参数是权重系数，该配置可以精确调整每一个变量参与损失计算时的权重；
+- 考虑到同一个变量在不同 CSV 文件中可能具有不同的字段名，而且有的字段名过长在编写代码时容易写错，因此该配置字典的第五个参数用于指定字段列的别名，此处填写为 `{"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}`；
 
-第八个参数是指定 CSV 文件的时刻信息，此处我们传入表示训练 30 个时刻的 `train_timestamps`；
+- 该配置字典的第六个参数指定每个标签在计算损失时的权重，此处我们放大 "u" 和 "v" 的权重至 10，填写 `{"u": 10, "v": 10}`；
 
-第九个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "BC_inlet_cylinder" 即可。
+- 该配置字典的第七个参数指定数据读取是否涉及时间信息，此处我们设定为训练时间戳，即填写 `train_timestamps`；
+
+第二个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项求和取平均；
+
+第三个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "BC_inlet_cylinder" 即可。
 
 剩下的 `bc_outlet` 按照相同原理构建，代码如下所示：
 
-``` py linenums="101"
+``` py linenums="107"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:101:129
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:107:135
 --8<--
 ```
 
@@ -292,9 +301,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:101:129
 
 对于 $t=t_0$ 时刻的流体域内的点，我们还需要对 $u$, $v$, $p$ 施加初值约束，代码如下：
 
-``` py linenums="130"
+``` py linenums="136"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:130:144
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:136:150
 --8<--
 ```
 
@@ -302,17 +311,17 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:130:144
 
 本案例在流体域内部加入了一定数量的监督点来保证模型最终的收敛情况，因此最后还需要加入一个监督约束，数据同样来自 CSV 文件，代码如下：
 
-``` py linenums="145"
+``` py linenums="151"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:145:159
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:151:165
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束、监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="160"
+``` py linenums="166"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:160:167
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:166:173
 --8<--
 ```
 
@@ -320,9 +329,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:160:167
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数，评估间隔为四百轮，学习率设为 0.001。
 
-``` py linenums="169"
+``` py linenums="175"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:169:171
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:175:177
 --8<--
 ```
 
@@ -330,9 +339,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:169:171
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="173"
+``` py linenums="179"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:173:174
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:179:180
 --8<--
 ```
 
@@ -340,9 +349,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:173:174
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="176"
+``` py linenums="182"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:176:192
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:182:198
 --8<--
 ```
 
@@ -364,9 +373,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:176:192
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 50 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="194"
+``` py linenums="200"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:194:205
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:200:212
 --8<--
 ```
 
@@ -374,9 +383,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:194:205
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="207"
+``` py linenums="214"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:207:
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:214:
 --8<--
 ```
 

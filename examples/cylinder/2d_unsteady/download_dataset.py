@@ -13,19 +13,15 @@
 # limitations under the License.
 """This *.py file is an example of downloading data of the 2d-unsteady-cylinder–flow case"""
 import os
-import zipfile
+import tarfile
 
 import wget
 
-DATASETS = (
-    "https://dataset.bj.bcebos.com/PaddleScience/cylinder2D_continuous/datasets.zip"
-)
+DATASETS = "https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar"
 
 dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
 print("* Running [download_dataset.py]")
 wget.download(DATASETS, out=dirname)
 
-with zipfile.ZipFile(dirname + "datasets.zip", "r") as zip_ref:
-    zip_ref.extractall(dirname)
-    print("\n" + "* Successfully Downloaded!")
-    print("* Data is prepared here :" + dirname + "datasets/\n")
+with tarfile.open("cylinder2d_unsteady_Re100_dataset.tar") as tar:
+    tar.extractall()

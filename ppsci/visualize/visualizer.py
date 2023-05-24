@@ -19,10 +19,7 @@ from typing import Optional
 from typing import Tuple
 
 import numpy as np
-import paddle
 
-from ppsci.utils import logger
-from ppsci.utils import misc
 from ppsci.visualize import base
 from ppsci.visualize import plot
 from ppsci.visualize import vtu
@@ -292,9 +289,7 @@ class Visualizer3D(base.Visualizer):
         output_expr (Dict[str, Callable]): Output expression.
         batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
         label_dict (Dict[str, np.ndarray]): Label dict.
-        transforms (Optional[Dict[str, ]]): Transformer dict.
         time_list (Optional[Tuple[float, ...]]): Time list.
-        num_timestamps (int, optional): Number of timestamps.
         prefix (str, optional): Prefix for output file.
     """
 
@@ -305,32 +300,21 @@ class Visualizer3D(base.Visualizer):
         batch_size: int = 64,
         label_dict: Optional[Dict[str, np.ndarray]] = None,
         time_list: Optional[Tuple[float, ...]] = None,
-        num_timestamps: int = 1,
         prefix: str = "vtu",
     ):
         self.label = label_dict
         self.time_list = time_list
-        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
+        super().__init__(input_dict, output_expr, batch_size, len(time_list), prefix)
 
-    def save(self, filename: str, data_dict: Dict[str, paddle.Tensor]):
-        """Save points result
-
-        Args:
-            filename (str): Output file name with directory.
-            data_dict (Dict[str, paddle.Tensor]): Predicted result.
-        """
-
+    def save(self, filename: str, data_dict: Dict[str, np.ndarray]):
         n = int((next(iter(data_dict.values()))).shape[0] / self.num_timestamps)
         coord_keys = [x for x in self.input_dict if x != "t"]
         for i in range(len(self.time_list)):
             vtu.save_vtu_to_mesh(
-                filename=osp.join(filename, f"predict_{i+1}.vtu"),
-                data_dict={
-                    key: (data_dict[key].numpy()[i * n : (i + 1) * n])
-                    for key in data_dict
-                },
-                value_keys=self.output_expr,
-                coord_keys=coord_keys,
+                osp.join(filename, f"predict_{i+1}.vtu"),
+                {key: (data_dict[key][i * n : (i + 1) * n]) for key in data_dict},
+                coord_keys,
+                self.output_keys,
             )
 
 
