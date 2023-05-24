@@ -255,7 +255,7 @@ def run_on_eval_mode(func: Callable) -> Callable:
             self.model.eval()
 
         # run func in eval mode
-        func()
+        func(self, *args, **kwargs)
 
         # restore state
         if train_state:
