@@ -47,9 +47,8 @@ pip install -i https://pypi.org/simple/ paddlesci
 
 执行以下代码，验证安装的 PaddleScience 基础功能是否正常
 
-``` py
-import ppsci
-ppsci.utils.run_check()
+``` shell
+python -c "import ppsci; ppsci.utils.run_check()"
 ```
 
 如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。

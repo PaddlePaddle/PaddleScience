@@ -83,3 +83,17 @@ class SupervisedValidator(base.Validator):
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, metric, name)
+
+    def __str__(self):
+        return ", ".join(
+            [
+                self.__class__.__name__,
+                f"name = {self.name}",
+                f"input_keys = {self.input_keys}",
+                f"output_keys = {self.output_keys}",
+                f"output_expr = {self.output_expr}",
+                f"len(dataloader) = {len(self.data_loader)}",
+                f"loss = {self.loss}",
+                f"metric = {list(self.metric.keys())}",
+            ]
+        )

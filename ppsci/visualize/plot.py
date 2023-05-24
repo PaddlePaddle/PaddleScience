@@ -20,7 +20,6 @@ from typing import Union
 
 import imageio
 import matplotlib
-import matplotlib as mpl
 import numpy as np
 import paddle
 from matplotlib import cm
@@ -174,8 +173,8 @@ def _save_plot_from_2d_array(
     """
 
     plt.close("all")
-    mpl.rcParams["xtick.labelsize"] = 5
-    mpl.rcParams["ytick.labelsize"] = 5
+    matplotlib.rcParams["xtick.labelsize"] = 5
+    matplotlib.rcParams["ytick.labelsize"] = 5
 
     fig, ax = plt.subplots(
         len(visu_keys),
@@ -215,7 +214,7 @@ def _save_plot_from_2d_array(
         ticks = np.linspace(0, 1, 5)
         tickLabels = np.linspace(c_min, c_max, 5)
         tickLabels = [f"{t0:02.2f}" for t0 in tickLabels]
-        cbar = mpl.colorbar.ColorbarBase(
+        cbar = matplotlib.colorbar.ColorbarBase(
             ax_cbar, cmap=plt.get_cmap("inferno"), orientation="vertical", ticks=ticks
         )
         cbar.set_ticklabels(tickLabels, fontsize=5)

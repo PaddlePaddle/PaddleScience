@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os.path as osp
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -287,7 +288,8 @@ class Visualizer3D(base.Visualizer):
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
         batch_size (int, optional): Batch size of data when computing result in visu.py. Defaults to 64.
-        num_timestamps (int, optional): Number of timestamps
+        label_dict (Dict[str, np.ndarray]): Label dict.
+        time_list (Optional[Tuple[float, ...]]): Time list.
         prefix (str, optional): Prefix for output file.
     """
 
@@ -296,15 +298,24 @@ class Visualizer3D(base.Visualizer):
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
         batch_size: int = 64,
-        num_timestamps: int = 1,
-        prefix: str = "plot3d",
+        label_dict: Optional[Dict[str, np.ndarray]] = None,
+        time_list: Optional[Tuple[float, ...]] = None,
+        prefix: str = "vtu",
     ):
-        super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
+        self.label = label_dict
+        self.time_list = time_list
+        super().__init__(input_dict, output_expr, batch_size, len(time_list), prefix)
 
-    def save(self, filename, data_dict):
-        vtu.save_vtu_from_dict(
-            filename, data_dict, self.input_keys, self.output_keys, self.num_timestamps
-        )
+    def save(self, filename: str, data_dict: Dict[str, np.ndarray]):
+        n = int((next(iter(data_dict.values()))).shape[0] / self.num_timestamps)
+        coord_keys = [x for x in self.input_dict if x != "t"]
+        for i in range(len(self.time_list)):
+            vtu.save_vtu_to_mesh(
+                osp.join(filename, f"predict_{i+1}.vtu"),
+                {key: (data_dict[key][i * n : (i + 1) * n]) for key in data_dict},
+                coord_keys,
+                self.output_keys,
+            )
 
 
 class VisualizerWeather(base.Visualizer):

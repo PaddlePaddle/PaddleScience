@@ -17,6 +17,7 @@ import numpy as np
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
+from ppsci.utils import reader
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -64,15 +65,20 @@ if __name__ == "__main__":
                 timestamps=np.concatenate((t0, train_timestamps), axis=0),
             ),
             ppsci.geometry.PointCloud(
-                "./datasets/domain_train.csv",
-                ["Points:0", "Points:1"],
-                alias_dict={"Points:0": "x", "Points:1": "y"},
+                reader.load_csv_file(
+                    "./datasets/domain_train.csv",
+                    ("x", "y"),
+                    alias_dict={"x": "Points:0", "y": "Points:1"},
+                ),
+                ("x", "y"),
             ),
         ),
         "time_rect_eval": ppsci.geometry.PointCloud(
-            "./datasets/cylinder2d_eval_points.csv",
-            ["t", "x", "y"],
-            alias_dict={},
+            reader.load_csv_file(
+                "./datasets/domain_eval.csv",
+                ("t", "x", "y"),
+            ),
+            ("t", "x", "y"),
         ),
     }
 
@@ -80,7 +86,7 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
-    NPOINT_PDE, ntime_pde = 9420, len(train_timestamps)
+    NPOINT_PDE, NTIME_PDE = 9420, len(train_timestamps)
     NPOINT_INLET_CYLINDER = 161
     NPOINT_OUTLET = 81
     ALIAS_DICT = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
@@ -92,7 +98,7 @@ if __name__ == "__main__":
         geom["time_rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "batch_size": NPOINT_PDE * ntime_pde,
+            "batch_size": NPOINT_PDE * NTIME_PDE,
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
@@ -103,8 +109,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/domain_inlet_cylinder.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["u", "v"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("u", "v"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
@@ -118,8 +124,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/domain_outlet.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["p"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("p",),
                 "alias_dict": ALIAS_DICT,
                 "timestamps": train_timestamps,
             },
@@ -132,8 +138,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/initial/ic0.1.csv",
-                "input_keys": ["x", "y"],
-                "label_keys": ["u", "v", "p"],
+                "input_keys": ("x", "y"),
+                "label_keys": ("u", "v", "p"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10, "p": 10},
                 "timestamps": t0,
@@ -147,8 +153,8 @@ if __name__ == "__main__":
             "dataset": {
                 "name": "IterableCSVDataset",
                 "file_path": "./datasets/probe/probe1_50.csv",
-                "input_keys": ["t", "x", "y"],
-                "label_keys": ["u", "v"],
+                "input_keys": ("t", "x", "y"),
+                "label_keys": ("u", "v"),
                 "alias_dict": ALIAS_DICT,
                 "weight_dict": {"u": 10, "v": 10},
                 "timestamps": train_timestamps,
@@ -174,14 +180,14 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(0.001)((model,))
 
     # set validator
-    npoints_eval = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
+    NPOINT_EVAL = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect_eval"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": npoints_eval,
+            "total_size": NPOINT_EVAL,
             "batch_size": 10240,
             "sampler": {"name": "BatchSampler"},
         },
@@ -193,14 +199,15 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS
+        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS,
+        evenly=True,
     )
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
+        "visulzie_u_v_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             num_timestamps=NUM_TIMESTAMPS,
-            prefix="result_u",
+            prefix="result_u_v_p",
         )
     }
 
