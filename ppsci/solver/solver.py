@@ -29,6 +29,7 @@ import paddle.distributed as dist
 import visualdl as vdl
 from packaging import version
 from paddle import amp
+from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
@@ -219,12 +220,17 @@ class Solver:
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
+            if self.update_freq != 1:
+                self.update_freq = 1
+                logger.warning("Set update_freq to to 1 when using L-BFGS optimizer.")
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
-            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+            self.model, self.optimizer = amp.decorate(
+                self.model, self.optimizer, self.amp_level
+            )
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
@@ -378,6 +384,7 @@ class Solver:
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
+                # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
 
@@ -397,7 +404,7 @@ class Solver:
                     self.equation,
                 )
 
-            # always save the latest model for convenient resume training
+            # save the latest model for convenient resume training
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
@@ -412,12 +419,9 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
+    @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0):
         """Evaluation"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -428,26 +432,19 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        if train_state:
-            self.model.train()
         return result
 
+    @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
         """Visualization"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
-        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization.")
-
-        if train_state:
-            self.model.train()
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
     @paddle.no_grad()
+    @misc.run_on_eval_mode
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
@@ -462,10 +459,6 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         if self.world_size > 1:
             raise NotImplementedError(
                 "Solver.predict only support single device yet, "
@@ -500,10 +493,9 @@ class Solver:
 
         pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
-        if train_state:
-            self.model.train()
         return pred_dict
 
+    @misc.run_on_eval_mode
     def export(self):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
@@ -514,12 +506,12 @@ class Solver:
 
         input_spec = copy.deepcopy(self.cfg["Export"]["input_shape"])
         config.replace_shape_with_inputspec_(input_spec)
-        static_model = paddle.jit.to_static(self.model, input_spec=input_spec)
+        static_model = jit.to_static(self.model, input_spec=input_spec)
 
         export_dir = self.cfg["Global"]["save_inference_dir"]
         save_path = os.path.join(export_dir, "inference")
-        paddle.jit.save(static_model, save_path)
-        logger.info(f"The inference model has been exported to {export_dir}.")
+        jit.save(static_model, save_path)
+        logger.info(f"The inference model has been exported to {export_dir}")
 
     def autocast_context_manager(self) -> contextlib.AbstractContextManager:
         """Autocast context manager for Auto Mix Precision.

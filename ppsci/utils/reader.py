@@ -27,6 +27,13 @@ import scipy.io as sio
 
 from ppsci.utils import logger
 
+__all__ = [
+    "load_csv_file",
+    "load_mat_file",
+    "load_vtk_file",
+    "load_vtk_with_time_file",
+]
+
 
 def load_csv_file(
     file_path: str,
@@ -119,7 +126,7 @@ def load_vtk_file(
     input_keys: Tuple[str, ...],
     label_keys: Optional[Tuple[str, ...]],
 ) -> Dict[str, np.ndarray]:
-    """load coordinates and attached label from the vtu file
+    """load coordinates and attached label from the *.vtu file.
 
     Args:
         filename_without_timeid (str): File name without time id.

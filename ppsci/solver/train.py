@@ -34,7 +34,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         total_loss = 0
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
-        total_batch_size = []
+        total_batch_size = 0
         reader_cost = 0
         batch_cost = 0
         reader_tic = time.perf_counter()
@@ -51,7 +51,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 for key in solver.train_time_info:
                     solver.train_time_info[key].reset()
             reader_cost += time.perf_counter() - reader_tic
-            total_batch_size.append(next(iter(input_dict.values())).shape[0])
+            total_batch_size += next(iter(input_dict.values())).shape[0]
 
             # gather each constraint's input, label, weight to a list
             input_dict_list.append(input_dict)
@@ -92,21 +92,20 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
             if iter_id % solver.update_freq == 0:
                 solver.scaler.minimize(solver.optimizer, total_loss_scaled)
                 solver.optimizer.clear_grad()
-                if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
-                    solver.lr_scheduler.step()
         else:
             total_loss.backward()
             if iter_id % solver.update_freq == 0:
                 solver.optimizer.step()
                 solver.optimizer.clear_grad()
-                if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
-                    solver.lr_scheduler.step()
+
+        # update learning rate by step
+        if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
+            solver.lr_scheduler.step()
 
         batch_cost += time.perf_counter() - batch_tic
 
         # update and log training information
         solver.global_step += 1
-        total_batch_size = sum(total_batch_size)
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
@@ -129,23 +128,26 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
     for iter_id in range(1, solver.iters_per_epoch + 1):
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
-        total_batch_size = []
+        total_batch_size = 0
         reader_cost = 0
         batch_cost = 0
         reader_tic = time.perf_counter()
 
-        input_dict_list = []
-        label_dict_list = []
-        weight_dict_list = []
+        input_dicts = []
+        label_dicts = []
+        weight_dicts = []
         for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
             for v in input_dict.values():
                 v.stop_gradient = False
-            input_dict_list.append(input_dict)
-            label_dict_list.append(label_dict)
-            weight_dict_list.append(weight_dict)
-            total_batch_size.append(next(iter(input_dict.values())).shape[0])
+
+            # gather all constraint data into list
+            input_dicts.append(input_dict)
+            label_dicts.append(label_dict)
+            weight_dicts.append(weight_dict)
+            total_batch_size += next(iter(input_dict.values())).shape[0]
+            reader_tic = time.perf_counter()
 
         def closure():
             """Forward-backward closure function for LBFGS optimizer.
@@ -159,26 +161,28 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
                     _constraint.input_keys, _constraint.output_keys, solver.model
                 )
                 for output_name, output_formula in _constraint.output_expr.items():
-                    evaluator.add_target_expr(output_formula, output_name)
+                    if output_name in label_dict:
+                        evaluator.add_target_expr(output_formula, output_name)
 
                 # forward for every batched data dict
                 with solver.autocast_context_manager():
-                    output_dict_i = evaluator(input_dict_list[i])
+                    output_dict_i = evaluator(input_dicts[i])
                     constraint_loss = _constraint.loss(
-                        output_dict_i, label_dict_list[i], weight_dict_list[i]
+                        output_dict_i, label_dicts[i], weight_dicts[i]
                     )
                     total_loss += constraint_loss
 
-                loss_dict[_constraint.name] += float(constraint_loss)
+                loss_dict[_constraint.name] = float(constraint_loss)
 
+            solver.optimizer.clear_grad()
             total_loss.backward()
             loss_dict["loss"] = float(total_loss)
 
             return total_loss
 
-        reader_tic = time.perf_counter()
-
         solver.optimizer.step(closure)
+
+        # update learning rate by step
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
@@ -186,7 +190,6 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
 
         # update and log training information
         solver.global_step += 1
-        total_batch_size = sum(total_batch_size)
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)

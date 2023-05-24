@@ -62,6 +62,8 @@ class Arch(nn.Layer):
         Returns:
             Tuple[paddle.Tensor, ...]: Concatenated tensor.
         """
+        if len(keys) == 1:
+            return data_dict[keys[0]]
         data = [data_dict[key] for key in keys]
         return paddle.concat(data, axis)
 
@@ -78,9 +80,8 @@ class Arch(nn.Layer):
         Returns:
             Dict[str, paddle.Tensor]: Dict contains tensor.
         """
-        # TODO: num_or_sections must > 1 in static, but 1 is allowed in dygraph.
         if len(keys) == 1:
-            return {key: data_tensor for i, key in enumerate(keys)}
+            return {keys[0]: data_tensor}
         data = paddle.split(data_tensor, len(keys), axis=axis)
         return {key: data[i] for i, key in enumerate(keys)}
 
