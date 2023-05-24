@@ -13,7 +13,12 @@
 # limitations under the License.
 
 import collections
+import functools
 import random
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
 
 import numpy as np
 import paddle
@@ -29,6 +34,7 @@ __all__ = [
     "stack_dict_list",
     "combine_array_with_time",
     "set_random_seed",
+    "run_on_eval_mode",
 ]
 
 
@@ -94,7 +100,16 @@ class Prettydefaultdict(collections.defaultdict):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
-def convert_to_dict(array, keys):
+def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.ndarray]:
+    """Split given array into single channel array at axis -1 in order of given keys.
+
+    Args:
+        array (np.ndarray): Array to be splited.
+        keys (Tuple[str, ...]):Keys used in split.
+
+    Returns:
+        Dict[str, np.ndarray]: Splited dict.
+    """
     if array.shape[-1] != len(keys):
         raise ValueError(
             f"dim of array({array.shape[-1]}) must equal to " f"len(keys)({len(keys)})"
@@ -104,7 +119,9 @@ def convert_to_dict(array, keys):
     return {key: split_array[i] for i, key in enumerate(keys)}
 
 
-def all_gather(tensor, concat=True, axis=0):
+def all_gather(
+    tensor: paddle.Tensor, concat: bool = True, axis: int = 0
+) -> List[paddle.Tensor]:
     """Gather tensor from all devices, concatenate them along given axis if specified.
 
     Args:
@@ -122,29 +139,78 @@ def all_gather(tensor, concat=True, axis=0):
     return result
 
 
-def convert_to_array(dict, keys):
+def convert_to_array(dict: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.ndarray:
+    """Concatenate arrays in axis -1 in order of given keys.
+
+    Args:
+        dict (Dict[str, np.ndarray]): Dict contains arrays.
+        keys (Tuple[str, ...]): Concatenate keys used in concatenation.
+
+    Returns:
+        np.ndarray: Concatenated array.
+    """
     return np.concatenate([dict[key] for key in keys], axis=-1)
 
 
-def concat_dict_list(dict_list):
+def concat_dict_list(
+    dict_list: Tuple[Dict[str, np.ndarray], ...]
+) -> Dict[str, np.ndarray]:
+    """concatenate arrays in tuple of dicts at axis 0.
+
+    Args:
+        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+
+    Returns:
+        Dict[str, np.ndarray]: A dict with concatenated arrays for each key.
+    """
     ret = {}
     for key in dict_list[0].keys():
         ret[key] = np.concatenate([_dict[key] for _dict in dict_list], axis=0)
     return ret
 
 
-def stack_dict_list(dict_list):
+def stack_dict_list(
+    dict_list: Tuple[Dict[str, np.ndarray], ...]
+) -> Dict[str, np.ndarray]:
+    """Stack arrays in tuple of dicts at axis 0.
+
+    Args:
+        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+
+    Returns:
+        Dict[str, np.ndarray]: A dict with stacked arrays for each key.
+    """
     ret = {}
     for key in dict_list[0].keys():
         ret[key] = np.stack([_dict[key] for _dict in dict_list], axis=0)
     return ret
 
 
-def typename(object):
+def typename(object: object) -> str:
+    """Return type name of given object.
+
+    Args:
+        object (object): Python object which is instantiated from a class.
+
+    Returns:
+        str: Class name of given object.
+    """
     return object.__class__.__name__
 
 
-def combine_array_with_time(x, t):
+def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
+    """Combine given data x with time sequence t.
+    Given x with shape (N, D) and t with shape (T, ),
+    this function will repeat t_i for N times and will concat it with data x for each t_i in t,
+    finally return the stacked result, whic is of shape (NxT, D+1).
+
+    Args:
+        x (np.ndarray): Points data with shape (N, D).
+        t (Tuple[int, ...]): Time sequence with shape (T, ).
+
+    Returns:
+        np.ndarray: Combined data with shape of (NxT, D+1).
+    """
     nx = len(x)
     tx = []
     for ti in t:
@@ -157,7 +223,42 @@ def combine_array_with_time(x, t):
     return tx
 
 
-def set_random_seed(seed):
+def set_random_seed(seed: int):
+    """Set numpy, random, paddle random_seed to given seed.
+
+    Args:
+        seed (int): Random seed.
+    """
     paddle.seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
+
+def run_on_eval_mode(func: Callable) -> Callable:
+    """A decorator automatically running given class method in eval mode and keep
+    training state unchanged after function finished.
+
+    Args:
+        func (Callable): Class method which is expected running in eval mode.
+
+    Returns:
+        Callable: Decorated class method.
+    """
+
+    @functools.wraps(func)
+    def function_with_eval_state(self, *args, **kwargs):
+        # log original state
+        train_state = self.model.training
+
+        # switch to eval mode
+        if train_state:
+            self.model.eval()
+
+        # run func in eval mode
+        func(self, *args, **kwargs)
+
+        # restore state
+        if train_state:
+            self.model.train()
+
+    return function_with_eval_state

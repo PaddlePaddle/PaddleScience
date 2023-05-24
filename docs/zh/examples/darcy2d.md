@@ -1,5 +1,7 @@
 # 2D-Darcy
 
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 ## 1. 问题简介
 
 2D-Darcy，达西渗流（Darcy flow）的一种，流体在多孔介质中流动时，渗流速度小，流动服从达西定律，渗流速度和压力梯度之间呈线性关系，这种流动称为线性渗流。
@@ -107,7 +109,7 @@ examples/darcy/darcy2d.py:52:69
 
 ``` py linenums="70"
 --8<--
-examples/darcy/darcy2d.py:70:81
+examples/darcy/darcy2d.py:70:117
 --8<--
 ```
 
@@ -120,6 +122,14 @@ lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 ```
 
 `BoundaryConstraint` 类其他参数的含义与 `InteriorConstraint` 基本一致，这里不再介绍。
+
+在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
+
+``` py linenums="118"
+--8<--
+examples/ldc/ldc2d_steady_Re10.py:118:125
+--8<--
+```
 
 ### 3.5 超参数设定
 

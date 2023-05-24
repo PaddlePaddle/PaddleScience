@@ -7,7 +7,9 @@
         - initializer
         - logger
         - misc
-        - reader
+        - load_csv_file
+        - load_mat_file
+        - load_vtk_file
         - run_check
         - AttrDict
         - ExpressionSolver
