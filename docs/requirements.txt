@@ -1,8 +1,6 @@
 numpy
-scipy
 sympy
 matplotlib
-vtk
 scipy
 pyyaml
 Jinja2==3.0.3
