@@ -47,7 +47,7 @@ class BoundaryConstraint(base.Constraint):
             Defaults to None.
         evenly (bool, optional): Whether to use evenly distribution sampling.
             Defaults to False.
-        weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
+        weight_dict (Optional[Dict[str, Union[float, Callable]]]): Define the weight of each
             constraint variable. Defaults to None.
         name (str, optional): Name of constraint object. Defaults to "BC".
 
@@ -78,7 +78,7 @@ class BoundaryConstraint(base.Constraint):
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
-        weight_dict: Optional[Dict[str, Callable]] = None,
+        weight_dict: Optional[Dict[str, Union[float, Callable]]] = None,
         name: str = "BC",
     ):
         self.output_expr = output_expr
