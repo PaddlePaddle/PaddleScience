@@ -16,13 +16,14 @@ import time
 
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
+from ppsci import solver
 from ppsci.solver import printer
 from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def train_epoch_func(solver, epoch_id: int, log_freq: int):
+def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train program for one epoch
 
     Args:
@@ -40,7 +41,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         reader_cost = 0
         batch_cost = 0
         reader_tic = time.perf_counter()
-        with solver.no_sync_context_manager(solver.world_size > 1):
+        with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             for _, _constraint in solver.constraint.items():
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
 
@@ -114,7 +115,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         batch_tic = time.perf_counter()
 
 
-def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
+def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
 
     Args:
@@ -155,7 +156,7 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
                 Tensor: Computed loss.
             """
             total_loss = 0
-            with solver.no_sync_context_manager(solver.world_size > 1):
+            with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
                 for i, _constraint in enumerate(solver.constraint.values()):
                     evaluator = expression.ExpressionSolver(
                         _constraint.input_keys, _constraint.output_keys, solver.model
