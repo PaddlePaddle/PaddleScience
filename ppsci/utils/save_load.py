@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import errno
 import os
 from typing import Any
 from typing import Dict
@@ -25,22 +24,6 @@ from ppsci.utils import logger
 __all__ = ["load_checkpoint", "save_checkpoint", "load_pretrain"]
 
 
-def _mkdir_if_not_exist(path):
-    """mkdir if not exists, ignore the exception when multiprocess mkdir together
-
-    Args:
-        path (str): Path for makedir
-    """
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            if e.errno == errno.EEXIST and os.path.isdir(path):
-                logger.warning(f"{path} already created")
-            else:
-                raise OSError(f"Failed to mkdir {path}")
-
-
 def _load_pretrain_from_path(model, path, equation=None):
     """Load pretrained model from given path.
 
@@ -49,17 +32,20 @@ def _load_pretrain_from_path(model, path, equation=None):
         path (str, optional): Pretrained model path.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
     """
-    if not (os.path.isdir(path) or os.path.exists(path + ".pdparams")):
+    if not (os.path.isdir(path) or os.path.exists(f"{path}.pdparams")):
         raise FileNotFoundError(
             f"Pretrained model path {path}.pdparams does not exists."
         )
 
-    param_state_dict = paddle.load(path + ".pdparams")
+    param_state_dict = paddle.load(f"{path}.pdparams")
     model.set_dict(param_state_dict)
     if equation is not None:
-        equation_dict = paddle.load(path + ".pdeqn")
-        for name, _equation in equation.items():
-            _equation.set_state_dict(equation_dict[name])
+        if not os.path.exists(f"{path}.pdeqn"):
+            logger.warning(f"{path}.pdeqn not found.")
+        else:
+            equation_dict = paddle.load(f"{path}.pdeqn")
+            for name, _equation in equation.items():
+                _equation.set_state_dict(equation_dict[name])
 
     logger.info(f"Finish loading pretrained model from {path}")
 
@@ -92,28 +78,32 @@ def load_checkpoint(
     Returns:
         Dict[str, Any]: Loaded metric information.
     """
-    if not os.path.exists(path + ".pdparams"):
+    if not os.path.exists(f"{path}.pdparams"):
         raise FileNotFoundError(f"{path}.pdparams not exist.")
-    if not os.path.exists(path + ".pdopt"):
+    if not os.path.exists(f"{path}.pdopt"):
         raise FileNotFoundError(f"{path}.pdopt not exist.")
-    if grad_scaler is not None and not os.path.exists(path + ".pdscaler"):
+    if grad_scaler is not None and not os.path.exists(f"{path}.pdscaler"):
         raise FileNotFoundError(f"{path}.scaler not exist.")
 
     # load state dict
-    param_dict = paddle.load(path + ".pdparams")
-    optim_dict = paddle.load(path + ".pdopt")
-    metric_dict = paddle.load(path + ".pdstates")
+    param_dict = paddle.load(f"{path}.pdparams")
+    optim_dict = paddle.load(f"{path}.pdopt")
+    metric_dict = paddle.load(f"{path}.pdstates")
     if grad_scaler is not None:
-        scaler_dict = paddle.load(path + ".pdscaler")
+        scaler_dict = paddle.load(f"{path}.pdscaler")
     if equation is not None:
-        equation_dict = paddle.load(path + ".pdeqn")
+        if not os.path.exists(f"{path}.pdeqn"):
+            logger.warning(f"{path}.pdeqn not found.")
+            equation_dict = None
+        else:
+            equation_dict = paddle.load(f"{path}.pdeqn")
 
     # set state dict
     model.set_state_dict(param_dict)
     optimizer.set_state_dict(optim_dict)
     if grad_scaler is not None:
         grad_scaler.load_state_dict(scaler_dict)
-    if equation is not None:
+    if equation is not None and equation_dict is not None:
         for name, _equation in equation.items():
             _equation.set_state_dict(equation_dict[name])
 
@@ -130,7 +120,7 @@ def save_checkpoint(
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
-        metric (Dict[str, Any]): Metric information, such as {"RMSE": ...}.
+        metric (Dict[str, float]): Metric information, such as {"RMSE": ...}.
         model_dir (str): Directory for chekpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "ppsci".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
@@ -138,18 +128,18 @@ def save_checkpoint(
     if paddle.distributed.get_rank() != 0:
         return
     model_dir = os.path.join(model_dir, "checkpoints")
-    _mkdir_if_not_exist(model_dir)
+    os.makedirs(model_dir, exist_ok=True)
     model_path = os.path.join(model_dir, prefix)
 
-    paddle.save(model.state_dict(), model_path + ".pdparams")
-    paddle.save(optimizer.state_dict(), model_path + ".pdopt")
-    paddle.save(metric, model_path + ".pdstates")
+    paddle.save(model.state_dict(), f"{model_path}.pdparams")
+    paddle.save(optimizer.state_dict(), f"{model_path}.pdopt")
+    paddle.save(metric, f"{model_path}.pdstates")
     if grad_scaler is not None:
-        paddle.save(grad_scaler.state_dict(), model_path + ".pdscaler")
+        paddle.save(grad_scaler.state_dict(), f"{model_path}.pdscaler")
     if equation is not None:
         paddle.save(
             {key: eq.state_dict() for key, eq in equation.items()},
-            model_path + ".pdeqn",
+            f"{model_path}.pdeqn",
         )
 
     logger.info(f"Finish saving checkpoint to {model_path}")
