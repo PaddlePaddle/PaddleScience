@@ -18,9 +18,9 @@ lines=(${dataline})
 download_dataset=$(func_parser_value "${lines[61]}")
 python=$(func_parser_value "${lines[2]}")
 export pip=$(func_parser_value "${lines[62]}")
-
+${pip} install --upgrade pip
 ${pip} install -r requirements.txt
 
-if [ ! -n ${download_dataset}] ; then
+if [ -n ${download_dataset} ] ; then
     ${python} ${PDSC_DIR}${download_dataset}
 fi
