@@ -18,7 +18,6 @@ from typing import Union
 
 import numpy as np
 import paddle
-import pysdf
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
@@ -38,7 +37,7 @@ class Mesh(geometry.Geometry):
         >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")  # doctest: +SKIP
     """
 
-    def __init__(self, mesh: Union["Mesh", str]):
+    def __init__(self, mesh: Union["pymesh.Mesh", str]):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
@@ -86,6 +85,11 @@ class Mesh(geometry.Geometry):
         self.v2 = self.vectors[:, 2]
         self.num_vertices = self.py_mesh.num_vertices
         self.num_faces = self.py_mesh.num_faces
+
+        if not checker.dynamic_import_to_globals(["pysdf"]):
+            raise ModuleNotFoundError
+        import pysdf
+
         self.pysdf = pysdf.SDF(self.vertices, self.faces)
         self.bounds = (
             ((np.min(self.vectors[:, :, 0])), np.max(self.vectors[:, :, 0])),
