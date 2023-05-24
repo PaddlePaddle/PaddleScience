@@ -85,10 +85,10 @@ class Jacobians:
 
         Examples:
             >>> import ppsci
-            >>> x = paddle.randn([4, 3])
+            >>> x = paddle.randn([4, 1])
             >>> x.stop_gradient = False
-            >>> y = (x * x).sum()
-            >>> dy_dx = ppsci.autodiff.jacoian(y, x)  # doctest: +SKIP
+            >>> y = x * x
+            >>> dy_dx = ppsci.autodiff.jacobian(y, x)
         """
         key = (ys, xs)
         if key not in self.Js:
@@ -187,7 +187,7 @@ class Hessians:
             >>> x = paddle.randn([4, 3])
             >>> x.stop_gradient = False
             >>> y = (x * x).sin()
-            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)  # doctest: +SKIP
+            >>> dy_dxx = ppsci.autodiff.hessian(y, x, component=0)
         """
         key = (ys, xs, component)
         if key not in self.Hs:

@@ -49,6 +49,8 @@ class NamedArrayDataset(io.Dataset):
         super().__init__()
         self.input = input
         self.label = label
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
         self.weight = weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))

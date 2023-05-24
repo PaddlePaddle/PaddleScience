@@ -23,7 +23,7 @@ from ppsci.loss import base
 
 
 class IntegralLoss(base.Loss):
-    r"""Class for integral loss with monte carlo integration algorithm.
+    r"""Class for integral loss with Monte-Carlo integration algorithm.
 
     $$
     L =
@@ -33,7 +33,7 @@ class IntegralLoss(base.Loss):
     \end{cases}
     $$
 
-    $M$ is the number of samples in monte carlo integration.
+    $M$ is the number of samples in Monte-Carlo integration.
 
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
