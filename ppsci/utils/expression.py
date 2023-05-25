@@ -85,11 +85,11 @@ class ExpressionSolver(nn.Layer):
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
-        input_dict: Dict[str, Callable],
+        input_dict: Dict[str, paddle.Tensor],
         model: nn.Layer,
         validator: "validate.Validator",
-        label_dict: Dict[str, Callable],
-        weight_dict: Dict[str, Callable],
+        label_dict: Dict[str, paddle.Tensor],
+        weight_dict: Dict[str, paddle.Tensor],
     ):
         # model forward
         if callable(next(iter(expr_dict.values()))):
@@ -118,7 +118,7 @@ class ExpressionSolver(nn.Layer):
     def visu_forward(
         self,
         expr_dict: Dict[str, Callable],
-        input_dict: Dict[str, Callable],
+        input_dict: Dict[str, paddle.Tensor],
         model: nn.Layer,
     ):
         # model forward
