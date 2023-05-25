@@ -31,7 +31,7 @@ class Translate:
         >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
     """
 
-    def __init__(self, offset: Dict[str, Union[int, float]]):
+    def __init__(self, offset: Dict[str, float]):
         self.offset = offset
 
     def __call__(self, data_dict):
@@ -53,7 +53,7 @@ class Scale:
         >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
     """
 
-    def __init__(self, scale: Dict[str, Union[int, float]]):
+    def __init__(self, scale: Dict[str, float]):
         self.scale = scale
 
     def __call__(self, data_dict):
