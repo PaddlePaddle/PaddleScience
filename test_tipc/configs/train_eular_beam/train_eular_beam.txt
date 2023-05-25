@@ -58,3 +58,4 @@ flags:FLAGS_eager_delete_tensor_gb=0.0;FLAGS_fraction_of_gpu_memory_to_use=0.98;
 ===========================prepare_params==========================
 download_dataset:
 pip:pip
+workdir:/examples/euler_beam
