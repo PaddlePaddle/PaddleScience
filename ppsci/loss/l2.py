@@ -52,7 +52,7 @@ class L2Loss(base.Loss):
                 loss *= output_dict["area"]
 
             loss = loss.sum()
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -94,7 +94,7 @@ class PeriodicL2Loss(base.Loss):
                 loss *= output_dict["area"]
 
             loss = loss.sum()
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]

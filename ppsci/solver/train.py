@@ -38,9 +38,12 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         reader_cost = 0
         batch_cost = 0
         reader_tic = time.perf_counter()
+
+        input_dicts = []
+        label_dicts = []
+        weight_dicts = []
         for _, _constraint in solver.constraint.items():
             input_dict, label_dict, weight_dict = next(_constraint.data_iter)
-
             # profile code below
             # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
@@ -48,26 +51,31 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
                 for key in solver.train_time_info:
                     solver.train_time_info[key].reset()
             reader_cost += time.perf_counter() - reader_tic
-            total_batch_size += next(iter(input_dict.values())).shape[0]
-
             for v in input_dict.values():
                 v.stop_gradient = False
-            evaluator = expression.ExpressionSolver(
-                _constraint.input_keys, _constraint.output_keys, solver.model
-            )
-            for output_name, output_formula in _constraint.output_expr.items():
-                if output_name in label_dict:
-                    evaluator.add_target_expr(output_formula, output_name)
 
-            # forward for every constraint
-            with solver.autocast_context_manager():
-                output_dict = evaluator(input_dict)
-                constraint_loss = _constraint.loss(output_dict, label_dict, weight_dict)
-                total_loss += constraint_loss
-
-            loss_dict[_constraint.name] = float(constraint_loss)
-
+            # gather each constraint's input, label, weight to a list
+            input_dicts.append(input_dict)
+            label_dicts.append(label_dict)
+            weight_dicts.append(weight_dict)
+            total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
+
+        # forward for every constraint, including model and equation expression
+        with solver.autocast_context_manager():
+            constraint_losses = solver.forward_helper.train_forward(
+                [_constraint.output_expr for _constraint in solver.constraint.values()],
+                input_dicts,
+                solver.model,
+                solver.constraint,
+                label_dicts,
+                weight_dicts,
+            )
+
+        # compute loss for each constraint according to its' own output, label and weight
+        for i, _constraint in enumerate(solver.constraint.values()):
+            total_loss += constraint_losses[i]
+            loss_dict[_constraint.name] += float(constraint_losses[i])
 
         if solver.update_freq > 1:
             total_loss = total_loss / solver.update_freq
