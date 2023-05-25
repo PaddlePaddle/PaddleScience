@@ -112,9 +112,9 @@ $$Re \sim(100, 750)$$
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="51" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="50" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:51:62
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:50:65
 --8<--
 ```
 
@@ -122,9 +122,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:51:62
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="67" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="70" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:67:84
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:70:87
 --8<--
 ```
 
@@ -143,9 +143,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:67:84
 
 定义监督约束的代码如下：
 
-``` py linenums="86" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="89" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:86:94
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:89:97
 --8<--
 ```
 
@@ -168,17 +168,17 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:86:94
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="99" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="102" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:99:105
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:102:108
 --8<--
 ```
 
 其中，`CylinderEmbedding` 的前两个参数在前文中已有描述，这里不再赘述，网络模型的第三、四个参数是训练数据集的均值和方差，用于归一化输入数据。计算均值、方差的的代码表示如下：
 
-``` py linenums="28" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="29" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:28:45
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:29:46
 --8<--
 ```
 
@@ -186,9 +186,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:28:45
 
 本案例中使用的学习率方法为 `ExponentialDecay`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="107" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="110" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:107:121
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:110:124
 --8<--
 ```
 
@@ -196,9 +196,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:107:121
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="123" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="126" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:123:150
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:126:153
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:123:150
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="153" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="156" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:153:
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:156:
 --8<--
 ```
 
@@ -218,9 +218,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:153:
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="58" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="57" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:58:74
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:57:79
 --8<--
 ```
 
@@ -228,9 +228,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:58:74
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="82" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="87" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:82:99
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:87:104
 --8<--
 ```
 
@@ -238,9 +238,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:82:99
 
 定义监督约束的代码如下：
 
-``` py linenums="101" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="106" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:101:106
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:106:111
 --8<--
 ```
 
@@ -255,9 +255,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:101:106
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="111" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="116" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:111:119
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:116:124
 --8<--
 ```
 
@@ -267,9 +267,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:111:119
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="121" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="126" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:121:135
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:126:140
 --8<--
 ```
 
@@ -277,9 +277,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:121:135
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="137" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="142" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:137:163
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:142:168
 --8<--
 ```
 
@@ -289,15 +289,15 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:137:163
 
 在本文中首先定义了对 Transformer 模型输出数据变换到物理状态空间的代码：
 
-``` py linenums="32" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="33" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:32:52
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:33:53
 --8<--
 ```
 
-``` py linenums="78" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="83" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:78:79
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:83:84
 --8<--
 ```
 
@@ -305,9 +305,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:78:79
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="165" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="170" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:165:193
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:170:197
 --8<--
 ```
 
@@ -317,9 +317,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:165:193
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="193" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="199" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:193:
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:199:
 --8<--
 ```
 
