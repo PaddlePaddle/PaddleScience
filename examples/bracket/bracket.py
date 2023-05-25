@@ -76,7 +76,7 @@ if __name__ == "__main__":
     cylinder_hole = ppsci.geometry.Mesh("./stl/cylinder_hole.stl")
     cylinder_lower = ppsci.geometry.Mesh("./stl/cylinder_lower.stl")
     cylinder_upper = ppsci.geometry.Mesh("./stl/cylinder_upper.stl")
-
+    # geometry bool operation
     curve_lower = aux_lower - cylinder_lower
     curve_upper = aux_upper - cylinder_upper
     geo = support + bracket + curve_lower + curve_upper - cylinder_hole
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 2,
+        "num_workers": 1,
     }
 
     # set constraint
@@ -382,15 +382,15 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
     )
-    # # train model
+    # train model
     solver.train()
 
-    # # evaluate after finished training
+    # evaluate after finished training
     solver.eval()
-    # # visualize prediction after finished training
+    # visualize prediction after finished training
     solver.visualize()
 
-    # # directly evaluate pretrained model(optional)
+    # directly evaluate pretrained model(optional)
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,

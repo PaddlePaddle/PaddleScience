@@ -21,24 +21,30 @@ from ppsci.equation.pde import base
 
 class LinearElasticity(base.PDE):
     """Linear elasticity equations.
-        Use either (E, nu) or (lambda_, mu) to define the material properties.
+    Use either (E, nu) or (lambda_, mu) to define the material properties.
 
     Args:
         E (Optional[float]): The Young's modulus. Defaults to None.
         nu (Optional[float]): The Poisson's ratio. Defaults to None.
         lambda_ (Optional[float]): Lamé's first parameter. Defaults to None.
-        mu (Optional[float], optional): Lamé's second parameter (shear modulus). Defaults to None. Defaults to None.
+        mu (Optional[float]): Lamé's second parameter (shear modulus). Defaults to None.
         rho (float, optional): Mass density.. Defaults to 1.
         dim (int, optional): Dimension of the linear elasticity (2 or 3). Defaults to 3.
         time (bool, optional): Whether contains time data. Defaults to False.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.LinearElasticity(
+        ...     E=None, nu=None, lambda_=1e4, mu=100, dim=3
+        ... )
     """
 
     def __init__(
         self,
-        E: Optional[float],
-        nu: Optional[float],
-        lambda_: Optional[float],
-        mu: Optional[float],
+        E: Optional[float] = None,
+        nu: Optional[float] = None,
+        lambda_: Optional[float] = None,
+        mu: Optional[float] = None,
         rho: float = 1,
         dim: int = 3,
         time: bool = False,
