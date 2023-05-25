@@ -37,6 +37,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
@@ -73,6 +74,7 @@ class Solver:
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
+        to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -97,7 +99,7 @@ class Solver:
         ...     "./output",
         ...     opt,
         ...     None,
-        ... )
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -128,6 +130,7 @@ class Solver:
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
+        to_static: bool = False,
     ):
         # set model
         self.model = model
@@ -216,6 +219,10 @@ class Solver:
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
+        # init logger without FileHandler if not initialized before
+        if logger._logger is None:
+            logger.init_logger("ppsci", None)
+
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
@@ -249,8 +256,13 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        if logger._logger is not None:
-            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+
+        self.forward_helper = expression.ExpressionSolver()
+
+        # whether enable static for forward pass, default to Fals
+        jit.enable_to_static(to_static)
+        logger.info(f"Set to_static={to_static} for forward computation.")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
