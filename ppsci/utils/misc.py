@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import collections
+import functools
 import random
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -32,6 +34,7 @@ __all__ = [
     "stack_dict_list",
     "combine_array_with_time",
     "set_random_seed",
+    "run_on_eval_mode",
 ]
 
 
@@ -229,3 +232,35 @@ def set_random_seed(seed: int):
     paddle.seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+
+
+def run_on_eval_mode(func: Callable) -> Callable:
+    """A decorator automatically running given class method in eval mode and keep
+    training state unchanged after function finished.
+
+    Args:
+        func (Callable): Class method which is expected running in eval mode.
+
+    Returns:
+        Callable: Decorated class method.
+    """
+
+    @functools.wraps(func)
+    def function_with_eval_state(self, *args, **kwargs):
+        # log original state
+        train_state = self.model.training
+
+        # switch to eval mode
+        if train_state:
+            self.model.eval()
+
+        # run func in eval mode
+        result = func(self, *args, **kwargs)
+
+        # restore state
+        if train_state:
+            self.model.train()
+
+        return result
+
+    return function_with_eval_state

@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 from typing import Callable
 from typing import Optional
 from typing import Union
 
 import numpy as np
 import paddle
-import pysdf
 
 from ppsci.geometry import geometry
 from ppsci.geometry import geometry_3d
@@ -40,7 +37,7 @@ class Mesh(geometry.Geometry):
         >>> geom = ppsci.geometry.Mesh("/path/to/mesh.stl")  # doctest: +SKIP
     """
 
-    def __init__(self, mesh: Union[Mesh, str]):
+    def __init__(self, mesh: Union["pymesh.Mesh", str]):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
@@ -51,7 +48,7 @@ class Mesh(geometry.Geometry):
         elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
-            raise ValueError(f"type of mesh({type(mesh)} should be str or pymesh.Mesh")
+            raise ValueError(f"arg `mesh` should be path string or or `pymesh.Mesh`")
 
         self.init_mesh()
 
@@ -88,6 +85,11 @@ class Mesh(geometry.Geometry):
         self.v2 = self.vectors[:, 2]
         self.num_vertices = self.py_mesh.num_vertices
         self.num_faces = self.py_mesh.num_faces
+
+        if not checker.dynamic_import_to_globals(["pysdf"]):
+            raise ModuleNotFoundError
+        import pysdf
+
         self.pysdf = pysdf.SDF(self.vertices, self.faces)
         self.bounds = (
             ((np.min(self.vectors[:, :, 0])), np.max(self.vectors[:, :, 0])),
@@ -130,7 +132,7 @@ class Mesh(geometry.Geometry):
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
 
-        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
+        if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
             raise ModuleNotFoundError
         import open3d
         import pymesh
@@ -150,7 +152,7 @@ class Mesh(geometry.Geometry):
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
-        if not checker.dynamic_import_to_globals(["open3d", "pymesh"]):
+        if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
             raise ModuleNotFoundError
         import open3d
         import pymesh
@@ -281,33 +283,34 @@ class Mesh(geometry.Geometry):
         self,
         random: str = "pseudo",
         criteria: Optional[Callable] = None,
-        n_appr: int = 20000,
-    ) -> float:
-        """Approximate area with given `criteria` using `n_appr` points.
+        n_appr: int = 10000,
+    ) -> np.ndarray:
+        """Approximate area with given `criteria` and `n_appr` points by Monte Carlo
+        algorithm.
 
         Args:
-            n_appr (int): Number of points for approximating area.
-            criteria (Callable): Criteria function.
             random (str, optional): Random method. Defaults to "pseudo".
+            criteria (Optional[Callable]): Criteria function. Defaults to None.
+            n_appr (int): Number of points for approximating area. Defaults to 10000.
 
         Returns:
-            float: Approximated area.
+            np.ndarray: Approximated areas with shape of [n_faces, ].
         """
-        areas = []
+        appr_areas = []
         for i in range(self.num_faces):
             sampled_points = sample_in_triangle(
                 self.v0[i], self.v1[i], self.v2[i], n_appr, random
             )
+            appr_area = self.face_area[i]
             if criteria is not None:
                 criteria_mask = criteria(
                     *np.split(sampled_points, self.ndim, 1)
                 ).flatten()
-            else:
-                criteria_mask = np.full((n_appr,), True)
-            valid_area = (criteria_mask.sum() / n_appr) * self.face_area[i]
-            areas.append(valid_area)
+                appr_area *= criteria_mask.mean()
 
-        return np.asarray(areas, paddle.get_default_dtype())
+            appr_areas.append(appr_area)
+
+        return np.asarray(appr_areas, paddle.get_default_dtype())
 
     # def precise_on_boundary(self, points: np.ndarray, normals: np.ndarray):
     #     """judge whether points is accurately on boundary.
@@ -327,43 +330,42 @@ class Mesh(geometry.Geometry):
     #     return (pos_sdf * neg_sdf <= 0)[:, 0]
 
     def random_boundary_points(self, n, random="pseudo", criteria=None):
-        triangle_areas = self._approximate_area(random, criteria)
-        triangle_prob = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
-        triangle_index = np.arange(triangle_prob.shape[0])
-        points_per_triangle = np.random.choice(triangle_index, n, p=triangle_prob)
-        points_per_triangle, _ = np.histogram(
-            points_per_triangle, np.arange(triangle_prob.shape[0] + 1) - 0.5
+        valid_areas = self._approximate_area(random, criteria)
+        triangle_prob = valid_areas / np.linalg.norm(valid_areas, ord=1)
+        npoint_per_triangle = np.random.choice(
+            np.arange(len(triangle_prob)), n, p=triangle_prob
+        )
+        npoint_per_triangle, _ = np.histogram(
+            npoint_per_triangle, np.arange(len(triangle_prob) + 1) - 0.5
         )
 
-        all_points = []
+        all_point = []
         all_normal = []
         all_area = []
-        for index, nr_p in enumerate(points_per_triangle):
-            if nr_p == 0:
+        for i, npoint in enumerate(npoint_per_triangle):
+            if npoint == 0:
                 continue
-            sampled_points = sample_in_triangle(
-                self.v0[index], self.v1[index], self.v2[index], nr_p, random, criteria
+            face_points = sample_in_triangle(
+                self.v0[i], self.v1[i], self.v2[i], npoint, random, criteria
             )
-            normal = np.tile(self.face_normal[index], [nr_p, 1])
-            area = np.full(
-                [nr_p, 1],
-                triangle_areas[index] / nr_p,
+            face_normal = np.tile(self.face_normal[i], [npoint, 1])
+            valid_area = np.full(
+                [npoint, 1],
+                valid_areas[i] / npoint,
                 dtype=paddle.get_default_dtype(),
             )
 
-            all_points.append(sampled_points)
-            all_normal.append(normal)
-            all_area.append(area)
+            all_point.append(face_points)
+            all_normal.append(face_normal)
+            all_area.append(valid_area)
 
-        all_points = np.concatenate(
-            all_points, axis=0, dtype=paddle.get_default_dtype()
-        )
-        all_normal = np.concatenate(
-            all_normal, axis=0, dtype=paddle.get_default_dtype()
-        )
-        all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
-        all_area = np.full_like(all_area, all_area.sum() / n)
-        return all_points, all_normal, all_area
+        all_point = np.concatenate(all_point, axis=0)
+        all_normal = np.concatenate(all_normal, axis=0)
+        all_area = np.concatenate(all_area, axis=0)
+
+        # NOTE: use global mean area instead of local mean area
+        all_area = np.full_like(all_area, all_area.mean())
+        return all_point, all_normal, all_area
 
     def sample_boundary(
         self, n, random="pseudo", criteria=None, evenly=False, inflation_dist=None
@@ -398,7 +400,7 @@ class Mesh(geometry.Geometry):
             [bound[0] for bound in self.bounds],
             [bound[1] for bound in self.bounds],
         )
-        _ntry, _nsuc = 0, 0
+        _nsample, _nvalid = 0, 0
         while _size < n:
             random_points = cuboid.random_points(n, random)
             valid_mask = self.is_inside(random_points)
@@ -407,20 +409,19 @@ class Mesh(geometry.Geometry):
                 valid_mask &= criteria(
                     *np.split(random_points, self.ndim, axis=1)
                 ).flatten()
-            valid_random_points = random_points[valid_mask]
-            _nsuc += len(valid_random_points)
+            valid_points = random_points[valid_mask]
+            _nvalid += len(valid_points)
 
-            if len(valid_random_points) > n - _size:
-                valid_random_points = valid_random_points[: n - _size]
+            if len(valid_points) > n - _size:
+                valid_points = valid_points[: n - _size]
 
-            all_points.append(valid_random_points)
-            _size += len(valid_random_points)
-            _ntry += n
+            all_points.append(valid_points)
+            _size += len(valid_points)
+            _nsample += n
 
         all_points = np.concatenate(all_points, axis=0)
-        all_areas = np.full(
-            (n, 1), np.prod([b[1] - b[0] for b in self.bounds]) * (_nsuc / _ntry) / n
-        )
+        cuboid_volume = np.prod([b[1] - b[0] for b in self.bounds])
+        all_areas = np.full((n, 1), cuboid_volume * (_nvalid / _nsample) / n)
         return all_points, all_areas
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
@@ -432,18 +433,18 @@ class Mesh(geometry.Geometry):
             )
             # points, area = self.uniform_points(n)
         else:
-            points, area = self.random_points(n, random, criteria)
+            points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
-        area_dict = misc.convert_to_dict(area, ["area"])
+        area_dict = misc.convert_to_dict(areas, ["area"])
 
-        # NOTE: add negtive to the sdf values for positive weight.
+        # NOTE: add negtive to the sdf values because weight should be positive.
         sdf = -self.sdf_func(points)
         sdf_dict = misc.convert_to_dict(sdf, ["sdf"])
 
         return {**x_dict, **area_dict, **sdf_dict}
 
-    def union(self, rhs):
+    def union(self, rhs: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
         import pymesh
@@ -451,13 +452,13 @@ class Mesh(geometry.Geometry):
         csg = pymesh.CSGTree({"union": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]})
         return Mesh(csg.mesh)
 
-    def __or__(self, rhs):
+    def __or__(self, rhs: "Mesh"):
         return self.union(rhs)
 
-    def __add__(self, rhs):
+    def __add__(self, rhs: "Mesh"):
         return self.union(rhs)
 
-    def difference(self, rhs):
+    def difference(self, rhs: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
         import pymesh
@@ -467,10 +468,10 @@ class Mesh(geometry.Geometry):
         )
         return Mesh(csg.mesh)
 
-    def __sub__(self, rhs):
+    def __sub__(self, rhs: "Mesh"):
         return self.difference(rhs)
 
-    def intersection(self, rhs):
+    def intersection(self, rhs: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
         import pymesh
@@ -480,7 +481,7 @@ class Mesh(geometry.Geometry):
         )
         return Mesh(csg.mesh)
 
-    def __and__(self, rhs):
+    def __and__(self, rhs: "Mesh"):
         return self.intersection(rhs)
 
     def __str__(self) -> str:
@@ -542,9 +543,9 @@ def sample_in_triangle(v0, v1, v2, n, random="pseudo", criteria=None):
         n (int): Number of points to be sampled.
 
     Returns:
-        np.ndarray: Coordinates of sampled n points.
+        np.ndarray: Coordinates of sampled n points with shape of [n, 3].
     """
-    all_x, all_y, all_z = [], [], []
+    xs, ys, zs = [], [], []
     _size = 0
     while _size < n:
         r1 = sampler.sample(n, 1, random).flatten()
@@ -565,14 +566,13 @@ def sample_in_triangle(v0, v1, v2, n, random="pseudo", criteria=None):
             y = y[: n - _size]
             z = z[: n - _size]
 
-        all_x.append(x)
-        all_y.append(y)
-        all_z.append(z)
-
+        xs.append(x)
+        ys.append(y)
+        zs.append(z)
         _size += len(x)
 
-    all_x = np.concatenate(all_x, axis=0)
-    all_y = np.concatenate(all_y, axis=0)
-    all_z = np.concatenate(all_z, axis=0)
+    xs = np.concatenate(xs, axis=0)
+    ys = np.concatenate(ys, axis=0)
+    zs = np.concatenate(zs, axis=0)
 
-    return np.stack([all_x, all_y, all_z], axis=1)
+    return np.stack([xs, ys, zs], axis=1)

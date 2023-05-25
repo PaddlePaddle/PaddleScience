@@ -179,6 +179,11 @@ def parse_args():
     parser = argparse.ArgumentParser("paddlescience running script")
     parser.add_argument("-e", "--epochs", type=int, help="training epochs")
     parser.add_argument("-o", "--output_dir", type=str, help="output directory")
+    parser.add_argument(
+        "--to_static",
+        action="store_true",
+        help="whether enable to_static for forward computation",
+    )
 
     args = parser.parse_args()
     return args

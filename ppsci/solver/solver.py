@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import itertools
 import os
 import sys
 from typing import Any
@@ -37,6 +38,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
@@ -73,6 +75,7 @@ class Solver:
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
+        to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -97,7 +100,7 @@ class Solver:
         ...     "./output",
         ...     opt,
         ...     None,
-        ... )
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -128,6 +131,7 @@ class Solver:
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
+        to_static: bool = False,
     ):
         # set model
         self.model = model
@@ -200,6 +204,16 @@ class Solver:
 
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
+        if validator is not None:
+            for metric in itertools.chain(
+                *[_v.metric.values() for _v in self.validator.values()]
+            ):
+                if metric.keep_batch ^ compute_metric_by_batch:
+                    raise ValueError(
+                        f"{misc.typename(metric)}.keep_batch should be "
+                        f"{compute_metric_by_batch} when compute_metric_by_batch="
+                        f"{compute_metric_by_batch}."
+                    )
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
@@ -216,6 +230,10 @@ class Solver:
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
+        # init logger without FileHandler if not initialized before
+        if logger._logger is None:
+            logger.init_logger("ppsci", None)
+
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
@@ -227,7 +245,9 @@ class Solver:
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
-            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+            self.model, self.optimizer = amp.decorate(
+                self.model, self.optimizer, self.amp_level
+            )
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
@@ -238,6 +258,11 @@ class Solver:
             self.model = fleet.distributed_model(self.model)
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
+            logger.warning(
+                f"Detected world_size({self.world_size}) > 1, it is recommended to "
+                "scale up the learning rate and reduce the epochs or "
+                "iters_per_epoch according to the world_size number both linearly."
+            )
 
         self.global_step = 0
 
@@ -247,8 +272,13 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        if logger._logger is not None:
-            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+
+        self.forward_helper = expression.ExpressionSolver()
+
+        # whether enable static for forward pass, default to Fals
+        jit.enable_to_static(to_static)
+        logger.info(f"Set to_static={to_static} for forward computation.")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -379,6 +409,7 @@ class Solver:
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
+                # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
 
@@ -398,7 +429,7 @@ class Solver:
                     self.equation,
                 )
 
-            # always save the latest model for convenient resume training
+            # save the latest model for convenient resume training
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
@@ -413,12 +444,9 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
+    @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0):
         """Evaluation"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -429,26 +457,19 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        if train_state:
-            self.model.train()
         return result
 
+    @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
         """Visualization"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
-        if train_state:
-            self.model.train()
-
     @paddle.no_grad()
+    @misc.run_on_eval_mode
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
@@ -463,10 +484,6 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         if self.world_size > 1:
             raise NotImplementedError(
                 "Solver.predict only support single device yet, "
@@ -492,7 +509,7 @@ class Solver:
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            with self.autocast_context_manager():
+            with self.autocast_context_manager(self.use_amp, self.amp_level):
                 batch_output_dict = self.model(batch_input_dict)
 
             # collect batch data
@@ -501,10 +518,9 @@ class Solver:
 
         pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
-        if train_state:
-            self.model.train()
         return pred_dict
 
+    @misc.run_on_eval_mode
     def export(self):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
@@ -522,30 +538,40 @@ class Solver:
         jit.save(static_model, save_path)
         logger.info(f"The inference model has been exported to {export_dir}")
 
-    def autocast_context_manager(self) -> contextlib.AbstractContextManager:
-        """Autocast context manager for Auto Mix Precision.
+    def autocast_context_manager(
+        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+    ) -> contextlib.AbstractContextManager:
+        """Smart autocast context manager for Auto Mix Precision.
+
+        Args:
+            enable (bool): Enable autocast.
+            level (Literal["O0", "O1", "O2"]): Autocast level.
 
         Returns:
-            Union[contextlib.AbstractContextManager]: Context manager.
+            contextlib.AbstractContextManager: Smart autocast context manager.
         """
-        if self.use_amp:
-            ctx_manager = amp.auto_cast(level=self.amp_level)
+        if enable:
+            ctx_manager = amp.auto_cast(level=level)
         else:
             ctx_manager = (
                 contextlib.nullcontext()
                 if sys.version_info >= (3, 7)
                 else contextlib.suppress()
             )
-
         return ctx_manager
 
-    def no_grad_context_manager(self) -> contextlib.AbstractContextManager:
-        """No grad manager.
+    def no_grad_context_manager(
+        self, enable: bool
+    ) -> contextlib.AbstractContextManager:
+        """Smart no_grad context manager.
+
+        Args:
+            enable (bool): Enable no_grad.
 
         Returns:
-            Union[contextlib.AbstractContextManager]: Context manager.
+            contextlib.AbstractContextManager: Smart no_grad context manager.
         """
-        if self.eval_with_no_grad:
+        if enable:
             ctx_manager = paddle.no_grad()
         else:
             ctx_manager = (
@@ -553,5 +579,33 @@ class Solver:
                 if sys.version_info >= (3, 7)
                 else contextlib.suppress()
             )
+        return ctx_manager
 
+    def no_sync_context_manager(
+        self,
+        enable: bool,
+        ddp_model: paddle.DataParallel,
+    ) -> contextlib.AbstractContextManager:
+        """Smart no_sync context manager for given model.
+        NOTE: Only `paddle.DataParallel` object has `no_sync` interface.
+
+        Args:
+            enable (bool): Enable no_sync.
+
+        Returns:
+            contextlib.AbstractContextManager: Smart no_sync context manager.
+        """
+        if enable:
+            if not isinstance(ddp_model, paddle.DataParallel):
+                raise TypeError(
+                    "no_sync interface is only for model with type paddle.DataParallel, "
+                    f"but got type {type(ddp_model)}"
+                )
+            ctx_manager = ddp_model.no_sync()
+        else:
+            ctx_manager = (
+                contextlib.nullcontext()
+                if sys.version_info >= (3, 7)
+                else contextlib.suppress()
+            )
         return ctx_manager
