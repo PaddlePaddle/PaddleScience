@@ -17,7 +17,6 @@ import os.path as osp
 
 import paddle
 
-from ppsci.utils import expression
 from ppsci.utils import misc
 
 
@@ -52,15 +51,11 @@ def visualize_func(solver, epoch_id: int):
                     batch_input_dict[key] = input_dict[key][st:ed]
                 batch_input_dict[key].stop_gradient = False
 
-            evaluator = expression.ExpressionSolver(
-                _visualizer.input_keys, _visualizer.output_keys, solver.model
-            )
-            for output_key, output_expr in _visualizer.output_expr.items():
-                evaluator.add_target_expr(output_expr, output_key)
-
             # forward
             with solver.no_grad_context_manager(solver.eval_with_no_grad):
-                batch_output_dict = evaluator(batch_input_dict)
+                batch_output_dict = solver.forward_helper.visu_forward(
+                    _visualizer.output_expr, batch_input_dict, solver.model
+                )
 
             # collect batch data
             for key, batch_input in batch_input_dict.items():

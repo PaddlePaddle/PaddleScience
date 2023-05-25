@@ -38,6 +38,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
@@ -74,6 +75,7 @@ class Solver:
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
+        to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
 
     Examples:
         >>> import ppsci
@@ -98,7 +100,7 @@ class Solver:
         ...     "./output",
         ...     opt,
         ...     None,
-        ... )
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -129,6 +131,7 @@ class Solver:
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
+        to_static: bool = False,
     ):
         # set model
         self.model = model
@@ -242,7 +245,9 @@ class Solver:
 
         # decorate model(s) and optimizer(s) for AMP
         if self.use_amp:
-            self.model = amp.decorate(self.model, self.optimizer, self.amp_level)
+            self.model, self.optimizer = amp.decorate(
+                self.model, self.optimizer, self.amp_level
+            )
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()
@@ -268,6 +273,12 @@ class Solver:
             else f"develop({paddle.version.commit[:7]})"
         )
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+
+        self.forward_helper = expression.ExpressionSolver()
+
+        # whether enable static for forward pass, default to Fals
+        jit.enable_to_static(to_static)
+        logger.info(f"Set to_static={to_static} for forward computation.")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -398,6 +409,7 @@ class Solver:
                 )
                 logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
 
+                # visualize after evaluation
                 if self.visualizer is not None:
                     self.visualize(epoch_id)
 
@@ -417,7 +429,7 @@ class Solver:
                     self.equation,
                 )
 
-            # always save the latest model for convenient resume training
+            # save the latest model for convenient resume training
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
@@ -432,12 +444,9 @@ class Solver:
         if self.vdl_writer is not None:
             self.vdl_writer.close()
 
+    @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0):
         """Evaluation"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -448,26 +457,19 @@ class Solver:
         logger.info(f"[Eval][Epoch {epoch_id}][Avg] {metric_msg}")
         self.eval_output_info.clear()
 
-        if train_state:
-            self.model.train()
         return result
 
+    @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
         """Visualization"""
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         # init train func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
-        if train_state:
-            self.model.train()
-
     @paddle.no_grad()
+    @misc.run_on_eval_mode
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
@@ -482,10 +484,6 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
-        train_state = self.model.training
-        if train_state:
-            self.model.eval()
-
         if self.world_size > 1:
             raise NotImplementedError(
                 "Solver.predict only support single device yet, "
@@ -520,10 +518,9 @@ class Solver:
 
         pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
-        if train_state:
-            self.model.train()
         return pred_dict
 
+    @misc.run_on_eval_mode
     def export(self):
         """Export to inference model"""
         pretrained_path = self.cfg["Global"]["pretrained_model"]
