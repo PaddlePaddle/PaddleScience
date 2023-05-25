@@ -219,6 +219,10 @@ class Solver:
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
+        # init logger without FileHandler if not initialized before
+        if logger._logger is None:
+            logger.init_logger("ppsci", None)
+
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
@@ -252,8 +256,7 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        if logger._logger is not None:
-            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
         self.forward_helper = expression.ExpressionSolver()
 
