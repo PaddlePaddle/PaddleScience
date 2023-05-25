@@ -68,7 +68,7 @@ class MSELoss(base.Loss):
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -168,7 +168,7 @@ class PeriodicMSELoss(base.Loss):
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
