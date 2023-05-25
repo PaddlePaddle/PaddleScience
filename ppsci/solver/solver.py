@@ -258,9 +258,8 @@ class Solver:
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass, default to Fals
-        if to_static:
-            jit.enable_to_static(to_static)
-            logger.info("Enable to_static for forward computation.")
+        jit.enable_to_static(to_static)
+        logger.info(f"Set to_static={to_static} for forward computation.")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
