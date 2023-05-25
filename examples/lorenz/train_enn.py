@@ -22,6 +22,7 @@ import numpy as np
 import paddle
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import logger
 
 
@@ -36,9 +37,11 @@ def get_mean_std(data: np.ndarray):
 
 
 if __name__ == "__main__":
-    ppsci.utils.set_random_seed(42)
-
-    EPOCHS = 300
+    args = config.parse_args()
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(42)
+    # set training hyper-parameters
+    EPOCHS = 300 if not args.epochs else args.epochs
     TRAIN_BLOCK_SIZE = 16
     VALID_BLOCK_SIZE = 32
 
@@ -47,7 +50,7 @@ if __name__ == "__main__":
     weights = (1.0 * (TRAIN_BLOCK_SIZE - 1), 1.0e4 * TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
 
-    OUTPUT_DIR = "./output/lorenz_enn"
+    OUTPUT_DIR = "./output/lorenz_enn" if not args.output_dir else args.output_dir
     TRAIN_FILE_PATH = "./datasets/lorenz_training_rk.hdf5"
     VALID_FILE_PATH = "./datasets/lorenz_valid_rk.hdf5"
     # initialize logger
