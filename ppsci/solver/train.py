@@ -179,9 +179,10 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
 
                 solver.optimizer.clear_grad()
                 total_loss.backward()
-            # fuse + allreduce manually before optimization if use DDP model
-            # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
+
             if solver.world_size > 1:
+                # fuse + allreduce manually before optimization if use DDP model
+                # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
                 hpu.fused_allreduce_gradients(list(solver.model.parameters()), None)
             loss_dict["loss"] = float(total_loss)
 

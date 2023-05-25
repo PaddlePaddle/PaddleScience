@@ -227,6 +227,10 @@ class Solver:
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
+        # init logger without FileHandler if not initialized before
+        if logger._logger is None:
+            logger.init_logger("ppsci", None)
+
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
@@ -249,6 +253,11 @@ class Solver:
             self.model = fleet.distributed_model(self.model)
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
+            logger.warning(
+                f"Detected world_size({self.world_size}) > 1, it is recommended to "
+                "scale up the learning rate and reduce the epochs or "
+                "iters_per_epoch according to the world_size number both linearly."
+            )
 
         self.global_step = 0
 
@@ -258,8 +267,7 @@ class Solver:
             if version.Version(paddle.__version__) != version.Version("0.0.0")
             else f"develop({paddle.version.commit[:7]})"
         )
-        if logger._logger is not None:
-            logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
+        logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
