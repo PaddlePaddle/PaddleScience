@@ -14,13 +14,15 @@
 
 import time
 
+from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
+
+from ppsci import solver
 from ppsci.solver import printer
-from ppsci.utils import expression
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
 
-def train_epoch_func(solver, epoch_id: int, log_freq: int):
+def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train program for one epoch
 
     Args:
@@ -61,38 +63,48 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
 
-        # forward for every constraint, including model and equation expression
-        with solver.autocast_context_manager():
-            constraint_losses = solver.forward_helper.train_forward(
-                [_constraint.output_expr for _constraint in solver.constraint.values()],
-                input_dicts,
-                solver.model,
-                solver.constraint,
-                label_dicts,
-                weight_dicts,
-            )
+        with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
+            # forward for every constraint, including model and equation expression
+            with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
+                constraint_losses = solver.forward_helper.train_forward(
+                    [
+                        _constraint.output_expr
+                        for _constraint in solver.constraint.values()
+                    ],
+                    input_dicts,
+                    solver.model,
+                    solver.constraint,
+                    label_dicts,
+                    weight_dicts,
+                )
+                # accumulate all losses
+                for i, _constraint in enumerate(solver.constraint.values()):
+                    total_loss += constraint_losses[i]
+                    loss_dict[_constraint.name] += (
+                        float(constraint_losses[i]) / solver.update_freq
+                    )
+                if solver.update_freq > 1:
+                    total_loss = total_loss / solver.update_freq
+                loss_dict["loss"] = float(total_loss)
 
-        # compute loss for each constraint according to its' own output, label and weight
-        for i, _constraint in enumerate(solver.constraint.values()):
-            total_loss += constraint_losses[i]
-            loss_dict[_constraint.name] += float(constraint_losses[i])
+            # backward
+            if solver.use_amp:
+                total_loss_scaled = solver.scaler.scale(total_loss)
+                total_loss_scaled.backward()
+            else:
+                total_loss.backward()
 
-        if solver.update_freq > 1:
-            total_loss = total_loss / solver.update_freq
-        loss_dict["loss"] = float(total_loss)
-
-        # backward
-        if solver.use_amp:
-            total_loss_scaled = solver.scaler.scale(total_loss)
-            total_loss_scaled.backward()
-            if iter_id % solver.update_freq == 0:
+        # update parameters
+        if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
+            if solver.world_size > 1:
+                # fuse + allreduce manually before optimization if use DDP + no_sync
+                # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
+                hpu.fused_allreduce_gradients(list(solver.model.parameters()), None)
+            if solver.use_amp:
                 solver.scaler.minimize(solver.optimizer, total_loss_scaled)
-                solver.optimizer.clear_grad()
-        else:
-            total_loss.backward()
-            if iter_id % solver.update_freq == 0:
+            else:
                 solver.optimizer.step()
-                solver.optimizer.clear_grad()
+            solver.optimizer.clear_grad()
 
         # update learning rate by step
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
@@ -111,7 +123,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
         batch_tic = time.perf_counter()
 
 
-def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
+def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
 
     Args:
@@ -152,30 +164,38 @@ def train_LBFGS_epoch_func(solver, epoch_id: int, log_freq: int):
                 Tensor: Computed loss.
             """
             total_loss = 0
-            for i, _constraint in enumerate(solver.constraint.values()):
-                evaluator = expression.ExpressionSolver(
-                    _constraint.input_keys, _constraint.output_keys, solver.model
-                )
-                for output_name, output_formula in _constraint.output_expr.items():
-                    if output_name in label_dict:
-                        evaluator.add_target_expr(output_formula, output_name)
-
-                # forward for every batched data dict
-                with solver.autocast_context_manager():
-                    output_dict_i = evaluator(input_dicts[i])
-                    constraint_loss = _constraint.loss(
-                        output_dict_i, label_dicts[i], weight_dicts[i]
+            with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
+                with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
+                    # forward for every constraint, including model and equation expression
+                    constraint_losses = solver.forward_helper.train_forward(
+                        [
+                            _constraint.output_expr
+                            for _constraint in solver.constraint.values()
+                        ],
+                        input_dicts,
+                        solver.model,
+                        solver.constraint,
+                        label_dicts,
+                        weight_dicts,
                     )
-                    total_loss += constraint_loss
+                    # accumulate all losses
+                    for i, _constraint in enumerate(solver.constraint.values()):
+                        total_loss += constraint_losses[i]
+                        loss_dict[_constraint.name] = float(constraint_losses[i])
+                    loss_dict["loss"] = float(total_loss)
 
-                loss_dict[_constraint.name] = float(constraint_loss)
+                # backward
+                solver.optimizer.clear_grad()
+                total_loss.backward()
 
-            solver.optimizer.clear_grad()
-            total_loss.backward()
-            loss_dict["loss"] = float(total_loss)
+            if solver.world_size > 1:
+                # fuse + allreduce manually before optimization if use DDP model
+                # details in https://github.com/PaddlePaddle/Paddle/issues/48898#issuecomment-1343838622
+                hpu.fused_allreduce_gradients(list(solver.model.parameters()), None)
 
             return total_loss
 
+        # update parameters
         solver.optimizer.step(closure)
 
         # update learning rate by step
