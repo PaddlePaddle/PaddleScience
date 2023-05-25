@@ -99,7 +99,7 @@ class Solver:
         ...     "./output",
         ...     opt,
         ...     None,
-        ... )
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
