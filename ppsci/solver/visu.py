@@ -52,7 +52,7 @@ def visualize_func(solver, epoch_id: int):
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            with solver.no_grad_context_manager():
+            with solver.no_grad_context_manager(solver.eval_with_no_grad):
                 batch_output_dict = solver.forward_helper.visu_forward(
                     _visualizer.output_expr, batch_input_dict, solver.model
                 )

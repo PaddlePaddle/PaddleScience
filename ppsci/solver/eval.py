@@ -55,12 +55,13 @@ def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
                 for key in solver.eval_time_info:
                     solver.eval_time_info[key].reset()
             reader_cost = time.perf_counter() - reader_tic
-
             for v in input_dict.values():
                 v.stop_gradient = False
 
             # forward
-            with solver.autocast_context_manager(), solver.no_grad_context_manager():
+            with solver.autocast_context_manager(
+                solver.use_amp, solver.amp_level
+            ), solver.no_grad_context_manager(solver.eval_with_no_grad):
                 output_dict, validator_loss = solver.forward_helper.eval_forward(
                     _validator.output_expr,
                     input_dict,
@@ -179,11 +180,13 @@ def _eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
                     solver.eval_time_info[key].reset()
             reader_cost = time.perf_counter() - reader_tic
             batch_size = next(iter(input_dict.values())).shape[0]
-
             for v in input_dict.values():
                 v.stop_gradient = False
+
             # forward
-            with solver.autocast_context_manager(), solver.no_grad_context_manager():
+            with solver.autocast_context_manager(
+                solver.use_amp, solver.amp_level
+            ), solver.no_grad_context_manager(solver.eval_with_no_grad):
                 output_dict, validator_loss = solver.forward_helper.eval_forward(
                     _validator.output_expr,
                     input_dict,
