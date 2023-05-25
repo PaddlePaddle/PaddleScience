@@ -59,7 +59,7 @@ class L1Loss(base.Loss):
             loss = F.l1_loss(output_dict[key], label_dict[key], "none")
             if weight_dict:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -72,7 +72,7 @@ class L1Loss(base.Loss):
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -122,7 +122,7 @@ class PeriodicL1Loss(base.Loss):
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
