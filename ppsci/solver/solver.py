@@ -20,6 +20,7 @@ import itertools
 import os
 import sys
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -370,7 +371,7 @@ class Solver:
         )
 
     def train(self):
-        """Training"""
+        """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
@@ -445,8 +446,15 @@ class Solver:
             self.vdl_writer.close()
 
     @misc.run_on_eval_mode
-    def eval(self, epoch_id: int = 0):
-        """Evaluation"""
+    def eval(self, epoch_id: int = 0) -> float:
+        """Evaluation.
+
+        Args:
+            epoch_id (int, optional): Epoch id. Defaults to 0.
+
+        Returns:
+            float: The value of the evaluation, used to judge the quality of the model.
+        """
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -461,26 +469,35 @@ class Solver:
 
     @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
-        """Visualization"""
-        # init train func
+        """Visualization.
+
+        Args:
+            epoch_id (int, optional): Epoch id. Defaults to 0.
+        """
+        # set visualize func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
         logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
 
-    @paddle.no_grad()
     @misc.run_on_eval_mode
     def predict(
         self,
         input_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
+        expr_dict: Optional[Dict[str, Callable]] = None,
         batch_size: int = 64,
+        no_grad: bool = True,
     ) -> Dict[str, paddle.Tensor]:
-        """Pure prediction using model.forward(...), support single device prediction yet.
+        """Pure prediction using model.forward(...) and expression(optional, if given),
+        NOTE: Only support single device prediction yet.
 
         Args:
             input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Input data in dict.
+            expr_dict (Optional[Dict[str, Callable]]): Expression dict, which guide to
+                compute equation variable with callable function. Defaults to None.
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
-
+            no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
+                for memory-efficiency. Defaults to True.
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
@@ -493,30 +510,37 @@ class Solver:
         num_samples = len(next(iter(input_dict.values())))
         batch_num = (num_samples + (batch_size - 1)) // batch_size
         pred_dict = misc.Prettydefaultdict(list)
-        for batch_id in range(batch_num):
-            batch_input_dict = {}
-            st = batch_id * batch_size
-            ed = min(num_samples, (batch_id + 1) * batch_size)
 
-            # prepare batch input dict
-            for key in input_dict:
-                if not paddle.is_tensor(input_dict[key]):
-                    batch_input_dict[key] = paddle.to_tensor(
-                        input_dict[key][st:ed], paddle.get_default_dtype()
-                    )
-                else:
-                    batch_input_dict[key] = input_dict[key][st:ed]
-                batch_input_dict[key].stop_gradient = False
+        with self.no_grad_context_manager(no_grad):
+            for batch_id in range(batch_num):
+                batch_input_dict = {}
+                st = batch_id * batch_size
+                ed = min(num_samples, (batch_id + 1) * batch_size)
 
-            # forward
-            with self.autocast_context_manager(self.use_amp, self.amp_level):
-                batch_output_dict = self.model(batch_input_dict)
+                # prepare batch input dict
+                for key in input_dict:
+                    if not paddle.is_tensor(input_dict[key]):
+                        batch_input_dict[key] = paddle.to_tensor(
+                            input_dict[key][st:ed], paddle.get_default_dtype()
+                        )
+                    else:
+                        batch_input_dict[key] = input_dict[key][st:ed]
+                    batch_input_dict[key].stop_gradient = no_grad
 
-            # collect batch data
-            for key, batch_output in batch_output_dict.items():
-                pred_dict[key].append(batch_output)
+                # forward
+                with self.autocast_context_manager(self.use_amp, self.amp_level):
+                    # model forward
+                    batch_output_dict = self.model(batch_input_dict)
+                    if isinstance(expr_dict, dict):
+                        # equation forward(if expr_dict is given)
+                        for name, expr in expr_dict.items():
+                            batch_output_dict[name] = expr(batch_output_dict)
 
-        pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
+                # collect batch data
+                for key, batch_output in batch_output_dict.items():
+                    pred_dict[key].append(batch_output)
+
+            pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
 
         return pred_dict
 
