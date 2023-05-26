@@ -50,7 +50,7 @@ class Solver:
     Args:
         model (nn.Layer): Model.
         constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
-        output_dir (str, optional): Output directory. Defaults to "./output/".
+        output_dir (Optional[str]): Output directory. Defaults to "./output/".
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
         epochs (int, optional): Training epoch(s). Defaults to 5.
@@ -107,7 +107,7 @@ class Solver:
         self,
         model: nn.Layer,
         constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
-        output_dir: str = "./output/",
+        output_dir: Optional[str] = "./output/",
         optimizer: Optional[optim.Optimizer] = None,
         lr_scheduler: Optional[optim.lr.LRScheduler] = None,
         epochs: int = 5,
