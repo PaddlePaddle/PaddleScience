@@ -18,10 +18,12 @@ lines=(${dataline})
 download_dataset=$(func_parser_value "${lines[61]}")
 python=$(func_parser_value "${lines[2]}")
 export pip=$(func_parser_value "${lines[62]}")
+workdir=$(func_parser_value "${lines[63]}")
 ${pip} install --upgrade pip
 ${pip} install pybind11
 ${pip} install -r requirements.txt
 
-if [ -n ${download_dataset} ] ; then
+if [ ${download_dataset} ] ; then
+    cd ${PDSC_DIR}/${workdir}
     ${python} ${PDSC_DIR}${download_dataset}
 fi
