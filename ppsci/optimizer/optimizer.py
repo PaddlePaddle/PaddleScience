@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
+
+if TYPE_CHECKING:
+    import paddle
 
 from paddle import nn
 from paddle import optimizer as optim
@@ -23,6 +29,7 @@ from paddle.incubate import optimizer as incubate_optim
 from typing_extensions import Literal
 
 from ppsci.utils import logger
+from ppsci.utils import misc
 
 __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
 
@@ -452,3 +459,55 @@ class AdamW:
 
     def _apply_decay_param_fun(self, name):
         return name not in self.no_weight_decay_param_name_list
+
+
+class OptimizerList:
+    """OptimizerList which wrap more than one optimizer.
+    NOTE: LBFGS is not supported yet.
+
+    Args:
+        optimizer_list (Tuple[optim.Optimizer, ...]): Optimizers listed in a tuple.
+
+    Examples:
+        >>> import ppsci
+        >>> model1 = ppsci.arch.MLP(("x",), ("u",), 5, 20)
+        >>> opt1 = ppsci.optimizer.Adam(1e-3)((model1,))
+        >>> model2 = ppsci.arch.MLP(("y",), ("v",), 5, 20)
+        >>> opt2 = ppsci.optimizer.Adam(1e-3)((model2,))
+        >>> opt = ppsci.optimizer.OptimizerList((opt1, opt2))
+    """
+
+    def __init__(self, optimizer_list: Tuple[optim.Optimizer, ...]):
+        super().__init__()
+        self._opt_list = optimizer_list
+        if "LBFGS" in set(misc.typename(opt) for opt in optimizer_list):
+            raise ValueError(f"LBFGS is not supported in OptimizerList yet.")
+
+    def step(self):
+        for opt in self._opt_list:
+            opt.step()
+
+    def clear_grad(self):
+        for opt in self._opt_list:
+            opt.clear_grad()
+
+    def get_lr(self) -> float:
+        """Return learning rate of first optimizer"""
+        return self._opt_list[0].get_lr()
+
+    def set_state_dict(self, state_dicts: List[Dict[str, "paddle.Tensor"]]):
+        for i, opt in enumerate(self._opt_list):
+            opt.set_state_dict(state_dicts[i])
+
+    def state_dict(self) -> List[Dict[str, "paddle.Tensor"]]:
+        state_dicts = [opt.state_dict() for opt in self._opt_list]
+        return state_dicts
+
+    def __len__(self) -> int:
+        return len(self._opt_list)
+
+    def __getitem__(self, idx):
+        return self._opt_list[idx]
+
+    def __setitem__(self, idx, opt):
+        raise NotImplementedError(f"Can not modify any item in OptimizerList.")

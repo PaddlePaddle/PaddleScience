@@ -20,9 +20,19 @@ from ppsci.optimizer.optimizer import SGD
 from ppsci.optimizer.optimizer import Adam
 from ppsci.optimizer.optimizer import AdamW
 from ppsci.optimizer.optimizer import Momentum
+from ppsci.optimizer.optimizer import OptimizerList
 from ppsci.optimizer.optimizer import RMSProp
 
-__all__ = ["LBFGS", "SGD", "Adam", "AdamW", "Momentum", "RMSProp", "lr_scheduler"]
+__all__ = [
+    "LBFGS",
+    "SGD",
+    "Adam",
+    "AdamW",
+    "Momentum",
+    "RMSProp",
+    "OptimizerList",
+    "lr_scheduler",
+]
 
 
 def build_lr_scheduler(cfg, epochs, iters_per_epoch):
