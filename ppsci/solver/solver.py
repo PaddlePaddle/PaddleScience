@@ -546,21 +546,8 @@ class Solver:
 
     @misc.run_on_eval_mode
     def export(self):
-        """Export to inference model"""
-        pretrained_path = self.cfg["Global"]["pretrained_model"]
-        if pretrained_path is not None:
-            save_load.load_pretrain(self.model, pretrained_path, self.equation)
-
-        self.model.eval()
-
-        input_spec = copy.deepcopy(self.cfg["Export"]["input_shape"])
-        config.replace_shape_with_inputspec_(input_spec)
-        static_model = jit.to_static(self.model, input_spec=input_spec)
-
-        export_dir = self.cfg["Global"]["save_inference_dir"]
-        save_path = os.path.join(export_dir, "inference")
-        jit.save(static_model, save_path)
-        logger.info(f"The inference model has been exported to {export_dir}")
+        """Export to inference model."""
+        raise NotImplementedError(f"model export is not supported yet.")
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
