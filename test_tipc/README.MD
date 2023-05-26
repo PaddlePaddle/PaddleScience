@@ -34,7 +34,8 @@ export CUDA_VISIBLE_DEVICES=0
 ```
 *在解析工具下载好之后，运行脚本
 ```
-cd ./test_tipc/
+mkdir jx
+cd jx/
 wget https://paddle-qa.bj.bcebos.com/benchmark/tools.tar.gz
 tar -zxvf tools.tar.gz
 export BENCHMARK_ROOT=$PWD/tools
