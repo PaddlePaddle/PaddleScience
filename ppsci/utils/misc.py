@@ -19,6 +19,7 @@ from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Tuple
+from typing import Union
 
 import numpy as np
 import paddle
@@ -121,7 +122,7 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
 def all_gather(
     tensor: paddle.Tensor, concat: bool = True, axis: int = 0
-) -> List[paddle.Tensor]:
+) -> Union[paddle.Tensor, List[paddle.Tensor]]:
     """Gather tensor from all devices, concatenate them along given axis if specified.
 
     Args:
