@@ -17,7 +17,6 @@ Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide
 """
 
 import numpy as np
-from paddle import fluid
 
 import ppsci
 from ppsci.utils import config
@@ -27,7 +26,7 @@ if __name__ == "__main__":
     # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
+    ppsci.utils.misc.set_random_seed(2023)
     # set output directory
     OUTPUT_DIR = "./output_bracket" if not args.output_dir else args.output_dir
     # initialize logger
@@ -350,9 +349,9 @@ if __name__ == "__main__":
         "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
-                "u": lambda d: d["u"],
-                "v": lambda d: d["v"],
-                "w": lambda d: d["w"],
+                "u": lambda out: out["u"],
+                "v": lambda out: out["v"],
+                "w": lambda out: out["w"],
                 "sigma_xx": lambda out: out["sigma_xx"],
                 "sigma_yy": lambda out: out["sigma_yy"],
                 "sigma_zz": lambda out: out["sigma_zz"],

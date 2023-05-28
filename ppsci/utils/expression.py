@@ -65,6 +65,10 @@ class ExpressionSolver(nn.Layer):
                 else:
                     raise TypeError(f"expr type({type(expr)}) is invalid")
 
+            # put field 'area' into output_dict
+            if "area" in input_dicts[i]:
+                output_dict["area"] = input_dicts[i]["area"]
+
             output_dicts.append(output_dict)
 
             # clear differentiation cache
@@ -103,6 +107,10 @@ class ExpressionSolver(nn.Layer):
                 output_dict[name] = expr({**output_dict, **input_dict})
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
+
+        # put field 'area' into output_dict
+        if "area" in input_dict:
+            output_dict["area"] = input_dict["area"]
 
         # clear differentiation cache
         clear()
