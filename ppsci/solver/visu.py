@@ -14,13 +14,17 @@
 
 import os
 import os.path as osp
+from typing import TYPE_CHECKING
 
 import paddle
+
+if TYPE_CHECKING:
+    from ppsci import solver
 
 from ppsci.utils import misc
 
 
-def visualize_func(solver, epoch_id: int):
+def visualize_func(solver: "solver.Solver", epoch_id: int):
     """Visualization program
 
     Args:
