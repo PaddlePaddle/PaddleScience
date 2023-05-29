@@ -48,16 +48,20 @@ def run_check() -> None:
 
         ITERS_PER_EPOCH = 5
         train_dataloader_cfg = {
-            "dataset": "IterableNamedArrayDataset",
+            "dataset": "NamedArrayDataset",
             "iters_per_epoch": ITERS_PER_EPOCH,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": True,
+                "shuffle": True,
+            },
+            "batch_size": 32,
         }
-
-        NPOINT_PDE = 8**2
         pde_constraint = ppsci.constraint.InteriorConstraint(
             equation["NavierStokes"].equations,
             {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
             geom["rect"],
-            {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+            train_dataloader_cfg,
             ppsci.loss.MSELoss("sum"),
             evenly=True,
             weight_dict={

@@ -16,9 +16,13 @@
 This module is adapted from [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from typing import TYPE_CHECKING
 from typing import Optional
 
-import paddle
+if TYPE_CHECKING:
+    import paddle
+
+from paddle import autograd
 
 
 class Jacobian:
@@ -33,7 +37,7 @@ class Jacobian:
         xs (paddle.Tensor): Input Tensor of shape [batch_size, dim_x].
     """
 
-    def __init__(self, ys: paddle.Tensor, xs: paddle.Tensor):
+    def __init__(self, ys: "paddle.Tensor", xs: "paddle.Tensor"):
         self.ys = ys
         self.xs = xs
 
@@ -42,7 +46,7 @@ class Jacobian:
 
         self.J = {}
 
-    def __call__(self, i: int = 0, j: Optional[int] = None) -> paddle.Tensor:
+    def __call__(self, i: int = 0, j: Optional[int] = None) -> "paddle.Tensor":
         """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,
         J[i].
         """
@@ -53,7 +57,7 @@ class Jacobian:
         # Compute J[i]
         if i not in self.J:
             y = self.ys[:, i : i + 1] if self.dim_y > 1 else self.ys
-            self.J[i] = paddle.grad(y, self.xs, create_graph=True)[0]
+            self.J[i] = autograd.jacobian(y.reshape((-1,)), self.xs, batch_axis=0)[:]
 
         return self.J[i] if j is None or self.dim_x == 1 else self.J[i][:, j : j + 1]
 
@@ -70,8 +74,12 @@ class Jacobians:
         self.Js = {}
 
     def __call__(
-        self, ys: paddle.Tensor, xs: paddle.Tensor, i: int = 0, j: Optional[int] = None
-    ) -> paddle.Tensor:
+        self,
+        ys: "paddle.Tensor",
+        xs: "paddle.Tensor",
+        i: int = 0,
+        j: Optional[int] = None,
+    ) -> "paddle.Tensor":
         """Compute jacobians for given ys and xs.
 
         Args:
@@ -84,6 +92,7 @@ class Jacobians:
             paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
 
         Examples:
+            >>> import paddle
             >>> import ppsci
             >>> x = paddle.randn([4, 1])
             >>> x.stop_gradient = False
@@ -117,10 +126,10 @@ class Hessian:
 
     def __init__(
         self,
-        y: paddle.Tensor,
-        xs: paddle.Tensor,
+        y: "paddle.Tensor",
+        xs: "paddle.Tensor",
         component: Optional[int] = None,
-        grad_y: Optional[paddle.Tensor] = None,
+        grad_y: Optional["paddle.Tensor"] = None,
     ):
         dim_y = y.shape[1]
 
@@ -159,13 +168,13 @@ class Hessians:
 
     def __call__(
         self,
-        ys: paddle.Tensor,
-        xs: paddle.Tensor,
+        ys: "paddle.Tensor",
+        xs: "paddle.Tensor",
         component: Optional[int] = None,
         i: int = 0,
         j: int = 0,
-        grad_y: Optional[paddle.Tensor] = None,
-    ) -> paddle.Tensor:
+        grad_y: Optional["paddle.Tensor"] = None,
+    ) -> "paddle.Tensor":
         """compute hessian matrix for given ys and xs.
 
         Args:
@@ -183,6 +192,7 @@ class Hessians:
             paddle.Tensor: Hessian matrix.
 
         Examples:
+            >>> import paddle
             >>> import ppsci
             >>> x = paddle.randn([4, 3])
             >>> x.stop_gradient = False
