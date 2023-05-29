@@ -547,7 +547,7 @@ class Solver:
     @misc.run_on_eval_mode
     def export(self):
         """Export to inference model."""
-        raise NotImplementedError(f"model export is not supported yet.")
+        raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"

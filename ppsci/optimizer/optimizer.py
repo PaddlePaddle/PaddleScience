@@ -481,7 +481,7 @@ class OptimizerList:
         super().__init__()
         self._opt_list = optimizer_list
         if "LBFGS" in set(misc.typename(opt) for opt in optimizer_list):
-            raise ValueError(f"LBFGS is not supported in OptimizerList yet.")
+            raise ValueError("LBFGS is not supported in OptimizerList yet.")
 
     def step(self):
         for opt in self._opt_list:
@@ -510,4 +510,4 @@ class OptimizerList:
         return self._opt_list[idx]
 
     def __setitem__(self, idx, opt):
-        raise NotImplementedError(f"Can not modify any item in OptimizerList.")
+        raise NotImplementedError("Can not modify any item in OptimizerList.")
