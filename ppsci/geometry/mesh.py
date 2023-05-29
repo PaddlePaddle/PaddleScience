@@ -172,7 +172,7 @@ class Mesh(geometry.Geometry):
         """Compute the equispaced points on the boundary."""
         return self.pysdf.sample_surface(n)
 
-    def inflated_random_points(self, n, distance, random="pseudo"):
+    def inflated_random_points(self, n, distance, random="pseudo", criteria=None):
         if not isinstance(n, (tuple, list)):
             n = [n]
         if not isinstance(distance, (tuple, list)):
@@ -185,30 +185,20 @@ class Mesh(geometry.Geometry):
         from ppsci.geometry import inflation
 
         all_points = []
+        all_areas = []
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
-            cur_n = 0
-            inflated_points = []
-            while cur_n < _n:
-                random_points = [
-                    sampler.sample(_n, 1, random) * (e[1] - e[0]) + e[0]
-                    for e in inflated_mesh.bounds
-                ]
-                random_points = np.concatenate(random_points, axis=1)
-                inner_mask = inflated_mesh.pysdf.contains(random_points)
-                valid_random_points = random_points[inner_mask]
+            points, areas = inflated_mesh.random_points(_n, random, criteria)
+            all_points.append(points)
+            all_areas.append(areas)
 
-                inflated_points.append(valid_random_points)
-                cur_n += len(valid_random_points)
+        all_points = np.concatenate(all_points, axis=0)
+        all_areas = np.concatenate(all_areas, axis=0)
+        return all_points, all_areas
 
-            inflated_points = np.concatenate(inflated_points, axis=0)
-            if cur_n > _n:
-                inflated_points = inflated_points[:_n]
-            all_points.append(inflated_points)
-
-        return np.concatenate(all_points, axis=0)
-
-    def inflated_random_boundary_points(self, n, distance, random="pseudo"):
+    def inflated_random_boundary_points(
+        self, n, distance, random="pseudo", criteria=None
+    ):
         if not isinstance(n, (tuple, list)):
             n = [n]
         if not isinstance(distance, (tuple, list)):
@@ -225,58 +215,16 @@ class Mesh(geometry.Geometry):
 
         for _n, _dist in zip(n, distance):
             inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
-            triangle_areas = area_of_triangles(
-                inflated_mesh.v0, inflated_mesh.v1, inflated_mesh.v2
+            points, normal, area = inflated_mesh.random_boundary_points(
+                _n, random, criteria
             )
-            triangle_prob = triangle_areas / np.linalg.norm(triangle_areas, 1)
-            triangle_index = np.arange(triangle_prob.shape[0])
-            points_per_triangle = np.random.choice(triangle_index, _n, p=triangle_prob)
-            points_per_triangle, _ = np.histogram(
-                points_per_triangle, np.arange(triangle_prob.shape[0] + 1) - 0.5
-            )
+            all_points.append(points)
+            all_points.append(normal)
+            all_points.append(area)
 
-            all_points_n = []
-            all_normal_n = []
-            all_area_n = []
-            for index, nr_p in enumerate(points_per_triangle):
-                if nr_p == 0:
-                    continue
-                sampled_points = sample_in_triangle(
-                    inflated_mesh.v0[index],
-                    inflated_mesh.v1[index],
-                    inflated_mesh.v2[index],
-                    nr_p,
-                    random,
-                )
-                normal = np.tile(inflated_mesh.face_normal[index], [nr_p, 1])
-                area = np.full([nr_p, 1], triangle_areas[index] / nr_p)
-
-                all_points_n.append(sampled_points)
-                all_normal_n.append(normal)
-                all_area_n.append(area)
-
-            all_points_n = np.concatenate(
-                all_points_n, axis=0, dtype=paddle.get_default_dtype()
-            )
-            all_normal_n = np.concatenate(
-                all_normal_n, axis=0, dtype=paddle.get_default_dtype()
-            )
-            all_area_n = np.concatenate(
-                all_area_n, axis=0, dtype=paddle.get_default_dtype()
-            )
-            all_area_n = np.full_like(all_area_n, all_area_n.sum() / _n)
-
-            all_points.append(all_points_n)
-            all_normal.append(all_normal_n)
-            all_area.append(all_area_n)
-
-        all_points = np.concatenate(
-            all_points, axis=0, dtype=paddle.get_default_dtype()
-        )
-        all_normal = np.concatenate(
-            all_normal, axis=0, dtype=paddle.get_default_dtype()
-        )
-        all_area = np.concatenate(all_area, axis=0, dtype=paddle.get_default_dtype())
+        all_point = np.concatenate(all_point, axis=0)
+        all_normal = np.concatenate(all_normal, axis=0)
+        all_area = np.concatenate(all_area, axis=0)
         return all_points, all_normal, all_area
 
     def _approximate_area(
@@ -311,23 +259,6 @@ class Mesh(geometry.Geometry):
             appr_areas.append(appr_area)
 
         return np.asarray(appr_areas, paddle.get_default_dtype())
-
-    # def precise_on_boundary(self, points: np.ndarray, normals: np.ndarray):
-    #     """judge whether points is accurately on boundary.
-
-    #     Args:
-    #         points (np.ndarray): Points.
-    #         normals (np.ndarray): Normals for each points.
-
-    #     Returns:
-    #         np.ndarray: If on boundary, true for yes, false for not.
-    #     """
-    #     EPS = 1e-6
-    #     points_pos_normals = points + normals * EPS
-    #     points_neg_normals = points - normals * EPS
-    #     pos_sdf = self.sdf_func(points_pos_normals)
-    #     neg_sdf = self.sdf_func(points_neg_normals)
-    #     return (pos_sdf * neg_sdf <= 0)[:, 0]
 
     def random_boundary_points(self, n, random="pseudo", criteria=None):
         valid_areas = self._approximate_area(random, criteria)
