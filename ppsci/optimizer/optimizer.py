@@ -31,7 +31,7 @@ from typing_extensions import Literal
 from ppsci.utils import logger
 from ppsci.utils import misc
 
-__all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS"]
+__all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS", "OptimizerList"]
 
 
 class SGD:

@@ -18,11 +18,11 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import paddle
 from paddle import jit
 from paddle import nn
 
 if TYPE_CHECKING:
+    import paddle
     from ppsci import constraint
     from ppsci import validate
 
@@ -46,12 +46,12 @@ class ExpressionSolver(nn.Layer):
     def train_forward(
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
-        input_dicts: Tuple[Dict[str, paddle.Tensor], ...],
+        input_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         model: nn.Layer,
         constraint: Dict[str, "constraint.Constraint"],
-        label_dicts: Tuple[Dict[str, paddle.Tensor], ...],
-        weight_dicts: Tuple[Dict[str, paddle.Tensor], ...],
-    ) -> Tuple[paddle.Tensor, ...]:
+        label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
+        weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
+    ) -> Tuple["paddle.Tensor", ...]:
         """Forward computation for training, including model forward and equation
         forward.
 
@@ -105,12 +105,12 @@ class ExpressionSolver(nn.Layer):
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
-        input_dict: Dict[str, paddle.Tensor],
+        input_dict: Dict[str, "paddle.Tensor"],
         model: nn.Layer,
         validator: "validate.Validator",
-        label_dict: Dict[str, paddle.Tensor],
-        weight_dict: Dict[str, paddle.Tensor],
-    ) -> Tuple[Dict[str, paddle.Tensor], paddle.Tensor]:
+        label_dict: Dict[str, "paddle.Tensor"],
+        weight_dict: Dict[str, "paddle.Tensor"],
+    ) -> Tuple[Dict[str, "paddle.Tensor"], "paddle.Tensor"]:
         """Forward computation for evaluation, including model forward and equation
         forward.
 
@@ -153,9 +153,9 @@ class ExpressionSolver(nn.Layer):
     def visu_forward(
         self,
         expr_dict: Optional[Dict[str, Callable]],
-        input_dict: Dict[str, paddle.Tensor],
+        input_dict: Dict[str, "paddle.Tensor"],
         model: nn.Layer,
-    ):
+    ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for visualization, including model forward and equation
         forward.
 
