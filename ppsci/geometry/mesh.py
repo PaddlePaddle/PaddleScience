@@ -48,7 +48,7 @@ class Mesh(geometry.Geometry):
         elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
-            raise ValueError(f"arg `mesh` should be path string or or `pymesh.Mesh`")
+            raise ValueError("arg `mesh` should be path string or or `pymesh.Mesh`")
 
         self.init_mesh()
 

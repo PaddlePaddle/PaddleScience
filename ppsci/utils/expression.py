@@ -115,12 +115,12 @@ class ExpressionSolver(nn.Layer):
         forward.
 
         Args:
-            expr_dict (Dict[str, Callable]]): Expression dict.
-            input_dict (Dict[str, paddle.Tensor]]): Input dict.
+            expr_dict (Dict[str, Callable]): Expression dict.
+            input_dict (Dict[str, paddle.Tensor]): Input dict.
             model (nn.Layer): NN model.
-            validator (Dict[str, "validate.Validator"]): Validator.
-            label_dict (Dict[str, paddle.Tensor]]): Label dict.
-            weight_dict (Dict[str, paddle.Tensor]]): Weight dict.
+            validator (validate.Validator): Validator.
+            label_dict (Dict[str, paddle.Tensor]): Label dict.
+            weight_dict (Dict[str, paddle.Tensor]): Weight dict.
 
         Returns:
             Tuple[Dict[str, paddle.Tensor], paddle.Tensor]: Result dict and loss for
@@ -160,7 +160,7 @@ class ExpressionSolver(nn.Layer):
         forward.
 
         Args:
-            expr_dict (Dict[str, Callable]]): Expression dict.
+            expr_dict (Optional[Dict[str, Callable]]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]]): Input dict.
             model (nn.Layer): NN model.
 
