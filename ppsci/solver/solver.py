@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import contextlib
-import copy
 import itertools
 import os
 import sys
@@ -51,7 +50,7 @@ class Solver:
     Args:
         model (nn.Layer): Model.
         constraint (Optional[Dict[str, ppsci.constraint.Constraint]]): Constraint(s) applied on model. Defaults to None.
-        output_dir (str, optional): Output directory. Defaults to "./output/".
+        output_dir (Optional[str]): Output directory. Defaults to "./output/".
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
         epochs (int, optional): Training epoch(s). Defaults to 5.
@@ -108,7 +107,7 @@ class Solver:
         self,
         model: nn.Layer,
         constraint: Optional[Dict[str, ppsci.constraint.Constraint]] = None,
-        output_dir: str = "./output/",
+        output_dir: Optional[str] = "./output/",
         optimizer: Optional[optim.Optimizer] = None,
         lr_scheduler: Optional[optim.lr.LRScheduler] = None,
         epochs: int = 5,
@@ -371,7 +370,7 @@ class Solver:
         )
 
     def train(self):
-        """Training"""
+        """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
@@ -446,8 +445,15 @@ class Solver:
             self.vdl_writer.close()
 
     @misc.run_on_eval_mode
-    def eval(self, epoch_id: int = 0):
-        """Evaluation"""
+    def eval(self, epoch_id: int = 0) -> float:
+        """Evaluation.
+
+        Args:
+            epoch_id (int, optional): Epoch id. Defaults to 0.
+
+        Returns:
+            float: The value of the evaluation, used to judge the quality of the model.
+        """
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
 
@@ -462,8 +468,12 @@ class Solver:
 
     @misc.run_on_eval_mode
     def visualize(self, epoch_id: int = 0):
-        """Visualization"""
-        # init train func
+        """Visualization.
+
+        Args:
+            epoch_id (int, optional): Epoch id. Defaults to 0.
+        """
+        # set visualize func
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
@@ -568,21 +578,8 @@ class Solver:
 
     @misc.run_on_eval_mode
     def export(self):
-        """Export to inference model"""
-        pretrained_path = self.cfg["Global"]["pretrained_model"]
-        if pretrained_path is not None:
-            save_load.load_pretrain(self.model, pretrained_path, self.equation)
-
-        self.model.eval()
-
-        input_spec = copy.deepcopy(self.cfg["Export"]["input_shape"])
-        config.replace_shape_with_inputspec_(input_spec)
-        static_model = jit.to_static(self.model, input_spec=input_spec)
-
-        export_dir = self.cfg["Global"]["save_inference_dir"]
-        save_path = os.path.join(export_dir, "inference")
-        jit.save(static_model, save_path)
-        logger.info(f"The inference model has been exported to {export_dir}")
+        """Export to inference model."""
+        raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"

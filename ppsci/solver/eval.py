@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import time
+from typing import TYPE_CHECKING
 
 import paddle
 from paddle import io
@@ -21,8 +22,11 @@ from ppsci.solver import printer
 from ppsci.utils import misc
 from ppsci.utils import profiler
 
+if TYPE_CHECKING:
+    from ppsci import solver
 
-def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
+
+def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
     """Evaluate with computing metric on total samples.
 
     Args:
@@ -148,7 +152,7 @@ def _eval_by_dataset(solver, epoch_id: int, log_freq: int) -> float:
     return target_metric
 
 
-def _eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
+def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
     """Evaluate with computing metric by batch, which is memory-efficient.
 
     Args:
@@ -249,7 +253,7 @@ def _eval_by_batch(solver, epoch_id: int, log_freq: int) -> float:
     return target_metric
 
 
-def eval_func(solver, epoch_id: int, log_freq: int) -> float:
+def eval_func(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
     """Evaluation function.
 
     Args:

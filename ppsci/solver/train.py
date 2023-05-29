@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import time
+from typing import TYPE_CHECKING
 
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
-from ppsci import solver
+if TYPE_CHECKING:
+    from ppsci import solver
+
 from ppsci.solver import printer
 from ppsci.utils import misc
 from ppsci.utils import profiler
