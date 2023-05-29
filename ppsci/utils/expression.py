@@ -18,11 +18,11 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import paddle
 from paddle import jit
 from paddle import nn
 
 if TYPE_CHECKING:
+    import paddle
     from ppsci import constraint
     from ppsci import validate
 
@@ -30,7 +30,8 @@ from ppsci.autodiff import clear
 
 
 class ExpressionSolver(nn.Layer):
-    """Expression Solver
+    """Expression computing helper, which compute named result according to corresponding
+    function and related inputs.
 
     Examples:
         >>> import ppsci
@@ -45,12 +46,26 @@ class ExpressionSolver(nn.Layer):
     def train_forward(
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
-        input_dicts: Tuple[Dict[str, paddle.Tensor], ...],
+        input_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         model: nn.Layer,
         constraint: Dict[str, "constraint.Constraint"],
-        label_dicts: Tuple[Dict[str, paddle.Tensor], ...],
-        weight_dicts: Tuple[Dict[str, paddle.Tensor], ...],
-    ):
+        label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
+        weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
+    ) -> Tuple["paddle.Tensor", ...]:
+        """Forward computation for training, including model forward and equation
+        forward.
+
+        Args:
+            expr_dicts (Tuple[Dict[str, Callable], ...]): Tuple of expression dicts.
+            input_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of input dicts.
+            model (nn.Layer): NN model.
+            constraint (Dict[str, "constraint.Constraint"]): Constraint dict.
+            label_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of label dicts.
+            weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
+
+        Returns:
+            Tuple[paddle.Tensor, ...]: Tuple of losses for each constraint.
+        """
         output_dicts = []
         for i, expr_dict in enumerate(expr_dicts):
             # model forward
@@ -90,12 +105,27 @@ class ExpressionSolver(nn.Layer):
     def eval_forward(
         self,
         expr_dict: Dict[str, Callable],
-        input_dict: Dict[str, paddle.Tensor],
+        input_dict: Dict[str, "paddle.Tensor"],
         model: nn.Layer,
         validator: "validate.Validator",
-        label_dict: Dict[str, paddle.Tensor],
-        weight_dict: Dict[str, paddle.Tensor],
-    ):
+        label_dict: Dict[str, "paddle.Tensor"],
+        weight_dict: Dict[str, "paddle.Tensor"],
+    ) -> Tuple[Dict[str, "paddle.Tensor"], "paddle.Tensor"]:
+        """Forward computation for evaluation, including model forward and equation
+        forward.
+
+        Args:
+            expr_dict (Dict[str, Callable]): Expression dict.
+            input_dict (Dict[str, paddle.Tensor]): Input dict.
+            model (nn.Layer): NN model.
+            validator (validate.Validator): Validator.
+            label_dict (Dict[str, paddle.Tensor]): Label dict.
+            weight_dict (Dict[str, paddle.Tensor]): Weight dict.
+
+        Returns:
+            Tuple[Dict[str, paddle.Tensor], paddle.Tensor]: Result dict and loss for
+                given validator.
+        """
         # model forward
         if callable(next(iter(expr_dict.values()))):
             output_dict = model(input_dict)
@@ -123,9 +153,20 @@ class ExpressionSolver(nn.Layer):
     def visu_forward(
         self,
         expr_dict: Optional[Dict[str, Callable]],
-        input_dict: Dict[str, paddle.Tensor],
+        input_dict: Dict[str, "paddle.Tensor"],
         model: nn.Layer,
-    ):
+    ) -> Dict[str, "paddle.Tensor"]:
+        """Forward computation for visualization, including model forward and equation
+        forward.
+
+        Args:
+            expr_dict (Optional[Dict[str, Callable]]): Expression dict.
+            input_dict (Dict[str, paddle.Tensor]]): Input dict.
+            model (nn.Layer): NN model.
+
+        Returns:
+            Dict[str, paddle.Tensor]: Result dict for given expression dict.
+        """
         # model forward
         output_dict = model(input_dict)
 
@@ -140,5 +181,4 @@ class ExpressionSolver(nn.Layer):
             # clear differentiation cache
             clear()
 
-        # compute loss for each validator according to its' own output, label and weight
         return output_dict
