@@ -17,7 +17,6 @@ export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
 export TEST_DIR="${PDSC_DIR}"
 export TIPC_TEST="ON" # open tipc log in solver.py 
 export PYTHONPATH=${PDSC_DIR}
-BENCHMARK_ROOT="${TEST_DIR}/test_tipc/tools"
 source ${TEST_DIR}/test_tipc/common_func.sh
 
 function func_parser_params(){
@@ -84,6 +83,8 @@ dataline=`cat $FILENAME`
 IFS=$'\n'
 lines=(${dataline})
 model_name=$(func_parser_value "${lines[1]}")
+workdir=$(func_parser_value "${lines[60]}")
+cd ${PDSC_DIR}/${workdir}
 python=$(func_parser_value "${lines[2]}")
 line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
 batch_size=$(func_parser_value "${lines[line_num]}")

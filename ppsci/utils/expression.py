@@ -15,6 +15,7 @@
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Tuple
 
 import paddle
@@ -151,7 +152,7 @@ class ExpressionSolver(nn.Layer):
 
     def visu_forward(
         self,
-        expr_dict: Dict[str, Callable],
+        expr_dict: Optional[Dict[str, Callable]],
         input_dict: Dict[str, paddle.Tensor],
         model: nn.Layer,
     ):
@@ -167,17 +168,17 @@ class ExpressionSolver(nn.Layer):
             Dict[str, paddle.Tensor]: Result dict for given expression dict.
         """
         # model forward
-        if callable(next(iter(expr_dict.values()))):
-            output_dict = model(input_dict)
+        output_dict = model(input_dict)
 
-        # equation forward
-        for name, expr in expr_dict.items():
-            if callable(expr):
-                output_dict[name] = expr({**output_dict, **input_dict})
-            else:
-                raise TypeError(f"expr type({type(expr)}) is invalid")
+        if isinstance(expr_dict, dict):
+            # equation forward
+            for name, expr in expr_dict.items():
+                if callable(expr):
+                    output_dict[name] = expr({**output_dict, **input_dict})
+                else:
+                    raise TypeError(f"expr type({type(expr)}) is invalid")
 
-        # clear differentiation cache
-        clear()
+            # clear differentiation cache
+            clear()
 
         return output_dict

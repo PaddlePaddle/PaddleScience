@@ -262,7 +262,7 @@ class Solver:
             logger.warning(
                 f"Detected world_size({self.world_size}) > 1, it is recommended to "
                 "scale up the learning rate and reduce the epochs or "
-                "iters_per_epoch according to the world_size number both linearly."
+                "iters_per_epoch according to the world_size both linearly."
             )
 
         self.global_step = 0
@@ -488,8 +488,7 @@ class Solver:
         batch_size: int = 64,
         no_grad: bool = True,
     ) -> Dict[str, paddle.Tensor]:
-        """Pure prediction using model.forward(...) and expression(optional, if given),
-        NOTE: Only support single device prediction yet.
+        """Pure prediction using model.forward(...) and expression(optional, if given).
 
         Args:
             input_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Input data in dict.
@@ -501,46 +500,80 @@ class Solver:
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """
-        if self.world_size > 1:
-            raise NotImplementedError(
-                "Solver.predict only support single device yet, "
-                f"but got {self.world_size} devices."
-            )
-
         num_samples = len(next(iter(input_dict.values())))
-        batch_num = (num_samples + (batch_size - 1)) // batch_size
-        pred_dict = misc.Prettydefaultdict(list)
+        num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
+        # pad with last element if `num_samples` is not divisible by `world_size`
+        # ensuring every device get same number of data.
+        if num_pad > 0:
+            for k, v in input_dict.items():
+                repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
+                input_dict[k] = paddle.concat(
+                    (
+                        v,
+                        paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
+                    ),
+                )
 
-        with self.no_grad_context_manager(no_grad):
-            for batch_id in range(batch_num):
+        num_samples_pad = num_samples + num_pad
+        local_num_samples_pad = num_samples_pad // self.world_size
+        local_input_dict = (
+            {k: v[self.rank :: self.world_size] for k, v in input_dict.items()}
+            if self.world_size > 1
+            else input_dict
+        )
+        local_batch_num = (local_num_samples_pad + (batch_size - 1)) // batch_size
+        pred_dict = misc.Prettydefaultdict(list)
+        with self.no_grad_context_manager(no_grad), self.no_sync_context_manager(
+            self.world_size > 1, self.model
+        ):
+            for batch_id in range(local_batch_num):
                 batch_input_dict = {}
                 st = batch_id * batch_size
-                ed = min(num_samples, (batch_id + 1) * batch_size)
+                ed = min(local_num_samples_pad, (batch_id + 1) * batch_size)
 
                 # prepare batch input dict
-                for key in input_dict:
-                    if not paddle.is_tensor(input_dict[key]):
+                for key in local_input_dict:
+                    if not paddle.is_tensor(local_input_dict[key]):
                         batch_input_dict[key] = paddle.to_tensor(
-                            input_dict[key][st:ed], paddle.get_default_dtype()
+                            local_input_dict[key][st:ed], paddle.get_default_dtype()
                         )
                     else:
-                        batch_input_dict[key] = input_dict[key][st:ed]
+                        batch_input_dict[key] = local_input_dict[key][st:ed]
                     batch_input_dict[key].stop_gradient = no_grad
 
                 # forward
                 with self.autocast_context_manager(self.use_amp, self.amp_level):
-                    # model forward
-                    batch_output_dict = self.model(batch_input_dict)
-                    if isinstance(expr_dict, dict):
-                        # equation forward(if expr_dict is given)
-                        for name, expr in expr_dict.items():
-                            batch_output_dict[name] = expr(batch_output_dict)
+                    batch_output_dict = self.forward_helper.visu_forward(
+                        expr_dict, batch_input_dict, self.model
+                    )
 
                 # collect batch data
                 for key, batch_output in batch_output_dict.items():
-                    pred_dict[key].append(batch_output)
+                    pred_dict[key].append(batch_output.detach())
 
+            # concatenate local predictions
             pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
+
+            if self.world_size > 1:
+                # gather global predictions from all devices if world_size > 1
+                pred_dict = {
+                    key: misc.all_gather(value) for key, value in pred_dict.items()
+                }
+
+                # rearange predictions as the same order of input_dict according to inverse
+                # permutation, then discard predictions of padding data at the end
+                perm = np.arange(num_samples_pad, dtype="int64")
+                perm = np.concatenate(
+                    [perm[rank :: self.world_size] for rank in range(self.world_size)],
+                    axis=0,
+                )
+                perm_inv = np.empty_like(perm)
+                perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
+                perm_inv = paddle.to_tensor(perm_inv)
+                pred_dict = {
+                    key: value[perm_inv][:num_samples]
+                    for key, value in pred_dict.items()
+                }
 
         return pred_dict
 
@@ -610,7 +643,7 @@ class Solver:
             if not isinstance(ddp_model, paddle.DataParallel):
                 raise TypeError(
                     "no_sync interface is only for model with type paddle.DataParallel, "
-                    f"but got type {type(ddp_model)}"
+                    f"but got type {misc.typename(ddp_model)}"
                 )
             ctx_manager = ddp_model.no_sync()
         else:
