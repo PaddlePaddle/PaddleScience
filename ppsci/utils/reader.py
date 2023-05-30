@@ -18,7 +18,6 @@ import sys
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import meshio
 import numpy as np
@@ -39,6 +38,7 @@ def load_csv_file(
     file_path: str,
     keys: Tuple[str, ...],
     alias_dict: Optional[Dict[str, str]] = None,
+    delimeter: str = ",",
     encoding: str = "utf-8",
 ) -> Dict[str, np.ndarray]:
     """Load *.csv file and fetch data as given keys.
@@ -59,7 +59,7 @@ def load_csv_file(
     try:
         # read all data from csv file
         with open(file_path, "r", encoding=encoding) as csv_file:
-            reader = csv.DictReader(csv_file)
+            reader = csv.DictReader(csv_file, delimiter=delimeter)
             raw_data = collections.defaultdict(list)
             for _, line_dict in enumerate(reader):
                 for key, value in line_dict.items():
@@ -121,16 +121,16 @@ def load_mat_file(
 
 def load_vtk_file(
     filename_without_timeid: str,
-    time_step: Union[float, int],
+    time_step: float,
     time_index: Tuple[int, ...],
     input_keys: Tuple[str, ...],
     label_keys: Optional[Tuple[str, ...]],
 ) -> Dict[str, np.ndarray]:
-    """load coordinates and attached label from the *.vtu file.
+    """Load coordinates and attached label from the *.vtu file.
 
     Args:
         filename_without_timeid (str): File name without time id.
-        time_step (Union[float, Dict]): Physical time step.
+        time_step (float): Physical time step.
         time_index (Tuple[int, ...]): Physical time indexes.
         input_keys (Tuple[str, ...]): Input coordinates name keys.
         label_keys (Optional[Tuple[str, ...]]): Input label name keys.

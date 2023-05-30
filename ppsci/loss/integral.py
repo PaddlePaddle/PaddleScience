@@ -23,17 +23,19 @@ from ppsci.loss import base
 
 
 class IntegralLoss(base.Loss):
-    r"""Class for integral loss with monte carlo integration algorithm.
+    r"""Class for integral loss with Monte-Carlo integration algorithm.
 
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='sum'}
+        \dfrac{1}{N} \Vert \mathbf{s} \circ \mathbf{x} - \mathbf{y} \Vert_2^2, & \text{if reduction='mean'} \\
+         \Vert \mathbf{s} \circ \mathbf{x} - \mathbf{y} \Vert_2^2, & \text{if reduction='sum'}
     \end{cases}
     $$
 
-    $M$ is the number of samples in monte carlo integration.
+    $$
+    \mathbf{x}, \mathbf{y}, \mathbf{s} \in \mathcal{R}^{N}
+    $$
 
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
@@ -71,7 +73,7 @@ class IntegralLoss(base.Loss):
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]

@@ -90,8 +90,8 @@ class ERA5Dataset(io.Dataset):
         paths = [path] if path.endswith(".h5") else glob.glob(path + "/*.h5")
         paths.sort()
         files = []
-        for path in paths:
-            _file = h5py.File(path, "r")
+        for path_ in paths:
+            _file = h5py.File(path_, "r")
             files.append(_file[var])
         return files
 

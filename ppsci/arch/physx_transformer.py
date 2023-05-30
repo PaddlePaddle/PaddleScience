@@ -114,8 +114,7 @@ class MaskedAttention(nn.Layer):
         x = x.reshape(new_x_shape)
         if k:
             return x.transpose([0, 2, 3, 1])
-        else:
-            return x.transpose([0, 2, 1, 3])
+        return x.transpose([0, 2, 1, 3])
 
     def forward(
         self,

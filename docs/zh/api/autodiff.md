@@ -8,5 +8,6 @@
         - Jacobians
         - hessian
         - Hessians
+        - clear
       show_root_heading: false
       heading_level: 3

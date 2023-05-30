@@ -78,7 +78,7 @@ class ProfilerOptions:
 
     def __getitem__(self, name):
         if self._options.get(name, None) is None:
-            raise ValueError("ProfilerOptions does not have an option named %s." % name)
+            raise ValueError(f"ProfilerOptions does not have an option named {name}.")
         return self._options[name]
 
 

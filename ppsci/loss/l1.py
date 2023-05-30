@@ -26,11 +26,11 @@ class L1Loss(base.Loss):
     r"""Class for l1 loss.
 
     $$
-    L =
-    \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{|x_i-y_i|}, & \text{if reduction='sum'}
-    \end{cases}
+    L = \Vert \mathbf{x} - \mathbf{y} \Vert_1
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
     Args:
@@ -39,7 +39,7 @@ class L1Loss(base.Loss):
 
     Examples:
         >>> import ppsci
-        >>> loss = ppsci.loss.L1Loss("mean")
+        >>> loss = ppsci.loss.L1Loss()
     """
 
     def __init__(
@@ -59,7 +59,8 @@ class L1Loss(base.Loss):
             loss = F.l1_loss(output_dict[key], label_dict[key], "none")
             if weight_dict:
                 loss *= weight_dict[key]
-            if isinstance(self.weight, float):
+
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -67,12 +68,14 @@ class L1Loss(base.Loss):
             if "area" in output_dict:
                 loss *= output_dict["area"]
 
+            loss = loss.sum(axis=1)
+
             if self.reduction == "sum":
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -82,10 +85,22 @@ class L1Loss(base.Loss):
 
 
 class PeriodicL1Loss(base.Loss):
-    """Class for periodic l1 loss.
+    r"""Class for periodic l1 loss.
+
+    $$
+    L = \Vert \mathbf{x_l}-\mathbf{x_r} \Vert_1
+    $$
+
+    $\mathbf{x_l} \in \mathcal{R}^{N}$ is the first half of batch output,
+    $\mathbf{x_r} \in \mathcal{R}^{N}$ is the second half of batch output.
 
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> loss = ppsci.loss.PeriodicL1Loss("mean")
     """
 
     def __init__(
@@ -117,12 +132,14 @@ class PeriodicL1Loss(base.Loss):
             if "area" in output_dict:
                 loss *= output_dict["area"]
 
+            loss = loss.sum(axis=1)
+
             if self.reduction == "sum":
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]

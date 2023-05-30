@@ -86,7 +86,7 @@ def print_dict(d, delimiter=0):
 
 def print_config(config):
     """
-    visualize configs
+    Visualize configs
     Arguments:
         config: configs
     """
@@ -179,6 +179,11 @@ def parse_args():
     parser = argparse.ArgumentParser("paddlescience running script")
     parser.add_argument("-e", "--epochs", type=int, help="training epochs")
     parser.add_argument("-o", "--output_dir", type=str, help="output directory")
+    parser.add_argument(
+        "--to_static",
+        action="store_true",
+        help="whether enable to_static for forward computation",
+    )
 
     args = parser.parse_args()
     return args
@@ -186,7 +191,7 @@ def parse_args():
 
 def _is_num_seq(seq):
     # whether seq is all int number(it is a shape)
-    return isinstance(seq, (list, tuple)) and all([isinstance(x, int) for x in seq])
+    return isinstance(seq, (list, tuple)) and all(isinstance(x, int) for x in seq)
 
 
 def replace_shape_with_inputspec_(node: AttrDict):
