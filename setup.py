@@ -14,7 +14,7 @@ def readme():
 if __name__ == "__main__":
     setuptools.setup(
         name="paddlesci",
-        version="1.0.1",
+        version="1.0.0",
         author="PaddlePaddle",
         url="https://github.com/PaddlePaddle/PaddleScience",
         description=(
@@ -28,7 +28,6 @@ if __name__ == "__main__":
                 "docs",
                 "examples",
                 "jointContribution",
-                "paddlescience",
                 "test_tipc",
                 "tests",
                 "tools",
@@ -48,7 +47,7 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
         install_requires=[
-            "numpy",
+            "numpy>=1.20.0",
             "scipy",
             "sympy",
             "matplotlib",
@@ -58,9 +57,11 @@ if __name__ == "__main__":
             "scipy",
             "visualdl",
             "pyvista==0.37.0",
-            "pysdf",
             "pyyaml",
             "scikit-optimize",
             "h5py",
+            "meshio==5.3.4",
+            "tqdm",
+            "imageio",
         ],
     )
