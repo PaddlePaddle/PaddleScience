@@ -41,7 +41,7 @@ if __name__ == "__main__":
             "label_keys": ("eta", "f"),
             "weight_dict": {"eta": 100},
         },
-        "batch_size": 150,
+        "batch_size": 100,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
