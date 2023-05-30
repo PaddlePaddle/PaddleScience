@@ -18,8 +18,8 @@ from typing import Tuple
 
 import numpy as np
 
-import ppsci.utils.misc as misc
 from ppsci.geometry import geometry
+from ppsci.utils import misc
 
 
 class PointCloud(geometry.Geometry):
@@ -148,32 +148,32 @@ class PointCloud(geometry.Geometry):
         """Compute the equispaced points in the geometry."""
         return self.interior[:n]
 
-    def union(self, rhs):
+    def union(self, other):
         raise NotImplementedError(
             "Union operation for PointCloud is not supported yet."
         )
 
-    def __or__(self, rhs):
+    def __or__(self, other):
         raise NotImplementedError(
             "Union operation for PointCloud is not supported yet."
         )
 
-    def difference(self, rhs):
+    def difference(self, other):
         raise NotImplementedError(
             "Subtraction operation for PointCloud is not supported yet."
         )
 
-    def __sub__(self, rhs):
+    def __sub__(self, other):
         raise NotImplementedError(
             "Subtraction operation for PointCloud is not supported yet."
         )
 
-    def intersection(self, rhs):
+    def intersection(self, other):
         raise NotImplementedError(
             "Intersection operation for PointCloud is not supported yet."
         )
 
-    def __and__(self, rhs):
+    def __and__(self, other):
         raise NotImplementedError(
             "Intersection operation for PointCloud is not supported yet."
         )

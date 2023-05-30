@@ -222,7 +222,7 @@ class Mesh(geometry.Geometry):
             all_points.append(normal)
             all_points.append(area)
 
-        all_point = np.concatenate(all_point, axis=0)
+        all_points = np.concatenate(all_points, axis=0)
         all_normal = np.concatenate(all_normal, axis=0)
         all_area = np.concatenate(all_area, axis=0)
         return all_points, all_normal, all_area
@@ -270,7 +270,7 @@ class Mesh(geometry.Geometry):
             npoint_per_triangle, np.arange(len(triangle_prob) + 1) - 0.5
         )
 
-        all_point = []
+        all_points = []
         all_normal = []
         all_area = []
         for i, npoint in enumerate(npoint_per_triangle):
@@ -286,17 +286,17 @@ class Mesh(geometry.Geometry):
                 dtype=paddle.get_default_dtype(),
             )
 
-            all_point.append(face_points)
+            all_points.append(face_points)
             all_normal.append(face_normal)
             all_area.append(valid_area)
 
-        all_point = np.concatenate(all_point, axis=0)
+        all_points = np.concatenate(all_points, axis=0)
         all_normal = np.concatenate(all_normal, axis=0)
         all_area = np.concatenate(all_area, axis=0)
 
         # NOTE: use global mean area instead of local mean area
         all_area = np.full_like(all_area, all_area.mean())
-        return all_point, all_normal, all_area
+        return all_points, all_normal, all_area
 
     def sample_boundary(
         self, n, random="pseudo", criteria=None, evenly=False, inflation_dist=None
@@ -311,11 +311,8 @@ class Mesh(geometry.Geometry):
                 raise ValueError(
                     "Can't sample evenly on mesh now, please set evenly=False."
                 )
-                # points, normal, area = self.uniform_boundary_points(n, False)
-            else:
-                points, normals, areas = self.random_boundary_points(
-                    n, random, criteria
-                )
+            # points, normal, area = self.uniform_boundary_points(n, False)
+            points, normals, areas = self.random_boundary_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
         normal_dict = misc.convert_to_dict(
@@ -362,9 +359,7 @@ class Mesh(geometry.Geometry):
             raise NotImplementedError(
                 "uniformly sample for interior in mesh is not support yet"
             )
-            # points, area = self.uniform_points(n)
-        else:
-            points, areas = self.random_points(n, random, criteria)
+        points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
         area_dict = misc.convert_to_dict(areas, ["area"])
@@ -375,45 +370,47 @@ class Mesh(geometry.Geometry):
 
         return {**x_dict, **area_dict, **sdf_dict}
 
-    def union(self, rhs: "Mesh"):
-        if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
-        import pymesh
-
-        csg = pymesh.CSGTree({"union": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]})
-        return Mesh(csg.mesh)
-
-    def __or__(self, rhs: "Mesh"):
-        return self.union(rhs)
-
-    def __add__(self, rhs: "Mesh"):
-        return self.union(rhs)
-
-    def difference(self, rhs: "Mesh"):
+    def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
         import pymesh
 
         csg = pymesh.CSGTree(
-            {"difference": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
+            {"union": [{"mesh": self.py_mesh}, {"mesh": other.py_mesh}]}
         )
         return Mesh(csg.mesh)
 
-    def __sub__(self, rhs: "Mesh"):
-        return self.difference(rhs)
+    def __or__(self, other: "Mesh"):
+        return self.union(other)
 
-    def intersection(self, rhs: "Mesh"):
+    def __add__(self, other: "Mesh"):
+        return self.union(other)
+
+    def difference(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ModuleNotFoundError
         import pymesh
 
         csg = pymesh.CSGTree(
-            {"intersection": [{"mesh": self.py_mesh}, {"mesh": rhs.py_mesh}]}
+            {"difference": [{"mesh": self.py_mesh}, {"mesh": other.py_mesh}]}
         )
         return Mesh(csg.mesh)
 
-    def __and__(self, rhs: "Mesh"):
-        return self.intersection(rhs)
+    def __sub__(self, other: "Mesh"):
+        return self.difference(other)
+
+    def intersection(self, other: "Mesh"):
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ModuleNotFoundError
+        import pymesh
+
+        csg = pymesh.CSGTree(
+            {"intersection": [{"mesh": self.py_mesh}, {"mesh": other.py_mesh}]}
+        )
+        return Mesh(csg.mesh)
+
+    def __and__(self, other: "Mesh"):
+        return self.intersection(other)
 
     def __str__(self) -> str:
         """Return the name of class"""
@@ -429,7 +426,7 @@ class Mesh(geometry.Geometry):
 
 
 def area_of_triangles(v0, v1, v2):
-    """ref https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
+    """Ref https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
 
     Args:
         v0 (np.ndarray): Coordinates of the first vertex of the triangle surface with shape of [N, 3].

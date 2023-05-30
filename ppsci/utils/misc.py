@@ -53,14 +53,14 @@ class AverageMeter:
         self.reset()
 
     def reset(self):
-        """reset"""
+        """Reset"""
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
-        """update"""
+        """Update"""
         self.val = val
         self.sum += val * n
         self.count += n
@@ -140,23 +140,23 @@ def all_gather(
     return result
 
 
-def convert_to_array(dict: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.ndarray:
+def convert_to_array(dict_: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.ndarray:
     """Concatenate arrays in axis -1 in order of given keys.
 
     Args:
-        dict (Dict[str, np.ndarray]): Dict contains arrays.
+        dict_ (Dict[str, np.ndarray]): Dict contains arrays.
         keys (Tuple[str, ...]): Concatenate keys used in concatenation.
 
     Returns:
         np.ndarray: Concatenated array.
     """
-    return np.concatenate([dict[key] for key in keys], axis=-1)
+    return np.concatenate([dict_[key] for key in keys], axis=-1)
 
 
 def concat_dict_list(
     dict_list: Tuple[Dict[str, np.ndarray], ...]
 ) -> Dict[str, np.ndarray]:
-    """concatenate arrays in tuple of dicts at axis 0.
+    """Concatenate arrays in tuple of dicts at axis 0.
 
     Args:
         dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
@@ -187,16 +187,16 @@ def stack_dict_list(
     return ret
 
 
-def typename(object: object) -> str:
+def typename(obj: object) -> str:
     """Return type name of given object.
 
     Args:
-        object (object): Python object which is instantiated from a class.
+        obj (object): Python object which is instantiated from a class.
 
     Returns:
         str: Class name of given object.
     """
-    return object.__class__.__name__
+    return obj.__class__.__name__
 
 
 def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:

@@ -49,8 +49,8 @@ def build_lr_scheduler(cfg, epochs, iters_per_epoch):
     cfg = copy.deepcopy(cfg)
     cfg.update({"epochs": epochs, "iters_per_epoch": iters_per_epoch})
     lr_scheduler_cls = cfg.pop("name")
-    lr_scheduler = eval(lr_scheduler_cls)(**cfg)
-    return lr_scheduler()
+    lr_scheduler_ = eval(lr_scheduler_cls)(**cfg)
+    return lr_scheduler_()
 
 
 def build_optimizer(cfg, model_list, epochs, iters_per_epoch):

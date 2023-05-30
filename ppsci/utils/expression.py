@@ -42,6 +42,11 @@ class ExpressionSolver(nn.Layer):
     def __init__(self):
         super().__init__()
 
+    def forward(self, *args, **kwargs):
+        raise NotImplementedError(
+            f"Use train_forward/eval_forward/visu_forward instead of forward."
+        )
+
     @jit.to_static
     def train_forward(
         self,
