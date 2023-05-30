@@ -4,6 +4,7 @@
     handler: python
     options:
       members:
+        - Visualizer
         - VisualizerScatter1D
         - VisualizerScatter3D
         - VisualizerVtu
@@ -12,6 +13,7 @@
         - Visualizer3D
         - VisualizerWeather
         - save_vtu_from_dict
+        - save_vtu_to_mesh
         - save_plot_from_1d_dict
         - save_plot_from_3d_dict
       show_root_heading: false

@@ -16,7 +16,7 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
-import paddle.nn as nn
+from paddle import nn
 from typing_extensions import Literal
 
 
