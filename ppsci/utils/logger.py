@@ -100,7 +100,7 @@ def set_log_level(log_level):
 
 def log_at_trainer0(log):
     """
-    logs will print multi-times when calling Fleet API.
+    Logs will print multi-times when calling Fleet API.
     Only display single log and ignore the others.
     """
 

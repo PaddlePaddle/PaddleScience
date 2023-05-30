@@ -83,7 +83,7 @@ class LRBase:
 
     @abc.abstractmethod
     def __call__(self, *kargs, **kwargs) -> lr.LRScheduler:
-        """generate an learning rate scheduler.
+        """Generate an learning rate scheduler.
 
         Returns:
             lr.LinearWarmup: learning rate scheduler.
@@ -127,7 +127,7 @@ class Constant(lr.LRScheduler):
         super().__init__()
 
     def get_lr(self) -> float:
-        """always return the same learning rate"""
+        """Always return the same learning rate"""
         return self.learning_rate
 
 

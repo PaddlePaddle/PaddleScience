@@ -86,7 +86,7 @@ def print_dict(d, delimiter=0):
 
 def print_config(config):
     """
-    visualize configs
+    Visualize configs
     Arguments:
         config: configs
     """
@@ -191,7 +191,7 @@ def parse_args():
 
 def _is_num_seq(seq):
     # whether seq is all int number(it is a shape)
-    return isinstance(seq, (list, tuple)) and all([isinstance(x, int) for x in seq])
+    return isinstance(seq, (list, tuple)) and all(isinstance(x, int) for x in seq)
 
 
 def replace_shape_with_inputspec_(node: AttrDict):
