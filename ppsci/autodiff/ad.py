@@ -166,7 +166,7 @@ class Hessians:
         j: int = 0,
         grad_y: Optional[paddle.Tensor] = None,
     ) -> paddle.Tensor:
-        """compute hessian matrix for given ys and xs.
+        """Compute hessian matrix for given ys and xs.
 
         Args:
             ys (paddle.Tensor): Output tensor.

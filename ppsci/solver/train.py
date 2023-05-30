@@ -17,12 +17,12 @@ from typing import TYPE_CHECKING
 
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
-if TYPE_CHECKING:
-    from ppsci import solver
-
 from ppsci.solver import printer
 from ppsci.utils import misc
 from ppsci.utils import profiler
+
+if TYPE_CHECKING:
+    from ppsci import solver
 
 
 def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):

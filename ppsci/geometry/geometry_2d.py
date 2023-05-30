@@ -455,7 +455,7 @@ class Polygon(geometry.Geometry):
         x = np.empty((0, 2), dtype=paddle.get_default_dtype())
         vbbox = self.bbox[1] - self.bbox[0]
         while len(x) < n:
-            x_new = sampler.sample(n, 2, sampler="pseudo") * vbbox + self.bbox[0]
+            x_new = sampler.sample(n, 2, "pseudo") * vbbox + self.bbox[0]
             x = np.vstack((x, x_new[self.is_inside(x_new)]))
         return x[:n]
 

@@ -31,7 +31,6 @@ def run_check() -> None:
         >>> import ppsci
         >>> ppsci.utils.run_check()  # doctest: +SKIP
     """
-
     # test demo code below.
     import logging
 
