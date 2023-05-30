@@ -15,7 +15,7 @@
 from typing import Any
 from typing import Dict
 
-import paddle.io as io
+from paddle import io
 
 from ppsci import data
 from ppsci import loss

@@ -19,9 +19,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-if TYPE_CHECKING:
-    import paddle
-
 from paddle import nn
 from paddle import optimizer as optim
 from paddle import regularizer
@@ -30,6 +27,9 @@ from typing_extensions import Literal
 
 from ppsci.utils import logger
 from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    import paddle
 
 __all__ = ["SGD", "Momentum", "Adam", "RMSProp", "AdamW", "LBFGS", "OptimizerList"]
 

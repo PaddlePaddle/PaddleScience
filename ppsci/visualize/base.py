@@ -48,7 +48,7 @@ class Visualizer:
 
     @abc.abstractmethod
     def save(self, data_dict):
-        """visualize result from data_dict and save as files"""
+        """Visualize result from data_dict and save as files"""
 
     def __str__(self):
         return ", ".join(
