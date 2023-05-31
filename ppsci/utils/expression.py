@@ -144,6 +144,10 @@ class ExpressionSolver(nn.Layer):
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
 
+        # put field 'area' into output_dict
+        if "area" in input_dict:
+            output_dict["area"] = input_dict["area"]
+
         # clear differentiation cache
         clear()
 

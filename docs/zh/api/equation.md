@@ -7,6 +7,7 @@
         - PDE
         - Biharmonic
         - Laplace
+        - LinearElasticity
         - NavierStokes
         - NormalDotVec
         - Poisson

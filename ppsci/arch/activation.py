@@ -18,16 +18,22 @@ import paddle
 import paddle.nn.functional as F
 from paddle import nn
 
+
+def silu(x):
+    """numeric stable silu"""
+    return x * F.sigmoid(x)
+
+
 act_func_dict = {
     "elu": F.elu,
     "relu": F.relu,
     "selu": F.selu,
     "gelu": F.gelu,
     "sigmoid": F.sigmoid,
-    "silu": F.silu,
+    "silu": silu,
     "sin": paddle.sin,
     "cos": paddle.cos,
-    "swish": F.silu,
+    "swish": silu,
     "tanh": F.tanh,
     "identity": nn.Identity(),
 }
