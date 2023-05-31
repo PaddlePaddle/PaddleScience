@@ -279,7 +279,9 @@ class Mesh(geometry.Geometry):
             face_points = sample_in_triangle(
                 self.v0[i], self.v1[i], self.v2[i], npoint, random, criteria
             )
-            face_normal = np.tile(self.face_normal[i], [npoint, 1])
+            face_normal = np.tile(self.face_normal[i], [npoint, 1]).astype(
+                paddle.get_default_dtype()
+            )
             valid_area = np.full(
                 [npoint, 1],
                 valid_areas[i] / npoint,
