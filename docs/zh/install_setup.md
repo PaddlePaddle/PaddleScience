@@ -26,25 +26,20 @@
     pip install -r requirements.txt
     ```
 
-    ???+ Info "安装注意事项"
-
-        如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装三个依赖库：
-        [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）,
-        [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）,
-        [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）
-
 #### 1.2.2 pip 安装
 
-coming soon
-
-<div style='display: none'>
 执行以下命令进行 pip 安装
 
 ``` shell
-pip install -i https://pypi.org/simple/ paddlesci
+pip install paddlesci
 ```
 
-</div>
+???+ Info "安装注意事项"
+
+    如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装三个依赖库：
+    [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）,
+    [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）,
+    [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）
 
 ## 2. 验证安装
 

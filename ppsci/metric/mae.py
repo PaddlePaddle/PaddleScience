@@ -22,7 +22,11 @@ class MAE(base.Metric):
     r"""Mean absolute error.
 
     $$
-    metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{|x_i-y_i|}
+    metric = \dfrac{1}{N} \Vert \mathbf{x} - \mathbf{y} \Vert_1
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
     Args:
