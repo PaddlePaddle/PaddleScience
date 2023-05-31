@@ -54,15 +54,15 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     # write your code here...
     ```
 
-更多安装方式请参考 [**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
+更多安装方式请参考 [**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/release-1.0/zh/install_setup/)
 
 ## 快速开始
 
-请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/quickstart/)
+请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh/release-1.0/zh/quickstart/)
 
 ## 经典案例
 
-请参考 [**经典案例**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/viv/)
+请参考 [**经典案例**](https://paddlescience-docs.readthedocs.io/zh/release-1.0/zh/examples/viv/)
 
 ## 支持
 
@@ -70,7 +70,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 贡献代码
 
-PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/release-1.0/zh/contribute/)。
 
 ## 证书
 
