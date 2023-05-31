@@ -165,7 +165,7 @@ def _save_plot_from_2d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
         stride (int, optional): The time stride of visualization. Defaults to 1.
         xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
@@ -314,7 +314,7 @@ def _save_plot_from_3d_array(
     Args:
         filename (str): Filename.
         visu_data (Tuple[np.ndarray, ...]): Data that requires visualization.
-        visu_keys (Tuple[str, ...]]): Keys for visualizing data. such as ("u", "v").
+        visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
 
