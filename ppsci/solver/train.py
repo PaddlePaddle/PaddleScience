@@ -83,17 +83,18 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
             total_loss.backward()
             # import numpy as np
             # # import os
-            # bias_u = np.load("./data/net2_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
-            # bias_v = np.load("./data/net3_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
-            # bias_p = np.load("./data/net4_params" + f"/bias_{epoch_id - 1}_{iter_id - 1}.npz")
-            # weight_u = np.load("./data/net2_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
-            # weight_v = np.load("./data/net3_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
-            # weight_p = np.load("./data/net4_params" + f"/weight_{epoch_id - 1}_{iter_id - 1}.npz")
-
-            # weight_grad_u = np.load("./data/net2_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
-            # weight_grad_v = np.load("./data/net3_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
-            # weight_grad_p = np.load("./data/net4_params" + f"/weight_grad_{epoch_id - 1}_{iter_id - 1}.npz")
+            # path = "/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526"
+            # bias_u = np.load(path + "/net2_params" + f"/bias_{epoch_id - 1}_{iter_id}.npz")
+            # bias_v = np.load(path + "/net3_params" + f"/bias_{epoch_id - 1}_{iter_id}.npz")
+            # bias_p = np.load(path + "/net4_params" + f"/bias_{epoch_id - 1}_{iter_id}.npz")
+            # weight_u = np.load(path + "/net2_params" + f"/weight_{epoch_id - 1}_{iter_id}.npz")
+            # weight_v = np.load(path + "/net3_params" + f"/weight_{epoch_id - 1}_{iter_id}.npz")
+            # weight_p = np.load(path + "/net4_params" + f"/weight_{epoch_id - 1}_{iter_id}.npz")
+            # weight_grad_u = np.load(path + "/net2_params" + f"/weight_grad_{epoch_id - 1}_{iter_id}.npz")
+            # weight_grad_v = np.load(path + "/net3_params" + f"/weight_grad_{epoch_id - 1}_{iter_id}.npz")
+            # weight_grad_p = np.load(path + "/net4_params" + f"/weight_grad_{epoch_id - 1}_{iter_id}.npz")
             # # u
+            # print("----------- print [u] net parameters -----------")
             # print("w0_u is close:", np.allclose(solver.model.model_list[0].linears[0].weight.numpy(), weight_u[f"w_0"]))
             # print("w1_u is close:", np.allclose(solver.model.model_list[0].linears[1].weight.numpy(), weight_u[f"w_1"]))
             # print("w2_u is close:", np.allclose(solver.model.model_list[0].linears[2].weight.numpy(), weight_u[f"w_2"]))
@@ -110,6 +111,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
             # print("w3_u grad is close:", np.allclose(solver.model.model_list[0].last_fc.weight.grad.numpy(), weight_grad_u[f"w_3"]))
 
             # #v
+            # print("----------- print [v] net parameters -----------")
             # print("w0_v is close:", np.allclose(solver.model.model_list[1].linears[0].weight.numpy(), weight_v[f"w_0"]))
             # print("w1_v is close:", np.allclose(solver.model.model_list[1].linears[1].weight.numpy(), weight_v[f"w_1"]))
             # print("w2_v is close:", np.allclose(solver.model.model_list[1].linears[2].weight.numpy(), weight_v[f"w_2"]))
@@ -126,6 +128,7 @@ def train_epoch_func(solver, epoch_id: int, log_freq: int):
             # print("w3_v grad is close:", np.allclose(solver.model.model_list[1].last_fc.weight.grad.numpy(), weight_grad_v[f"w_3"]))
 
             # #p
+            # print("----------- print [p] net parameters -----------")
             # print("w0_p is close:", np.allclose(solver.model.model_list[2].linears[0].weight.numpy(), weight_p[f"w_0"]))
             # print("w1_p is close:", np.allclose(solver.model.model_list[2].linears[1].weight.numpy(), weight_p[f"w_1"]))
             # print("w2_p is close:", np.allclose(solver.model.model_list[2].linears[2].weight.numpy(), weight_p[f"w_2"]))
