@@ -78,6 +78,9 @@ class PeriodicConstraint(base.Constraint):
 
         self.input_keys = geom.dim_keys
         self.output_keys = list(output_expr.keys())
+        # "area" will be kept in "output_dict" for computation.
+        if isinstance(geom, geometry.Mesh):
+            self.output_keys += ["area"]
 
         if isinstance(criteria, str):
             criteria = eval(criteria)
@@ -101,6 +104,9 @@ class PeriodicConstraint(base.Constraint):
             criteria,
             evenly,
         )
+        if "area" in input:
+            input["area"] *= dataloader_cfg["iters_per_epoch"]
+
         input_periodic = geom.periodic_point(
             input,
             geom.geometry.dim_keys.index(periodic_key)

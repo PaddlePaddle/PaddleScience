@@ -24,11 +24,11 @@ import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
+from ppsci import geometry
 from ppsci.constraint import base
 from ppsci.data import dataset
 
 if TYPE_CHECKING:
-    from ppsci import geometry
     from ppsci import loss
 
 
@@ -41,7 +41,7 @@ class InitialConstraint(base.Constraint):
             will be multiplied by model output v and the result will be named "u_mul_v".
         label_dict (Dict[str, Union[float, Callable]]): Function in dict for computing
             label, which will be a reference value to participate in the loss calculation.
-        geom (geometry.Geometry): Geometry where data sampled from.
+        geom (geometry.TimeXGeometry): Geometry where data sampled from.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
         random (Literal["pseudo", "LHS"], optional): Random method for sampling data in
@@ -78,7 +78,7 @@ class InitialConstraint(base.Constraint):
         self,
         output_expr: Dict[str, Callable],
         label_dict: Dict[str, Union[float, Callable]],
-        geom: "geometry.Geometry",
+        geom: geometry.TimeXGeometry,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
         random: Literal["pseudo", "LHS"] = "pseudo",
@@ -95,6 +95,10 @@ class InitialConstraint(base.Constraint):
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
         self.output_keys = list(label_dict.keys())
+        # "area" will be kept in "output_dict" for computation.
+        if isinstance(geom.geometry, geometry.Mesh):
+            self.output_keys += ["area"]
+
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
@@ -105,6 +109,8 @@ class InitialConstraint(base.Constraint):
             criteria,
             evenly,
         )
+        if "area" in input:
+            input["area"] *= dataloader_cfg["iters_per_epoch"]
 
         # prepare label
         label = {}
