@@ -28,7 +28,11 @@ class RMSE(base.Metric):
     r"""Root mean square error
 
     $$
-    metric = \sqrt{\dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}}
+    metric = \sqrt{\dfrac{1}{N} \Vert \mathbf{x} - \mathbf{y} \Vert_2^2}
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
     Args:
@@ -62,7 +66,7 @@ class LatitudeWeightedRMSE(base.Metric):
     $$
 
     $$
-    L_m = N_{lat}\dfrac{cos(lat_m)}{\sum\limits_{j=1}^{N_{lat}}cos(lat_j)}
+    L_m = N_{lat}\dfrac{\cos(lat_m)}{\sum\limits_{j=1}^{N_{lat}}\cos(lat_j)}
     $$
 
     $lat_m$ is the latitude at m.
