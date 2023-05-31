@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Optional
 
-from ppsci import loss
 from ppsci.constraint import base
 from ppsci.data import dataset
+
+if TYPE_CHECKING:
+    from ppsci import loss
 
 
 class SupervisedConstraint(base.Constraint):
@@ -51,7 +54,7 @@ class SupervisedConstraint(base.Constraint):
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: "loss.Loss",
         output_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):

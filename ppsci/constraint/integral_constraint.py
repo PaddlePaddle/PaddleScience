@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -25,10 +26,12 @@ from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
-from ppsci import loss
 from ppsci.constraint import base
 from ppsci.data import dataset
 from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    from ppsci import loss
 
 
 class IntegralConstraint(base.Constraint):
@@ -75,7 +78,7 @@ class IntegralConstraint(base.Constraint):
         label_dict: Dict[str, Union[float, Callable]],
         geom: geometry.Geometry,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: "loss.Loss",
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         weight_dict: Optional[Dict[str, Callable]] = None,
