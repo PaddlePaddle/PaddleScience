@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -23,10 +24,12 @@ import sympy
 from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
-from ppsci import geometry
-from ppsci import loss
 from ppsci.constraint import base
 from ppsci.data import dataset
+
+if TYPE_CHECKING:
+    from ppsci import geometry
+    from ppsci import loss
 
 
 class InitialConstraint(base.Constraint):
@@ -75,9 +78,9 @@ class InitialConstraint(base.Constraint):
         self,
         output_expr: Dict[str, Callable],
         label_dict: Dict[str, Union[float, Callable]],
-        geom: geometry.Geometry,
+        geom: "geometry.Geometry",
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: "loss.Loss",
         random: Literal["pseudo", "LHS"] = "pseudo",
         criteria: Optional[Callable] = None,
         evenly: bool = False,
