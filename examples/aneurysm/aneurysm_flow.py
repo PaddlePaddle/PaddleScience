@@ -51,7 +51,7 @@ if __name__ == "__main__":
     core.set_prim_eager_enabled(True)
 
     # Hyper parameters
-    EPOCHS = 1
+    EPOCHS = 500
     BATCH_SIZE = 50
     LEARNING_RATE = 1e-3
 
@@ -100,28 +100,27 @@ if __name__ == "__main__":
     plt.scatter(x[idx], y_up[idx])
     plt.scatter(x[idx], y_down[idx])
     plt.axis("equal")
-    plt.show()
     plt.savefig(osp.join(PLOT_DIR, "idealized_stenotid_vessel"), bbox_inches="tight")
 
     # Points and shuffle(for alignment)
-    y = np.zeros([len(x), 1])
+    y = np.zeros([len(x), 1], dtype=paddle.get_default_dtype())
     for x0 in x_inital:
         index = np.where(x[:, 0] == x0)[0]
-        Rsec = max(y_up[index])
         # y is linear to scale, so we place linespace to get 1000 x, it coressponds to vessels
-        y[index] = np.linspace(-Rsec, Rsec, len(index)).reshape(len(index), -1)
+        y[index] = np.linspace(-max(y_up[index]), max(y_up[index]), len(index)).reshape(
+            len(index), -1
+        )
 
     idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indexs
     plt.figure()
     plt.scatter(x[idx], y[idx])
     plt.axis("equal")
-    plt.show()
     plt.savefig(osp.join(PLOT_DIR, "one_scale_sample"), bbox_inches="tight")
 
     # index = [i for i in range(x.shape[0])]
     # res = list(zip(x, y, scale))
     # np.random.shuffle(res)
-    # x, y, scale = zip(*res)
+    # x, y, scale = zip(*res)fastype
     # x = np.array(x).astype(float)
     # y = np.array(y).astype(float)
     # scale = np.array(scale).astype(float)
@@ -161,10 +160,10 @@ if __name__ == "__main__":
         False,
         False,
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net2_params/weight_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net2_params/weight_0_0.npz"
         ),
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net2_params/bias_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net2_params/bias_0_0.npz"
         ),
     )
 
@@ -177,10 +176,10 @@ if __name__ == "__main__":
         False,
         False,
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net3_params/weight_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net3_params/weight_0_0.npz"
         ),
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net3_params/bias_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net3_params/bias_0_0.npz"
         ),
     )
 
@@ -193,10 +192,10 @@ if __name__ == "__main__":
         False,
         False,
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net4_params/weight_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net4_params/weight_0_0.npz"
         ),
         np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/Cases_0526/net4_params/bias_0_0.npz"
+            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net4_params/bias_0_0.npz"
         ),
     )
     # model_1.apply(init_func)
@@ -282,7 +281,7 @@ if __name__ == "__main__":
             "iters_per_epoch": int(x.shape[0] / BATCH_SIZE),
             "sampler": {
                 "name": "BatchSampler",
-                "shuffle": False,
+                "shuffle": True,
                 "drop_last": False,
             },
         },
@@ -302,12 +301,12 @@ if __name__ == "__main__":
         iters_per_epoch=int(x.shape[0] / BATCH_SIZE),
         eval_during_train=False,
         save_freq=10,
-        log_freq=1,
+        log_freq=100,
         equation=equation,
-        # checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0504_debug/checkpoints/epoch_300"
+        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0531/checkpoints/epoch_30",
     )
 
-    solver.train()
+    # solver.train()
 
     def single_test(x, y, scale, solver):
         xt = paddle.to_tensor(x, dtype="float32")
@@ -331,11 +330,11 @@ if __name__ == "__main__":
     for caseIdx in caseCount:
         scale = scale_test[int(caseIdx - 1)]
         Data_CFD = np.load(path + str(caseIdx) + "CFD_contour.npz")
-        Data_NN = np.load(path + str(caseIdx) + "NN_contour.npz")
+        # Data_NN = np.load(path + str(caseIdx) + "NN_contour.npz")
         x = Data_CFD["x"]
         y = Data_CFD["y"]
         U_CFD = Data_CFD["U"]
-        U = Data_NN["U"]
+        # U = Data_NN["U"]
         n = len(x)
         output_dict = single_test(
             x.reshape(n, 1), y.reshape(n, 1), np.ones((n, 1)) * scale, solver
