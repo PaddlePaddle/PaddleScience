@@ -166,7 +166,7 @@ class ExpressionSolver(nn.Layer):
 
         Args:
             expr_dict (Optional[Dict[str, Callable]]): Expression dict.
-            input_dict (Dict[str, paddle.Tensor]]): Input dict.
+            input_dict (Dict[str, paddle.Tensor]): Input dict.
             model (nn.Layer): NN model.
 
         Returns:
