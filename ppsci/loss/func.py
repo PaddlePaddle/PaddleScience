@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from typing import Callable
+from typing import Dict
 from typing import Optional
+from typing import Union
+
+from typing_extensions import Literal
 
 from ppsci.loss import base
 
@@ -23,21 +26,35 @@ class FunctionalLoss(base.Loss):
     r"""Class for functional loss.
 
     Args:
-        loss_expr (Optional[Callable], optional): expression of loss calculation. Defaults to None.
+        loss_expr (Callable): expression of loss calculation.
+        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
+        weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> import paddle
+        >>> import paddle.nn.functional as F
         >>> def loss_expr(output_dict):
-        ...     return paddle.nn.functional.mse_loss(output_dict, output_dict, "sum")
+        ...     losses = 0
+        ...     for key in output_dict:
+        ...         length = int(len(output_dict[key])/2)
+        ...         out_dict = {key: output_dict[key][:length]}
+        ...         label_dict = {key: output_dict[key][length:]}
+        ...         losses += F.mse_loss(out_dict, label_dict, "sum")
+        ...     return losses
         >>> loss = ppsci.loss.FunctionalLoss(loss_expr)
     """
 
     def __init__(
         self,
-        loss_expr: Optional[Callable] = None,
+        loss_expr: Callable,
+        reduction: Literal["mean", "sum"] = "mean",
+        weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
-        super().__init__("mean", None)
+        if reduction not in ["mean", "sum"]:
+            raise ValueError(
+                f"reduction should be 'mean' or 'sum', but got {reduction}"
+            )
+        super().__init__(reduction, weight)
         self.loss_expr = loss_expr
 
     def forward(self, output_dict, label_dict=None, weight_dict=None):

@@ -12,23 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import paddle
+import paddle.nn.functional as F
 
 import ppsci
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
-from ppsci.loss import FunctionalLoss
-from ppsci.loss import MSELoss
-from ppsci.metric import FunctionalMetric
-from ppsci.metric import L2Rel
 from ppsci.utils import logger
 
 
 def pde_loss_compute(output_dict):
-    losses = paddle.nn.functional.mse_loss(
-        output_dict["f_pde"], output_dict["du_t"], "sum"
-    )
+    losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
     return losses
 
 
@@ -45,15 +37,15 @@ def boundary_loss_compute(output_dict):
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
 
     x_b = output_dict["x"]
-    du_x = jacobian(u_b, x_b)
-    du_xx = hessian(u_b, x_b)
+    du_x = ppsci.autodiff.jacobian(u_b, x_b)
+    du_xx = ppsci.autodiff.hessian(u_b, x_b)
 
     du_x_lb, du_x_ub = paddle.split(du_x, 2, axis=0)
     du_xx_lb, du_xx_ub = paddle.split(du_xx, 2, axis=0)
 
-    losses = paddle.nn.functional.mse_loss(u_lb, u_ub, "sum")
-    losses += paddle.nn.functional.mse_loss(du_x_lb, du_x_ub, "sum")
-    losses += paddle.nn.functional.mse_loss(du_xx_lb, du_xx_ub, "sum")
+    losses = F.mse_loss(u_lb, u_ub, "sum")
+    losses += F.mse_loss(du_x_lb, du_x_ub, "sum")
+    losses += F.mse_loss(du_xx_lb, du_xx_ub, "sum")
     return losses
 
 
@@ -65,7 +57,6 @@ if __name__ == "__main__":
     EPOCHS = 50000  # set 1 for LBFGS
     MAX_ITER = 50000  # for LBFGS
     ITERS_PER_EPOCH = 1
-    LEARNING_RATE = 1e-3
     DATASET_PATH = "./datasets/DeepHPMs/KdV_sine.mat"
     DATASET_PATH_SOL = "./datasets/DeepHPMs/KdV_cos.mat"
     OUTPUT_DIR = "./outs/"
@@ -82,7 +73,7 @@ if __name__ == "__main__":
     # initialize models
     model_idn = ppsci.arch.MLP(("t", "x"), ("u_idn",), 4, 50, "sin")
     model_pde = ppsci.arch.MLP(
-        ("u_x", "du_x", "du_xx", "du_xxx"), ("f_pde",), 2, 100, "sin", input_dim=4
+        ("u_x", "du_x", "du_xx", "du_xxx"), ("f_pde",), 2, 100, "sin"
     )
     model_sol = ppsci.arch.MLP(("t", "x"), ("u_sol",), 4, 50, "sin")
 
@@ -98,9 +89,9 @@ if __name__ == "__main__":
         in_idn = {"t": input["t"], "x": input["x"]}
         x = input["x"]
         u = model(in_idn)[out_key]
-        du_x = jacobian(u, x)
-        du_xx = hessian(u, x)
-        du_xxx = jacobian(du_xx, x)
+        du_x = ppsci.autodiff.jacobian(u, x)
+        du_xx = ppsci.autodiff.hessian(u, x)
+        du_xxx = ppsci.autodiff.jacobian(du_xx, x)
         input_trans = {"u_x": u, "du_x": du_x, "du_xx": du_xx, "du_xxx": du_xxx}
         return input_trans
 
@@ -120,9 +111,9 @@ if __name__ == "__main__":
 
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(LEARNING_RATE)((model_idn,))
-    optimizer_pde = ppsci.optimizer.Adam(LEARNING_RATE)((model_pde,))
-    optimizer_sol = ppsci.optimizer.Adam(LEARNING_RATE)((model_sol,))
+    optimizer_idn = ppsci.optimizer.Adam(1e-3)((model_idn,))
+    optimizer_pde = ppsci.optimizer.Adam(1e-3)((model_pde,))
+    optimizer_sol = ppsci.optimizer.Adam(1e-3)((model_sol,))
 
     # LBFGS
     # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn, ))
@@ -143,7 +134,7 @@ if __name__ == "__main__":
 
     sup_constraint_idn = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_idn,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"u_idn": lambda out: out["u_idn"]},
         name="u_mse_sup",
     )
@@ -162,9 +153,9 @@ if __name__ == "__main__":
 
     sup_validator_idn = ppsci.validate.SupervisedValidator(
         train_dataloader_cfg_idn,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"u_idn": lambda out: out["u_idn"]},
-        {"l2": L2Rel()},
+        {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
     validator_idn = {sup_validator_idn.name: sup_validator_idn}
@@ -201,9 +192,9 @@ if __name__ == "__main__":
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_pde,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
-            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
+            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
         name="f_mse_sup",
@@ -223,12 +214,12 @@ if __name__ == "__main__":
 
     sup_validator_pde = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_pde,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
-            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
+            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
-        {"l2": FunctionalMetric(pde_l2_rel_compute)},
+        {"l2": ppsci.metric.FunctionalMetric(pde_l2_rel_compute)},
         name="f_L2_sup",
     )
     validator_pde = {sup_validator_pde.name: sup_validator_pde}
@@ -286,22 +277,22 @@ if __name__ == "__main__":
 
     sup_constraint_sol_f = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_f,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
             "f_pde": lambda out: out["f_pde"],
-            "du_t": lambda out: jacobian(out["u_sol"], out["t"]),
+            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_sol"], out["t"]),
         },
         name="f_mse_sup",
     )
     sup_constraint_sol_init = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_init,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"u_sol": lambda out: out["u_sol"]},
         name="u0_mse_sup",
     )
     sup_constraint_sol_bc = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_bc,
-        FunctionalLoss(boundary_loss_compute),
+        ppsci.loss.FunctionalLoss(boundary_loss_compute),
         {
             "x": lambda out: out["x"],
             "u_sol": lambda out: out["u_sol"],
@@ -327,9 +318,9 @@ if __name__ == "__main__":
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"u_sol": lambda out: out["u_sol"]},
-        {"l2": L2Rel()},
+        {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
     validator_sol = {

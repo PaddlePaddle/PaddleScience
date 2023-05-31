@@ -12,23 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import paddle
+import paddle.nn.functional as F
 
 import ppsci
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
-from ppsci.loss import FunctionalLoss
-from ppsci.loss import MSELoss
-from ppsci.metric import FunctionalMetric
-from ppsci.metric import L2Rel
 from ppsci.utils import logger
 
 
 def pde_loss_compute(output_dict):
-    losses = paddle.nn.functional.mse_loss(
-        output_dict["f_pde"], output_dict["dw_t"], "sum"
-    )
+    losses = F.mse_loss(output_dict["f_pde"], output_dict["dw_t"], "sum")
     return losses
 
 
@@ -45,7 +37,6 @@ if __name__ == "__main__":
     EPOCHS = 50000  # set 1 for LBFGS
     MAX_ITER = 50000  # for LBFGS
     ITERS_PER_EPOCH = 1
-    LEARNING_RATE = 1e-4
     DATASET_PATH = "./datasets/DeepHPMs/cylinder.mat"
     OUTPUT_DIR = "./outs/"
 
@@ -65,7 +56,6 @@ if __name__ == "__main__":
         2,
         100,
         "sin",
-        input_dim=8,
     )
 
     # initialize transform
@@ -81,12 +71,12 @@ if __name__ == "__main__":
         in_idn = {"t": _in["t"], "x": _in["x"], "y": _in["y"]}
         x, y = _in["x"], _in["y"]
         w = model_idn(in_idn)["w_idn"]
-        dw_x = jacobian(w, x)
-        dw_y = jacobian(w, y)
+        dw_x = ppsci.autodiff.jacobian(w, x)
+        dw_y = ppsci.autodiff.jacobian(w, y)
 
-        dw_xx = hessian(w, x)
-        dw_yy = hessian(w, y)
-        dw_xy = jacobian(dw_x, y)
+        dw_xx = ppsci.autodiff.hessian(w, x)
+        dw_yy = ppsci.autodiff.hessian(w, y)
+        dw_xy = ppsci.autodiff.jacobian(dw_x, y)
 
         input_trans = {
             "u": _in["u"],
@@ -109,8 +99,8 @@ if __name__ == "__main__":
 
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(LEARNING_RATE)((model_idn,))
-    optimizer_pde = ppsci.optimizer.Adam(LEARNING_RATE)((model_pde,))
+    optimizer_idn = ppsci.optimizer.Adam(1e-4)((model_idn,))
+    optimizer_pde = ppsci.optimizer.Adam(1e-4)((model_pde,))
 
     # LBFGS
     # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn, ))
@@ -137,7 +127,7 @@ if __name__ == "__main__":
 
     sup_constraint_idn = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_idn,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"w_idn": lambda out: out["w_idn"]},
         name="w_mse_sup",
     )
@@ -163,9 +153,9 @@ if __name__ == "__main__":
 
     sup_validator_idn = ppsci.validate.SupervisedValidator(
         train_dataloader_cfg_idn,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"w_idn": lambda out: out["w_idn"]},
-        {"l2": L2Rel()},
+        {"l2": ppsci.metric.L2Rel()},
         name="w_L2_sup",
     )
     validator_idn = {sup_validator_idn.name: sup_validator_idn}
@@ -209,9 +199,9 @@ if __name__ == "__main__":
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_pde,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
-            "dw_t": lambda out: jacobian(out["w_idn"], out["t"]),
+            "dw_t": lambda out: ppsci.autodiff.jacobian(out["w_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
         name="f_mse_sup",
@@ -238,12 +228,12 @@ if __name__ == "__main__":
 
     sup_validator_pde = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_pde,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
-            "dw_t": lambda out: jacobian(out["w_idn"], out["t"]),
+            "dw_t": lambda out: ppsci.autodiff.jacobian(out["w_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
-        {"l2": FunctionalMetric(pde_l2_rel_compute)},
+        {"l2": ppsci.metric.FunctionalMetric(pde_l2_rel_compute)},
         name="f_L2_sup",
     )
     validator_pde = {sup_validator_pde.name: sup_validator_pde}
@@ -303,16 +293,16 @@ if __name__ == "__main__":
 
     sup_constraint_sol_f = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_f,
-        FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_compute),
         {
             "f_pde": lambda out: out["f_pde"],
-            "dw_t": lambda out: jacobian(out["w_idn"], out["t"]),
+            "dw_t": lambda out: ppsci.autodiff.jacobian(out["w_idn"], out["t"]),
         },
         name="f_mse_sup",
     )
     sup_constraint_sol_bc = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_bc,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"wb_sol": lambda out: out["w_idn"]},
         name="ub_mse_sup",
     )
@@ -341,9 +331,9 @@ if __name__ == "__main__":
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
-        MSELoss("sum"),
+        ppsci.loss.MSELoss("sum"),
         {"w_sol": lambda out: out["w_idn"]},
-        {"l2": L2Rel()},
+        {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
     validator_sol = {
