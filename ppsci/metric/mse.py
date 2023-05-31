@@ -22,7 +22,11 @@ class MSE(base.Metric):
     r"""Mean square error
 
     $$
-    metric = \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}
+    metric = \dfrac{1}{N} \Vert \mathbf{x} - \mathbf{y} \Vert_2^2
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
     Args:
