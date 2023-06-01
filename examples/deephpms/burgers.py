@@ -16,6 +16,8 @@ import paddle
 import paddle.nn.functional as F
 
 import ppsci
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
 
@@ -38,7 +40,7 @@ def boundary_loss_func(output_dict):
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
 
     x_b = output_dict["x"]
-    du_x = ppsci.autodiff.jacobian(u_b, x_b)
+    du_x = jacobian(u_b, x_b)
 
     du_x_lb, du_x_ub = paddle.split(du_x, 2, axis=0)
 
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
     DATASET_PATH = "./datasets/DeepHPMs/burgers_sine.mat"
     DATASET_PATH_SOL = "./datasets/DeepHPMs/burgers.mat"
-    OUTPUT_DIR = "./output_deephpms/" if args.output_dir is None else args.output_dir
+    OUTPUT_DIR = "./output_burgers/" if args.output_dir is None else args.output_dir
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -80,8 +82,8 @@ if __name__ == "__main__":
         in_idn = {"t": input["t"], "x": input["x"]}
         x = input["x"]
         u = model(in_idn)[out_key]
-        du_x = ppsci.autodiff.jacobian(u, x)
-        du_xx = ppsci.autodiff.hessian(u, x)
+        du_x = jacobian(u, x)
+        du_xx = hessian(u, x)
         input_trans = {"u_x": u, "du_x": du_x, "du_xx": du_xx}
         return input_trans
 
@@ -189,7 +191,7 @@ if __name__ == "__main__":
         train_dataloader_cfg_pde,
         ppsci.loss.FunctionalLoss(pde_loss_func),
         {
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
         name="f_mse_sup",
@@ -211,7 +213,7 @@ if __name__ == "__main__":
         eval_dataloader_cfg_pde,
         ppsci.loss.FunctionalLoss(pde_loss_func),
         {
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
         },
         {"l2": ppsci.metric.FunctionalMetric(pde_l2_rel_func)},
@@ -275,7 +277,7 @@ if __name__ == "__main__":
         ppsci.loss.FunctionalLoss(pde_loss_func),
         {
             "f_pde": lambda out: out["f_pde"],
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_sol"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_sol"], out["t"]),
         },
         name="f_mse_sup",
     )

@@ -17,6 +17,8 @@ import paddle
 import paddle.nn.functional as F
 
 import ppsci
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
 
@@ -44,8 +46,8 @@ def boundary_loss_func(output_dict):
     v_lb, v_ub = paddle.split(v_b, 2, axis=0)
 
     x_b = output_dict["x"]
-    du_x = ppsci.autodiff.jacobian(u_b, x_b)
-    dv_x = ppsci.autodiff.jacobian(v_b, x_b)
+    du_x = jacobian(u_b, x_b)
+    dv_x = jacobian(v_b, x_b)
 
     du_x_lb, du_x_ub = paddle.split(du_x, 2, axis=0)
     dv_x_lb, dv_x_ub = paddle.split(dv_x, 2, axis=0)
@@ -62,7 +64,7 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
     DATASET_PATH = "./datasets/DeepHPMs/NLS.mat"
     DATASET_PATH_SOL = "./datasets/DeepHPMs/NLS.mat"
-    OUTPUT_DIR = "./output_deephpms/" if args.output_dir is None else args.output_dir
+    OUTPUT_DIR = "./output_schrodinger/" if args.output_dir is None else args.output_dir
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -82,7 +84,6 @@ if __name__ == "__main__":
         2,
         100,
         "sin",
-        input_dim=6,
     )
     model_pde_g = ppsci.arch.MLP(
         ("u", "v", "du_x", "dv_x", "du_xx", "dv_xx"),
@@ -106,11 +107,11 @@ if __name__ == "__main__":
         u = model_idn_u(in_idn)["u_idn"]
         v = model_idn_v(in_idn)["v_idn"]
 
-        du_x = ppsci.autodiff.jacobian(u, x)
-        du_xx = ppsci.autodiff.hessian(u, x)
+        du_x = jacobian(u, x)
+        du_xx = hessian(u, x)
 
-        dv_x = ppsci.autodiff.jacobian(v, x)
-        dv_xx = ppsci.autodiff.hessian(v, x)
+        dv_x = jacobian(v, x)
+        dv_xx = hessian(v, x)
 
         input_trans = {
             "u": u,
@@ -236,8 +237,8 @@ if __name__ == "__main__":
         train_dataloader_cfg_pde,
         ppsci.loss.FunctionalLoss(pde_loss_func),
         {
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
-            "dv_t": lambda out: ppsci.autodiff.jacobian(out["v_idn"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
+            "dv_t": lambda out: jacobian(out["v_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
             "g_pde": lambda out: out["g_pde"],
         },
@@ -265,8 +266,8 @@ if __name__ == "__main__":
         eval_dataloader_cfg_pde,
         ppsci.loss.FunctionalLoss(pde_loss_func),
         {
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
-            "dv_t": lambda out: ppsci.autodiff.jacobian(out["v_idn"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
+            "dv_t": lambda out: jacobian(out["v_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
             "g_pde": lambda out: out["g_pde"],
         },
@@ -338,8 +339,8 @@ if __name__ == "__main__":
         {
             "f_pde": lambda out: out["f_pde"],
             "g_pde": lambda out: out["g_pde"],
-            "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
-            "dv_t": lambda out: ppsci.autodiff.jacobian(out["v_idn"], out["t"]),
+            "du_t": lambda out: jacobian(out["u_idn"], out["t"]),
+            "dv_t": lambda out: jacobian(out["v_idn"], out["t"]),
         },
         name="fg_mse_sup",
     )
