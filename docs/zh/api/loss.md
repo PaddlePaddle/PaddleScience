@@ -5,6 +5,7 @@
     options:
       members:
         - Loss
+        - FunctionalLoss
         - L1Loss
         - L2Loss
         - L2RelLoss
