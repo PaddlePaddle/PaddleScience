@@ -23,7 +23,7 @@ from ppsci.loss import base
 
 
 class FunctionalLoss(base.Loss):
-    r"""Class for functional loss.
+    r"""Functional loss class, which allows to use custom loss computing function from given loss_expr for complex computation cases.
 
     Args:
         loss_expr (Callable): expression of loss calculation.

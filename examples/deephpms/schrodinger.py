@@ -17,16 +17,17 @@ import paddle
 import paddle.nn.functional as F
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def pde_loss_compute(output_dict):
+def pde_loss_func(output_dict):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
     losses += F.mse_loss(output_dict["g_pde"], output_dict["dv_t"], "sum")
     return losses
 
 
-def pde_l2_rel_compute(output_dict):
+def pde_l2_rel_func(output_dict):
     rel_l2_f = paddle.norm(output_dict["du_t"] - output_dict["f_pde"]) / paddle.norm(
         output_dict["du_t"]
     )
@@ -37,7 +38,7 @@ def pde_l2_rel_compute(output_dict):
     return metric_dict
 
 
-def boundary_loss_compute(output_dict):
+def boundary_loss_func(output_dict):
     u_b, v_b = output_dict["u_idn"], output_dict["v_idn"]
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
     v_lb, v_ub = paddle.split(v_b, 2, axis=0)
@@ -57,12 +58,11 @@ def boundary_loss_compute(output_dict):
 
 
 if __name__ == "__main__":
-    EPOCHS = 50000  # 1 for LBFGS
-    MAX_ITER = 50000  # for LBFGS
-    ITERS_PER_EPOCH = 1
+    args = config.parse_args()
+    ppsci.utils.misc.set_random_seed(42)
     DATASET_PATH = "./datasets/DeepHPMs/NLS.mat"
     DATASET_PATH_SOL = "./datasets/DeepHPMs/NLS.mat"
-    OUTPUT_DIR = "./outs/"
+    OUTPUT_DIR = "./output_deephpms/" if args.output_dir is None else args.output_dir
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -132,6 +132,11 @@ if __name__ == "__main__":
     model_list = ppsci.arch.ModelList(
         (model_idn_u, model_idn_v, model_pde_f, model_pde_g)
     )
+
+    # set training hyper-parameters
+    ITERS_PER_EPOCH = 1
+    EPOCHS = 50000 if args.epochs is None else args.epochs  # set 1 for LBFGS
+    # MAX_ITER = 50000  # for LBFGS
 
     # initialize optimizer
     # Adam
@@ -229,7 +234,7 @@ if __name__ == "__main__":
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_pde,
-        ppsci.loss.FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_func),
         {
             "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
             "dv_t": lambda out: ppsci.autodiff.jacobian(out["v_idn"], out["t"]),
@@ -258,14 +263,14 @@ if __name__ == "__main__":
 
     sup_validator_pde = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_pde,
-        ppsci.loss.FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_func),
         {
             "du_t": lambda out: ppsci.autodiff.jacobian(out["u_idn"], out["t"]),
             "dv_t": lambda out: ppsci.autodiff.jacobian(out["v_idn"], out["t"]),
             "f_pde": lambda out: out["f_pde"],
             "g_pde": lambda out: out["g_pde"],
         },
-        {"l2": ppsci.metric.FunctionalMetric(pde_l2_rel_compute)},
+        {"l2": ppsci.metric.FunctionalMetric(pde_l2_rel_func)},
         name="fg_L2_sup",
     )
     validator_pde = {sup_validator_pde.name: sup_validator_pde}
@@ -329,7 +334,7 @@ if __name__ == "__main__":
 
     sup_constraint_sol_f = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_f,
-        ppsci.loss.FunctionalLoss(pde_loss_compute),
+        ppsci.loss.FunctionalLoss(pde_loss_func),
         {
             "f_pde": lambda out: out["f_pde"],
             "g_pde": lambda out: out["g_pde"],
@@ -346,7 +351,7 @@ if __name__ == "__main__":
     )
     sup_constraint_sol_bc = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_bc,
-        ppsci.loss.FunctionalLoss(boundary_loss_compute),
+        ppsci.loss.FunctionalLoss(boundary_loss_func),
         {
             "x": lambda out: out["x"],
             "u_idn": lambda out: out["u_idn"],
