@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
     # set output directory
-    OUTPUT_DIR = "./output_0531"
+    OUTPUT_DIR = "./output_0601"
     PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     # initialize logger
@@ -151,56 +151,14 @@ if __name__ == "__main__":
         if misc.typename(m) == "Linear":
             ppsci.utils.initializer.kaiming_normal_(m.weight, reverse=True)
 
-    model_1 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["u"],
-        3,
-        20,
-        "swish",
-        False,
-        False,
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net2_params/weight_0_0.npz"
-        ),
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net2_params/bias_0_0.npz"
-        ),
-    )
+    model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u"), 3, 20, "swish")
 
-    model_2 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["v"],
-        3,
-        20,
-        "swish",
-        False,
-        False,
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net3_params/weight_0_0.npz"
-        ),
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net3_params/bias_0_0.npz"
-        ),
-    )
+    model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v"), 3, 20, "swish")
 
-    model_3 = ppsci.arch.MLP(
-        ["x", "y", "scale"],
-        ["p"],
-        3,
-        20,
-        "swish",
-        False,
-        False,
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net4_params/weight_0_0.npz"
-        ),
-        np.load(
-            f"/workspace/wangguan/LabelFree-DNN-Surrogate/ParametricAneurysm/net_params/net4_params/bias_0_0.npz"
-        ),
-    )
-    # model_1.apply(init_func)
-    # model_2.apply(init_func)
-    # model_3.apply(init_func)
+    model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p"), 3, 20, "swish")
+    model_1.apply(init_func)
+    model_2.apply(init_func)
+    model_3.apply(init_func)
 
     # print(f"layer 1 mean : {np.mean(model_1.linears[0].weight.numpy())}")
     # print(f"layer 1 var : {np.var(model_1.linears[0].weight.numpy())}")
@@ -247,7 +205,7 @@ if __name__ == "__main__":
                     + (X_IN - x) * (X_OUT - x) * p
                 )
             else:
-                raise NotImplementedError(f"{out.keys()} are outputs to be implemented")
+                ValueError(f"{next(iter(out.keys()))} is not a valid key.")
 
             return new_out
 
@@ -255,17 +213,17 @@ if __name__ == "__main__":
     model_1.register_output_transform(shared_transform)
     model_2.register_output_transform(shared_transform)
     model_3.register_output_transform(shared_transform)
-    model = ppsci.arch.ModelList([model_1, model_2, model_3])
+    model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     optimizer_1 = ppsci.optimizer.Adam(
-        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=10**-15
-    )([model_1])
+        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
+    )((model_1,))
     optimizer_2 = ppsci.optimizer.Adam(
-        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=10**-15
-    )([model_2])
+        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
+    )((model_2,))
     optimizer_3 = ppsci.optimizer.Adam(
-        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=10**-15
-    )([model_3])
+        LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
+    )((model_3,))
     optimizer = ppsci.optimizer.OptimizerList((optimizer_1, optimizer_2, optimizer_3))
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
@@ -287,14 +245,13 @@ if __name__ == "__main__":
         },
         loss=ppsci.loss.MSELoss("mean"),
         evenly=True,
-        weight_dict={"u": 1, "v": 1, "p": 1},
         name="EQ",
     )
-
+    constrain_dict = {pde_constraint.name: pde_constraint}
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        {pde_constraint.name: pde_constraint},
+        constrain_dict,
         OUTPUT_DIR,
         optimizer,
         epochs=EPOCHS,
@@ -303,14 +260,14 @@ if __name__ == "__main__":
         save_freq=10,
         log_freq=100,
         equation=equation,
-        checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0531/checkpoints/epoch_30",
+        # checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0601/checkpoints/epoch_460",
     )
 
-    # solver.train()
+    solver.train()
 
     def single_test(x, y, scale, solver):
-        xt = paddle.to_tensor(x, dtype="float32")
-        yt = paddle.to_tensor(y, dtype="float32")
+        xt = paddle.to_tensor(x)
+        yt = paddle.to_tensor(y)
         scalet = scale * paddle.ones_like(xt)
         net_in = {"x": xt, "y": yt, "scale": scalet}
         output_dict = solver.predict(net_in, 10000)
@@ -327,31 +284,48 @@ if __name__ == "__main__":
     fontsize = 14
     axis_limit = [0, 1, -0.15, 0.15]
     path = "./data/cases/"
+    dp = 0.1
     for caseIdx in caseCount:
         scale = scale_test[int(caseIdx - 1)]
-        Data_CFD = np.load(path + str(caseIdx) + "CFD_contour.npz")
-        # Data_NN = np.load(path + str(caseIdx) + "NN_contour.npz")
-        x = Data_CFD["x"]
-        y = Data_CFD["y"]
-        U_CFD = Data_CFD["U"]
-        # U = Data_NN["U"]
+        data_CFD = np.load(osp.join(path, str(caseIdx) + "CFD_contour.npz"))
+        x = data_CFD["x"].astype(paddle.get_default_dtype())
+        y = data_CFD["y"].astype(paddle.get_default_dtype())
+        u_cfd = data_CFD["U"].astype(paddle.get_default_dtype())
+        # p_cfd = data_CFD["P"].astype(paddle.get_default_dtype()) # missing data
+
         n = len(x)
         output_dict = single_test(
-            x.reshape(n, 1), y.reshape(n, 1), np.ones((n, 1)) * scale, solver
+            x.reshape(n, 1),
+            y.reshape(n, 1),
+            np.ones((n, 1), dtype=paddle.get_default_dtype()) * scale,
+            solver,
         )
         u, v, p = output_dict["u"], output_dict["v"], output_dict["p"]
         w = np.zeros_like(u)
-        U = np.concatenate([u, v, w], axis=1)
+        u_vec = np.concatenate([u, v, w], axis=1)
+        print(f"shape of vec : {(u_vec[:, 0] - u_cfd[:, 0]).shape}")
+        error_u = np.linalg.norm(u_vec[:, 0] - u_cfd[:, 0], ord=2) / (
+            dp * len(u_vec[:, 0])
+        )
+        error_v = np.linalg.norm(u_vec[:, 1] - u_cfd[:, 1], ord=2) / (
+            dp * len(u_vec[:, 0])
+        )
+        # error_p = np.linalg.norm(p - p_cfd) / (dp * dp)
+
+        print(f"Table 1 : Aneurysm - Geometry error u : {error_u: .3e}")
+        print(f"Table 1 : Aneurysm - Geometry error v : {error_v: .3e}")
+        # print(f"Table 1 : Aneurysm - Geometry error p : {error_p}")
+        exit()
 
         # Streamwise velocity component u
         plt.figure()
         plt.subplot(212)
-        plt.scatter(x, y, c=U[:, 0], vmin=min(U_CFD[:, 0]), vmax=max(U_CFD[:, 0]))
+        plt.scatter(x, y, c=u_vec[:, 0], vmin=min(u_cfd[:, 0]), vmax=max(u_cfd[:, 0]))
         plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
         plt.axis(axis_limit)
         plt.colorbar()
         plt.subplot(211)
-        plt.scatter(x, y, c=U_CFD[:, 0], vmin=min(U_CFD[:, 0]), vmax=max(U_CFD[:, 0]))
+        plt.scatter(x, y, c=u_cfd[:, 0], vmin=min(u_cfd[:, 0]), vmax=max(u_cfd[:, 0]))
         plt.colorbar()
         plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
         plt.axis(axis_limit)
@@ -363,12 +337,12 @@ if __name__ == "__main__":
         # Spanwise velocity component v
         plt.figure()
         plt.subplot(212)
-        plt.scatter(x, y, c=U[:, 1], vmin=min(U_CFD[:, 1]), vmax=max(U_CFD[:, 1]))
+        plt.scatter(x, y, c=u_vec[:, 1], vmin=min(u_cfd[:, 1]), vmax=max(u_cfd[:, 1]))
         plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
         plt.axis(axis_limit)
         plt.colorbar()
         plt.subplot(211)
-        plt.scatter(x, y, c=U_CFD[:, 1], vmin=min(U_CFD[:, 1]), vmax=max(U_CFD[:, 1]))
+        plt.scatter(x, y, c=u_cfd[:, 1], vmin=min(u_cfd[:, 1]), vmax=max(u_cfd[:, 1]))
         plt.colorbar()
         plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
         plt.axis(axis_limit)
@@ -379,11 +353,11 @@ if __name__ == "__main__":
         plt.close("all")
 
         # Centerline wall shear profile tau_c
-        Data_CFD_wss = np.load(path + str(caseIdx) + "CFD_wss.npz")
-        x_inital = Data_CFD_wss["x"]
-        wall_shear_mag_up = Data_CFD_wss["wss"]
-        Data_NN_wss = np.load(path + str(caseIdx) + "NN_wss.npz")
-        NNwall_shear_mag_up = Data_NN_wss["wss"]
+        data_CFD_wss = np.load(path + str(caseIdx) + "CFD_wss.npz")
+        x_inital = data_CFD_wss["x"]
+        wall_shear_mag_up = data_CFD_wss["wss"]
+        data_NN_wss = np.load(path + str(caseIdx) + "NN_wss.npz")
+        nn_wall_shear_mag_up = data_NN_wss["wss"]
 
         plt.figure()
         plt.plot(
@@ -397,7 +371,7 @@ if __name__ == "__main__":
         )
         plt.plot(
             x_inital,
-            NNwall_shear_mag_up,
+            nn_wall_shear_mag_up,
             label="DNN",
             color="red",
             linestyle="--",
