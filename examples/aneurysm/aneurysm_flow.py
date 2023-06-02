@@ -1,4 +1,5 @@
 import math
+import os
 import os.path as osp
 
 import matplotlib.pyplot as plt
@@ -9,39 +10,10 @@ from paddle.fluid import core
 import ppsci
 from ppsci.utils import misc
 
-
-def generate_scale_for_all_x(x, scale):
-    new_scale = np.tile(scale, (len(x), 1))
-    new_x = np.array([np.tile(val, len(scale)) for val in x]).reshape(len(new_scale), 1)
-    return new_x, new_scale
-
-
-def predict(
-    input_dict,
-    solver,
-):
-    for key, val in input_dict.items():
-        input_dict[key] = paddle.to_tensor(val, dtype="float32")
-    evaluator = ppsci.utils.expression.ExpressionSolver(
-        input_dict.keys(), ["u", "v", "p"], solver.model
-    )
-    output_expr_dict = {
-        "u": lambda d: d["u"],
-        "v": lambda d: d["v"],
-        "p": lambda d: d["p"],
-    }
-    for output_key, output_expr in output_expr_dict.items():
-        evaluator.add_target_expr(output_expr, output_key)
-    output_dict = evaluator(input_dict)
-    return output_dict
-
-
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-    import os
 
-    os.chdir("/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm")
     # set output directory
     OUTPUT_DIR = "./output_0601"
     PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
@@ -68,11 +40,10 @@ if __name__ == "__main__":
     R_INLET = 0.05
     unique_x = np.linspace(X_IN, X_OUT, 100)
     mu = 0.5 * (X_OUT - X_IN)
-    N_y = 20
+    N_Y = 20
     x_inital = np.linspace(X_IN, X_OUT, 100, dtype=paddle.get_default_dtype()).reshape(
         100, 1
     )
-    mu = 0.5 * (X_OUT - X_IN)
     x_20_copy = np.tile(x_inital, (20, 1))  # duplicate 20 times of x for dataloader
     SIGMA = 0.1
     SCALE_START = -0.02
@@ -80,9 +51,10 @@ if __name__ == "__main__":
     scale_initial = np.linspace(
         SCALE_START, SCALE_END, 50, endpoint=True, dtype=paddle.get_default_dtype()
     ).reshape(50, 1)
-    x, scale = generate_scale_for_all_x(
-        x_20_copy, scale_initial
-    )  # generate 50 scale factors for each x (mesh grid)
+    scale = np.tile(scale_initial, (len(x_20_copy), 1))
+    x = np.array([np.tile(val, len(scale_initial)) for val in x_20_copy]).reshape(
+        len(scale), 1
+    )
 
     # Axisymetric boundary
     R = (
@@ -117,14 +89,6 @@ if __name__ == "__main__":
     plt.axis("equal")
     plt.savefig(osp.join(PLOT_DIR, "one_scale_sample"), bbox_inches="tight")
 
-    # index = [i for i in range(x.shape[0])]
-    # res = list(zip(x, y, scale))
-    # np.random.shuffle(res)
-    # x, y, scale = zip(*res)fastype
-    # x = np.array(x).astype(float)
-    # y = np.array(y).astype(float)
-    # scale = np.array(scale).astype(float)
-
     np.savez("x_0526_pd", x=x)
     np.savez("y_0526_pd", y=y)
     np.savez("scale_0526_pd", scale=scale)
@@ -133,28 +97,12 @@ if __name__ == "__main__":
         coord_keys=["x", "y", "scale"],
     )
 
-    def _calculate_fan_in_and_fan_out(tensor):
-        if tensor.ndim < 2:
-            raise ValueError(
-                f"tensor.ndim should be no less than 2, but got {tensor.ndim}."
-            )
-        num_input_fmaps = tensor.shape[1]
-        num_output_fmaps = tensor.shape[0]
-        receptive_field_size = 1
-        if tensor.ndim > 2:
-            receptive_field_size = np.prod(tensor.shape[2:])
-        fan_in = num_input_fmaps * receptive_field_size
-        fan_out = num_output_fmaps * receptive_field_size
-        return fan_in, fan_out
-
     def init_func(m):
         if misc.typename(m) == "Linear":
             ppsci.utils.initializer.kaiming_normal_(m.weight, reverse=True)
 
     model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u"), 3, 20, "swish")
-
     model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v"), 3, 20, "swish")
-
     model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p"), 3, 20, "swish")
     model_1.apply(init_func)
     model_2.apply(init_func)
@@ -239,7 +187,7 @@ if __name__ == "__main__":
             "iters_per_epoch": int(x.shape[0] / BATCH_SIZE),
             "sampler": {
                 "name": "BatchSampler",
-                "shuffle": True,
+                "shuffle": False,
                 "drop_last": False,
             },
         },
@@ -258,9 +206,8 @@ if __name__ == "__main__":
         iters_per_epoch=int(x.shape[0] / BATCH_SIZE),
         eval_during_train=False,
         save_freq=10,
-        log_freq=100,
+        log_freq=1,
         equation=equation,
-        # checkpoint_path="/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/output_0601/checkpoints/epoch_460",
     )
 
     solver.train()
@@ -270,22 +217,29 @@ if __name__ == "__main__":
         yt = paddle.to_tensor(y)
         scalet = scale * paddle.ones_like(xt)
         net_in = {"x": xt, "y": yt, "scale": scalet}
-        output_dict = solver.predict(net_in, 10000)
+        output_dict = solver.predict(net_in, 100)
         return output_dict
 
     scale_test = np.load("./data/aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")[
         "scale"
     ]
-    caseCount = [1.0, 151.0, 486.0]
-    W_ctl = np.zeros([len(scale_test), 1])
-    W_ctl_Ml = np.zeros([len(scale_test), 1])
-    plot_x = 0.8
-    plot_y = 0.06
-    fontsize = 14
+    CASE_COUNT = [1.0, 151.0, 486.0]
+    w_ctl = np.zeros([len(scale_test), 1])
+    w_ctl_Ml = np.zeros([len(scale_test), 1])
+    PLOT_X = 0.8
+    PLOT_Y = 0.06
+    FONTSIZE = 14
     axis_limit = [0, 1, -0.15, 0.15]
     path = "./data/cases/"
-    dp = 0.1
-    for caseIdx in caseCount:
+    D_P = 0.1
+    error_u = []
+    error_v = []
+    N_CL = 200  # number of sampling points in centerline (confused about centerline, but the paper did not explain)
+    x_centerline = np.linspace(
+        X_IN, X_OUT, N_CL, dtype=paddle.get_default_dtype()
+    ).reshape(N_CL, 1)
+    y_centerline = np.zeros_like(x_centerline, dtype=paddle.get_default_dtype())
+    for caseIdx in CASE_COUNT:
         scale = scale_test[int(caseIdx - 1)]
         data_CFD = np.load(osp.join(path, str(caseIdx) + "CFD_contour.npz"))
         x = data_CFD["x"].astype(paddle.get_default_dtype())
@@ -303,31 +257,25 @@ if __name__ == "__main__":
         u, v, p = output_dict["u"], output_dict["v"], output_dict["p"]
         w = np.zeros_like(u)
         u_vec = np.concatenate([u, v, w], axis=1)
-        print(f"shape of vec : {(u_vec[:, 0] - u_cfd[:, 0]).shape}")
-        error_u = np.linalg.norm(u_vec[:, 0] - u_cfd[:, 0], ord=2) / (
-            dp * len(u_vec[:, 0])
+        error_u.append(
+            np.linalg.norm(u_vec[:, 0] - u_cfd[:, 0]) / (D_P * len(u_vec[:, 0]))
         )
-        error_v = np.linalg.norm(u_vec[:, 1] - u_cfd[:, 1], ord=2) / (
-            dp * len(u_vec[:, 0])
+        error_v.append(
+            np.linalg.norm(u_vec[:, 1] - u_cfd[:, 1]) / (D_P * len(u_vec[:, 0]))
         )
-        # error_p = np.linalg.norm(p - p_cfd) / (dp * dp)
-
-        print(f"Table 1 : Aneurysm - Geometry error u : {error_u: .3e}")
-        print(f"Table 1 : Aneurysm - Geometry error v : {error_v: .3e}")
-        # print(f"Table 1 : Aneurysm - Geometry error p : {error_p}")
-        exit()
+        # error_p = np.linalg.norm(p - p_cfd) / (D_P * D_P)
 
         # Streamwise velocity component u
         plt.figure()
         plt.subplot(212)
         plt.scatter(x, y, c=u_vec[:, 0], vmin=min(u_cfd[:, 0]), vmax=max(u_cfd[:, 0]))
-        plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
+        plt.text(PLOT_X, PLOT_Y, r"DNN", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.colorbar()
         plt.subplot(211)
         plt.scatter(x, y, c=u_cfd[:, 0], vmin=min(u_cfd[:, 0]), vmax=max(u_cfd[:, 0]))
         plt.colorbar()
-        plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
+        plt.text(PLOT_X, PLOT_Y, r"CFD", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.savefig(
             osp.join(PLOT_DIR, f"{int(caseIdx)}_scale_{scale}_uContour_test.png"),
@@ -338,13 +286,13 @@ if __name__ == "__main__":
         plt.figure()
         plt.subplot(212)
         plt.scatter(x, y, c=u_vec[:, 1], vmin=min(u_cfd[:, 1]), vmax=max(u_cfd[:, 1]))
-        plt.text(plot_x, plot_y, r"DNN", {"color": "b", "fontsize": fontsize})
+        plt.text(PLOT_X, PLOT_Y, r"DNN", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.colorbar()
         plt.subplot(211)
         plt.scatter(x, y, c=u_cfd[:, 1], vmin=min(u_cfd[:, 1]), vmax=max(u_cfd[:, 1]))
         plt.colorbar()
-        plt.text(plot_x, plot_y, r"CFD", {"color": "b", "fontsize": fontsize})
+        plt.text(PLOT_X, PLOT_Y, r"CFD", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.savefig(
             osp.join(PLOT_DIR, f"{int(caseIdx)}_scale_{scale}_vContour_test.png"),
@@ -352,12 +300,32 @@ if __name__ == "__main__":
         )
         plt.close("all")
 
-        # Centerline wall shear profile tau_c
+        # Centerline wall shear profile tau_c (downside)
         data_CFD_wss = np.load(path + str(caseIdx) + "CFD_wss.npz")
         x_inital = data_CFD_wss["x"]
         wall_shear_mag_up = data_CFD_wss["wss"]
-        data_NN_wss = np.load(path + str(caseIdx) + "NN_wss.npz")
-        nn_wall_shear_mag_up = data_NN_wss["wss"]
+
+        D_H = 0.001  # The spanwise distance is approximately the height of the wall
+        r_cl = (
+            scale
+            * 1
+            / np.sqrt(2 * np.pi * SIGMA**2)
+            * np.exp(-((x_centerline - mu) ** 2) / (2 * SIGMA**2))
+        )
+        y_wall = (-R_INLET + D_H) * np.ones_like(
+            x_centerline, dtype=paddle.get_default_dtype()
+        ) + r_cl
+        output_dict_wss = single_test(
+            x_centerline, y_wall, np.ones((N_CL, 1)) * scale, solver
+        )
+        v_cl_total = np.zeros_like(
+            x_centerline, dtype=paddle.get_default_dtype()
+        )  # assuming normal velocity along the wall is zero
+        u_cl = output_dict_wss["u"].numpy()
+        v_cl = output_dict_wss["v"].numpy()
+        for i in range(N_CL):
+            v_cl_total[i] = np.sqrt(u_cl[i] ** 2 + v_cl[i] ** 2)
+        tau_c = NU * v_cl_total / D_H
 
         plt.figure()
         plt.plot(
@@ -371,7 +339,7 @@ if __name__ == "__main__":
         )
         plt.plot(
             x_inital,
-            nn_wall_shear_mag_up,
+            tau_c,
             label="DNN",
             color="red",
             linestyle="--",
@@ -387,3 +355,6 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
         plt.close("all")
+    print(f"epochs = {EPOCHS}")
+    print(f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}")
+    print(f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}")
