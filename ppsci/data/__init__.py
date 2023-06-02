@@ -106,4 +106,10 @@ def build_dataloader(_dataset, cfg):
         worker_init_fn=init_fn,
     )
 
+    if len(dataloader_) == 0:
+        raise ValueError(
+            f"batch_size({sampler_cfg['batch_size']}) should not bigger than number of "
+            f"samples({len(_dataset)}) when drop_last is {sampler_cfg.get('drop_last', False)}."
+        )
+
     return dataloader_

@@ -127,6 +127,11 @@ def save_checkpoint(
     """
     if paddle.distributed.get_rank() != 0:
         return
+    if model_dir is None:
+        logger.warning(
+            f"model_dir({model_dir}) is set to None, skip save_checkpoint..."
+        )
+        return
     model_dir = os.path.join(model_dir, "checkpoints")
     os.makedirs(model_dir, exist_ok=True)
     model_path = os.path.join(model_dir, prefix)

@@ -49,6 +49,8 @@ class NamedArrayDataset(io.Dataset):
         super().__init__()
         self.input = input
         self.label = label
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
         self.weight = weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))
@@ -93,6 +95,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         weight: Dict[str, np.ndarray],
         transforms: Optional[vision.Compose] = None,
     ):
+        super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
         self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}

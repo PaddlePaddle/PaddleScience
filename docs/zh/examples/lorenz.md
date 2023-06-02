@@ -59,9 +59,9 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="41" title="examples/lorenz/train_enn.py"
+``` py linenums="40" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:41:52
+examples/lorenz/train_enn.py:40:55
 --8<--
 ```
 
@@ -69,9 +69,9 @@ examples/lorenz/train_enn.py:41:52
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="57" title="examples/lorenz/train_enn.py"
+``` py linenums="60" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:57:74
+examples/lorenz/train_enn.py:60:77
 --8<--
 ```
 
@@ -90,9 +90,9 @@ examples/lorenz/train_enn.py:57:74
 
 定义监督约束的代码如下：
 
-``` py linenums="76" title="examples/lorenz/train_enn.py"
+``` py linenums="79" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:76:84
+examples/lorenz/train_enn.py:79:87
 --8<--
 ```
 
@@ -115,17 +115,17 @@ examples/lorenz/train_enn.py:76:84
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="89" title="examples/lorenz/train_enn.py"
+``` py linenums="93" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:89:93
+examples/lorenz/train_enn.py:93:96
 --8<--
 ```
 
 其中，`LorenzEmbedding` 的前两个参数在前文中已有描述，这里不再赘述，网络模型的第三、四个参数是训练数据集的均值和方差，用于归一化输入数据。计算均值、方差的的代码表示如下：
 
-``` py linenums="28" title="examples/lorenz/train_enn.py"
+``` py linenums="29" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:28:35
+examples/lorenz/train_enn.py:29:36
 --8<--
 ```
 
@@ -133,9 +133,9 @@ examples/lorenz/train_enn.py:28:35
 
 本案例中使用的学习率方法为 `ExponentialDecay` ，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下
 
-``` py linenums="95" title="examples/lorenz/train_enn.py"
+``` py linenums="99" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:95:109
+examples/lorenz/train_enn.py:99:112
 --8<--
 ```
 
@@ -143,9 +143,9 @@ examples/lorenz/train_enn.py:95:109
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="112" title="examples/lorenz/train_enn.py"
+``` py linenums="115" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:112:138
+examples/lorenz/train_enn.py:115:141
 --8<--
 ```
 
@@ -155,9 +155,9 @@ examples/lorenz/train_enn.py:112:138
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="141" title="examples/lorenz/train_enn.py"
+``` py linenums="144" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:141:
+examples/lorenz/train_enn.py:144:
 --8<--
 ```
 
@@ -165,9 +165,9 @@ examples/lorenz/train_enn.py:141:
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="58" title="examples/lorenz/train_transformer.py"
+``` py linenums="57" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:58:74
+examples/lorenz/train_transformer.py:57:79
 --8<--
 ```
 
@@ -175,9 +175,9 @@ examples/lorenz/train_transformer.py:58:74
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="82" title="examples/lorenz/train_transformer.py"
+``` py linenums="87" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:82:99
+examples/lorenz/train_transformer.py:87:104
 --8<--
 ```
 
@@ -185,9 +185,9 @@ examples/lorenz/train_transformer.py:82:99
 
 定义监督约束的代码如下：
 
-``` py linenums="101" title="examples/lorenz/train_transformer.py"
+``` py linenums="106" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:101:106
+examples/lorenz/train_transformer.py:106:111
 --8<--
 ```
 
@@ -202,9 +202,9 @@ examples/lorenz/train_transformer.py:101:106
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="111" title="examples/lorenz/train_transformer.py"
+``` py linenums="116" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:111:119
+examples/lorenz/train_transformer.py:116:124
 --8<--
 ```
 
@@ -214,9 +214,9 @@ examples/lorenz/train_transformer.py:111:119
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="121" title="examples/lorenz/train_transformer.py"
+``` py linenums="126" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:121:135
+examples/lorenz/train_transformer.py:126:140
 --8<--
 ```
 
@@ -224,9 +224,9 @@ examples/lorenz/train_transformer.py:121:135
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="137" title="examples/lorenz/train_transformer.py"
+``` py linenums="142" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:137:163
+examples/lorenz/train_transformer.py:142:168
 --8<--
 ```
 
@@ -236,15 +236,15 @@ examples/lorenz/train_transformer.py:137:163
 
 在本文中首先定义了对 Transformer 模型输出数据变换到物理状态空间的代码：
 
-``` py linenums="31" title="examples/lorenz/train_transformer.py"
+``` py linenums="32" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:31:49
+examples/lorenz/train_transformer.py:32:50
 --8<--
 ```
 
-``` py linenums="78" title="examples/lorenz/train_transformer.py"
+``` py linenums="83" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:78:79
+examples/lorenz/train_transformer.py:83:84
 --8<--
 ```
 
@@ -252,9 +252,9 @@ examples/lorenz/train_transformer.py:78:79
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="165" title="examples/lorenz/train_transformer.py"
+``` py linenums="170" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:165:183
+examples/lorenz/train_transformer.py:170:188
 --8<--
 ```
 
@@ -264,9 +264,9 @@ examples/lorenz/train_transformer.py:165:183
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="185" title="examples/lorenz/train_transformer.py"
+``` py linenums="190" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:185:
+examples/lorenz/train_transformer.py:190:
 --8<--
 ```
 

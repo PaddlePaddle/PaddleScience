@@ -29,9 +29,13 @@ class MSELoss(base.Loss):
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{(x_i-y_i)^2}, & \text{if reduction='sum'}
+        \dfrac{1}{N} \Vert {\mathbf{x}-\mathbf{y}} \Vert_2^2, & \text{if reduction='mean'} \\
+        \Vert {\mathbf{x}-\mathbf{y}} \Vert_2^2, & \text{if reduction='sum'}
     \end{cases}
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
     Args:
@@ -58,7 +62,7 @@ class MSELoss(base.Loss):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict:
+            if weight_dict is not None:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:
@@ -68,7 +72,7 @@ class MSELoss(base.Loss):
                 loss = loss.sum()
             elif self.reduction == "mean":
                 loss = loss.mean()
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]
@@ -83,12 +87,16 @@ class MSELossWithL2Decay(MSELoss):
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(x_i-y_i)^2} + \sum\limits_{j=1}^{M}{\Vert r_j \Vert_2^2}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{(x_i-y_i)^2} + \sum\limits_{j=1}^{M}{\Vert r_j \Vert_2^2}, & \text{if reduction='sum'}
+        \dfrac{1}{N} \Vert {\mathbf{x}-\mathbf{y}} \Vert_2^2 + \displaystyle\sum_{i=1}^{M}{\Vert \mathbf{K_i} \Vert_F^2}, & \text{if reduction='mean'} \\
+         \Vert {\mathbf{x}-\mathbf{y}} \Vert_2^2 + \displaystyle\sum_{i=1}^{M}{\Vert \mathbf{K_i} \Vert_F^2}, & \text{if reduction='sum'}
     \end{cases}
     $$
 
-    $M$ is the number of variables which apply regularization on.
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}, \mathbf{K_i} \in \mathcal{R}^{O_i \times P_i}
+    $$
+
+    $M$ is the number of  which apply regularization on.
 
     Args:
         reduction (Literal["mean", "sum"], optional): Specifies the reduction to apply to the output: 'mean' | 'sum'. Defaults to "mean".
@@ -127,7 +135,18 @@ class MSELossWithL2Decay(MSELoss):
 
 
 class PeriodicMSELoss(base.Loss):
-    """Class for periodic mean squared error loss.
+    r"""Class for periodic mean squared error loss.
+
+    $$
+    L =
+    \begin{cases}
+        \dfrac{1}{N} \Vert \mathbf{x_l}-\mathbf{x_r} \Vert_2^2, & \text{if reduction='mean'} \\
+        \Vert \mathbf{x_l}-\mathbf{x_r} \Vert_2^2, & \text{if reduction='sum'}
+    \end{cases}
+    $$
+
+    $\mathbf{x_l} \in \mathcal{R}^{N}$ is the first half of batch output,
+    $\mathbf{x_r} \in \mathcal{R}^{N}$ is the second half of batch output.
 
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
@@ -168,7 +187,7 @@ class PeriodicMSELoss(base.Loss):
             elif self.reduction == "mean":
                 loss = loss.mean()
 
-            if isinstance(self.weight, float):
+            if isinstance(self.weight, (float, int)):
                 loss *= self.weight
             elif isinstance(self.weight, dict) and key in self.weight:
                 loss *= self.weight[key]

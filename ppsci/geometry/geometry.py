@@ -157,8 +157,8 @@ class Geometry:
         ):
             area_dict = misc.convert_to_dict(area[:, 1:], ["area"])
             return {**x_dict, **normal_dict, **area_dict}
-        else:
-            return {**x_dict, **normal_dict}
+
+        return {**x_dict, **normal_dict}
 
     @abc.abstractmethod
     def random_points(self, n: int, random: str = "pseudo"):

@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import importlib.util
+import traceback
 from typing import Dict
 from typing import Tuple
 from typing import Union
+
+import paddle
 
 from ppsci.utils import logger
 
@@ -26,44 +29,34 @@ def run_check() -> None:
 
     Examples:
         >>> import ppsci
-        >>> ppsci.utils.run_check()
-        Runing test code [1/2] [1/5]
-        Runing test code [1/2] [2/5]
-        Runing test code [1/2] [3/5]
-        Runing test code [1/2] [4/5]
-        Runing test code [1/2] [5/5]
-        Runing test code [2/2] [1/5]
-        Runing test code [2/2] [2/5]
-        Runing test code [2/2] [3/5]
-        Runing test code [2/2] [4/5]
-        Runing test code [2/2] [5/5]
-        PaddleScience is installed successfully.✨ 🍰 ✨
+        >>> ppsci.utils.run_check()  # doctest: +SKIP
     """
-
     # test demo code below.
     import logging
 
     import ppsci
 
     try:
-        model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh", False, False)
+        ppsci.utils.set_random_seed(42)
+        ppsci.utils.logger.init_logger()
+        model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 3, 16, "tanh")
 
         equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
 
         geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
 
-        iters_per_epoch = 5
+        ITERS_PER_EPOCH = 5
         train_dataloader_cfg = {
             "dataset": "IterableNamedArrayDataset",
-            "iters_per_epoch": iters_per_epoch,
+            "iters_per_epoch": ITERS_PER_EPOCH,
         }
 
-        npoint_pde = 8**2
+        NPOINT_PDE = 8**2
         pde_constraint = ppsci.constraint.InteriorConstraint(
             equation["NavierStokes"].equations,
             {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
             geom["rect"],
-            {**train_dataloader_cfg, "batch_size": npoint_pde},
+            {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
             ppsci.loss.MSELoss("sum"),
             evenly=True,
             weight_dict={
@@ -73,31 +66,43 @@ def run_check() -> None:
             },
             name="EQ",
         )
+        constraint = {pde_constraint.name: pde_constraint}
 
-        epochs = 2
+        residual_validator = ppsci.validate.GeometryValidator(
+            equation["NavierStokes"].equations,
+            {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
+            geom["rect"],
+            {
+                "dataset": "NamedArrayDataset",
+                "total_size": 8**2,
+                "batch_size": 32,
+                "sampler": {"name": "BatchSampler"},
+            },
+            ppsci.loss.MSELoss("sum"),
+            evenly=True,
+            metric={"MSE": ppsci.metric.MSE(False)},
+            name="Residual",
+        )
+        validator = {residual_validator.name: residual_validator}
+
+        EPOCHS = 2
         optimizer = ppsci.optimizer.Adam(0.001)((model,))
-        for _epoch in range(1, epochs + 1):
-            for _iter_id in range(1, iters_per_epoch + 1):
-                input_dict, label_dict, weight_dict = next(pde_constraint.data_iter)
-                for v in input_dict.values():
-                    v.stop_gradient = False
-                evaluator = ppsci.utils.ExpressionSolver(
-                    pde_constraint.input_keys, pde_constraint.output_keys, model
-                )
-                for output_name, output_formula in pde_constraint.output_expr.items():
-                    if output_name in label_dict:
-                        evaluator.add_target_expr(output_formula, output_name)
-
-                output_dict = evaluator(input_dict)
-                loss = pde_constraint.loss(output_dict, label_dict, weight_dict)
-                loss.backward()
-                optimizer.step()
-                optimizer.clear_grad()
-                print(
-                    f"Runing test code [{_epoch}/{epochs}]"
-                    f" [{_iter_id}/{iters_per_epoch}]"
-                )
+        solver = ppsci.solver.Solver(
+            model,
+            constraint,
+            None,
+            optimizer,
+            None,
+            EPOCHS,
+            ITERS_PER_EPOCH,
+            device=paddle.device.get_device(),
+            equation=equation,
+            validator=validator,
+        )
+        solver.train()
+        solver.eval(EPOCHS)
     except Exception as e:
+        traceback.print_exc()
         logging.warning(
             f"PaddleScience meets some problem with \n {repr(e)} \nplease check whether "
             "Paddle's version and PaddleScience's version are both correct."

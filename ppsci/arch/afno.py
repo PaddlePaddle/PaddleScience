@@ -22,8 +22,8 @@ from typing import Tuple
 
 import paddle
 import paddle.fft
-import paddle.nn as nn
 import paddle.nn.functional as F
+from paddle import nn
 
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
@@ -381,7 +381,7 @@ class PatchEmbed(nn.Layer):
         )
 
     def forward(self, x):
-        B, C, H, W = x.shape
+        _, _, H, W = x.shape
         if not (H == self.img_size[0] and W == self.img_size[1]):
             raise ValueError(
                 f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
@@ -541,7 +541,7 @@ class AFNONet(base.Arch):
 
         y = []
         input = x
-        for i in range(self.num_timestamps):
+        for _ in range(self.num_timestamps):
             out = self.forward_tensor(input)
             y.append(out)
             input = out
@@ -665,7 +665,7 @@ class PrecipNet(base.Arch):
 
         input_wind = x
         y = []
-        for i in range(self.num_timestamps):
+        for _ in range(self.num_timestamps):
             with paddle.no_grad():
                 out_wind = self.wind_model.forward_tensor(input_wind)
             out = self.forward_tensor(out_wind)

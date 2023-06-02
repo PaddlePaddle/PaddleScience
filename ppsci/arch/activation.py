@@ -31,12 +31,9 @@ class Swish(nn.Layer):
         return x * F.sigmoid(self.beta * x)
 
 
-class Silu(nn.Layer):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x * F.sigmoid(x)
+def silu(x):
+    """numeric stable silu"""
+    return x * F.sigmoid(x)
 
 
 act_func_dict = {
@@ -45,11 +42,10 @@ act_func_dict = {
     "selu": F.selu,
     "gelu": F.gelu,
     "sigmoid": F.sigmoid,
-    "silu": Silu,
     "sin": paddle.sin,
     "cos": paddle.cos,
-    "swish_beta": Swish_beta(1.0),
     "swish": Swish(),
+    "silu": silu,
     "tanh": F.tanh,
     "identity": nn.Identity(),
 }

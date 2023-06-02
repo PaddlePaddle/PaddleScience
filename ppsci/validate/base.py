@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
 
 from paddle import io
 
 from ppsci import data
-from ppsci import loss
-from ppsci import metric
+
+if TYPE_CHECKING:
+    from ppsci import loss
+    from ppsci import metric
 
 
 class Validator:
@@ -37,8 +40,8 @@ class Validator:
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
-        metric: Dict[str, metric.Metric],
+        loss: "loss.Loss",
+        metric: Dict[str, "metric.Metric"],
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
