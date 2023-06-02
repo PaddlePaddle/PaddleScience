@@ -15,12 +15,12 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    OUTPUT_DIR = "./output_0601"
+    OUTPUT_DIR = "./output_aneurysm_flow"
     PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    core.set_prim_eager_enabled(True)
+    core.set_prim_eager_enabled(False)
 
     # Hyper parameters
     EPOCHS = 500
@@ -114,59 +114,50 @@ if __name__ == "__main__":
     model_2.apply(init_func)
     model_3.apply(init_func)
 
-    # print(f"layer 1 mean : {np.mean(model_1.linears[0].weight.numpy())}")
-    # print(f"layer 1 var : {np.var(model_1.linears[0].weight.numpy())}")
-
-    # print(f"layer 2 mean : {np.mean(model_1.linears[1].weight.numpy())}")
-    # print(f"layer 2 var : {np.var(model_1.linears[1].weight.numpy())}")
-
-    # print(f"layer 3 mean : {np.mean(model_1.linears[2].weight.numpy())}")
-    # print(f"layer 3 var : {np.var(model_1.linears[2].weight.numpy())}")
-
-    # print(f"layer 4 mean : {np.mean(model_1.last_fc.weight.numpy())}")
-    # print(f"layer 4 var : {np.var(model_1.last_fc.weight.numpy())}")
-
-    class Output_transform:
+    class Transform:
         def __init__(self) -> None:
             pass
 
-        def __call__(self, out, input):
-            new_out = {}
-            x, y, scale = input["x"], input["y"], input["scale"]
-            # axisymetric boundary
-            if next(iter(out.keys())) == "u":
-                R = (
-                    scale
-                    * 1
-                    / np.sqrt(2 * np.pi * SIGMA**2)
-                    * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
-                )
-                self.h = R_INLET - R
-                u = out["u"]
-                # The no-slip condition of velocity on the wall
-                new_out["u"] = u * (self.h**2 - y**2)
-            elif next(iter(out.keys())) == "v":
-                v = out["v"]
-                # The no-slip condition of velocity on the wall
-                new_out["v"] = (self.h**2 - y**2) * v
-            elif next(iter(out.keys())) == "p":
-                p = out["p"]
-                # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
-                new_out["p"] = (
+        def input_trans(self, input):
+            self.input = input
+
+        def output_trans_u(self, out):
+            x, scale = self.input["x"], self.input["scale"]
+            R = (
+                scale
+                * 1
+                / np.sqrt(2 * np.pi * SIGMA**2)
+                * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
+            )
+            self.h = R_INLET - R
+            u = out["u"]
+            # The no-slip condition of velocity on the wall
+            return {"u": u * (self.h**2 - y**2)}
+
+        def output_trans_v(self, out):
+            y = self.input["y"]
+            v = out["v"]
+            # The no-slip condition of velocity on the wall
+            return {"v": (self.h**2 - y**2) * v}
+
+        def output_trans_p(self, out):
+            x = self.input["x"]
+            p = out["p"]
+            # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
+            return {
+                "p": (
                     (X_IN - x) * 0
                     + (P_IN - P_OUT) * (X_OUT - x) / L
-                    + 0 * y
                     + (X_IN - x) * (X_OUT - x) * p
                 )
-            else:
-                ValueError(f"{next(iter(out.keys()))} is not a valid key.")
+            }
 
-            return new_out
-
-    shared_transform = Output_transform()
-    model_1.register_output_transform(shared_transform)
-    model_2.register_output_transform(shared_transform)
-    model_3.register_output_transform(shared_transform)
+    model_1.register_input_transform(Transform.input_trans)
+    model_2.register_input_transform(Transform.input_trans)
+    model_3.register_input_transform(Transform.input_trans)
+    model_1.register_output_transform(Transform.output_trans_u)
+    model_2.register_output_transform(Transform.output_trans_v)
+    model_3.register_output_transform(Transform.output_trans_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     optimizer_1 = ppsci.optimizer.Adam(

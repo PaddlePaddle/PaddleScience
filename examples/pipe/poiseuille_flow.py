@@ -31,9 +31,9 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    output_dir = "./output_0602"
+    output_dir = "./output_poiseuille_flow"
 
-    core.set_prim_eager_enabled(True)
+    core.set_prim_eager_enabled(False)
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -99,34 +99,41 @@ if __name__ == "__main__":
 
     model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p"), 3, 50, "swish")
 
-    def input_transform(input):
-        x, y = input["x"], input["y"]
-        nu = input["nu"]
-        b = 2 * np.pi / (X_OUT - X_IN)
-        c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-        sin_x = X_IN * paddle.sin(b * x + c)
-        cos_x = X_IN * paddle.cos(b * x + c)
-        return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
+    class Transform:
+        def __init__(self) -> None:
+            pass
 
-    model_u.register_input_transform(input_transform)
-    model_v.register_input_transform(input_transform)
-    model_p.register_input_transform(input_transform)
-    model_u.register_output_transform(
-        lambda out, input: {"u": out["u"] * (R**2 - input["y"] ** 2)}
-    )
-    model_v.register_output_transform(
-        lambda out, input: {"v": (R**2 - input["y"] ** 2) * out["v"]}
-    )
-    model_p.register_output_transform(
-        lambda out, input: {
-            "p": (
-                (X_IN - input["x"]) * 0
-                + (P_IN - P_OUT) * (X_OUT - input["x"]) / L
-                + 0 * input["y"]
-                + (X_IN - input["x"]) * (X_OUT - input["x"]) * out["p"]
-            )
-        }
-    )
+        def input_trans(self, input):
+            self.input = input
+            x, y = input["x"], input["y"]
+            nu = input["nu"]
+            b = 2 * np.pi / (X_OUT - X_IN)
+            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
+            sin_x = X_IN * paddle.sin(b * x + c)
+            cos_x = X_IN * paddle.cos(b * x + c)
+            return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
+
+        def output_trans_u(self, out):
+            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
+
+        def output_trans_v(self, out):
+            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
+
+        def output_trans_p(self, out):
+            return {
+                "p": (
+                    (X_IN - self.input["x"]) * 0
+                    + (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
+                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
+                )
+            }
+
+    model_u.register_input_transform(Transform.input_trans)
+    model_v.register_input_transform(Transform.input_trans)
+    model_p.register_input_transform(Transform.input_trans)
+    model_u.register_output_transform(Transform.output_trans_u)
+    model_v.register_output_transform(Transform.output_trans_v)
+    model_p.register_output_transform(Transform.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
