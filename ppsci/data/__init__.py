@@ -78,8 +78,6 @@ def build_dataloader(_dataset, cfg):
             )
 
     sampler_cfg["batch_size"] = cfg["batch_size"]
-    if sampler_cfg["shuffle"] is False:
-        logger.warning(f"Data picked by sampler is not shuffled")
     sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
 
     # build collate_fn if specified

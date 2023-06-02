@@ -137,7 +137,7 @@ if __name__ == "__main__":
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(LEARNING_RATE)([model])
+    optimizer = ppsci.optimizer.Adam(LEARNING_RATE)((model,))
 
     # set euqation
     equation = {
