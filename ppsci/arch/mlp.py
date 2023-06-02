@@ -144,6 +144,7 @@ class MLP(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
+
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.forward_tensor(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
