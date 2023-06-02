@@ -101,9 +101,15 @@ if __name__ == "__main__":
         if misc.typename(m) == "Linear":
             ppsci.utils.initializer.kaiming_normal_(m.weight, reverse=True)
 
-    model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u"), 3, 20, "swish")
-    model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v"), 3, 20, "swish")
-    model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p"), 3, 20, "swish")
+    model_1 = ppsci.arch.MLP(
+        ("x", "y", "scale"), ("u"), 3, 20, "silu"
+    )  # swish without learnable variable
+    model_2 = ppsci.arch.MLP(
+        ("x", "y", "scale"), ("v"), 3, 20, "silu"
+    )  # swish without learnable variable
+    model_3 = ppsci.arch.MLP(
+        ("x", "y", "scale"), ("p"), 3, 20, "silu"
+    )  # swish without learnable variable
     model_1.apply(init_func)
     model_2.apply(init_func)
     model_3.apply(init_func)

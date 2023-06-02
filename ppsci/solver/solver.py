@@ -343,14 +343,15 @@ class Solver:
         """Training"""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
 
+        LOSS = []
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
-            self.train_epoch_func(self, epoch_id, self.log_freq)
+            self.train_epoch_func(self, epoch_id, self.log_freq, LOSS)
 
             # log training summation at end of a epoch
             metric_msg = ", ".join(
                 [self.train_output_info[key].avg_info for key in self.train_output_info]
             )
-            # logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
+            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")
@@ -409,6 +410,9 @@ class Solver:
                 self.equation,
             )
 
+        import numpy as np
+
+        np.savetxt("Loss_track_pipe_para.csv", np.array(LOSS))
         # close VisualDL
         if self.vdl_writer is not None:
             self.vdl_writer.close()

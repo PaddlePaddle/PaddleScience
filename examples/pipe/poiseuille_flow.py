@@ -210,7 +210,7 @@ if __name__ == "__main__":
         ["u"],
         LAYER_NUMBER,
         HIDDEN_SIZE,
-        "swish_beta",
+        "swish",
         False,
         False,
     )
@@ -220,7 +220,7 @@ if __name__ == "__main__":
         ["v"],
         LAYER_NUMBER,
         HIDDEN_SIZE,
-        "swish_beta",
+        "swish",
         False,
         False,
     )
@@ -230,11 +230,9 @@ if __name__ == "__main__":
         ["p"],
         LAYER_NUMBER,
         HIDDEN_SIZE,
-        "swish_beta",
+        "swish",
         False,
         False,
-        # np.load(dir + f"/weight_p_epoch_1.npz"),
-        # np.load(dir + f"/bias_p_epoch_1.npz"),
     )
 
     def output_transform(out, input):

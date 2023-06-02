@@ -19,20 +19,19 @@ import paddle.nn.functional as F
 from paddle import nn
 
 
-class Swish_beta(nn.Layer):
+class Swish(nn.Layer):
     def __init__(self, beta: float = 1.0):
         super().__init__()
         self.beta = paddle.create_parameter(
-            shape=[1],
-            dtype="float32",
+            shape=[0],
             default_initializer=paddle.nn.initializer.Constant(beta),
         )
 
     def forward(self, x):
-        return x * F.sigmoid(x * self.beta)
+        return x * F.sigmoid(self.beta * x)
 
 
-class Swish(nn.Layer):
+class Silu(nn.Layer):
     def __init__(self):
         super().__init__()
 
@@ -46,7 +45,7 @@ act_func_dict = {
     "selu": F.selu,
     "gelu": F.gelu,
     "sigmoid": F.sigmoid,
-    "silu": F.silu,
+    "silu": Silu,
     "sin": paddle.sin,
     "cos": paddle.cos,
     "swish_beta": Swish_beta(1.0),

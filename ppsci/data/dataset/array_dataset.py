@@ -108,28 +108,3 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     def __len__(self):
         return 1
-
-
-class MiniBatchDataset(io.Dataset):
-    def __init__(self, input, label, weight):
-        super().__init__()
-        self.input = input
-        self.label = label
-        self.num_samples = self.check_input(input)
-
-    def check_input(self, input):
-        len_input = set()
-        for _, value in input.items():
-            len_input.add(len(value))
-        if len(len_input) is not 1:
-            raise AttributeError("Input dimension mismatch")
-        else:
-            return list(len_input)[0]
-
-    def __getitem__(self, idx):
-        input_item = {key: value[idx] for key, value in self.input.items()}
-        label_item = {key: value[idx] for key, value in self.label.items()}
-        return (input_item, label_item)
-
-    def __len__(self):
-        return self.num_samples

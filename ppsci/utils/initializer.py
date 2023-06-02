@@ -427,14 +427,6 @@ def kaiming_normal_(
     fan = _calculate_correct_fan(tensor, mode, reverse)
     gain = _calculate_gain(nonlinearity, a)
     std = gain / math.sqrt(fan)
-    # print("------------------------------------------")
-    # print(f"layer 1 mean : {np.mean(tensor.numpy())}")
-    # print(f"layer 1 var : {np.var(tensor.numpy())}")
-    # print("\n")
-    # tmp = _no_grad_normal_(tensor, 0, std)
-    # print(f"layer 1 mean : {np.mean(tmp.numpy())}")
-    # print(f"layer 1 var : {np.var(tmp.numpy())}")
-    # print("\n")
     return _no_grad_normal_(tensor, 0, std)
 
 

@@ -15,7 +15,6 @@
 import copy
 
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
-from ppsci.data.dataset.array_dataset import MiniBatchDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.csv_dataset import IterableCSVDataset
@@ -33,7 +32,6 @@ from ppsci.utils import logger
 __all__ = [
     "IterableNamedArrayDataset",
     "NamedArrayDataset",
-    "MiniBatchDataset",
     "CSVDataset",
     "IterableCSVDataset",
     "ERA5Dataset",
