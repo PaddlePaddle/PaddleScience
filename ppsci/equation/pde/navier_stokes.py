@@ -51,6 +51,7 @@ class NavierStokes(base.PDE):
         self.add_equation("continuity", continuity_compute_func)
 
         def momentum_x_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
@@ -73,6 +74,7 @@ class NavierStokes(base.PDE):
         self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
@@ -97,6 +99,7 @@ class NavierStokes(base.PDE):
         if self.dim == 3:
 
             def momentum_z_compute_func(out):
+                nu = self.nu(out) if callable(self.nu) else self.nu
                 x, y, z = out["x"], out["y"], out["z"]
                 u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (

@@ -121,32 +121,12 @@ class NavierStokes(base.PDE):
             self.add_equation("momentum_z", momentum_z_compute_func)
 
 
-def predict(
-    input_dict,
-    solver,
-):
-    for key, val in input_dict.items():
-        input_dict[key] = paddle.to_tensor(val, dtype="float32")
-    evaluator = ppsci.utils.expression.ExpressionSolver(
-        input_dict.keys(), ["u", "v", "p"], solver.model
-    )
-    output_expr_dict = {
-        "u": lambda d: d["u"],
-        "v": lambda d: d["v"],
-        "p": lambda d: d["p"],
-    }
-    for output_key, output_expr in output_expr_dict.items():
-        evaluator.add_target_expr(output_expr, output_key)
-    output_dict = evaluator(input_dict)
-    return output_dict
-
-
 if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    output_dir = "./output_poiseuille_flow"
+    output_dir = "./output_0602"
 
     core.set_prim_eager_enabled(True)
 
@@ -170,9 +150,6 @@ if __name__ == "__main__":
     EPOCHS = 3000  # 5000
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
 
-    HIDDEN_SIZE = 50
-    LAYER_NUMBER = 4 - 1  # last fc
-    LOG_FREQ = 1
     EVAL_FREQ = 100  # display step
     VISU_FREQ = 100  # visulize step
 
@@ -184,9 +161,15 @@ if __name__ == "__main__":
     NU_END = NU_MEAN + NU_MEAN * NU_STD  # 0.1
 
     ## prepare data with (?, 2)
-    data_1d_x = np.linspace(X_IN, X_OUT, N_x, endpoint=True)
-    data_1d_y = np.linspace(Y_START, Y_END, N_y, endpoint=True)
-    data_1d_nu = np.linspace(NU_START, NU_END, N_p, endpoint=True)
+    data_1d_x = np.linspace(
+        X_IN, X_OUT, N_x, endpoint=True, dtype=paddle.get_default_dtype()
+    )
+    data_1d_y = np.linspace(
+        Y_START, Y_END, N_y, endpoint=True, dtype=paddle.get_default_dtype()
+    )
+    data_1d_nu = np.linspace(
+        NU_START, NU_END, N_p, endpoint=True, dtype=paddle.get_default_dtype()
+    )
 
     data_2d_xy = (
         np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu)).reshape(3, -1).T
@@ -194,72 +177,22 @@ if __name__ == "__main__":
     data_2d_xy_old = copy.deepcopy(data_2d_xy)
     np.random.shuffle(data_2d_xy)
 
-    input_x = data_2d_xy[:, 0].reshape(data_2d_xy.shape[0], 1).astype("float32")
-    input_y = data_2d_xy[:, 1].reshape(data_2d_xy.shape[0], 1).astype("float32")
-    input_nu = data_2d_xy[:, 2].reshape(data_2d_xy.shape[0], 1).astype("float32")
+    input_x = data_2d_xy[:, 0].reshape(data_2d_xy.shape[0], 1)
+    input_y = data_2d_xy[:, 1].reshape(data_2d_xy.shape[0], 1)
+    input_nu = data_2d_xy[:, 2].reshape(data_2d_xy.shape[0], 1)
 
     interior_data = {"x": input_x, "y": input_y, "nu": input_nu}
     interior_geom = ppsci.geometry.PointCloud(
         interior={"x": input_x, "y": input_y, "nu": input_nu},
-        coord_keys=["x", "y", "nu"],
+        coord_keys=("x", "y", "nu"),
     )
 
     # set model
-    model_u = ppsci.arch.MLP(
-        ["sin(x)", "cos(x)", "y", "nu"],
-        ["u"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-    )
+    model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u"), 3, 50, "swish")
 
-    model_v = ppsci.arch.MLP(
-        ["sin(x)", "cos(x)", "y", "nu"],
-        ["v"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-    )
+    model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v"), 3, 50, "swish")
 
-    model_p = ppsci.arch.MLP(
-        ["sin(x)", "cos(x)", "y", "nu"],
-        ["p"],
-        LAYER_NUMBER,
-        HIDDEN_SIZE,
-        "swish",
-        False,
-        False,
-    )
-
-    def output_transform(out, input):
-        new_out = {}
-        x, y = input["x"], input["y"]
-
-        if next(iter(out.keys())) == "u":
-            u = out["u"]
-            # The no-slip condition of velocity on the wall
-            new_out["u"] = u * (R**2 - y**2)
-        elif next(iter(out.keys())) == "v":
-            v = out["v"]
-            # The no-slip condition of velocity on the wall
-            new_out["v"] = (R**2 - y**2) * v
-        elif next(iter(out.keys())) == "p":
-            p = out["p"]
-            # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
-            new_out["p"] = (
-                (X_IN - x) * 0
-                + (P_IN - P_OUT) * (X_OUT - x) / L
-                + 0 * y
-                + (X_IN - x) * (X_OUT - x) * p
-            )
-        else:
-            raise NotImplementedError(f"{out.keys()} are outputs to be implemented")
-
-        return new_out
+    model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p"), 3, 50, "swish")
 
     def input_transform(input):
         x, y = input["x"], input["y"]
@@ -273,16 +206,33 @@ if __name__ == "__main__":
     model_u.register_input_transform(input_transform)
     model_v.register_input_transform(input_transform)
     model_p.register_input_transform(input_transform)
-    model_u.register_output_transform(output_transform)
-    model_v.register_output_transform(output_transform)
-    model_p.register_output_transform(output_transform)
-    model = ppsci.arch.ModelList([model_u, model_v, model_p])
+    model_u.register_output_transform(
+        lambda out, input: {"u": out["u"] * (R**2 - input["y"] ** 2)}
+    )
+    model_v.register_output_transform(
+        lambda out, input: {"v": (R**2 - input["y"] ** 2) * out["v"]}
+    )
+    model_p.register_output_transform(
+        lambda out, input: {
+            "p": (
+                (X_IN - input["x"]) * 0
+                + (P_IN - P_OUT) * (X_OUT - input["x"]) / L
+                + 0 * input["y"]
+                + (X_IN - input["x"]) * (X_OUT - input["x"]) * out["p"]
+            )
+        }
+    )
+    model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(LEARNING_RATE)([model])
 
     # set euqation
-    equation = {"NavierStokes": NavierStokes(RHO, 2, False)}
+    equation = {
+        "NavierStokes": ppsci.equation.NavierStokes(
+            nu=lambda out: out["nu"], rho=RHO, dim=2, time=False
+        )
+    }
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -301,18 +251,8 @@ if __name__ == "__main__":
         },
         loss=ppsci.loss.MSELoss("mean"),
         evenly=True,
-        weight_dict={"u": 1, "v": 1, "p": 1},
         name="EQ",
     )
-
-    visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
-            interior_data,
-            {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            VISU_FREQ,
-            "result_u",
-        )
-    }
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -324,7 +264,7 @@ if __name__ == "__main__":
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=False,
         save_freq=10,
-        log_freq=LOG_FREQ,
+        log_freq=1,
         equation=equation,
     )
 
@@ -337,7 +277,7 @@ if __name__ == "__main__":
         "y": data_2d_xy_old[:, 1:2],
         "nu": data_2d_xy_old[:, 2:3],
     }
-    output_dict = predict(input_dict, solver)
+    output_dict = solver.predict(input_dict)
     u_pred = output_dict["u"].numpy().reshape(N_y, N_x, N_p)
     v_pred = output_dict["v"].numpy().reshape(N_y, N_x, N_p)
     p_pred = output_dict["p"].numpy().reshape(N_y, N_x, N_p)
@@ -408,7 +348,7 @@ if __name__ == "__main__":
         "y": data_2d_xy_test[:, 1:2],
         "nu": data_2d_xy_test[:, 2:3],
     }
-    output_dict_test = predict(input_dict_test, solver)
+    output_dict_test = solver.predict(input_dict_test)
     u_max_pred = output_dict_test["u"].numpy()
 
     # Analytical result, y = 0

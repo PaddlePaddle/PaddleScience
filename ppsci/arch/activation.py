@@ -23,7 +23,8 @@ class Swish(nn.Layer):
     def __init__(self, beta: float = 1.0):
         super().__init__()
         self.beta = paddle.create_parameter(
-            shape=[0],
+            shape=[1],
+            dtype=paddle.get_default_dtype(),
             default_initializer=paddle.nn.initializer.Constant(beta),
         )
 

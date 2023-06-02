@@ -19,9 +19,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-if TYPE_CHECKING:
-    import paddle
-
 from paddle import nn
 from paddle import optimizer as optim
 from paddle import regularizer
