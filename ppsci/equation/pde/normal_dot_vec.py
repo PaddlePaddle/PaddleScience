@@ -18,7 +18,11 @@ from ppsci.equation.pde import base
 
 
 class NormalDotVec(base.PDE):
-    """NormalDotVec.
+    r"""NormalDotVec.
+
+    $$
+    \mathbf{n} \cdot \mathbf{v} = 0
+    $$
 
     Args:
         velocity_keys (Tuple[str, ...]): Keys for velocity(ies).
