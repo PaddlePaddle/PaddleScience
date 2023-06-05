@@ -161,7 +161,7 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3dVector(vertices),
             open3d.utility.Vector3iVector(faces),
         )
-        open3d_mesh.scale(scale, center)
+        open3d_mesh = open3d_mesh.scale(scale, center)
         self.py_mesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )

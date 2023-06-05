@@ -17,7 +17,11 @@ from ppsci.equation.pde import base
 
 
 class Laplace(base.PDE):
-    """Class for laplace equation.
+    r"""Class for laplace equation.
+
+    $$
+    \nabla^2 \varphi = 0
+    $$
 
     Args:
         dim (int): Dimension of equation.

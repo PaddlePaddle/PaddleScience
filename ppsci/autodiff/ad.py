@@ -171,12 +171,12 @@ class Hessians:
         Args:
             ys (paddle.Tensor): Output tensor.
             xs (paddle.Tensor): Input tensor.
-            component (Optional[int], optional): If `y` has the shape (batch_size, dim_y > 1), then `y[:, component]`
+            component (Optional[int]): If `y` has the shape (batch_size, dim_y > 1), then `y[:, component]`
                 is used to compute the Hessian. Do not use if `y` has the shape (batch_size,
                 1). Defaults to None.
             i (int, optional): i-th input variable. Defaults to 0.
             j (int, optional): j-th input variable. Defaults to 0.
-            grad_y (Optional[paddle.Tensor], optional): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
+            grad_y (Optional[paddle.Tensor]): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
                 duplicate computation. Defaults to None.
 
         Returns:
