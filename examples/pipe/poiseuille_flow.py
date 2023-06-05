@@ -94,9 +94,7 @@ if __name__ == "__main__":
 
     # set model
     model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u"), 3, 50, "swish")
-
     model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v"), 3, 50, "swish")
-
     model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p"), 3, 50, "swish")
 
     class Transform:

@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import math
 import os
 import os.path as osp
@@ -5,12 +19,13 @@ import os.path as osp
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
-from paddle.fluid import core
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import misc
 
 if __name__ == "__main__":
+    args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
@@ -20,12 +35,8 @@ if __name__ == "__main__":
     os.makedirs(PLOT_DIR, exist_ok=True)
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    core.set_prim_eager_enabled(False)
 
     # Hyper parameters
-    EPOCHS = 500
-    BATCH_SIZE = 50
-    LEARNING_RATE = 1e-3
 
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
@@ -59,7 +70,6 @@ if __name__ == "__main__":
     # Axisymetric boundary
     R = (
         scale
-        * 1
         / math.sqrt(2 * np.pi * SIGMA**2)
         * np.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
     )
@@ -89,27 +99,18 @@ if __name__ == "__main__":
     plt.axis("equal")
     plt.savefig(osp.join(PLOT_DIR, "one_scale_sample"), bbox_inches="tight")
 
-    np.savez("x_0526_pd", x=x)
-    np.savez("y_0526_pd", y=y)
-    np.savez("scale_0526_pd", scale=scale)
     interior_geom = ppsci.geometry.PointCloud(
         interior={"x": x, "y": y, "scale": scale},
-        coord_keys=["x", "y", "scale"],
+        coord_keys=("x", "y", "scale"),
     )
 
     def init_func(m):
         if misc.typename(m) == "Linear":
             ppsci.utils.initializer.kaiming_normal_(m.weight, reverse=True)
 
-    model_1 = ppsci.arch.MLP(
-        ("x", "y", "scale"), ("u"), 3, 20, "silu"
-    )  # swish without learnable variable
-    model_2 = ppsci.arch.MLP(
-        ("x", "y", "scale"), ("v"), 3, 20, "silu"
-    )  # swish without learnable variable
-    model_3 = ppsci.arch.MLP(
-        ("x", "y", "scale"), ("p"), 3, 20, "silu"
-    )  # swish without learnable variable
+    model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u"), 3, 20, "silu")
+    model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v"), 3, 20, "silu")
+    model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p"), 3, 20, "silu")
     model_1.apply(init_func)
     model_2.apply(init_func)
     model_3.apply(init_func)
@@ -125,7 +126,6 @@ if __name__ == "__main__":
             x, scale = self.input["x"], self.input["scale"]
             R = (
                 scale
-                * 1
                 / np.sqrt(2 * np.pi * SIGMA**2)
                 * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
             )
@@ -160,6 +160,8 @@ if __name__ == "__main__":
     model_3.register_output_transform(Transform.output_trans_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
+    LEARNING_RATE = 1e-3
+
     optimizer_1 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
     )((model_1,))
@@ -173,6 +175,8 @@ if __name__ == "__main__":
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
 
+    BATCH_SIZE = 50
+
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -184,7 +188,7 @@ if __name__ == "__main__":
             "iters_per_epoch": int(x.shape[0] / BATCH_SIZE),
             "sampler": {
                 "name": "BatchSampler",
-                "shuffle": False,
+                "shuffle": True,
                 "drop_last": False,
             },
         },
@@ -192,18 +196,20 @@ if __name__ == "__main__":
         evenly=True,
         name="EQ",
     )
-    constrain_dict = {pde_constraint.name: pde_constraint}
+    constraint = {pde_constraint.name: pde_constraint}
+
+    EPOCHS = 500 if not args.epochs else args.epochs
+
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constrain_dict,
+        constraint,
         OUTPUT_DIR,
         optimizer,
         epochs=EPOCHS,
         iters_per_epoch=int(x.shape[0] / BATCH_SIZE),
-        eval_during_train=False,
         save_freq=10,
-        log_freq=1,
+        log_freq=10,
         equation=equation,
     )
 
@@ -213,16 +219,14 @@ if __name__ == "__main__":
         xt = paddle.to_tensor(x)
         yt = paddle.to_tensor(y)
         scalet = scale * paddle.ones_like(xt)
-        net_in = {"x": xt, "y": yt, "scale": scalet}
-        output_dict = solver.predict(net_in, 100)
+        input_dict = {"x": xt, "y": yt, "scale": scalet}
+        output_dict = solver.predict(input_dict, batch_size=100)
         return output_dict
 
     scale_test = np.load("./data/aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")[
         "scale"
     ]
-    CASE_COUNT = [1.0, 151.0, 486.0]
-    w_ctl = np.zeros([len(scale_test), 1])
-    w_ctl_Ml = np.zeros([len(scale_test), 1])
+    CASE_SELECTED = [1, 151, 486]
     PLOT_X = 0.8
     PLOT_Y = 0.06
     FONTSIZE = 14
@@ -235,10 +239,10 @@ if __name__ == "__main__":
     x_centerline = np.linspace(
         X_IN, X_OUT, N_CL, dtype=paddle.get_default_dtype()
     ).reshape(N_CL, 1)
-    y_centerline = np.zeros_like(x_centerline, dtype=paddle.get_default_dtype())
-    for caseIdx in CASE_COUNT:
-        scale = scale_test[int(caseIdx - 1)]
-        data_CFD = np.load(osp.join(path, str(caseIdx) + "CFD_contour.npz"))
+    y_centerline = np.zeros_like(x_centerline)
+    for case_id in CASE_SELECTED:
+        scale = scale_test[case_id - 1]
+        data_CFD = np.load(osp.join(path, f"{case_id}CFD_contour.npz"))
         x = data_CFD["x"].astype(paddle.get_default_dtype())
         y = data_CFD["y"].astype(paddle.get_default_dtype())
         u_cfd = data_CFD["U"].astype(paddle.get_default_dtype())
@@ -248,10 +252,14 @@ if __name__ == "__main__":
         output_dict = single_test(
             x.reshape(n, 1),
             y.reshape(n, 1),
-            np.ones((n, 1), dtype=paddle.get_default_dtype()) * scale,
+            np.full((n, 1), scale, dtype=paddle.get_default_dtype()),
             solver,
         )
-        u, v, p = output_dict["u"], output_dict["v"], output_dict["p"]
+        u, v, p = (
+            output_dict["u"].numpy(),
+            output_dict["v"].numpy(),
+            output_dict["p"].numpy(),
+        )
         w = np.zeros_like(u)
         u_vec = np.concatenate([u, v, w], axis=1)
         error_u.append(
@@ -275,7 +283,7 @@ if __name__ == "__main__":
         plt.text(PLOT_X, PLOT_Y, r"CFD", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.savefig(
-            osp.join(PLOT_DIR, f"{int(caseIdx)}_scale_{scale}_uContour_test.png"),
+            osp.join(PLOT_DIR, f"{case_id}_scale_{scale}_uContour_test.png"),
             bbox_inches="tight",
         )
 
@@ -292,31 +300,31 @@ if __name__ == "__main__":
         plt.text(PLOT_X, PLOT_Y, r"CFD", {"color": "b", "fontsize": FONTSIZE})
         plt.axis(axis_limit)
         plt.savefig(
-            osp.join(PLOT_DIR, f"{int(caseIdx)}_scale_{scale}_vContour_test.png"),
+            osp.join(PLOT_DIR, f"{case_id}_scale_{scale}_vContour_test.png"),
             bbox_inches="tight",
         )
         plt.close("all")
 
         # Centerline wall shear profile tau_c (downside)
-        data_CFD_wss = np.load(path + str(caseIdx) + "CFD_wss.npz")
+        data_CFD_wss = np.load(osp.join(path, f"{case_id}CFD_wss.npz"))
         x_inital = data_CFD_wss["x"]
         wall_shear_mag_up = data_CFD_wss["wss"]
 
         D_H = 0.001  # The spanwise distance is approximately the height of the wall
         r_cl = (
             scale
-            * 1
             / np.sqrt(2 * np.pi * SIGMA**2)
             * np.exp(-((x_centerline - mu) ** 2) / (2 * SIGMA**2))
         )
-        y_wall = (-R_INLET + D_H) * np.ones_like(
-            x_centerline, dtype=paddle.get_default_dtype()
-        ) + r_cl
+        y_wall = (-R_INLET + D_H) * np.ones_like(x_centerline) + r_cl
         output_dict_wss = single_test(
-            x_centerline, y_wall, np.ones((N_CL, 1)) * scale, solver
+            x_centerline,
+            y_wall,
+            np.full((N_CL, 1), scale, dtype=paddle.get_default_dtype()),
+            solver,
         )
         v_cl_total = np.zeros_like(
-            x_centerline, dtype=paddle.get_default_dtype()
+            x_centerline
         )  # assuming normal velocity along the wall is zero
         u_cl = output_dict_wss["u"].numpy()
         v_cl = output_dict_wss["v"].numpy()
@@ -348,10 +356,14 @@ if __name__ == "__main__":
         plt.ylabel(r"$\tau_{c}$", fontsize=16)
         plt.legend(prop={"size": 16})
         plt.savefig(
-            osp.join(PLOT_DIR, f"{int(caseIdx)}_nu__{scale}_wallshear_test.png"),
+            osp.join(PLOT_DIR, f"{case_id}_nu__{scale}_wallshear_test.png"),
             bbox_inches="tight",
         )
         plt.close("all")
-    print(f"epochs = {EPOCHS}")
-    print(f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}")
-    print(f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}")
+    ppsci.utils.logger(f"epochs = {EPOCHS}")
+    ppsci.utils.logger(
+        f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}"
+    )
+    ppsci.utils.logger(
+        f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}"
+    )

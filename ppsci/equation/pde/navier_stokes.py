@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
+from typing import Union
+
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
@@ -21,7 +24,7 @@ class NavierStokes(base.PDE):
     """Class for navier-stokes equation.
 
     Args:
-        nu (float): Dynamic viscosity.
+        nu (Union[float, Callable]): Dynamic viscosity.
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
@@ -31,7 +34,7 @@ class NavierStokes(base.PDE):
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
-    def __init__(self, nu: float, rho: float, dim: int, time: bool):
+    def __init__(self, nu: Union[float, Callable], rho: float, dim: int, time: bool):
         super().__init__()
         self.nu = nu
         self.rho = rho
