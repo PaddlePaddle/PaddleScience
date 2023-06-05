@@ -20,15 +20,29 @@ from ppsci.equation.pde import base
 
 
 class LinearElasticity(base.PDE):
-    """Linear elasticity equations.
+    r"""Linear elasticity equations.
     Use either (E, nu) or (lambda_, mu) to define the material properties.
+
+    $$
+    \begin{cases}
+        stress\_disp_{xx} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial u}{\partial x} - \sigma_{xx} \\
+        stress\_disp_{yy} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial v}{\partial y} - \sigma_{yy} \\
+        stress\_disp_{zz} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial w}{\partial z} - \sigma_{zz} \\
+        traction_{x} = \mathbf{n}_x \sigma_{xx} + \mathbf{n}_y \sigma_{xy} + \mathbf{n}_z \sigma_{xz} \\
+        traction_{y} = \mathbf{n}_y \sigma_{yx} + \mathbf{n}_y \sigma_{yy} + \mathbf{n}_z \sigma_{yz} \\
+        traction_{z} = \mathbf{n}_z \sigma_{zx} + \mathbf{n}_y \sigma_{zy} + \mathbf{n}_z \sigma_{zz} \\
+        navier_{x} = \rho(\dfrac{\partial^2 u}{\partial t}) - (\lambda + \mu)(\dfrac{\partial^2 u}{\partial x^2}+\dfrac{\partial^2 v}{\partial y \partial x} + \dfrac{\partial^2 w}{\partial z \partial x}) - \mu(\dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} + \dfrac{\partial^2 u}{\partial z^2}) \\
+        navier_{y} = \rho(\dfrac{\partial^2 v}{\partial t}) - (\lambda + \mu)(\dfrac{\partial^2 v}{\partial x \partial y}+\dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 w}{\partial z \partial y}) - \mu(\dfrac{\partial^2 v}{\partial x^2} + \dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 v}{\partial z^2}) \\
+        navier_{z} = \rho(\dfrac{\partial^2 w}{\partial t}) - (\lambda + \mu)(\dfrac{\partial^2 w}{\partial x \partial z}+\dfrac{\partial^2 v}{\partial y \partial z} + \dfrac{\partial^2 w}{\partial z^2}) - \mu(\dfrac{\partial^2 w}{\partial x^2} + \dfrac{\partial^2 w}{\partial y^2} + \dfrac{\partial^2 w}{\partial z^2}) \\
+    \end{cases}
+    $$
 
     Args:
         E (Optional[float]): The Young's modulus. Defaults to None.
         nu (Optional[float]): The Poisson's ratio. Defaults to None.
         lambda_ (Optional[float]): Lamé's first parameter. Defaults to None.
         mu (Optional[float]): Lamé's second parameter (shear modulus). Defaults to None.
-        rho (float, optional): Mass density.. Defaults to 1.
+        rho (float, optional): Mass density. Defaults to 1.
         dim (int, optional): Dimension of the linear elasticity (2 or 3). Defaults to 3.
         time (bool, optional): Whether contains time data. Defaults to False.
 

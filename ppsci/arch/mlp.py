@@ -67,7 +67,7 @@ class MLP(base.Arch):
         activation (str, optional): Name of activation function. Defaults to "tanh".
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
-        input_dim (Optional[int], optional): Number of input's dimension. Defaults to None.
+        input_dim (Optional[int]): Number of input's dimension. Defaults to None.
 
     Examples:
         >>> import ppsci

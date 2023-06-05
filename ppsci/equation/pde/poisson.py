@@ -17,7 +17,11 @@ from ppsci.equation.pde import base
 
 
 class Poisson(base.PDE):
-    """Class for poisson equation.
+    r"""Class for poisson equation.
+
+    $$
+    \nabla^2 \varphi = C
+    $$
 
     Args:
         dim (int): Dimension of equation.
