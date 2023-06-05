@@ -19,21 +19,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 import seaborn as sns
-from paddle.fluid import core
 
 import ppsci
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
-from ppsci.equation.pde import base
+from ppsci.utils import config
 
 if __name__ == "__main__":
+    args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
     output_dir = "./output_poiseuille_flow"
-
-    core.set_prim_eager_enabled(False)
 
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
@@ -52,7 +48,7 @@ if __name__ == "__main__":
 
     LEARNING_RATE = 5e-3
     BATCH_SIZE = 128
-    EPOCHS = 3000  # 5000
+    EPOCHS = 3000 if not args.epochs else args.epochs  # 5000
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
 
     EVAL_FREQ = 100  # display step
