@@ -22,6 +22,7 @@ import seaborn as sns
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import logger
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     output_dir = "./output_poiseuille_flow"
 
     # initialize logger
-    ppsci.utils.logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
 
     NU_MEAN = 0.001
     NU_STD = 0.9
@@ -114,12 +115,13 @@ if __name__ == "__main__":
                 )
             }
 
-    model_u.register_input_transform(Transform.input_trans)
-    model_v.register_input_transform(Transform.input_trans)
-    model_p.register_input_transform(Transform.input_trans)
-    model_u.register_output_transform(Transform.output_trans_u)
-    model_v.register_output_transform(Transform.output_trans_v)
-    model_p.register_output_transform(Transform.output_trans_p)
+    trm = Transform()
+    model_u.register_input_transform(trm.input_trans)
+    model_v.register_input_transform(trm.input_trans)
+    model_p.register_input_transform(trm.input_trans)
+    model_u.register_output_transform(trm.output_trans_u)
+    model_v.register_output_transform(trm.output_trans_v)
+    model_p.register_output_transform(trm.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     LEARNING_RATE = 5e-3
@@ -173,7 +175,7 @@ if __name__ == "__main__":
         equation=equation,
     )
 
-    solver.train()
+    # solver.train()
 
     # Cross-section velocity profiles of 4 different viscosity sample
     # Predicted result

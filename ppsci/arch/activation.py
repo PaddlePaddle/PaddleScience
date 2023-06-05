@@ -27,7 +27,7 @@ class Swish(nn.Layer):
             dtype=paddle.get_default_dtype(),
             default_initializer=paddle.nn.initializer.Constant(beta),
         )
-        self.add_parameter("beta", beta)
+        self.add_parameter("beta", self.beta)
 
     def forward(self, x):
         return x * F.sigmoid(self.beta * x)

@@ -22,6 +22,7 @@ import paddle
 
 import ppsci
 from ppsci.utils import config
+from ppsci.utils import logger
 from ppsci.utils import misc
 
 if __name__ == "__main__":
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     # initialize logger
-    ppsci.utils.logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
@@ -119,9 +120,10 @@ if __name__ == "__main__":
 
         def input_trans(self, input):
             self.input = input
+            return input
 
         def output_trans_u(self, out):
-            x, scale = self.input["x"], self.input["scale"]
+            x, y, scale = self.input["x"], self.input["y"], self.input["scale"]
             R = (
                 scale
                 / np.sqrt(2 * np.pi * SIGMA**2)
@@ -150,12 +152,13 @@ if __name__ == "__main__":
                 )
             }
 
-    model_1.register_input_transform(Transform.input_trans)
-    model_2.register_input_transform(Transform.input_trans)
-    model_3.register_input_transform(Transform.input_trans)
-    model_1.register_output_transform(Transform.output_trans_u)
-    model_2.register_output_transform(Transform.output_trans_v)
-    model_3.register_output_transform(Transform.output_trans_p)
+    trm = Transform()
+    model_1.register_input_transform(trm.input_trans)
+    model_2.register_input_transform(trm.input_trans)
+    model_3.register_input_transform(trm.input_trans)
+    model_1.register_output_transform(trm.output_trans_u)
+    model_2.register_output_transform(trm.output_trans_v)
+    model_3.register_output_transform(trm.output_trans_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     LEARNING_RATE = 1e-3
@@ -211,7 +214,7 @@ if __name__ == "__main__":
         equation=equation,
     )
 
-    solver.train()
+    # solver.train()
 
     def single_test(x, y, scale, solver):
         xt = paddle.to_tensor(x)
@@ -358,10 +361,10 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
         plt.close("all")
-    ppsci.utils.logger(f"epochs = {EPOCHS}")
-    ppsci.utils.logger(
+    logger.info(f"epochs = {EPOCHS}")
+    logger.info(
         f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}"
     )
-    ppsci.utils.logger(
+    logger.info(
         f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}"
     )
