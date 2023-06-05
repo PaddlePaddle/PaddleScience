@@ -20,20 +20,10 @@ from paddle import nn
 
 
 class Swish(nn.Layer):
-    r"""
-    Swish Activation.
-
-    .. math::
-
-        Swish(x)= \aplpha x \cdot \frac{1}{1 + e^{-x}}
-
-    """
-
     def __init__(self, beta: float = 1.0):
         super().__init__()
         self.beta = self.create_parameter(
-            shape=[1],
-            dtype=paddle.get_default_dtype(),
+            shape=[],
             default_initializer=paddle.nn.initializer.Constant(beta),
         )
         self.add_parameter("beta", self.beta)
@@ -42,38 +32,7 @@ class Swish(nn.Layer):
         return x * F.sigmoid(self.beta * x)
 
 
-def silu(x):
-    """numeric stable silu"""
-    return x * F.sigmoid(x)
-
-
-class SILU(nn.Layer):
-    r"""
-    SILU Activation.
-
-    .. math::
-
-        SILU(x)= x \cdot \frac{1}{1 + e^{-x}}
-
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return silu(x)
-
-
 class Cos(nn.Layer):
-    r"""
-    Cos Activation.
-
-    .. math::
-
-        Cos(x)= cos(x)
-
-    """
-
     def __init__(self):
         super().__init__()
 
@@ -82,15 +41,6 @@ class Cos(nn.Layer):
 
 
 class Sin(nn.Layer):
-    r"""
-    Sin Activation.
-
-    .. math::
-
-        Sin(x)= sin(x)
-
-    """
-
     def __init__(self):
         super().__init__()
 
@@ -104,7 +54,7 @@ act_func_dict = {
     "selu": nn.SELU(),
     "gelu": nn.GELU(),
     "sigmoid": nn.Sigmoid(),
-    "silu": SILU(),
+    "silu": nn.Silu(),
     "sin": Sin(),
     "cos": Cos(),
     "swish": Swish(),

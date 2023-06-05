@@ -34,8 +34,6 @@ if __name__ == "__main__":
 
     # set output directory
     OUTPUT_DIR = "./output_aneurysm_flow"
-    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
-    os.makedirs(PLOT_DIR, exist_ok=True)
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -51,16 +49,18 @@ if __name__ == "__main__":
     X_IN = 0
     X_OUT = X_IN + L
     R_INLET = 0.05
-    unique_x = np.linspace(X_IN, X_OUT, 100)
     mu = 0.5 * (X_OUT - X_IN)
     N_Y = 20
+
     x_inital = np.linspace(X_IN, X_OUT, 100, dtype=paddle.get_default_dtype()).reshape(
         100, 1
     )
     x_20_copy = np.tile(x_inital, (20, 1))  # duplicate 20 times of x for dataloader
+
     SIGMA = 0.1
     SCALE_START = -0.02
     SCALE_END = 0
+
     scale_initial = np.linspace(
         SCALE_START, SCALE_END, 50, endpoint=True, dtype=paddle.get_default_dtype()
     ).reshape(50, 1)
@@ -70,15 +70,17 @@ if __name__ == "__main__":
     )
 
     # Axisymetric boundary
-    R = (
+    r_func = (
         scale
         / math.sqrt(2 * np.pi * SIGMA**2)
         * np.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
     )
 
     # Visualize stenosis(scale == 0.2)
-    y_up = (R_INLET - R) * np.ones_like(x)
-    y_down = (-R_INLET + R) * np.ones_like(x)
+    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
+    os.makedirs(PLOT_DIR, exist_ok=True)
+    y_up = (R_INLET - r_func) * np.ones_like(x)
+    y_down = (-R_INLET + r_func) * np.ones_like(x)
     idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indexs
     plt.figure()
     plt.scatter(x[idx], y_up[idx])
@@ -91,9 +93,12 @@ if __name__ == "__main__":
     for x0 in x_inital:
         index = np.where(x[:, 0] == x0)[0]
         # y is linear to scale, so we place linespace to get 1000 x, it coressponds to vessels
-        y[index] = np.linspace(-max(y_up[index]), max(y_up[index]), len(index)).reshape(
-            len(index), -1
-        )
+        y[index] = np.linspace(
+            -max(y_up[index]),
+            max(y_up[index]),
+            len(index),
+            dtype=paddle.get_default_dtype(),
+        ).reshape(len(index), -1)
 
     idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indexs
     plt.figure()
@@ -105,14 +110,15 @@ if __name__ == "__main__":
         interior={"x": x, "y": y, "scale": scale},
         coord_keys=("x", "y", "scale"),
     )
+    geom = {"interior": interior_geom}
 
     def init_func(m):
         if misc.typename(m) == "Linear":
             ppsci.utils.initializer.kaiming_normal_(m.weight, reverse=True)
 
-    model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u"), 3, 20, "silu")
-    model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v"), 3, 20, "silu")
-    model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p"), 3, 20, "silu")
+    model_1 = ppsci.arch.MLP(("x", "y", "scale"), ("u",), 3, 20, "silu")
+    model_2 = ppsci.arch.MLP(("x", "y", "scale"), ("v",), 3, 20, "silu")
+    model_3 = ppsci.arch.MLP(("x", "y", "scale"), ("p",), 3, 20, "silu")
     model_1.apply(init_func)
     model_2.apply(init_func)
     model_3.apply(init_func)
@@ -127,12 +133,12 @@ if __name__ == "__main__":
 
         def output_trans_u(self, out):
             x, y, scale = self.input["x"], self.input["y"], self.input["scale"]
-            R = (
+            r_func = (
                 scale
                 / np.sqrt(2 * np.pi * SIGMA**2)
                 * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
             )
-            self.h = R_INLET - R
+            self.h = R_INLET - r_func
             u = out["u"]
             # The no-slip condition of velocity on the wall
             return {"u": u * (self.h**2 - y**2)}
@@ -148,20 +154,16 @@ if __name__ == "__main__":
             p = out["p"]
             # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
             return {
-                "p": (
-                    (X_IN - x) * 0
-                    + (P_IN - P_OUT) * (X_OUT - x) / L
-                    + (X_IN - x) * (X_OUT - x) * p
-                )
+                "p": ((P_IN - P_OUT) * (X_OUT - x) / L + (X_IN - x) * (X_OUT - x) * p)
             }
 
-    trm = Transform()
-    model_1.register_input_transform(trm.input_trans)
-    model_2.register_input_transform(trm.input_trans)
-    model_3.register_input_transform(trm.input_trans)
-    model_1.register_output_transform(trm.output_trans_u)
-    model_2.register_output_transform(trm.output_trans_v)
-    model_3.register_output_transform(trm.output_trans_p)
+    transform = Transform()
+    model_1.register_input_transform(transform.input_trans)
+    model_2.register_input_transform(transform.input_trans)
+    model_3.register_input_transform(transform.input_trans)
+    model_1.register_output_transform(transform.output_trans_u)
+    model_2.register_output_transform(transform.output_trans_v)
+    model_3.register_output_transform(transform.output_trans_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     LEARNING_RATE = 1e-3
@@ -184,7 +186,7 @@ if __name__ == "__main__":
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-        geom=interior_geom,
+        geom=geom["interior"],
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
             "num_workers": 1,
@@ -213,7 +215,6 @@ if __name__ == "__main__":
         epochs=EPOCHS,
         iters_per_epoch=int(x.shape[0] / BATCH_SIZE),
         save_freq=10,
-        log_freq=10,
         equation=equation,
     )
 
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     def single_test(x, y, scale, solver):
         xt = paddle.to_tensor(x)
         yt = paddle.to_tensor(y)
-        scalet = scale * paddle.ones_like(xt)
+        scalet = paddle.full_like(xt, scale)
         input_dict = {"x": xt, "y": yt, "scale": scalet}
         output_dict = solver.predict(input_dict, batch_size=100)
         return output_dict
@@ -332,8 +333,7 @@ if __name__ == "__main__":
         )  # assuming normal velocity along the wall is zero
         u_cl = output_dict_wss["u"].numpy()
         v_cl = output_dict_wss["v"].numpy()
-        for i in range(N_CL):
-            v_cl_total[i] = np.sqrt(u_cl[i] ** 2 + v_cl[i] ** 2)
+        v_cl_total = np.sqrt(u_cl**2 + v_cl**2)
         tau_c = NU * v_cl_total / D_H
 
         plt.figure()

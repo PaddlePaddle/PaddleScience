@@ -14,6 +14,7 @@
 
 import copy
 import os
+import os.path as osp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,8 +22,13 @@ import paddle
 import seaborn as sns
 
 import ppsci
+from ppsci.utils import checker
 from ppsci.utils import config
 from ppsci.utils import logger
+
+if not checker.dynamic_import_to_globals("seaborn"):
+    raise ModuleNotFoundError(f"Please install seaborn through pip first.")
+
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -30,10 +36,10 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
 
     # set output directory
-    output_dir = "./output_poiseuille_flow"
+    OUTPUT_DIR = "./output_poiseuille_flow"
 
     # initialize logger
-    logger.init_logger("ppsci", f"{output_dir}/train.log", "info")
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     NU_MEAN = 0.001
     NU_STD = 0.9
@@ -68,12 +74,12 @@ if __name__ == "__main__":
     data_2d_xy = (
         np.array(np.meshgrid(data_1d_x, data_1d_y, data_1d_nu)).reshape(3, -1).T
     )
-    data_2d_xy_old = copy.deepcopy(data_2d_xy)
-    np.random.shuffle(data_2d_xy)
+    data_2d_xy_shuffle = copy.deepcopy(data_2d_xy)
+    np.random.shuffle(data_2d_xy_shuffle)
 
-    input_x = data_2d_xy[:, 0].reshape(data_2d_xy.shape[0], 1)
-    input_y = data_2d_xy[:, 1].reshape(data_2d_xy.shape[0], 1)
-    input_nu = data_2d_xy[:, 2].reshape(data_2d_xy.shape[0], 1)
+    input_x = data_2d_xy_shuffle[:, 0].reshape(data_2d_xy_shuffle.shape[0], 1)
+    input_y = data_2d_xy_shuffle[:, 1].reshape(data_2d_xy_shuffle.shape[0], 1)
+    input_nu = data_2d_xy_shuffle[:, 2].reshape(data_2d_xy_shuffle.shape[0], 1)
 
     interior_data = {"x": input_x, "y": input_y, "nu": input_nu}
     interior_geom = ppsci.geometry.PointCloud(
@@ -82,14 +88,11 @@ if __name__ == "__main__":
     )
 
     # set model
-    model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u"), 3, 50, "swish")
-    model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v"), 3, 50, "swish")
-    model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p"), 3, 50, "swish")
+    model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u",), 3, 50, "swish")
+    model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v",), 3, 50, "swish")
+    model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p",), 3, 50, "swish")
 
     class Transform:
-        def __init__(self) -> None:
-            pass
-
         def input_trans(self, input):
             self.input = input
             x, y = input["x"], input["y"]
@@ -109,25 +112,22 @@ if __name__ == "__main__":
         def output_trans_p(self, out):
             return {
                 "p": (
-                    (X_IN - self.input["x"]) * 0
-                    + (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
+                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
                     + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
                 )
             }
 
-    trm = Transform()
-    model_u.register_input_transform(trm.input_trans)
-    model_v.register_input_transform(trm.input_trans)
-    model_p.register_input_transform(trm.input_trans)
-    model_u.register_output_transform(trm.output_trans_u)
-    model_v.register_output_transform(trm.output_trans_v)
-    model_p.register_output_transform(trm.output_trans_p)
+    transform = Transform()
+    model_u.register_input_transform(transform.input_trans)
+    model_v.register_input_transform(transform.input_trans)
+    model_p.register_input_transform(transform.input_trans)
+    model_u.register_output_transform(transform.output_trans_u)
+    model_v.register_output_transform(transform.output_trans_v)
+    model_p.register_output_transform(transform.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
-    LEARNING_RATE = 5e-3
-
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(LEARNING_RATE)((model,))
+    optimizer = ppsci.optimizer.Adam(5e-3)((model,))
 
     # set euqation
     equation = {
@@ -159,19 +159,18 @@ if __name__ == "__main__":
         name="EQ",
     )
 
-    EPOCHS = 3000 if not args.epochs else args.epochs  # 5000
+    EPOCHS = 3000 if not args.epochs else args.epochs
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         {pde_constraint.name: pde_constraint},
-        output_dir,
+        OUTPUT_DIR,
         optimizer,
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=False,
         save_freq=10,
-        log_freq=1,
         equation=equation,
     )
 
@@ -180,9 +179,9 @@ if __name__ == "__main__":
     # Cross-section velocity profiles of 4 different viscosity sample
     # Predicted result
     input_dict = {
-        "x": data_2d_xy_old[:, 0:1],
-        "y": data_2d_xy_old[:, 1:2],
-        "nu": data_2d_xy_old[:, 2:3],
+        "x": data_2d_xy[:, 0:1],
+        "y": data_2d_xy[:, 1:2],
+        "nu": data_2d_xy[:, 2:3],
     }
     output_dict = solver.predict(input_dict)
     u_pred = output_dict["u"].numpy().reshape(N_y, N_x, N_p)
@@ -203,6 +202,8 @@ if __name__ == "__main__":
     ytext = [0.45, 0.28, 0.1, 0.01]
 
     # Plot
+    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
+    os.makedirs(PLOT_DIR, exist_ok=True)
     plt.figure(1)
     plt.clf()
     for idxP in range(len(nu_index)):
@@ -224,11 +225,10 @@ if __name__ == "__main__":
             lw=2.0,
             alpha=1.0,
         )
-        nu_current = float("{0:.5f}".format(data_1d_nu[nu_index[idxP]]))
         plt.text(
             -0.012,
             ytext[idxP],
-            r"$\nu = $" + str(nu_current),
+            rf"$\nu = $ {data_1d_nu[nu_index[idxP]]}",
             {"color": "k", "fontsize": fontsize},
         )
 
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     ax1.tick_params(axis="y", labelsize=fontsize)
     ax1.set_xlim([-0.05, 0.05])
     ax1.set_ylim([0.0, 0.62])
-    plt.savefig("pipe_uProfiles.png", bbox_inches="tight")
+    plt.savefig(osp.join(PLOT_DIR, "pipe_uProfiles.png"), bbox_inches="tight")
 
     # Distribution of center velocity
     # Predicted result
@@ -288,4 +288,4 @@ if __name__ == "__main__":
     plt.ylabel(r"PDF", fontsize=fontsize)
     ax1.tick_params(axis="x", labelsize=fontsize)
     ax1.tick_params(axis="y", labelsize=fontsize)
-    plt.savefig("pipe_unformUQ.png", bbox_inches="tight")
+    plt.savefig(osp.join(PLOT_DIR, "pipe_unformUQ.png"), bbox_inches="tight")
