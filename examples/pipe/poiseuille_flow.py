@@ -175,7 +175,7 @@ if __name__ == "__main__":
         equation=equation,
     )
 
-    # solver.train()
+    solver.train()
 
     # Cross-section velocity profiles of 4 different viscosity sample
     # Predicted result

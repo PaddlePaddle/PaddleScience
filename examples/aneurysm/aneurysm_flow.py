@@ -214,7 +214,7 @@ if __name__ == "__main__":
         equation=equation,
     )
 
-    # solver.train()
+    solver.train()
 
     def single_test(x, y, scale, solver):
         xt = paddle.to_tensor(x)
