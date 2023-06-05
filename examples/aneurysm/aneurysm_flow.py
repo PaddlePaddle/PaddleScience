@@ -27,6 +27,8 @@ from ppsci.utils import misc
 
 if __name__ == "__main__":
     args = config.parse_args()
+    paddle.fluid.core.set_prim_eager_enabled(True)
+
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
 
@@ -34,6 +36,7 @@ if __name__ == "__main__":
     OUTPUT_DIR = "./output_aneurysm_flow"
     PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
+
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 

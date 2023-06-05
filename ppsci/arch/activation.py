@@ -20,6 +20,15 @@ from paddle import nn
 
 
 class Swish(nn.Layer):
+    r"""
+    Swish Activation.
+
+    .. math::
+
+        Swish(x)= \aplpha x \cdot \frac{1}{1 + e^{-x}}
+
+    """
+
     def __init__(self, beta: float = 1.0):
         super().__init__()
         self.beta = self.create_parameter(
@@ -38,17 +47,68 @@ def silu(x):
     return x * F.sigmoid(x)
 
 
+class SILU(nn.Layer):
+    r"""
+    SILU Activation.
+
+    .. math::
+
+        SILU(x)= x \cdot \frac{1}{1 + e^{-x}}
+
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return silu(x)
+
+
+class Cos(nn.Layer):
+    r"""
+    Cos Activation.
+
+    .. math::
+
+        Cos(x)= cos(x)
+
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return paddle.cos(x)
+
+
+class Sin(nn.Layer):
+    r"""
+    Sin Activation.
+
+    .. math::
+
+        Sin(x)= sin(x)
+
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return paddle.sin(x)
+
+
 act_func_dict = {
-    "elu": F.elu,
-    "relu": F.relu,
-    "selu": F.selu,
-    "gelu": F.gelu,
-    "sigmoid": F.sigmoid,
-    "silu": silu,
-    "sin": paddle.sin,
-    "cos": paddle.cos,
+    "elu": nn.ELU(),
+    "relu": nn.ReLU(),
+    "selu": nn.SELU(),
+    "gelu": nn.GELU(),
+    "sigmoid": nn.Sigmoid(),
+    "silu": SILU(),
+    "sin": Sin(),
+    "cos": Cos(),
     "swish": Swish(),
-    "tanh": F.tanh,
+    "tanh": nn.Tanh(),
     "identity": nn.Identity(),
 }
 

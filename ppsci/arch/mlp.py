@@ -29,16 +29,10 @@ class WeightNormLinear(nn.Layer):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight_v = self.create_parameter(
-            (in_features, out_features), dtype=paddle.get_default_dtype()
-        )
-        self.weight_g = self.create_parameter(
-            (out_features,), dtype=paddle.get_default_dtype()
-        )
+        self.weight_v = self.create_parameter((in_features, out_features))
+        self.weight_g = self.create_parameter((out_features,))
         if bias:
-            self.bias = self.create_parameter(
-                (out_features,), dtype=paddle.get_default_dtype()
-            )
+            self.bias = self.create_parameter((out_features,))
         else:
             self.bias = None
         self._init_weights()
@@ -120,7 +114,9 @@ class MLP(base.Arch):
         self.last_fc = nn.Linear(cur_size, len(self.output_keys))
 
         # initialize activation function
-        self.act = act_mod.get_activation(activation)
+        self.act = nn.LayerList(
+            [act_mod.get_activation(activation) for _ in range(len(hidden_size))]
+        )
 
         self.skip_connection = skip_connection
 
@@ -135,7 +131,7 @@ class MLP(base.Arch):
                     y = y + skip
                 else:
                     skip = y
-            y = self.act(y)
+            y = self.act[i](y)
 
         y = self.last_fc(y)
 
