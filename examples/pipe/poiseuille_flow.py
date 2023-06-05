@@ -46,14 +46,6 @@ if __name__ == "__main__":
     N_y = 50
     N_p = 50
 
-    LEARNING_RATE = 5e-3
-    BATCH_SIZE = 128
-    EPOCHS = 3000 if not args.epochs else args.epochs  # 5000
-    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
-
-    EVAL_FREQ = 100  # display step
-    VISU_FREQ = 100  # visulize step
-
     X_IN = 0
     X_OUT = X_IN + L
     Y_START = -R
@@ -130,6 +122,8 @@ if __name__ == "__main__":
     model_p.register_output_transform(Transform.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
+    LEARNING_RATE = 5e-3
+
     # set optimizer
     optimizer = ppsci.optimizer.Adam(LEARNING_RATE)((model,))
 
@@ -139,6 +133,9 @@ if __name__ == "__main__":
             nu=lambda out: out["nu"], rho=RHO, dim=2, time=False
         )
     }
+
+    BATCH_SIZE = 128
+    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -159,6 +156,8 @@ if __name__ == "__main__":
         evenly=True,
         name="EQ",
     )
+
+    EPOCHS = 3000 if not args.epochs else args.epochs  # 5000
 
     # initialize solver
     solver = ppsci.solver.Solver(

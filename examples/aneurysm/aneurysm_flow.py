@@ -36,8 +36,6 @@ if __name__ == "__main__":
     # initialize logger
     ppsci.utils.logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
-    # Hyper parameters
-
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
     P_IN = 0.1  # pressure at the inlet of pipe
