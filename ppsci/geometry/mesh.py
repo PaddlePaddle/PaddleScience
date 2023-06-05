@@ -40,7 +40,7 @@ class Mesh(geometry.Geometry):
     def __init__(self, mesh: Union["pymesh.Mesh", str]):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import pymesh
 
         if isinstance(mesh, str):
@@ -63,7 +63,7 @@ class Mesh(geometry.Geometry):
         self.face_area = self.py_mesh.get_attribute("face_area").reshape([-1])
 
         if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install open3d first.")
         import open3d
 
         self.open3d_mesh = open3d.geometry.TriangleMesh(
@@ -87,7 +87,7 @@ class Mesh(geometry.Geometry):
         self.num_faces = self.py_mesh.num_faces
 
         if not checker.dynamic_import_to_globals(["pysdf"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pysdf first.")
         import pysdf
 
         self.pysdf = pysdf.SDF(self.vertices, self.faces)
@@ -114,7 +114,7 @@ class Mesh(geometry.Geometry):
         the result of this function.
         """
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import pymesh
 
         sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
@@ -133,7 +133,7 @@ class Mesh(geometry.Geometry):
         faces = np.array(self.faces)
 
         if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import open3d
         import pymesh
 
@@ -153,7 +153,7 @@ class Mesh(geometry.Geometry):
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
         if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install open3d and pymesh first.")
         import open3d
         import pymesh
 
@@ -374,7 +374,7 @@ class Mesh(geometry.Geometry):
 
     def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import pymesh
 
         csg = pymesh.CSGTree(
@@ -390,7 +390,7 @@ class Mesh(geometry.Geometry):
 
     def difference(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import pymesh
 
         csg = pymesh.CSGTree(
@@ -403,7 +403,7 @@ class Mesh(geometry.Geometry):
 
     def intersection(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ModuleNotFoundError("Please install pymesh first.")
         import pymesh
 
         csg = pymesh.CSGTree(
