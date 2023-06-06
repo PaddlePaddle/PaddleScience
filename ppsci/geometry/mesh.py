@@ -133,7 +133,7 @@ class Mesh(geometry.Geometry):
         faces = np.array(self.faces)
 
         if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
-            raise ModuleNotFoundError("Please install pymesh first.")
+            raise ModuleNotFoundError("Please install open3d and pymesh first.")
         import open3d
         import pymesh
 
