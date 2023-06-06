@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+"""
+Reference: https://github.com/Jianxun-Wang/LabelFree-DNN-Surrogate
+"""
+
 import math
 import os
 import os.path as osp
