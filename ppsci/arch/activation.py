@@ -47,13 +47,7 @@ class Sin(nn.Layer):
         return paddle.sin(x)
 
 
-class SILU(nn.Layer):
-    r"""
-    SILU Activation.
-    .. math::
-        SILU(x)= x \cdot \frac{1}{1 + e^{-x}}
-    """
-
+class Silu(nn.Layer):
     def __init__(self):
         super().__init__()
 
@@ -67,7 +61,7 @@ act_func_dict = {
     "selu": nn.SELU(),
     "gelu": nn.GELU(),
     "sigmoid": nn.Sigmoid(),
-    "silu": SILU(),
+    "silu": Silu(),
     "sin": Sin(),
     "cos": Cos(),
     "swish": Swish(),
