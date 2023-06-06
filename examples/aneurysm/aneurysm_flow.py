@@ -220,13 +220,15 @@ if __name__ == "__main__":
 
     solver.train()
 
-    def single_test(x, y, scale, solver):
+    def model_predict(
+        x: np.ndarray, y: np.ndarray, scale: np.ndarray, solver: ppsci.solver.Solver
+    ):
         xt = paddle.to_tensor(x)
         yt = paddle.to_tensor(y)
         scalet = paddle.full_like(xt, scale)
         input_dict = {"x": xt, "y": yt, "scale": scalet}
         output_dict = solver.predict(input_dict, batch_size=100)
-        return output_dict
+        return {k: v.numpy() for k, v in output_dict.items()}
 
     scale_test = np.load("./data/aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")[
         "scale"
@@ -254,16 +256,16 @@ if __name__ == "__main__":
         # p_cfd = data_CFD["P"].astype(paddle.get_default_dtype()) # missing data
 
         n = len(x)
-        output_dict = single_test(
+        output_dict = model_predict(
             x.reshape(n, 1),
             y.reshape(n, 1),
             np.full((n, 1), scale, dtype=paddle.get_default_dtype()),
             solver,
         )
         u, v, p = (
-            output_dict["u"].numpy(),
-            output_dict["v"].numpy(),
-            output_dict["p"].numpy(),
+            output_dict["u"],
+            output_dict["v"],
+            output_dict["p"],
         )
         w = np.zeros_like(u)
         u_vec = np.concatenate([u, v, w], axis=1)
@@ -322,7 +324,7 @@ if __name__ == "__main__":
             * np.exp(-((x_centerline - mu) ** 2) / (2 * SIGMA**2))
         )
         y_wall = (-R_INLET + D_H) * np.ones_like(x_centerline) + r_cl
-        output_dict_wss = single_test(
+        output_dict_wss = model_predict(
             x_centerline,
             y_wall,
             np.full((N_CL, 1), scale, dtype=paddle.get_default_dtype()),
@@ -331,8 +333,8 @@ if __name__ == "__main__":
         v_cl_total = np.zeros_like(
             x_centerline
         )  # assuming normal velocity along the wall is zero
-        u_cl = output_dict_wss["u"].numpy()
-        v_cl = output_dict_wss["v"].numpy()
+        u_cl = output_dict_wss["u"]
+        v_cl = output_dict_wss["v"]
         v_cl_total = np.sqrt(u_cl**2 + v_cl**2)
         tau_c = NU * v_cl_total / D_H
 
@@ -364,7 +366,6 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
         plt.close("all")
-    logger.info(f"epochs = {EPOCHS}")
     logger.info(
         f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}"
     )

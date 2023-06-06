@@ -26,7 +26,6 @@ class Swish(nn.Layer):
             shape=[],
             default_initializer=paddle.nn.initializer.Constant(beta),
         )
-        self.add_parameter("beta", self.beta)
 
     def forward(self, x):
         return x * F.sigmoid(self.beta * x)
@@ -48,13 +47,27 @@ class Sin(nn.Layer):
         return paddle.sin(x)
 
 
+class SILU(nn.Layer):
+    r"""
+    SILU Activation.
+    .. math::
+        SILU(x)= x \cdot \frac{1}{1 + e^{-x}}
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x * F.sigmoid(x)
+
+
 act_func_dict = {
     "elu": nn.ELU(),
     "relu": nn.ReLU(),
     "selu": nn.SELU(),
     "gelu": nn.GELU(),
     "sigmoid": nn.Sigmoid(),
-    "silu": nn.Silu(),
+    "silu": SILU(),
     "sin": Sin(),
     "cos": Cos(),
     "swish": Swish(),
