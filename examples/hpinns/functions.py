@@ -21,7 +21,7 @@ import scipy.io
 class Funcs:
     """All functions used in hpinns example, including functions of utils, transform, loss."""
 
-    def __init__(self):
+    def __init__(self, train_mode):
         # define params
         self.BOX = np.array([[-2, -2], [2, 3]])
         self.DPML = 1
@@ -35,6 +35,7 @@ class Funcs:
         self.lambda_re = None
         self.lambda_im = None
         self._in = None
+        self.train_mode = train_mode
 
         # vars for plot
         self.loss_log = []  # pde, lag, opt
@@ -109,7 +110,10 @@ class Funcs:
         self.lambda_re = np.zeros((len(x[bound:]), 1))
         self.lambda_im = np.zeros((len(y[bound:]), 1))
         # loss_weight, PDE loss 1, PDE loss 2, Lagrangian loss 1, Lagrangian loss 2, objective loss
-        self.loss_weight = [0.5 * self.mu] * 2 + [0.0, 0.0, 1.0]
+        if self.train_mode is "aug_lag":
+            self.loss_weight = [0.5 * self.mu] * 2 + [1, 1] + [1.0]
+        elif self.train_mode is "penalty":
+            self.loss_weight = [0.5 * self.mu] * 2 + [0.0, 0.0] + [1.0]
 
     def update_lambda(self, output_dict, bound):
         loss_re, loss_im = self.get_loss_re_n_im(output_dict)
@@ -123,7 +127,7 @@ class Funcs:
 
     def update_mu(self):
         self.mu *= self.beta
-        self.loss_weight = [0.5 * self.mu] * 2 + [1, 1] + [1.0]
+        self.loss_weight[:2] = [0.5 * self.mu] * 2
 
     def _sigma_1(self, d):
         return self.SIGMA0 * d**2 * np.heaviside(d, 0)

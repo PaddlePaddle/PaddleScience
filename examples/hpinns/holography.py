@@ -29,8 +29,8 @@ if __name__ == "__main__":
 
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
-    DATASET_PATH = "./data/hpinns_train.mat"
-    DATASET_PATH_VALID = "./data/hpinns_valid.mat"
+    DATASET_PATH = "./datasets/hPINNs/hpinns_holo_train.mat"
+    DATASET_PATH_VALID = "./datasets/hPINNs/hpinns_holo_valid.mat"
     OUTPUT_DIR = "./output_hpinns/" if args.output_dir is None else args.output_dir
 
     # initialize logger
@@ -59,10 +59,10 @@ if __name__ == "__main__":
     model_eps = ppsci.arch.MLP(in_keys, ("eps",), 4, 48, "tanh")
 
     # intialize params
-    f = Funcs()
-    loss_log_obj = []
     train_mode = "aug_lag"  # "soft", "penalty", "aug_lag"
     k = 9
+    f = Funcs(train_mode)
+    loss_log_obj = []
 
     # register transform
     model_re.register_input_transform(f.transform_in)
@@ -310,40 +310,36 @@ if __name__ == "__main__":
 
     # penalty and augmented Lagrangian, difference between the two is updating of lambda
     if train_mode is not "soft":
-        # only needed by augmented Lagrangian
-        if train_mode is "aug_lag":
-            train_dict = f.load_data_from_mat(DATASET_PATH)
-            in_dict = {"x": train_dict["x"], "y": train_dict["y"]}
-            expr_dict = {
-                "x": lambda out: out["x"],
-                "y": lambda out: out["y"],
-                "e_real": lambda out: out["e_real"],
-                "e_imaginary": lambda out: out["e_imaginary"],
-                "epsilon": lambda out: out["epsilon"],
-                "de_re_x": lambda out: jacobian(out["e_real"], out["x"]),
-                "de_re_y": lambda out: jacobian(out["e_real"], out["y"]),
-                "de_re_xx": lambda out: hessian(out["e_real"], out["x"]),
-                "de_re_yy": lambda out: hessian(out["e_real"], out["y"]),
-                "de_im_x": lambda out: jacobian(out["e_imaginary"], out["x"]),
-                "de_im_y": lambda out: jacobian(out["e_imaginary"], out["y"]),
-                "de_im_xx": lambda out: hessian(out["e_imaginary"], out["x"]),
-                "de_im_yy": lambda out: hessian(out["e_imaginary"], out["y"]),
-            }
-            f.init_lambda(in_dict, int(train_dict["bound"]))
-            f.lambda_log.append(
-                [f.lambda_re.copy().squeeze(), f.lambda_im.copy().squeeze()]
-            )
+        train_dict = f.load_data_from_mat(DATASET_PATH)
+        in_dict = {"x": train_dict["x"], "y": train_dict["y"]}
+        expr_dict = {
+            "x": lambda out: out["x"],
+            "y": lambda out: out["y"],
+            "e_real": lambda out: out["e_real"],
+            "e_imaginary": lambda out: out["e_imaginary"],
+            "epsilon": lambda out: out["epsilon"],
+            "de_re_x": lambda out: jacobian(out["e_real"], out["x"]),
+            "de_re_y": lambda out: jacobian(out["e_real"], out["y"]),
+            "de_re_xx": lambda out: hessian(out["e_real"], out["x"]),
+            "de_re_yy": lambda out: hessian(out["e_real"], out["y"]),
+            "de_im_x": lambda out: jacobian(out["e_imaginary"], out["x"]),
+            "de_im_y": lambda out: jacobian(out["e_imaginary"], out["y"]),
+            "de_im_xx": lambda out: hessian(out["e_imaginary"], out["x"]),
+            "de_im_yy": lambda out: hessian(out["e_imaginary"], out["y"]),
+        }
+        f.init_lambda(in_dict, int(train_dict["bound"]))
+        f.lambda_log.append(
+            [f.lambda_re.copy().squeeze(), f.lambda_im.copy().squeeze()]
+        )
 
         for i in range(1, k + 1):
-            # only needed by augmented Lagrangian
-            if train_mode is "aug_lag":
-                pred_dict = solver.predict(
-                    in_dict,
-                    expr_dict,
-                    batch_size=np.shape(train_dict["x"])[0],
-                    no_grad=False,
-                )
-                f.update_lambda(pred_dict, int(train_dict["bound"]))
+            pred_dict = solver.predict(
+                in_dict,
+                expr_dict,
+                batch_size=np.shape(train_dict["x"])[0],
+                no_grad=False,
+            )
+            f.update_lambda(pred_dict, int(train_dict["bound"]))
 
             f.update_mu()
             print(f"Iteration {i}: mu = {f.mu}\n")
