@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
+from typing import Union
+
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
@@ -48,7 +51,7 @@ class NavierStokes(base.PDE):
     $$
 
     Args:
-        nu (float): Dynamic viscosity.
+        nu (Union[float, Callable]): Dynamic viscosity.
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
@@ -58,7 +61,7 @@ class NavierStokes(base.PDE):
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
-    def __init__(self, nu: float, rho: float, dim: int, time: bool):
+    def __init__(self, nu: Union[float, Callable], rho: float, dim: int, time: bool):
         super().__init__()
         self.nu = nu
         self.rho = rho
@@ -77,6 +80,7 @@ class NavierStokes(base.PDE):
         self.add_equation("continuity", continuity_compute_func)
 
         def momentum_x_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
@@ -98,6 +102,7 @@ class NavierStokes(base.PDE):
         self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
@@ -121,6 +126,7 @@ class NavierStokes(base.PDE):
         if self.dim == 3:
 
             def momentum_z_compute_func(out):
+                nu = self.nu(out) if callable(self.nu) else self.nu
                 x, y, z = out["x"], out["y"], out["z"]
                 u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (
