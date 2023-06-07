@@ -263,9 +263,7 @@ if __name__ == "__main__":
     u_max_pred = output_dict_test["u"].numpy()
 
     # Analytical result, y = 0
-    u_max_a = np.zeros([num_test, 1])
-    for i in range(num_test):
-        u_max_a[i] = (R**2) * dP / (2 * L * data_1d_nu_distribution[i] * RHO)
+    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
 
     # Plot
     plt.figure(2)

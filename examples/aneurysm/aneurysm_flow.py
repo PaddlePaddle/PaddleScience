@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 """
 Reference: https://github.com/Jianxun-Wang/LabelFree-DNN-Surrogate
 """
@@ -209,7 +208,7 @@ if __name__ == "__main__":
     )
     constraint = {pde_constraint.name: pde_constraint}
 
-    EPOCHS = 500 if not args.epochs else args.epochs
+    EPOCHS = 400 if not args.epochs else args.epochs
 
     # initialize solver
     solver = ppsci.solver.Solver(
