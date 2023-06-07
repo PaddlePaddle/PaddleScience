@@ -254,8 +254,16 @@ class Funcs:
         return losses
 
     def eval_loss_fun(self, output_dict):
-        # fake loss
-        return paddle.to_tensor(0.0)
+        x, y = output_dict["x"], output_dict["y"]
+        e_re = output_dict["e_real"]
+        e_im = output_dict["e_imaginary"]
+
+        f1 = paddle.heaviside((x + 0.5) * (0.5 - x), paddle.to_tensor(0.5))
+        f2 = paddle.heaviside((y - 1) * (2 - y), paddle.to_tensor(0.5))
+        j = e_re**2 + e_im**2 - f1 * f2
+        losses = F.mse_loss(j, paddle.zeros_like(j, dtype="float32"), "mean")
+
+        return losses
 
     def eval_metric_fun(self, output_dict):
         loss_re, loss_im = self.get_loss_re_n_im(output_dict)
