@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
@@ -34,15 +35,15 @@ beta = 2.0
 mu = 2
 
 # define variables which will be updated during training
-lambda_re = None  # type: np.ndarray
-lambda_im = None  # type: np.ndarray
-loss_weight = None  # type: List
-input_dict = None  # type: Dict[str, paddle.Tensor]
-train_mode = None  # str
+lambda_re: np.ndarray = None
+lambda_im: np.ndarray = None
+loss_weight: List[float] = None
+input_dict: Dict[str, paddle.Tensor] = None
+train_mode: str = None
 
 # define log variables for plotting
 loss_log = []  # record all losses, [pde, lag, obj]
-loss_obj = 0  # record last objective loss of each k
+loss_obj = 0.0  # record last objective loss of each k
 lambda_log = []  # record all lambdas
 
 
@@ -51,7 +52,7 @@ def transform_in(_in):
     global input_dict
     input_dict = _in
     # Periodic BC in x
-    P = BOX[1][0] - BOX[0][0] + 2 * DPML  # 周期长度
+    P = BOX[1][0] - BOX[0][0] + 2 * DPML
     w = 2 * np.pi / P
     x, y = input_dict["x"], input_dict["y"]
     input_transformed = {}
@@ -73,20 +74,20 @@ def transform_out_all(var):
     return t * var
 
 
-def transform_out_real_part(_out):
-    re = _out["e_re"]
+def transform_out_real_part(out):
+    re = out["e_re"]
     trans_out = transform_out_all(re)
     return {"e_real": trans_out}
 
 
-def transform_out_imaginary_part(_out):
-    im = _out["e_im"]
+def transform_out_imaginary_part(out):
+    im = out["e_im"]
     trans_out = transform_out_all(im)
     return {"e_imaginary": trans_out}
 
 
-def transform_out_epsilon(_out):
-    eps = _out["eps"]
+def transform_out_epsilon(out):
+    eps = out["eps"]
     # 1 <= eps <= 12
     eps = F.sigmoid(eps) * 11 + 1
     return {"epsilon": eps}
@@ -104,9 +105,9 @@ def init_lambda(output_dict: Dict[str, paddle.Tensor], bound: int):
     x, y = output_dict["x"], output_dict["y"]
     lambda_re = np.zeros((len(x[bound:]), 1))
     lambda_im = np.zeros((len(y[bound:]), 1))
-    # loss_weight, PDE loss 1, PDE loss 2, Lagrangian loss 1, Lagrangian loss 2, objective loss
-    if train_mode is "aug_lag":
-        loss_weight = [0.5 * mu] * 2 + [1, 1] + [1.0]
+    # loss_weight: [PDE loss 1, PDE loss 2, Lagrangian loss 1, Lagrangian loss 2, objective loss]
+    if train_mode == "aug_lag":
+        loss_weight = [0.5 * mu] * 2 + [1.0, 1.0] + [1.0]
     else:
         loss_weight = [0.5 * mu] * 2 + [0.0, 0.0] + [1.0]
 
@@ -159,7 +160,7 @@ def perfectly_matched_layers(x: paddle.Tensor, y: paddle.Tensor):
         y (paddle.Tensor): one of input contains tensor.
 
     Returns:
-        np.ndarray: parameters of pde formula.
+        np.ndarray: Parameters of pde formula.
     """
     x = x.numpy()
     y = y.numpy()
@@ -198,7 +199,7 @@ def compute_real_and_imaginary_loss(
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
 
     Returns:
-        paddle.Tensor: real and imaginary_loss.
+        paddle.Tensor: Real and imaginary_loss.
     """
     x, y = output_dict["x"], output_dict["y"]
     e_re = output_dict["e_real"]
@@ -210,7 +211,6 @@ def compute_real_and_imaginary_loss(
     )
 
     eps = eps * condition + 1 - condition
-    # eps = 1
 
     de_re_x = output_dict["de_re_x"]
     de_re_y = output_dict["de_re_y"]
@@ -244,7 +244,7 @@ def pde_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
 
     Returns:
-        paddle.Tensor: pde loss (and lagrangian loss if using Augmented Lagrangian method).
+        paddle.Tensor: PDE loss (and lagrangian loss if using Augmented Lagrangian method).
     """
     global loss_log
     bound = output_dict["bound"]
@@ -278,7 +278,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
 
     Returns:
-        paddle.Tensor: objective loss.
+        paddle.Tensor: Objective loss.
     """
     global loss_log, loss_obj
     x, y = output_dict["x"], output_dict["y"]
@@ -306,7 +306,7 @@ def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Ten
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
 
     Returns:
-        paddle.Tensor: objective loss.
+        paddle.Tensor: Objective loss.
     """
     x, y = output_dict["x"], output_dict["y"]
     e_re = output_dict["e_real"]
@@ -327,7 +327,7 @@ def eval_metric_fun(output_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.T
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
 
     Returns:
-        Dict[str, paddle.Tensor]: mse metric.
+        Dict[str, paddle.Tensor]: MSE metric.
     """
     loss_re, loss_im = compute_real_and_imaginary_loss(output_dict)
     eps_opt = paddle.concat([loss_re, loss_im], axis=-1)

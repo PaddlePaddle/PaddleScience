@@ -11,14 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
 
-import functions as f
+import functions as func_module
 import numpy as np
 import paddle
-import plotting as p
+import plotting as plot_module
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -52,17 +53,17 @@ if __name__ == "__main__":
     # intialize params
     train_mode = "aug_lag"  # "soft", "penalty", "aug_lag"
     k = 9
-    f.train_mode = train_mode
+    func_module.train_mode = train_mode
     loss_log_obj = []
 
     # register transform
-    model_re.register_input_transform(f.transform_in)
-    model_im.register_input_transform(f.transform_in)
-    model_eps.register_input_transform(f.transform_in)
+    model_re.register_input_transform(func_module.transform_in)
+    model_im.register_input_transform(func_module.transform_in)
+    model_eps.register_input_transform(func_module.transform_in)
 
-    model_re.register_output_transform(f.transform_out_real_part)
-    model_im.register_output_transform(f.transform_out_imaginary_part)
-    model_eps.register_output_transform(f.transform_out_epsilon)
+    model_re.register_output_transform(func_module.transform_out_real_part)
+    model_im.register_output_transform(func_module.transform_out_imaginary_part)
+    model_eps.register_output_transform(func_module.transform_out_epsilon)
 
     model_list = ppsci.arch.ModelList((model_re, model_im, model_eps))
 
@@ -102,41 +103,36 @@ if __name__ == "__main__":
         "de_im_yy": lambda out: hessian(out["e_imaginary"], out["y"]),
     }
 
-    train_dataloader_cfg_pde = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": DATASET_PATH,
-            "input_keys": ("x", "y", "bound"),
-            "label_keys": label_keys + label_keys_derivative,
-            "alias_dict": {
-                "e_real": "x",
-                "e_imaginary": "x",
-                "epsilon": "x",
-                **{k: "x" for k in label_keys_derivative},
+    sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
+        {
+            "dataset": {
+                "name": "IterableMatDataset",
+                "file_path": DATASET_PATH,
+                "input_keys": ("x", "y", "bound"),
+                "label_keys": label_keys + label_keys_derivative,
+                "alias_dict": {
+                    "e_real": "x",
+                    "e_imaginary": "x",
+                    "epsilon": "x",
+                    **{k: "x" for k in label_keys_derivative},
+                },
             },
         },
-    }
-
-    train_dataloader_cfg_obj = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": DATASET_PATH,
-            "input_keys": ("x", "y", "bound"),
-            "label_keys": label_keys,
-            "alias_dict": {"e_real": "x", "e_imaginary": "x", "epsilon": "x"},
-        },
-    }
-
-    sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg_pde,
-        ppsci.loss.FunctionalLoss(f.pde_loss_fun),
+        ppsci.loss.FunctionalLoss(func_module.pde_loss_fun),
         output_expr,
         name="sup_constraint_pde",
     )
-
     sup_constraint_obj = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg_obj,
-        ppsci.loss.FunctionalLoss(f.obj_loss_fun),
+        {
+            "dataset": {
+                "name": "IterableMatDataset",
+                "file_path": DATASET_PATH,
+                "input_keys": ("x", "y", "bound"),
+                "label_keys": label_keys,
+                "alias_dict": {"e_real": "x", "e_imaginary": "x", "epsilon": "x"},
+            },
+        },
+        ppsci.loss.FunctionalLoss(func_module.obj_loss_fun),
         {key: lambda out, k=key: out[k] for key in label_keys},
         name="sup_constraint_obj",
     )
@@ -146,53 +142,48 @@ if __name__ == "__main__":
     }
 
     # maunally build validator
-    eval_dataloader_cfg_opt = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": DATASET_PATH_VALID,
-            "input_keys": ("x", "y", "bound"),
-            "label_keys": label_keys + label_keys_derivative,
-            "alias_dict": {
-                "x": "x_opt",
-                "y": "y_opt",
-                "e_real": "x_opt",
-                "e_imaginary": "x_opt",
-                "epsilon": "x_opt",
-                **{k: "x_opt" for k in label_keys_derivative},
-            },
-        },
-    }
-
-    eval_dataloader_cfg_val = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": DATASET_PATH_VALID,
-            "input_keys": ("x", "y", "bound"),
-            "label_keys": label_keys + label_keys_derivative,
-            "alias_dict": {
-                "x": "x_val",
-                "y": "y_val",
-                "e_real": "x_val",
-                "e_imaginary": "x_val",
-                "epsilon": "x_val",
-                **{k: "x_val" for k in label_keys_derivative},
-            },
-        },
-    }
-
     sup_validator_opt = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg_opt,
-        ppsci.loss.FunctionalLoss(f.eval_loss_fun),
+        {
+            "dataset": {
+                "name": "IterableMatDataset",
+                "file_path": DATASET_PATH_VALID,
+                "input_keys": ("x", "y", "bound"),
+                "label_keys": label_keys + label_keys_derivative,
+                "alias_dict": {
+                    "x": "x_opt",
+                    "y": "y_opt",
+                    "e_real": "x_opt",
+                    "e_imaginary": "x_opt",
+                    "epsilon": "x_opt",
+                    **{k: "x_opt" for k in label_keys_derivative},
+                },
+            },
+        },
+        ppsci.loss.FunctionalLoss(func_module.eval_loss_fun),
         output_expr,
-        {"mse": ppsci.metric.FunctionalMetric(f.eval_metric_fun)},
+        {"mse": ppsci.metric.FunctionalMetric(func_module.eval_metric_fun)},
         name="opt_sup",
     )
-
     sup_validator_val = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg_val,
-        ppsci.loss.FunctionalLoss(f.eval_loss_fun),
+        {
+            "dataset": {
+                "name": "IterableMatDataset",
+                "file_path": DATASET_PATH_VALID,
+                "input_keys": ("x", "y", "bound"),
+                "label_keys": label_keys + label_keys_derivative,
+                "alias_dict": {
+                    "x": "x_val",
+                    "y": "y_val",
+                    "e_real": "x_val",
+                    "e_imaginary": "x_val",
+                    "epsilon": "x_val",
+                    **{k: "x_val" for k in label_keys_derivative},
+                },
+            },
+        },
+        ppsci.loss.FunctionalLoss(func_module.eval_loss_fun),
         output_expr,
-        {"mse": ppsci.metric.FunctionalMetric(f.eval_metric_fun)},
+        {"mse": ppsci.metric.FunctionalMetric(func_module.eval_metric_fun)},
         name="val_sup",
     )
     validator = {
@@ -201,7 +192,6 @@ if __name__ == "__main__":
     }
 
     # initialize solver
-    # train: base, epoch=EPOCHS
     solver = ppsci.solver.Solver(
         model_list,
         constraint,
@@ -229,7 +219,7 @@ if __name__ == "__main__":
     )
 
     # train: soft constraint, epoch=1 for lbfgs
-    if train_mode is "soft":
+    if train_mode == "soft":
         solver = ppsci.solver.Solver(
             solver.model,
             constraint,
@@ -248,18 +238,21 @@ if __name__ == "__main__":
         solver.eval()
 
     # append objective loss for plot
-    loss_log_obj.append(f.loss_obj)
+    loss_log_obj.append(func_module.loss_obj)
 
     # penalty and augmented Lagrangian, difference between the two is updating of lambda
-    if train_mode is not "soft":
+    if train_mode != "soft":
         train_dict = ppsci.utils.reader.load_mat_file(DATASET_PATH, ("x", "y", "bound"))
         in_dict = {"x": train_dict["x"], "y": train_dict["y"]}
         expr_dict = output_expr.copy()
         expr_dict.pop("bound")
 
-        f.init_lambda(in_dict, int(train_dict["bound"]))
-        f.lambda_log.append(
-            [f.lambda_re.copy().squeeze(), f.lambda_im.copy().squeeze()]
+        func_module.init_lambda(in_dict, int(train_dict["bound"]))
+        func_module.lambda_log.append(
+            [
+                func_module.lambda_re.copy().squeeze(),
+                func_module.lambda_im.copy().squeeze(),
+            ]
         )
 
         for i in range(1, k + 1):
@@ -269,10 +262,10 @@ if __name__ == "__main__":
                 batch_size=np.shape(train_dict["x"])[0],
                 no_grad=False,
             )
-            f.update_lambda(pred_dict, int(train_dict["bound"]))
+            func_module.update_lambda(pred_dict, int(train_dict["bound"]))
 
-            f.update_mu()
-            ppsci.utils.logger.info(f"Iteration {i}: mu = {f.mu}\n")
+            func_module.update_mu()
+            ppsci.utils.logger.info(f"Iteration {i}: mu = {func_module.mu}\n")
 
             solver = ppsci.solver.Solver(
                 solver.model,
@@ -291,17 +284,17 @@ if __name__ == "__main__":
             # evaluate after finished training
             solver.eval()
             # append objective loss for plot
-            loss_log_obj.append(f.loss_obj)
+            loss_log_obj.append(func_module.loss_obj)
 
     ################# plotting ###################
     # log of loss
-    loss_log = np.array(f.loss_log).reshape(-1, 3)
+    loss_log = np.array(func_module.loss_log).reshape(-1, 3)
 
-    p.set_params(train_mode, OUTPUT_DIR, DATASET_PATH, DATASET_PATH_VALID)
-    p.plot_6a(loss_log)
-    if train_mode is not "soft":
-        p.prepare_data(solver, expr_dict)
-        p.plot_6b(loss_log_obj)
-        p.plot_6c7c(f.lambda_log)
-        p.plot_6d(f.lambda_log)
-        p.plot_6ef(f.lambda_log)
+    plot_module.set_params(train_mode, OUTPUT_DIR, DATASET_PATH, DATASET_PATH_VALID)
+    plot_module.plot_6a(loss_log)
+    if train_mode != "soft":
+        plot_module.prepare_data(solver, expr_dict)
+        plot_module.plot_6b(loss_log_obj)
+        plot_module.plot_6c7c(func_module.lambda_log)
+        plot_module.plot_6d(func_module.lambda_log)
+        plot_module.plot_6ef(func_module.lambda_log)

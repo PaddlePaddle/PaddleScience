@@ -11,13 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
 
 import os
+from typing import Callable
+from typing import Dict
+from typing import List
 
-import functions as f
+import functions as func_module
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -42,13 +46,13 @@ field_name = [
 ]
 
 # define constants which will be assigned later
-FIGNAME = ""  # type: str
-OUTPUT_DIR = ""  # type: str
-DATASET_PATH = ""  # type: str
-DATASET_PATH_VALID = ""  # type: str
-input_valid = None  # type: np.ndarray
-output_valid = None  # type: np.ndarray
-input_train = None  # type: np.ndarray
+FIGNAME: str = ""
+OUTPUT_DIR: str = ""
+DATASET_PATH: str = ""
+DATASET_PATH_VALID: str = ""
+input_valid: np.ndarray = None
+output_valid: np.ndarray = None
+input_train: np.ndarray = None
 
 
 def set_params(figname, output_dir, dataset_path, dataset_path_valid):
@@ -60,7 +64,15 @@ def set_params(figname, output_dir, dataset_path, dataset_path_valid):
     DATASET_PATH_VALID = dataset_path_valid
 
 
-def prepare_data(solver, expr_dict):
+def prepare_data(solver: ppsci.solver.Solver, expr_dict: Dict[str, Callable]):
+    """Prepare data of input of training and validation and generate
+        output of validation by predicting.
+
+    Args:
+        solver (ppsci.solver.Solver): Object of ppsci.solver.Solver().
+        expr_dict (Dict[str, Callable]): Expression dict, which guide to
+            compute equation variable with callable function.
+    """
     global input_valid, output_valid, input_train
     # train data
     train_dict = ppsci.utils.reader.load_mat_file(DATASET_PATH, ("x", "y", "bound"))
@@ -71,13 +83,13 @@ def prepare_data(solver, expr_dict):
     input_train = np.stack((x_train, y_train), axis=-1).reshape(-1, 2)
 
     # valid data
-    N = ((f.l_BOX[1] - f.l_BOX[0]) / 0.05).astype(int)
+    N = ((func_module.l_BOX[1] - func_module.l_BOX[0]) / 0.05).astype(int)
 
     valid_dict = ppsci.utils.reader.load_mat_file(
         DATASET_PATH_VALID, ("x_val", "y_val", "bound")
     )
     in_dict_val = {"x": valid_dict["x_val"], "y": valid_dict["y_val"]}
-    f.init_lambda(in_dict_val, int(valid_dict["bound"]))
+    func_module.init_lambda(in_dict_val, int(valid_dict["bound"]))
 
     pred_dict_val = solver.predict(
         in_dict_val,
@@ -98,7 +110,20 @@ def prepare_data(solver, expr_dict):
     ).T.reshape(N[0], N[1], 3)
 
 
-def plot_field_horo(coord_visual, field_visual, coord_lambda, field_lambda, title=None):
+def plot_field_holo(
+    coord_visual: np.ndarray,
+    field_visual: np.ndarray,
+    coord_lambda: np.ndarray,
+    field_lambda: np.ndarray,
+):
+    """Plot fields of of holograpy example.
+
+    Args:
+        coord_visual (np.ndarray): The coord of epsilon and |E|**2.
+        field_visual (np.ndarray): The filed of epsilon and |E|**2.
+        coord_lambda (np.ndarray): The coord of lambda.
+        field_lambda (np.ndarray): The filed of lambda.
+    """
     fmin, fmax = np.array([0, 1.0]), np.array([0.6, 12])
     cmin, cmax = coord_visual.min(axis=(0, 1)), coord_visual.max(axis=(0, 1))
     emin, emax = np.array([-3, -1]), np.array([3, 0])
@@ -178,8 +203,12 @@ def plot_field_horo(coord_visual, field_visual, coord_lambda, field_lambda, titl
         )
 
 
-def plot_6a(log_loss):
-    # plot Fig.6 A of paper
+def plot_6a(log_loss: np.ndarray):
+    """Plot Fig.6 A of paper.
+
+    Args:
+        log_loss (np.ndarray): Losses of all training's iterations.
+    """
     plt.figure(300, figsize=(8, 6))
     smooth_step = 100  # how many steps of loss are squeezed to one point, num_points is epoch/smooth_step
     if log_loss.shape[0] % smooth_step is not 0:
@@ -208,8 +237,12 @@ def plot_6a(log_loss):
     plt.savefig(os.path.join(OUTPUT_DIR, f"{FIGNAME}_Fig6_A.jpg"))
 
 
-def plot_6b(log_loss_obj):
-    # plot Fig.6 B of paper
+def plot_6b(log_loss_obj: List[float]):
+    """Plot Fig.6 B of paper.
+
+    Args:
+        log_loss_obj (List[float]): Objective losses of last iteration of each k.
+    """
     plt.figure(400, figsize=(10, 6))
     plt.clf()
     plt.plot(np.arange(len(log_loss_obj)), log_loss_obj, "bo-")
@@ -221,7 +254,12 @@ def plot_6b(log_loss_obj):
     plt.savefig(os.path.join(OUTPUT_DIR, f"{FIGNAME}_Fig6_B.jpg"))
 
 
-def plot_6c7c(log_lambda):
+def plot_6c7c(log_lambda: List[np.ndarray]):
+    """Plot Fig.6 Cs and Fig.7.Cs of paper.
+
+    Args:
+        log_lambda (List[np.ndarray]): Lambdas of each k.
+    """
     # plot Fig.6 Cs and Fig.7.Cs of paper
     global input_valid, output_valid, input_train
 
@@ -230,11 +268,15 @@ def plot_6c7c(log_lambda):
     ).T
     v_visual = output_valid[..., 0] ** 2 + output_valid[..., 1] ** 2
     field_visual = np.stack((v_visual, output_valid[..., -1]), axis=-1)
-    plot_field_horo(input_valid, field_visual, input_train, field_lambda)
+    plot_field_holo(input_valid, field_visual, input_train, field_lambda)
 
 
-def plot_6d(log_lambda):
-    # plot Fig.6 D of paper
+def plot_6d(log_lambda: List[np.ndarray]):
+    """Plot Fig.6 D of paper.
+
+    Args:
+        log_lambda (List[np.ndarray]): Lambdas of each k.
+    """
     # lambda/mu
     mu_ = 2 ** np.arange(1, 11)
     log_lambda = np.array(log_lambda) / mu_[:, None, None]
@@ -264,8 +306,12 @@ def plot_6d(log_lambda):
     plt.savefig(os.path.join(OUTPUT_DIR, f"{FIGNAME}_Fig6_D_lambda.jpg"))
 
 
-def plot_6ef(log_lambda):
-    # plot Fig.6 E and Fig.6.F of paper
+def plot_6ef(log_lambda: List[np.ndarray]):
+    """Plot Fig.6 E and Fig.6.F of paper.
+
+    Args:
+        log_lambda (List[np.ndarray]): Lambdas of each k.
+    """
     # lambda/mu
     mu_ = 2 ** np.arange(1, 11)
     log_lambda = np.array(log_lambda) / mu_[:, None, None]
