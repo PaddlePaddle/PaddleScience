@@ -137,7 +137,7 @@ class ERA5Dataset(io.Dataset):
                     label_idx + i, self.vars_channel
                 ]
 
-        weight_shape = [1] * len(next(iter(label_item.values)).shape)
+        weight_shape = [1] * len(next(iter(label_item.values())).shape)
         weight_item = {
             key: np.full(weight_shape, value, paddle.get_default_dtype())
             for key, value in self.weight_dict.items()
@@ -220,7 +220,7 @@ class ERA5SampledDataset(io.Dataset):
                 _file["label_dict"][key], paddle.get_default_dtype()
             )
 
-        weight_shape = [1] * len(next(iter(label_item.values)).shape)
+        weight_shape = [1] * len(next(iter(label_item.values())).shape)
         weight_item = {
             key: np.full(weight_shape, value, paddle.get_default_dtype())
             for key, value in self.weight_dict.items()
