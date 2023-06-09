@@ -123,7 +123,7 @@ class PeriodicL2Loss(base.Loss):
             loss = F.mse_loss(
                 output_dict[key][:n_output], output_dict[key][n_output:], "none"
             )
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:
@@ -188,7 +188,7 @@ class L2RelLoss(base.Loss):
         losses = 0
         for key in label_dict:
             loss = self.rel_loss(output_dict[key], label_dict[key])
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
 
             if self.reduction == "sum":
