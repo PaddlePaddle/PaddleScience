@@ -16,9 +16,11 @@
 This module is adapted from [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from typing import TYPE_CHECKING
 from typing import Optional
 
-import paddle
+if TYPE_CHECKING:
+    import paddle
 
 
 class Jacobian:
@@ -33,7 +35,7 @@ class Jacobian:
         xs (paddle.Tensor): Input Tensor of shape [batch_size, dim_x].
     """
 
-    def __init__(self, ys: paddle.Tensor, xs: paddle.Tensor):
+    def __init__(self, ys: "paddle.Tensor", xs: "paddle.Tensor"):
         self.ys = ys
         self.xs = xs
 
@@ -42,7 +44,7 @@ class Jacobian:
 
         self.J = {}
 
-    def __call__(self, i: int = 0, j: Optional[int] = None) -> paddle.Tensor:
+    def __call__(self, i: int = 0, j: Optional[int] = None) -> "paddle.Tensor":
         """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,
         J[i].
         """
@@ -70,8 +72,12 @@ class Jacobians:
         self.Js = {}
 
     def __call__(
-        self, ys: paddle.Tensor, xs: paddle.Tensor, i: int = 0, j: Optional[int] = None
-    ) -> paddle.Tensor:
+        self,
+        ys: "paddle.Tensor",
+        xs: "paddle.Tensor",
+        i: int = 0,
+        j: Optional[int] = None,
+    ) -> "paddle.Tensor":
         """Compute jacobians for given ys and xs.
 
         Args:
@@ -84,6 +90,7 @@ class Jacobians:
             paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
 
         Examples:
+            >>> import paddle
             >>> import ppsci
             >>> x = paddle.randn([4, 1])
             >>> x.stop_gradient = False
@@ -117,10 +124,10 @@ class Hessian:
 
     def __init__(
         self,
-        y: paddle.Tensor,
-        xs: paddle.Tensor,
+        y: "paddle.Tensor",
+        xs: "paddle.Tensor",
         component: Optional[int] = None,
-        grad_y: Optional[paddle.Tensor] = None,
+        grad_y: Optional["paddle.Tensor"] = None,
     ):
         dim_y = y.shape[1]
 
@@ -159,13 +166,13 @@ class Hessians:
 
     def __call__(
         self,
-        ys: paddle.Tensor,
-        xs: paddle.Tensor,
+        ys: "paddle.Tensor",
+        xs: "paddle.Tensor",
         component: Optional[int] = None,
         i: int = 0,
         j: int = 0,
-        grad_y: Optional[paddle.Tensor] = None,
-    ) -> paddle.Tensor:
+        grad_y: Optional["paddle.Tensor"] = None,
+    ) -> "paddle.Tensor":
         """Compute hessian matrix for given ys and xs.
 
         Args:
@@ -183,6 +190,7 @@ class Hessians:
             paddle.Tensor: Hessian matrix.
 
         Examples:
+            >>> import paddle
             >>> import ppsci
             >>> x = paddle.randn([4, 3])
             >>> x.stop_gradient = False
