@@ -16,7 +16,6 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import paddle
 import paddle.nn as nn
 
 from ppsci.arch import activation as act_mod
@@ -83,6 +82,9 @@ class MLP(base.Arch):
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
+        self.acts = []
+        self.skip_connection = skip_connection
+
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -102,23 +104,23 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
-        for _size in hidden_size:
+        for i, _size in enumerate(hidden_size):
             self.linears.append(
                 WeightNormLinear(cur_size, _size)
                 if weight_norm
                 else nn.Linear(cur_size, _size)
             )
+            self.acts.append(act_mod.get_activation(activation))
             cur_size = _size
+            if activation == "siren":
+                if i == 0:
+                    act_mod.Siren.init_for_first_layer(self.linears[-1])
+                else:
+                    act_mod.Siren.init_for_hidden_layer(self.linears[-1])
+
         self.linears = nn.LayerList(self.linears)
-
+        self.acts = nn.LayerList(self.acts)
         self.last_fc = nn.Linear(cur_size, len(self.output_keys))
-
-        # initialize activation function
-        self.act = nn.LayerList(
-            [act_mod.get_activation(activation) for _ in range(len(hidden_size))]
-        )
-
-        self.skip_connection = skip_connection
 
     def forward_tensor(self, x):
         y = x

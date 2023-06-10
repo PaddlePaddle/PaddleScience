@@ -14,9 +14,13 @@
 
 from typing import Callable
 
+import numpy as np
 import paddle
 import paddle.nn.functional as F
 from paddle import nn
+
+from ppsci.utils import initializer
+from ppsci.utils import misc
 
 
 class Swish(nn.Layer):
@@ -55,6 +59,49 @@ class Silu(nn.Layer):
         return x * F.sigmoid(x)
 
 
+class Siren(nn.Layer):
+    """Implicit Neural Representations with Periodic Activation Functions.
+    paper link: https://arxiv.org/abs/2006.09661
+    code ref: https://github.com/vsitzmann/siren/tree/master
+    """
+
+    def __init__(self, w0: float = 30):
+        self.w0 = w0
+
+    def forward(self, x):
+        return paddle.sin(self.w0 * x)
+
+    @staticmethod
+    def init_for_first_layer(layer: nn.Linear):
+        """Initialzation only for first hidden layer.
+        ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L630
+        """
+        if not isinstance(layer, nn.Linear):
+            raise TypeError(
+                "Siren initialization only support Linear layer now, "
+                f"but got {misc.typename(layer)}"
+            )
+        in_features = layer.weight.shape[0]
+        initializer.uniform_(layer.weight, -1 / in_features, 1 / in_features)
+        initializer.zeros_(layer.bias)
+
+    @staticmethod
+    def init_for_hidden_layer(layer: nn.Linear, w0: float):
+        """Initialzation for hidden layer except first layer.
+        ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L622
+        """
+        if not isinstance(layer, nn.Linear):
+            raise TypeError(
+                "Siren initialization only support Linear layer now, "
+                f"but got {misc.typename(layer)}"
+            )
+        in_features = layer.weight.shape[0]
+        initializer.uniform_(
+            -np.sqrt(6 / in_features) / w0, np.sqrt(6 / in_features) / w0
+        )
+        initializer.zeros_(layer.bias)
+
+
 act_func_dict = {
     "elu": nn.ELU(),
     "relu": nn.ReLU(),
@@ -67,6 +114,7 @@ act_func_dict = {
     "swish": Swish(),
     "tanh": nn.Tanh(),
     "identity": nn.Identity(),
+    "siren": Siren(),
 }
 
 
