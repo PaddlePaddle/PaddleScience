@@ -16,11 +16,9 @@
 This module is adapted from [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
-from typing import TYPE_CHECKING
 from typing import Optional
 
-if TYPE_CHECKING:
-    import paddle
+import paddle
 
 
 class Jacobian:
