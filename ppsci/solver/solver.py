@@ -496,6 +496,7 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """

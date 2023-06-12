@@ -19,7 +19,8 @@ from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
 from ppsci.solver import printer
 from ppsci.utils import misc
-from ppsci.utils import profiler
+
+# from ppsci.utils import profiler
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -70,10 +71,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             # forward for every constraint, including model and equation expression
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                 constraint_losses = solver.forward_helper.train_forward(
-                    [
+                    (
                         _constraint.output_expr
                         for _constraint in solver.constraint.values()
-                    ],
+                    ),
                     input_dicts,
                     solver.model,
                     solver.constraint,
@@ -171,10 +172,10 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
                 with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                     # forward for every constraint, including model and equation expression
                     constraint_losses = solver.forward_helper.train_forward(
-                        [
+                        (
                             _constraint.output_expr
                             for _constraint in solver.constraint.values()
-                        ],
+                        ),
                         input_dicts,
                         solver.model,
                         solver.constraint,

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import Callable
-from typing import Optional
 
 from ppsci.metric import base
 

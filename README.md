@@ -2,8 +2,10 @@
 
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
-[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
+[![Version](https://img.shields.io/pypi/v/paddlesci)](./https://pypi.org/project/paddlesci/)
+[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](./https://pypi.org/project/paddlesci/)
 [![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](./LICENSE)
+[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
