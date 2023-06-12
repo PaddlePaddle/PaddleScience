@@ -20,7 +20,8 @@ from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import misc
-from ppsci.utils import profiler
+
+# from ppsci.utils import profiler
 
 if TYPE_CHECKING:
     from ppsci import solver
