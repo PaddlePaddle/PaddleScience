@@ -7,6 +7,8 @@
 传统的PINNs(Physics-informed neural networks)网络中的约束都是软约束，作为loss项参与网络训练。而hPINNs通过修改网络输出的方法，将约束严格的加入网络结构中，形成一种硬约束。
 同时hPINNs通过对约束的不同设计，进行了软约束、应用惩罚方法的约束的硬约束和应用增强的拉格朗日方法的硬约束 3 种不同的约束条件下的实验。本文档以下说明主要针对应用增强的拉格朗日方法的硬约束进行说明，但完整代码中可以通过 `train_mode` 参数来切换三种训练模式。
 
+本问题可参考 [AI Studio题目](https://aistudio.baidu.com/aistudio/projectdetail/4117361?channelType=0&channel=0).
+
 ## 2. 问题定义
 
 本问题使用hPINNs解决基于傅立叶光学的全息领域(holography)的问题，旨在设计散射板的介电常数图，该图散射光使得传播强度具有目标函数的形状。
@@ -38,12 +40,13 @@ $$
 
 ## 3. 问题求解
 
-接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
-为了快速理解 PaddleScience，接下来仅对模型构建、约束构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。为了快速理解 PaddleScience，接下来仅对模型构建、约束构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
 ### 3.1 数据集介绍
 
 数据集为处理好的 holograpy 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以 PaddleScience 需要的数据集形式之一 `Dict[str: np.ndarray]` 存储在 `.mat` 文件中。
+
+运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)
 
 ### 3.2 模型构建
 
@@ -328,3 +331,9 @@ examples/hpinns/plotting.py
   ![holograpy_result_7eps](../../images/hpinns/aug_lag_Fig7_eps.jpg){ loading=lazy }
   <figcaption> epsilon值</figcaption>
 </figure>
+
+## 6. 参考文献
+
+参考文献： [PHYSICS-INFORMED NEURAL NETWORKS WITH HARD CONSTRAINTS FOR INVERSE DESIGN](https://arxiv.org/pdf/2102.04626.pdf)
+
+参考代码： [hPINNs-DeepXDE](https://github.com/lululxvi/hpinn)
