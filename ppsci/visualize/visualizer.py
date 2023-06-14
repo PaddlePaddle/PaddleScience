@@ -281,6 +281,10 @@ class Visualizer2DPlot(Visualizer2D):
             )
 
 
+from ppsci.utils import logger
+from ppsci.utils import misc
+
+
 class Visualizer3D(base.Visualizer):
     """Visualizer for 3D plot data.
 
@@ -315,6 +319,38 @@ class Visualizer3D(base.Visualizer):
                 {key: (data_dict[key][i * n : (i + 1) * n]) for key in data_dict},
                 coord_keys,
                 self.output_keys,
+            )
+
+    def quantitive_error(self, label: Dict, solution: Dict):
+        """Caculate quantitive error
+
+        Args:
+            label (Dict): reference baseline result.
+            solution (Dict): predicted result.
+        """
+        # LBM baseline, output Error
+        n = int((next(iter(label.values()))).shape[0] / self.num_timestamps)
+        err_dict = misc.Prettydefaultdict(list)
+        err_dict_key = "u"
+        for i in range(len(self.time_list)):
+            for key in solution.keys():
+                err_dict[key].append(
+                    (
+                        label[key][
+                            i * n : (i + 1) * n
+                        ]  # n : nodes number per time step
+                        - solution[key][i * n : (i + 1) * n]
+                    ).numpy()  # n : nodes number per time step
+                )
+            logger.info(
+                ", ".join(
+                    [
+                        f"{self.time_list[i]}",
+                        f"sum = {(np.absolute(err_dict[err_dict_key][i])).sum(axis=0)}: .5f",
+                        f"mean = {(np.absolute(err_dict[err_dict_key][i])).mean(axis=0)}: .5f",
+                        f"median = {np.median(np.absolute(err_dict[err_dict_key][i]), axis=0)}: .5f",
+                    ]
+                )
             )
 
 
