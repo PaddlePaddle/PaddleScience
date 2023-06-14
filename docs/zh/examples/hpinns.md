@@ -1,6 +1,6 @@
 # hPINNs(PINN with hard constraints)
 
-<a href="https://aistudio.baidu.com/aistudio/projectdetail/4117361?channelType=0&channel=0" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6390502" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 ## 1. 问题简介
 
@@ -44,7 +44,7 @@ $$
 
 ### 3.1 数据集介绍
 
-数据集为处理好的 holograpy 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以 PaddleScience 需要的数据集形式之一 `Dict[str: np.ndarray]` 存储在 `.mat` 文件中。
+数据集为处理好的 holography 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以 PaddleScience 需要的数据集形式之一 `Dict[str: np.ndarray]` 存储在 `.mat` 文件中。
 
 运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)
 
@@ -53,11 +53,11 @@ $$
 holograpy问题的模型结构图为：
 
 <figure markdown>
-  ![holograpy-arch](../../images/hpinns/holograpy_arch.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>holograpy 问题的 hPINNs 网络模型</figcaption>
+  ![holography-arch](../../images/hpinns/holograpy_arch.png){ loading=lazy style="margin:0 auto"}
+  <figcaption>holography 问题的 hPINNs 网络模型</figcaption>
 </figure>
 
-在 holograpy 问题中，应用PMLs(perfectly matched layers)方法后，PDE公式变为：
+在 holography 问题中，应用PMLs(perfectly matched layers)方法后，PDE公式变为：
 
 $$
 \dfrac{1}{1+\imath \dfrac{\sigma_x(x)}{\omega}} \dfrac{\partial}{\partial x} (\dfrac{1}{1+\imath \dfrac{\sigma_x(x)}{\omega}} \dfrac{\partial E}{\partial x})+\dfrac{1}{1+\imath \dfrac{\sigma_y(y)}{\omega}} \dfrac{\partial}{\partial y} (\dfrac{1}{1+\imath \dfrac{\sigma_y(y)}{\omega}} \dfrac{\partial E}{\partial y}) + \varepsilon \omega^2 E = - \imath \omega \mathcal{J}
@@ -79,7 +79,7 @@ examples/hpinns/holography.py:43:51
 --8<--
 ```
 
-为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("x_cos_1","x_sin_1",...,"x_cos_6","x_sin_6","y","y_cos_1","y_sin_1")` ，输出变量名分别是 `("e_re",)`,`("e_im",)`,`("eps",)`。
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("x_cos_1","x_sin_1",...,"x_cos_6","x_sin_6","y","y_cos_1","y_sin_1")` ，输出变量名分别是 `("e_re",)`, `("e_im",)`, `("eps",)`。
 注意到这里的输入变量远远多于 $(x, y)$ 这两个变量，这是因为如上图所示，模型的输入实际上是 $(x, y)$ 傅立叶展开的项而不是它们本身。因为数据集中提供的训练数据为 $(x, y)$ 值，这也就意味着我们需要对输入进行 transform 。同时如上图所示，由于硬约束的存在，模型的输出变量名也不是最终输出，因此也需要对输出进行 transform 。
 
 ### 3.3 transform构建
@@ -94,7 +94,7 @@ examples/hpinns/functions.py:50:93
 
 需要对每个 MLP 模型分别注册相应的 transform ，然后将 3 个 MLP 模型组成 Model List
 
-``` py linenums="58"
+``` py linenums="59"
 --8<--
 examples/hpinns/holography.py:59:68
 --8<--
@@ -124,7 +124,7 @@ examples/hpinns/functions.py:28:47
 --8<--
 ```
 
-由于应用了增强的拉格朗日方法，参数 $\mu$ 和 $\lambda$ 不是常量，而是随训练轮次 $\k$ 改变，此时 $\beta$ 为改变的系数，即每轮训练
+由于应用了增强的拉格朗日方法，参数 $\mu$ 和 $\lambda$ 不是常量，而是随训练轮次 $k$ 改变，此时 $\beta$ 为改变的系数，即每轮训练
 
 $\mu_k = \beta \mu_{k-1}$, $\lambda_k = \beta \lambda_{k-1}$
 
@@ -324,12 +324,12 @@ examples/hpinns/plotting.py
 
 <figure markdown>
   ![holograpy_result_7C](../../images/hpinns/aug_lag_Fig7_C.jpg){ loading=lazy }
-  <figcaption> E值</figcaption>
+  <figcaption> E 值</figcaption>
 </figure>
 
 <figure markdown>
   ![holograpy_result_7eps](../../images/hpinns/aug_lag_Fig7_eps.jpg){ loading=lazy }
-  <figcaption> epsilon值</figcaption>
+  <figcaption> epsilon 值</figcaption>
 </figure>
 
 ## 6. 参考文献
