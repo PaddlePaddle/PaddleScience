@@ -36,7 +36,7 @@ def pde_l2_rel_func(output_dict):
     rel_l2_g = paddle.norm(output_dict["dv_t"] - output_dict["g_pde"]) / paddle.norm(
         output_dict["dv_t"]
     )
-    metric_dict = {"f_pde": rel_l2_f, "f_pde": rel_l2_g}
+    metric_dict = {"f_pde_f": rel_l2_f, "f_pde_g": rel_l2_g}
     return metric_dict
 
 
@@ -278,7 +278,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_pde,
         OUTPUT_DIR,
         optimizer_pde,
@@ -395,7 +395,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_sol,
         OUTPUT_DIR,
         optimizer_idn,
@@ -410,7 +410,7 @@ if __name__ == "__main__":
     solver.train()
 
     # Unused models can be deleted from model list if there is no enough cuda memory before eval
-    del solver.model.model_list[-1]
-    del solver.model.model_list[-1]
+    del model_list.model_list[-1]
+    del model_list.model_list[-1]
     # evaluate after finished training
     solver.eval()
