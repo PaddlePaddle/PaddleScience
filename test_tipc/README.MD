@@ -4,7 +4,7 @@ TIPC功能测试的主程序为benchmark_train.sh，可以测试基于Python的�
 - docker image: registry.baidubce.com/paddlepaddle/paddle:latest-dev-cuda11.2-cudnn8-gcc82
 - paddle = 0.0.0
 - paddlescience = 0.0.0
-- python = 3.7
+- python = 3.10
 ## 2. 测试结论汇总
 | 算法名称 | 模型名称 | 单机单卡 | 单机多卡 | 多机多卡 | 模型压缩（单机多卡） |
 |  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |
