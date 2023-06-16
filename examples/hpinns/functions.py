@@ -67,7 +67,7 @@ def transform_in(_in):
 
 
 def transform_out_all(var):
-    x, y = input_dict["x"], input_dict["y"]
+    y = input_dict["y"]
     # Zero Dirichlet BC
     a, b = BOX[0][1] - DPML, BOX[1][1] + DPML
     t = (1 - paddle.exp(a - y)) * (1 - paddle.exp(y - b))
@@ -299,7 +299,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
     return losses
 
 
-def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
+def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
     """Compute objective loss for evalution.
 
     Args:
