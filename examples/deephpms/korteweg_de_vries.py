@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_pde,
         OUTPUT_DIR,
         optimizer_pde,
@@ -335,7 +335,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_sol,
         OUTPUT_DIR,
         optimizer_sol,

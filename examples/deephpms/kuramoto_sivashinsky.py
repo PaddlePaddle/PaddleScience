@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import paddle
 import paddle.nn.functional as F
 
@@ -246,7 +245,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_pde,
         OUTPUT_DIR,
         optimizer_pde,
@@ -346,7 +345,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_sol,
         OUTPUT_DIR,
         optimizer_idn,
