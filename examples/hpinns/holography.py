@@ -221,7 +221,7 @@ if __name__ == "__main__":
     # train: soft constraint, epoch=1 for lbfgs
     if train_mode == "soft":
         solver = ppsci.solver.Solver(
-            solver.model,
+            model_list,
             constraint,
             OUTPUT_DIR,
             optimizer_lbfgs,
@@ -268,7 +268,7 @@ if __name__ == "__main__":
             ppsci.utils.logger.info(f"Iteration {i}: mu = {func_module.mu}\n")
 
             solver = ppsci.solver.Solver(
-                solver.model,
+                model_list,
                 constraint,
                 OUTPUT_DIR,
                 optimizer_lbfgs,
