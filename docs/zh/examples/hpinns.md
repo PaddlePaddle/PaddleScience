@@ -4,19 +4,22 @@
 
 ## 1. 问题简介
 
-传统的PINNs(Physics-informed neural networks)网络中的约束都是软约束，作为loss项参与网络训练。而hPINNs通过修改网络输出的方法，将约束严格的加入网络结构中，形成一种硬约束。
-同时hPINNs通过对约束的不同设计，进行了软约束、应用惩罚方法的约束的硬约束和应用增强的拉格朗日方法的硬约束 3 种不同的约束条件下的实验。本文档以下说明主要针对应用增强的拉格朗日方法的硬约束进行说明，但完整代码中可以通过 `train_mode` 参数来切换三种训练模式。
+传统的 PINNs(Physics-informed neural networks) 网络中的约束都是软约束，作为 loss 项参与网络训练。而 hPINNs 通过修改网络输出的方法，将约束严格地加入网络结构中，形成一种硬约束。
+同时 hPINNs 设计了不同的约束组合，进行了软约束、带正则化的硬约束和应用增强的拉格朗日硬约束 3 种条件下的实验。本文档主要针对应用增强的拉格朗日方法的硬约束进行说明，但完整代码中可以通过 `train_mode` 参数来切换三种训练模式。
 
 本问题可参考 [AI Studio题目](https://aistudio.baidu.com/aistudio/projectdetail/4117361?channelType=0&channel=0).
 
 ## 2. 问题定义
 
-本问题使用hPINNs解决基于傅立叶光学的全息领域(holography)的问题，旨在设计散射板的介电常数图，该图散射光使得传播强度具有目标函数的形状。
+本问题使用 hPINNs 解决基于傅立叶光学的全息领域 (holography) 的问题，旨在设计散射板的介电常数图，这种方法使得介电常数图散射光线的传播强度具备目标函数的形状。
 
 objective 函数：
 
 $$
-\mathcal{J}(E) = \dfrac{1}{Area(\Omega_3)} \|\vert E(x,y)^2-f(x,y)\vert| \|^2_{2,\Omega_3} = \dfrac{1}{Area(\Omega_3)} \int_{\Omega_3} (\vert E(x,y)^2-f(x,y)\vert)^2 {\rm d}x {\rm d}y
+\begin{aligned}
+\mathcal{J}(E) &= \dfrac{1}{Area(\Omega_3)} \left\| |E(x,y)|^2-f(x,y)\right\|^2_{2,\Omega_3} \\
+&= \dfrac{1}{Area(\Omega_3)} \int_{\Omega_3} (|E(x,y)|^2-f(x,y))^2 {\rm d}x {\rm d}y
+\end{aligned}
 $$
 
 其中E为电场强度：$\vert E\vert^2 = (\mathfrak{R} [E])^2+(\mathfrak{I} [E])^2$
@@ -35,7 +38,7 @@ $$
 PDE公式：
 
 $$
-\nabla^2 E + \varepsilon \omega^2 E = - \imath \omega \mathcal{J}
+\nabla^2 E + \varepsilon \omega^2 E = -i \omega \mathcal{J}
 $$
 
 ## 3. 问题求解
@@ -44,9 +47,15 @@ $$
 
 ### 3.1 数据集介绍
 
-数据集为处理好的 holography 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以 PaddleScience 需要的数据集形式之一 `Dict[str: np.ndarray]` 存储在 `.mat` 文件中。
+数据集为处理好的 holography 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以字典的形式存储在 `.mat` 文件中。
 
-运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)
+运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)， 下载后分别存放在路径：
+
+``` py linenums="36"
+--8<--
+examples/hpinns/holography.py:36:37
+--8<--
+```
 
 ### 3.2 模型构建
 
@@ -57,21 +66,21 @@ holograpy问题的模型结构图为：
   <figcaption>holography 问题的 hPINNs 网络模型</figcaption>
 </figure>
 
-在 holography 问题中，应用PMLs(perfectly matched layers)方法后，PDE公式变为：
+在 holography 问题中，应用 PMLs(perfectly matched layers) 方法后，PDE公式变为：
 
 $$
-\dfrac{1}{1+\imath \dfrac{\sigma_x(x)}{\omega}} \dfrac{\partial}{\partial x} (\dfrac{1}{1+\imath \dfrac{\sigma_x(x)}{\omega}} \dfrac{\partial E}{\partial x})+\dfrac{1}{1+\imath \dfrac{\sigma_y(y)}{\omega}} \dfrac{\partial}{\partial y} (\dfrac{1}{1+\imath \dfrac{\sigma_y(y)}{\omega}} \dfrac{\partial E}{\partial y}) + \varepsilon \omega^2 E = - \imath \omega \mathcal{J}
+\dfrac{1}{1+i \dfrac{\sigma_x\left(x\right)}{\omega}} \dfrac{\partial}{\partial x} \left(\dfrac{1}{1+i \dfrac{\sigma_x\left(x\right)}{\omega}} \dfrac{\partial E}{\partial x}\right)+\dfrac{1}{1+i \dfrac{\sigma_y\left(y\right)}{\omega}} \dfrac{\partial}{\partial y} \left(\dfrac{1}{1+i \dfrac{\sigma_y\left(y\right)}{\omega}} \dfrac{\partial E}{\partial y}\right) + \varepsilon \omega^2 E = -i \omega \mathcal{J}
 $$
 
-PMLs方法请参考 [相关论文](https://arxiv.org/abs/2108.05348)。
+PMLs 方法请参考 [相关论文](https://arxiv.org/abs/2108.05348)。
 
-本问题中频率 $\omega$ 被选择为 $\dfrac{2\pi}{\mathcal{P}}$ 为常量（$\mathcal{P}$ 为Period），待求解的未知量 $E$ 与位置参数 $(x, y)$ 相关，在本例中，介电常数 $\varepsilon$ 同样为未知量, $\sigma_x(x)$ 和 $\sigma_y(y)$ 为由PMLs得到的分别与 $x, y$ 相关的变量。我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y)$ 到 $(E, \varepsilon)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^2$ ，但如上图所示的网络结构，本问题中将 $E$ 按照实部和虚部分为两个部分 $(\mathfrak{R} [E],\mathfrak{I} [E])$，且使用 3 个并行的 MLP 网络分别对 $(\mathfrak{R} [E], \mathfrak{I} [E], \varepsilon)$ 进行映射，映射函数 $f_i: \mathbb{R}^2 \to \mathbb{R}^1$ ，即：
+本问题中频率 $\omega$ 为常量 $\dfrac{2\pi}{\mathcal{P}}$（$\mathcal{P}$ 为Period），待求解的未知量 $E$ 与位置参数 $(x, y)$ 相关，在本例中，介电常数 $\varepsilon$ 同样为未知量, $\sigma_x(x)$ 和 $\sigma_y(y)$ 为由 PMLs 得到的，分别与 $x, y$ 相关的变量。我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y)$ 到 $(E, \varepsilon)$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^2$ ，但如上图所示的网络结构，本问题中将 $E$ 按照实部和虚部分为两个部分 $(\mathfrak{R} [E],\mathfrak{I} [E])$，且使用 3 个并行的 MLP 网络分别对 $(\mathfrak{R} [E], \mathfrak{I} [E], \varepsilon)$ 进行映射，映射函数 $f_i: \mathbb{R}^2 \to \mathbb{R}^1$ ，即：
 
 $$
 \mathfrak{R} [E] = f_1(x,y), \ \mathfrak{R} [E] = f_2(x,y), \ \varepsilon = f_3(x,y)
 $$
 
-上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List ，用 PaddleScience 代码表示如下
+上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
 ``` py linenums="43"
 --8<--
@@ -80,7 +89,7 @@ examples/hpinns/holography.py:43:51
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("x_cos_1","x_sin_1",...,"x_cos_6","x_sin_6","y","y_cos_1","y_sin_1")` ，输出变量名分别是 `("e_re",)`, `("e_im",)`, `("eps",)`。
-注意到这里的输入变量远远多于 $(x, y)$ 这两个变量，这是因为如上图所示，模型的输入实际上是 $(x, y)$ 傅立叶展开的项而不是它们本身。因为数据集中提供的训练数据为 $(x, y)$ 值，这也就意味着我们需要对输入进行 transform 。同时如上图所示，由于硬约束的存在，模型的输出变量名也不是最终输出，因此也需要对输出进行 transform 。
+注意到这里的输入变量远远多于 $(x, y)$ 这两个变量，这是因为如上图所示，模型的输入实际上是 $(x, y)$ 傅立叶展开的项而不是它们本身。而数据集中提供的训练数据为 $(x, y)$ 值，这也就意味着我们需要对输入进行 transform。同时如上图所示，由于硬约束的存在，模型的输出变量名也不是最终输出，因此也需要对输出进行 transform。
 
 ### 3.3 transform构建
 
@@ -144,7 +153,7 @@ examples/hpinns/holography.py:212:214
 
 ### 3.5 优化器构建
 
-训练分为两个阶段，先使用Adam优化器进行大致训练，再使用LBFGS优化器逼近最优点，因此需要两个优化器，这也对应了上一部分超参数中的两种 `EPOCHS` 值
+训练分为两个阶段，先使用 Adam 优化器进行大致训练，再使用 LBFGS 优化器逼近最优点，因此需要两个优化器，这也对应了上一部分超参数中的两种 `EPOCHS` 值
 
 ``` py linenums="74"
 --8<--
@@ -162,7 +171,7 @@ examples/hpinns/holography.py:216:219
 
 本问题采用无监督学习的方式，约束为结果需要满足PDE公式。
 
-虽然我们不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint` ，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分”假的“标签数据。
+虽然我们不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
 ``` py linenums="113"
 --8<--
@@ -182,15 +191,15 @@ examples/hpinns/holography.py:77:138
 
 `SupervisedConstraint` 的第一个参数是监督约束的读取配置，其中 `“dataset”` 字段表示使用的训练数据集信息，各个字段分别表示：
 
-1. `name` ：数据集类型，此处 `"IterableMatDataset"` 表示不分 batch 顺序读取的 `.mat` 类型的数据集；
-2. `file_path` ：数据集文件路径；
-3. `input_keys` ：输入变量名；
-4. `label_keys` ：标签变量名；
-5. `alias_dict` ：变量别名。
+1. `name`： 数据集类型，此处 `"IterableMatDataset"` 表示不分 batch 顺序读取的 `.mat` 类型的数据集；
+2. `file_path`： 数据集文件路径；
+3. `input_keys`： 输入变量名；
+4. `label_keys`： 标签变量名；
+5. `alias_dict`： 变量别名。
 
 第二个参数是损失函数，此处的 `FunctionalLoss` 为 PaddleScience 预留的自定义 loss 函数类，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法，本问题中由于存在多个 loss 项，因此需要定义多个 loss 计算函数，这也是需要构建多个约束的原因。自定义 loss 函数代码请参考 [自定义 loss 和 metric ](#38)。
 
-第三个参数是方程表达式，用于描述如何计算约束目标，此处填入 `output_expr` ，计算后的值将会按照指定名称存入输出列表中，从而保证 loss 计算时可以使用这些值。
+第三个参数是方程表达式，用于描述如何计算约束目标，此处填入 `output_expr`，计算后的值将会按照指定名称存入输出列表中，从而保证 loss 计算时可以使用这些值。
 
 第四个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。
 
@@ -212,15 +221,15 @@ examples/hpinns/holography.py:144:192
 --8<--
 ```
 
-评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE` 、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric ](#38)。
+评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric ](#38)。
 
 其余配置与 [约束构建](#36) 的设置类似。
 
 ### 3.8 自定义 loss 和 metric
 
-由于本问题采用无监督学习，数据中不存在标签数据，loss 和 metric 根据 PDE 计算得到，因此需要自定义 loss 和 metric 。方法为先定义相关函数，再将函数名作为参数传给 `FunctionalLoss` 和 `FunctionalMetric`。
+由于本问题采用无监督学习，数据中不存在标签数据，loss 和 metric 根据 PDE 计算得到，因此需要自定义 loss 和 metric。方法为先定义相关函数，再将函数名作为参数传给 `FunctionalLoss` 和 `FunctionalMetric`。
 
-需要注意自定义 loss 和 metric 函数的输入输出参数需要与 PaddleScience 中如 `MSE` 等其他函数保持一致，即输入为模型输入等字典 `output_dict: Dict[str, paddle.Tensor]` ，loss 函数输出为 loss 值 `Dict[str, paddle.Tensor]` ，metric 函数输出为字典 `paddle.Tensor`。
+需要注意自定义 loss 和 metric 函数的输入输出参数需要与 PaddleScience 中如 `MSE` 等其他函数保持一致，即输入为模型输出 `output_dict` 等字典变量，loss 函数输出为 loss 值 `paddle.Tensor`，metric 函数输出为字典 `Dict[str, paddle.Tensor]`。
 
 ``` py linenums="240"
 --8<--
@@ -234,8 +243,6 @@ examples/hpinns/functions.py:323:337
 --8<--
 ```
 
-PaddleScience 中当前 loss 和 metric API 请参考 [API文档](../api/loss.md)。
-
 ### 3.9 模型训练、评估
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
@@ -246,7 +253,7 @@ examples/hpinns/holography.py:194:210
 --8<--
 ```
 
-由于本问题存在多种训练模式，根据每个模式的不同，将进行 $[2,1+k]$ 次完整的训练、评估，具体代码请参考 [完整代码](#4)中 holography.py 文件。
+由于本问题存在多种训练模式，根据每个模式的不同，将进行 $[2,1+k]$ 次完整的训练、评估，具体代码请参考 [完整代码](#4) 中 holography.py 文件。
 
 需要注意的是由于进行多阶段训练，再次定义 `solver` 时注意传入的模型不是最开始的 `model_list`， 而是上一阶段训练得到的模型 `solver.model`， 否则将无法继承上一阶段训练得到的模型参数。
 
@@ -266,7 +273,7 @@ examples/hpinns/holography.py:289:
 --8<--
 ```
 
-自定义代码请参考 [完整代码](#4)中 plotting.py 文件。
+自定义代码请参考 [完整代码](#4) 中 plotting.py 文件。
 
 ## 4. 完整代码
 
