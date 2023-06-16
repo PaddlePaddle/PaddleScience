@@ -16,7 +16,11 @@
 
     ``` shell
     git clone https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+
     cd PaddleScience
+    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
