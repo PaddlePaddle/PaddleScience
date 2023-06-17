@@ -1,8 +1,8 @@
 import pytest
-from ppsci.equation import PDE
-from paddle import nn
 import paddle
 import sympy
+from paddle import nn
+from ppsci.equation import PDE
 
 
 class Test_PDE:
