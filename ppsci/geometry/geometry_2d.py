@@ -177,6 +177,29 @@ class Rectangle(geometry_nd.Hypercube):
             and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
         )
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape of the array is `[N, 2]`.
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is `[N, 1]`.
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        assert points.shape[1] == 2, "The shape of points must be [N, 2]."
+        center = (self.xmin + self.xmax) / 2
+        q = np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
+        return -(
+            np.linalg.norm(np.maximum(q, 0), axis=1) + np.minimum(np.max(q, axis=1), 0)
+        ).reshape(-1, 1)
+
 
 class Triangle(geometry.Geometry):
     """Class for Triangle
@@ -348,6 +371,49 @@ class Triangle(geometry.Geometry):
             else:
                 x.append((l - self.l12 - self.l23) * self.n31 + self.x3)
         return np.vstack(x)
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape of the array is `[N, 2]`.
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is `[N, 1]`.
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        assert points.shape[1] == 2, "The shape of points must be [N, 2]."
+        v1p = points - self.x1
+        v2p = points - self.x2
+        v3p = points - self.x3
+        pq1 = (
+            self.v12
+            * np.clip(np.dot(v1p, self.v12.reshape(2, -1)) / self.l12**2, 0, 1)
+            - v1p
+        )
+        pq2 = (
+            self.v23
+            * np.clip(np.dot(v2p, self.v23.reshape(2, -1)) / self.l23**2, 0, 1)
+            - v2p
+        )
+        pq3 = (
+            self.v31
+            * np.clip(np.dot(v3p, self.v31.reshape(2, -1)) / self.l31**2, 0, 1)
+            - v3p
+        )
+
+        s = self.is_inside(points).reshape(-1, 1) * 2 - 1
+        dist_pq1 = np.linalg.norm(pq1, axis=1, keepdims=True)
+        dist_pq2 = np.linalg.norm(pq2, axis=1, keepdims=True)
+        dist_pq3 = np.linalg.norm(pq3, axis=1, keepdims=True)
+        dist = np.minimum(np.minimum(dist_pq1, dist_pq2), dist_pq3)
+        return s * dist
 
 
 class Polygon(geometry.Geometry):
