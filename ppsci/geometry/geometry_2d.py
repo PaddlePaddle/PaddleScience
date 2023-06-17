@@ -78,6 +78,26 @@ class Disk(geometry.Geometry):
         X = np.concatenate((np.cos(theta), np.sin(theta)), axis=1)
         return self.radius * X + self.center
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 2]
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        sdf = self.radius - np.linalg.norm(points - self.center, axis=1)
+        sdf = -sdf[..., np.newaxis]
+        return sdf
+
 
 class Rectangle(geometry_nd.Hypercube):
     """Class for rectangle geometry
