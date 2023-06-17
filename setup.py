@@ -1,46 +1,67 @@
-# Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Setup configuration
+"""
 
-from io import open
+import setuptools
 
-from setuptools import setup
 
-with open("requirements.txt", encoding="utf-8-sig") as f:
-    requirements = f.readlines()
+def readme():
+    """README"""
+    with open("README.md") as f:
+        return f.read()
 
-setup(
-    name="paddlescience",
-    packages=["paddlescience"],
-    package_dir={"paddlescience": ""},
-    include_package_data=True,
-    entry_points={
-        "console_scripts": ["paddlescience=paddlescience.paddlescience:main"]
-    },
-    version="0.0.0",
-    install_requires=requirements,
-    license="Apache License 2.0",
-    description="A treasure chest for visual recognition powered by PaddlePaddle.",
-    long_description_content_type="text/markdown",
-    url="https://github.com/PaddlePaddle/PaddleScience",
-    download_url="https://github.com/PaddlePaddle/PaddleScience.git",
-    keywords=["AI for Science"],
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Operating System :: OS Independent",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Education",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.7",
-    ], )
+
+if __name__ == "__main__":
+    setuptools.setup(
+        name="paddlesci",
+        version="1.0.0",
+        author="PaddlePaddle",
+        url="https://github.com/PaddlePaddle/PaddleScience",
+        description=(
+            "PaddleScience is SDK and library for developing AI-driven scientific computing"
+            " applications based on PaddlePaddle."
+        ),
+        long_description=readme(),
+        long_description_content_type="text/markdown",
+        packages=setuptools.find_packages(
+            exclude=(
+                "docs",
+                "examples",
+                "jointContribution",
+                "test_tipc",
+                "tests",
+                "tools",
+            )
+        ),
+        classifiers=[
+            "Development Status :: 5 - Production/Stable",
+            "Intended Audience :: Science/Research",
+            "License :: OSI Approved :: Apache Software License",
+            "Programming Language :: Python :: 3 :: Only",
+            "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Topic :: Scientific/Engineering",
+            "Topic :: Scientific/Engineering :: Artificial Intelligence",
+            "Topic :: Scientific/Engineering :: Mathematics",
+        ],
+        install_requires=[
+            "numpy>=1.20.0",
+            "scipy",
+            "sympy",
+            "matplotlib",
+            "vtk",
+            "pyevtk",
+            "wget",
+            "scipy",
+            "visualdl",
+            "pyvista==0.37.0",
+            "pyyaml",
+            "scikit-optimize",
+            "h5py",
+            "meshio==5.3.4",
+            "tqdm",
+            "imageio",
+        ],
+    )

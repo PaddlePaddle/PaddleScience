@@ -1,10 +1,15 @@
-# Defining the exact version will make sure things don't break
-
-sphinx==3.5.2
-sphinx_rtd_theme==0.5.1
-readthedocs-sphinx-search==0.1.0
-
-sphinx-copybutton==0.3.1
-sphinx-markdown-tables==0.0.15
-
-# paddlepaddle >= 2.0.1
+numpy
+sympy
+matplotlib
+scipy
+pyyaml
+Jinja2==3.0.3
+mkdocs-material
+mkdocs==1.4.2
+mkdocs-autorefs
+mkdocs-include-markdown-plugin
+mkdocs-material
+mkdocs-material-extensions
+mkdocstrings
+mkdocstrings-python
+mkdocs-glightbox
