@@ -95,10 +95,14 @@ class Geometry:
                     "please check correctness of geometry and given creteria."
                 )
 
-        sdf = -self.sdf_func(x)
-        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
-        x_dict = misc.convert_to_dict(x, self.dim_keys)
-        return {**x_dict, **sdf_dict}
+        # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
+        if "sdf_func" in dir(self):
+            sdf = -self.sdf_func(x)
+            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+            x_dict = misc.convert_to_dict(x, self.dim_keys)
+            return {**x_dict, **sdf_dict}
+        else:
+            return misc.convert_to_dict(x, self.dim_keys)
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
