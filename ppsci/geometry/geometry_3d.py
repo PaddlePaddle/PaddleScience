@@ -149,7 +149,7 @@ class Cuboid(geometry_nd.Hypercube):
         sdf = (
             ((self.xmax - self.xmin) / 2 - abs(points - (self.xmin + self.xmax) / 2))
         ).min(axis=1)
-        sdf = sdf[..., np.newaxis]
+        sdf = -sdf[..., np.newaxis]
         return sdf
 
 
