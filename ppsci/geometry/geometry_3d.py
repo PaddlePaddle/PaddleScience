@@ -149,3 +149,23 @@ class Sphere(geometry_nd.Hypersphere):
         x = np.sqrt(1 - z**2) * np.cos(2 * np.pi * nl * g)
         y = np.sqrt(1 - z**2) * np.sin(2 * np.pi * nl * g)
         return np.stack((x, y, z), axis=-1)
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 3]
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        sdf = self.radius - (((points - self.center) ** 2).sum(axis=1)) ** 0.5
+        sdf = -sdf[..., np.newaxis]
+        return sdf
