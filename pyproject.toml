@@ -64,4 +64,4 @@ exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "tests*", "
 
 [tool.ruff]
 line-length = 88
-ignore = ["E501",]
+ignore = ["E501", "E741"]
