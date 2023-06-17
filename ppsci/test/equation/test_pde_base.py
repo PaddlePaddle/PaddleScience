@@ -15,6 +15,9 @@ def hessian(y: "paddle.Tensor", x: "paddle.Tensor") -> "paddle.Tensor":
 
 class Test_PDE():
     def test_pde_init(self):
+        """
+        Testing the PDE class initialization
+        """
         pde = PDE()
         assert isinstance(pde, PDE)
         assert isinstance(pde.equations, dict)
