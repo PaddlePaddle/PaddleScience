@@ -60,11 +60,6 @@ class L1Loss(base.Loss):
             if weight_dict:
                 loss *= weight_dict[key]
 
-            if isinstance(self.weight, (float, int)):
-                loss *= self.weight
-            elif isinstance(self.weight, dict) and key in self.weight:
-                loss *= self.weight[key]
-
             if "area" in output_dict:
                 loss *= output_dict["area"]
 
@@ -127,7 +122,7 @@ class PeriodicL1Loss(base.Loss):
             loss = F.l1_loss(
                 output_dict[key][:n_output], output_dict[key][n_output:], "none"
             )
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
             if "area" in output_dict:
                 loss *= output_dict["area"]

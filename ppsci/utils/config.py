@@ -125,7 +125,7 @@ def override(dl, ks, v):
     else:
         if len(ks) == 1:
             # assert ks[0] in dl, (f"{ks[0]} is not exist in {dl}")
-            if not ks[0] in dl:
+            if ks[0] not in dl:
                 print(f"A new field ({ks[0]}) detected!")
             dl[ks[0]] = str2num(v)
         else:

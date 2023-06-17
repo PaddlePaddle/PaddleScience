@@ -84,7 +84,6 @@ IFS=$'\n'
 lines=(${dataline})
 model_name=$(func_parser_value "${lines[1]}")
 workdir=$(func_parser_value "${lines[60]}")
-cd ${PDSC_DIR}/${workdir}
 python=$(func_parser_value "${lines[2]}")
 line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
 batch_size=$(func_parser_value "${lines[line_num]}")
@@ -133,6 +132,8 @@ line_export_py=30
 func_sed_params "$FILENAME" "${line_eval_py}" "null"
 func_sed_params "$FILENAME" "${line_export_py}" "null"
 func_sed_params "$FILENAME" "${line_python}"  "$python"
+
+cd ${PDSC_DIR}/${workdir}
 
 if  [ ! -n "$PARAMS" ] ;then
     # PARAMS input is not a word.

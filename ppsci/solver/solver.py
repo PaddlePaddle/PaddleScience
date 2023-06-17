@@ -181,9 +181,14 @@ class Solver:
         self.vdl_writer = vdl_writer
 
         # set running device
+        if device != "cpu" and paddle.device.get_device() == "cpu":
+            logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
+            device = "cpu"
         self.device = paddle.set_device(device)
+
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
+
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
@@ -496,6 +501,7 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
         """

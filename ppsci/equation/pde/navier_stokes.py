@@ -12,16 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
+from typing import Union
+
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 
 class NavierStokes(base.PDE):
-    """Class for navier-stokes equation.
+    r"""Class for navier-stokes equation.
+
+    $$
+    \begin{cases}
+        \dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z} = 0 \\
+        \dfrac{\partial u}{\partial t} + u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} + w\dfrac{\partial w}{\partial z} =
+            - \dfrac{1}{\rho}\dfrac{\partial p}{\partial x}
+            + \nu(
+                \dfrac{\partial ^2 u}{\partial x ^2}
+                + \dfrac{\partial ^2 u}{\partial y ^2}
+                + \dfrac{\partial ^2 u}{\partial z ^2}
+            ) \\
+        \dfrac{\partial v}{\partial t} + u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} + w\dfrac{\partial w}{\partial z} =
+            - \dfrac{1}{\rho}\dfrac{\partial p}{\partial y}
+            + \nu(
+                \dfrac{\partial ^2 v}{\partial x ^2}
+                + \dfrac{\partial ^2 v}{\partial y ^2}
+                + \dfrac{\partial ^2 v}{\partial z ^2}
+            ) \\
+        \dfrac{\partial w}{\partial t} + u\dfrac{\partial w}{\partial x} + v\dfrac{\partial w}{\partial y} + w\dfrac{\partial w}{\partial z} =
+            - \dfrac{1}{\rho}\dfrac{\partial p}{\partial z}
+            + \nu(
+                \dfrac{\partial ^2 w}{\partial x ^2}
+                + \dfrac{\partial ^2 w}{\partial y ^2}
+                + \dfrac{\partial ^2 w}{\partial z ^2}
+            ) \\
+    \end{cases}
+    $$
 
     Args:
-        nu (float): Dynamic viscosity.
+        nu (Union[float, Callable]): Dynamic viscosity.
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
@@ -31,7 +61,7 @@ class NavierStokes(base.PDE):
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
-    def __init__(self, nu: float, rho: float, dim: int, time: bool):
+    def __init__(self, nu: Union[float, Callable], rho: float, dim: int, time: bool):
         super().__init__()
         self.nu = nu
         self.rho = rho
@@ -43,14 +73,14 @@ class NavierStokes(base.PDE):
             u, v = out["u"], out["v"]
             continuity = jacobian(u, x) + jacobian(v, y)
             if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
+                z, w = out["z"], out["w"]
                 continuity += jacobian(w, z)
             return continuity
 
         self.add_equation("continuity", continuity_compute_func)
 
         def momentum_x_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
@@ -64,8 +94,7 @@ class NavierStokes(base.PDE):
                 t = out["t"]
                 momentum_x += jacobian(u, t)
             if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
+                z, w = out["z"], out["w"]
                 momentum_x += w * jacobian(u, z)
                 momentum_x -= nu / rho * hessian(u, z)
             return momentum_x
@@ -73,6 +102,7 @@ class NavierStokes(base.PDE):
         self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
+            nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
@@ -86,8 +116,7 @@ class NavierStokes(base.PDE):
                 t = out["t"]
                 momentum_y += jacobian(v, t)
             if self.dim == 3:
-                z = out["z"]
-                w = out["w"]
+                z, w = out["z"], out["w"]
                 momentum_y += w * jacobian(v, z)
                 momentum_y -= nu / rho * hessian(v, z)
             return momentum_y
@@ -97,6 +126,7 @@ class NavierStokes(base.PDE):
         if self.dim == 3:
 
             def momentum_z_compute_func(out):
+                nu = self.nu(out) if callable(self.nu) else self.nu
                 x, y, z = out["x"], out["y"], out["z"]
                 u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (

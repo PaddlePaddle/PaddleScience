@@ -44,7 +44,7 @@ class ExpressionSolver(nn.Layer):
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError(
-            f"Use train_forward/eval_forward/visu_forward instead of forward."
+            "Use train_forward/eval_forward/visu_forward instead of forward."
         )
 
     @jit.to_static
@@ -143,6 +143,10 @@ class ExpressionSolver(nn.Layer):
                 output_dict[name] = expr({**output_dict, **input_dict})
             else:
                 raise TypeError(f"expr type({type(expr)}) is invalid")
+
+        # put field 'area' into output_dict
+        if "area" in input_dict:
+            output_dict["area"] = input_dict["area"]
 
         # clear differentiation cache
         clear()

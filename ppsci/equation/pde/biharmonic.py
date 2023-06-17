@@ -17,7 +17,11 @@ from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    """Class for biharmonic equation.
+    r"""Class for biharmonic equation.
+
+    $$
+    \nabla^4 \varphi = \dfrac{q}{D}
+    $$
 
     Args:
         dim (int): Dimension of equation.

@@ -2,8 +2,10 @@
 
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
-[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
+[![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](https://pypi.org/project/paddlesci/)
 [![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](./LICENSE)
+[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
@@ -30,7 +32,11 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
     ``` shell
     git clone https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+
     cd PaddleScience
+    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 

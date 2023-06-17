@@ -41,6 +41,7 @@ nav:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
         - Laplace2D: zh/examples/laplace2d.md
+        - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
         - FourCastNet: zh/examples/fourcastnet.md
         - Lorenz_transform_physx: zh/examples/lorenz.md

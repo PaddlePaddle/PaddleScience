@@ -52,7 +52,7 @@ null:null
 ===========================train_benchmark_params==========================
 batch_size:1
 fp_items:fp32
-epoch:20
+epoch:10000
 --profiler_options:batch_range=[1,1];state=GPU;tracer_option=Default;profile_path=model.profile
 flags:FLAGS_eager_delete_tensor_gb=0.0;FLAGS_fraction_of_gpu_memory_to_use=0.98;FLAGS_conv_workspace_size_limit=0
 ===========================prepare_params==========================

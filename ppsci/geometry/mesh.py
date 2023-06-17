@@ -40,7 +40,10 @@ class Mesh(geometry.Geometry):
     def __init__(self, mesh: Union["pymesh.Mesh", str]):
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pymesh python package."
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import pymesh
 
         if isinstance(mesh, str):
@@ -63,7 +66,10 @@ class Mesh(geometry.Geometry):
         self.face_area = self.py_mesh.get_attribute("face_area").reshape([-1])
 
         if not checker.dynamic_import_to_globals(["open3d"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import open3d python package. "
+                "Please install it with `pip install open3d`."
+            )
         import open3d
 
         self.open3d_mesh = open3d.geometry.TriangleMesh(
@@ -87,7 +93,10 @@ class Mesh(geometry.Geometry):
         self.num_faces = self.py_mesh.num_faces
 
         if not checker.dynamic_import_to_globals(["pysdf"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pysdf python package. "
+                "Please install open3d with `pip install pysdf`."
+            )
         import pysdf
 
         self.pysdf = pysdf.SDF(self.vertices, self.faces)
@@ -114,7 +123,10 @@ class Mesh(geometry.Geometry):
         the result of this function.
         """
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pymesh python package."
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import pymesh
 
         sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
@@ -133,7 +145,11 @@ class Mesh(geometry.Geometry):
         faces = np.array(self.faces)
 
         if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import open3d and pymesh python package. "
+                "Please install open3d with `pip install open3d` and "
+                "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import open3d
         import pymesh
 
@@ -153,7 +169,11 @@ class Mesh(geometry.Geometry):
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
         if not checker.dynamic_import_to_globals(("open3d", "pymesh")):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import open3d and pymesh python package. "
+                "Please install open3d with `pip install open3d` and "
+                "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import open3d
         import pymesh
 
@@ -161,7 +181,7 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3dVector(vertices),
             open3d.utility.Vector3iVector(faces),
         )
-        open3d_mesh.scale(scale, center)
+        open3d_mesh = open3d_mesh.scale(scale, center)
         self.py_mesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
@@ -279,7 +299,9 @@ class Mesh(geometry.Geometry):
             face_points = sample_in_triangle(
                 self.v0[i], self.v1[i], self.v2[i], npoint, random, criteria
             )
-            face_normal = np.tile(self.face_normal[i], [npoint, 1])
+            face_normal = np.tile(self.face_normal[i], [npoint, 1]).astype(
+                paddle.get_default_dtype()
+            )
             valid_area = np.full(
                 [npoint, 1],
                 valid_areas[i] / npoint,
@@ -372,7 +394,10 @@ class Mesh(geometry.Geometry):
 
     def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pymesh python package. "
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import pymesh
 
         csg = pymesh.CSGTree(
@@ -388,7 +413,10 @@ class Mesh(geometry.Geometry):
 
     def difference(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pymesh python package. "
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import pymesh
 
         csg = pymesh.CSGTree(
@@ -401,7 +429,10 @@ class Mesh(geometry.Geometry):
 
     def intersection(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
-            raise ModuleNotFoundError
+            raise ImportError(
+                "Could not import pymesh python package. "
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
         import pymesh
 
         csg = pymesh.CSGTree(
