@@ -15,25 +15,13 @@
 import paddle
 import pytest
 from paddle import nn
+
 from ppsci import equation
 
 __all__ = []
 
-def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
-    return paddle.grad(y, x, create_graph=True)[0]
 
-def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
-    return jacobian(jacobian(y, x), x)
-
-def poisson_compute(p: paddle.Tensor, x: paddle.Tensor, y: paddle.Tensor, z: paddle.Tensor):
-    poisson=0
-    temp1=hessian(p,x)
-    temp2=hessian(p,y)
-    temp3=hessian(p,z)
-    poisson += temp1+temp2+temp3
-    return poisson
-
-@pytest.mark.parametrize("dim", (3, 3))
+@pytest.mark.parametrize("dim", (2, 3))
 def test_poisson(dim):
     """Test for only mean."""
     batch_size = 13
@@ -43,11 +31,13 @@ def test_poisson(dim):
     # generate input data
     x = paddle.randn([batch_size, 1])
     y = paddle.randn([batch_size, 1])
-    z = paddle.randn([batch_size, 1])
     x.stop_gradient = False
     y.stop_gradient = False
-    z.stop_gradient = False
-    input_data = paddle.concat([x, y, z], axis=1)
+    input_data = paddle.concat([x, y], axis=1)
+    if dim == 3:
+        z = paddle.randn([batch_size, 1])
+        z.stop_gradient = False
+        input_data = paddle.concat([x, y, z], axis=1)
 
     # build NN model
     model = nn.Sequential(
@@ -57,17 +47,27 @@ def test_poisson(dim):
 
     # manually generate output
     p = model(input_data)
+
+    def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
+        return paddle.grad(y, x, create_graph=True)[0]
+
+    def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
+        return jacobian(jacobian(y, x), x)
+
     # compute expected result
-    expected_result = poisson_compute(p, x, y, z)
-    
+    expected_result = hessian(p, x) + hessian(p, y)
+    if dim == 3:
+        expected_result += hessian(p, z)
+
     # compute result using built-in Laplace module
     poisson_equation = equation.Poisson(dim=dim)
     data_dict = {
         "x": x,
         "y": y,
-        "z": z,
         "p": p,
     }
+    if dim == 3:
+        data_dict["z"] = z
     test_result = poisson_equation.equations["poisson"](data_dict)
     # check result whether is equal
     assert paddle.allclose(expected_result, test_result)
