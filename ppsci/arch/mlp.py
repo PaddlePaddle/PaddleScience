@@ -82,6 +82,7 @@ class MLP(base.Arch):
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
+        self.acts = []
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -107,15 +108,17 @@ class MLP(base.Arch):
                 if weight_norm
                 else nn.Linear(cur_size, _size)
             )
+            # initialize activation function
+            self.acts.append(
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(_size)
+            )
             cur_size = _size
+
         self.linears = nn.LayerList(self.linears)
-
+        self.acts = nn.LayerList(self.acts)
         self.last_fc = nn.Linear(cur_size, len(self.output_keys))
-
-        # initialize activation function
-        self.act = nn.LayerList(
-            [act_mod.get_activation(activation) for _ in range(len(hidden_size))]
-        )
 
         self.skip_connection = skip_connection
 
@@ -130,7 +133,7 @@ class MLP(base.Arch):
                     y = y + skip
                 else:
                     skip = y
-            y = self.act[i](y)
+            y = self.acts[i](y)
 
         y = self.last_fc(y)
 
