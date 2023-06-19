@@ -105,17 +105,17 @@ class Test_PDE:
         pde = PDE()
 
         assert len(pde.state_dict()) == 0
+        # this is a paddle nn.ParameterList()
+        pde.learnable_parameters.append(
+            paddle.create_parameter(shape=[1], dtype="float32")
+        )
+        external_state = pde.state_dict()
+        # change the value in the external_state to 2
+        external_state["0"] = paddle.to_tensor([2.0])
+        pde.learnable_parameters.set_state_dict(external_state)
+        assert pde.state_dict()["0"] == paddle.to_tensor([2.0])
 
-        external_state = {
-            "learnable_parameters": [
-                paddle.create_parameter(shape=[1], dtype="float32")
-            ]
-        }
-
-        # set state dict
-        pde.set_state_dict(pde.state_dict())
-
-        assert len(pde.state_dict()) == 1
+        
 
 
 if __name__ == "__main__":
