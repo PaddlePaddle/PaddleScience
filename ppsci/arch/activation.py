@@ -19,6 +19,27 @@ import paddle.nn.functional as F
 from paddle import nn
 
 
+class Stan(nn.Layer):
+    """Self-scalable Tanh.
+    paper: https://arxiv.org/abs/2204.12589v1
+
+    Args:
+        out_features (int, optional): Output features. Defaults to 1.
+    """
+
+    def __init__(self, out_features: int = 1):
+        super().__init__()
+        self.beta = self.create_parameter(
+            shape=(out_features,),
+            default_initializer=nn.initializer.Constant(1),
+        )
+
+    def forward(self, x):
+        # TODO: manually broadcast beta to x.shape for preventing backward error yet.
+        return F.tanh(x) * (1 + paddle.broadcast_to(self.beta, x.shape) * x)
+        # return F.tanh(x) * (1 + self.beta * x)
+
+
 class Swish(nn.Layer):
     def __init__(self, beta: float = 1.0):
         super().__init__()
@@ -67,6 +88,7 @@ act_func_dict = {
     "swish": Swish(),
     "tanh": nn.Tanh(),
     "identity": nn.Identity(),
+    "stan": Stan,
 }
 
 
