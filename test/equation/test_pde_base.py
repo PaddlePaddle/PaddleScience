@@ -126,7 +126,7 @@ class Test_PDE:
         def simple_equation(out):
             x, y = out["x"], out["y"]
             return x + y
-        
+
         pde.add_equation("simple", simple_equation)
 
         assert str(pde).startswith("PDE, simple: ")
