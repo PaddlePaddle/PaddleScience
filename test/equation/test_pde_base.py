@@ -115,8 +115,6 @@ class Test_PDE:
         pde.learnable_parameters.set_state_dict(external_state)
         assert pde.state_dict()["0"] == paddle.to_tensor([2.0])
 
-        
-
 
 if __name__ == "__main__":
     pytest.main()
