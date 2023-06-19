@@ -23,6 +23,10 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
 
+## 致谢
+
+PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
+
 ## 证书
 
 [Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
