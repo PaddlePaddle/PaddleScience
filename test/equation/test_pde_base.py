@@ -112,8 +112,24 @@ class Test_PDE:
         external_state = pde.state_dict()
         # change the value in the external_state to 2
         external_state["0"] = paddle.to_tensor([2.0])
-        pde.learnable_parameters.set_state_dict(external_state)
+        pde.set_state_dict(external_state)
         assert pde.state_dict()["0"] == paddle.to_tensor([2.0])
+
+    def test_str(self):
+        """
+        initiate a PDE object and check its string representation
+        """
+        pde = PDE()
+        assert str(pde) == "PDE"
+
+        # add an equation
+        def simple_equation(out):
+            x, y = out["x"], out["y"]
+            return x + y
+        
+        pde.add_equation("simple", simple_equation)
+
+        assert str(pde).startswith("PDE, simple: ")
 
 
 if __name__ == "__main__":
