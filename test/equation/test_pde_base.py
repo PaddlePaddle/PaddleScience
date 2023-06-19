@@ -1,7 +1,8 @@
-import pytest
 import paddle
+import pytest
 import sympy
 from paddle import nn
+
 from ppsci.equation import PDE
 
 
