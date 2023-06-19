@@ -197,6 +197,35 @@ class Rectangle(geometry_nd.Hypercube):
             and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
         )
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape of the array is [N, 2].
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        if points.shape[1] != 2:
+            raise ValueError(
+                f"Shape of given points should be [*, 2], but got {points.shape}"
+            )
+        center = (self.xmin + self.xmax) / 2
+        dist_from_center = (
+            np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
+        )
+        return -(
+            np.linalg.norm(np.maximum(dist_from_center, 0), axis=1)
+            + np.minimum(np.max(dist_from_center, axis=1), 0)
+        ).reshape(-1, 1)
+
 
 class Triangle(geometry.Geometry):
     """Class for Triangle
@@ -368,6 +397,53 @@ class Triangle(geometry.Geometry):
             else:
                 x.append((l - self.l12 - self.l23) * self.n31 + self.x3)
         return np.vstack(x)
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape of the array is [N, 2].
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        if points.shape[1] != 2:
+            raise ValueError(
+                f"Shape of given points should be [*, 2], but got {points.shape}"
+            )
+        v1p = points - self.x1  # v1p: vector from x1 to points
+        v2p = points - self.x2
+        v3p = points - self.x3
+        # vv12_p: vertical vector of points to v12(If the vertical point is in the extension of v12,
+        # the vector will be the vector from x1 to points)
+        vv12_p = (
+            self.v12
+            * np.clip(np.dot(v1p, self.v12.reshape(2, -1)) / self.l12**2, 0, 1)
+            - v1p
+        )
+        vv23_p = (
+            self.v23
+            * np.clip(np.dot(v2p, self.v23.reshape(2, -1)) / self.l23**2, 0, 1)
+            - v2p
+        )
+        vv31_p = (
+            self.v31
+            * np.clip(np.dot(v3p, self.v31.reshape(2, -1)) / self.l31**2, 0, 1)
+            - v3p
+        )
+        is_inside = self.is_inside(points).reshape(-1, 1) * 2 - 1
+        len_vv12_p = np.linalg.norm(vv12_p, axis=1, keepdims=True)
+        len_vv23_p = np.linalg.norm(vv23_p, axis=1, keepdims=True)
+        len_vv31_p = np.linalg.norm(vv31_p, axis=1, keepdims=True)
+        mini_dist = np.minimum(np.minimum(len_vv12_p, len_vv23_p), len_vv31_p)
+        return is_inside * mini_dist
 
 
 class Polygon(geometry.Geometry):
