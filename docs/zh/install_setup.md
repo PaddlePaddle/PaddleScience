@@ -40,10 +40,11 @@ pip install paddlesci
 
 ???+ Info "安装注意事项"
 
-    如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装三个依赖库：
-    [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）,
-    [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）,
-    [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）
+    如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装四个依赖库：
+    <li> [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）</li>
+    <li> pybind11（Python>=3.10 的用户安装 pysdf 前请先执行 `pip install -U pybind11`）</li>
+    <li> [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）</li>
+    <li> [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）</li>
 
 ## 2. 验证安装
 

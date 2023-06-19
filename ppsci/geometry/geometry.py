@@ -94,7 +94,15 @@ class Geometry:
                     "Sample interior points failed, "
                     "please check correctness of geometry and given creteria."
                 )
-        return misc.convert_to_dict(x, self.dim_keys)
+
+        # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
+        if hasattr(self, "sdf_func"):
+            sdf = -self.sdf_func(x)
+            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        else:
+            sdf_dict = {}
+        x_dict = misc.convert_to_dict(x, self.dim_keys)
+        return {**x_dict, **sdf_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""

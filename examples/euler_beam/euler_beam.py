@@ -42,7 +42,7 @@ if __name__ == "__main__":
     geom = {"interval": ppsci.geometry.Interval(0, 1)}
 
     # set equation(s)
-    equation = {"biharmonic": ppsci.equation.pde.Biharmonic(dim=1, q=-1.0, D=1.0)}
+    equation = {"biharmonic": ppsci.equation.Biharmonic(dim=1, q=-1.0, D=1.0)}
 
     # set dataloader config
     dataloader_cfg = {
