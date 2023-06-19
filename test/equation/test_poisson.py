@@ -48,7 +48,6 @@ def test_poisson(dim):
     # manually generate output
     p = model(input_data)
 
-    # use self-defined jacobian and hessian
     def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
         return paddle.grad(y, x, create_graph=True)[0]
 
