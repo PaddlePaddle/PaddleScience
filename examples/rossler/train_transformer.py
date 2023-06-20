@@ -80,7 +80,7 @@ if __name__ == "__main__":
     embedding_model = build_embedding_model(EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         grad_clip=clip,
     )([model])
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg = {
         "dataset": {
             "name": "RosslerDataset",
