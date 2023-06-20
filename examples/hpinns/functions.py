@@ -321,7 +321,7 @@ def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
 
 
 def eval_metric_fun(output_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
-    """Compute metric for evalution.
+    """Compute metric for evaluation.
 
     Args:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.

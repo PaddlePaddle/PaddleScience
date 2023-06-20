@@ -121,7 +121,7 @@ def save_checkpoint(
         optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         metric (Dict[str, float]): Metric information, such as {"RMSE": ...}.
-        model_dir (str): Directory for chekpoint storage.
+        model_dir (str): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "ppsci".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equations. Defaults to None.
     """
