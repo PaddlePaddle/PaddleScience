@@ -8,7 +8,7 @@ __all__ = []
 
 
 @pytest.mark.parametrize("dim", (2, 3))
-def test_l1loss_mean(dim):
+def test_laplace(dim):
     """Test for only mean."""
     batch_size = 13
     input_dims = ("x", "y", "z")[:dim]
