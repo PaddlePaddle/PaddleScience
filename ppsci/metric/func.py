@@ -18,7 +18,7 @@ from ppsci.metric import base
 
 
 class FunctionalMetric(base.Metric):
-    r"""Functional metric class, which allows to use custom mtric computing function from given metric_expr for complex computation cases.
+    r"""Functional metric class, which allows to use custom metric computing function from given metric_expr for complex computation cases.
 
     Args:
         metric_expr (Callable): expression of metric calculation.

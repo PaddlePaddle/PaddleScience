@@ -145,7 +145,7 @@ class Geometry:
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample boundary points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         if not (

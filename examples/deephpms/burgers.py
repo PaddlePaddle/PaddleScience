@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # optimizer_sol = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_sol, ))
 
     # stage 1: training identification net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     )
     constraint_idn = {sup_constraint_idn.name: sup_constraint_idn}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # stage 2: training pde net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     )
     constraint_pde = {sup_constraint_pde.name: sup_constraint_pde}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -243,7 +243,7 @@ if __name__ == "__main__":
     # re-register transform for model 2, fit for loss of stage 3
     model_pde.register_input_transform(transform_f_sol)
 
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_sol_f = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         sup_constraint_sol_bc.name: sup_constraint_sol_bc,
     }
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_sol = {
         "dataset": {
             "name": "IterableMatDataset",
