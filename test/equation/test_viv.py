@@ -46,8 +46,8 @@ def test_vibration(rho, k1, k2):
         + paddle.exp(k1) * jacobian(eta, t_f)
         + paddle.exp(k2) * eta
     )
-    # compute result using Vibration class
 
+    # compute result using Vibration class
     vibration_equation = Vibration(rho=rho, k1=k1, k2=k2)
     data_dict = {"eta": eta, "t_f": t_f}
     test_result = vibration_equation.equations["f"](data_dict)
