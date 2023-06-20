@@ -208,12 +208,13 @@ class Solver:
             for metric in itertools.chain(
                 *[_v.metric.values() for _v in self.validator.values()]
             ):
-                if metric.keep_batch ^ compute_metric_by_batch:
-                    raise ValueError(
-                        f"{misc.typename(metric)}.keep_batch should be "
-                        f"{compute_metric_by_batch} when compute_metric_by_batch="
-                        f"{compute_metric_by_batch}."
-                    )
+                if misc.typename(metric) == 'MSE':
+                    if metric.keep_batch ^ compute_metric_by_batch:
+                        raise ValueError(
+                            f"{misc.typename(metric)}.keep_batch should be "
+                            f"{compute_metric_by_batch} when compute_metric_by_batch="
+                            f"{compute_metric_by_batch}."
+                        )
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 

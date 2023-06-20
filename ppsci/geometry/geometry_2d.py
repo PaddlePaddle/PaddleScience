@@ -95,6 +95,8 @@ class Rectangle(geometry_nd.Hypercube):
         super().__init__(xmin, xmax)
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
+        self.area_array = None
+
 
     def uniform_boundary_points(self, n):
         nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
@@ -155,16 +157,35 @@ class Rectangle(geometry_nd.Hypercube):
 
         u *= self.perimeter
         x = []
+        area_boundary = [l1, l2-l1, l1, l2-l1]
+        num = [0 for _ in range(len(area_boundary))]
         for l in u:
             if l < l1:
                 x.append([self.xmin[0] + l, self.xmin[1]])
+                num[0] += 1
             elif l < l2:
                 x.append([self.xmax[0], self.xmin[1] + (l - l1)])
+                num[1] += 1
+
             elif l < l3:
                 x.append([self.xmax[0] - (l - l2), self.xmax[1]])
+                num[2] += 1
+
             else:
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
+                num[3] += 1
+        self.area_array = np.vstack([np.full((n, 1), a / n) for n, a in zip(num,area_boundary)]) #counter clockwise pointwise area
         return np.vstack(x)
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        sdf = np.zeros_like(points[:,0])
+        center = (self.xmax + self.xmin) / 2
+        xmax_rel = self.xmax - center
+        points_rel =  points - center
+        for i, position in enumerate(points_rel):
+            distance = np.abs(position) - xmax_rel
+            sdf[i] = np.max([distance[0], distance[1], 0]) +  np.min(np.max([distance[0], distance[1]]), 0)
+        return sdf
 
     @staticmethod
     def is_valid(vertices):
@@ -176,6 +197,16 @@ class Rectangle(geometry_nd.Hypercube):
             and np.isclose(np.prod(vertices[3] - vertices[2]), 0)
             and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
         )
+
+    def approx_area(
+        self,
+        criteria=None,
+        approx_nr=10000,
+        random='pseudo'
+    ):
+        points = self.random_boundary_points(approx_nr)
+        criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
+        return np.sum(criteria_mask) / criteria_mask.shape[0] * self.area
 
 
 class Triangle(geometry.Geometry):
@@ -503,6 +534,73 @@ class Polygon(geometry.Geometry):
             x.append((l - l0) * v + self.vertices[i])
         return np.vstack(x)
 
+
+class Line(geometry.Geometry):
+    def __init__(self, x_min, x_max, normal):
+        x_min = np.array(x_min, dtype=paddle.get_default_dtype())
+        x_max = np.array(x_max, dtype=paddle.get_default_dtype())
+        self.normal = normal
+        self.dim = x_min.shape[0]
+        super().__init__(2, (x_min), np.linalg.norm(x_max - x_min))
+        self.x_min = x_min
+        self.x_max = x_max
+        self.area = None
+        self.perimeter = np.sqrt((self.x_max[0] - self.x_min[0])**2 + (self.x_max[1] - self.x_min[1])**2)
+
+    def uniform_boundary_points(self, n: int, random='pseudo'):
+        if (np.abs(self.normal) == np.array([1,0])).all():
+            y = np.random.choice([self.l, self.r], n)
+            x = np.full_like(y, self.x_min[0])
+            return np.array([x,y]).astype(paddle.get_default_dtype())
+    def random_boundary_points(self, n: int, random='pseudo'):
+        if (np.abs(self.normal) == np.array([1,0])).all():
+            y = np.ravel(sampler.sample(n + 10, 1, random))
+            # Remove the possible points very close to the line tips
+            y = y[~np.isclose(y, 0)]
+            y = y[~np.isclose(y, 1)]
+            y_max = self.x_max[1]
+            y_min = self.x_min[1]
+            y = (y_max - y_min) * y[0:n] + y_min
+            y = y.reshape(y.shape[0], 1)
+            x = np.full_like(y, self.x_min[0])
+            return np.hstack((x,y))
+        elif(np.abs(self.normal) == np.array([0,1])).all():
+            x = np.ravel(sampler.sample(n + 10, 1, random))
+            # Remove the possible points very close to the line tips
+            x = x[~np.isclose(x, 0)]
+            x = x[~np.isclose(x, 1)]
+            x_max = self.x_max[0]
+            x_min = self.x_min[0]
+            x = (x_max - x_min) * x[0:n] + x_min
+            x = x.reshape(x.shape[0], 1)
+            y = np.full_like(x, self.x_min[1])
+            return np.hstack((x,y))
+    
+    def boundary_normal(self, x):
+        normal = np.zeros_like(x)
+        for i, x in enumerate(self.normal):
+            normal[:, i] = x
+        return normal
+
+    def approx_area(
+        self,
+        criteria=None,
+        approx_nr=10000,
+        random='pseudo'
+    ):
+        points = self.random_boundary_points(approx_nr)
+        criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
+        return np.sum(criteria_mask) / criteria_mask.shape[0] * self.perimeter
+        
+    def is_inside(self, x):
+        return np.full(x.shape[0], False)
+
+    def on_boundary(self, x: np.ndarray):
+        is_x_min = np.isclose(x, self.x_min)
+        is_x_min = is_x_min[:,0] & is_x_min[:,1]
+        is_x_max = np.isclose(x, self.x_max)
+        is_x_max = is_x_max[:,0] & is_x_max[:,1]
+        return is_x_min | is_x_max
 
 def polygon_signed_area(vertices):
     """The (signed) area of a simple polygon.

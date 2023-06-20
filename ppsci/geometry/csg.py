@@ -41,6 +41,16 @@ class CSGUnion(geometry.Geometry):
         )
         self.geom1 = geom1
         self.geom2 = geom2
+        if geom1.area is not None and geom2.area is not None:
+            self.area = geom1.area + geom2.area
+        else:
+            self.area = None
+
+        if geom1.perimeter is not None and geom2.perimeter is not None:
+            self.perimeter = geom1.perimeter + geom2.perimeter
+        else:
+            self.perimeter = None
+        self.area_array = None
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
@@ -82,18 +92,28 @@ class CSGUnion(geometry.Geometry):
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
-            geom1_boundary_points = self.geom1.random_boundary_points(n, random=random)
+            if self.perimeter is not None:
+                n1 = int(self.geom1.perimeter / self.perimeter * n)
+                n2 = n - n1
+            else:
+                n1, n2 = n, n
+            geom1_boundary_points = self.geom1.random_boundary_points(n1, random=random)
             geom1_boundary_points = geom1_boundary_points[
                 ~self.geom2.is_inside(geom1_boundary_points)
             ]
 
-            geom2_boundary_points = self.geom2.random_boundary_points(n, random=random)
+            geom2_boundary_points = self.geom2.random_boundary_points(n2, random=random)
             geom2_boundary_points = geom2_boundary_points[
                 ~self.geom1.is_inside(geom2_boundary_points)
             ]
 
             points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
-            points = np.random.permutation(points)
+            permutated_index = np.random.permutation(np.arange(len(points)))
+            points = points[permutated_index]
+
+            if hasattr(self.geom1, 'area_array') and hasattr(self.geom2, 'area_array'):
+                area_array = np.concatenate((self.geom1.area_array, self.geom2.area_array))
+                self.area_array = area_array[permutated_index]
 
             if len(points) > n - _size:
                 points = points[: n - _size]
@@ -117,6 +137,15 @@ class CSGUnion(geometry.Geometry):
         ]
         return x
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        geom1 = self.geom1
+        geom2 = self.geom2
+        sdf_geom1 = geom1.sdf_func(points)
+        sdf_geom2 = geom2.sdf_func(points)
+        sdf_union = np.zeros_like(sdf_geom1)
+        for i in range(sdf_geom1.shape[0]):
+            sdf_union[i] = sdf_geom2[i] if sdf_geom1[i] > sdf_geom2[i] else sdf_geom1[i]
+        return sdf_union
 
 class CSGDifference(geometry.Geometry):
     """Construct an object by CSG Difference."""
@@ -130,6 +159,7 @@ class CSGDifference(geometry.Geometry):
         super().__init__(geom1.ndim, geom1.bbox, geom1.diam)
         self.geom1 = geom1
         self.geom2 = geom2
+        self.area = geom1.area - geom2.area
 
     def is_inside(self, x):
         return np.logical_and(self.geom1.is_inside(x), ~self.geom2.is_inside(x))
@@ -197,6 +227,16 @@ class CSGDifference(geometry.Geometry):
         ]
         return x
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        geom1 = self.geom1
+        geom2 = self.geom2
+        sdf_geom1 = geom1.sdf_func(points)
+        sdf_geom2 = geom2.sdf_func(points)
+        sdf_diff = np.zeros_like(sdf_geom1)
+        for i in range(sdf_geom1.shape[0]):
+            sdf_diff[i] = sdf_geom1[i] if sdf_geom1[i] > -sdf_geom2[i] else -sdf_geom2[i]
+        return sdf_diff
+        
 
 class CSGIntersection(geometry.Geometry):
     """Construct an object by CSG Intersection."""

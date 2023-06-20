@@ -21,10 +21,9 @@ from typing import Tuple
 
 import numpy as np
 import paddle
-
 from ppsci.utils import logger
 from ppsci.utils import misc
-
+import numpy as np
 
 class Geometry:
     """Base class for geometry.
@@ -63,10 +62,14 @@ class Geometry:
         )
         return self.random_points(n)
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        pass 
+
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
+        
         while _size < n:
             if evenly:
                 points = self.uniform_points(n)
@@ -94,7 +97,15 @@ class Geometry:
                     "Sample interior points failed, "
                     "please check correctness of geometry and given creteria."
                 )
-        return misc.convert_to_dict(x, self.dim_keys)
+        
+        ret_dict = misc.convert_to_dict(x, self.dim_keys)
+        if  ((misc.typename(self) == "Rectangle") 
+        | (misc.typename(self) == "Line") 
+        | (misc.typename(self) == "CSGDifference")):
+            area = np.full_like(next(iter(ret_dict.values())), self.area / n)
+            sdf = -self.sdf_func(points)
+            ret_dict.update({"sdf": sdf, "area": area})
+        return ret_dict
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -157,6 +168,21 @@ class Geometry:
         ):
             area_dict = misc.convert_to_dict(area[:, 1:], ["area"])
             return {**x_dict, **normal_dict, **area_dict}
+        
+        if ((misc.typename(self) == "Line") 
+        | (misc.typename(self) == "CSGUnion") 
+        | (misc.typename(self) == "Rectangle")):
+            if criteria is not None and ((misc.typename(self) == "Line") or (misc.typename(self) == "Rectangle")):
+                area = self.approx_area(criteria)
+            elif criteria is None and self.area is None:
+                area = self.perimeter
+            elif criteria is None and self.area is not None:
+                area = self.area_array
+            else:
+                area = -1 # tdb
+                print(f"misc.typename(self) == {misc.typename(self)}")
+            area_dict = {"area" : np.full_like(next(iter(x_dict.values())), area / n)} if isinstance(area, float) else {"area" : area}
+            return {**x_dict, **normal_dict, **area_dict}
 
         return {**x_dict, **normal_dict}
 
@@ -181,6 +207,12 @@ class Geometry:
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
 
     def union(self, other):
+        """CSG Union."""
+        from ppsci.geometry import csg
+
+        return csg.CSGUnion(self, other)
+    
+    def __add__(self, other):
         """CSG Union."""
         from ppsci.geometry import csg
 

@@ -75,8 +75,10 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     label_dict,
                     weight_dict,
                 )
-
-            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            if isinstance(validator_loss, paddle.Tensor):
+                loss_dict[f"loss({_validator.name})"] = float(validator_loss)
+            elif isinstance(validator_loss, dict):
+                loss_dict = {f"loss({key})" : val for key, val in validator_loss.items()}
 
             # collect batch data
             for key, input in input_dict.items():
@@ -131,7 +133,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
 
         metric = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
-            metric_dict = metric_func(all_output, all_label)
+            metric_dict = metric_func({**all_output, **all_input}, all_label)
             metric[metric_name] = metric_dict
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
@@ -142,7 +144,18 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                 solver.eval_output_info[metric_str].update(
                     float(metric_value), num_samples
                 )
+        import os 
+        import csv
+        validator_dir = os.path.join(solver.output_dir, "validator")
+        os.makedirs(validator_dir, exist_ok=True)
 
+        if epoch_id == solver.eval_freq:
+            with open(validator_dir + '/' + _validator.name + '.csv', 'w', encoding='utf-8', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([key for key in metric_dict.keys()])
+        with open(validator_dir + '/' + _validator.name + '.csv', 'a', encoding='utf-8', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([val.item() for val in metric_dict.values()])
         # use the first metric for return value
         if target_metric is None:
             tmp = metric

@@ -20,6 +20,9 @@ from ppsci.equation.pde.navier_stokes import NavierStokes
 from ppsci.equation.pde.normal_dot_vec import NormalDotVec
 from ppsci.equation.pde.poisson import Poisson
 from ppsci.equation.pde.viv import Vibration
+from ppsci.equation.pde.turbulence_zero_eq import ZeroEquation
+from ppsci.equation.pde.grad_normal import GradNormal
+from ppsci.equation.pde.advection_diffusion import AdvectionDiffusion
 
 __all__ = [
     "PDE",
@@ -30,4 +33,7 @@ __all__ = [
     "NormalDotVec",
     "Poisson",
     "Vibration",
+    "ZeroEquation",
+    "GradNormal",
+    "AdvectionDiffusion"
 ]

@@ -83,6 +83,7 @@ class InteriorConstraint(base.Constraint):
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         name: str = "EQ",
+        out_dir = None
     ):
         self.output_expr = output_expr
         for label_name, expr in self.output_expr.items():
@@ -106,8 +107,11 @@ class InteriorConstraint(base.Constraint):
             criteria,
             evenly,
         )
+        import ppsci
+        ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf",))
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
+            input.pop("area")
 
         # prepare label
         label = {}
