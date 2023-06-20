@@ -93,3 +93,24 @@ class Interval(geometry.Geometry):
             periodic_x_normal, [f"normal_{k}" for k in self.dim_keys]
         )
         return {**periodic_x, **periodic_x_normal}
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 1]
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+
+        For interval with [l, r], the sdf is defined by:
+            sdf(x) = -min(x-l, r-x) = ((r-l)/2 - abs(x-(l+r)/2))/2
+        """
+        return ((self.r - self.l) / 2 - np.abs(points - (self.l + self.r) / 2)) / 2
