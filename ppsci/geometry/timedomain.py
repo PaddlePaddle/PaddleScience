@@ -200,7 +200,7 @@ class TimeXGeometry(geometry.Geometry):
                 if _ntry >= 1000 and _nsuc == 0:
                     raise ValueError(
                         "Sample points failed, "
-                        "please check correctness of geometry and given creteria."
+                        "please check correctness of geometry and given criteria."
                     )
 
             # 2. repeat spatial points along time

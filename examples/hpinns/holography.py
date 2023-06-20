@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # initialize Adam optimizer
     optimizer_adam = ppsci.optimizer.Adam(1e-3)((model_re, model_im, model_eps))
 
-    # maunally build constraint(s)
+    # manually build constraint(s)
     label_keys = ("x", "y", "bound", "e_real", "e_imaginary", "epsilon")
     label_keys_derivative = (
         "de_re_x",
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         sup_constraint_obj.name: sup_constraint_obj,
     }
 
-    # maunally build validator
+    # manually build validator
     sup_validator_opt = ppsci.validate.SupervisedValidator(
         {
             "dataset": {
