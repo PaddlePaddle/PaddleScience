@@ -29,8 +29,8 @@ class Vibration(base.PDE):
 
     Args:
         rho (float): Generalized mass.
-        k1 (float): Learnable parameters for modal damping.
-        k2 (float): Learnable parameters for generalized stiffness.
+        k1 (float): Learnable parameter for modal damping.
+        k2 (float): Learnable parameter for generalized stiffness.
 
     Examples:
         >>> import ppsci
