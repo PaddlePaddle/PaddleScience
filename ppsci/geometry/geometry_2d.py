@@ -599,6 +599,34 @@ class Polygon(geometry.Geometry):
             x.append((l - l0) * v + self.vertices[i])
         return np.vstack(x)
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 2]
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        sdf_value = np.random.random((points.shape[0],1))
+        for n in range(points.shape[0]):
+            d = np.dot(points[n]-self.vertices[0],points[n]-self.vertices[0])
+            s = 1.0
+            for i in range(self.vertices.shape[0]):
+                j = (self.vertices.shape[0] - 1) if i == 0 else (i - 1)
+                e = self.vertices[j] - self.vertices[i]
+                w = points[n] - self.vertices[i]
+                b = w - e * np.clip(np.dot(w, e) / np.dot(e, e), 0.0, 1.0)
+                d = np.minimum(d, np.dot(b, b))
+                c = (points[1] >= self.vertices[i][1]) & (points[1] < self.vertices[j][1]) & (e[0] * w[1] > e[1] * w[0])
+                if c.any() or not c.all():
+                    s *= -1.0
+            sdf_value[n] = s * d
+        return sdf_value
 
 def polygon_signed_area(vertices):
     """The (signed) area of a simple polygon.
