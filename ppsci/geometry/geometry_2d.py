@@ -612,9 +612,9 @@ class Polygon(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        sdf_value = np.random.random((points.shape[0],1))
+        sdf_value = np.random.random((points.shape[0], 1))
         for n in range(points.shape[0]):
-            d = np.dot(points[n]-self.vertices[0],points[n]-self.vertices[0])
+            d = np.dot(points[n] - self.vertices[0], points[n] - self.vertices[0])
             s = 1.0
             for i in range(self.vertices.shape[0]):
                 j = (self.vertices.shape[0] - 1) if i == 0 else (i - 1)
@@ -622,11 +622,16 @@ class Polygon(geometry.Geometry):
                 w = points[n] - self.vertices[i]
                 b = w - e * np.clip(np.dot(w, e) / np.dot(e, e), 0.0, 1.0)
                 d = np.minimum(d, np.dot(b, b))
-                c = (points[1] >= self.vertices[i][1]) & (points[1] < self.vertices[j][1]) & (e[0] * w[1] > e[1] * w[0])
+                c = (
+                    (points[1] >= self.vertices[i][1])
+                    & (points[1] < self.vertices[j][1])
+                    & (e[0] * w[1] > e[1] * w[0])
+                )
                 if c.any() or not c.all():
                     s *= -1.0
             sdf_value[n] = s * d
         return sdf_value
+
 
 def polygon_signed_area(vertices):
     """The (signed) area of a simple polygon.
