@@ -632,7 +632,7 @@ class Polygon(geometry.Geometry):
                     distance, np.dot(distance_vector, distance_vector)
                 )
                 # Calculate the inside and outside using the Odd-even rule
-                odd_even_rule_number= np.array(
+                odd_even_rule_number = np.array(
                     [
                         points[n][1] >= self.vertices[i][1],
                         points[n][1] < self.vertices[j][1],
