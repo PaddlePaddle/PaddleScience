@@ -612,26 +612,28 @@ class Polygon(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        sdf_value = np.random.random((points.shape[0], 1))
+        sdf_value = np.empty((points.shape[0], 1), dtype=paddle.get_default_dtype())
         for n in range(points.shape[0]):
-            d = np.dot(points[n] - self.vertices[0], points[n] - self.vertices[0])
-            s = 1.0
+            distance = np.dot(points[n] - self.vertices[0], points[n] - self.vertices[0])
+            inside_tag = 1.0
             for i in range(self.vertices.shape[0]):
                 j = (self.vertices.shape[0] - 1) if i == 0 else (i - 1)
-                e = self.vertices[j] - self.vertices[i]
-                w = points[n] - self.vertices[i]
-                b = w - e * np.clip(np.dot(w, e) / np.dot(e, e), 0.0, 1.0)
-                d = np.minimum(d, np.dot(b, b))
-                c = np.array(
+                # Calculate the shortest distance from point P to each edge.
+                Vector_ij = self.vertices[j] - self.vertices[i]
+                Vector_in = points[n] - self.vertices[i]
+                distance_vector = Vector_in - Vector_ij * np.clip(np.dot(Vector_in, Vector_ij) / np.dot(Vector_ij, Vector_ij), 0.0, 1.0)
+                distance = np.minimum(distance, np.dot(distance_vector, distance_vector))
+                # Calculate the inside and outside using the Odd-even rule
+                Odd_even_rule_number= np.array(
                     [
                         points[n][1] >= self.vertices[i][1],
                         points[n][1] < self.vertices[j][1],
-                        e[0] * w[1] > e[1] * w[0],
+                        Vector_ij[0] * Vector_in[1] > Vector_ij[1] * Vector_in[0],
                     ]
                 )
-                if c.all() or np.all(~c):
-                    s *= -1.0
-            sdf_value[n] = s * np.sqrt(d)
+                if Odd_even_rule_number.all() or np.all(~Odd_even_rule_number):
+                    inside_tag *= -1.0
+            sdf_value[n] = inside_tag * np.sqrt(distance)
         return -sdf_value
 
 
