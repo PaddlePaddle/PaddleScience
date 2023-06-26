@@ -634,6 +634,7 @@ class Polygon(geometry.Geometry):
             sdf_value[n] = s * np.sqrt(d)
         return -sdf_value
 
+
 def polygon_signed_area(vertices):
     """The (signed) area of a simple polygon.
 
