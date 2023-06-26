@@ -58,6 +58,7 @@ cd ..
 ```
 
 在PaddleScience主目录下运行
+
 ``` sh
 export script_path=./test_tipc/configs/train_2d_unsteady_continuous/2d_unsteady_continuous_train_infer_python.txt
 bash ./test_tipc/prepare.sh $script_path benchmark_train
