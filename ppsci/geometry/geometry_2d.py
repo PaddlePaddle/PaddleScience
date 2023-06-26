@@ -630,7 +630,7 @@ class Polygon(geometry.Geometry):
                 if c.all() or np.all(~c):
                     s *= -1.0
             sdf_value[n] = s * np.sqrt(d)
-        return sdf_value
+        return -sdf_value
 
 
 def polygon_signed_area(vertices):
