@@ -614,15 +614,23 @@ class Polygon(geometry.Geometry):
         """
         sdf_value = np.empty((points.shape[0], 1), dtype=paddle.get_default_dtype())
         for n in range(points.shape[0]):
-            distance = np.dot(points[n] - self.vertices[0], points[n] - self.vertices[0])
+            distance = np.dot(
+                points[n] - self.vertices[0], points[n] - self.vertices[0]
+            )
             inside_tag = 1.0
             for i in range(self.vertices.shape[0]):
                 j = (self.vertices.shape[0] - 1) if i == 0 else (i - 1)
                 # Calculate the shortest distance from point P to each edge.
                 vector_ij = self.vertices[j] - self.vertices[i]
                 vector_in = points[n] - self.vertices[i]
-                distance_vector = vector_in - vector_ij * np.clip(np.dot(vector_in, vector_ij) / np.dot(vector_ij, vector_ij), 0.0, 1.0)
-                distance = np.minimum(distance, np.dot(distance_vector, distance_vector))
+                distance_vector = vector_in - vector_ij * np.clip(
+                    np.dot(vector_in, vector_ij) / np.dot(vector_ij, vector_ij),
+                    0.0,
+                    1.0,
+                )
+                distance = np.minimum(
+                    distance, np.dot(distance_vector, distance_vector)
+                )
                 # Calculate the inside and outside using the Odd-even rule
                 odd_even_rule_number= np.array(
                     [
