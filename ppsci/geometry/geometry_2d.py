@@ -622,11 +622,13 @@ class Polygon(geometry.Geometry):
                 w = points[n] - self.vertices[i]
                 b = w - e * np.clip(np.dot(w, e) / np.dot(e, e), 0.0, 1.0)
                 d = np.minimum(d, np.dot(b, b))
-                c = np.array([
+                c = np.array(
+                    [
                     points[n][1] >= self.vertices[i][1],
                     points[n][1] < self.vertices[j][1],
                     e[0] * w[1] > e[1] * w[0],
-                ])
+                ]
+                )
                 if c.all() or np.all(~c):
                     s *= -1.0
             sdf_value[n] = s * np.sqrt(d)
