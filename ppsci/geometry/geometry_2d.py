@@ -624,10 +624,10 @@ class Polygon(geometry.Geometry):
                 d = np.minimum(d, np.dot(b, b))
                 c = np.array(
                     [
-                    points[n][1] >= self.vertices[i][1],
-                    points[n][1] < self.vertices[j][1],
-                    e[0] * w[1] > e[1] * w[0],
-                ]
+                        points[n][1] >= self.vertices[i][1],
+                        points[n][1] < self.vertices[j][1],
+                        e[0] * w[1] > e[1] * w[0],
+                    ]
                 )
                 if c.all() or np.all(~c):
                     s *= -1.0
