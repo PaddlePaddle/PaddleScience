@@ -624,14 +624,14 @@ class Polygon(geometry.Geometry):
                 distance_vector = vector_in - vector_ij * np.clip(np.dot(vector_in, vector_ij) / np.dot(vector_ij, vector_ij), 0.0, 1.0)
                 distance = np.minimum(distance, np.dot(distance_vector, distance_vector))
                 # Calculate the inside and outside using the Odd-even rule
-                Odd_even_rule_number= np.array(
+                odd_even_rule_number= np.array(
                     [
                         points[n][1] >= self.vertices[i][1],
                         points[n][1] < self.vertices[j][1],
                         vector_ij[0] * vector_in[1] > vector_ij[1] * vector_in[0],
                     ]
                 )
-                if Odd_even_rule_number.all() or np.all(~Odd_even_rule_number):
+                if odd_even_rule_number.all() or np.all(~odd_even_rule_number):
                     inside_tag *= -1.0
             sdf_value[n] = inside_tag * np.sqrt(distance)
         return -sdf_value
