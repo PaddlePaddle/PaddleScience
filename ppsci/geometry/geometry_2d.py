@@ -619,16 +619,16 @@ class Polygon(geometry.Geometry):
             for i in range(self.vertices.shape[0]):
                 j = (self.vertices.shape[0] - 1) if i == 0 else (i - 1)
                 # Calculate the shortest distance from point P to each edge.
-                Vector_ij = self.vertices[j] - self.vertices[i]
-                Vector_in = points[n] - self.vertices[i]
-                distance_vector = Vector_in - Vector_ij * np.clip(np.dot(Vector_in, Vector_ij) / np.dot(Vector_ij, Vector_ij), 0.0, 1.0)
+                vector_ij = self.vertices[j] - self.vertices[i]
+                vector_in = points[n] - self.vertices[i]
+                distance_vector = vector_in - vector_ij * np.clip(np.dot(vector_in, vector_ij) / np.dot(vector_ij, vector_ij), 0.0, 1.0)
                 distance = np.minimum(distance, np.dot(distance_vector, distance_vector))
                 # Calculate the inside and outside using the Odd-even rule
                 Odd_even_rule_number= np.array(
                     [
                         points[n][1] >= self.vertices[i][1],
                         points[n][1] < self.vertices[j][1],
-                        Vector_ij[0] * Vector_in[1] > Vector_ij[1] * Vector_in[0],
+                        vector_ij[0] * vector_in[1] > vector_ij[1] * vector_in[0],
                     ]
                 )
                 if Odd_even_rule_number.all() or np.all(~Odd_even_rule_number):
