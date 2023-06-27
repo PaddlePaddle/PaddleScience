@@ -2,15 +2,30 @@
 
 ## 1. 开始安装
 
-### 1.1 安装 PaddlePaddle
+### 1.1 python 环境安装[可选]
+
+如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
+
+1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包，并手动安装
+2. 创建 python 3.7 环境，并进入该环境
+
+    ``` sh
+    # 使用 conda 创建 python 环境，并命名为 "ppsci"
+    conda create -n ppsci python=3.7 # 3.8 也可以
+
+    # 进入创建好的 "ppsci" 环境
+    conda activate ppsci
+    ```
+
+### 1.2 安装 PaddlePaddle
 
 请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 **develop** 版的 PaddlePaddle
 
-### 1.2 安装 PaddleScience
+### 1.3 安装 PaddleScience
 
-从 [1.2.1 git 安装](#121-git) 和 [1.2.2 pip 安装](#122-pip) 任选一种安装方式即可
+从 [1.3.1 git 安装](#121-git) 和 [1.3.2 pip 安装](#122-pip) 任选一种安装方式即可
 
-#### 1.2.1 git 安装
+#### 1.3.2 git 安装
 
 1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
@@ -30,7 +45,7 @@
     pip install -r requirements.txt
     ```
 
-#### 1.2.2 pip 安装
+#### 1.3.3 pip 安装
 
 执行以下命令进行 pip 安装
 
