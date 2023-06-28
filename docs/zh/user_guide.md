@@ -78,7 +78,7 @@ solver.eval()
 
 ???+ Warning "路径填写注意事项"
 
-    同样地，此处只需将路径填写到预训练文件的文件名为止即可，不需要加上其后缀，程序会自动根据 "/path/to/pretrain"，自动补充所需后缀名来加载 `/path/to/pretrain.pdparams` 文件。
+    同样地，此处只需将路径填写到预训练文件的文件名为止即可，不需要加上其后缀，程序会自动根据 "/path/to/model"，自动补充所需后缀名来加载 `/path/to/model.pdparams` 文件。
 
 ## 2. 进阶功能
 
