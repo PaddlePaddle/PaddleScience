@@ -66,7 +66,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
-  - 进阶使用: zh/advanced_usage.md
+  - 使用指南: zh/user_guide.md
   - 贡献指南: zh/contribute.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md

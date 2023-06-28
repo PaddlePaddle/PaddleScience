@@ -164,7 +164,6 @@ if __name__ == "__main__":
         evenly=True,
         name="EQ",
     )
-    ITERS_PER_EPOCH = len(pde_constraint.data_loader)
 
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
