@@ -21,7 +21,7 @@
 
 为了更方便使用 PaddleScience,这里推荐你可以通过 docker 直接获取对应环境,按照下列流程可以快速启动:
 
-1. 下载 pymesh 预编译文件放到该目录下 ./docker/pymesh.tar.xz
+1. 下载 pymesh 预编译文件放到 PaddleScience/docker 目录下: docker/pymesh.tar.xz
 2. 运行 bash run.sh, 如果 git clone PaddleScience 仓库困难,可以用 gitee 自行代替
 3. 等到终端自动进入容器后,在容器中运行下列命令后即可开始使用:
     ```
