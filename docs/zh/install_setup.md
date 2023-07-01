@@ -17,6 +17,17 @@
     conda activate ppsci
     ```
 
+#### 使用 docker 镜像启动环境[可选]
+
+为了更方便使用 PaddleScience,这里推荐你可以通过 docker 直接获取对应环境,按照下列流程可以快速启动:
+
+1. 下载 pymesh 预编译文件放到该目录下 ./docker/pymesh.tar.xz
+2. 运行 bash run.sh, 如果 git clone PaddleScience 仓库困难,可以用 gitee 自行代替
+3. 等到终端自动进入容器后,在容器中运行下列命令后即可开始使用:
+    ```
+    cd /work/PaddleScience && pip install -e . 
+    ```
+
 ### 1.2 安装 PaddlePaddle
 
 请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 **develop** 版的 PaddlePaddle
