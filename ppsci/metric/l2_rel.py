@@ -45,9 +45,10 @@ class L2Rel(base.Metric):
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
-            rel_l2 = paddle.norm(label_dict[key] - output_dict[key]) / paddle.norm(
-                label_dict[key]
-            )
+            rel_l2 = (
+                paddle.norm(label_dict[key] - output_dict[key], p=2, axis=1)
+                / paddle.norm(label_dict[key], p=2, axis=1)
+            ).mean()
             metric_dict[key] = rel_l2
 
         return metric_dict
