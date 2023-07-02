@@ -6,7 +6,7 @@ from paddle.nn import initializer
 from ppsci import equation
 
 
-@pytest.mark.parametrize("dim,time", [(2, 3),(True,False)])
+@pytest.mark.parametrize("dim,time", [(2, 3), (True, False)])
 def test_momentum_x_compute_func(dim, time):
     """Test for navier-stokes equation."""
     batch_size = 13
@@ -24,18 +24,18 @@ def test_momentum_x_compute_func(dim, time):
     v.stop_gradient = False
     p.stop_gradient = False
     input_dims = 5
-    input_data = paddle.concat([x,y,u,v,p], axis=1)
-    if time==True:
+    input_data = paddle.concat([x, y, u, v, p], axis=1)
+    if time == True:
         t = paddle.randn([batch_size, 1])
         t.stop_gradient = False
-        input_data = paddle.concat([input_data,t], axis=1)
+        input_data = paddle.concat([input_data, t], axis=1)
         input_dims += 1
     if dim == 3:
         z = paddle.randn([batch_size, 1])
         z.stop_gradient = False
         w = paddle.randn([batch_size, 1])
         w.stop_gradient = False
-        input_data = paddle.concat([input_data,z,w], axis=1)
+        input_data = paddle.concat([input_data, z, w], axis=1)
         input_dims += 2
     model = nn.Sequential(
         nn.Linear(len(input_dims), 1),
@@ -60,8 +60,8 @@ def test_momentum_x_compute_func(dim, time):
     )
 
     # compute result using NavierStokes class
-    navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim,time=time)
-    if time==True:
+    navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
+    if time == True:
         expected_result += jacobian(u, t)
     if dim == 3:
         expected_result += w * jacobian(u, z)
@@ -75,7 +75,7 @@ def test_momentum_x_compute_func(dim, time):
         "v": v,
         "p": p,
     }
-    if time==True:
+    if time == True:
         data_dict["t"] = t
     if dim == 3:
         data_dict["z"] = z
