@@ -36,6 +36,8 @@ class L2Rel(base.Metric):
         >>> metric = ppsci.metric.L2Rel()
     """
 
+    EPS: float = 1e-6
+
     def __init__(self, keep_batch: bool = False):
         if keep_batch:
             raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
@@ -47,7 +49,7 @@ class L2Rel(base.Metric):
         for key in label_dict:
             rel_l2 = (
                 paddle.norm(label_dict[key] - output_dict[key], p=2, axis=1)
-                / paddle.norm(label_dict[key], p=2, axis=1)
+                / paddle.norm(label_dict[key], p=2, axis=1).clip(min=self.EPS)
             ).mean()
             metric_dict[key] = rel_l2
 
