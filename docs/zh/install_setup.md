@@ -2,7 +2,19 @@
 
 ## 1. 开始安装
 
-### 1.1 python 环境安装[可选]
+
+### 1.1 使用 docker 镜像启动环境[可选]
+
+为了更方便使用 PaddleScience,这里推荐你可以通过 docker 直接获取对应环境，按照下列流程可以快速启动：
+
+1. 下载 pymesh 预编译文件放到 PaddleScience/docker 目录下：docker/pymesh.tar.xz
+2. 运行 bash run.sh，如果 git clone PaddleScience 仓库困难,可以用 gitee 自行代替
+3. 等到终端自动进入容器后,在容器中运行下列命令后即可开始使用：
+    ```
+    cd /work/PaddleScience && pip install -e .
+    ```
+
+### 1.2 python 环境安装[可选]
 
 如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
 
@@ -17,26 +29,15 @@
     conda activate ppsci
     ```
 
-#### 使用 docker 镜像启动环境[可选]
-
-为了更方便使用 PaddleScience,这里推荐你可以通过 docker 直接获取对应环境,按照下列流程可以快速启动:
-
-1. 下载 pymesh 预编译文件放到 PaddleScience/docker 目录下: docker/pymesh.tar.xz
-2. 运行 bash run.sh, 如果 git clone PaddleScience 仓库困难,可以用 gitee 自行代替
-3. 等到终端自动进入容器后,在容器中运行下列命令后即可开始使用:
-    ```
-    cd /work/PaddleScience && pip install -e . 
-    ```
-
-### 1.2 安装 PaddlePaddle
+### 1.3 安装 PaddlePaddle
 
 请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 **develop** 版的 PaddlePaddle
 
-### 1.3 安装 PaddleScience
+### 1.4 安装 PaddleScience
 
 从 [1.3.1 git 安装](#121-git) 和 [1.3.2 pip 安装](#122-pip) 任选一种安装方式即可
 
-#### 1.3.2 git 安装
+#### 1.4.2 git 安装
 
 1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
@@ -56,7 +57,7 @@
     pip install -r requirements.txt
     ```
 
-#### 1.3.3 pip 安装
+#### 1.4.3 pip 安装
 
 执行以下命令进行 pip 安装
 
