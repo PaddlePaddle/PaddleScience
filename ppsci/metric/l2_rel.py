@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import paddle
 
 from ppsci.metric import base
@@ -36,7 +37,9 @@ class L2Rel(base.Metric):
         >>> metric = ppsci.metric.L2Rel()
     """
 
-    EPS: float = 1e-6
+    # NOTE: Avoid divide by zero in result
+    # see https://github.com/scikit-learn/scikit-learn/pull/15007
+    EPS: float = np.finfo(np.float32).eps
 
     def __init__(self, keep_batch: bool = False):
         if keep_batch:
