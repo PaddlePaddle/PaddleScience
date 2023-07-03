@@ -4,4 +4,4 @@ tar -xvf bracket_data.tar
 
 cd ..
 docker build . -t paddlescience:latest
-docker run --gpus all -it -v $pwd/:/work paddlescience
+docker run --gpus all -it -v $PWD/:/work paddlescience

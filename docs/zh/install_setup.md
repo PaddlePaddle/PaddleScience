@@ -8,11 +8,7 @@
 如果你对 docker 有一定了解，则可以通过我们提供的 docker 文件直接构建出能运行 PaddleScience 的环境。按照下列步骤构建 docker 并自动进入该环境，以运行 PaddleScience。
 
 1. 下载 pymesh 预编译文件 pymesh.tar.xz 放到 PaddleScience/docker 目录下：docker/pymesh.tar.xz
-2. 运行 bash run.sh，如果 git clone PaddleScience 仓库困难,可以用 gitee 自行代替
-3. 等到终端自动进入容器后,在容器中运行下列命令后即可开始使用：
-    ```
-    cd /work/PaddleScience && pip install -e .
-    ```
+2. 运行 bash run.sh
 
 ### 1.2 python 环境安装[可选]
 
