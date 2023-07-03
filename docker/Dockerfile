@@ -34,8 +34,7 @@ RUN wget https://mirrors.huaweicloud.com/python/3.7.11/Python-3.7.11.tgz && \
 
 RUN python3 -m pip install --upgrade pip -i https://pypi.douban.com/simple/ && pip install pysdf open3d db-sqlite3 -i https://pypi.douban.com/simple/
 
-# install PaddleScience and pymesh
-COPY ./PaddleScience /src/PaddleScience
+# install pymesh and paddle
 COPY ./pymesh.tar.xz /src/pymesh.tar.xz
 
 RUN cd /src && \
@@ -44,7 +43,7 @@ RUN cd /src && \
     cd pymesh && \
     python3 setup.py install
 
-ENV PATH="$PATH:/usr/lib/x86_64-linux-gnu/""
+ENV PATH="$PATH:/usr/lib/x86_64-linux-gnu/"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64/:$LD_LIBRARY_PATH"
 
 RUN cd /src && \
@@ -54,5 +53,4 @@ RUN cd /src && \
     ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so.8 /usr/local/cuda/lib64/libcudnn.so && \
     ln -s /usr/local/cuda/lib64/libcublas.so.11 /usr/local/cuda/lib64/libcublas.so && \
     python3 -m pip install paddlepaddle-gpu==0.0.0.post116 -f https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html && \
-    cd PaddleScience && pip3 install -r requirements.txt && pip install -e . && \
     rm -rf /src
