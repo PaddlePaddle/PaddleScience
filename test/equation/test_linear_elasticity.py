@@ -176,7 +176,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     if time:
         t.stop_gradient = False
 
-    if lambda_ == None or mu == None:
+    if lambda_ is None or mu is None:
         lambda_ = (E * nu) / ((1 + nu) * (1 - 2 * nu))
         mu = E / (2 * (1 + nu))
     else:
