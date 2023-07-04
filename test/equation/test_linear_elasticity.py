@@ -256,9 +256,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     linear_elasticity = equation.LinearElasticity(
         E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
     )
-    # linear_elasticity = equation.LinearElasticity(
-    #     E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
-    # )
+
     data_dict = {
         "x": x,
         "y": y,
