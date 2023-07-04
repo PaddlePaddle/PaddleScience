@@ -2,7 +2,15 @@ import paddle
 import pytest
 from paddle import nn
 
-from ppsci.equation import LinearElasticity
+from ppsci import equation
+
+
+def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
+    return paddle.grad(y, x, create_graph=True)[0]
+
+
+def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
+    return jacobian(jacobian(y, x), x)
 
 
 def stress_disp_xx_expected_result(u, v, w, x, y, z, lambda_, mu, dim, sigma_xx):
@@ -105,14 +113,6 @@ def traction_z_expected_result(
     return traction_z
 
 
-def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
-    return paddle.grad(y, x, create_graph=True, allow_unused=True)[0]
-
-
-def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
-    return jacobian(jacobian(y, x), x)
-
-
 def navier_x_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, dim, time):
     duxvywz = jacobian(u, x) + jacobian(v, y)
     duxxuyyuzz = hessian(u, x) + hessian(u, y)
@@ -153,6 +153,10 @@ def navier_z_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, time):
         (1e4, 0.3, None, None, 1, 2, True),
         (1e4, 0.3, None, None, 1, 3, False),
         (1e4, 0.3, None, None, 1, 3, True),
+        (None, None, 1e3, 1e3, 1, 2, False),
+        (None, None, 1e3, 1e3, 1, 2, True),
+        (None, None, 1e3, 1e3, 1, 3, False),
+        (None, None, 1e3, 1e3, 1, 3, True),
     ],
 )
 def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
@@ -172,8 +176,12 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     if time:
         t.stop_gradient = False
 
-    lambda_ = (E * nu) / ((1 + nu) * (1 - 2 * nu))
-    mu = E / (2 * (1 + nu))
+    if lambda_ == None or mu == None:
+        lambda_ = (E * nu) / ((1 + nu) * (1 - 2 * nu))
+        mu = E / (2 * (1 + nu))
+    else:
+        nu = lambda_ / (2 * mu + 2 * lambda_)
+        E = 2 * mu * (1 + nu)
 
     input_data = paddle.concat([x, y], axis=1)
     if dim == 3:
@@ -190,20 +198,14 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     output = model(input_data)
 
     # 提取输出中的u, v, w, sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz
-    u, v = output[:, 0:1], output[:, 1:2]
+    u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
+
     if dim == 3:
-        w = output[:, 2:3]
-        sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz = (
-            output[:, 3:4],
-            output[:, 4:5],
-            output[:, 5:6],
-            output[:, 6:7],
-            output[:, 7:8],
-            output[:, 8:9],
-        )
+        w = other_outputs[0]
+        sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz = other_outputs[1:]
     else:
         w = None
-        sigma_xx, sigma_xy, sigma_yy = (output[:, 2:3], output[:, 3:4], output[:, 4:5])
+        sigma_xx, sigma_xy, sigma_yy = other_outputs[0:3]
         sigma_xz, sigma_yz, sigma_zz = None, None, None
 
     expected_stress_disp_xx = stress_disp_xx_expected_result(
@@ -251,9 +253,12 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
             normal_x, normal_y, normal_z, sigma_xz, sigma_yz, sigma_zz
         )
 
-    linear_elasticity = LinearElasticity(
+    linear_elasticity = equation.LinearElasticity(
         E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
     )
+    # linear_elasticity = equation.LinearElasticity(
+    #     E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
+    # )
     data_dict = {
         "x": x,
         "y": y,
@@ -309,5 +314,3 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
 
 if __name__ == "__main__":
     pytest.main()
-
-# test_linear_elasticity_navier_y(1e4, 0.3, None, None, 1, 2, True)
