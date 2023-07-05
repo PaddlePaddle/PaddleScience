@@ -66,10 +66,6 @@ class Mesh(geometry.Geometry):
             self.py_mesh.add_attribute("face_normal")
         self.face_normal = self.py_mesh.get_attribute("face_normal").reshape([-1, 3])
 
-        if "face_area" not in self.py_mesh.get_attribute_names():
-            self.py_mesh.add_attribute("face_area")
-        self.face_area = self.py_mesh.get_attribute("face_area").reshape([-1])
-
         if not checker.dynamic_import_to_globals(["open3d"]):
             raise ImportError(
                 "Could not import open3d python package. "

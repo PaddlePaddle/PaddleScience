@@ -22,7 +22,7 @@ class L2Rel(base.Metric):
     r"""Class for l2 relative error.
 
     $$
-    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \mathbf{y} \Vert_2}
+    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \max(\mathbf{y}, \epsilon) \Vert_2}
     $$
 
     $$
