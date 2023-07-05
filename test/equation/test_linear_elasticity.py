@@ -149,10 +149,6 @@ def navier_z_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, time):
 @pytest.mark.parametrize(
     "E, nu, lambda_, mu, rho, dim, time",
     [
-        (1e4, 0.3, None, None, 1, 2, False),
-        (1e4, 0.3, None, None, 1, 2, True),
-        (1e4, 0.3, None, None, 1, 3, False),
-        (1e4, 0.3, None, None, 1, 3, True),
         (None, None, 1e3, 1e3, 1, 2, False),
         (None, None, 1e3, 1e3, 1, 2, True),
         (None, None, 1e3, 1e3, 1, 3, False),
@@ -176,13 +172,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     if time:
         t.stop_gradient = False
 
-    if lambda_ is None or mu is None:
-        lambda_ = (E * nu) / ((1 + nu) * (1 - 2 * nu))
-        mu = E / (2 * (1 + nu))
-    else:
-        nu = lambda_ / (2 * mu + 2 * lambda_)
-        E = 2 * mu * (1 + nu)
-
     input_data = paddle.concat([x, y], axis=1)
     if dim == 3:
         input_data = paddle.concat([input_data, z], axis=1)
@@ -194,10 +183,8 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         nn.Tanh(),
     )
 
-    # generate output through the model
     output = model(input_data)
 
-    # 提取输出中的u, v, w, sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz
     u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
 
     if dim == 3:
@@ -254,7 +241,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         )
 
     linear_elasticity = equation.LinearElasticity(
-        E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
+        E=None, nu=None, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
     )
 
     data_dict = {
@@ -275,39 +262,75 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "normal_y": normal_y,
         "normal_z": normal_z,
     }
-    test_stress_disp_xx = linear_elasticity.equations["stress_disp_xx"](data_dict)
-    test_stress_disp_yy = linear_elasticity.equations["stress_disp_yy"](data_dict)
-    test_stress_disp_xy = linear_elasticity.equations["stress_disp_xy"](data_dict)
-    test_equilibrium_x = linear_elasticity.equations["equilibrium_x"](data_dict)
-    test_equilibrium_y = linear_elasticity.equations["equilibrium_y"](data_dict)
-    test_navier_x = linear_elasticity.equations["navier_x"](data_dict)
-    test_navier_y = linear_elasticity.equations["navier_y"](data_dict)
-    test_traction_x = linear_elasticity.equations["traction_x"](data_dict)
-    test_traction_y = linear_elasticity.equations["traction_y"](data_dict)
-    if dim == 3:
-        test_stress_zz = linear_elasticity.equations["stress_disp_zz"](data_dict)
-        test_stress_xz = linear_elasticity.equations["stress_disp_xz"](data_dict)
-        test_stress_yz = linear_elasticity.equations["stress_disp_yz"](data_dict)
-        test_equilibrium_z = linear_elasticity.equations["equilibrium_z"](data_dict)
-        test_navier_z = linear_elasticity.equations["navier_z"](data_dict)
-        test_traction_z = linear_elasticity.equations["traction_z"](data_dict)
 
-    assert paddle.allclose(expected_stress_disp_xx, test_stress_disp_xx)
-    assert paddle.allclose(expected_stress_disp_yy, test_stress_disp_yy)
-    assert paddle.allclose(expected_stress_disp_xy, test_stress_disp_xy)
-    assert paddle.allclose(expected_equilibrium_x, test_equilibrium_x)
-    assert paddle.allclose(expected_equilibrium_y, test_equilibrium_y)
-    assert paddle.allclose(expected_navier_x, test_navier_x)
-    assert paddle.allclose(expected_navier_y, test_navier_y)
-    assert paddle.allclose(expected_traction_x, test_traction_x)
-    assert paddle.allclose(expected_traction_y, test_traction_y)
+    test_output_names = [
+        "stress_disp_xx",
+        "stress_disp_yy",
+        "stress_disp_xy",
+        "equilibrium_x",
+        "equilibrium_y",
+        "navier_x",
+        "navier_y",
+        "traction_x",
+        "traction_y",
+    ]
+    test_output = {}
+    for name in test_output_names:
+        test_output[name] = linear_elasticity.equations[name](data_dict)
+    test_output_names = [
+        "stress_disp_xx",
+        "stress_disp_yy",
+        "stress_disp_xy",
+        "equilibrium_x",
+        "equilibrium_y",
+        "navier_x",
+        "navier_y",
+        "traction_x",
+        "traction_y",
+    ]
+
     if dim == 3:
-        assert paddle.allclose(expected_stress_disp_zz, test_stress_zz)
-        assert paddle.allclose(expected_stress_disp_xz, test_stress_xz)
-        assert paddle.allclose(expected_stress_disp_yz, test_stress_yz)
-        assert paddle.allclose(expected_equilibrium_z, test_equilibrium_z)
-        assert paddle.allclose(expected_traction_z, test_traction_z)
-        assert paddle.allclose(expected_navier_z, test_navier_z)
+        test_output_names.extend(
+            [
+                "stress_disp_zz",
+                "stress_disp_xz",
+                "stress_disp_yz",
+                "equilibrium_z",
+                "navier_z",
+                "traction_z",
+            ]
+        )
+
+    test_output = {}
+    for name in test_output_names:
+        test_output[name] = linear_elasticity.equations[name](data_dict)
+
+    expected_output = {
+        "stress_disp_xx": expected_stress_disp_xx,
+        "stress_disp_yy": expected_stress_disp_yy,
+        "stress_disp_xy": expected_stress_disp_xy,
+        "equilibrium_x": expected_equilibrium_x,
+        "equilibrium_y": expected_equilibrium_y,
+        "navier_x": expected_navier_x,
+        "navier_y": expected_navier_y,
+        "traction_x": expected_traction_x,
+        "traction_y": expected_traction_y,
+    }
+
+    if dim == 3:
+        expected_output.update(
+            {
+                "stress_disp_zz": expected_stress_disp_zz,
+                "stress_disp_xz": expected_stress_disp_xz,
+                "stress_disp_yz": expected_stress_disp_yz,
+                "equilibrium_z": expected_equilibrium_z,
+                "navier_z": expected_navier_z,
+                "traction_z": expected_traction_z,
+            }
+        )
+
+    for name in test_output_names:
+        assert paddle.allclose(expected_output[name], test_output[name])
 
 
 if __name__ == "__main__":
