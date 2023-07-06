@@ -5,7 +5,7 @@ tar -xvf bracket_data.tar
 cd ..
 docker build . -t paddlescience:latest
 
-if [ -x "$(command -v podman)" ]; then
+if [ -x "$(command -v nvidia-docker)" ]; then
     nvidia-docker run -it -v $PWD:/work paddlescience
 elif [ -x "$(command -v docker)" ]; then
     docker run --gpus all -it -v $PWD/:/work paddlescience
