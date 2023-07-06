@@ -29,6 +29,7 @@ from ppsci.utils.reader import load_vtk_with_time_file
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
+from ppsci.utils.paddle_printer import paddle_lambdify
 
 __all__ = [
     "initializer",
@@ -48,4 +49,5 @@ __all__ = [
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
+    "paddle_lambdify",
 ]

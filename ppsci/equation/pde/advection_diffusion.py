@@ -19,27 +19,33 @@ from ppsci.equation.pde import base
 
 class AdvectionDiffusion(base.PDE):
     def __init__(
-        self, T="T", D="D", Q=0, rho="rho", dim=3, time=False, mixed_form=False
+        self, temperature="T", diffusivity="D", source_term=0, rho="rho", dim=3, time=False, mixed_form=False
     ):
         super().__init__()
         # set params
-        self.T = T
+        self.T = temperature
         self.dim = dim
         self.time = time
         self.mixed_form = mixed_form
+        self.diffusivity = diffusivity
+        self.source_term = source_term
 
         def advection_diffusion_func(out):
-            x, y, z= out["x"], out["y"]
-            u, v, w = out["u"], out["v"]
+            x, y = out["x"], out["y"]
+            u, v = out["u"], out["v"]
+            T = out["c"]
+            D = self.diffusivity
+            Q = self.source_term
 
             advection = (
-                rho * u * (jacobian(T, x) + rho * v * jacobian(T, y) )
+                rho * u * jacobian(T, x) + 
+                rho * v * jacobian(T, y)
             )
 
             if not self.mixed_form:
                 diffusion = (
-                    (rho * D * hessian(T, x))
-                    + (rho * D * hessian(T, y))
-                    )
+                (rho * D * hessian(T, x)) +
+                (rho * D * hessian(T, y))
+                )
             return advection - diffusion - Q
         self.add_equation("advection_diffusion_" + self.T, advection_diffusion_func)

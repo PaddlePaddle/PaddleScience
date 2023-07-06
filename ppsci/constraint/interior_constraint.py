@@ -83,7 +83,8 @@ class InteriorConstraint(base.Constraint):
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
         name: str = "EQ",
-        out_dir = None
+        out_dir = None,
+        input_keys_patch = None
     ):
         self.output_expr = output_expr
         for label_name, expr in self.output_expr.items():
@@ -101,17 +102,20 @@ class InteriorConstraint(base.Constraint):
             criteria = eval(criteria)
 
         # prepare input
-        input = geom.sample_interior(
-            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
-            random,
-            criteria,
-            evenly,
-        )
-        import ppsci
-        ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf",))
+        # input = geom.sample_interior(
+        #     dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
+        #     random,
+        #     criteria,
+        #     evenly,
+        # )
+
+        if True:
+            import ppsci
+            # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf",))
+            input, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/inter_"+name+".vtu", input_keys=('x','y'), input_keys_patch=input_keys_patch)
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
-            input.pop("area")
+            # input.pop("area")
 
         # prepare label
         label = {}
@@ -167,8 +171,8 @@ class InteriorConstraint(base.Constraint):
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
-        if "sdf" in input:
-            input.pop("sdf")
+        # if "sdf" in input:
+        #     input.pop("sdf")
 
         # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)

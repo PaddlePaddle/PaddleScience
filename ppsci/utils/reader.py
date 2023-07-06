@@ -121,10 +121,11 @@ def load_mat_file(
 
 def load_vtk_file(
     filename_without_timeid: str,
-    time_step: float,
-    time_index: Tuple[int, ...],
     input_keys: Tuple[str, ...],
-    label_keys: Optional[Tuple[str, ...]],
+    time_step: float = None,
+    time_index: Tuple[int, ...] = (0,),
+    label_keys: Optional[Tuple[str, ...]]=(),
+    input_keys_patch = None
 ) -> Dict[str, np.ndarray]:
     """Load coordinates and attached label from the *.vtu file.
 
@@ -139,9 +140,14 @@ def load_vtk_file(
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
     """
     input_dict = {var: [] for var in input_keys}
+    input_dict_patch = {var: [] for var in input_keys_patch}
+    
     label_dict = {var: [] for var in label_keys}
     for index in time_index:
-        file = filename_without_timeid + f"{index}.vtu"
+        if 't' in input_dict:
+            file = filename_without_timeid + f"{index}.vtu"
+        else:
+            file = filename_without_timeid
         mesh = meshio.read(file)
         n = mesh.points.shape[0]
         i = 0
@@ -153,8 +159,15 @@ def load_vtk_file(
                     mesh.points[:, i].reshape(n, 1).astype("float32")
                 )
                 i += 1
+
+        for key in input_dict_patch:
+            input_dict_patch[key].append(np.array(mesh.point_data[key], "float32"))
+        
+        input_dict.update(input_dict_patch)
+
         for i, key in enumerate(label_dict):
             label_dict[key].append(np.array(mesh.point_data[key], "float32"))
+        
     for key in input_dict:
         input_dict[key] = np.concatenate(input_dict[key])
     for key in label_dict:

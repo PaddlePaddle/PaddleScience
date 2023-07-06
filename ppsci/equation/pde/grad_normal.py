@@ -26,7 +26,7 @@ class GradNormal(base.PDE):
         def normal_gradient_fun(out):
             x, y = out["x"], out["y"]
             T = out[self.T]
-            normal_x, normal_y = out["normal_x"], out["normal_x"]
+            normal_x, normal_y = out["normal_x"], out["normal_y"]
             return normal_x * jacobian(T, x) + normal_y * jacobian(T, y)
         
         self.add_equation("normal_gradient_" + self.T, normal_gradient_fun)

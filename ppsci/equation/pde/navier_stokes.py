@@ -14,10 +14,13 @@
 
 from typing import Callable
 from typing import Union
+from ppsci.utils.paddle_printer import SympyToPaddle
+
 
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
+from sympy import lambdify, Symbol, Derivative, Function, Basic, Add, Max, Min
 
 
 class NavierStokes(base.PDE):
@@ -99,7 +102,7 @@ class NavierStokes(base.PDE):
                 momentum_x -= nu / rho * hessian(u, z)
             return momentum_x
 
-        self.add_equation("momentum_x", momentum_x_compute_func)
+        # self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
             nu = self.nu(out) if callable(self.nu) else self.nu
@@ -121,7 +124,50 @@ class NavierStokes(base.PDE):
                 momentum_y -= nu / rho * hessian(v, z)
             return momentum_y
 
-        self.add_equation("momentum_y", momentum_y_compute_func)
+        # self.add_equation("momentum_y", momentum_y_compute_func)
+
+
+        def momentum_x_symbol_func():
+            x, y, z, t = Symbol("x"), Symbol("y"), Symbol("z"), Symbol("t")
+            input_variables = {"x": x, "y": y}
+            u = Function("u")(*input_variables)
+            v = Function("v")(*input_variables)
+            p = Function("p")(*input_variables)
+            nu = Function("nu")(*input_variables) if callable(self.nu) else self.nu
+            mu = nu * rho
+            sympy_expr = (
+            u * ((rho * u).diff(x)) +
+            v * ((rho * u).diff(y)) 
+            + p.diff(x) 
+            - (mu * u.diff(x)).diff(x) 
+            - (mu * u.diff(y)).diff(y))
+            
+            return SympyToPaddle(sympy_expr, "momentum_x")
+        self.add_equation("momentum_x", momentum_x_symbol_func())
+
+
+        def momentum_y_symbol_func():
+            x, y, z, t = Symbol("x"), Symbol("y"), Symbol("z"), Symbol("t")
+            input_variables = {"x": x, "y": y}
+            u = Function("u")(*input_variables)
+            v = Function("v")(*input_variables)
+            p = Function("p")(*input_variables)
+            nu = Function("nu")(*input_variables) if callable(self.nu) else self.nu
+            mu = nu * rho
+            sympy_expr = (
+                + (
+                    u * ((rho * v).diff(x))
+                    + v * ((rho * v).diff(y))
+                )
+                + p.diff(y)
+                - (mu * v.diff(x)).diff(x)
+                - (mu * v.diff(y)).diff(y)
+            )
+            
+            return SympyToPaddle(sympy_expr, "momentum_y")
+        
+        self.add_equation("momentum_y", momentum_y_symbol_func())
+        
 
         if self.dim == 3:
 
