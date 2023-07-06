@@ -10,6 +10,8 @@
 1. 下载 pymesh 预编译文件 pymesh.tar.xz 放到 PaddleScience/docker 目录下：docker/pymesh.tar.xz
 2. 运行 bash run.sh
 
+* 等到终端进入 docker 环境后，输入 `nvidia-smi` 确保显卡运行正常，如果没有出现，则输入 `ldconfig` 可恢复正常。
+
 ### 1.2 python 环境安装[可选]
 
 如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤

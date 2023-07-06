@@ -16,7 +16,7 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ xenial-updates main re
 RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse" >> /etc/apt/sources.list
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Acquire::Retries=10 --no-install-recommends \
     g++ gcc cmake wget xz-utils git make zlib1g-dev openssl libssl-dev libffi-dev libeigen3-dev sqlite3 libsqlite3-dev libx11-dev libgl1-mesa-dev bzip2 libbz2-dev liblzma-dev \
     # pymesh dependency
     libeigen3-dev libgmp-dev libgmpxx4ldbl libmpfr-dev libboost-dev libboost-thread-dev libtbb-dev && \
