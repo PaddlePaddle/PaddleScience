@@ -241,7 +241,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         )
 
     linear_elasticity = equation.LinearElasticity(
-        E=None, nu=None, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
+        E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
     )
 
     data_dict = {
@@ -263,20 +263,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "normal_z": normal_z,
     }
 
-    test_output_names = [
-        "stress_disp_xx",
-        "stress_disp_yy",
-        "stress_disp_xy",
-        "equilibrium_x",
-        "equilibrium_y",
-        "navier_x",
-        "navier_y",
-        "traction_x",
-        "traction_y",
-    ]
-    test_output = {}
-    for name in test_output_names:
-        test_output[name] = linear_elasticity.equations[name](data_dict)
     test_output_names = [
         "stress_disp_xx",
         "stress_disp_yy",
