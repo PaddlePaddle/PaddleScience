@@ -2,7 +2,17 @@
 
 ## 1. 开始安装
 
-### 1.1 python 环境安装[可选]
+
+### 1.1 使用 docker 镜像启动环境[可选]
+
+如果你对 docker 有一定了解，则可以通过我们提供的 docker 文件直接构建出能运行 PaddleScience 的环境。按照下列步骤构建 docker 并自动进入该环境，以运行 PaddleScience。
+
+1. 下载 pymesh 预编译文件 pymesh.tar.xz 放到 PaddleScience/docker 目录下：docker/pymesh.tar.xz
+2. 运行 bash run.sh
+
+* 等到终端进入 docker 环境后，输入 `nvidia-smi` 确保显卡运行正常，如果没有出现，则输入 `ldconfig` 可恢复正常。
+
+### 1.2 python 环境安装[可选]
 
 如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
 
@@ -17,15 +27,15 @@
     conda activate ppsci
     ```
 
-### 1.2 安装 PaddlePaddle
+### 1.3 安装 PaddlePaddle
 
 请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 **develop** 版的 PaddlePaddle
 
-### 1.3 安装 PaddleScience
+### 1.4 安装 PaddleScience
 
 从 [1.3.1 git 安装](#121-git) 和 [1.3.2 pip 安装](#122-pip) 任选一种安装方式即可
 
-#### 1.3.2 git 安装
+#### 1.4.2 git 安装
 
 1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
@@ -45,7 +55,7 @@
     pip install -r requirements.txt
     ```
 
-#### 1.3.3 pip 安装
+#### 1.4.3 pip 安装
 
 执行以下命令进行 pip 安装
 
