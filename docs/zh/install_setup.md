@@ -2,15 +2,13 @@
 
 ## 1. 开始安装
 
+### 1.1 从 docker 镜像启动[可选]
 
-### 1.1 使用 docker 镜像启动环境[可选]
+如果你对 docker 有一定了解，则可以通过我们提供的 docker 文件，直接构建出能运行 PaddleScience 的环境。按照下列步骤构建 docker 并自动进入该环境，以运行 PaddleScience。
 
-如果你对 docker 有一定了解，则可以通过我们提供的 docker 文件直接构建出能运行 PaddleScience 的环境。按照下列步骤构建 docker 并自动进入该环境，以运行 PaddleScience。
-
-1. 下载 pymesh 预编译文件 pymesh.tar.xz 放到 PaddleScience/docker 目录下：docker/pymesh.tar.xz
-2. 运行 bash run.sh
-
-* 等到终端进入 docker 环境后，输入 `nvidia-smi` 确保显卡运行正常，如果没有出现，则输入 `ldconfig` 可恢复正常。
+1. 下载 pymesh 预编译文件压缩包 [pymesh.tar.xz](https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz)，并放置在 `PaddleScience/docker/` 目录下
+2. 执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可
+3. 在 docker 环境中，执行 `ldconfig`
 
 ### 1.2 python 环境安装[可选]
 
@@ -20,11 +18,11 @@
 2. 创建 python 3.7 环境，并进入该环境
 
     ``` sh
-    # 使用 conda 创建 python 环境，并命名为 "ppsci"
-    conda create -n ppsci python=3.7 # 3.8 也可以
+    # 使用 conda 创建 python 环境，并命名为 "ppsci_py37"
+    conda create -n ppsci_py37 python=3.7 # 3.8 也可以
 
-    # 进入创建好的 "ppsci" 环境
-    conda activate ppsci
+    # 进入创建好的 "ppsci_py37" 环境
+    conda activate ppsci_py37
     ```
 
 ### 1.3 安装 PaddlePaddle
@@ -33,7 +31,7 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.3.1 git 安装](#121-git) 和 [1.3.2 pip 安装](#122-pip) 任选一种安装方式即可
+从 [1.3.1 git 安装](#131-git) 和 [1.3.2 pip 安装](#132-pip) 任选一种安装方式即可
 
 #### 1.4.2 git 安装
 
