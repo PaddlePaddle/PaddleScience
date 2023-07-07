@@ -49,11 +49,11 @@ if __name__ == "__main__":
     }
 
     # set geometry
-    inlet_geo = ppsci.geometry.Mesh("./dataset/stl_files/aneurysm_inlet.stl")
-    outlet_geo = ppsci.geometry.Mesh("./dataset/stl_files/aneurysm_outlet.stl")
-    noslip_geo = ppsci.geometry.Mesh("./dataset/stl_files/aneurysm_noslip.stl")
-    integral_geo = ppsci.geometry.Mesh("./dataset/stl_files/aneurysm_integral.stl")
-    interior_geo = ppsci.geometry.Mesh("./dataset/stl_files/aneurysm_closed.stl")
+    inlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_inlet.stl")
+    outlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_outlet.stl")
+    noslip_geo = ppsci.geometry.Mesh("./stl/aneurysm_noslip.stl")
+    integral_geo = ppsci.geometry.Mesh("./stl/aneurysm_integral.stl")
+    interior_geo = ppsci.geometry.Mesh("./stl/aneurysm_closed.stl")
 
     # inlet velocity profile
     CENTER = (-18.40381048596882, -50.285383353981196, 12.848136936899031)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     # set validator
     eval_data_dict = reader.load_csv_file(
-        "./dataset/aneurysm_parabolicInlet_sol0.csv",
+        "./data/aneurysm_parabolicInlet_sol0.csv",
         ("x", "y", "z", "u", "v", "w", "p"),
         {
             "x": "Points:0",
