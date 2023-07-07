@@ -302,7 +302,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "traction_x": expected_traction_x,
         "traction_y": expected_traction_y,
     }
-
     if dim == 3:
         expected_output.update(
             {
