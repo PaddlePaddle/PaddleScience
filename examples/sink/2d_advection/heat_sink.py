@@ -245,8 +245,11 @@ if __name__ == "__main__":
         constraint_heat_interior.name: constraint_heat_interior,
         integral_continuity.name: integral_continuity
     }
-    net_params_f = (np.load("/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/data/modulus/net_params/flow_net_params.npy",allow_pickle=True)).item()
-    net_params_t = (np.load("/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/data/modulus/net_params/thermal_net_params.npy",allow_pickle=True)).item()
+
+    folder = r"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/data/modulus/net_params/"
+
+    net_params_f = paddle.load(folder + "flow_net_params.pdparams")
+    net_params_t = paddle.load(folder + "thermal_net_params.pdparams")
 
     model_flow = ppsci.arch.MLP(
         ("x", "y"), ("u", "v", "p"), 6, 512, "silu", weight_norm=True, weight_init_v=net_params_f['w'], weight_init_g=net_params_f['w_grad'], bias_init=net_params_f['b'])
