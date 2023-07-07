@@ -167,16 +167,16 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
 
     x.stop_gradient = False
     y.stop_gradient = False
-    if dim == 3:
-        z.stop_gradient = False
     if time:
         t.stop_gradient = False
+    if dim == 3:
+        z.stop_gradient = False
 
     input_data = paddle.concat([x, y], axis=1)
-    if dim == 3:
-        input_data = paddle.concat([input_data, z], axis=1)
     if time:
         input_data = paddle.concat([input_data, t], axis=1)
+    if dim == 3:
+        input_data = paddle.concat([input_data, z], axis=1)
 
     model = nn.Sequential(
         nn.Linear(input_data.shape[1], 9 if dim == 3 else 5),
