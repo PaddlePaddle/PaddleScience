@@ -19,7 +19,7 @@ from ppsci.equation.pde import base
 
 class AdvectionDiffusion(base.PDE):
     def __init__(
-        self, temperature="T", diffusivity="D", source_term=0, rho="rho", dim=3, time=False, mixed_form=False
+        self, temperature="T", diffusivity="D", source_term=0, rho="rho", dim=3, time=False, mixed_form=False, couple_method='heat_only'
     ):
         super().__init__()
         # set params
@@ -32,6 +32,8 @@ class AdvectionDiffusion(base.PDE):
 
         def advection_diffusion_func(out):
             x, y = out["x"], out["y"]
+            if couple_method == 'heat_only':
+                out["u"], out["v"] = out["u"].detach(), out["v"].detach()
             u, v = out["u"], out["v"]
             T = out["c"]
             D = self.diffusivity

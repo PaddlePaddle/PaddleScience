@@ -413,6 +413,7 @@ if __name__ == "__main__":
         eval_freq=20,
         equation=equation,
         validator=validator,
+        # checkpoint_path="/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_sink_0706/checkpoints/latest.pdeqn"
     )
 
     solver.train()
