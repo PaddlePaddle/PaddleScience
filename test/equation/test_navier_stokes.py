@@ -8,23 +8,29 @@ from ppsci import equation
 def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
     return paddle.grad(y, x, create_graph=True)[0]
 
+
 def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
     return jacobian(jacobian(y, x), x)
 
-def continuity_compute_func_expected_result(x, y, u, v, dim, w=None, z=None):                 
+
+def continuity_compute_func_expected_result(x, y, u, v, dim, w=None, z=None):
     continuity = jacobian(u, x) + jacobian(v, y)
-    if self.dim == 3:
+    if dim == 3:
         continuity += jacobian(w, z)
     return continuity
 
-def momentum_x_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None):
-    momentum_x = 
+
+def momentum_x_compute_func_expected_result(
+    nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+):
+    momentum_x = (
         u * jacobian(u, x)
         + v * jacobian(u, y)
         - nu / rho * hessian(u, x)
         - nu / rho * hessian(u, y)
         + 1 / rho * jacobian(p, x)
-    
+    )
+
     if time is True:
         momentum_x += jacobian(u, t)
     if dim == 3:
@@ -32,14 +38,18 @@ def momentum_x_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= F
         momentum_x -= nu / rho * hessian(u, z)
     return momentum_x
 
-def momentum_y_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None):
-    momentum_y = 
+
+def momentum_y_compute_func_expected_result(
+    nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+):
+    momentum_y = (
         u * jacobian(v, x)
         + v * jacobian(v, y)
         - nu / rho * hessian(v, x)
         - nu / rho * hessian(v, y)
         + 1 / rho * jacobian(p, y)
-    
+    )
+
     if time is True:
         momentum_y += jacobian(v, t)
     if dim == 3:
@@ -47,8 +57,11 @@ def momentum_y_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= F
         momentum_y -= nu / rho * hessian(v, z)
     return momentum_y
 
-def momentum_z_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None):
-    momentum_z = 
+
+def momentum_z_compute_func_expected_result(
+    nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+):
+    momentum_z = (
         u * jacobian(w, x)
         + v * jacobian(w, y)
         + w * jacobian(w, z)
@@ -56,10 +69,11 @@ def momentum_z_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= F
         - nu / rho * hessian(w, y)
         - nu / rho * hessian(w, z)
         + 1 / rho * jacobian(p, z)
-    
+    )
     if time is True:
         momentum_z += jacobian(w, t)
     return momentum_z
+
 
 @pytest.mark.parametrize("dim,time", [(2, 3), (True, False)])
 def test_navier_stokes(nu, rho, dim, time):
@@ -89,10 +103,28 @@ def test_navier_stokes(nu, rho, dim, time):
     # manually generate output
     output = model(input_data)
 
-    expected_result_continuity_compute_func = continuity_compute_func_expected_result(x, y, u, v, dim, w=None, z=None)
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None)
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None)
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(nu, p, rho, x, y, u, v, dim, time= False, w=None, z=None, t=None)
+    u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
+
+    if dim == 3:
+        w = other_outputs[0]
+        sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz = other_outputs[1:]
+    else:
+        w = None
+        sigma_xx, sigma_xy, sigma_yy = other_outputs[0:3]
+        sigma_xz, sigma_yz, sigma_zz = None, None, None
+
+    expected_result_continuity_compute_func = continuity_compute_func_expected_result(
+        x, y, u, v, dim, w=None, z=None
+    )
+    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
+        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+    )
+    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
+        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+    )
+    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
+        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+    )
 
     # compute result using NavierStokes class
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
@@ -118,6 +150,7 @@ def test_navier_stokes(nu, rho, dim, time):
     test_result = poisson_equation.equations["poisson"](data_dict)
     # check result whether is equal
     assert paddle.allclose(expected_result, test_result)
+
 
 if __name__ == "__main__":
     pytest.main()
