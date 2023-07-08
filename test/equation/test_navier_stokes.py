@@ -113,7 +113,7 @@ def test_navierstokes(nu, rho, dim, time):
     f(t, x, y, z) = (u, v, w, p)
     """
     model = nn.Sequential(
-        nn.Linear(input_dims, 3 if dim == 2  else 4),
+        nn.Linear(input_dims, 3 if dim == 2 else 4),
         nn.Tanh(),
     )
 
@@ -142,13 +142,7 @@ def test_navierstokes(nu, rho, dim, time):
     # compute result using NavierStokes class
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
 
-    data_dict = {
-        "x": x,
-        "y": y,
-        "u": u,
-        "v": v,
-        "p": p
-    }
+    data_dict = {"x": x, "y": y, "u": u, "v": v, "p": p}
     if time:
         data_dict["t"] = t
     if dim == 3:
