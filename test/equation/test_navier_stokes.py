@@ -13,14 +13,14 @@ def hessian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
     return jacobian(jacobian(y, x), x)
 
 
-def continuity_compute_func_expected_result(x, y, u, v, dim, w=None, z=None):
+def continuity_compute_func(x, y, u, v, dim, w=None, z=None):
     continuity = jacobian(u, x) + jacobian(v, y)
     if dim == 3:
         continuity += jacobian(w, z)
     return continuity
 
 
-def momentum_x_compute_func_expected_result(
+def momentum_x_compute_func(
     nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
 ):
     momentum_x = (
@@ -31,7 +31,7 @@ def momentum_x_compute_func_expected_result(
         + 1 / rho * jacobian(p, x)
     )
 
-    if time is True:
+    if time:
         momentum_x += jacobian(u, t)
     if dim == 3:
         momentum_x += w * jacobian(u, z)
@@ -39,7 +39,7 @@ def momentum_x_compute_func_expected_result(
     return momentum_x
 
 
-def momentum_y_compute_func_expected_result(
+def momentum_y_compute_func(
     nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
 ):
     momentum_y = (
@@ -50,7 +50,7 @@ def momentum_y_compute_func_expected_result(
         + 1 / rho * jacobian(p, y)
     )
 
-    if time is True:
+    if time:
         momentum_y += jacobian(v, t)
     if dim == 3:
         momentum_y += w * jacobian(v, z)
@@ -58,7 +58,7 @@ def momentum_y_compute_func_expected_result(
     return momentum_y
 
 
-def momentum_z_compute_func_expected_result(
+def momentum_z_compute_func(
     nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
 ):
     momentum_z = (
@@ -70,12 +70,20 @@ def momentum_z_compute_func_expected_result(
         - nu / rho * hessian(w, z)
         + 1 / rho * jacobian(p, z)
     )
-    if time is True:
+    if time:
         momentum_z += jacobian(w, t)
     return momentum_z
 
 
-@pytest.mark.parametrize("dim,time", [(2, 3), (True, False)])
+@pytest.mark.parametrize(
+    "nu, rho, dim, time",
+    [
+        (0.1, 1.0, 3, False),
+        (0.1, 1.0, 2, False),
+        (0.1, 1.0, 3, True),
+        (0.1, 1.0, 2, True),
+    ],
+)
 def test_navier_stokes(nu, rho, dim, time):
     batch_size = 13
     # generate input data
@@ -84,72 +92,97 @@ def test_navier_stokes(nu, rho, dim, time):
     x.stop_gradient = False
     y.stop_gradient = False
     input_dims = 2
-    input_data = paddle.concat([x, y], axis=1)
-    if time is True:
+    inputs = (x, y)
+    if time:
         t = paddle.randn([batch_size, 1])
         t.stop_gradient = False
-        input_data = paddle.concat([t, input_data], axis=1)
+        inputs = (t,) + inputs
         input_dims += 1
     if dim == 3:
         z = paddle.randn([batch_size, 1])
         z.stop_gradient = False
-        input_data = paddle.concat([input_data, z], axis=1)
+        inputs = inputs + (z,)
         input_dims += 1
+    input_data = paddle.concat(inputs, axis=1)
+
+    """
+    Use the relatively simple Multilayer Perceptron 
+    to represent the mapping function from (t, x, y, z) to (u, v, w, p):
+    f(x, y) = (u, v, p) or
+    f(t, x, y) = (u, v, p) or
+    f(t, x, y, z) = (u, v, w, p)
+    """
     model = nn.Sequential(
-        nn.Linear(len(input_dims), 1),
+        nn.Linear(len(input_dims), 3 if input_dims <= 3 else 4),
         nn.Tanh(),
     )
 
     # manually generate output
     output = model(input_data)
 
-    u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
-
-    if dim == 3:
-        w = other_outputs[0]
-        sigma_xx, sigma_xy, sigma_xz, sigma_yy, sigma_yz, sigma_zz = other_outputs[1:]
+    if dim == 2:
+        u, v, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
+        w, z = None, None
     else:
-        w = None
-        sigma_xx, sigma_xy, sigma_yy = other_outputs[0:3]
-        sigma_xz, sigma_yz, sigma_zz = None, None, None
+        u, v, w, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
 
-    expected_result_continuity_compute_func = continuity_compute_func_expected_result(
-        x, y, u, v, dim, w=None, z=None
+    expected_continuity = continuity_compute_func(x=x, y=y, u=u, v=v, dim=dim, w=w, z=z)
+    expected_momentum_x = momentum_x_compute_func(
+        nu=nu, p=p, rho=rho, x=x, y=y, u=u, v=v, dim=dim, time=time, w=w, z=z, t=t
     )
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
-        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
+    expected_momentum_y = momentum_y_compute_func(
+        nu=nu, p=p, rho=rho, x=x, y=y, u=u, v=v, dim=dim, time=time, w=w, z=z, t=t
     )
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
-        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
-    )
-    expected_result_momentum_x_compute_func = momentum_x_compute_func_expected_result(
-        nu, p, rho, x, y, u, v, dim, time=False, w=None, z=None, t=None
-    )
+    if dim == 3:
+        expected_momentum_z = momentum_z_compute_func(
+            nu=nu, p=p, rho=rho, x=x, y=y, u=u, v=v, dim=dim, time=time, w=w, z=z, t=t
+        )
 
     # compute result using NavierStokes class
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
-    if time == True:
-        expected_result += jacobian(eta, t)
-    if dim == 3:
-        expected_result += w * jacobian(eta, z)
-        expected_result -= nu / rho * hessian(eta, z)
-    # compute result using built-in Laplace module
-    poisson_equation = equation.NavierStokes(dim=dim)
+
     data_dict = {
+        "t": t,
         "x": x,
         "y": y,
         "u": u,
         "v": v,
-        "p": p,
+        "z": z,
+        "w": w,
     }
-    if time == True:
-        data_dict["t"] = t
+
+    test_output_names = [
+        "continuity",
+        "momentum_x",
+        "momentum_y",
+    ]
+
     if dim == 3:
-        data_dict["z"] = z
-        data_dict["w"] = w
-    test_result = poisson_equation.equations["poisson"](data_dict)
+        test_output_names.extend(
+            [
+                "momentum_z",
+            ]
+        )
+
+    test_output = {}
+    for name in test_output_names:
+        test_output[name] = navier_stokes_equation.equations[name](data_dict)
+
+    expected_output = {
+        "continuity": expected_continuity,
+        "momentum_x": expected_momentum_x,
+        "momentum_y": expected_momentum_y,
+    }
+    if dim == 3:
+        expected_output.update(
+            {
+                "momentum_z": expected_momentum_z,
+            }
+        )
+
     # check result whether is equal
-    assert paddle.allclose(expected_result, test_result)
+    for name in test_output_names:
+        assert paddle.allclose(expected_output[name], test_output[name])
 
 
 if __name__ == "__main__":
