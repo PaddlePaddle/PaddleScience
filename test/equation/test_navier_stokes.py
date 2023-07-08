@@ -113,7 +113,7 @@ def test_navier_stokes(nu, rho, dim, time):
     f(t, x, y, z) = (u, v, w, p)
     """
     model = nn.Sequential(
-        nn.Linear(len(input_dims), 3 if input_dims <= 3 else 4),
+        nn.Linear(input_dims, 3 if input_dims <= 3 else 4),
         nn.Tanh(),
     )
 
@@ -158,10 +158,8 @@ def test_navier_stokes(nu, rho, dim, time):
     ]
 
     if dim == 3:
-        test_output_names.extend(
-            [
-                "momentum_z",
-            ]
+        test_output_names.append(
+            "momentum_z",
         )
 
     test_output = {}
@@ -174,11 +172,7 @@ def test_navier_stokes(nu, rho, dim, time):
         "momentum_y": expected_momentum_y,
     }
     if dim == 3:
-        expected_output.update(
-            {
-                "momentum_z": expected_momentum_z,
-            }
-        )
+        expected_output.update["momentum_z"] = expected_momentum_z
 
     # check result whether is equal
     for name in test_output_names:
