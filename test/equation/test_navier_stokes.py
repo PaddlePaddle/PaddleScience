@@ -76,7 +76,7 @@ def momentum_z_compute_func(
 
 
 @pytest.mark.parametrize(
-    "nu, rho, dim, time",
+    "nu,rho,dim,time",
     [
         (0.1, 1.0, 3, False),
         (0.1, 1.0, 2, False),
@@ -84,7 +84,7 @@ def momentum_z_compute_func(
         (0.1, 1.0, 2, True),
     ],
 )
-def test_navier_stokes(nu, rho, dim, time):
+def test_navierstokes(nu, rho, dim, time):
     batch_size = 13
     # generate input data
     x = paddle.randn([batch_size, 1])
@@ -113,7 +113,7 @@ def test_navier_stokes(nu, rho, dim, time):
     f(t, x, y, z) = (u, v, w, p)
     """
     model = nn.Sequential(
-        nn.Linear(input_dims, 3 if input_dims <= 3 else 4),
+        nn.Linear(input_dims, 3 if dim == 2  else 4),
         nn.Tanh(),
     )
 
@@ -125,7 +125,8 @@ def test_navier_stokes(nu, rho, dim, time):
         w, z = None, None
     else:
         u, v, w, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
-
+    if time is False:
+        t = None
     expected_continuity = continuity_compute_func(x=x, y=y, u=u, v=v, dim=dim, w=w, z=z)
     expected_momentum_x = momentum_x_compute_func(
         nu=nu, p=p, rho=rho, x=x, y=y, u=u, v=v, dim=dim, time=time, w=w, z=z, t=t
@@ -142,14 +143,17 @@ def test_navier_stokes(nu, rho, dim, time):
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
 
     data_dict = {
-        "t": t,
         "x": x,
         "y": y,
         "u": u,
         "v": v,
-        "z": z,
-        "w": w,
+        "p": p
     }
+    if time:
+        data_dict["t"] = t
+    if dim == 3:
+        data_dict["z"] = z
+        data_dict["w"] = w
 
     test_output_names = [
         "continuity",
@@ -172,7 +176,7 @@ def test_navier_stokes(nu, rho, dim, time):
         "momentum_y": expected_momentum_y,
     }
     if dim == 3:
-        expected_output.update["momentum_z"] = expected_momentum_z
+        expected_output["momentum_z"] = expected_momentum_z
 
     # check result whether is equal
     for name in test_output_names:
