@@ -23,7 +23,7 @@
 2. 安装必要的依赖包
 
     ``` shell
-    pip install -r requirements.txt
+    bash requirements.sh
     ```
 
     ???+ Info "安装注意事项"

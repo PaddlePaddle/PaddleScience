@@ -26,6 +26,11 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 安装使用
 
+0. 安装paddle
+
+    登录 [**paddle安装**](https://www.paddlepaddle.org.cn/install)，根据环境下载paddle并配置
+
+
 1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
     ``` shell
@@ -37,7 +42,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 2. 安装必要的依赖包
 
     ``` shell
-    pip install -r requirements.txt
+    bash requirements.sh
     ```
 
 3. 验证安装
