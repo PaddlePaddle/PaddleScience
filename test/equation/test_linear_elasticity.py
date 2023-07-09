@@ -174,7 +174,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
 
     input_data = paddle.concat([x, y], axis=1)
     if time:
-        input_data = paddle.concat([input_data, t], axis=1)
+        input_data = paddle.concat([ t,input_data], axis=1)
     if dim == 3:
         input_data = paddle.concat([input_data, z], axis=1)
 
