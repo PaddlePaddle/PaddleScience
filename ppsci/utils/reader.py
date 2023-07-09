@@ -18,7 +18,6 @@ import sys
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import meshio
 import numpy as np
@@ -127,7 +126,7 @@ def load_vtk_file(
     input_keys: Tuple[str, ...],
     label_keys: Optional[Tuple[str, ...]],
 ) -> Dict[str, np.ndarray]:
-    """load coordinates and attached label from the *.vtu file.
+    """Load coordinates and attached label from the *.vtu file.
 
     Args:
         filename_without_timeid (str): File name without time id.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-version = "1.0.1"
+version = "1.0.0"
 description = "A library for scientific machine learning"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -13,6 +13,7 @@ authors = [
 ]
 requires-python = ">=3.7"
 keywords = [
+    "Machine learning",
     "Deep learning",
     "Differential equations",
     "AI4Science",
@@ -33,7 +34,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 dependencies = [
-    "numpy",
+    "numpy>=1.20.0",
     "scipy",
     "sympy",
     "matplotlib",
@@ -43,10 +44,12 @@ dependencies = [
     "scipy",
     "visualdl",
     "pyvista==0.37.0",
-    "pysdf",
     "pyyaml",
     "scikit-optimize",
     "h5py",
+    "meshio==5.3.4",
+    "tqdm",
+    "imageio",
 ]
 
 [project.urls]
@@ -57,4 +60,8 @@ Documentation = "https://paddlescience-docs.readthedocs.io/zh/latest/"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["docs*", "examples*", "jointContribution*", "paddlescience*", "test_tipc*", "tests*", "tools*"]
+exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "tests*", "tools*"]
+
+[tool.ruff]
+line-length = 88
+ignore = ["E501", "E741"]

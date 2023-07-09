@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
 
-import paddle.io as io
+from paddle import io
 
 from ppsci import data
-from ppsci import loss
+
+if TYPE_CHECKING:
+    from ppsci import loss
 
 
 class Constraint:
@@ -35,7 +38,7 @@ class Constraint:
         self,
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: "loss.Loss",
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)

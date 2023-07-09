@@ -28,12 +28,14 @@ class IntegralLoss(base.Loss):
     $$
     L =
     \begin{cases}
-        \dfrac{1}{N}\sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='mean'} \\
-        \sum\limits_{i=1}^{N}{(\sum\limits_{j=1}^{M}{(x_i^j s_{j})}-y_i)^2}, & \text{if reduction='sum'}
+        \dfrac{1}{N} \Vert \displaystyle\sum_{i=1}^{M}{\mathbf{s}_i \cdot \mathbf{x}_i} - \mathbf{y} \Vert_2^2, & \text{if reduction='mean'} \\
+         \Vert \displaystyle\sum_{i=0}^{M}{\mathbf{s}_i \cdot \mathbf{x}_i} - \mathbf{y} \Vert_2^2, & \text{if reduction='sum'}
     \end{cases}
     $$
 
-    $M$ is the number of samples in Monte-Carlo integration.
+    $$
+    \mathbf{x}, \mathbf{s} \in \mathcal{R}^{M \times N}, \mathbf{y} \in \mathcal{R}^{N}
+    $$
 
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".

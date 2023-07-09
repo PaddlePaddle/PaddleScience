@@ -2,8 +2,10 @@
 
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
-[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
+[![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](https://pypi.org/project/paddlesci/)
 [![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](./LICENSE)
+[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
@@ -12,7 +14,7 @@
 PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
 
 <div align="center">
-    <img src="./docs/images/overview/panorama.png" width="80%" height="80%">
+    <img src="./docs/images/overview/panorama.png" width="90%" height="90%">
 </div>
 
 ## 特性
@@ -35,7 +37,11 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
     ``` shell
     git clone https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+
     cd PaddleScience
+    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
@@ -71,11 +77,15 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 支持
 
-如使用过程中遇到问题或想提出开发建议，欢迎在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new) 页面新建 issue。
+如使用过程中遇到问题或想提出开发建议，欢迎在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue。
 
 ## 贡献代码
 
 PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+
+## 致谢
+
+PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
 
 ## 证书
 

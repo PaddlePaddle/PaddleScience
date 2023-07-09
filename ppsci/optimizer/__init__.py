@@ -20,40 +20,50 @@ from ppsci.optimizer.optimizer import SGD
 from ppsci.optimizer.optimizer import Adam
 from ppsci.optimizer.optimizer import AdamW
 from ppsci.optimizer.optimizer import Momentum
+from ppsci.optimizer.optimizer import OptimizerList
 from ppsci.optimizer.optimizer import RMSProp
 
-__all__ = ["LBFGS", "SGD", "Adam", "AdamW", "Momentum", "RMSProp", "lr_scheduler"]
+__all__ = [
+    "LBFGS",
+    "SGD",
+    "Adam",
+    "AdamW",
+    "Momentum",
+    "RMSProp",
+    "OptimizerList",
+    "lr_scheduler",
+]
 
 
 def build_lr_scheduler(cfg, epochs, iters_per_epoch):
     """Build learning rate scheduler.
 
     Args:
-        cfg (AttrDict): Learing rate scheduler config.
+        cfg (AttrDict): Learning rate scheduler config.
         epochs (int): Total epochs.
         iters_per_epoch (int): Number of iterations of one epoch.
 
     Returns:
-        LRScheduler: Learing rate scheduler.
+        LRScheduler: Learning rate scheduler.
     """
     cfg = copy.deepcopy(cfg)
     cfg.update({"epochs": epochs, "iters_per_epoch": iters_per_epoch})
     lr_scheduler_cls = cfg.pop("name")
-    lr_scheduler = eval(lr_scheduler_cls)(**cfg)
-    return lr_scheduler()
+    lr_scheduler_ = eval(lr_scheduler_cls)(**cfg)
+    return lr_scheduler_()
 
 
 def build_optimizer(cfg, model_list, epochs, iters_per_epoch):
-    """Build optimizer and learing rate scheduler
+    """Build optimizer and learning rate scheduler
 
     Args:
-        cfg (AttrDict): Learing rate scheduler config.
+        cfg (AttrDict): Learning rate scheduler config.
         model_list (Tuple[nn.Layer, ...]): Tuple of model(s).
         epochs (int): Total epochs.
         iters_per_epoch (int): Number of iterations of one epoch.
 
     Returns:
-        Optimizer, LRScheduler: Optimizer and learing rate scheduler.
+        Optimizer, LRScheduler: Optimizer and learning rate scheduler.
     """
     # build lr_scheduler
     cfg = copy.deepcopy(cfg)

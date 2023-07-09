@@ -78,7 +78,6 @@ def get_path_from_url(url, root_dir, md5sum=None, check_exist=True, decompress=T
     Returns:
         str: a local path to save downloaded models & weights & datasets.
     """
-
     if not is_url(url):
         raise ValueError(f"Given url({url}) is not valid")
     # parse path after download to decompress under root_dir
@@ -142,7 +141,7 @@ def _download(url, path, md5sum=None):
                 f"Downloading from {url} failed with code " f"{req.status_code}!"
             )
 
-        # For protecting download interupted, download to
+        # For protecting download interrupted, download to
         # tmp_fullname firstly, move tmp_fullname to fullname
         # after download finished
         tmp_fullname = fullname + "_tmp"
@@ -188,7 +187,7 @@ def _decompress(fname):
     """
     logger.info(f"Decompressing {fname}...")
 
-    # For protecting decompressing interupted,
+    # For protecting decompressing interrupted,
     # decompress to fpath_tmp directory firstly, if decompress
     # successed, move decompress files to fpath and delete
     # fpath_tmp and remove download compress file.
@@ -204,64 +203,60 @@ def _decompress(fname):
 
 
 def _uncompress_file_zip(filepath):
-    files = zipfile.ZipFile(filepath, "r")
-    file_list = files.namelist()
+    with zipfile.ZipFile(filepath, "r") as files:
+        file_list = files.namelist()
 
-    file_dir = os.path.dirname(filepath)
+        file_dir = os.path.dirname(filepath)
 
-    if _is_a_single_file(file_list):
-        rootpath = file_list[0]
-        uncompressed_path = os.path.join(file_dir, rootpath)
+        if _is_a_single_file(file_list):
+            rootpath = file_list[0]
+            uncompressed_path = os.path.join(file_dir, rootpath)
 
-        for item in file_list:
-            files.extract(item, file_dir)
+            for item in file_list:
+                files.extract(item, file_dir)
 
-    elif _is_a_single_dir(file_list):
-        rootpath = os.path.splitext(file_list[0])[0].split(os.sep)[-1]
-        uncompressed_path = os.path.join(file_dir, rootpath)
+        elif _is_a_single_dir(file_list):
+            rootpath = os.path.splitext(file_list[0])[0].split(os.sep)[-1]
+            uncompressed_path = os.path.join(file_dir, rootpath)
 
-        for item in file_list:
-            files.extract(item, file_dir)
+            for item in file_list:
+                files.extract(item, file_dir)
 
-    else:
-        rootpath = os.path.splitext(filepath)[0].split(os.sep)[-1]
-        uncompressed_path = os.path.join(file_dir, rootpath)
-        if not os.path.exists(uncompressed_path):
-            os.makedirs(uncompressed_path)
-        for item in file_list:
-            files.extract(item, os.path.join(file_dir, rootpath))
-
-    files.close()
+        else:
+            rootpath = os.path.splitext(filepath)[0].split(os.sep)[-1]
+            uncompressed_path = os.path.join(file_dir, rootpath)
+            if not os.path.exists(uncompressed_path):
+                os.makedirs(uncompressed_path)
+            for item in file_list:
+                files.extract(item, os.path.join(file_dir, rootpath))
 
     return uncompressed_path
 
 
 def _uncompress_file_tar(filepath, mode="r:*"):
-    files = tarfile.open(filepath, mode)
-    file_list = files.getnames()
+    with tarfile.open(filepath, mode) as files:
+        file_list = files.getnames()
 
-    file_dir = os.path.dirname(filepath)
+        file_dir = os.path.dirname(filepath)
 
-    if _is_a_single_file(file_list):
-        rootpath = file_list[0]
-        uncompressed_path = os.path.join(file_dir, rootpath)
-        for item in file_list:
-            files.extract(item, file_dir)
-    elif _is_a_single_dir(file_list):
-        rootpath = os.path.splitext(file_list[0])[0].split(os.sep)[-1]
-        uncompressed_path = os.path.join(file_dir, rootpath)
-        for item in file_list:
-            files.extract(item, file_dir)
-    else:
-        rootpath = os.path.splitext(filepath)[0].split(os.sep)[-1]
-        uncompressed_path = os.path.join(file_dir, rootpath)
-        if not os.path.exists(uncompressed_path):
-            os.makedirs(uncompressed_path)
+        if _is_a_single_file(file_list):
+            rootpath = file_list[0]
+            uncompressed_path = os.path.join(file_dir, rootpath)
+            for item in file_list:
+                files.extract(item, file_dir)
+        elif _is_a_single_dir(file_list):
+            rootpath = os.path.splitext(file_list[0])[0].split(os.sep)[-1]
+            uncompressed_path = os.path.join(file_dir, rootpath)
+            for item in file_list:
+                files.extract(item, file_dir)
+        else:
+            rootpath = os.path.splitext(filepath)[0].split(os.sep)[-1]
+            uncompressed_path = os.path.join(file_dir, rootpath)
+            if not os.path.exists(uncompressed_path):
+                os.makedirs(uncompressed_path)
 
-        for item in file_list:
-            files.extract(item, os.path.join(file_dir, rootpath))
-
-    files.close()
+            for item in file_list:
+                files.extract(item, os.path.join(file_dir, rootpath))
 
     return uncompressed_path
 

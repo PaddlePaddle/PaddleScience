@@ -32,7 +32,7 @@ class LatitudeWeightedACC(base.Metric):
     $$
 
     $$
-    L_m = N_{lat}\dfrac{cos(lat_m)}{\sum\limits_{j=1}^{N_{lat}}cos(lat_j)}
+    L_m = N_{lat}\dfrac{\cos(lat_m)}{\sum\limits_{j=1}^{N_{lat}}\cos(lat_j)}
     $$
 
     $lat_m$ is the latitude at m.

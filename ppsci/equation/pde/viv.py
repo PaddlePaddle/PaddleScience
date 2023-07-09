@@ -21,12 +21,16 @@ from ppsci.equation.pde import base
 
 
 class Vibration(base.PDE):
-    """Vortex induced vibration equation.
+    r"""Vortex induced vibration equation.
+
+    $$
+    \rho \dfrac{\partial^2 \eta}{\partial t^2} + e^{k1} \dfrac{\partial \eta}{\partial t} + e^{k2} \eta = f
+    $$
 
     Args:
         rho (float): Generalized mass.
-        k1 (float): Learnable paremters for modal damping.
-        k2 (float): Learnable paremters for generalized stiffness.
+        k1 (float): Learnable parameter for modal damping.
+        k2 (float): Learnable parameter for generalized stiffness.
 
     Examples:
         >>> import ppsci
@@ -37,12 +41,12 @@ class Vibration(base.PDE):
         super().__init__()
         self.rho = rho
         self.k1 = paddle.create_parameter(
-            shape=[1],
+            shape=[],
             dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k1),
         )
         self.k2 = paddle.create_parameter(
-            shape=[1],
+            shape=[],
             dtype=paddle.get_default_dtype(),
             default_initializer=initializer.Constant(k2),
         )
