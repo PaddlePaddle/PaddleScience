@@ -125,7 +125,7 @@ def test_navierstokes(nu, rho, dim, time):
         w, z = None, None
     else:
         u, v, w, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
-    if time is False:
+    if not time:
         t = None
     expected_continuity = continuity_compute_func(x=x, y=y, u=u, v=v, dim=dim, w=w, z=z)
     expected_momentum_x = momentum_x_compute_func(
