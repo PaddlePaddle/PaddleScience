@@ -140,11 +140,11 @@ def save_vtu_to_mesh(
     coord_ndim = len(coord_keys)
 
     # get the list variable transposed
-    points = np.stack((data_dict[key].numpy() for key in coord_keys)).reshape(
+    points = np.stack((data_dict[key] for key in coord_keys)).reshape(
         coord_ndim, npoint
     )
     mesh = meshio.Mesh(
         points=points.T, cells=[("vertex", np.arange(npoint).reshape(npoint, 1))]
     )
-    mesh.point_data = {key: data_dict[key].numpy() for key in value_keys}
+    mesh.point_data = {key: data_dict[key] for key in value_keys}
     mesh.write(filename)
