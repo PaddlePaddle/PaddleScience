@@ -131,6 +131,16 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
 
         metric = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
+            if hasattr(_validator.data_loader.dataset, "transfroms"):
+                transform_dict = _validator.data_loader.dataset.transforms.transforms[
+                    0
+                ].scale
+                all_output = {
+                    key: val / transform_dict[key] for key, val in all_output.items()
+                }
+                all_label = {
+                    key: val / transform_dict[key] for key, val in all_label.items()
+                }
             metric_dict = metric_func(all_output, all_label)
             metric[metric_name] = metric_dict
             for var_name, metric_value in metric_dict.items():

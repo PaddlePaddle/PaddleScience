@@ -80,11 +80,11 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
             all_input[key] = paddle.concat(all_input[key])
         for key in all_output:
             all_output[key] = paddle.concat(all_output[key])
-        _visualizer.quantitive_error(all_output, _visualizer.label)
+
         # save visualization
         if solver.rank == 0:
             visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-            os.makedirs(osp.join(visual_dir, _visualizer.prefix), exist_ok=True)
+            os.makedirs(visual_dir, exist_ok=True)
             _visualizer.save(
                 osp.join(visual_dir, _visualizer.prefix), {**all_input, **all_output}
             )
