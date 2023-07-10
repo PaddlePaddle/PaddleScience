@@ -81,6 +81,7 @@ act_func_dict = {
     "relu": nn.ReLU(),
     "selu": nn.SELU(),
     "gelu": nn.GELU(),
+    "leakyrelu": nn.LeakyReLU(),
     "sigmoid": nn.Sigmoid(),
     "silu": Silu(),
     "sin": Sin(),

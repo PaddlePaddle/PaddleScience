@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
 from typing import Dict
 from typing import Tuple
 from typing import Union
@@ -217,3 +218,36 @@ class SqueezeData:
                         f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
         return input_item, label_item, weight_item
+
+
+class FunctionalTransform:
+    """Functional data transform class, which allows to use custom data transform function from given trans_expr for special cases.
+    Args:
+        trans_expr (Callable): Expression of data transform.
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> def trans_expr(data_dict):
+        ...     rand_ratio = np.random.rand()
+        ...     for key in data_dict:
+        ...         data_dict[key] = data_dict[key]*rand_ratio
+        ...     return data_dict
+        >>> transform_cfg = {
+        ...     "transforms": (
+        ...         {
+        ...             "FunctionalTransform": {
+        ...                 "trans_expr": trans_expr,
+        ...             },
+        ...         },
+        ...     ),
+        ... }
+    """
+
+    def __init__(
+        self,
+        trans_expr: Callable,
+    ):
+        self.trans_expr = trans_expr
+
+    def __call__(self, data_dict: Dict[str, np.ndarray]):
+        return self.trans_expr(data_dict)

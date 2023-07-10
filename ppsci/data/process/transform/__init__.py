@@ -18,6 +18,7 @@ import copy
 from paddle import vision
 
 from ppsci.data.process.transform.preprocess import CropData
+from ppsci.data.process.transform.preprocess import FunctionalTransform
 from ppsci.data.process.transform.preprocess import Log1p
 from ppsci.data.process.transform.preprocess import Normalize
 from ppsci.data.process.transform.preprocess import Scale
@@ -26,6 +27,7 @@ from ppsci.data.process.transform.preprocess import Translate
 
 __all__ = [
     "CropData",
+    "FunctionalTransform",
     "Log1p",
     "Normalize",
     "Scale",
