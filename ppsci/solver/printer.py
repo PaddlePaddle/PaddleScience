@@ -82,7 +82,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
         )
 
 
-def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
+def log_eval_info(name, trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
     metric_msg = ", ".join(
         [
             f"{key}: {trainer.eval_output_info[key].avg:.5f}"
@@ -101,7 +101,7 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
     eta_sec = (iters_per_epoch - iter_id) * trainer.eval_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
     logger.info(
-        f"[Eval][Epoch {epoch_id}][Iter: {iter_id}/{iters_per_epoch}] "
+        f"[Eval {name}][Epoch {epoch_id}][Iter: {iter_id}/{iters_per_epoch}] "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 
@@ -112,3 +112,21 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
             step=trainer.global_step,
             writer=trainer.vdl_writer,
         )
+
+def log_eval_metric_info(metrics_dict, epoch_id):
+    """
+    Report metrics collected during eval per epoch.
+
+    
+    Args:
+        metrics_dict (dict): Dict containing metric results.
+        epoch_id (int): Epoch id.
+    
+    Returns:
+        None
+    """
+    logger.info(
+        f"[Eval Metrics Summary][Epoch {epoch_id}]")
+    for key, val in metrics_dict.items():
+        logger.info(
+            f"{key} = {val.val:.5f}")

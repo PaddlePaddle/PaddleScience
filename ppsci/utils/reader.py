@@ -140,6 +140,8 @@ def load_vtk_file(
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
     """
     input_dict = {var: [] for var in input_keys}
+    if input_keys_patch == None:
+        input_keys_patch = {}
     input_dict_patch = {var: [] for var in input_keys_patch}
     
     label_dict = {var: [] for var in label_keys}

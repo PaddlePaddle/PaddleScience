@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os 
+import csv
 import time
-from typing import TYPE_CHECKING
-
 import paddle
 from paddle import io
-
-from ppsci.solver import printer
+from typing import TYPE_CHECKING
 from ppsci.utils import misc
-
-# from ppsci.utils import profiler
+from ppsci.solver import printer
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -39,6 +37,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
         float: Target metric computed during evaluation.
     """
     target_metric: float = None
+    metric_summary_dict = misc.Prettydefaultdict(float)
     for _, _validator in solver.validator.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
@@ -107,6 +106,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
                 printer.log_eval_info(
+                    _validator.name,
                     solver,
                     batch_size,
                     epoch_id,
@@ -137,15 +137,13 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             metric[metric_name] = metric_dict
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
-                if metric_str not in solver.eval_output_info:
-                    solver.eval_output_info[metric_str] = misc.AverageMeter(
+                if metric_str not in metric_summary_dict:
+                    metric_summary_dict[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
                     )
-                solver.eval_output_info[metric_str].update(
-                    float(metric_value), num_samples
-                )
-        import os 
-        import csv
+                metric_summary_dict[metric_str].update(float(metric_value), num_samples)
+
+
         validator_dir = os.path.join(solver.output_dir, "validator")
         os.makedirs(validator_dir, exist_ok=True)
 
@@ -162,7 +160,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             while isinstance(tmp, dict):
                 tmp = next(iter(tmp.values()))
             target_metric = float(tmp)
-
+    printer.log_eval_metric_info(metric_summary_dict, epoch_id)
     return target_metric
 
 
@@ -234,6 +232,7 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
                 printer.log_eval_info(
+                    _validator.name,
                     solver,
                     batch_size,
                     epoch_id,
