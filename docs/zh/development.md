@@ -1,4 +1,4 @@
-# 贡献指南
+# 开发指南
 
 本文档介绍如何基于 PaddleScience 套件进行代码开发并最终贡献到 PaddleScience 套件中
 
@@ -7,14 +7,14 @@
 1. 将 PaddleScience fork 到自己的仓库
 2. 克隆自己仓库里的 PaddleScience 到本地，并进入该目录
 
-    ``` shell
+    ``` sh
     git clone https://github.com/your_username/PaddleScience.git
     cd PaddleScience
     ```
 
 3. 安装必要的依赖包
 
-    ``` shell
+    ``` sh
     pip install -r requirements.txt
     # 安装较慢时可以加上-i选项，提升下载速度
     # pip install -r requirements.txt -i https://pypi.douban.com/simple/
@@ -22,13 +22,13 @@
 
 4. 基于 develop 分支，新建一个新分支(假设新分支名字为dev_model)
 
-    ``` shell
+    ``` sh
     git checkout -b "dev_model"
     ```
 
 5. 添加 PaddleScience 目录到系统环境变量 PYTHONPATH 中
 
-    ``` shell
+    ``` sh
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
@@ -404,7 +404,7 @@ PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-
 
 因此在 commit 你的代码之前，请务必先执行以下命令安装 `pre-commit`。
 
-``` shell
+``` sh
 pip install pre-commit
 pre-commit install
 ```
