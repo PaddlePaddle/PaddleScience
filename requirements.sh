@@ -1,22 +1,2 @@
-export REQUIREMENTS="
-numpy>=1.20.0 \
-sympy \
-matplotlib \
-vtk \
-pyevtk \
-wget \
-scipy \
-visualdl \
-pyvista==0.37.0 \
-pyyaml \
-scikit-optimize \
-h5py \
-meshio==5.3.4 \
-tqdm \
-imageio \
-typing-extensions \
-seaborn"
-
-pip install --upgrade pip
 pip install pybind11
-pip install ${REQUIREMENTS}
+pip install -r requirements
