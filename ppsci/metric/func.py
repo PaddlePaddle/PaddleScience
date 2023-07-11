@@ -27,7 +27,7 @@ class FunctionalMetric(base.Metric):
     Examples:
         >>> import ppsci
         >>> import paddle
-        >>> def metric_expr(output_dict):
+        >>> def metric_expr(output_dict, *args):
         ...     rel_l2 = 0
         ...     for key in output_dict:
         ...         length = int(len(output_dict[key])/2)
@@ -47,4 +47,4 @@ class FunctionalMetric(base.Metric):
         self.metric_expr = metric_expr
 
     def forward(self, output_dict, label_dict=None):
-        return self.metric_expr(output_dict)
+        return self.metric_expr(output_dict, label_dict)
