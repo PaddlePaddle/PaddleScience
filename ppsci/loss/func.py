@@ -33,7 +33,7 @@ class FunctionalLoss(base.Loss):
     Examples:
         >>> import ppsci
         >>> import paddle.nn.functional as F
-        >>> def loss_expr(output_dict):
+        >>> def loss_expr(output_dict, *args):
         ...     losses = 0
         ...     for key in output_dict:
         ...         length = int(len(output_dict[key])/2)
@@ -58,4 +58,4 @@ class FunctionalLoss(base.Loss):
         self.loss_expr = loss_expr
 
     def forward(self, output_dict, label_dict=None, weight_dict=None):
-        return self.loss_expr(output_dict)
+        return self.loss_expr(output_dict, label_dict, weight_dict)
