@@ -222,8 +222,10 @@ class SqueezeData:
 
 class FunctionalTransform:
     """Functional data transform class, which allows to use custom data transform function from given transform_func for special cases.
+
     Args:
         transform_func (Callable): Function of data transform.
+
     Examples:
         >>> import ppsci
         >>> import numpy as np
