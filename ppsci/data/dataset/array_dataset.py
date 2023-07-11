@@ -51,11 +51,7 @@ class NamedArrayDataset(io.Dataset):
         self.label = label
         self.input_keys = tuple(input.keys())
         self.label_keys = tuple(label.keys())
-        self.weight = (
-            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
-            if weight is None
-            else weight
-        )
+        self.weight = {} if weight is None else weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))
 

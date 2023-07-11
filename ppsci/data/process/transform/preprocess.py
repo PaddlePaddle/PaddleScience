@@ -221,22 +221,22 @@ class SqueezeData:
 
 
 class FunctionalTransform:
-    """Functional data transform class, which allows to use custom data transform function from given trans_expr for special cases.
+    """Functional data transform class, which allows to use custom data transform function from given transform_func for special cases.
     Args:
-        trans_expr (Callable): Expression of data transform.
+        transform_func (Callable): Function of data transform.
     Examples:
         >>> import ppsci
         >>> import numpy as np
-        >>> def trans_expr(data_dict):
+        >>> def transform_func(data_dict):
         ...     rand_ratio = np.random.rand()
         ...     for key in data_dict:
-        ...         data_dict[key] = data_dict[key]*rand_ratio
+        ...         data_dict[key] = data_dict[key] * rand_ratio
         ...     return data_dict
         >>> transform_cfg = {
         ...     "transforms": (
         ...         {
         ...             "FunctionalTransform": {
-        ...                 "trans_expr": trans_expr,
+        ...                 "transform_func": transform_func,
         ...             },
         ...         },
         ...     ),
@@ -245,9 +245,9 @@ class FunctionalTransform:
 
     def __init__(
         self,
-        trans_expr: Callable,
+        transform_func: Callable,
     ):
-        self.trans_expr = trans_expr
+        self.transform_func = transform_func
 
     def __call__(self, data_dict: Dict[str, np.ndarray]):
-        return self.trans_expr(data_dict)
+        return self.transform_func(data_dict)
