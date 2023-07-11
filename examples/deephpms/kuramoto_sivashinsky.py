@@ -22,12 +22,12 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def pde_loss_func(output_dict):
+def pde_loss_func(output_dict, *args):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
     return losses
 
 
-def pde_l2_rel_func(output_dict):
+def pde_l2_rel_func(output_dict, *args):
     rel_l2 = paddle.norm(output_dict["du_t"] - output_dict["f_pde"]) / paddle.norm(
         output_dict["du_t"]
     )
@@ -35,7 +35,7 @@ def pde_l2_rel_func(output_dict):
     return metric_dict
 
 
-def boundary_loss_func(output_dict):
+def boundary_loss_func(output_dict, *args):
     u_b = output_dict["u_idn"]
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
 

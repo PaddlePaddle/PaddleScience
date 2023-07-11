@@ -237,7 +237,7 @@ def compute_real_and_imaginary_loss(
     return loss_re, loss_im
 
 
-def pde_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
+def pde_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     """Compute pde loss and lagrangian loss.
 
     Args:
@@ -271,7 +271,7 @@ def pde_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
     return losses
 
 
-def obj_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
+def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     """Compute objective loss.
 
     Args:
@@ -299,7 +299,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
     return losses
 
 
-def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
+def eval_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     """Compute objective loss for evalution.
 
     Args:
@@ -320,7 +320,9 @@ def eval_loss_fun(output_dict: Dict[str, paddle.Tensor]) -> paddle.Tensor:
     return losses
 
 
-def eval_metric_fun(output_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
+def eval_metric_fun(
+    output_dict: Dict[str, paddle.Tensor], *args
+) -> Dict[str, paddle.Tensor]:
     """Compute metric for evaluation.
 
     Args:
