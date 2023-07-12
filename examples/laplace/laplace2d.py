@@ -73,10 +73,6 @@ if __name__ == "__main__":
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, 0.0)
-        | np.isclose(x, 1.0)
-        | np.isclose(y, 0.0)
-        | np.isclose(y, 1.0),
         name="BC",
     )
     # wrap constraints together
