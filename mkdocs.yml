@@ -35,18 +35,24 @@ nav:
       - 快速开始: zh/quickstart.md
   - 经典案例:
       - PINNs:
-        - ViV: zh/examples/viv.md
-        - Darcy2D: zh/examples/darcy2d.md
-        - LDC2D_steady: zh/examples/ldc2d_steady.md
-        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
-        - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-        - Laplace2D: zh/examples/laplace2d.md
-        - hPINNs: zh/examples/hpinns.md
+        - 方程求解:
+          - Laplace2D: zh/examples/laplace2d.md
+        - 振动:
+          - ViV: zh/examples/viv.md
+        - 流体:
+          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
+          - LDC2D_steady: zh/examples/ldc2d_steady.md
+          - Darcy2D: zh/examples/darcy2d.md
+        - 光学:
+          - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
-        - FourCastNet: zh/examples/fourcastnet.md
-        - Lorenz_transform_physx: zh/examples/lorenz.md
-        - Rossler_transform_physx: zh/examples/rossler.md
-        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+        - 气象:
+          - FourCastNet: zh/examples/fourcastnet.md
+          - Lorenz_transform_physx: zh/examples/lorenz.md
+          - Rossler_transform_physx: zh/examples/rossler.md
+        - 流体:
+          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
