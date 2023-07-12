@@ -28,7 +28,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "tanh", False, False)
+    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "tanh")
 
     # set equation
     equation = {"Poisson": ppsci.equation.Poisson(2)}

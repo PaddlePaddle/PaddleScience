@@ -112,7 +112,7 @@ $$
 
 ``` py linenums="30"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:30:33
+examples/ldc/ldc2d_unsteady_Re10.py:30:31
 --8<--
 ```
 
@@ -124,9 +124,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:30:33
 
 由于 2D-LDC 使用的是 Navier-Stokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="34"
+``` py linenums="33"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:34:35
+examples/ldc/ldc2d_unsteady_Re10.py:33:34
 --8<--
 ```
 
@@ -137,9 +137,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:34:35
 本文中 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，且时间域为 16 个时刻 [0.0, 0.1, ..., 1.4, 1.5]，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
-``` py linenums="37"
+``` py linenums="36"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:37:45
+examples/ldc/ldc2d_unsteady_Re10.py:36:44
 --8<--
 ```
 
@@ -193,9 +193,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:37:45
 
 在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
 
-``` py linenums="47"
+``` py linenums="46"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:47:61
+examples/ldc/ldc2d_unsteady_Re10.py:46:60
 --8<--
 ```
 
@@ -203,7 +203,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:47:61
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="63"
+``` py linenums="62"
 # set constraint
 pde_constraint = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
@@ -251,9 +251,9 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
-``` py linenums="78"
+``` py linenums="77"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:78:113
+examples/ldc/ldc2d_unsteady_Re10.py:77:112
 --8<--
 ```
 
@@ -261,17 +261,17 @@ examples/ldc/ldc2d_unsteady_Re10.py:78:113
 
 最后我们还需要对 $t=t_0$ 时刻的矩形内部点施加 N-S 方程约束，代码如下：
 
-``` py linenums="114"
+``` py linenums="113"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:114:122
+examples/ldc/ldc2d_unsteady_Re10.py:113:121
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="123"
+``` py linenums="122"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:123:131
+examples/ldc/ldc2d_unsteady_Re10.py:122:130
 --8<--
 ```
 
@@ -279,9 +279,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:123:131
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="133"
+``` py linenums="132"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:133:140
+examples/ldc/ldc2d_unsteady_Re10.py:132:139
 --8<--
 ```
 
@@ -289,9 +289,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:133:140
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="142"
+``` py linenums="141"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:142:143
+examples/ldc/ldc2d_unsteady_Re10.py:141:142
 --8<--
 ```
 
@@ -299,9 +299,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:142:143
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="145"
+``` py linenums="144"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:145:163
+examples/ldc/ldc2d_unsteady_Re10.py:144:162
 --8<--
 ```
 
@@ -323,9 +323,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:145:163
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i,y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 16 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="165"
+``` py linenums="164"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:165:196
+examples/ldc/ldc2d_unsteady_Re10.py:164:195
 --8<--
 ```
 
@@ -333,9 +333,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:165:196
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="198"
+``` py linenums="197"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:198:
+examples/ldc/ldc2d_unsteady_Re10.py:197:
 --8<--
 ```
 
