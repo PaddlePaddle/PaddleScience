@@ -103,7 +103,7 @@ examples/laplace/laplace2d.py:61:69
 
 ``` py linenums="70"
 --8<--
-examples/laplace/laplace2d.py:70:81
+examples/laplace/laplace2d.py:70:77
 --8<--
 ```
 
@@ -133,9 +133,9 @@ examples/laplace/laplace2d.py:26:29
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="88"
+``` py linenums="84"
 --8<--
-examples/laplace/laplace2d.py:88:89
+examples/laplace/laplace2d.py:84:85
 --8<--
 ```
 
@@ -143,9 +143,9 @@ examples/laplace/laplace2d.py:88:89
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="91"
+``` py linenums="87"
 --8<--
-examples/laplace/laplace2d.py:91:106
+examples/laplace/laplace2d.py:87:102
 --8<--
 ```
 
@@ -155,9 +155,9 @@ examples/laplace/laplace2d.py:91:106
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="108"
+``` py linenums="104"
 --8<--
-examples/laplace/laplace2d.py:108:117
+examples/laplace/laplace2d.py:104:113
 --8<--
 ```
 
@@ -165,9 +165,9 @@ examples/laplace/laplace2d.py:108:117
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="119"
+``` py linenums="115"
 --8<--
-examples/laplace/laplace2d.py:119:
+examples/laplace/laplace2d.py:115:
 --8<--
 ```
 
