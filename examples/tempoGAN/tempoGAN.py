@@ -20,8 +20,6 @@ import numpy as np
 from functions import DataFuncs
 from functions import DiscFuncs
 from functions import GenFuncs
-from GAN import DiscNet
-from GAN import GenNet
 
 import ppsci
 from ppsci.utils import config
@@ -70,7 +68,7 @@ if __name__ == "__main__":
     acts = ["relu", None, None]
 
     # define Generator model
-    model_gen = GenNet(
+    model_gen = ppsci.arch.Generator(
         ("in_d_low_inp",),  # 'NCHW'
         ("out_gen",),
         in_channel,
@@ -114,7 +112,7 @@ if __name__ == "__main__":
             "out_disc_gen_out_layer4",
             "out_disc_gen_out",
         )
-        model_disc = DiscNet(
+        model_disc = ppsci.arch.Discriminator(
             ("in_d_high_disc_label", "in_d_high_disc_gen"),  # 'NCHW'
             output_keys_disc,
             in_channel,
@@ -142,7 +140,7 @@ if __name__ == "__main__":
             "out_disc_t_gen_out_layer4",
             "out_disc_t_gen_out",
         )
-        model_disc_tempo = DiscNet(
+        model_disc_tempo = ppsci.arch.Discriminator(
             ("in_d_high_disc_t_label", "in_d_high_disc_t_gen"),  # 'NCHW'
             output_keys_disc_t,
             in_channel_tempo,
@@ -163,15 +161,29 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 2
     EPOCHS = 40000 if args.epochs is None else args.epochs
     EPOCHS_GEN = EPOCHS_DISC = EPOCHS_DISC_TEMPO = 1
-    BATCH_SIZE = 8
+    BATCH_SIZE = 4
 
     # initialize Adam optimizer
-    LR = 2e-4  # will be LR * 0.05 after EPOCHS/2
-    optimizer_gen = ppsci.optimizer.Adam(LR)((model_gen,))
+    lr_scheduler_gen = ppsci.optimizer.lr_scheduler.Step(
+        epochs=EPOCHS,
+        iters_per_epoch=ITERS_PER_EPOCH,
+        learning_rate=2e-4,
+        step_size=EPOCHS // 2,
+        gamma=0.05,
+    )()
+    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
     if use_spatialdisc:
-        optimizer_disc = ppsci.optimizer.Adam(LR)((model_disc,))
+        lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
+            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05
+        )()
+        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
     if use_tempodisc:
-        optimizer_disc_tempo = ppsci.optimizer.Adam(LR)((model_disc_tempo,))
+        lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
+            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05
+        )()
+        optimizer_disc_tempo = ppsci.optimizer.Adam(lr_scheduler_disc_tempo)(
+            (model_disc_tempo,)
+        )
 
     # Generator
     # maunally build constraint(s)
@@ -187,7 +199,7 @@ if __name__ == "__main__":
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "trans_expr": data_funcs.transform,
+                            "transform_func": data_funcs.transform,
                         },
                     },
                 ),
@@ -216,7 +228,7 @@ if __name__ == "__main__":
                     "transforms": (
                         {
                             "FunctionalTransform": {
-                                "trans_expr": data_funcs.transform,
+                                "transform_func": data_funcs.transform,
                             },
                         },
                     ),
@@ -257,7 +269,7 @@ if __name__ == "__main__":
                     "transforms": (
                         {
                             "FunctionalTransform": {
-                                "trans_expr": data_funcs.transform,
+                                "transform_func": data_funcs.transform,
                             },
                         },
                     ),
@@ -300,7 +312,7 @@ if __name__ == "__main__":
                     "transforms": (
                         {
                             "FunctionalTransform": {
-                                "trans_expr": data_funcs.transform,
+                                "transform_func": data_funcs.transform,
                             },
                         },
                     ),
@@ -325,12 +337,12 @@ if __name__ == "__main__":
         constraint_gen,
         OUTPUT_DIR,
         optimizer_gen,
-        None,
+        lr_scheduler_gen,
         EPOCHS_GEN,
         ITERS_PER_EPOCH,
         eval_during_train=False,
         use_amp=use_amp,
-        amp_level="O2",
+        amp_level="O1",
     )
     if use_spatialdisc:
         solver_disc = ppsci.solver.Solver(
@@ -338,12 +350,12 @@ if __name__ == "__main__":
             constraint_disc,
             OUTPUT_DIR,
             optimizer_disc,
-            None,
+            lr_scheduler_disc,
             EPOCHS_DISC,
             ITERS_PER_EPOCH,
             eval_during_train=False,
             use_amp=use_amp,
-            amp_level="O2",
+            amp_level="O1",
         )
     if use_tempodisc:
         solver_disc_tempo = ppsci.solver.Solver(
@@ -351,30 +363,17 @@ if __name__ == "__main__":
             constraint_disc_tempo,
             OUTPUT_DIR,
             optimizer_disc_tempo,
-            None,
+            lr_scheduler_disc_tempo,
             EPOCHS_DISC_TEMPO,
             ITERS_PER_EPOCH,
             eval_during_train=False,
             use_amp=use_amp,
-            amp_level="O2",
+            amp_level="O1",
         )
 
     PRED_INTERVAL = 200
     for i in range(1, EPOCHS + 1):
-        # update learning rate
-        # cannot use ppsci.optimizer.lr_scheduler because of EPOCHS_GEN = EPOCHS_DISC = EPOCHS_DISC_TEMPO = 1
-        if i == int(EPOCHS / 2):
-            LR = LR * 0.05
-            optimizer_gen = ppsci.optimizer.Adam(LR)((model_gen,))
-            solver_gen.optimizer = optimizer_gen
-            if use_spatialdisc:
-                optimizer_disc = ppsci.optimizer.Adam(LR)((model_disc,))
-                solver_disc.optimizer = optimizer_disc
-            if use_tempodisc:
-                optimizer_disc_tempo = ppsci.optimizer.Adam(LR)((model_disc_tempo,))
-                solver_disc_tempo.optimizer = optimizer_disc_tempo
-
-        ppsci.utils.logger.info(f"\nEpoch {i}: learning rate = {LR}\n")
+        ppsci.utils.logger.info(f"\nEpoch: {i}\n")
         # plotting during training
         if i == 1 or i % PRED_INTERVAL == 0:
             if i == 1:

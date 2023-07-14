@@ -23,7 +23,7 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 
 
-class GenNet(base.Arch):
+class Generator(base.Arch):
     """Generator Net of GAN. It is a variant of ResNet.
 
     Args:
@@ -199,7 +199,7 @@ class GenNet(base.Arch):
         return y
 
 
-class DiscNet(base.Arch):
+class Discriminator(base.Arch):
     """Discriminator Net of GAN. The net is unique to this example but not open source network.
 
     Args:
