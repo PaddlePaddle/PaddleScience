@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     ITERS_PER_EPOCH = 2
-    EPOCHS = 40000 if args.epochs is None else args.epochs
+    EPOCHS = 40 if args.epochs is None else args.epochs
     EPOCHS_GEN = EPOCHS_DISC = EPOCHS_DISC_TEMPO = 1
     BATCH_SIZE = 4
 
@@ -170,16 +170,17 @@ if __name__ == "__main__":
         learning_rate=2e-4,
         step_size=EPOCHS // 2,
         gamma=0.05,
+        by_epoch=True,
     )()
     optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
     if use_spatialdisc:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
-            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05
+            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
         )()
         optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
     if use_tempodisc:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
-            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05
+            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
         )()
         optimizer_disc_tempo = ppsci.optimizer.Adam(lr_scheduler_disc_tempo)(
             (model_disc_tempo,)

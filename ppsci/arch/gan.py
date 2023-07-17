@@ -200,7 +200,7 @@ class Generator(base.Arch):
 
 
 class Discriminator(base.Arch):
-    """Discriminator Net of GAN. The net is unique to this example but not open source network.
+    """Discriminator Net of GAN. Attention, the net is unique to "tempoGAN" example but not an open source network.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
