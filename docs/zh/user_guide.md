@@ -14,7 +14,7 @@
 4. `latest.pdstates`，该文件保存了 latest 对应 epoch 的所有评估指标以及 epoch 数。
 5. `latest.pdscaler`（可选），在开启自动混合精度（AMP）功能时，该文件保存了 `GradScaler` 梯度缩放器内部的参数。
 
-因此我们只需要在 `Solver` 时指定 `pretrained_model_path` 参数为 `latest。*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
+因此我们只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest。*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
 
 ``` py hl_lines="9"
 import ppsci
@@ -25,7 +25,7 @@ import ppsci
 solver = ppsci.solver.Solver(
     ...,
     ...,
-    pretrained_model_path="/path/to/latest"
+    checkpoint_path="/path/to/latest"
 )
 ```
 
