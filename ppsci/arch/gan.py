@@ -36,6 +36,20 @@ class Generator(base.Arch):
         strides_list (List[List[int]]): 'stride' of all conv layers.
         use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
         acts (List[str]): Whether to use the activation layer after each conv layer. If so, witch activation to use.
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 1
+        >>> rb_channel0 = [2, 8, 8]
+        >>> rb_channel1 = [128, 128, 128]
+        >>> rb_channel2 = [32, 8, 8]
+        >>> rb_channel3 = [2, 1, 1]
+        >>> out_channels_list = [rb_channel0, rb_channel1, rb_channel2, rb_channel3]
+        >>> kernel_sizes_list = [[(5, 5)] * 2 + [(1, 1)]] * 4
+        >>> strides_list = [[1] * 3] * 4
+        >>> use_bns_list = [[True] * 3] * 3 + [[False] * 3]
+        >>> acts = ["relu", None, None]
+        >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_list, kernel_sizes_list, strides_list, use_bns_list, acts)
     """
 
     def __init__(
@@ -214,6 +228,19 @@ class Discriminator(base.Arch):
         strides_list (List[List[int]]): 'stride' of all conv layers.
         use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
         acts (List[str]): Whether to use the activation layer after each conv layer. If so, witch activation to use.
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 2
+        >>> in_channel_tempo = 3
+        >>> out_channels = [32, 64, 128, 256]
+        >>> fc_channel = 65536
+        >>> kernel_sizes = [(4, 4)] * 4
+        >>> strides = [2] * 3 + [1]
+        >>> use_bns = [False] + [True] * 3
+        >>> acts = ["leaky_relu"] * 4 + [None]
+        >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
+        >>> model = ppsci.arch.Discriminator(("in_1","in_2"), output_keys_disc, in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
     """
 
     def __init__(
