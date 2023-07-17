@@ -360,8 +360,8 @@ class DiscFuncs:
         return dereshape_input(input_trans, 3)
 
     def loss_func(self, output_dict, *args):
-        out_disc_label = output_dict["out_disc_label"]  # [-1]
-        out_disc_gen_out = output_dict["out_disc_gen_out"]  # [-1]
+        out_disc_label = output_dict["out_disc_label"]
+        out_disc_gen_out = output_dict["out_disc_gen_out"]
 
         label_ones = paddle.ones_like(out_disc_label)
         label_zeros = paddle.zeros_like(out_disc_gen_out)
@@ -376,8 +376,8 @@ class DiscFuncs:
         return losses
 
     def loss_func_tempo(self, output_dict, *args):
-        out_disc_label = output_dict["out_disc_t_label"]  # [-1]
-        out_disc_gen_out = output_dict["out_disc_t_gen_out"]  # [-1]
+        out_disc_label = output_dict["out_disc_t_label"]
+        out_disc_gen_out = output_dict["out_disc_t_gen_out"]
 
         label_ones = paddle.ones_like(out_disc_label)
         label_zeros = paddle.zeros_like(out_disc_gen_out)

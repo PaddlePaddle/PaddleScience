@@ -25,9 +25,9 @@ GAN 网络为无监督学习，本问题网络设计中将目标值作为一个�
 
 运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat)， 下载后分别存放在路径：
 
-``` py linenums="33"
+``` py linenums="31"
 --8<--
-examples/tempoGAN/tempoGAN.py:33:34
+examples/tempoGAN/tempoGAN.py:31:32
 --8<--
 ```
 
@@ -48,13 +48,13 @@ examples/tempoGAN/tempoGAN.py:33:34
 
 本问题中的 Generator 是一个拥有 4 层改良 Res Block 的模型，Discriminator 和 Discriminator_tempo 为同一个拥有 4 层卷积结果的模型，两者网络结构相同但输入不同。Generator、Discriminator 和 Discriminator_tempo 的网络参数也需要额外定义。
 
-具体代码请参考 [完整代码](#4) 中 GAN.py 文件。
+具体代码请参考 [完整代码](#4) 中 gan.py 文件。
 
 由于 GAN 网络中生成器和判别器的中间结果要相互调用，参与对方的 loss 计算，因此使用 Model List 实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="62"
+``` py linenums="58"
 --8<--
-examples/tempoGAN/tempoGAN.py:62:162
+examples/tempoGAN/tempoGAN.py:58:158
 --8<--
 ```
 
@@ -94,9 +94,9 @@ examples/tempoGAN/functions.py:339:339
 
 我们需要指定问题相关的参数，如数据集路径、各项 loss 的权重参数等。
 
-``` py linenums="31"
+``` py linenums="29"
 --8<--
-examples/tempoGAN/tempoGAN.py:31:60
+examples/tempoGAN/tempoGAN.py:29:56
 --8<--
 ```
 
@@ -104,19 +104,19 @@ examples/tempoGAN/tempoGAN.py:31:60
 
 同时需要指定训练轮数和学习率等超参数，注意由于 GAN 网络训练流程与一般单个模型的网络不同，`EPOCHS` 的设置也有所不同。
 
-``` py linenums="164"
+``` py linenums="160"
 --8<--
-examples/tempoGAN/tempoGAN.py:164:168
+examples/tempoGAN/tempoGAN.py:160:164
 --8<--
 ```
 
 ### 3.5 优化器构建
 
-训练使用 Adam 优化器：
+训练使用 Adam 优化器，学习率在 `Epoch` 达到一半时减小到原来的 $1/20$，因此使用 `Step` 方法作为学习率策略。如果将 `by_epoch` 设为 True，学习率将根据训练的 `Epoch` 改变，否则将根据 `Iteration` 改变。
 
-``` py linenums="170"
+``` py linenums="166"
 --8<--
-examples/tempoGAN/tempoGAN.py:170:176
+examples/tempoGAN/tempoGAN.py:166:187
 --8<--
 ```
 
@@ -124,9 +124,9 @@ examples/tempoGAN/tempoGAN.py:170:176
 
 本问题采用无监督学习的方式，虽然不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
-``` py linenums="182"
+``` py linenums="193"
 --8<--
-examples/tempoGAN/tempoGAN.py:182:196
+examples/tempoGAN/tempoGAN.py:193:207
 --8<--
 ```
 
@@ -136,9 +136,9 @@ examples/tempoGAN/tempoGAN.py:182:196
 
 下面是约束的具体内容，要注意上述提到的给定“假的”标签数据：
 
-``` py linenums="179"
+``` py linenums="190"
 --8<--
-examples/tempoGAN/tempoGAN.py:179:207
+examples/tempoGAN/tempoGAN.py:190:218
 --8<--
 ```
 
@@ -163,17 +163,17 @@ examples/tempoGAN/tempoGAN.py:179:207
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问，由于本问题设置了`use_spatialdisc` 和 `use_tempodisc`，导致 Generator 的部分约束不一定存在，因此先封装一定存在的约束到字典中，当其余约束存在时，在向字典中添加约束元素。
 
-``` py linenums="208"
+``` py linenums="219"
 --8<--
-examples/tempoGAN/tempoGAN.py:208:236
+examples/tempoGAN/tempoGAN.py:219:247
 --8<--
 ```
 
 #### 3.6.2 Discriminator 的约束
 
-``` py linenums="239"
+``` py linenums="250"
 --8<--
-examples/tempoGAN/tempoGAN.py:239:279
+examples/tempoGAN/tempoGAN.py:250:290
 --8<--
 ```
 
@@ -181,9 +181,9 @@ examples/tempoGAN/tempoGAN.py:239:279
 
 #### 3.6.3 Discriminator_tempo 的约束
 
-``` py linenums="282"
+``` py linenums="293"
 --8<--
-examples/tempoGAN/tempoGAN.py:282:322
+examples/tempoGAN/tempoGAN.py:293:333
 --8<--
 ```
 
@@ -199,9 +199,9 @@ examples/tempoGAN/functions.py:155:231
 --8<--
 ```
 
-``` py linenums="380"
+``` py linenums="378"
 --8<--
-examples/tempoGAN/tempoGAN.py:380:386
+examples/tempoGAN/tempoGAN.py:378:384
 --8<--
 ```
 
@@ -255,21 +255,21 @@ examples/tempoGAN/functions.py:395:446
 
 完成上述设置之后，首先需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="324"
+``` py linenums="335"
 --8<--
-examples/tempoGAN/tempoGAN.py:324:398
+examples/tempoGAN/tempoGAN.py:335:396
 --8<--
 ```
 
-注意 GAN 类型的网络训练方法为多个模型交替训练，与单一模型或多模型分阶段训练不同，不能简单的使用 solver.train API，具体代码请参考 [完整代码](#4) 中 tempoGAN.py 文件。
+注意 GAN 类型的网络训练方法为多个模型交替训练，与单一模型或多模型分阶段训练不同，不能简单的使用 `solver.train` API，具体代码请参考 [完整代码](#4) 中 tempoGAN.py 文件。
 
 ### 3.10 模型评估
 
 由于本问题的输出为图片，评估指标需要使用针对图片的评估指标，因此不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估，而是在训练结束后针对最后一个 `Epoch` 进行一次评估:
 
-``` py linenums="400"
+``` py linenums="398"
 --8<--
-examples/tempoGAN/tempoGAN.py:400:409
+examples/tempoGAN/tempoGAN.py:398:407
 --8<--
 ```
 
@@ -277,17 +277,11 @@ examples/tempoGAN/tempoGAN.py:400:409
 
 ## 4. 完整代码
 
-完整代码包含 PaddleScience 具体训练流程代码 tempoGAN.py、自定义网络结构代码 GAN.py 和 所有自定义函数代码 functions.py。
+完整代码包含 PaddleScience 具体训练流程代码 tempoGAN.py 和 所有自定义函数代码 functions.py，另外还向 `ppsci.arch` 添加了网络结构代码 gan.py，一并显示在下面，如果需要自定义网络结构，可以作为参考。
 
 ``` py linenums="1" title="tempoGAN.py"
 --8<--
 examples/tempoGAN/tempoGAN.py
---8<--
-```
-
-``` py linenums="1" title="GAN.py"
---8<--
-examples/tempoGAN/GAN.py
 --8<--
 ```
 
@@ -297,13 +291,19 @@ examples/tempoGAN/functions.py
 --8<--
 ```
 
+``` py linenums="1" title="gan.py"
+--8<--
+ppsci/arch/gan.py
+--8<--
+```
+
 ## 5. 结果展示
 
-使用混合精度训练后评估与目标之间的 MSE、PSNR、SSIM，评估指标的值为：
+使用混合精度训练后，在测试集上评估与目标之间的 MSE、PSNR、SSIM，评估指标的值为：
 
 | MSE | PSNR | SSIM |
 | :---: | :---: | :---: |
-| 1.9e-4 | 39.09 | 0.9955 |
+| 8.6e-5 | 43.65 | 0.9973 |
 
 视频：
 
@@ -313,12 +313,12 @@ examples/tempoGAN/functions.py
 </figure>
 
 <figure markdown>
-  ![pred-amp](../../images/tempoGAN/pred_amp.gif){ loading=lazy }
+  ![pred-amp02](../../images/tempoGAN/pred_amp02.gif){ loading=lazy }
   <figcaption>混合精度训练后推理得到的高密度流体</figcaption>
 </figure>
 
 <figure markdown>
-  ![label](../../images/tempoGAN/label.gif){ loading=lazy }
+  ![target](../../images/tempoGAN/target.gif){ loading=lazy }
   <figcaption> 目标高密度流体</figcaption>
 </figure>
 
