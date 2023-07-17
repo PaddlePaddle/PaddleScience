@@ -41,16 +41,17 @@ class CSGUnion(geometry.Geometry):
         )
         self.geom1 = geom1
         self.geom2 = geom2
-        if geom1.area is not None and geom2.area is not None:
+        self.CSG = [geom1]
+        if geom1.area is not None and geom2.area is not None: #assum no area intersection, fix while sampleing
+            self.area = geom1.area + geom2.area
             self.area = geom1.area + geom2.area
         else:
             self.area = None
 
-        if geom1.perimeter is not None and geom2.perimeter is not None:
+        if geom1.perimeter is not None and geom2.perimeter is not None: #assum no area intersection, fix while sampleing
             self.perimeter = geom1.perimeter + geom2.perimeter
         else:
             self.perimeter = None
-        self.area_array = None
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
@@ -111,9 +112,7 @@ class CSGUnion(geometry.Geometry):
             permutated_index = np.random.permutation(np.arange(len(points)))
             points = points[permutated_index]
 
-            if hasattr(self.geom1, 'area_array') and hasattr(self.geom2, 'area_array'):
-                area_array = np.concatenate((self.geom1.area_array, self.geom2.area_array))
-                self.area_array = area_array[permutated_index]
+            self.perimeter = (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
 
             if len(points) > n - _size:
                 points = points[: n - _size]
@@ -138,14 +137,9 @@ class CSGUnion(geometry.Geometry):
         return x
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        geom1 = self.geom1
-        geom2 = self.geom2
-        sdf_geom1 = geom1.sdf_func(points)
-        sdf_geom2 = geom2.sdf_func(points)
-        sdf_union = np.zeros_like(sdf_geom1)
-        for i in range(sdf_geom1.shape[0]):
-            sdf_union[i] = sdf_geom2[i] if sdf_geom1[i] > sdf_geom2[i] else sdf_geom1[i]
-        return sdf_union
+        sdf_geom1 = self.geom1.sdf_func(points)
+        sdf_geom2 = self.geom2.sdf_func(points)
+        return np.amin((sdf_geom1, sdf_geom2), axis=0)
 
 class CSGDifference(geometry.Geometry):
     """Construct an object by CSG Difference."""
@@ -228,14 +222,11 @@ class CSGDifference(geometry.Geometry):
         return x
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        geom1 = self.geom1
-        geom2 = self.geom2
-        sdf_geom1 = geom1.sdf_func(points)
-        sdf_geom2 = geom2.sdf_func(points)
-        sdf_diff = np.zeros_like(sdf_geom1)
-        for i in range(sdf_geom1.shape[0]):
-            sdf_diff[i] = sdf_geom1[i] if sdf_geom1[i] > -sdf_geom2[i] else -sdf_geom2[i]
-        return sdf_diff
+        # geom1 - geom2
+        sdf_geom1 = self.geom1.sdf_func(points)
+        sdf_geom2 = self.geom2.sdf_func(points)
+        return np.amax((sdf_geom1, -sdf_geom2), axis=0)
+
         
 
 class CSGIntersection(geometry.Geometry):

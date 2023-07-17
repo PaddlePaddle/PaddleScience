@@ -70,10 +70,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             weight_dicts.append(weight_dict)
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
-        if iter_id == 95:
-            print("break")
-        # if iter_id == 502:
-        #     print("break")
+        # if iter_id == 1001:
+            # exit()
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             # forward for every constraint, including model and equation expression
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
@@ -98,6 +96,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     total_loss = total_loss / solver.update_freq
                 loss_dict["loss"] = float(total_loss)
             # backward
+            # for k, v in loss_dict.items():
+            #     print(f"loss {k} {v}")
             if solver.use_amp:
                 total_loss_scaled = solver.scaler.scale(total_loss)
                 total_loss_scaled.backward()
@@ -106,9 +106,6 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         with open(filename, 'a') as file:
             writer = csv.writer(file)
             writer.writerow([iter_id, float(total_loss)])
-        if iter_id == 1000:
-            exit()
-            # print("break")
         # update parameters
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
             if solver.world_size > 1:

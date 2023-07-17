@@ -16,8 +16,10 @@
 Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-sym/user_guide/advanced/conjugate_heat_transfer.html#introduction
 """
 
-import os
 import ppsci
+ppsci.utils.misc.set_random_seed(42)
+
+import os
 import paddle
 import numpy as np
 from ppsci.utils import config
@@ -27,10 +29,12 @@ if __name__ == "__main__":
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
     OUTPUT_DIR = (
-        "./output_sink_0708" if not args.output_dir else args.output_dir
+        "./output_0712" if not args.output_dir else args.output_dir
     )
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     os.chdir("/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection")
+    shuffle = True
+
     # params for domain
     channel_length = (-2.5, 2.5)
     channel_width = (-0.5, 0.5)
@@ -46,20 +50,9 @@ if __name__ == "__main__":
     diffusivity = 0.01 / 5
 
     # define geometry
-    channel = ppsci.geometry.Rectangle(
+    channel = ppsci.geometry.Channel(
         (channel_length[0], channel_width[0]), (channel_length[1], channel_width[1])
     )
-
-    channel_wall_top = ppsci.geometry.Line(
-        (channel_length[0], channel_width[1]), (channel_length[1], channel_width[1]), (0,1)
-    )
-
-    channel_wall_bottom = ppsci.geometry.Line(
-        (channel_length[0], channel_width[0]), (channel_length[1], channel_width[0]), (0,1)
-    )
-
-    channel_wall = channel_wall_top + channel_wall_bottom
-
 
     heat_sink = ppsci.geometry.Rectangle(
         heat_sink_origin,
@@ -110,12 +103,11 @@ if __name__ == "__main__":
         "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
         "num_workers": 1,
     }
-
     def parabola(input, inter_1=channel_width[0], inter_2=channel_width[1], height=inlet_vel):
         x = input["y"]
         factor = (4 * height) / (-(inter_1**2) - inter_2**2 + 2 * inter_1 * inter_2)
@@ -160,7 +152,7 @@ if __name__ == "__main__":
     constraint_channel_wall = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "normal_gradient_c": lambda d: equation["GradNormal"].equations["normal_gradient_c"](d)},
         {"u": 0, "v": 0, "normal_gradient_c": 0},
-        channel_wall, #channel,
+        channel,
         {**train_dataloader_cfg, "batch_size": 2500},
         ppsci.loss.MSELoss("sum"),
         criteria=None,
@@ -186,7 +178,7 @@ if __name__ == "__main__":
             "momentum_y": "sdf"
         },
         name="interior_flow",
-        out_dir = "./data/inter_interior_flow.vtu",
+        out_dir = "./data/constraints/inter_interior_flow_pd.vtu",
         input_keys_patch=('sdf', 'sdf__x','sdf__y', 'area')
     )
 
@@ -201,7 +193,7 @@ if __name__ == "__main__":
             "advection_diffusion_c": 1.0,
         },
         name="interior_heat",
-        out_dir = "./data/inter_interior_heat.vtu",
+        out_dir = "./data/constraints/inter_interior_heat.vtu",
         input_keys_patch=('sdf', 'area')
     )
     # integral continuity
@@ -309,7 +301,7 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
     }
@@ -353,10 +345,6 @@ if __name__ == "__main__":
         'c':vtk_to_numpy(vtk_points_data.GetArray('pred_c')).reshape(n_vtp, 1),
         }
 
-    # input_modulus, label_modulus = ppsci.utils.load_vtk_file("./data/modulus/constraints/validator_modulus.vtp", input_keys=('x','y'), input_keys_patch=(), label_keys=("u", "v", "p", "c"))
-
-
-
     eval_dataloader_cfg_global= {
         "dataset": {
             "name": "InputDataset",
@@ -364,7 +352,7 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
     }
@@ -376,7 +364,7 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
     }
@@ -388,7 +376,7 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
     }
@@ -403,7 +391,7 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": True,
+            "shuffle": shuffle,
             "drop_last": True,
         },
     }
@@ -454,6 +442,7 @@ if __name__ == "__main__":
     )
 
     validator = {
+        openfoam_validator.name: openfoam_validator,
         eq_validator.name: eq_validator,
         force_validator.name: force_validator,
         temperature_validator.name: temperature_validator,
@@ -467,6 +456,7 @@ if __name__ == "__main__":
         prefix="PaddleScience")}
 
     # initialize solver
+    eval_id = 143
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -476,18 +466,23 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         save_freq=1,
-        eval_during_train=True,
+        eval_during_train=False,#True,
         log_freq=1,
         eval_freq=1,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path="/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_sink_0708/checkpoints/latest"
+        checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0712/checkpoints/latest", #TODO succecssufly load checkpoint
+        # checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0712/checkpoints/epoch_{eval_id}", #TODO succecssufly load checkpoint
+        # checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0714/checkpoints/epoch_{eval_id}", #TODO succecssufly load checkpoint
+
     )
-    solver.visualize()
-    solver.model.training = False
-    solver.eval()
-    # solver.train()
+    # solver.visualize()
+    # solver.model.training = False
+    # solver.eval_freq = eval_id
+    # solver.eval(eval_id)
+
+    solver.train()
 
 
 

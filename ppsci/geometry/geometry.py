@@ -65,6 +65,15 @@ class Geometry:
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
         pass 
 
+    def sdf_gradient(self, points, delta=(0.0001,)) -> np.ndarray:
+        delta = delta * self.ndim  
+        sdf_grad = misc.Prettydefaultdict()
+        for i, key in enumerate(self.dim_keys):
+            d = np.zeros_like(points)
+            d[:, i] += delta[i]
+            sdf_grad["sdf__" + key] = -(self.sdf_func(points + d) - self.sdf_func(points - d)) / (2 * delta[i]) #sdf -> negative inside
+        return sdf_grad
+
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
@@ -104,7 +113,8 @@ class Geometry:
         | (misc.typename(self) == "CSGDifference")):
             area = np.full_like(next(iter(ret_dict.values())), self.area / n)
             sdf = -self.sdf_func(points)
-            ret_dict.update({"sdf": sdf, "area": area})
+            sdf_grad = self.sdf_gradient(points)
+            ret_dict.update({"sdf": sdf, "area": area, **sdf_grad})
         return ret_dict
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
@@ -169,19 +179,15 @@ class Geometry:
             area_dict = misc.convert_to_dict(area[:, 1:], ["area"])
             return {**x_dict, **normal_dict, **area_dict}
         
-        if ((misc.typename(self) == "Line") 
-        | (misc.typename(self) == "CSGUnion") 
-        | (misc.typename(self) == "Rectangle")):
-            if criteria is not None and ((misc.typename(self) == "Line") or (misc.typename(self) == "Rectangle")):
+        if (self.ndim == 2):
+            if (criteria is not None) and (misc.typename(self) == "Line"):
                 area = self.approx_area(criteria)
-            elif criteria is None and self.area is None:
+                print(f"area = {area}")
+            elif criteria is None:
                 area = self.perimeter
-            elif criteria is None and self.area is not None:
-                area = self.area_array
             else:
-                area = -1 # tdb
-                print(f"misc.typename(self) == {misc.typename(self)}")
-            area_dict = {"area" : np.full_like(next(iter(x_dict.values())), area / n)} if isinstance(area, float) else {"area" : area}
+                raise NotImplementedError("self.approx_area is not implemented")
+            area_dict = {"area" : np.full_like(next(iter(x_dict.values())), area / n)}
             return {**x_dict, **normal_dict, **area_dict}
 
         return {**x_dict, **normal_dict}

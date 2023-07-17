@@ -102,17 +102,17 @@ class InteriorConstraint(base.Constraint):
             criteria = eval(criteria)
 
         # prepare input
-        # input = geom.sample_interior(
-        #     dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
-        #     random,
-        #     criteria,
-        #     evenly,
-        # )
+        input = geom.sample_interior(
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
+            random,
+            criteria,
+            evenly,
+        )
 
-        if True:
-            import ppsci
-            # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf",))
-            input, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/inter_"+name+".vtu", input_keys=('x','y'), input_keys_patch=input_keys_patch)
+        # import ppsci
+        # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf", "area", "sdf__x", "sdf__y"))
+        # if True:
+        #     input, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/inter_"+name+".vtu", input_keys=('x','y'), input_keys_patch=input_keys_patch)
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
             # input.pop("area")

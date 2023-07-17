@@ -22,7 +22,7 @@ from sympy import Symbol, sqrt, pprint, diff, simplify, Function, Min
 
 class ZeroEquation(base.PDE):
     def __init__(
-        self, nu, max_distance, rho=1, dim=3
+        self, nu, max_distance, rho=1.0, dim=3
     ):  # TODO add density into model
         # set params
         super().__init__()
@@ -73,8 +73,7 @@ class ZeroEquation(base.PDE):
                 + (u.diff(y) + v.diff(x)) ** 2
             )
 
-            # sympy_expr = nu + rho * mixing_length**2 * sqrt(G)
-            sympy_expr = mixing_length**2
+            sympy_expr = nu + rho * mixing_length**2 * sqrt(G)
             self.expr = sympy_expr
             return SympyToPaddle(sympy_expr, "nu_symbol")
 

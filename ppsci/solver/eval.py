@@ -105,14 +105,15 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             batch_size = next(iter(input_dict.values())).shape[0]
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
-                printer.log_eval_info(
-                    _validator.name,
-                    solver,
-                    batch_size,
-                    epoch_id,
-                    len(_validator.data_loader),
-                    iter_id,
-                )
+                # printer.log_eval_info(
+                #     _validator.name,
+                #     solver,
+                #     batch_size,
+                #     epoch_id,
+                #     len(_validator.data_loader),
+                #     iter_id,
+                # )
+                pass
 
             reader_tic = time.perf_counter()
             batch_tic = time.perf_counter()

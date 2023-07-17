@@ -101,24 +101,31 @@ class IntegralConstraint(base.Constraint):
 
         # prepare input
         input_list = []
-        # for i in range(
-        #     dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
-        # ):
-        #     random_trans = criteria.set_trans(i)
-        #     print(f"random_trans = {random_trans}")
-        #     input = geom.sample_boundary(
-        #         dataloader_cfg["integral_batch_size"], random, criteria
-        #     )
-        #     input["x"] = input["x"] + random_trans
-        #     import ppsci
-        #     # ppsci.visualize.save_vtu_to_mesh(f"./data/constraints/integral_continuity/integral_continuity_{i}.vtu", input, ("x","y"), ("normal_x","normal_y","area"))
-
-        #     input_list.append(input)
+        for i in range(
+            dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
+        ):
+            random_trans = criteria.set_trans(i)
+            print(f"random_trans = {random_trans}")
+            input = geom.sample_boundary(
+                dataloader_cfg["integral_batch_size"], random, criteria
+            )
+            input["x"] = input["x"] + random_trans
+            input_list.append(input)
+        # import ppsci
         # input = misc.stack_dict_list(input_list)
-        import numpy as np
-        invar_list = np.load("./data/modulus/constraints/integral_invar_list.npy",allow_pickle=True)
-        input = misc.stack_dict_list(invar_list)
-        input = {key: val.astype("float32") for key, val in input.items()}
+        # ppsci.visualize.save_vtu_to_mesh(f"./data/constraints/integral_pdsc.vtu", {key : val.ravel() for key, val in input.items()}, ("x","y"), ("normal_x","normal_y","area"))
+
+
+        # if True:
+        #     invar_list = paddle.load("./data/modulus/constraints/integral_invar_list.pdparams")
+        #     for var in invar_list:
+        #         for k, v in var.items():
+        #             var[k] = v.numpy().astype("float32")
+        #     input = misc.stack_dict_list(invar_list)
+        #     input = {key: val for key, val in input.items()}
+        #     ppsci.visualize.save_vtu_to_mesh(f"./data/constraints/integral_modulus.vtu", {key : val.ravel() for key, val in input.items()}, ("x","y"), ("normal_x","normal_y","area"))
+
+
         # shape of each input is [batch_size, integral_batch_size, ndim]
 
         # prepare label

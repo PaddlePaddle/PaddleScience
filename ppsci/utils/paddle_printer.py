@@ -45,11 +45,14 @@ def paddle_lambdify(f, r, separable=False):
     return lambdify_f
 
 def _derivative_to_str(deriv):
-    n = int(deriv.args[1][1])
-    deriv_simple = deriv.args[0].name
-    for i in range(n):
-        deriv_simple += "__"+ str(deriv.args[1][0])
-    return deriv_simple
+    m = len(deriv.args)
+    deriv_str = deriv.args[0].name
+    for i in range(1, m):
+        n = int(deriv.args[i][1])
+        denominator =  deriv.args[i][0].name
+        for i in range(n):
+            deriv_str += "__"+ denominator
+    return deriv_str
 
 
 def _subs_derivatives(expr_old):
@@ -57,10 +60,13 @@ def _subs_derivatives(expr_old):
     while True:
         try:
             deriv = expr.atoms(Derivative).pop()
+            # print(str(deriv))
             new_fn_name = _derivative_to_str(deriv)
+            # print(new_fn_name)
             expr = expr.subs(deriv, Function(new_fn_name)(*deriv.free_symbols))
         except:
             break
+    # print(str(expr))
     while True:
         try:
             fn = {
@@ -88,7 +94,8 @@ def _heaviside_paddle(x, y):
 PADDLE_SYMPY_PRINTER = {
     "abs": paddle.abs,
     "Min": _min_paddle,
-    "Heaviside": _heaviside_paddle,}
+    "Heaviside": _heaviside_paddle,
+    "sqrt": paddle.sqrt,}
 
 
 class SympyToPaddle(paddle.nn.Layer):
@@ -100,8 +107,6 @@ class SympyToPaddle(paddle.nn.Layer):
         detach_names: List[str] = [],
     ):
         super().__init__()
-        if name == 'momentum_y':
-            print("sympy-torch momentum y")
         sympy_expr = _subs_derivatives(sympy_expr_old)
         # Sort keys to guarantee ordering
         self.keys = sorted([k.name for k in sympy_expr.free_symbols])
@@ -132,15 +137,30 @@ class SympyToPaddle(paddle.nn.Layer):
                 "v__y" : jacobian(v, y),
                 "p__y" : jacobian(p, y),
                 "u__x__x" : hessian(u, x),
-                "v__x__x" : hessian(v, x),
                 "u__y__y" : hessian(u, y),
+                "v__x__x" : hessian(v, x),
                 "v__y__y" : hessian(v, y),
         }
+        sympy_to_paddle.update({
+                "u__x__y" : jacobian(sympy_to_paddle["u__x"], y),
+                "u__y__x" : jacobian(sympy_to_paddle["u__y"], x),
+                "v__x__y" : jacobian(sympy_to_paddle["v__x"], y),
+                "v__y__x" : jacobian(sympy_to_paddle["v__y"], x),
+        })
         args = [
             out[k] if k in out else sympy_to_paddle[k] for k in self.keys
         ]
+        # print(len(self.keys))
+        # print(len(args))
+        
+        # for i, x in enumerate(args):
+            # print(f"{self.keys[i]} : {x.mean().item()}")
+
+
         if not self.freeze_terms:
             output = self.paddle_expr(args)
+            # if self.name == "momentum_x":
+            #     print(f"momentum_x : {output.mean().item()}")
         else:
             output = paddle.zeros_like(out[self.keys[0]])
             for _, expr in enumerate(self.paddle_expr):
@@ -149,5 +169,4 @@ class SympyToPaddle(paddle.nn.Layer):
                     # output += expr(args).detach() #FIXME why not just output+=expr(args)
                 else:
                     output += expr(args)
-
         return output

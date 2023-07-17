@@ -19,6 +19,7 @@ from ppsci.geometry.geometry_1d import Interval
 from ppsci.geometry.geometry_2d import Disk
 from ppsci.geometry.geometry_2d import Polygon
 from ppsci.geometry.geometry_2d import Rectangle
+from ppsci.geometry.geometry_2d import Channel
 from ppsci.geometry.geometry_2d import Triangle
 from ppsci.geometry.geometry_2d import Line
 
@@ -44,6 +45,7 @@ __all__ = [
     "Mesh",
     "Polygon",
     "Rectangle",
+    "Channel",
     "Sphere",
     "TimeDomain",
     "TimeXGeometry",

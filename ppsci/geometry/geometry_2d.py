@@ -95,7 +95,6 @@ class Rectangle(geometry_nd.Hypercube):
         super().__init__(xmin, xmax)
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
-        self.area_array = None
 
 
     def uniform_boundary_points(self, n):
@@ -174,18 +173,33 @@ class Rectangle(geometry_nd.Hypercube):
             else:
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
                 num[3] += 1
-        self.area_array = np.vstack([np.full((n, 1), a / n) for n, a in zip(num,area_boundary)]) #counter clockwise pointwise area
         return np.vstack(x)
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        sdf = np.zeros_like(points[:,0])
-        center = (self.xmax + self.xmin) / 2
-        xmax_rel = self.xmax - center
-        points_rel =  points - center
-        for i, position in enumerate(points_rel):
-            distance = np.abs(position) - xmax_rel
-            sdf[i] = np.max([distance[0], distance[1], 0]) +  np.min(np.max([distance[0], distance[1]]), 0)
-        return sdf
+        """Compute signed distance field.
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape of the array is [N, 2].
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        if points.shape[1] != 2:
+            raise ValueError(
+                f"Shape of given points should be [*, 2], but got {points.shape}"
+            )
+        center = (self.xmin + self.xmax) / 2
+        dist_from_center = (
+            np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
+        )
+        return (
+            np.linalg.norm(np.maximum(dist_from_center, 0), axis=1)
+            + np.minimum(np.max(dist_from_center, axis=1), 0)
+        ).reshape(-1, 1)
 
     @staticmethod
     def is_valid(vertices):
@@ -207,6 +221,68 @@ class Rectangle(geometry_nd.Hypercube):
         points = self.random_boundary_points(approx_nr)
         criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
         return np.sum(criteria_mask) / criteria_mask.shape[0] * self.area
+
+
+class Channel(Rectangle):
+    """Class for channel geometry (no bounding curves in x-direction for sdf calculation)
+
+    Args:
+        xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
+        xmax (Tuple[float, float]): Top right corner point, [x1, y1].
+
+    Examples:
+        >>> import ppsci
+        >>> geom = ppsci.geometry.channel((0.0, 0.0), (1.0, 1.0))
+    """
+
+    def __init__(self, xmin, xmax):
+        super().__init__(xmin, xmax)
+        self.top_normal = np.array([0, 1.0], paddle.get_default_dtype()).reshape(-1, 1)
+        self.bottom_normal = np.array([0, -1.0], paddle.get_default_dtype()).reshape(-1, 1)
+
+        self.perimeter = 2 * (xmax[0] - xmin[0])
+
+    def random_boundary_points(self, n, random="pseudo"):
+        l1 = self.xmax[0] - self.xmin[0]
+        u = np.ravel(sampler.sample(n + 15, 1, random))
+        # Remove the possible points very close to the corners
+        u = u[~np.isclose(u, 0)]
+        u = u[~np.isclose(u, 1/2)]
+        u = u[~np.isclose(u, 1)]
+        u = u[0:n]
+        u *= self.perimeter
+        x = []
+        area_boundary = [l1, l1]
+        num = [0 for _ in range(len(area_boundary))]
+        for l in u:
+            if l < l1:
+                x.append([self.xmin[0] + l, self.xmin[1]])
+                num[0] += 1
+            else:
+                x.append([self.xmin[0] + l - l1, self.xmax[1]])
+                num[1] += 1
+        return np.vstack(x)
+
+    def boundary_normal(self, x):
+        on_top = np.isclose(x[:,1], self.xmax[1])
+        on_bottom = np.isclose(x[:,1], self.xmin[1])
+        return (self.top_normal * on_top + self.bottom_normal * on_bottom).T
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """
+        Calculate the signed distance (SDF) of the given points.
+
+        Args:
+            points (np.ndarray): A two-dimensional numpy array containing x and y coordinates, with a shape of (n,2).
+
+        Returns:
+            np.ndarray: A numpy array containing n distance values, where each value represents the signed distance (SDF) of the corresponding point, with a shape of (n,)
+
+        """
+        center = (self.xmax + self.xmin) / 2
+        xmax_rel = self.xmax - center
+        return (np.abs(points[:,1].reshape(-1, 1) - center[1]) - xmax_rel[1])
+
 
 
 class Triangle(geometry.Geometry):
@@ -578,8 +654,8 @@ class Line(geometry.Geometry):
     
     def boundary_normal(self, x):
         normal = np.zeros_like(x)
-        for i, x in enumerate(self.normal):
-            normal[:, i] = x
+        for i, normal_val in enumerate(self.normal):
+            normal[:, i] = normal_val
         return normal
 
     def approx_area(

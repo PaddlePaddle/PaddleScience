@@ -107,10 +107,10 @@ class BoundaryConstraint(base.Constraint):
             criteria,
             evenly,
         )
-        if True:
-            import ppsci
-            # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("normal_x","normal_y"))
-            input, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/bc_"+name+".vtu", input_keys = ('x','y'), input_keys_patch=('normal_x', 'normal_y', 'area'))
+        # import ppsci
+        # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("normal_x","normal_y", "area"))
+        # if True:
+        #     input, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/bc_"+name+".vtu", input_keys = ('x','y'), input_keys_patch=('normal_x', 'normal_y', 'area'))
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
 
