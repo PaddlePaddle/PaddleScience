@@ -24,7 +24,8 @@ from ppsci.arch import base
 
 
 class Generator(base.Arch):
-    """Generator Net of GAN. It is a variant of ResNet.
+    """Generator Net of GAN. Attention, the net using a kind of variant of ResBlock which is
+        unique to "tempoGAN" example but not an open source network.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
@@ -221,12 +222,12 @@ class Discriminator(base.Arch):
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
         in_channel (int): 'in_channels' of the first conv layer.
             Notice that it is not number of input_keys although it looks like.
-        out_channels_list (List[List[int]]): 'out_channels' of all conv layers.
+        out_channels (List[int]): 'out_channels' of all conv layers.
         fc_channel (int): 'in_features' of linear layer.
             'out_features' is set to 1 in this Net to construct a fully_connected layer.
-        kernel_sizes_list (List[List[int]]): 'kernel_size' of all conv layers.
-        strides_list (List[List[int]]): 'stride' of all conv layers.
-        use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
+        kernel_sizes (List[int]): 'kernel_size' of all conv layers.
+        strides (List[int]): 'stride' of all conv layers.
+        use_bns (List[bool]): Whether to use the batch_norm layer after each conv layer.
         acts (List[str]): Whether to use the activation layer after each conv layer. If so, witch activation to use.
 
     Examples:
@@ -377,19 +378,19 @@ class Discriminator(base.Arch):
         for k in x:
             y_list.extend(self.forward_tensor(x[k]))
 
-        y = self.split_to_dict(y_list, self.output_keys)
+        y = self._split_to_dict(y_list, self.output_keys)
 
         if self._output_transform is not None:
             y = self._output_transform(y)
 
         return y
 
-    def split_to_dict(
+    def _split_to_dict(
         self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
-            Reason for overwriting is there is no concat_to_tensor() method called in this example.
-            That is because input in this example is not in a regular format, but a format like:
+            Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
+            That is because input in "tempoGAN" example is not in a regular format, but a format like:
             {
             "input1": paddle.concat([in1, in2], axis=1),
             "input2": paddle.concat([in1, in3], axis=1),
