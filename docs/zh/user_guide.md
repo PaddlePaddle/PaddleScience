@@ -80,6 +80,44 @@ solver.eval()
 
     同样地，此处只需将路径填写到预训练权重的文件名为止即可，不需要加上其后缀，程序会根据 "/path/to/model"，自动补充所需后缀名来加载 `/path/to/model.pdparams` 文件。
 
+### 1.4 使用 WandB 记录实验
+
+[WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
+
+PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能
+
+1. 安装 wandb
+
+    ``` sh
+    pip install wandb
+    ```
+
+2. 注册 wandb 并在终端登录
+
+    ``` sh
+    # 登录 wandb 获取 API key
+    wandb login
+    # 根据 login 提示，输入 API key 并回车确认
+    ```
+
+3. 在案例中开启 wandb
+
+    ``` py hl_lines="3 4 5 6 7 8"
+    solver = ppsci.solver.Solver(
+        ...,
+        use_wandb=True,
+        wandb_config={
+            "project": "PaddleScience",
+            "name": "Laplace2D",
+            "dir": OUTPUT_DIR,
+        },
+        ...
+    )
+    solver.train()
+    ```
+
+    如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。
+
 ## 2. 进阶功能
 
 ### 2.1 分布式训练
