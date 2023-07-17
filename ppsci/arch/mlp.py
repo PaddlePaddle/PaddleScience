@@ -24,26 +24,17 @@ from ppsci.utils import initializer
 
 
 class WeightNormLinear(nn.Layer):
-    def __init__(self, in_features: int, out_features: int, bias: bool = True, weight_attr_v = None, weight_attr_g = None, bias_attr = None
-                 ) -> None:
+    def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        if  weight_attr_g is not None and weight_attr_v is not None and bias_attr is not None:
-            self.weight_v = self.create_parameter((in_features, out_features), attr=weight_attr_v)
-            self.weight_g = self.create_parameter((out_features,), attr=weight_attr_g)
-            if bias:
-                self.bias = self.create_parameter((out_features,), attr=bias_attr)
-            else:
-                self.bias = None
+        self.weight_v = self.create_parameter((in_features, out_features))
+        self.weight_g = self.create_parameter((out_features,))
+        if bias:
+            self.bias = self.create_parameter((out_features,))
         else:
-            self.weight_v = self.create_parameter((in_features, out_features))
-            self.weight_g = self.create_parameter((out_features,))
-            if bias:
-                self.bias = self.create_parameter((out_features,))
-            else:
-                self.bias = None
-            self._init_weights()
+            self.bias = None
+        self._init_weights()
 
     def _init_weights(self) -> None:
         initializer.xavier_uniform_(self.weight_v)
@@ -86,14 +77,12 @@ class MLP(base.Arch):
         skip_connection: bool = False,
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
-        weight_init_v = None,
-        weight_init_g = None,
-        bias_init = None
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.linears = []
+        self.acts = []
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -113,37 +102,23 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
-        import paddle
-
-        for i, _size in enumerate(hidden_size):
-            w_v_para = paddle.nn.initializer.Assign(weight_init_v[i].T)
-            w_g_para = paddle.nn.initializer.Assign(weight_init_g[i].T)
-
-            b_para = paddle.nn.initializer.Assign(bias_init[i])
+        for _size in hidden_size:
             self.linears.append(
-                WeightNormLinear(cur_size, _size,
-                                 weight_attr_v=paddle.ParamAttr(initializer=w_v_para),
-                                 weight_attr_g=paddle.ParamAttr(initializer=w_g_para),
-                                 bias_attr=paddle.ParamAttr(initializer=b_para))
+                WeightNormLinear(cur_size, _size)
                 if weight_norm
-                else nn.Linear(cur_size, _size,
-                               weight_attr=paddle.ParamAttr(initializer=w_v_para),
-                               bias_attr=paddle.ParamAttr(initializer=b_para),)
+                else nn.Linear(cur_size, _size)
+            )
+            # initialize activation function
+            self.acts.append(
+                act_mod.get_activation(activation)
+                if activation != "stan"
+                else act_mod.get_activation(activation)(_size)
             )
             cur_size = _size
+
         self.linears = nn.LayerList(self.linears)
-
-        w_v_para = paddle.nn.initializer.Assign(weight_init_v[num_layers].T)
-        b_para = paddle.nn.initializer.Assign(bias_init[num_layers].T)
-
-        self.last_fc = nn.Linear(cur_size, len(self.output_keys),
-                weight_attr=paddle.ParamAttr(initializer=w_v_para),
-                bias_attr=paddle.ParamAttr(initializer=b_para),)
-
-        # initialize activation function
-        self.act = nn.LayerList(
-            [act_mod.get_activation(activation) for _ in range(len(hidden_size))]
-        )
+        self.acts = nn.LayerList(self.acts)
+        self.last_fc = nn.Linear(cur_size, len(self.output_keys))
 
         self.skip_connection = skip_connection
 
@@ -158,7 +133,7 @@ class MLP(base.Arch):
                     y = y + skip
                 else:
                     skip = y
-            y = self.act[i](y)
+            y = self.acts[i](y)
 
         y = self.last_fc(y)
 

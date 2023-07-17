@@ -13,26 +13,24 @@
 # limitations under the License.s
 
 """
-Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-sym/user_guide/advanced/conjugate_heat_transfer.html#introduction
+Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-sym/user_guide/foundational/scalar_transport.html#advection-diffusion
 """
 
 import ppsci
-ppsci.utils.misc.set_random_seed(42)
-
-import os
 import paddle
 import numpy as np
 from ppsci.utils import config
 from ppsci.utils import logger
+from vtk.util.numpy_support import vtk_to_numpy
 
 if __name__ == "__main__":
+    # initialization
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
     OUTPUT_DIR = (
-        "./output_0712" if not args.output_dir else args.output_dir
+        "./output" if not args.output_dir else args.output_dir
     )
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    os.chdir("/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection")
     shuffle = True
 
     # params for domain
@@ -61,6 +59,7 @@ if __name__ == "__main__":
             heat_sink_origin[1] + heat_sink_fin_thickness,
         ),
     )
+
     for i in range(1, nr_heat_sink_fins):
         heat_sink_origin = (heat_sink_origin[0], heat_sink_origin[1] + gap)
         fin = ppsci.geometry.Rectangle(
@@ -118,8 +117,7 @@ if __name__ == "__main__":
         ppsci.loss.MSELoss("sum"),
         criteria=None,
         weight_dict={"u": 1, "v": 1, "c": 1},
-        name="inlet",
-        out_dir = "./data/constraints/bc_inlet.vtu"
+        name="inlet"
     )
     
     constraint_outlet = ppsci.constraint.BoundaryConstraint(
@@ -130,8 +128,7 @@ if __name__ == "__main__":
         ppsci.loss.MSELoss("sum"),
         criteria=None,
         weight_dict={"p": 1},
-        name="outlet",
-        out_dir = "./data/constraints/bc_outlet.vtu"
+        name="outlet"
     )
 
     constraint_hs_wall = ppsci.constraint.BoundaryConstraint(
@@ -142,8 +139,7 @@ if __name__ == "__main__":
         ppsci.loss.MSELoss("sum"),
         criteria=None,
         weight_dict={"u": 1, "v": 1, "c": 1},
-        name="hs_wall",
-        out_dir = "./data/constraints/bc_hs_wall.vtu"
+        name="hs_wall"
     )
 
     constraint_channel_wall = ppsci.constraint.BoundaryConstraint(
@@ -153,13 +149,8 @@ if __name__ == "__main__":
         {**train_dataloader_cfg, "batch_size": 2500},
         ppsci.loss.MSELoss("sum"),
         criteria=None,
-        # criteria=lambda x, y: (
-        #     ( y == channel_width[0])
-        #     | (y == channel_width[1])
-        # ),
         weight_dict={"u": 1, "v": 1, "normal_gradient_c": 1},
-        name="channel_wall",
-        out_dir = "./data/constraints/bc_channel_wall.vtu"
+        name="channel_wall"
     )
 
     constraint_flow_interior = ppsci.constraint.InteriorConstraint(
@@ -174,9 +165,7 @@ if __name__ == "__main__":
             "momentum_x": "sdf",
             "momentum_y": "sdf"
         },
-        name="interior_flow",
-        out_dir = "./data/constraints/inter_interior_flow_pd.vtu",
-        input_keys_patch=('sdf', 'sdf__x','sdf__y', 'area')
+        name="interior_flow"
     )
 
     constraint_heat_interior = ppsci.constraint.InteriorConstraint(
@@ -189,16 +178,14 @@ if __name__ == "__main__":
         weight_dict={
             "advection_diffusion_c": 1.0,
         },
-        name="interior_heat",
-        out_dir = "./data/constraints/inter_interior_heat.vtu",
-        input_keys_patch=('sdf', 'area')
+        name="interior_heat"
     )
+
     # integral continuity
     class Integral_translate():
         def __init__(self):
             self.trans = 0
             self.trans_array = 5 * np.random.random((128 * 100,)) - 2.5
-            # self.trans_array = np.linspace(-1.5,1.5, 15)
         
         def __call__(self, x, y):
             n = x.shape[0]
@@ -235,16 +222,11 @@ if __name__ == "__main__":
         integral_continuity.name: integral_continuity
     }
 
-    folder = r"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/data/modulus/net_params/"
-
-    net_params_f = paddle.load(folder + "flow_net_params.pdparams")
-    net_params_t = paddle.load(folder + "thermal_net_params.pdparams")
-
     model_flow = ppsci.arch.MLP(
-        ("x", "y"), ("u", "v", "p"), 6, 512, "silu", weight_norm=True, weight_init_v=net_params_f['w'], weight_init_g=net_params_f['w_grad'], bias_init=net_params_f['b'])
+        ("x", "y"), ("u", "v", "p"), 6, 512, "silu", weight_norm=True)
 
     model_heat = ppsci.arch.MLP(
-        ("x", "y"), ( "c"), 6, 512, "silu", weight_norm=True, weight_init_v=net_params_t['w'], weight_init_g=net_params_t['w_grad'], bias_init=net_params_t['b'])
+        ("x", "y"), ( "c"), 6, 512, "silu", weight_norm=True)
 
     model = ppsci.arch.ModelList((model_flow, model_heat))
 
@@ -315,18 +297,17 @@ if __name__ == "__main__":
         metric={"MSE": ppsci.metric.L2Rel()},
         name="openfoam_validator",
     )
-    # ppsci.visualize.save_vtu_to_mesh(out_dir, input, ("x","y"), ("sdf",))
+
     input_global, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_global.vtu", input_keys=('x','y'), input_keys_patch=("sdf","area"))
     input_global['sdf__x'] = np.zeros_like(input_global['sdf'])
     input_global['sdf__y'] = np.zeros_like(input_global['sdf'])
-
     input_force, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_force.vtu", input_keys=('x','y'), input_keys_patch=("area", "normal_x", "normal_y"))
     input_peakT, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_peakT.vtu", input_keys=('x','y'), input_keys_patch=("area", "normal_x", "normal_y"))
     
-    import vtk
-    from vtk.util.numpy_support import vtk_to_numpy
+
     vtp_file_path = "./data/modulus/validator_500000.vtp"
     def read_vtk(vtp_file_path):
+        import vtk
         vtk_reader = vtk.vtkXMLPolyDataReader()
         vtk_reader.SetFileName(vtp_file_path)
         vtk_reader.Update()
@@ -409,7 +390,6 @@ if __name__ == "__main__":
         "temperature_validator",
     )
 
-
     validator = {
         openfoam_validator.name: openfoam_validator,
         eq_validator.name: eq_validator,
@@ -424,7 +404,6 @@ if __name__ == "__main__":
         prefix="PaddleScience")}
 
     # initialize solver
-    eval_id = 143
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -434,23 +413,16 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         save_freq=1,
-        eval_during_train=False,#True,
+        eval_during_train=True,
         log_freq=1,
         eval_freq=1,
         equation=equation,
         validator=validator,
-        visualizer=visualizer,
-        checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0712/checkpoints/latest", #TODO succecssufly load checkpoint
-        # checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0712/checkpoints/epoch_{eval_id}", #TODO succecssufly load checkpoint
-        # checkpoint_path=f"/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0714/checkpoints/epoch_{eval_id}", #TODO succecssufly load checkpoint
-
+        visualizer=visualizer
     )
-    # solver.visualize()
-    # solver.model.training = False
-    # solver.eval_freq = eval_id
-    # solver.eval(eval_id)
 
     solver.train()
+    solver.visualize()
 
 
 
