@@ -65,8 +65,10 @@ class SGD:
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
@@ -122,8 +124,10 @@ class Momentum:
             no_weight_decay_name.split() if no_weight_decay_name else []
         )
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = None
         if len(self.no_weight_decay_name_list) > 0:
             params_with_decay = []
@@ -212,8 +216,10 @@ class Adam:
         self.grad_clip = grad_clip
         self.lazy_mode = lazy_mode
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
@@ -273,8 +279,10 @@ class LBFGS:
         self.history_size = history_size
         self.line_search_fn = line_search_fn
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
@@ -344,8 +352,10 @@ class RMSProp:
         self.weight_decay = weight_decay
         self.grad_clip = grad_clip
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
@@ -406,8 +416,10 @@ class AdamW:
         )
         self.one_dim_param_no_weight_decay = one_dim_param_no_weight_decay
 
-    def __call__(self, model_list: Tuple[nn.Layer, ...]):
+    def __call__(self, model_list: Union[nn.Layer, Tuple[nn.Layer, ...]]):
         # model_list is None in static graph
+        if not isinstance(model_list, (tuple, list)):
+            model_list = (model_list,)
         parameters = (
             sum([m.parameters() for m in model_list], []) if model_list else None
         )
