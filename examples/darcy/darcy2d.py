@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    OUTPUT_DIR = "./output_darcy2d_PR" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_darcy2d" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
@@ -66,6 +66,7 @@ if __name__ == "__main__":
         evenly=True,
         name="EQ",
     )
+
     bc = ppsci.constraint.BoundaryConstraint(
         {"p": lambda out: out["p"]},
         {
@@ -178,7 +179,7 @@ if __name__ == "__main__":
     solver.visualize()
 
     # finetuning pretrained model with L-BFGS
-    OUTPUT_DIR = "./output_darcy2d_PR_L-BFGS"
+    OUTPUT_DIR = "./output_darcy2d_L-BFGS"
     EPOCHS = 1000
     optimizer_lbfgs = ppsci.optimizer.LBFGS(
         1.0,
