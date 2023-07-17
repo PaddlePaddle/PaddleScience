@@ -180,6 +180,7 @@ if __name__ == "__main__":
 
     # finetuning pretrained model with L-BFGS
     OUTPUT_DIR = "./output_darcy2d_L-BFGS"
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     EPOCHS = EPOCHS // 10
     optimizer_lbfgs = ppsci.optimizer.LBFGS(1.0, max_iter=10)(model)
     solver = ppsci.solver.Solver(
