@@ -159,9 +159,9 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     ITERS_PER_EPOCH = 2
-    EPOCHS = 40 if args.epochs is None else args.epochs
+    EPOCHS = 40000 if args.epochs is None else args.epochs
     EPOCHS_GEN = EPOCHS_DISC = EPOCHS_DISC_TEMPO = 1
-    BATCH_SIZE = 4
+    BATCH_SIZE = 8
 
     # initialize Adam optimizer
     lr_scheduler_gen = ppsci.optimizer.lr_scheduler.Step(
@@ -343,7 +343,7 @@ if __name__ == "__main__":
         ITERS_PER_EPOCH,
         eval_during_train=False,
         use_amp=use_amp,
-        amp_level="O1",
+        amp_level="O2",
     )
     if use_spatialdisc:
         solver_disc = ppsci.solver.Solver(
@@ -356,7 +356,7 @@ if __name__ == "__main__":
             ITERS_PER_EPOCH,
             eval_during_train=False,
             use_amp=use_amp,
-            amp_level="O1",
+            amp_level="O2",
         )
     if use_tempodisc:
         solver_disc_tempo = ppsci.solver.Solver(
@@ -369,7 +369,7 @@ if __name__ == "__main__":
             ITERS_PER_EPOCH,
             eval_during_train=False,
             use_amp=use_amp,
-            amp_level="O1",
+            amp_level="O2",
         )
 
     PRED_INTERVAL = 200
