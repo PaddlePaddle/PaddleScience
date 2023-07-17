@@ -648,17 +648,25 @@ class CosineWarmRestarts(LRBase):
 
 
 class OneCycleLR(LRBase):
-    """Set the learning rate using a cosine annealing schedule with warm restarts.
+    """Sets the learning rate according to the one cycle learning rate scheduler.
+    The scheduler adjusts the learning rate from an initial learning rate to the maximum learning rate and then
+    from that maximum learning rate to the minimum learning rate, which is much less than the initial learning rate.
+
+    It has been proposed in [Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates](https://arxiv.org/abs/1708.07120).
+
+    Please note that the default behaviour of this scheduler follows the fastai implementation of one cycle,
+    which claims that **"unpublished work has shown even better results by using only two phases"**.
+    If you want the behaviour of this scheduler to be consistent with the paper, please set `three_phase=True`.
 
     Args:
-        epochs (int): Total epoch(s)
-        iters_per_epoch (int): Number of iterations within an epoch
-        max_learning_rate (float): The maximum learning rate. It is a python float number. Functionally, it defines the initial learning rate by ``divide_factor`` .
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        max_learning_rate (float): The maximum learning rate. It is a python float number. Functionally, it defines the initial learning rate by `divide_factor` .
         divide_factor (float, optional): Initial learning rate will be determined by initial_learning_rate = max_learning_rate / divide_factor. Defaults to 25.0.
         end_learning_rate (float, optional): The minimum learning rate during training, it should be much less than initial learning rate. Defaults to 0.0001.
         phase_pct (float): The percentage of total steps which used to increasing learning rate. Defaults to 0.3.
-        anneal_strategy (str, optional): Strategy of adjusting learning rate.'cos' for cosine annealing, 'linear' for linear annealing. Defaults to "cos".
-        three_phase (bool, optional): Whether to use three phase.
+        anneal_strategy (str, optional): Strategy of adjusting learning rate. "cos" for cosine annealing, "linear" for linear annealing. Defaults to "cos".
+        three_phase (bool, optional): Whether to use three phase. Defaults to False.
         warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
         warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
         last_epoch (int, optional): Last epoch. Defaults to -1.
