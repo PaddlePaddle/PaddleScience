@@ -180,11 +180,8 @@ if __name__ == "__main__":
 
     # finetuning pretrained model with L-BFGS
     OUTPUT_DIR = "./output_darcy2d_L-BFGS"
-    EPOCHS = 1000
-    optimizer_lbfgs = ppsci.optimizer.LBFGS(
-        1.0,
-        10,
-    )(model)
+    EPOCHS = EPOCHS // 10
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(1.0, max_iter=10)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint,
