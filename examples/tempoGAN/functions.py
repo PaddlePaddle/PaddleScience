@@ -265,7 +265,7 @@ class GenFuncs:
         d_low_inp = transform_interpolate(d_low, ratio, "nearest")
         return {"in_d_low_inp": d_low_inp}
 
-    def loss_func_gen(self, output_dict):
+    def loss_func_gen(self, output_dict, *args):
         # l1 loss
         loss_l1 = F.l1_loss(output_dict["out_gen"], output_dict["density_high"], "mean")
         losses = loss_l1 * self.weight_gl[0]
@@ -305,7 +305,7 @@ class GenFuncs:
 
         return losses
 
-    def loss_func_gen_tempo(self, output_dict):
+    def loss_func_gen_tempo(self, output_dict, *args):
         out_disc_t_gen_out = output_dict["out_disc_t_gen_out"][-1]
         label_t_ones = paddle.ones_like(out_disc_t_gen_out)
 
@@ -359,7 +359,7 @@ class DiscFuncs:
 
         return dereshape_input(input_trans, 3)
 
-    def loss_func(self, output_dict):
+    def loss_func(self, output_dict, *args):
         out_disc_label = output_dict["out_disc_label"]  # [-1]
         out_disc_gen_out = output_dict["out_disc_gen_out"]  # [-1]
 
@@ -375,7 +375,7 @@ class DiscFuncs:
         losses = loss_disc * self.weight_dld + loss_gen
         return losses
 
-    def loss_func_tempo(self, output_dict):
+    def loss_func_tempo(self, output_dict, *args):
         out_disc_label = output_dict["out_disc_t_label"]  # [-1]
         out_disc_gen_out = output_dict["out_disc_t_gen_out"]  # [-1]
 
