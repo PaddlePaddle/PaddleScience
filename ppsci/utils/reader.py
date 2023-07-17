@@ -122,29 +122,28 @@ def load_mat_file(
 def load_vtk_file(
     filename_without_timeid: str,
     input_keys: Tuple[str, ...],
-    time_step: float = None,
-    time_index: Tuple[int, ...] = (0,),
-    label_keys: Optional[Tuple[str, ...]]=(),
-    input_keys_patch = None
+    time_step: Optional[float] = None,
+    time_index: Optional[Tuple[int, ...]] = None,
+    label_keys: Optional[Tuple[str, ...]] = None,
+    input_keys_patch: Optional[Tuple[str, ...]] = None,
 ) -> Dict[str, np.ndarray]:
     """Load coordinates and attached label from the *.vtu file.
 
     Args:
         filename_without_timeid (str): File name without time id.
-        time_step (float): Physical time step.
-        time_index (Tuple[int, ...]): Physical time indexes.
         input_keys (Tuple[str, ...]): Input coordinates name keys.
+        time_step (Optional[float]): Physical time step.
+        time_index (Optional[Tuple[int, ...]]): Physical time indexes.
         label_keys (Optional[Tuple[str, ...]]): Input label name keys.
+        input_keys_patch (Optional[Tuple[str, ...]]): Input other name keys, like : sdf, area and plus.
 
     Returns:
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
     """
     input_dict = {var: [] for var in input_keys}
-    if input_keys_patch == None:
-        input_keys_patch = {}
-    input_dict_patch = {var: [] for var in input_keys_patch}
-    
-    label_dict = {var: [] for var in label_keys}
+    label_dict = {} if label_keys is None else {var: [] for var in label_keys}
+    input_dict_patch = {} if input_keys_patch is None else {var: [] for var in input_keys_patch}
+    time_index = (0,) if time_index is None else time_index
     for index in time_index:
         if 't' in input_dict:
             file = filename_without_timeid + f"{index}.vtu"
@@ -169,7 +168,6 @@ def load_vtk_file(
 
         for i, key in enumerate(label_dict):
             label_dict[key].append(np.array(mesh.point_data[key], "float32"))
-        
     for key in input_dict:
         input_dict[key] = np.concatenate(input_dict[key])
     for key in label_dict:

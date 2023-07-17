@@ -1,50 +1,67 @@
-from sympy import lambdify, Symbol, Derivative, Function, Basic, Add, Max, Min
-from typing import List, Dict
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import paddle
 import copy
+import sympy
+from sympy import lambdify, Symbol, Derivative, Function, Add
+from typing import List, Dict
+from ppsci.autodiff import hessian
+from ppsci.autodiff import jacobian
 
-def paddle_lambdify(f, r, separable=False):
-    """
-    generates a PyTorch function from a sympy equation
+from typing import List, Dict, Union
+def paddle_lambdify(
+    f: Union[sympy.core.basic.Basic, float, int, bool], 
+    r: List[str]):
+    """Generates a Paddle function from a sympy expression
 
-    Parameters
-    ----------
-    f : Sympy Exp, float, int, bool
-      the equation to convert to torch.
-      If float, int, or bool this gets converted
-      to a constant function of value `f`.
-    r : list, dict
-      A list of the arguments for `f`. If dict then
-      the keys of the dict are used.
-
-    Returns
-    -------
-    torch_f : PyTorch function
+    Args:
+        f (Tuple[sympy.core.basic.Basic, float, int, bool]): 
+            The equation to convert to torch. If float, int, or bool,
+            this gets converted to a constant function of value `f`.
+        r (List[str]): List, dict A list of the arguments for `f`. 
+        
+    Returns:
+        lambdify_f : Paddle function
     """
 
     try:
         f = float(f)
     except:
         pass
-    if isinstance(f, (float, int, bool)):  # constant function
 
+    if isinstance(f, (float, int, bool)):  # constant function
         def loop_lambda(constant):
             return lambda **x: paddle.zeros_like(next(iter(x.items()))[1]) + constant
-
         lambdify_f = loop_lambda(f)
     else:
-        vars = [k for k in r] if separable else [[k for k in r]]
-        try:  # NOTE this fixes a very odd bug in SymPy TODO add issue to SymPy
+        vars = [[k for k in r]]
+        try:  # NOTE Bug in SymPy 
             lambdify_f = lambdify(vars, f, [PADDLE_SYMPY_PRINTER])
         except:
             lambdify_f = lambdify(vars, f, [PADDLE_SYMPY_PRINTER])
     return lambdify_f
 
-def _derivative_to_str(deriv):
+def _derivative_to_str(deriv: (sympy.core.basic.Basic)) -> str:    
+    """Converts a sympy expression representing a derivative to a string for display purposes.
+
+    Args:
+        deriv (sympy.core.basic.Basic): A sympy expression representing a derivative.
+
+    Returns:
+        deriv_str (str): A string representing the derivative for display purposes.
+    """
     m = len(deriv.args)
     deriv_str = deriv.args[0].name
     for i in range(1, m):
@@ -55,18 +72,23 @@ def _derivative_to_str(deriv):
     return deriv_str
 
 
-def _subs_derivatives(expr_old):
+def _subs_derivatives(expr_old: (sympy.core.basic.Basic)) -> sympy.core.basic.Basic:
+    """Replaces derivatives in an expression with function symbols.
+
+    Args:
+        expr_old: (sympy.core.basic.Basic) The expression to be processed.
+
+    Returns:
+        (sympy.core.basic.Basic): The expression with replaced derivatives.
+    """
     expr = copy.deepcopy(expr_old)
     while True:
         try:
             deriv = expr.atoms(Derivative).pop()
-            # print(str(deriv))
             new_fn_name = _derivative_to_str(deriv)
-            # print(new_fn_name)
             expr = expr.subs(deriv, Function(new_fn_name)(*deriv.free_symbols))
         except:
             break
-    # print(str(expr))
     while True:
         try:
             fn = {
@@ -99,30 +121,29 @@ PADDLE_SYMPY_PRINTER = {
 
 
 class SympyToPaddle(paddle.nn.Layer):
+    """Initialize the object to convert sympy expression to paddle expression.
+
+    Args:
+        sympy_expr_old (sympy.core.basic.Basic): The sympy expression to be converted.
+        name (str): The name of the expression.
+        detach_names (List[str], optional): The list of variable names that should be detached 
+                                            from the expression and computed separately. The default is an empty list.
+
+    Examples:
+        >>> import ppsci
+        >>> SympyToPaddle(sympy_expr, "nu_symbol")
+    """
     def __init__(
         self,
-        sympy_expr_old,
+        sympy_expr_old: sympy.core.basic.Basic,
         name: str,
-        freeze_terms: List[int] = [],
         detach_names: List[str] = [],
     ):
         super().__init__()
         sympy_expr = _subs_derivatives(sympy_expr_old)
         # Sort keys to guarantee ordering
         self.keys = sorted([k.name for k in sympy_expr.free_symbols])
-        self.freeze_terms = freeze_terms
-        if not self.freeze_terms:
-            self.paddle_expr = paddle_lambdify(sympy_expr, self.keys)
-        else:
-            assert all(
-                x < len(Add.make_args(sympy_expr)) for x in freeze_terms
-            ), "The freeze term index cannot be larger than the total terms in the expression"
-            self.paddle_expr = []
-            for i in range(len(Add.make_args(sympy_expr))):
-                self.paddle_expr.append(
-                    paddle_lambdify(Add.make_args(sympy_expr)[i], self.keys)
-                )
-            self.freeze_list = list(self.paddle_expr[i] for i in freeze_terms)
+        self.paddle_expr = paddle_lambdify(sympy_expr, self.keys)
         self.name = name
         self.detach_names = detach_names
 
@@ -150,23 +171,5 @@ class SympyToPaddle(paddle.nn.Layer):
         args = [
             out[k] if k in out else sympy_to_paddle[k] for k in self.keys
         ]
-        # print(len(self.keys))
-        # print(len(args))
-        
-        # for i, x in enumerate(args):
-            # print(f"{self.keys[i]} : {x.mean().item()}")
-
-
-        if not self.freeze_terms:
-            output = self.paddle_expr(args)
-            # if self.name == "momentum_x":
-            #     print(f"momentum_x : {output.mean().item()}")
-        else:
-            output = paddle.zeros_like(out[self.keys[0]])
-            for _, expr in enumerate(self.paddle_expr):
-                if expr in self.freeze_list:
-                    pass
-                    # output += expr(args).detach() #FIXME why not just output+=expr(args)
-                else:
-                    output += expr(args)
+        output = self.paddle_expr(args)
         return output

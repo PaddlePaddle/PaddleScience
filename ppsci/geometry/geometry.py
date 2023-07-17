@@ -21,8 +21,10 @@ from typing import Tuple
 
 import numpy as np
 import paddle
+
 from ppsci.utils import logger
 from ppsci.utils import misc
+
 import numpy as np
 
 class Geometry:
@@ -78,7 +80,6 @@ class Geometry:
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
-        
         while _size < n:
             if evenly:
                 points = self.uniform_points(n)
@@ -182,7 +183,6 @@ class Geometry:
         if (self.ndim == 2):
             if (criteria is not None) and (misc.typename(self) == "Line"):
                 area = self.approx_area(criteria)
-                print(f"area = {area}")
             elif criteria is None:
                 area = self.perimeter
             else:

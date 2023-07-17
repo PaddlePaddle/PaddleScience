@@ -35,11 +35,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         log_freq (int): Log training information every `log_freq` steps.
     """
     batch_tic = time.perf_counter()
-    import csv
-    filename = solver.output_dir + r"/loss.csv"
-    with open(filename, 'w') as file:
-        writer = csv.writer(file)
-        writer.writerow(["epoch", "loss"])
+
     for iter_id in range(1, solver.iters_per_epoch + 1):
         total_loss = 0
         loss_dict = misc.Prettydefaultdict(float)
@@ -70,8 +66,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             weight_dicts.append(weight_dict)
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
-        # if iter_id == 1001:
-            # exit()
+
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
             # forward for every constraint, including model and equation expression
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
@@ -95,17 +90,14 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 if solver.update_freq > 1:
                     total_loss = total_loss / solver.update_freq
                 loss_dict["loss"] = float(total_loss)
+
             # backward
-            # for k, v in loss_dict.items():
-            #     print(f"loss {k} {v}")
             if solver.use_amp:
                 total_loss_scaled = solver.scaler.scale(total_loss)
                 total_loss_scaled.backward()
             else:
                 total_loss.backward()
-        with open(filename, 'a') as file:
-            writer = csv.writer(file)
-            writer.writerow([iter_id, float(total_loss)])
+
         # update parameters
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
             if solver.world_size > 1:

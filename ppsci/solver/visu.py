@@ -31,7 +31,7 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
         solver (solver.Solver): Main Solver.
         epoch_id (int): Epoch id.
     """
-    for name, _visualizer in solver.visualizer.items():
+    for _, _visualizer in solver.visualizer.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
 
@@ -79,20 +79,14 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
         for key in all_input:
             all_input[key] = paddle.concat(all_input[key])
         for key in all_output:
-            if key.split("_")[-1] == "scalar":
-                metric[key] = sum(all_output[key])
-            else:
-                all_output[key] = paddle.concat(all_output[key])
-        for key in metric:
-            all_output.pop(key)
+            all_output[key] = paddle.concat(all_output[key])
         
 
 
         # save visualization
         if solver.rank == 0:
             visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-            os.makedirs(visual_dir, exist_ok=True)
-                        
+            os.makedirs(visual_dir, exist_ok=True)        
             _visualizer.save(
                 osp.join(visual_dir, _visualizer.prefix), {**all_input, **all_output}
             )

@@ -208,7 +208,7 @@ class Solver:
             for metric in itertools.chain(
                 *[_v.metric.values() for _v in self.validator.values()]
             ):
-                if misc.typename(metric) == 'MSE':
+                if hasattr(metric, "keep_batch"):
                     if metric.keep_batch ^ compute_metric_by_batch:
                         raise ValueError(
                             f"{misc.typename(metric)}.keep_batch should be "

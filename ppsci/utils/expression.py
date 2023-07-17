@@ -79,8 +79,6 @@ class ExpressionSolver(nn.Layer):
 
             # equation forward
             for name, expr in expr_dict.items():
-                if name not in label_dicts[i]:
-                    continue
                 if callable(expr):
                     output_dict[name] = expr({**output_dict, **input_dicts[i]})
                 else:
@@ -137,8 +135,6 @@ class ExpressionSolver(nn.Layer):
 
         # equation forward
         for name, expr in expr_dict.items():
-            if len(label_dict) > 0 and name not in label_dict:
-                continue
             if callable(expr):
                 output_dict[name] = expr({**output_dict, **input_dict})
             else:
@@ -152,7 +148,8 @@ class ExpressionSolver(nn.Layer):
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_loss = None if validator.loss is None else validator.loss(output_dict,label_dict,weight_dict)
+        validator_loss = None if not validator.loss else validator.loss(
+            output_dict,label_dict,weight_dict)
 
         return output_dict, validator_loss
 

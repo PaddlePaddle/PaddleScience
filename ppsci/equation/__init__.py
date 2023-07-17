@@ -25,7 +25,6 @@ from ppsci.equation.pde import Vibration
 from ppsci.equation.pde import ZeroEquation
 from ppsci.equation.pde import GradNormal
 from ppsci.equation.pde import AdvectionDiffusion
-
 from ppsci.utils import logger
 from ppsci.utils import misc
 

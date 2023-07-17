@@ -70,35 +70,6 @@ class NamedArrayDataset(io.Dataset):
         return self._len
 
 
-class InputDataset(io.Dataset):
-    """Class for Input Dataset.
-
-    Args:
-        input (Dict[str, np.ndarray]): Input dict.
-
-    Examples:
-        >>> import ppsci
-        >>> input = {"x": np.random.randn(100, 1)}
-        >>> dataset = ppsci.data.dataset.InputDataset(input)
-    """
-
-    def __init__(
-        self,
-        input: Dict[str, np.ndarray],
-    ):
-        super().__init__()
-        self.input = input
-        self.input_keys = tuple(input.keys())
-        self._len = len(next(iter(input.values())))
-
-    def __getitem__(self, idx):
-        input_item = {key: value[idx] for key, value in self.input.items()}
-        return (input_item, {}, {})
-
-    def __len__(self):
-        return self._len
-
-
 class IterableNamedArrayDataset(io.IterableDataset):
     """IterableNamedArrayDataset for full-data loading.
 

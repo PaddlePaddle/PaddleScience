@@ -86,15 +86,12 @@ if __name__ == "__main__":
         (1,0)
     )
 
-    zero_eq =  ppsci.equation.ZeroEquation(0.01, (channel_width[1] - channel_width[0]) / 2)
-
-    equation = {
-        "ZeroEquation": zero_eq,
-        "NavierStokes": ppsci.equation.NavierStokes(zero_eq.expr, 1.0, 2, False),
-        "AdvectionDiffusion": ppsci.equation.AdvectionDiffusion(temperature="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False),
-        "GradNormal": ppsci.equation.GradNormal("c", dim=2, time=False),
-        "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v"))
-        }
+    equation = ppsci.utils.misc.Prettydefaultdict()
+    equation["ZeroEquation"] = ppsci.equation.ZeroEquation(0.01, (channel_width[1] - channel_width[0]) / 2)
+    equation["NavierStokes"] = ppsci.equation.NavierStokes(equation["ZeroEquation"].expr, 1.0, 2, False)
+    equation["AdvectionDiffusion"] = ppsci.equation.AdvectionDiffusion(temperature="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False)
+    equation["GradNormal"] = ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
+    equation["NormalDotVec"] = ppsci.equation.NormalDotVec(("u", "v"))
 
     ITERS_PER_EPOCH = 1000
 
@@ -328,82 +325,56 @@ if __name__ == "__main__":
     
     import vtk
     from vtk.util.numpy_support import vtk_to_numpy
-    vtp_file_path = "./data/modulus/constraints/validator_modulus.vtp"
-    vtk_reader = vtk.vtkXMLPolyDataReader()
-    vtk_reader.SetFileName(vtp_file_path)
-    vtk_reader.Update()
-    vtk_poly_data = vtk_reader.GetOutput()
-    vtk_coord = vtk_poly_data.GetPoints()
-    vtk_array = vtk_coord.GetData()
-    point_coordinates = vtk_to_numpy(vtk_array)
-    vtk_points_data = vtk_poly_data.GetPointData()
-    n_vtp = point_coordinates.shape[0]
+    vtp_file_path = "./data/modulus/validator_500000.vtp"
+    def read_vtk(vtp_file_path):
+        vtk_reader = vtk.vtkXMLPolyDataReader()
+        vtk_reader.SetFileName(vtp_file_path)
+        vtk_reader.Update()
+        vtk_poly_data = vtk_reader.GetOutput()
+        vtk_coord = vtk_poly_data.GetPoints()
+        vtk_array = vtk_coord.GetData()
+        point_coordinates = vtk_to_numpy(vtk_array)
+        vtk_points_data = vtk_poly_data.GetPointData()
+        n_vtp = point_coordinates.shape[0]
+        return point_coordinates, vtk_points_data, n_vtp
+    
+    _,vtk_points_data,n_vtp = read_vtk(vtp_file_path)
     label_modulus = {
         'u':vtk_to_numpy(vtk_points_data.GetArray('pred_u')).reshape(n_vtp, 1),
         'v':vtk_to_numpy(vtk_points_data.GetArray('pred_v')).reshape(n_vtp, 1),
         'p':vtk_to_numpy(vtk_points_data.GetArray('pred_p')).reshape(n_vtp, 1),
         'c':vtk_to_numpy(vtk_points_data.GetArray('pred_c')).reshape(n_vtp, 1),
         }
+    mse_sum_fun = ppsci.metric.L2Rel()
+    label_modulus = {key:paddle.to_tensor(val) for key,val in label_modulus.items()}
+    openfoam_outvar_numpy = {key:paddle.to_tensor(val) for key,val in openfoam_outvar_numpy.items()}
+    mse_modulus = mse_sum_fun(label_modulus, openfoam_outvar_numpy)
+    print(mse_modulus)
 
-    eval_dataloader_cfg_global= {
-        "dataset": {
-            "name": "InputDataset",
-            "input": input_global #geo.sample_interior(100),
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
-        },
-    }
-
-    eval_dataloader_cfg_force = {
-        "dataset": {
-            "name": "InputDataset",
-            "input": input_force#heat_sink.sample_boundary(100),
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
-        },
-    }
-
-    eval_dataloader_cfg_peakT = {
-        "dataset": {
-            "name": "InputDataset",
-            "input": input_peakT#heat_sink.sample_boundary(100),
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
-        },
-    }
-
-    eval_dataloader_cfg_modulus= {
+    eval_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
-            "input": openfoam_invar_numpy, #geo.sample_interior(100),
-            "label": label_modulus,
-            "weight": {k: np.ones_like(v) for k, v in label_modulus.items()},
-
+            "label":{"dummy" : np.zeros(100, paddle.get_default_dtype())},
+            "weight":{"dummy" : np.zeros(100, paddle.get_default_dtype())}
         },
         "sampler": {
             "name": "BatchSampler",
             "shuffle": shuffle,
             "drop_last": True,
         },
+        "batch_size": 100
     }
 
+    eval_cfg["dataset"]["input"] = input_global
     eq_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg_global, "batch_size": 100},
-        output_expr={
-            "continuity":equation["NavierStokes"].equations["continuity"],
+        eval_cfg,
+        None,
+        {
+            "continuity": equation["NavierStokes"].equations["continuity"],
             "momentum_x": equation["NavierStokes"].equations["momentum_x"],
             "momentum_y": equation["NavierStokes"].equations["momentum_y"]
         },
-        metric={
+        {
             "global_monitor":lambda var, _: 
             {
                 "mass_imbalance":
@@ -412,13 +383,15 @@ if __name__ == "__main__":
                 paddle.sum(var["area"] * (paddle.abs(var["momentum_x"]) + paddle.abs(var["momentum_y"])))
             }
         },
-        name="eq_validator",
+        "eq_validator",
     )
 
+    eval_cfg["dataset"]["input"] = input_force
     force_validator = ppsci.validate.SupervisedValidator(
-        dataloader_cfg={**eval_dataloader_cfg_force, "batch_size": 100},
-        output_expr={"u": lambda out: out["u"]},
-        metric={
+        eval_cfg,
+        None,
+        {"u": lambda out: out["u"]},
+        {
             "heat_sink_force":lambda var, _: {
                 "force_x": paddle.sum(var["normal_x"] * var["area"] * var["p"]),
                 "force_y": paddle.sum(var["normal_y"] * var["area"] * var["p"])
@@ -427,26 +400,21 @@ if __name__ == "__main__":
         name="force_validator",
     )
 
+    eval_cfg["dataset"]["input"] = input_peakT
     temperature_validator = ppsci.validate.SupervisedValidator(
-        dataloader_cfg={**eval_dataloader_cfg_peakT, "batch_size": 100},
-        output_expr={"u": lambda out: out["u"]},
-        metric={"peak_T": lambda var, _:{"peak_T":paddle.max(var["c"])}},
-        name="temperature_validator",
+        eval_cfg,
+        None,
+        {"u": lambda out: out["u"]},
+        {"peak_T": lambda var, _:{"peak_T":paddle.max(var["c"])}},
+        "temperature_validator",
     )
 
-    modulus_validator = ppsci.validate.SupervisedValidator(
-        dataloader_cfg={**eval_dataloader_cfg_modulus, "batch_size": 100},
-        output_expr={"u": lambda out: out["u"]},
-        metric={"MSE": ppsci.metric.MSE()},
-        name="modulus_validator",
-    )
 
     validator = {
         openfoam_validator.name: openfoam_validator,
         eq_validator.name: eq_validator,
         force_validator.name: force_validator,
-        temperature_validator.name: temperature_validator,
-        modulus_validator.name: modulus_validator
+        temperature_validator.name: temperature_validator
     }
 
     visualizer = {"visualizer":ppsci.visualize.VisualizerVtu(

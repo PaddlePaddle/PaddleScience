@@ -21,9 +21,7 @@ import paddle
 from sympy import Symbol, sqrt, pprint, diff, simplify, Function, Min
 
 class ZeroEquation(base.PDE):
-    def __init__(
-        self, nu, max_distance, rho=1.0, dim=3
-    ):  # TODO add density into model
+    def __init__(self, nu, max_distance, rho=1.0, dim=3):
         # set params
         super().__init__()
         self.dim = dim
@@ -50,7 +48,6 @@ class ZeroEquation(base.PDE):
                 + (u.diff(y) + v.diff(x)) ** 2
             )
             return nu + rho * mixing_length**2 * paddle.sqrt(G)
-
         # self.add_equation("nu", nu_equation)
 
         def nu_symbol():

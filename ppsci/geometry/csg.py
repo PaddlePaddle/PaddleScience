@@ -41,17 +41,8 @@ class CSGUnion(geometry.Geometry):
         )
         self.geom1 = geom1
         self.geom2 = geom2
-        self.CSG = [geom1]
-        if geom1.area is not None and geom2.area is not None: #assum no area intersection, fix while sampleing
-            self.area = geom1.area + geom2.area
-            self.area = geom1.area + geom2.area
-        else:
-            self.area = None
-
-        if geom1.perimeter is not None and geom2.perimeter is not None: #assum no area intersection, fix while sampleing
-            self.perimeter = geom1.perimeter + geom2.perimeter
-        else:
-            self.perimeter = None
+        self.area = geom1.area + geom2.area #assum no area intersection, fix while sampling
+        self.perimeter = geom1.perimeter + geom2.perimeter #assum no area intersection, fix while sampling
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
@@ -93,11 +84,8 @@ class CSGUnion(geometry.Geometry):
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
-            if self.perimeter is not None:
-                n1 = int(self.geom1.perimeter / self.perimeter * n)
-                n2 = n - n1
-            else:
-                n1, n2 = n, n
+            n1 = int(self.geom1.perimeter / self.perimeter * n)
+            n2 = n - n1
             geom1_boundary_points = self.geom1.random_boundary_points(n1, random=random)
             geom1_boundary_points = geom1_boundary_points[
                 ~self.geom2.is_inside(geom1_boundary_points)
@@ -109,8 +97,7 @@ class CSGUnion(geometry.Geometry):
             ]
 
             points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
-            permutated_index = np.random.permutation(np.arange(len(points)))
-            points = points[permutated_index]
+            points = np.random.permutation(points)
 
             self.perimeter = (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
 
@@ -153,7 +140,7 @@ class CSGDifference(geometry.Geometry):
         super().__init__(geom1.ndim, geom1.bbox, geom1.diam)
         self.geom1 = geom1
         self.geom2 = geom2
-        self.area = geom1.area - geom2.area
+        self.area = geom1.area - geom2.area #assum full area intersection, fix while sampling
 
     def is_inside(self, x):
         return np.logical_and(self.geom1.is_inside(x), ~self.geom2.is_inside(x))

@@ -105,14 +105,14 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             batch_size = next(iter(input_dict.values())).shape[0]
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
-                # printer.log_eval_info(
-                #     _validator.name,
-                #     solver,
-                #     batch_size,
-                #     epoch_id,
-                #     len(_validator.data_loader),
-                #     iter_id,
-                # )
+                printer.log_eval_info(
+                    _validator.name,
+                    solver,
+                    batch_size,
+                    epoch_id,
+                    len(_validator.data_loader),
+                    iter_id,
+                )
                 pass
 
             reader_tic = time.perf_counter()
@@ -144,17 +144,19 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     )
                 metric_summary_dict[metric_str].update(float(metric_value), num_samples)
 
+        def write_csv(solver, csv_name, epoch_id, name, data):
+            validator_dir = os.path.join(solver.output_dir, csv_name)
+            os.makedirs(validator_dir, exist_ok=True)
+            if epoch_id == solver.eval_freq:
+                with open(validator_dir + '/' + name + '.csv', 'w', encoding='utf-8', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(["epoch id"] + [key for key in data.keys()])
+            with open(validator_dir + '/' + name + '.csv', 'a', encoding='utf-8', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([epoch_id] + [val.item() for val in data.values()])
+        
+        write_csv(solver, "validator", epoch_id, _validator.name, metric_dict)
 
-        validator_dir = os.path.join(solver.output_dir, "validator")
-        os.makedirs(validator_dir, exist_ok=True)
-
-        if epoch_id == solver.eval_freq:
-            with open(validator_dir + '/' + _validator.name + '.csv', 'w', encoding='utf-8', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow([key for key in metric_dict.keys()])
-        with open(validator_dir + '/' + _validator.name + '.csv', 'a', encoding='utf-8', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow([val.item() for val in metric_dict.values()])
         # use the first metric for return value
         if target_metric is None:
             tmp = metric

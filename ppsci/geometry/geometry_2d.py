@@ -96,7 +96,6 @@ class Rectangle(geometry_nd.Hypercube):
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
 
-
     def uniform_boundary_points(self, n):
         nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
         bottom = np.hstack(
@@ -156,23 +155,15 @@ class Rectangle(geometry_nd.Hypercube):
 
         u *= self.perimeter
         x = []
-        area_boundary = [l1, l2-l1, l1, l2-l1]
-        num = [0 for _ in range(len(area_boundary))]
         for l in u:
             if l < l1:
                 x.append([self.xmin[0] + l, self.xmin[1]])
-                num[0] += 1
             elif l < l2:
                 x.append([self.xmax[0], self.xmin[1] + (l - l1)])
-                num[1] += 1
-
             elif l < l3:
                 x.append([self.xmax[0] - (l - l2), self.xmax[1]])
-                num[2] += 1
-
             else:
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
-                num[3] += 1
         return np.vstack(x)
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
@@ -239,7 +230,6 @@ class Channel(Rectangle):
         super().__init__(xmin, xmax)
         self.top_normal = np.array([0, 1.0], paddle.get_default_dtype()).reshape(-1, 1)
         self.bottom_normal = np.array([0, -1.0], paddle.get_default_dtype()).reshape(-1, 1)
-
         self.perimeter = 2 * (xmax[0] - xmin[0])
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -252,15 +242,11 @@ class Channel(Rectangle):
         u = u[0:n]
         u *= self.perimeter
         x = []
-        area_boundary = [l1, l1]
-        num = [0 for _ in range(len(area_boundary))]
         for l in u:
             if l < l1:
                 x.append([self.xmin[0] + l, self.xmin[1]])
-                num[0] += 1
             else:
                 x.append([self.xmin[0] + l - l1, self.xmax[1]])
-                num[1] += 1
         return np.vstack(x)
 
     def boundary_normal(self, x):
@@ -615,9 +601,9 @@ class Line(geometry.Geometry):
     def __init__(self, x_min, x_max, normal):
         x_min = np.array(x_min, dtype=paddle.get_default_dtype())
         x_max = np.array(x_max, dtype=paddle.get_default_dtype())
+        super().__init__(2, (x_min), np.linalg.norm(x_max - x_min))
         self.normal = normal
         self.dim = x_min.shape[0]
-        super().__init__(2, (x_min), np.linalg.norm(x_max - x_min))
         self.x_min = x_min
         self.x_max = x_max
         self.area = None

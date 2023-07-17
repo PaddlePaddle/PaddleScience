@@ -43,7 +43,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
 
     metric_msg = ", ".join(
         [
-            f"{key}: {trainer.train_output_info[key].val:.5f}"
+            f"{key}: {trainer.train_output_info[key].avg:.5f}"
             for key in trainer.train_output_info
         ]
     )
@@ -114,10 +114,8 @@ def log_eval_info(name, trainer, batch_size, epoch_id, iters_per_epoch, iter_id)
         )
 
 def log_eval_metric_info(metrics_dict, epoch_id):
-    """
-    Report metrics collected during eval per epoch.
+    """Report metrics collected during eval per epoch.
 
-    
     Args:
         metrics_dict (dict): Dict containing metric results.
         epoch_id (int): Epoch id.

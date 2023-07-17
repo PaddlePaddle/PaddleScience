@@ -17,9 +17,9 @@ from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 class GradNormal(base.PDE):
-    def __init__(self, T, dim=3, time=True):
+    def __init__(self, grad_var, dim=3, time=True):
         super().__init__()
-        self.T = T
+        self.T = grad_var
         self.dim = dim
         self.time = time
 

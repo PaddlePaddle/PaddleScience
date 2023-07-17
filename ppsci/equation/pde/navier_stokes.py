@@ -20,7 +20,7 @@ from ppsci.utils.paddle_printer import SympyToPaddle
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
-from sympy import lambdify, Symbol, Derivative, Function, Basic, Add, Max, Min
+from sympy import Symbol, Function
 
 
 class NavierStokes(base.PDE):

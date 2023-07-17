@@ -18,8 +18,25 @@ from ppsci.equation.pde import base
 
 
 class AdvectionDiffusion(base.PDE):
+    r"""Class for Advection-Diffusion equation.
+
+    Args:
+        temperature (str): The temperature variable name used in the equation. Defaults to "T".
+        diffusivity (str): The diffusivity coefficient name used in the equation. Defaults to "D".
+        source_term (float): The source term of the equation. Defaults to 0.
+        rho (str): The density variable name used in the equation. Defaults to "rho".
+        dim (int): The dimension of the equation. Defaults to 3.
+        time (bool): Whether or not to include time as a variable. Defaults to False.
+        mixed_form (bool): Whether or not to use mixed partial derivatives in the diffusion term. Defaults to False.
+        couple_method (str): The method used to couple 'heat_only', 'momentum_only', or 'heat_and_momentum'. Defaults to 'heat_only'.
+
+    Examples:
+        >>> import ppsci
+        >>> pde = ppsci.equation.(temperature="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False)
+    """
     def __init__(
-        self, temperature="T", diffusivity="D", source_term=0, rho="rho", dim=3, time=False, mixed_form=False, couple_method='heat_only'
+        self, temperature="c", diffusivity="D", source_term=0, rho="rho", dim=3, time=False,
+        mixed_form=False, couple_method='heat_only'
     ):
         super().__init__()
         # set params
@@ -35,7 +52,7 @@ class AdvectionDiffusion(base.PDE):
             if couple_method == 'heat_only':
                 out["u"], out["v"] = out["u"].detach(), out["v"].detach()
             u, v = out["u"], out["v"]
-            T = out["c"]
+            T = out[self.T]
             D = self.diffusivity
             Q = self.source_term
 
