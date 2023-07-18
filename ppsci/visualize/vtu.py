@@ -111,7 +111,7 @@ def save_vtu_from_dict(
     if len(coord_keys) not in [2, 3, 4]:
         raise ValueError(f"ndim of coord ({len(coord_keys)}) should be 2, 3 or 4")
 
-    coord = [data_dict[k] for k in coord_keys if k != "t"]
+    coord = [data_dict[k] for k in coord_keys if k not in ("t", "sdf")]
     value = [data_dict[k] for k in value_keys] if value_keys else None
 
     coord = np.concatenate(coord, axis=1)
