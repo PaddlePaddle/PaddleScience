@@ -15,12 +15,12 @@
 import paddle
 import copy
 import sympy
-from sympy import lambdify, Symbol, Derivative, Function, Add
+from sympy import lambdify, Symbol, Derivative, Function
 from typing import List, Dict
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-
 from typing import List, Dict, Union
+
 def paddle_lambdify(
     f: Union[sympy.core.basic.Basic, float, int, bool], 
     r: List[str]):
@@ -71,7 +71,6 @@ def _derivative_to_str(deriv: (sympy.core.basic.Basic)) -> str:
             deriv_str += "__"+ denominator
     return deriv_str
 
-
 def _subs_derivatives(expr_old: (sympy.core.basic.Basic)) -> sympy.core.basic.Basic:
     """Replaces derivatives in an expression with function symbols.
 
@@ -100,18 +99,13 @@ def _subs_derivatives(expr_old: (sympy.core.basic.Basic)) -> sympy.core.basic.Ba
             break
     return expr
 
-
 def _min_paddle(x, y):
     tensor = x if isinstance(x, paddle.Tensor) else y
     scalar = x if isinstance(x, (int, float)) else y
-    return paddle.clip(tensor, max = scalar)
-
+    return paddle.clip(tensor, max=scalar)
 
 def _heaviside_paddle(x, y):
-    # return paddle.heaviside(x ,paddle.zeros_like(x))
     return paddle.heaviside(x ,paddle.full_like(x, y))
-
-                
 
 PADDLE_SYMPY_PRINTER = {
     "abs": paddle.abs,
@@ -161,13 +155,13 @@ class SympyToPaddle(paddle.nn.Layer):
                 "u__y__y" : hessian(u, y),
                 "v__x__x" : hessian(v, x),
                 "v__y__y" : hessian(v, y),
-        }
+        } #TODO external developers task
         sympy_to_paddle.update({
                 "u__x__y" : jacobian(sympy_to_paddle["u__x"], y),
                 "u__y__x" : jacobian(sympy_to_paddle["u__y"], x),
                 "v__x__y" : jacobian(sympy_to_paddle["v__x"], y),
                 "v__y__x" : jacobian(sympy_to_paddle["v__y"], x),
-        })
+        }) #TODO external developers task
         args = [
             out[k] if k in out else sympy_to_paddle[k] for k in self.keys
         ]

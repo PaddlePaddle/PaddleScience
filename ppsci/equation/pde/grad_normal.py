@@ -54,6 +54,3 @@ class GradNormal(base.PDE):
             return grad_normal
         
         self.add_equation("normal_gradient_" + self.T, normal_gradient_fun)
-
-        
-

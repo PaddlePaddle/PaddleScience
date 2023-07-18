@@ -25,7 +25,6 @@ import paddle
 from ppsci.utils import logger
 from ppsci.utils import misc
 
-import numpy as np
 
 class Geometry:
     """Base class for geometry.

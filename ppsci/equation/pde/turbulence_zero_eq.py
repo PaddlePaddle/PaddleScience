@@ -21,7 +21,7 @@ class ZeroEquation(base.PDE):
     
     $$
     \begin{cases}
-        \mu_t = \rho l_{m}^2 G \\
+        \nu_t = \rho l_{m}^2 G \\
         G = \left[
                 \dfrac{\partial U_i}{\partial x_j} 
             \left(
@@ -80,4 +80,3 @@ class ZeroEquation(base.PDE):
             return SympyToPaddle(sympy_expr, "nu_symbol")
 
         self.add_equation("nu_symbol", nu_symbol())
-            

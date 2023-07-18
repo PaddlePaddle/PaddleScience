@@ -88,7 +88,7 @@ if __name__ == "__main__":
     equation = ppsci.utils.misc.Prettydefaultdict()
     equation["ZeroEquation"] = ppsci.equation.ZeroEquation(0.01, (channel_width[1] - channel_width[0]) / 2)
     equation["NavierStokes"] = ppsci.equation.NavierStokes(equation["ZeroEquation"].expr, 1.0, 2, False)
-    equation["AdvectionDiffusion"] = ppsci.equation.AdvectionDiffusion(concentration="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False)
+    equation["AdvectionDiffusion"] = ppsci.equation.AdvectionDiffusion(concentration="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False, sympy_expression=True)
     equation["GradNormal"] = ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
     equation["NormalDotVec"] = ppsci.equation.NormalDotVec(("u", "v"))
 

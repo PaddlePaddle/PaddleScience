@@ -113,7 +113,6 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     len(_validator.data_loader),
                     iter_id,
                 )
-                pass
 
             reader_tic = time.perf_counter()
             batch_tic = time.perf_counter()

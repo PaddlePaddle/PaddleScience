@@ -270,7 +270,6 @@ class Channel(Rectangle):
         return (np.abs(points[:,1].reshape(-1, 1) - center[1]) - xmax_rel[1])
 
 
-
 class Triangle(geometry.Geometry):
     """Class for Triangle
 

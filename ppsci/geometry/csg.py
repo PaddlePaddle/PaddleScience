@@ -214,7 +214,6 @@ class CSGDifference(geometry.Geometry):
         sdf_geom2 = self.geom2.sdf_func(points)
         return np.amax((sdf_geom1, -sdf_geom2), axis=0)
 
-        
 
 class CSGIntersection(geometry.Geometry):
     """Construct an object by CSG Intersection."""
