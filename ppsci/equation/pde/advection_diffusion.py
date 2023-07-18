@@ -22,13 +22,13 @@ class AdvectionDiffusion(base.PDE):
 
     $$
     \begin{cases}
-        \rho u\dfrac{\partial T}{\partial x} + 
-        \rho v\dfrac{\partial T}{\partial y} + 
-        \rho w\dfrac{\partial T}{\partial z} - 
+        u\dfrac{\partial T}{\partial x} + 
+        v\dfrac{\partial T}{\partial y} + 
+        w\dfrac{\partial T}{\partial z} - 
         (
-            \rho D\dfrac{\partial ^2 T}{\partial x^2} + 
-            \rho D\dfrac{\partial ^2 T}{\partial y^2} + 
-            \rho D\dfrac{\partial ^2 T}{\partial z^2}
+            D\dfrac{\partial ^2 T}{\partial x^2} + 
+            D\dfrac{\partial ^2 T}{\partial y^2} + 
+            D\dfrac{\partial ^2 T}{\partial z^2}
         )
         - Q = 0 \\
     \end{cases}
@@ -38,7 +38,6 @@ class AdvectionDiffusion(base.PDE):
         concentration (str): The concentration of physical quantities(e.g. heat, dissolved species) variable name used in the equation. Defaults to "T".
         diffusivity (str): The diffusivity coefficient name used in the equation. Defaults to "D".
         source_term (float): The source term of the equation. Defaults to 0.
-        rho (str): The density variable name used in the equation. Defaults to "rho".
         dim (int): The dimension of the equation. Defaults to 3.
         time (bool): Whether or not to include time as a variable. Defaults to False.
         mixed_form (bool): Whether or not to use mixed partial derivatives in the diffusion term. Defaults to False.
@@ -49,7 +48,7 @@ class AdvectionDiffusion(base.PDE):
         >>> pde = ppsci.equation.(concentration="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False)
     """
     def __init__(
-        self, concentration="c", diffusivity="D", source_term=0, rho="rho", dim=3, time=False,
+        self, concentration="c", diffusivity="D", rho=1, source_term=0, dim=3, time=False,
         mixed_form=False, couple_method='heat_only'
     ):
         super().__init__()
@@ -71,21 +70,21 @@ class AdvectionDiffusion(base.PDE):
             Q = self.source_term
 
             advection = (
-                rho * u * jacobian(T, x) + 
-                rho * v * jacobian(T, y)
+                u * jacobian(T, x) + 
+                v * jacobian(T, y)
             )
 
             if not self.mixed_form:
                 diffusion = (
-                (rho * D * hessian(T, x)) +
-                (rho * D * hessian(T, y))
+                (D * hessian(T, x)) +
+                (D * hessian(T, y))
                 )
 
             if self.dim == 3:
                 z = out["y"]
                 w = out["w"].detach() if couple_method == 'heat_only' else out["w"]
-                advection += (rho * w * jacobian(T, z))
-                diffusion += (rho * D * hessian(T, z)) 
+                advection += (w * jacobian(T, z))
+                diffusion += (D * hessian(T, z)) 
 
-            return advection - diffusion - Q
+            return advection - diffusion - Q / rho
         self.add_equation("advection_diffusion_" + self.T, advection_diffusion_func)

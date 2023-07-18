@@ -23,7 +23,7 @@ from sympy import Symbol, Function
 
 
 class NavierStokes(base.PDE):
-    r"""Class for navier-stokes equation(Incompressible).
+    r"""Class for navier-stokes equation.
 
     $$
     \begin{cases}
@@ -87,7 +87,7 @@ class NavierStokes(base.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
-                + u * jacobian(u, x)
+                u * jacobian(u, x)
                 + v * jacobian(u, y)
                 - nu * hessian(u, x)
                 - nu * hessian(u, y)
@@ -110,7 +110,7 @@ class NavierStokes(base.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
-                + u * jacobian(v, x)
+                u * jacobian(v, x)
                 + v * jacobian(v, y)
                 - nu  * hessian(v, x)
                 - nu  * hessian(v, y)
@@ -202,7 +202,7 @@ class NavierStokes(base.PDE):
                 x, y, z = out["x"], out["y"], out["z"]
                 u, v, w, p = out["u"], out["v"], out["w"], out["p"]
                 momentum_z = (
-                    + u * jacobian(w, x)
+                    u * jacobian(w, x)
                     + v * jacobian(w, y)
                     + w * jacobian(w, z)
                     - nu / rho * hessian(w, x)

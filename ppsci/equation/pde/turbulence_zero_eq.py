@@ -50,6 +50,7 @@ class ZeroEquation(base.PDE):
         self.dim = dim
         self.nu = nu
         self.expr = None
+
         # model coefficients
         self.max_distance = max_distance
         self.karman_constant = 0.419
@@ -59,16 +60,16 @@ class ZeroEquation(base.PDE):
             # make input variables
             x, y = Symbol("x"), Symbol("y")
             input_variables = {"x": x, "y": y}
-
             u = Function("u")(*input_variables)
             v = Function("v")(*input_variables)
             nu = Function("nu")(*input_variables) if callable(self.nu) else self.nu
             normal_distance = Function("sdf")(*input_variables)
 
             mixing_length = Min(
-            self.karman_constant * normal_distance,
-            self.max_distance_ratio * self.max_distance,
+                self.karman_constant * normal_distance,
+                self.max_distance_ratio * self.max_distance,
             )
+
             G = (
                 2 * u.diff(x) ** 2
                 + 2 * v.diff(y) ** 2

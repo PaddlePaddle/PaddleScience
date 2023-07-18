@@ -29,7 +29,7 @@ class WeightNormLinear(nn.Layer):
         self.in_features = in_features
         self.out_features = out_features
         self.weight_v = self.create_parameter((in_features, out_features))
-        self.weight_g = self.create_parameter((out_features,))
+        self.weight_g = self.create_parameter((out_features, 1))
         if bias:
             self.bias = self.create_parameter((out_features,))
         else:

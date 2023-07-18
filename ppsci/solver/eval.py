@@ -18,7 +18,7 @@ import time
 import paddle
 from paddle import io
 from typing import TYPE_CHECKING
-from ppsci.utils import misc
+from ppsci.utils import misc, write_csv_file
 from ppsci.solver import printer
 
 if TYPE_CHECKING:
@@ -106,7 +106,6 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
                 printer.log_eval_info(
-                    _validator.name,
                     solver,
                     batch_size,
                     epoch_id,
@@ -143,18 +142,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     )
                 metric_summary_dict[metric_str].update(float(metric_value), num_samples)
 
-        def write_csv(solver, csv_name, epoch_id, name, data):
-            validator_dir = os.path.join(solver.output_dir, csv_name)
-            os.makedirs(validator_dir, exist_ok=True)
-            if epoch_id == solver.eval_freq:
-                with open(validator_dir + '/' + name + '.csv', 'w', encoding='utf-8', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(["epoch id"] + [key for key in data.keys()])
-            with open(validator_dir + '/' + name + '.csv', 'a', encoding='utf-8', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow([epoch_id] + [val.item() for val in data.values()])
-        
-        write_csv(solver, "validator", epoch_id, _validator.name, metric_dict)
+        write_csv_file(solver.output_dir, solver.eval_freq, "validator", epoch_id, _validator.name, metric_dict)
 
         # use the first metric for return value
         if target_metric is None:
@@ -234,7 +222,6 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
             printer.update_eval_loss(solver, loss_dict, batch_size)
             if iter_id == 1 or iter_id % log_freq == 0:
                 printer.log_eval_info(
-                    _validator.name,
                     solver,
                     batch_size,
                     epoch_id,

@@ -19,6 +19,7 @@ Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-sym/user_guide/f
 import ppsci
 import paddle
 import numpy as np
+import os.path as osp
 from ppsci.utils import config
 from ppsci.utils import logger
 from vtk.util.numpy_support import vtk_to_numpy
@@ -46,6 +47,7 @@ if __name__ == "__main__":
     base_temp = 293.498
     nu = 0.01
     diffusivity = 0.01 / 5
+    max_distance = (channel_width[1] - channel_width[0]) / 2
 
     # define geometry
     channel = ppsci.geometry.Channel(
@@ -70,6 +72,7 @@ if __name__ == "__main__":
             ),
         )
         heat_sink = heat_sink + fin
+
     geo = channel - heat_sink
 
     geo_inlet = ppsci.geometry.Line(
@@ -86,9 +89,9 @@ if __name__ == "__main__":
     )
 
     equation = ppsci.utils.misc.Prettydefaultdict()
-    equation["ZeroEquation"] = ppsci.equation.ZeroEquation(0.01, (channel_width[1] - channel_width[0]) / 2)
-    equation["NavierStokes"] = ppsci.equation.NavierStokes(equation["ZeroEquation"].expr, 1.0, 2, False)
-    equation["AdvectionDiffusion"] = ppsci.equation.AdvectionDiffusion(concentration="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False, sympy_expression=True)
+    equation["ZeroEquation"] = ppsci.equation.ZeroEquation(0.01, max_distance)
+    equation["NavierStokes"] = ppsci.equation.NavierStokes(equation["ZeroEquation"].expr, 1.0, 2, False, True)
+    equation["AdvectionDiffusion"] = ppsci.equation.AdvectionDiffusion("c", diffusivity, 1.0, 0, 2, False)
     equation["GradNormal"] = ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
     equation["NormalDotVec"] = ppsci.equation.NormalDotVec(("u", "v"))
 
@@ -104,6 +107,7 @@ if __name__ == "__main__":
         },
         "num_workers": 1,
     }
+
     def parabola(input, inter_1=channel_width[0], inter_2=channel_width[1], height=inlet_vel):
         x = input["y"]
         factor = (4 * height) / (-(inter_1**2) - inter_2**2 + 2 * inter_1 * inter_2)
@@ -143,7 +147,11 @@ if __name__ == "__main__":
     )
 
     constraint_channel_wall = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda d: d["u"], "v": lambda d: d["v"], "normal_gradient_c": lambda d: equation["GradNormal"].equations["normal_gradient_c"](d)},
+        {
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"], 
+            "normal_gradient_c": 
+                lambda d: equation["GradNormal"].equations["normal_gradient_c"](d)},
         {"u": 0, "v": 0, "normal_gradient_c": 0},
         channel,
         {**train_dataloader_cfg, "batch_size": 2500},
@@ -298,39 +306,24 @@ if __name__ == "__main__":
         name="openfoam_validator",
     )
 
-    input_global, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_global.vtu", input_keys=('x','y'), input_keys_patch=("sdf","area"))
+    F_MTR = "./data/monitor"
+    input_global, _ = ppsci.utils.load_vtk_file(
+        osp.join(F_MTR, "monitor_global.vtu"), 
+        input_keys=('x','y'), 
+        input_keys_patch=("sdf","area")
+        )
     input_global['sdf__x'] = np.zeros_like(input_global['sdf'])
     input_global['sdf__y'] = np.zeros_like(input_global['sdf'])
-    input_force, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_force.vtu", input_keys=('x','y'), input_keys_patch=("area", "normal_x", "normal_y"))
-    input_peakT, _ = ppsci.utils.load_vtk_file("./data/modulus/constraints/monitor_peakT.vtu", input_keys=('x','y'), input_keys_patch=("area", "normal_x", "normal_y"))
-    
-
-    vtp_file_path = "./data/modulus/validator_500000.vtp"
-    def read_vtk(vtp_file_path):
-        import vtk
-        vtk_reader = vtk.vtkXMLPolyDataReader()
-        vtk_reader.SetFileName(vtp_file_path)
-        vtk_reader.Update()
-        vtk_poly_data = vtk_reader.GetOutput()
-        vtk_coord = vtk_poly_data.GetPoints()
-        vtk_array = vtk_coord.GetData()
-        point_coordinates = vtk_to_numpy(vtk_array)
-        vtk_points_data = vtk_poly_data.GetPointData()
-        n_vtp = point_coordinates.shape[0]
-        return point_coordinates, vtk_points_data, n_vtp
-    
-    _,vtk_points_data,n_vtp = read_vtk(vtp_file_path)
-    label_modulus = {
-        'u':vtk_to_numpy(vtk_points_data.GetArray('pred_u')).reshape(n_vtp, 1),
-        'v':vtk_to_numpy(vtk_points_data.GetArray('pred_v')).reshape(n_vtp, 1),
-        'p':vtk_to_numpy(vtk_points_data.GetArray('pred_p')).reshape(n_vtp, 1),
-        'c':vtk_to_numpy(vtk_points_data.GetArray('pred_c')).reshape(n_vtp, 1),
-        }
-    mse_sum_fun = ppsci.metric.L2Rel()
-    label_modulus = {key:paddle.to_tensor(val) for key,val in label_modulus.items()}
-    openfoam_outvar_numpy = {key:paddle.to_tensor(val) for key,val in openfoam_outvar_numpy.items()}
-    mse_modulus = mse_sum_fun(label_modulus, openfoam_outvar_numpy)
-    print(mse_modulus)
+    input_force, _ = ppsci.utils.load_vtk_file(
+        osp.join(F_MTR, "monitor_force.vtu"), 
+        input_keys=('x','y'), 
+        input_keys_patch=("area", "normal_x", "normal_y")
+        )
+    input_peakT, _ = ppsci.utils.load_vtk_file(
+        osp.join(F_MTR, "monitor_peakT.vtu"), 
+        input_keys=('x','y'), 
+        input_keys_patch=("area", "normal_x", "normal_y")
+        )
 
     eval_cfg = {
         "dataset": {
@@ -423,7 +416,3 @@ if __name__ == "__main__":
 
     solver.train()
     solver.visualize()
-
-
-
-

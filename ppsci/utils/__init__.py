@@ -22,6 +22,7 @@ from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
+from ppsci.utils.reader import write_csv_file
 from ppsci.utils.reader import load_csv_file
 from ppsci.utils.reader import load_mat_file
 from ppsci.utils.reader import load_vtk_file
@@ -36,6 +37,7 @@ __all__ = [
     "logger",
     "misc",
     "reader",
+    "write_csv_file",
     "load_csv_file",
     "load_mat_file",
     "load_vtk_file",

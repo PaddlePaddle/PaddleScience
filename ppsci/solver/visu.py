@@ -13,11 +13,9 @@
 # limitations under the License.
 
 import os
+import paddle
 import os.path as osp
 from typing import TYPE_CHECKING
-
-import paddle
-
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
@@ -74,7 +72,7 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
                     if solver.world_size == 1
                     else misc.all_gather(batch_output.detach())
                 )
-        metric = {}
+
         # concate all data
         for key in all_input:
             all_input[key] = paddle.concat(all_input[key])

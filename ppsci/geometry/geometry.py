@@ -72,7 +72,7 @@ class Geometry:
         for i, key in enumerate(self.dim_keys):
             d = np.zeros_like(points)
             d[:, i] += delta[i]
-            sdf_grad["sdf__" + key] = -(self.sdf_func(points + d) - self.sdf_func(points - d)) / (2 * delta[i]) #sdf -> negative inside
+            sdf_grad["sdf__" + key] = -(self.sdf_func(points + d) - self.sdf_func(points - d)) / (2 * delta[i])
         return sdf_grad
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
