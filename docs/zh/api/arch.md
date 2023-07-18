@@ -8,6 +8,8 @@
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
+        - Generator
+        - Discriminator
         - PhysformerGPT2
         - ModelList
         - AFNONet
