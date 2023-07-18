@@ -22,7 +22,6 @@ import numpy as np
 import os.path as osp
 from ppsci.utils import config
 from ppsci.utils import logger
-from vtk.util.numpy_support import vtk_to_numpy
 
 if __name__ == "__main__":
     # initialization
