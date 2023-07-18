@@ -28,6 +28,7 @@ class ZeroEquation(base.PDE):
                 \dfrac{\partial U_i}{\partial x_j} + 
                 \dfrac{\partial U_j}{\partial x_i}
             \right) \right]^{1/2} \\
+        l_m = min \left(karman_constant * normal_distance, max_distance_ratio * max_distance) \\
     \end{cases}
     $$
 
