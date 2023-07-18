@@ -198,7 +198,7 @@ if __name__ == "__main__":
         def __call__(self, x, y):
             n = x.shape[0]
             x = x + self.trans
-            if self.trans > -1 and self.trans < 0:
+            if self.trans > heat_sink_origin[0] and self.trans < heat_sink_origin[0] + heat_sink_length:
                 logic_sdf = geo.sdf_func(np.hstack((x.reshape(n,1), y.reshape(n,1)))) <= 0
             else:
                 logic_sdf = np.full(n, True)
