@@ -24,7 +24,8 @@ from ppsci.arch import base
 
 
 class Generator(base.Arch):
-    """Generator Net of GAN. It is a variant of ResNet.
+    """Generator Net of GAN. Attention, the net using a kind of variant of ResBlock which is
+        unique to "tempoGAN" example but not an open source network.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
@@ -36,6 +37,20 @@ class Generator(base.Arch):
         strides_list (List[List[int]]): 'stride' of all conv layers.
         use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
         acts (List[str]): Whether to use the activation layer after each conv layer. If so, witch activation to use.
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 1
+        >>> rb_channel0 = [2, 8, 8]
+        >>> rb_channel1 = [128, 128, 128]
+        >>> rb_channel2 = [32, 8, 8]
+        >>> rb_channel3 = [2, 1, 1]
+        >>> out_channels_list = [rb_channel0, rb_channel1, rb_channel2, rb_channel3]
+        >>> kernel_sizes_list = [[(5, 5)] * 2 + [(1, 1)]] * 4
+        >>> strides_list = [[1] * 3] * 4
+        >>> use_bns_list = [[True] * 3] * 3 + [[False] * 3]
+        >>> acts = ["relu", None, None]
+        >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_list, kernel_sizes_list, strides_list, use_bns_list, acts)
     """
 
     def __init__(
@@ -207,13 +222,26 @@ class Discriminator(base.Arch):
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
         in_channel (int): 'in_channels' of the first conv layer.
             Notice that it is not number of input_keys although it looks like.
-        out_channels_list (List[List[int]]): 'out_channels' of all conv layers.
+        out_channels (List[int]): 'out_channels' of all conv layers.
         fc_channel (int): 'in_features' of linear layer.
             'out_features' is set to 1 in this Net to construct a fully_connected layer.
-        kernel_sizes_list (List[List[int]]): 'kernel_size' of all conv layers.
-        strides_list (List[List[int]]): 'stride' of all conv layers.
-        use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
+        kernel_sizes (List[int]): 'kernel_size' of all conv layers.
+        strides (List[int]): 'stride' of all conv layers.
+        use_bns (List[bool]): Whether to use the batch_norm layer after each conv layer.
         acts (List[str]): Whether to use the activation layer after each conv layer. If so, witch activation to use.
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 2
+        >>> in_channel_tempo = 3
+        >>> out_channels = [32, 64, 128, 256]
+        >>> fc_channel = 65536
+        >>> kernel_sizes = [(4, 4)] * 4
+        >>> strides = [2] * 3 + [1]
+        >>> use_bns = [False] + [True] * 3
+        >>> acts = ["leaky_relu"] * 4 + [None]
+        >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
+        >>> model = ppsci.arch.Discriminator(("in_1","in_2"), output_keys_disc, in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
     """
 
     def __init__(
@@ -361,15 +389,15 @@ class Discriminator(base.Arch):
         self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
-            Reason for overwriting is there is no concat_to_tensor() method called in this example.
-            That is because input in this example is not in a regular format, but a format like:
+            Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
+            That is because input in "tempoGAN" example is not in a regular format, but a format like:
             {
-            "input1": paddle.concat([in1, in2], axis=1),
-            "input2": paddle.concat([in1, in3], axis=1),
+                "input1": paddle.concat([in1, in2], axis=1),
+                "input2": paddle.concat([in1, in3], axis=1),
             }
 
         Args:
-            data_list (List[paddle.Tensor]): The data to be splited. It should be a List but not a paddle.Tensor.
+            data_list (List[paddle.Tensor]): The data to be splited. It should be a list of tensor(s), but not a paddle.Tensor.
             keys (Tuple[str, ...]): Keys of outputs.
 
         Returns:
