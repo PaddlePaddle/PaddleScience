@@ -277,7 +277,7 @@ examples/tempoGAN/tempoGAN.py:398:407
 
 ## 4. 完整代码
 
-完整代码包含 PaddleScience 具体训练流程代码 tempoGAN.py 和 所有自定义函数代码 functions.py，另外还向 `ppsci.arch` 添加了网络结构代码 gan.py，一并显示在下面，如果需要自定义网络结构，可以作为参考。
+完整代码包含 PaddleScience 具体训练流程代码 tempoGAN.py 和所有自定义函数代码 functions.py，另外还向 `ppsci.arch` 添加了网络结构代码 gan.py，一并显示在下面，如果需要自定义网络结构，可以作为参考。
 
 ``` py linenums="1" title="tempoGAN.py"
 --8<--
@@ -313,12 +313,12 @@ ppsci/arch/gan.py
 </figure>
 
 <figure markdown>
-  ![pred-amp02](../../images/tempoGAN/pred_amp02.gif){ loading=lazy }
+  ![pred-amp02](https://paddle-org.bj.bcebos.com/paddlescience/docs/tempoGAN/pred_amp02.gif){ loading=lazy }
   <figcaption>混合精度训练后推理得到的高密度流体</figcaption>
 </figure>
 
 <figure markdown>
-  ![target](../../images/tempoGAN/target.gif){ loading=lazy }
+  ![target](https://paddle-org.bj.bcebos.com/paddlescience/docs/tempoGAN/target.gif){ loading=lazy }
   <figcaption> 目标高密度流体</figcaption>
 </figure>
 

@@ -378,26 +378,26 @@ class Discriminator(base.Arch):
         for k in x:
             y_list.extend(self.forward_tensor(x[k]))
 
-        y = self._split_to_dict(y_list, self.output_keys)
+        y = self.split_to_dict(y_list, self.output_keys)
 
         if self._output_transform is not None:
             y = self._output_transform(y)
 
         return y
 
-    def _split_to_dict(
+    def split_to_dict(
         self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
             Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
             That is because input in "tempoGAN" example is not in a regular format, but a format like:
             {
-            "input1": paddle.concat([in1, in2], axis=1),
-            "input2": paddle.concat([in1, in3], axis=1),
+                "input1": paddle.concat([in1, in2], axis=1),
+                "input2": paddle.concat([in1, in3], axis=1),
             }
 
         Args:
-            data_list (List[paddle.Tensor]): The data to be splited. It should be a List but not a paddle.Tensor.
+            data_list (List[paddle.Tensor]): The data to be splited. It should be a list of tensor(s), but not a paddle.Tensor.
             keys (Tuple[str, ...]): Keys of outputs.
 
         Returns:
