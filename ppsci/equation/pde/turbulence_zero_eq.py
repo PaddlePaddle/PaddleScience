@@ -12,15 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 from ppsci.utils.paddle_printer import SympyToPaddle
-import numpy as np
-import paddle
-from sympy import Symbol, sqrt, pprint, diff, simplify, Function, Min
+from sympy import Symbol, sqrt, Function, Min
 
 class ZeroEquation(base.PDE):
+    r"""Prandtl's mixing-length model
+    
+    $$
+    \begin{cases}
+        \mu_t = \rho l_{m}^2 G \\
+        G = \left[
+                \dfrac{\partial U_i}{\partial x_j} 
+            \left(
+                \dfrac{\partial U_i}{\partial x_j} + 
+                \dfrac{\partial U_j}{\partial x_i}
+            \right) \right]^{1/2} \\
+    \end{cases}
+    $$
+
+    Args:
+        nu (float/Callable): The dynamic viscosity of the fluid. If Callable, it can accept x and y as input and output the drag coefficient value.
+        max_distance (float): The maximum distance used to calculate the mixing length.
+        rho (float, optional): Density, default is 1.0.
+        dim (int, optional): The dimension of the computational domain, default is 3.
+
+    Returns:
+        Dynamic Eddy-Viscosity + Dynamic Fluid Viscosity
+
+    Examples:
+        >>> import ppsci
+        >>> ppsci.equation.ZeroEquation(0.01, 1)
+    """
     def __init__(self, nu, max_distance, rho=1.0, dim=3):
         # set params
         super().__init__()
@@ -31,24 +54,6 @@ class ZeroEquation(base.PDE):
         self.max_distance = max_distance
         self.karman_constant = 0.419
         self.max_distance_ratio = 0.09
-        
-        def nu_equation(out):
-            x, y = out["x"], out["y"]
-            u, v = out["u"], out["v"]
-            sdf = out["sdf"]
-            normal_distance = sdf
-            # mixing length
-            mixing_length = np.min(
-                self.karman_constant * normal_distance,
-                self.max_distance_ratio * self.max_distance,
-            )
-            G = (
-                2 * jacobian(u, x) ** 2
-                + 2 * jacobian(v, y) ** 2
-                + (u.diff(y) + v.diff(x)) ** 2
-            )
-            return nu + rho * mixing_length**2 * paddle.sqrt(G)
-        # self.add_equation("nu", nu_equation)
 
         def nu_symbol():
             # make input variables

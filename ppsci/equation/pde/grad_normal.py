@@ -17,6 +17,26 @@ from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 class GradNormal(base.PDE):
+    r"""Gradients summation of scalar variable over every dimensions.
+
+    $$
+    \begin{cases}
+        GradNormal = n_i \frac{\partial T}{\partial x_i}
+    \end{cases}
+    $$
+
+    Args:
+        grad_var: The name of the parameter variable used to calculate the gradient.
+        dim: The dimension of the point set.
+        time: Whether to include time as a dimension.
+
+    Returns:
+        Gradients summation of grad_var over all dimensions
+    
+    Examples:
+        >>> import ppsci
+        >>> ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
+    """
     def __init__(self, grad_var, dim=3, time=True):
         super().__init__()
         self.T = grad_var
@@ -27,7 +47,11 @@ class GradNormal(base.PDE):
             x, y = out["x"], out["y"]
             T = out[self.T]
             normal_x, normal_y = out["normal_x"], out["normal_y"]
-            return normal_x * jacobian(T, x) + normal_y * jacobian(T, y)
+            grad_normal = normal_x * jacobian(T, x) + normal_y * jacobian(T, y)
+            if self.dim == 3:
+                normal_z, z = out["z"], out["normal_z"]
+                grad_normal += normal_z * jacobian(T, z)
+            return grad_normal
         
         self.add_equation("normal_gradient_" + self.T, normal_gradient_fun)
 
