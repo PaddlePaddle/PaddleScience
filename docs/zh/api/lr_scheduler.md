@@ -11,5 +11,6 @@
         - MultiStepDecay
         - ExponentialDecay
         - CosineWarmRestarts
+        - OneCycleLR
       show_root_heading: false
       heading_level: 3

@@ -23,10 +23,10 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-    # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(2023)
+    SEED = 2023
+    ppsci.utils.misc.set_random_seed(SEED)
     # set output directory
     OUTPUT_DIR = "./output_bracket" if not args.output_dir else args.output_dir
     # initialize logger
@@ -378,13 +378,15 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         save_freq=20,
-        eval_during_train=True,
         log_freq=20,
+        eval_during_train=True,
         eval_freq=20,
+        seed=SEED,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        eval_with_no_grad=True,
     )
     # train model
     solver.train()

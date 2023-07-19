@@ -85,19 +85,19 @@ class PeriodicConstraint(base.Constraint):
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
-        if dataloader_cfg["sampler"]["batch_size"] % 2 > 0:
+        if dataloader_cfg["batch_size"] % 2 > 0:
             raise ValueError(
                 f"batch_size({dataloader_cfg['sampler']['batch_size']}) "
                 "should be positive and even when using PeriodicConstraint"
             )
-        if dataloader_cfg["sampler"]["shuffle"]:
+        if dataloader_cfg.get("shuffle", False):
             raise ValueError(
                 f"shuffle({dataloader_cfg['sampler']['batch_size']}) "
                 "should be False when using PeriodicConstraint"
             )
 
         # prepare input
-        _bs_half = dataloader_cfg["sampler"]["batch_size"] // 2
+        _bs_half = dataloader_cfg["batch_size"] // 2
         input = geom.sample_boundary(
             _bs_half * dataloader_cfg["iters_per_epoch"],
             random,

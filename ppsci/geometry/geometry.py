@@ -106,16 +106,34 @@ class Geometry:
                     "Sample interior points failed, "
                     "please check correctness of geometry and given creteria."
                 )
-        
-        ret_dict = misc.convert_to_dict(x, self.dim_keys)
-        if  ((misc.typename(self) == "Rectangle") 
-        | (misc.typename(self) == "Line") 
-        | (misc.typename(self) == "CSGDifference")):
-            area = np.full_like(next(iter(ret_dict.values())), self.area / n)
-            sdf = -self.sdf_func(points)
-            sdf_grad = self.sdf_gradient(points)
-            ret_dict.update({"sdf": sdf, "area": area, **sdf_grad})
-        return ret_dict
+
+        # if sdf_fun/sdf_grad/area added, 
+        # return x_dict and sdf_dict/sdf_grad_dict/area_dict, else, only return the x_dict
+        if hasattr(self, "sdf_func"):
+            sdf = -self.sdf_func(x)
+            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        else:
+            sdf_dict = {}
+            
+        if hasattr(self, "sdf_gradient"):
+            sdf_grad = -self.sdf_func(x)
+            sdf_grad_dict = misc.convert_to_dict(sdf_grad, ("sdf_grad",))
+        else:
+            sdf_grad_dict = {}
+            
+        if hasattr(self, "area"):
+            if self.ndim == 1:
+                area = self.perimeter
+            elif self.ndim == 2:
+                area = self.area
+            elif self.ndim == 3:
+                area = self.volume
+            area_dict = misc.convert_to_dict(np.full_like(n, area / n), ("area",))
+        else:
+            area_dict = {}
+         
+        x_dict = misc.convert_to_dict(x, self.dim_keys)
+        return {**x_dict, **sdf_dict, **sdf_grad_dict, **area_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -158,7 +176,7 @@ class Geometry:
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample boundary points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         if not (

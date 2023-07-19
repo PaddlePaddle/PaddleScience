@@ -41,11 +41,14 @@ nav:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
         - Laplace2D: zh/examples/laplace2d.md
+        - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
         - FourCastNet: zh/examples/fourcastnet.md
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - Rossler_transform_physx: zh/examples/rossler.md
         - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+        - DeepHPMs: zh/examples/deephpms.md
+        - tempoGAN: zh/examples/tempoGAN.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -65,7 +68,10 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
-  - 贡献指南: zh/contribute.md
+  - 使用指南: zh/user_guide.md
+  - 开发与复现指南:
+    - 开发指南: zh/development.md
+    - 复现指南: zh/reproduction.md
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15

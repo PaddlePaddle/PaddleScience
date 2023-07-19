@@ -62,7 +62,9 @@ class Solver:
         start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
         seed (int, optional): Random seed. Defaults to 42.
-        vdl_writer (Optional[vdl.LogWriter]): VisualDL writer object. Defaults to None.
+        use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
+        use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
+        wandb_cfg (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
@@ -119,7 +121,9 @@ class Solver:
         start_eval_epoch: int = 1,
         eval_freq: int = 1,
         seed: int = 42,
-        vdl_writer: Optional[vdl.LogWriter] = None,
+        use_vdl: bool = False,
+        use_wandb: bool = False,
+        wandb_config: Optional[Dict[str, str]] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
@@ -178,12 +182,30 @@ class Solver:
         self.seed = seed
 
         # set VisualDL tool
-        self.vdl_writer = vdl_writer
+        self.vdl_writer = None
+        if use_vdl:
+            self.vdl_writer = vdl.LogWriter(f"{output_dir}/vdl")
+        # set WandB tool
+        self.wandb_writer = None
+        if use_wandb:
+            try:
+                import wandb
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'wandb' with `pip install wandb` first."
+                )
+            wandb.init(**wandb_config)
+            self.wandb_writer = wandb
 
         # set running device
+        if device != "cpu" and paddle.device.get_device() == "cpu":
+            logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
+            device = "cpu"
         self.device = paddle.set_device(device)
+
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
+
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
@@ -218,6 +240,12 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model, self.optimizer = amp.decorate(
+                self.model, self.optimizer, self.amp_level
+            )
+
         # initialize an dict for tracking best metric during training
         self.best_metric = {
             "metric": float("inf"),
@@ -243,12 +271,6 @@ class Solver:
                 logger.warning("Set update_freq to to 1 when using L-BFGS optimizer.")
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
-
-        # decorate model(s) and optimizer(s) for AMP
-        if self.use_amp:
-            self.model, self.optimizer = amp.decorate(
-                self.model, self.optimizer, self.amp_level
-            )
 
         # wrap model and optimizer to parallel object
         self.rank = dist.get_rank()

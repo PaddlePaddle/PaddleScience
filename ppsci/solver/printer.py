@@ -70,7 +70,8 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
         name="lr",
         value=trainer.optimizer.get_lr(),
         step=trainer.global_step,
-        writer=trainer.vdl_writer,
+        vdl_writer=trainer.vdl_writer,
+        wandb_writer=trainer.wandb_writer,
     )
 
     for key in trainer.train_output_info:
@@ -78,7 +79,8 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
             name=f"train_{key}",
             value=trainer.train_output_info[key].avg,
             step=trainer.global_step,
-            writer=trainer.vdl_writer,
+            vdl_writer=trainer.vdl_writer,
+            wandb_writer=trainer.wandb_writer,
         )
 
 
@@ -110,7 +112,8 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
             name=f"eval_{key}",
             value=trainer.eval_output_info[key].avg,
             step=trainer.global_step,
-            writer=trainer.vdl_writer,
+            vdl_writer=trainer.vdl_writer,
+            wandb_writer=trainer.wandb_writer,
         )
 
 def log_eval_metric_info(metrics_dict, epoch_id):
