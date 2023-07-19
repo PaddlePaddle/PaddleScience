@@ -116,8 +116,8 @@ class Geometry:
             sdf_dict = {}
             
         if hasattr(self, "sdf_gradient"):
-            sdf_grad = -self.sdf_func(x)
-            sdf_grad_dict = misc.convert_to_dict(sdf_grad, ("sdf_grad",))
+            print("sdf_grad")
+            sdf_grad_dict = self.sdf_gradient(x)
         else:
             sdf_grad_dict = {}
             
@@ -128,7 +128,7 @@ class Geometry:
                 area = self.area
             elif self.ndim == 3:
                 area = self.volume
-            area_dict = misc.convert_to_dict(np.full_like(n, area / n), ("area",))
+            area_dict = misc.convert_to_dict(np.full((n, 1), area / n), ("area",))
         else:
             area_dict = {}
          
