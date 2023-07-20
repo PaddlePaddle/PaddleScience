@@ -184,6 +184,9 @@ def parse_args():
         action="store_true",
         help="whether enable to_static for forward computation",
     )
+    parser.add_argument(
+        "--eval", action="store_const", const=True, default=False, help="eval mode"
+    )
 
     args = parser.parse_args()
     return args

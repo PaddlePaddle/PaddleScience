@@ -21,6 +21,7 @@ from ppsci.utils import reader
 
 if __name__ == "__main__":
     args = config.parse_args()
+    EVAL_RESULT = args.eval
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
@@ -220,7 +221,7 @@ if __name__ == "__main__":
         None,
         EPOCHS,
         ITERS_PER_EPOCH,
-        eval_during_train=True,
+        eval_during_train=EVAL_RESULT,
         eval_freq=EVAL_FREQ,
         equation=equation,
         geom=geom,
@@ -230,7 +231,8 @@ if __name__ == "__main__":
     # train model
     solver.train()
     # evaluate after finished training
-    solver.eval()
+    if EVAL_RESULT:
+        solver.eval()
     # visualize prediction after finished training
     solver.visualize()
 
@@ -240,12 +242,14 @@ if __name__ == "__main__":
         model,
         constraint,
         OUTPUT_DIR,
+        eval_during_train=EVAL_RESULT,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
-    solver.eval()
+    if EVAL_RESULT:
+        solver.eval()
     # visualize prediction from pretrained_model_path(optional)
     solver.visualize()

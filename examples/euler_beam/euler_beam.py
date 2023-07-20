@@ -22,6 +22,7 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
     args = config.parse_args()
+    EVAL_RESULT = args.eval
     # enable computation for fourth-order differentiation of matmul
     fluid.core.set_prim_eager_enabled(True)
     fluid.core._set_prim_all_enabled(True)
@@ -125,7 +126,7 @@ if __name__ == "__main__":
         optimizer,
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
+        eval_during_train=EVAL_RESULT,
         eval_freq=1000,
         equation=equation,
         geom=geom,
@@ -136,7 +137,8 @@ if __name__ == "__main__":
     # train model
     solver.train()
     # evaluate after finished training
-    solver.eval()
+    if EVAL_RESULT:
+        solver.eval()
     # visualize prediction after finished training
     solver.visualize()
 
@@ -146,11 +148,13 @@ if __name__ == "__main__":
         model,
         constraint,
         OUTPUT_DIR,
+        eval_during_train=EVAL_RESULT,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
     )
-    solver.eval()
+    if EVAL_RESULT:
+        solver.eval()
     # visualize prediction from pretrained_model_path(optional)
     solver.visualize()
