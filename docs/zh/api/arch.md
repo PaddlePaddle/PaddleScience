@@ -5,6 +5,7 @@
     options:
       members:
         - MLP
+        - DeepONet
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
