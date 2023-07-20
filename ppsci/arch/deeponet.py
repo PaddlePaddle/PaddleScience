@@ -17,8 +17,9 @@ class DeepONet(base.Arch):
     (https://doi.org/10.1038/s42256-021-00302-5)
 
     Args:
-        u_key (str): Function data name for input function u(x).
-        y_key (str): Location data name for input function G(u).
+        u_key (str): Name of function data for input function u(x).
+        y_key (str): Name of location data for input function G(u).
+        G_key (str): Output name of predicted G(u)(y).
         num_loc (int): Number of sampled u(x), i.e. `m` in paper.
         num_features (int): Number of features extracted from u(x), same for y.
         branch_num_layers (int): Number of hidden layers of branch net.
@@ -37,13 +38,14 @@ class DeepONet(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.DeepONet("u", "y", (100, 40, 40), )
+        >>> model = ppsci.arch.DeepONet("u", "y", "G", (100, 40, 40))
     """
 
     def __init__(
         self,
         u_key: str,
         y_key: str,
+        G_key: str,
         num_loc: int,
         num_features: int,
         branch_num_layers: int,
@@ -62,7 +64,7 @@ class DeepONet(base.Arch):
         self.u_key = u_key
         self.y_key = y_key
         self.input_keys = (u_key, y_key)
-        self.output_keys = ("G",)
+        self.output_keys = (G_key,)
 
         self.branch_net = mlp.MLP(
             (self.u_key,),

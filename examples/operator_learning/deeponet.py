@@ -1,17 +1,3 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Reference: https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html
 """
@@ -43,6 +29,7 @@ if __name__ == "__main__":
     model = ppsci.arch.DeepONet(
         "u",
         "y",
+        "G",
         NUM_SENSORS,
         NUM_FEATURES,
         1,
@@ -76,6 +63,7 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 10000 if not args.epochs else args.epochs
+    EVAL_FREQ = 500
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(1e-3)(model)
@@ -158,22 +146,35 @@ if __name__ == "__main__":
         return u, y, G_ref
 
     func_u_G_pair = [
-        # (func_u, func_G(u)), s.t. dG/dx == u and G(u)(0) = 0.
-        (lambda x: np.cos(x), lambda y: np.sin(y)),  # 1
-        (lambda x: (1 / np.cos(x)) ** 2, lambda y: np.tan(y)),  # 2
-        (lambda x: (1 / np.cos(x) * np.tan(x)), lambda y: 1 / np.cos(y) - 1),  # 3
-        (lambda x: 1.5**x * np.log(1.5), lambda y: 1.5**y - 1),  # 4
-        (lambda x: 3 * x**2, lambda y: y**3),  # 5
-        (lambda x: 4 * x**3, lambda y: y**4),  # 6
-        (lambda x: 5 * x**4, lambda y: y**5),  # 7
-        (lambda x: 5 * x**4, lambda y: y**5),  # 8
-        (lambda x: np.exp(x), lambda y: np.exp(y) - 1),  # 9
+        # (title_string, func_u, func_G(u)), s.t. dG/dx == u and G(u)(0) = 0
+        (r"$u=\cos(x), G(u)=sin(x$)", lambda x: np.cos(x), lambda y: np.sin(y)),  # 1
+        (
+            r"$u=sec^2(x), G(u)=tan(x$)",
+            lambda x: (1 / np.cos(x)) ** 2,
+            lambda y: np.tan(y),
+        ),  # 2
+        (
+            r"$u=sec(x)tan(x), G(u)=sec(x) - 1$",
+            lambda x: (1 / np.cos(x) * np.tan(x)),
+            lambda y: 1 / np.cos(y) - 1,
+        ),  # 3
+        (
+            r"$u=1.5^x\ln{1.5}, G(u)=1.5^x-1$",
+            lambda x: 1.5**x * np.log(1.5),
+            lambda y: 1.5**y - 1,
+        ),  # 4
+        (r"$u=3x^2, G(u)=x^3$", lambda x: 3 * x**2, lambda y: y**3),  # 5
+        (r"$u=4x^3, G(u)=x^4$", lambda x: 4 * x**3, lambda y: y**4),  # 6
+        (r"$u=5x^4, G(u)=x^5$", lambda x: 5 * x**4, lambda y: y**5),  # 7
+        (r"$u=6x^5, G(u)=x^6$", lambda x: 5 * x**4, lambda y: y**5),  # 8
+        (r"$u=e^x, G(u)=e^x-1$", lambda x: np.exp(x), lambda y: np.exp(y) - 1),  # 9
     ]
-    for i, (u_func, G_func) in enumerate(func_u_G_pair):
+    for i, (title, u_func, G_func) in enumerate(func_u_G_pair):
         u, y, G_ref = generate_y_u_G_ref(u_func, G_func)
         G_pred = solver.predict({"u": u, "y": y})["G"]
-        plt.plot(y, G_pred, label="G(u)(y)_ref")
-        plt.plot(y, G_ref, label="G(u)}(y)_pred")
+        plt.plot(y, G_pred, label=r"$G(u)(y)_{ref}$")
+        plt.plot(y, G_ref, label=r"$G(u)(y)_{pred}$")
         plt.legend()
+        plt.title(title)
         plt.savefig(f"{OUTPUT_DIR}/visual/func_{i}_result.png")
         plt.clf()
