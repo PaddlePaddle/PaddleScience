@@ -38,7 +38,14 @@ class DeepONet(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.DeepONet("u", "y", "G", (100, 40, 40))
+        >>> model = ppsci.arch.DeepONet(
+        ...     "u", "y", "G",
+        ...     100, 40,
+        ...     1, 1,
+        ...     40, 40,
+        ...     branch_activation="relu", trunk_activation="relu",
+        ...     use_bias=True,
+        ... )
     """
 
     def __init__(
