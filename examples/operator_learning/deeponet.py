@@ -63,7 +63,6 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 10000 if not args.epochs else args.epochs
-    EVAL_FREQ = 500
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(1e-3)(model)
@@ -88,6 +87,7 @@ if __name__ == "__main__":
     validator = {sup_validator.name: sup_validator}
 
     # initialize solver
+    EVAL_FREQ = 500
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -96,10 +96,10 @@ if __name__ == "__main__":
         None,
         EPOCHS,
         ITERS_PER_EPOCH,
-        save_freq=500,
+        save_freq=EVAL_FREQ,
         log_freq=20,
         eval_during_train=True,
-        eval_freq=500,
+        eval_freq=EVAL_FREQ,
         seed=SEED,
         validator=validator,
         eval_with_no_grad=True,
