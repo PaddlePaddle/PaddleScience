@@ -31,7 +31,7 @@ class NPZDataset(io.Dataset):
     """Dataset class for .npz file.
 
     Args:
-        file_path (str): Mat file path.
+        file_path (str): Npz file path.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.
@@ -148,7 +148,7 @@ class IterableNPZDataset(io.IterableDataset):
     """IterableNPZDataset for full-data loading.
 
     Args:
-        file_path (str): Mat file path.
+        file_path (str): Npz file path.
         input_keys (Tuple[str, ...]): List of input keys.
         label_keys (Tuple[str, ...], optional): List of label keys. Defaults to ().
         alias_dict (Optional[Dict[str, str]]): Dict of alias(es) for input and label keys.

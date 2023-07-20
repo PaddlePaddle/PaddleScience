@@ -123,10 +123,10 @@ def load_mat_file(
 def load_npz_file(
     file_path: str, keys: Tuple[str, ...], alias_dict: Optional[Dict[str, str]] = None
 ) -> Dict[str, np.ndarray]:
-    """Load *.mat file and fetch data as given keys.
+    """Load *.npz file and fetch data as given keys.
 
     Args:
-        file_path (str): Mat file path.
+        file_path (str): Npz file path.
         keys (Tuple[str, ...]): Required fetching keys.
         alias_dict (Optional[Dict[str, str]]): Alias for keys,
             i.e. {original_key: original_key}. Defaults to None.
@@ -139,10 +139,10 @@ def load_npz_file(
         alias_dict = {}
 
     try:
-        # read all data from mat file
+        # read all data from npz file
         raw_data = np.load(file_path, allow_pickle=True)
     except FileNotFoundError:
-        logger.error(f"{file_path} isn't a valid mat file.")
+        logger.error(f"{file_path} isn't a valid npz file.")
         raise
 
     # convert to numpy array
