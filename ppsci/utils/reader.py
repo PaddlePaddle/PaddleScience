@@ -140,7 +140,7 @@ def load_npz_file(
 
     try:
         # read all data from mat file
-        raw_data = np.load(file_path)
+        raw_data = np.load(file_path, allow_pickle=True)
     except FileNotFoundError:
         logger.error(f"{file_path} isn't a valid mat file.")
         raise

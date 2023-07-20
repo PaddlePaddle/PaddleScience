@@ -22,6 +22,7 @@ from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
+from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
@@ -39,6 +40,7 @@ __all__ = [
     "ERA5SampledDataset",
     "IterableMatDataset",
     "MatDataset",
+    "IterableNPZDataset",
     "NPZDataset",
     "CylinderDataset",
     "LorenzDataset",

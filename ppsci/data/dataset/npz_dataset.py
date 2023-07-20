@@ -184,7 +184,7 @@ class IterableNPZDataset(io.IterableDataset):
         self.label_keys = label_keys
 
         # read raw data from file
-        raw_data = reader.load_mat_file(
+        raw_data = reader.load_npz_file(
             file_path,
             input_keys + label_keys,
             alias_dict,
