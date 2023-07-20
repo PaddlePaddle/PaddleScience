@@ -37,7 +37,6 @@ nav:
       - PINNs:
         - 方程求解:
           - Laplace2D: zh/examples/laplace2d.md
-          - DeepHPMs: zh/examples/deephpms.md
         - 振动:
           - ViV: zh/examples/viv.md
         - 流体:
@@ -48,6 +47,8 @@ nav:
         - 材料:
           - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
+        - 方程求解:
+          - DeepHPMs: zh/examples/deephpms.md
         - 算子学习:
           - DeepONet: zh/examples/deeponet.md
         - 气象预测:
