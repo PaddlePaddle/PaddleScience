@@ -37,7 +37,7 @@ $$
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
-## 3.1 数据集介绍
+### 3.1 数据集介绍
 
 本案例数据集使用 DeepXDE 官方文档提供的数据集，一个 npz 文件内已包含训练集和验证集，[下载地址](https://yaleedu-my.sharepoint.com/personal/lu_lu_yale_edu/_layouts/15/onedrive.aspx?ga=1&id=%2Fpersonal%2Flu%5Flu%5Fyale%5Fedu%2FDocuments%2Fdatasets%2Fdeepxde%2Fdeeponet%5Fantiderivative%5Funaligned)
 
@@ -59,37 +59,37 @@ $$
 |X_test1 |$y$ 对应的测试输入数据数据，形状为(100000, 1)  |
 |y_test |$G(u)$ 对应的测试标签数据，形状为(100000,1)  |
 
-### 3.1 模型构建
+### 3.2 模型构建
 
 在上述问题中，我们确定了输入为 $u$ 和 $y$，输出为 $G(u)$，按照 DeepONet 论文所述，我们使用含有 branch 和 trunk 两个子分支网络的 `DeepONet` 来创建网络模型，用 PaddleScience 代码表示如下：
 
-``` py linenums="40"
+``` py linenums="26"
 --8<--
-examples/operator_learning/deeponet.py:40:56
+examples/operator_learning/deeponet.py:26:42
 --8<--
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `u` 和 `y`，输出变量名是 `G`，接着通过指定 `DeepONet` 的 SENSORS 个数，特征通道数、隐藏层层数、神经元个数以及子网络的激活函数，我们就实例化出了 `DeepONet` 神经网络模型 `model`。
 
-### 3.4 约束构建
+### 3.3 约束构建
 
 本文采用监督学习的方式，对模型输出 $G(u)$ 进行约束。
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置，包括文件路径、输入数据字段名、标签数据字段名、数据转换前后的别名字典。
 
-``` py linenums="58"
+``` py linenums="44"
 --8<--
-examples/operator_learning/deeponet.py:58:68
+examples/operator_learning/deeponet.py:44:54
 --8<--
 ```
 
-#### 3.4.1 监督约束
+#### 3.3.1 监督约束
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="70"
+``` py linenums="56"
 --8<--
-examples/operator_learning/deeponet.py:70:74
+examples/operator_learning/deeponet.py:56:60
 --8<--
 ```
 
@@ -101,39 +101,39 @@ examples/operator_learning/deeponet.py:70:74
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="75"
+``` py linenums="61"
 --8<--
-examples/operator_learning/deeponet.py:75:76
+examples/operator_learning/deeponet.py:61:62
 --8<--
 ```
 
-### 3.5 超参数设定
+### 3.4 超参数设定
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
 
-``` py linenums="78"
+``` py linenums="64"
 --8<--
-examples/operator_learning/deeponet.py:78:80
+examples/operator_learning/deeponet.py:64:65
 --8<--
 ```
 
-### 3.6 优化器构建
+### 3.5 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
 
-``` py linenums="82"
+``` py linenums="67"
 --8<--
-examples/operator_learning/deeponet.py:82:83
+examples/operator_learning/deeponet.py:67:68
 --8<--
 ```
 
-### 3.7 评估器构建
+### 3.6 评估器构建
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="85"
+``` py linenums="70"
 --8<--
-examples/operator_learning/deeponet.py:85:102
+examples/operator_learning/deeponet.py:70:87
 --8<--
 ```
 
@@ -141,23 +141,23 @@ examples/operator_learning/deeponet.py:85:102
 
 其余配置与 [约束构建](#34) 的设置类似。
 
-### 3.9 模型训练、评估
+### 3.7 模型训练、评估
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="104"
+``` py linenums="89"
 --8<--
-examples/operator_learning/deeponet.py:104:
+examples/operator_learning/deeponet.py:89:
 --8<--
 ```
 
-### 3.10 结果可视化
+### 3.8 结果可视化
 
 在模型训练完毕之后，我们可以手动构造 $u$、$y$ 并在适当范围内进行离散化，得到对应输入数据，继而预测出 $G(u)(y)$，并和 $G(u)$ 的标准解共同绘制图像，进行对比。（此处我们构造了 9 组 $u-G(u)$ 函数对）进行测试
 
-``` py linenums="138"
+``` py linenums="124"
 --8<--
-examples/operator_learning/deeponet.py:138:
+examples/operator_learning/deeponet.py:124:
 --8<--
 ```
 
