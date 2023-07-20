@@ -13,9 +13,9 @@
 $$
 \begin{cases}
 \begin{aligned}
-\mathbf{u}+\nabla p =& 0,(x,y)\in (0,1)\times (0,1) \\
-\nabla \cdot \mathbf{u} =& f,(x,y)\in (0,1)\times (0,1) \\
-p(x,y) =& \sin(2 \pi x )\cos(2 \pi y), x=1 \lor  y=1
+  \mathbf{u}+\nabla p =& 0,(x,y) \in \Omega \\
+  \nabla \cdot \mathbf{u} =& f,(x,y) \in \Omega \\
+  p(x,y) =& \sin(2 \pi x )\cos(2 \pi y), (x,y) \in \partial \Omega
 \end{aligned}
 \end{cases}
 $$
@@ -36,9 +36,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="30"
+``` py linenums="32"
 --8<--
-examples/darcy/darcy2d.py:30:31
+examples/darcy/darcy2d.py:32:33
 --8<--
 ```
 
@@ -50,9 +50,9 @@ examples/darcy/darcy2d.py:30:31
 
 由于 2D-Poisson 使用的是 Poisson 方程的2维形式，因此可以直接使用 PaddleScience 内置的 `Poisson`，指定该类的参数 `dim` 为2。
 
-``` py linenums="33"
+``` py linenums="35"
 --8<--
-examples/darcy/darcy2d.py:33:34
+examples/darcy/darcy2d.py:35:36
 --8<--
 ```
 
@@ -61,9 +61,9 @@ examples/darcy/darcy2d.py:33:34
 本文中 2D darcy 问题作用在以 (0.0, 0.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-``` py linenums="36"
+``` py linenums="38"
 --8<--
-examples/darcy/darcy2d.py:36:37
+examples/darcy/darcy2d.py:38:39
 --8<--
 ```
 
@@ -73,9 +73,9 @@ examples/darcy/darcy2d.py:36:37
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="39"
+``` py linenums="41"
 --8<--
-examples/darcy/darcy2d.py:39:50
+examples/darcy/darcy2d.py:41:49
 --8<--
 ```
 
@@ -83,9 +83,9 @@ examples/darcy/darcy2d.py:39:50
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="52"
+``` py linenums="51"
 --8<--
-examples/darcy/darcy2d.py:52:69
+examples/darcy/darcy2d.py:51:68
 --8<--
 ```
 
@@ -109,7 +109,7 @@ examples/darcy/darcy2d.py:52:69
 
 ``` py linenums="70"
 --8<--
-examples/darcy/darcy2d.py:70:117
+examples/darcy/darcy2d.py:70:80
 --8<--
 ```
 
@@ -125,9 +125,9 @@ lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="118"
+``` py linenums="81"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:118:125
+examples/darcy/darcy2d.py:81:85
 --8<--
 ```
 
@@ -135,19 +135,19 @@ examples/ldc/ldc2d_steady_Re10.py:118:125
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数。
 
-``` py linenums="127"
+``` py linenums="87"
 --8<--
-examples/darcy/darcy2d.py:127:128
+examples/darcy/darcy2d.py:87:88
 --8<--
 ```
 
 ### 3.6 优化器构建
 
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="130"
+``` py linenums="90"
 --8<--
-examples/darcy/darcy2d.py:130:131
+examples/darcy/darcy2d.py:90:97
 --8<--
 ```
 
@@ -155,9 +155,9 @@ examples/darcy/darcy2d.py:130:131
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="133"
+``` py linenums="99"
 --8<--
-examples/darcy/darcy2d.py:133:150
+examples/darcy/darcy2d.py:99:116
 --8<--
 ```
 
@@ -167,21 +167,38 @@ examples/darcy/darcy2d.py:133:150
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="152"
+``` py linenums="118"
 --8<--
-examples/darcy/darcy2d.py:152:162
+examples/darcy/darcy2d.py:118:156
 --8<--
 ```
 
 ### 3.9 模型训练、评估与可视化
 
+#### 3.9.1 使用 Adam 训练
+
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="164"
+``` py linenums="158"
 --8<--
-examples/darcy/darcy2d.py:164:
+examples/darcy/darcy2d.py:158:179
 --8<--
 ```
+
+#### 3.9.2 使用 L-BFGS 微调[可选]
+
+在使用 `Adam` 优化器训练完毕之后，我们可以将优化器更换成二阶优化器 `L-BFGS` 继续训练少量轮数（此处我们使用 `Adam` 优化轮数的 10% 即可），从而进一步提高模型精度。
+
+``` py linenums="181"
+--8<--
+examples/darcy/darcy2d.py:181:206
+--8<--
+
+```
+
+???+ tip "提示"
+
+    在常规优化器训练完毕之后，使用 `L-BFGS` 微调少量轮数的方法，在大多数场景中都可以进一步有效提高模型精度。
 
 ## 4. 完整代码
 
@@ -194,6 +211,10 @@ examples/darcy/darcy2d.py
 ## 5. 结果展示
 
 <figure markdown>
-  ![darcy 2d](../../images/darcy2d/darcy2d.png){ loading=lazy }
-  <figcaption>模型预测压力 p</figcaption>
+  ![darcy 2d](../../images/darcy2d/darcy2d_p.png){ loading=lazy }
+  <figcaption>左：预测压力 p，中：参考压力 p，右：压力差</figcaption>
+  ![darcy 2d](../../images/darcy2d/darcy2d_u_x.png){ loading=lazy }
+  <figcaption>左：预测x方向流速 p，中：参考x方向流速 p，右：x方向流速差</figcaption>
+  ![darcy 2d](../../images/darcy2d/darcy2d_u_y.png){ loading=lazy }
+  <figcaption>左：预测y方向流速 p，中：参考y方向流速 p，右：y方向流速差</figcaption>
 </figure>

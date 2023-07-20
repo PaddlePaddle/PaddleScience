@@ -45,10 +45,12 @@ nav:
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - Darcy2D: zh/examples/darcy2d.md
-        - 光学:
+        - 材料:
           - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
-        - 气象:
+        - 算子学习:
+          - DeepONet: zh/examples/deeponet.md
+        - 气象预测:
           - FourCastNet: zh/examples/fourcastnet.md
           - Lorenz_transform_physx: zh/examples/lorenz.md
           - Rossler_transform_physx: zh/examples/rossler.md

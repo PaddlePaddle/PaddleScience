@@ -61,6 +61,7 @@ class MLP(base.Arch):
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
+        output_dim (Optional[int]): Number of output's dimension. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -77,6 +78,7 @@ class MLP(base.Arch):
         skip_connection: bool = False,
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -118,7 +120,10 @@ class MLP(base.Arch):
 
         self.linears = nn.LayerList(self.linears)
         self.acts = nn.LayerList(self.acts)
-        self.last_fc = nn.Linear(cur_size, len(self.output_keys))
+        self.last_fc = nn.Linear(
+            cur_size,
+            len(self.output_keys) if output_dim is None else output_dim,
+        )
 
         self.skip_connection = skip_connection
 
