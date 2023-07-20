@@ -64,7 +64,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
-        wandb_cfg (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
+        wandb_config (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
