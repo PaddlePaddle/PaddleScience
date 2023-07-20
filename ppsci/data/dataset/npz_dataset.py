@@ -226,9 +226,7 @@ class IterableNPZDataset(io.IterableDataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = {}
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
