@@ -47,9 +47,17 @@ class AdvectionDiffusion(base.PDE):
         >>> import ppsci
         >>> pde = ppsci.equation.(concentration="c", diffusivity=diffusivity,rho=1.0, dim=2, time=False)
     """
+
     def __init__(
-        self, concentration="c", diffusivity="D", rho=1, source_term=0, dim=3, time=False,
-        mixed_form=False, couple_method='heat_only'
+        self,
+        concentration="c",
+        diffusivity="D",
+        rho=1,
+        source_term=0,
+        dim=3,
+        time=False,
+        mixed_form=False,
+        couple_method="heat_only",
     ):
         super().__init__()
         # set params
@@ -62,29 +70,24 @@ class AdvectionDiffusion(base.PDE):
 
         def advection_diffusion_func(out):
             x, y = out["x"], out["y"]
-            if couple_method == 'heat_only':
+            if couple_method == "heat_only":
                 out["u"], out["v"] = out["u"].detach(), out["v"].detach()
             u, v = out["u"], out["v"]
             T = out[self.T]
             D = self.diffusivity
             Q = self.source_term
 
-            advection = (
-                u * jacobian(T, x) + 
-                v * jacobian(T, y)
-            )
+            advection = u * jacobian(T, x) + v * jacobian(T, y)
 
             if not self.mixed_form:
-                diffusion = (
-                (D * hessian(T, x)) +
-                (D * hessian(T, y))
-                )
+                diffusion = (D * hessian(T, x)) + (D * hessian(T, y))
 
             if self.dim == 3:
                 z = out["y"]
-                w = out["w"].detach() if couple_method == 'heat_only' else out["w"]
-                advection += (w * jacobian(T, z))
-                diffusion += (D * hessian(T, z)) 
+                w = out["w"].detach() if couple_method == "heat_only" else out["w"]
+                advection += w * jacobian(T, z)
+                diffusion += D * hessian(T, z)
 
             return advection - diffusion - Q / rho
+
         self.add_equation("advection_diffusion_" + self.T, advection_diffusion_func)

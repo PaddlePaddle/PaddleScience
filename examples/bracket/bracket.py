@@ -68,9 +68,17 @@ if __name__ == "__main__":
     }
 
     equation_traction = ("traction_x", "traction_y", "traction_z")
-    equation_rest = ("equilibrium_x", "equilibrium_y", "equilibrium_z",
-        "stress_disp_xx", "stress_disp_yy", "stress_disp_zz",
-        "stress_disp_xy", "stress_disp_xz", "stress_disp_yz",)
+    equation_rest = (
+        "equilibrium_x",
+        "equilibrium_y",
+        "equilibrium_z",
+        "stress_disp_xx",
+        "stress_disp_yy",
+        "stress_disp_zz",
+        "stress_disp_xy",
+        "stress_disp_xz",
+        "stress_disp_yz",
+    )
 
     # set geometry
     support = ppsci.geometry.Mesh("./stl/support.stl")
@@ -122,7 +130,7 @@ if __name__ == "__main__":
         name="BC_BACK",
     )
     bc_front = ppsci.constraint.BoundaryConstraint(
-        {key: equation["LinearElasticity"].equations[key]for key in equation_traction},
+        {key: equation["LinearElasticity"].equations[key] for key in equation_traction},
         {"traction_x": 0, "traction_y": 0, "traction_z": T},
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 128},
@@ -131,7 +139,7 @@ if __name__ == "__main__":
         name="BC_FRONT",
     )
     bc_surface = ppsci.constraint.BoundaryConstraint(
-        {key: equation["LinearElasticity"].equations[key]for key in equation_traction},
+        {key: equation["LinearElasticity"].equations[key] for key in equation_traction},
         {"traction_x": 0, "traction_y": 0, "traction_z": 0},
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 4096},
@@ -142,7 +150,7 @@ if __name__ == "__main__":
         name="BC_SURFACE",
     )
     support_interior_constraint = ppsci.constraint.InteriorConstraint(
-        {key: equation["LinearElasticity"].equations[key]for key in equation_rest},
+        {key: equation["LinearElasticity"].equations[key] for key in equation_rest},
         {
             "equilibrium_x": 0,
             "equilibrium_y": 0,
@@ -179,7 +187,7 @@ if __name__ == "__main__":
         name="support_interior",
     )
     bracket_interior_constraint = ppsci.constraint.InteriorConstraint(
-        {key: equation["LinearElasticity"].equations[key]for key in equation_rest},
+        {key: equation["LinearElasticity"].equations[key] for key in equation_rest},
         {
             "equilibrium_x": 0,
             "equilibrium_y": 0,

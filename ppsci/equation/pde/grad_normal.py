@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
+
 
 class GradNormal(base.PDE):
     r"""Gradients summation of scalar variable over every dimensions.
@@ -32,11 +32,12 @@ class GradNormal(base.PDE):
 
     Returns:
         Gradients summation of grad_var over all dimensions
-    
+
     Examples:
         >>> import ppsci
         >>> ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
     """
+
     def __init__(self, grad_var, dim=3, time=True):
         super().__init__()
         self.T = grad_var
@@ -52,5 +53,5 @@ class GradNormal(base.PDE):
                 normal_z, z = out["z"], out["normal_z"]
                 grad_normal += normal_z * jacobian(T, z)
             return grad_normal
-        
+
         self.add_equation("normal_gradient_" + self.T, normal_gradient_fun)

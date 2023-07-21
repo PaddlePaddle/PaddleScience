@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import collections
-import os
 import csv
+import os
 import sys
 from typing import Dict
 from typing import Optional
@@ -28,7 +28,7 @@ import scipy.io as sio
 from ppsci.utils import logger
 
 __all__ = [
-    "write_csv_file"
+    "write_csv_file",
     "load_csv_file",
     "load_mat_file",
     "load_vtk_file",
@@ -36,7 +36,9 @@ __all__ = [
 ]
 
 
-def write_csv_file(output_dir:str, eval_freq:int, csv_name:str, epoch_id:int, name:str, data:dict):
+def write_csv_file(
+    output_dir: str, eval_freq: int, csv_name: str, epoch_id: int, name: str, data: dict
+):
     """Write data in csv format to file.
 
     Args:
@@ -52,12 +54,16 @@ def write_csv_file(output_dir:str, eval_freq:int, csv_name:str, epoch_id:int, na
     validator_dir = os.path.join(output_dir, csv_name)
     os.makedirs(validator_dir, exist_ok=True)
     if epoch_id == eval_freq:
-        with open(validator_dir + '/' + name + '.csv', 'w', encoding='utf-8', newline='') as file:
+        with open(
+            validator_dir + "/" + name + ".csv", "w", encoding="utf-8", newline=""
+        ) as file:
             writer = csv.writer(file)
             writer.writerow(["epoch id"] + [key for key in data.keys()])
-    with open(validator_dir + '/' + name + '.csv', 'a', encoding='utf-8', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([epoch_id] + [val.item() for val in data.values()])
+    with open(
+        validator_dir + "/" + name + ".csv", "a", encoding="utf-8", newline=""
+    ) as file:
+        writer = csv.writer(file)
+        writer.writerow([epoch_id] + [val.item() for val in data.values()])
 
 
 def load_csv_file(
@@ -168,10 +174,12 @@ def load_vtk_file(
     """
     input_dict = {var: [] for var in input_keys}
     label_dict = {} if label_keys is None else {var: [] for var in label_keys}
-    input_dict_patch = {} if input_keys_patch is None else {var: [] for var in input_keys_patch}
+    input_dict_patch = (
+        {} if input_keys_patch is None else {var: [] for var in input_keys_patch}
+    )
     time_index = (0,) if time_index is None else time_index
     for index in time_index:
-        if 't' in input_dict:
+        if "t" in input_dict:
             file = filename_without_timeid + f"{index}.vtu"
         else:
             file = filename_without_timeid
@@ -189,7 +197,7 @@ def load_vtk_file(
 
         for key in input_dict_patch:
             input_dict_patch[key].append(np.array(mesh.point_data[key], "float32"))
-        
+
         input_dict.update(input_dict_patch)
 
         for i, key in enumerate(label_dict):

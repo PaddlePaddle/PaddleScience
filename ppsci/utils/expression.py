@@ -148,8 +148,11 @@ class ExpressionSolver(nn.Layer):
         clear()
 
         # compute loss for each validator according to its' own output, label and weight
-        validator_loss = None if not validator.loss else validator.loss(
-            output_dict,label_dict,weight_dict)
+        validator_loss = (
+            None
+            if not validator.loss
+            else validator.loss(output_dict, label_dict, weight_dict)
+        )
 
         return output_dict, validator_loss
 

@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os 
-import csv
 import time
+from typing import TYPE_CHECKING
+
 import paddle
 from paddle import io
-from typing import TYPE_CHECKING
-from ppsci.utils import misc, write_csv_file
+
 from ppsci.solver import printer
+from ppsci.utils import misc
+from ppsci.utils import write_csv_file
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -77,7 +78,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             if isinstance(validator_loss, paddle.Tensor):
                 loss_dict[f"loss({_validator.name})"] = float(validator_loss)
             elif isinstance(validator_loss, dict):
-                loss_dict = {f"loss({key})" : val for key, val in validator_loss.items()}
+                loss_dict = {f"loss({key})": val for key, val in validator_loss.items()}
 
             # collect batch data
             for key, input in input_dict.items():
@@ -142,7 +143,14 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     )
                 metric_summary_dict[metric_str].update(float(metric_value), num_samples)
 
-        write_csv_file(solver.output_dir, solver.eval_freq, "validator", epoch_id, _validator.name, metric_dict)
+        write_csv_file(
+            solver.output_dir,
+            solver.eval_freq,
+            "validator",
+            epoch_id,
+            _validator.name,
+            metric_dict,
+        )
 
         # use the first metric for return value
         if target_metric is None:

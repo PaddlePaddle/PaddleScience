@@ -116,18 +116,17 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
             wandb_writer=trainer.wandb_writer,
         )
 
+
 def log_eval_metric_info(metrics_dict, epoch_id):
     """Report metrics collected during eval per epoch.
 
     Args:
         metrics_dict (dict): Dict containing metric results.
         epoch_id (int): Epoch id.
-    
+
     Returns:
         None
     """
-    logger.info(
-        f"[Eval Metrics Summary][Epoch {epoch_id}]")
+    logger.info(f"[Eval Metrics Summary][Epoch {epoch_id}]")
     for key, val in metrics_dict.items():
-        logger.info(
-            f"{key} = {val.val:.5f}")
+        logger.info(f"{key} = {val.val:.5f}")

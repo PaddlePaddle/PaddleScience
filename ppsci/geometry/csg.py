@@ -41,8 +41,12 @@ class CSGUnion(geometry.Geometry):
         )
         self.geom1 = geom1
         self.geom2 = geom2
-        self.area = geom1.area + geom2.area #assum no area intersection, fix while sampling
-        self.perimeter = geom1.perimeter + geom2.perimeter #assum no area intersection, fix while sampling
+        self.area = (
+            geom1.area + geom2.area
+        )  # assum no area intersection, fix while sampling
+        self.perimeter = (
+            geom1.perimeter + geom2.perimeter
+        )  # assum no area intersection, fix while sampling
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
@@ -99,7 +103,9 @@ class CSGUnion(geometry.Geometry):
             points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
             points = np.random.permutation(points)
 
-            self.perimeter = (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
+            self.perimeter = (
+                (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
+            )
 
             if len(points) > n - _size:
                 points = points[: n - _size]
@@ -128,6 +134,7 @@ class CSGUnion(geometry.Geometry):
         sdf_geom2 = self.geom2.sdf_func(points)
         return np.amin((sdf_geom1, sdf_geom2), axis=0)
 
+
 class CSGDifference(geometry.Geometry):
     """Construct an object by CSG Difference."""
 
@@ -140,7 +147,9 @@ class CSGDifference(geometry.Geometry):
         super().__init__(geom1.ndim, geom1.bbox, geom1.diam)
         self.geom1 = geom1
         self.geom2 = geom2
-        self.area = geom1.area - geom2.area #assum full area intersection, fix while sampling
+        self.area = (
+            geom1.area - geom2.area
+        )  # assum full area intersection, fix while sampling
 
     def is_inside(self, x):
         return np.logical_and(self.geom1.is_inside(x), ~self.geom2.is_inside(x))

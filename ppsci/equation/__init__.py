@@ -15,7 +15,9 @@
 import copy
 
 from ppsci.equation.pde import PDE
+from ppsci.equation.pde import AdvectionDiffusion
 from ppsci.equation.pde import Biharmonic
+from ppsci.equation.pde import GradNormal
 from ppsci.equation.pde import Laplace
 from ppsci.equation.pde import LinearElasticity
 from ppsci.equation.pde import NavierStokes
@@ -23,8 +25,6 @@ from ppsci.equation.pde import NormalDotVec
 from ppsci.equation.pde import Poisson
 from ppsci.equation.pde import Vibration
 from ppsci.equation.pde import ZeroEquation
-from ppsci.equation.pde import GradNormal
-from ppsci.equation.pde import AdvectionDiffusion
 from ppsci.utils import logger
 from ppsci.utils import misc
 
@@ -40,7 +40,7 @@ __all__ = [
     "build_equation",
     "ZeroEquation",
     "GradNormal",
-    "AdvectionDiffusion"
+    "AdvectionDiffusion",
 ]
 
 

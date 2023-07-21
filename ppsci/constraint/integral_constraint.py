@@ -105,7 +105,11 @@ class IntegralConstraint(base.Constraint):
         for i in range(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
         ):
-            random_trans = criteria.set_trans(i) if criteria and hasattr(criteria, "set_trans") else 0
+            random_trans = (
+                criteria.set_trans(i)
+                if criteria and hasattr(criteria, "set_trans")
+                else 0
+            )
             input = geom.sample_boundary(
                 dataloader_cfg["integral_batch_size"], random, criteria
             )

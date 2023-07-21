@@ -64,15 +64,17 @@ class Geometry:
         return self.random_points(n)
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        pass 
+        pass
 
     def sdf_gradient(self, points, delta=(0.0001,)) -> np.ndarray:
-        delta = delta * self.ndim  
+        delta = delta * self.ndim
         sdf_grad = misc.Prettydefaultdict()
         for i, key in enumerate(self.dim_keys):
             d = np.zeros_like(points)
             d[:, i] += delta[i]
-            sdf_grad["sdf__" + key] = -(self.sdf_func(points + d) - self.sdf_func(points - d)) / (2 * delta[i])
+            sdf_grad["sdf__" + key] = -(
+                self.sdf_func(points + d) - self.sdf_func(points - d)
+            ) / (2 * delta[i])
         return sdf_grad
 
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
@@ -107,20 +109,20 @@ class Geometry:
                     "please check correctness of geometry and given creteria."
                 )
 
-        # if sdf_fun/sdf_grad/area added, 
+        # if sdf_fun/sdf_grad/area added,
         # return x_dict and sdf_dict/sdf_grad_dict/area_dict, else, only return the x_dict
         if hasattr(self, "sdf_func"):
             sdf = -self.sdf_func(x)
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
         else:
             sdf_dict = {}
-            
+
         if hasattr(self, "sdf_gradient"):
             print("sdf_grad")
             sdf_grad_dict = self.sdf_gradient(x)
         else:
             sdf_grad_dict = {}
-            
+
         if hasattr(self, "area"):
             if self.ndim == 1:
                 area = self.perimeter
@@ -131,7 +133,7 @@ class Geometry:
             area_dict = misc.convert_to_dict(np.full((n, 1), area / n), ("area",))
         else:
             area_dict = {}
-         
+
         x_dict = misc.convert_to_dict(x, self.dim_keys)
         return {**x_dict, **sdf_dict, **sdf_grad_dict, **area_dict}
 
@@ -196,15 +198,15 @@ class Geometry:
         ):
             area_dict = misc.convert_to_dict(area[:, 1:], ["area"])
             return {**x_dict, **normal_dict, **area_dict}
-        
-        if (self.ndim == 2):
+
+        if self.ndim == 2:
             if (criteria is not None) and (misc.typename(self) == "Line"):
                 area = self.approx_area(criteria)
             elif criteria is None:
                 area = self.perimeter
             else:
                 raise NotImplementedError("self.approx_area is not implemented")
-            area_dict = {"area" : np.full_like(next(iter(x_dict.values())), area / n)}
+            area_dict = {"area": np.full_like(next(iter(x_dict.values())), area / n)}
             return {**x_dict, **normal_dict, **area_dict}
 
         return {**x_dict, **normal_dict}
@@ -234,7 +236,7 @@ class Geometry:
         from ppsci.geometry import csg
 
         return csg.CSGUnion(self, other)
-    
+
     def __add__(self, other):
         """CSG Union."""
         from ppsci.geometry import csg

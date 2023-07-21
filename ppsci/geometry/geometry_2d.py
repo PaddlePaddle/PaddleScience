@@ -223,12 +223,7 @@ class Rectangle(geometry_nd.Hypercube):
             and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
         )
 
-    def approx_area(
-        self,
-        criteria=None,
-        approx_nr=10000,
-        random='pseudo'
-    ):
+    def approx_area(self, criteria=None, approx_nr=10000, random="pseudo"):
         points = self.random_boundary_points(approx_nr)
         criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
         return np.sum(criteria_mask) / criteria_mask.shape[0] * self.area
@@ -249,7 +244,9 @@ class Channel(Rectangle):
     def __init__(self, xmin, xmax):
         super().__init__(xmin, xmax)
         self.top_normal = np.array([0, 1.0], paddle.get_default_dtype()).reshape(-1, 1)
-        self.bottom_normal = np.array([0, -1.0], paddle.get_default_dtype()).reshape(-1, 1)
+        self.bottom_normal = np.array([0, -1.0], paddle.get_default_dtype()).reshape(
+            -1, 1
+        )
         self.perimeter = 2 * (xmax[0] - xmin[0])
 
     def random_boundary_points(self, n, random="pseudo"):
@@ -257,7 +254,7 @@ class Channel(Rectangle):
         u = np.ravel(sampler.sample(n + 15, 1, random))
         # Remove the possible points very close to the corners
         u = u[~np.isclose(u, 0)]
-        u = u[~np.isclose(u, 1/2)]
+        u = u[~np.isclose(u, 1 / 2)]
         u = u[~np.isclose(u, 1)]
         u = u[0:n]
         u *= self.perimeter
@@ -270,8 +267,8 @@ class Channel(Rectangle):
         return np.vstack(x)
 
     def boundary_normal(self, x):
-        on_top = np.isclose(x[:,1], self.xmax[1])
-        on_bottom = np.isclose(x[:,1], self.xmin[1])
+        on_top = np.isclose(x[:, 1], self.xmax[1])
+        on_bottom = np.isclose(x[:, 1], self.xmin[1])
         return (self.top_normal * on_top + self.bottom_normal * on_bottom).T
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
@@ -287,7 +284,7 @@ class Channel(Rectangle):
         """
         center = (self.xmax + self.xmin) / 2
         xmax_rel = self.xmax - center
-        return (np.abs(points[:,1].reshape(-1, 1) - center[1]) - xmax_rel[1])
+        return np.abs(points[:, 1].reshape(-1, 1) - center[1]) - xmax_rel[1]
 
 
 class Triangle(geometry.Geometry):
@@ -718,15 +715,18 @@ class Line(geometry.Geometry):
         self.x_min = x_min
         self.x_max = x_max
         self.area = None
-        self.perimeter = np.sqrt((self.x_max[0] - self.x_min[0])**2 + (self.x_max[1] - self.x_min[1])**2)
+        self.perimeter = np.sqrt(
+            (self.x_max[0] - self.x_min[0]) ** 2 + (self.x_max[1] - self.x_min[1]) ** 2
+        )
 
-    def uniform_boundary_points(self, n: int, random='pseudo'):
-        if (np.abs(self.normal) == np.array([1,0])).all():
+    def uniform_boundary_points(self, n: int, random="pseudo"):
+        if (np.abs(self.normal) == np.array([1, 0])).all():
             y = np.random.choice([self.l, self.r], n)
             x = np.full_like(y, self.x_min[0])
-            return np.array([x,y]).astype(paddle.get_default_dtype())
-    def random_boundary_points(self, n: int, random='pseudo'):
-        if (np.abs(self.normal) == np.array([1,0])).all():
+            return np.array([x, y]).astype(paddle.get_default_dtype())
+
+    def random_boundary_points(self, n: int, random="pseudo"):
+        if (np.abs(self.normal) == np.array([1, 0])).all():
             y = np.ravel(sampler.sample(n + 10, 1, random))
             # Remove the possible points very close to the line tips
             y = y[~np.isclose(y, 0)]
@@ -736,8 +736,8 @@ class Line(geometry.Geometry):
             y = (y_max - y_min) * y[0:n] + y_min
             y = y.reshape(y.shape[0], 1)
             x = np.full_like(y, self.x_min[0])
-            return np.hstack((x,y))
-        elif(np.abs(self.normal) == np.array([0,1])).all():
+            return np.hstack((x, y))
+        elif (np.abs(self.normal) == np.array([0, 1])).all():
             x = np.ravel(sampler.sample(n + 10, 1, random))
             # Remove the possible points very close to the line tips
             x = x[~np.isclose(x, 0)]
@@ -747,33 +747,29 @@ class Line(geometry.Geometry):
             x = (x_max - x_min) * x[0:n] + x_min
             x = x.reshape(x.shape[0], 1)
             y = np.full_like(x, self.x_min[1])
-            return np.hstack((x,y))
-    
+            return np.hstack((x, y))
+
     def boundary_normal(self, x):
         normal = np.zeros_like(x)
         for i, normal_val in enumerate(self.normal):
             normal[:, i] = normal_val
         return normal
 
-    def approx_area(
-        self,
-        criteria=None,
-        approx_nr=10000,
-        random='pseudo'
-    ):
+    def approx_area(self, criteria=None, approx_nr=10000, random="pseudo"):
         points = self.random_boundary_points(approx_nr)
         criteria_mask = criteria(*np.split(points, self.ndim, axis=1)).flatten()
         return np.sum(criteria_mask) / criteria_mask.shape[0] * self.perimeter
-        
+
     def is_inside(self, x):
         return np.full(x.shape[0], False)
 
     def on_boundary(self, x: np.ndarray):
         is_x_min = np.isclose(x, self.x_min)
-        is_x_min = is_x_min[:,0] & is_x_min[:,1]
+        is_x_min = is_x_min[:, 0] & is_x_min[:, 1]
         is_x_max = np.isclose(x, self.x_max)
-        is_x_max = is_x_max[:,0] & is_x_max[:,1]
+        is_x_max = is_x_max[:, 0] & is_x_max[:, 1]
         return is_x_min | is_x_max
+
 
 def polygon_signed_area(vertices):
     """The (signed) area of a simple polygon.

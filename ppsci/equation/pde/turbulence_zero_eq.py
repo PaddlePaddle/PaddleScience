@@ -12,9 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from sympy import Function
+from sympy import Min
+from sympy import Symbol
+from sympy import sqrt
+
 from ppsci.equation.pde import base
 from ppsci.utils.paddle_printer import SympyToPaddle
-from sympy import Symbol, sqrt, Function, Min
+
 
 class ZeroEquation(base.PDE):
     r"""Prandtl's mixing-length model
@@ -45,6 +50,7 @@ class ZeroEquation(base.PDE):
         >>> import ppsci
         >>> ppsci.equation.ZeroEquation(0.01, 1)
     """
+
     def __init__(self, nu, max_distance, rho=1.0, dim=3):
         # set params
         super().__init__()
@@ -71,11 +77,7 @@ class ZeroEquation(base.PDE):
                 self.max_distance_ratio * self.max_distance,
             )
 
-            G = (
-                2 * u.diff(x) ** 2
-                + 2 * v.diff(y) ** 2
-                + (u.diff(y) + v.diff(x)) ** 2
-            )
+            G = 2 * u.diff(x) ** 2 + 2 * v.diff(y) ** 2 + (u.diff(y) + v.diff(x)) ** 2
 
             sympy_expr = nu + rho * mixing_length**2 * sqrt(G)
             self.expr = sympy_expr

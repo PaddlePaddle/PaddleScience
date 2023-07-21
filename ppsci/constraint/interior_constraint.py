@@ -163,7 +163,6 @@ class InteriorConstraint(base.Constraint):
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
-
         # wrap input, label, weight into a dataset
         _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
 

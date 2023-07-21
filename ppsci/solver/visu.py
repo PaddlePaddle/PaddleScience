@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import os
-import paddle
 import os.path as osp
 from typing import TYPE_CHECKING
+
+import paddle
+
 from ppsci.utils import misc
 
 if TYPE_CHECKING:

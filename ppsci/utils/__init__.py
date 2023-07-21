@@ -22,15 +22,15 @@ from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
-from ppsci.utils.reader import write_csv_file
+from ppsci.utils.paddle_printer import paddle_lambdify
 from ppsci.utils.reader import load_csv_file
 from ppsci.utils.reader import load_mat_file
 from ppsci.utils.reader import load_vtk_file
 from ppsci.utils.reader import load_vtk_with_time_file
+from ppsci.utils.reader import write_csv_file
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
-from ppsci.utils.paddle_printer import paddle_lambdify
 
 __all__ = [
     "initializer",
