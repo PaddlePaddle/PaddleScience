@@ -186,6 +186,17 @@ class Rectangle(geometry_nd.Hypercube):
                 x.append([self.xmin[0], self.xmax[1] - (l - l3)])
         return np.vstack(x)
 
+    @staticmethod
+    def is_valid(vertices):
+        """Check if the geometry is a Rectangle."""
+        return (
+            len(vertices) == 4
+            and np.isclose(np.prod(vertices[1] - vertices[0]), 0)
+            and np.isclose(np.prod(vertices[2] - vertices[1]), 0)
+            and np.isclose(np.prod(vertices[3] - vertices[2]), 0)
+            and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
+        )
+
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
         """Compute signed distance field.
 
@@ -214,17 +225,6 @@ class Rectangle(geometry_nd.Hypercube):
             np.linalg.norm(np.maximum(dist_from_center, 0), axis=1)
             + np.minimum(np.max(dist_from_center, axis=1), 0)
         ).reshape(-1, 1)
-
-    @staticmethod
-    def is_valid(vertices):
-        """Check if the geometry is a Rectangle."""
-        return (
-            len(vertices) == 4
-            and np.isclose(np.prod(vertices[1] - vertices[0]), 0)
-            and np.isclose(np.prod(vertices[2] - vertices[1]), 0)
-            and np.isclose(np.prod(vertices[3] - vertices[2]), 0)
-            and np.isclose(np.prod(vertices[0] - vertices[3]), 0)
-        )
 
     def approx_area(self, criteria=None, approx_nr=10000, random="pseudo"):
         points = self.random_boundary_points(approx_nr)
