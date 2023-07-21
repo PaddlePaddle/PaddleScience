@@ -118,7 +118,6 @@ class Geometry:
             sdf_dict = {}
 
         if hasattr(self, "sdf_gradient"):
-            print("sdf_grad")
             sdf_grad_dict = self.sdf_gradient(x)
         else:
             sdf_grad_dict = {}

@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # initialization
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
-    OUTPUT_DIR = "./output_0719" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output" if not args.output_dir else args.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     shuffle = True
 
@@ -430,7 +430,6 @@ if __name__ == "__main__":
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        checkpoint_path="/workspace/wangguan/PaddleScience_2D_Sink/examples/sink/2d_advection/output_0719/checkpoints/latest",
     )
 
     solver.train()
