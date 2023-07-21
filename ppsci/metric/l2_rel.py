@@ -47,7 +47,7 @@ class L2Rel(base.Metric):
         super().__init__(keep_batch)
 
     @paddle.no_grad()
-    def forward(self, output_dict, label_dict, weight_dict=None):
+    def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
             rel_l2 = (
