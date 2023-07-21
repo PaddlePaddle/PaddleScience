@@ -31,9 +31,8 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(
-        ("t", "x", "y"), ("u", "v", "p"), 5, 50, "tanh", False, False
-    )
+    model = ppsci.arch.MLP(("t", "x", "y"), ("u", "v", "p"), 5, 50, "tanh")
+
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
 

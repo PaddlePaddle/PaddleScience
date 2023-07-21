@@ -139,7 +139,7 @@ examples/operator_learning/deeponet.py:70:87
 
 评价指标 `metric` 选择 `ppsci.metric.L2Rel` 即可。
 
-其余配置与 [约束构建](#34) 的设置类似。
+其余配置与 [约束构建](#33) 的设置类似。
 
 ### 3.7 模型训练、评估
 
@@ -172,15 +172,15 @@ examples/operator_learning/deeponet.py
 ## 5. 结果展示
 
 <figure markdown>
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_0_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_1_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_2_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_3_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_4_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_5_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_6_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_7_result.png){ loading=lazy }
-  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_8_result.png){ loading=lazy }
+  ![result0.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_0_result.png){ loading=lazy }
+  ![result1.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_1_result.png){ loading=lazy }
+  ![result2.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_2_result.png){ loading=lazy }
+  ![result3.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_3_result.png){ loading=lazy }
+  ![result4.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_4_result.png){ loading=lazy }
+  ![result5.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_5_result.png){ loading=lazy }
+  ![result6.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_6_result.png){ loading=lazy }
+  ![result7.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_7_result.png){ loading=lazy }
+  ![result8.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepONet/func_8_result.png){ loading=lazy }
 </figure>
 
 ## 6. 参考文献
