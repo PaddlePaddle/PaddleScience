@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-version = "1.0.0"
+version = "1.1.0"
 description = "A library for scientific machine learning"
 readme = "README.md"
 license = {text = "Apache-2.0"}
