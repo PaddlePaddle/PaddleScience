@@ -36,7 +36,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     # git clone https://gitee.com/paddlepaddle/PaddleScience.git
 
     cd PaddleScience
-    git checkout develop
+    git checkout release/1.1
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 

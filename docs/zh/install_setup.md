@@ -43,7 +43,7 @@
     # git clone https://gitee.com/paddlepaddle/PaddleScience.git
 
     cd PaddleScience
-    git checkout develop
+    git checkout release/1.1
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
