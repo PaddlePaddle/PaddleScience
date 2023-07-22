@@ -14,7 +14,7 @@ def readme():
 if __name__ == "__main__":
     setuptools.setup(
         name="paddlesci",
-        version="1.0.0",
+        version="1.1.0",
         author="PaddlePaddle",
         url="https://github.com/PaddlePaddle/PaddleScience",
         description=(
