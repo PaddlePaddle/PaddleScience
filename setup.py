@@ -29,7 +29,7 @@ if __name__ == "__main__":
                 "examples",
                 "jointContribution",
                 "test_tipc",
-                "tests",
+                "test",
                 "tools",
             )
         ),
