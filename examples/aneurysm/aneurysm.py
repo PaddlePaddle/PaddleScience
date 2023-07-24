@@ -301,7 +301,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         eval_with_no_grad=True,
     )
     solver.eval()
