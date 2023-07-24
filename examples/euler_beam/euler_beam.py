@@ -149,7 +149,7 @@ if __name__ == "__main__":
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)
