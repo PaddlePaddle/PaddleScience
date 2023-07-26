@@ -147,7 +147,7 @@ examples/operator_learning/deeponet.py:70:87
 
 ``` py linenums="89"
 --8<--
-examples/operator_learning/deeponet.py:89:
+examples/operator_learning/deeponet.py:89:122
 --8<--
 ```
 
