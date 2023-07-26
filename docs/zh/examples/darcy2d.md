@@ -89,9 +89,9 @@ examples/darcy/darcy2d.py:51:68
 --8<--
 ```
 
-`InteriorConstraint` 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["darcy"].equations`；
+`InteriorConstraint` 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["Poisson"].equations`；
 
-第二个参数是约束变量的目标值，在本问题中我们希望 Poisson 方程产生的结果 `darcy` 被优化至与其标准解一致，因此将它的目标值全设为 `poisson_ref_compute_func` 产生的结果；
+第二个参数是约束变量的目标值，在本问题中我们希望 Poisson 方程产生的结果被优化至与其标准解一致，因此将它的目标值全设为 `poisson_ref_compute_func` 产生的结果；
 
 第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33) 章节实例化好的 `geom["rect"]` 即可；
 
