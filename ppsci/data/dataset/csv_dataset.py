@@ -46,7 +46,7 @@ class CSVDataset(io.Dataset):
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.CSVDataset(
-        ...     "/path/to/file.csv"
+        ...     "/path/to/file.csv",
         ...     ("x",),
         ...     ("u",),
         ... )  # doctest: +SKIP
