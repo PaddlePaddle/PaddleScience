@@ -2,6 +2,7 @@
 Reference: https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html
 """
 
+import os
 from typing import Callable
 from typing import Tuple
 
@@ -169,6 +170,8 @@ if __name__ == "__main__":
         (r"$u=6x^5, G(u)=x^6$", lambda x: 5 * x**4, lambda y: y**5),  # 8
         (r"$u=e^x, G(u)=e^x-1$", lambda x: np.exp(x), lambda y: np.exp(y) - 1),  # 9
     ]
+
+    os.makedirs(os.path.join(OUTPUT_DIR, "visual"), exist_ok=True)
     for i, (title, u_func, G_func) in enumerate(func_u_G_pair):
         u, y, G_ref = generate_y_u_G_ref(u_func, G_func)
         G_pred = solver.predict({"u": u, "y": y})["G"]
@@ -176,5 +179,5 @@ if __name__ == "__main__":
         plt.plot(y, G_ref, label=r"$G(u)(y)_{pred}$")
         plt.legend()
         plt.title(title)
-        plt.savefig(f"{OUTPUT_DIR}/visual/func_{i}_result.png")
+        plt.savefig(os.path.join(OUTPUT_DIR, "visual", f"func_{i}_result.png"))
         plt.clf()
