@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import scipy.io
+import os
 
 import functions as func_module
-import hdf5storage
 import numpy as np
-from functions import DataFuncs
-from functions import DiscFuncs
-from functions import GenFuncs
 
 import ppsci
+from ppsci.utils import checker
 from ppsci.utils import config
 from ppsci.utils import logger
+
+if not checker.dynamic_import_to_globals("hdf5storage"):
+    raise ModuleNotFoundError("Please install hdf5storage through pip first.")
+import hdf5storage
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -36,20 +37,20 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # initialize parameters and import classes
-    use_amp = True
-    use_spatialdisc = True
-    use_tempodisc = True
+    USE_AMP = True
+    USE_SPATIALDISC = True
+    USE_TEMPODISC = True
 
-    weight_gl = [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
-    weight_gl_layer = (
-        [-1e-5, -1e-5, -1e-5, -1e-5, -1e-5] if use_spatialdisc else None
+    weight_gen_loss = [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
+    weight_gen_layer_loss = (
+        [-1e-5, -1e-5, -1e-5, -1e-5, -1e-5] if USE_SPATIALDISC else None
     )  # lambda_layer, lambda_layer1, lambda_layer2, lambda_layer3, lambda_layer4
-    weight_dld = 1.0
+    weight_disc_loss = 1.0
     tile_ratio = 1
 
-    gen_funcs = GenFuncs(weight_gl, weight_gl_layer)
-    dics_funcs = DiscFuncs(weight_dld)
-    data_funcs = DataFuncs(tile_ratio)
+    gen_funcs = func_module.GenFuncs(weight_gen_loss, weight_gen_layer_loss)
+    dics_funcs = func_module.DiscFuncs(weight_disc_loss)
+    data_funcs = func_module.DataFuncs(tile_ratio)
 
     # load dataset
     dataset_train = hdf5storage.loadmat(DATASET_PATH)
@@ -69,8 +70,8 @@ if __name__ == "__main__":
 
     # define Generator model
     model_gen = ppsci.arch.Generator(
-        ("in_d_low_inp",),  # 'NCHW'
-        ("out_gen",),
+        ("input_gen",),  # 'NCHW'
+        ("output_gen",),
         in_channel,
         out_channels_list,
         kernel_sizes_list,
@@ -99,21 +100,14 @@ if __name__ == "__main__":
     acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
 
     # define Discriminators
-    if use_spatialdisc:
-        output_keys_disc = (
-            "out_disc_label_layer1",
-            "out_disc_label_layer2",
-            "out_disc_label_layer3",
-            "out_disc_label_layer4",
-            "out_disc_label",
-            "out_disc_gen_out_layer1",
-            "out_disc_gen_out_layer2",
-            "out_disc_gen_out_layer3",
-            "out_disc_gen_out_layer4",
-            "out_disc_gen_out",
-        )
+    if USE_SPATIALDISC:
+        output_keys_disc_list = ["out_disc_from_target"] * 5 + ["out_disc_from_gen"] * 5
+        for i in range(4):
+            output_keys_disc_list[i] += f"_layer{i}"
+            output_keys_disc_list[i + 5] += f"_layer{i}"
+        output_keys_disc = tuple(output_keys_disc_list)
         model_disc = ppsci.arch.Discriminator(
-            ("in_d_high_disc_label", "in_d_high_disc_gen"),  # 'NCHW'
+            ("input_disc_from_target", "input_disc_from_gen"),  # 'NCHW'
             output_keys_disc,
             in_channel,
             out_channels,
@@ -126,23 +120,18 @@ if __name__ == "__main__":
         model_disc.register_input_transform(dics_funcs.transform_in)
         model_tuple += (model_disc,)
 
-    # define Discriminators tempo
-    if use_tempodisc:
-        output_keys_disc_t = (
-            "out_disc_t_label_layer1",
-            "out_disc_t_label_layer2",
-            "out_disc_t_label_layer3",
-            "out_disc_t_label_layer4",
-            "out_disc_t_label",
-            "out_disc_t_gen_out_layer1",
-            "out_disc_t_gen_out_layer2",
-            "out_disc_t_gen_out_layer3",
-            "out_disc_t_gen_out_layer4",
-            "out_disc_t_gen_out",
-        )
+    # define temporal Discriminators
+    if USE_TEMPODISC:
+        output_keys_disc_tempo_list = ["out_disc_tempo_from_target"] * 5 + [
+            "out_disc_tempo_from_gen"
+        ] * 5
+        for i in range(4):
+            output_keys_disc_tempo_list[i] += f"_layer{i}"
+            output_keys_disc_tempo_list[i + 5] += f"_layer{i}"
+        output_keys_disc_tempo = tuple(output_keys_disc_tempo_list)
         model_disc_tempo = ppsci.arch.Discriminator(
-            ("in_d_high_disc_t_label", "in_d_high_disc_t_gen"),  # 'NCHW'
-            output_keys_disc_t,
+            ("input_tempo_disc_from_target", "input_tempo_disc_from_gen"),  # 'NCHW'
+            output_keys_disc_tempo,
             in_channel_tempo,
             out_channels,
             fc_channel,
@@ -172,13 +161,13 @@ if __name__ == "__main__":
         gamma=0.05,
         by_epoch=True,
     )()
-    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)(model_gen)
-    if use_spatialdisc:
+    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
+    if USE_SPATIALDISC:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
             EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
         )()
-        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)(model_disc)
-    if use_tempodisc:
+        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
+    if USE_TEMPODISC:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
             EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
         )()
@@ -216,7 +205,7 @@ if __name__ == "__main__":
         name="sup_constraint_gen",
     )
     constraint_gen = {sup_constraint_gen.name: sup_constraint_gen}
-    if use_tempodisc:
+    if USE_TEMPODISC:
         sup_constraint_gen_tempo = ppsci.constraint.SupervisedConstraint(
             {
                 "dataset": {
@@ -248,7 +237,7 @@ if __name__ == "__main__":
 
     # Discriminators
     # maunally build constraint(s)
-    if use_spatialdisc:
+    if USE_SPATIALDISC:
         sup_constraint_disc = ppsci.constraint.SupervisedConstraint(
             {
                 "dataset": {
@@ -258,11 +247,11 @@ if __name__ == "__main__":
                         "density_high": dataset_train["density_high"],
                     },
                     "label": {
-                        "out_disc_label": np.ones(
+                        "out_disc_from_target": np.ones(
                             (np.shape(dataset_train["density_high"])[0], 1),
                             dtype=np.float32,
                         ),
-                        "out_disc_gen_out": np.ones(
+                        "out_disc_from_gen": np.ones(
                             (np.shape(dataset_train["density_high"])[0], 1),
                             dtype=np.float32,
                         ),
@@ -289,9 +278,9 @@ if __name__ == "__main__":
             sup_constraint_disc.name: sup_constraint_disc,
         }
 
-    # Discriminators tempo
+    # temporal Discriminators
     # maunally build constraint(s)
-    if use_tempodisc:
+    if USE_TEMPODISC:
         sup_constraint_disc_tempo = ppsci.constraint.SupervisedConstraint(
             {
                 "dataset": {
@@ -301,11 +290,11 @@ if __name__ == "__main__":
                         "density_high": dataset_train["density_high_tempo"],
                     },
                     "label": {
-                        "out_disc_t_label": np.ones(
+                        "out_disc_tempo_from_target": np.ones(
                             (np.shape(dataset_train["density_high_tempo"])[0], 1),
                             dtype=np.float32,
                         ),
-                        "out_disc_t_gen_out": np.ones(
+                        "out_disc_tempo_from_gen": np.ones(
                             (np.shape(dataset_train["density_high_tempo"])[0], 1),
                             dtype=np.float32,
                         ),
@@ -342,10 +331,10 @@ if __name__ == "__main__":
         EPOCHS_GEN,
         ITERS_PER_EPOCH,
         eval_during_train=False,
-        use_amp=use_amp,
+        use_amp=USE_AMP,
         amp_level="O2",
     )
-    if use_spatialdisc:
+    if USE_SPATIALDISC:
         solver_disc = ppsci.solver.Solver(
             model_list,
             constraint_disc,
@@ -355,10 +344,10 @@ if __name__ == "__main__":
             EPOCHS_DISC,
             ITERS_PER_EPOCH,
             eval_during_train=False,
-            use_amp=use_amp,
+            use_amp=USE_AMP,
             amp_level="O2",
         )
-    if use_tempodisc:
+    if USE_TEMPODISC:
         solver_disc_tempo = ppsci.solver.Solver(
             model_list,
             constraint_disc_tempo,
@@ -368,7 +357,7 @@ if __name__ == "__main__":
             EPOCHS_DISC_TEMPO,
             ITERS_PER_EPOCH,
             eval_during_train=False,
-            use_amp=use_amp,
+            use_amp=USE_AMP,
             amp_level="O2",
         )
 
@@ -376,7 +365,7 @@ if __name__ == "__main__":
     for i in range(1, EPOCHS + 1):
         ppsci.utils.logger.info(f"\nEpoch: {i}\n")
         # plotting during training
-        if i == 1 or i % PRED_INTERVAL == 0:
+        if i == 1 or i % PRED_INTERVAL == 0 or i == EPOCHS:
             if i == 1:
                 dics_funcs.model_gen = model_gen
             func_module.predict_and_save_plot(
@@ -385,23 +374,28 @@ if __name__ == "__main__":
 
         dics_funcs.model_gen = model_gen
         # train disc, input: (x,y,G(x))
-        if use_spatialdisc:
+        if USE_SPATIALDISC:
             solver_disc.train()
 
         # train disc tempo, input: (y_3,G(x)_3)
-        if use_tempodisc:
+        if USE_TEMPODISC:
             solver_disc_tempo.train()
 
         # train gen, input: (x,)
         solver_gen.train()
 
     ############### evaluation after training ###############
-    img_label = (
-        func_module.get_image_array(f"{OUTPUT_DIR}predict/label_epoch_1.png") / 255.0
-    )
-    img_pred = (
-        func_module.get_image_array(f"{OUTPUT_DIR}predict/pred_epoch_{EPOCHS}.png")
+    img_target = (
+        func_module.get_image_array(
+            os.path.join(OUTPUT_DIR, "predict", "target_epoch_1.png")
+        )
         / 255.0
     )
-    eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_label, img_pred)
+    img_pred = (
+        func_module.get_image_array(
+            os.path.join(OUTPUT_DIR, "predict", "pred_epoch_" + str(EPOCHS) + ".png")
+        )
+        / 255.0
+    )
+    eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_target, img_pred)
     ppsci.utils.logger.info(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")
