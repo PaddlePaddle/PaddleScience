@@ -65,7 +65,7 @@ if __name__ == "__main__":
     kernel_sizes_list = [[(5, 5)] * 2 + [(1, 1)]] * 4
     strides_list = [[1] * 3] * 4
     use_bns_list = [[True] * 3] * 3 + [[False] * 3]
-    acts = ["relu", None, None]
+    acts_list = [["relu", None, None]] * 4
 
     # define Generator model
     model_gen = ppsci.arch.Generator(
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         kernel_sizes_list,
         strides_list,
         use_bns_list,
-        acts,
+        acts_list,
     )
 
     model_gen.register_input_transform(gen_funcs.transform_in)
@@ -86,17 +86,17 @@ if __name__ == "__main__":
     # init Discriminators params
     in_channel = 2
     in_channel_tempo = 3
-    out_channels = [32, 64, 128, 256]
+    out_channels = (32, 64, 128, 256)
     in_shape = np.shape(dataset_train["density_high"][0])
     h, w = in_shape[1] // tile_ratio, in_shape[2] // tile_ratio
     down_sample_ratio = 2 ** (len(out_channels) - 1)
     fc_channel = int(
         out_channels[-1] * (h / down_sample_ratio) * (w / down_sample_ratio)
     )
-    kernel_sizes = [(4, 4)] * 4
-    strides = [2] * 3 + [1]
-    use_bns = [False] + [True] * 3
-    acts = ["leaky_relu"] * 4 + [None]
+    kernel_sizes = ((4, 4), (4, 4), (4, 4), (4, 4))
+    strides = (2, 2, 2, 1)
+    use_bns = (False, True, True, True)
+    acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
 
     # define Discriminators
     if use_spatialdisc:
