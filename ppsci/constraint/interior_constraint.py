@@ -167,7 +167,11 @@ class InteriorConstraint(base.Constraint):
             input.pop("sdf")
 
         # wrap input, label, weight into a dataset
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+        # _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+        dataloader_cfg["dataset"].update(
+            {"input": input, "label": label, "weight": weight}
+        )
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

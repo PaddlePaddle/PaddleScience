@@ -96,7 +96,7 @@ class InitialConstraint(base.Constraint):
         self.input_keys = geom.dim_keys
         self.output_keys = list(label_dict.keys())
         # "area" will be kept in "output_dict" for computation.
-        if isinstance(geom.geometry, geometry.Mesh):
+        if isinstance(geom, geometry.Mesh):
             self.output_keys += ["area"]
 
         if isinstance(criteria, str):
