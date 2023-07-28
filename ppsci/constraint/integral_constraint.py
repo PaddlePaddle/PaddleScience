@@ -118,7 +118,6 @@ class IntegralConstraint(base.Constraint):
         input = misc.stack_dict_list(input_list)
 
         # prepare label
-        # shape of each label is [batch_size, ndim]
         label = {}
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
@@ -147,6 +146,7 @@ class IntegralConstraint(base.Constraint):
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+        # shape of each label is [batch_size, ndim]
 
         # prepare weight
         # shape of each weight is [batch_size, ndim]

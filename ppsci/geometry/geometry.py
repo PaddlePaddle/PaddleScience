@@ -17,8 +17,10 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 """
 
 import abc
+from typing import Dict
 from typing import Tuple
 
+import geometry_2d
 import numpy as np
 import paddle
 
@@ -64,11 +66,13 @@ class Geometry:
         return self.random_points(n)
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        pass
+        """Compute sdf."""
+        raise NotImplementedError("Geometry.sdf_func is not implemented")
 
-    def sdf_gradient(self, points, delta=(0.0001,)) -> np.ndarray:
+    def sdf_gradient(self, points, delta=(0.0001,)) -> Dict[str, np.ndarray]:
+        """Compute gradient of sdf."""
         delta = delta * self.ndim
-        sdf_grad = misc.Prettydefaultdict()
+        sdf_grad = {}
         for i, key in enumerate(self.dim_keys):
             d = np.zeros_like(points)
             d[:, i] += delta[i]
@@ -110,17 +114,10 @@ class Geometry:
                 )
 
         # if sdf_fun/sdf_grad/area added,
-        # return x_dict and sdf_dict/sdf_grad_dict/area_dict, else, only return the x_dict
-        if hasattr(self, "sdf_func"):
-            sdf = -self.sdf_func(x)
-            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
-        else:
-            sdf_dict = {}
-
-        if hasattr(self, "sdf_gradient"):
-            sdf_grad_dict = self.sdf_gradient(x)
-        else:
-            sdf_grad_dict = {}
+        # return x_dict and sdf_grad_dict/area_dict, else, only return the x_dict
+        sdf = -self.sdf_func(x)
+        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        sdf_grad_dict = self.sdf_gradient(x)
 
         if hasattr(self, "area"):
             if self.ndim == 1:
@@ -199,12 +196,12 @@ class Geometry:
             return {**x_dict, **normal_dict, **area_dict}
 
         if self.ndim == 2:
-            if (criteria is not None) and (misc.typename(self) == "Line"):
-                area = self.approx_area(criteria)
+            if (criteria is not None) and isinstance(self, geometry_2d.Line):
+                area = self._approximate_area(criteria)
             elif criteria is None:
                 area = self.perimeter
             else:
-                raise NotImplementedError("self.approx_area is not implemented")
+                raise NotImplementedError("self._approximate_area is not implemented")
             area_dict = {"area": np.full_like(next(iter(x_dict.values())), area / n)}
             return {**x_dict, **normal_dict, **area_dict}
 

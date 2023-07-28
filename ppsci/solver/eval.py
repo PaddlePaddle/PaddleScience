@@ -75,10 +75,8 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     label_dict,
                     weight_dict,
                 )
-            if isinstance(validator_loss, paddle.Tensor):
-                loss_dict[f"loss({_validator.name})"] = float(validator_loss)
-            elif isinstance(validator_loss, dict):
-                loss_dict = {f"loss({key})": val for key, val in validator_loss.items()}
+
+            loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
             for key, input in input_dict.items():
@@ -158,7 +156,6 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             while isinstance(tmp, dict):
                 tmp = next(iter(tmp.values()))
             target_metric = float(tmp)
-    printer.log_eval_metric_info(metric_summary_dict, epoch_id)
     return target_metric
 
 

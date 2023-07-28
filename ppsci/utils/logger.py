@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import csv
 import functools
 import logging
 import os
@@ -178,3 +179,41 @@ def advertise():
             "=" * (AD_LEN + 4),
         )
     )
+
+
+def write_csv_file(
+    output_dir: str,
+    eval_freq: int,
+    csv_dir_name: str,
+    epoch_id: int,
+    filename: str,
+    data: dict,
+):
+    """Write data in csv format to file.
+
+    Args:
+        solver (solver): Solver class object.
+        csv_dir_name (str): str type, prefix of the csv file name.
+        epoch_id (int): int type, the current epoch id.
+        filename (str): str type, the name of the data to be written.
+        data (dict):  type, the data to be written, with string keys and numeric values.
+
+    Returns:
+        None.
+    """
+    validator_dir = os.path.join(output_dir, csv_dir_name)
+    os.makedirs(validator_dir, exist_ok=True)
+    if epoch_id == eval_freq:
+        with open(
+            os.path.join(validator_dir, f"{filename}.csv"), encoding="utf-8", newline=""
+        ) as file:
+            writer = csv.writer(file)
+            writer.writerow(["epoch id"] + [key for key in data.keys()])
+    with open(
+        os.path.join(validator_dir, f"{filename}.csv"),
+        "a",
+        encoding="utf-8",
+        newline="",
+    ) as file:
+        writer = csv.writer(file)
+        writer.writerow([epoch_id] + [val.item() for val in data.values()])

@@ -22,13 +22,13 @@ class AdvectionDiffusion(base.PDE):
 
     $$
     \begin{cases}
-        u\dfrac{\partial T}{\partial x} + 
-        v\dfrac{\partial T}{\partial y} + 
-        w\dfrac{\partial T}{\partial z} - 
+        u\dfrac{\partial T}{\partial x}
+        + v\dfrac{\partial T}{\partial y} 
+        + w\dfrac{\partial T}{\partial z} - 
         (
-            D\dfrac{\partial ^2 T}{\partial x^2} + 
-            D\dfrac{\partial ^2 T}{\partial y^2} + 
-            D\dfrac{\partial ^2 T}{\partial z^2}
+            D\dfrac{\partial ^2 T}{\partial x^2} 
+            + D\dfrac{\partial ^2 T}{\partial y^2} 
+            + D\dfrac{\partial ^2 T}{\partial z^2}
         )
         - Q = 0 \\
     \end{cases}
@@ -41,7 +41,7 @@ class AdvectionDiffusion(base.PDE):
         dim (int): The dimension of the equation. Defaults to 3.
         time (bool): Whether or not to include time as a variable. Defaults to False.
         mixed_form (bool): Whether or not to use mixed partial derivatives in the diffusion term. Defaults to False.
-        couple_method (str): The method used to couple 'heat_only', 'momentum_only', or 'heat_and_momentum'. Defaults to 'heat_only'.
+        couple_method (str): The method used to couple "heat_only", "momentum_only", or "heat_and_momentum". Defaults to "heat_only".
 
     Examples:
         >>> import ppsci
@@ -50,17 +50,16 @@ class AdvectionDiffusion(base.PDE):
 
     def __init__(
         self,
-        concentration="c",
-        diffusivity="D",
-        rho=1,
-        source_term=0,
-        dim=3,
-        time=False,
-        mixed_form=False,
-        couple_method="heat_only",
+        concentration: str = "c",
+        diffusivity: str = "D",
+        rho: int = 1,
+        source_term: float = 0.0,
+        dim: int = 3,
+        time: bool = False,
+        mixed_form: bool = False,
+        couple_method: str = "heat_only",
     ):
         super().__init__()
-        # set params
         self.T = concentration
         self.dim = dim
         self.time = time
@@ -71,8 +70,9 @@ class AdvectionDiffusion(base.PDE):
         def advection_diffusion_func(out):
             x, y = out["x"], out["y"]
             if couple_method == "heat_only":
-                out["u"], out["v"] = out["u"].detach(), out["v"].detach()
-            u, v = out["u"], out["v"]
+                u, v = out["u"].detach(), out["v"].detach()
+            else:
+                u, v = out["u"], out["v"]
             T = out[self.T]
             D = self.diffusivity
             Q = self.source_term
@@ -90,4 +90,4 @@ class AdvectionDiffusion(base.PDE):
 
             return advection - diffusion - Q / rho
 
-        self.add_equation("advection_diffusion_" + self.T, advection_diffusion_func)
+        self.add_equation(f"advection_diffusion_{self.T}", advection_diffusion_func)

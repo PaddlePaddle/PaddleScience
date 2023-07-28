@@ -44,9 +44,25 @@ class CSGUnion(geometry.Geometry):
         self.area = (
             geom1.area + geom2.area
         )  # assum no area intersection, fix while sampling
+
+        n = 1000
+        n1 = int(self.geom1.perimeter / self.perimeter * n)
+        n2 = n - n1
+        geom1_boundary_points = self.geom1.random_boundary_points(n1, random="pseudo")
+        geom1_boundary_points = geom1_boundary_points[
+            ~self.geom2.is_inside(geom1_boundary_points)
+        ]
+
+        geom2_boundary_points = self.geom2.random_boundary_points(n2, random="pseudo")
+        geom2_boundary_points = geom2_boundary_points[
+            ~self.geom1.is_inside(geom2_boundary_points)
+        ]
+
+        points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
+        points = np.random.permutation(points)
         self.perimeter = (
-            geom1.perimeter + geom2.perimeter
-        )  # assum no area intersection, fix while sampling
+            (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
+        )
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))

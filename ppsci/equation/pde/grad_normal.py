@@ -26,19 +26,16 @@ class GradNormal(base.PDE):
     $$
 
     Args:
-        grad_var: The name of the parameter variable used to calculate the gradient.
-        dim: The dimension of the point set.
-        time: Whether to include time as a dimension.
-
-    Returns:
-        Gradients summation of grad_var over all dimensions
+        grad_var(str): The name of the parameter variable used to calculate the gradient.
+        dim(int): The dimension of the point set.
+        time(bool): Whether to include time as a dimension.
 
     Examples:
         >>> import ppsci
         >>> ppsci.equation.GradNormal(grad_var="c", dim=2, time=False)
     """
 
-    def __init__(self, grad_var, dim=3, time=True):
+    def __init__(self, grad_var: str, dim: int = 3, time: bool = True):
         super().__init__()
         self.T = grad_var
         self.dim = dim
@@ -54,4 +51,4 @@ class GradNormal(base.PDE):
                 grad_normal += normal_z * jacobian(T, z)
             return grad_normal
 
-        self.add_equation("normal_gradient_" + self.T, normal_gradient_fun)
+        self.add_equation(f"normal_gradient_{self.T}", normal_gradient_fun)

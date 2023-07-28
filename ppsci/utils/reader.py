@@ -28,42 +28,11 @@ import scipy.io as sio
 from ppsci.utils import logger
 
 __all__ = [
-    "write_csv_file",
     "load_csv_file",
     "load_mat_file",
     "load_vtk_file",
     "load_vtk_with_time_file",
 ]
-
-
-def write_csv_file(
-    output_dir: str, eval_freq: int, csv_name: str, epoch_id: int, name: str, data: dict
-):
-    """Write data in csv format to file.
-
-    Args:
-        solver (solver): Solver class object.
-        csv_name (str): str type, prefix of the csv file name.
-        epoch_id (int): int type, the current epoch id.
-        name (str): str type, the name of the data to be written.
-        data (dict):  type, the data to be written, with string keys and numeric values.
-
-    Returns:
-        None.
-    """
-    validator_dir = os.path.join(output_dir, csv_name)
-    os.makedirs(validator_dir, exist_ok=True)
-    if epoch_id == eval_freq:
-        with open(
-            validator_dir + "/" + name + ".csv", "w", encoding="utf-8", newline=""
-        ) as file:
-            writer = csv.writer(file)
-            writer.writerow(["epoch id"] + [key for key in data.keys()])
-    with open(
-        validator_dir + "/" + name + ".csv", "a", encoding="utf-8", newline=""
-    ) as file:
-        writer = csv.writer(file)
-        writer.writerow([epoch_id] + [val.item() for val in data.values()])
 
 
 def load_csv_file(
@@ -172,15 +141,15 @@ def load_vtk_file(
     Returns:
         Dict[str, np.ndarray]: Input coordinates dict, label coordinates dict
     """
-    input_dict = {var: [] for var in input_keys}
-    label_dict = {} if label_keys is None else {var: [] for var in label_keys}
+    input_dict = {k: [] for k in input_keys}
+    label_dict = {} if label_keys is None else {k: [] for k in label_keys}
     input_dict_patch = (
-        {} if input_keys_patch is None else {var: [] for var in input_keys_patch}
+        {} if input_keys_patch is None else {k: [] for k in input_keys_patch}
     )
     time_index = (0,) if time_index is None else time_index
     for index in time_index:
         if "t" in input_dict:
-            file = filename_without_timeid + f"{index}.vtu"
+            file = os.path.join(filename_without_timeid, f"{index}.vtu")
         else:
             file = filename_without_timeid
         mesh = meshio.read(file)
