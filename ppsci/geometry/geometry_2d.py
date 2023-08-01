@@ -94,6 +94,10 @@ class Disk(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if points.shape[1] != {self.ndim}:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
         sdf = self.radius - np.linalg.norm(points - self.center, axis=1)
         sdf = -sdf[..., np.newaxis]
         return sdf
@@ -213,17 +217,17 @@ class Rectangle(geometry_nd.Hypercube):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        if points.shape[1] != 2:
+        if points.shape[1] != self.ndim:
             raise ValueError(
-                f"Shape of given points should be [*, 2], but got {points.shape}"
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
             )
         center = (self.xmin + self.xmax) / 2
-        dist_from_center = (
+        dist_to_boundary = (
             np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
         )
         return -(
-            np.linalg.norm(np.maximum(dist_from_center, 0), axis=1)
-            + np.minimum(np.max(dist_from_center, axis=1), 0)
+            np.linalg.norm(np.maximum(dist_to_boundary, 0), axis=1)
+            + np.minimum(np.max(dist_to_boundary, axis=1), 0)
         ).reshape(-1, 1)
 
 
@@ -414,9 +418,9 @@ class Triangle(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        if points.shape[1] != 2:
+        if points.shape[1] != self.ndim:
             raise ValueError(
-                f"Shape of given points should be [*, 2], but got {points.shape}"
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
             )
         v1p = points - self.x1  # v1p: vector from x1 to points
         v2p = points - self.x2
@@ -612,6 +616,10 @@ class Polygon(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
         sdf_value = np.empty((points.shape[0], 1), dtype=paddle.get_default_dtype())
         for n in range(points.shape[0]):
             distance = np.dot(
