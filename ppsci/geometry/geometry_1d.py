@@ -110,4 +110,8 @@ class Interval(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
         return -((self.r - self.l) / 2 - np.abs(points - (self.l + self.r) / 2))
