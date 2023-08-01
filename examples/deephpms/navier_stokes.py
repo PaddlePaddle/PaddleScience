@@ -103,6 +103,7 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
     EPOCHS = 50000 if args.epochs is None else args.epochs  # set 1 for LBFGS
     # MAX_ITER = 50000  # for LBFGS
+    EVAL_BATCH_SIZE = 10000
 
     # initialize optimizer
     # Adam
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_idn = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x", "y", "u", "v"),
             "label_keys": ("w_idn",),
@@ -155,6 +156,12 @@ if __name__ == "__main__":
                 "v": "v_star",
                 "w_idn": "w_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -218,7 +225,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_pde = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x", "y", "u", "v"),
             "label_keys": ("dw_t",),
@@ -230,6 +237,12 @@ if __name__ == "__main__":
                 "v": "v_star",
                 "dw_t": "t_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -321,7 +334,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_sol = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x", "y", "u", "v"),
             "label_keys": ("w_sol",),
@@ -333,6 +346,12 @@ if __name__ == "__main__":
                 "u": "u_star",
                 "v": "v_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
