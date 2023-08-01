@@ -1,6 +1,6 @@
 # DeepONet
 
-<a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6566389?sUid=438690&shared=1&ts=1690775701017" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 ## 1. 问题简介
 
@@ -63,9 +63,9 @@ $$
 
 在上述问题中，我们确定了输入为 $u$ 和 $y$，输出为 $G(u)$，按照 DeepONet 论文所述，我们使用含有 branch 和 trunk 两个子分支网络的 `DeepONet` 来创建网络模型，用 PaddleScience 代码表示如下：
 
-``` py linenums="26"
+``` py linenums="27"
 --8<--
-examples/operator_learning/deeponet.py:26:42
+examples/operator_learning/deeponet.py:27:43
 --8<--
 ```
 
@@ -77,9 +77,9 @@ examples/operator_learning/deeponet.py:26:42
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置，包括文件路径、输入数据字段名、标签数据字段名、数据转换前后的别名字典。
 
-``` py linenums="44"
+``` py linenums="45"
 --8<--
-examples/operator_learning/deeponet.py:44:54
+examples/operator_learning/deeponet.py:45:55
 --8<--
 ```
 
@@ -87,9 +87,9 @@ examples/operator_learning/deeponet.py:44:54
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="56"
+``` py linenums="57"
 --8<--
-examples/operator_learning/deeponet.py:56:60
+examples/operator_learning/deeponet.py:57:61
 --8<--
 ```
 
@@ -101,9 +101,9 @@ examples/operator_learning/deeponet.py:56:60
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="61"
+``` py linenums="62"
 --8<--
-examples/operator_learning/deeponet.py:61:62
+examples/operator_learning/deeponet.py:62:63
 --8<--
 ```
 
@@ -111,19 +111,19 @@ examples/operator_learning/deeponet.py:61:62
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
 
-``` py linenums="64"
+``` py linenums="65"
 --8<--
-examples/operator_learning/deeponet.py:64:65
+examples/operator_learning/deeponet.py:65:66
 --8<--
 ```
 
 ### 3.5 优化器构建
 
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 `0.001`。
 
-``` py linenums="67"
+``` py linenums="68"
 --8<--
-examples/operator_learning/deeponet.py:67:68
+examples/operator_learning/deeponet.py:68:69
 --8<--
 ```
 
@@ -131,9 +131,9 @@ examples/operator_learning/deeponet.py:67:68
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="70"
+``` py linenums="71"
 --8<--
-examples/operator_learning/deeponet.py:70:87
+examples/operator_learning/deeponet.py:71:88
 --8<--
 ```
 
@@ -145,9 +145,9 @@ examples/operator_learning/deeponet.py:70:87
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="89"
+``` py linenums="90"
 --8<--
-examples/operator_learning/deeponet.py:89:122
+examples/operator_learning/deeponet.py:90:123
 --8<--
 ```
 
@@ -155,9 +155,9 @@ examples/operator_learning/deeponet.py:89:122
 
 在模型训练完毕之后，我们可以手动构造 $u$、$y$ 并在适当范围内进行离散化，得到对应输入数据，继而预测出 $G(u)(y)$，并和 $G(u)$ 的标准解共同绘制图像，进行对比。（此处我们构造了 9 组 $u-G(u)$ 函数对）进行测试
 
-``` py linenums="124"
+``` py linenums="125"
 --8<--
-examples/operator_learning/deeponet.py:124:
+examples/operator_learning/deeponet.py:125:
 --8<--
 ```
 
