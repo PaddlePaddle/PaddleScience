@@ -172,12 +172,12 @@ if __name__ == "__main__":
         gamma=0.05,
         by_epoch=True,
     )()
-    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
+    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)(model_gen)
     if use_spatialdisc:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
             EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
         )()
-        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
+        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)(model_disc)
     if use_tempodisc:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
             EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
