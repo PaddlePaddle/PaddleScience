@@ -180,7 +180,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     eval_data_dict = reader.load_csv_file(
