@@ -146,6 +146,10 @@ class Cuboid(geometry_nd.Hypercube):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
         sdf = (
             ((self.xmax - self.xmin) / 2 - abs(points - (self.xmin + self.xmax) / 2))
         ).min(axis=1)
@@ -188,6 +192,10 @@ class Sphere(geometry_nd.Hypersphere):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
         sdf = self.radius - (((points - self.center) ** 2).sum(axis=1)) ** 0.5
         sdf = -sdf[..., np.newaxis]
         return sdf

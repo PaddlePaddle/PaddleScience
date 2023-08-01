@@ -126,7 +126,7 @@ class CSGUnion(geometry.Geometry):
             value, the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, D].
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)
@@ -214,14 +214,13 @@ class CSGDifference(geometry.Geometry):
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
         """Compute signed distance field of CSG difference of two geometries.
-        ref: https://iquilezles.org/articles/distfunctions/
 
         Args:
             points (np.ndarray): The coordinate points used to calculate the SDF
             value, the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, D].
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)
@@ -329,7 +328,7 @@ class CSGIntersection(geometry.Geometry):
             value the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, D].
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)
