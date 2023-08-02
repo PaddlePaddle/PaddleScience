@@ -170,7 +170,7 @@ if __name__ == "__main__":
         5e-4,
         by_epoch=True,
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # initialize solver
     solver = ppsci.solver.Solver(

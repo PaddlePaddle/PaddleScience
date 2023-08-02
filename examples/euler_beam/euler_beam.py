@@ -80,7 +80,7 @@ if __name__ == "__main__":
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)(model)
 
     # set validator
     TOTAL_SIZE = 100
