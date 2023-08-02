@@ -16,6 +16,7 @@ import os
 
 import functions as func_module
 import numpy as np
+import paddle
 
 import ppsci
 from ppsci.utils import checker
@@ -23,7 +24,10 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if not checker.dynamic_import_to_globals("hdf5storage"):
-    raise ModuleNotFoundError("Please install hdf5storage through pip first.")
+    raise ImportError(
+        "Could not import hdf5storage python package. "
+        "Please install it with `pip install hdf5storage`."
+    )
 import hdf5storage
 
 if __name__ == "__main__":
@@ -41,15 +45,15 @@ if __name__ == "__main__":
     USE_SPATIALDISC = True
     USE_TEMPODISC = True
 
-    weight_gen_loss = [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
-    weight_gen_layer_loss = (
+    weight_gen = [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
+    weight_gen_layer = (
         [-1e-5, -1e-5, -1e-5, -1e-5, -1e-5] if USE_SPATIALDISC else None
     )  # lambda_layer, lambda_layer1, lambda_layer2, lambda_layer3, lambda_layer4
-    weight_disc_loss = 1.0
+    weight_disc = 1.0
     tile_ratio = 1
 
-    gen_funcs = func_module.GenFuncs(weight_gen_loss, weight_gen_layer_loss)
-    dics_funcs = func_module.DiscFuncs(weight_disc_loss)
+    gen_funcs = func_module.GenFuncs(weight_gen, weight_gen_layer)
+    dics_funcs = func_module.DiscFuncs(weight_disc)
     data_funcs = func_module.DataFuncs(tile_ratio)
 
     # load dataset
@@ -81,6 +85,7 @@ if __name__ == "__main__":
     )
 
     model_gen.register_input_transform(gen_funcs.transform_in)
+    dics_funcs.model_gen = model_gen
 
     model_tuple = (model_gen,)
 
@@ -94,18 +99,19 @@ if __name__ == "__main__":
     fc_channel = int(
         out_channels[-1] * (h / down_sample_ratio) * (w / down_sample_ratio)
     )
-    kernel_sizes = ((4, 4), (4, 4), (4, 4), (4, 4))
-    strides = (2, 2, 2, 1)
-    use_bns = (False, True, True, True)
-    acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
+    kernel_sizes = ((4, 4),) * 4
+    strides = (2,) * 3 + (1,)
+    use_bns = (False,) + (True,) * 3
+    acts = ("leaky_relu",) * 4 + (None,)
 
     # define Discriminators
     if USE_SPATIALDISC:
-        output_keys_disc_list = ["out_disc_from_target"] * 5 + ["out_disc_from_gen"] * 5
-        for i in range(4):
-            output_keys_disc_list[i] += f"_layer{i}"
-            output_keys_disc_list[i + 5] += f"_layer{i}"
-        output_keys_disc = tuple(output_keys_disc_list)
+        output_keys_disc = (
+            tuple(f"out0_layer{i}" for i in range(4))
+            + ("out_disc_from_target",)
+            + tuple(f"out1_layer{i}" for i in range(4))
+            + ("out_disc_from_gen",)
+        )
         model_disc = ppsci.arch.Discriminator(
             ("input_disc_from_target", "input_disc_from_gen"),  # 'NCHW'
             output_keys_disc,
@@ -122,13 +128,12 @@ if __name__ == "__main__":
 
     # define temporal Discriminators
     if USE_TEMPODISC:
-        output_keys_disc_tempo_list = ["out_disc_tempo_from_target"] * 5 + [
-            "out_disc_tempo_from_gen"
-        ] * 5
-        for i in range(4):
-            output_keys_disc_tempo_list[i] += f"_layer{i}"
-            output_keys_disc_tempo_list[i + 5] += f"_layer{i}"
-        output_keys_disc_tempo = tuple(output_keys_disc_tempo_list)
+        output_keys_disc_tempo = (
+            tuple(f"out0_tempo_layer{i}" for i in range(4))
+            + ("out_disc_tempo_from_target",)
+            + tuple(f"out1_tempo_layer{i}" for i in range(4))
+            + ("out_disc_tempo_from_gen",)
+        )
         model_disc_tempo = ppsci.arch.Discriminator(
             ("input_tempo_disc_from_target", "input_tempo_disc_from_gen"),  # 'NCHW'
             output_keys_disc_tempo,
@@ -249,11 +254,11 @@ if __name__ == "__main__":
                     "label": {
                         "out_disc_from_target": np.ones(
                             (np.shape(dataset_train["density_high"])[0], 1),
-                            dtype=np.float32,
+                            dtype=paddle.get_default_dtype(),
                         ),
                         "out_disc_from_gen": np.ones(
                             (np.shape(dataset_train["density_high"])[0], 1),
-                            dtype=np.float32,
+                            dtype=paddle.get_default_dtype(),
                         ),
                     },
                     "transforms": (
@@ -292,11 +297,11 @@ if __name__ == "__main__":
                     "label": {
                         "out_disc_tempo_from_target": np.ones(
                             (np.shape(dataset_train["density_high_tempo"])[0], 1),
-                            dtype=np.float32,
+                            dtype=paddle.get_default_dtype(),
                         ),
                         "out_disc_tempo_from_gen": np.ones(
                             (np.shape(dataset_train["density_high_tempo"])[0], 1),
-                            dtype=np.float32,
+                            dtype=paddle.get_default_dtype(),
                         ),
                     },
                     "transforms": (
@@ -366,8 +371,6 @@ if __name__ == "__main__":
         ppsci.utils.logger.info(f"\nEpoch: {i}\n")
         # plotting during training
         if i == 1 or i % PRED_INTERVAL == 0 or i == EPOCHS:
-            if i == 1:
-                dics_funcs.model_gen = model_gen
             func_module.predict_and_save_plot(
                 OUTPUT_DIR, i, solver_gen, dataset_valid, tile_ratio
             )
@@ -386,14 +389,12 @@ if __name__ == "__main__":
 
     ############### evaluation after training ###############
     img_target = (
-        func_module.get_image_array(
-            os.path.join(OUTPUT_DIR, "predict", "target_epoch_1.png")
-        )
+        func_module.get_image_array(os.path.join(OUTPUT_DIR, "predict", "target.png"))
         / 255.0
     )
     img_pred = (
         func_module.get_image_array(
-            os.path.join(OUTPUT_DIR, "predict", "pred_epoch_" + str(EPOCHS) + ".png")
+            os.path.join(OUTPUT_DIR, "predict", f"pred_epoch_{EPOCHS}.png")
         )
         / 255.0
     )

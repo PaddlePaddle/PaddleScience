@@ -27,10 +27,11 @@ from skimage.metrics import peak_signal_noise_ratio
 from skimage.metrics import structural_similarity
 
 import ppsci
+from ppsci.utils import logger
 
 
 # train
-def transform_interpolate(
+def interpolate(
     data: paddle.Tensor, ratio: int, mode: str = "nearest"
 ) -> paddle.Tensor:
     """Interpolate twice.
@@ -54,7 +55,7 @@ def transform_interpolate(
 
 def reshape_input(input_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
     """Reshape input data for temporally Discriminator. Reshape data from N, C, W, H to N * C, 1, H, W.
-        Which means merge N dimension and C dimension to 1 dimension but still keep 4 dimensions
+        Which will merge N dimension and C dimension to 1 dimension but still keep 4 dimensions
         to ensure the data can be used for training.
 
     Args:
@@ -74,9 +75,6 @@ def dereshape_input(
     input_dict: Dict[str, paddle.Tensor], C: int
 ) -> Dict[str, paddle.Tensor]:
     """Dereshape input data for temporally Discriminator. Deeshape data from N * C, 1, H, W to N, C, W, H.
-        Which means split the first dimension to 2 dimensions. This function should be called
-        when sending normal input data in shape [N * C, 1, H, W] to temporal discriminator which needs
-        shape [N, C, W, H] to match other input data.
 
     Args:
         input_dict (Dict[str, paddle.Tensor]): input data dict.
@@ -89,7 +87,7 @@ def dereshape_input(
         input = input_dict[key]
         N, _, H, W = input.shape
         if N < C:
-            ppsci.utils.logger.info(
+            logger.info(
                 f"Warning: batch_size is smaller than {C}! Tempo needs at least {C} frames, input will be copied."
             )
             input_dict[key] = paddle.concat([input[:1]] * C, axis=1)
@@ -202,7 +200,7 @@ def predict_and_save_plot(
             mode="nearest",
         ).numpy()
         Img.imsave(
-            os.path.join(OUTPUT_DIR, dir_pred, "input_epoch_" + str(epoch_id) + ".png"),
+            os.path.join(OUTPUT_DIR, dir_pred, "input.png"),
             np.squeeze(input_img),
             vmin=0.0,
             vmax=1.0,
@@ -210,9 +208,7 @@ def predict_and_save_plot(
         )
         # plot target image
         Img.imsave(
-            os.path.join(
-                OUTPUT_DIR, dir_pred, "target_epoch_" + str(epoch_id) + ".png"
-            ),
+            os.path.join(OUTPUT_DIR, dir_pred, "target.png"),
             np.squeeze(dataset_valid["density_high"][start_idx]),
             vmin=0.0,
             vmax=1.0,
@@ -225,7 +221,7 @@ def predict_and_save_plot(
         else np.squeeze(pred_dict["density_high"][0].numpy())
     )
     Img.imsave(
-        os.path.join(OUTPUT_DIR, dir_pred, "pred_epoch_" + str(epoch_id) + ".png"),
+        os.path.join(OUTPUT_DIR, dir_pred, f"pred_epoch_{str(epoch_id)}.png"),
         pred_img,
         vmin=0.0,
         vmax=1.0,
@@ -260,21 +256,21 @@ class GenFuncs:
     """All functions used for Generator, including functions of transform and loss.
 
     Args:
-        weight_gen_loss (List[float]): Weights of L1 loss.
-        weight_gen_layer_loss (List[float], optional): Weights of layers loss. Defaults to None.
+        weight_gen (List[float]): Weights of L1 loss.
+        weight_gen_layer (List[float], optional): Weights of layers loss. Defaults to None.
     """
 
     def __init__(
-        self, weight_gen_loss: List[float], weight_gen_layer_loss: List[float] = None
+        self, weight_gen: List[float], weight_gen_layer: List[float] = None
     ) -> None:
-        self.weight_gen_loss = weight_gen_loss
-        self.weight_gen_layer_loss = weight_gen_layer_loss
+        self.weight_gen = weight_gen
+        self.weight_gen_layer = weight_gen_layer
 
     def transform_in(self, _in):
         ratio = 2
         input_dict = reshape_input(_in)
         density_low = input_dict["density_low"]
-        density_low_inp = transform_interpolate(density_low, ratio, "nearest")
+        density_low_inp = interpolate(density_low, ratio, "nearest")
         return {"input_gen": density_low_inp}
 
     def loss_func_gen(self, output_dict: Dict, *args) -> paddle.Tensor:
@@ -292,15 +288,15 @@ class GenFuncs:
         loss_l1 = F.l1_loss(
             output_dict["output_gen"], output_dict["density_high"], "mean"
         )
-        losses = loss_l1 * self.weight_gen_loss[0]
+        losses = loss_l1 * self.weight_gen[0]
 
         # l2 loss
         loss_l2 = F.mse_loss(
             output_dict["output_gen"], output_dict["density_high"], "mean"
         )
-        losses += loss_l2 * self.weight_gen_loss[1]
+        losses += loss_l2 * self.weight_gen[1]
 
-        if self.weight_gen_layer_loss is not None:
+        if self.weight_gen_layer is not None:
             # disc(generator_out) loss
             out_disc_from_gen = output_dict["out_disc_from_gen"][-1]
             label_ones = paddle.ones_like(out_disc_from_gen)
@@ -311,21 +307,21 @@ class GenFuncs:
 
             # layer loss
             key_list = list(output_dict.keys())
-            # ["out_disc_from_target_layer0","out_disc_from_target_layer1","out_disc_from_target_layer2","out_disc_from_target_layer3","out_disc_from_target",
-            # "out_disc_from_gen_layer0","out_disc_from_gen_layer1","out_disc_from_gen_layer2","out_disc_from_gen_layer3","out_disc_from_gen"]
+            # ["out0_layer0","out0_layer1","out0_layer2","out0_layer3","out_disc_from_target",
+            # "out1_layer0","out1_layer1","out1_layer2","out1_layer3","out_disc_from_gen"]
             loss_layer = 0
-            for i in range(1, len(self.weight_gen_layer_loss)):
+            for i in range(1, len(self.weight_gen_layer)):
                 # i = 0,1,2,3
                 loss_layer += (
-                    self.weight_gen_layer_loss[i]
-                    * paddle.sum(
-                        paddle.square(
-                            output_dict[key_list[i]] - output_dict[key_list[5 + i]]
-                        )
+                    self.weight_gen_layer[i]
+                    * F.mse_loss(
+                        output_dict[key_list[i]],
+                        output_dict[key_list[5 + i]],
+                        reduction="sum",
                     )
                     / 2
                 )
-            losses += loss_layer * self.weight_gen_layer_loss[0]
+            losses += loss_layer * self.weight_gen_layer[0]
 
         return losses
 
@@ -345,7 +341,7 @@ class GenFuncs:
         loss_gen_t = F.binary_cross_entropy_with_logits(
             out_disc_tempo_from_gen, label_t_ones, reduction="mean"
         )
-        losses = loss_gen_t * self.weight_gen_loss[2]
+        losses = loss_gen_t * self.weight_gen[2]
         return losses
 
 
@@ -353,11 +349,11 @@ class DiscFuncs:
     """All functions used for Discriminator and temporally Discriminator, including functions of transform and loss.
 
     Args:
-        weight_disc_loss (float): Weight of loss generated by the discriminator to judge the true target.
+        weight_disc (float): Weight of loss generated by the discriminator to judge the true target.
     """
 
-    def __init__(self, weight_disc_loss: float) -> None:
-        self.weight_disc_loss = weight_disc_loss
+    def __init__(self, weight_disc: float) -> None:
+        self.weight_disc = weight_disc
         self.model_gen = None
 
     def transform_in(self, _in):
@@ -366,7 +362,7 @@ class DiscFuncs:
         density_low = input_dict["density_low"]
         density_high_from_target = input_dict["density_high"]
 
-        density_low_inp = transform_interpolate(density_low, ratio, "nearest")
+        density_low_inp = interpolate(density_low, ratio, "nearest")
 
         density_high_from_gen = self.model_gen(input_dict)["output_gen"]
         density_high_from_gen.stop_gradient = True
@@ -409,7 +405,7 @@ class DiscFuncs:
         loss_disc_from_gen = F.binary_cross_entropy_with_logits(
             out_disc_from_gen, label_zeros, reduction="mean"
         )
-        losses = loss_disc_from_target * self.weight_disc_loss + loss_disc_from_gen
+        losses = loss_disc_from_target * self.weight_disc + loss_disc_from_gen
         return losses
 
     def loss_func_tempo(self, output_dict, *args):
@@ -426,8 +422,7 @@ class DiscFuncs:
             out_disc_tempo_from_gen, label_zeros, reduction="mean"
         )
         losses = (
-            loss_disc_tempo_from_target * self.weight_disc_loss
-            + loss_disc_tempo_from_gen
+            loss_disc_tempo_from_target * self.weight_disc + loss_disc_tempo_from_gen
         )
         return losses
 
@@ -455,7 +450,7 @@ class DataFuncs:
             rand_ratio = np.random.rand()
             density_low = self.cut_data(input_item["density_low"], rand_ratio)
             density_high = self.cut_data(input_item["density_high"], rand_ratio)
-            if self.select_valid_tile(density_low):
+            if self.is_valid_tile(density_low):
                 break
 
         input_item["density_low"] = density_low
@@ -479,7 +474,7 @@ class DataFuncs:
 
         return data
 
-    def select_valid_tile(self, tile: paddle.Tensor):
+    def is_valid_tile(self, tile: paddle.Tensor):
         img_density = tile[0].sum()
         return img_density >= (
             self.density_min * tile.shape[0] * tile.shape[1] * tile.shape[2]
