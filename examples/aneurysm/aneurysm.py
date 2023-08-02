@@ -81,7 +81,7 @@ if __name__ == "__main__":
     INLET_RADIUS = np.sqrt(INLET_AREA / np.pi)
     INLET_VEL = 1.5
 
-    def compute_parabola(_in):
+    def _compute_parabola(_in):
         centered_x = _in["x"] - INLET_CENTER[0]
         centered_y = _in["y"] - INLET_CENTER[1]
         centered_z = _in["z"] - INLET_CENTER[2]
@@ -90,13 +90,13 @@ if __name__ == "__main__":
         return parabola
 
     def inlet_u_ref_func(_in):
-        return INLET_NORMAL[0] * compute_parabola(_in)
+        return INLET_NORMAL[0] * _compute_parabola(_in)
 
     def inlet_v_ref_func(_in):
-        return INLET_NORMAL[1] * compute_parabola(_in)
+        return INLET_NORMAL[1] * _compute_parabola(_in)
 
     def inlet_w_ref_func(_in):
-        return INLET_NORMAL[2] * compute_parabola(_in)
+        return INLET_NORMAL[2] * _compute_parabola(_in)
 
     bc_inlet = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
@@ -215,7 +215,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": input_dict,
             "label": label_dict,
-            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {"name": "BatchSampler"},
         "num_workers": 1,

@@ -1,10 +1,10 @@
 # Aneurysm
 
-<a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
 ## 1. 问题简介
 
-针对如下血管瘤几何模型，通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对表面压力进行建模。
+针对如下血管瘤几何模型，通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
 
 <figure markdown>
   ![equation](../../images/aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%" align="center" }
@@ -12,7 +12,7 @@
 
 ## 2. 问题定义
 
-假设血管瘤模型中，在入口 inlet 部分，中心最高点的流速为 1.5，并向圆周区域逐渐减少；在出口 outlet 区域，压力恒为 0；在边界上无滑移，流速为 0；血管内部则符合 N-S 方程运动规律，中间段的平均流量为负（流入），出口段的平均流量为正（流出）。
+假设血管瘤模型中，在入口 inlet 部分，中心点的流速为 1.5，并向四周逐渐减小；在出口 outlet 区域，压力恒为 0；在边界上无滑移，流速为 0；血管内部则符合 N-S 方程运动规律，中间段的平均流量为负（流入），出口段的平均流量为正（流出）。
 
 ## 3. 问题求解
 
@@ -52,7 +52,9 @@ examples/aneurysm/aneurysm.py:31:37
 
 ### 3.3 计算域构建
 
-本问题的几何区域由 stl 文件指定，可以点此下载，并解压到 `aneurysm/` 文件夹下。
+本问题的几何区域由 stl 文件指定，按照下方命令，下载并解压到 `aneurysm/` 文件夹下。
+
+**注：数据集中的 stl 文件和测试集数据（使用OpenFOAM生成）均来自 [Aneurysm - NVIDIA Modulus](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html)**。
 
 ``` sh
 # linux
@@ -67,11 +69,11 @@ tar -xvf aneurysm_dataset.tar
 
 解压完毕之后，`aneurysm/stl` 文件夹下即存放了计算域构建所需的 stl 几何文件。
 
-然后通过 PaddleScience 内置的 STL 几何模块 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
-
 ???+ warning "注意"
 
-    使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、pymesh 3 个几何依赖包。
+    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、pymesh 3 个几何依赖包。**
+
+然后通过 PaddleScience 内置的 STL 几何模块 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 
 ``` py linenums="39"
 --8<--
@@ -107,9 +109,9 @@ examples/aneurysm/aneurysm.py:125:132
 --8<--
 ```
 
-`InteriorConstraint` 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["NavierStokes"].equations`；
+`InteriorConstraint` 的第一个参数是方程（组）表达式，用于描述如何计算约束目标，此处填入在 [3.2 方程构建](#32) 章节中实例化好的 `equation["NavierStokes"].equations`；
 
-第二个参数是约束变量的目标值，在本问题中希望 N-S 方程产生的结果被优化至 0；
+第二个参数是约束变量的目标值，在本问题中希望与 N-S 方程相关的四个值 `continuity`, `momentum_x`, `momentum_y`, `momentum_z` 均被优化至 0；
 
 第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33) 章节实例化好的 `geom["interior_geo"]` 即可；
 
@@ -121,8 +123,8 @@ examples/aneurysm/aneurysm.py:125:132
 
 #### 3.4.2 边界约束
 
-接着需要对血管入口、出口、血管壁这三个表面施加约束，包括入口速度约束、出口压力约束、血管壁无滑移约束。
-在 `bc_inlet` 约束中，为了满足入口处的流速从中心点开始向周围呈二次抛物线衰减，此处使用抛物线函数对速度进行计算并作为 `BoundaryConstraint` 的第二个字典参数的 value
+接着需要对**血管入口、出口、血管壁**这三个表面施加约束，包括入口速度约束、出口压力约束、血管壁无滑移约束。
+在 `bc_inlet` 约束中，入口处的流速满足从中心点开始向周围呈二次抛物线衰减，此处使用抛物线函数表示速度随着远离圆心而衰减，再将其作为 `BoundaryConstraint` 的第二个参数(字典)的 value。
 
 ``` py linenums="77"
 --8<--
@@ -130,13 +132,33 @@ examples/aneurysm/aneurysm.py:77:108
 --8<--
 ```
 
-剩余两个边界约束类似，如下所示：
+血管出口、血管壁约束的构建方法类似，如下所示：
 
 ``` py linenums="109"
 --8<--
 examples/aneurysm/aneurysm.py:109:124
 --8<--
 ```
+
+#### 3.4.3 积分边界约束
+
+对于血管入口下方的一段区域和出口区域（面），需额外施加流入和流出的流量约束，由于流量计算涉及到具体面积，因此需要使用离散积分的方式进行计算，这些过程已经内置在了 `IntegralConstraint` 这一约束条件中。如下所示：
+
+``` py linenums="133"
+--8<--
+examples/aneurysm/aneurysm.py:133:160
+--8<--
+```
+
+对应的流量计算公式：
+
+$$
+flow_i = \sum_{i=1}^{M}{s_{i} (\mathbf{u_i} \cdot \mathbf{n_i})}
+$$
+
+其中$M$表示离散积分点个数，$s_i$表示某一个点的（近似）面积，$\mathbf{u_i}$表示某一个点的速度矢量，$\mathbf{n_i}$表示某一个点的外法向矢量。
+
+除前面章节所述的共同参数外，此处额外增加了 `integral_batch_size` 参数，这表示用于离散积分的采样点数量，此处使用 100 个离散点来近似积分计算；同时指定损失函数为 `IntegralLoss`，表示计算损失所用的最终预测值由多个离散点近似积分，再与标签值计算损失。
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
@@ -145,18 +167,6 @@ examples/aneurysm/aneurysm.py:109:124
 examples/aneurysm/aneurysm.py:161:169
 --8<--
 ```
-
-#### 3.4.3 积分边界约束
-
-对于血管入口下方的一段区域和出口区域（面），需额外施加流入和流出的流量约束，由于流量计算涉及到具体面积，因此此处需要使用离散积分的方式进行计算，这些过程已经内置在了 `IntegralConstraint` 这一内置约束条件中。如下所示
-
-``` py linenums="133"
---8<--
-examples/aneurysm/aneurysm.py:133:160
---8<--
-```
-
-除前面章节所述的共同参数外，此处额外增加了 `integral_batch_size` 参数，这表示用于离散积分的采样点数量，此处使用 100 个离散点来近似积分计算；同时指定损失函数为 `IntegralLoss`，表示计算损失所用的最终预测值由多个离散点近似积分，再与标签值计算损失。
 
 ### 3.5 超参数设定
 
@@ -184,7 +194,7 @@ examples/aneurysm/aneurysm.py:182:183
 
 ``` py linenums="185"
 --8<--
-examples/aneurysm/aneurysm.py:185:235
+examples/aneurysm/aneurysm.py:185:234
 --8<--
 ```
 
@@ -192,11 +202,11 @@ examples/aneurysm/aneurysm.py:185:235
 
 在模型评估时，如果评估结果是可以可视化的数据，可以选择合适的可视化器来对输出结果进行可视化。
 
-本文中的输出数据是一个区域内的二维点集，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
+本文中的输出数据是一个区域内的三维点集，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="237"
+``` py linenums="236"
 --8<--
-examples/aneurysm/aneurysm.py:237:250
+examples/aneurysm/aneurysm.py:236:250
 --8<--
 ```
 
@@ -204,9 +214,9 @@ examples/aneurysm/aneurysm.py:237:250
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="252"
+``` py linenums="251"
 --8<--
-examples/aneurysm/aneurysm.py:252:278
+examples/aneurysm/aneurysm.py:251:278
 --8<--
 ```
 
@@ -224,6 +234,6 @@ examples/aneurysm/aneurysm.py
   ![aneurysm_compare.jpg](../../images/aneurysm/aneurysm_compare.png){ loading=lazy }
 </figure>
 
-## 参考资料
+## 6. 参考资料
 
-[Aneurysm - NVIDIA docs](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html)
+- [Aneurysm - NVIDIA Modulus](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html)
