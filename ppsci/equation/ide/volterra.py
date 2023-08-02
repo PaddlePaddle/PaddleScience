@@ -17,67 +17,107 @@ from typing import Callable
 import numpy as np
 import paddle
 
-from ppsci.autodiff import jacobian
 from ppsci.equation.pde import PDE
 
 
 class Volterra(PDE):
-    """Base class for Partial Differential Equation"""
+    r"""Volterra integral equation with Gaussian quadrature algorithm
 
-    def __init__(self, num_points: int, quad_deg: int, kernel_func: Callable):
+    $$
+    f(t)=\int_a^t K(t, s) x(s) d s
+    $$
+
+    [Volterra integral equation](https://en.wikipedia.org/wiki/Volterra_integral_equation)
+
+    [Gaussian quadrature](https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval)
+
+    Args:
+        bound (float): Lower bound `a` for Volterra integral equation.
+        num_points (int): Sampled points in integral interval.
+        quad_deg (int): Number of quadrature.
+        kernel_func (Callable): Kernel func `K(t,s)`.
+        func (Callable): `f(t)` in Volterra integral equation.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> vol_eq = ppsci.equation.Volterra(
+        ...     0, 12, 20, lambda x,t: np.exp(s-x), lambda out: out["u"],
+        ... )
+    """
+
+    dtype = paddle.get_default_dtype()
+
+    def __init__(
+        self,
+        bound: float,
+        num_points: int,
+        quad_deg: int,
+        kernel_func: Callable,
+        func: Callable,
+    ):
         super().__init__()
+        self.bound = bound
         self.num_points = num_points
         self.quad_deg = quad_deg
         self.kernel_func = kernel_func
-        self.quad_x, self.quad_w = np.polynomial.legendre.leggauss(quad_deg)
+        self.func = func
 
-        self.quad_x = self.quad_x.astype(paddle.get_default_dtype()).reshape([-1, 1])
-        self.quad_w = self.quad_w.astype(paddle.get_default_dtype())
-        self.quad_x = paddle.to_tensor(self.quad_x)
+        self.quad_x, self.quad_w = np.polynomial.legendre.leggauss(quad_deg)
+        self.quad_x = self.quad_x.astype(Volterra.dtype).reshape([-1, 1])  # [Q, 1]
+        self.quad_x = paddle.to_tensor(self.quad_x)  # [Q, 1]
+
+        self.quad_w = self.quad_w.astype(Volterra.dtype)  # [Q, ]
 
         def compute_volterra_func(out):
             x, u = out["x"], out["u"]
-            int_mat = paddle.to_tensor(self.get_int_matrix(x), stop_gradient=False)
-            rhs = paddle.mm(int_mat, u)  # (nide, 1)
-            du_dx = jacobian(u, x)
-            volterra = (du_dx + u)[: len(rhs)] - rhs
+            lhs = self.func(out)
+
+            int_mat = paddle.to_tensor(self._get_int_matrix(x), stop_gradient=False)
+            rhs = paddle.mm(int_mat, u)  # (N, 1)
+
+            volterra = lhs[: len(rhs)] - rhs
             return volterra
 
         self.add_equation("volterra", compute_volterra_func)
 
-    def get_quad_points(self, x: float) -> np.ndarray:
-        """Transform points from [N, 1] to desired range.
+    def get_quad_points(self, t: np.ndarray) -> np.ndarray:
+        """Transform quad_x from [0, 1] to desired range.
+        reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            x (float): Points of shape [N, 1].
+            t (np.ndarray): Upper bound 't' for integral.
 
         Returns:
-            np.ndarray: Transformed points in desired range with shape of [N, M].
+            np.ndarray: Transformed points in desired range with shape of [N, Q].
         """
-        return x @ (self.quad_x.T + 1) / 2
+        a, b = self.bound, t
+        return ((b - a) / 2) @ self.quad_x.T + (b + a) / 2
 
-    def get_quad_weights(self, x: float) -> np.ndarray:
+    def _get_quad_weights(self, t: float) -> np.ndarray:
         """Transform weights to desired range.
+        reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            x (float): [N, 1]
+            t (float): Sampled point.
 
         Returns:
-            np.ndarray: Output weights of shape [N, M].
+            np.ndarray: Transformed weights in desired range with shape of [Q, ].
         """
-        return self.quad_w * x / 2
+        a, b = self.bound, t
+        return (b - a) / 2 * self.quad_w
 
-    def get_int_matrix(self, x: np.ndarray) -> np.ndarray:
+    def _get_int_matrix(self, x: np.ndarray) -> np.ndarray:
         int_mat = np.zeros(
             (self.num_points, self.num_points + (self.num_points * self.quad_deg)),
-            dtype=paddle.get_default_dtype(),
+            dtype=Volterra.dtype,
         )
         for i in range(self.num_points):
-            xi = float(x[i, 0])
+            xi = float(x[i])
             beg = self.num_points + self.quad_deg * i
             end = self.num_points + self.quad_deg * (i + 1)
             K = np.ravel(
                 self.kernel_func(np.full((self.quad_deg, 1), xi), x[beg:end].numpy())
-            )
-            int_mat[i, beg:end] = self.get_quad_weights(xi) * K
+            )  # [Q, ]
+            int_mat[i, beg:end] = self._get_quad_weights(xi) * K  # [Q, ]
         return int_mat

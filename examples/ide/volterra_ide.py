@@ -14,15 +14,19 @@
 
 # Reference: https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py
 
+from typing import Dict
+
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
 
 import ppsci
+from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
+    paddle.set_device("cpu")
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
@@ -37,25 +41,45 @@ if __name__ == "__main__":
     # set model
     model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
 
-    # set equation
-    def kernel_func(x, s):
-        return np.exp(s - x)
+    # set geometry
+    BOUNDS = (0, 5)
+    geom = {"timedomain": ppsci.geometry.TimeDomain(BOUNDS[0], BOUNDS[1])}
 
+    # set equation
     QUAD_DEG = 20
     NPOINT_INTERIOR = 12
     NPOINT_IC = 1
+
+    def kernel_func(x, s):
+        return np.exp(s - x)
+
+    def func(out):
+        x, u = out["x"], out["u"]
+        return jacobian(u, x) + u
+
     equation = {
-        "volterra": ppsci.equation.Volterra(NPOINT_INTERIOR, QUAD_DEG, kernel_func)
+        "volterra": ppsci.equation.Volterra(
+            BOUNDS[0],
+            NPOINT_INTERIOR,
+            QUAD_DEG,
+            kernel_func,
+            func,
+        )
     }
 
-    # set geometry
-    geom = {"timedomain": ppsci.geometry.TimeDomain(0, 5)}
+    # set input transform
+    def quad_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+        """Get sampling points for integral.
 
-    # set train dataloader config
-    def input_transform_func(in_):
-        x = in_["x"]
-        x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])
-        x_quad = paddle.concat((x, x_quad), axis=0)
+        Args:
+            in_ (Dict[str, np.ndarray]): Raw input dict.
+
+        Returns:
+            Dict[str, np.ndarray]: Input dict contained sampling points.
+        """
+        x = in_["x"]  # N points.
+        x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])  # NxQ
+        x_quad = paddle.concat((x, x_quad), axis=0)  # M+MxQ: [M|Q1|Q2,...,QM|]
         return {
             **in_,
             "x": x_quad,
@@ -72,7 +96,7 @@ if __name__ == "__main__":
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "transform_func": input_transform_func,
+                            "transform_func": quad_transform,
                         },
                     },
                 ),
@@ -147,6 +171,7 @@ if __name__ == "__main__":
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=1,
+        device="cpu",
         equation=equation,
         geom=geom,
         validator=validator,
@@ -160,9 +185,10 @@ if __name__ == "__main__":
 
     label_data = u_solution_func({"x": input_data})
     output_data = solver.predict({"x": input_data})["u"]
-    plt.plot(input_data, label_data, "-")
-    plt.plot(input_data, output_data, "o")
+    plt.plot(input_data, label_data, "-", label=r"$u(t)$")
+    plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
+    plt.legend()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")
     plt.title(r"$u-t$")
-    plt.savefig("Volterra_IDE.png")
+    plt.savefig("./Volterra_IDE.png", dpi=200)
