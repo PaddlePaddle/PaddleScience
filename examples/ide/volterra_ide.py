@@ -26,7 +26,6 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-    paddle.set_device("cpu")
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
@@ -171,7 +170,6 @@ if __name__ == "__main__":
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=1,
-        device="cpu",
         equation=equation,
         geom=geom,
         validator=validator,
