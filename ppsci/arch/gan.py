@@ -77,49 +77,31 @@ class Generator(base.Arch):
         self.use_bns_list = use_bns_list
         self.acts_list = acts_list
 
-        self.layers_conv2d = []
-        self.layers_bn = []
-        self.layers_act = []
-        self.layers_act_res = []
+        self.init_block_i(0)
+        self.layers_res_block0 = nn.LayerList(self.layers_res_block)
+        self.init_block_i(1)
+        self.layers_res_block1 = nn.LayerList(self.layers_res_block)
+        self.init_block_i(2)
+        self.layers_res_block2 = nn.LayerList(self.layers_res_block)
+        self.init_block_i(3)
+        self.layers_res_block3 = nn.LayerList(self.layers_res_block)
+        self.layers = [
+            self.layers_res_block0,
+            self.layers_res_block1,
+            self.layers_res_block2,
+            self.layers_res_block3,
+        ]
 
-        self.init_layers()
-        self.layers_conv2d = nn.LayerList(self.layers_conv2d)
-        self.layers_bn = nn.LayerList(self.layers_bn)
-        self.layers_act = nn.LayerList(self.layers_act)
-        self.layers_act_res = nn.LayerList(self.layers_act_res)
-
-    def init_layers(self):
+    def init_block_i(self, i):
+        self.layers_res_block = []
+        in_channel = self.in_channel if i == 0 else self.out_channels_list[i - 1][-1]
         self.init_res_block(
-            self.in_channel,
-            self.out_channels_list[0],
-            self.kernel_sizes_list[0],
-            self.strides_list[0],
-            self.use_bns_list[0],
-            self.acts_list[0],
-        )
-        self.init_res_block(
-            self.out_channels_list[0][-1],
-            self.out_channels_list[1],
-            self.kernel_sizes_list[1],
-            self.strides_list[1],
-            self.use_bns_list[1],
-            self.acts_list[1],
-        )
-        self.init_res_block(
-            self.out_channels_list[1][-1],
-            self.out_channels_list[2],
-            self.kernel_sizes_list[2],
-            self.strides_list[2],
-            self.use_bns_list[2],
-            self.acts_list[2],
-        )
-        self.init_res_block(
-            self.out_channels_list[2][-1],
-            self.out_channels_list[3],
-            self.kernel_sizes_list[3],
-            self.strides_list[3],
-            self.use_bns_list[3],
-            self.acts_list[3],
+            in_channel,
+            self.out_channels_list[i],
+            self.kernel_sizes_list[i],
+            self.strides_list[i],
+            self.use_bns_list[i],
+            self.acts_list[i],
         )
 
     def init_conv_block(
@@ -129,7 +111,7 @@ class Generator(base.Arch):
             initializer=nn.initializer.Normal(mean=0.0, std=0.04)
         )
         bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=0.1))
-        self.layers_conv2d.append(
+        self.layers_res_block.append(
             nn.Conv2D(
                 in_channel,
                 out_channel,
@@ -140,8 +122,8 @@ class Generator(base.Arch):
                 bias_attr=bias_attr,
             )
         )
-        self.layers_bn.append(nn.BatchNorm2D(out_channel) if use_bn else None)
-        self.layers_act.append(act_mod.get_activation(act) if act else None)
+        self.layers_res_block.append(nn.BatchNorm2D(out_channel) if use_bn else None)
+        self.layers_res_block.append(act_mod.get_activation(act) if act else None)
 
     def init_res_block(
         self, in_channel, out_channels, kernel_sizes, strides, use_bns, acts
@@ -172,34 +154,28 @@ class Generator(base.Arch):
             acts[2],
         )
 
-        self.layers_act_res.append(act_mod.get_activation("relu"))
+        self.layers_res_block.append(act_mod.get_activation("relu"))
 
-    def forward_res(self, x: paddle.Tensor, idx: int) -> paddle.Tensor:
+    def forward_res(self, x: paddle.Tensor) -> paddle.Tensor:
         """Forward of one res block.
 
         Args:
             x (paddle.Tensor): Input of the block.
-            idx (int): NO. of one res block.
 
         Returns:
             paddle.Tensor: Output of the block.
         """
         y1 = x
         y2 = x
-        for i in range(idx * 3, idx * 3 + 2):
-            y1 = self.layers_conv2d[i](y1)
-            if self.layers_bn[i]:
-                y1 = self.layers_bn[i](y1)
-            if self.layers_act[i]:
-                y1 = self.layers_act[i](y1)
+        for i in range(6):
+            if self.layers_res_block[i]:
+                y1 = self.layers_res_block[i](y1)
 
-        y2 = self.layers_conv2d[idx * 3 + 2](y2)
-        if self.layers_bn[idx * 3 + 2]:
-            y2 = self.layers_bn[idx * 3 + 2](y2)
-        if self.layers_act[idx * 3 + 2]:
-            y2 = self.layers_act[idx * 3 + 2](y2)
+        for i in range(6, 9):
+            if self.layers_res_block[i]:
+                y2 = self.layers_res_block[i](y2)
 
-        y = self.layers_act_res[idx](y1 + y2)
+        y = self.layers_res_block[-1](y1 + y2)
 
         return y
 
@@ -207,7 +183,8 @@ class Generator(base.Arch):
         y = x
 
         for i in range(len(self.out_channels_list)):
-            y = self.forward_res(y, i)
+            self.layers_res_block = self.layers[i]
+            y = self.forward_res(y)
 
         return y
 
