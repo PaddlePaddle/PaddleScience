@@ -31,29 +31,29 @@ class Generator(base.Arch):
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input1", "input2").
         output_keys (Tuple[str, ...]): Name of output keys, such as ("output1", "output2").
         in_channel (int): Number of input channels of the first conv layer.
-        out_channels_list (List[List[int]]): Number of output channels of all conv layers,
+        out_channels_tuple (Tuple[Tuple[int, ...], ...]): Number of output channels of all conv layers,
             such as [[out_res0_conv0, out_res0_conv1], [out_res1_conv0, out_res1_conv1]]
-        kernel_sizes_list (List[List[int]]): Number of kernel_size of all conv layers,
+        kernel_sizes_tuple (Tuple[Tuple[int, ...], ...]): Number of kernel_size of all conv layers,
             such as [[kernel_size_res0_conv0, kernel_size_res0_conv1], [kernel_size_res1_conv0, kernel_size_res1_conv1]]
-        strides_list (List[List[int]]): Number of stride of all conv layers,
+        strides_tuple (Tuple[Tuple[int, ...], ...]): Number of stride of all conv layers,
             such as [[stride_res0_conv0, stride_res0_conv1], [stride_res1_conv0, stride_res1_conv1]]
-        use_bns_list (List[List[bool]]): Whether to use the batch_norm layer after each conv layer.
-        acts_list (List[List[str]]): Whether to use the activation layer after each conv layer. If so, witch activation to use,
+        use_bns_tuple (Tuple[Tuple[bool, ...], ...]): Whether to use the batch_norm layer after each conv layer.
+        acts_tuple (Tuple[Tuple[str, ...], ...]): Whether to use the activation layer after each conv layer. If so, witch activation to use,
             such as [[act_res0_conv0, act_res0_conv1], [act_res1_conv0, act_res1_conv1]]
 
     Examples:
         >>> import ppsci
         >>> in_channel = 1
-        >>> rb_channel0 = [2, 8, 8]
-        >>> rb_channel1 = [128, 128, 128]
-        >>> rb_channel2 = [32, 8, 8]
-        >>> rb_channel3 = [2, 1, 1]
-        >>> out_channels_list = [rb_channel0, rb_channel1, rb_channel2, rb_channel3]
-        >>> kernel_sizes_list = [[(5, 5)] * 2 + [(1, 1)]] * 4
-        >>> strides_list = [[1] * 3] * 4
-        >>> use_bns_list = [[True] * 3] * 3 + [[False] * 3]
-        >>> acts_list = [["relu", None, None]] * 4
-        >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_list, kernel_sizes_list, strides_list, use_bns_list, acts_list)
+        >>> rb_channel0 = (2, 8, 8)
+        >>> rb_channel1 = (128, 128, 128)
+        >>> rb_channel2 = (32, 8, 8)
+        >>> rb_channel3 = (2, 1, 1)
+        >>> out_channels_tuple = (rb_channel0, rb_channel1, rb_channel2, rb_channel3)
+        >>> kernel_sizes_tuple = (((5, 5), ) * 2 + ((1, 1), ), ) * 4
+        >>> strides_tuple = ((1, 1, 1), ) * 4
+        >>> use_bns_tuple = ((True, True, True), ) * 3 + ((False, False, False), )
+        >>> acts_tuple = (("relu", None, None), ) * 4
+        >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_tuple, kernel_sizes_tuple, strides_tuple, use_bns_tuple, acts_tuple)
     """
 
     def __init__(
@@ -61,21 +61,21 @@ class Generator(base.Arch):
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
         in_channel: int,
-        out_channels_list: List[List[int]],
-        kernel_sizes_list: List[List[int]],
-        strides_list: List[List[int]],
-        use_bns_list: List[List[bool]],
-        acts_list: List[List[str]],
+        out_channels_tuple: Tuple[Tuple[int, ...], ...],
+        kernel_sizes_tuple: Tuple[Tuple[int, ...], ...],
+        strides_tuple: Tuple[Tuple[int, ...], ...],
+        use_bns_tuple: Tuple[Tuple[bool, ...], ...],
+        acts_tuple: Tuple[Tuple[str, ...], ...],
     ):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
         self.in_channel = in_channel
-        self.out_channels_list = out_channels_list
-        self.kernel_sizes_list = kernel_sizes_list
-        self.strides_list = strides_list
-        self.use_bns_list = use_bns_list
-        self.acts_list = acts_list
+        self.out_channels_tuple = out_channels_tuple
+        self.kernel_sizes_tuple = kernel_sizes_tuple
+        self.strides_tuple = strides_tuple
+        self.use_bns_tuple = use_bns_tuple
+        self.acts_tuple = acts_tuple
 
         self.init_block_i(0)
         self.layers_res_block0 = nn.LayerList(self.layers_res_block)
@@ -94,14 +94,14 @@ class Generator(base.Arch):
 
     def init_block_i(self, i):
         self.layers_res_block = []
-        in_channel = self.in_channel if i == 0 else self.out_channels_list[i - 1][-1]
+        in_channel = self.in_channel if i == 0 else self.out_channels_tuple[i - 1][-1]
         self.init_res_block(
             in_channel,
-            self.out_channels_list[i],
-            self.kernel_sizes_list[i],
-            self.strides_list[i],
-            self.use_bns_list[i],
-            self.acts_list[i],
+            self.out_channels_tuple[i],
+            self.kernel_sizes_tuple[i],
+            self.strides_tuple[i],
+            self.use_bns_tuple[i],
+            self.acts_tuple[i],
         )
 
     def init_conv_block(
@@ -182,7 +182,7 @@ class Generator(base.Arch):
     def forward_tensor(self, x):
         y = x
 
-        for i in range(len(self.out_channels_list)):
+        for i in range(len(self.out_channels_tuple)):
             self.layers_res_block = self.layers[i]
             y = self.forward_res(y)
 

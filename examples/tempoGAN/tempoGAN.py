@@ -62,26 +62,26 @@ if __name__ == "__main__":
 
     # init Generator params
     in_channel = 1
-    rb_channel0 = [2, 8, 8]
-    rb_channel1 = [128, 128, 128]
-    rb_channel2 = [32, 8, 8]
-    rb_channel3 = [2, 1, 1]
-    out_channels_list = [rb_channel0, rb_channel1, rb_channel2, rb_channel3]
-    kernel_sizes_list = [[(5, 5)] * 2 + [(1, 1)]] * 4
-    strides_list = [[1] * 3] * 4
-    use_bns_list = [[True] * 3] * 3 + [[False] * 3]
-    acts_list = [["relu", None, None]] * 4
+    rb_channel0 = (2, 8, 8)
+    rb_channel1 = (128, 128, 128)
+    rb_channel2 = (32, 8, 8)
+    rb_channel3 = (2, 1, 1)
+    out_channels_tuple = (rb_channel0, rb_channel1, rb_channel2, rb_channel3)
+    kernel_sizes_tuple = (((5, 5),) * 2 + ((1, 1),),) * 4
+    strides_tuple = ((1, 1, 1),) * 4
+    use_bns_tuple = ((True, True, True),) * 3 + ((False, False, False),)
+    acts_tuple = (("relu", None, None),) * 4
 
     # define Generator model
     model_gen = ppsci.arch.Generator(
         ("input_gen",),  # 'NCHW'
         ("output_gen",),
         in_channel,
-        out_channels_list,
-        kernel_sizes_list,
-        strides_list,
-        use_bns_list,
-        acts_list,
+        out_channels_tuple,
+        kernel_sizes_tuple,
+        strides_tuple,
+        use_bns_tuple,
+        acts_tuple,
     )
 
     model_gen.register_input_transform(gen_funcs.transform_in)
