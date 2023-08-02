@@ -132,8 +132,8 @@ if __name__ == "__main__":
 
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(1e-4)((model_idn,))
-    optimizer_pde = ppsci.optimizer.Adam(1e-4)((model_pde,))
+    optimizer_idn = ppsci.optimizer.Adam(1e-4)(model_idn)
+    optimizer_pde = ppsci.optimizer.Adam(1e-4)(model_pde)
 
     # LBFGS
     # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn, ))
