@@ -158,7 +158,8 @@ class BoundaryConstraint(base.Constraint):
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # wrap input, label, weight into a dataset
-        # _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+        if isinstance(dataloader_cfg["dataset"], str):
+            dataloader_cfg["dataset"] = {"name": dataloader_cfg["dataset"]}
         dataloader_cfg["dataset"].update(
             {"input": input, "label": label, "weight": weight}
         )
