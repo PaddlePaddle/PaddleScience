@@ -59,6 +59,16 @@ def boundary_loss_func(output_dict, *args):
     return losses
 
 
+def sol_l2_rel_func(output_dict, label_dict):
+    uv_pred = paddle.sqrt(output_dict["u_idn"] ** 2 + output_dict["v_idn"] ** 2)
+    uv_label = paddle.sqrt(label_dict["u_idn"] ** 2 + label_dict["u_idn"] ** 2)
+    rel_l2 = paddle.norm(uv_label - uv_pred, p=2, axis=None) / paddle.norm(
+        uv_pred, p=2, axis=None
+    )
+    metric_dict = {"uv_sol": rel_l2}
+    return metric_dict
+
+
 if __name__ == "__main__":
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
@@ -138,6 +148,7 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
     EPOCHS = 50000 if args.epochs is None else args.epochs  # set 1 for LBFGS
     # MAX_ITER = 50000  # for LBFGS
+    EVAL_BATCH_SIZE = 10000
 
     # initialize optimizer
     # Adam
@@ -176,7 +187,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_idn = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
@@ -186,6 +197,12 @@ if __name__ == "__main__":
                 "u_idn": "u_star",
                 "v_idn": "v_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -249,7 +266,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_pde = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("du_t", "dv_t"),
@@ -259,6 +276,12 @@ if __name__ == "__main__":
                 "du_t": "t_star",
                 "dv_t": "t_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -369,7 +392,7 @@ if __name__ == "__main__":
     # manually build validator
     eval_dataloader_cfg_sol = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
@@ -380,13 +403,19 @@ if __name__ == "__main__":
                 "v_idn": "v_star",
             },
         },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
     }
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
         {key: (lambda out, k=key: out[k]) for key in ("u_idn", "v_idn")},
-        {"l2": ppsci.metric.L2Rel()},
+        {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
         name="uv_L2_sup",
     )
     validator_sol = {
@@ -408,9 +437,5 @@ if __name__ == "__main__":
 
     # train model
     solver.train()
-
-    # Unused models can be deleted from model list if there is no enough cuda memory before eval
-    del model_list.model_list[-1]
-    del model_list.model_list[-1]
     # evaluate after finished training
     solver.eval()

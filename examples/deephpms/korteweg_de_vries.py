@@ -52,6 +52,14 @@ def boundary_loss_func(output_dict, *args):
     return losses
 
 
+def sol_l2_rel_func(output_dict, label_dict):
+    rel_l2 = paddle.norm(
+        label_dict["u_sol"] - output_dict["u_sol"], p=2, axis=None
+    ) / paddle.norm(label_dict["u_sol"], p=2, axis=None)
+    metric_dict = {"u_sol": rel_l2}
+    return metric_dict
+
+
 if __name__ == "__main__":
     # open FLAG for higher order differential operator when order >= 4
     paddle.fluid.core.set_prim_eager_enabled(True)
@@ -326,7 +334,7 @@ if __name__ == "__main__":
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
         {"u_sol": lambda out: out["u_sol"]},
-        {"l2": ppsci.metric.L2Rel()},
+        {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
         name="u_L2_sup",
     )
     validator_sol = {
