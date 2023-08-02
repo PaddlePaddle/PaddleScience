@@ -132,7 +132,7 @@ if __name__ == "__main__":
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(5e-3)((model,))
+    optimizer = ppsci.optimizer.Adam(5e-3)(model)
 
     # set euqation
     equation = {

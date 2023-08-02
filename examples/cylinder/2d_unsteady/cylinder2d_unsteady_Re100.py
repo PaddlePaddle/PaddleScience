@@ -176,7 +176,7 @@ if __name__ == "__main__":
     EVAL_FREQ = 400
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(0.001)((model,))
+    optimizer = ppsci.optimizer.Adam(0.001)(model)
 
     # set validator
     NPOINT_EVAL = (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * NUM_TIMESTAMPS

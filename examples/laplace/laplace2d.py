@@ -82,7 +82,7 @@ if __name__ == "__main__":
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)(model)
 
     # set validator
     mse_metric = ppsci.validate.GeometryValidator(

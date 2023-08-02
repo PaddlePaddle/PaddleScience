@@ -219,7 +219,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     ref_xyzu = ppsci.utils.reader.load_csv_file(

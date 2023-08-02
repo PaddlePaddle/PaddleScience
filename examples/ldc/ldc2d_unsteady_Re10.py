@@ -139,7 +139,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     NPOINT_EVAL = NPOINT_PDE * NTIME_ALL

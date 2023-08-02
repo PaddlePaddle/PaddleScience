@@ -174,13 +174,13 @@ if __name__ == "__main__":
 
     optimizer_1 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_1,))
+    )(model_1)
     optimizer_2 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_2,))
+    )(model_2)
     optimizer_3 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_3,))
+    )(model_3)
     optimizer = ppsci.optimizer.OptimizerList((optimizer_1, optimizer_2, optimizer_3))
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
