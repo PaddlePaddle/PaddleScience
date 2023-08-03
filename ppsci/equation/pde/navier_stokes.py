@@ -86,8 +86,8 @@ class NavierStokes(base.PDE):
             momentum_x = (
                 u * jacobian(u, x)
                 + v * jacobian(u, y)
-                - nu / rho * hessian(u, x)
-                - nu / rho * hessian(u, y)
+                - nu * hessian(u, x)
+                - nu * hessian(u, y)
                 + 1 / rho * jacobian(p, x)
             )
             if self.time:
@@ -96,7 +96,7 @@ class NavierStokes(base.PDE):
             if self.dim == 3:
                 z, w = out["z"], out["w"]
                 momentum_x += w * jacobian(u, z)
-                momentum_x -= nu / rho * hessian(u, z)
+                momentum_x -= nu * hessian(u, z)
             return momentum_x
 
         self.add_equation("momentum_x", momentum_x_compute_func)
@@ -108,8 +108,8 @@ class NavierStokes(base.PDE):
             momentum_y = (
                 u * jacobian(v, x)
                 + v * jacobian(v, y)
-                - nu / rho * hessian(v, x)
-                - nu / rho * hessian(v, y)
+                - nu * hessian(v, x)
+                - nu * hessian(v, y)
                 + 1 / rho * jacobian(p, y)
             )
             if self.time:
@@ -118,7 +118,7 @@ class NavierStokes(base.PDE):
             if self.dim == 3:
                 z, w = out["z"], out["w"]
                 momentum_y += w * jacobian(v, z)
-                momentum_y -= nu / rho * hessian(v, z)
+                momentum_y -= nu * hessian(v, z)
             return momentum_y
 
         self.add_equation("momentum_y", momentum_y_compute_func)
@@ -133,9 +133,9 @@ class NavierStokes(base.PDE):
                     u * jacobian(w, x)
                     + v * jacobian(w, y)
                     + w * jacobian(w, z)
-                    - nu / rho * hessian(w, x)
-                    - nu / rho * hessian(w, y)
-                    - nu / rho * hessian(w, z)
+                    - nu * hessian(w, x)
+                    - nu * hessian(w, y)
+                    - nu * hessian(w, z)
                     + 1 / rho * jacobian(p, z)
                 )
                 if self.time:
