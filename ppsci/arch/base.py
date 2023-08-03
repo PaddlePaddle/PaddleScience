@@ -28,8 +28,8 @@ class Arch(nn.Layer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._input_transform = None
-        self._output_transform = None
+        self._input_transform: Callable = None
+        self._output_transform: Callable = None
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError("Arch.forward is not implemented")
