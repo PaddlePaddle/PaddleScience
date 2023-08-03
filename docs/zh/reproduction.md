@@ -120,12 +120,12 @@ class PetDataset(io.Dataset):
         """
         构造函数
         """
-        if self.mode not in ["train", "test", "predict"]:
+        if mode not in ["train", "test", "predict"]:
             raise ValueError(
-                f"mode should be 'train' or 'test' or 'predict', but got {self.mode}"
+                f"mode should be 'train' or 'test' or 'predict', but got {mode}"
             )
         self.image_size = IMAGE_SIZE
-        self.mode = mode.lower()
+        self.mode = mode
         self.train_images = []
         self.label_images = []
         with open(f"./{self.mode}.txt", "r") as f:
