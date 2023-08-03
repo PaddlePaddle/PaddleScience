@@ -100,6 +100,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
         self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}
         self._len = len(next(iter(self.input.values())))
+        self.transforms = transforms
 
     @property
     def num_samples(self):
@@ -107,7 +108,10 @@ class IterableNamedArrayDataset(io.IterableDataset):
         return self._len
 
     def __iter__(self):
-        yield self.input, self.label, self.weight
+        if callable(self.transforms):
+            yield self.transforms(self.input), self.label, self.weight
+        else:
+            yield self.input, self.label, self.weight
 
     def __len__(self):
         return 1

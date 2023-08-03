@@ -14,6 +14,7 @@
 
 import copy
 
+from ppsci.equation.ide import Volterra
 from ppsci.equation.pde import PDE
 from ppsci.equation.pde import Biharmonic
 from ppsci.equation.pde import Laplace
@@ -34,6 +35,7 @@ __all__ = [
     "NormalDotVec",
     "Poisson",
     "Vibration",
+    "Volterra",
     "build_equation",
 ]
 
