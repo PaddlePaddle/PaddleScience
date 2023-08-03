@@ -104,7 +104,7 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
-        for _size in hidden_size:
+        for i, _size in enumerate(hidden_size):
             self.linears.append(
                 WeightNormLinear(cur_size, _size)
                 if weight_norm
@@ -116,6 +116,14 @@ class MLP(base.Arch):
                 if activation != "stan"
                 else act_mod.get_activation(activation)(_size)
             )
+            # spetial initialization for certain activation
+            # TODO: Adapt code below to a more elegent style
+            if activation == "siren":
+                if i == 0:
+                    act_mod.Siren.init_for_first_layer(self.linears[-1])
+                else:
+                    act_mod.Siren.init_for_hidden_layer(self.linears[-1])
+
             cur_size = _size
 
         self.linears = nn.LayerList(self.linears)
