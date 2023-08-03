@@ -73,7 +73,7 @@ class Arch(nn.Layer):
         """Split tensor and wrap into a dict by given keys.
 
         Args:
-            data_tensor (Dict[str, paddle.Tensor]): Tensor to be split.
+            data_tensor (paddle.Tensor): Tensor to be split.
             keys (Tuple[str, ...]): Keys tensor mapping to.
             axis (int, optional): Axis split at. Defaults to -1.
 

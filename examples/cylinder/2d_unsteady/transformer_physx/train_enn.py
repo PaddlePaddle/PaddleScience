@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         grad_clip=clip,
     )([model])
 
-    # maunally build validator
+    # manually build validator
     weights = (10.0 * (VALID_BLOCK_SIZE - 1), 10.0 * VALID_BLOCK_SIZE)
     eval_dataloader_cfg = {
         "dataset": {

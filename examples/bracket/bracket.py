@@ -1,19 +1,7 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html
+STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
 """
 
 import numpy as np
@@ -23,10 +11,10 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 if __name__ == "__main__":
-    # fluid.core.set_prim_eager_enabled(True)
     args = config.parse_args()
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(2023)
+    SEED = 2023
+    ppsci.utils.misc.set_random_seed(SEED)
     # set output directory
     OUTPUT_DIR = "./output_bracket" if not args.output_dir else args.output_dir
     # initialize logger
@@ -231,7 +219,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     ref_xyzu = ppsci.utils.reader.load_csv_file(
@@ -373,13 +361,15 @@ if __name__ == "__main__":
         EPOCHS,
         ITERS_PER_EPOCH,
         save_freq=20,
-        eval_during_train=True,
         log_freq=20,
+        eval_during_train=True,
         eval_freq=20,
+        seed=SEED,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        eval_with_no_grad=True,
     )
     # train model
     solver.train()
@@ -399,7 +389,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

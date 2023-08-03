@@ -23,6 +23,27 @@ from ppsci.utils import initializer
 from ppsci.utils import misc
 
 
+class Stan(nn.Layer):
+    """Self-scalable Tanh.
+    paper: https://arxiv.org/abs/2204.12589v1
+
+    Args:
+        out_features (int, optional): Output features. Defaults to 1.
+    """
+
+    def __init__(self, out_features: int = 1):
+        super().__init__()
+        self.beta = self.create_parameter(
+            shape=(out_features,),
+            default_initializer=nn.initializer.Constant(1),
+        )
+
+    def forward(self, x):
+        # TODO: manually broadcast beta to x.shape for preventing backward error yet.
+        return F.tanh(x) * (1 + paddle.broadcast_to(self.beta, x.shape) * x)
+        # return F.tanh(x) * (1 + self.beta * x)
+
+
 class Swish(nn.Layer):
     def __init__(self, beta: float = 1.0):
         super().__init__()
@@ -82,8 +103,9 @@ class Siren(nn.Layer):
                 f"but got {misc.typename(layer)}"
             )
         in_features = layer.weight.shape[0]
-        initializer.uniform_(layer.weight, -1 / in_features, 1 / in_features)
-        initializer.zeros_(layer.bias)
+        with paddle.no_grad():
+            initializer.uniform_(layer.weight, -1 / in_features, 1 / in_features)
+            initializer.zeros_(layer.bias)
 
     @staticmethod
     def init_for_hidden_layer(layer: nn.Linear, w0: float):
@@ -96,10 +118,11 @@ class Siren(nn.Layer):
                 f"but got {misc.typename(layer)}"
             )
         in_features = layer.weight.shape[0]
-        initializer.uniform_(
-            -np.sqrt(6 / in_features) / w0, np.sqrt(6 / in_features) / w0
-        )
-        initializer.zeros_(layer.bias)
+        with paddle.no_grad():
+            initializer.uniform_(
+                -np.sqrt(6 / in_features) / w0, np.sqrt(6 / in_features) / w0
+            )
+            initializer.zeros_(layer.bias)
 
 
 act_func_dict = {
@@ -107,6 +130,7 @@ act_func_dict = {
     "relu": nn.ReLU(),
     "selu": nn.SELU(),
     "gelu": nn.GELU(),
+    "leaky_relu": nn.LeakyReLU(),
     "sigmoid": nn.Sigmoid(),
     "silu": Silu(),
     "sin": Sin(),
@@ -115,6 +139,7 @@ act_func_dict = {
     "tanh": nn.Tanh(),
     "identity": nn.Identity(),
     "siren": Siren(),
+    "stan": Stan,
 }
 
 

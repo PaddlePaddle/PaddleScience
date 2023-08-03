@@ -42,7 +42,7 @@ if __name__ == "__main__":
     geom = {"interval": ppsci.geometry.Interval(0, 1)}
 
     # set equation(s)
-    equation = {"biharmonic": ppsci.equation.pde.Biharmonic(dim=1, q=-1.0, D=1.0)}
+    equation = {"biharmonic": ppsci.equation.Biharmonic(dim=1, q=-1.0, D=1.0)}
 
     # set dataloader config
     dataloader_cfg = {
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)((model,))
+    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)(model)
 
     # set validator
     TOTAL_SIZE = 100
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
     )
     solver.eval()
     # visualize prediction from pretrained_model_path(optional)

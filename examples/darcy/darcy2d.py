@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import numpy as np
+import paddle
 
 import ppsci
+from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
 
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "tanh", False, False)
+    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "stan")
 
     # set equation
     equation = {"Poisson": ppsci.equation.Poisson(2)}
@@ -44,10 +46,7 @@ if __name__ == "__main__":
     }
 
     NPOINT_PDE = 99**2
-    NPOINT_TOP = 101
-    NPOINT_BOTTOM = 101
-    NPOINT_LEFT = 99
-    NPOINT_RIGHT = 99
+    NPOINT_BC = 100 * 4
 
     # set constraint
     def poisson_ref_compute_func(_in):
@@ -67,68 +66,35 @@ if __name__ == "__main__":
         evenly=True,
         name="EQ",
     )
-    bc_top = ppsci.constraint.BoundaryConstraint(
+
+    bc = ppsci.constraint.BoundaryConstraint(
         {"p": lambda out: out["p"]},
         {
             "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
             * np.cos(2.0 * np.pi * _in["y"])
         },
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_TOP},
+        {**train_dataloader_cfg, "batch_size": NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(y, 1.0),
-        name="BC_top",
-    )
-    bc_bottom = ppsci.constraint.BoundaryConstraint(
-        {"p": lambda out: out["p"]},
-        {
-            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
-            * np.cos(2.0 * np.pi * _in["y"])
-        },
-        geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_BOTTOM},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(y, 0.0),
-        name="BC_bottom",
-    )
-    bc_left = ppsci.constraint.BoundaryConstraint(
-        {"p": lambda out: out["p"]},
-        {
-            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
-            * np.cos(2.0 * np.pi * _in["y"])
-        },
-        geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_LEFT},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, 0.0),
-        name="BC_left",
-    )
-    bc_right = ppsci.constraint.BoundaryConstraint(
-        {"p": lambda out: out["p"]},
-        {
-            "p": lambda _in: np.sin(2.0 * np.pi * _in["x"])
-            * np.cos(2.0 * np.pi * _in["y"])
-        },
-        geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT},
-        ppsci.loss.MSELoss("sum"),
-        criteria=lambda x, y: np.isclose(x, 1.0),
-        name="BC_right",
+        name="BC",
     )
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
-        bc_top.name: bc_top,
-        bc_bottom.name: bc_bottom,
-        bc_left.name: bc_left,
-        bc_right.name: bc_right,
+        bc.name: bc,
     }
 
     # set training hyper-parameters
     EPOCHS = 10000 if not args.epochs else args.epochs
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(1e-3)((model,))
+    lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        max_learning_rate=1e-3,
+        end_learning_rate=1e-7,
+    )()
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     NPOINT_EVAL = NPOINT_PDE
@@ -151,13 +117,41 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     # manually collate input data for visualization,
-    NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
         "visulzie_p": ppsci.visualize.VisualizerVtu(
             vis_points,
-            {"p": lambda d: d["p"]},
-            prefix="result_p",
+            {
+                "p": lambda d: d["p"],
+                "p_ref": lambda d: paddle.sin(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "p_diff": lambda d: paddle.sin(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"])
+                - d["p"],
+                "ux": lambda d: jacobian(d["p"], d["x"]),
+                "ux_ref": lambda d: 2
+                * np.pi
+                * paddle.cos(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "ux_diff": lambda d: jacobian(d["p"], d["x"])
+                - 2
+                * np.pi
+                * paddle.cos(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "uy": lambda d: jacobian(d["p"], d["y"]),
+                "uy_ref": lambda d: -2
+                * np.pi
+                * paddle.sin(2 * np.pi * d["x"])
+                * paddle.sin(2 * np.pi * d["y"]),
+                "uy_diff": lambda d: jacobian(d["p"], d["y"])
+                - (
+                    -2
+                    * np.pi
+                    * paddle.sin(2 * np.pi * d["x"])
+                    * paddle.sin(2 * np.pi * d["y"])
+                ),
+            },
+            prefix="result_p_ux_uy",
         )
     }
 
@@ -167,6 +161,33 @@ if __name__ == "__main__":
         constraint,
         OUTPUT_DIR,
         optimizer,
+        lr_scheduler,
+        EPOCHS,
+        ITERS_PER_EPOCH,
+        eval_during_train=True,
+        eval_freq=200,
+        equation=equation,
+        geom=geom,
+        validator=validator,
+        visualizer=visualizer,
+    )
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
+
+    # finetuning pretrained model with L-BFGS
+    OUTPUT_DIR = "./output_darcy2d_L-BFGS"
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    EPOCHS = EPOCHS // 10
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(1.0, max_iter=10)(model)
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        OUTPUT_DIR,
+        optimizer_lbfgs,
         None,
         EPOCHS,
         ITERS_PER_EPOCH,

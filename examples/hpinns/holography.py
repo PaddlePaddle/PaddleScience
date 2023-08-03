@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # initialize Adam optimizer
     optimizer_adam = ppsci.optimizer.Adam(1e-3)((model_re, model_im, model_eps))
 
-    # maunally build constraint(s)
+    # manually build constraint(s)
     label_keys = ("x", "y", "bound", "e_real", "e_imaginary", "epsilon")
     label_keys_derivative = (
         "de_re_x",
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         sup_constraint_obj.name: sup_constraint_obj,
     }
 
-    # maunally build validator
+    # manually build validator
     sup_validator_opt = ppsci.validate.SupervisedValidator(
         {
             "dataset": {
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     # train: soft constraint, epoch=1 for lbfgs
     if train_mode == "soft":
         solver = ppsci.solver.Solver(
-            solver.model,
+            model_list,
             constraint,
             OUTPUT_DIR,
             optimizer_lbfgs,
@@ -268,7 +268,7 @@ if __name__ == "__main__":
             ppsci.utils.logger.info(f"Iteration {i}: mu = {func_module.mu}\n")
 
             solver = ppsci.solver.Solver(
-                solver.model,
+                model_list,
                 constraint,
                 OUTPUT_DIR,
                 optimizer_lbfgs,
