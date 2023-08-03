@@ -114,10 +114,10 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     solver = ppsci.solver.Solver(
         model,
-        constraint,
+        None,
         OUTPUT_DIR,
         validator=validator,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         eval_with_no_grad=True,
     )
     solver.eval()
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(OUTPUT_DIR, "visual"), exist_ok=True)
     for i, (title, u_func, G_func) in enumerate(func_u_G_pair):
         u, y, G_ref = generate_y_u_G_ref(u_func, G_func)
-        G_pred = solver.predict({"u": u, "y": y})["G"]
+        G_pred = solver.predict({"u": u, "y": y})["G"].numpy()
         plt.plot(y, G_pred, label=r"$G(u)(y)_{ref}$")
         plt.plot(y, G_ref, label=r"$G(u)(y)_{pred}$")
         plt.legend()
