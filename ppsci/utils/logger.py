@@ -113,21 +113,47 @@ def log_at_trainer0(log_func):
     return wrapped_log_func
 
 
+def ensure_logger(log_func):
+    """
+    Automatically initialize `logger` by default arguments
+    when init_logger() is not called manually.
+    """
+
+    @functools.wraps(log_func)
+    def wrapped_log_func(fmt, *args):
+        if _logger is None:
+            init_logger()
+            _logger.info(
+                "Before you call functions within the logger, the logger has already "
+                "been automatically initialized. Since `log_file` is not specified by "
+                "default, information will not be written to any file except being "
+                "output to the terminal."
+            )
+
+        log_func(fmt, *args)
+
+    return wrapped_log_func
+
+
+@ensure_logger
 @log_at_trainer0
 def info(fmt, *args):
     _logger.info(fmt, *args)
 
 
+@ensure_logger
 @log_at_trainer0
 def debug(fmt, *args):
     _logger.debug(fmt, *args)
 
 
+@ensure_logger
 @log_at_trainer0
 def warning(fmt, *args):
     _logger.warning(fmt, *args)
 
 
+@ensure_logger
 @log_at_trainer0
 def error(fmt, *args):
     _logger.error(fmt, *args)
