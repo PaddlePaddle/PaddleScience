@@ -56,9 +56,9 @@ def boundary_loss_func(output_dict, *args):
 
 
 def sol_l2_rel_func(output_dict, label_dict):
-    rel_l2 = paddle.norm(
-        label_dict["u_sol"] - output_dict["u_sol"], p=2, axis=None
-    ) / paddle.norm(label_dict["u_sol"], p=2, axis=None)
+    rel_l2 = paddle.norm(label_dict["u_sol"] - output_dict["u_sol"]) / paddle.norm(
+        label_dict["u_sol"]
+    )
     metric_dict = {"u_sol": rel_l2}
     return metric_dict
 

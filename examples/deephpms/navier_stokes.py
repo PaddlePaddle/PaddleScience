@@ -36,9 +36,9 @@ def pde_l2_rel_func(output_dict, *args):
 
 
 def sol_l2_rel_func(output_dict, label_dict):
-    rel_l2 = paddle.norm(
-        label_dict["w_sol"] - output_dict["w_sol"], p=2, axis=None
-    ) / paddle.norm(label_dict["w_sol"], p=2, axis=None)
+    rel_l2 = paddle.norm(label_dict["w_sol"] - output_dict["w_sol"]) / paddle.norm(
+        label_dict["w_sol"]
+    )
     metric_dict = {"w_sol": rel_l2}
     return metric_dict
 

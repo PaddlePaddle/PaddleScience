@@ -62,9 +62,7 @@ def boundary_loss_func(output_dict, *args):
 def sol_l2_rel_func(output_dict, label_dict):
     uv_pred = paddle.sqrt(output_dict["u_idn"] ** 2 + output_dict["v_idn"] ** 2)
     uv_label = paddle.sqrt(label_dict["u_idn"] ** 2 + label_dict["u_idn"] ** 2)
-    rel_l2 = paddle.norm(uv_label - uv_pred, p=2, axis=None) / paddle.norm(
-        uv_pred, p=2, axis=None
-    )
+    rel_l2 = paddle.norm(uv_label - uv_pred) / paddle.norm(uv_pred)
     metric_dict = {"uv_sol": rel_l2}
     return metric_dict
 
