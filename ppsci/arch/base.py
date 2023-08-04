@@ -28,8 +28,14 @@ class Arch(nn.Layer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._input_transform: Callable = None
-        self._output_transform: Callable = None
+        self._input_transform: Callable[
+            [Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]
+        ] = None
+
+        self._output_transform: Callable[
+            [Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]],
+            Dict[str, paddle.Tensor],
+        ] = None
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError("Arch.forward is not implemented")
@@ -99,12 +105,15 @@ class Arch(nn.Layer):
 
     def register_output_transform(
         self,
-        transform: Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]],
+        transform: Callable[
+            [Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]],
+            Dict[str, paddle.Tensor],
+        ],
     ):
         """Register output transform.
 
         Args:
-            transform (Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
+            transform (Callable[[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
                 Output transform of network, receive a single tensor dict and return a single tensor dict.
         """
         self._output_transform = transform

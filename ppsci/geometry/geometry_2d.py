@@ -94,7 +94,7 @@ class Disk(geometry.Geometry):
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
         """
-        if points.shape[1] != {self.ndim}:
+        if points.shape[1] != self.ndim:
             raise ValueError(
                 f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
             )
