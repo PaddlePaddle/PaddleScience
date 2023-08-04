@@ -23,6 +23,132 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 
 
+class Conv2DBlock(nn.Layer):
+    def __init__(
+        self,
+        in_channel,
+        out_channel,
+        kernel_size,
+        stride,
+        use_bn,
+        act,
+        mean,
+        std,
+        value,
+    ):
+        super().__init__()
+        weight_attr = paddle.ParamAttr(
+            initializer=nn.initializer.Normal(mean=mean, std=std)
+        )
+        bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=value))
+        self.conv_2d = nn.Conv2D(
+            in_channel,
+            out_channel,
+            kernel_size,
+            stride,
+            padding="SAME",
+            weight_attr=weight_attr,
+            bias_attr=bias_attr,
+        )
+        self.bn = nn.BatchNorm2D(out_channel) if use_bn else None
+        self.act = act_mod.get_activation(act) if act else None
+
+    def forward(self, x):
+        y = x
+        y = self.conv_2d(y)
+        if self.bn:
+            y = self.bn(y)
+        if self.act:
+            y = self.act(y)
+        return y
+
+
+class VariantResBlock(nn.Layer):
+    def __init__(
+        self,
+        in_channel,
+        out_channels,
+        kernel_sizes,
+        strides,
+        use_bns,
+        acts,
+        mean,
+        std,
+        value,
+    ):
+        super().__init__()
+        self.conv_2d_0 = Conv2DBlock(
+            in_channel=in_channel,
+            out_channel=out_channels[0],
+            kernel_size=kernel_sizes[0],
+            stride=strides[0],
+            use_bn=use_bns[0],
+            act=acts[0],
+            mean=mean,
+            std=std,
+            value=value,
+        )
+        self.conv_2d_1 = Conv2DBlock(
+            in_channel=out_channels[0],
+            out_channel=out_channels[1],
+            kernel_size=kernel_sizes[1],
+            stride=strides[1],
+            use_bn=use_bns[1],
+            act=acts[1],
+            mean=mean,
+            std=std,
+            value=value,
+        )
+
+        self.conv_2d_2 = Conv2DBlock(
+            in_channel=in_channel,
+            out_channel=out_channels[2],
+            kernel_size=kernel_sizes[2],
+            stride=strides[2],
+            use_bn=use_bns[2],
+            act=acts[2],
+            mean=mean,
+            std=std,
+            value=value,
+        )
+
+        self.act = act_mod.get_activation("relu")
+
+    def forward(self, x):
+        y = x
+        y = self.conv_2d_0(y)
+        y = self.conv_2d_1(y)
+        short = self.conv_2d_2(x)
+        y = paddle.add(y, short)
+        y = self.act(y)
+        return y
+
+
+class FCBlock(nn.Layer):
+    def __init__(self, in_channel, act, mean, std, value):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        weight_attr = paddle.ParamAttr(
+            initializer=nn.initializer.Normal(mean=mean, std=std)
+        )
+        bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=value))
+        self.linear = nn.Linear(
+            in_channel,
+            1,
+            weight_attr=weight_attr,
+            bias_attr=bias_attr,
+        )
+        self.act = act_mod.get_activation(act) if act else None
+
+    def forward(self, x):
+        y = x
+        y = self.flatten(y)
+        y = self.linear(y)
+        if self.act:
+            y = self.act(y)
+        return y
+
+
 class Generator(base.Arch):
     """Generator Net of GAN. Attention, the net using a kind of variant of ResBlock which is
         unique to "tempoGAN" example but not an open source network.
@@ -77,115 +203,33 @@ class Generator(base.Arch):
         self.use_bns_tuple = use_bns_tuple
         self.acts_tuple = acts_tuple
 
-        self.init_block_i(0)
-        self.layers_res_block0 = nn.LayerList(self.layers_res_block)
-        self.init_block_i(1)
-        self.layers_res_block1 = nn.LayerList(self.layers_res_block)
-        self.init_block_i(2)
-        self.layers_res_block2 = nn.LayerList(self.layers_res_block)
-        self.init_block_i(3)
-        self.layers_res_block3 = nn.LayerList(self.layers_res_block)
-        self.layers = [
-            self.layers_res_block0,
-            self.layers_res_block1,
-            self.layers_res_block2,
-            self.layers_res_block3,
-        ]
+        self.init_blocks()
 
-    def init_block_i(self, i):
-        self.layers_res_block = []
-        in_channel = self.in_channel if i == 0 else self.out_channels_tuple[i - 1][-1]
-        self.init_res_block(
-            in_channel,
-            self.out_channels_tuple[i],
-            self.kernel_sizes_tuple[i],
-            self.strides_tuple[i],
-            self.use_bns_tuple[i],
-            self.acts_tuple[i],
-        )
-
-    def init_conv_block(
-        self, in_channel, out_channel, kernel_size, stride, use_bn, act
-    ):
-        weight_attr = paddle.ParamAttr(
-            initializer=nn.initializer.Normal(mean=0.0, std=0.04)
-        )
-        bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=0.1))
-        self.layers_res_block.append(
-            nn.Conv2D(
-                in_channel,
-                out_channel,
-                kernel_size,
-                stride,
-                padding="SAME",
-                weight_attr=weight_attr,
-                bias_attr=bias_attr,
+    def init_blocks(self):
+        blocks_list = []
+        for i in range(len(self.out_channels_tuple)):
+            in_channel = (
+                self.in_channel if i == 0 else self.out_channels_tuple[i - 1][-1]
             )
-        )
-        self.layers_res_block.append(nn.BatchNorm2D(out_channel) if use_bn else None)
-        self.layers_res_block.append(act_mod.get_activation(act) if act else None)
-
-    def init_res_block(
-        self, in_channel, out_channels, kernel_sizes, strides, use_bns, acts
-    ):
-        self.init_conv_block(
-            in_channel,
-            out_channels[0],
-            kernel_sizes[0],
-            strides[0],
-            use_bns[0],
-            acts[0],
-        )
-        self.init_conv_block(
-            out_channels[0],
-            out_channels[1],
-            kernel_sizes[1],
-            strides[1],
-            use_bns[1],
-            acts[1],
-        )
-
-        self.init_conv_block(
-            in_channel,
-            out_channels[2],
-            kernel_sizes[2],
-            strides[2],
-            use_bns[2],
-            acts[2],
-        )
-
-        self.layers_res_block.append(act_mod.get_activation("relu"))
-
-    def forward_res(self, x: paddle.Tensor) -> paddle.Tensor:
-        """Forward of one res block.
-
-        Args:
-            x (paddle.Tensor): Input of the block.
-
-        Returns:
-            paddle.Tensor: Output of the block.
-        """
-        y1 = x
-        y2 = x
-        for i in range(6):
-            if self.layers_res_block[i]:
-                y1 = self.layers_res_block[i](y1)
-
-        for i in range(6, 9):
-            if self.layers_res_block[i]:
-                y2 = self.layers_res_block[i](y2)
-
-        y = self.layers_res_block[-1](y1 + y2)
-
-        return y
+            blocks_list.append(
+                VariantResBlock(
+                    in_channel=in_channel,
+                    out_channels=self.out_channels_tuple[i],
+                    kernel_sizes=self.kernel_sizes_tuple[i],
+                    strides=self.strides_tuple[i],
+                    use_bns=self.use_bns_tuple[i],
+                    acts=self.acts_tuple[i],
+                    mean=0.0,
+                    std=0.04,
+                    value=0.1,
+                )
+            )
+        self.blocks = nn.LayerList(blocks_list)
 
     def forward_tensor(self, x):
         y = x
-
-        for i in range(len(self.out_channels_tuple)):
-            self.layers_res_block = self.layers[i]
-            y = self.forward_res(y)
-
+        for block in self.blocks:
+            y = block(y)
         return y
 
     def forward(self, x):
@@ -257,106 +301,37 @@ class Discriminator(base.Arch):
         self.use_bns = use_bns
         self.acts = acts
 
-        self.layers_conv2d = []
-        self.layers_bn = []
-        self.layers_act = []
-        self.layers_fc = []
-
         self.init_layers()
-        self.layers_conv2d = nn.LayerList(self.layers_conv2d)
-        self.layers_bn = nn.LayerList(self.layers_bn)
-        self.layers_act = nn.LayerList(self.layers_act)
-        self.layers_fc = nn.LayerList(self.layers_fc)
 
     def init_layers(self):
-        self.init_conv_block(
-            self.in_channel,
-            self.out_channels[0],
-            self.kernel_sizes[0],
-            self.strides[0],
-            self.use_bns[0],
-            self.acts[0],
-        )
-        self.init_conv_block(
-            self.out_channels[0],
-            self.out_channels[1],
-            self.kernel_sizes[1],
-            self.strides[1],
-            self.use_bns[1],
-            self.acts[1],
-        )
-        self.init_conv_block(
-            self.out_channels[1],
-            self.out_channels[2],
-            self.kernel_sizes[2],
-            self.strides[2],
-            self.use_bns[2],
-            self.acts[2],
-        )
-        self.init_conv_block(
-            self.out_channels[2],
-            self.out_channels[3],
-            self.kernel_sizes[3],
-            self.strides[3],
-            self.use_bns[3],
-            self.acts[3],
-        )
-        self.init_fc_block(self.fc_channel, self.acts[4])
-
-    def init_conv_block(
-        self, in_channel, out_channel, kernel_size, stride, use_bn, act
-    ):
-        weight_attr = paddle.ParamAttr(
-            initializer=nn.initializer.Normal(mean=0.0, std=0.04)
-        )
-        bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=0.1))
-        self.layers_conv2d.append(
-            nn.Conv2D(
-                in_channel,
-                out_channel,
-                kernel_size,
-                stride,
-                padding="SAME",
-                weight_attr=weight_attr,
-                bias_attr=bias_attr,
+        layers_list = []
+        for i in range(len(self.out_channels)):
+            in_channel = self.in_channel if i == 0 else self.out_channels[i - 1]
+            layers_list.append(
+                Conv2DBlock(
+                    in_channel=in_channel,
+                    out_channel=self.out_channels[i],
+                    kernel_size=self.kernel_sizes[i],
+                    stride=self.strides[i],
+                    use_bn=self.use_bns[i],
+                    act=self.acts[i],
+                    mean=0.0,
+                    std=0.04,
+                    value=0.1,
+                )
             )
-        )
-        self.layers_bn.append(nn.BatchNorm2D(out_channel) if use_bn else None)
-        self.layers_act.append(act_mod.get_activation(act) if act else None)
 
-    def init_fc_block(self, in_channel, act):
-        self.layers_fc.append(nn.Flatten())
-        weight_attr = paddle.ParamAttr(
-            initializer=nn.initializer.Normal(mean=0.0, std=0.04)
+        layers_list.append(
+            FCBlock(self.fc_channel, self.acts[4], mean=0.0, std=0.04, value=0.1)
         )
-        bias_attr = paddle.ParamAttr(initializer=nn.initializer.Constant(value=0.1))
-        self.layers_fc.append(
-            nn.Linear(
-                in_channel,
-                1,
-                weight_attr=weight_attr,
-                bias_attr=bias_attr,
-            )
-        )
-        self.layers_act.append(act_mod.get_activation(act) if act else None)
+        self.layers = nn.LayerList(layers_list)
 
     def forward_tensor(self, x):
         y = x
         y_list = []
-        for i in range(len(self.layers_conv2d)):
-            y = self.layers_conv2d[i](y)
-            if self.layers_bn[i]:
-                y = self.layers_bn[i](y)
-            if self.layers_act[i]:
-                y = self.layers_act[i](y)
+        for layer in self.layers:
+            y = layer(y)
             y_list.append(y)
-
-        for layer_fc in self.layers_fc:
-            y = layer_fc(y)
-        if self.layers_act[-1]:
-            y = self.layers_act[-1](y)
-        y_list.append(y)
-
         return y_list  # y_conv1, y_conv2, y_conv3, y_conv4, y_fc(y_out)
 
     def forward(self, x):
