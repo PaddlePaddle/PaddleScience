@@ -389,7 +389,7 @@ class Solver:
 
     def train(self):
         """Training."""
-        self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
+        self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
