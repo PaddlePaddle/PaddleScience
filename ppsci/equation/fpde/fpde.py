@@ -49,7 +49,8 @@ class FPDE(PDE):
         self._w_init = self._init_weights()
 
         def compute_fpde_func(out):
-            xy = paddle.concat((out["x"], out["y"]), axis=1)
+            x = paddle.concat((out["x"], out["y"]), axis=1)
+            y = out["u"]
             indices, values, shape = self.int_mat
             int_mat = sparse.sparse_coo_tensor(
                 [[p[0] for p in indices], [p[1] for p in indices]],
@@ -57,23 +58,19 @@ class FPDE(PDE):
                 shape,
                 stop_gradient=False,
             )
-            lhs = sparse.matmul(int_mat, out["u"])
+            lhs = sparse.matmul(int_mat, y)
             lhs = lhs[:, 0]
             lhs *= (
                 special.gamma((1 - self.alpha) / 2)
                 * special.gamma((2 + self.alpha) / 2)
                 / (2 * np.pi**1.5)
             )
-            # x = x[: paddle.numel(lhs)]
+            x = x[: paddle.numel(lhs)]
             rhs = (
                 2**self.alpha
                 * special.gamma(2 + self.alpha / 2)
                 * special.gamma(1 + self.alpha / 2)
-                * (
-                    1
-                    - (1 + self.alpha / 2)
-                    * paddle.sum(xy[: paddle.numel(lhs)] ** 2, axis=1)
-                )
+                * (1 - (1 + self.alpha / 2) * paddle.sum(x**2, axis=1))
             )
             res = lhs - rhs
             return res
@@ -88,10 +85,10 @@ class FPDE(PDE):
         return np.array(w, dtype=self.dtype)
 
     def get_x(self, x_f):
-        # x0 是严格内部点（不包括边界）
-        self.x0 = x_f
+        if hasattr(self, "train_x"):
+            return self.train_x
 
-        # below code is self.get_x()
+        self.x0 = x_f
         if np.any(self.geom.on_boundary(self.x0)):
             raise ValueError("x0 contains boundary points.")
 
@@ -150,7 +147,8 @@ class FPDE(PDE):
             self.w.append(np.hstack(wi))
         self.x = np.vstack([self.x0] + x)
         self.int_mat = self._get_int_matrix(self.x0)
-        return misc.convert_to_dict(self.x, ("x", "y"))
+        self.train_x = misc.convert_to_dict(self.x, ("x", "y"))
+        return self.train_x
 
     def get_weight(self, n):
         return self._w_init[: n + 1]

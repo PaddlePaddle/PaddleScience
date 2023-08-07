@@ -19,27 +19,32 @@ from typing import Union
 
 import numpy as np
 import paddle
+from matplotlib import pyplot as plt
 
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
+from ppsci.utils import save_load
 
 if __name__ == "__main__":
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    EPOCHS = 1 if not args.epochs else args.epochs
+    EPOCHS = 20000 if not args.epochs else args.epochs
     ITERS_PER_EPOCH = 1
 
     # set output directory
     OUTPUT_DIR = (
-        "./output/Fractional_Poisson_2d" if not args.output_dir else args.output_dir
+        "./output_Fractional_Poisson_2d" if not args.output_dir else args.output_dir
     )
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("u",), 4, 20)
+    save_load.load_pretrain(
+        model, "/workspace/hesensen/deepxde_sd/examples/pinn_forward/deepxde_fpde"
+    )
 
     def output_transform(in_, out):
         return {"u": (1 - (in_["x"] ** 2 + in_["y"] ** 2)) * out["u"]}
@@ -51,10 +56,6 @@ if __name__ == "__main__":
 
     # set equation
     ALPHA = 1.8
-
-    def kernel_func(x, s):
-        return np.exp(s - x)
-
     equation = {"fpde": ppsci.equation.FPDE(ALPHA, geom["disk"], [8, 100])}
 
     # set constraint
@@ -64,9 +65,10 @@ if __name__ == "__main__":
     def u_solution_func(
         out: Dict[str, Union[paddle.Tensor, np.ndarray]]
     ) -> Union[paddle.Tensor, np.ndarray]:
+        # print(out["x"].shape, out["y"].shape)
         if isinstance(out["x"], paddle.Tensor):
-            return (paddle.abs(1 - out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
-        return (np.abs(1 - out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
+            return (paddle.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
+        return (np.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
 
     # set input transform
     def quad_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
@@ -78,7 +80,11 @@ if __name__ == "__main__":
         Returns:
             Dict[str, np.ndarray]: Input dict contained sampling points.
         """
-        points = np.concatenate((in_["x"], in_["y"]), axis=1)  # N points.
+        points = np.concatenate(
+            (in_["x"].numpy(), in_["y"].numpy()), axis=1
+        )  # N points.
+        # bcp = np.array([[-1, 0]], "float32")
+        # points = np.concatenate([bcp, points], axis=0)
         x = equation["fpde"].get_x(points)  # NxQ
         return {
             **in_,
@@ -87,7 +93,7 @@ if __name__ == "__main__":
 
     fpde_constraint = ppsci.constraint.InteriorConstraint(
         equation["fpde"].equations,
-        {"fpde": u_solution_func},
+        {"fpde": 0},
         geom["disk"],
         {
             "dataset": {
@@ -142,7 +148,7 @@ if __name__ == "__main__":
             "total_size": NPOINT_EVAL,
         },
         ppsci.loss.L2RelLoss(),
-        metric={"L2Rel": ppsci.metric.L2Rel()},
+        metric={"L2Rel": ppsci.metric.MeanL2Rel()},
         name="L2Rel_Metric",
     )
     validator = {l2rel_metric.name: l2rel_metric}
@@ -156,7 +162,7 @@ if __name__ == "__main__":
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=2000,
+        eval_freq=1000,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -166,20 +172,17 @@ if __name__ == "__main__":
     solver.train()
 
     # visualize prediction after finished training
-    # input_data = geom["disk"].sample_interior(1000)
-    # input_data = {k: v for k, v in input_data.items() if k in geom["disk"].dim_keys}
+    input_data = geom["disk"].sample_interior(1000)
+    input_data = {k: v for k, v in input_data.items() if k in geom["disk"].dim_keys}
 
-    # label_data = u_solution_func(input_data)
-    # output_data = solver.predict(input_data)
-    # output_data = {
-    #     k: v.numpy()
-    #     for k, v in output_data.items()
-    # }
+    label_data = u_solution_func(input_data)
+    output_data = solver.predict(input_data)
+    output_data = {k: v.numpy() for k, v in output_data.items()}
 
-    # plt.plot(input_data, label_data, "-", label=r"$u(t)$")
-    # plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
-    # plt.legend()
-    # plt.xlabel(r"$t$")
-    # plt.ylabel(r"$u$")
-    # plt.title(r"$u-t$")
-    # plt.savefig("./Volterra_IDE.png", dpi=200)
+    plt.plot(input_data, label_data, "-", label=r"$u(x,y)$")
+    plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
+    plt.legend()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$u$")
+    plt.title(r"$u-t$")
+    plt.savefig("./Volterra_IDE.png", dpi=200)
