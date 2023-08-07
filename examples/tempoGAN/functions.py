@@ -244,7 +244,7 @@ def evaluate_img(
     """
     eval_mse = mean_squared_error(img_target, img_pred)
     eval_psnr = peak_signal_noise_ratio(img_target, img_pred)
-    eval_ssim = structural_similarity(img_target, img_pred)
+    eval_ssim = structural_similarity(img_target, img_pred, data_range=1.0)
     return eval_mse, eval_psnr, eval_ssim
 
 
