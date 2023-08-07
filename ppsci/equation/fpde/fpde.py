@@ -22,11 +22,7 @@ from scipy import special
 
 from ppsci import geometry
 from ppsci.equation.pde import PDE
-
-"""
-dde.data.FPDE.losses_train
-dde.data.FPDE.train_next_batch
-"""
+from ppsci.utils import misc
 
 
 class FPDE(PDE):
@@ -53,7 +49,8 @@ class FPDE(PDE):
         self._w_init = self._init_weights()
 
         def compute_fpde_func(out):
-            indices, values, shape = out["indices"], out["values"], out["shape"]
+            xy = paddle.concat((out["x"], out["y"]), axis=1)
+            indices, values, shape = self.int_mat
             int_mat = sparse.sparse_coo_tensor(
                 [[p[0] for p in indices], [p[1] for p in indices]],
                 values,
@@ -75,7 +72,7 @@ class FPDE(PDE):
                 * (
                     1
                     - (1 + self.alpha / 2)
-                    * paddle.sum(out["x"][: paddle.numel(lhs)] ** 2, axis=1)
+                    * paddle.sum(xy[: paddle.numel(lhs)] ** 2, axis=1)
                 )
             )
             res = lhs - rhs
@@ -90,9 +87,12 @@ class FPDE(PDE):
             w.append(w[-1] * (j - 1 - self.alpha) / j)
         return np.array(w, dtype=self.dtype)
 
-    def get_x(self, x0):
+    def get_x(self, x_f):
         # x0 是严格内部点（不包括边界）
-        if np.any(self.geom.on_boundary(x0)):
+        self.x0 = x_f
+
+        # below code is self.get_x()
+        if np.any(self.geom.on_boundary(self.x0)):
             raise ValueError("x0 contains boundary points.")
 
         if self.geom.ndim == 1:
@@ -122,7 +122,7 @@ class FPDE(PDE):
             dirn_w = np.pi**2 / 2 * np.array(dirn_w)
 
         x, self.w = [], []
-        for x0i in x0:
+        for x0i in self.x0:
             xi = list(
                 map(
                     lambda dirn: self.background_points(
@@ -148,7 +148,9 @@ class FPDE(PDE):
             # xi, wi = zip(*map(self.modify_third_order, xi, wi))
             x.append(np.vstack(xi))
             self.w.append(np.hstack(wi))
-        return np.vstack([x0] + x)
+        self.x = np.vstack([self.x0] + x)
+        self.int_mat = self._get_int_matrix(self.x0)
+        return misc.convert_to_dict(self.x, ("x", "y"))
 
     def get_weight(self, n):
         return self._w_init[: n + 1]
@@ -164,7 +166,7 @@ class FPDE(PDE):
     def distance2boundary_unitdirn(self, x, dirn):
         # https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
         xc = x - self.geom.center
-        xc = xc.numpy()
+        xc = xc
         ad = np.dot(xc, dirn)
         return (
             -ad + (ad**2 - np.sum(xc * xc, axis=-1) + self.geom.radius**2) ** 0.5
@@ -177,17 +179,15 @@ class FPDE(PDE):
         return x, w
 
     def _dynamic_dist2npts(self, dx):
-        print(dx)
-        return int(self.resolution[-1] * dx + 0.5)
         return int(math.ceil(self.resolution[-1] * dx))
 
     def _get_int_matrix(self, x: np.ndarray) -> np.ndarray:
-        dense_shape = (self.x0.shape[0], self.x.shape[0])
+        dense_shape = (x.shape[0], self.x.shape[0])
         indices, values = [], []
-        beg = self.x0.shape[0]
-        for i in range(self.x0.shape[0]):
+        beg = x.shape[0]
+        for i in range(x.shape[0]):
             for _ in range(self.w[i].shape[0]):
                 indices.append([i, beg])
                 beg += 1
             values = np.hstack((values, self.w[i]))
-        return indices, values, dense_shape
+        return indices, values.astype(self.dtype), dense_shape

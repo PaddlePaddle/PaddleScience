@@ -29,18 +29,22 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters
-    EPOCHS = 20000 if not args.epochs else args.epochs
+    EPOCHS = 1 if not args.epochs else args.epochs
     ITERS_PER_EPOCH = 1
 
     # set output directory
-    OUTPUT_DIR = "./output/Volterra_IDE" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = (
+        "./output/Fractional_Poisson_2d" if not args.output_dir else args.output_dir
+    )
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("u",), 4, 20)
-    model.register_output_transform(
-        lambda in_, out: (1 - (in_["x"] ** 2 + in_["y"] ** 2)) * out["u"]
-    )
+
+    def output_transform(in_, out):
+        return {"u": (1 - (in_["x"] ** 2 + in_["y"] ** 2)) * out["u"]}
+
+    model.register_output_transform(output_transform)
 
     # set geometry
     geom = {"disk": ppsci.geometry.Disk((0, 0), 1)}
@@ -74,15 +78,15 @@ if __name__ == "__main__":
         Returns:
             Dict[str, np.ndarray]: Input dict contained sampling points.
         """
-        x = in_["x"]  # N points.
-        x = equation["fpde"].get_x(x)  # NxQ
+        points = np.concatenate((in_["x"], in_["y"]), axis=1)  # N points.
+        x = equation["fpde"].get_x(points)  # NxQ
         return {
             **in_,
-            "x": x,
+            **{k: paddle.to_tensor(v) for k, v in x.items()},
         }
 
     fpde_constraint = ppsci.constraint.InteriorConstraint(
-        {},
+        equation["fpde"].equations,
         {"fpde": u_solution_func},
         geom["disk"],
         {
@@ -100,6 +104,7 @@ if __name__ == "__main__":
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
+        random="Hammersley",
         criteria=lambda x, y: ~geom["disk"].on_boundary(np.hstack((x, y))),
         name="FPDE",
     )
@@ -113,6 +118,8 @@ if __name__ == "__main__":
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
+        random="Hammersley",
+        criteria=lambda x, y: np.isclose(x, -1),
         name="BC",
     )
     # wrap constraints together
@@ -125,10 +132,10 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(1e-3)(model)
 
     # set validator
-    NPOINT_EVAL = 100
+    NPOINT_EVAL = 1000
     l2rel_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
-        {"u": lambda in_: np.exp(-in_["x"]) * np.cosh(in_["x"])},
+        {"u": u_solution_func},
         geom["disk"],
         {
             "dataset": "IterableNamedArrayDataset",
@@ -149,7 +156,7 @@ if __name__ == "__main__":
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=400,
+        eval_freq=2000,
         equation=equation,
         geom=geom,
         validator=validator,
