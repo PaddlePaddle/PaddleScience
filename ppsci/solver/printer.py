@@ -39,7 +39,7 @@ def update_eval_loss(trainer, loss_dict, batch_size):
 
 
 def log_train_info(trainer, batch_size, epoch_id, iter_id):
-    lr_msg = f"lr: {trainer.optimizer.get_lr():.8f}"
+    lr_msg = f"lr: {trainer.optimizer.get_lr():.5f}"
 
     metric_msg = ", ".join(
         [
@@ -67,7 +67,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
     )
 
     logger.scaler(
-        name="lr",
+        name="train/lr",
         value=trainer.optimizer.get_lr(),
         step=trainer.global_step,
         vdl_writer=trainer.vdl_writer,
@@ -76,7 +76,7 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
 
     for key in trainer.train_output_info:
         logger.scaler(
-            name=f"train_{key}",
+            name=f"train/{key}",
             value=trainer.train_output_info[key].avg,
             step=trainer.global_step,
             vdl_writer=trainer.vdl_writer,
@@ -109,7 +109,7 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
 
     for key in trainer.eval_output_info:
         logger.scaler(
-            name=f"eval_{key}",
+            name=f"eval/{key}",
             value=trainer.eval_output_info[key].avg,
             step=trainer.global_step,
             vdl_writer=trainer.vdl_writer,
