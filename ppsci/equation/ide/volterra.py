@@ -21,10 +21,10 @@ from ppsci.equation.pde import PDE
 
 
 class Volterra(PDE):
-    r"""Volterra integral equation with Gaussian quadrature algorithm
+    r"""A second kind of volterra integral equation with Gaussian quadrature algorithm.
 
     $$
-    f(t)=\int_a^t K(t, s) x(s) d s
+    x(t) - f(t)=\int_a^t K(t, s) x(s) d s
     $$
 
     [Volterra integral equation](https://en.wikipedia.org/wiki/Volterra_integral_equation)
@@ -36,13 +36,13 @@ class Volterra(PDE):
         num_points (int): Sampled points in integral interval.
         quad_deg (int): Number of quadrature.
         kernel_func (Callable): Kernel func `K(t,s)`.
-        func (Callable): `f(t)` in Volterra integral equation.
+        func (Callable): `x(t) - f(t)` in Volterra integral equation.
 
     Examples:
         >>> import ppsci
         >>> import numpy as np
         >>> vol_eq = ppsci.equation.Volterra(
-        ...     0, 12, 20, lambda x,t: np.exp(s-x), lambda out: out["u"],
+        ...     0, 12, 20, lambda x, t: np.exp(s-x), lambda out: out["u"],
         ... )
     """
 
