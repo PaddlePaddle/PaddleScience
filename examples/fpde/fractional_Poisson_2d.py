@@ -14,37 +14,37 @@
 
 # Reference: https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/fractional_Poisson_2d.py
 
+import math
+from os import path
 from typing import Dict
 from typing import Union
 
 import numpy as np
 import paddle
+from matplotlib import cm
 from matplotlib import pyplot as plt
 
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
-from ppsci.utils import save_load
 
 if __name__ == "__main__":
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
+
     # set training hyper-parameters
     EPOCHS = 20000 if not args.epochs else args.epochs
     ITERS_PER_EPOCH = 1
 
     # set output directory
     OUTPUT_DIR = (
-        "./output_Fractional_Poisson_2d" if not args.output_dir else args.output_dir
+        "./output_fractional_poisson_2d" if not args.output_dir else args.output_dir
     )
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("u",), 4, 20)
-    save_load.load_pretrain(
-        model, "/workspace/hesensen/deepxde_sd/examples/pinn_forward/deepxde_fpde"
-    )
 
     def output_transform(in_, out):
         return {"u": (1 - (in_["x"] ** 2 + in_["y"] ** 2)) * out["u"]}
@@ -65,13 +65,12 @@ if __name__ == "__main__":
     def u_solution_func(
         out: Dict[str, Union[paddle.Tensor, np.ndarray]]
     ) -> Union[paddle.Tensor, np.ndarray]:
-        # print(out["x"].shape, out["y"].shape)
         if isinstance(out["x"], paddle.Tensor):
             return (paddle.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
         return (np.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
 
     # set input transform
-    def quad_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def fpde_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         """Get sampling points for integral.
 
         Args:
@@ -80,12 +79,8 @@ if __name__ == "__main__":
         Returns:
             Dict[str, np.ndarray]: Input dict contained sampling points.
         """
-        points = np.concatenate(
-            (in_["x"].numpy(), in_["y"].numpy()), axis=1
-        )  # N points.
-        # bcp = np.array([[-1, 0]], "float32")
-        # points = np.concatenate([bcp, points], axis=0)
-        x = equation["fpde"].get_x(points)  # NxQ
+        points = np.concatenate((in_["x"].numpy(), in_["y"].numpy()), axis=1)
+        x = equation["fpde"].get_x(points)
         return {
             **in_,
             **{k: paddle.to_tensor(v) for k, v in x.items()},
@@ -101,7 +96,7 @@ if __name__ == "__main__":
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "transform_func": quad_transform,
+                            "transform_func": fpde_transform,
                         },
                     },
                 ),
@@ -139,6 +134,7 @@ if __name__ == "__main__":
 
     # set validator
     NPOINT_EVAL = 1000
+    EVAL_FREQ = 1000
     l2rel_metric = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
@@ -147,8 +143,8 @@ if __name__ == "__main__":
             "dataset": "IterableNamedArrayDataset",
             "total_size": NPOINT_EVAL,
         },
-        ppsci.loss.L2RelLoss(),
-        metric={"L2Rel": ppsci.metric.MeanL2Rel()},
+        ppsci.loss.MSELoss(),
+        metric={"L2Rel": ppsci.metric.L2Rel()},
         name="L2Rel_Metric",
     )
     validator = {l2rel_metric.name: l2rel_metric}
@@ -162,27 +158,58 @@ if __name__ == "__main__":
         epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        eval_freq=1000,
+        eval_freq=EVAL_FREQ,
         equation=equation,
         geom=geom,
         validator=validator,
         eval_with_no_grad=True,
+        pretrained_model_path=path.join(OUTPUT_DIR, "checkpoints", "latest"),
     )
     # train model
     solver.train()
 
     # visualize prediction after finished training
-    input_data = geom["disk"].sample_interior(1000)
-    input_data = {k: v for k, v in input_data.items() if k in geom["disk"].dim_keys}
+    theta = np.arange(0, 2 * math.pi, 0.04)
+    rho = np.arange(0, 1, 0.005)
+    mt, mr = np.meshgrid(theta, rho)
+    x = mr * np.cos(mt)
+    y = mr * np.sin(mt)
 
-    label_data = u_solution_func(input_data)
+    input_data = {
+        "x": x.reshape([-1, 1]),
+        "y": y.reshape([-1, 1]),
+    }
+    label_data = u_solution_func(input_data).reshape([x.shape[0], -1])
     output_data = solver.predict(input_data)
-    output_data = {k: v.numpy() for k, v in output_data.items()}
+    output_data = {
+        k: v.numpy().reshape([x.shape[0], -1]) for k, v in output_data.items()
+    }
 
-    plt.plot(input_data, label_data, "-", label=r"$u(x,y)$")
-    plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
-    plt.legend()
-    plt.xlabel(r"$t$")
-    plt.ylabel(r"$u$")
-    plt.title(r"$u-t$")
-    plt.savefig("./Volterra_IDE.png", dpi=200)
+    fig = plt.figure()
+    # plot prediction
+    ax1 = fig.add_subplot(121, projection="3d")
+    surf1 = ax1.plot_surface(
+        x, y, output_data["u"], cmap=cm.jet, linewidth=0, antialiased=False
+    )
+    ax1.set_zlim(0, 1.2)
+    ax1.set_xlabel(r"$x$")
+    ax1.set_ylabel(r"$y$")
+    ax1.set_zlabel(r"$z$")
+    ax1.set_title(r"$u(x,y), label$")
+    fig.colorbar(surf1, ax=ax1, aspect=5, orientation="horizontal")
+
+    # plot label
+    ax2 = fig.add_subplot(122, projection="3d")
+    surf2 = ax2.plot_surface(
+        x, y, label_data, cmap=cm.jet, linewidth=0, antialiased=False
+    )
+    ax2.set_zlim(0, 1.2)
+    ax2.set_xlabel("x")
+    ax2.set_ylabel("y")
+    ax2.set_zlabel("z")
+    ax2.set_title(r"$u(x,y), prediction$")
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf2, ax=ax2, aspect=5, orientation="horizontal")
+    fig.subplots_adjust(wspace=0.5, hspace=0.5)
+    plt.savefig("fractional_poisson_2d_result.png", dpi=400)
