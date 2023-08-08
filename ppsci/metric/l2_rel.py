@@ -92,18 +92,18 @@ class MeanL2Rel(base.Metric):
     EPS: float = np.finfo(np.float32).eps
 
     def __init__(self, keep_batch: bool = False):
-        if keep_batch:
-            raise ValueError(f"keep_batch should be False, but got {keep_batch}.")
         super().__init__(keep_batch)
 
     @paddle.no_grad()
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
-            mean_rel_l2 = (
-                paddle.norm(label_dict[key] - output_dict[key], p=2)
-                / paddle.norm(label_dict[key], p=2).clip(min=self.EPS)
-            ).mean()
-            metric_dict[key] = mean_rel_l2
+            rel_l2 = paddle.norm(
+                label_dict[key] - output_dict[key], p=2, axis=1
+            ) / paddle.norm(label_dict[key], p=2, axis=1).clip(min=self.EPS)
+            if self.keep_batch:
+                metric_dict[key] = rel_l2
+            else:
+                metric_dict[key] = rel_l2.mean()
 
         return metric_dict
