@@ -127,47 +127,33 @@ if __name__ == "__main__":
     model_2.apply(init_func)
     model_3.apply(init_func)
 
-    class Transform:
-        def __init__(self) -> None:
-            pass
+    def output_trans_u(self, input, out):
+        x, y, scale = input["x"], input["y"], input["scale"]
+        r_func = (
+            scale
+            / np.sqrt(2 * np.pi * SIGMA**2)
+            * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
+        )
+        self.h = R_INLET - r_func
+        u = out["u"]
+        # The no-slip condition of velocity on the wall
+        return {"u": u * (self.h**2 - y**2)}
 
-        def input_trans(self, input):
-            self.input = input
-            return input
+    def output_trans_v(self, input, out):
+        y = input["y"]
+        v = out["v"]
+        # The no-slip condition of velocity on the wall
+        return {"v": (self.h**2 - y**2) * v}
 
-        def output_trans_u(self, out):
-            x, y, scale = self.input["x"], self.input["y"], self.input["scale"]
-            r_func = (
-                scale
-                / np.sqrt(2 * np.pi * SIGMA**2)
-                * paddle.exp(-((x - mu) ** 2) / (2 * SIGMA**2))
-            )
-            self.h = R_INLET - r_func
-            u = out["u"]
-            # The no-slip condition of velocity on the wall
-            return {"u": u * (self.h**2 - y**2)}
+    def output_trans_p(self, input, out):
+        x = input["x"]
+        p = out["p"]
+        # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
+        return {"p": ((P_IN - P_OUT) * (X_OUT - x) / L + (X_IN - x) * (X_OUT - x) * p)}
 
-        def output_trans_v(self, out):
-            y = self.input["y"]
-            v = out["v"]
-            # The no-slip condition of velocity on the wall
-            return {"v": (self.h**2 - y**2) * v}
-
-        def output_trans_p(self, out):
-            x = self.input["x"]
-            p = out["p"]
-            # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
-            return {
-                "p": ((P_IN - P_OUT) * (X_OUT - x) / L + (X_IN - x) * (X_OUT - x) * p)
-            }
-
-    transform = Transform()
-    model_1.register_input_transform(transform.input_trans)
-    model_2.register_input_transform(transform.input_trans)
-    model_3.register_input_transform(transform.input_trans)
-    model_1.register_output_transform(transform.output_trans_u)
-    model_2.register_output_transform(transform.output_trans_v)
-    model_3.register_output_transform(transform.output_trans_p)
+    model_1.register_output_transform(output_trans_u)
+    model_2.register_output_transform(output_trans_v)
+    model_3.register_output_transform(output_trans_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     LEARNING_RATE = 1e-3
