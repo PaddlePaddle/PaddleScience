@@ -114,7 +114,8 @@ class Arch(nn.Layer):
 
         Args:
             transform (Callable[[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
-                Output transform of network, receive a single tensor dict and return a single tensor dict.
+                Output transform of network, receive two single tensor dict(raw input
+                and raw output) and return a single tensor dict(transformed output).
         """
         self._output_transform = transform
 
