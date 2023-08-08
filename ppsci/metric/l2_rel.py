@@ -21,12 +21,13 @@ from ppsci.metric import base
 class L2Rel(base.Metric):
     r"""Class for l2 relative error.
 
-    NOTE: This metric API is different from `MeanL2Rel`, difference is as below:
-    - `L2Rel` regards the input sample as a whole and calculates the L2Rel of the whole;
-    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of L2Rel for all samples.
+    NOTE: This metric API is slightly different from `MeanL2Rel`, difference is as below:
+
+    - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
 
     $$
-    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \max(\mathbf{y}, \epsilon) \Vert_2}
+    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\max(\Vert \mathbf{y} \Vert_2, \epsilon)}
     $$
 
     $$
@@ -65,16 +66,17 @@ class L2Rel(base.Metric):
 class MeanL2Rel(base.Metric):
     r"""Class for mean l2 relative error.
 
-    NOTE: This metric API is different from `L2Rel`, difference is as below:
-    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of L2Rel for all samples.
-    - `L2Rel` regards the input sample as a whole and calculates the L2Rel of the whole;
+    NOTE: This metric API is slightly different from `L2Rel`, difference is as below:
+
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
+    - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
 
     $$
-    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \max(\mathbf{y}, \epsilon) \Vert_2}
+    metric = \dfrac{1}{M} \sum_{i=1}^{M}\dfrac{\Vert \mathbf{x_i} - \mathbf{y_i} \Vert_2}{\max(\Vert \mathbf{y_i} \Vert_2, \epsilon) }
     $$
 
     $$
-    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
+    \mathbf{x_i}, \mathbf{y_i} \in \mathcal{R}^{N}
     $$
 
     Args:
