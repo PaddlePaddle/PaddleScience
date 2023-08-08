@@ -15,7 +15,6 @@
 # Reference: https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/fractional_Poisson_2d.py
 
 import math
-from os import path
 from typing import Dict
 from typing import Union
 
@@ -163,7 +162,6 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         eval_with_no_grad=True,
-        pretrained_model_path=path.join(OUTPUT_DIR, "checkpoints", "latest"),
     )
     # train model
     solver.train()

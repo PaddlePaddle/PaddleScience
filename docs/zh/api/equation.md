@@ -4,9 +4,9 @@
     handler: python
     options:
       members:
+        - PDE
         - FractionalPoisson
         - IDE
-        - PDE
         - Biharmonic
         - Laplace
         - LinearElasticity
