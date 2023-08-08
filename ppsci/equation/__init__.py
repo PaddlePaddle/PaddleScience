@@ -14,7 +14,7 @@
 
 import copy
 
-from ppsci.equation.fpde import FPDE
+from ppsci.equation.fpde import FractionalPoisson
 from ppsci.equation.ide import Volterra
 from ppsci.equation.pde import PDE
 from ppsci.equation.pde import Biharmonic
@@ -37,7 +37,7 @@ __all__ = [
     "Poisson",
     "Vibration",
     "Volterra",
-    "FPDE",
+    "FractionalPoisson",
     "build_equation",
 ]
 

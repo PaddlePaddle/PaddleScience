@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     # set equation
     ALPHA = 1.8
-    equation = {"fpde": ppsci.equation.FPDE(ALPHA, geom["disk"], [8, 100])}
+    equation = {"fpde": ppsci.equation.FractionalPoisson(ALPHA, geom["disk"], [8, 100])}
 
     # set constraint
     NPOINT_INTERIOR = 100

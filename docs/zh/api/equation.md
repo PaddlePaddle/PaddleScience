@@ -4,6 +4,8 @@
     handler: python
     options:
       members:
+        - FractionalPoisson
+        - IDE
         - PDE
         - Biharmonic
         - Laplace

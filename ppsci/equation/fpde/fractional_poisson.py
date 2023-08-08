@@ -25,7 +25,7 @@ from ppsci.equation.pde import PDE
 from ppsci.utils import misc
 
 
-class FPDE(PDE):
+class FractionalPoisson(PDE):
     r"""
 
     $$

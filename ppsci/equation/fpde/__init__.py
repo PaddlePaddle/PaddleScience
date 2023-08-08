@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.equation.fpde.fpde import FPDE
+from ppsci.equation.fpde.fractional_poisson import FractionalPoisson
 
 __all__ = [
-    "FPDE",
+    "FractionalPoisson",
 ]
