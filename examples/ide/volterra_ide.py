@@ -29,12 +29,9 @@ if __name__ == "__main__":
     args = config.parse_args()
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
-    # set training hyper-parameters
-    EPOCHS = 1 if not args.epochs else args.epochs
-    ITERS_PER_EPOCH = 1
 
     # set output directory
-    OUTPUT_DIR = "./output/Volterra_IDE" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_Volterra_IDE" if not args.output_dir else args.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
@@ -66,15 +63,17 @@ if __name__ == "__main__":
         )
     }
 
+    # set constraint
+    ITERS_PER_EPOCH = 1
     # set input transform
-    def quad_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def quad_transform(in_: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         """Get sampling points for integral.
 
         Args:
-            in_ (Dict[str, np.ndarray]): Raw input dict.
+            in_ (Dict[str, paddle.Tensor]): Raw input dict.
 
         Returns:
-            Dict[str, np.ndarray]: Input dict contained sampling points.
+            Dict[str, paddle.Tensor]: Input dict contained sampling points.
         """
         x = in_["x"]  # N points.
         x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])  # NxQ
@@ -84,8 +83,8 @@ if __name__ == "__main__":
             "x": x_quad,
         }
 
-    # set constraint
-    odeconstraint = ppsci.constraint.InteriorConstraint(
+    # interior constraint
+    ide_constraint = ppsci.constraint.InteriorConstraint(
         equation["volterra"].equations,
         {"volterra": 0},
         geom["timedomain"],
@@ -108,7 +107,7 @@ if __name__ == "__main__":
         name="EQ",
     )
 
-    # compute ground truth function
+    # initial condition
     def u_solution_func(in_):
         if isinstance(in_["x"], paddle.Tensor):
             return paddle.exp(-in_["x"]) * paddle.cosh(in_["x"])
@@ -124,14 +123,17 @@ if __name__ == "__main__":
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
-        criteria=lambda x: np.isclose(x, 0),
+        criteria=geom["timedomain"].on_initial,
         name="IC",
     )
     # wrap constraints together
     constraint = {
-        odeconstraint.name: odeconstraint,
+        ide_constraint.name: ide_constraint,
         ic.name: ic,
     }
+
+    # set training hyper-parameters
+    EPOCHS = 1 if not args.epochs else args.epochs
 
     # set optimizer
     optimizer = ppsci.optimizer.LBFGS(
@@ -145,9 +147,9 @@ if __name__ == "__main__":
 
     # set validator
     NPOINT_EVAL = 100
-    l2rel_metric = ppsci.validate.GeometryValidator(
+    l2rel_validator = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
-        {"u": lambda in_: np.exp(-in_["x"]) * np.cosh(in_["x"])},
+        {"u": u_solution_func},
         geom["timedomain"],
         {
             "dataset": "IterableNamedArrayDataset",
@@ -156,9 +158,9 @@ if __name__ == "__main__":
         ppsci.loss.L2RelLoss(),
         evenly=True,
         metric={"L2Rel": ppsci.metric.L2Rel()},
-        name="L2Rel_Metric",
+        name="L2Rel_Validator",
     )
-    validator = {l2rel_metric.name: l2rel_metric}
+    validator = {l2rel_validator.name: l2rel_validator}
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -180,9 +182,9 @@ if __name__ == "__main__":
 
     # visualize prediction after finished training
     input_data = geom["timedomain"].uniform_points(100)
-
     label_data = u_solution_func({"x": input_data})
     output_data = solver.predict({"x": input_data})["u"].numpy()
+
     plt.plot(input_data, label_data, "-", label=r"$u(t)$")
     plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
     plt.legend()
