@@ -6,7 +6,6 @@
       members:
         - PDE
         - FractionalPoisson
-        - IDE
         - Biharmonic
         - Laplace
         - LinearElasticity

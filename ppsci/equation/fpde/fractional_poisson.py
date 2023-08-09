@@ -155,7 +155,7 @@ class FractionalPoisson(PDE):
         return self._w_init[: n + 1]
 
     def background_points(self, x, dirn, dist2npt, shift):
-        dirn = dirn / np.linalg.norm(dirn)  # 单位方向向量
+        dirn = dirn / np.linalg.norm(dirn)
         dx = self.distance2boundary_unitdirn(x, -dirn)
         n = max(dist2npt(dx), 1)
         h = dx / n
