@@ -28,6 +28,7 @@ from ppsci.utils import misc
 class FractionalPoisson(PDE):
     r"""
 
+    TODO: refine this docstring
     Args:
         alpha (float): Alpha.
         geom (geometry.Geometry): Computation geometry.
@@ -35,8 +36,7 @@ class FractionalPoisson(PDE):
 
     Examples:
         >>> import ppsci
-        >>> ALPHA = 1.8
-        >>> equation = {"fpde": ppsci.equation.FractionalPoisson(ALPHA, geom["disk"], [8, 100])}
+        >>> fpde = ppsci.equation.FractionalPoisson(ALPHA, geom["disk"], [8, 100])
     """
     dtype = paddle.get_default_dtype()
 
