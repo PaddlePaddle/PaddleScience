@@ -123,7 +123,7 @@ if __name__ == "__main__":
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
-        criteria=lambda x: np.isclose(x, 0),
+        criteria=geom["timedomain"].on_initial,
         name="IC",
     )
     # wrap constraints together

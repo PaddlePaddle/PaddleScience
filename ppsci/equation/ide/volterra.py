@@ -81,15 +81,15 @@ class Volterra(PDE):
 
         self.add_equation("volterra", compute_volterra_func)
 
-    def get_quad_points(self, t: np.ndarray) -> np.ndarray:
+    def get_quad_points(self, t: paddle.Tensor) -> paddle.Tensor:
         """Scale and transform quad_x from [-1, 1] to range [a, b].
         reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            t (np.ndarray): Upper bound 't' for integral.
+            t (paddle.Tensor): Tensor array of upper bounds 't' for integral.
 
         Returns:
-            np.ndarray: Transformed points in desired range with shape of [N, Q].
+            paddle.Tensor: Transformed points in desired range with shape of [N, Q].
         """
         a, b = self.bound, t
         return ((b - a) / 2) @ self.quad_x.T + (b + a) / 2
@@ -99,7 +99,7 @@ class Volterra(PDE):
         reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            t (float): Upper bound 't' for integral.
+            t (float): Array of upper bound 't' for integral.
 
         Returns:
             np.ndarray: Transformed weights in desired range with shape of [Q, ].
