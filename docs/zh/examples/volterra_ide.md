@@ -1,6 +1,6 @@
 # Volterra integral equation
 
-<a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<a href="https://aistudio.baidu.com/aistudio/projectdetail/6622866?sUid=438690&shared=1&ts=1691582831601" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 ## 1. 问题简介
 
