@@ -73,17 +73,17 @@ def transform_out_all(input, var):
 
 def transform_out_real_part(input, out):
     re = out["e_re"]
-    trans_out = transform_out_all(re)
+    trans_out = transform_out_all(input, re)
     return {"e_real": trans_out}
 
 
-def transform_out_imaginary_part(out):
+def transform_out_imaginary_part(input, out):
     im = out["e_im"]
-    trans_out = transform_out_all(im)
+    trans_out = transform_out_all(input, im)
     return {"e_imaginary": trans_out}
 
 
-def transform_out_epsilon(out):
+def transform_out_epsilon(input, out):
     eps = out["eps"]
     # 1 <= eps <= 12
     eps = F.sigmoid(eps) * 11 + 1
