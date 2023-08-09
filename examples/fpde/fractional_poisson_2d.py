@@ -65,8 +65,8 @@ if __name__ == "__main__":
         out: Dict[str, Union[paddle.Tensor, np.ndarray]]
     ) -> Union[paddle.Tensor, np.ndarray]:
         if isinstance(out["x"], paddle.Tensor):
-            return (paddle.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
-        return (np.abs(1 - (out["x"] ** 2 + out["y"] ** 2))) ** (1 + ALPHA / 2)
+            return paddle.abs(1 - (out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
+        return np.abs(1 - (out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
 
     # set input transform
     def fpde_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:

@@ -28,15 +28,16 @@ from ppsci.utils import misc
 class FractionalPoisson(PDE):
     r"""
 
-    $$
-    $$
-
-
     Args:
+        alpha (float): Alpha.
+        geom (geometry.Geometry): Computation geometry.
+        resolution (Tuple[int, ...]): Resolution.
 
     Examples:
+        >>> import ppsci
+        >>> ALPHA = 1.8
+        >>> equation = {"fpde": ppsci.equation.FractionalPoisson(ALPHA, geom["disk"], [8, 100])}
     """
-
     dtype = paddle.get_default_dtype()
 
     def __init__(
