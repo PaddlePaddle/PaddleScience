@@ -21,10 +21,10 @@ from ppsci.equation.pde import PDE
 
 
 class Volterra(PDE):
-    r"""Volterra integral equation with Gaussian quadrature algorithm
+    r"""A second kind of volterra integral equation with Gaussian quadrature algorithm.
 
     $$
-    f(t)=\int_a^t K(t, s) x(s) d s
+    x(t) - f(t)=\int_a^t K(t, s) x(s) d s
     $$
 
     [Volterra integral equation](https://en.wikipedia.org/wiki/Volterra_integral_equation)
@@ -36,13 +36,13 @@ class Volterra(PDE):
         num_points (int): Sampled points in integral interval.
         quad_deg (int): Number of quadrature.
         kernel_func (Callable): Kernel func `K(t,s)`.
-        func (Callable): `f(t)` in Volterra integral equation.
+        func (Callable): `x(t) - f(t)` in Volterra integral equation.
 
     Examples:
         >>> import ppsci
         >>> import numpy as np
         >>> vol_eq = ppsci.equation.Volterra(
-        ...     0, 12, 20, lambda x,t: np.exp(s-x), lambda out: out["u"],
+        ...     0, 12, 20, lambda t, s: np.exp(s - t), lambda out: out["u"],
         ... )
     """
 
@@ -81,15 +81,15 @@ class Volterra(PDE):
 
         self.add_equation("volterra", compute_volterra_func)
 
-    def get_quad_points(self, t: np.ndarray) -> np.ndarray:
+    def get_quad_points(self, t: paddle.Tensor) -> paddle.Tensor:
         """Scale and transform quad_x from [-1, 1] to range [a, b].
         reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            t (np.ndarray): Upper bound 't' for integral.
+            t (paddle.Tensor): Tensor array of upper bounds 't' for integral.
 
         Returns:
-            np.ndarray: Transformed points in desired range with shape of [N, Q].
+            paddle.Tensor: Transformed points in desired range with shape of [N, Q].
         """
         a, b = self.bound, t
         return ((b - a) / 2) @ self.quad_x.T + (b + a) / 2
@@ -99,7 +99,7 @@ class Volterra(PDE):
         reference: https://en.wikipedia.org/wiki/Gaussian_quadrature#Change_of_interval
 
         Args:
-            t (float): Upper bound 't' for integral.
+            t (float): Array of upper bound 't' for integral.
 
         Returns:
             np.ndarray: Transformed weights in desired range with shape of [Q, ].
@@ -118,6 +118,6 @@ class Volterra(PDE):
             end = self.num_points + self.quad_deg * (i + 1)
             K = np.ravel(
                 self.kernel_func(np.full((self.quad_deg, 1), xi), x[beg:end].numpy())
-            )  # [Q, ]
-            int_mat[i, beg:end] = self._get_quad_weights(xi) * K  # [Q, ]
+            )
+            int_mat[i, beg:end] = self._get_quad_weights(xi) * K
         return int_mat

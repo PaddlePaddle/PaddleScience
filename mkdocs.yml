@@ -36,6 +36,7 @@ nav:
   - 经典案例:
       - PINNs:
         - 方程求解:
+          - Volterra_IDE: zh/examples/volterra_ide.md
           - Laplace2D: zh/examples/laplace2d.md
         - 振动:
           - ViV: zh/examples/viv.md
