@@ -18,11 +18,9 @@ import scipy.io
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-
 from ppsci.utils import config
 from ppsci.utils import logger
 from ppsci.utils import reader
-
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -76,7 +74,7 @@ if __name__ == "__main__":
     }
 
     # set dataloader config
-    ITERS_PER_EPOCH = 1   
+    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
@@ -94,7 +92,10 @@ if __name__ == "__main__":
     }
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
-        {'pressure_Poisson': lambda out: hessian(out['p'],out['x'])+hessian(out['p'],out['y'])},
+        {
+            "pressure_Poisson": lambda out: hessian(out["p"], out["x"])
+            + hessian(out["p"], out["y"])
+        },
         {"pressure_Poisson": 0},
         geom["time_rect"],
         {
@@ -149,10 +150,7 @@ if __name__ == "__main__":
         eta_mse_validator.name: eta_mse_validator,
     }
 
-    visu_mat = geom["time_rect_eval"].sample_interior(
-        300*100*126,
-        evenly=True
-    )
+    visu_mat = geom["time_rect_eval"].sample_interior(300 * 100 * 126, evenly=True)
 
     datafile = "maxmin.mat"
     data = scipy.io.loadmat(datafile)
@@ -172,7 +170,7 @@ if __name__ == "__main__":
                 "v": lambda d: d["v"] * (v_max - v_min) + v_min,
                 "p": lambda d: d["p"] * (p_max - p_min) + p_min,
                 "phil": lambda d: d["phil"],
-            },  
+            },
             num_timestamps=126,
             prefix="result_u_v_p",
         )
