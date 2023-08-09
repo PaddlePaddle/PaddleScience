@@ -35,7 +35,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("t",), ("u",), 3, 20)
+    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
 
     # set geometry
     BOUNDS = (0, 5)
@@ -46,12 +46,12 @@ if __name__ == "__main__":
     NPOINT_INTERIOR = 12
     NPOINT_IC = 1
 
-    def kernel_func(t, s):
-        return np.exp(s - t)
+    def kernel_func(x, s):
+        return np.exp(s - x)
 
     def func(out):
-        t, u = out["t"], out["u"]
-        return jacobian(u, t) + u
+        x, u = out["x"], out["u"]
+        return jacobian(u, x) + u
 
     equation = {
         "volterra": ppsci.equation.Volterra(
@@ -66,21 +66,21 @@ if __name__ == "__main__":
     # set constraint
     ITERS_PER_EPOCH = 1
     # set input transform
-    def quad_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def quad_transform(in_: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
         """Get sampling points for integral.
 
         Args:
-            in_ (Dict[str, np.ndarray]): Raw input dict.
+            in_ (Dict[str, paddle.Tensor]): Raw input dict.
 
         Returns:
-            Dict[str, np.ndarray]: Input dict contained sampling points.
+            Dict[str, paddle.Tensor]: Input dict contained sampling points.
         """
-        t = in_["t"]  # N points.
-        x_quad = equation["volterra"].get_quad_points(t).reshape([-1, 1])  # NxQ
-        x_quad = paddle.concat((t, x_quad), axis=0)  # M+MxQ: [M|Q1|Q2,...,QM|]
+        x = in_["x"]  # N points.
+        x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])  # NxQ
+        x_quad = paddle.concat((x, x_quad), axis=0)  # M+MxQ: [M|Q1|Q2,...,QM|]
         return {
             **in_,
-            "t": x_quad,
+            "x": x_quad,
         }
 
     # interior constraint
@@ -109,9 +109,9 @@ if __name__ == "__main__":
 
     # initial condition
     def u_solution_func(in_):
-        if isinstance(in_["t"], paddle.Tensor):
-            return paddle.exp(-in_["t"]) * paddle.cosh(in_["t"])
-        return np.exp(-in_["t"]) * np.cosh(in_["t"])
+        if isinstance(in_["x"], paddle.Tensor):
+            return paddle.exp(-in_["x"]) * paddle.cosh(in_["x"])
+        return np.exp(-in_["x"]) * np.cosh(in_["x"])
 
     ic = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
@@ -123,7 +123,7 @@ if __name__ == "__main__":
             "iters_per_epoch": ITERS_PER_EPOCH,
         },
         ppsci.loss.MSELoss("mean"),
-        criteria=lambda t: np.isclose(t, 0),
+        criteria=lambda x: np.isclose(x, 0),
         name="IC",
     )
     # wrap constraints together
@@ -182,9 +182,9 @@ if __name__ == "__main__":
 
     # visualize prediction after finished training
     input_data = geom["timedomain"].uniform_points(100)
+    label_data = u_solution_func({"x": input_data})
+    output_data = solver.predict({"x": input_data})["u"].numpy()
 
-    label_data = u_solution_func({"t": input_data})
-    output_data = solver.predict({"t": input_data})["u"].numpy()
     plt.plot(input_data, label_data, "-", label=r"$u(t)$")
     plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
     plt.legend()

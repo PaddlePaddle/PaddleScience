@@ -20,7 +20,7 @@ $$
 假设存在如下 IDE 方程：
 
 $$
-u(t) = \int_{t_0}^t e^{t-s} u(s) d s
+u(t) = -\dfrac{du}{dt} + \int_{t_0}^t e^{t-s} u(s) d s
 $$
 
 其中 $u(t)$ 就是待求解的函数，而 $-\dfrac{du}{dt}$ 对应了 $f(t)$，$e^{t-s}$ 对应了 $K(t,s)$。
@@ -37,17 +37,7 @@ $$
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
-### 3.1 计算域构建
-
-Volterra_IDE 问题的积分域是 $a$ ~ $t$，其中 `a` 为固定常数 0，`t` 的范围为 0 ~ 5，因此可以使用PaddleScience 内置的一维几何 `TimeDomain` 作为计算域。
-
-``` py linenums="40"
---8<--
-examples/ide/volterra_ide.py:40:42
---8<--
-```
-
-### 3.2 模型构建
+### 3.1 模型构建
 
 在上述问题中，我们确定了输入为 $t$，输出为 $u(t)$，因此我们使用，用 PaddleScience 代码表示如下：
 
@@ -59,13 +49,23 @@ examples/ide/volterra_ide.py:37:38
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `"x"`，输出变量名是 `"u"`，接着通过指定 `MLP` 的隐藏层层数、神经元个数，我们就实例化出了神经网络模型 `model`。
 
+### 3.2 计算域构建
+
+Volterra_IDE 问题的积分域是 $a$ ~ $t$，其中 `a` 为固定常数 0，`t` 的范围为 0 ~ 5，因此可以使用PaddleScience 内置的一维几何 `TimeDomain` 作为计算域。
+
+``` py linenums="40"
+--8<--
+examples/ide/volterra_ide.py:40:42
+--8<--
+```
+
 ### 3.3 方程构建
 
 由于 Volterra_IDE 使用的是积分方程，因此可以直接使用 PaddleScience 内置的 `ppsci.equation.Volterra`，并指定所需的参数：积分下限 `a`、`t` 的离散取值点数 `num_points`、一维高斯积分点的个数 `quad_deg`、$K(t,s)$ 核函数 `kernel_func`、$u(t) - f(t)$ 等式右侧表达式 `func`。
 
 ``` py linenums="44"
 --8<--
-examples/ide/volterra_ide.py:44:63
+examples/ide/volterra_ide.py:44:64
 --8<--
 ```
 
@@ -79,7 +79,7 @@ examples/ide/volterra_ide.py:44:63
 
 ``` py linenums="66"
 --8<--
-examples/ide/volterra_ide.py:66:106
+examples/ide/volterra_ide.py:66:108
 --8<--
 ```
 
@@ -93,17 +93,17 @@ $$
 
 因此可以加入 `t=0` 时的初值条件，代码如下所示
 
-``` py linenums="108"
+``` py linenums="110"
 --8<--
-examples/ide/volterra_ide.py:108:126
+examples/ide/volterra_ide.py:110:128
 --8<--
 ```
 
 在微分方程约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="127"
+``` py linenums="129"
 --8<--
-examples/ide/volterra_ide.py:127:131
+examples/ide/volterra_ide.py:129:133
 --8<--
 ```
 
@@ -111,9 +111,9 @@ examples/ide/volterra_ide.py:127:131
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，让 `L-BFGS` 优化器进行一轮优化即可，但一轮优化内的 `max_iters` 数可以设置为一个较大的一个数 `15000`。
 
-``` py linenums="133"
+``` py linenums="135"
 --8<--
-examples/ide/volterra_ide.py:133:134
+examples/ide/volterra_ide.py:135:136
 --8<--
 ```
 
@@ -121,9 +121,9 @@ examples/ide/volterra_ide.py:133:134
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `LBFGS` 优化器。
 
-``` py linenums="136"
+``` py linenums="138"
 --8<--
-examples/ide/volterra_ide.py:136:144
+examples/ide/volterra_ide.py:138:146
 --8<--
 ```
 
@@ -131,9 +131,9 @@ examples/ide/volterra_ide.py:136:144
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="146"
+``` py linenums="148"
 --8<--
-examples/ide/volterra_ide.py:146:161
+examples/ide/volterra_ide.py:148:163
 --8<--
 ```
 
@@ -141,13 +141,13 @@ examples/ide/volterra_ide.py:146:161
 
 其余配置与 [3.4 约束构建](#34) 的设置类似。
 
-### 3.8 模型训练、评估
+### 3.8 模型训练
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="163"
+``` py linenums="165"
 --8<--
-examples/ide/volterra_ide.py:163:179
+examples/ide/volterra_ide.py:165:181
 --8<--
 ```
 
@@ -155,9 +155,9 @@ examples/ide/volterra_ide.py:163:179
 
 在模型训练完毕之后，我们可以手动构造 0 ~ 5 区间内均匀 100 个点作为评估的积分上限 `t` 作为输入数据进行预测，并可视化结果。
 
-``` py linenums="181"
+``` py linenums="183"
 --8<--
-examples/ide/volterra_ide.py:181:
+examples/ide/volterra_ide.py:183:
 --8<--
 ```
 

@@ -42,7 +42,7 @@ class Volterra(PDE):
         >>> import ppsci
         >>> import numpy as np
         >>> vol_eq = ppsci.equation.Volterra(
-        ...     0, 12, 20, lambda x, t: np.exp(s-x), lambda out: out["u"],
+        ...     0, 12, 20, lambda t, s: np.exp(s - t), lambda out: out["u"],
         ... )
     """
 
@@ -118,6 +118,6 @@ class Volterra(PDE):
             end = self.num_points + self.quad_deg * (i + 1)
             K = np.ravel(
                 self.kernel_func(np.full((self.quad_deg, 1), xi), x[beg:end].numpy())
-            )  # [Q, ]
-            int_mat[i, beg:end] = self._get_quad_weights(xi) * K  # [Q, ]
+            )
+            int_mat[i, beg:end] = self._get_quad_weights(xi) * K
         return int_mat
