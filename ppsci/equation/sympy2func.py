@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from typing import Dict
 from typing import List
 from typing import Tuple
 
-import numpy as np
 import paddle
 import paddle.nn as nn
 import sympy
@@ -24,7 +24,7 @@ from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
 
-func_map = {
+FUNC_MAP = {
     sympy.sin: paddle.sin,
     sympy.cos: paddle.cos,
     sympy.exp: paddle.exp,
@@ -33,74 +33,77 @@ func_map = {
     sympy.log: paddle.log,
     sympy.tan: paddle.tan,
     sympy.Mul: paddle.multiply,
-}
-
-constant_map = {
-    sympy.pi: np.pi,
-    sympy.E: np.e,
+    sympy.Add: paddle.add_n,
 }
 
 
 class FuncNode(nn.Layer):
     """
-    A node representing a function in the computational graph
+    A node representing a paddle function in the computational graph.
 
     Args:
-        fun (paddle.nn.Layer): the function
-        args (List[paddle.nn.Layer]): the arguments of the function
+        func (nn.Layer): The function to be applied.
+        *args (nn.Layer): The arguments of the function.
 
     Returns:
-        the result of the function
+        The result of applying the function to the arguments.
+
+    Examples:
+        >>> x = sympy.Symbol("x")
+        >>> node = FuncNode(paddle.sin, SymbolNode(x))
+        >>> node({x: paddle.to_tensor(0.5)})
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+         0.47942555)
     """
 
-    def __init__(self, fun, *args):
+    def __init__(self, func, *args):
         super().__init__()
-        self.fun = fun
+        self.func = func
         self.args = args
 
     def forward(self, x):
-        return self.fun(*[arg(x) for arg in self.args])
-
-
-class AddNode(nn.Layer):
-    """
-    A node representing a sum in the computational graph
-
-    Args:
-        args (List[paddle.nn.Layer]): the arguments of the sum
-
-    Returns:
-        the result of the sum
-    """
-
-    def __init__(self, *args):
-        super().__init__()
-        self.args = args
-
-    def forward(self, x):
-        return paddle.add_n([arg(x) for arg in self.args])
+        if self.func == paddle.add_n:
+            return self.func([arg(x) for arg in self.args])
+        return self.func(*[arg(x) for arg in self.args])
 
 
 class SymbolNode(nn.Layer):
     """
-    A node representing a symbol in the computational graph
+    A node retrieves the value of a symbol from the provided dictionary.
 
     Args:
-        sym (sympy.Symbol): the symbol
+        symbol (sympy.Symbol): The symbol to be represent in the graph
 
     Returns:
-        the value of the symbol
+        The value of the symbol
+
+    Examples:
+        >>> x = sympy.Symbol("x")
+        >>> node = SymbolNode(x)
+        >>> node({x: paddle.to_tensor(0.5)})
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+         0.50000000)
+
+       Or you can use the name of the symbol
+
+        >>> x = sympy.Symbol("x")
+        >>> node = SymbolNode(x)
+        >>> node({"x": paddle.to_tensor(0.5)})
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+         0.50000000)
     """
 
-    def __init__(self, sym: sympy.Symbol):
+    def __init__(self, symbol: sympy.Symbol):
         super().__init__()
-        self.sym = sym
+        self.symbol = symbol
 
     def forward(self, x: Dict):
-        if self.sym in x.keys():
-            return x[self.sym]
-        else:
-            raise KeyError(f"Symbol {self.sym} not in {x.keys()}")
+        value = x.get(self.symbol, x.get(self.symbol.name))
+        if value is None:
+            raise ValueError(
+                f"Symbol {self.symbol} not in provided dictionary {list(x.keys())}!"
+            )
+        return value
 
 
 class NumberNode(nn.Layer):
@@ -108,23 +111,24 @@ class NumberNode(nn.Layer):
     A node representing a number in the computational graph
 
     Args:
-        num (sympy.Number): the number
+        number (sympy.Number): the number
 
     Returns:
         the value of the number
+
+    Examples:
+        >>> node = NumberNode(sympy.pi)
+        >>> node({})
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            3.1415927)
     """
 
-    def __init__(self, num):
+    def __init__(self, number: sympy.Number):
         super().__init__()
-        assert isinstance(num, sympy.Number)
-        if num in constant_map.keys():
-            num = constant_map[num]
-        else:
-            num = float(num)
-        self.num = num
+        self.number = float(number)
 
     def forward(self, x):
-        return paddle.to_tensor(self.num, dtype="float32")
+        return paddle.to_tensor(self.number, dtype=paddle.get_default_dtype())
 
 
 class DerivativeNode(nn.Layer):
@@ -159,68 +163,84 @@ class DerivativeNode(nn.Layer):
         return x_value
 
 
-class ExtraFuncNode(nn.Layer):
+class LayerNode(nn.Layer):
     """
-    A node representing a extra function in the computational graph
+    A node representing a neural network in the computational graph
 
     Args:
-        fun (sympy.Function): the function
-        args (List[paddle.nn.Layer]): the arguments of the function
+        func (sympy.Function): the neural network represented by a sympy function
+        *args (SymbolNode): the arguments of the function
 
     Returns:
-        the result of the function
+        the output of the neural network
 
     Note:
-        This is used to handle the case where the function is a neural network
+        For a multi-output model, only one symbol can be provided in the input dictionary,
 
     Examples:
+        Single output case:
         >>> x, y = sympy.symbols("x y")
         >>> u = sympy.Function("u")(x, y)
-        >>> fun = sympy.Derivative(u, x, y)
-        >>> fun = sympy_to_function(fun)
-        >>> fun({u: model, x: paddle.to_tensor(0.5), y: paddle.to_tensor(0.5)})
+        >>> func = sympy.Derivative(u, x, y)
+        >>> func = sympy_to_function(func)
+        >>> func({u: model, x: paddle.to_tensor(0.5), y: paddle.to_tensor(0.5)})
 
-        Other cases:
-
+        Multi-output case:
         >>> x, y = sympy.symbols("x y")
         >>> u = sympy.Function("u")(x, y)
         >>> v = sympy.Function("v")(x, y)
-        >>> fun = sympy.Derivative(u, x, y) + sympy.Derivative(v, x, y)
-        >>> fun = sympy_to_function(fun)
-        >>> fun({u: (model, 0), v: (model, 1), x: paddle.to_tensor(0.5), y: paddle.to_tensor(0.5)})
+        >>> func = sympy.Derivative(u, x, y) + sympy.Derivative(v, x, y)
+        >>> func = sympy_to_function(func)
+        >>> func({u: model, x: paddle.to_tensor(0.5), y: paddle.to_tensor(0.5)}) # The model should have output_keys = ["u", "v"]
     """
 
-    def __init__(self, fun: sympy.Function, *args):
+    _MODEL_OUTPUT_CACHE: Dict[str, paddle.Tensor] = {}
+
+    def __init__(self, func: sympy.Function, *args: SymbolNode):
         super().__init__()
-        assert isinstance(fun, sympy.Function)
-        self.fun = fun
+        assert isinstance(func, sympy.Function)
+        self.func = func
         self.args = args
 
     def forward(self, x: Dict):
-        model = x[self.fun]
-        if isinstance(model, tuple):
-            model, pos = model
-            return model(*[arg(x) for arg in self.args])[
-                pos
-            ]  # TODO(PuQing): lazy computing for model, avoid multiple computing
-        return model(*[arg(x) for arg in self.args])
+        # check if the model output is in the cache
+        model_output = self._MODEL_OUTPUT_CACHE.get(self.func.name)
+
+        if model_output is None:
+            # Find which model provides the symbol value
+            for model in x.values():
+                if hasattr(model, "output_keys"):
+                    output_keys: Dict = model.output_keys
+                    if self.func.name in output_keys:
+                        model_output_dict: Dict = model(
+                            {arg.symbol.name: arg(x) for arg in self.args}
+                        )
+                        for key in output_keys:
+                            self._MODEL_OUTPUT_CACHE[key] = model_output_dict[key]
+                        break
+            else:  # when no model provides the symbol value
+                raise ValueError(
+                    f"Model {self.func.name} not in provided dictionary {list(x.keys())}!"
+                )
+
+        output = self._MODEL_OUTPUT_CACHE[self.func.name]
+        self._MODEL_OUTPUT_CACHE[self.func.name] = None
+        return output
 
 
 def process_sympy_expression(expr: sympy.Expr):
     if expr.is_Symbol:
         return SymbolNode(expr)
-    elif expr.is_Function or expr.is_Pow or expr.is_Mul:
+    elif expr.is_Function or expr.is_Pow or expr.is_Mul or expr.is_Add:
         args = [process_sympy_expression(arg) for arg in expr.args]
         try:
-            paddle_func = func_map[expr.func]
+            paddle_func = FUNC_MAP[expr.func]
             return FuncNode(paddle_func, *args)
         except KeyError:
             logger.warning(
                 f"Note that you appear to be using a non-built-in function {expr}, please pass in that when you call the function"
             )
-    elif expr.is_Add:
-        args = [process_sympy_expression(arg) for arg in expr.args]
-        return AddNode(*args)
+            return LayerNode(expr, *args)
     elif expr.is_Number:
         return NumberNode(expr)
     elif expr.is_Derivative:
