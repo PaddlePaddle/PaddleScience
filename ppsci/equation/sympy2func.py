@@ -244,9 +244,9 @@ def process_sympy_expression(expr: sympy.Expr):
     elif expr.is_Number:
         return NumberNode(expr)
     elif expr.is_Derivative:
-        expr = process_sympy_expression(expr.args[0])
+        model = process_sympy_expression(expr.args[0])
         syms = [(process_sympy_expression(sym), order) for sym, order in expr.args[1:]]
-        return DerivativeNode(expr, syms)
+        return DerivativeNode(model, syms)
     else:
         raise NotImplementedError(f"Unknown type {expr}")
 
