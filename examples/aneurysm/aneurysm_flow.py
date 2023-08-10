@@ -31,7 +31,7 @@ from ppsci.utils import misc
 
 if __name__ == "__main__":
     args = config.parse_args()
-    paddle.fluid.core.set_prim_eager_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
 
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
