@@ -298,6 +298,11 @@ class Solver:
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for forward computation.")
 
+        # recode losses
+        self.losses_dict = {"loss": []}
+        for key in self.constraint.keys():
+            self.losses_dict[key] = []
+
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
         """Initialize solver from given config.
@@ -671,3 +676,18 @@ class Solver:
                 else contextlib.suppress()
             )
         return ctx_manager
+
+    def plot_losses(self, by_epoch: bool = False, smooth_step: int = 1) -> None:
+        """Plotting loss-iteration/epoch curve.
+
+        Args:
+            by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
+            smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+        """
+        misc.plot_losses_fig(
+            self.losses_dict,
+            self.output_dir,
+            by_epoch,
+            self.iters_per_epoch,
+            smooth_step,
+        )

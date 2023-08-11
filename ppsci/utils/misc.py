@@ -14,6 +14,7 @@
 
 import collections
 import functools
+import os
 import random
 from typing import Callable
 from typing import Dict
@@ -23,6 +24,7 @@ from typing import Union
 
 import numpy as np
 import paddle
+from matplotlib import pyplot as plt
 
 __all__ = [
     "all_gather",
@@ -37,6 +39,7 @@ __all__ = [
     "combine_array_with_time",
     "set_random_seed",
     "run_on_eval_mode",
+    "plot_losses_fig",
 ]
 
 
@@ -299,3 +302,55 @@ def run_on_eval_mode(func: Callable) -> Callable:
         return result
 
     return function_with_eval_state
+
+
+def plot_losses_fig(
+    loss_dict: Dict[str, List],
+    output_dir: str = "./output/",
+    by_epoch: bool = False,
+    iters_per_epoch: int = 1,
+    smooth_step: int = 1,
+) -> None:
+    """Plotting loss-iteration/epoch curve.
+
+    Args:
+        loss_dict (Dict[str, List]): Losses of all constraints.
+        output_dir (str): Output directory. Defaults to "./output/".
+        by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
+        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 1.
+        smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+    """
+    loss_list = []
+    for key in loss_dict:
+        loss_list.append(np.array(loss_dict[key]).reshape(-1, 1))
+    loss_arr = np.concatenate(loss_list, axis=1)
+
+    if by_epoch:
+        loss_arr = np.mean(
+            loss_arr.reshape(-1, iters_per_epoch, loss_arr.shape[1]), axis=1
+        )
+
+    # smooth
+    if loss_arr.shape[0] % smooth_step != 0:
+        vis_loss = loss_arr[: -(loss_arr.shape[0] % smooth_step), :].reshape(
+            -1, smooth_step, loss_arr.shape[1]
+        )
+    else:
+        vis_loss = loss_arr.reshape(-1, smooth_step, loss_arr.shape[1])
+
+    # plot
+    plt.figure()
+    for i in range(vis_loss.shape[1]):
+        plt.semilogy(np.arange(vis_loss.shape[0]) * smooth_step, vis_loss[:, i])
+    plt.legend(
+        list(loss_dict.keys()),
+        loc="lower left",
+    )
+    figname = "Epoch" if by_epoch else "Iteration"
+    plt.xlabel(figname)
+    plt.ylabel("Loss")
+    plt.grid()
+    plt.yticks(size=10)
+    plt.xticks(size=10)
+
+    plt.savefig(os.path.join(output_dir, f"{figname} Loss.jpg"))

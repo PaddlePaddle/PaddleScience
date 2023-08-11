@@ -98,6 +98,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             else:
                 total_loss.backward()
 
+            # record losses
+            for key in loss_dict:
+                solver.losses_dict[key].append(loss_dict[key])
+
         # update parameters
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
             if solver.world_size > 1:
