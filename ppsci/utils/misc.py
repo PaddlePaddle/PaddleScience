@@ -33,6 +33,7 @@ __all__ = [
     "convert_to_array",
     "convert_to_dict",
     "stack_dict_list",
+    "cartesian_product",
     "combine_array_with_time",
     "set_random_seed",
     "run_on_eval_mode",
@@ -222,6 +223,39 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
         )
     tx = np.vstack(tx)
     return tx
+
+
+def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
+    """Cartesian product for input sequence of array(s).
+    Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
+
+    Assume input arrays shape are: (N_1,), (N_2,), (N_3,), ..., (N_M,),
+    then the cartesian product result will be shape of (N_1*N_2*N_3*...*N_M, M).
+
+    Returns:
+        np.ndarray: Cartesian product result of shape (N_1*N_2*N_3*...*N_M, M).
+
+    Examples:
+        >>> t = np.array([1, 2])
+        >>> x = np.array([10, 20])
+        >>> y = np.array([100, 200])
+        >>> txy = cartesian_product(t, x, y)
+        >>> print(txy)
+        [[  1  10 100]
+         [  1  10 200]
+         [  1  20 100]
+         [  1  20 200]
+         [  2  10 100]
+         [  2  10 200]
+         [  2  20 100]
+         [  2  20 200]]
+    """
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+    return arr.reshape(-1, la)
 
 
 def set_random_seed(seed: int):
