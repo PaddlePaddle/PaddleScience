@@ -4,6 +4,7 @@
     handler: python
     options:
       members:
+        - Arch
         - MLP
         - DeepONet
         - LorenzEmbedding
