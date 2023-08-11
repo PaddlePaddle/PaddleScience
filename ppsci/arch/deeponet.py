@@ -28,8 +28,7 @@ class DeepONet(base.Arch):
     """Deep operator network.
 
     [Lu et al. Learning nonlinear operators via DeepONet based on the universal
-    approximation theorem of operators. Nat Mach Intell, 2021.]
-    (https://doi.org/10.1038/s42256-021-00302-5)
+    approximation theorem of operators. Nat Mach Intell, 2021.](https://doi.org/10.1038/s42256-021-00302-5)
 
     Args:
         u_key (str): Name of function data for input function u(x).
