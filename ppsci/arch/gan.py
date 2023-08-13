@@ -241,7 +241,7 @@ class Generator(base.Arch):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y
 
 
@@ -346,7 +346,7 @@ class Discriminator(base.Arch):
         y = self.split_to_dict(y_list, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
 
         return y
 
@@ -354,12 +354,13 @@ class Discriminator(base.Arch):
         self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
-            Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
-            That is because input in "tempoGAN" example is not in a regular format, but a format like:
-            {
-                "input1": paddle.concat([in1, in2], axis=1),
-                "input2": paddle.concat([in1, in3], axis=1),
-            }
+
+        Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
+        That is because input in "tempoGAN" example is not in a regular format, but a format like:
+        {
+            "input1": paddle.concat([in1, in2], axis=1),
+            "input2": paddle.concat([in1, in3], axis=1),
+        }
 
         Args:
             data_list (List[paddle.Tensor]): The data to be splited. It should be a list of tensor(s), but not a paddle.Tensor.
