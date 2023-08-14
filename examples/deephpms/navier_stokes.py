@@ -35,14 +35,6 @@ def pde_l2_rel_func(output_dict, *args):
     return metric_dict
 
 
-def sol_l2_rel_func(output_dict, label_dict):
-    rel_l2 = paddle.norm(label_dict["w_sol"] - output_dict["w_sol"]) / paddle.norm(
-        label_dict["w_sol"]
-    )
-    metric_dict = {"w_sol": rel_l2}
-    return metric_dict
-
-
 if __name__ == "__main__":
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
@@ -367,7 +359,7 @@ if __name__ == "__main__":
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
         {"w_sol": lambda out: out["w_idn"]},
-        {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
+        {"l2": ppsci.metric.L2Rel()},
         name="w_L2_sup",
     )
     validator_sol = {
