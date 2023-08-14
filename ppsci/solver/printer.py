@@ -17,28 +17,37 @@ from __future__ import division
 from __future__ import print_function
 
 import datetime
+from typing import TYPE_CHECKING
+from typing import Dict
 
 from ppsci.utils import logger
 from ppsci.utils import misc
 
+if TYPE_CHECKING:
+    from ppsci import solver
 
-def update_train_loss(trainer, loss_dict, batch_size):
-    # update_output_info
+
+def update_train_loss(
+    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+):
     for key in loss_dict:
         if key not in trainer.train_output_info:
             trainer.train_output_info[key] = misc.AverageMeter(key, "7.5f")
         trainer.train_output_info[key].update(float(loss_dict[key]), batch_size)
 
 
-def update_eval_loss(trainer, loss_dict, batch_size):
-    # update_output_info
+def update_eval_loss(
+    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+):
     for key in loss_dict:
         if key not in trainer.eval_output_info:
             trainer.eval_output_info[key] = misc.AverageMeter(key, "7.5f")
         trainer.eval_output_info[key].update(float(loss_dict[key]), batch_size)
 
 
-def log_train_info(trainer, batch_size, epoch_id, iter_id):
+def log_train_info(
+    trainer: "solver.Solver", batch_size: int, epoch_id: int, iter_id: int
+):
     lr_msg = f"lr: {trainer.optimizer.get_lr():.5f}"
 
     metric_msg = ", ".join(
@@ -84,7 +93,13 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
         )
 
 
-def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
+def log_eval_info(
+    trainer: "solver.Solver",
+    batch_size: int,
+    epoch_id: int,
+    iters_per_epoch: int,
+    iter_id: int,
+):
     metric_msg = ", ".join(
         [
             f"{key}: {trainer.eval_output_info[key].avg:.5f}"
