@@ -95,9 +95,9 @@ examples/hpinns/holography.py:43:51
 
 输入的 transform 为变量 $(x, y)$ 到 $(\cos(\omega x),\sin(\omega x),...,\cos(6 \omega x),\sin(6 \omega x),y,\cos(\omega y),\sin(\omega y))$ 的变换，输出 transform 分别为对 $(\mathfrak{R} [E], \mathfrak{I} [E], \varepsilon)$ 的硬约束，代码如下
 
-``` py linenums="50"
+``` py linenums="49"
 --8<--
-examples/hpinns/functions.py:50:93
+examples/hpinns/functions.py:49:92
 --8<--
 ```
 
@@ -129,7 +129,7 @@ examples/hpinns/holography.py:53:57
 
 ``` py linenums="28"
 --8<--
-examples/hpinns/functions.py:28:47
+examples/hpinns/functions.py:28:46
 --8<--
 ```
 
@@ -231,15 +231,15 @@ examples/hpinns/holography.py:144:192
 
 需要注意自定义 loss 和 metric 函数的输入输出参数需要与 PaddleScience 中如 `MSE` 等其他函数保持一致，即输入为模型输出 `output_dict` 等字典变量，loss 函数输出为 loss 值 `paddle.Tensor`，metric 函数输出为字典 `Dict[str, paddle.Tensor]`。
 
-``` py linenums="240"
+``` py linenums="237"
 --8<--
-examples/hpinns/functions.py:240:320
+examples/hpinns/functions.py:237:317
 --8<--
 ```
 
-``` py linenums="323"
+``` py linenums="320"
 --8<--
-examples/hpinns/functions.py:323:337
+examples/hpinns/functions.py:320:336
 --8<--
 ```
 
