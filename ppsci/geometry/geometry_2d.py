@@ -225,7 +225,7 @@ class Rectangle(geometry_nd.Hypercube):
         dist_to_boundary = (
             np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
         )
-        return -(
+        return (
             np.linalg.norm(np.maximum(dist_to_boundary, 0), axis=1)
             + np.minimum(np.max(dist_to_boundary, axis=1), 0)
         ).reshape(-1, 1)
