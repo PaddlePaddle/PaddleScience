@@ -14,6 +14,7 @@
 
 import copy
 
+from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
@@ -29,6 +30,7 @@ from ppsci.utils import logger  # isort:skip
 
 
 __all__ = [
+    "Arch",
     "MLP",
     "DeepONet",
     "LorenzEmbedding",
