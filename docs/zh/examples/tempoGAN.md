@@ -25,9 +25,9 @@ GAN 网络为无监督学习，本问题网络设计中将目标值作为一个�
 
 运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat)， 下载后分别存放在路径：
 
-``` py linenums="31"
+``` py linenums="36"
 --8<--
-examples/tempoGAN/tempoGAN.py:31:32
+examples/tempoGAN/tempoGAN.py:36:37
 --8<--
 ```
 
@@ -52,9 +52,9 @@ examples/tempoGAN/tempoGAN.py:31:32
 
 由于 GAN 网络中生成器和判别器的中间结果要相互调用，参与对方的 loss 计算，因此使用 Model List 实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="58"
+``` py linenums="63"
 --8<--
-examples/tempoGAN/tempoGAN.py:58:158
+examples/tempoGAN/tempoGAN.py:63:152
 --8<--
 ```
 
@@ -64,25 +64,25 @@ examples/tempoGAN/tempoGAN.py:58:158
 
 Generator 的输入为低密度流体数据的插值，而数据集中保存的为原始的低密度流体数据，因此需要进行一个插值的 transform。
 
-``` py linenums="261"
+``` py linenums="269"
 --8<--
-examples/tempoGAN/functions.py:261:266
+examples/tempoGAN/functions.py:269:274
 --8<--
 ```
 
 Discriminator 和 Discriminator_tempo 对输入的 transform 更为复杂，分别为：
 
-``` py linenums="330"
+``` py linenums="359"
 --8<--
-examples/tempoGAN/functions.py:330:360
+examples/tempoGAN/functions.py:359:393
 --8<--
 ```
 
 其中：
 
-``` py linenums="339"
+``` py linenums="368"
 --8<--
-examples/tempoGAN/functions.py:339:339
+examples/tempoGAN/functions.py:368:368
 --8<--
 ```
 
@@ -94,9 +94,9 @@ examples/tempoGAN/functions.py:339:339
 
 我们需要指定问题相关的参数，如数据集路径、各项 loss 的权重参数等。
 
-``` py linenums="29"
+``` py linenums="34"
 --8<--
-examples/tempoGAN/tempoGAN.py:29:56
+examples/tempoGAN/tempoGAN.py:34:61
 --8<--
 ```
 
@@ -104,9 +104,9 @@ examples/tempoGAN/tempoGAN.py:29:56
 
 同时需要指定训练轮数和学习率等超参数，注意由于 GAN 网络训练流程与一般单个模型的网络不同，`EPOCHS` 的设置也有所不同。
 
-``` py linenums="160"
+``` py linenums="154"
 --8<--
-examples/tempoGAN/tempoGAN.py:160:164
+examples/tempoGAN/tempoGAN.py:154:158
 --8<--
 ```
 
@@ -114,9 +114,9 @@ examples/tempoGAN/tempoGAN.py:160:164
 
 训练使用 Adam 优化器，学习率在 `Epoch` 达到一半时减小到原来的 $1/20$，因此使用 `Step` 方法作为学习率策略。如果将 `by_epoch` 设为 True，学习率将根据训练的 `Epoch` 改变，否则将根据 `Iteration` 改变。
 
-``` py linenums="166"
+``` py linenums="160"
 --8<--
-examples/tempoGAN/tempoGAN.py:166:187
+examples/tempoGAN/tempoGAN.py:160:181
 --8<--
 ```
 
@@ -124,9 +124,9 @@ examples/tempoGAN/tempoGAN.py:166:187
 
 本问题采用无监督学习的方式，虽然不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
-``` py linenums="193"
+``` py linenums="187"
 --8<--
-examples/tempoGAN/tempoGAN.py:193:207
+examples/tempoGAN/tempoGAN.py:187:201
 --8<--
 ```
 
@@ -136,9 +136,9 @@ examples/tempoGAN/tempoGAN.py:193:207
 
 下面是约束的具体内容，要注意上述提到的给定“假的”标签数据：
 
-``` py linenums="190"
+``` py linenums="183"
 --8<--
-examples/tempoGAN/tempoGAN.py:190:218
+examples/tempoGAN/tempoGAN.py:183:211
 --8<--
 ```
 
@@ -163,17 +163,17 @@ examples/tempoGAN/tempoGAN.py:190:218
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问，由于本问题设置了`use_spatialdisc` 和 `use_tempodisc`，导致 Generator 的部分约束不一定存在，因此先封装一定存在的约束到字典中，当其余约束存在时，在向字典中添加约束元素。
 
-``` py linenums="219"
+``` py linenums="213"
 --8<--
-examples/tempoGAN/tempoGAN.py:219:247
+examples/tempoGAN/tempoGAN.py:213:241
 --8<--
 ```
 
 #### 3.6.2 Discriminator 的约束
 
-``` py linenums="250"
+``` py linenums="243"
 --8<--
-examples/tempoGAN/tempoGAN.py:250:290
+examples/tempoGAN/tempoGAN.py:243:284
 --8<--
 ```
 
@@ -181,9 +181,9 @@ examples/tempoGAN/tempoGAN.py:250:290
 
 #### 3.6.3 Discriminator_tempo 的约束
 
-``` py linenums="293"
+``` py linenums="286"
 --8<--
-examples/tempoGAN/tempoGAN.py:293:333
+examples/tempoGAN/tempoGAN.py:286:327
 --8<--
 ```
 
@@ -193,15 +193,15 @@ examples/tempoGAN/tempoGAN.py:293:333
 
 因为 GAN 网络训练的特性，本问题不使用 PaddleScience 中内置的可视化器，而是自定义了一个用于实现推理的函数，该函数读取验证集数据，得到推理结果并将结果以图片形式保存下来，在训练过程中按照一定间隔调用该函数即可在训练过程中监控训练效果。
 
-``` py linenums="155"
+``` py linenums="153"
 --8<--
-examples/tempoGAN/functions.py:155:231
+examples/tempoGAN/functions.py:153:229
 --8<--
 ```
 
-``` py linenums="378"
+``` py linenums="372"
 --8<--
-examples/tempoGAN/tempoGAN.py:378:384
+examples/tempoGAN/tempoGAN.py:372:376
 --8<--
 ```
 
@@ -213,9 +213,9 @@ examples/tempoGAN/tempoGAN.py:378:384
 
 Generator 的 loss 提供了 l1 loss、l2 loss、输出经过 Discriminator 判断的 loss 和 输出经过 Discriminator_tempo 判断的 loss。这些 loss 是否存在根据权重参数控制，若某一项 loss 的权重参数为 0，则表示训练中不添加该 loss 项。
 
-``` py linenums="268"
+``` py linenums="276"
 --8<--
-examples/tempoGAN/functions.py:268:316
+examples/tempoGAN/functions.py:276:345
 --8<--
 ```
 
@@ -223,9 +223,9 @@ examples/tempoGAN/functions.py:268:316
 
 Discriminator 为判别器，它的作用是判断数据为真数据还是假数据，因此它的 loss 为 Generator 产生的数据应当判断为假而产生的 loss 和 目标值数据应当判断为真而产生的 loss。
 
-``` py linenums="362"
+``` py linenums="395"
 --8<--
-examples/tempoGAN/functions.py:362:376
+examples/tempoGAN/functions.py:395:409
 --8<--
 ```
 
@@ -233,9 +233,9 @@ examples/tempoGAN/functions.py:362:376
 
 Discriminator_tempo 的 loss 构成 与 Discriminator 相同，只是所需数据不同。
 
-``` py linenums="378"
+``` py linenums="411"
 --8<--
-examples/tempoGAN/functions.py:378:392
+examples/tempoGAN/functions.py:411:427
 --8<--
 ```
 
@@ -243,9 +243,9 @@ examples/tempoGAN/functions.py:378:392
 
 本问题提供了一种输入数据处理方法，将输入的流体密度数据随机裁剪一块，然后进行密度值判断，若裁剪下来的块密度值低于阈值则重新裁剪，直到密度满足条件或裁剪次数达到阈值。这样做主要是为了减少训练所需的显存，同时对裁剪下来的块密度值的判断保证了块中信息的丰富程度。[参数和超参数设定](#34)中 `tile_ratio` 表示原始尺寸是块的尺寸的几倍，即若`tile_ratio` 为 2，裁剪下来的块的大小为整张原始图片的四分之一。
 
-``` py linenums="395"
+``` py linenums="430"
 --8<--
-examples/tempoGAN/functions.py:395:446
+examples/tempoGAN/functions.py:430:481
 --8<--
 ```
 
@@ -255,9 +255,9 @@ examples/tempoGAN/functions.py:395:446
 
 完成上述设置之后，首先需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="335"
+``` py linenums="329"
 --8<--
-examples/tempoGAN/tempoGAN.py:335:396
+examples/tempoGAN/tempoGAN.py:329:367
 --8<--
 ```
 
@@ -267,9 +267,9 @@ examples/tempoGAN/tempoGAN.py:335:396
 
 由于本问题的输出为图片，评估指标需要使用针对图片的评估指标，因此不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估，而是在训练结束后针对最后一个 `Epoch` 进行一次评估:
 
-``` py linenums="398"
+``` py linenums="390"
 --8<--
-examples/tempoGAN/tempoGAN.py:398:407
+examples/tempoGAN/tempoGAN.py:390:402
 --8<--
 ```
 
