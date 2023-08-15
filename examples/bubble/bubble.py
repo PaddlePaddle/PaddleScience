@@ -20,7 +20,6 @@ from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import config
 from ppsci.utils import logger
-from ppsci.utils import reader
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -33,7 +32,7 @@ if __name__ == "__main__":
 
     # load Data
     data = scipy.io.loadmat("bubble.mat")
-    # Normalize data
+    # normalize data
     p_max = data["p"].max(axis=0)
     p_min = data["p"].min(axis=0)
     p_norm = (data["p"] - p_min) / (p_max - p_min)
@@ -46,57 +45,36 @@ if __name__ == "__main__":
 
     u_star = u_norm  # N x T
     v_star = v_norm  # N x T
-    P_star = p_norm  # N x T
-    Phil_star = data["phil"]  # N x T
+    p_star = p_norm  # N x T
+    phil_star = data["phil"]  # N x T
     t_star = data["t"]  # T x 1
-    X_star = data["X"]  # N x 2
+    x_star = data["X"]  # N x 2
 
-    N = X_star.shape[0]
+    N = x_star.shape[0]
     T = t_star.shape[0]
 
-    # Rearrange Data
-    XX = np.tile(X_star[:, 0:1], (1, T))  # N x T
-    YY = np.tile(X_star[:, 1:2], (1, T))  # N x T
-    TT = np.tile(t_star, (1, N)).T  # N x T
+    # rearrange data
+    xx = np.tile(x_star[:, 0:1], (1, T))  # N x T
+    yy = np.tile(x_star[:, 1:2], (1, T))  # N x T
+    tt = np.tile(t_star, (1, N)).T  # N x T
 
-    UU = u_star  # U_star[:,0,:] # N x T
-    VV = v_star  # U_star[:,1,:] # N x T
-    PP = P_star  # N x T
-    Phil = Phil_star  # N x T
+    x = xx.flatten()[:, None]  # NT x 1
+    y = yy.flatten()[:, None]  # NT x 1
+    t = tt.flatten()[:, None]  # NT x 1
 
-    x = XX.flatten()[:, None]  # NT x 1
-    y = YY.flatten()[:, None]  # NT x 1
-    t = TT.flatten()[:, None]  # NT x 1
-
-    u = UU.flatten()[:, None]  # NT x 1
-    v = VV.flatten()[:, None]  # NT x 1
-    p = PP.flatten()[:, None]  # NT x 1
-    phil = Phil.flatten()[:, None]  # NT x 1
+    u = u_star.flatten()[:, None]  # NT x 1
+    v = v_star.flatten()[:, None]  # NT x 1
+    p = p_star.flatten()[:, None]  # NT x 1
+    phil = phil_star.flatten()[:, None]  # NT x 1
 
     idx = np.random.choice(N * T, int(N * T * 0.75), replace=False)
     # train data
-    train_data = dict()
-    train_data["x"] = x[idx, :]
-    train_data["y"] = y[idx, :]
-    train_data["t"] = t[idx, :]
-    train_data["u"] = u[idx, :]
-    train_data["v"] = v[idx, :]
-    train_data["p"] = p[idx, :]
-    train_data["phil"] = phil[idx, :]
-    scipy.io.savemat("bubble_train.mat", train_data)
-    # valid Data
-    test_data = dict()
-    test_data["x"] = x
-    test_data["y"] = y
-    test_data["t"] = t
-    test_data["u"] = u
-    test_data["v"] = v
-    test_data["p"] = p
-    test_data["phil"] = phil
-    scipy.io.savemat("bubble_valid.mat", test_data)
+    train_input = {"x": x[idx, :], "y": y[idx, :], "t": t[idx, :]}
+    train_label = {"u": u[idx, :], "v": v[idx, :], "p": p[idx, :], "phil": phil[idx, :]}
 
-    DATASET_PATH = "bubble_train.mat"
-    DATASET_PATH_VALID = "bubble_valid.mat"
+    # eval Data
+    test_input = {"x": x, "y": y, "t": t}
+    test_label = {"u": u, "v": v, "p": p, "phil": phil}
 
     # set model
     model_psi = ppsci.arch.MLP(("t", "x", "y"), ("psi",), 9, 30, "tanh")
@@ -119,10 +97,7 @@ if __name__ == "__main__":
     timestamps = np.linspace(0, 126, 127, endpoint=True)
     geom = {
         "time_rect": ppsci.geometry.PointCloud(
-            reader.load_mat_file(
-                DATASET_PATH,
-                ("t", "x", "y"),
-            ),
+            train_input,
             ("t", "x", "y"),
         ),
         "time_rect_eval": ppsci.geometry.TimeXGeometry(
@@ -135,10 +110,9 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": {
-            "name": "MatDataset",
-            "file_path": DATASET_PATH,
-            "input_keys": ("t", "x", "y"),
-            "label_keys": ("u", "v", "p", "phil"),
+            "name": "NamedArrayDataset",
+            "input": train_input,
+            "label": train_label,
             "timestamps": timestamps,
         },
         "batch_size": 2419,
@@ -189,10 +163,9 @@ if __name__ == "__main__":
     # set validator
     valida_dataloader_cfg = {
         "dataset": {
-            "name": "MatDataset",
-            "file_path": DATASET_PATH_VALID,
-            "input_keys": ("t", "x", "y"),
-            "label_keys": ("u", "v", "p", "phil"),
+            "name": "NamedArrayDataset",
+            "input": test_input,
+            "label": test_label,
         },
         "batch_size": 2419,
         "sampler": {
