@@ -104,7 +104,7 @@ if __name__ == "__main__":
         c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
         sin_x = X_IN * paddle.sin(b * x + c)
         cos_x = X_IN * paddle.cos(b * x + c)
-        return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
+        return {"sin(x)": sin_x, "cos(x)": cos_x, "x": x, "y": y, "nu": nu}
 
     def output_trans_u(input, out):
         return {"u": out["u"] * (R**2 - input["y"] ** 2)}
