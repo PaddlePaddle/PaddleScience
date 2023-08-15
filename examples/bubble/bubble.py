@@ -72,7 +72,7 @@ if __name__ == "__main__":
     train_input = {"x": x[idx, :], "y": y[idx, :], "t": t[idx, :]}
     train_label = {"u": u[idx, :], "v": v[idx, :], "p": p[idx, :], "phil": phil[idx, :]}
 
-    # eval Data
+    # eval data
     test_input = {"x": x, "y": y, "t": t}
     test_label = {"u": u, "v": v, "p": p, "phil": phil}
 
