@@ -158,9 +158,9 @@ if __name__ == "__main__":
             }
 
     transform = Transform()
-    model_1.register_output_transform(transform.output_trans_u)
-    model_2.register_output_transform(transform.output_trans_v)
-    model_3.register_output_transform(transform.output_trans_p)
+    model_1.register_output_transform(transform.output_transform_u)
+    model_2.register_output_transform(transform.output_transform_v)
+    model_3.register_output_transform(transform.output_transform_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     LEARNING_RATE = 1e-3
