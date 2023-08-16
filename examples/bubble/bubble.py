@@ -106,6 +106,8 @@ if __name__ == "__main__":
         ),
     }
 
+    NTIME_ALL = len(timestamps)
+    NPOINT_PDE, NTIME_PDE = 300 * 100, NTIME_ALL - 1
     # set dataloader config
     ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
@@ -122,9 +124,6 @@ if __name__ == "__main__":
             "shuffle": True,
         },
     }
-
-    NTIME_ALL = len(timestamps)
-    NPOINT_PDE, NTIME_PDE = 300 * 100, NTIME_ALL - 1
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
