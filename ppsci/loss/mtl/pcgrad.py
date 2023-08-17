@@ -24,7 +24,7 @@ from ppsci.loss.mtl.base import LossAggregator
 class PCGrad(LossAggregator):
     r"""[Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
 
-    https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py
+    A portion of the code is referenced from: https://github.com/median-research-group/LibMTL/blob/main/LibMTL/weighting/PCGrad.py
 
     Args:
         losses (List[paddle.Tensor]): Losses from different task.
@@ -41,14 +41,13 @@ class PCGrad(LossAggregator):
         >>> mtl.PCGrad([loss1, loss2], model).backward()
     """
 
-    EPS: float = 1e-8
-
     def __init__(self, losses: List[paddle.Tensor], model: nn.Layer) -> None:
         super().__init__(losses, model)
         self.param_num = 0
         for param in self.model.parameters():
             if not param.stop_gradient:
                 self.param_num += 1
+        self._zero = paddle.zeros([])
 
     def backward(self) -> None:
         np.random.shuffle(self.losses)
@@ -59,8 +58,8 @@ class PCGrad(LossAggregator):
 
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
-        grads_list = []
-        for loss in self.losses:
+        grads_list = []  # num_params x num_losses
+        for i, loss in enumerate(self.losses):
             # backward with current loss
             loss.backward()
             grads_list.append(
@@ -96,14 +95,14 @@ class PCGrad(LossAggregator):
             start_idx = 0
             for idx, var in enumerate(self.model.parameters()):
                 grad_shape = var.shape
-                flatten_length = var.numel()
-                refined_grad = grads_list[j][start_idx : start_idx + flatten_length]
+                flatten_dim = var.numel()
+                refined_grad = grads_list[j][start_idx : start_idx + flatten_dim]
                 refined_grad = paddle.reshape(refined_grad, grad_shape)
                 if len(proj_grads) < self.param_num:
                     proj_grads.append(refined_grad)
                 else:
                     proj_grads[idx] += refined_grad
-                start_idx += flatten_length
+                start_idx += flatten_dim
         return proj_grads
 
     def _set_grads(self, grads_list: List[paddle.Tensor]) -> None:
