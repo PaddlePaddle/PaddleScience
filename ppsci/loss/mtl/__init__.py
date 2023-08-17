@@ -12,10 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+from typing import Dict
+
+from ppsci.loss.mtl.agda import AGDA
 from ppsci.loss.mtl.base import LossAggregator
 from ppsci.loss.mtl.pcgrad import PCGrad
 
 __all__ = [
     "LossAggregator",
     "PCGrad",
+    "AGDA",
 ]
+
+
+def build_mtl_aggregator(cfg: Dict[str, Any]):
+    mtl_name = cfg.pop("name")
+    return eval(mtl_name)(**cfg)

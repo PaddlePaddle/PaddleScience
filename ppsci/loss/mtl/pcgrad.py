@@ -41,8 +41,8 @@ class PCGrad(LossAggregator):
         >>> mtl.PCGrad([loss1, loss2], model).backward()
     """
 
-    def __init__(self, losses: List[paddle.Tensor], model: nn.Layer) -> None:
-        super().__init__(losses, model)
+    def __init__(self, model: nn.Layer) -> None:
+        super().__init__(model)
         self.param_num = 0
         for param in self.model.parameters():
             if not param.stop_gradient:
@@ -59,7 +59,7 @@ class PCGrad(LossAggregator):
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
         grads_list = []  # num_params x num_losses
-        for i, loss in enumerate(self.losses):
+        for loss in self.losses:
             # backward with current loss
             loss.backward()
             grads_list.append(

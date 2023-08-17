@@ -37,6 +37,7 @@ from paddle.distributed import fleet
 from typing_extensions import Literal
 
 import ppsci
+from ppsci.loss import mtl
 from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
@@ -78,6 +79,7 @@ class Solver:
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
+        mtl (Optional[mtl.LossAggregator]): Choose a Multi-task learning method. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -136,6 +138,7 @@ class Solver:
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
         to_static: bool = False,
+        loss_aggregator: Optional[mtl.LossAggregator] = None,
     ):
         # set model
         self.model = model
@@ -297,6 +300,9 @@ class Solver:
         # whether enable static for forward pass, default to Fals
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for forward computation.")
+
+        # use loss aggregator, use summation if None
+        self.loss_aggegator = loss_aggregator
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
