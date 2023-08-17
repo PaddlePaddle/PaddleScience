@@ -94,17 +94,17 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             # backward
             if solver.use_amp:
                 total_loss_scaled = solver.scaler.scale(total_loss)
-                if solver.loss_aggegator is None:
+                if solver.loss_aggregator is None:
                     total_loss_scaled.backward()
                 else:
-                    solver.loss_aggegator(
+                    solver.loss_aggregator(
                         constraint_losses, solver.global_step
                     ).backward()
             else:
-                if solver.loss_aggegator is None:
+                if solver.loss_aggregator is None:
                     total_loss.backward()
                 else:
-                    solver.loss_aggegator(
+                    solver.loss_aggregator(
                         constraint_losses, solver.global_step
                     ).backward()
 
@@ -200,10 +200,10 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
 
                 # backward
                 solver.optimizer.clear_grad()
-                if solver.loss_aggegator is None:
+                if solver.loss_aggregator is None:
                     total_loss.backward()
                 else:
-                    solver.loss_aggegator(
+                    solver.loss_aggregator(
                         constraint_losses, solver.global_step
                     ).backward()
 

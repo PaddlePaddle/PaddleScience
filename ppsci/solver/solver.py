@@ -79,7 +79,7 @@ class Solver:
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
-        mtl (Optional[mtl.LossAggregator]): Choose a Multi-task learning method. Defaults to None.
+        loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -302,7 +302,7 @@ class Solver:
         logger.info(f"Set to_static={to_static} for forward computation.")
 
         # use loss aggregator, use summation if None
-        self.loss_aggegator = loss_aggregator
+        self.loss_aggregator = loss_aggregator
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
