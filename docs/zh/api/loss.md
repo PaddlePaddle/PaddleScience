@@ -17,3 +17,12 @@
         - PeriodicMSELoss
       show_root_heading: false
       heading_level: 3
+
+::: ppsci.loss.mtl
+    handler: python
+    options:
+      members:
+        - LossAggregator
+        - PCGrad
+      show_root_heading: false
+      heading_level: 3
