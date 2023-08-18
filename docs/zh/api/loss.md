@@ -24,5 +24,6 @@
       members:
         - LossAggregator
         - PCGrad
+        - AGDA
       show_root_heading: false
       heading_level: 3
