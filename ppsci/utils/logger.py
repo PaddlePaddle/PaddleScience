@@ -24,7 +24,7 @@ _logger = None
 
 
 def init_logger(
-    name: str = "ppsci",
+    name: Optional[str] = "ppsci",
     log_file: Optional[str] = None,
     log_level: Optional[int] = logging.INFO,
 ) -> None:
@@ -52,13 +52,13 @@ def init_logger(
     _logger = logging.getLogger(name)
     _logger.handlers.clear()
 
-    formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%Y/%m/%d %H:%M:%S"
-    )
-
     # add stream_handler, output to stdout such as terminal
+    stream_formatter = logging.Formatter(
+        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+    )
     stream_handler = logging.StreamHandler(stream=sys.stdout)
-    stream_handler.setFormatter(formatter)
+    stream_handler.setFormatter(stream_formatter)
     stream_handler._name = "stream_handler"
     _logger.addHandler(stream_handler)
 
@@ -66,8 +66,12 @@ def init_logger(
     if log_file is not None and dist.get_rank() == 0:
         log_file_folder = os.path.split(log_file)[0]
         os.makedirs(log_file_folder, exist_ok=True)
+        file_formatter = logging.Formatter(
+            "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+            datefmt="%Y/%m/%d %H:%M:%S",
+        )
         file_handler = logging.FileHandler(log_file, "a")  # append mode
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(file_formatter)
         file_handler._name = "file_handler"
         _logger.addHandler(file_handler)
 
