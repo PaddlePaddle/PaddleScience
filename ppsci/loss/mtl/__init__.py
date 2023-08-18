@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import copy
-from typing import Any
-from typing import Dict
 
 from ppsci.loss.mtl.base import LossAggregator
 from ppsci.loss.mtl.pcgrad import PCGrad
@@ -25,7 +23,7 @@ __all__ = [
 ]
 
 
-def build_mtl_aggregator(cfg: Dict[str, Any]):
+def build_mtl_aggregator(cfg):
     """Build loss aggregator with multi-task learning method.
 
     Args:

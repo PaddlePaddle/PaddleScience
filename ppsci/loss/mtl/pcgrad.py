@@ -108,6 +108,5 @@ class PCGrad(LossAggregator):
         return proj_grads
 
     def _set_grads(self, grads_list: List[paddle.Tensor]) -> None:
-        assert len(grads_list) == self.param_num
         for i, param in enumerate(self.model.parameters()):
-            param.grad.set_value(grads_list[i])
+            param.grad = grads_list[i]
