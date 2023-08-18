@@ -27,7 +27,6 @@ class PCGrad(LossAggregator):
     A portion of the code is referenced from: https://github.com/median-research-group/LibMTL/blob/main/LibMTL/weighting/PCGrad.py
 
     Args:
-        losses (List[paddle.Tensor]): Losses from different task.
         model (nn.Layer): Training model.
 
     Examples:
