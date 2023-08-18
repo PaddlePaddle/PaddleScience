@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-import paddle
 from paddle import nn
 
 
@@ -22,14 +19,22 @@ class LossAggregator:
     """Base class of loss aggregator mainly for multi-task learning.
 
     Args:
-        losses (List[paddle.Tensor]): Losses from different task.
         model (nn.Layer): Training model.
     """
 
-    def __init__(self, losses: List[paddle.Tensor], model: nn.Layer) -> None:
+    def __init__(self, model: nn.Layer) -> None:
+        self.model = model
+        self.step = 0
+        self.param_num = 0
+        for param in self.model.parameters():
+            if not param.stop_gradient:
+                self.param_num += 1
+
+    def __call__(self, losses, step: int = 0):
         self.losses = losses
         self.loss_num = len(losses)
-        self.model = model
+        self.step = step
+        return self
 
     def backward(self) -> None:
         raise NotImplementedError(

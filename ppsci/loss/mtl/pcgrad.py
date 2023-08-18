@@ -31,22 +31,20 @@ class PCGrad(LossAggregator):
         model (nn.Layer): Training model.
 
     Examples:
-        >>> from paddle import nn
+        >>> import paddle
         >>> from ppsci.loss import mtl
-        >>> model = nn.Linear(3, 4)
-        >>> x = paddle.randn([8, 3])
-        >>> y = model(x)
-        >>> loss1 = paddle.sum(y)
-        >>> loss2 = paddle.sum((y - 2) ** 2)
-        >>> mtl.PCGrad([loss1, loss2], model).backward()
+        >>> model = paddle.nn.Linear(3, 4)
+        >>> x1 = paddle.randn([8, 3])
+        >>> x2 = paddle.randn([8, 3])
+        >>> y1 = model(x1)
+        >>> y2 = model(x2)
+        >>> loss1 = paddle.sum(y1)
+        >>> loss2 = paddle.sum((y2 - 2) ** 2)
+        >>> mtl.PCGrad(model)([loss1, loss2]).backward()
     """
 
-    def __init__(self, losses: List[paddle.Tensor], model: nn.Layer) -> None:
-        super().__init__(losses, model)
-        self.param_num = 0
-        for param in self.model.parameters():
-            if not param.stop_gradient:
-                self.param_num += 1
+    def __init__(self, model: nn.Layer) -> None:
+        super().__init__(model)
         self._zero = paddle.zeros([])
 
     def backward(self) -> None:
@@ -59,7 +57,7 @@ class PCGrad(LossAggregator):
     def _compute_grads(self) -> List[paddle.Tensor]:
         # compute all gradients derived by each loss
         grads_list = []  # num_params x num_losses
-        for i, loss in enumerate(self.losses):
+        for loss in self.losses:
             # backward with current loss
             loss.backward()
             grads_list.append(
@@ -106,6 +104,5 @@ class PCGrad(LossAggregator):
         return proj_grads
 
     def _set_grads(self, grads_list: List[paddle.Tensor]) -> None:
-        assert len(grads_list) == self.param_num
         for i, param in enumerate(self.model.parameters()):
-            param.grad.set_value(grads_list[i])
+            param.grad = grads_list[i]
