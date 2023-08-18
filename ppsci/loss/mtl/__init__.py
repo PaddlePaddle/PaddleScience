@@ -14,12 +14,14 @@
 
 import copy
 
+from ppsci.loss.mtl.agda import AGDA
 from ppsci.loss.mtl.base import LossAggregator
 from ppsci.loss.mtl.pcgrad import PCGrad
 
 __all__ = [
     "LossAggregator",
     "PCGrad",
+    "AGDA",
 ]
 
 
