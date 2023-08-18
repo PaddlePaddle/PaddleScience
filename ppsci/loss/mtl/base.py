@@ -25,6 +25,10 @@ class LossAggregator:
     def __init__(self, model: nn.Layer) -> None:
         self.model = model
         self.step = 0
+        self.param_num = 0
+        for param in self.model.parameters():
+            if not param.stop_gradient:
+                self.param_num += 1
 
     def __call__(self, losses, step: int = 0):
         self.losses = losses

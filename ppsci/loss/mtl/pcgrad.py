@@ -45,10 +45,6 @@ class PCGrad(LossAggregator):
 
     def __init__(self, model: nn.Layer) -> None:
         super().__init__(model)
-        self.param_num = 0
-        for param in self.model.parameters():
-            if not param.stop_gradient:
-                self.param_num += 1
         self._zero = paddle.zeros([])
 
     def backward(self) -> None:
