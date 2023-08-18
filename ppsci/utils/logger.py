@@ -24,9 +24,9 @@ _logger = None
 
 
 def init_logger(
-    name: Optional[str] = "ppsci",
+    name: str = "ppsci",
     log_file: Optional[str] = None,
-    log_level: Optional[int] = logging.INFO,
+    log_level: int = logging.INFO,
 ) -> None:
     """Initialize and get a logger by name.
 
@@ -39,7 +39,7 @@ def init_logger(
         name (str, optional): Logger name. Defaults to "ppsci".
         log_file (Optional[str]): The log filename. If specified, a FileHandler
             will be added to the logger. Defaults to None.
-        log_level (Optional[int]): The logger level. Note that only the process of
+        log_level (int, optional): The logger level. Note that only the process of
             rank 0 is affected, and other processes will set the level to
             "Error" thus be silent most of the time. Defaults to logging.INFO.
     """
