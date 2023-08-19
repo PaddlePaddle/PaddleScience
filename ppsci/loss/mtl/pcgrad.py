@@ -24,7 +24,7 @@ from ppsci.loss.mtl.base import LossAggregator
 class PCGrad(LossAggregator):
     r"""[Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
 
-    A portion of the code is referenced from: https://github.com/median-research-group/LibMTL/blob/main/LibMTL/weighting/PCGrad.py
+    A portion of the code is referenced from: https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py
 
     Args:
         model (nn.Layer): Training model.
