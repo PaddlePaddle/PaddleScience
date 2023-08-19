@@ -22,9 +22,13 @@ from ppsci.loss.mtl.base import LossAggregator
 
 
 class PCGrad(LossAggregator):
-    r"""[Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
+    r"""
+    **P**rojecting **C**onflicting Gradients
 
-    A portion of the code is referenced from: https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py
+    [Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
+
+    Code reference: [https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py](\
+        https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py)
 
     Args:
         model (nn.Layer): Training model.
@@ -33,13 +37,15 @@ class PCGrad(LossAggregator):
         >>> import paddle
         >>> from ppsci.loss import mtl
         >>> model = paddle.nn.Linear(3, 4)
-        >>> x1 = paddle.randn([8, 3])
-        >>> x2 = paddle.randn([8, 3])
-        >>> y1 = model(x1)
-        >>> y2 = model(x2)
-        >>> loss1 = paddle.sum(y1)
-        >>> loss2 = paddle.sum((y2 - 2) ** 2)
-        >>> mtl.PCGrad(model)([loss1, loss2]).backward()
+        >>> loss_aggregator = mtl.PCGrad(model)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator([loss1, loss2]).backward()
     """
 
     def __init__(self, model: nn.Layer) -> None:
