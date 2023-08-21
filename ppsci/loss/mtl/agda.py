@@ -21,26 +21,31 @@ from ppsci.loss.mtl.base import LossAggregator
 
 
 class AGDA(LossAggregator):
-    r"""[Adaptive Gradient Descent Algorithm](\
-        https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new?redirectedFrom=fulltext\
+    r"""
+    **A**daptive **G**radient **D**escent **A**lgorithm
+
+    [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](\
+        https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new\
     )
 
     Args:
         model (nn.Layer): Training model.
-        M (int, optional): Period constant. Defaults to 100.
+        M (int, optional): Smoothing period. Defaults to 100.
         gamma (float, optional): Smooth factor. Defaults to 0.999.
 
     Examples:
         >>> import paddle
         >>> from ppsci.loss import mtl
         >>> model = paddle.nn.Linear(3, 4)
-        >>> x1 = paddle.randn([8, 3])
-        >>> x2 = paddle.randn([8, 3])
-        >>> y1 = model(x1)
-        >>> y2 = model(x2)
-        >>> loss1 = paddle.sum(y1)
-        >>> loss2 = paddle.sum((y2 - 2) ** 2)
-        >>> mtl.AGDA(model)([loss1, loss2]).backward()
+        >>> loss_aggregator = mtl.AGDA(model)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator([loss1, loss2]).backward()
     """
 
     def __init__(self, model: nn.Layer, M: int = 100, gamma: float = 0.999) -> None:
@@ -51,6 +56,13 @@ class AGDA(LossAggregator):
         self.Lu_smooth = 0
         self.Lf_tilde_acc = 0
         self.Lu_tilde_acc = 0
+
+    def __call__(self, losses, step: int = 0):
+        if len(losses) != 2:
+            raise ValueError(
+                f"Number of losses(tasks) for AGDA shoule be 2, but got {len(losses)}"
+            )
+        return super().__call__(losses, step)
 
     def backward(self) -> None:
         grads_list = self._compute_grads()
@@ -115,10 +127,9 @@ class AGDA(LossAggregator):
         gu_bar = omega_u * grads_list[1]
 
         # compute gradient projection - step2(1)
-        if (gf_bar * gu_bar).sum() < 0:
-            gu_bar = (
-                gu_bar - ((gu_bar * gf_bar).sum() / (gf_bar * gf_bar).sum()) * gf_bar
-            )
+        dot_product = (gf_bar * gu_bar).sum()
+        if dot_product < 0:
+            gu_bar = gu_bar - (dot_product / (gf_bar * gf_bar).sum()) * gf_bar
         grads_list = [gf_bar, gu_bar]
 
         proj_grads = []
