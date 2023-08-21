@@ -1,5 +1,7 @@
 # 快速开始
 
+<a href="https://aistudio.baidu.com/projectdetail/6665190?contributionType=1&sUid=438690&shared=1&ts=1692616326196" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 本文通过一个简单的 demo 及其扩展问题，介绍如何使用 PaddleScience 训练模型，解决一类方程学习与预测问题，并可视化预测结果。
 
 ## 1. 问题简介
@@ -37,7 +39,7 @@ from ppsci.utils import logger
 ppsci.utils.misc.set_random_seed(42)
 
 # set output directory
-OUTPUT_DIR = "./output_quick_start"
+OUTPUT_DIR = "./output_quick_start_case1"
 
 # initialize logger
 logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
@@ -328,7 +330,6 @@ bc_constraint = ppsci.constraint.BoundaryConstraint(
     },
     loss=ppsci.loss.MSELoss(),
     criteria=lambda x: np.isclose(x, l_limit), # only choose x close to l_limit, i.e. -pi
-    name=
 )
 ```
 
@@ -340,7 +341,6 @@ constraint = {
     interior_constraint.name: interior_constraint,
     bc_constraint.name: bc_constraint,
 }
-
 ```
 
 修改完毕后执行训练，训练日志如下所示
@@ -378,7 +378,7 @@ from ppsci.utils import logger
 ppsci.utils.misc.set_random_seed(42)
 
 # set output directory
-OUTPUT_DIR = "./output_quick_start"
+OUTPUT_DIR = "./output_quick_start_case2"
 
 # initialize logger
 logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
