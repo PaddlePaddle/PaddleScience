@@ -17,32 +17,44 @@
 ## 2. 问题定义
 ### 2.1. 气泡流控制方程
 气泡流在许多生物应用中经常遇到。两相流（空气和水）由 Navier–Stokes 方程控制，
+
 $$\nabla \cdot \boldsymbol{u}=0,\\
-    \rho\left(\frac{\partial \boldsymbol{u}}{\partial t}+(\boldsymbol{u} \cdot \nabla) \boldsymbol{u}\right)=-\nabla p+\mu \nabla^2 \boldsymbol{u},$$
+\rho\left(\frac{\partial \boldsymbol{u}}{\partial t}+(\boldsymbol{u} \cdot \nabla) \boldsymbol{u}\right)=-\nabla p+\mu \nabla^2 \boldsymbol{u},$$
+
 其中 $\rho$ 是流体密度，$\boldsymbol {u} = ( u , v )$ 是二维速度矢量，$p$ 是流体压力，$\mu$ 是动力粘度。空气和水之间的界面由某个水平集或全局定义函数的等值线表示，即定义二维空间中的水平集函数 $\phi = \phi ( x , y , t )$。对于水来说 $\phi=0$，对于空气来说 $\phi=1$。在整个界面中，有从 0 到 1 的光滑过渡，界面由水平集 $\phi= 0.5$ 定义。
 
 设 $\rho_l$ 为水（液体）密度，$\rho_g$ 为空气（气体）密度，$\mu_l$ 为水粘度，$\mu_g$ 为空气粘度。流体中的密度和粘度可以通过水平集函数表示为：
+
 $$\begin{aligned}
 \rho & =\rho_l+\phi\left(\rho_g-\rho_l\right), \\
 \mu & =\mu_l+\phi\left(\mu_g-\mu_l\right) .
 \end{aligned}$$
 
 为了模拟液体和气体之间的界面，水平集函数 $\phi = \phi ( x , y , t )$ 定义为
+
 $$\frac{\partial \phi}{\partial t}+\boldsymbol{u} \cdot \nabla \phi=\gamma \nabla \cdot\left(\epsilon_{l s} \nabla \phi-\phi(1-\phi) \frac{\nabla \phi}{|\nabla \phi|}\right),$$
+
 其中左端描述了界面的运动，而右端旨在保持界面紧凑，使数值稳定。$\gamma$ 是初始化参数，决定了水平集函数的重新初始化或稳定量，$\epsilon_{l s}$ 是控制界面厚度的参数，它等于网格最大尺寸。
 
 ### 2.2. BubbleNet（Semi-PINNs方法）
 
 - 引入流函数 $\psi$ 用于预测速度场 $u$、$v$，即
 $$u=\frac{\partial \psi}{\partial y},\quad  v=-\frac{\partial \psi}{\partial x},$$
+
 流函数的引入避免了损失函数中速度向量的梯度计算，提高了神经网络的效率。
 - 引入压力泊松方程，以提高预测的准确性，即对动量方程等号两端同时求散度：
+
 $$\nabla^2 p=\rho \frac{\nabla \cdot \mathbf{u}}{\Delta t}-\rho \nabla \cdot(\mathbf{u} \cdot \nabla \mathbf{u})+\mu \nabla^2(\nabla \cdot \mathbf{u}) = -\rho \nabla \cdot(\mathbf{u} \cdot \nabla \mathbf{u}).$$
+
 - 时间离散归一化（TDN），即
+
 $$\mathcal{W}=\frac{\mathcal{U}-\mathcal{U}_{\min }}{\mathcal{U}_{\max }-\mathcal{U}_{\min }},$$
+
 其中 $\mathcal{U}=(u, v, p, \phi)$ 是从气泡流模拟中获得的粗化数据，$\mathcal{U}_{\min },~\mathcal{U}_{\max }$ 分别为每个时间步粗化CFD数据的最大值和最小值。如此处理的原因在于流场中的物理量变化较大，TDN 将有助于消除物理量变化造成的不准确性。
 - 使用均方误差（MSE）来计算损失函数中预测和训练数据的偏差，损失函数表示为
+
 $$\mathcal{L}=\frac{1}{m} \sum_{i=1}^m\left(\mathcal{W}_{\text {pred }(i)}-\mathcal{W}_{\text {train }(i)}\right)^2+\frac{1}{m} \sum_{i=1}^m\left(\nabla^2 p_{(i)}\right)^2,$$
+
 其中 $\mathcal{W}=(u, v, p, \phi)$ 表示归一化后的数据集。
 
 ## 3. 问题求解
@@ -80,6 +92,7 @@ p &= f_2(t, x, y),\\
 \phi &= f_3(t, x, y).
 \end{aligned}
 $$
+
 上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
 ``` py linenums="84"
