@@ -39,7 +39,7 @@ __all__ = [
     "combine_array_with_time",
     "set_random_seed",
     "run_on_eval_mode",
-    "plot_losses_fig",
+    "plot_curve",
 ]
 
 
@@ -62,6 +62,7 @@ class AverageMeter:
         self.avg = 0
         self.sum = 0
         self.count = 0
+        self.history = []
 
     def update(self, val, n=1):
         """Update"""
@@ -69,6 +70,7 @@ class AverageMeter:
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+        self.history.append(val)
 
     @property
     def avg_info(self):
@@ -304,53 +306,47 @@ def run_on_eval_mode(func: Callable) -> Callable:
     return function_with_eval_state
 
 
-def plot_losses_fig(
-    loss_dict: Dict[str, List],
+def plot_curve(
+    fname: Tuple[str, str],
+    data: Dict[str, List],
     output_dir: str = "./output/",
-    by_epoch: bool = False,
-    iters_per_epoch: int = 1,
     smooth_step: int = 1,
 ) -> None:
-    """Plotting loss-iteration/epoch curve.
+    """Plotting curve.
 
     Args:
-        loss_dict (Dict[str, List]): Losses of all constraints.
-        output_dir (str): Output directory. Defaults to "./output/".
-        by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
-        iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 1.
-        smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+        fname (Tuple[str, str]): names of x and y axises.
+        data (Dict[str, List]): Dict of all data, keys are curves' name.
+        output_dir (str, optional): Output directory of figure. Defaults to "./output/".
+        smooth_step (int, optional): How many points are squeezed to one point to smooth the curve. Defaults to 1.
     """
-    loss_list = []
-    for key in loss_dict:
-        loss_list.append(np.array(loss_dict[key]).reshape(-1, 1))
-    loss_arr = np.concatenate(loss_list, axis=1)
-
-    if by_epoch:
-        loss_arr = np.mean(
-            loss_arr.reshape(-1, iters_per_epoch, loss_arr.shape[1]), axis=1
-        )
+    data_list = []
+    for key in data:
+        data_list.append(np.array(data[key]).reshape(-1, 1))
+    data_arr = np.concatenate(data_list, axis=1)
 
     # smooth
-    if loss_arr.shape[0] % smooth_step != 0:
-        vis_loss = loss_arr[: -(loss_arr.shape[0] % smooth_step), :].reshape(
-            -1, smooth_step, loss_arr.shape[1]
+    if data_arr.shape[0] % smooth_step != 0:
+        data_vis = np.reshape(
+            data_arr[: -(data_arr.shape[0] % smooth_step), :],
+            (-1, smooth_step, data_arr.shape[1]),
         )
     else:
-        vis_loss = loss_arr.reshape(-1, smooth_step, loss_arr.shape[1])
+        data_vis = np.reshape(data_arr, (-1, smooth_step, data_arr.shape[1]))
+    data_vis = np.mean(data_vis, axis=1)
 
     # plot
     plt.figure()
-    for i in range(vis_loss.shape[1]):
-        plt.semilogy(np.arange(vis_loss.shape[0]) * smooth_step, vis_loss[:, i])
+    for i in range(data_vis.shape[1]):
+        plt.semilogy(np.arange(data_vis.shape[0]) * smooth_step, data_vis[:, i])
     plt.legend(
-        list(loss_dict.keys()),
+        list(data.keys()),
         loc="lower left",
     )
-    figname = "Epoch" if by_epoch else "Iteration"
-    plt.xlabel(figname)
-    plt.ylabel("Loss")
+    plt.xlabel(fname[0])
+    plt.ylabel(fname[1])
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
 
-    plt.savefig(os.path.join(output_dir, f"{figname} Loss.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{fname[0]}-{fname[1]} curve.jpg"))
