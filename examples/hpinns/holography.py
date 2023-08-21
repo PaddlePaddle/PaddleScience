@@ -29,7 +29,7 @@ from ppsci.utils import logger
 
 if __name__ == "__main__":
     # open FLAG for higher order differential operator
-    paddle.fluid.core.set_prim_eager_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
 
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)

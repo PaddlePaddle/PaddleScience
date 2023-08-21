@@ -184,12 +184,12 @@ class LorenzEmbedding(base.Arch):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        x = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = self.forward_tensor(x)
+        x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        y = self.forward_tensor(x_tensor)
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y
 
 
@@ -494,5 +494,5 @@ class CylinderEmbedding(base.Arch):
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from paddle import fluid
+import paddle
 
 import ppsci
 from ppsci.autodiff import hessian
@@ -23,8 +23,8 @@ from ppsci.utils import logger
 if __name__ == "__main__":
     args = config.parse_args()
     # enable computation for fourth-order differentiation of matmul
-    fluid.core.set_prim_eager_enabled(True)
-    fluid.core._set_prim_all_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
+    paddle.framework.core._set_prim_all_enabled(True)
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set training hyper-parameters

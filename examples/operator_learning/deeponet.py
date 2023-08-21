@@ -82,7 +82,7 @@ if __name__ == "__main__":
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         {"G": lambda out: out["G"]},
-        metric={"L2Rel": ppsci.metric.L2Rel()},
+        metric={"MeanL2Rel": ppsci.metric.MeanL2Rel()},
         name="G_eval",
     )
     validator = {sup_validator.name: sup_validator}

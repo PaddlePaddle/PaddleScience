@@ -21,8 +21,13 @@ from ppsci.metric import base
 class L2Rel(base.Metric):
     r"""Class for l2 relative error.
 
+    NOTE: This metric API is slightly different from `MeanL2Rel`, difference is as below:
+
+    - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
+
     $$
-    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\Vert \max(\mathbf{y}, \epsilon) \Vert_2}
+    metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\max(\Vert \mathbf{y} \Vert_2, \epsilon)}
     $$
 
     $$
@@ -50,10 +55,55 @@ class L2Rel(base.Metric):
     def forward(self, output_dict, label_dict):
         metric_dict = {}
         for key in label_dict:
-            rel_l2 = (
-                paddle.norm(label_dict[key] - output_dict[key], p=2, axis=1)
-                / paddle.norm(label_dict[key], p=2, axis=1).clip(min=self.EPS)
-            ).mean()
+            rel_l2 = paddle.norm(label_dict[key] - output_dict[key], p=2) / paddle.norm(
+                label_dict[key], p=2
+            ).clip(min=self.EPS)
             metric_dict[key] = rel_l2
+
+        return metric_dict
+
+
+class MeanL2Rel(base.Metric):
+    r"""Class for mean l2 relative error.
+
+    NOTE: This metric API is slightly different from `L2Rel`, difference is as below:
+
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
+    - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
+
+    $$
+    metric = \dfrac{1}{M} \sum_{i=1}^{M}\dfrac{\Vert \mathbf{x_i} - \mathbf{y_i} \Vert_2}{\max(\Vert \mathbf{y_i} \Vert_2, \epsilon) }
+    $$
+
+    $$
+    \mathbf{x_i}, \mathbf{y_i} \in \mathcal{R}^{N}
+    $$
+
+    Args:
+        keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
+
+    Examples:
+        >>> import ppsci
+        >>> metric = ppsci.metric.MeanL2Rel()
+    """
+
+    # NOTE: Avoid divide by zero in result
+    # see https://github.com/scikit-learn/scikit-learn/pull/15007
+    EPS: float = np.finfo(np.float32).eps
+
+    def __init__(self, keep_batch: bool = False):
+        super().__init__(keep_batch)
+
+    @paddle.no_grad()
+    def forward(self, output_dict, label_dict):
+        metric_dict = {}
+        for key in label_dict:
+            rel_l2 = paddle.norm(
+                label_dict[key] - output_dict[key], p=2, axis=1
+            ) / paddle.norm(label_dict[key], p=2, axis=1).clip(min=self.EPS)
+            if self.keep_batch:
+                metric_dict[key] = rel_l2
+            else:
+                metric_dict[key] = rel_l2.mean()
 
         return metric_dict
