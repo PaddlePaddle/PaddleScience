@@ -267,3 +267,9 @@ examples/bubble/bubble.py
   ![phil.png](../../images/bubble/phil.png){ loading=lazy style="margin:0 auto"}
   <figcaption>在时刻 $t=50$ 时的水平集函数 $\phi$ </figcaption>
 </figure>
+
+## 6. 参考文献
+
+参考文献： [Predicting micro-bubble dynamics with semi-physics-informed deep learning](https://doi.org/10.1063/5.0079602)
+
+参考代码： [Semi-PINNs](https://github.com/hanfengzhai/BubbleNet)
