@@ -18,6 +18,7 @@ Bubble data files download link: https://paddle-org.bj.bcebos.com/paddlescience/
 """
 
 import numpy as np
+import paddle
 import scipy.io
 
 import ppsci
@@ -63,14 +64,14 @@ if __name__ == "__main__":
     yy = np.tile(x_star[:, 1:2], (1, T))  # N x T
     tt = np.tile(t_star, (1, N)).T  # N x T
 
-    x = xx.flatten()[:, None].astype("float32")  # NT x 1
-    y = yy.flatten()[:, None].astype("float32")  # NT x 1
-    t = tt.flatten()[:, None].astype("float32")  # NT x 1
+    x = xx.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
+    y = yy.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
+    t = tt.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
 
-    u = u_star.flatten()[:, None].astype("float32")  # NT x 1
-    v = v_star.flatten()[:, None].astype("float32")  # NT x 1
-    p = p_star.flatten()[:, None].astype("float32")  # NT x 1
-    phil = phil_star.flatten()[:, None].astype("float32")  # NT x 1
+    u = u_star.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
+    v = v_star.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
+    p = p_star.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
+    phil = phil_star.flatten()[:, None].astype(paddle.get_default_dtype())  # NT x 1
 
     idx = np.random.choice(N * T, int(N * T * 0.75), replace=False)
     # train data
@@ -120,7 +121,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": train_input,
             "label": train_label,
-            "weight": {},
         },
         "batch_size": 2419,
         "sampler": {
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     EPOCHS = 10000 if not args.epochs else args.epochs
     EVAL_FREQ = 1000
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(0.001)((model_list,))
+    optimizer = ppsci.optimizer.Adam(0.001)(model_list)
 
     # set validator
     valida_dataloader_cfg = {
@@ -174,7 +174,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": test_input,
             "label": test_label,
-            "weight": {},
         },
         "batch_size": 2419,
         "sampler": {

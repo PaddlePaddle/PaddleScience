@@ -18,8 +18,14 @@
 ### 2.1. 气泡流控制方程
 气泡流在许多生物应用中经常遇到。两相流（空气和水）由 Navier–Stokes 方程控制，
 
-$$\nabla \cdot \boldsymbol{u}=0,\\
-\rho\left(\frac{\partial \boldsymbol{u}}{\partial t}+(\boldsymbol{u} \cdot \nabla) \boldsymbol{u}\right)=-\nabla p+\mu \nabla^2 \boldsymbol{u},$$
+$$
+\begin{cases}
+\begin{aligned}
+  \nabla \cdot \boldsymbol{u}&=0, \\
+  \rho\left(\frac{\partial \boldsymbol{u}}{\partial t}+(\boldsymbol{u} \cdot \nabla) \boldsymbol{u}\right)&=-\nabla p+\mu \nabla^2 \boldsymbol{u},
+\end{aligned}
+\end{cases}
+$$
 
 其中 $\rho$ 是流体密度，$\boldsymbol {u} = ( u , v )$ 是二维速度矢量，$p$ 是流体压力，$\mu$ 是动力粘度。空气和水之间的界面由某个水平集或全局定义函数的等值线表示，即定义二维空间中的水平集函数 $\phi = \phi ( x , y , t )$。对于水来说 $\phi=0$，对于空气来说 $\phi=1$。在整个界面中，有从 0 到 1 的光滑过渡，界面由水平集 $\phi= 0.5$ 定义。
 
@@ -39,9 +45,11 @@ $$\frac{\partial \phi}{\partial t}+\boldsymbol{u} \cdot \nabla \phi=\gamma \nabl
 ### 2.2. BubbleNet（Semi-PINNs方法）
 
 - 引入流函数 $\psi$ 用于预测速度场 $u$、$v$，即
+
 $$u=\frac{\partial \psi}{\partial y},\quad  v=-\frac{\partial \psi}{\partial x},$$
 
 流函数的引入避免了损失函数中速度向量的梯度计算，提高了神经网络的效率。
+
 - 引入压力泊松方程，以提高预测的准确性，即对动量方程等号两端同时求散度：
 
 $$\nabla^2 p=\rho \frac{\nabla \cdot \mathbf{u}}{\Delta t}-\rho \nabla \cdot(\mathbf{u} \cdot \nabla \mathbf{u})+\mu \nabla^2(\nabla \cdot \mathbf{u}) = -\rho \nabla \cdot(\mathbf{u} \cdot \nabla \mathbf{u}).$$
@@ -51,6 +59,7 @@ $$\nabla^2 p=\rho \frac{\nabla \cdot \mathbf{u}}{\Delta t}-\rho \nabla \cdot(\ma
 $$\mathcal{W}=\frac{\mathcal{U}-\mathcal{U}_{\min }}{\mathcal{U}_{\max }-\mathcal{U}_{\min }},$$
 
 其中 $\mathcal{U}=(u, v, p, \phi)$ 是从气泡流模拟中获得的粗化数据，$\mathcal{U}_{\min },~\mathcal{U}_{\max }$ 分别为每个时间步粗化CFD数据的最大值和最小值。如此处理的原因在于流场中的物理量变化较大，TDN 将有助于消除物理量变化造成的不准确性。
+
 - 使用均方误差（MSE）来计算损失函数中预测和训练数据的偏差，损失函数表示为
 
 $$\mathcal{L}=\frac{1}{m} \sum_{i=1}^m\left(\mathcal{W}_{\text {pred }(i)}-\mathcal{W}_{\text {train }(i)}\right)^2+\frac{1}{m} \sum_{i=1}^m\left(\nabla^2 p_{(i)}\right)^2,$$
@@ -61,7 +70,7 @@ $$\mathcal{L}=\frac{1}{m} \sum_{i=1}^m\left(\mathcal{W}_{\text {pred }(i)}-\math
 
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。为了快速理解 PaddleScience，接下来仅对模型构建、约束构建等关键步骤进行阐述，而其余细节请参考[API文档](../api/arch.md)。
 
-### 3.1. 数据处理
+### 3.1 数据处理
 
 数据集是通过用细网格下的 CFD 结果获得的，包含未归一化的 $x,~y,~t,~u,~v,~p,~\phi$，以字典的形式存储在 `.mat` 文件中。
 
@@ -69,13 +78,13 @@ $$\mathcal{L}=\frac{1}{m} \sum_{i=1}^m\left(\mathcal{W}_{\text {pred }(i)}-\math
 
 下载后，我们需要首先对数据集进行时间离散归一化（TDN）处理，同时构造训练集和验证集。
 
-``` py linenums="38"
+``` py linenums="39"
 --8<--
-examples/bubble/bubble.py:38:82
+examples/bubble/bubble.py:39:83
 --8<--
 ```
 
-### 3.2. 模型构建
+### 3.2 模型构建
 
 气泡流问题的模型结构图为：
 
@@ -95,25 +104,25 @@ $$
 
 上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
-``` py linenums="84"
+``` py linenums="85"
 --8<--
-examples/bubble/bubble.py:84:87
+examples/bubble/bubble.py:85:88
 --8<--
 ```
 
-使用  `transform_out` 函数实现流函数 $\psi$ 到 速度 $u,~v$ 的变换，代码如下
+使用  `transform_out` 函数实现流函数 $\psi$ 到速度 $u,~v$ 的变换，代码如下
 
-``` py linenums="89"
+``` py linenums="90"
 --8<--
-examples/bubble/bubble.py:89:96
+examples/bubble/bubble.py:90:97
 --8<--
 ```
 
 同时需要对模型 `model_psi` 注册相应的 transform ，然后将 3 个 MLP 模型组成 Model List
 
-``` py linenums="97"
+``` py linenums="99"
 --8<--
-examples/bubble/bubble.py:97:99
+examples/bubble/bubble.py:99:101
 --8<--
 ```
 
@@ -125,9 +134,9 @@ examples/bubble/bubble.py:97:99
 
 验证区域在以 [0, 0], [15, 5] 为对角线的二维矩形区域，且时间域为 126 个时刻 [0, 1, ..., 124, 125]，因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。代码如下
 
-``` py linenums="101"
+``` py linenums="103"
 --8<--
-examples/bubble/bubble.py:101:113
+examples/bubble/bubble.py:103:115
 --8<--
 ```
 
@@ -141,13 +150,13 @@ examples/bubble/bubble.py:101:113
 
 ### 3.4 约束构建
 
-根据 [2.2. BubbleNet（Semi-PINNs方法）](#2) 定义的损失函数表达式，对应了在计算域中指导模型训练的两个约束条件，接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述两种约束条件。
+根据 [2.2. BubbleNet（Semi-PINNs方法）](#22) 定义的损失函数表达式，对应了在计算域中指导模型训练的两个约束条件，接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述两种约束条件。
 
 在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
 
-``` py linenums="115"
+``` py linenums="117"
 --8<--
-examples/bubble/bubble.py:115:133
+examples/bubble/bubble.py:117:134
 --8<--
 ```
 
@@ -155,13 +164,13 @@ examples/bubble/bubble.py:115:133
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="135"
+``` py linenums="136"
 --8<--
-examples/bubble/bubble.py:135:149
+examples/bubble/bubble.py:136:150
 --8<--
 ```
 
-`InteriorConstraint` 的第一个参数是方程表达式，用于计算输出字典中的函数，此处计算损失函数表达式第二项中 $\nabla^2 p_{(i)}$；
+`InteriorConstraint` 的第一个参数是方程表达式，用于计算方程结果，此处计算损失函数表达式第二项中 $\nabla^2 p_{(i)}$；
 
 第二个参数是约束变量的目标值，在本问题中我们希望 $\nabla^2 p_{(i)}$ 的结果被优化至 0，因此将目标值设为 0；
 
@@ -177,9 +186,9 @@ examples/bubble/bubble.py:135:149
 
 同时在训练数据上以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="152"
+``` py linenums="153"
 --8<--
-examples/bubble/bubble.py:152:156
+examples/bubble/bubble.py:153:157
 --8<--
 ```
 
@@ -191,9 +200,9 @@ examples/bubble/bubble.py:152:156
 
 在微分方程约束和监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="158"
+``` py linenums="159"
 --8<--
-examples/bubble/bubble.py:158:162
+examples/bubble/bubble.py:159:163
 --8<--
 ```
 
@@ -201,9 +210,9 @@ examples/bubble/bubble.py:158:162
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，评估间隔为一千轮，学习率设为 0.001。
 
-``` py linenums="164"
+``` py linenums="165"
 --8<--
-examples/bubble/bubble.py:164:166
+examples/bubble/bubble.py:165:167
 --8<--
 ```
 
@@ -211,9 +220,9 @@ examples/bubble/bubble.py:164:166
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="167"
+``` py linenums="168"
 --8<--
-examples/bubble/bubble.py:167:168
+examples/bubble/bubble.py:168:169
 --8<--
 ```
 
@@ -221,9 +230,9 @@ examples/bubble/bubble.py:167:168
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="170"
+``` py linenums="171"
 --8<--
-examples/bubble/bubble.py:170:193
+examples/bubble/bubble.py:171:193
 --8<--
 ```
 
@@ -243,7 +252,7 @@ examples/bubble/bubble.py:195:223
 本文中的可视化数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$，在此我们对预测的 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$ 进行反归一化，最终我们将反归一化后的数据按时刻保存成 126 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 ``` py linenums="225"
 --8<--
-examples/bubble/bubble.py:225:247
+examples/bubble/bubble.py:225:254
 --8<--
 ```
 
@@ -263,25 +272,25 @@ examples/bubble/bubble.py
 
 <figure markdown>
   ![u.png](../../images/bubble/u.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 $t=50$ 时的速度 $u$</figcaption>
+  <figcaption>在时刻 t=50 时的速度 u</figcaption>
 </figure>
 
 <figure markdown>
   ![v.png](../../images/bubble/v.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 $t=50$ 时的速度 $v$</figcaption>
+  <figcaption>在时刻 t=50 时的速度 v</figcaption>
 </figure>
 
 <figure markdown>
   ![p.png](../../images/bubble/p.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 $t=50$ 时的压力 $p$</figcaption>
+  <figcaption>在时刻 t=50 时的压力 p</figcaption>
 </figure>
 
 <figure markdown>
   ![phil.png](../../images/bubble/phil.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 $t=50$ 时的水平集函数 $\phi$ </figcaption>
+  <figcaption>在时刻 t=50 时的水平集函数 phi </figcaption>
 </figure>
 
-## 6. 参考文献
+## 6. 参考资料
 
 参考文献： [Predicting micro-bubble dynamics with semi-physics-informed deep learning](https://doi.org/10.1063/5.0079602)
 
