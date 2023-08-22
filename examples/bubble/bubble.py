@@ -235,7 +235,7 @@ if __name__ == "__main__":
         "phil": pred_norm["phil"].numpy(),
     }
     ppsci.visualize.save_vtu_from_dict(
-        "{OUTPUT_DIR}/visual/result.vtu",
+        "f{OUTPUT_DIR}/visual/result.vtu",
         {
             "t": visu_mat["t"],
             "x": visu_mat["x"],
