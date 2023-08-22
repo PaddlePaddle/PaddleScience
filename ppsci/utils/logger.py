@@ -18,9 +18,17 @@ import os
 import sys
 from typing import Optional
 
+import colorlog
 import paddle.distributed as dist
 
 _logger = None
+
+
+COLORLOG_CONFIG = {
+    "DEBUG": "green",
+    "WARNING": "yellow",
+    "ERROR": "red",
+}
 
 
 def init_logger(
@@ -53,9 +61,10 @@ def init_logger(
     _logger.handlers.clear()
 
     # add stream_handler, output to stdout such as terminal
-    stream_formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+    stream_formatter = colorlog.ColoredFormatter(
+        "%(log_color)s[%(asctime)s] %(name)s %(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
+        log_colors=COLORLOG_CONFIG,
     )
     stream_handler = logging.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(stream_formatter)
