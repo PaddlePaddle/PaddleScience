@@ -356,7 +356,7 @@ visualizer = {
         visualize_input_dict,
         ("x",),
         {"u_pred": lambda out: out["u"], "u_ref": lambda out: out["u_ref"]},
-        prefix="u=sin(x)",
+        prefix="u=sin(x)+2",
     ),
 }
 ```
@@ -390,7 +390,7 @@ ppsci INFO: [Train][Epoch 10/10][Iter: 90/100] lr: 0.00100000, loss: 0.00036, EQ
 ppsci INFO: [Train][Epoch 10/10][Iter: 100/100] lr: 0.00100000, loss: 0.00036, EQ: 0.00036, batch_cost: 0.01106s, reader_cost: 0.00016s, ips: 2892.93859 samples/s, eta: 0:00:00
 ppsci INFO: [Train][Epoch 10/10][Avg] loss: 0.00036, EQ: 0.00036
 ppsci INFO: Finish saving checkpoint to ./output_quick_start_case2/checkpoints/latest
-ppsci INFO: 1D result is saved to ./output_quick_start_case2/visual/epoch_0/u=sin(x).png
+ppsci INFO: 1D result is saved to ./output_quick_start_case2/visual/epoch_0/u=sin(x)+2.png
 ppsci INFO: [Visualize][Epoch 0] Finished visualization.
 ```
 
