@@ -29,7 +29,7 @@ def update_train_loss(trainer, loss_dict, batch_size):
             trainer.train_output_info[key] = misc.AverageMeter(key, "7.5f")
         trainer.train_output_info[key].update(float(loss_dict[key]), batch_size)
         if key not in trainer.train_loss_info:
-            trainer.train_loss_info[key] = misc.AverageMeter(key, ".5f", postfix="s")
+            trainer.train_loss_info[key] = misc.AverageMeter(key, ".5f")
         trainer.train_loss_info[key].update(float(loss_dict[key]))
 
 

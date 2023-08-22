@@ -170,7 +170,7 @@ class Solver:
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
-        self.train_loss_info = {"loss": misc.AverageMeter("loss", ".5f", postfix="s")}
+        self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
         self.eval_output_info = {}
@@ -673,26 +673,31 @@ class Solver:
             )
         return ctx_manager
 
-    def plot_loss_history(self, by_epoch: bool = False, smooth_step: int = 1) -> None:
+    def plot_loss_history(
+        self, by_epoch: bool = False, smooth_step: int = 1, use_semilogy=False
+    ) -> None:
         """Plotting iteration/epoch-loss curve.
 
         Args:
             by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
             smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+            use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to False.
         """
         loss_dict = {}
         for key in self.train_loss_info:
             loss_arr = np.array(self.train_loss_info[key].history)
             if by_epoch:
                 loss_arr = np.mean(
-                    np.reshape(loss_arr, (-1, self.iters_per_epoch, 1)),
+                    np.reshape(loss_arr, (-1, self.iters_per_epoch)),
                     axis=1,
                 )
             loss_dict[key] = list(loss_arr)
 
         misc.plot_curve(
-            fname=("Epoch", "Loss") if by_epoch else ("Iteration", "Loss"),
             data=loss_dict,
+            xlabel="Epoch" if by_epoch else "Iteration",
+            ylabel="Loss",
             output_dir=self.output_dir,
             smooth_step=smooth_step,
+            use_semilogy=use_semilogy,
         )

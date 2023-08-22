@@ -307,46 +307,53 @@ def run_on_eval_mode(func: Callable) -> Callable:
 
 
 def plot_curve(
-    fname: Tuple[str, str],
     data: Dict[str, List],
+    xlabel: str = "X",
+    ylabel: str = "Y",
     output_dir: str = "./output/",
     smooth_step: int = 1,
+    use_semilogy: bool = False,
 ) -> None:
     """Plotting curve.
 
     Args:
-        fname (Tuple[str, str]): names of x and y axises.
         data (Dict[str, List]): Dict of all data, keys are curves' name.
+        xlabel (str, optional): label of x-axis. Defaults to "X".
+        ylabel (str, optional): label of y-axis. Defaults to "Y".
         output_dir (str, optional): Output directory of figure. Defaults to "./output/".
         smooth_step (int, optional): How many points are squeezed to one point to smooth the curve. Defaults to 1.
+        use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to False.
     """
-    data_list = []
-    for key in data:
-        data_list.append(np.array(data[key]).reshape(-1, 1))
-    data_arr = np.concatenate(data_list, axis=1)
+    data_arr = np.concatenate(
+        [np.asarray(arr).reshape(-1, 1) for arr in data.values()], axis=1
+    )
 
     # smooth
     if data_arr.shape[0] % smooth_step != 0:
-        data_vis = np.reshape(
+        data_arr = np.reshape(
             data_arr[: -(data_arr.shape[0] % smooth_step), :],
             (-1, smooth_step, data_arr.shape[1]),
         )
     else:
-        data_vis = np.reshape(data_arr, (-1, smooth_step, data_arr.shape[1]))
-    data_vis = np.mean(data_vis, axis=1)
+        data_arr = np.reshape(data_arr, (-1, smooth_step, data_arr.shape[1]))
+    data_arr = np.mean(data_arr, axis=1)
 
     # plot
     plt.figure()
-    for i in range(data_vis.shape[1]):
-        plt.semilogy(np.arange(data_vis.shape[0]) * smooth_step, data_vis[:, i])
+    for i in range(data_arr.shape[1]):
+        if use_semilogy:
+            plt.semilogy(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
+        else:
+            plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
     plt.legend(
         list(data.keys()),
         loc="lower left",
     )
-    plt.xlabel(fname[0])
-    plt.ylabel(fname[1])
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
 
-    plt.savefig(os.path.join(output_dir, f"{fname[0]}-{fname[1]} curve.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.clf()
