@@ -50,6 +50,7 @@ dependencies = [
     "meshio==5.3.4",
     "tqdm",
     "imageio",
+    "colorlog",
 ]
 
 [project.urls]

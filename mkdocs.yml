@@ -79,6 +79,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+      - ppsci.experimental: zh/api/experimental.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md
