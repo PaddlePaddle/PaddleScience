@@ -114,26 +114,11 @@ if __name__ == "__main__":
         ),
     }
 
-    # set dataloader config
-    ITERS_PER_EPOCH = 1
-    train_dataloader_cfg = {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": train_input,
-            "label": train_label,
-        },
-        "batch_size": 2419,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": True,
-        },
-    }
-
     NTIME_ALL = len(timestamps)
     NPOINT_PDE, NTIME_PDE = 300 * 100, NTIME_ALL - 1
 
     # set constraint
+    ITERS_PER_EPOCH = 1
     pde_constraint = ppsci.constraint.InteriorConstraint(
         {
             "pressure_Poisson": lambda out: hessian(out["p"], out["x"])
@@ -151,7 +136,19 @@ if __name__ == "__main__":
     )
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg,
+        {
+            "dataset": {
+                "name": "NamedArrayDataset",
+                "input": train_input,
+                "label": train_label,
+            },
+            "batch_size": 2419,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": True,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
         name="Sup",
     )
@@ -169,21 +166,20 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(0.001)(model_list)
 
     # set validator
-    valida_dataloader_cfg = {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": test_input,
-            "label": test_label,
-        },
-        "batch_size": 2419,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
-    }
     mse_validator = ppsci.validate.SupervisedValidator(
-        valida_dataloader_cfg,
+        {
+            "dataset": {
+                "name": "NamedArrayDataset",
+                "input": test_input,
+                "label": test_label,
+            },
+            "batch_size": 2419,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
+        },
         ppsci.loss.MSELoss("mean"),
         metric={"MSE": ppsci.metric.MSE()},
         name="bubble_mse",
@@ -232,11 +228,12 @@ if __name__ == "__main__":
     p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
     u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
     v_pred = pred_norm["v"].reshape([NTIME_PDE, NPOINT_PDE]).T
-    pred = dict()
-    pred["p"] = (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]).numpy()
-    pred["u"] = (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]).numpy()
-    pred["v"] = (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]).numpy()
-    pred["phil"] = pred_norm["phil"].numpy()
+    pred = {
+        "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]).numpy(),
+        "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]).numpy(),
+        "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]).numpy(),
+        "phil": pred_norm["phil"].numpy(),
+    }
     ppsci.visualize.save_vtu_from_dict(
         "{OUTPUT_DIR}/visual/result.vtu",
         {

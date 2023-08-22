@@ -15,7 +15,9 @@
 为此，我们不采用完整的流体动力学方程来监督训练过程，而是基于部分物理信息来获得令人满意的结果。具体来说，我们仅将流体连续性条件（ $\nabla u =0$ ）和压力泊松方程（表示为 $\mathcal{P}$⁠ ) 代入损失函数，可以将其描述为具有半物理信息的神经网络—— Semi-PINNs。
 
 ## 2. 问题定义
+
 ### 2.1. 气泡流控制方程
+
 气泡流在许多生物应用中经常遇到。两相流（空气和水）由 Navier–Stokes 方程控制，
 
 $$
@@ -152,11 +154,11 @@ examples/bubble/bubble.py:103:115
 
 根据 [2.2. BubbleNet（Semi-PINNs方法）](#22) 定义的损失函数表达式，对应了在计算域中指导模型训练的两个约束条件，接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `BoundaryConstraint` 构建上述两种约束条件。
 
-在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
+在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量。
 
 ``` py linenums="117"
 --8<--
-examples/bubble/bubble.py:117:134
+examples/bubble/bubble.py:117:118
 --8<--
 ```
 
@@ -164,9 +166,9 @@ examples/bubble/bubble.py:117:134
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="136"
+``` py linenums="120"
 --8<--
-examples/bubble/bubble.py:136:150
+examples/bubble/bubble.py:120:136
 --8<--
 ```
 
@@ -176,7 +178,7 @@ examples/bubble/bubble.py:136:150
 
 第三个参数是约束方程作用的计算域，此处填入在 [3.3 计算域构建](#33) 章节实例化好的 `geom["time_rect"]` 即可；
 
-第四个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 `dataset` 字段设置为 "IterableNamedArrayDataset" 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 228595(表示99x99的等间隔网格，共有 15 个时刻的网格)；
+第四个参数是在计算域上的采样配置，此处我们使用全量数据点训练，因此 `dataset` 字段设置为 "IterableNamedArrayDataset" 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 228595；
 
 第五个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项的平均值；
 
@@ -186,9 +188,9 @@ examples/bubble/bubble.py:136:150
 
 同时在训练数据上以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="153"
+``` py linenums="138"
 --8<--
-examples/bubble/bubble.py:153:157
+examples/bubble/bubble.py:138:154
 --8<--
 ```
 
@@ -200,9 +202,9 @@ examples/bubble/bubble.py:153:157
 
 在微分方程约束和监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="159"
+``` py linenums="156"
 --8<--
-examples/bubble/bubble.py:159:163
+examples/bubble/bubble.py:156:160
 --8<--
 ```
 
@@ -210,9 +212,9 @@ examples/bubble/bubble.py:159:163
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，评估间隔为一千轮，学习率设为 0.001。
 
-``` py linenums="165"
+``` py linenums="162"
 --8<--
-examples/bubble/bubble.py:165:167
+examples/bubble/bubble.py:162:164
 --8<--
 ```
 
@@ -220,9 +222,9 @@ examples/bubble/bubble.py:165:167
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="168"
+``` py linenums="165"
 --8<--
-examples/bubble/bubble.py:168:169
+examples/bubble/bubble.py:165:166
 --8<--
 ```
 
@@ -230,9 +232,9 @@ examples/bubble/bubble.py:168:169
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="171"
+``` py linenums="168"
 --8<--
-examples/bubble/bubble.py:171:193
+examples/bubble/bubble.py:168:189
 --8<--
 ```
 
@@ -242,17 +244,19 @@ examples/bubble/bubble.py:171:193
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="195"
+``` py linenums="191"
 --8<--
-examples/bubble/bubble.py:195:223
+examples/bubble/bubble.py:191:219
 --8<--
 ```
 
 ### 3.9 结果可视化
+
 本文中的可视化数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$，在此我们对预测的 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$ 进行反归一化，最终我们将反归一化后的数据按时刻保存成 126 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
+
 ``` py linenums="225"
 --8<--
-examples/bubble/bubble.py:225:254
+examples/bubble/bubble.py:221:251
 --8<--
 ```
 
