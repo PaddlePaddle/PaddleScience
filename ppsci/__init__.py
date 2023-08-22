@@ -25,7 +25,7 @@ from ppsci import utils  # isort:skip
 from ppsci import visualize  # isort:skip
 from ppsci import validate  # isort:skip
 from ppsci import solver  # isort:skip
-from jointContribution import math  # isort:skip
+from ppsci import experimental  # isort:skip
 
 __all__ = [
     "arch",
@@ -41,5 +41,5 @@ __all__ = [
     "visualize",
     "validate",
     "solver",
-    "math",
+    "experimental",
 ]
