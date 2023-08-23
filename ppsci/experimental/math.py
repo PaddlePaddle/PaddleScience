@@ -16,16 +16,56 @@ import paddle
 
 
 def bessel_i0(x: paddle.Tensor) -> paddle.Tensor:
+    """Zero-order modified Bézier curve functions of the first kind.
+
+    Args:
+        x (paddle.Tensor): Input data of the formula.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> res = ppsci.experimental.bessel_i0(paddle.to_tensor([0, 1, 2, 3, 4], dtype="float32"))
+    """
     return paddle.i0(x)
 
 
 def bessel_i0e(x: paddle.Tensor) -> paddle.Tensor:
+    """Exponentially scaled zero-order modified Bézier curve functions of the first kind.
+
+    Args:
+        x (paddle.Tensor): Input data of the formula.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> res = ppsci.experimental.bessel_i0e(paddle.to_tensor([0, 1, 2, 3, 4], dtype="float32"))
+    """
     return paddle.i0e(x)
 
 
 def bessel_i1(x: paddle.Tensor) -> paddle.Tensor:
+    """First-order modified Bézier curve functions of the first kind.
+
+    Args:
+        x (paddle.Tensor): Input data of the formula.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> res = ppsci.experimental.bessel_i1(paddle.to_tensor([0, 1, 2, 3, 4], dtype="float32"))
+    """
     return paddle.i1(x)
 
 
 def bessel_i1e(x: paddle.Tensor) -> paddle.Tensor:
+    """Exponentially scaled first-order modified Bézier curve functions of the first kind.
+
+    Args:
+        x (paddle.Tensor): Input data of the formula.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> res = ppsci.experimental.bessel_i1e(paddle.to_tensor([0, 1, 2, 3, 4], dtype="float32"))
+    """
     return paddle.i1e(x)
