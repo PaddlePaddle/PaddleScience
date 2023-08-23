@@ -318,8 +318,8 @@ def plot_curve(
 
     Args:
         data (Dict[str, List]): Dict of all data, keys are curves' name.
-        xlabel (str, optional): label of x-axis. Defaults to "X".
-        ylabel (str, optional): label of y-axis. Defaults to "Y".
+        xlabel (str, optional): Label of x-axis. Defaults to "X".
+        ylabel (str, optional): Label of y-axis. Defaults to "Y".
         output_dir (str, optional): Output directory of figure. Defaults to "./output/".
         smooth_step (int, optional): How many points are squeezed to one point to smooth the curve. Defaults to 1.
         use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to False.

@@ -674,14 +674,17 @@ class Solver:
         return ctx_manager
 
     def plot_loss_history(
-        self, by_epoch: bool = False, smooth_step: int = 1, use_semilogy=False
+        self,
+        by_epoch: bool = False,
+        smooth_step: int = 1,
+        use_semilogy: bool = True,
     ) -> None:
         """Plotting iteration/epoch-loss curve.
 
         Args:
             by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
             smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
-            use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to False.
+            use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to True.
         """
         loss_dict = {}
         for key in self.train_loss_info:
