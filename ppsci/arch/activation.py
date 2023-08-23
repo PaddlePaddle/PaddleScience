@@ -87,6 +87,7 @@ class Siren(nn.Layer):
     """
 
     def __init__(self, w0: float = 30):
+        super().__init__()
         self.w0 = w0
 
     def forward(self, x):
@@ -108,7 +109,7 @@ class Siren(nn.Layer):
             initializer.zeros_(layer.bias)
 
     @staticmethod
-    def init_for_hidden_layer(layer: nn.Linear, w0: float):
+    def init_for_hidden_layer(layer: nn.Linear, w0: float = 30):
         """Initialzation for hidden layer except first layer.
         ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L622
         """
@@ -120,7 +121,9 @@ class Siren(nn.Layer):
         in_features = layer.weight.shape[0]
         with paddle.no_grad():
             initializer.uniform_(
-                -np.sqrt(6 / in_features) / w0, np.sqrt(6 / in_features) / w0
+                layer.weight,
+                -np.sqrt(6 / in_features) / w0,
+                np.sqrt(6 / in_features) / w0,
             )
             initializer.zeros_(layer.bias)
 

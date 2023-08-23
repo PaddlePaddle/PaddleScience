@@ -170,11 +170,11 @@ examples/aneurysm/aneurysm.py:161:169
 
 ### 3.5 超参数设定
 
-接下来需要指定训练轮数和学习率，此处按实验经验，使用一万轮训练轮数。
+接下来需要指定训练轮数和学习率，此处按实验经验，使用 1500 轮训练轮数。
 
 ``` py linenums="171"
 --8<--
-examples/aneurysm/aneurysm.py:171:180
+examples/aneurysm/aneurysm.py:171:172
 --8<--
 ```
 
@@ -182,9 +182,9 @@ examples/aneurysm/aneurysm.py:171:180
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="182"
+``` py linenums="174"
 --8<--
-examples/aneurysm/aneurysm.py:182:183
+examples/aneurysm/aneurysm.py:174:183
 --8<--
 ```
 

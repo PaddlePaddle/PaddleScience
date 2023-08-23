@@ -371,12 +371,12 @@ class PhysformerGPT2(base.Arch):
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
-        x = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
         if self.training:
-            y = self.forward_tensor(x)
+            y = self.forward_tensor(x_tensor)
         else:
-            y = self.forward_eval(x)
+            y = self.forward_eval(x_tensor)
         y = self.split_to_dict(y, self.output_keys)
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y

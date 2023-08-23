@@ -60,6 +60,9 @@ nav:
         - 流体:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - tempoGAN: zh/examples/tempoGAN.md
+      - 数理融合:
+        - 流体:
+          - BubbleNet: zh/examples/bubble.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -79,6 +82,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+      - ppsci.experimental: zh/api/experimental.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md

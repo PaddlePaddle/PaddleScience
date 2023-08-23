@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import sys
+import time
+from typing import Callable
 
 import paddle
 
@@ -113,3 +116,35 @@ def add_profiler_step(options_str=None):
             sys.exit(0)
 
     _profiler_step_id += 1
+
+
+def timing(func: Callable) -> Callable:
+    """Get time cost for given function.
+
+    Args:
+        func (Callable): Function to be tested.
+
+    Returns:
+        Callable: Wrapped function with time.perf_counter() at begin and end.
+
+    Examples:
+        >>> from ppsci.utils import profiler
+        >>> @profiler.timing
+        ... def my_func():
+        ...     x = 0
+        ...     for i in range(20):
+        ...         x += i
+        ...     return x
+        >>> # Time cost of [my_func] is 0.00(s).
+    """
+
+    @functools.wraps(func)
+    def wrapped_func(*args, **kwargs):
+        s = time.perf_counter()
+        result = func(*args, **kwargs)
+        t = time.perf_counter()
+        cost = t - s
+        print(f"Time cost of [{func.__name__}] is {cost:.2f}(s).")
+        return result
+
+    return wrapped_func

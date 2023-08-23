@@ -5,6 +5,7 @@
     options:
       members:
         - PDE
+        - FractionalPoisson
         - Biharmonic
         - Laplace
         - LinearElasticity
