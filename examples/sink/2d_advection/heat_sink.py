@@ -346,11 +346,22 @@ if __name__ == "__main__":
         },
         "batch_size": 100,
     }
+    from ppsci.loss import base
+
+    class MSELoss(base.Loss):
+        def __init__(
+            self,
+            input_str,
+        ):
+            super().__init__("False")
+
+        def forward(self, output_dict, label_dict, weight_dict=None):
+            return 0
 
     eval_cfg["dataset"]["input"] = input_global
     eq_validator = ppsci.validate.SupervisedValidator(
         eval_cfg,
-        None,
+        MSELoss("fake loss"),
         {
             "continuity": equation["NavierStokes"].equations["continuity"],
             "momentum_x": equation["NavierStokes"].equations["momentum_x"],
@@ -373,7 +384,7 @@ if __name__ == "__main__":
     eval_cfg["dataset"]["input"] = input_force
     force_validator = ppsci.validate.SupervisedValidator(
         eval_cfg,
-        None,
+        MSELoss("fake loss"),
         {"u": lambda out: out["u"]},
         {
             "heat_sink_force": lambda var, _: {
@@ -387,7 +398,7 @@ if __name__ == "__main__":
     eval_cfg["dataset"]["input"] = input_peakT
     temperature_validator = ppsci.validate.SupervisedValidator(
         eval_cfg,
-        None,
+        MSELoss("fake loss"),
         {"u": lambda out: out["u"]},
         {"peak_T": lambda var, _: {"peak_T": paddle.max(var["c"])}},
         "temperature_validator",
@@ -409,6 +420,7 @@ if __name__ == "__main__":
                 "pred_p": lambda d: d["p"],
                 "pred_c": lambda d: d["c"],
             },
+            coord_keys=("x", "y"),
             batch_size=128,
             prefix="PaddleScience",
         )

@@ -39,7 +39,7 @@ class Disk(geometry.Geometry):
         >>> geom = ppsci.geometry.Disk((0.0, 0.0), 1.0)
     """
 
-    def __init__(self, center: Tuple(float, float), radius: float):
+    def __init__(self, center: Tuple[float, float], radius: float):
         self.center = np.array(center, dtype=paddle.get_default_dtype())
         self.radius = radius
         super().__init__(2, (self.center - radius, self.center + radius), 2 * radius)
@@ -103,15 +103,15 @@ class Rectangle(geometry_nd.Hypercube):
     """Class for rectangle geometry
 
     Args:
-        xmin (Tuple(float, float)): Bottom left corner point, [x0, y0].
-        xmax (Tuple(float, float)): Top right corner point, [x1, y1].
+        xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
+        xmax (Tuple[float, float]): Top right corner point, [x1, y1].
 
     Examples:
         >>> import ppsci
         >>> geom = ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))
     """
 
-    def __init__(self, xmin: Tuple(float, float), xmax: Tuple(float, float)):
+    def __init__(self, xmin: Tuple[float, float], xmax: Tuple[float, float]):
         super().__init__(xmin, xmax)
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
@@ -236,15 +236,15 @@ class Channel(Rectangle):
     """Class for channel geometry (no bounding curves in x-direction for sdf calculation)
 
     Args:
-        xmin (Tuple(float, float)): Bottom left corner point, [x0, y0].
-        xmax (Tuple(float, float)): Top right corner point, [x1, y1].
+        xmin (Tuple[float, float]): Bottom left corner point, [x0, y0].
+        xmax (Tuple[float, float]): Top right corner point, [x1, y1].
 
     Examples:
         >>> import ppsci
         >>> geom = ppsci.geometry.channel((0.0, 0.0), (1.0, 1.0))
     """
 
-    def __init__(self, xmin: Tuple(float, float), xmax: Tuple(float, float)):
+    def __init__(self, xmin: Tuple[float, float], xmax: Tuple[float, float]):
         super().__init__(xmin, xmax)
         self.top_normal = np.array([0, 1.0], paddle.get_default_dtype()).reshape(-1, 1)
         self.bottom_normal = np.array([0, -1.0], paddle.get_default_dtype()).reshape(
@@ -297,9 +297,9 @@ class Triangle(geometry.Geometry):
     vertices will be re-ordered in counterclockwise (right hand rule).
 
     Args:
-        x1 (Tuple(float, float)): First point of Triangle [x0, y0].
-        x2 (Tuple(float, float)): Second point of Triangle [x1, y1].
-        x3 (Tuple(float, float)): Third point of Triangle [x2, y2].
+        x1 (Tuple[float, float]): First point of Triangle [x0, y0].
+        x2 (Tuple[float, float]): Second point of Triangle [x1, y1].
+        x3 (Tuple[float, float]): Third point of Triangle [x2, y2].
 
     Examples:
         >>> import ppsci
@@ -307,7 +307,7 @@ class Triangle(geometry.Geometry):
     """
 
     def __init__(
-        self, x1: Tuple(float, float), x2: Tuple(float, float), x3: Tuple(float, float)
+        self, x1: Tuple[float, float], x2: Tuple[float, float], x3: Tuple[float, float]
     ):
         self.area = polygon_signed_area([x1, x2, x3])
         # Clockwise
@@ -714,8 +714,8 @@ class Line(geometry.Geometry):
     """class of 2d Line
 
     Args:
-        x_min (Tuple(float, float)): Tuple of minimum values of the Line
-        x_max (Tuple(float, float)): Tuple of maximum values of the Line
+        x_min (Tuple[float, float]): Tuple of minimum values of the Line
+        x_max (Tuple[float, float]): Tuple of maximum values of the Line
         normal (bool): normal vector of the Line
 
     Examples:
@@ -725,9 +725,9 @@ class Line(geometry.Geometry):
 
     def __init__(
         self,
-        x_min: Tuple(float, float),
-        x_max: Tuple(float, float),
-        normal: Tuple(float, float),
+        x_min: Tuple[float, float],
+        x_max: Tuple[float, float],
+        normal: Tuple[float, float],
     ):
         x_min = np.array(x_min, dtype=paddle.get_default_dtype())
         x_max = np.array(x_max, dtype=paddle.get_default_dtype())

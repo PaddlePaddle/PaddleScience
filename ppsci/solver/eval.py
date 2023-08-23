@@ -20,7 +20,7 @@ from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import misc
-from ppsci.utils import write_csv_file
+from ppsci.utils import save_to_csv
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -141,7 +141,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     )
                 metric_summary_dict[metric_str].update(float(metric_value), num_samples)
 
-        write_csv_file(
+        save_to_csv(
             solver.output_dir,
             solver.eval_freq,
             "validator",

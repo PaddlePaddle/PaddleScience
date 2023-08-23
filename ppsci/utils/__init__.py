@@ -20,7 +20,7 @@ from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.checker import run_check
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
-from ppsci.utils.logger import write_csv_file
+from ppsci.utils.logger import save_to_csv
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
 from ppsci.utils.paddle_printer import paddle_lambdify
@@ -37,7 +37,7 @@ __all__ = [
     "logger",
     "misc",
     "reader",
-    "write_csv_file",
+    "save_to_csv",
     "load_csv_file",
     "load_mat_file",
     "load_vtk_file",

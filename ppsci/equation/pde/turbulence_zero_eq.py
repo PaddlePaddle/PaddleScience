@@ -58,8 +58,8 @@ class ZeroEquation(base.PDE):
         self.max_distance_ratio = 0.09
 
         def nu_symbol():
-            x, y = self.create_symbols("x"), self.create_symbols("y")
-            input_variables = {"x": x, "y": y}
+            x, y, z, t = self.create_symbols("x, y, z, t")
+            input_variables = (x, y)
             u = self.create_function("u", input_variables)
             v = self.create_function("v", input_variables)
             nu = (

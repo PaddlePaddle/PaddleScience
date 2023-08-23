@@ -100,7 +100,6 @@ class IntegralConstraint(base.Constraint):
             criteria = eval(criteria)
 
         # prepare input
-        # shape of each input is [batch_size, integral_batch_size, ndim]
         input_list = []
         for i in range(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
@@ -116,6 +115,7 @@ class IntegralConstraint(base.Constraint):
             input["x"] = input["x"] + random_trans
             input_list.append(input)
         input = misc.stack_dict_list(input_list)
+        # shape of each input is [batch_size, integral_batch_size, ndim]
 
         # prepare label
         label = {}

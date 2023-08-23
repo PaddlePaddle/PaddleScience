@@ -46,7 +46,9 @@ class CSGUnion(geometry.Geometry):
         )  # assum no area intersection, fix while sampling
 
         n = 1000
-        n1 = int(self.geom1.perimeter / self.perimeter * n)
+        n1 = int(
+            self.geom1.perimeter / (self.geom1.perimeter + self.geom2.perimeter) * n
+        )
         n2 = n - n1
         geom1_boundary_points = self.geom1.random_boundary_points(n1, random="pseudo")
         geom1_boundary_points = geom1_boundary_points[
@@ -148,7 +150,7 @@ class CSGUnion(geometry.Geometry):
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
         sdf_geom1 = self.geom1.sdf_func(points)
         sdf_geom2 = self.geom2.sdf_func(points)
-        return np.amin((sdf_geom1, sdf_geom2), axis=0)
+        return np.minimum(sdf_geom1, sdf_geom2)
 
 
 class CSGDifference(geometry.Geometry):
@@ -237,7 +239,7 @@ class CSGDifference(geometry.Geometry):
         # geom1 - geom2
         sdf_geom1 = self.geom1.sdf_func(points)
         sdf_geom2 = self.geom2.sdf_func(points)
-        return np.amax((sdf_geom1, -sdf_geom2), axis=0)
+        return np.maximum(sdf_geom1, -sdf_geom2)
 
 
 class CSGIntersection(geometry.Geometry):

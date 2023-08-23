@@ -181,7 +181,7 @@ def advertise():
     )
 
 
-def write_csv_file(
+def save_to_csv(
     output_dir: str,
     eval_freq: int,
     csv_dir_name: str,

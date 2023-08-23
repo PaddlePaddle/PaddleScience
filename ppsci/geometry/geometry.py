@@ -20,7 +20,6 @@ import abc
 from typing import Dict
 from typing import Tuple
 
-import geometry_2d
 import numpy as np
 import paddle
 
@@ -196,7 +195,7 @@ class Geometry:
             return {**x_dict, **normal_dict, **area_dict}
 
         if self.ndim == 2:
-            if (criteria is not None) and isinstance(self, geometry_2d.Line):
+            if (criteria is not None) and misc.typename(self) == "Line":
                 area = self._approximate_area(criteria)
             elif criteria is None:
                 area = self.perimeter

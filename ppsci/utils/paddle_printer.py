@@ -15,7 +15,6 @@
 import copy
 from typing import Dict
 from typing import List
-from typing import Union
 
 import paddle
 import sympy
@@ -29,11 +28,11 @@ from ppsci.autodiff import jacobian
 from ppsci.utils import logger
 
 
-def paddle_lambdify(f: Union[sympy.core.basic.Basic, float, int, bool], r: List[str]):
+def paddle_lambdify(f: sympy.core.basic.Basic, r: List[str]):
     """Generates a Paddle function from a sympy expression
 
     Args:
-        f (Tuple[sympy.core.basic.Basic, float, int, bool]):
+        f (sympy.core.basic.Basic):
             The equation to convert to torch. If float, int, or bool,
             this gets converted to a constant function of value `f`.
         r (List[str]): List, dict A list of the arguments for `f`.
@@ -41,12 +40,6 @@ def paddle_lambdify(f: Union[sympy.core.basic.Basic, float, int, bool], r: List[
     Returns:
         lambdify_f : Paddle function
     """
-
-    try:
-        f = float(f)
-    except Exception as e:
-        logger.info(repr(e))
-        pass
 
     if isinstance(f, (float, int, bool)):  # constant function
 
@@ -59,7 +52,7 @@ def paddle_lambdify(f: Union[sympy.core.basic.Basic, float, int, bool], r: List[
         try:  # NOTE Bug in SymPy
             lambdify_f = lambdify(vars, f, [PADDLE_SYMPY_PRINTER])
         except Exception as e:
-            logger.info(repr(e))
+            logger.info(f"paddle_printer tofix {e}")
             lambdify_f = lambdify(vars, f, [PADDLE_SYMPY_PRINTER])
     return lambdify_f
 
@@ -99,7 +92,7 @@ def _subs_derivatives(expr_old: (sympy.core.basic.Basic)) -> sympy.core.basic.Ba
             new_fn_name = _derivative_to_str(deriv)
             expr = expr.subs(deriv, Function(new_fn_name)(*deriv.free_symbols))
         except Exception as e:
-            logger.info(repr(e))
+            logger.info(f"paddle_printer tofix {e}")
             break
     while True:
         try:
@@ -109,7 +102,7 @@ def _subs_derivatives(expr_old: (sympy.core.basic.Basic)) -> sympy.core.basic.Ba
             new_symbol_name = fn.name
             expr = expr.subs(fn, Symbol(new_symbol_name))
         except Exception as e:
-            logger.info(repr(e))
+            logger.info(f"paddle_printer tofix {e}")
             break
     return expr
 

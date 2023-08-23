@@ -93,7 +93,7 @@ class NavierStokes(base.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
-                u * jacobian(u, x)
+                +u * jacobian(u, x)
                 + v * jacobian(u, y)
                 - nu * hessian(u, x)
                 - nu * hessian(u, y)
@@ -116,7 +116,7 @@ class NavierStokes(base.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
-                u * jacobian(v, x)
+                +u * jacobian(v, x)
                 + v * jacobian(v, y)
                 - nu * hessian(v, x)
                 - nu * hessian(v, y)
@@ -135,8 +135,8 @@ class NavierStokes(base.PDE):
             self.add_equation("momentum_y", momentum_y_compute_func)
 
         def momentum_x_symbol_func():
-            x, y = self.create_symbols("x"), self.create_symbols("y")
-            input_variables = {"x": x, "y": y}
+            x, y, z, t = self.create_symbols("x, y, z, t")
+            input_variables = (x, y, z, t)
             u = self.create_function("u", input_variables)
             v = self.create_function("v", input_variables)
             p = self.create_function("p", input_variables)
@@ -145,39 +145,31 @@ class NavierStokes(base.PDE):
                 if callable(self.nu)
                 else self.nu
             )
-            sympy_expr = (
+            sympy_expr = 0
+
+            if self.time:
+                sympy_expr += u.diff(t)
+
+            if self.dim == 3:
+                w = self.create_function("w", input_variables)
+                sympy_expr += w * u.diff(z)
+                sympy_expr -= (nu * u.diff(z)).diff(z)
+
+            sympy_expr += (
                 +u * (u.diff(x))
                 + v * (u.diff(y))
                 + 1 / rho * p.diff(x)
                 - (nu * u.diff(x)).diff(x)
                 - (nu * u.diff(y)).diff(y)
             )
-
-            if self.time:
-                t = self.create_symbols("t")
-                input_variables.update({"t", t})
-                sympy_expr += u.diff(t)
-
-            if self.dim == 3:
-                z = self.create_symbols("z")
-                input_variables.update({"z", z})
-                w = self.create_function("w", input_variables)
-                sympy_expr += w * u.diff(z)
-                sympy_expr -= (nu * u.diff(z)).diff(z)
-
             return SympyToPaddle(sympy_expr, "momentum_x")
 
         if use_sympy is True:
             self.add_equation("momentum_x", momentum_x_symbol_func())
 
         def momentum_y_symbol_func():
-            x, y, z, t = (
-                self.create_symbols("x"),
-                self.create_symbols("y"),
-                self.create_symbols("z"),
-                self.create_symbols("t"),
-            )
-            input_variables = {"x": x, "y": y}
+            x, y, z, t = self.create_symbols("x, y, z, t")
+            input_variables = (x, y, z, t)
             u = self.create_function("u", input_variables)
             v = self.create_function("v", input_variables)
             p = self.create_function("p", input_variables)
@@ -186,25 +178,23 @@ class NavierStokes(base.PDE):
                 if callable(self.nu)
                 else self.nu
             )
-            sympy_expr = (
+            sympy_expr = 0
+
+            if self.time:
+                sympy_expr += u.diff(t)
+
+            if self.dim == 3:
+                w = self.create_function("w", input_variables)
+                sympy_expr += w * v.diff(z)
+                sympy_expr -= (nu * v.diff(z)).diff(z)
+
+            sympy_expr += (
                 +u * v.diff(x)
                 + v * v.diff(y)
                 + 1 / rho * p.diff(y)
                 - (nu * v.diff(x)).diff(x)
                 - (nu * v.diff(y)).diff(y)
             )
-
-            if self.time:
-                t = self.create_symbols("t")
-                input_variables.update({"t", t})
-                sympy_expr += v.diff(t)
-
-            if self.dim == 3:
-                z = self.create_symbols("z")
-                input_variables.update(("z", z))
-                w = self.create_function("w", input_variables)
-                sympy_expr += w * v.diff(z)
-                sympy_expr -= (nu * v.diff(z)).diff(z)
 
             return SympyToPaddle(sympy_expr, "momentum_y")
 
