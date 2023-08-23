@@ -75,7 +75,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     label_dict,
                     weight_dict,
                 )
-
+            print(f"loss({_validator.name})")
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data

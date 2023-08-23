@@ -22,8 +22,78 @@ import numpy as np
 import paddle
 
 import ppsci
+from ppsci.loss import base
 from ppsci.utils import config
 from ppsci.utils import logger
+
+
+class MSELoss(base.Loss):
+    def __init__(
+        self,
+        input_str,
+    ):
+        super().__init__("False")
+
+    def forward(self, output_dict, label_dict, weight_dict=None):
+        return 0
+
+
+class Mass_imbalance_metric(ppsci.metric.base.Metric):
+    def __init__(self, keep_batch: bool = False):
+        super().__init__(keep_batch)
+
+    @paddle.no_grad()
+    def forward(self, output_dict, label_dict):
+        metric_dict = {}
+
+        metric_dict["mass imbalance"] = paddle.sum(
+            output_dict["area"] * paddle.abs(output_dict["continuity"])
+        )
+        return metric_dict
+
+
+class Momentum_imbalance_metric(ppsci.metric.base.Metric):
+    def __init__(self, keep_batch: bool = False):
+        super().__init__(keep_batch)
+
+    @paddle.no_grad()
+    def forward(self, output_dict, label_dict):
+        metric_dict = {}
+        metric_dict["momentum imbalance"] = output_dict["area"].T.matmul(
+            (
+                +paddle.abs(output_dict["momentum_x"])
+                + paddle.abs(output_dict["momentum_y"])
+            )
+        )
+        return metric_dict
+
+
+class Heat_sink_force_metric(ppsci.metric.base.Metric):
+    def __init__(self, keep_batch: bool = False):
+        super().__init__(keep_batch)
+
+    @paddle.no_grad()
+    def forward(self, output_dict, label_dict):
+        metric_dict = {}
+        metric_dict["force_x"] = paddle.sum(
+            output_dict["normal_x"] * output_dict["area"] * output_dict["p"]
+        )
+        metric_dict["force_y"] = paddle.sum(
+            output_dict["normal_y"] * output_dict["area"] * output_dict["p"]
+        )
+        return metric_dict
+
+
+class Peak_temperature_metric(ppsci.metric.base.Metric):
+    def __init__(self, keep_batch: bool = False):
+        super().__init__(keep_batch)
+
+    @paddle.no_grad()
+    def forward(self, output_dict, label_dict):
+        metric_dict = {}
+        metric_dict["peak_T"] = paddle.max(output_dict["c"])
+        return metric_dict
+
 
 if __name__ == "__main__":
     # initialization
@@ -31,7 +101,6 @@ if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
     OUTPUT_DIR = "./output" if not args.output_dir else args.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    shuffle = True
 
     # params for domain
     channel_length = (-2.5, 2.5)
@@ -107,8 +176,8 @@ if __name__ == "__main__":
         "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
+            "shuffle": True,
+            "drop_last": False,
         },
         "num_workers": 1,
     }
@@ -126,8 +195,6 @@ if __name__ == "__main__":
         geo_inlet,
         {**train_dataloader_cfg, "batch_size": 64},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
-        weight_dict={"u": 1, "v": 1, "c": 1},
         name="inlet",
     )
 
@@ -137,8 +204,6 @@ if __name__ == "__main__":
         geo_outlet,
         {**train_dataloader_cfg, "batch_size": 64},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
-        weight_dict={"p": 1},
         name="outlet",
     )
 
@@ -148,8 +213,6 @@ if __name__ == "__main__":
         heat_sink,
         {**train_dataloader_cfg, "batch_size": 500},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
-        weight_dict={"u": 1, "v": 1, "c": 1},
         name="hs_wall",
     )
 
@@ -165,7 +228,6 @@ if __name__ == "__main__":
         channel,
         {**train_dataloader_cfg, "batch_size": 2500},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
         weight_dict={"u": 1, "v": 1, "normal_gradient_c": 1},
         name="channel_wall",
     )
@@ -176,7 +238,6 @@ if __name__ == "__main__":
         geo,
         {**train_dataloader_cfg, "batch_size": 4800},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
         weight_dict={"continuity": "sdf", "momentum_x": "sdf", "momentum_y": "sdf"},
         name="interior_flow",
     )
@@ -187,10 +248,6 @@ if __name__ == "__main__":
         geo,
         {**train_dataloader_cfg, "batch_size": 4800},
         ppsci.loss.MSELoss("sum"),
-        criteria=None,
-        weight_dict={
-            "advection_diffusion_c": 1.0,
-        },
         name="interior_heat",
     )
 
@@ -198,7 +255,7 @@ if __name__ == "__main__":
     class Integral_translate:
         def __init__(self):
             self.trans = 0
-            self.trans_array = 5 * np.random.random((128 * 100,)) - 2.5
+            self.trans_array = 5 * np.random.random((128 * 100,)) - channel_length[1]
 
         def __call__(self, x, y):
             n = x.shape[0]
@@ -229,7 +286,6 @@ if __name__ == "__main__":
         weight_dict={"normal_dot_vel": 0.1},
         name="integral_continuity",
     )
-
     constraint = {
         constraint_inlet.name: constraint_inlet,
         constraint_outlet.name: constraint_outlet,
@@ -243,7 +299,6 @@ if __name__ == "__main__":
     model_flow = ppsci.arch.MLP(
         ("x", "y"), ("u", "v", "p"), 6, 512, "silu", weight_norm=True
     )
-
     model_heat = ppsci.arch.MLP(("x", "y"), ("c"), 6, 512, "silu", weight_norm=True)
 
     model = ppsci.arch.ModelList((model_flow, model_heat))
@@ -259,10 +314,11 @@ if __name__ == "__main__":
         by_epoch=False,
     )()
 
+    # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
 
     # add validation data
-    mapping = {
+    alias_dict = {
         "x": "Points:0",
         "y": "Points:1",
         "u": "U:0",
@@ -272,38 +328,36 @@ if __name__ == "__main__":
         "nu": "nuT",
         "c": "T",
     }
-    openfoam_var = ppsci.utils.reader.load_csv_file(
-        "./data/openfoam/heat_sink_zeroEq_Pr5_mesh20.csv", mapping.keys(), mapping
+    eval_data = ppsci.utils.reader.load_csv_file(
+        "./data/openfoam/heat_sink_zeroEq_Pr5_mesh20.csv", alias_dict.keys(), alias_dict
     )
-    openfoam_var["nu"] += nu
-    openfoam_var["c"] += -base_temp
-    openfoam_var["c"] /= 273.15
-    openfoam_invar_numpy = {
-        key: value for key, value in openfoam_var.items() if key in ["x", "y"]
-    }
-    openfoam_outvar_numpy = {
+    eval_data["nu"] += nu
+    eval_data["c"] += -base_temp
+    eval_data["c"] /= 273.15
+    input_dict = {key: value for key, value in eval_data.items() if key in ["x", "y"]}
+    label_dict = {
         key: value
-        for key, value in openfoam_var.items()
+        for key, value in eval_data.items()
         if key in ["u", "v", "p", "c"]  # Removing "nu"
     }
 
     eval_dataloader_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
-            "input": openfoam_invar_numpy,
-            "label": openfoam_outvar_numpy,
-            "weight": {k: np.ones_like(v) for k, v in openfoam_outvar_numpy.items()},
+            "input": input_dict,
+            "label": label_dict,
+            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
+            "shuffle": True,
+            "drop_last": False,
         },
     }
 
     openfoam_validator = ppsci.validate.SupervisedValidator(
         {**eval_dataloader_cfg, "batch_size": 128},
-        None,
+        MSELoss("fake loss"),
         {
             "u": lambda out: out["u"],
             "v": lambda out: out["v"],
@@ -314,21 +368,20 @@ if __name__ == "__main__":
         name="openfoam_validator",
     )
 
-    F_MTR = "./data/monitor"
     input_global, _ = ppsci.utils.load_vtk_file(
-        osp.join(F_MTR, "monitor_global.vtu"),
+        osp.join("./data/monitor", "monitor_global.vtu"),
         input_keys=("x", "y"),
         input_keys_patch=("sdf", "area"),
     )
     input_global["sdf__x"] = np.zeros_like(input_global["sdf"])
     input_global["sdf__y"] = np.zeros_like(input_global["sdf"])
     input_force, _ = ppsci.utils.load_vtk_file(
-        osp.join(F_MTR, "monitor_force.vtu"),
+        osp.join("./data/monitor", "monitor_force.vtu"),
         input_keys=("x", "y"),
         input_keys_patch=("area", "normal_x", "normal_y"),
     )
     input_peakT, _ = ppsci.utils.load_vtk_file(
-        osp.join(F_MTR, "monitor_peakT.vtu"),
+        osp.join("./data/monitor", "monitor_peakT.vtu"),
         input_keys=("x", "y"),
         input_keys_patch=("area", "normal_x", "normal_y"),
     )
@@ -341,42 +394,20 @@ if __name__ == "__main__":
         },
         "sampler": {
             "name": "BatchSampler",
-            "shuffle": shuffle,
-            "drop_last": True,
+            "shuffle": True,
+            "drop_last": False,
         },
         "batch_size": 100,
     }
-    from ppsci.loss import base
-
-    class MSELoss(base.Loss):
-        def __init__(
-            self,
-            input_str,
-        ):
-            super().__init__("False")
-
-        def forward(self, output_dict, label_dict, weight_dict=None):
-            return 0
 
     eval_cfg["dataset"]["input"] = input_global
     eq_validator = ppsci.validate.SupervisedValidator(
         eval_cfg,
         MSELoss("fake loss"),
+        equation["NavierStokes"].equations,
         {
-            "continuity": equation["NavierStokes"].equations["continuity"],
-            "momentum_x": equation["NavierStokes"].equations["momentum_x"],
-            "momentum_y": equation["NavierStokes"].equations["momentum_y"],
-        },
-        {
-            "global_monitor": lambda var, _: {
-                "mass_imbalance": paddle.sum(
-                    var["area"] * paddle.abs(var["continuity"])
-                ),
-                "momentum_imbalance": paddle.sum(
-                    var["area"]
-                    * (paddle.abs(var["momentum_x"]) + paddle.abs(var["momentum_y"]))
-                ),
-            }
+            "global_monitor": Mass_imbalance_metric(),
+            "momentum_imbalance": Momentum_imbalance_metric(),
         },
         "eq_validator",
     )
@@ -386,12 +417,7 @@ if __name__ == "__main__":
         eval_cfg,
         MSELoss("fake loss"),
         {"u": lambda out: out["u"]},
-        {
-            "heat_sink_force": lambda var, _: {
-                "force_x": paddle.sum(var["normal_x"] * var["area"] * var["p"]),
-                "force_y": paddle.sum(var["normal_y"] * var["area"] * var["p"]),
-            }
-        },
+        {"heat_sink_force": Heat_sink_force_metric()},
         name="force_validator",
     )
 
@@ -400,7 +426,7 @@ if __name__ == "__main__":
         eval_cfg,
         MSELoss("fake loss"),
         {"u": lambda out: out["u"]},
-        {"peak_T": lambda var, _: {"peak_T": paddle.max(var["c"])}},
+        {"peak_T": Peak_temperature_metric()},
         "temperature_validator",
     )
 
@@ -413,7 +439,7 @@ if __name__ == "__main__":
 
     visualizer = {
         "visualizer": ppsci.visualize.VisualizerVtu(
-            openfoam_invar_numpy,
+            input_dict,
             {
                 "pred_u": lambda d: d["u"],
                 "pred_v": lambda d: d["v"],
@@ -422,7 +448,7 @@ if __name__ == "__main__":
             },
             coord_keys=("x", "y"),
             batch_size=128,
-            prefix="PaddleScience",
+            prefix="result_u_v_p_c",
         )
     }
 

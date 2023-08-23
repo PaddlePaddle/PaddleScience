@@ -205,7 +205,10 @@ def save_to_csv(
     os.makedirs(validator_dir, exist_ok=True)
     if epoch_id == eval_freq:
         with open(
-            os.path.join(validator_dir, f"{filename}.csv"), encoding="utf-8", newline=""
+            os.path.join(validator_dir, f"{filename}.csv"),
+            "w",
+            encoding="utf-8",
+            newline="",
         ) as file:
             writer = csv.writer(file)
             writer.writerow(["epoch id"] + [key for key in data.keys()])
