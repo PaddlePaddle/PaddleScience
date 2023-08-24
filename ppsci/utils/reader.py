@@ -76,7 +76,10 @@ def load_csv_file(
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
         data_dict[key] = np.asarray(
-            raw_data[fetch_key], paddle.get_default_dtype()
+            raw_data[fetch_key],
+            paddle.get_default_dtype()
+            if (raw_data[fetch_key].dtype in [np.float32, np.float64])
+            else None,
         ).reshape([-1, 1])
 
     return data_dict
@@ -114,7 +117,10 @@ def load_mat_file(
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
         data_dict[key] = np.asarray(
-            raw_data[fetch_key], paddle.get_default_dtype()
+            raw_data[fetch_key],
+            paddle.get_default_dtype()
+            if (raw_data[fetch_key].dtype in [np.float32, np.float64])
+            else None,
         ).reshape([-1, 1])
 
     return data_dict
@@ -151,7 +157,12 @@ def load_npz_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(raw_data[fetch_key], paddle.get_default_dtype())
+        data_dict[key] = np.asarray(
+            raw_data[fetch_key],
+            paddle.get_default_dtype()
+            if (raw_data[fetch_key].dtype in [np.float32, np.float64])
+            else None,
+        )
     return data_dict
 
 
