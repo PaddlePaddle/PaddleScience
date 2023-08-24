@@ -22,9 +22,10 @@ from typing import Tuple
 from typing import Union
 
 import paddle
-import sympy
+import sympy as sp
 from paddle import jit
 from paddle import nn
+from typing_extensions import TypeAlias
 
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
@@ -202,20 +203,33 @@ class ExpressionSolver(nn.Layer):
 
 
 FUNC_MAP = {
-    sympy.sin: paddle.sin,
-    sympy.cos: paddle.cos,
-    sympy.exp: paddle.exp,
-    sympy.Pow: paddle.pow,
-    sympy.log: paddle.log,
-    sympy.tan: paddle.tan,
-    sympy.Max: paddle.maximum,
-    sympy.Min: paddle.minimum,
-    sympy.Abs: paddle.abs,
-    sympy.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+    sp.sin: paddle.sin,
+    sp.cos: paddle.cos,
+    sp.exp: paddle.exp,
+    sp.Pow: paddle.pow,
+    sp.log: paddle.log,
+    sp.tan: paddle.tan,
+    sp.Max: paddle.maximum,
+    sp.Min: paddle.minimum,
+    sp.Abs: paddle.abs,
+    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
 }
 
+SYMPY_BUILTIN_FUNC: TypeAlias = Union[
+    sp.sin,
+    sp.cos,
+    sp.exp,
+    sp.Pow,
+    sp.log,
+    sp.tan,
+    sp.Max,
+    sp.Min,
+    sp.Abs,
+    sp.Heaviside,
+]
 
-def single_derivate_func(dvar: paddle.Tensor, invar: paddle.Tensor, order: int):
+
+def _single_derivate_func(dvar: paddle.Tensor, invar: paddle.Tensor, order: int):
     order_left = order
     while order_left > 0:
         if order_left >= 2:
@@ -227,13 +241,14 @@ def single_derivate_func(dvar: paddle.Tensor, invar: paddle.Tensor, order: int):
     return dvar
 
 
-def cvt_to_key(sympy_node: sympy.Basic):
-    if isinstance(sympy_node, sympy.Heaviside):
-        return str(sympy_node)
-    if isinstance(sympy_node, (sympy.Symbol, sympy.Function)):
+def _cvt_to_key(sympy_node: sp.Basic):
+    if isinstance(
+        sympy_node, (sp.Symbol, sp.core.function.UndefinedFunction, sp.Function)
+    ):
         return sympy_node.name
-    elif isinstance(sympy_node, sympy.Derivative):
-        expr_str = sympy_node.args[0].name  # use 'f' instead of 'f(x,y,z)'
+    elif isinstance(sympy_node, sp.Derivative):
+        # convert Derivative(u(x,y),(x,2),(y,2)) to "u__x__x__y__y"
+        expr_str = sympy_node.args[0].name
         for symbol, order in sympy_node.args[1:]:
             expr_str += f"__{symbol}" * order
         return expr_str
@@ -242,25 +257,17 @@ def cvt_to_key(sympy_node: sympy.Basic):
 
 
 class NodeBase(nn.Layer):
-    """
-    The base class of the node in the computational graph.
+    """The base class of the node in expression tree."""
 
-    Args:
-        expr (sympy.Expr): The expression of the node.
-
-    Returns:
-        The input dictionary with the output of the node added.
-    """
-
-    def __init__(self, expr: sympy.Expr):
+    def __init__(self, expr: sp.Basic):
         super().__init__()
         self.expr = expr
-        self.key = cvt_to_key(self.expr)
+        self.key = _cvt_to_key(self.expr)
 
-    def forward(self, data_dict: Dict, model_dict: Dict[str, nn.Layer] = None):
-        raise NotImplementedError
+    def forward(self, **kwargs):
+        raise NotImplementedError("NodeBase.forward is not implemented")
 
-    def __repr__(self):
+    def __str__(self):
         return (
             self.__class__.__name__ + f"(expr: {self.expr}), type: {type(self.expr)})"
         )
@@ -268,37 +275,29 @@ class NodeBase(nn.Layer):
 
 class OperatorNode(NodeBase):
     """
-    A node representing a sympy operator in the computational graph.
-
-    (e.g. sin, cos, etc.)
-
-    Args:
-        expr (sympy.Expr): The expression of the node.
-
-    Returns:
-        The input dictionary with the output of the operator added.
+    A node representing a sp operator in the computational graph.
     """
 
-    def __init__(self, expr: Union[sympy.Add, sympy.Mul, sympy.Derivative]):
+    def __init__(self, expr: SYMPY_BUILTIN_FUNC):
         super().__init__(expr)
 
-    def forward(self, data_dict: Dict, model_dict: Dict[str, nn.Layer] = None):
-        if self.expr.func == sympy.Add:
+    def forward(self, data_dict: Dict):
+        if self.expr.func == sp.Add:
             data_dict[self.key] = paddle.add_n(
-                [data_dict[cvt_to_key(arg)] for arg in self.expr.args]
+                [data_dict[_cvt_to_key(arg)] for arg in self.expr.args]
             )
-        elif self.expr.func == sympy.Mul:
-            data_dict[self.key] = data_dict[cvt_to_key(self.expr.args[0])]
+        elif self.expr.func == sp.Mul:
+            data_dict[self.key] = data_dict[_cvt_to_key(self.expr.args[0])]
             for arg in self.expr.args[1:]:
-                data_dict[self.key] = data_dict[self.key] * data_dict[cvt_to_key(arg)]
-        elif self.expr.func == sympy.Derivative:
+                data_dict[self.key] = data_dict[self.key] * data_dict[_cvt_to_key(arg)]
+        elif self.expr.func == sp.Derivative:
             if self.key in data_dict:
                 return data_dict
-            data_dict[self.key] = data_dict[cvt_to_key(self.expr.args[0])]
+            data_dict[self.key] = data_dict[_cvt_to_key(self.expr.args[0])]
             for symbol, order in self.expr.args[1:]:
-                data_dict[self.key] = single_derivate_func(
+                data_dict[self.key] = _single_derivate_func(
                     data_dict[self.key],
-                    data_dict[cvt_to_key(symbol)],
+                    data_dict[_cvt_to_key(symbol)],
                     order,
                 )
         else:
@@ -308,11 +307,11 @@ class OperatorNode(NodeBase):
                 raise NotImplementedError(
                     f"'{self.expr.func}' operator is not supported now."
                 )
-            if self.expr.func == sympy.Heaviside:
-                data_dict[self.key] = func(data_dict[cvt_to_key(self.expr.args[0])])
+            if self.expr.func == sp.Heaviside:
+                data_dict[self.key] = func(data_dict[_cvt_to_key(self.expr.args[0])])
             else:
                 data_dict[self.key] = func(
-                    *[data_dict[cvt_to_key(arg)] for arg in self.expr.args]
+                    *[data_dict[_cvt_to_key(arg)] for arg in self.expr.args]
                 )
         return data_dict
 
@@ -320,22 +319,9 @@ class OperatorNode(NodeBase):
 class LayerNode(NodeBase):
     """
     A node representing a neural network in the computational graph
-
-    Args:
-        expr (sympy.core.function.UndefinedFunction): Definition symbol of the neural network.
-
-    Returns:
-        The input dictionary with the output of the neural network added.
-
-    Note:
-        For the provided network, the forward should accept a dictionary as input and return a dictionary as output.
-        And the `output_keys` should be provided in the `__init__` function.
-
-    Examples:
-
     """
 
-    def __init__(self, expr: sympy.core.function.UndefinedFunction, model: nn.Layer):
+    def __init__(self, expr: sp.core.function.UndefinedFunction, model: nn.Layer):
         super().__init__(expr)
         self.model = model
 
@@ -353,29 +339,16 @@ class LayerNode(NodeBase):
 class ConstantNode(NodeBase):
     """
     A node representing a constant in the computational graph.
-
-    Args:
-        expr (sympy.Number or sympy.NumberSymbol): The constant to be applied.
-
-    Returns:
-        The input dictionary with the constant added.
-
-    Examples:
-        >>> node = ConstantNode(sympy.pi)
-        >>> node({})
-        {'pi': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            3.1415927)}
     """
 
-    def __init__(self, expr: sympy.Number or sympy.NumberSymbol):
+    def __init__(self, expr: Union[sp.Number, sp.NumberSymbol]):
         super().__init__(expr)
-        if self.expr.is_Float:
-            self.expr = float(self.expr)
-        elif self.expr.is_Integer:
-            self.expr = float(self.expr)
-        elif self.expr.is_Boolean:
-            self.expr = float(self.expr)
-        elif self.expr.is_Rational:
+        if (
+            self.expr.is_Float
+            or self.expr.is_Integer
+            or self.expr.is_Boolean
+            or self.expr.is_Rational
+        ):
             self.expr = float(self.expr)
         else:
             raise TypeError(
@@ -391,13 +364,6 @@ class ConstantNode(NodeBase):
 class ComposedFunc(nn.Layer):
     """
     Compose multiple functions into one function.
-
-    Args:
-        data_dict (Dict): The input tensor dictionary.
-        model_dict (Dict[str, nn.Layer]): The dictionary of the models.
-
-    Returns:
-        The dictionary of the outputs of the all calculated nodes.
     """
 
     def __init__(self, target: str, funcs: List[NodeBase]):
@@ -408,45 +374,37 @@ class ComposedFunc(nn.Layer):
     def forward(self, data_dict: Dict):
         for func in self.funcs:
             data_dict = func(data_dict)
-        return data_dict[self.funcs[-1].key]
+        return data_dict[self.funcs[-1].key]  # return the computed result of root node
 
 
-def post_traverse(cur_node, nodes):
+def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
     # traverse into sub-nodes
-    if isinstance(cur_node, sympy.core.function.UndefinedFunction):
+    if isinstance(cur_node, sp.core.function.UndefinedFunction):
         nodes.append(cur_node)
-    elif isinstance(cur_node, sympy.Function):
+    elif isinstance(cur_node, sp.Function):
         for arg in cur_node.args:
-            nodes = post_traverse(arg, nodes)
+            nodes = _post_traverse(arg, nodes)
         nodes.append(cur_node)
-    elif isinstance(cur_node, sympy.Derivative):
-        nodes = post_traverse(cur_node.args[0], nodes)
+    elif isinstance(cur_node, sp.Derivative):
+        nodes = _post_traverse(cur_node.args[0], nodes)
         nodes.append(cur_node)
-    elif isinstance(cur_node, sympy.Symbol):
+    elif isinstance(cur_node, sp.Symbol):
         return nodes
-    elif isinstance(cur_node, sympy.Number):
+    elif isinstance(cur_node, sp.Number):
         nodes.append(cur_node)
     else:
         for arg in cur_node.args:
-            nodes = post_traverse(arg, nodes)
+            nodes = _post_traverse(arg, nodes)
         nodes.append(cur_node)
     return nodes
 
 
-def sympy_to_function(target: str, expr: sympy.Expr, models: nn.Layer):
+def sympy_to_function(target: str, expr: sp.Expr, models: nn.Layer) -> ComposedFunc:
     """
-    Convert a sympy expression to a ComposedFunc.
-
-    Args:
-        expr (sympy.Expr): the sympy expression
-
-    Returns:
-        A ComposedFunc that can execute the formula represented by the sympy expression.
-
-    Examples:
+    Convert a sp expression to a ComposedFunc.
     """
     sympy_nodes = []
-    sympy_nodes = post_traverse(expr, sympy_nodes)
+    sympy_nodes = _post_traverse(expr, sympy_nodes)
     sympy_nodes = [node for node in sympy_nodes if not node.is_Symbol]
     sympy_nodes = list(
         dict.fromkeys(sympy_nodes)
@@ -455,7 +413,7 @@ def sympy_to_function(target: str, expr: sympy.Expr, models: nn.Layer):
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
         logger.debug(f"tree node [{i + 1}/{len(sympy_nodes)}]: {node}")
-        if isinstance(node.func, sympy.core.function.UndefinedFunction):
+        if isinstance(node.func, sp.core.function.UndefinedFunction):
             match = False
             for model in models:
                 if str(node.func.name) in model.output_keys:
