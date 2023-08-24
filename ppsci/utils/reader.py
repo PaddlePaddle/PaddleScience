@@ -75,12 +75,9 @@ def load_csv_file(
         fetch_key = alias_dict[key] if key in alias_dict else key
         if fetch_key not in raw_data:
             raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
-        data_dict[key] = np.asarray(
-            raw_data[fetch_key],
-            paddle.get_default_dtype()
-            if (raw_data[fetch_key].dtype in [np.float32, np.float64])
-            else None,
-        ).reshape([-1, 1])
+        data_dict[key] = np.asarray(raw_data[fetch_key]).reshape([-1, 1])
+        if data_dict[key].dtype in [np.float32, np.float64]:
+            data_dict[key].astype(paddle.get_default_dtype())
 
     return data_dict
 
