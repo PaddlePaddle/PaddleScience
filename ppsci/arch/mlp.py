@@ -61,6 +61,7 @@ class MLP(base.Arch):
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
         input_dim (Optional[int]): Number of input's dimension. Defaults to None.
+        output_dim (Optional[int]): Number of output's dimension. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -77,6 +78,7 @@ class MLP(base.Arch):
         skip_connection: bool = False,
         weight_norm: bool = False,
         input_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -102,7 +104,7 @@ class MLP(base.Arch):
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
-        for _size in hidden_size:
+        for i, _size in enumerate(hidden_size):
             self.linears.append(
                 WeightNormLinear(cur_size, _size)
                 if weight_norm
@@ -114,11 +116,22 @@ class MLP(base.Arch):
                 if activation != "stan"
                 else act_mod.get_activation(activation)(_size)
             )
+            # spetial initialization for certain activation
+            # TODO: Adapt code below to a more elegent style
+            if activation == "siren":
+                if i == 0:
+                    act_mod.Siren.init_for_first_layer(self.linears[-1])
+                else:
+                    act_mod.Siren.init_for_hidden_layer(self.linears[-1])
+
             cur_size = _size
 
         self.linears = nn.LayerList(self.linears)
         self.acts = nn.LayerList(self.acts)
-        self.last_fc = nn.Linear(cur_size, len(self.output_keys))
+        self.last_fc = nn.Linear(
+            cur_size,
+            len(self.output_keys) if output_dim is None else output_dim,
+        )
 
         self.skip_connection = skip_connection
 
@@ -148,5 +161,5 @@ class MLP(base.Arch):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y

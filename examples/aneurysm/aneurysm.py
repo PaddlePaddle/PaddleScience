@@ -1,19 +1,7 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html
+STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
+pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
 """
 
 import numpy as np
@@ -93,7 +81,7 @@ if __name__ == "__main__":
     INLET_RADIUS = np.sqrt(INLET_AREA / np.pi)
     INLET_VEL = 1.5
 
-    def compute_parabola(_in):
+    def _compute_parabola(_in):
         centered_x = _in["x"] - INLET_CENTER[0]
         centered_y = _in["y"] - INLET_CENTER[1]
         centered_z = _in["z"] - INLET_CENTER[2]
@@ -102,13 +90,13 @@ if __name__ == "__main__":
         return parabola
 
     def inlet_u_ref_func(_in):
-        return INLET_NORMAL[0] * compute_parabola(_in)
+        return INLET_NORMAL[0] * _compute_parabola(_in)
 
     def inlet_v_ref_func(_in):
-        return INLET_NORMAL[1] * compute_parabola(_in)
+        return INLET_NORMAL[1] * _compute_parabola(_in)
 
     def inlet_w_ref_func(_in):
-        return INLET_NORMAL[2] * compute_parabola(_in)
+        return INLET_NORMAL[2] * _compute_parabola(_in)
 
     bc_inlet = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
@@ -182,6 +170,8 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 1500 if not args.epochs else args.epochs
+
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         EPOCHS,
         ITERS_PER_EPOCH,
@@ -190,9 +180,7 @@ if __name__ == "__main__":
         EPOCHS * ITERS_PER_EPOCH // 100,
         by_epoch=False,
     )()
-
-    # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     eval_data_dict = reader.load_csv_file(
@@ -227,7 +215,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": input_dict,
             "label": label_dict,
-            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {"name": "BatchSampler"},
         "num_workers": 1,
@@ -299,7 +286,7 @@ if __name__ == "__main__":
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/best_model",
+        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
         eval_with_no_grad=True,
     )
     solver.eval()

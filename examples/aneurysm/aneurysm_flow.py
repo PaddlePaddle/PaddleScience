@@ -31,7 +31,7 @@ from ppsci.utils import misc
 
 if __name__ == "__main__":
     args = config.parse_args()
-    paddle.fluid.core.set_prim_eager_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
 
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
@@ -131,12 +131,8 @@ if __name__ == "__main__":
         def __init__(self) -> None:
             pass
 
-        def input_trans(self, input):
-            self.input = input
-            return input
-
-        def output_trans_u(self, out):
-            x, y, scale = self.input["x"], self.input["y"], self.input["scale"]
+        def output_transform_u(self, in_, out):
+            x, y, scale = in_["x"], in_["y"], in_["scale"]
             r_func = (
                 scale
                 / np.sqrt(2 * np.pi * SIGMA**2)
@@ -147,14 +143,14 @@ if __name__ == "__main__":
             # The no-slip condition of velocity on the wall
             return {"u": u * (self.h**2 - y**2)}
 
-        def output_trans_v(self, out):
-            y = self.input["y"]
+        def output_transform_v(self, in_, out):
+            y = in_["y"]
             v = out["v"]
             # The no-slip condition of velocity on the wall
             return {"v": (self.h**2 - y**2) * v}
 
-        def output_trans_p(self, out):
-            x = self.input["x"]
+        def output_transform_p(self, in_, out):
+            x = in_["x"]
             p = out["p"]
             # The pressure inlet [p_in = 0.1] and outlet [p_out = 0]
             return {
@@ -162,25 +158,22 @@ if __name__ == "__main__":
             }
 
     transform = Transform()
-    model_1.register_input_transform(transform.input_trans)
-    model_2.register_input_transform(transform.input_trans)
-    model_3.register_input_transform(transform.input_trans)
-    model_1.register_output_transform(transform.output_trans_u)
-    model_2.register_output_transform(transform.output_trans_v)
-    model_3.register_output_transform(transform.output_trans_p)
+    model_1.register_output_transform(transform.output_transform_u)
+    model_2.register_output_transform(transform.output_transform_v)
+    model_3.register_output_transform(transform.output_transform_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
 
     LEARNING_RATE = 1e-3
 
     optimizer_1 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_1,))
+    )(model_1)
     optimizer_2 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_2,))
+    )(model_2)
     optimizer_3 = ppsci.optimizer.Adam(
         LEARNING_RATE, beta1=0.9, beta2=0.99, epsilon=1e-15
-    )((model_3,))
+    )(model_3)
     optimizer = ppsci.optimizer.OptimizerList((optimizer_1, optimizer_2, optimizer_3))
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}

@@ -57,7 +57,7 @@ def boundary_loss_func(output_dict, *args):
 
 if __name__ == "__main__":
     # open FLAG for higher order differential operator when order >= 4
-    paddle.fluid.core.set_prim_eager_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
 
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
@@ -132,8 +132,8 @@ if __name__ == "__main__":
 
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(1e-4)((model_idn,))
-    optimizer_pde = ppsci.optimizer.Adam(1e-4)((model_pde,))
+    optimizer_idn = ppsci.optimizer.Adam(1e-4)(model_idn)
+    optimizer_pde = ppsci.optimizer.Adam(1e-4)(model_pde)
 
     # LBFGS
     # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn, ))
@@ -277,8 +277,8 @@ if __name__ == "__main__":
             "name": "IterableMatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
-            "label_keys": ("u_idn",),
-            "alias_dict": {"t": "t0", "x": "x0", "u_idn": "u0"},
+            "label_keys": ("u0_sol",),
+            "alias_dict": {"t": "t0", "x": "x0", "u0_sol": "u0"},
         },
     }
     train_dataloader_cfg_sol_bc = {
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     sup_constraint_sol_init = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_init,
         ppsci.loss.MSELoss("sum"),
-        {"u_idn": lambda out: out["u_idn"]},
+        {"u0_sol": lambda out: out["u_idn"]},
         name="u0_mse_sup",
     )
     sup_constraint_sol_bc = ppsci.constraint.SupervisedConstraint(
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         ppsci.loss.FunctionalLoss(boundary_loss_func),
         {
             "x": lambda out: out["x"],
-            "u_idn": lambda out: out["u_idn"],
+            "ub_sol": lambda out: out["u_idn"],
         },
         name="ub_mse_sup",
     )
@@ -327,15 +327,15 @@ if __name__ == "__main__":
             "name": "IterableMatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
-            "label_keys": ("u_idn",),
-            "alias_dict": {"t": "t_star", "x": "x_star", "u_idn": "u_star"},
+            "label_keys": ("u_sol",),
+            "alias_dict": {"t": "t_star", "x": "x_star", "u_sol": "u_star"},
         },
     }
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
-        {"u_idn": lambda out: out["u_idn"]},
+        {"u_sol": lambda out: out["u_idn"]},
         {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )

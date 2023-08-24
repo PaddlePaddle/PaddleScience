@@ -37,6 +37,7 @@ from paddle.distributed import fleet
 from typing_extensions import Literal
 
 import ppsci
+from ppsci.loss import mtl
 from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
@@ -64,7 +65,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
-        wandb_cfg (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
+        wandb_config (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
@@ -78,6 +79,7 @@ class Solver:
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
+        loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -136,6 +138,7 @@ class Solver:
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
         to_static: bool = False,
+        loss_aggregator: Optional[mtl.LossAggregator] = None,
     ):
         # set model
         self.model = model
@@ -170,6 +173,7 @@ class Solver:
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
+        self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
         self.eval_output_info = {}
@@ -259,10 +263,6 @@ class Solver:
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
 
-        # init logger without FileHandler if not initialized before
-        if logger._logger is None:
-            logger.init_logger("ppsci", None)
-
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
@@ -302,6 +302,9 @@ class Solver:
         # whether enable static for forward pass, default to Fals
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for forward computation.")
+
+        # use loss aggregator, use summation if None
+        self.loss_aggregator = loss_aggregator
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -394,7 +397,7 @@ class Solver:
 
     def train(self):
         """Training."""
-        self.global_step = self.best_metric["epoch"] * self.iters_per_epoch + 1
+        self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
 
         for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
@@ -676,3 +679,35 @@ class Solver:
                 else contextlib.suppress()
             )
         return ctx_manager
+
+    def plot_loss_history(
+        self,
+        by_epoch: bool = False,
+        smooth_step: int = 1,
+        use_semilogy: bool = True,
+    ) -> None:
+        """Plotting iteration/epoch-loss curve.
+
+        Args:
+            by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
+            smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+            use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to True.
+        """
+        loss_dict = {}
+        for key in self.train_loss_info:
+            loss_arr = np.array(self.train_loss_info[key].history)
+            if by_epoch:
+                loss_arr = np.mean(
+                    np.reshape(loss_arr, (-1, self.iters_per_epoch)),
+                    axis=1,
+                )
+            loss_dict[key] = list(loss_arr)
+
+        misc.plot_curve(
+            data=loss_dict,
+            xlabel="Epoch" if by_epoch else "Iteration",
+            ylabel="Loss",
+            output_dir=self.output_dir,
+            smooth_step=smooth_step,
+            use_semilogy=use_semilogy,
+        )

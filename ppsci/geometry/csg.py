@@ -148,9 +148,19 @@ class CSGUnion(geometry.Geometry):
         return x
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        sdf_geom1 = self.geom1.sdf_func(points)
-        sdf_geom2 = self.geom2.sdf_func(points)
-        return np.minimum(sdf_geom1, sdf_geom2)
+        """Compute signed distance field of CSG union of two geometries.
+        ref: https://iquilezles.org/articles/distfunctions/
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF
+            value, the shape is [N, D].
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+        """
+        sdf1 = self.geom1.sdf_func(points)
+        sdf2 = self.geom2.sdf_func(points)
+        return np.minimum(sdf1, sdf2)
 
 
 class CSGDifference(geometry.Geometry):
@@ -236,10 +246,18 @@ class CSGDifference(geometry.Geometry):
         return x
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        # geom1 - geom2
-        sdf_geom1 = self.geom1.sdf_func(points)
-        sdf_geom2 = self.geom2.sdf_func(points)
-        return np.maximum(sdf_geom1, -sdf_geom2)
+        """Compute signed distance field of CSG difference of two geometries. geom1 - geom2
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF
+            value, the shape is [N, D].
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+        """
+        sdf1 = self.geom1.sdf_func(points)
+        sdf2 = self.geom2.sdf_func(points)
+        return np.maximum(sdf1, -sdf2)
 
 
 class CSGIntersection(geometry.Geometry):
@@ -333,3 +351,18 @@ class CSGIntersection(geometry.Geometry):
             on_boundary_geom2
         ]
         return x
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field of CSG intersection of two geometries.
+        ref: https://iquilezles.org/articles/distfunctions/
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF
+            value the shape is [N, D].
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+        """
+        sdf1 = self.geom1.sdf_func(points)
+        sdf2 = self.geom2.sdf_func(points)
+        return np.maximum(sdf1, sdf2)

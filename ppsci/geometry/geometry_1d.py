@@ -109,8 +109,9 @@ class Interval(geometry.Geometry):
         the object(interior points) is negative, the outside is positive, and the edge
         is 0. Therefore, when used for weighting, a negative sign is often added before
         the result of this function.
-
-        For interval with [l, r], the sdf is defined by:
-            sdf(x) = -min(x-l, r-x) = ((r-l)/2 - abs(x-(l+r)/2))/2
         """
-        return ((self.r - self.l) / 2 - np.abs(points - (self.l + self.r) / 2)) / 2
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
+        return -((self.r - self.l) / 2 - np.abs(points - (self.l + self.r) / 2))

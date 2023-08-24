@@ -10,6 +10,7 @@
         - MSE
         - RMSE
         - L2Rel
+        - MeanL2Rel
         - LatitudeWeightedACC
         - LatitudeWeightedRMSE
       show_root_heading: false

@@ -50,6 +50,7 @@ dependencies = [
     "meshio==5.3.4",
     "tqdm",
     "imageio",
+    "colorlog",
 ]
 
 [project.urls]
@@ -60,7 +61,7 @@ Documentation = "https://paddlescience-docs.readthedocs.io/zh/latest/"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "tests*", "tools*"]
+exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "tools*"]
 
 [tool.ruff]
 line-length = 88

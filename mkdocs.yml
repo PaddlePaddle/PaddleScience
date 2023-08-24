@@ -35,20 +35,34 @@ nav:
       - 快速开始: zh/quickstart.md
   - 经典案例:
       - PINNs:
-        - ViV: zh/examples/viv.md
-        - Darcy2D: zh/examples/darcy2d.md
-        - LDC2D_steady: zh/examples/ldc2d_steady.md
-        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
-        - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-        - Laplace2D: zh/examples/laplace2d.md
-        - hPINNs: zh/examples/hpinns.md
+        - 方程求解:
+          - Volterra_IDE: zh/examples/volterra_ide.md
+          - Laplace2D: zh/examples/laplace2d.md
+        - 振动:
+          - ViV: zh/examples/viv.md
+        - 流体:
+          - Aneurysm: zh/examples/aneurysm.md
+          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
+          - LDC2D_steady: zh/examples/ldc2d_steady.md
+          - Darcy2D: zh/examples/darcy2d.md
+        - 材料:
+          - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
-        - FourCastNet: zh/examples/fourcastnet.md
-        - Lorenz_transform_physx: zh/examples/lorenz.md
-        - Rossler_transform_physx: zh/examples/rossler.md
-        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
-        - DeepHPMs: zh/examples/deephpms.md
-        - tempoGAN: zh/examples/tempoGAN.md
+        - 方程求解:
+          - DeepHPMs: zh/examples/deephpms.md
+          - Lorenz_transform_physx: zh/examples/lorenz.md
+          - Rossler_transform_physx: zh/examples/rossler.md
+        - 算子学习:
+          - DeepONet: zh/examples/deeponet.md
+        - 气象预测:
+          - FourCastNet: zh/examples/fourcastnet.md
+        - 流体:
+          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+          - tempoGAN: zh/examples/tempoGAN.md
+      - 数理融合:
+        - 流体:
+          - BubbleNet: zh/examples/bubble.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -68,6 +82,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+      - ppsci.experimental: zh/api/experimental.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md

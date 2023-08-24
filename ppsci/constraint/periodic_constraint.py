@@ -164,9 +164,12 @@ class PeriodicConstraint(base.Constraint):
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # wrap input, label, weight into a dataset
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(
-            mixed_input, label, weight
+        if isinstance(dataloader_cfg["dataset"], str):
+            dataloader_cfg["dataset"] = {"name": dataloader_cfg["dataset"]}
+        dataloader_cfg["dataset"].update(
+            {"input": mixed_input, "label": label, "weight": weight}
         )
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

@@ -92,11 +92,14 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                 loss_dict["loss"] = float(total_loss)
 
             # backward
-            if solver.use_amp:
-                total_loss_scaled = solver.scaler.scale(total_loss)
-                total_loss_scaled.backward()
+            if solver.loss_aggregator is None:
+                if solver.use_amp:
+                    total_loss_scaled = solver.scaler.scale(total_loss)
+                    total_loss_scaled.backward()
+                else:
+                    total_loss.backward()
             else:
-                total_loss.backward()
+                solver.loss_aggregator(constraint_losses, solver.global_step).backward()
 
         # update parameters
         if iter_id % solver.update_freq == 0 or iter_id == solver.iters_per_epoch:
@@ -190,7 +193,12 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
 
                 # backward
                 solver.optimizer.clear_grad()
-                total_loss.backward()
+                if solver.loss_aggregator is None:
+                    total_loss.backward()
+                else:
+                    solver.loss_aggregator(
+                        constraint_losses, solver.global_step
+                    ).backward()
 
             if solver.world_size > 1:
                 # fuse + allreduce manually before optimization if use DDP model

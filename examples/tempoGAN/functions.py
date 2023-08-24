@@ -15,6 +15,7 @@
 import os
 from typing import Dict
 from typing import List
+from typing import Union
 
 import numpy as np
 import paddle
@@ -26,10 +27,11 @@ from skimage.metrics import peak_signal_noise_ratio
 from skimage.metrics import structural_similarity
 
 import ppsci
+from ppsci.utils import logger
 
 
 # train
-def transform_interpolate(
+def interpolate(
     data: paddle.Tensor, ratio: int, mode: str = "nearest"
 ) -> paddle.Tensor:
     """Interpolate twice.
@@ -42,22 +44,19 @@ def transform_interpolate(
     Returns:
         paddle.Tensor: Data interpolated.
     """
-    data_inp = data
-    data_inp = F.interpolate(
-        data_inp,
-        [data_inp.shape[-2] * ratio, data_inp.shape[-1] * ratio],
-        mode=mode,
-    )
-    data_inp = F.interpolate(
-        data_inp,
-        [data_inp.shape[-2] * ratio, data_inp.shape[-1] * ratio],
-        mode=mode,
-    )
-    return data_inp
+    for _ in range(2):
+        data = F.interpolate(
+            data,
+            [data.shape[-2] * ratio, data.shape[-1] * ratio],
+            mode=mode,
+        )
+    return data
 
 
 def reshape_input(input_dict: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
     """Reshape input data for temporally Discriminator. Reshape data from N, C, W, H to N * C, 1, H, W.
+        Which will merge N dimension and C dimension to 1 dimension but still keep 4 dimensions
+        to ensure the data can be used for training.
 
     Args:
         input_dict (Dict[str, paddle.Tensor]): input data dict.
@@ -84,12 +83,11 @@ def dereshape_input(
     Returns:
         Dict[str, paddle.Tensor]: dereshaped data dict.
     """
-    # if N % C != 0, it means that the data is not for disc_tempo
     for key in input_dict:
         input = input_dict[key]
         N, _, H, W = input.shape
         if N < C:
-            print(
+            logger.info(
                 f"Warning: batch_size is smaller than {C}! Tempo needs at least {C} frames, input will be copied."
             )
             input_dict[key] = paddle.concat([input[:1]] * C, axis=1)
@@ -127,8 +125,8 @@ def split_data(data: np.ndarray, tile_ratio: int) -> np.ndarray:
     return np.concatenate(tiles, axis=0)
 
 
-def unsplit_data(data: np.ndarray, tile_ratio: int) -> np.ndarray:
-    """Unsplit numpy tiles to a image equally.
+def concat_data(data: np.ndarray, tile_ratio: int) -> np.ndarray:
+    """Concat numpy tiles to a image equally.
 
     Args:
         data (np.ndarray): The tiles to be upsplited.
@@ -140,7 +138,7 @@ def unsplit_data(data: np.ndarray, tile_ratio: int) -> np.ndarray:
     """
     _, _, tile_h, tile_w = data.shape
     h, w = tile_h * tile_ratio, tile_w * tile_ratio
-    data_whole = np.ones([h, w])
+    data_whole = np.ones([h, w], dtype=paddle.get_default_dtype())
     tile_idx = 0
     for i in range(tile_ratio):
         for j in range(tile_ratio):
@@ -188,29 +186,29 @@ def predict_and_save_plot(
             "density_low": density_low,
             "density_high": density_high,
         },
-        {"density_high": lambda out: out["out_gen"]},
+        {"density_high": lambda out: out["output_gen"]},
         batch_size=tile_ratio * tile_ratio if tile_ratio != 1 else 3,
         no_grad=False,
     )
     if epoch_id == 1:
         # plot interpolated input image
         input_img = np.expand_dims(dataset_valid["density_low"][start_idx], axis=0)
-        input_img = paddle.to_tensor(input_img)
+        input_img = paddle.to_tensor(input_img, dtype=paddle.get_default_dtype())
         input_img = F.interpolate(
             input_img,
             [input_img.shape[-2] * 4, input_img.shape[-1] * 4],
             mode="nearest",
         ).numpy()
         Img.imsave(
-            f"{OUTPUT_DIR}{dir_pred}input_epoch_{str(epoch_id)}.png",
+            os.path.join(OUTPUT_DIR, dir_pred, "input.png"),
             np.squeeze(input_img),
             vmin=0.0,
             vmax=1.0,
             cmap="gray",
         )
-        # plot label image
+        # plot target image
         Img.imsave(
-            f"{OUTPUT_DIR}{dir_pred}label_epoch_{str(epoch_id)}.png",
+            os.path.join(OUTPUT_DIR, dir_pred, "target.png"),
             np.squeeze(dataset_valid["density_high"][start_idx]),
             vmin=0.0,
             vmax=1.0,
@@ -218,12 +216,12 @@ def predict_and_save_plot(
         )
     # plot pred image
     pred_img = (
-        unsplit_data(pred_dict["density_high"].numpy(), tile_ratio)
+        concat_data(pred_dict["density_high"].numpy(), tile_ratio)
         if tile_ratio != 1
         else np.squeeze(pred_dict["density_high"][0].numpy())
     )
     Img.imsave(
-        f"{OUTPUT_DIR}{dir_pred}pred_epoch_{str(epoch_id)}.png",
+        os.path.join(OUTPUT_DIR, dir_pred, f"pred_epoch_{str(epoch_id)}.png"),
         pred_img,
         vmin=0.0,
         vmax=1.0,
@@ -232,11 +230,21 @@ def predict_and_save_plot(
 
 
 # evaluation
-def evaluate_img(img_label, img_pred):
-    """Evaluate two images. Return MSE, PSNR, SSIM."""
-    eval_mse = mean_squared_error(img_label, img_pred)
-    eval_psnr = peak_signal_noise_ratio(img_label, img_pred)
-    eval_ssim = structural_similarity(img_label, img_pred)
+def evaluate_img(
+    img_target: np.ndarray, img_pred: np.ndarray
+) -> Union[float, float, float]:
+    """Evaluate two images.
+
+    Args:
+        img_target (np.ndarray): Target image.
+        img_pred (np.ndarray): Image generated by prediction.
+
+    Returns:
+        Union[float, float, float]: MSE, PSNR, SSIM.
+    """
+    eval_mse = mean_squared_error(img_target, img_pred)
+    eval_psnr = peak_signal_noise_ratio(img_target, img_pred)
+    eval_ssim = structural_similarity(img_target, img_pred, data_range=1.0)
     return eval_mse, eval_psnr, eval_ssim
 
 
@@ -248,71 +256,92 @@ class GenFuncs:
     """All functions used for Generator, including functions of transform and loss.
 
     Args:
-        weight_gl (List[float]): Weights of L1 loss.
-        weight_gl_layer (List[float], optional): Weights of layers loss. Defaults to None.
+        weight_gen (List[float]): Weights of L1 loss.
+        weight_gen_layer (List[float], optional): Weights of layers loss. Defaults to None.
     """
 
     def __init__(
-        self, weight_gl: List[float], weight_gl_layer: List[float] = None
+        self, weight_gen: List[float], weight_gen_layer: List[float] = None
     ) -> None:
-        self.weight_gl = weight_gl
-        self.weight_gl_layer = weight_gl_layer
+        self.weight_gen = weight_gen
+        self.weight_gen_layer = weight_gen_layer
 
     def transform_in(self, _in):
         ratio = 2
         input_dict = reshape_input(_in)
-        d_low = input_dict["density_low"]
-        d_low_inp = transform_interpolate(d_low, ratio, "nearest")
-        return {"in_d_low_inp": d_low_inp}
+        density_low = input_dict["density_low"]
+        density_low_inp = interpolate(density_low, ratio, "nearest")
+        return {"input_gen": density_low_inp}
 
-    def loss_func_gen(self, output_dict, *args):
+    def loss_func_gen(self, output_dict: Dict, *args) -> paddle.Tensor:
+        """Calculate loss of generator when use spatial discraminitor.
+            The loss consists of l1 loss, l2 loss and layer loss when use spatial discraminitor.
+            Notice that all item of loss is optional because weight of them might be 0.
+
+        Args:
+            output_dict (Dict): output dict of model.
+
+        Returns:
+            paddle.Tensor: Loss of generator.
+        """
         # l1 loss
-        loss_l1 = F.l1_loss(output_dict["out_gen"], output_dict["density_high"], "mean")
-        losses = loss_l1 * self.weight_gl[0]
+        loss_l1 = F.l1_loss(
+            output_dict["output_gen"], output_dict["density_high"], "mean"
+        )
+        losses = loss_l1 * self.weight_gen[0]
 
         # l2 loss
         loss_l2 = F.mse_loss(
-            output_dict["out_gen"], output_dict["density_high"], "mean"
+            output_dict["output_gen"], output_dict["density_high"], "mean"
         )
-        losses += loss_l2 * self.weight_gl[1]
+        losses += loss_l2 * self.weight_gen[1]
 
-        if self.weight_gl_layer is not None:
+        if self.weight_gen_layer is not None:
             # disc(generator_out) loss
-            out_disc_gen_out = output_dict["out_disc_gen_out"][-1]
-            label_ones = paddle.ones_like(out_disc_gen_out)
+            out_disc_from_gen = output_dict["out_disc_from_gen"][-1]
+            label_ones = paddle.ones_like(out_disc_from_gen)
             loss_gen = F.binary_cross_entropy_with_logits(
-                out_disc_gen_out, label_ones, reduction="mean"
+                out_disc_from_gen, label_ones, reduction="mean"
             )
             losses += loss_gen
 
             # layer loss
             key_list = list(output_dict.keys())
-            # ["out_disc_label_layer1","out_disc_label_layer2","out_disc_label_layer3","out_disc_label_layer4","out_disc_label",
-            # "out_disc_gen_out_layer1","out_disc_gen_out_layer2","out_disc_gen_out_layer3","out_disc_gen_out_layer4","out_disc_gen_out",]
+            # ["out0_layer0","out0_layer1","out0_layer2","out0_layer3","out_disc_from_target",
+            # "out1_layer0","out1_layer1","out1_layer2","out1_layer3","out_disc_from_gen"]
             loss_layer = 0
-            for i in range(1, len(self.weight_gl_layer)):
+            for i in range(1, len(self.weight_gen_layer)):
                 # i = 0,1,2,3
                 loss_layer += (
-                    self.weight_gl_layer[i]
-                    * paddle.sum(
-                        paddle.square(
-                            output_dict[key_list[i]] - output_dict[key_list[5 + i]]
-                        )
+                    self.weight_gen_layer[i]
+                    * F.mse_loss(
+                        output_dict[key_list[i]],
+                        output_dict[key_list[5 + i]],
+                        reduction="sum",
                     )
                     / 2
                 )
-            losses += loss_layer * self.weight_gl_layer[0]
+            losses += loss_layer * self.weight_gen_layer[0]
 
         return losses
 
-    def loss_func_gen_tempo(self, output_dict, *args):
-        out_disc_t_gen_out = output_dict["out_disc_t_gen_out"][-1]
-        label_t_ones = paddle.ones_like(out_disc_t_gen_out)
+    def loss_func_gen_tempo(self, output_dict: Dict, *args) -> paddle.Tensor:
+        """Calculate loss of generator when use temporal discraminitor.
+            The loss is cross entropy loss when use temporal discraminitor.
+
+        Args:
+            output_dict (Dict): output dict of model.
+
+        Returns:
+            paddle.Tensor: Loss of generator.
+        """
+        out_disc_tempo_from_gen = output_dict["out_disc_tempo_from_gen"][-1]
+        label_t_ones = paddle.ones_like(out_disc_tempo_from_gen)
 
         loss_gen_t = F.binary_cross_entropy_with_logits(
-            out_disc_t_gen_out, label_t_ones, reduction="mean"
+            out_disc_tempo_from_gen, label_t_ones, reduction="mean"
         )
-        losses = loss_gen_t * self.weight_gl[2]
+        losses = loss_gen_t * self.weight_gen[2]
         return losses
 
 
@@ -320,75 +349,81 @@ class DiscFuncs:
     """All functions used for Discriminator and temporally Discriminator, including functions of transform and loss.
 
     Args:
-        weight_dld (float): Weight of loss generated by the discriminator to judge the true label.
+        weight_disc (float): Weight of loss generated by the discriminator to judge the true target.
     """
 
-    def __init__(self, weight_dld: float) -> None:
-        self.weight_dld = weight_dld
+    def __init__(self, weight_disc: float) -> None:
+        self.weight_disc = weight_disc
         self.model_gen = None
 
     def transform_in(self, _in):
         ratio = 2
         input_dict = reshape_input(_in)
-        d_low = input_dict["density_low"]
-        d_high_label = input_dict["density_high"]
+        density_low = input_dict["density_low"]
+        density_high_from_target = input_dict["density_high"]
 
-        d_low_inp = transform_interpolate(d_low, ratio, "nearest")
+        density_low_inp = interpolate(density_low, ratio, "nearest")
 
-        d_high_gen_out = self.model_gen(input_dict)["out_gen"]
-        d_high_gen_out.stop_gradient = True
+        density_high_from_gen = self.model_gen(input_dict)["output_gen"]
+        density_high_from_gen.stop_gradient = True
 
-        d_in_label = paddle.concat([d_low_inp, d_high_label], axis=1)
-        d_in_gen_out = paddle.concat([d_low_inp, d_high_gen_out], axis=1)
+        density_input_from_target = paddle.concat(
+            [density_low_inp, density_high_from_target], axis=1
+        )
+        density_input_from_gen = paddle.concat(
+            [density_low_inp, density_high_from_gen], axis=1
+        )
         return {
-            "in_d_high_disc_label": d_in_label,
-            "in_d_high_disc_gen": d_in_gen_out,
+            "input_disc_from_target": density_input_from_target,
+            "input_disc_from_gen": density_input_from_gen,
         }
 
     def transform_in_tempo(self, _in):
-        d_high_label = _in["density_high"]
+        density_high_from_target = _in["density_high"]
 
         input_dict = reshape_input(_in)
-        d_high_gen_out = self.model_gen(input_dict)["out_gen"]
-        d_high_gen_out.stop_gradient = True
+        density_high_from_gen = self.model_gen(input_dict)["output_gen"]
+        density_high_from_gen.stop_gradient = True
 
         input_trans = {
-            "in_d_high_disc_t_label": d_high_label,
-            "in_d_high_disc_t_gen": d_high_gen_out,
+            "input_tempo_disc_from_target": density_high_from_target,
+            "input_tempo_disc_from_gen": density_high_from_gen,
         }
 
         return dereshape_input(input_trans, 3)
 
     def loss_func(self, output_dict, *args):
-        out_disc_label = output_dict["out_disc_label"]
-        out_disc_gen_out = output_dict["out_disc_gen_out"]
+        out_disc_from_target = output_dict["out_disc_from_target"]
+        out_disc_from_gen = output_dict["out_disc_from_gen"]
 
-        label_ones = paddle.ones_like(out_disc_label)
-        label_zeros = paddle.zeros_like(out_disc_gen_out)
+        label_ones = paddle.ones_like(out_disc_from_target)
+        label_zeros = paddle.zeros_like(out_disc_from_gen)
 
-        loss_disc = F.binary_cross_entropy_with_logits(
-            out_disc_label, label_ones, reduction="mean"
+        loss_disc_from_target = F.binary_cross_entropy_with_logits(
+            out_disc_from_target, label_ones, reduction="mean"
         )
-        loss_gen = F.binary_cross_entropy_with_logits(
-            out_disc_gen_out, label_zeros, reduction="mean"
+        loss_disc_from_gen = F.binary_cross_entropy_with_logits(
+            out_disc_from_gen, label_zeros, reduction="mean"
         )
-        losses = loss_disc * self.weight_dld + loss_gen
+        losses = loss_disc_from_target * self.weight_disc + loss_disc_from_gen
         return losses
 
     def loss_func_tempo(self, output_dict, *args):
-        out_disc_label = output_dict["out_disc_t_label"]
-        out_disc_gen_out = output_dict["out_disc_t_gen_out"]
+        out_disc_tempo_from_target = output_dict["out_disc_tempo_from_target"]
+        out_disc_tempo_from_gen = output_dict["out_disc_tempo_from_gen"]
 
-        label_ones = paddle.ones_like(out_disc_label)
-        label_zeros = paddle.zeros_like(out_disc_gen_out)
+        label_ones = paddle.ones_like(out_disc_tempo_from_target)
+        label_zeros = paddle.zeros_like(out_disc_tempo_from_gen)
 
-        loss_disc = F.binary_cross_entropy_with_logits(
-            out_disc_label, label_ones, reduction="mean"
+        loss_disc_tempo_from_target = F.binary_cross_entropy_with_logits(
+            out_disc_tempo_from_target, label_ones, reduction="mean"
         )
-        loss_gen = F.binary_cross_entropy_with_logits(
-            out_disc_gen_out, label_zeros, reduction="mean"
+        loss_disc_tempo_from_gen = F.binary_cross_entropy_with_logits(
+            out_disc_tempo_from_gen, label_zeros, reduction="mean"
         )
-        losses = loss_disc * self.weight_dld + loss_gen
+        losses = (
+            loss_disc_tempo_from_target * self.weight_disc + loss_disc_tempo_from_gen
+        )
         return losses
 
 
@@ -415,7 +450,7 @@ class DataFuncs:
             rand_ratio = np.random.rand()
             density_low = self.cut_data(input_item["density_low"], rand_ratio)
             density_high = self.cut_data(input_item["density_high"], rand_ratio)
-            if self.selected_tile_is_ok(density_low):
+            if self.is_valid_tile(density_low):
                 break
 
         input_item["density_low"] = density_low
@@ -439,7 +474,7 @@ class DataFuncs:
 
         return data
 
-    def selected_tile_is_ok(self, tile: paddle.Tensor):
+    def is_valid_tile(self, tile: paddle.Tensor):
         img_density = tile[0].sum()
         return img_density >= (
             self.density_min * tile.shape[0] * tile.shape[1] * tile.shape[2]

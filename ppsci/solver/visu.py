@@ -56,23 +56,25 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
                 batch_input_dict[key].stop_gradient = False
 
             # forward
-            with solver.no_grad_context_manager(solver.eval_with_no_grad):
+            with solver.autocast_context_manager(
+                solver.use_amp, solver.amp_level
+            ), solver.no_grad_context_manager(solver.eval_with_no_grad):
                 batch_output_dict = solver.forward_helper.visu_forward(
                     _visualizer.output_expr, batch_input_dict, solver.model
                 )
 
-            # collect batch data
+            # collect batch data with float32 dtype
             for key, batch_input in batch_input_dict.items():
                 all_input[key].append(
-                    batch_input.detach()
+                    batch_input.detach().astype("float32")
                     if solver.world_size == 1
-                    else misc.all_gather(batch_input.detach())
+                    else misc.all_gather(batch_input.detach().astype("float32"))
                 )
             for key, batch_output in batch_output_dict.items():
                 all_output[key].append(
-                    batch_output.detach()
+                    batch_output.detach().astype("float32")
                     if solver.world_size == 1
-                    else misc.all_gather(batch_output.detach())
+                    else misc.all_gather(batch_output.detach().astype("float32"))
                 )
 
         # concate all data

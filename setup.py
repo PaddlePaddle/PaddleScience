@@ -29,7 +29,7 @@ if __name__ == "__main__":
                 "examples",
                 "jointContribution",
                 "test_tipc",
-                "tests",
+                "test",
                 "tools",
             )
         ),
@@ -63,5 +63,6 @@ if __name__ == "__main__":
             "meshio==5.3.4",
             "tqdm",
             "imageio",
+            "colorlog",
         ],
     )

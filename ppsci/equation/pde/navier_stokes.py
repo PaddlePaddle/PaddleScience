@@ -128,7 +128,7 @@ class NavierStokes(base.PDE):
             if self.dim == 3:
                 z, w = out["z"], out["w"]
                 momentum_y += w * jacobian(v, z)
-                momentum_y -= nu / rho * hessian(v, z)
+                momentum_y -= nu * hessian(v, z)
             return momentum_y
 
         if use_sympy is False:
@@ -211,9 +211,9 @@ class NavierStokes(base.PDE):
                     u * jacobian(w, x)
                     + v * jacobian(w, y)
                     + w * jacobian(w, z)
-                    - nu / rho * hessian(w, x)
-                    - nu / rho * hessian(w, y)
-                    - nu / rho * hessian(w, z)
+                    - nu * hessian(w, x)
+                    - nu * hessian(w, y)
+                    - nu * hessian(w, z)
                     + 1 / rho * jacobian(p, z)
                 )
                 if self.time:
