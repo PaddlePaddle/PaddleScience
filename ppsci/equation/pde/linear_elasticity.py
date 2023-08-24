@@ -64,6 +64,12 @@ class LinearElasticity(base.PDE):
         time: bool = False,
     ):
         super().__init__()
+        if lambda_ is None:
+            nu = float(nu)
+            E = float(E)
+            lambda_ = nu * E / ((1 + nu) * (1 - 2 * nu))
+            mu = E / (2 * (1 + nu))
+
         self.E = E
         self.nu = nu
         self.lambda_ = lambda_
@@ -74,13 +80,11 @@ class LinearElasticity(base.PDE):
 
         # Stress equations
         def stress_disp_xx_compute_func(out):
-            x, y, z, u, v, w = (
+            x, y, u, v = (
                 out["x"],
                 out["y"],
-                out["z"],
                 out["u"],
                 out["v"],
-                out["w"],
             )
             sigma_xx = out["sigma_xx"]
             stress_disp_xx = (
@@ -96,13 +100,11 @@ class LinearElasticity(base.PDE):
         self.add_equation("stress_disp_xx", stress_disp_xx_compute_func)
 
         def stress_disp_yy_compute_func(out):
-            x, y, z, u, v, w = (
+            x, y, u, v = (
                 out["x"],
                 out["y"],
-                out["z"],
                 out["u"],
                 out["v"],
-                out["w"],
             )
             sigma_yy = out["sigma_yy"]
             stress_disp_yy = (
@@ -166,7 +168,7 @@ class LinearElasticity(base.PDE):
 
         # Equations of equilibrium
         def equilibrium_x_compute_func(out):
-            x, y, z = out["x"], out["y"], out["z"]
+            x, y = out["x"], out["y"]
             sigma_xx, sigma_xy = out["sigma_xx"], out["sigma_xy"]
             equilibrium_x = -jacobian(sigma_xx, x) - jacobian(sigma_xy, y)
             if self.dim == 3:
@@ -180,11 +182,10 @@ class LinearElasticity(base.PDE):
         self.add_equation("equilibrium_x", equilibrium_x_compute_func)
 
         def equilibrium_y_compute_func(out):
-            x, y, z = out["x"], out["y"], out["z"]
-            sigma_xy, sigma_yy, sigma_yz = (
+            x, y = out["x"], out["y"]
+            sigma_xy, sigma_yy = (
                 out["sigma_xy"],
                 out["sigma_yy"],
-                out["sigma_yz"],
             )
             equilibrium_y = -jacobian(sigma_xy, x) - jacobian(sigma_yy, y)
             if self.dim == 3:
@@ -253,21 +254,25 @@ class LinearElasticity(base.PDE):
 
         self.add_equation("traction_y", traction_y_compute_func)
 
-        def traction_z_compute_func(out):
-            normal_x, normal_y, normal_z = (
-                out["normal_x"],
-                out["normal_y"],
-                out["normal_z"],
-            )
-            sigma_xz, sigma_yz, sigma_zz = (
-                out["sigma_xz"],
-                out["sigma_yz"],
-                out["sigma_zz"],
-            )
-            traction_z = normal_x * sigma_xz + normal_y * sigma_yz + normal_z * sigma_zz
-            return traction_z
+        if self.dim == 3:
 
-        self.add_equation("traction_z", traction_z_compute_func)
+            def traction_z_compute_func(out):
+                normal_x, normal_y, normal_z = (
+                    out["normal_x"],
+                    out["normal_y"],
+                    out["normal_z"],
+                )
+                sigma_xz, sigma_yz, sigma_zz = (
+                    out["sigma_xz"],
+                    out["sigma_yz"],
+                    out["sigma_zz"],
+                )
+                traction_z = (
+                    normal_x * sigma_xz + normal_y * sigma_yz + normal_z * sigma_zz
+                )
+                return traction_z
+
+            self.add_equation("traction_z", traction_z_compute_func)
 
         # Navier equations
         def navier_x_compute_func(out):

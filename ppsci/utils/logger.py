@@ -92,28 +92,6 @@ def init_logger(
     _logger.propagate = False
 
 
-def set_log_level(log_level):
-    """Set log level."""
-    if dist.get_rank() == 0:
-        _logger.setLevel(log_level)
-    else:
-        _logger.setLevel(logging.ERROR)
-
-
-def log_at_trainer0(log_func):
-    """
-    Logs will print multi-times when calling Fleet API.
-    Only display single log and ignore the others.
-    """
-
-    @functools.wraps(log_func)
-    def wrapped_log_func(fmt, *args):
-        if dist.get_rank() == 0:
-            log_func(fmt, *args)
-
-    return wrapped_log_func
-
-
 def ensure_logger(log_func):
     """
     Automatically initialize `logger` by default arguments
@@ -132,6 +110,29 @@ def ensure_logger(log_func):
             )
 
         log_func(fmt, *args)
+
+    return wrapped_log_func
+
+
+@ensure_logger
+def set_log_level(log_level):
+    """Set log level."""
+    if dist.get_rank() == 0:
+        _logger.setLevel(log_level)
+    else:
+        _logger.setLevel(logging.ERROR)
+
+
+def log_at_trainer0(log_func):
+    """
+    Logs will print multi-times when calling Fleet API.
+    Only display single log and ignore the others.
+    """
+
+    @functools.wraps(log_func)
+    def wrapped_log_func(fmt, *args):
+        if dist.get_rank() == 0:
+            log_func(fmt, *args)
 
     return wrapped_log_func
 

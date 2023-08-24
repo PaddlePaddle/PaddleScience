@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 from typing import Dict
 from typing import List
+from typing import Union
 
 import paddle
 import paddle.nn as nn
 import sympy
 
+import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
@@ -28,13 +31,40 @@ FUNC_MAP = {
     sympy.cos: paddle.cos,
     sympy.exp: paddle.exp,
     sympy.Pow: paddle.pow,
-    sympy.sqrt: paddle.sqrt,
+    # sympy.sqrt: paddle.sqrt,
     sympy.log: paddle.log,
     sympy.tan: paddle.tan,
     sympy.Max: paddle.maximum,
     sympy.Min: paddle.minimum,
     sympy.Abs: paddle.abs,
+    sympy.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
 }
+
+
+def single_derivate_func(dvar: paddle.Tensor, invar: paddle.Tensor, order: int):
+    order_left = order
+    while order_left > 0:
+        if order_left >= 2:
+            dvar = hessian(dvar, invar)
+            order_left -= 2
+        else:
+            dvar = jacobian(dvar, invar)
+            order_left -= 1
+    return dvar
+
+
+def cvt_to_key(sympy_node: sympy.Basic):
+    if isinstance(sympy_node, sympy.Heaviside):
+        return str(sympy_node)
+    if isinstance(sympy_node, (sympy.Symbol, sympy.Function)):
+        return sympy_node.name
+    elif isinstance(sympy_node, sympy.Derivative):
+        expr_str = sympy_node.args[0].name  # use 'f' instead of 'f(x,y,z)'
+        for symbol, order in sympy_node.args[1:]:
+            expr_str += f"__{symbol}" * order
+        return expr_str
+    else:
+        return str(sympy_node)
 
 
 class NodeBase(nn.Layer):
@@ -51,8 +81,9 @@ class NodeBase(nn.Layer):
     def __init__(self, expr: sympy.Expr):
         super().__init__()
         self.expr = expr
+        self.key = cvt_to_key(self.expr)
 
-    def forward(self, inputs_dict: Dict, models_dict: Dict[str, nn.Layer] = None):
+    def forward(self, data_dict: Dict, model_dict: Dict[str, nn.Layer] = None):
         raise NotImplementedError
 
     def __repr__(self):
@@ -72,60 +103,44 @@ class OperatorNode(NodeBase):
 
     Returns:
         The input dictionary with the output of the operator added.
-
-    Examples:
-        >>> x = sympy.Symbol("x")
-        >>> node = OperatorNode(sympy.sin(x))
-        >>> node({"x": paddle.to_tensor(np.random.randn(1, 1))})
-        {'x': Tensor(shape=[1, 1], dtype=float64, place=Place(gpu:0), stop_gradient=True,
-                [[-0.49221350]]),
-        'sin(x)': Tensor(shape=[1, 1], dtype=float64, place=Place(gpu:0), stop_gradient=True,
-                [[-0.47257778]])}
     """
 
-    def __init__(
-        self, expr: sympy.Function or sympy.Add or sympy.Mul or sympy.Derivative
-    ):
+    def __init__(self, expr: Union[sympy.Add, sympy.Mul, sympy.Derivative]):
         super().__init__(expr)
 
-    def forward(self, inputs_dict: Dict, models_dict: Dict[str, nn.Layer] = None):
-        expr_str = str(self.expr)
+    def forward(self, data_dict: Dict, model_dict: Dict[str, nn.Layer] = None):
         if self.expr.func == sympy.Add:
-            inputs_dict[expr_str] = paddle.add_n(
-                [inputs_dict[str(arg)] for arg in self.expr.args]
+            data_dict[self.key] = paddle.add_n(
+                [data_dict[cvt_to_key(arg)] for arg in self.expr.args]
             )
         elif self.expr.func == sympy.Mul:
-            inputs_dict[expr_str] = paddle.to_tensor(
-                1.0, dtype=paddle.get_default_dtype()
-            )
-            for arg in self.expr.args:
-                inputs_dict[expr_str] *= inputs_dict[str(arg)]
+            data_dict[self.key] = data_dict[cvt_to_key(self.expr.args[0])]
+            for arg in self.expr.args[1:]:
+                data_dict[self.key] = data_dict[self.key] * data_dict[cvt_to_key(arg)]
         elif self.expr.func == sympy.Derivative:
-            inputs_dict[expr_str] = inputs_dict[
-                str(self.expr.args[0])
-            ]  # initialize the derivative
-            symbols = self.expr.args[1:]
-            for symbol, order in symbols:
-                expr_tensor = inputs_dict[expr_str]
-                symbol_tensor = inputs_dict[str(symbol)]
-                if order == 1:
-                    inputs_dict[expr_str] = jacobian(expr_tensor, symbol_tensor)
-                elif order == 2:
-                    inputs_dict[expr_str] = hessian(expr_tensor, symbol_tensor)
-                else:
-                    logger.warning(
-                        f"The order {order} of the derivative is not supported, the order should be 1 or 2."
-                    )
+            if self.key in data_dict:
+                return data_dict
+            data_dict[self.key] = data_dict[cvt_to_key(self.expr.args[0])]
+            for symbol, order in self.expr.args[1:]:
+                data_dict[self.key] = single_derivate_func(
+                    data_dict[self.key],
+                    data_dict[cvt_to_key(symbol)],
+                    order,
+                )
         else:
             try:
-                inputs_dict[expr_str] = FUNC_MAP[self.expr.func](
-                    *[inputs_dict[str(arg)] for arg in self.expr.args]
-                )
+                func = FUNC_MAP[self.expr.func]
             except KeyError:
-                logger.warning(
-                    f"The operator {self.expr.func} is not supported, please add it to FUNC_MAP."
+                raise NotImplementedError(
+                    f"'{self.expr.func}' operator is not supported now."
                 )
-        return inputs_dict
+            if self.expr.func == sympy.Heaviside:
+                data_dict[self.key] = func(data_dict[cvt_to_key(self.expr.args[0])])
+            else:
+                data_dict[self.key] = func(
+                    *[data_dict[cvt_to_key(arg)] for arg in self.expr.args]
+                )
+        return data_dict
 
 
 class LayerNode(NodeBase):
@@ -143,93 +158,22 @@ class LayerNode(NodeBase):
         And the `output_keys` should be provided in the `__init__` function.
 
     Examples:
-        Single output case:
-        >>> x, y = sympy.symbols("x y")
-        >>> u = sympy.Function("u")(x, y)
-        >>> func = u.diff(x) + u.diff(y)
-        >>> node = LayerNode(func)
-        >>> x = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> y = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> class MyLayer(nn.Layer):
-        >>>    def __init__(self):
-        >>>        super(MyLayer, self).__init__()
-        >>>        self.output_keys = ["u"]
-        >>>    def forward(self, x):
-        >>>        x, y = x["x"], x["y"]
-        >>>        u = paddle.cos(y * x)
-        >>>        return {"u": u}
-        >>> node(inputs_dict={"x": x, "y": y}, model_dict={f"u": MyLayer()})
-        {'x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-        [[0.20314099]]),
-         'y': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.95114714]]),
-         'u(x, y)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.98139161]]),
-         'Derivative(u(x, y), x)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[-0.18263641]])}
 
-        Multi-output case:
-        >>> x, y = sympy.symbols("x y")
-        >>> u = sympy.Function("u")(x, y)
-        >>> v = sympy.Function("v")(x, y)
-        >>> func = u.diff(x) + u.diff(y)
-        >>> node = LayerNode(func)
-        >>> class MyLayer(nn.Layer):
-        >>>    def __init__(self):
-        >>>        super(MyLayer, self).__init__()
-        >>>        self.output_keys = ["u", "v"]
-        >>>    def forward(self, x):
-        >>>        x, y = x["x"], x["y"]
-        >>>        u = paddle.cos(y * x)
-        >>>        v = paddle.tanh(x**2)
-        >>>        return {"u": u, "v": v}
-        >>> x = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> y = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> node(inputs_dict={"x": x, "y": y}, model_dict={"u": MyLayer()})
-        {'x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.65654278]]),
-        'y': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.07239681]]),
-        'u(x, y)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.99887061]]),
-        'v(x, y)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.40619713]]),
-        'Derivative(u(x, y), y)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[-0.03119478]]),
-        'Derivative(u(x, y), x)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[-0.00343984]]),
-        'Derivative(u(x, y), x) + Derivative(u(x, y), y)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[-0.03463462]])}
     """
 
-    def __init__(self, expr: sympy.core.function.UndefinedFunction):
+    def __init__(self, expr: sympy.core.function.UndefinedFunction, model: nn.Layer):
         super().__init__(expr)
+        self.model = model
 
-    def forward(self, inputs_dict: Dict, models_dict: Dict[str, nn.Layer]):
-        if str(self.expr) in inputs_dict:
-            return inputs_dict
-        for model in models_dict.values():
-            if model.output_keys is None:
-                raise ValueError(
-                    "The output_keys of the model should be provided in the __init__ function."
-                )
-            model_output_keys = model.output_keys
-            if str(self.expr.func) in model_output_keys:  # u(x, y) to u
-                model_output = model(
-                    {str(arg): inputs_dict[str(arg)] for arg in self.expr.args}
-                )
-                for key in model_output_keys:
-                    # u to u(x, y)
-                    expr_key = (
-                        f"{key}({', '.join([str(arg) for arg in self.expr.args])})"
-                    )
-                    inputs_dict[expr_key] = model_output[key]
-                break
-        else:  # no break
-            raise ValueError(
-                f"The model with output_keys = {str(self.expr.func)} is not found."
-            )
-        return inputs_dict
+    def forward(self, data_dict: Dict):
+        if self.key in data_dict:
+            return data_dict
+
+        output_dict = self.model(data_dict)
+        for key, value in output_dict.items():
+            data_dict[key] = value
+
+        return data_dict
 
 
 class ConstantNode(NodeBase):
@@ -251,12 +195,23 @@ class ConstantNode(NodeBase):
 
     def __init__(self, expr: sympy.Number or sympy.NumberSymbol):
         super().__init__(expr)
+        if self.expr.is_Float:
+            self.expr = float(self.expr)
+        elif self.expr.is_Integer:
+            self.expr = float(self.expr)
+        elif self.expr.is_Boolean:
+            self.expr = float(self.expr)
+        elif self.expr.is_Rational:
+            self.expr = float(self.expr)
+        else:
+            raise TypeError(
+                f"expr({expr}) should be float/int/bool, but got {type(self.expr)}"
+            )
+        self.expr = paddle.to_tensor(self.expr)
 
-    def forward(self, inputs_dict: Dict, models_dict: Dict[str, nn.Layer]):
-        inputs_dict[str(self.expr)] = paddle.to_tensor(
-            float(self.expr), dtype=paddle.get_default_dtype()
-        )
-        return inputs_dict
+    def forward(self, data_dict: Dict):
+        data_dict[self.key] = self.expr
+        return data_dict
 
 
 class ComposedFunc(nn.Layer):
@@ -264,114 +219,47 @@ class ComposedFunc(nn.Layer):
     Compose multiple functions into one function.
 
     Args:
-        inputs_dict (Dict): The input tensor dictionary.
+        data_dict (Dict): The input tensor dictionary.
         model_dict (Dict[str, nn.Layer]): The dictionary of the models.
 
     Returns:
         The dictionary of the outputs of the all calculated nodes.
-
-    Examples:
-        >>> x = sympy.Symbol("x")
-        >>> expr = sympy.sin(x)
-        >>> func = sympy_to_function(expr)
-        >>> func({x: paddle.to_tensor(0.5)})
-        {'sin(x)': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            0.47942555)}
     """
 
-    def __init__(self, nodes: List[NodeBase]):
+    def __init__(self, target: str, funcs: List[NodeBase]):
         super().__init__()
-        self.nodes = nodes
+        self.funcs = funcs
+        self.target = target
 
-    def _derivative_to_str(self, expr: sympy.Expr) -> str:
-        """
-        Convert the derivative expression to string.
-
-        Args:
-            expr (sympy.Expr): The derivative expression.
-
-        Returns:
-            The string of the derivative expression.
-        """
-        key = str(expr.args[0].func)
-        for symbol, order in expr.args[1:]:
-            key += f"__{symbol}" * order
-        return key
-
-    def forward(self, inputs_dict: Dict, model_dict: Dict[str, nn.Layer] = None):
-        for node in self.nodes:
-            inputs_dict = node(inputs_dict, model_dict)
-
-        last_expr = self.nodes[-1].expr
-        inputs_dict["output"] = inputs_dict.pop(
-            str(last_expr)
-        )  # rename the last node key to output
-
-        layer_key_maps = {}
-
-        for key in list(inputs_dict.keys()):
-            expr = sympy.sympify(key)
-            if key.startswith(
-                "Derivative("
-            ):  # rename the derivative key Derivative(u(x, y), x) to u__x
-                inputs_dict[self._derivative_to_str(expr)] = inputs_dict.pop(key)
-            if key.startswith("-Derivative("):  # remove the negative derivative
-                inputs_dict[
-                    "-" + self._derivative_to_str(expr.args[1])
-                ] = inputs_dict.pop(key)
-            if isinstance(expr.func, sympy.core.function.UndefinedFunction):
-                layer_key_maps[key] = str(expr.func)
-
-        for (
-            key,
-            value,
-        ) in layer_key_maps.items():  # rename the layer key e.g. u(x, y) to u
-            for inputs_key in list(inputs_dict.keys()):
-                if key in inputs_key:
-                    inputs_dict[inputs_key.replace(key, value)] = inputs_dict.pop(
-                        inputs_key
-                    )
-
-        return inputs_dict
+    def forward(self, data_dict: Dict):
+        for func in self.funcs:
+            data_dict = func(data_dict)
+        return data_dict[self.funcs[-1].key]
 
 
-def get_expression_nodes(expr: sympy.Expr) -> List[sympy.Expr]:
-    """
-    Convert a sympy expression to a list of sympy expressions using post-order traversal.
-
-    Args:
-        expr (sympy.Expr): the sympy expression to be converted
-
-    Returns:
-        A list of sympy expressions.
-
-    Examples:
-        >>> x = sympy.Symbol("x")
-        >>> expr = sympy.sin(x) + x
-        >>> nodes = get_expression_nodes(expr)
-        >>> nodes
-        [x, sin(x), x, x + sin(x)]
-
-    Notes:
-        This function performs a post-order traversal of the expression tree rooted at `expr`.
-        The resulting list contains the sub-expressions of `expr` in the order in which they would be evaluated.
-    """
-    nodes = []
-
-    def traverse_expression(expr, nodes):
-        nodes.insert(0, expr)
-        if expr.func == sympy.Derivative:
-            nodes.insert(0, expr.args[0])
-            return nodes
-        for arg in expr.args:
-            nodes = traverse_expression(arg, nodes)
+def post_traverse(cur_node, nodes):
+    # traverse into sub-nodes
+    if isinstance(cur_node, sympy.core.function.UndefinedFunction):
+        nodes.append(cur_node)
+    elif isinstance(cur_node, sympy.Function):
+        for arg in cur_node.args:
+            nodes = post_traverse(arg, nodes)
+        nodes.append(cur_node)
+    elif isinstance(cur_node, sympy.Derivative):
+        nodes = post_traverse(cur_node.args[0], nodes)
+        nodes.append(cur_node)
+    elif isinstance(cur_node, sympy.Symbol):
         return nodes
-
-    nodes = traverse_expression(expr, nodes)
+    elif isinstance(cur_node, sympy.Number):
+        nodes.append(cur_node)
+    else:
+        for arg in cur_node.args:
+            nodes = post_traverse(arg, nodes)
+        nodes.append(cur_node)
     return nodes
 
 
-def sympy_to_function(expr: sympy.Expr):
+def sympy_to_function(target: str, expr: sympy.Expr, models: nn.Layer):
     """
     Convert a sympy expression to a ComposedFunc.
 
@@ -382,73 +270,398 @@ def sympy_to_function(expr: sympy.Expr):
         A ComposedFunc that can execute the formula represented by the sympy expression.
 
     Examples:
-        >>> x, y = sympy.symbols("x y")
-        >>> u = sympy.Function("u")(x, y)
-        >>> v = sympy.Function("v")(x, y)
-        >>> expr = u.diff(x) - v.diff(x, 2) + u * v + sympy.sin(u) * sympy.cos(v)
-        >>> function = sympy_to_function(expr)
-
-        >>> class MyLayer(nn.Layer):
-        >>>    def __init__(self):
-        >>>        super(MyLayer, self).__init__()
-        >>>        self.output_keys = ["u", "v"]
-        >>>    def forward(self, x):
-        >>>        x, y = x["x"], x["y"]
-        >>>        u = paddle.cos(y * x)
-        >>>        v = paddle.tanh(x**2)
-        >>>        return {"u": u, "v": v}
-
-        >>> x = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> y = paddle.to_tensor(np.random.randn(1, 1), stop_gradient=False, dtype="float32")
-        >>> function(inputs_dict={"x": x, "y": y}, model_dict={"u": MyLayer()})
-        {'x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-        [[-0.21531263]]),
-         'y': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[-0.20731021]]),
-         '-1': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                 -1.),
-         'output': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[-1.08300245]]),
-         'u__x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.00925053]]),
-         'v__x__x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[1.97856331]]),
-         '-v__x__x': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[-1.97856331]]),
-         'u': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.99900395]]),
-         'sin(u)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.84093243]]),
-         'v': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.04632635]]),
-         'cos(v)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.99892712]]),
-         'u*v': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                 [[0.04628020]]),
-         'sin(u)*cos(v)': Tensor(shape=[1, 1], dtype=float32, place=Place(gpu:0), stop_gradient=False,
-                [[0.84003019]])}
     """
-    expression_nodes = get_expression_nodes(expr)
-    expression_nodes = [
-        node for node in expression_nodes if not node.is_Symbol
-    ]  # remove symbol.Symbols
-    expression_nodes = list(dict.fromkeys(expression_nodes))  # remove duplicates
-    nodes = []
-    for node in expression_nodes:
+    sympy_nodes = []
+    sympy_nodes = post_traverse(expr, sympy_nodes)
+    sympy_nodes = [node for node in sympy_nodes if not node.is_Symbol]
+    sympy_nodes = list(
+        dict.fromkeys(sympy_nodes)
+    )  # remove duplicates with topo-order kept
+
+    callable_nodes = []
+    for i, node in enumerate(sympy_nodes):
+        logger.debug(f"tree node [{i + 1}/{len(sympy_nodes)}]: {node}")
         if isinstance(node.func, sympy.core.function.UndefinedFunction):
-            nodes.append(LayerNode(node))
+            match = False
+            for model in models:
+                if str(node.func.name) in model.output_keys:
+                    callable_nodes.append(LayerNode(node, model))
+                    if match:
+                        raise ValueError(
+                            f"function {node} can match at least 2 output key of models, which is forbidden."
+                        )
+                    match = True
         elif (
-            node.is_Function
+            isinstance(node, tuple(FUNC_MAP.keys()))
             or node.is_Add
             or node.is_Mul
-            or node.is_Pow
             or node.is_Derivative
+            or node.is_Pow
         ):
-            nodes.append(OperatorNode(node))
+            callable_nodes.append(OperatorNode(node))
         elif node.is_Number or node.is_NumberSymbol:
-            nodes.append(ConstantNode(node))
+            callable_nodes.append(ConstantNode(node))
         else:
             raise NotImplementedError(
                 f"The node {node} is not supported in sympy_to_function."
             )
-    return ComposedFunc(nodes)
+    return ComposedFunc(target, callable_nodes)
+
+
+class ZeroEquation:
+    """
+    Zero Equation Turbulence model
+
+    Parameters
+    ==========
+    nu : float
+        The kinematic viscosity of the fluid.
+    max_distance : float
+        The maximum wall distance in the flow field.
+    rho : float, Sympy Symbol/Expr, str
+        The density. If `rho` is a str then it is
+        converted to Sympy Function of form 'rho(x,y,z,t)'.
+        If 'rho' is a Sympy Symbol or Expression then this
+        is substituted into the equation. Default is 1.
+    dim : int
+        Dimension of the Zero Equation Turbulence model (2 or 3).
+        Default is 3.
+    time : bool
+        If time-dependent equations or not. Default is True.
+
+    Example
+    """
+
+    def __init__(
+        self, nu, max_distance, rho=1, dim=3, time=True
+    ):  # TODO add density into model
+        # set params
+        self.dim = dim
+        self.time = time
+
+        # model coefficients
+        self.max_distance = max_distance
+        self.karman_constant = 0.419
+        self.max_distance_ratio = 0.09
+
+        # coordinates
+        x, y, z = sympy.Symbol("x"), sympy.Symbol("y"), sympy.Symbol("z")
+
+        # time
+        t = sympy.Symbol("t")
+
+        # make input variables
+        input_variables = {"x": x, "y": y, "z": z, "t": t}
+        if self.dim == 2:
+            input_variables.pop("z")
+        if not self.time:
+            input_variables.pop("t")
+
+        # velocity componets
+        u = sympy.Function("u")(*input_variables)
+        v = sympy.Function("v")(*input_variables)
+        if self.dim == 3:
+            w = sympy.Function("w")(*input_variables)
+        else:
+            w = sympy.Number(0)
+
+        # density
+        if type(rho) is str:
+            rho = sympy.Function(rho)(*input_variables)
+        elif type(rho) in [float, int]:
+            rho = sympy.Number(rho)
+
+        # wall distance
+        normal_distance = sympy.Function("sdf")(*input_variables)
+
+        # mixing length
+        mixing_length = sympy.Min(
+            self.karman_constant * normal_distance,
+            self.max_distance_ratio * self.max_distance,
+        )
+        G = (
+            2 * u.diff(x) ** 2
+            + 2 * v.diff(y) ** 2
+            + 2 * w.diff(z) ** 2
+            + (u.diff(y) + v.diff(x)) ** 2
+            + (u.diff(z) + w.diff(x)) ** 2
+            + (v.diff(z) + w.diff(y)) ** 2
+        )
+
+        # set equations
+        self.equations = {}
+        self.equations["nu"] = nu + rho * mixing_length**2 * sympy.sqrt(G)
+
+
+class NavierStokes_sympy:
+    """
+    Compressible Navier Stokes equations
+
+    Parameters
+    ==========
+    nu : float, Sympy Symbol/Expr, str
+        The kinematic viscosity. If `nu` is a str then it is
+        converted to Sympy Function of form `nu(x,y,z,t)`.
+        If `nu` is a Sympy Symbol or Expression then this
+        is substituted into the equation. This allows for
+        variable viscosity.
+    rho : float, Sympy Symbol/Expr, str
+        The density of the fluid. If `rho` is a str then it is
+        converted to Sympy Function of form 'rho(x,y,z,t)'.
+        If 'rho' is a Sympy Symbol or Expression then this
+        is substituted into the equation to allow for
+        compressible Navier Stokes. Default is 1.
+    dim : int
+        Dimension of the Navier Stokes (2 or 3). Default is 3.
+    time : bool
+        If time-dependent equations or not. Default is True.
+    mixed_form: bool
+        If True, use the mixed formulation of the Navier-Stokes equations.
+
+    Examples
+    """
+
+    name = "NavierStokes"
+
+    def __init__(self, nu, rho=1, dim=3, time=True, mixed_form=False):
+        # set params
+        self.dim = dim
+        self.time = time
+        self.mixed_form = mixed_form
+
+        # coordinates
+        x, y, z = sympy.Symbol("x"), sympy.Symbol("y"), sympy.Symbol("z")
+
+        # time
+        t = sympy.Symbol("t")
+
+        # make input variables
+        input_variables = {"x": x, "y": y, "z": z, "t": t}
+        if self.dim == 2:
+            input_variables.pop("z")
+        if not self.time:
+            input_variables.pop("t")
+
+        # velocity componets
+        u = sympy.Function("u")(*input_variables)
+        v = sympy.Function("v")(*input_variables)
+        if self.dim == 3:
+            w = sympy.Function("w")(*input_variables)
+        else:
+            w = sympy.Number(0)
+
+        # pressure
+        p = sympy.Function("p")(*input_variables)
+
+        # kinematic viscosity
+        if isinstance(nu, str):
+            nu = sympy.Function(nu)(*input_variables)
+        elif isinstance(nu, (float, int)):
+            nu = sympy.Number(nu)
+
+        # density
+        if isinstance(rho, str):
+            rho = sympy.Function(rho)(*input_variables)
+        elif isinstance(rho, (float, int)):
+            rho = sympy.Number(rho)
+
+        # dynamic viscosity
+        mu = rho * nu
+
+        # set equations
+        self.equations = {}
+        self.equations["continuity"] = (
+            rho.diff(t) + (rho * u).diff(x) + (rho * v).diff(y) + (rho * w).diff(z)
+        )
+
+        if not self.mixed_form:
+            curl = (
+                sympy.Number(0)
+                if rho.diff(x) == 0
+                else u.diff(x) + v.diff(y) + w.diff(z)
+            )
+            self.equations["momentum_x"] = (
+                (rho * u).diff(t)
+                + (
+                    u * ((rho * u).diff(x))
+                    + v * ((rho * u).diff(y))
+                    + w * ((rho * u).diff(z))
+                    + rho * u * (curl)
+                )
+                + p.diff(x)
+                - (-2 / 3 * mu * (curl)).diff(x)
+                - (mu * u.diff(x)).diff(x)
+                - (mu * u.diff(y)).diff(y)
+                - (mu * u.diff(z)).diff(z)
+                - (mu * (curl).diff(x))
+            )
+            self.equations["momentum_y"] = (
+                (rho * v).diff(t)
+                + (
+                    u * ((rho * v).diff(x))
+                    + v * ((rho * v).diff(y))
+                    + w * ((rho * v).diff(z))
+                    + rho * v * (curl)
+                )
+                + p.diff(y)
+                - (-2 / 3 * mu * (curl)).diff(y)
+                - (mu * v.diff(x)).diff(x)
+                - (mu * v.diff(y)).diff(y)
+                - (mu * v.diff(z)).diff(z)
+                - (mu * (curl).diff(y))
+            )
+            self.equations["momentum_z"] = (
+                (rho * w).diff(t)
+                + (
+                    u * ((rho * w).diff(x))
+                    + v * ((rho * w).diff(y))
+                    + w * ((rho * w).diff(z))
+                    + rho * w * (curl)
+                )
+                + p.diff(z)
+                - (-2 / 3 * mu * (curl)).diff(z)
+                - (mu * w.diff(x)).diff(x)
+                - (mu * w.diff(y)).diff(y)
+                - (mu * w.diff(z)).diff(z)
+                - (mu * (curl).diff(z))
+            )
+
+            if self.dim == 2:
+                self.equations.pop("momentum_z")
+
+        elif self.mixed_form:
+            u_x = sympy.Function("u_x")(*input_variables)
+            u_y = sympy.Function("u_y")(*input_variables)
+            u_z = sympy.Function("u_z")(*input_variables)
+            v_x = sympy.Function("v_x")(*input_variables)
+            v_y = sympy.Function("v_y")(*input_variables)
+            v_z = sympy.Function("v_z")(*input_variables)
+
+            if self.dim == 3:
+                w_x = sympy.Function("w_x")(*input_variables)
+                w_y = sympy.Function("w_y")(*input_variables)
+                w_z = sympy.Function("w_z")(*input_variables)
+            else:
+                w_x = sympy.Number(0)
+                w_y = sympy.Number(0)
+                w_z = sympy.Number(0)
+                u_z = sympy.Number(0)
+                v_z = sympy.Number(0)
+
+            curl = sympy.Number(0) if rho.diff(x) == 0 else u_x + v_y + w_z
+            self.equations["momentum_x"] = (
+                (rho * u).diff(t)
+                + (
+                    u * ((rho * u.diff(x)))
+                    + v * ((rho * u.diff(y)))
+                    + w * ((rho * u.diff(z)))
+                    + rho * u * (curl)
+                )
+                + p.diff(x)
+                - (-2 / 3 * mu * (curl)).diff(x)
+                - (mu * u_x).diff(x)
+                - (mu * u_y).diff(y)
+                - (mu * u_z).diff(z)
+                - (mu * (curl).diff(x))
+            )
+            self.equations["momentum_y"] = (
+                (rho * v).diff(t)
+                + (
+                    u * ((rho * v.diff(x)))
+                    + v * ((rho * v.diff(y)))
+                    + w * ((rho * v.diff(z)))
+                    + rho * v * (curl)
+                )
+                + p.diff(y)
+                - (-2 / 3 * mu * (curl)).diff(y)
+                - (mu * v_x).diff(x)
+                - (mu * v_y).diff(y)
+                - (mu * v_z).diff(z)
+                - (mu * (curl).diff(y))
+            )
+            self.equations["momentum_z"] = (
+                (rho * w).diff(t)
+                + (
+                    u * ((rho * w.diff(x)))
+                    + v * ((rho * w.diff(y)))
+                    + w * ((rho * w.diff(z)))
+                    + rho * w * (curl)
+                )
+                + p.diff(z)
+                - (-2 / 3 * mu * (curl)).diff(z)
+                - (mu * w_x).diff(x)
+                - (mu * w_y).diff(y)
+                - (mu * w_z).diff(z)
+                - (mu * (curl).diff(z))
+            )
+            self.equations["compatibility_u_x"] = u.diff(x) - u_x
+            self.equations["compatibility_u_y"] = u.diff(y) - u_y
+            self.equations["compatibility_u_z"] = u.diff(z) - u_z
+            self.equations["compatibility_v_x"] = v.diff(x) - v_x
+            self.equations["compatibility_v_y"] = v.diff(y) - v_y
+            self.equations["compatibility_v_z"] = v.diff(z) - v_z
+            self.equations["compatibility_w_x"] = w.diff(x) - w_x
+            self.equations["compatibility_w_y"] = w.diff(y) - w_y
+            self.equations["compatibility_w_z"] = w.diff(z) - w_z
+            self.equations["compatibility_u_xy"] = u_x.diff(y) - u_y.diff(x)
+            self.equations["compatibility_u_xz"] = u_x.diff(z) - u_z.diff(x)
+            self.equations["compatibility_u_yz"] = u_y.diff(z) - u_z.diff(y)
+            self.equations["compatibility_v_xy"] = v_x.diff(y) - v_y.diff(x)
+            self.equations["compatibility_v_xz"] = v_x.diff(z) - v_z.diff(x)
+            self.equations["compatibility_v_yz"] = v_y.diff(z) - v_z.diff(y)
+            self.equations["compatibility_w_xy"] = w_x.diff(y) - w_y.diff(x)
+            self.equations["compatibility_w_xz"] = w_x.diff(z) - w_z.diff(x)
+            self.equations["compatibility_w_yz"] = w_y.diff(z) - w_z.diff(y)
+
+            if self.dim == 2:
+                self.equations.pop("momentum_z")
+                self.equations.pop("compatibility_u_z")
+                self.equations.pop("compatibility_v_z")
+                self.equations.pop("compatibility_w_x")
+                self.equations.pop("compatibility_w_y")
+                self.equations.pop("compatibility_w_z")
+                self.equations.pop("compatibility_u_xz")
+                self.equations.pop("compatibility_u_yz")
+                self.equations.pop("compatibility_v_xz")
+                self.equations.pop("compatibility_v_yz")
+                self.equations.pop("compatibility_w_xy")
+                self.equations.pop("compatibility_w_xz")
+                self.equations.pop("compatibility_w_yz")
+
+
+if __name__ == "__main__":
+    logger.init_logger(log_level="debug")
+    # ze = ZeroEquation(nu=1, rho=1.0, dim=2, max_distance=4, time=False)
+    ns = NavierStokes_sympy(nu=2.0, rho=1.0, dim=2, time=False)
+    target = "momentum_x"
+    test_expr = ns.equations[target]
+
+    x = paddle.randn([4, 1])
+    y = paddle.randn([4, 1])
+    z = paddle.randn([4, 1])
+    sdf = paddle.randn([4, 1])
+    sdf__x = paddle.randn([4, 1])
+    sdf__y = paddle.randn([4, 1])
+    x.stop_gradient = False
+    y.stop_gradient = False
+    z.stop_gradient = False
+    sdf.stop_gradient = False
+    sdf__x.stop_gradient = False
+    sdf__y.stop_gradient = False
+
+    input_dict = {
+        "x": x,
+        "y": y,
+        "z": z,
+        "sdf": sdf,
+        "sdf__x": sdf__x,
+        "sdf__y": sdf__y,
+    }
+
+    model1 = ppsci.arch.MLP(("x", "y", "z"), ("u", "v"), 2, 10)
+    model2 = ppsci.arch.MLP(("x", "y", "z"), ("w", "p"), 2, 10)
+
+    cvt_expr = sympy_to_function(target, test_expr, [model1, model2])
+
+    output = cvt_expr(input_dict)
+    print(output.shape)
