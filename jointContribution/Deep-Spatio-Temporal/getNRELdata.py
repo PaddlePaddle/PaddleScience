@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Get wind speed data from NREL WIND
     https://www.nrel.gov/grid/wind-toolkit.html

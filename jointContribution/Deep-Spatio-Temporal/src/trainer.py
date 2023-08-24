@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+import os
 
 import numpy as np
 import paddle
-from paddle.io import DataLoader
-from src.datamgr import NRELwpDataset
-from src.datamgr import wpDataset
-from src.utils import cal_loss
-from tqdm import tqdm
+import tqdm
+from paddle import io
+from src import datamgr
+from src import utils
 
 
 class EarlyStopping:
@@ -47,26 +46,28 @@ class Trainer:
         self.model = model
         self.name = name
         if name == "wind_power":
-            train_dataset = wpDataset(
+            train_dataset = datamgr.wpDataset(
                 data_mgr.train_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
             )
-            val_dataset = wpDataset(data_mgr.val_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN)
-            test_dataset = wpDataset(
+            val_dataset = datamgr.wpDataset(
+                data_mgr.val_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
+            )
+            test_dataset = datamgr.wpDataset(
                 data_mgr.test_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
             )
         else:
-            train_dataset = NRELwpDataset(
+            train_dataset = datamgr.NRELwpDataset(
                 data_mgr.train_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
             )
-            val_dataset = NRELwpDataset(
+            val_dataset = datamgr.NRELwpDataset(
                 data_mgr.val_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
             )
-            test_dataset = NRELwpDataset(
+            test_dataset = datamgr.NRELwpDataset(
                 data_mgr.test_data, ENC_LEN=ENC_LEN, DEC_LEN=DEC_LEN
             )
-        train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
-        val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
-        test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
+        train_dataloader = io.DataLoader(train_dataset, batch_size=BATCH_SIZE)
+        val_dataloader = io.DataLoader(val_dataset, batch_size=BATCH_SIZE)
+        test_dataloader = io.DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
@@ -101,12 +102,14 @@ class Trainer:
 
             if early_stopping.early_stop:
                 paddle.save(
-                    self.model.state_dict(), "outputs/" + self.SAVE_FILE + ".pdparams"
+                    self.model.state_dict(),
+                    os.path.join("outputs", self.SAVE_FILE + ".pdparams"),
                 )
                 break
         else:
             paddle.save(
-                self.model.state_dict(), "outputs/" + self.SAVE_FILE + ".pdparams"
+                self.model.state_dict(),
+                os.path.join("outputs", self.SAVE_FILE + ".pdparams"),
             )
 
     def fit(self):
@@ -116,7 +119,7 @@ class Trainer:
         running_loss = 0.0
         running_mae = [0.0] * 12
         running_rmse = [0.0] * 12
-        prog_bar = tqdm(
+        prog_bar = tqdm.tqdm(
             enumerate(self.train_dataloader),
             total=int(len(self.train_dataset) / self.train_dataloader.batch_size),
         )
@@ -127,7 +130,7 @@ class Trainer:
             y_true = data[2]
             y_true = y_true[:, 1:, 0]
             y_pred = y_pred.transpose((1, 0))
-            mae, rmse = cal_loss(y_true, y_pred, self.name)
+            mae, rmse = utils.cal_loss(y_true, y_pred, self.name)
 
             y_true, y_pred = self.rescale_output(y_true, y_pred)
 
@@ -154,7 +157,7 @@ class Trainer:
         running_mae = [0.0] * 12
         running_rmse = [0.0] * 12
 
-        prog_bar = tqdm(
+        prog_bar = tqdm.tqdm(
             enumerate(self.val_dataloader),
             total=int(len(self.val_dataset) / self.val_dataloader.batch_size),
         )
@@ -165,7 +168,7 @@ class Trainer:
                 y_true = data[2]
                 y_true = y_true[:, 1:, 0]
                 y_pred = y_pred.transpose((1, 0))
-                mae, rmse = cal_loss(y_true, y_pred, self.name)
+                mae, rmse = utils.cal_loss(y_true, y_pred, self.name)
 
                 y_true, y_pred = self.rescale_output(y_true, y_pred)
 
@@ -190,7 +193,7 @@ class Trainer:
         running_mae = [0.0] * 12
         running_rmse = [0.0] * 12
 
-        prog_bar = tqdm(
+        prog_bar = tqdm.tqdm(
             enumerate(self.test_dataloader),
             total=int(len(self.test_dataset) / self.test_dataloader.batch_size),
         )
@@ -201,7 +204,7 @@ class Trainer:
                 y_true = data[2]
                 y_true = y_true[:, 1:, 0]
                 y_pred = y_pred.transpose((1, 0))
-                mae, rmse = cal_loss(y_true, y_pred, self.name)
+                mae, rmse = utils.cal_loss(y_true, y_pred, self.name)
 
                 y_true, y_pred = self.rescale_output(y_true, y_pred)
                 idx = ~paddle.isnan(y_true)

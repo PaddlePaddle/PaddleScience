@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import os
 import sys
@@ -7,13 +5,10 @@ import sys
 import paddle
 import pandas as pd
 from paddle import nn
-from src.datamgr import DataMgr
-from src.datamgr import NRELDataMgr
-from src.model import Seq2Seq
-from src.trainer import Trainer
-from src.utils import count_parameters
-
-# from src.utils import init_weights
+from src import datamgr
+from src import model
+from src import trainer
+from src import utils
 
 
 def main():
@@ -31,7 +26,7 @@ def main():
 
     args = parser.parse_args()
 
-    print("Running with following command line arguments: {}".format(args))
+    print(f"Running with following command line arguments: {args}")
 
     BATCH_SIZE = args.batch_size
     EPOCHS = args.epoch
@@ -45,26 +40,29 @@ def main():
                 "No data found!!!\n"
                 "Download wind power data first (follow the instructions in readme)."
             )
-        data_mgr = DataMgr(file_path="./data/" + args.name + ".csv", K=K)
+        data_mgr = datamgr.DataMgr(
+            file_path=os.path.join("./data", args.name + ".csv"), K=K
+        )
     elif args.name == "wind_speed":
         if not os.path.exists("./data/wind_speed.csv"):
             sys.exit(
                 "No data found!!!\n"
                 "Download wind speed data first (follow the instructions in readme)."
             )
-        data_mgr = NRELDataMgr(
+        data_mgr = datamgr.NRELDataMgr(
             folder_path="./data/",
             file_path="wind_speed.csv",
             meta_path="wind_speed_meta.csv",
         )
-    model = Seq2Seq(K=K, n_turbines=args.n_turbines)
+    model_obj = model.Seq2Seq(K=K, n_turbines=args.n_turbines)
 
     criterion = nn.MSELoss()
-    optimizer = paddle.optimizer.Adam(parameters=model.parameters(), learning_rate=LR)
-    print(f"model parameters:{count_parameters(model)}")
-    # model.apply(init_weights) # change to Seq2Seq
-    trainer = Trainer(
-        model=model,
+    optimizer = paddle.optimizer.Adam(
+        parameters=model_obj.parameters(), learning_rate=LR
+    )
+    print(f"model parameters:{utils.count_parameters(model_obj)}")
+    trainer_obj = trainer.Trainer(
+        model=model_obj,
         data_mgr=data_mgr,
         optimizer=optimizer,
         criterion=criterion,
@@ -72,10 +70,10 @@ def main():
         BATCH_SIZE=BATCH_SIZE,
         name=args.name,
     )
-    trainer.train(epochs=EPOCHS)
-    loss, mae, rmse = trainer.report_test_error()
+    trainer_obj.train(epochs=EPOCHS)
+    loss, mae, rmse = trainer_obj.report_test_error()
     outdf = pd.DataFrame({"MAE": mae, "RMSE": rmse}, index=[*range(1, 13)])
-    outdf.to_csv("outputs/" + SAVE_FILE + "_metrics.csv")
+    outdf.to_csv(os.path.join("outputs", SAVE_FILE + "_metrics.csv"))
 
 
 if __name__ == "__main__":

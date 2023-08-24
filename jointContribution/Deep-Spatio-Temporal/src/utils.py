@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
 import paddle
-
-# from paddle import nn
 
 
 def cal_loss(y_true, y_pred, name="wind_power"):
@@ -18,8 +14,6 @@ def cal_loss(y_true, y_pred, name="wind_power"):
         idx = ~paddle.isnan(x)
         l1_x = paddle.abs(x[idx]).mean().item()
         l2_x = (x[idx] ** 2).mean().item() ** 0.5
-        # l1_x = paddle.nanmean(paddle.abs(x)).item()
-        # l2_x = paddle.nanmean(x**2).item() ** 0.5
 
         mae.append(l1_x)
         rmse.append(l2_x)
@@ -27,14 +21,12 @@ def cal_loss(y_true, y_pred, name="wind_power"):
     return mae, rmse
 
 
-def init_weights(m):
-    for name, param in m.named_parameters():
-        if "weight" in name:
-            # nn.init.normal_(param.data, mean=0, std=0.1)
-            pass
-        else:
-            # nn.init.constant_(param.data, 0)
-            pass
+def get_weight_attr():
+    return paddle.ParamAttr(initializer=paddle.nn.initializer.Normal(mean=0, std=0.1))
+
+
+def get_bias_attr():
+    return paddle.ParamAttr(initializer=paddle.nn.initializer.Constant(value=0))
 
 
 def count_parameters(model):

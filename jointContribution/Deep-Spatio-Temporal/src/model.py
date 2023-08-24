@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-
 import paddle
 import paddle.nn.functional as F
 from paddle import nn
+from src import utils
 
 
 class Embedding(nn.Layer):
@@ -10,10 +9,9 @@ class Embedding(nn.Layer):
         super().__init__()
         self.num_pts = num_pts
         self.embd_dim = embd_dim
-        weight_attr = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
+        self.embedding = nn.Embedding(
+            num_pts, embd_dim, weight_attr=utils.get_weight_attr()
         )
-        self.embedding = nn.Embedding(num_pts, embd_dim, weight_attr=weight_attr)
 
     def forward(self, batch_ids):
         pts_embedded = self.embedding(batch_ids)
@@ -50,52 +48,52 @@ class Encoder(nn.Layer):
         else:
             direction = "forward"
 
-        weight_attr1 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        weight_attr2 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        bias_attr1 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
-        bias_attr2 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
         if GRU_LSTM == "GRU":
             self.rnn = nn.GRU(
                 self.input_dim,
                 self.enc_dim,
                 direction=direction,
                 time_major=True,
-                weight_ih_attr=weight_attr1,
-                weight_hh_attr=weight_attr2,
-                bias_ih_attr=bias_attr1,
-                bias_hh_attr=bias_attr2,
+                weight_ih_attr=utils.get_weight_attr(),
+                weight_hh_attr=utils.get_weight_attr(),
+                bias_ih_attr=utils.get_bias_attr(),
+                bias_hh_attr=utils.get_bias_attr(),
             )
         if GRU_LSTM == "LSTM":
             self.rnn = nn.LSTM(
-                self.input_dim, self.enc_dim, direction=direction, time_major=True
+                self.input_dim,
+                self.enc_dim,
+                direction=direction,
+                time_major=True,
+                weight_ih_attr=utils.get_weight_attr(),
+                weight_hh_attr=utils.get_weight_attr(),
+                bias_ih_attr=utils.get_bias_attr(),
+                bias_hh_attr=utils.get_bias_attr(),
             )
 
-        weight_attr3 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        bias_attr3 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
         if self.is_bidirectional:
             self.fc = nn.Linear(
-                enc_dim * 2, dec_dim, weight_attr=weight_attr3, bias_attr=bias_attr3
+                enc_dim * 2,
+                dec_dim,
+                weight_attr=utils.get_weight_attr(),
+                bias_attr=utils.get_bias_attr(),
             )
         else:
             self.fc = nn.Linear(
-                enc_dim, dec_dim, weight_attr=weight_attr3, bias_attr=bias_attr3
+                enc_dim,
+                dec_dim,
+                weight_attr=utils.get_weight_attr(),
+                bias_attr=utils.get_bias_attr(),
             )
 
     def forward(self, one_batch):
-        """
-        input_batch: enc_len * size * input_dim
+        """The forward function of the encoder.
+
+        Args:
+            one_batch (Tensor): The input batch.
+        Returns:
+            Tensor: The encoder outputs.
+            Tensor: The hidden variable returned by the decoder.
         """
         batch_ids = one_batch[0]
 
@@ -146,19 +144,6 @@ class Decoder(nn.Layer):
         self.GRU_LSTM = GRU_LSTM
         self.is_bidirectional = is_bidirectional
 
-        weight_attr1 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        weight_attr2 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        bias_attr1 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
-        bias_attr2 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
-
         self.embedding_layer = embedding_layer
         if embedding_layer is not None:
             embd_dim = embedding_layer.embd_dim
@@ -170,57 +155,60 @@ class Decoder(nn.Layer):
                 self.dec_input_dim,
                 dec_dim,
                 time_major=True,
-                weight_ih_attr=weight_attr1,
-                weight_hh_attr=weight_attr2,
-                bias_ih_attr=bias_attr1,
-                bias_hh_attr=bias_attr2,
+                weight_ih_attr=utils.get_weight_attr(),
+                weight_hh_attr=utils.get_weight_attr(),
+                bias_ih_attr=utils.get_bias_attr(),
+                bias_hh_attr=utils.get_bias_attr(),
             )
         if GRU_LSTM == "LSTM":
-            self.rnn = nn.LSTM(self.dec_input_dim, dec_dim, time_major=True)
-        weight_attr_fc = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        bias_attr_fc = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
+            self.rnn = nn.LSTM(
+                self.dec_input_dim,
+                dec_dim,
+                time_major=True,
+                weight_ih_attr=utils.get_weight_attr(),
+                weight_hh_attr=utils.get_weight_attr(),
+                bias_ih_attr=utils.get_bias_attr(),
+                bias_hh_attr=utils.get_bias_attr(),
+            )
         self.fc = nn.Linear(
-            dec_dim, 1, weight_attr=weight_attr_fc, bias_attr=bias_attr_fc
+            dec_dim,
+            1,
+            weight_attr=utils.get_weight_attr(),
+            bias_attr=utils.get_bias_attr(),
         )
 
-        weight_attr3 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Normal(mean=0, std=0.1)
-        )
-        bias_attr3 = paddle.framework.ParamAttr(
-            initializer=paddle.nn.initializer.Constant(value=0)
-        )
         if self.attention_ind:
             self.attn = nn.Linear(self.dec_input_dim + dec_dim, enc_len)
             if self.is_bidirectional:
                 self.attn_combined = nn.Linear(
                     self.dec_input_dim + 2 * enc_dim,
                     self.dec_input_dim,
-                    weight_attr=weight_attr3,
-                    bias_attr=bias_attr3,
+                    weight_attr=utils.get_weight_attr(),
+                    bias_attr=utils.get_bias_attr(),
                 )
             else:
                 self.attn_combined = nn.Linear(
                     self.dec_input_dim + enc_dim,
                     self.dec_input_dim,
-                    weight_attr=weight_attr3,
-                    bias_attr=bias_attr3,
+                    weight_attr=utils.get_weight_attr(),
+                    bias_attr=utils.get_bias_attr(),
                 )
 
     def forward(self, one_batch, encoder_outputs, hidden):
-        """
-        input: size * input_dim
-        batch_ids: size
+        """The forward function of the decoder.
+
+        Args:
+            one_batch (Tensor): The input batch.
+            encoder_outputs (Tensor): The encoder outputs.
+            hidden (Tensor): The hidden variable returned by the decoder.
+        Returns:
+            Tensor: The predicted value.
         """
         # change size to 1 * size * dim
         batch_ids = one_batch[0]
         y_ = one_batch[2].transpose(perm=[1, 0, 2])
         encoder_outputs = encoder_outputs.transpose(perm=[1, 0, 2])
 
-        # rnn_input = y_[[0], :, :]
         rnn_input = paddle.index_select(y_, paddle.to_tensor([0]))
         rnn_input = paddle.nan_to_num(rnn_input)
 
@@ -289,9 +277,7 @@ class Seq2Seq(nn.Layer):
         n_turbines=200,
         device="cpu",
     ):
-
         super().__init__()
-
         self.enc_dim = enc_dim
         self.dec_dim = dec_dim
         self.enc_input_dim = input_dim + K - 1
@@ -346,7 +332,5 @@ class Seq2Seq(nn.Layer):
 
     def forward(self, one_batch):
         encoder_outputs, hidden = self.encoder(one_batch)
-
         y_pred = self.decoder(one_batch, encoder_outputs, hidden)
-
         return y_pred
