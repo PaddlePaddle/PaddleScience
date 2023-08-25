@@ -102,7 +102,7 @@ def ensure_logger(log_func):
     def wrapped_log_func(fmt, *args):
         if _logger is None:
             init_logger()
-            _logger.info(
+            _logger.warning(
                 "Before you call functions within the logger, the logger has already "
                 "been automatically initialized. Since `log_file` is not specified by "
                 "default, information will not be written to any file except being "

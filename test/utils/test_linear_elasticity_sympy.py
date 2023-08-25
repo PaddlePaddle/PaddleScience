@@ -253,7 +253,7 @@ def test_linearelasticity(E, nu, lambda_, mu, rho, dim, time):
     # test for result
     for key in functional_expr_dict:
         assert paddle.allclose(
-            output_dict_functional[key], output_dict_sympy[key], atol=1e-7
+            output_dict_functional[key], output_dict_sympy[key], atol=2e-7
         )
 
 

@@ -245,7 +245,11 @@ def _cvt_to_key(sympy_node: sp.Basic):
     if isinstance(
         sympy_node, (sp.Symbol, sp.core.function.UndefinedFunction, sp.Function)
     ):
-        return sympy_node.name
+        if hasattr(sympy_node, "name"):
+            # custom function
+            return sympy_node.name
+        else:
+            str(sympy_node)
     elif isinstance(sympy_node, sp.Derivative):
         # convert Derivative(u(x,y),(x,2),(y,2)) to "u__x__x__y__y"
         expr_str = sympy_node.args[0].name
@@ -256,7 +260,7 @@ def _cvt_to_key(sympy_node: sp.Basic):
         return str(sympy_node)
 
 
-class NodeBase(nn.Layer):
+class Node(nn.Layer):
     """The base class of the node in expression tree."""
 
     def __init__(self, expr: sp.Basic):
@@ -265,7 +269,7 @@ class NodeBase(nn.Layer):
         self.key = _cvt_to_key(self.expr)
 
     def forward(self, **kwargs):
-        raise NotImplementedError("NodeBase.forward is not implemented")
+        raise NotImplementedError("Node.forward is not implemented")
 
     def __str__(self):
         return (
@@ -273,7 +277,7 @@ class NodeBase(nn.Layer):
         )
 
 
-class OperatorNode(NodeBase):
+class OperatorNode(Node):
     """
     A node representing a sp operator in the computational graph.
     """
@@ -283,7 +287,7 @@ class OperatorNode(NodeBase):
 
     def forward(self, data_dict: Dict):
         if self.expr.func == sp.Add:
-            data_dict[self.key] = paddle.add_n(
+            data_dict[self.key] = sum(
                 [data_dict[_cvt_to_key(arg)] for arg in self.expr.args]
             )
         elif self.expr.func == sp.Mul:
@@ -316,7 +320,7 @@ class OperatorNode(NodeBase):
         return data_dict
 
 
-class LayerNode(NodeBase):
+class LayerNode(Node):
     """
     A node representing a neural network in the computational graph
     """
@@ -330,13 +334,14 @@ class LayerNode(NodeBase):
             return data_dict
 
         output_dict = self.model(data_dict)
+        print("call model forward")
         for key, value in output_dict.items():
             data_dict[key] = value
 
         return data_dict
 
 
-class ConstantNode(NodeBase):
+class ConstantNode(Node):
     """
     A node representing a constant in the computational graph.
     """
@@ -366,7 +371,7 @@ class ComposedFunc(nn.Layer):
     Compose multiple functions into one function.
     """
 
-    def __init__(self, target: str, funcs: List[NodeBase]):
+    def __init__(self, target: str, funcs: List[Node]):
         super().__init__()
         self.funcs = funcs
         self.target = target

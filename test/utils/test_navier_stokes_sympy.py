@@ -14,30 +14,27 @@
 
 import paddle
 import pytest
-from sympy import Function
-from sympy import Number
-from sympy import Symbol
+import sympy as sp
 
 import ppsci
 from ppsci import equation
 from ppsci.autodiff import clear
+from ppsci.autodiff import hessian as H
+from ppsci.autodiff import jacobian as J
 from ppsci.utils import expression
-
-__all__ = []
 
 
 class NavierStokes_sympy:
-    def __init__(self, nu, rho=1, dim=3, time=True, mixed_form=False):
+    def __init__(self, nu, rho=1, dim=3, time=True):
         # set params
         self.dim = dim
         self.time = time
-        self.mixed_form = mixed_form
 
         # coordinates
-        x, y, z = Symbol("x"), Symbol("y"), Symbol("z")
+        x, y, z = sp.Symbol("x"), sp.Symbol("y"), sp.Symbol("z")
 
         # time
-        t = Symbol("t")
+        t = sp.Symbol("t")
 
         # make input variables
         input_variables = {"x": x, "y": y, "z": z, "t": t}
@@ -47,27 +44,27 @@ class NavierStokes_sympy:
             input_variables.pop("t")
 
         # velocity componets
-        u = Function("u")(*input_variables)
-        v = Function("v")(*input_variables)
+        u = sp.Function("u")(*input_variables)
+        v = sp.Function("v")(*input_variables)
         if self.dim == 3:
-            w = Function("w")(*input_variables)
+            w = sp.Function("w")(*input_variables)
         else:
-            w = Number(0)
+            w = sp.Number(0)
 
         # pressure
-        p = Function("p")(*input_variables)
+        p = sp.Function("p")(*input_variables)
 
         # kinematic viscosity
         if isinstance(nu, str):
-            nu = Function(nu)(*input_variables)
+            nu = sp.Function(nu)(*input_variables)
         elif isinstance(nu, (float, int)):
-            nu = Number(nu)
+            nu = sp.Number(nu)
 
         # density
         if isinstance(rho, str):
-            rho = Function(rho)(*input_variables)
+            rho = sp.Function(rho)(*input_variables)
         elif isinstance(rho, (float, int)):
-            rho = Number(rho)
+            rho = sp.Number(rho)
 
         # dynamic viscosity
         mu = rho * nu
@@ -78,7 +75,7 @@ class NavierStokes_sympy:
             rho.diff(t) + (rho * u).diff(x) + (rho * v).diff(y) + (rho * w).diff(z)
         )
 
-        curl = Number(0) if rho.diff(x) == 0 else u.diff(x) + v.diff(y) + w.diff(z)
+        curl = sp.Number(0) if rho.diff(x) == 0 else u.diff(x) + v.diff(y) + w.diff(z)
         self.equations["momentum_x"] = (
             (rho * u).diff(t)
             + (
@@ -129,68 +126,438 @@ class NavierStokes_sympy:
             self.equations.pop("momentum_z")
 
 
-@pytest.mark.parametrize("nu", (2.0,))
-@pytest.mark.parametrize("rho", (1.0,))
-@pytest.mark.parametrize("dim", (2, 3))
-@pytest.mark.parametrize("time", (False, True))
-def test_navier_stokes(nu, rho, dim, time):
-    """Test for navier_stokes equation."""
-    # define input/output keys
-    input_keys = ("x", "y", "z")[:dim]
-    if time:
-        input_keys = ("t",) + input_keys
+class ZeroEquation_sympy:
+    """
+    Zero Equation Turbulence model
 
-    output_keys = ("u", "v")
-    if dim == 3:
-        output_keys += ("w",)
-    output_keys += ("p",)
+    Parameters
+    ==========
+    nu : float
+        The kinematic viscosity of the fluid.
+    max_distance : float
+        The maximum wall distance in the flow field.
+    rho : float, Sympy sp.Symbol/Expr, str
+        The density. If `rho` is a str then it is
+        converted to Sympy sp.Function of form 'rho(x,y,z,t)'.
+        If 'rho' is a Sympy sp.Symbol or Expression then this
+        is substituted into the equation. Default is 1.
+    dim : int
+        Dimension of the Zero Equation Turbulence model (2 or 3).
+        Default is 3.
+    time : bool
+        If time-dependent equations or not. Default is True.
 
-    # prepare input data in dict
-    batch_size = 13
-    input_dict = {}
-    for var in input_keys:
-        input_dict[var] = paddle.randn([batch_size, 1])
-        input_dict[var].stop_gradient = False
+    Example
+    """
 
-    # prepare model
-    model = ppsci.arch.MLP(input_keys, output_keys, 2, 10)
+    def __init__(
+        self, nu, max_distance, rho=1, dim=3, time=True
+    ):  # TODO add density into model
+        # set params
+        self.dim = dim
+        self.time = time
 
-    # prepare python function expressions and sympy-expression in dict
-    functional_expr_dict = equation.NavierStokes(nu, rho, dim, time).equations
-    sympy_expr_dict = NavierStokes_sympy(nu, rho, dim, time).equations
-    for target, expr in sympy_expr_dict.items():
-        sympy_expr_dict[target] = expression.sympy_to_function(
-            target,
-            expr,
-            [
-                model,
-            ],
-        )
+        # model coefficients
+        self.max_distance = max_distance
+        self.karman_constant = 0.419
+        self.max_distance_ratio = 0.09
 
-    # compute equation with python function
-    output_dict_functional = model(input_dict)
-    for name, expr in functional_expr_dict.items():
-        if callable(expr):
-            output_dict_functional[name] = expr(
-                {**output_dict_functional, **input_dict}
-            )
+        # coordinates
+        x, y, z = sp.Symbol("x"), sp.Symbol("y"), sp.Symbol("z")
+
+        # time
+        t = sp.Symbol("t")
+
+        # make input variables
+        input_variables = {"x": x, "y": y, "z": z, "t": t}
+        if self.dim == 2:
+            input_variables.pop("z")
+        if not self.time:
+            input_variables.pop("t")
+
+        # velocity componets
+        u = sp.Function("u")(*input_variables)
+        v = sp.Function("v")(*input_variables)
+        if self.dim == 3:
+            w = sp.Function("w")(*input_variables)
         else:
-            raise TypeError(f"expr type({type(expr)}) is invalid")
-    clear()
+            w = sp.Number(0)
 
-    # compute equation with funciton converted from sympy
-    output_dict_sympy = {k: v for k, v in input_dict.items()}
-    for name, _ in sympy_expr_dict.items():
-        output_dict_sympy[name] = sympy_expr_dict[name](
-            {**output_dict_sympy, **input_dict}
-        )
-    clear()
+        # density
+        if type(rho) is str:
+            rho = sp.Function(rho)(*input_variables)
+        elif type(rho) in [float, int]:
+            rho = sp.Number(rho)
 
-    # test for result
-    for key in functional_expr_dict:
-        assert paddle.allclose(
-            output_dict_functional[key], output_dict_sympy[key], atol=1e-7
+        # wall distance
+        normal_distance = sp.Function("sdf")(*input_variables)
+
+        # mixing length
+        mixing_length = sp.Min(
+            self.karman_constant * normal_distance,
+            self.max_distance_ratio * self.max_distance,
         )
+        G = (
+            2 * u.diff(x) ** 2
+            + 2 * v.diff(y) ** 2
+            + 2 * w.diff(z) ** 2
+            + (u.diff(y) + v.diff(x)) ** 2
+            + (u.diff(z) + w.diff(x)) ** 2
+            + (v.diff(z) + w.diff(y)) ** 2
+        )
+
+        # set equations
+        self.equations = {}
+        self.equations["nu"] = nu + rho * mixing_length**2 * sp.sqrt(G)
+
+
+class Test_NavierStokes_sympy:
+    @pytest.mark.parametrize("nu", (2.0,))
+    @pytest.mark.parametrize("rho", (1.0,))
+    @pytest.mark.parametrize("dim", (2,))
+    @pytest.mark.parametrize("time", (False, True))
+    def test_nu_sympy(self, nu, rho, dim, time):
+        """Test for navier_stokes equation."""
+        # define input/output keys
+        ze = ZeroEquation_sympy(nu=nu, rho=1.0, dim=dim, max_distance=3.4, time=time)
+        nu_sympy = ze.equations["nu"]
+
+        input_keys = ("x", "y", "z")[:dim]
+        if time:
+            input_keys = ("t",) + input_keys
+
+        output_keys = ("u", "v")
+        if dim == 3:
+            output_keys += ("w",)
+        output_keys += ("p",)
+
+        # prepare input data in dict
+        batch_size = 13
+        input_dict = {}
+        for var in input_keys:
+            input_dict[var] = paddle.randn([batch_size, 1])
+            input_dict[var].stop_gradient = False
+            if var != "t":
+                input_dict[f"sdf__{var}"] = paddle.randn([batch_size, 1])
+                input_dict[f"normal__{var}"] = paddle.randn([batch_size, 1])
+
+                input_dict[f"sdf__{var}"].stop_gradient = False
+                input_dict[f"normal__{var}"].stop_gradient = False
+
+        input_dict["sdf"] = paddle.randn([batch_size, 1])
+        input_dict["sdf"].stop_gradient = False
+
+        # prepare model
+        model = ppsci.arch.MLP(input_keys, output_keys, 2, 10)
+
+        # prepare python function expressions and sympy-expression in dict
+        def nu_f(out):
+            karman_constant = 0.419
+            max_distance_ratio = 0.09
+            normal_distance = out["sdf"]
+            max_distance = ze.max_distance
+            mixing_length = paddle.minimum(
+                karman_constant * normal_distance,
+                max_distance_ratio * max_distance,
+            )
+            x, y = out["x"], out["y"]
+            u, v = out["u"], out["v"]
+            G = 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2 + (J(u, y) + J(v, x)) ** 2
+            if dim == 3:
+                z, w = out["z"], out["w"]
+                G += (
+                    +2 * J(w, z) ** 2
+                    + (J(u, z) + J(w, x)) ** 2
+                    + (J(v, z) + J(w, y)) ** 2
+                )
+            return nu + rho * mixing_length**2 * paddle.sqrt(G)
+
+        functional_expr_dict = equation.NavierStokes(nu_f, rho, dim, time).equations
+
+        def continuity_f(out):
+            x, y = out["x"], out["y"]
+            u, v = out["u"], out["v"]
+            return 1.0 * J(u, x) + 1.0 * J(v, y)
+
+        def momentum_x_f(out):
+            x, y = out["x"], out["y"]
+            u, v, p = out["u"], out["v"], out["p"]
+            if time:
+                t = out["t"]
+            return (
+                -(
+                    1.0
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    + 2.0
+                )
+                * H(u, x)
+                - (
+                    1.0
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    + 2.0
+                )
+                * H(u, y)
+                - (
+                    1.0
+                    * (
+                        (J(u, y) + J(v, x)) * (2 * H(u, y) + 2 * J(J(v, x), y)) / 2
+                        + 2 * J(u, x) * J(J(u, x), y)
+                        + 2 * J(v, y) * H(v, y)
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    / paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    + 0.838
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.heaviside(0.306 - 0.419 * out["sdf"], paddle.zeros([]))
+                    * out["sdf__y"]
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                )
+                * J(u, y)
+                - (
+                    1.0
+                    * (
+                        (J(u, y) + J(v, x)) * (2 * H(v, x) + 2 * J(J(u, x), y)) / 2
+                        + 2 * J(u, x) * H(u, x)
+                        + 2 * J(v, y) * J(J(v, x), y)
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    / paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    + 0.838
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.heaviside(0.306 - 0.419 * out["sdf"], paddle.zeros([]))
+                    * out["sdf__x"]
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                )
+                * J(u, x)
+                + (1.0 * u * J(u, x) + 1.0 * v * J(u, y) + J(p, x))
+                + (J(u, t) if time else 0)
+            )
+
+        def momentum_y_f(out):
+            x, y = out["x"], out["y"]
+            u, v, p = out["u"], out["v"], out["p"]
+            if time:
+                t = out["t"]
+            return (
+                -(
+                    1.0
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    + 2.0
+                )
+                * H(v, x)
+                - (
+                    1.0
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    + 2.0
+                )
+                * H(v, y)
+                - (
+                    1.0
+                    * (
+                        (J(u, y) + J(v, x)) * (2 * H(u, y) + 2 * J(J(v, x), y)) / 2
+                        + 2 * J(u, x) * J(J(u, x), y)
+                        + 2 * J(v, y) * H(v, y)
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    / paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    + 0.838
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.heaviside(0.306 - 0.419 * out["sdf"], paddle.zeros([]))
+                    * out["sdf__y"]
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                )
+                * J(v, y)
+                - (
+                    1.0
+                    * (
+                        (J(u, y) + J(v, x)) * (2 * H(v, x) + 2 * J(J(u, x), y)) / 2
+                        + 2 * J(u, x) * H(u, x)
+                        + 2 * J(v, y) * J(J(v, x), y)
+                    )
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                    ** 2
+                    / paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    + 0.838
+                    * paddle.sqrt(
+                        (J(u, y) + J(v, x)) ** 2 + 2 * J(u, x) ** 2 + 2 * J(v, y) ** 2
+                    )
+                    * paddle.heaviside(0.306 - 0.419 * out["sdf"], paddle.zeros([]))
+                    * out["sdf__x"]
+                    * paddle.minimum(
+                        paddle.full_like(out["sdf"], 0.306), 0.419 * out["sdf"]
+                    )
+                )
+                * J(v, x)
+                + (1.0 * u * J(v, x) + 1.0 * v * J(v, y) + J(p, y))
+                + (J(v, t) if time else 0)
+            )
+
+        functional_expr_dict["continuity"] = continuity_f
+        functional_expr_dict["momentum_x"] = momentum_x_f
+        functional_expr_dict["momentum_y"] = momentum_y_f
+
+        sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
+        for target, expr in sympy_expr_dict.items():
+            sympy_expr_dict[target] = expression.sympy_to_function(
+                target,
+                expr,
+                [
+                    model,
+                ],
+            )
+
+        # compute equation with python function
+        output_dict_functional = model(input_dict)
+        for name, expr in functional_expr_dict.items():
+            if callable(expr):
+                output_dict_functional[name] = expr(
+                    {**output_dict_functional, **input_dict}
+                )
+            else:
+                raise TypeError(f"expr type({type(expr)}) is invalid")
+        clear()
+
+        # compute equation with funciton converted from sympy
+        output_dict_sympy = {k: v for k, v in input_dict.items()}
+        for name, expr in sympy_expr_dict.items():
+            tmp = expr(output_dict_sympy)
+            output_dict_sympy[name] = tmp
+        clear()
+
+        # test for result
+        for key in functional_expr_dict:
+            assert paddle.allclose(
+                output_dict_functional[key], output_dict_sympy[key], atol=1e-7
+            ), f"{key} not equal."
+
+    @pytest.mark.parametrize("nu", (2.0,))
+    @pytest.mark.parametrize("rho", (1.0,))
+    @pytest.mark.parametrize("dim", (2,))
+    @pytest.mark.parametrize("time", (False, True))
+    def test_nu_constant(self, nu, rho, dim, time):
+        """Test for navier_stokes equation."""
+        # define input/output keys
+        nu_sympy = nu
+
+        input_keys = ("x", "y", "z")[:dim]
+        if time:
+            input_keys = ("t",) + input_keys
+
+        output_keys = ("u", "v")
+        if dim == 3:
+            output_keys += ("w",)
+        output_keys += ("p",)
+
+        # prepare input data in dict
+        batch_size = 13
+        input_dict = {}
+        for var in input_keys:
+            input_dict[var] = paddle.randn([batch_size, 1])
+            input_dict[var].stop_gradient = False
+            if var != "t":
+                input_dict[f"sdf__{var}"] = paddle.randn([batch_size, 1])
+                input_dict[f"normal__{var}"] = paddle.randn([batch_size, 1])
+
+                input_dict[f"sdf__{var}"].stop_gradient = False
+                input_dict[f"normal__{var}"].stop_gradient = False
+
+        input_dict["sdf"] = paddle.randn([batch_size, 1])
+        input_dict["sdf"].stop_gradient = False
+
+        # prepare model
+        model = ppsci.arch.MLP(input_keys, output_keys, 2, 10)
+
+        # prepare python function expressions and sympy-expression in dict
+        functional_expr_dict = equation.NavierStokes(nu, rho, dim, time).equations
+
+        sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
+        for target, expr in sympy_expr_dict.items():
+            sympy_expr_dict[target] = expression.sympy_to_function(
+                target,
+                expr,
+                [
+                    model,
+                ],
+            )
+
+        # compute equation with python function
+        output_dict_functional = model(input_dict)
+        for name, expr in functional_expr_dict.items():
+            if callable(expr):
+                output_dict_functional[name] = expr(
+                    {**output_dict_functional, **input_dict}
+                )
+            else:
+                raise TypeError(f"expr type({type(expr)}) is invalid")
+        clear()
+
+        # compute equation with funciton converted from sympy
+        output_dict_sympy = {k: v for k, v in input_dict.items()}
+        for name, expr in sympy_expr_dict.items():
+            tmp = expr(output_dict_sympy)
+            output_dict_sympy[name] = tmp
+        clear()
+
+        # test for result
+        for key in functional_expr_dict:
+            assert paddle.allclose(
+                output_dict_functional[key], output_dict_sympy[key], atol=1e-7
+            ), f"{key} not equal."
 
 
 if __name__ == "__main__":
