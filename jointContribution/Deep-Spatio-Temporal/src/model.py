@@ -92,8 +92,7 @@ class Encoder(nn.Layer):
         Args:
             one_batch (Tensor): The input batch.
         Returns:
-            Tensor: The encoder outputs.
-            Tensor: The hidden variable returned by the decoder.
+            Tuple[Tensor, Tensor]: The encoder outputs and the hidden variable returned by the decoder.
         """
         batch_ids = one_batch[0]
 
