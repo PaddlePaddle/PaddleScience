@@ -21,7 +21,7 @@ from ppsci import equation
 from ppsci.autodiff import clear
 from ppsci.autodiff import hessian as H
 from ppsci.autodiff import jacobian as J
-from ppsci.utils import expression
+from ppsci.utils import sym_to_func
 
 
 class NavierStokes_sympy:
@@ -219,7 +219,7 @@ class Test_NavierStokes_sympy:
     def test_nu_sympy(self, nu, rho, dim, time):
         """Test for navier_stokes equation."""
         # define input/output keys
-        ze = ZeroEquation_sympy(nu=nu, rho=1.0, dim=dim, max_distance=3.4, time=time)
+        ze = ZeroEquation_sympy(nu=nu, rho=rho, dim=dim, max_distance=3.4, time=time)
         nu_sympy = ze.equations["nu"]
 
         input_keys = ("x", "y", "z")[:dim]
@@ -453,7 +453,7 @@ class Test_NavierStokes_sympy:
 
         sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
         for target, expr in sympy_expr_dict.items():
-            sympy_expr_dict[target] = expression.sympy_to_function(
+            sympy_expr_dict[target] = sym_to_func.sympy_to_function(
                 target,
                 expr,
                 [
@@ -527,7 +527,7 @@ class Test_NavierStokes_sympy:
 
         sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
         for target, expr in sympy_expr_dict.items():
-            sympy_expr_dict[target] = expression.sympy_to_function(
+            sympy_expr_dict[target] = sym_to_func.sympy_to_function(
                 target,
                 expr,
                 [
@@ -548,9 +548,10 @@ class Test_NavierStokes_sympy:
 
         # compute equation with funciton converted from sympy
         output_dict_sympy = {k: v for k, v in input_dict.items()}
+        tmp = {k: v for k, v in output_dict_sympy.items()}
         for name, expr in sympy_expr_dict.items():
-            tmp = expr(output_dict_sympy)
-            output_dict_sympy[name] = tmp
+            output = expr(tmp)
+            output_dict_sympy[name] = output
         clear()
 
         # test for result
