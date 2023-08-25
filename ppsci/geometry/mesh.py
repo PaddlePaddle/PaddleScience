@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
@@ -152,6 +154,7 @@ class Mesh(geometry.Geometry):
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
         import open3d
+
         import pymesh
 
         open3d_mesh = open3d.geometry.TriangleMesh(
@@ -176,6 +179,7 @@ class Mesh(geometry.Geometry):
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
         import open3d
+
         import pymesh
 
         open3d_mesh = open3d.geometry.TriangleMesh(
