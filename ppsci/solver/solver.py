@@ -432,7 +432,13 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
+                logger.scaler(
+                    "eval/metric",
+                    cur_metric,
+                    epoch_id,
+                    self.vdl_writer,
+                    self.wandb_writer,
+                )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
