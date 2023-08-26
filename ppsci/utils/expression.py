@@ -74,17 +74,15 @@ class ExpressionSolver(nn.Layer):
         output_dicts = []
         for i, expr_dict in enumerate(expr_dicts):
             # model forward
-            if callable(next(iter(expr_dict.values()))):
-                output_dict = model(input_dicts[i])
+            output_dict = model(input_dicts[i])
 
             # equation forward
+            tmp = {k: v for k, v in input_dicts[i].items()}
+            tmp.update(output_dict)
             for name, expr in expr_dict.items():
                 if name not in label_dicts[i]:
                     continue
-                if callable(expr):
-                    output_dict[name] = expr({**output_dict, **input_dicts[i]})
-                else:
-                    raise TypeError(f"expr type({type(expr)}) is invalid")
+                output_dict[name] = expr(tmp)
 
             # put field 'area' into output_dict
             if "area" in input_dicts[i]:
@@ -132,17 +130,15 @@ class ExpressionSolver(nn.Layer):
                 given validator.
         """
         # model forward
-        if callable(next(iter(expr_dict.values()))):
-            output_dict = model(input_dict)
+        output_dict = model(input_dict)
 
         # equation forward
+        tmp = {k: v for k, v in input_dict.items()}
+        tmp.update(output_dict)
         for name, expr in expr_dict.items():
             if name not in label_dict:
                 continue
-            if callable(expr):
-                output_dict[name] = expr({**output_dict, **input_dict})
-            else:
-                raise TypeError(f"expr type({type(expr)}) is invalid")
+            output_dict[name] = expr(tmp)
 
         # put field 'area' into output_dict
         if "area" in input_dict:
@@ -181,11 +177,10 @@ class ExpressionSolver(nn.Layer):
 
         if isinstance(expr_dict, dict):
             # equation forward
+            tmp = {k: v for k, v in input_dict.items()}
+            tmp.update(output_dict)
             for name, expr in expr_dict.items():
-                if callable(expr):
-                    output_dict[name] = expr({**output_dict, **input_dict})
-                else:
-                    raise TypeError(f"expr type({type(expr)}) is invalid")
+                output_dict[name] = expr(tmp)
 
             # clear differentiation cache
             clear()

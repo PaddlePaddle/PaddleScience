@@ -29,14 +29,14 @@ if __name__ == "__main__":
     EVAL_FREQ = 200
 
     # set output directory
-    OUTPUT_DIR = "./output/laplace2d" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_laplace2d" if not args.output_dir else args.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
     model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
 
     # set equation
-    equation = {"laplace": ppsci.equation.pde.Laplace(dim=2)}
+    equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}

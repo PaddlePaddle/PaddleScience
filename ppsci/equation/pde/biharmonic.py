@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
@@ -39,13 +38,11 @@ class Biharmonic(base.PDE):
         self.q = q
         self.D = D
 
-        def biharmonic_compute_func(out):
-            u = out["u"]
-            biharmonic = -self.q / self.D
-            invars = ("x", "y", "z")[: self.dim]
-            for invar_i in invars:
-                for invar_j in invars:
-                    biharmonic += hessian(hessian(u, out[invar_i]), out[invar_j])
-            return biharmonic
+        invars = self.create_symbols(("x", "y", "z")[: self.dim])
+        u = self.create_function("u", invars)
+        biharmonic = -self.q / self.D
+        for invar_i in invars:
+            for invar_j in invars:
+                biharmonic += u.diff(invar_i).diff(invar_i).diff(invar_j).diff(invar_j)
 
-        self.add_equation("biharmonic", biharmonic_compute_func)
+        self.add_equation("biharmonic", biharmonic)
