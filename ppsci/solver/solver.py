@@ -422,8 +422,8 @@ class Solver:
                     save_load.save_checkpoint(
                         self.model,
                         self.optimizer,
-                        self.scaler,
                         self.best_metric,
+                        self.scaler,
                         self.output_dir,
                         "best_model",
                         self.equation,
@@ -453,8 +453,8 @@ class Solver:
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
-                    self.scaler,
                     {"metric": cur_metric, "epoch": epoch_id},
+                    self.scaler,
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
@@ -464,8 +464,8 @@ class Solver:
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
-                self.scaler,
                 {"metric": cur_metric, "epoch": epoch_id},
+                self.scaler,
                 self.output_dir,
                 "latest",
                 self.equation,

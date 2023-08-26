@@ -42,7 +42,7 @@ def _load_pretrain_from_path(
     """Load pretrained model from given path.
 
     Args:
-        path (str, optional): Pretrained model path.
+        path (str): Pretrained model path.
         model (nn.Layer): Model with parameters.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
@@ -91,7 +91,7 @@ def load_checkpoint(
     Args:
         path (str): Path for checkpoint.
         model (nn.Layer): Model with parameters.
-        optimizer (optimizer.Optimizer, optional): Optimizer for model.
+        optimizer (optimizer.Optimizer): Optimizer for model.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
 
@@ -134,43 +134,43 @@ def load_checkpoint(
 def save_checkpoint(
     model: nn.Layer,
     optimizer: optimizer.Optimizer,
-    grad_scaler: amp.GradScaler,
     metric: Dict[str, float],
-    ckpt_dir: Optional[str] = None,
+    grad_scaler: Optional[amp.GradScaler] = None,
+    output_dir: Optional[str] = None,
     prefix: str = "model",
-    equation: Dict[str, equation.PDE] = None,
+    equation: Optional[Dict[str, equation.PDE]] = None,
 ):
     """Save checkpoint, including model params, optimizer params, metric information.
 
     Args:
         model (nn.Layer): Model with parameters.
         optimizer (optimizer.Optimizer): Optimizer for model.
+        metric (Dict[str, float]): Metric information, such as {"RMSE": 0.1, "MAE": 0.2}.
         grad_scaler (Optional[amp.GradScaler]): GradScaler for AMP. Defaults to None.
-        metric (Dict[str, float]): Metric information, such as {"RMSE": ...}.
-        ckpt_dir (Optional[str]): Directory for checkpoint storage.
+        output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
     if paddle.distributed.get_rank() != 0:
         return
 
-    if ckpt_dir is None:
-        logger.warning("ckpt_dir is None, skip save_checkpoint")
+    if output_dir is None:
+        logger.warning("output_dir is None, skip save_checkpoint")
         return
 
-    ckpt_dir = os.path.join(ckpt_dir, "checkpoints")
+    ckpt_dir = os.path.join(output_dir, "checkpoints")
+    ckpt_path = os.path.join(ckpt_dir, prefix)
     os.makedirs(ckpt_dir, exist_ok=True)
-    model_path = os.path.join(ckpt_dir, prefix)
 
-    paddle.save(model.state_dict(), f"{model_path}.pdparams")
-    paddle.save(optimizer.state_dict(), f"{model_path}.pdopt")
-    paddle.save(metric, f"{model_path}.pdstates")
+    paddle.save(model.state_dict(), f"{ckpt_path}.pdparams")
+    paddle.save(optimizer.state_dict(), f"{ckpt_path}.pdopt")
+    paddle.save(metric, f"{ckpt_path}.pdstates")
     if grad_scaler is not None:
-        paddle.save(grad_scaler.state_dict(), f"{model_path}.pdscaler")
+        paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
     if equation is not None:
         paddle.save(
             {key: eq.state_dict() for key, eq in equation.items()},
-            f"{model_path}.pdeqn",
+            f"{ckpt_path}.pdeqn",
         )
 
-    logger.message(f"Finish saving checkpoint to {model_path}")
+    logger.message(f"Finish saving checkpoint to {ckpt_path}")
