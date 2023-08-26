@@ -18,11 +18,11 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import paddle
 from paddle import jit
 from paddle import nn
 
 if TYPE_CHECKING:
+    import paddle
     from ppsci import constraint
     from ppsci import validate
 
