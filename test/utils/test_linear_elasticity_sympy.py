@@ -21,7 +21,7 @@ from sympy import Symbol
 import ppsci
 from ppsci import equation
 from ppsci.autodiff import clear
-from ppsci.utils import expression
+from ppsci.utils import sym_to_func
 
 __all__ = []
 
@@ -227,8 +227,8 @@ def test_linearelasticity(E, nu, lambda_, mu, rho, dim, time):
         E, nu, lambda_, mu, rho, dim, time
     ).equations
     for target, expr in sympy_expr_dict.items():
-        sympy_expr_dict[target] = expression.sympy_to_function(
-            target, expr, [disp_net, stress_net]
+        sympy_expr_dict[target] = sym_to_func.sympy_to_function(
+            expr, [disp_net, stress_net]
         )
 
     # compute equation with python function

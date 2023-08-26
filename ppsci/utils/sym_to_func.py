@@ -1,6 +1,22 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Sympy to python function conversion module
 """
+
+from __future__ import annotations
 
 import functools
 from typing import TYPE_CHECKING
@@ -17,7 +33,6 @@ from typing_extensions import TypeAlias
 
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import logger
 
 if TYPE_CHECKING:
     from ppsci import arch
@@ -235,7 +250,7 @@ class ConstantNode(Node):
             self.expr = float(self.expr)
         else:
             raise TypeError(
-                f"expr({expr}) should be float/int/bool, but got {type(self.expr)}"
+                f"expr({expr}) should be Float/Integer/Boolean/Rational, but got {type(self.expr)}"
             )
         self.expr = paddle.to_tensor(self.expr)
 
@@ -253,10 +268,9 @@ class ComposedNode(nn.Layer):
     Compose list of several callable objects together.
     """
 
-    def __init__(self, target: str, funcs: List[Node]):
+    def __init__(self, funcs: List[Node]):
         super().__init__()
         self.funcs = funcs
-        self.target = target
 
     def forward(self, data_dict: Dict):
         # call all funcs in order
@@ -299,19 +313,57 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
 
 
 def sympy_to_function(
-    target: str,
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
     Args:
-        target (str): Alias of `expr`, such as "z" for expression: "z = a + b * c".
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data in dict given.
+
+    Examples:
+        >>> import paddle
+        >>> import sympy as sp
+        >>> from ppsci import arch
+        >>> from ppsci.utils import sym_to_func
+
+        >>> a, b, c, x, y = sp.symbols("a b c x y")
+        >>> u = sp.Function("u")(x, y)
+        >>> v = sp.Function("v")(x, y)
+        >>> z = -a + b * (c ** 2) + u * v + 2.3
+
+        >>> model = arch.MLP(("x", "y"), ("u", "v"), 4, 16)
+
+        >>> batch_size = 13
+        >>> a_tensor = paddle.randn([batch_size, 1])
+        >>> b_tensor = paddle.randn([batch_size, 1])
+        >>> c_tensor = paddle.randn([batch_size, 1])
+        >>> x_tensor = paddle.randn([batch_size, 1])
+        >>> y_tensor = paddle.randn([batch_size, 1])
+
+        >>> model_output_dict = model({"x": x_tensor, "y": y_tensor})
+        >>> u_tensor, v_tensor = model_output_dict["u"], model_output_dict["v"]
+
+        >>> z_tensor_manually = (
+        ...     -a_tensor + b_tensor * (c_tensor ** 2)
+        ...     + u_tensor * v_tensor + 2.3
+        ... )
+        >>> z_tensor_sympy = sym_to_func.sympy_to_function(z, model)(
+        ...     {
+        ...         "a": a_tensor,
+        ...         "b": b_tensor,
+        ...         "c": c_tensor,
+        ...         "x": x_tensor,
+        ...         "y": y_tensor,
+        ...     }
+        ... )
+
+        >>> paddle.allclose(z_tensor_manually, z_tensor_sympy).item()
+        True
     """
 
     # simplify expression to reduce nodes in tree
@@ -330,9 +382,10 @@ def sympy_to_function(
     sympy_nodes = list(dict.fromkeys(sympy_nodes))
 
     # convert sympy node to callable node
+    if not isinstance(models, (tuple, list)):
+        models = (models,)
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
-        logger.debug(f"tree node [{i + 1}/{len(sympy_nodes)}]: {node}")
         if isinstance(node.func, sp.core.function.UndefinedFunction):
             match = False
             for model in models:
@@ -359,4 +412,4 @@ def sympy_to_function(
             )
 
     # Compose callable nodes into one callable object
-    return ComposedNode(target, callable_nodes)
+    return ComposedNode(callable_nodes)

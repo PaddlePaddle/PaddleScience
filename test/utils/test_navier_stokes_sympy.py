@@ -127,29 +127,6 @@ class NavierStokes_sympy:
 
 
 class ZeroEquation_sympy:
-    """
-    Zero Equation Turbulence model
-
-    Parameters
-    ==========
-    nu : float
-        The kinematic viscosity of the fluid.
-    max_distance : float
-        The maximum wall distance in the flow field.
-    rho : float, Sympy sp.Symbol/Expr, str
-        The density. If `rho` is a str then it is
-        converted to Sympy sp.Function of form 'rho(x,y,z,t)'.
-        If 'rho' is a Sympy sp.Symbol or Expression then this
-        is substituted into the equation. Default is 1.
-    dim : int
-        Dimension of the Zero Equation Turbulence model (2 or 3).
-        Default is 3.
-    time : bool
-        If time-dependent equations or not. Default is True.
-
-    Example
-    """
-
     def __init__(
         self, nu, max_distance, rho=1, dim=3, time=True
     ):  # TODO add density into model
@@ -454,7 +431,6 @@ class Test_NavierStokes_sympy:
         sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
         for target, expr in sympy_expr_dict.items():
             sympy_expr_dict[target] = sym_to_func.sympy_to_function(
-                target,
                 expr,
                 [
                     model,
@@ -528,7 +504,6 @@ class Test_NavierStokes_sympy:
         sympy_expr_dict = NavierStokes_sympy(nu_sympy, rho, dim, time).equations
         for target, expr in sympy_expr_dict.items():
             sympy_expr_dict[target] = sym_to_func.sympy_to_function(
-                target,
                 expr,
                 [
                     model,
