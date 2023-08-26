@@ -153,9 +153,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -178,9 +177,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
