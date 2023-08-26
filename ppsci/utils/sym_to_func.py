@@ -95,30 +95,6 @@ def _cvt_to_key(expr: sp.Basic) -> str:
         return str(expr)
 
 
-def _compute_single_derivate(
-    dvar: paddle.Tensor, invar: paddle.Tensor, order: int
-) -> paddle.Tensor:
-    """Compute derivative for a single dependent variable to a single independent variable.
-
-    Args:
-        dvar (paddle.Tensor): Dependent variable.
-        invar (paddle.Tensor): Independent variable.
-        order (int): Order of derivative
-
-    Returns:
-        paddle.Tensor: Result of derivative d^{order}{dvar} / d{invar}^{order}.
-    """
-    order_left = order
-    while order_left > 0:
-        if order_left & 1:
-            dvar = jacobian(dvar, invar)
-            order_left -= 1
-        if order_left >= 2:
-            dvar = hessian(dvar, invar)
-            order_left -= 2
-    return dvar
-
-
 class Node(nn.Layer):
     """The base class of the node in expression tree.
 
@@ -191,11 +167,12 @@ class OperatorNode(Node):
     def _derivate_operator_func(self, data_dict):
         data_dict[self.key] = data_dict[self.childs[0]]
         for child, order in self.childs[1:]:
-            data_dict[self.key] = _compute_single_derivate(
-                data_dict[self.key],
-                data_dict[child],
-                order,
-            )
+            if order & 1:
+                data_dict[self.key] = jacobian(data_dict[self.key], data_dict[child])
+                order -= 1
+            while order > 0:
+                data_dict[self.key] = hessian(data_dict[self.key], data_dict[child])
+                order -= 2
         return data_dict
 
     def _heaviside_operator_func(self, data_dict):
@@ -204,7 +181,7 @@ class OperatorNode(Node):
 
     def _vanilla_operator_func(self, data_dict):
         data_dict[self.key] = PADDLE_FUNC_MAP[self.expr.func](
-            *[data_dict[child] for child in self.childs]
+            *tuple(data_dict[child] for child in self.childs)
         )
         return data_dict
 
