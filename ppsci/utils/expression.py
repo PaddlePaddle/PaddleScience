@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
@@ -25,6 +27,7 @@ if TYPE_CHECKING:
     import paddle
     from ppsci import constraint
     from ppsci import validate
+    from ppsci import arch
 
 from ppsci.autodiff import clear
 
@@ -52,7 +55,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
         input_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-        model: nn.Layer,
+        model: arch.Arch,
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
@@ -63,7 +66,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dicts (Tuple[Dict[str, Callable], ...]): Tuple of expression dicts.
             input_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of input dicts.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
             constraint (Dict[str, "constraint.Constraint"]): Constraint dict.
             label_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of label dicts.
             weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
@@ -77,12 +80,10 @@ class ExpressionSolver(nn.Layer):
             output_dict = model(input_dicts[i])
 
             # equation forward
-            tmp = {k: v for k, v in input_dicts[i].items()}
-            tmp.update(output_dict)
+            data_dict = {k: v for k, v in input_dicts[i].items()}
+            data_dict.update(output_dict)
             for name, expr in expr_dict.items():
-                if name not in label_dicts[i]:
-                    continue
-                output_dict[name] = expr(tmp)
+                output_dict[name] = expr(data_dict)
 
             # put field 'area' into output_dict
             if "area" in input_dicts[i]:
@@ -109,7 +110,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dict: Dict[str, Callable],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: nn.Layer,
+        model: arch.Arch,
         validator: "validate.Validator",
         label_dict: Dict[str, "paddle.Tensor"],
         weight_dict: Dict[str, "paddle.Tensor"],
@@ -120,7 +121,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dict (Dict[str, Callable]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
             validator (validate.Validator): Validator.
             label_dict (Dict[str, paddle.Tensor]): Label dict.
             weight_dict (Dict[str, paddle.Tensor]): Weight dict.
@@ -133,12 +134,10 @@ class ExpressionSolver(nn.Layer):
         output_dict = model(input_dict)
 
         # equation forward
-        tmp = {k: v for k, v in input_dict.items()}
-        tmp.update(output_dict)
+        data_dict = {k: v for k, v in input_dict.items()}
+        data_dict.update(output_dict)
         for name, expr in expr_dict.items():
-            if name not in label_dict:
-                continue
-            output_dict[name] = expr(tmp)
+            output_dict[name] = expr(data_dict)
 
         # put field 'area' into output_dict
         if "area" in input_dict:
@@ -159,7 +158,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dict: Optional[Dict[str, Callable]],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: nn.Layer,
+        model: arch.Arch,
     ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for visualization, including model forward and equation
         forward.
@@ -167,7 +166,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dict (Optional[Dict[str, Callable]]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
 
         Returns:
             Dict[str, paddle.Tensor]: Result dict for given expression dict.
@@ -177,10 +176,10 @@ class ExpressionSolver(nn.Layer):
 
         if isinstance(expr_dict, dict):
             # equation forward
-            tmp = {k: v for k, v in input_dict.items()}
-            tmp.update(output_dict)
+            data_dict = {k: v for k, v in input_dict.items()}
+            data_dict.update(output_dict)
             for name, expr in expr_dict.items():
-                output_dict[name] = expr(tmp)
+                output_dict[name] = expr(data_dict)
 
             # clear differentiation cache
             clear()

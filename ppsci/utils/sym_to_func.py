@@ -195,13 +195,13 @@ class LayerNode(Node):
 
     Args:
         expr (sp.core.function.UndefinedFunction): Sympy expression.
-        model (nn.Layer): NN model for computing forward result in this node.
+        model (arch.Arch): NN model for computing forward result in this node.
     """
 
     def __init__(
         self,
         expr: sp.core.function.UndefinedFunction,
-        model: nn.Layer,
+        model: arch.Arch,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__(expr)
@@ -284,9 +284,7 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
         List[sp.Basic]: Node list storing all tree nodes in postorder.
     """
     # traverse into sub-nodes
-    if isinstance(cur_node, sp.core.function.UndefinedFunction):
-        nodes.append(cur_node)
-    elif isinstance(cur_node, sp.Function):
+    if isinstance(cur_node, sp.Function):
         for arg in cur_node.args:
             nodes = _post_traverse(arg, nodes)
         nodes.append(cur_node)
