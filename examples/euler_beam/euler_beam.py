@@ -31,7 +31,11 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
     EPOCHS = 10000 if not args.epochs else args.epochs
     # set output directory
-    OUTPUT_DIR = "./output_euler_beam" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = (
+        "./output_euler_beam_sympy_to_static"
+        if not args.output_dir
+        else args.output_dir
+    )
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
