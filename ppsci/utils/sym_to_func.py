@@ -43,18 +43,7 @@ __all__ = [
 ]
 
 
-PADDLE_FUNC_MAP = {
-    sp.sin: paddle.sin,
-    sp.cos: paddle.cos,
-    sp.exp: paddle.exp,
-    sp.Pow: paddle.pow,
-    sp.log: paddle.log,
-    sp.tan: paddle.tan,
-    sp.Max: paddle.maximum,
-    sp.Min: paddle.minimum,
-    sp.Abs: paddle.abs,
-    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
-}
+DATA_DICT: TypeAlias = Dict[str, paddle.Tensor]
 
 SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.sin,
@@ -68,6 +57,19 @@ SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.Abs,
     sp.Heaviside,
 ]
+
+PADDLE_FUNC_MAP = {
+    sp.sin: paddle.sin,
+    sp.cos: paddle.cos,
+    sp.exp: paddle.exp,
+    sp.Pow: paddle.pow,
+    sp.log: paddle.log,
+    sp.tan: paddle.tan,
+    sp.Max: paddle.maximum,
+    sp.Min: paddle.minimum,
+    sp.Abs: paddle.abs,
+    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+}
 
 
 def _cvt_to_key(expr: sp.Basic) -> str:
@@ -136,51 +138,53 @@ class OperatorNode(Node):
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
 
         if self.expr.func == sp.Add:
-            self.func = self._add_operator_func
+            self._operator_func = self._add_operator_func
         elif self.expr.func == sp.Mul:
-            self.func = self._mul_operator_func
+            self._operator_func = self._mul_operator_func
         elif self.expr.func == sp.Derivative:
-            self.func = self._derivate_operator_func
+            self._operator_func = self._derivate_operator_func
         else:
             if self.expr.func == sp.Heaviside:
-                self.func = self._heaviside_operator_func
+                self._operator_func = self._heaviside_operator_func
+                self._mapping_func = PADDLE_FUNC_MAP[sp.Heaviside]
             else:
-                self.func = self._vanilla_operator_func
+                self._operator_func = self._vanilla_operator_func
+                self._mapping_func = PADDLE_FUNC_MAP[self.expr.func]
 
-    def forward(self, data_dict: Dict):
+    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         # use cache
         if self.key in data_dict:
             return data_dict
 
-        return self.func(data_dict)
+        return self._operator_func(data_dict)
 
-    def _add_operator_func(self, data_dict):
+    def _add_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = sum([data_dict[child] for child in self.childs])
         return data_dict
 
-    def _mul_operator_func(self, data_dict):
+    def _mul_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = data_dict[self.childs[0]]
         for child in self.childs[1:]:
             data_dict[self.key] *= data_dict[child]
         return data_dict
 
-    def _derivate_operator_func(self, data_dict):
+    def _derivate_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = data_dict[self.childs[0]]
         for child, order in self.childs[1:]:
             if order & 1:
                 data_dict[self.key] = jacobian(data_dict[self.key], data_dict[child])
                 order -= 1
-            while order > 0:
+            for _ in range(0, order, 2):
                 data_dict[self.key] = hessian(data_dict[self.key], data_dict[child])
                 order -= 2
         return data_dict
 
-    def _heaviside_operator_func(self, data_dict):
-        data_dict[self.key] = PADDLE_FUNC_MAP[sp.Heaviside](data_dict[self.childs[0]])
+    def _heaviside_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        data_dict[self.key] = self._mapping_func(data_dict[self.childs[0]])
         return data_dict
 
-    def _vanilla_operator_func(self, data_dict):
-        data_dict[self.key] = PADDLE_FUNC_MAP[self.expr.func](
+    def _vanilla_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        data_dict[self.key] = self._mapping_func(
             *tuple(data_dict[child] for child in self.childs)
         )
         return data_dict
@@ -204,7 +208,7 @@ class LayerNode(Node):
         self.model = model
         self.detach_keys = detach_keys
 
-    def forward(self, data_dict: Dict):
+    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         # use cache
         if self.key in data_dict:
             return data_dict
@@ -242,7 +246,7 @@ class ConstantNode(Node):
             )
         self.expr = paddle.to_tensor(self.expr)
 
-    def forward(self, data_dict: Dict):
+    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         # use cache
         if self.key in data_dict:
             return data_dict
@@ -260,7 +264,7 @@ class ComposedNode(nn.Layer):
         super().__init__()
         self.funcs = funcs
 
-    def forward(self, data_dict: Dict):
+    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         # call all funcs in order
         for func in self.funcs:
             data_dict = func(data_dict)
