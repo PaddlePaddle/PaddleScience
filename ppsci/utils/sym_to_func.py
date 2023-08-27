@@ -84,7 +84,7 @@ def _cvt_to_key(expr: sp.Basic) -> str:
             # use name of custom function instead of itself.
             return expr.name
         else:
-            str(expr)
+            return str(expr)
     elif isinstance(expr, sp.Derivative):
         # convert Derivative(u(x,y),(x,2),(y,2)) to "u__x__x__y__y"
         expr_str = expr.args[0].name
