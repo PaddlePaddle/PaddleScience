@@ -31,9 +31,6 @@ class LinearElasticity(base.PDE):
         traction_{x} = n_x \sigma_{xx} + n_y \sigma_{xy} + n_z \sigma_{xz} \\
         traction_{y} = n_y \sigma_{yx} + n_y \sigma_{yy} + n_z \sigma_{yz} \\
         traction_{z} = n_z \sigma_{zx} + n_y \sigma_{zy} + n_z \sigma_{zz} \\
-        navier_{x} = \rho(\dfrac{\partial^2 u}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 u}{\partial x^2}+\dfrac{\partial^2 v}{\partial y \partial x} + \dfrac{\partial^2 w}{\partial z \partial x}) - \mu(\dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} + \dfrac{\partial^2 u}{\partial z^2}) \\
-        navier_{y} = \rho(\dfrac{\partial^2 v}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 v}{\partial x \partial y}+\dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 w}{\partial z \partial y}) - \mu(\dfrac{\partial^2 v}{\partial x^2} + \dfrac{\partial^2 v}{\partial y^2} + \dfrac{\partial^2 v}{\partial z^2}) \\
-        navier_{z} = \rho(\dfrac{\partial^2 w}{\partial t^2}) - (\lambda + \mu)(\dfrac{\partial^2 w}{\partial x \partial z}+\dfrac{\partial^2 v}{\partial y \partial z} + \dfrac{\partial^2 w}{\partial z^2}) - \mu(\dfrac{\partial^2 w}{\partial x^2} + \dfrac{\partial^2 w}{\partial y^2} + \dfrac{\partial^2 w}{\partial z^2}) \\
     \end{cases}
     $$
 
@@ -273,74 +270,3 @@ class LinearElasticity(base.PDE):
                 return traction_z
 
             self.add_equation("traction_z", traction_z_compute_func)
-
-        # Navier equations
-        def navier_x_compute_func(out):
-            x, y, u, v = (
-                out["x"],
-                out["y"],
-                out["u"],
-                out["v"],
-            )
-            duxvywz = jacobian(u, x) + jacobian(v, y)
-            duxxuyyuzz = hessian(u, x) + hessian(u, y)
-            if self.dim == 3:
-                z, w = out["z"], out["w"]
-                duxvywz += jacobian(w, z)
-                duxxuyyuzz += hessian(u, z)
-            navier_x = (
-                -(self.lambda_ + self.mu) * jacobian(duxvywz, x) - self.mu * duxxuyyuzz
-            )
-            if self.time:
-                t = out["t"]
-                navier_x += rho * hessian(u, t)
-            return navier_x
-
-        self.add_equation("navier_x", navier_x_compute_func)
-
-        def navier_y_compute_func(out):
-            x, y, u, v = (
-                out["x"],
-                out["y"],
-                out["u"],
-                out["v"],
-            )
-            duxvywz = jacobian(u, x) + jacobian(v, y)
-            dvxxvyyvzz = hessian(v, x) + hessian(v, y)
-            if self.dim == 3:
-                z, w = out["z"], out["w"]
-                duxvywz += jacobian(w, z)
-                dvxxvyyvzz += hessian(v, z)
-            navier_y = (
-                -(self.lambda_ + self.mu) * jacobian(duxvywz, y) - self.mu * dvxxvyyvzz
-            )
-            if self.time:
-                t = out["t"]
-                navier_y += rho * hessian(v, t)
-            return navier_y
-
-        self.add_equation("navier_y", navier_y_compute_func)
-
-        if self.dim == 3:
-
-            def navier_z_compute_func(out):
-                x, y, z, u, v, w = (
-                    out["x"],
-                    out["y"],
-                    out["z"],
-                    out["u"],
-                    out["v"],
-                    out["w"],
-                )
-                duxvywz = jacobian(u, x) + jacobian(v, y) + jacobian(w, z)
-                dwxxvyyvzz = hessian(w, x) + hessian(w, y) + hessian(w, z)
-                navier_z = (
-                    -(self.lambda_ + self.mu) * jacobian(duxvywz, z)
-                    - self.mu * dwxxvyyvzz
-                )
-                if self.time:
-                    t = out["t"]
-                    navier_z += rho * hessian(w, t)
-                return navier_z
-
-            self.add_equation("navier_z", navier_z_compute_func)
