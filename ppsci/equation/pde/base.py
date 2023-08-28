@@ -38,6 +38,7 @@ class PDE:
     def __init__(self):
         super().__init__()
         self.equations = {}
+        self.equations_func = {}
         self.detach_keys = []
 
         # for PDE which has learnable parameter(s)
@@ -99,7 +100,7 @@ class PDE:
         """Convert equation(s) to callable function"""
         for name, expr in self.equations.items():
             if isinstance(expr, sympy.Basic):
-                self.equations[name] = sym_to_func.sympy_to_function(
+                self.equations_func[name] = sym_to_func.sympy_to_function(
                     expr,
                     models,
                     self.detach_keys,

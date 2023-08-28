@@ -260,12 +260,12 @@ class ParameterNode(Node):
 
     Args:
         expr (sp.Symbol): Parameter expression.
-        paramter (paddle.framework.io.EagerParamBase): Parameter tensor.
+        parameter (paddle.framework.io.EagerParamBase): Parameter tensor.
     """
 
-    def __init__(self, expr: sp.Symbol, paramter: paddle.framework.io.EagerParamBase):
+    def __init__(self, expr: sp.Symbol, parameter: paddle.framework.io.EagerParamBase):
         super().__init__(expr)
-        self.parameter = paramter
+        self.parameter = parameter
 
     def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = self.parameter
@@ -309,6 +309,7 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
         nodes = _post_traverse(cur_node.args[0], nodes)
         nodes.append(cur_node)
     elif isinstance(cur_node, sp.Symbol):
+        nodes.append(cur_node)
         return nodes
     elif isinstance(cur_node, sp.Number):
         nodes.append(cur_node)
@@ -392,7 +393,7 @@ def sympy_to_function(
     sympy_nodes = [
         node
         for node in sympy_nodes
-        if (not node.is_Symbol) or (_cvt_to_key(node) not in _parameter_names)
+        if (not node.is_Symbol) or (_cvt_to_key(node) in _parameter_names)
     ]
 
     # remove duplicates with topo-order kept
@@ -406,7 +407,15 @@ def sympy_to_function(
     # convert sympy node to callable node
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
-        if isinstance(node, sp.Function):
+        if (
+            isinstance(node, tuple(PADDLE_FUNC_MAP.keys()))
+            or node.is_Add
+            or node.is_Mul
+            or node.is_Derivative
+            or node.is_Pow
+        ):
+            callable_nodes.append(OperatorNode(node))
+        elif isinstance(node, sp.Function):
             match_index = None
             for j, model in enumerate(models):
                 if str(node.func.name) in model.output_keys:
@@ -426,18 +435,15 @@ def sympy_to_function(
                             f" and models[{j}]."
                         )
                     match_index = j
-        elif (
-            isinstance(node, tuple(PADDLE_FUNC_MAP.keys()))
-            or node.is_Add
-            or node.is_Mul
-            or node.is_Derivative
-            or node.is_Pow
-        ):
-            callable_nodes.append(OperatorNode(node))
         elif node.is_Number or node.is_NumberSymbol:
             callable_nodes.append(ConstantNode(node))
         elif isinstance(node, sp.Symbol):
-            callable_nodes.append(ParameterNode(node, parameters[_cvt_to_key(node)]))
+            print("ParameterNode", node)
+            callable_nodes.append(
+                ParameterNode(
+                    node, *[param for param in parameters if param.name == node.name]
+                )
+            )
         else:
             raise NotImplementedError(
                 f"The node {node} is not supported in sympy_to_function."

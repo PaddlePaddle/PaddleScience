@@ -27,6 +27,7 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.distributed as dist
+import sympy as sp
 import visualdl as vdl
 from packaging import version
 from paddle import amp
@@ -210,10 +211,6 @@ class Solver:
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
 
-        # convert sympy expression to python function using sym_to_func module
-        for equation in self.equation.values():
-            equation.cvt_sympy_to_function(model)
-
         # set geometry for generating data
         self.geom = {} if geom is None else geom
 
@@ -223,6 +220,45 @@ class Solver:
         # set visualizer
         self.visualizer = visualizer
 
+        # convert sympy expression to python function using sym_to_func module
+        for equation in self.equation.values():
+            equation.cvt_sympy_to_function(model)
+            if constraint is not None:
+                for constraint in self.constraint.values():
+                    for name, expr in constraint.output_expr.items():
+                        if isinstance(expr, sp.Basic):
+                            converted_func = [
+                                equation.equations_func[e_name]
+                                for e_name, e_expr in equation.equations.items()
+                                if expr == e_expr
+                            ]
+                            print(expr)
+                            if len(converted_func) == 1:
+                                constraint.output_expr[name] = converted_func[0]
+            if validator is not None:
+                for validator in self.validator.values():
+                    for name, expr in validator.output_expr.items():
+                        if isinstance(expr, sp.Basic):
+                            converted_func = [
+                                equation.equations_func[e_name]
+                                for e_name, e_expr in equation.equations.items()
+                                if expr == e_expr
+                            ]
+                            print(expr)
+                            if len(converted_func) == 1:
+                                validator.output_expr[name] = converted_func[0]
+            if visualizer is not None:
+                for visualizer in self.visualizer.values():
+                    for name, expr in visualizer.output_expr.items():
+                        if isinstance(expr, sp.Basic):
+                            converted_func = [
+                                equation.equations_func[e_name]
+                                for e_name, e_expr in equation.equations.items()
+                                if expr == e_expr
+                            ]
+                            print(expr)
+                            if len(converted_func) == 1:
+                                visualizer.output_expr[name] = converted_func[0]
         # set automatic mixed precision(AMP) configuration
         self.use_amp = use_amp
         self.amp_level = amp_level
