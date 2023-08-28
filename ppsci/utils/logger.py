@@ -12,22 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import functools
 import logging
 import os
 import sys
+from typing import Callable
 from typing import Optional
 
 import colorlog
 import paddle.distributed as dist
 
-_logger = None
+_logger: logging.Logger = None
 
+# INFO(20) is white(no color)
+# use custom log level `MESSAGE` for printing message in color
+MESSAGE = 25
 
 COLORLOG_CONFIG = {
     "DEBUG": "green",
     "WARNING": "yellow",
     "ERROR": "red",
+    "MESSAGE": "cyan",
 }
 
 
@@ -51,6 +58,9 @@ def init_logger(
             rank 0 is affected, and other processes will set the level to
             "Error" thus be silent most of the time. Defaults to logging.INFO.
     """
+    # Add custom log level MESSAGE(25), between WARNING(30) and INFO(20)
+    logging.addLevelName(MESSAGE, "MESSAGE")
+
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper())
 
@@ -92,72 +102,82 @@ def init_logger(
     _logger.propagate = False
 
 
-def set_log_level(log_level):
-    """Set log level."""
+def set_log_level(log_level: int):
+    """Set logger level, only msg of level >= `log_level` will be printed.
+
+    Args:
+        log_level (int): Log level.
+    """
     if dist.get_rank() == 0:
         _logger.setLevel(log_level)
     else:
         _logger.setLevel(logging.ERROR)
 
 
-def log_at_trainer0(log_func):
+def log_at_trainer0(log_func: Callable):
     """
     Logs will print multi-times when calling Fleet API.
     Only display single log and ignore the others.
     """
 
     @functools.wraps(log_func)
-    def wrapped_log_func(fmt, *args):
+    def wrapped_log_func(msg, *args):
         if dist.get_rank() == 0:
-            log_func(fmt, *args)
+            log_func(msg, *args)
 
     return wrapped_log_func
 
 
-def ensure_logger(log_func):
+def ensure_logger(log_func: Callable):
     """
     Automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
     """
 
     @functools.wraps(log_func)
-    def wrapped_log_func(fmt, *args):
+    def wrapped_log_func(msg, *args):
         if _logger is None:
             init_logger()
-            _logger.info(
+            _logger.warning(
                 "Before you call functions within the logger, the logger has already "
                 "been automatically initialized. Since `log_file` is not specified by "
                 "default, information will not be written to any file except being "
                 "output to the terminal."
             )
 
-        log_func(fmt, *args)
+        log_func(msg, *args)
 
     return wrapped_log_func
 
 
 @ensure_logger
 @log_at_trainer0
-def info(fmt, *args):
-    _logger.info(fmt, *args)
+def info(msg, *args):
+    _logger.info(msg, *args)
 
 
 @ensure_logger
 @log_at_trainer0
-def debug(fmt, *args):
-    _logger.debug(fmt, *args)
+def message(msg, *args):
+    _logger.log(MESSAGE, msg, *args)
 
 
 @ensure_logger
 @log_at_trainer0
-def warning(fmt, *args):
-    _logger.warning(fmt, *args)
+def debug(msg, *args):
+    _logger.debug(msg, *args)
 
 
 @ensure_logger
 @log_at_trainer0
-def error(fmt, *args):
-    _logger.error(fmt, *args)
+def warning(msg, *args):
+    _logger.warning(msg, *args)
+
+
+@ensure_logger
+@log_at_trainer0
+def error(msg, *args):
+    _logger.error(msg, *args)
 
 
 def scaler(name: str, value: float, step: int, vdl_writer=None, wandb_writer=None):
