@@ -136,23 +136,25 @@ class OperatorNode(Node):
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
 
         if self.expr.func == sp.Add:
-            self.func = self._add_operator_func
+            self._operator_func = self._add_operator_func
         elif self.expr.func == sp.Mul:
-            self.func = self._mul_operator_func
+            self._operator_func = self._mul_operator_func
         elif self.expr.func == sp.Derivative:
-            self.func = self._derivate_operator_func
+            self._operator_func = self._derivate_operator_func
         else:
             if self.expr.func == sp.Heaviside:
-                self.func = self._heaviside_operator_func
+                self._operator_func = self._heaviside_operator_func
+                self._compute_func = PADDLE_FUNC_MAP[sp.Heaviside]
             else:
-                self.func = self._vanilla_operator_func
+                self._operator_func = self._vanilla_operator_func
+                self._compute_func = PADDLE_FUNC_MAP[self.expr.func]
 
     def forward(self, data_dict: Dict):
         # use cache
         if self.key in data_dict:
             return data_dict
 
-        return self.func(data_dict)
+        return self._operator_func(data_dict)
 
     def _add_operator_func(self, data_dict):
         data_dict[self.key] = sum([data_dict[child] for child in self.childs])
@@ -176,11 +178,11 @@ class OperatorNode(Node):
         return data_dict
 
     def _heaviside_operator_func(self, data_dict):
-        data_dict[self.key] = PADDLE_FUNC_MAP[sp.Heaviside](data_dict[self.childs[0]])
+        data_dict[self.key] = self._compute_func(data_dict[self.childs[0]])
         return data_dict
 
     def _vanilla_operator_func(self, data_dict):
-        data_dict[self.key] = PADDLE_FUNC_MAP[self.expr.func](
+        data_dict[self.key] = self._compute_func(
             *tuple(data_dict[child] for child in self.childs)
         )
         return data_dict
@@ -197,7 +199,7 @@ class LayerNode(Node):
     def __init__(
         self,
         expr: sp.core.function.UndefinedFunction,
-        model: nn.Layer,
+        model: arch.Arch,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__(expr)
@@ -371,10 +373,12 @@ def sympy_to_function(
     # remove duplicates with topo-order kept
     sympy_nodes = list(dict.fromkeys(sympy_nodes))
 
-    if not isinstance(models, (tuple, list)):
-        models = (models,)
+    if models is None:
+        models = ()
     if detach_keys is None:
         detach_keys = ()
+    if not isinstance(models, (tuple, list)):
+        models = (models,)
 
     # convert sympy node to callable node
     callable_nodes = []
