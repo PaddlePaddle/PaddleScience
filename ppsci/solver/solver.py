@@ -27,7 +27,6 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.distributed as dist
-import sympy as sp
 import visualdl as vdl
 from packaging import version
 from paddle import amp
@@ -44,7 +43,6 @@ from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
-from ppsci.utils import sym_to_func
 
 
 class Solver:
@@ -213,12 +211,8 @@ class Solver:
         self.equation = equation
 
         # convert sympy expression to python function using sym_to_func module
-        for equation_obj in self.equation.values():
-            for name, expr in equation_obj.equations.items():
-                if isinstance(expr, sp.Basic):
-                    equation_obj.equations[name] = sym_to_func.sympy_to_function(
-                        expr, self.model
-                    )
+        for equation in self.equation.values():
+            equation.cvt_sympy_to_function(model)
 
         # set geometry for generating data
         self.geom = {} if geom is None else geom

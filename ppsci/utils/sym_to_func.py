@@ -225,7 +225,7 @@ class LayerNode(Node):
 
 
 class ConstantNode(Node):
-    """ "Class for constant variable node in converted expression tree.
+    """Class for constant variable node in converted expression tree.
 
     Args:
         expr (Union[sp.Number, sp.NumberSymbol]): Number expression.
@@ -252,6 +252,23 @@ class ConstantNode(Node):
             return data_dict
 
         data_dict[self.key] = self.expr
+        return data_dict
+
+
+class ParameterNode(Node):
+    """Class for constant variable node in converted expression tree.
+
+    Args:
+        expr (sp.Symbol): Parameter expression.
+        paramter (paddle.framework.io.EagerParamBase): Parameter tensor.
+    """
+
+    def __init__(self, expr: sp.Symbol, paramter: paddle.framework.io.EagerParamBase):
+        super().__init__(expr)
+        self.parameter = paramter
+
+    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
+        data_dict[self.key] = self.parameter
         return data_dict
 
 
@@ -305,13 +322,16 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
 def sympy_to_function(
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
-    detach_keys: Tuple[str, ...] = None,
+    detach_keys: Optional[Tuple[str, ...]] = None,
+    parameters: Optional[nn.ParameterList] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
     Args:
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
+        detach_keys (Optional[Tuple[str, ...]], optional): Keys which will be detached in computation. Defaults to None.
+        parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data in dict given.
@@ -367,8 +387,13 @@ def sympy_to_function(
     sympy_nodes = []
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
-    # remove unnecessary symbol node for already in input dict
-    sympy_nodes = [node for node in sympy_nodes if not node.is_Symbol]
+    # remove unnecessary symbol node for already in input dict(except for paramter symbol)
+    _parameter_names = tuple(param.name for param in parameters)
+    sympy_nodes = [
+        node
+        for node in sympy_nodes
+        if (not node.is_Symbol) or (_cvt_to_key(node) not in _parameter_names)
+    ]
 
     # remove duplicates with topo-order kept
     sympy_nodes = list(dict.fromkeys(sympy_nodes))
@@ -381,7 +406,7 @@ def sympy_to_function(
     # convert sympy node to callable node
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
-        if isinstance(node.func, sp.core.function.UndefinedFunction):
+        if isinstance(node, sp.Function):
             match_index = None
             for j, model in enumerate(models):
                 if str(node.func.name) in model.output_keys:
@@ -411,6 +436,8 @@ def sympy_to_function(
             callable_nodes.append(OperatorNode(node))
         elif node.is_Number or node.is_NumberSymbol:
             callable_nodes.append(ConstantNode(node))
+        elif isinstance(node, sp.Symbol):
+            callable_nodes.append(ParameterNode(node, parameters[_cvt_to_key(node)]))
         else:
             raise NotImplementedError(
                 f"The node {node} is not supported in sympy_to_function."

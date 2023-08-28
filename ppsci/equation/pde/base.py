@@ -12,14 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import paddle
 import sympy
 from paddle import nn
+
+from ppsci.utils import sym_to_func
+
+if TYPE_CHECKING:
+    from ppsci import arch
 
 
 class PDE:
@@ -28,11 +36,12 @@ class PDE:
     def __init__(self):
         super().__init__()
         self.equations = {}
+        self.detach_keys = []
 
         # for PDE which has learnable parameter(s)
         self.learnable_parameters = nn.ParameterList()
 
-    def create_symbols(self, symbol_str) -> Tuple[sympy.Symbol, ...]:
+    def create_symbols(self, symbol_str: str) -> Tuple[sympy.Symbol, ...]:
         """Create symbols
 
         Args:
@@ -43,7 +52,9 @@ class PDE:
         """
         return sympy.symbols(symbol_str)
 
-    def create_function(self, name, invars) -> sympy.Function:
+    def create_function(
+        self, name: str, invars: Tuple[sympy.Symbol, ...]
+    ) -> sympy.Function:
         """Create named function depending on given invars.
 
         Args:
@@ -79,6 +90,19 @@ class PDE:
     def set_state_dict(self, state_dict):
         """Set state dict from dict."""
         self.learnable_parameters.set_state_dict(state_dict)
+
+    def cvt_sympy_to_function(
+        self, models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]
+    ) -> None:
+        """Convert equation(s) to callable function"""
+        for name, expr in self.equations.items():
+            if isinstance(expr, sympy.Basic):
+                self.equations[name] = sym_to_func.sympy_to_function(
+                    expr,
+                    models,
+                    self.detach_keys,
+                    self.learnable_parameters,
+                )
 
     def __str__(self):
         return ", ".join(
