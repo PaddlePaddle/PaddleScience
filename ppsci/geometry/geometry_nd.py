@@ -15,6 +15,7 @@
 """
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
+from __future__ import annotations
 
 import itertools
 from typing import Tuple
