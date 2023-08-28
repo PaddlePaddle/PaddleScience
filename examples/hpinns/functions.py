@@ -244,7 +244,7 @@ def pde_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
         paddle.Tensor: PDE loss (and lagrangian loss if using Augmented Lagrangian method).
     """
     global loss_log
-    bound = output_dict["bound"]
+    bound = int(output_dict["bound"])
     loss_re, loss_im = compute_real_and_imaginary_loss(output_dict)
     loss_re = loss_re[bound:]
     loss_im = loss_im[bound:]
@@ -279,7 +279,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     """
     global loss_log, loss_obj
     x, y = output_dict["x"], output_dict["y"]
-    bound = output_dict["bound"]
+    bound = int(output_dict["bound"])
     e_re = output_dict["e_real"]
     e_im = output_dict["e_imaginary"]
 

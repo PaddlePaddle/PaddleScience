@@ -426,8 +426,8 @@ class Solver:
                     save_load.save_checkpoint(
                         self.model,
                         self.optimizer,
-                        self.scaler,
                         self.best_metric,
+                        self.scaler,
                         self.output_dir,
                         "best_model",
                         self.equation,
@@ -436,7 +436,13 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
+                logger.scaler(
+                    "eval/metric",
+                    cur_metric,
+                    epoch_id,
+                    self.vdl_writer,
+                    self.wandb_writer,
+                )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
@@ -451,8 +457,8 @@ class Solver:
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
-                    self.scaler,
                     {"metric": cur_metric, "epoch": epoch_id},
+                    self.scaler,
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
@@ -462,8 +468,8 @@ class Solver:
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
-                self.scaler,
                 {"metric": cur_metric, "epoch": epoch_id},
+                self.scaler,
                 self.output_dir,
                 "latest",
                 self.equation,
