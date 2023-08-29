@@ -224,10 +224,6 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # load pretrained model, usually used for transfer learning
-        if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
-
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
@@ -243,11 +239,9 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
-        # decorate model(s) and optimizer(s) for AMP
-        if self.use_amp:
-            self.model, self.optimizer = amp.decorate(
-                self.model, self.optimizer, self.amp_level
-            )
+        # load pretrained model, usually used for transfer learning
+        if pretrained_model_path is not None:
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -261,6 +255,15 @@ class Solver:
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
+
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model, self.optimizer = amp.decorate(
+                self.model,
+                self.optimizer,
+                self.amp_level,
+                save_dtype="float32",
+            )
 
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
