@@ -1,0 +1,18 @@
+# my first comment
+Load_Data: false
+Scheduler: True
+Randomintensity: True
+learning_rate: 0.01
+num_epochs: 50
+batch_size: 128
+learning_rate: 1e-5
+layers: 7
+kernels: 15
+channels: 32
+downsamples: 16
+lossnum: 2  #0: Difference Loss, 1: POD loss, 2: norm POD loss, 3: only POD loss, 4: only normalized POD loss
+criterion: "MSE"
+data_directory: "./data"
+data_name: "rawdataM.mat"
+pod_data_name: "poddata.mat"
+
