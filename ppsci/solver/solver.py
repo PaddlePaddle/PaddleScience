@@ -168,7 +168,7 @@ class Solver:
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        self.train_output_info = {}
+        self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -176,7 +176,7 @@ class Solver:
         self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        self.eval_output_info = {}
+        self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
