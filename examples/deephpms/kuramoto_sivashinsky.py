@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import paddle
 import paddle.nn.functional as F
 
@@ -23,12 +22,12 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def pde_loss_func(output_dict):
+def pde_loss_func(output_dict, *args):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
     return losses
 
 
-def pde_l2_rel_func(output_dict):
+def pde_l2_rel_func(output_dict, *args):
     rel_l2 = paddle.norm(output_dict["du_t"] - output_dict["f_pde"]) / paddle.norm(
         output_dict["du_t"]
     )
@@ -36,7 +35,7 @@ def pde_l2_rel_func(output_dict):
     return metric_dict
 
 
-def boundary_loss_func(output_dict):
+def boundary_loss_func(output_dict, *args):
     u_b = output_dict["u_idn"]
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
 
@@ -58,7 +57,7 @@ def boundary_loss_func(output_dict):
 
 if __name__ == "__main__":
     # open FLAG for higher order differential operator when order >= 4
-    paddle.fluid.core.set_prim_eager_enabled(True)
+    paddle.framework.core.set_prim_eager_enabled(True)
 
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
@@ -133,15 +132,15 @@ if __name__ == "__main__":
 
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(1e-4)((model_idn,))
-    optimizer_pde = ppsci.optimizer.Adam(1e-4)((model_pde,))
+    optimizer_idn = ppsci.optimizer.Adam(1e-4)(model_idn)
+    optimizer_pde = ppsci.optimizer.Adam(1e-4)(model_pde)
 
     # LBFGS
     # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn, ))
     # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_pde, ))
 
     # stage 1: training identification net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -160,7 +159,7 @@ if __name__ == "__main__":
     )
     constraint_idn = {sup_constraint_idn.name: sup_constraint_idn}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -199,7 +198,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # stage 2: training pde net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -221,7 +220,7 @@ if __name__ == "__main__":
     )
     constraint_pde = {sup_constraint_pde.name: sup_constraint_pde}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -246,7 +245,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_pde,
         OUTPUT_DIR,
         optimizer_pde,
@@ -263,7 +262,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # stage 3: training solution net, reuse identification net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_sol_f = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -278,8 +277,8 @@ if __name__ == "__main__":
             "name": "IterableMatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
-            "label_keys": ("u_idn",),
-            "alias_dict": {"t": "t0", "x": "x0", "u_idn": "u0"},
+            "label_keys": ("u0_sol",),
+            "alias_dict": {"t": "t0", "x": "x0", "u0_sol": "u0"},
         },
     }
     train_dataloader_cfg_sol_bc = {
@@ -304,7 +303,7 @@ if __name__ == "__main__":
     sup_constraint_sol_init = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_sol_init,
         ppsci.loss.MSELoss("sum"),
-        {"u_idn": lambda out: out["u_idn"]},
+        {"u0_sol": lambda out: out["u_idn"]},
         name="u0_mse_sup",
     )
     sup_constraint_sol_bc = ppsci.constraint.SupervisedConstraint(
@@ -312,7 +311,7 @@ if __name__ == "__main__":
         ppsci.loss.FunctionalLoss(boundary_loss_func),
         {
             "x": lambda out: out["x"],
-            "u_idn": lambda out: out["u_idn"],
+            "ub_sol": lambda out: out["u_idn"],
         },
         name="ub_mse_sup",
     )
@@ -322,21 +321,21 @@ if __name__ == "__main__":
         sup_constraint_sol_bc.name: sup_constraint_sol_bc,
     }
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_sol = {
         "dataset": {
             "name": "IterableMatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
-            "label_keys": ("u_idn",),
-            "alias_dict": {"t": "t_star", "x": "x_star", "u_idn": "u_star"},
+            "label_keys": ("u_sol",),
+            "alias_dict": {"t": "t_star", "x": "x_star", "u_sol": "u_star"},
         },
     }
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
-        {"u_idn": lambda out: out["u_idn"]},
+        {"u_sol": lambda out: out["u_idn"]},
         {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
@@ -346,7 +345,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_sol,
         OUTPUT_DIR,
         optimizer_idn,

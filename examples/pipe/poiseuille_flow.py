@@ -23,16 +23,17 @@ import os.path as osp
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+
+from ppsci.utils import checker
+
+if not checker.dynamic_import_to_globals("seaborn"):
+    raise ModuleNotFoundError("Please install seaborn through pip first.")
+
 import seaborn as sns
 
 import ppsci
-from ppsci.utils import checker
 from ppsci.utils import config
 from ppsci.utils import logger
-
-if not checker.dynamic_import_to_globals("seaborn"):
-    raise ModuleNotFoundError(f"Please install seaborn through pip first.")
-
 
 if __name__ == "__main__":
     args = config.parse_args()
@@ -96,42 +97,39 @@ if __name__ == "__main__":
     model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v",), 3, 50, "swish")
     model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p",), 3, 50, "swish")
 
-    class Transform:
-        def input_trans(self, input):
-            self.input = input
-            x, y = input["x"], input["y"]
-            nu = input["nu"]
-            b = 2 * np.pi / (X_OUT - X_IN)
-            c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-            sin_x = X_IN * paddle.sin(b * x + c)
-            cos_x = X_IN * paddle.cos(b * x + c)
-            return {"sin(x)": sin_x, "cos(x)": cos_x, "y": y, "nu": nu}
+    def input_trans(input):
+        x, y = input["x"], input["y"]
+        nu = input["nu"]
+        b = 2 * np.pi / (X_OUT - X_IN)
+        c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
+        sin_x = X_IN * paddle.sin(b * x + c)
+        cos_x = X_IN * paddle.cos(b * x + c)
+        return {"sin(x)": sin_x, "cos(x)": cos_x, "x": x, "y": y, "nu": nu}
 
-        def output_trans_u(self, out):
-            return {"u": out["u"] * (R**2 - self.input["y"] ** 2)}
+    def output_trans_u(input, out):
+        return {"u": out["u"] * (R**2 - input["y"] ** 2)}
 
-        def output_trans_v(self, out):
-            return {"v": (R**2 - self.input["y"] ** 2) * out["v"]}
+    def output_trans_v(input, out):
+        return {"v": (R**2 - input["y"] ** 2) * out["v"]}
 
-        def output_trans_p(self, out):
-            return {
-                "p": (
-                    (P_IN - P_OUT) * (X_OUT - self.input["x"]) / L
-                    + (X_IN - self.input["x"]) * (X_OUT - self.input["x"]) * out["p"]
-                )
-            }
+    def output_trans_p(input, out):
+        return {
+            "p": (
+                (P_IN - P_OUT) * (X_OUT - input["x"]) / L
+                + (X_IN - input["x"]) * (X_OUT - input["x"]) * out["p"]
+            )
+        }
 
-    transform = Transform()
-    model_u.register_input_transform(transform.input_trans)
-    model_v.register_input_transform(transform.input_trans)
-    model_p.register_input_transform(transform.input_trans)
-    model_u.register_output_transform(transform.output_trans_u)
-    model_v.register_output_transform(transform.output_trans_v)
-    model_p.register_output_transform(transform.output_trans_p)
+    model_u.register_input_transform(input_trans)
+    model_v.register_input_transform(input_trans)
+    model_p.register_input_transform(input_trans)
+    model_u.register_output_transform(output_trans_u)
+    model_v.register_output_transform(output_trans_v)
+    model_p.register_output_transform(output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(5e-3)((model,))
+    optimizer = ppsci.optimizer.Adam(5e-3)(model)
 
     # set euqation
     equation = {
@@ -140,6 +138,7 @@ if __name__ == "__main__":
         )
     }
 
+    # set constraint
     BATCH_SIZE = 128
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
 
@@ -163,12 +162,15 @@ if __name__ == "__main__":
         name="EQ",
     )
 
+    # wrap constraints together
+    constraint = {pde_constraint.name: pde_constraint}
+
     EPOCHS = 3000 if not args.epochs else args.epochs
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        {pde_constraint.name: pde_constraint},
+        constraint,
         OUTPUT_DIR,
         optimizer,
         epochs=EPOCHS,

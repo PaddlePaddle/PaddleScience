@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import abc
 import math
 from typing import Tuple
@@ -29,6 +31,7 @@ __all__ = [
     "MultiStepDecay",
     "ExponentialDecay",
     "CosineWarmRestarts",
+    "OneCycleLR",
 ]
 
 
@@ -635,6 +638,89 @@ class CosineWarmRestarts(LRBase):
             T_0=self.T_0,
             T_mult=self.T_mult,
             eta_min=self.eta_min,
+            last_epoch=self.last_epoch,
+            verbose=self.verbose,
+        )
+
+        if self.warmup_steps > 0:
+            learning_rate = self.linear_warmup(learning_rate)
+
+        setattr(learning_rate, "by_epoch", self.by_epoch)
+        return learning_rate
+
+
+class OneCycleLR(LRBase):
+    """Sets the learning rate according to the one cycle learning rate scheduler.
+    The scheduler adjusts the learning rate from an initial learning rate to the maximum learning rate and then
+    from that maximum learning rate to the minimum learning rate, which is much less than the initial learning rate.
+
+    It has been proposed in [Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates](https://arxiv.org/abs/1708.07120).
+
+    Please note that the default behaviour of this scheduler follows the fastai implementation of one cycle,
+    which claims that **"unpublished work has shown even better results by using only two phases"**.
+    If you want the behaviour of this scheduler to be consistent with the paper, please set `three_phase=True`.
+
+    Args:
+        epochs (int): Total epoch(s).
+        iters_per_epoch (int): Number of iterations within an epoch.
+        max_learning_rate (float): The maximum learning rate. It is a python float number. Functionally, it defines the initial learning rate by `divide_factor` .
+        divide_factor (float, optional): Initial learning rate will be determined by initial_learning_rate = max_learning_rate / divide_factor. Defaults to 25.0.
+        end_learning_rate (float, optional): The minimum learning rate during training, it should be much less than initial learning rate. Defaults to 0.0001.
+        phase_pct (float): The percentage of total steps which used to increasing learning rate. Defaults to 0.3.
+        anneal_strategy (str, optional): Strategy of adjusting learning rate. "cos" for cosine annealing, "linear" for linear annealing. Defaults to "cos".
+        three_phase (bool, optional): Whether to use three phase. Defaults to False.
+        warmup_epoch (int, optional): The epoch numbers for LinearWarmup. Defaults to 0.
+        warmup_start_lr (float, optional): start learning rate within warmup. Defaults to 0.0.
+        last_epoch (int, optional): Last epoch. Defaults to -1.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
+
+    Examples:
+        >>> import ppsci
+        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(1e-3, 100)
+    """
+
+    def __init__(
+        self,
+        epochs: int,
+        iters_per_epoch: int,
+        max_learning_rate: float,
+        divide_factor: float = 25.0,
+        end_learning_rate: float = 0.0001,
+        phase_pct: float = 0.3,
+        anneal_strategy: str = "cos",
+        three_phase: bool = False,
+        warmup_epoch: int = 0,
+        warmup_start_lr: float = 0.0,
+        last_epoch: int = -1,
+        by_epoch: bool = False,
+    ):
+        super().__init__(
+            epochs,
+            iters_per_epoch,
+            max_learning_rate,
+            warmup_epoch,
+            warmup_start_lr,
+            last_epoch,
+            by_epoch,
+        )
+        self.total_steps = epochs
+        if not by_epoch:
+            self.total_steps *= iters_per_epoch
+        self.divide_factor = divide_factor
+        self.end_learning_rate = end_learning_rate
+        self.phase_pct = phase_pct
+        self.anneal_strategy = anneal_strategy
+        self.three_phase = three_phase
+
+    def __call__(self):
+        learning_rate = lr.OneCycleLR(
+            max_learning_rate=self.learning_rate,
+            total_steps=self.total_steps,
+            divide_factor=self.divide_factor,
+            end_learning_rate=self.end_learning_rate,
+            phase_pct=self.phase_pct,
+            anneal_strategy=self.anneal_strategy,
+            three_phase=self.three_phase,
             last_epoch=self.last_epoch,
             verbose=self.verbose,
         )

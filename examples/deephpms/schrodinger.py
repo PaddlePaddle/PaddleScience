@@ -23,24 +23,24 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def pde_loss_func(output_dict):
+def pde_loss_func(output_dict, *args):
     losses = F.mse_loss(output_dict["f_pde"], output_dict["du_t"], "sum")
     losses += F.mse_loss(output_dict["g_pde"], output_dict["dv_t"], "sum")
     return losses
 
 
-def pde_l2_rel_func(output_dict):
+def pde_l2_rel_func(output_dict, *args):
     rel_l2_f = paddle.norm(output_dict["du_t"] - output_dict["f_pde"]) / paddle.norm(
         output_dict["du_t"]
     )
     rel_l2_g = paddle.norm(output_dict["dv_t"] - output_dict["g_pde"]) / paddle.norm(
         output_dict["dv_t"]
     )
-    metric_dict = {"f_pde": rel_l2_f, "f_pde": rel_l2_g}
+    metric_dict = {"f_pde_f": rel_l2_f, "f_pde_g": rel_l2_g}
     return metric_dict
 
 
-def boundary_loss_func(output_dict):
+def boundary_loss_func(output_dict, *args):
     u_b, v_b = output_dict["u_idn"], output_dict["v_idn"]
     u_lb, u_ub = paddle.split(u_b, 2, axis=0)
     v_lb, v_ub = paddle.split(v_b, 2, axis=0)
@@ -57,6 +57,14 @@ def boundary_loss_func(output_dict):
     losses += F.mse_loss(du_x_lb, du_x_ub, "sum")
     losses += F.mse_loss(dv_x_lb, dv_x_ub, "sum")
     return losses
+
+
+def sol_l2_rel_func(output_dict, label_dict):
+    uv_pred = paddle.sqrt(output_dict["u_idn"] ** 2 + output_dict["v_idn"] ** 2)
+    uv_label = paddle.sqrt(label_dict["u_idn"] ** 2 + label_dict["u_idn"] ** 2)
+    rel_l2 = paddle.norm(uv_label - uv_pred) / paddle.norm(uv_pred)
+    metric_dict = {"uv_sol": rel_l2}
+    return metric_dict
 
 
 if __name__ == "__main__":
@@ -138,6 +146,7 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = 1
     EPOCHS = 50000 if args.epochs is None else args.epochs  # set 1 for LBFGS
     # MAX_ITER = 50000  # for LBFGS
+    EVAL_BATCH_SIZE = 10000
 
     # initialize optimizer
     # Adam
@@ -149,7 +158,7 @@ if __name__ == "__main__":
     # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_pde_f, model_pde_g))
 
     # stage 1: training identification net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -173,10 +182,10 @@ if __name__ == "__main__":
     )
     constraint_idn = {sup_constraint_idn.name: sup_constraint_idn}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_idn = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
@@ -186,6 +195,12 @@ if __name__ == "__main__":
                 "u_idn": "u_star",
                 "v_idn": "v_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -217,7 +232,7 @@ if __name__ == "__main__":
     solver.eval()
 
     # stage 2: training pde net
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -246,10 +261,10 @@ if __name__ == "__main__":
     )
     constraint_pde = {sup_constraint_pde.name: sup_constraint_pde}
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_pde = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("du_t", "dv_t"),
@@ -259,6 +274,12 @@ if __name__ == "__main__":
                 "du_t": "t_star",
                 "dv_t": "t_star",
             },
+        },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
         },
     }
 
@@ -278,7 +299,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_pde,
         OUTPUT_DIR,
         optimizer_pde,
@@ -299,7 +320,7 @@ if __name__ == "__main__":
     # optimizer_idn = ppsci.optimizer.LBFGS(learning_rate=0.01, max_iter=MAX_ITER)(
     #     [model_idn_u, model_idn_v]
     # )
-    # maunally build constraint(s)
+    # manually build constraint(s)
     train_dataloader_cfg_sol_f = {
         "dataset": {
             "name": "IterableMatDataset",
@@ -366,10 +387,10 @@ if __name__ == "__main__":
         sup_constraint_sol_bc.name: sup_constraint_sol_bc,
     }
 
-    # maunally build validator
+    # manually build validator
     eval_dataloader_cfg_sol = {
         "dataset": {
-            "name": "IterableMatDataset",
+            "name": "MatDataset",
             "file_path": DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
@@ -380,13 +401,19 @@ if __name__ == "__main__":
                 "v_idn": "v_star",
             },
         },
+        "batch_size": EVAL_BATCH_SIZE,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
     }
 
     sup_validator_sol = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg_sol,
         ppsci.loss.MSELoss("sum"),
         {key: (lambda out, k=key: out[k]) for key in ("u_idn", "v_idn")},
-        {"l2": ppsci.metric.L2Rel()},
+        {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
         name="uv_L2_sup",
     )
     validator_sol = {
@@ -395,7 +422,7 @@ if __name__ == "__main__":
 
     # update solver
     solver = ppsci.solver.Solver(
-        solver.model,
+        model_list,
         constraint_sol,
         OUTPUT_DIR,
         optimizer_idn,
@@ -408,9 +435,5 @@ if __name__ == "__main__":
 
     # train model
     solver.train()
-
-    # Unused models can be deleted from model list if there is no enough cuda memory before eval
-    del solver.model.model_list[-1]
-    del solver.model.model_list[-1]
     # evaluate after finished training
     solver.eval()

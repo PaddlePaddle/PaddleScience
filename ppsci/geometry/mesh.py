@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -24,6 +28,9 @@ from ppsci.geometry import geometry_3d
 from ppsci.geometry import sampler
 from ppsci.utils import checker
 from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    import pymesh
 
 
 class Mesh(geometry.Geometry):
@@ -60,10 +67,6 @@ class Mesh(geometry.Geometry):
         if "face_normal" not in self.py_mesh.get_attribute_names():
             self.py_mesh.add_attribute("face_normal")
         self.face_normal = self.py_mesh.get_attribute("face_normal").reshape([-1, 3])
-
-        if "face_area" not in self.py_mesh.get_attribute_names():
-            self.py_mesh.add_attribute("face_area")
-        self.face_area = self.py_mesh.get_attribute("face_area").reshape([-1])
 
         if not checker.dynamic_import_to_globals(["open3d"]):
             raise ImportError(
@@ -150,8 +153,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -174,8 +177,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -216,43 +219,12 @@ class Mesh(geometry.Geometry):
         all_areas = np.concatenate(all_areas, axis=0)
         return all_points, all_areas
 
-    def inflated_random_boundary_points(
-        self, n, distance, random="pseudo", criteria=None
-    ):
-        if not isinstance(n, (tuple, list)):
-            n = [n]
-        if not isinstance(distance, (tuple, list)):
-            distance = [distance]
-        if len(n) != len(distance):
-            raise ValueError(
-                f"len(n)({len(n)}) should be equal to len(distance)({len(distance)})"
-            )
-        all_points = []
-        all_normal = []
-        all_area = []
-
-        from ppsci.geometry import inflation
-
-        for _n, _dist in zip(n, distance):
-            inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
-            points, normal, area = inflated_mesh.random_boundary_points(
-                _n, random, criteria
-            )
-            all_points.append(points)
-            all_points.append(normal)
-            all_points.append(area)
-
-        all_points = np.concatenate(all_points, axis=0)
-        all_normal = np.concatenate(all_normal, axis=0)
-        all_area = np.concatenate(all_area, axis=0)
-        return all_points, all_normal, all_area
-
     def _approximate_area(
         self,
         random: str = "pseudo",
         criteria: Optional[Callable] = None,
         n_appr: int = 10000,
-    ) -> np.ndarray:
+    ) -> float:
         """Approximate area with given `criteria` and `n_appr` points by Monte Carlo
         algorithm.
 
@@ -264,25 +236,48 @@ class Mesh(geometry.Geometry):
         Returns:
             np.ndarray: Approximated areas with shape of [n_faces, ].
         """
+        triangle_areas = area_of_triangles(self.v0, self.v1, self.v2)
+        triangle_probabilities = triangle_areas / np.linalg.norm(triangle_areas, ord=1)
+        triangle_index = np.arange(triangle_probabilities.shape[0])
+        npoint_per_triangle = np.random.choice(
+            triangle_index, n_appr, p=triangle_probabilities
+        )
+        npoint_per_triangle, _ = np.histogram(
+            npoint_per_triangle,
+            np.arange(triangle_probabilities.shape[0] + 1) - 0.5,
+        )
+
         appr_areas = []
-        for i in range(self.num_faces):
-            sampled_points = sample_in_triangle(
-                self.v0[i], self.v1[i], self.v2[i], n_appr, random
-            )
-            appr_area = self.face_area[i]
+        if criteria is not None:
+            aux_points = []
+
+        for i, npoint in enumerate(npoint_per_triangle):
+            if npoint == 0:
+                continue
+            # sample points for computing criteria mask if criteria is given
             if criteria is not None:
-                criteria_mask = criteria(
-                    *np.split(sampled_points, self.ndim, 1)
-                ).flatten()
-                appr_area *= criteria_mask.mean()
+                points_at_triangle_i = sample_in_triangle(
+                    self.v0[i], self.v1[i], self.v2[i], npoint, random
+                )
+                aux_points.append(points_at_triangle_i)
 
-            appr_areas.append(appr_area)
+            appr_areas.append(
+                np.full(
+                    (npoint, 1), triangle_areas[i] / npoint, paddle.get_default_dtype()
+                )
+            )
+        appr_areas = np.concatenate(appr_areas, axis=0)  # [n_appr, 1]
 
-        return np.asarray(appr_areas, paddle.get_default_dtype())
+        # set invalid area to 0 by computing criteria mask with auxiliary points
+        if criteria is not None:
+            aux_points = np.concatenate(aux_points, axis=0)  # [n_appr, 3]
+            criteria_mask = criteria(*np.split(aux_points, self.ndim, 1))
+            appr_areas *= criteria_mask
+        return appr_areas.sum()
 
-    def random_boundary_points(self, n, random="pseudo", criteria=None):
-        valid_areas = self._approximate_area(random, criteria)
-        triangle_prob = valid_areas / np.linalg.norm(valid_areas, ord=1)
+    def random_boundary_points(self, n, random="pseudo"):
+        triangle_area = area_of_triangles(self.v0, self.v1, self.v2)
+        triangle_prob = triangle_area / np.linalg.norm(triangle_area, ord=1)
         npoint_per_triangle = np.random.choice(
             np.arange(len(triangle_prob)), n, p=triangle_prob
         )
@@ -290,57 +285,115 @@ class Mesh(geometry.Geometry):
             npoint_per_triangle, np.arange(len(triangle_prob) + 1) - 0.5
         )
 
-        all_points = []
-        all_normal = []
-        all_area = []
+        points = []
+        normal = []
+        areas = []
         for i, npoint in enumerate(npoint_per_triangle):
             if npoint == 0:
                 continue
-            face_points = sample_in_triangle(
-                self.v0[i], self.v1[i], self.v2[i], npoint, random, criteria
+            points_at_triangle_i = sample_in_triangle(
+                self.v0[i], self.v1[i], self.v2[i], npoint, random
             )
-            face_normal = np.tile(self.face_normal[i], [npoint, 1]).astype(
+            normal_at_triangle_i = np.tile(self.face_normal[i], (npoint, 1)).astype(
                 paddle.get_default_dtype()
             )
-            valid_area = np.full(
-                [npoint, 1],
-                valid_areas[i] / npoint,
+            areas_at_triangle_i = np.full(
+                (npoint, 1),
+                triangle_area[i] / npoint,
                 dtype=paddle.get_default_dtype(),
             )
 
-            all_points.append(face_points)
-            all_normal.append(face_normal)
-            all_area.append(valid_area)
+            points.append(points_at_triangle_i)
+            normal.append(normal_at_triangle_i)
+            areas.append(areas_at_triangle_i)
 
-        all_points = np.concatenate(all_points, axis=0)
-        all_normal = np.concatenate(all_normal, axis=0)
-        all_area = np.concatenate(all_area, axis=0)
+        points = np.concatenate(points, axis=0)
+        normal = np.concatenate(normal, axis=0)
+        areas = np.concatenate(areas, axis=0)
 
-        # NOTE: use global mean area instead of local mean area
-        all_area = np.full_like(all_area, all_area.mean())
-        return all_points, all_normal, all_area
+        return points, normal, areas
 
     def sample_boundary(
         self, n, random="pseudo", criteria=None, evenly=False, inflation_dist=None
-    ):
+    ) -> Dict[str, np.ndarray]:
         # TODO(sensen): support for time-dependent points(repeat data in time)
         if inflation_dist is not None:
-            points, normals, areas = self.inflated_random_boundary_points(
-                n, inflation_dist, random
-            )
+            if not isinstance(n, (tuple, list)):
+                n = [n]
+            if not isinstance(inflation_dist, (tuple, list)):
+                inflation_dist = [inflation_dist]
+            if len(n) != len(inflation_dist):
+                raise ValueError(
+                    f"len(n)({len(n)}) should be equal to len(inflation_dist)({len(inflation_dist)})"
+                )
+
+            from ppsci.geometry import inflation
+
+            inflated_data_dict = {}
+            for _n, _dist in zip(n, inflation_dist):
+                # 1. manually inflate mesh at first
+                inflated_mesh = Mesh(inflation.pymesh_inflation(self.py_mesh, _dist))
+                # 2. compute all data by sample_boundary with `inflation_dist=None`
+                data_dict = inflated_mesh.sample_boundary(
+                    _n,
+                    random,
+                    criteria,
+                    evenly,
+                    inflation_dist=None,
+                )
+                for key, value in data_dict:
+                    if key not in inflated_data_dict:
+                        inflated_data_dict[key] = value
+                    else:
+                        inflated_data_dict[key] = np.concatenate(
+                            (inflated_data_dict[key], value), axis=0
+                        )
+            return inflated_data_dict
         else:
             if evenly:
                 raise ValueError(
                     "Can't sample evenly on mesh now, please set evenly=False."
                 )
-            # points, normal, area = self.uniform_boundary_points(n, False)
-            points, normals, areas = self.random_boundary_points(n, random, criteria)
+            _size, _ntry, _nsuc = 0, 0, 0
+            all_points = []
+            all_normal = []
+            while _size < n:
+                points, normal, _ = self.random_boundary_points(n, random)
+                if criteria is not None:
+                    criteria_mask = criteria(
+                        *np.split(points, self.ndim, axis=1)
+                    ).flatten()
+                    points = points[criteria_mask]
+                    normal = normal[criteria_mask]
 
-        x_dict = misc.convert_to_dict(points, self.dim_keys)
+                if len(points) > n - _size:
+                    points = points[: n - _size]
+                    normal = normal[: n - _size]
+
+                all_points.append(points)
+                all_normal.append(normal)
+
+                _size += len(points)
+                _ntry += 1
+                if len(points) > 0:
+                    _nsuc += 1
+
+                if _ntry >= 1000 and _nsuc == 0:
+                    raise ValueError(
+                        "Sample boundary points failed, "
+                        "please check correctness of geometry and given creteria."
+                    )
+
+            all_points = np.concatenate(all_points, axis=0)
+            all_normal = np.concatenate(all_normal, axis=0)
+            appr_area = self._approximate_area(random, criteria)
+            all_areas = np.full((n, 1), appr_area / n, paddle.get_default_dtype())
+
+        x_dict = misc.convert_to_dict(all_points, self.dim_keys)
         normal_dict = misc.convert_to_dict(
-            normals, [f"normal_{key}" for key in self.dim_keys if key != "t"]
+            all_normal, [f"normal_{key}" for key in self.dim_keys if key != "t"]
         )
-        area_dict = misc.convert_to_dict(areas, ["area"])
+        area_dict = misc.convert_to_dict(all_areas, ["area"])
         return {**x_dict, **normal_dict, **area_dict}
 
     def random_points(self, n, random="pseudo", criteria=None):

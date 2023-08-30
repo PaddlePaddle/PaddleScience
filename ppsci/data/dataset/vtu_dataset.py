@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Optional
 from typing import Tuple
 
@@ -23,7 +25,7 @@ from ppsci.utils import reader
 
 
 class VtuDataset(io.Dataset):
-    """Dataset class for .csv file.
+    """Dataset class for .vtu file.
 
     Args:
         file_path (str): *.vtu file path.

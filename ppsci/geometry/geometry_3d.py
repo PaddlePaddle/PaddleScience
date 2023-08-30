@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 import itertools
 from typing import Tuple
 
@@ -130,6 +132,32 @@ class Cuboid(geometry_nd.Hypercube):
             return pts[np.random.choice(len(pts), size=n, replace=False)]
         return pts
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 3]
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
+        sdf = (
+            ((self.xmax - self.xmin) / 2 - abs(points - (self.xmin + self.xmax) / 2))
+        ).min(axis=1)
+        sdf = -sdf[..., np.newaxis]
+        return sdf
+
 
 class Sphere(geometry_nd.Hypersphere):
     """Class for Sphere
@@ -149,3 +177,27 @@ class Sphere(geometry_nd.Hypersphere):
         x = np.sqrt(1 - z**2) * np.cos(2 * np.pi * nl * g)
         y = np.sqrt(1 - z**2) * np.sin(2 * np.pi * nl * g)
         return np.stack((x, y, z), axis=-1)
+
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute signed distance field.
+
+        Args:
+            points (np.ndarray): The coordinate points used to calculate the SDF value,
+                the shape is [N, 3]
+
+        Returns:
+            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+
+        NOTE: This function usually returns ndarray with negative values, because
+        according to the definition of SDF, the SDF value of the coordinate point inside
+        the object(interior points) is negative, the outside is positive, and the edge
+        is 0. Therefore, when used for weighting, a negative sign is often added before
+        the result of this function.
+        """
+        if points.shape[1] != self.ndim:
+            raise ValueError(
+                f"Shape of given points should be [*, {self.ndim}], but got {points.shape}"
+            )
+        sdf = self.radius - (((points - self.center) ** 2).sum(axis=1)) ** 0.5
+        sdf = -sdf[..., np.newaxis]
+        return sdf

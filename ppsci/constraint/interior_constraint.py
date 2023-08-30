@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class InteriorConstraint(base.Constraint):
-    """Class for integral constraint.
+    """Class for interior constraint.
 
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.
@@ -167,7 +169,12 @@ class InteriorConstraint(base.Constraint):
             input.pop("sdf")
 
         # wrap input, label, weight into a dataset
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(input, label, weight)
+        if isinstance(dataloader_cfg["dataset"], str):
+            dataloader_cfg["dataset"] = {"name": dataloader_cfg["dataset"]}
+        dataloader_cfg["dataset"].update(
+            {"input": input, "label": label, "weight": weight}
+        )
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

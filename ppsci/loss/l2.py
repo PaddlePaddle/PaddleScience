@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -58,7 +60,7 @@ class L2Loss(base.Loss):
         losses = 0.0
         for key in label_dict:
             loss = F.mse_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict is not None:
+            if weight_dict:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import collections
 import csv
 import sys
@@ -29,6 +31,7 @@ from ppsci.utils import logger
 __all__ = [
     "load_csv_file",
     "load_mat_file",
+    "load_npz_file",
     "load_vtk_file",
     "load_vtk_with_time_file",
 ]
@@ -116,6 +119,41 @@ def load_mat_file(
             raw_data[fetch_key], paddle.get_default_dtype()
         ).reshape([-1, 1])
 
+    return data_dict
+
+
+def load_npz_file(
+    file_path: str, keys: Tuple[str, ...], alias_dict: Optional[Dict[str, str]] = None
+) -> Dict[str, np.ndarray]:
+    """Load *.npz file and fetch data as given keys.
+
+    Args:
+        file_path (str): Npz file path.
+        keys (Tuple[str, ...]): Required fetching keys.
+        alias_dict (Optional[Dict[str, str]]): Alias for keys,
+            i.e. {original_key: original_key}. Defaults to None.
+
+    Returns:
+        Dict[str, np.ndarray]: Loaded data in dict.
+    """
+
+    if alias_dict is None:
+        alias_dict = {}
+
+    try:
+        # read all data from npz file
+        raw_data = np.load(file_path, allow_pickle=True)
+    except FileNotFoundError:
+        logger.error(f"{file_path} isn't a valid npz file.")
+        raise
+
+    # convert to numpy array
+    data_dict = {}
+    for key in keys:
+        fetch_key = alias_dict[key] if key in alias_dict else key
+        if fetch_key not in raw_data:
+            raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
+        data_dict[key] = np.asarray(raw_data[fetch_key], paddle.get_default_dtype())
     return data_dict
 
 

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Tuple
@@ -28,8 +30,14 @@ class Arch(nn.Layer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._input_transform = None
-        self._output_transform = None
+        self._input_transform: Callable[
+            [Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]
+        ] = None
+
+        self._output_transform: Callable[
+            [Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]],
+            Dict[str, paddle.Tensor],
+        ] = None
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError("Arch.forward is not implemented")
@@ -73,7 +81,7 @@ class Arch(nn.Layer):
         """Split tensor and wrap into a dict by given keys.
 
         Args:
-            data_tensor (Dict[str, paddle.Tensor]): Tensor to be split.
+            data_tensor (paddle.Tensor): Tensor to be split.
             keys (Tuple[str, ...]): Keys tensor mapping to.
             axis (int, optional): Axis split at. Defaults to -1.
 
@@ -99,13 +107,17 @@ class Arch(nn.Layer):
 
     def register_output_transform(
         self,
-        transform: Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]],
+        transform: Callable[
+            [Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]],
+            Dict[str, paddle.Tensor],
+        ],
     ):
         """Register output transform.
 
         Args:
-            transform (Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
-                Output transform of network, receive a single tensor dict and return a single tensor dict.
+            transform (Callable[[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
+                Output transform of network, receive two single tensor dict(raw input
+                and raw output) and return a single tensor dict(transformed output).
         """
         self._output_transform = transform
 

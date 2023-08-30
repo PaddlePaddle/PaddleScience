@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 import itertools
 from typing import Optional
 from typing import Tuple
@@ -200,7 +202,7 @@ class TimeXGeometry(geometry.Geometry):
                 if _ntry >= 1000 and _nsuc == 0:
                     raise ValueError(
                         "Sample points failed, "
-                        "please check correctness of geometry and given creteria."
+                        "please check correctness of geometry and given criteria."
                     )
 
             # 2. repeat spatial points along time
@@ -534,9 +536,9 @@ class TimeXGeometry(geometry.Geometry):
         return np.hstack((np.full([n, 1], t, dtype=paddle.get_default_dtype()), x))
 
     def periodic_point(self, x, component):
-        t, _x = x[:, :1], x[:, 1:]
-        xp = self.geometry.periodic_point(_x, component)
-        return np.vstack((x, np.hstack(t, xp)))
+        xp = self.geometry.periodic_point(x, component)
+        txp = {"t": x["t"], **xp}
+        return txp
 
     def sample_initial_interior(
         self, n: int, random: str = "pseudo", criteria=None, evenly=False

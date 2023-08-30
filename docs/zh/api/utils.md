@@ -11,6 +11,7 @@
         - load_mat_file
         - load_vtk_file
         - run_check
+        - profiler
         - AttrDict
         - ExpressionSolver
         - AverageMeter

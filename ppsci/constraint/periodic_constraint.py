@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
@@ -85,19 +87,19 @@ class PeriodicConstraint(base.Constraint):
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
-        if dataloader_cfg["sampler"]["batch_size"] % 2 > 0:
+        if dataloader_cfg["batch_size"] % 2 > 0:
             raise ValueError(
                 f"batch_size({dataloader_cfg['sampler']['batch_size']}) "
                 "should be positive and even when using PeriodicConstraint"
             )
-        if dataloader_cfg["sampler"]["shuffle"]:
+        if dataloader_cfg.get("shuffle", False):
             raise ValueError(
                 f"shuffle({dataloader_cfg['sampler']['batch_size']}) "
                 "should be False when using PeriodicConstraint"
             )
 
         # prepare input
-        _bs_half = dataloader_cfg["sampler"]["batch_size"] // 2
+        _bs_half = dataloader_cfg["batch_size"] // 2
         input = geom.sample_boundary(
             _bs_half * dataloader_cfg["iters_per_epoch"],
             random,
@@ -164,9 +166,12 @@ class PeriodicConstraint(base.Constraint):
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # wrap input, label, weight into a dataset
-        _dataset = getattr(dataset, dataloader_cfg["dataset"])(
-            mixed_input, label, weight
+        if isinstance(dataloader_cfg["dataset"], str):
+            dataloader_cfg["dataset"] = {"name": dataloader_cfg["dataset"]}
+        dataloader_cfg["dataset"].update(
+            {"input": mixed_input, "label": label, "weight": weight}
         )
+        _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         # construct dataloader with dataset and dataloader_cfg
         super().__init__(_dataset, dataloader_cfg, loss, name)

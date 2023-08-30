@@ -10,7 +10,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
-- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 8+ 案例。
+- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 14+ 案例。
 - 支持结果可视化输出与日志结构化保存。
 - 完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。
 - 更多特性正在开发中...
@@ -22,6 +22,10 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ## 贡献代码
 
 PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+
+## 致谢
+
+PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
 
 ## 证书
 

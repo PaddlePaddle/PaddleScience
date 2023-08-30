@@ -4,10 +4,14 @@
     handler: python
     options:
       members:
+        - Arch
         - MLP
+        - DeepONet
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
+        - Generator
+        - Discriminator
         - PhysformerGPT2
         - ModelList
         - AFNONet

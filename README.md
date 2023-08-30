@@ -2,8 +2,8 @@
 
 > *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
-[![Version](https://img.shields.io/pypi/v/paddlesci)](./https://pypi.org/project/paddlesci/)
-[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](./https://pypi.org/project/paddlesci/)
+[![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](https://pypi.org/project/paddlesci/)
 [![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](./LICENSE)
 [![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
@@ -21,7 +21,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 - 支持简单几何和复杂 STL 几何的采样与布尔运算。
 - 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
-- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 8+ 案例。
+- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 14+ 案例。
 - 支持结果可视化输出与日志结构化保存。
 - 完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。
 - 更多特性正在开发中...
@@ -32,7 +32,11 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
     ``` shell
     git clone https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+
     cd PaddleScience
+    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
@@ -73,6 +77,10 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 ## 贡献代码
 
 PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+
+## 致谢
+
+PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
 
 ## 证书
 

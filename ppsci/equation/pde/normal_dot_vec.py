@@ -12,35 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Tuple
 
 from ppsci.equation.pde import base
 
 
 class NormalDotVec(base.PDE):
-    r"""NormalDotVec.
+    r"""Normal Dot Vector.
 
     $$
     \mathbf{n} \cdot \mathbf{v} = 0
     $$
 
     Args:
-        velocity_keys (Tuple[str, ...]): Keys for velocity(ies).
+        vec_keys (Tuple[str, ...]): Keys for vectors, such as ("u", "v", "w") for
+            velocity vector.
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.NormalDotVec(("u", "v", "w"))
     """
 
-    def __init__(self, velocity_keys: Tuple[str, ...]):
+    def __init__(self, vec_keys: Tuple[str, ...]):
         super().__init__()
-        self.velocity_keys = velocity_keys
+        self.vec_keys = vec_keys
         self.normal_keys = ("normal_x", "normal_y", "normal_z")
 
         def normal_dot_vel_compute_func(out):
             normal_dot_vel = 0
-            for i, vel_key in enumerate(velocity_keys):
-                normal_dot_vel += out[vel_key] * out[self.normal_keys[i]]
+            for i, vec_key in enumerate(vec_keys):
+                normal_dot_vel += out[vec_key] * out[self.normal_keys[i]]
 
             return normal_dot_vel
 

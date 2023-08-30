@@ -26,7 +26,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh", False, False)
+    model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh")
 
     # set equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     )
     # train model
     solver.train()
-    # # evaluate after finished training
+    # evaluate after finished training
     solver.eval()
     # visualize prediction after finished training
     solver.visualize()

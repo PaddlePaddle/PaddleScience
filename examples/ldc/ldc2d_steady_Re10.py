@@ -28,7 +28,7 @@ if __name__ == "__main__":
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh", False, False)
+    model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     )()
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     NPOINT_EVAL = NPOINT_PDE

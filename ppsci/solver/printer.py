@@ -17,29 +17,41 @@ from __future__ import division
 from __future__ import print_function
 
 import datetime
+from typing import TYPE_CHECKING
+from typing import Dict
 
 from ppsci.utils import logger
 from ppsci.utils import misc
 
+if TYPE_CHECKING:
+    from ppsci import solver
 
-def update_train_loss(trainer, loss_dict, batch_size):
-    # update_output_info
+
+def update_train_loss(
+    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+):
     for key in loss_dict:
         if key not in trainer.train_output_info:
             trainer.train_output_info[key] = misc.AverageMeter(key, "7.5f")
         trainer.train_output_info[key].update(float(loss_dict[key]), batch_size)
+        if key not in trainer.train_loss_info:
+            trainer.train_loss_info[key] = misc.AverageMeter(key, ".5f")
+        trainer.train_loss_info[key].update(float(loss_dict[key]))
 
 
-def update_eval_loss(trainer, loss_dict, batch_size):
-    # update_output_info
+def update_eval_loss(
+    trainer: "solver.Solver", loss_dict: Dict[str, float], batch_size: int
+):
     for key in loss_dict:
         if key not in trainer.eval_output_info:
             trainer.eval_output_info[key] = misc.AverageMeter(key, "7.5f")
         trainer.eval_output_info[key].update(float(loss_dict[key]), batch_size)
 
 
-def log_train_info(trainer, batch_size, epoch_id, iter_id):
-    lr_msg = f"lr: {trainer.optimizer.get_lr():.8f}"
+def log_train_info(
+    trainer: "solver.Solver", batch_size: int, epoch_id: int, iter_id: int
+):
+    lr_msg = f"lr: {trainer.optimizer.get_lr():.5f}"
 
     metric_msg = ", ".join(
         [
@@ -67,22 +79,30 @@ def log_train_info(trainer, batch_size, epoch_id, iter_id):
     )
 
     logger.scaler(
-        name="lr",
+        name="train/lr",
         value=trainer.optimizer.get_lr(),
         step=trainer.global_step,
-        writer=trainer.vdl_writer,
+        vdl_writer=trainer.vdl_writer,
+        wandb_writer=trainer.wandb_writer,
     )
 
     for key in trainer.train_output_info:
         logger.scaler(
-            name=f"train_{key}",
+            name=f"train/{key}",
             value=trainer.train_output_info[key].avg,
             step=trainer.global_step,
-            writer=trainer.vdl_writer,
+            vdl_writer=trainer.vdl_writer,
+            wandb_writer=trainer.wandb_writer,
         )
 
 
-def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
+def log_eval_info(
+    trainer: "solver.Solver",
+    batch_size: int,
+    epoch_id: int,
+    iters_per_epoch: int,
+    iter_id: int,
+):
     metric_msg = ", ".join(
         [
             f"{key}: {trainer.eval_output_info[key].avg:.5f}"
@@ -107,8 +127,9 @@ def log_eval_info(trainer, batch_size, epoch_id, iters_per_epoch, iter_id):
 
     for key in trainer.eval_output_info:
         logger.scaler(
-            name=f"eval_{key}",
+            name=f"eval/{key}",
             value=trainer.eval_output_info[key].avg,
             step=trainer.global_step,
-            writer=trainer.vdl_writer,
+            vdl_writer=trainer.vdl_writer,
+            wandb_writer=trainer.wandb_writer,
         )

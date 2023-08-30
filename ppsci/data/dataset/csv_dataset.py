@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -46,7 +48,7 @@ class CSVDataset(io.Dataset):
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.CSVDataset(
-        ...     "/path/to/file.csv"
+        ...     "/path/to/file.csv",
         ...     ("x",),
         ...     ("u",),
         ... )  # doctest: +SKIP

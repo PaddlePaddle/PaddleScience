@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import os
 from typing import Dict
 from typing import Optional
@@ -334,7 +336,7 @@ def _save_plot_from_3d_array(
         handler_map = dict(
             zip(cmap_handles, [HandlerColormap(cm, num_stripes=8) for cm in cmaps])
         )
-        # Create custom legend with color map rectangels
+        # Create custom legend with color map rectangles
         ax.legend(
             handles=cmap_handles,
             labels=visu_keys,

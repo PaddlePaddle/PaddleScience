@@ -15,6 +15,7 @@
 from ppsci.utils import initializer
 from ppsci.utils import logger
 from ppsci.utils import misc
+from ppsci.utils import profiler
 from ppsci.utils import reader
 from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.checker import run_check
@@ -24,6 +25,7 @@ from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
 from ppsci.utils.reader import load_csv_file
 from ppsci.utils.reader import load_mat_file
+from ppsci.utils.reader import load_npz_file
 from ppsci.utils.reader import load_vtk_file
 from ppsci.utils.reader import load_vtk_with_time_file
 from ppsci.utils.save_load import load_checkpoint
@@ -35,8 +37,10 @@ __all__ = [
     "logger",
     "misc",
     "reader",
+    "profiler",
     "load_csv_file",
     "load_mat_file",
+    "load_npz_file",
     "load_vtk_file",
     "load_vtk_with_time_file",
     "dynamic_import_to_globals",
