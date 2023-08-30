@@ -223,7 +223,7 @@ class LayerNode(Node):
 
 
 class ConstantNode(Node):
-    """ "Class for constant variable node in converted expression tree.
+    """Class for constant variable node in converted expression tree.
 
     Args:
         expr (Union[sp.Number, sp.NumberSymbol]): Number expression.
