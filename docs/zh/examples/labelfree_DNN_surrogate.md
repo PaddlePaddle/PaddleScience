@@ -1,0 +1,401 @@
+# LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
+
+
+## 1. 问题简介
+
+流体动力学问题的数值模拟主要依赖于使用多项式将控制方程在空间或/和时间上离散化为有限维代数系统。由于物理的多尺度特性和对复杂几何体进行网格划分的敏感性，这样的过程对于大多数实时应用程序（例如，临床诊断和手术计划）和多查询分析（例如，优化设计和不确定性量化）。在本文中，我们提供了一种物理约束的 DL 方法，用于在不依赖任何模拟数据的情况下对流体流动进行代理建模。 具体来说，设计了一种结构化深度神经网络 (DNN) 架构来强制执行初始条件和边界条件，并将控制偏微分方程（即 Navier-Stokes 方程）纳入 DNN的损失中以驱动训练。 对与血液动力学应用相关的许多内部流动进行了数值实验，并研究了流体特性和域几何中不确定性的前向传播。结果表明，DL 代理近似与第一原理数值模拟之间的流场和前向传播不确定性非常吻合。
+
+## 2. 案例一， PipeFlow
+
+### 2.1 问题定义
+
+**定义：**
+
+管道流体是一类非常常见和常用的流体系统，例如动脉中的血液或气管中的气流，一般管道流受到管道两端的压力差驱动，或者重力体积力驱动。
+在心血管系统中，前者更占主导地位，因为血流主要受心脏泵送引起的压降控制。 一般来说，模拟管中的流体动力学需要用数值方法求解完整的 Navier-Stokes 方程，但如果管是直的并且具有恒定的圆形横截面，则可以获得完全发展的稳态流动的解析解，即 一个理想的基准来验证所提出方法的性能。 因此，我们首先研究二维圆管中的流动（也称为泊肃叶流）。
+
+质量守恒：
+
+$$
+\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} = 0
+$$
+
+$x$ 动量守恒：
+
+$$
+u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial x} + \nu(\dfrac{\partial ^2 u}{\partial x ^2} + \dfrac{\partial ^2 u}{\partial y ^2})
+$$
+
+$y$ 动量守恒：
+
+$$
+u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial y} + \nu(\dfrac{\partial ^2 v}{\partial x ^2} + \dfrac{\partial ^2 v}{\partial y ^2})
+$$
+
+我们只关注这种完全发展的流动并且在边界施加了无滑移边界条件。与传统PINNs方法不同的是，我们将无滑动边界条件通过速度函数假设的方式强制施加在边界上：
+对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
+
+<figure markdown>
+  ![pipe](../../images/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
+  <figcaption>流场示意图</figcaption>
+</figure>
+
+流体域入口边界：
+
+$$
+p=0.1
+$$
+
+流体域出口边界：
+
+$$
+p=0
+$$
+
+流体域上下边界：
+
+$$
+u=0, v=0
+$$
+
+### 2.2 问题求解
+
+接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
+为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+
+#### 2.2.1 模型构建
+
+在本案例中，每一个已知的坐标点 $(x, y, nu)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
+三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, nu)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
+
+$$
+u= transform_{output}(f_1(transform_{input}(x, y, nu)))
+$$
+
+$$
+v= transform_{output}(f_2(transform_{input}(x, y, nu)))
+$$
+
+$$
+p= transform_{output}(f_3(transform_{input}(x, y, nu)))
+$$
+
+上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
+
+``` py linenums="33"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:95:97
+--8<--
+```
+
+``` py linenums="33"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:124:131
+--8<--
+```
+
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y", "nu"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
+
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个个拥有 4 层隐藏神经元，每层神经元数为 50，使用 "swish" 作为激活函数的神经网络模型 `model_u` `model_v` `model_p`。
+
+#### 2.2.2 方程构建
+
+由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
+
+``` py linenums="37"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:136:141
+--8<--
+```
+
+在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu$ 为网络输出, 流体密度 $\rho=1.0$。
+
+#### 2.2.3 计算域构建
+
+本文中本案例的计算域和参数自变量$nu$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
+
+``` py linenums="37"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:67:86
+--8<--
+```
+
+???+ tip "提示"
+
+    `PointCloud`是种可以单独使用的 `Geometry` 派生类。
+
+    如输入数据只来自于点云几何，则可以直接使用 `ppsci.geometry.PointCloud(...)` 创建空间几何域对象；
+
+#### 2.2.4 约束构建
+
+根据 [2.1 问题定义](#21) 得到的公式和和边界条件，对应了在计算域中指导模型训练的几个个约束条件，即：
+
+1. 施加在流体域内部点上的Navier-Stokes 方程约束
+
+    质量守恒：
+
+    $$
+    \dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} = 0
+    $$
+
+    $x$ 动量守恒：
+
+    $$
+    u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} +\dfrac{1}{\rho}\dfrac{\partial p}{\partial x} - \nu(\dfrac{\partial ^2 u}{\partial x ^2} + \dfrac{\partial ^2 u}{\partial y ^2}) = 0
+    $$
+
+    $y$ 动量守恒：
+
+    $$
+    u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} +\dfrac{1}{\rho}\dfrac{\partial p}{\partial y} - \nu(\dfrac{\partial ^2 v}{\partial x ^2} + \dfrac{\partial ^2 v}{\partial y ^2}) = 0
+    $$
+
+    为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。
+
+2. 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束
+
+    作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的尴尬。另外增加一层输入层丰富模型的非线性。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
+
+    流体域上下边界(血管壁)：
+
+    修正函数的公式形式为
+
+    <figure markdown>
+    ![darcy 2d](../../images/labelfree_DNN_surrogate/encoded_bc_eq.png){ loading=lazy }
+
+    具体的修正函数带入后得到：
+
+    <figure markdown>
+    ![darcy 2d](../../images/labelfree_DNN_surrogate/encoded_bc_pipe.png){ loading=lazy }
+
+
+接下来使用 PaddleScience 内置的 `InteriorConstraint` 和模型`Transform`自定义层，构建上述两种约束条件。
+
+1. 内部点约束
+
+    以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
+
+    ``` py linenums="94"
+    --8<--
+    /workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:146:164
+    --8<--
+    ```
+
+    `InteriorConstraint` 的第一个参数是方程表达式，用于描述如何计算约束目标，此处填入在 [2.2.2 方程构建](#222) 章节中实例化好的 `equation["NavierStokes"].equations`；
+
+    第二个参数是约束变量的目标值，在本问题中我们希望 Navier-Stokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
+
+    第三个参数是约束方程作用的计算域，此处填入在 [2.3.2 计算域构建](#232) 章节实例化好的 `interior_geom` 即可；
+
+    第四个参数是在计算域上的采样配置，此处我们使用分批次数据点训练，因此 `dataset` 字段设置为 `NamedArrayDataset` 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 128；
+
+    第五个参数是损失函数，此处我们选用常用的MSE函数，且 `reduction` 设置为 `"mean"`，即我们会将参与计算的所有数据点产生的损失项求和取平均；
+
+    第六个参数是约束条件的名字，我们需要给每一个约束条件命名，方便后续对其索引。此处我们命名为 "EQ" 即可。
+
+2. 边界约束
+
+    另一方面，我们还需要构建流体域的流入边界、流出边界、上下边界共四个边界的 Dirichlet 边界约束。
+
+    ``` py linenums="33"
+    --8<--
+    /workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:136:141
+    --8<--
+    ```
+
+#### 2.2.5 超参数设定
+
+接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，评估间隔为四百轮，学习率设为 0.005。
+
+``` py linenums="175"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:166:166
+--8<--
+```
+
+#### 2.2.6 优化器构建
+
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
+
+``` py linenums="179"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:133:134
+--8<--
+```
+
+#### 2.2.7 评估器构建
+
+本案例暂无
+
+#### 2.2.8 可视化器构建
+
+本案例暂无
+
+
+#### 2.2.9 模型训练、评估与可视化
+
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
+
+
+``` py linenums="200"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:168:181
+--8<--
+```
+
+另一方面，本文的可视化和定量评估主要依赖于：
+
+1. 在 $x=0$ 截面速度 $u(y)$ 随 $y$ 在四种不同的动力粘性系数 ${\nu}$ 采样下的曲线和解析解的对比
+
+2. 当我们选取截断高斯分布的动力粘性系数 $\nu$ 采样(均值为 $\nu = 10^{−3}， 方差 $\sigma_{nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
+
+``` py linenums="200"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:183:293
+--8<--
+```
+
+### 2.3 完整代码
+
+``` py linenums="1" title="poiseuille_flow.py"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py
+--8<--
+```
+
+### 2.4. 结果展示
+
+???+ info "说明"
+
+    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 论文复现结果 存在一定差别。
+
+<figure markdown>
+    ![pipe result](../../images/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
+  <figcaption>(左)在 $x=0$ 截面速度 $u(y)$ 随 $y$ 在四种不同的动力粘性系数 ${\nu}$ 采样下的曲线和解析解的对比; (右)当我们选取截断高斯分布的动力粘性系数 $\nu$ 采样(均值为 $\nu=10^{−3}， 方差 $\sigma_{nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比</figcaption>
+
+
+## 3 案例二， Aneurysm Flow
+
+### 3.1 问题定义
+
+**定义：**
+
+本文主要研究了两种类型的典型血管流（具有标准化的血管几何形状），狭窄流和动脉瘤流。
+狭窄血流是指流过血管的血流，其中血管壁变窄和再扩张。 血管的这种局部限制与许多心血管疾病有关，例如动脉硬化、中风和心脏病发作 。
+动脉瘤内的血管血流，即由于血管壁薄弱导致的动脉扩张，称为动脉瘤血流。 动脉瘤破裂可能导致危及生命的情况，例如，由于脑动脉瘤破裂引起的蛛网膜下腔出血 (SAH），而血液动力学的研究可以提高诊断和对动脉瘤进展和破裂的基本了解 。
+
+虽然现实的血管几何形状通常是不规则和复杂的，包括曲率、分叉和连接点，但这里研究理想化的狭窄和动脉瘤模型以进行概念验证。 即，狭窄血管和动脉瘤血管都被理想化为具有不同横截面半径的轴对称管，其由以下函数参数化，
+
+质量守恒：
+
+$$
+\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} = 0
+$$
+
+$x$ 动量守恒：
+
+$$
+u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial x} + \nu(\dfrac{\partial ^2 u}{\partial x ^2} + \dfrac{\partial ^2 u}{\partial y ^2})
+$$
+
+$y$ 动量守恒：
+
+$$
+u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} = -\dfrac{1}{\rho}\dfrac{\partial p}{\partial y} + \nu(\dfrac{\partial ^2 v}{\partial x ^2} + \dfrac{\partial ^2 v}{\partial y ^2})
+$$
+
+我们只关注这种完全发展的流动并且在边界施加了无滑移边界条件。与传统PINNs方法不同的是，我们将无滑动边界条件通过速度函数假设的方式强制施加在边界上：
+对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
+
+<figure markdown>
+  ![pipe](../../images/labelfree_DNN_surrogate/aneurysm.png){ loading=lazy }
+  <figcaption>流场示意图</figcaption>
+</figure>
+
+流体域入口边界：
+
+$$
+p=0.1
+$$
+
+流体域出口边界：
+
+$$
+p=0
+$$
+
+流体域上下边界：
+
+$$
+u=0, v=0
+$$
+
+### 3.2 问题求解
+
+接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
+为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+
+#### 3.2.1 模型构建
+
+在本案例中，每一个已知的坐标点 $(x, y, scale)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
+三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, scale)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
+
+$$
+u= transform_{output}(f_1(transform_{input}(x, y, scale)))
+$$
+
+$$
+v= transform_{output}(f_2(transform_{input}(x, y, scale)))
+$$
+
+$$
+p= transform_{output}(f_3(transform_{input}(x, y, scale)))
+$$
+
+上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
+
+``` py linenums="33"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:119:128
+--8<--
+```
+
+``` py linenums="33"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:164:171
+--8<--
+```
+
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y", "nu"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
+
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个个拥有 4 层隐藏神经元，每层神经元数为 20，使用 "silu" 作为激活函数的神经网络模型 `model_1` `model_2` `model_3`。
+
+此外，使用`kaiming normal`方法对权重和偏置初始化。
+
+#### 3.2.2 方程构建
+
+由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
+
+``` py linenums="37"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:187:187
+--8<--
+```
+
+在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001, 流体密度 $\rho = 1.0$。
+
+#### 3.2.3 计算域构建
+
+本文中本案例的计算域和参数自变量$nu$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
+
+``` py linenums="37"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:67:86
+--8<--
+```
+
+???+ tip "提示"
+
+    `PointCloud`是种可以单独使用的 `Geometry` 派生类。
+
+    如输入数据只来自于点云几何，则可以直接使用 `ppsci.geometry.PointCloud(...)` 创建空间几何域对象；

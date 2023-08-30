@@ -41,6 +41,8 @@ nav:
         - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
         - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
         - Laplace2D: zh/examples/laplace2d.md
+        - labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+        
       - 数据驱动:
         - FourCastNet: zh/examples/fourcastnet.md
         - Lorenz_transform_physx: zh/examples/lorenz.md
@@ -156,3 +158,5 @@ extra:
     - name: English
       link: /en/
       lang: en
+
+dev_addr: '127.0.0.1:5500' #默认值
