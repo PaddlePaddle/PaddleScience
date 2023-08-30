@@ -15,6 +15,7 @@
 """
 Code below is heavily based on [FourCastNet](https://github.com/NVlabs/FourCastNet)
 """
+from __future__ import annotations
 
 from functools import partial
 from typing import Optional

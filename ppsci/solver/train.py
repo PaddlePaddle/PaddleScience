@@ -49,7 +49,11 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         label_dicts = []
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
-            input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            try:
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            except StopIteration:
+                _constraint.data_iter = iter(_constraint.data_loader)
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             # profile code below
             # profiler.add_profiler_step(solver.cfg["profiler_options"])
             if iter_id == 5:
@@ -152,7 +156,11 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         label_dicts = []
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
-            input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            try:
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
+            except StopIteration:
+                _constraint.data_iter = iter(_constraint.data_loader)
+                input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
             for v in input_dict.values():
                 v.stop_gradient = False

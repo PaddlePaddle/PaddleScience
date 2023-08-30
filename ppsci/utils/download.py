@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import hashlib
 import os
 import os.path as osp
@@ -36,7 +38,7 @@ def is_url(path):
     """
     Whether path is URL.
     Args:
-        path (string): URL string or not.
+        path (str): URL string or not.
     """
     return path.startswith("http://") or path.startswith("https://")
 
@@ -88,7 +90,7 @@ def get_path_from_url(url, root_dir, md5sum=None, check_exist=True, decompress=T
     rank_id_curr_node = int(os.environ.get("PADDLE_RANK_IN_NODE", 0))
 
     if osp.exists(fullpath) and check_exist and _md5check(fullpath, md5sum):
-        logger.info(f"Found {fullpath}")
+        logger.message(f"Found {fullpath}")
     else:
         if rank_id_curr_node == 0:
             fullpath = _download(url, root_dir, md5sum)
@@ -125,12 +127,12 @@ def _download(url, path, md5sum=None):
         else:
             raise RuntimeError(f"Download from {url} failed. " "Retry limit reached")
 
-        logger.info(f"Downloading {fname} from {url}")
+        logger.message(f"Downloading {fname} from {url}")
 
         try:
             req = requests.get(url, stream=True)
         except Exception as e:  # requests.exceptions.ConnectionError
-            logger.info(
+            logger.warning(
                 f"Downloading {fname} from {url} failed {retry_cnt + 1} times with exception {str(e)}"
             )
             time.sleep(1)
@@ -165,7 +167,7 @@ def _md5check(fullname, md5sum=None):
     if md5sum is None:
         return True
 
-    logger.info(f"File {fullname} md5 checking...")
+    logger.message(f"File {fullname} md5 checking...")
     md5 = hashlib.md5()
     with open(fullname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -173,7 +175,7 @@ def _md5check(fullname, md5sum=None):
     calc_md5sum = md5.hexdigest()
 
     if calc_md5sum != md5sum:
-        logger.info(
+        logger.error(
             f"File {fullname} md5 check failed, {calc_md5sum}(calc) != "
             f"{md5sum}(base)"
         )
@@ -185,7 +187,7 @@ def _decompress(fname):
     """
     Decompress for zip and tar file
     """
-    logger.info(f"Decompressing {fname}...")
+    logger.message(f"Decompressing {fname}...")
 
     # For protecting decompressing interrupted,
     # decompress to fpath_tmp directory firstly, if decompress
