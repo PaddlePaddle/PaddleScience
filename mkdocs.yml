@@ -178,5 +178,3 @@ extra:
     - name: English
       link: /en/
       lang: en
-
-dev_addr: '127.0.0.1:5500' #默认值
