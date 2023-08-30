@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class InteriorConstraint(base.Constraint):
-    """Class for integral constraint.
+    """Class for interior constraint.
 
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.

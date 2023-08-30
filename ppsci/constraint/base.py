@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
@@ -42,7 +44,6 @@ class Constraint:
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
-        self.data_loader = data.dataloader.InfiniteDataLoader(self.data_loader)
         self.data_iter = iter(self.data_loader)
         self.loss = loss
         self.name = name

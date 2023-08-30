@@ -66,3 +66,4 @@ exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "t
 [tool.ruff]
 line-length = 88
 ignore = ["E501", "E741"]
+extend-exclude = ["./ppsci/geometry/inflation.py"]

@@ -168,7 +168,7 @@ class Solver:
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        self.train_output_info = {}
+        self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -176,7 +176,7 @@ class Solver:
         self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        self.eval_output_info = {}
+        self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -224,10 +224,6 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # load pretrained model, usually used for transfer learning
-        if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
-
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
@@ -244,11 +240,9 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
-        # decorate model(s) and optimizer(s) for AMP
-        if self.use_amp:
-            self.model, self.optimizer = amp.decorate(
-                self.model, self.optimizer, self.amp_level
-            )
+        # load pretrained model, usually used for transfer learning
+        if pretrained_model_path is not None:
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -262,6 +256,15 @@ class Solver:
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
+
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model, self.optimizer = amp.decorate(
+                self.model,
+                self.optimizer,
+                self.amp_level,
+                save_dtype="float32",
+            )
 
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
@@ -423,8 +426,8 @@ class Solver:
                     save_load.save_checkpoint(
                         self.model,
                         self.optimizer,
-                        self.scaler,
                         self.best_metric,
+                        self.scaler,
                         self.output_dir,
                         "best_model",
                         self.equation,
@@ -433,7 +436,13 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
+                logger.scaler(
+                    "eval/metric",
+                    cur_metric,
+                    epoch_id,
+                    self.vdl_writer,
+                    self.wandb_writer,
+                )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
@@ -448,8 +457,8 @@ class Solver:
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
-                    self.scaler,
                     {"metric": cur_metric, "epoch": epoch_id},
+                    self.scaler,
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
@@ -459,8 +468,8 @@ class Solver:
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
-                self.scaler,
                 {"metric": cur_metric, "epoch": epoch_id},
+                self.scaler,
                 self.output_dir,
                 "latest",
                 self.equation,
