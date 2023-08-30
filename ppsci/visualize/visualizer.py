@@ -150,17 +150,17 @@ class VisualizerVtu(base.Visualizer):
         self,
         input_dict: Dict[str, np.ndarray],
         output_expr: Dict[str, Callable],
-        coord_keys: Tuple[str] = ("x", "y", "z"),
+        coord_keys: Tuple[str] = None,
         batch_size: int = 64,
         num_timestamps: int = 1,
         prefix: str = "vtu",
     ):
-        self.coord_keys = coord_keys
         super().__init__(input_dict, output_expr, batch_size, num_timestamps, prefix)
+        self.input_keys = coord_keys if coord_keys is not None else self.input_keys
 
     def save(self, filename, data_dict):
         vtu.save_vtu_from_dict(
-            filename, data_dict, self.coord_keys, self.output_keys, self.num_timestamps
+            filename, data_dict, self.input_keys, self.output_keys, self.num_timestamps
         )
 
 
