@@ -36,9 +36,6 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """
     batch_tic = time.perf_counter()
 
-    expr_dicts = tuple(
-        _constraint.output_expr for _constraint in solver.constraint.values()
-    )
     for iter_id in range(1, solver.iters_per_epoch + 1):
         total_loss = 0
         loss_dict = misc.Prettydefaultdict(float)
@@ -78,7 +75,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             # forward for every constraint, including model and equation expression
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                 constraint_losses = solver.forward_helper.train_forward(
-                    expr_dicts,
+                    tuple(
+                        _constraint.output_expr
+                        for _constraint in solver.constraint.values()
+                    ),
                     input_dicts,
                     solver.model,
                     solver.constraint,
@@ -144,9 +144,6 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
     """
     batch_tic = time.perf_counter()
 
-    expr_dicts = tuple(
-        _constraint.output_expr for _constraint in solver.constraint.values()
-    )
     for iter_id in range(1, solver.iters_per_epoch + 1):
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
@@ -186,7 +183,10 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
                 with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                     # forward for every constraint, including model and equation expression
                     constraint_losses = solver.forward_helper.train_forward(
-                        expr_dicts,
+                        tuple(
+                            _constraint.output_expr
+                            for _constraint in solver.constraint.values()
+                        ),
                         input_dicts,
                         solver.model,
                         solver.constraint,
