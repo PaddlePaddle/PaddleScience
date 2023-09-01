@@ -4,11 +4,13 @@
 
 ## 1. 问题简介
 
+流体模拟方面的问题，捕捉湍流的复杂细节一直是数值模拟的长期挑战，用离散模型解决这些细节会产生巨大的计算成本，对于人类空间和时间尺度上的流动来说，很快就会变得不可行。因此流体超分辨率的需求应运而生，它旨在通过流体动力学模拟和深度学习技术将低分辨率流体模拟结果恢复为高分辨率结果，以减少生成高分辨率流体过程中的巨大计算成本。该技术可以应用于各种流体模拟，例如水流、空气流动、火焰模拟等。
+
 生成式对抗网络 GAN(Generative Adversarial Networks) 是一种使用无监督学习方法的深度学习网络，GAN 网络中（至少）包含两个模型：生成器(Generator) 和判别器(Discriminator)，生成器用于生成问题的输出，判别器用于判断输出的真假，两者在相互博弈中共同优化，最终使得生成器的输出接近真实值。
 
 tempoGAN 在 GAN 网络的基础上新增了一个与时间相关的判别器 Discriminator_tempo，该判别器的网络结构与基础判别器相同，但输入为时间连续的几帧数据，而不是单帧数据，从而将时序纳入考虑范围。
 
-本问题主要解决的是流体模拟方面的问题，捕捉湍流的复杂细节一直是数值模拟的长期挑战，用离散模型解决这些细节会产生巨大的计算成本，对于人类空间和时间尺度上的流动来说，很快就会变得不可行。因此可以使用该网络，通过输入的低密度流体数据，得到对应的高密度流体数据，大大节省时间和计算成本。
+本问题主要使用该网络，通过输入的低密度流体数据，得到对应的高密度流体数据，大大节省时间和计算成本。
 
 ## 2. 问题定义
 
@@ -34,7 +36,7 @@ examples/tempoGAN/tempoGAN.py:36:37
 ### 3.2 模型构建
 
 <figure markdown>
-  ![tempoGAN-arch](../../images/tempoGAN/tempoGAN_arch.png){ loading=lazy style="margin:0 auto"}
+  ![tempoGAN-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/tempoGAN/tempoGAN_arch.png){ loading=lazy style="margin:0 auto"}
   <figcaption> tempoGAN 网络模型</figcaption>
 </figure>
 
@@ -305,10 +307,10 @@ ppsci/arch/gan.py
 | :---: | :---: | :---: |
 | 8.6e-5 | 43.65 | 0.9973 |
 
-视频：
+一个流体超分样例结果的视频：
 
 <figure markdown>
-  ![input](../../images/tempoGAN/input.gif){ loading=lazy }
+  ![input](https://paddle-org.bj.bcebos.com/paddlescience/docs/tempoGAN/input.gif){ loading=lazy }
   <figcaption>输入的低密度流体</figcaption>
 </figure>
 
