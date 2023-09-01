@@ -2,11 +2,19 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
+
+涡激振动（Vortex-Induced Vibration，VIV）是一种流固耦合振动现象，主要发生在流体绕过柱体或管体时。在海洋工程和风工程中，这种振动现象具有重要应用。
+
+在海洋工程中，涡激振动问题主要涉及海洋平台（如桩基、立管等）的涡激振动响应分析。这些平台在海流中运行，会受到涡激振动的影响。这种振动可能会导致平台结构的疲劳损伤，因此在进行海洋平台设计时，需要考虑这一问题。
+
+在风工程中，涡激振动问题主要涉及风力发电机的涡激振动响应分析。风力发电机叶片在运行过程中受到气流的涡激振动，这种振动可能会导致叶片的疲劳损伤。为了确保风力发电机的安全运行，需要对这一问题进行深入的研究。
+
+总之，涡激振动问题的应用主要涉及海洋工程和风工程领域，对于这些领域的发展具有重要意义。
 
 当涡流脱落频率接近结构的固有频率时，圆柱会发生涡激振动，VIV系统相当于一个弹簧-阻尼系统：
 
-![VIV_1D_SpringDamper](../../images/viv/VIV_1D_SpringDamper.png)
+![VIV_1D_SpringDamper](https://paddle-org.bj.bcebos.com/paddlescience/docs/ViV/VIV_1D_SpringDamper.png)
 
 ## 2. 问题定义
 
@@ -170,7 +178,11 @@ examples/fsi/viv.py
 
 ## 5. 结果展示
 
+模型预测结果如下所示，横轴为时间自变量$t$，$\eta_{gt}$为参考振幅，$\eta$为模型预测振幅，$f_{gt}$为参考升力，$f$为模型预测升力。
+
 <figure markdown>
-  ![Viv_result](../../images/viv/eta_f_pred.png){ loading=lazy }
-  <figcaption> 振幅 eta 与升力 f 的预测结果和参考结果</figcaption>
+  ![Viv_result](https://paddle-org.bj.bcebos.com/paddlescience/docs/ViV/eta_f_pred.png){ loading=lazy }
+  <figcaption> 振幅 eta 与升力 f 随时间t变化的预测结果和参考结果</figcaption>
 </figure>
+
+可以看到模型对在$[0,10]$时间范围内，对振幅和升力的预测结果与参考结果基本一致。
