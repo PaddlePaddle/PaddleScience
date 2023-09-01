@@ -94,13 +94,15 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self,
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
-        weight: Dict[str, np.ndarray],
+        weight: Dict[str, np.ndarray] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
-        self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
+        self.weight = {} if weight is None else weight
         self._len = len(next(iter(self.input.values())))
         self.transforms = transforms
 

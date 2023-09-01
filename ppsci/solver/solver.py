@@ -520,6 +520,7 @@ class Solver:
         expr_dict: Optional[Dict[str, Callable]] = None,
         batch_size: int = 64,
         no_grad: bool = True,
+        return_numpy: bool = False,
     ) -> Dict[str, paddle.Tensor]:
         """Pure prediction using model.forward(...) and expression(optional, if given).
 
@@ -530,6 +531,8 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+            return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
+                Defaults to False.
 
         Returns:
             Dict[str, paddle.Tensor]: Prediction in dict.
@@ -608,6 +611,10 @@ class Solver:
                     key: value[perm_inv][:num_samples]
                     for key, value in pred_dict.items()
                 }
+
+        # convert to numpy ndarray if specified
+        if return_numpy:
+            pred_dict = {k: v.numpy() for k, v in pred_dict.items()}
 
         return pred_dict
 
