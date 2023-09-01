@@ -81,13 +81,13 @@ $$
 
 ``` py linenums="95"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:95:98
+examples/pipe/poiseuille_flow.py:95:98
 --8<--
 ```
 
 ``` py linenums="123"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:123:129
+examples/pipe/poiseuille_flow.py:123:129
 --8<--
 ```
 
@@ -101,7 +101,7 @@ $$
 
 ``` py linenums="134"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:134:139
+examples/pipe/poiseuille_flow.py:134:139
 --8<--
 ```
 
@@ -113,7 +113,7 @@ $$
 
 ``` py linenums="67"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:67:86
+examples/pipe/poiseuille_flow.py:67:86
 --8<--
 ```
 
@@ -177,7 +177,7 @@ $$
 
     ``` py linenums="145"
     --8<--
-    /workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:145:164
+    examples/pipe/poiseuille_flow.py:145:164
     --8<--
     ```
 
@@ -199,7 +199,7 @@ $$
 
 ``` py linenums="168"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:168:168
+examples/pipe/poiseuille_flow.py:168:168
 --8<--
 ```
 
@@ -209,7 +209,7 @@ $$
 
 ``` py linenums="131"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:131:132
+examples/pipe/poiseuille_flow.py:131:132
 --8<--
 ```
 
@@ -219,7 +219,7 @@ $$
 
 ``` py linenums="170"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:170:183
+examples/pipe/poiseuille_flow.py:170:183
 --8<--
 ```
 
@@ -231,7 +231,7 @@ $$
 
 ``` py linenums="185"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:185:293
+examples/pipe/poiseuille_flow.py:185:293
 --8<--
 ```
 
@@ -239,7 +239,7 @@ $$
 
 ``` py linenums="1" title="poiseuille_flow.py"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py
+examples/pipe/poiseuille_flow.py
 --8<--
 ```
 
@@ -249,6 +249,22 @@ $$
   ![laplace 2d](../../images/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
   <figcaption>(左)在 x=0 截面速度 u(y) 随 y 在四种不同的动力粘性系数采样下的曲线和解析解的对比 (右)当我们选取截断高斯分布的动力粘性系数 nu 采样(均值为 nu=0.001， 方差 sigma​=2.67×10e−4)，中心处速度的概率密度函数和解析解对比</figcaption>
 </figure>
+
+DNN代理模型的结果如左图所示，和泊肃叶流动的精确解(论文公式13)进行比较：
+
+$$
+u_a = \dfrac{\delta p}{2 \nu \rho L} + (\dfrac{d^2}{4} - y^2)
+$$
+
+公式和图片中的 $y$ 表示展向坐标，$\delta p$，从图片中我们可以观察到DNN预测的，4种不同粘度采样下的速度曲线（红色虚线），几乎完美符合解析解的速度曲线（蓝色实线），其中，4个case的雷诺数（$Re$）分别为283，121，33，3。实际上，只要雷诺数适中，DNN能精确预测任意给定动力学粘性系数的管道流。
+
+右图展示了中心线(x方向管道中心)速度，在给定动力学粘性系数（高斯分布）下的不确定性。动力学粘性系数的高斯分布，平均值为$1e^{-3}$，方差为$2.67e^{-4}$，这样保证了动力学粘性系数是一个正随机变量。此外，这个高斯分布的区间为$0,+\infty)$，概率密度函数为：
+
+$$
+f(\nu ; \bar{\nu}, \sigma_{\nu}) = \dfrac{\dfrac{1}{\sigma_{\nu}} N(\dfrac{(\nu - \bar{\nu})}{\sigma_{\nu}})}{1 - \phi(-\dfrac{\bar{\nu}}{\sigma_{\nu}})}
+$$
+
+更多细节请参考论文第九页
 
 ## 3 案例二: Aneurysm Flow
 
@@ -330,13 +346,13 @@ $$
 
 ``` py linenums="33"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:119:128
+examples/aneurysm/aneurysm_flow.py:119:128
 --8<--
 ```
 
 ``` py linenums="33"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:164:171
+examples/aneurysm/aneurysm_flow.py:164:171
 --8<--
 ```
 
@@ -348,13 +364,13 @@ $$
 
 ``` py linenums="119"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:119:121
+examples/aneurysm/aneurysm_flow.py:119:121
 --8<--
 ```
 
 ``` py linenums="126"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:126:128
+examples/aneurysm/aneurysm_flow.py:126:128
 --8<--
 ```
 
@@ -364,7 +380,7 @@ $$
 
 ``` py linenums="179"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:179:179
+examples/aneurysm/aneurysm_flow.py:179:179
 --8<--
 ```
 
@@ -376,7 +392,7 @@ $$
 
 ``` py linenums="51"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:51:117
+examples/aneurysm/aneurysm_flow.py:51:117
 --8<--
 ```
 
@@ -440,7 +456,7 @@ $$
 
     ``` py linenums="183"
     --8<--
-    /workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:183:202
+    examples/aneurysm/aneurysm_flow.py:183:202
     --8<--
     ```
 
@@ -462,7 +478,7 @@ $$
 
 ``` py linenums="204"
 --8<--
-    /workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:204:204
+examples/aneurysm/aneurysm_flow.py:204:204
 --8<--
 ```
 
@@ -472,7 +488,7 @@ $$
 
 ``` py linenums="168"
 --8<--
-    /workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:168:177
+examples/aneurysm/aneurysm_flow.py:168:177
 --8<--
 ```
 
@@ -482,7 +498,7 @@ $$
 
 ``` py linenums="206"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:206:218
+examples/aneurysm/aneurysm_flow.py:206:218
 --8<--
 ```
 
@@ -496,7 +512,7 @@ $$
 
 ``` py linenums="220"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:220:371
+examples/aneurysm/aneurysm_flow.py:220:371
 --8<--
 ```
 
@@ -504,7 +520,7 @@ $$
 
 ``` py linenums="1" title="aneurysm_flow.py"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py
+examples/aneurysm/aneurysm_flow.py
 --8<--
 ```
 
@@ -516,6 +532,10 @@ $$
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_3.png)
   <figcaption>第一行为x方向速度，第二行为y方向速度，第三行为壁面剪切应力曲线</figcaption>
 </figure>
+
+图片展示了对于几何变化的动脉瘤流动的求解能力，其中训练是通过，对几何缩放系数$A$从$0$到$-2e^{-2}$区间采样进行的。三种不同几何的流场预测如图所示，动脉瘤的大小从左到右增加，流动速度在血管扩张区域减小，在动脉瘤中心处衰减最多。从前两行图片可以看出CFD结果和模型预测结果符合较好。对于WSS壁面剪切应力，曲线随着几何的变化也被模型精确捕获。
+
+更多细节参考论文13页。
 
 ## 4. 参考文献
 
