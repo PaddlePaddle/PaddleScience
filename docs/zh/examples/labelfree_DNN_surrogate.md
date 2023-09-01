@@ -1,6 +1,5 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
-
 ## 1. 问题简介
 
 流体动力学问题的数值模拟主要依赖于使用多项式将控制方程在空间或/和时间上离散化为有限维代数系统。由于物理的多尺度特性和对复杂几何体进行网格划分的敏感性，这样的过程对于大多数实时应用程序（例如，临床诊断和手术计划）和多查询分析（例如，优化设计和不确定性量化）。在本文中，我们提供了一种物理约束的 DL 方法，用于在不依赖任何模拟数据的情况下对流体流动进行代理建模。 具体来说，设计了一种结构化深度神经网络 (DNN) 架构来强制执行初始条件和边界条件，并将控制偏微分方程（即 Navier-Stokes 方程）纳入 DNN的损失中以驱动训练。 对与血液动力学应用相关的许多内部流动进行了数值实验，并研究了流体特性和域几何中不确定性的前向传播。结果表明，DL 代理近似与第一原理数值模拟之间的流场和前向传播不确定性非常吻合。
@@ -63,7 +62,7 @@ $$
 
 #### 2.2.1 模型构建
 
-在本案例中，每一个已知的坐标点 $(x, y, nu)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
+在本案例中，每一个已知的坐标点和该点的nu三元组 $(x, y, nu)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
 三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, nu)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
 
 $$
@@ -92,9 +91,9 @@ $$
 --8<--
 ```
 
-为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y", "nu"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x"、 "y"、 "nu"]`，输出变量名是 `["u"、 "v"、 "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个个拥有 4 层隐藏神经元，每层神经元数为 50，使用 "swish" 作为激活函数的神经网络模型 `model_u` `model_v` `model_p`。
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 4 层隐藏神经元，每层神经元数为 50，使用 "swish" 作为激活函数的神经网络模型 `model_u` `model_v` `model_p`。
 
 #### 2.2.2 方程构建
 
@@ -110,14 +109,13 @@ $$
 
 #### 2.2.3 计算域构建
 
-本文中本案例的计算域和参数自变量$nu$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
+本文中本案例的计算域和参数自变量$\nu$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
 ``` py linenums="67"
 --8<--
 /workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:67:86
 --8<--
 ```
-
 
 #### 2.2.4 约束构建
 
@@ -145,7 +143,7 @@ $$
 
     为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。
 
-- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的尴尬。另外增加一层输入层丰富模型的非线性。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
+- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的不足。另外增加一层输入层丰富模型的非线性。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
 
     流体域上下边界(血管壁)修正函数的公式形式为:
 
@@ -157,7 +155,7 @@ $$
     \hat{p}(t,x,\theta;W,b) = p_{par}(t,x,\theta) + D(t,x,\theta)\tilde{p}(t,x,\theta;W,b)
     $$
 
-    具体的修正函数带入后得到：
+    其中$u_{par}$和$p_{par}$是满足边界条件和初始条件的特解，具体的修正函数带入后得到：
 
     $$
     \hat{u} = (\dfrac{d^2}{4} - y^2) \tilde{u}
@@ -197,7 +195,13 @@ $$
 
 #### 2.2.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，评估间隔为400轮，学习率设为 0.005。
+接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，学习率设为 0.005。
+
+``` py linenums="168"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:168:168
+--8<--
+```
 
 #### 2.2.6 优化器构建
 
@@ -213,10 +217,9 @@ $$
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-
-``` py linenums="200"
+``` py linenums="170"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:168:181
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:170:183
 --8<--
 ```
 
@@ -224,11 +227,11 @@ $$
 
 1. 在 $x=0$ 截面速度 $u(y)$ 随 $y$ 在四种不同的动力粘性系数 ${\nu}$ 采样下的曲线和解析解的对比
 
-2. 当我们选取截断高斯分布的动力粘性系数 $\nu$ 采样(均值为 ${\nu} = 10^{−3}$， 方差 $\sigma_{nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
+2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 ${\nu} = 10^{−3}$， 方差 $\sigma_{nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
-``` py linenums="183"
+``` py linenums="185"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:183:293
+/workspace/wangguan/PaddleScience_Surrogate/examples/pipe/poiseuille_flow.py:185:293
 --8<--
 ```
 
@@ -242,15 +245,10 @@ $$
 
 ### 2.4. 结果展示
 
-???+ info "说明"
-
-    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 论文复现结果 存在一定差别。
-
 <figure markdown>
   ![laplace 2d](../../images/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
   <figcaption>(左)在 x=0 截面速度 u(y) 随 y 在四种不同的动力粘性系数采样下的曲线和解析解的对比 (右)当我们选取截断高斯分布的动力粘性系数 nu 采样(均值为 nu=0.001， 方差 sigma​=2.67×10e−4)，中心处速度的概率密度函数和解析解对比</figcaption>
 </figure>
-
 
 ## 3 案例二: Aneurysm Flow
 
@@ -313,7 +311,7 @@ $$
 
 #### 3.2.1 模型构建
 
-在本案例中，每一个已知的坐标点 $(x, y, scale)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
+在本案例中，每一个已知的坐标点和几何放大系数 $(x, y, scale)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
 三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, scale)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
 
 $$
@@ -344,7 +342,7 @@ $$
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y", "nu"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个个拥有 4 层隐藏神经元，每层神经元数为 20，使用 "silu" 作为激活函数的神经网络模型 `model_1` `model_2` `model_3`。
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 3 层隐藏神经元，每层神经元数为 20，使用 "silu" 作为激活函数的神经网络模型 `model_1` `model_2` `model_3`。
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
 
@@ -352,9 +350,9 @@ $$
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="187"
+``` py linenums="179"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:187:187
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:179:179
 --8<--
 ```
 
@@ -370,7 +368,7 @@ $$
 --8<--
 ```
 
-#### 2.2.4 约束构建
+#### 3.2.4 约束构建
 
 根据 [3.1 问题定义](#31) 得到的公式和和边界条件，对应了在计算域中指导模型训练的几个约束条件，即：
 
@@ -464,7 +462,6 @@ $$
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-
 ``` py linenums="200"
 --8<--
 /workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:168:177
@@ -495,14 +492,15 @@ $$
 
 ### 3.4. 结果展示
 
-???+ info "说明"
-
-    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 论文复现结果 存在一定差别。
-
-
 <figure markdown>
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_1.png)
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_2.png)
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_3.png)
   <figcaption>流场示意图</figcaption>
 </figure>
+
+## 4. 参考文献
+
+参考文献： [Surrogate modeling for fluid flows based on physics-constrained deep learning without simulation data](https://arxiv.org/abs/1906.02382)
+
+参考代码： [LabelFree-DNN-Surrogate](https://github.com/Jianxun-Wang/LabelFree-DNN-Surrogate)
