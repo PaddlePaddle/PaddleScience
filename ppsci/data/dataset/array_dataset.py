@@ -78,7 +78,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray]): Weight dict.
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
 
@@ -94,7 +94,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self,
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
-        weight: Dict[str, np.ndarray] = None,
+        weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
