@@ -62,19 +62,19 @@ $$
 
 #### 2.2.1 模型构建
 
-在本案例中，每一个已知的坐标点和该点的nu三元组 $(x, y, nu)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
-三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, nu)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
+在本案例中，每一个已知的坐标点和该点的动力粘性系数三元组 $(x, y, \nu)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
+三个待求解的未知量，我们在这里使用比较简单的三个 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y, \nu)$ 到 $(u, v, p)$ 的映射函数 $f_1, f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^3$ ，即：
 
 $$
-u= transform_{output}(f_1(transform_{input}(x, y, nu)))
-$$
-
-$$
-v= transform_{output}(f_2(transform_{input}(x, y, nu)))
+u= transform_{output}(f_1(transform_{input}(x, y, \nu)))
 $$
 
 $$
-p= transform_{output}(f_3(transform_{input}(x, y, nu)))
+v= transform_{output}(f_2(transform_{input}(x, y, \nu)))
+$$
+
+$$
+p= transform_{output}(f_3(transform_{input}(x, y, \nu)))
 $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
@@ -93,7 +93,7 @@ $$
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x"、 "y"、 "nu"]`，输出变量名是 `["u"、 "v"、 "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 4 层隐藏神经元，每层神经元数为 50，使用 "swish" 作为激活函数的神经网络模型 `model_u` `model_v` `model_p`。
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 3 层隐藏神经元和 1 层输出层神经元的神经网络，每层神经元数为 50，使用 "swish" 作为激活函数的神经网络模型 `model_u` `model_v` `model_p`。
 
 #### 2.2.2 方程构建
 
@@ -109,7 +109,7 @@ $$
 
 #### 2.2.3 计算域构建
 
-本文中本案例的计算域和参数自变量$\nu$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
+本文中本案例的计算域和参数自变量 $\nu$ 由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
 ``` py linenums="67"
 --8<--
@@ -143,7 +143,7 @@ $$
 
     为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。
 
-- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的不足。另外增加一层输入层丰富模型的非线性。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
+- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的不足。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
 
     流体域上下边界(血管壁)修正函数的公式形式为:
 
@@ -227,7 +227,7 @@ $$
 
 1. 在 $x=0$ 截面速度 $u(y)$ 随 $y$ 在四种不同的动力粘性系数 ${\nu}$ 采样下的曲线和解析解的对比
 
-2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 ${\nu} = 10^{−3}$， 方差 $\sigma_{nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
+2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
 ``` py linenums="185"
 --8<--
@@ -340,11 +340,23 @@ $$
 --8<--
 ```
 
-为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x", "y", "nu"]`，输出变量名是 `["u", "v", "p"]`，这些命名与后续代码保持一致。
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `["x"、 "y"、 "scale"]`，输出变量名是 `["u"、 "v"、 "p"]`，这些命名与后续代码保持一致。
 
-接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 3 层隐藏神经元，每层神经元数为 20，使用 "silu" 作为激活函数的神经网络模型 `model_1` `model_2` `model_3`。
+接着通过指定 MLP 的层数、神经元个数以及激活函数，我们就实例化出了三个拥有 3 层隐藏神经元和 1 层输出层神经元的神经网络，每层神经元数为 20，使用 "silu" 作为激活函数的神经网络模型 `model_1` `model_2` `model_3`。
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
+
+``` py linenums="119"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:119:121
+--8<--
+```
+
+``` py linenums="126"
+--8<--
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:126:128
+--8<--
+```
 
 #### 3.2.2 方程构建
 
@@ -356,7 +368,7 @@ $$
 --8<--
 ```
 
-在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001, 流体密度 $\rho = 1.0$。
+在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001$, 流体密度 $\rho = 1.0$。
 
 #### 3.2.3 计算域构建
 
@@ -394,7 +406,7 @@ $$
 
     为了方便获取中间变量，`NavierStokes` 类内部将上式左侧的结果分别命名为 `continuity`, `momentum_x`, `momentum_y`。
 
-- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束的尴尬。另外增加一层输入层丰富模型的非线性。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
+- 施加在流体域入出口、流体域上下血管壁边界的的 Dirichlet 边界条件约束。作为本文创新点之一，此案例创新性的使用了结构化边界条件，即通过网络的输出层后面，增加一层公式层，来施加边界条件（公式在边界处值为零）。避免了数据点作为边界条件无法有效约束。统一使用用类函数`Transform()`进行初始化和管理。具体的推理过程为：
 
     设狭窄缩放系数为$A$:
 
@@ -446,7 +458,13 @@ $$
 
 #### 3.2.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，评估间隔为400轮，学习率设为 0.005。
+接下来我们需要指定训练轮数和学习率，使用400轮训练轮数，学习率设为 0.005。
+
+``` py linenums="204"
+--8<--
+    /workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:204:204
+--8<--
+```
 
 #### 3.2.6 优化器构建
 
@@ -462,9 +480,9 @@ $$
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="200"
+``` py linenums="206"
 --8<--
-/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:168:177
+/workspace/wangguan/PaddleScience_Surrogate/examples/aneurysm/aneurysm_flow.py:206:218
 --8<--
 ```
 
@@ -496,7 +514,7 @@ $$
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_1.png)
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_2.png)
   ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_3.png)
-  <figcaption>流场示意图</figcaption>
+  <figcaption>第一行为x方向速度，第二行为y方向速度，第三行为壁面剪切应力曲线</figcaption>
 </figure>
 
 ## 4. 参考文献
