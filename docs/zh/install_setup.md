@@ -12,17 +12,17 @@
 
 ### 1.2 python 环境安装[可选]
 
-如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
+如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
 
 1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包，并手动安装
-2. 创建 python 3.7 环境，并进入该环境
+2. 创建 python 3.9 环境，并进入该环境
 
     ``` sh
-    # 使用 conda 创建 python 环境，并命名为 "ppsci_py37"
-    conda create -n ppsci_py37 python=3.7 # 3.8 也可以
+    # 使用 conda 创建 python 环境，并命名为 "ppsci_py39"
+    conda create -n ppsci_py39 python=3.9
 
-    # 进入创建好的 "ppsci_py37" 环境
-    conda activate ppsci_py37
+    # 进入创建好的 "ppsci_py39" 环境
+    conda activate ppsci_py39
     ```
 
 ### 1.3 安装 PaddlePaddle
@@ -35,7 +35,7 @@
 
 #### 1.4.2 git 安装
 
-1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
+1. 执行以下命令，从 github 上 clone PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
     ``` shell
     git clone https://github.com/PaddlePaddle/PaddleScience.git
@@ -61,13 +61,61 @@
 pip install paddlesci
 ```
 
-???+ Info "安装注意事项"
+如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需按照下方指示，额外安装四个依赖库
 
-    如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装四个依赖库：
-    <li> [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）</li>
-    <li> pybind11（Python>=3.10 的用户安装 pysdf 前请先执行 `pip install -U pybind11`）</li>
-    <li> [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）</li>
-    <li> [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）</li>
+??? tip "open3d 安装命令"
+
+    ``` sh
+    pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+
+??? tip "pybind11 安装命令"
+
+    ``` sh
+    pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+
+??? tip "pysdf 安装命令"
+
+    ``` sh
+    pip install pysdf
+    ```
+
+??? tip "PyMesh 安装命令"
+
+    请<font color="red">严格按照顺序</font>执行以下命令，安装 PyMesh 库。
+    若由网络问题导致 `git submodule update` 过程中部分库 clone 失败，
+    请反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功后，再继续往下执行剩余命令
+
+    ``` sh
+    git clone https://github.com/PyMesh/PyMesh.git
+    cd PyMesh
+
+    git submodule update --init --recursive --progress
+    # argument '--recursive' is necessary, or empty directory will occur in third_party/
+    export PYMESH_PATH=`pwd`
+
+    apt-get install \
+        libeigen3-dev \
+        libgmp-dev \
+        libgmpxx4ldbl \
+        libmpfr-dev \
+        libboost-dev \
+        libboost-thread-dev \
+        libtbb-dev \
+        python3-dev
+
+    pip install -r $PYMESH_PATH/python/requirements.txt
+    ./setup.py build
+    ./setup.py install --user
+
+    # test whether installed successfully
+    python -c "import pymesh; pymesh.test()"
+
+    # Ran 175 tests in 3.150s
+
+    # OK (SKIP=2)
+    ```
 
 ## 2. 验证安装
 
