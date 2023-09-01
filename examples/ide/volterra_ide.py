@@ -186,7 +186,7 @@ if __name__ == "__main__":
     output_data = solver.predict({"x": input_data})["u"].numpy()
 
     plt.plot(input_data, label_data, "-", label=r"$u(t)$")
-    plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
+    plt.plot(input_data, output_data, "o", label=r"$\hat{u}(t)$", markersize=4.0)
     plt.legend()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")
