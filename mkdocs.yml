@@ -115,6 +115,7 @@ theme:
     - content.code.select
     - content.code.annotate
     - search.highlight
+    - content.tabs.link
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -156,6 +157,8 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 # Extra javascripts
 extra_javascript:

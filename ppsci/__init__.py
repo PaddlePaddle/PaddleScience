@@ -27,6 +27,9 @@ from ppsci import validate  # isort:skip
 from ppsci import solver  # isort:skip
 from ppsci import experimental  # isort:skip
 
+from ppsci.utils.checker import run_check  # isort:skip
+from ppsci.utils.checker import run_check_mesh  # isort:skip
+
 __all__ = [
     "arch",
     "autodiff",
@@ -42,4 +45,6 @@ __all__ = [
     "validate",
     "solver",
     "experimental",
+    "run_check",
+    "run_check_mesh",
 ]

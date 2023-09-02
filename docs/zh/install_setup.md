@@ -31,7 +31,7 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.3.1 git 安装](#131-git) 和 [1.3.2 pip 安装](#132-pip) 任选一种安装方式即可
+从 [1.4.1 git 安装](#131-git) 和 [1.4.2 pip 安装](#132-pip) 任选一种安装方式即可
 
 #### 1.4.2 git 安装
 
@@ -61,38 +61,40 @@
 pip install paddlesci
 ```
 
-如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需按照下方指示，额外安装四个依赖库
+#### 1.4.4 额外依赖安装[可选]
 
-??? tip "open3d 安装命令"
+如需通过 STL 文件构建几何（计算域），以及使用加密采样等功能，则需按照下方指示，额外安装 open3d、
+pybind11、pysdf、PyMesh 四个依赖库。
+否则无法使用 `ppsci.geometry.Mesh` 等基于 STL 文件的 API，因此也无法运行
+如 [Aneurysm](./examples/aneurysm.md) 等依赖`ppsci.geometry.Mesh` API 的复杂案例。
+
+=== "open3d 安装命令"
 
     ``` sh
     pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
-??? tip "pybind11 安装命令"
+=== "pybind11 安装命令"
 
     ``` sh
     pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
-??? tip "pysdf 安装命令"
+=== "pysdf 安装命令"
 
     ``` sh
     pip install pysdf
     ```
 
-??? tip "PyMesh 安装命令"
+=== "PyMesh 安装命令"
 
-    请<font color="red">严格按照顺序</font>执行以下命令，安装 PyMesh 库。
-    若由网络问题导致 `git submodule update` 过程中部分库 clone 失败，
-    请反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功后，再继续往下执行剩余命令
+    PyMesh 库需要以非 pip 的方式手动安装，命令如下：
 
     ``` sh
     git clone https://github.com/PyMesh/PyMesh.git
     cd PyMesh
 
     git submodule update --init --recursive --progress
-    # argument '--recursive' is necessary, or empty directory will occur in third_party/
     export PYMESH_PATH=`pwd`
 
     apt-get install \
@@ -105,9 +107,9 @@ pip install paddlesci
         libtbb-dev \
         python3-dev
 
-    pip install -r $PYMESH_PATH/python/requirements.txt
-    ./setup.py build
-    ./setup.py install --user
+    python -m pip install -r $PYMESH_PATH/python/requirements.txt
+    python setup.py build
+    python setup.py install --user
 
     # test whether installed successfully
     python -c "import pymesh; pymesh.test()"
@@ -117,15 +119,35 @@ pip install paddlesci
     # OK (SKIP=2)
     ```
 
+    !!! warning "安装注意事项"
+
+        安装过程中可能会出现两个问题，可以按照以下方式解决：
+
+        1. 由于网络问题，`git submodule update` 过程中可能某些 submodule 会 clone 失败，此时只需
+        反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功即可。
+
+        2. 所有 submodule 都 clone 成功后，请检查 `PyMesh/third_party/` 下是否有空文件夹，若有则需
+        手动找到并删除这些空文件夹，再执行 `git submodule update --init --recursive --progress` 命
+        令即可恢复这些空文件夹至正常含有文件的状态，此时再继续执行剩余安装命令即可。
+
 ## 2. 验证安装
 
-执行以下代码，验证安装的 PaddleScience 基础功能是否正常
+- 执行以下代码，验证安装的 PaddleScience 基础功能是否正常
 
-``` shell
-python -c "import ppsci; ppsci.utils.run_check()"
-```
+    ``` shell
+    python -c "import ppsci; ppsci.run_check()"
+    ```
 
-如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
+    如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
+
+- [可选]如果已按照 [1.4.4 额外依赖安装](#144) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+    验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行
+
+    ``` shell
+    python -c "import ppsci; ppsci.run_check_mesh()"
+    ```
+
+    如果出现 `ppsci.geometry.Mesh module running successfully.✨ 🍰 ✨`，则说明该模块运行正常。
 
 ## 3. 开始使用
 
