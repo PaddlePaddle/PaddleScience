@@ -103,7 +103,7 @@ def run_check() -> None:
         solver.eval(EPOCHS)
     except Exception as e:
         traceback.print_exc()
-        logger.warning(
+        logger.error(
             f"PaddleScience meets some problem with \n {repr(e)} \nplease check whether "
             "Paddle's version and PaddleScience's version are both correct."
         )
@@ -148,7 +148,7 @@ def run_check_mesh() -> None:
 
         equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
 
-        # create a 1x1x1 simple box geometry
+        # create a 1x1x1 simple cube geometry
         vertices = np.array(
             [
                 [0.0, 0.0, 0.0],
@@ -160,7 +160,7 @@ def run_check_mesh() -> None:
                 [0.0, 1.0, 1.0],
                 [1.0, 1.0, 1.0],
             ]
-        )  # 8 vertices
+        )  # 8 vertices for mesh
         faces = np.array(
             [
                 [4, 7, 5],
@@ -176,7 +176,7 @@ def run_check_mesh() -> None:
                 [0, 4, 1],
                 [1, 4, 5],
             ]
-        )  # 12 faces
+        )  # 12 triangle faces for mesh
         box_mesh = pymesh.form_mesh(vertices, faces)
         geom = {"rect": ppsci.geometry.Mesh(box_mesh)}
 
@@ -236,9 +236,9 @@ def run_check_mesh() -> None:
         solver.eval(EPOCHS)
     except Exception as e:
         traceback.print_exc()
-        logger.warning(
+        logger.error(
             f"PaddleScience meets some problem with \n {repr(e)} \nplease check whether "
-            "Paddle's version and PaddleScience's version are both correct."
+            "open3d, pysdf, pybind11, PyMesh are all installed correctly."
         )
     else:
         logger.message("ppsci.geometry.Mesh module running successfully.✨ 🍰 ✨")

@@ -433,7 +433,7 @@ class Mesh(geometry.Geometry):
             # TODO(sensen): implement uniform sample for mesh interior.
             raise NotImplementedError(
                 "uniformly sample for interior in mesh is not support yet, "
-                "You may have to set evenly=False in config dict of constraint"
+                "you may need to set evenly=False in config dict of constraint"
             )
         points, areas = self.random_points(n, random, criteria)
 
