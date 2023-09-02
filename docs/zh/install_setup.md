@@ -31,9 +31,9 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.4.1 git 安装](#131-git) 和 [1.4.2 pip 安装](#132-pip) 任选一种安装方式即可
+从 [1.4.1 git 安装](#141-git) 和 [1.4.2 pip 安装](#142-pip) 任选一种安装方式即可
 
-#### 1.4.2 git 安装
+#### 1.4.1 git 安装
 
 1. 执行以下命令，从 github 上 clone PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
@@ -53,7 +53,7 @@
     pip install -r requirements.txt
     ```
 
-#### 1.4.3 pip 安装
+#### 1.4.2 pip 安装
 
 执行以下命令进行 pip 安装
 
@@ -61,10 +61,11 @@
 pip install paddlesci
 ```
 
-#### 1.4.4 额外依赖安装[可选]
+#### 1.4.3 额外依赖安装[可选]
 
-如需通过 STL 文件构建几何（计算域），以及使用加密采样等功能，则需按照下方指示，额外安装 open3d、
+如需通过 STL 文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
 pybind11、pysdf、PyMesh 四个依赖库。
+
 否则无法使用 `ppsci.geometry.Mesh` 等基于 STL 文件的 API，因此也无法运行
 如 [Aneurysm](./examples/aneurysm.md) 等依赖`ppsci.geometry.Mesh` API 的复杂案例。
 
