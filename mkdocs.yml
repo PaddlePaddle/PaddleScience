@@ -137,6 +137,7 @@ plugins:
       handlers:
         python:
           paths: [./ppsci]
+  - mkdocs-video
 
 # Extensions
 markdown_extensions:

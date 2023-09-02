@@ -274,25 +274,17 @@ examples/bubble/bubble.py
 
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
-<figure markdown>
-  ![u.png](../../images/bubble/u.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的速度 u</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/Ub88rh-qACI?si=hEzFu0kE4KhsWWTe)
+<center>在时刻 t=50 时的速度 u</center>
 
-<figure markdown>
-  ![v.png](../../images/bubble/v.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的速度 v</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/KYcXho0DQxc?si=YwexUy4RTIZrUjOG)
+<center>在时刻 t=50 时的速度 v</center>
 
-<figure markdown>
-  ![p.png](../../images/bubble/p.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的压力 p</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/VHMus9CJWfI?si=klzDydp5gbOV3ZdZ)
+<center>在时刻 t=50 时的压力 p</center>
 
-<figure markdown>
-  ![phil.png](../../images/bubble/phil.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的水平集函数 phi </figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/wtCKbsVnBGs?si=wGJlUdEU3xKe4iLr)
+<center>在时刻 t=50 时的水平集函数 phi</center>
 
 ## 6. 参考资料
 
