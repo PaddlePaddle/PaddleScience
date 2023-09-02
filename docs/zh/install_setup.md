@@ -38,12 +38,11 @@
 1. 执行以下命令，从 github 上 clone PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
     ``` shell
-    git clone https://github.com/PaddlePaddle/PaddleScience.git
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
     # 若 github clone 速度比较慢，可以使用 gitee clone
-    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
 
     cd PaddleScience
-    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
