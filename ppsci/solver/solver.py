@@ -614,7 +614,10 @@ class Solver:
 
         # convert to numpy ndarray if specified
         if return_numpy:
-            pred_dict = {k: v.numpy() for k, v in pred_dict.items()}
+            pred_dict = {
+                k: (v.numpy() if paddle.is_tensor(v) else v)
+                for k, v in pred_dict.items()
+            }
 
         return pred_dict
 
