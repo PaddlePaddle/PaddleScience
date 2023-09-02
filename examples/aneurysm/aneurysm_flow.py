@@ -363,9 +363,9 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
         plt.close("all")
-    logger.info(
+    logger.message(
         f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}"
     )
-    logger.info(
+    logger.message(
         f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}"
     )
