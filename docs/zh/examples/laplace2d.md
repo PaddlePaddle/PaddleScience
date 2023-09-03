@@ -2,9 +2,12 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-2D-Laplace，在本文中代表拉普拉斯方程的2维形式。拉普拉斯方程因为由法国数学家拉普拉斯首先提出而得名。求解拉普拉斯方程是电磁学、天文学和流体力学等领域经常遇到的一类重要的数学问题，因为这种方程以势函数的形式描写了电场、引力场和流场等物理对象（一般统称为“保守场”或“有势场”）的性质。
+拉普拉斯方程因为由法国数学家拉普拉斯首先提出而得名，该方程的求解在许多领域都有重要应用，例如电磁学、天文学和流体力学等。在实际应用中，拉普拉斯方程的求解往往是一个复杂的数学问题。对于一些具有特定边界条件和初始条件的实际问题，可以通过特定的数值方法（如有限元方法、有限差分方法等）来求解拉普拉斯方程。对于一些复杂的问题，可能需要采用更高级的数值方法或者借助高性能计算机进行计算。
+
+本案例通过深度学习的方式对拉普拉斯方程的2维形式进行求解。
+
 
 ## 2. 问题定义
 
@@ -181,7 +184,9 @@ examples/laplace/laplace2d.py
 
 ## 5. 结果展示
 
+使用训练得到的模型对以上 2D-Laplace 中取的每个点进行预测得到了模型的预测结果，如下所示，其中图像中每个点的值代表对应坐标上模型对 2D-Laplace 问题预测的解。
+
 <figure markdown>
-  ![laplace 2d](../../images/laplace2d/laplace2d.png){ loading=lazy }
+  ![laplace 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/laplace2d/laplace2d.png){ loading=lazy }
   <figcaption>模型预测结果</figcaption>
 </figure>
