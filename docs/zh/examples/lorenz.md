@@ -2,9 +2,9 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6206798?contributionType=1&sUid=455441&shared=1&ts=1684477535039" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹混沌系统”，最早由美国气象学家爱德华·洛伦兹（Edward N.Lorenz）在1963年的一篇文章中提出。著名的“蝴蝶效应”，即“一只南美洲亚马逊河流域热带雨林中的蝴蝶，偶尔扇动几下翅膀，可以在两周以后引起美国得克萨斯州的一场龙卷风”，也是最早起源于这篇文章。洛伦兹系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
+Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹混沌系统”，最早由美国气象学家爱德华·洛伦兹（Edward N.Lorenz）在1963年的一篇文章中提出。著名的“蝴蝶效应”，即“一只南美洲亚马逊河流域热带雨林中的蝴蝶，偶尔扇动几下翅膀，可以在两周以后引起美国得克萨斯州的一场龙卷风”，也是最早起源于这篇文章。洛伦兹系统的特点是在一定参数条件下展现出复杂、不确定的动态行为，包括对初始条件的敏感性和长期行为的不可预测性。这种混沌行为在自然界和许多实际应用领域中都存在，例如气候变化、股票市场波动等。洛伦兹系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
 
 ## 2. 问题定义
 
@@ -35,7 +35,7 @@ Transformer 结构在 NLP、CV 领域中取得了巨大的成功，但是其在�
 如下图所示，该方法主要包含两个网络模型：Embedding 模型和 Transformer 模型。其中，Embedding 模型的 Encoder 模块负责将物理状态变量进行编码映射为编码向量，Decoder 模块则负责将编码向量映射为物理状态变量；Transformer 模型作用于编码空间，其输入是 Embedding 模型 Encoder 模块的输出，利用当前时刻的编码向量预测下一时刻的编码向量，预测得到的编码向量可以被 Embedding 模型的 Decoder 模块解码，得到对应的物理状态变量。在模型训练时，首先训练 Embedding 模型，然后将 Embedding 模型的参数冻结训练 Transformer 模型。关于该方法的细节请参考论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957)。
 
 <figure markdown>
-  ![trphysx-arch](../../images/lorenz/trphysx-arch.png){ loading=lazy }
+  ![trphysx-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/trphysx-arch.png){ loading=lazy }
   <figcaption>左：Embedding 网络结构，右：Transformer 网络结构</figcaption>
 </figure>
 
@@ -109,7 +109,7 @@ examples/lorenz/train_enn.py:79:87
 在该案例中，Embedding 模型的输入输出都是物理空间中点的位置坐标 $(x, y, z)$ ，使用了全连接层实现 Embedding 模型，如下图所示。
 
 <figure markdown>
-  ![lorenz_embedding](../../images/lorenz/lorenz_embedding.png){ loading=lazy }
+  ![lorenz_embedding](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/lorenz_embedding.png){ loading=lazy }
   <figcaption>Embedding 网络模型</figcaption>
 </figure>
 
@@ -196,7 +196,7 @@ examples/lorenz/train_transformer.py:106:111
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
-  ![lorenz_transformer](../../images/lorenz/lorenz_transformer.png){ loading=lazy }
+  ![lorenz_transformer](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/lorenz_transformer.png){ loading=lazy }
   <figcaption>Transformer 网络模型</figcaption>
 </figure>
 
@@ -286,12 +286,14 @@ examples/lorenz/train_transformer.py
 
 ## 5. 结果展示
 
+下图中展示了两个不同初始条件下的模型预测结果和传统数值微分的预测结果。
+
 <figure markdown>
-  ![result_states0](../../images/lorenz/result_states0.png){ loading=lazy }
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/result_states0.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>
 
 <figure markdown>
-  ![result_states1](../../images/lorenz/result_states1.png){ loading=lazy }
+  ![result_states1](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/result_states1.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>
