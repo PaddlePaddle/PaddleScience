@@ -1,11 +1,18 @@
 import math
 
-from paddle.optimizer.lr import LRScheduler
+from paddle.optimizer import lr
 
 
-class CosineAnnealingWarmUpRestarts(LRScheduler):
+class CosineAnnealingWarmUpRestarts(lr.LRScheduler):
     def __init__(
-        self, optimizer, T_0, T_mult=1, eta_max=0.1, T_up=0, gamma=1.0, last_epoch=-1
+        self,
+        learning_rate,
+        T_0,
+        T_mult=1,
+        eta_max=0.1,
+        T_up=0,
+        gamma=1.0,
+        last_epoch=-1,
     ):
         if T_0 <= 0 or not isinstance(T_0, int):
             raise ValueError("Expected positive integer T_0, but got {}".format(T_0))
@@ -22,10 +29,8 @@ class CosineAnnealingWarmUpRestarts(LRScheduler):
         self.gamma = gamma
         self.cycle = 0
         self.T_cur = last_epoch
-        self.optimizer = optimizer
-        super(CosineAnnealingWarmUpRestarts, self).__init__(
-            optimizer.get_lr(), last_epoch
-        )
+        self.base_lrs = [learning_rate]
+        super(CosineAnnealingWarmUpRestarts, self).__init__(learning_rate, last_epoch)
 
     def get_lr(self):
         if self.T_cur == -1:
@@ -79,7 +84,3 @@ class CosineAnnealingWarmUpRestarts(LRScheduler):
 
         self.eta_max = self.base_eta_max * (self.gamma**self.cycle)
         self.last_epoch = math.floor(epoch)
-        """
-        for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
-            param_group["lr"] = lr
-        """

@@ -1,52 +1,29 @@
 # Deep learning based denoising process
 
-## Reference  
+## 参考
 
 Yoon, Taekeun, et al. "Deep learning-based denoising for fast time-resolved flame emission spectroscopy in high-pressure combustion environment." Combustion and Flame 248 (2023): 112583.
 <https://doi.org/10.1016/j.combustflame.2022.112583>
+<https://github.com/ytg7146/DU_CNN>
 
-## Included folders and files
+## 包含目录和文件
 
-* data  : raw dataset (download following [file (url)](https://drive.google.com/file/d/1yOuxJmI4tKYI3tJEJIWKf52T4SjAfaSB/view?usp=share_link)
-'rawdataM.mat' and locate in data folder)
-* models   : model strucutre python code
-* utils   : required functions
-* main.py : main code
-* enivornment.yaml  : conda environment
-* config.yaml  : configuration
+* data  : 数据集下载到 data 目录 [rawdataM.mat](https://drive.google.com/file/d/1yOuxJmI4tKYI3tJEJIWKf52T4SjAfaSB/view?usp=share_link)
+* models  : 模型
+* utils  : 需要的辅助函数
+* main.py  : 主程序
+* requirements.txt  : 安装的依赖
+* config.yaml  : 配置
 
-## Requirements
+## 步骤
 
-* python environment (anaconda)
-* python version 3.10.4
-* window 10 64bit
+1. 选择工作目录
+2. 下载数据集到目录 ./data/
+3. conda create -n DUCNN
+4. conda activate DUCNN
+5. pip install -r requirements.txt
+6. python main.py
 
-## Procedure
+### 注意
 
-$ : command <br/>
-
-1. Select working directory
-2. Download [data](https://drive.google.com/file/d/1yOuxJmI4tKYI3tJEJIWKf52T4SjAfaSB/view?usp=share_link) in ./data/
-3. $ conda create -n DUCNN
-4. $ conda activate DUCNN
-5. $ conda env create --file environment.yaml
-6. $ python main.py
-
-### Note1
-
-If the GPU memory is not enough,
-Reduce batch_size
-
--------------------
-原 github 仓库 <https://github.com/ytg7146/DU_CNN>
-使用 `conda env create --file environment.yaml` 安装依赖失败，所以删除 environment.yaml
-增加 requirements.txt
-
-安装依赖运行
-
-``` shell
-pip install -r requirements.txt
-```
-
-数据集下载
-[rawdataM.mat](https://drive.google.com/file/d/1yOuxJmI4tKYI3tJEJIWKf52T4SjAfaSB/view?usp=share_link)
+如果 GPU 内存不足，降低 batch_size

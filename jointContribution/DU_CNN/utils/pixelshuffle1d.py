@@ -1,9 +1,9 @@
-import paddle
+from paddle import nn
 
 # "long" and "short" denote longer and shorter samples
 
 
-class PixelShuffle1D(paddle.nn.Layer):
+class PixelShuffle1D(nn.Layer):
     """
     1D pixel shuffler. https://arxiv.org/pdf/1609.05158.pdf
     Upscales sample length, downscales channel length
@@ -29,7 +29,7 @@ class PixelShuffle1D(paddle.nn.Layer):
         return x
 
 
-class PixelUnshuffle1D(paddle.nn.Layer):
+class PixelUnshuffle1D(nn.Layer):
     """
     Inverse of 1D pixel shuffler
     Upscales channel length, downscales sample length

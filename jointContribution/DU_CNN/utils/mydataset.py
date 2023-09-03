@@ -1,11 +1,12 @@
+import numpy as np
 import paddle
-from paddle.io import Dataset
+from paddle import io
 
 
-class MapDataset(Dataset):
+class MapDataset(io.Dataset):
     def __init__(self, datashort, datalong, num):
-        self.datashort = datashort
-        self.datalong = datalong
+        self.datashort = np.array(datashort).astype(paddle.get_default_dtype())
+        self.datalong = np.array(datalong).astype(paddle.get_default_dtype())
         self.datarange = len(num)
         self.datarangeshort = datashort[0][0].shape[1]
         self.datarangelong = datalong[0][0].shape[1]
@@ -20,14 +21,11 @@ class MapDataset(Dataset):
         return self.length
 
     def __getitem__(self, idx):
-        return paddle.to_tensor(
+        return (
             self.datashort[self.num[idx // self.datarange2]][0][
                 :, idx % self.datarange2 // self.datarangelong
-            ]
-        ).astype("float32"), paddle.to_tensor(
+            ],
             self.datalong[self.num[idx // self.datarange2]][0][
                 :, idx % self.datarange2 % self.datarangelong
-            ]
-        ).astype(
-            "float32"
+            ],
         )

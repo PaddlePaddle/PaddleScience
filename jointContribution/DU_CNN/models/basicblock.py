@@ -1,27 +1,26 @@
-from collections import OrderedDict
-
-import paddle.nn as nn
-
 """
 # --------------------------------------------
 # Advanced nn.Sequential
 # https://github.com/xinntao/BasicSR
 # --------------------------------------------
 """
+from collections import OrderedDict
+
+from paddle import nn
 
 
-def sequential(*args):
+def to_sequential(*args):
     """Advanced nn.Sequential.
 
-    Args:
-        nn.Sequential, nn.Layer
+    Raises:
+        NotImplementedError: Sequential does not support OrderedDict input.
 
     Returns:
-        nn.Sequential
+        nn.Sequential: The nn.Sequential of module list.
     """
     if len(args) == 1:
         if isinstance(args[0], OrderedDict):
-            raise NotImplementedError("sequential does not support OrderedDict input.")
+            raise NotImplementedError("Sequential does not support OrderedDict input.")
         return args[0]  # No sequential is needed.
     modules = []
     for module in args:
@@ -46,9 +45,10 @@ def conv1(
     mode="CBR",
     negative_slope=0.2,
 ):
-    bias_attr = bias
-    if bias_attr:
+    if bias:
         bias_attr = None
+    else:
+        bias_attr = False
     L = []
     for t in mode:
         if t == "C":
@@ -85,13 +85,9 @@ def conv1(
             )
         elif t == "I":
             L.append(nn.InstanceNorm1D(out_channels, weight_attr=None, bias_attr=None))
-        elif t == "R":
+        elif t in ("R", "r"):
             L.append(nn.ReLU())
-        elif t == "r":
-            L.append(nn.ReLU())
-        elif t == "L":
-            L.append(nn.LeakyReLU(negative_slope=negative_slope))
-        elif t == "l":
+        elif t in ("L", "l"):
             L.append(nn.LeakyReLU(negative_slope=negative_slope))
         elif t == "M":
             L.append(nn.MaxPool1D(kernel_size=kernel_size, stride=stride, padding=0))
@@ -99,4 +95,4 @@ def conv1(
             L.append(nn.AvgPool1D(kernel_size=kernel_size, stride=stride, padding=0))
         else:
             raise NotImplementedError(f"Undefined type: {t}")
-    return sequential(*L)
+    return to_sequential(*L)

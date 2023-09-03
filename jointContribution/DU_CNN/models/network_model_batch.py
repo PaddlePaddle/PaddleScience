@@ -1,44 +1,38 @@
 # https://github.com/viktor-ktorvi/1d-convolutional-neural-networks
 
-import models.basicblock as B
 import paddle.nn as nn
-from utils.pixelshuffle1d import PixelShuffle1D
-from utils.pixelshuffle1d import PixelUnshuffle1D
+from models import basicblock
+from utils import pixelshuffle1d
 
 
 class Networkn(nn.Layer):
+    """Init function.
+
+    Args:
+        nb (int): Total number of conv layers.
+        nc (int): Channel number.
+        downsample (int): Downsample number.
+        kerneln (int): Kernel number.
+        in_nc (int, optional): Channel number of input. Defaults to 1.
+        out_nc (int, optional): Channel number of output. Defaults to 1.
+        act_mode (str, optional): Batch norm + activation function; 'BR' means BN+ReLU. Defaults to 'BR'.
+
+    Raises:
+        ValueError: Examples of activation function: R, L, BR, BL, IR, IL.
+    """
+
     def __init__(self, nb, downsample, kerneln, nc, in_nc=1, out_nc=1, act_mode="BR"):
-
-        """
-        # ------------------------------------
-        in_nc: channel number of input
-        out_nc: channel number of output
-        nc: channel number
-        nb: total number of conv layers
-        act_mode: batch norm + activation function; 'BR' means BN+ReLU.
-        # ------------------------------------
-        Batch normalization and residual learning are
-        beneficial to Gaussian denoising (especially
-        for a single noise level).
-        The residual of a noisy image corrupted by additive white
-        Gaussian noise (AWGN) follows a constant
-        Gaussian distribution which stablizes batch
-        normalization during training.
-        # ------------------------------------
-        """
-
         super(Networkn, self).__init__()
 
         # encoder
-        self.down = PixelUnshuffle1D(downsample)
-        self.up = PixelShuffle1D(downsample)
+        self.down = pixelshuffle1d.PixelUnshuffle1D(downsample)
+        self.up = pixelshuffle1d.PixelShuffle1D(downsample)
 
-        assert (
-            "R" in act_mode or "L" in act_mode
-        ), "Examples of activation function: R, L, BR, BL, IR, IL"
+        if "R" not in act_mode and "L" not in act_mode:
+            raise ValueError("Examples of activation function: R, L, BR, BL, IR, IL.")
         bias = True
 
-        m_head = B.conv1(
+        m_head = basicblock.conv1(
             in_nc * downsample,
             nc,
             kerneln,
@@ -47,16 +41,16 @@ class Networkn(nn.Layer):
             bias=bias,
         )
         m_body = [
-            B.conv1(
+            basicblock.conv1(
                 nc, nc, kerneln, padding=kerneln // 2, mode="C" + act_mode, bias=bias
             )
             for _ in range(nb - 2)
         ]
-        m_tail = B.conv1(
+        m_tail = basicblock.conv1(
             nc, out_nc * downsample, kerneln, padding=kerneln // 2, mode="C", bias=bias
         )
 
-        self.model = B.sequential(m_head, *m_body, m_tail)
+        self.model = basicblock.to_sequential(m_head, *m_body, m_tail)
 
     def forward(self, x):
         x = self.down(x)
