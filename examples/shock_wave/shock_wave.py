@@ -30,7 +30,7 @@ from ppsci.utils import misc
 class Euler2D(equation.PDE):
     def __init__(self):
         super().__init__()
-        # HACK: solver will be added here by `setattr` for tracking run-time epoch to
+        # HACK: solver will be added here for tracking run-time epoch to
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
@@ -140,7 +140,7 @@ class Euler2D(equation.PDE):
 class BC_EQ(equation.PDE):
     def __init__(self):
         super().__init__()
-        # HACK: solver will be added here by `setattr` for tracking run-time epoch to
+        # HACK: solver will be added here for tracking run-time epoch to
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
@@ -257,14 +257,14 @@ if __name__ == "__main__":
     equation = {"Euler2D": Euler2D(), "BC_EQ": BC_EQ()}
 
     # set hyper-parameters
-    num_ib = 10000
-    num_int = 100000
     Lt = 0.4
     Lx = 1.5
     Ly = 2.0
     rx = 1.0
     ry = 1.0
     rd = 0.25
+    N_INTERIOR = 100000
+    N_BOUNDARY = 10000
     RHO1 = 2.112
     P1 = 3.001
     GAMMA = 1.4
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     # generate PDE data
     xlimits = np.array([[0.0, 0.0, 0.0], [Lt, Lx, Ly]]).T
     name_value = ("t", "x", "y")
-    doe_lhs = lhs.LHS(num_int, xlimits)
+    doe_lhs = lhs.LHS(N_INTERIOR, xlimits)
     x_int_train = doe_lhs.get_sample()
     x_int_train = x_int_train[
         ~((x_int_train[:, 1] - rx) ** 2 + (x_int_train[:, 2] - ry) ** 2 < rd**2)
@@ -286,29 +286,6 @@ if __name__ == "__main__":
     y_int_train = np.zeros([len(x_int_train), len(model.output_keys)], dtype)
     y_int_train_dict = misc.convert_to_dict(
         y_int_train, tuple(equation["Euler2D"].equations.keys())
-    )
-
-    # generate IC data
-    xlimits = np.array([[0.0, 0.0, 0.0], [0.0, Lx, Ly]]).T
-    doe_lhs = lhs.LHS(num_ib, xlimits)
-    x_ic_train = doe_lhs.get_sample()
-    x_ic_train = x_ic_train[
-        ~((x_ic_train[:, 1] - rx) ** 2 + (x_ic_train[:, 2] - ry) ** 2 < rd**2)
-    ]
-    x_ic_train_dict = misc.convert_to_dict(x_ic_train, name_value)
-    U1 = np.sqrt(GAMMA * P1 / RHO1) * MA
-    y_ic_train = np.concatenate(
-        [
-            np.full([len(x_ic_train), 1], U1, dtype),
-            np.full([len(x_ic_train), 1], 0, dtype),
-            np.full([len(x_ic_train), 1], P1, dtype),
-            np.full([len(x_ic_train), 1], RHO1, dtype),
-        ],
-        axis=1,
-    )
-    y_ic_train_dict = misc.convert_to_dict(
-        y_ic_train,
-        model.output_keys,
     )
 
     # generate BC data(left, right side)
@@ -322,7 +299,7 @@ if __name__ == "__main__":
             ],
         ]
     ).T
-    doe_lhs = lhs.LHS(num_ib, xlimits)
+    doe_lhs = lhs.LHS(N_BOUNDARY, xlimits)
     x_bcL_train = doe_lhs.get_sample()
     x_bcL_train_dict = misc.convert_to_dict(x_bcL_train, name_value)
 
@@ -344,7 +321,7 @@ if __name__ == "__main__":
     )
 
     x_bcI_train, sin_bcI_train, cos_bcI_train = generate_bc_down_circle_points(
-        Lt, rx, ry, rd, num_ib
+        Lt, rx, ry, rd, N_BOUNDARY
     )
     x_bcI_train_dict = misc.convert_to_dict(
         np.concatenate([x_bcI_train, sin_bcI_train, cos_bcI_train], axis=1),
@@ -353,6 +330,29 @@ if __name__ == "__main__":
     y_bcI_train_dict = misc.convert_to_dict(
         np.zeros((len(x_bcI_train), 3), dtype),
         ("item1", "item2", "item3"),
+    )
+
+    # generate IC data
+    xlimits = np.array([[0.0, 0.0, 0.0], [0.0, Lx, Ly]]).T
+    doe_lhs = lhs.LHS(N_BOUNDARY, xlimits)
+    x_ic_train = doe_lhs.get_sample()
+    x_ic_train = x_ic_train[
+        ~((x_ic_train[:, 1] - rx) ** 2 + (x_ic_train[:, 2] - ry) ** 2 < rd**2)
+    ]
+    x_ic_train_dict = misc.convert_to_dict(x_ic_train, name_value)
+    U1 = np.sqrt(GAMMA * P1 / RHO1) * MA
+    y_ic_train = np.concatenate(
+        [
+            np.full([len(x_ic_train), 1], U1, dtype),
+            np.full([len(x_ic_train), 1], 0, dtype),
+            np.full([len(x_ic_train), 1], P1, dtype),
+            np.full([len(x_ic_train), 1], RHO1, dtype),
+        ],
+        axis=1,
+    )
+    y_ic_train_dict = misc.convert_to_dict(
+        y_ic_train,
+        model.output_keys,
     )
 
     # set constraints
@@ -427,7 +427,6 @@ if __name__ == "__main__":
         ITERS_PER_EPOCH,
         save_freq=50,
         log_freq=20,
-        eval_during_train=False,
         seed=SEED,
         equation=equation,
         eval_with_no_grad=True,
@@ -475,30 +474,38 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(15, 15))
 
-    plt.subplot(2, 2, 3)
+    plt.subplot(2, 2, 1)
     plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], u * 241.315, 60)
     plt.title("U m/s")
-    axe = plt.gca()
-    axe.set_aspect(1)
-    plt.colorbar()
-
-    plt.subplot(2, 2, 4)
-    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], v * 241.315, 60)
-    plt.title("V m/s")
+    plt.xlabel("x")
+    plt.ylabel("y")
     axe = plt.gca()
     axe.set_aspect(1)
     plt.colorbar()
 
     plt.subplot(2, 2, 2)
-    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], p * 33775, 60)
-    plt.title("P Pa")
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], v * 241.315, 60)
+    plt.title("V m/s")
+    plt.xlabel("x")
+    plt.ylabel("y")
     axe = plt.gca()
     axe.set_aspect(1)
     plt.colorbar()
 
-    plt.subplot(2, 2, 1)
+    plt.subplot(2, 2, 3)
+    plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], p * 33775, 60)
+    plt.title("P Pa")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    axe = plt.gca()
+    axe.set_aspect(1)
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
     plt.contourf(x_grid[:, 0, :], y_grid[:, 0, :], rho * 0.58, 60)
     plt.title("Rho kg/m^3")
+    plt.xlabel("x")
+    plt.ylabel("y")
     axe = plt.gca()
     axe.set_aspect(1)
     plt.colorbar()
