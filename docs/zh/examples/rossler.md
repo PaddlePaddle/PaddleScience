@@ -2,9 +2,9 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6209280?sUid=455441&shared=1&ts=1684495132419" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-Rossler System，最早由德国科学家 Rossler 提出，也是常见的混沌系统。该系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
+Rossler System，最早由德国科学家 Rossler 提出，也是常见的混沌系统。该系统在混沌理论的研究中具有重要地位，为混沌现象提供了一种数学描述和理解方法。同时由于该系统对数值扰动极为敏感，因此也是是评估机器学习（深度学习）模型准确性的良好基准。
 
 ## 2. 问题定义
 
@@ -93,7 +93,7 @@ examples/rossler/train_enn.py:83:91
 在该案例中，Embedding 模型的输入输出都是物理空间中点的位置坐标 $(x, y, z)$ ，使用了全连接层实现 Embedding 模型，如下图所示。
 
 <figure markdown>
-  ![rossler_embedding](../../images/rossler/rossler_embedding.png){ loading=lazy }
+  ![rossler_embedding](https://paddle-org.bj.bcebos.com/paddlescience/docs/rossler/rossler_embedding.png){ loading=lazy }
   <figcaption>Embedding 网络模型</figcaption>
 </figure>
 
@@ -180,7 +180,7 @@ examples/rossler/train_transformer.py:103:108
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
-  ![rossler_transformer](../../images/rossler/rossler_transformer.png){ loading=lazy }
+  ![rossler_transformer](https://paddle-org.bj.bcebos.com/paddlescience/docs/rossler/rossler_transformer.png){ loading=lazy }
   <figcaption>Transformer 网络模型</figcaption>
 </figure>
 
@@ -270,12 +270,14 @@ examples/rossler/train_transformer.py
 
 ## 5. 结果展示
 
+下图中展示了两个不同初始条件下的模型预测结果和传统数值微分的预测结果。
+
 <figure markdown>
-  ![result_states0](../../images/rossler/result_states0.png){ loading=lazy }
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/rossler/result_states0.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>
 
 <figure markdown>
-  ![result_states1](../../images/rossler/result_states1.png){ loading=lazy }
+  ![result_states1](https://paddle-org.bj.bcebos.com/paddlescience/docs/rossler/result_states1.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>
