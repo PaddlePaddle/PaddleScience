@@ -2,9 +2,12 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6390502" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-传统的 PINNs(Physics-informed neural networks) 网络中的约束都是软约束，作为 loss 项参与网络训练。而 hPINNs 通过修改网络输出的方法，将约束严格地加入网络结构中，形成一种硬约束。
+求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
+
+传统的 PINNs 网络中的约束都是软约束，即 PDE(偏微分方程) 作为 loss 项参与网络训练。而本案例 hPINNs 通过修改网络输出的方法，将约束严格地加入网络结构中，形成一种更有效的硬约束。
+
 同时 hPINNs 设计了不同的约束组合，进行了软约束、带正则化的硬约束和应用增强的拉格朗日硬约束 3 种条件下的实验。本文档主要针对应用增强的拉格朗日方法的硬约束进行说明，但完整代码中可以通过 `train_mode` 参数来切换三种训练模式。
 
 本问题可参考 [AI Studio题目](https://aistudio.baidu.com/aistudio/projectdetail/4117361?channelType=0&channel=0).
@@ -59,10 +62,10 @@ examples/hpinns/holography.py:36:37
 
 ### 3.2 模型构建
 
-holograpy问题的模型结构图为：
+holograpy 问题的模型结构图为：
 
 <figure markdown>
-  ![holography-arch](../../images/hpinns/holograpy_arch.png){ loading=lazy style="margin:0 auto"}
+  ![holography-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/holograpy_arch.png){ loading=lazy style="margin:0 auto"}
   <figcaption>holography 问题的 hPINNs 网络模型</figcaption>
 </figure>
 
@@ -291,43 +294,56 @@ examples/hpinns/plotting.py
 
 ## 5. 结果展示
 
+参考 [问题定义](#2)，下图展示了训练过程中 loss 变化、参数 lambda 和参数 mu 与增强的拉格朗日方法中训练论次 k 的变化、电场 E 和介电常数 epsilon 最终预测的值。
+
+下图展示了对于一个定义的方形域内，电磁波传播的情况的预测。预测结果与有限差分频域(FDFD)方法的结果基本一致。
+
+训练过程中的 loss 值变化：
+
 <figure markdown>
-  ![holograpy_result_6A](../../images/hpinns/aug_lag_Fig6_A.jpg){ loading=lazy }
+  ![holograpy_result_6A](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_A.jpg){ loading=lazy }
   <figcaption> 训练过程 loss 值随 iteration 变化</figcaption>
 </figure>
 
+objective loss 值随训练轮次 k 的变化：
 <figure markdown>
-  ![holograpy_result_6B](../../images/hpinns/aug_lag_Fig6_B.jpg){ loading=lazy }
+  ![holograpy_result_6B](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_B.jpg){ loading=lazy }
   <figcaption> k 值对应 objective loss 值</figcaption>
 </figure>
 
+k=1,4,9 时对应参数 lambda 实部和虚部的值：
 <figure markdown>
-  ![holograpy_result_6C](../../images/hpinns/aug_lag_Fig6_C.jpg){ loading=lazy }
+  ![holograpy_result_6C](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_C.jpg){ loading=lazy }
   <figcaption> k=1,4,9 时对应 lambda 值</figcaption>
 </figure>
 
+参数 lambda 和参数 mu 的比值随训练轮次 k 的变化：
 <figure markdown>
-  ![holograpy_result_6D](../../images/hpinns/aug_lag_Fig6_D.jpg){ loading=lazy }
+  ![holograpy_result_6D](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_D.jpg){ loading=lazy }
   <figcaption> k 值对应 lambda/mu 值</figcaption>
 </figure>
 
+参数 lambda 和参数 mu 实部的比值随训练轮次 k=1,4,6,9 时出现的频率，曲线越“尖”说明值越趋于统一，收敛的越好：
 <figure markdown>
-  ![holograpy_result_6E](../../images/hpinns/aug_lag_Fig6_E.jpg){ loading=lazy }
+  ![holograpy_result_6E](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_E.jpg){ loading=lazy }
   <figcaption> k=1,4,6,9 时对应实部 lambda/mu 值出现频率</figcaption>
 </figure>
 
+参数 lambda 和参数 mu 虚部的比值随训练轮次 k=1,4,6,9 时出现的频率，曲线越“尖”说明值越趋于统一，收敛的越好：
 <figure markdown>
-  ![holograpy_result_6F](../../images/hpinns/aug_lag_Fig6_F.jpg){ loading=lazy }
+  ![holograpy_result_6F](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig6_F.jpg){ loading=lazy }
   <figcaption> k=1,4,6,9 时对应虚部 lambda/mu 值出现频率</figcaption>
 </figure>
 
+电场 E 值：
 <figure markdown>
-  ![holograpy_result_7C](../../images/hpinns/aug_lag_Fig7_C.jpg){ loading=lazy }
+  ![holograpy_result_7C](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig7_C.jpg){ loading=lazy }
   <figcaption> E 值</figcaption>
 </figure>
 
+介电常数 epsilon 值：
 <figure markdown>
-  ![holograpy_result_7eps](../../images/hpinns/aug_lag_Fig7_eps.jpg){ loading=lazy }
+  ![holograpy_result_7eps](https://paddle-org.bj.bcebos.com/paddlescience/docs/hPINNs/aug_lag_Fig7_eps.jpg){ loading=lazy }
   <figcaption> epsilon 值</figcaption>
 </figure>
 
