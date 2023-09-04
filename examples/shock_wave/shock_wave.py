@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path
+from os import path as osp
 
 import lhs
 import numpy as np
@@ -287,16 +287,7 @@ if __name__ == "__main__":
     )
 
     # generate BC data(left, right side)
-    xlimits = np.array(
-        [
-            [0.0, 0.0, 0.0],
-            [
-                Lt,
-                0.0,
-                Ly,
-            ],
-        ]
-    ).T
+    xlimits = np.array([[0.0, 0.0, 0.0], [Lt, 0.0, Ly]]).T
     doe_lhs = lhs.LHS(N_BOUNDARY, xlimits)
     x_bcL_train = doe_lhs.get_sample()
     x_bcL_train_dict = misc.convert_to_dict(x_bcL_train, name_value)
@@ -510,4 +501,4 @@ if __name__ == "__main__":
     axe.set_aspect(1)
     plt.colorbar()
 
-    plt.savefig(path.join(OUTPUT_DIR, f"shock_wave(Ma_{MA:.3f}).png"))
+    plt.savefig(osp.join(OUTPUT_DIR, f"shock_wave(Ma_{MA:.3f}).png"))

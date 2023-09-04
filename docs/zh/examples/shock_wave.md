@@ -54,7 +54,7 @@ $$
 
 ### 3.1 模型构建
 
-在 ShockWave 问题中，给定时间 $t$ 和位置坐标 $(x,y)$，模型负责预测出对应的 $(u,v,p,\rho)$，因此我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t,x,y)$ 到 $(u,v,p,\rho)$ 的映射函数 $g: \mathbb{R}^3 \to \mathbb{R}^4$ ，即：
+在 ShockWave 问题中，给定时间 $t$ 和位置坐标 $(x,y)$，模型负责预测出对应的 $x$ 方向速度、 $y$ 防线速度、压力、密度四个物理量 $(u,v,p,\rho)$，因此我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t,x,y)$ 到 $(u,v,p,\rho)$ 的映射函数 $g: \mathbb{R}^3 \to \mathbb{R}^4$ ，即：
 
 $$
 u,v,p,\rho = g(t,x,y)
@@ -90,7 +90,7 @@ examples/shock_wave/shock_wave.py:256:257
 
 ### 3.3 计算域构建
 
-本案例的计算域为0~0.4单位时间，长为1.5，宽为2.0的长方形区域，其内含有一个圆心坐标为 [1,1]，半径为 0.25 的圆，代码如下所示
+本案例的计算域为 0 ~ 0.4 单位时间，长为 1.5，宽为 2.0 的长方形区域，其内含有一个圆心坐标为 [1, 1]，半径为 0.25 的圆，代码如下所示
 
 ``` py linenums="259"
 --8<--
@@ -112,13 +112,13 @@ examples/shock_wave/shock_wave.py:266:266
 
 ``` py linenums="273"
 --8<--
-examples/shock_wave/shock_wave.py:273:288
+examples/shock_wave/shock_wave.py:273:287
 --8<--
 ```
 
-``` py linenums="356"
+``` py linenums="347"
 --8<--
-examples/shock_wave/shock_wave.py:356:370
+examples/shock_wave/shock_wave.py:347:361
 --8<--
 ```
 
@@ -134,13 +134,13 @@ examples/shock_wave/shock_wave.py:267:267
 
 ``` py linenums="289"
 --8<--
-examples/shock_wave/shock_wave.py:289:331
+examples/shock_wave/shock_wave.py:289:322
 --8<--
 ```
 
-``` py linenums="383"
+``` py linenums="374"
 --8<--
-examples/shock_wave/shock_wave.py:383:407
+examples/shock_wave/shock_wave.py:374:398
 --8<--
 ```
 
@@ -148,23 +148,23 @@ examples/shock_wave/shock_wave.py:383:407
 
 我们将边界条件施加在计算域的初始时刻的点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在初始时刻的计算域内采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="333"
+``` py linenums="324"
 --8<--
-examples/shock_wave/shock_wave.py:333:354
+examples/shock_wave/shock_wave.py:324:345
 --8<--
 ```
 
-``` py linenums="371"
+``` py linenums="362"
 --8<--
-examples/shock_wave/shock_wave.py:371:382
+examples/shock_wave/shock_wave.py:362:373
 --8<--
 ```
 
 在以上三个约束构建完毕之后，需要将他们包装成一个字典，方便后续作为参数传递
 
-``` py linenums="408"
+``` py linenums="399"
 --8<--
-examples/shock_wave/shock_wave.py:408:413
+examples/shock_wave/shock_wave.py:399:404
 --8<--
 ```
 
@@ -172,9 +172,9 @@ examples/shock_wave/shock_wave.py:408:413
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="419"
+``` py linenums="410"
 --8<--
-examples/shock_wave/shock_wave.py:419:419
+examples/shock_wave/shock_wave.py:410:410
 --8<--
 ```
 
@@ -182,9 +182,9 @@ examples/shock_wave/shock_wave.py:419:419
 
 训练过程会调用优化器来更新模型参数，此处选择 `L-BFGS` 优化器并设定 `max_iter` 为 100。
 
-``` py linenums="415"
+``` py linenums="406"
 --8<--
-examples/shock_wave/shock_wave.py:415:416
+examples/shock_wave/shock_wave.py:406:407
 --8<--
 ```
 
@@ -192,33 +192,33 @@ examples/shock_wave/shock_wave.py:415:416
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="418"
+``` py linenums="409"
 --8<--
-examples/shock_wave/shock_wave.py:418:433
+examples/shock_wave/shock_wave.py:409:424
 --8<--
 ```
 
 本案例需要根据每一轮训练的 epoch 值，计算PDE、BC方程内的权重系数 `relu`。因此在 solver 实例化完毕之后，需额外将其传递给方程本身，代码如下：
 
-``` py linenums="434"
+``` py linenums="425"
 --8<--
-examples/shock_wave/shock_wave.py:434:437
+examples/shock_wave/shock_wave.py:425:428
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="439"
+``` py linenums="430"
 --8<--
-examples/shock_wave/shock_wave.py:439:440
+examples/shock_wave/shock_wave.py:430:431
 --8<--
 ```
 
 训练完毕后，我们可视化最后一个时刻的计算域内辨率为 600x600 的激波，共 360000 个点，代码如下：
 
-``` py linenums="442"
+``` py linenums="433"
 --8<--
-examples/shock_wave/shock_wave.py:442:513
+examples/shock_wave/shock_wave.py:433:504
 --8<--
 ```
 
@@ -236,12 +236,12 @@ examples/shock_wave/shock_wave.py
 
 <figure markdown>
   ![Ma_2.0](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_2.000).png){ loading=lazy }
-  <figcaption> Ma=2.0时，u、v、p、rho的预测结果</figcaption>
+  <figcaption> Ma=2.0时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
 </figure>
 
 <figure markdown>
   ![Ma_0.728](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_0.728).png){ loading=lazy }
-  <figcaption> Ma=0.728时，u、v、p、rho的预测结果</figcaption>
+  <figcaption> Ma=0.728时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
 </figure>
 
 ## 6. 参考资料
