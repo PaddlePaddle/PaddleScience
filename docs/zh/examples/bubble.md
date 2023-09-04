@@ -316,4 +316,4 @@ examples/bubble/bubble.py
 
 参考文献： [Predicting micro-bubble dynamics with semi-physics-informed deep learning](https://doi.org/10.1063/5.0079602)
 
-参考代码： [Semi-PINNs](https://github.com/hanfengzhai/BubbleNet)
+参考代码： [BubbleNet(Semi-PINNs)](https://github.com/hanfengzhai/BubbleNet)
