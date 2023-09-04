@@ -143,7 +143,7 @@ examples/operator_learning/deeponet.py:71:88
 
 ### 3.7 模型训练、评估
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
 ``` py linenums="90"
 --8<--

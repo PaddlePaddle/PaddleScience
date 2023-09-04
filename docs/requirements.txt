@@ -13,3 +13,4 @@ mkdocs-material-extensions
 mkdocstrings
 mkdocstrings-python
 mkdocs-glightbox
+mkdocs-video
