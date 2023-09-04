@@ -140,7 +140,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
     如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
 
-- [可选]如果已按照 [1.4.4 额外依赖安装](#144) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+- [可选]如果已按照 [1.4.3 额外依赖安装](#143) 正确安装了 4 个额外依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行
 
     ``` shell
