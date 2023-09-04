@@ -82,6 +82,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+      - ppsci.experimental: zh/api/experimental.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md
@@ -89,7 +90,6 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
-  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:
@@ -114,6 +114,7 @@ theme:
     - content.code.select
     - content.code.annotate
     - search.highlight
+    - content.tabs.link
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -155,6 +156,8 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 # Extra javascripts
 extra_javascript:

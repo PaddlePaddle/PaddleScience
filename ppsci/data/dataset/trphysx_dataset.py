@@ -16,6 +16,8 @@
 Code below is heavily based on [transformer-physx](https://github.com/zabaras/transformer-physx)
 """
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 from typing import Tuple

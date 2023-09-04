@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import List
 
 import paddle
@@ -25,8 +27,7 @@ class AGDA(LossAggregator):
     **A**daptive **G**radient **D**escent **A**lgorithm
 
     [Physics-informed neural network based on a new adaptive gradient descent algorithm for solving partial differential equations of flow problems](\
-        https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new\
-    )
+        https://pubs.aip.org/aip/pof/article-abstract/35/6/063608/2899773/Physics-informed-neural-network-based-on-a-new)
 
     Args:
         model (nn.Layer): Training model.

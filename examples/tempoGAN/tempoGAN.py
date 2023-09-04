@@ -368,7 +368,7 @@ if __name__ == "__main__":
 
     PRED_INTERVAL = 200
     for i in range(1, EPOCHS + 1):
-        ppsci.utils.logger.info(f"\nEpoch: {i}\n")
+        logger.message(f"\nEpoch: {i}\n")
         # plotting during training
         if i == 1 or i % PRED_INTERVAL == 0 or i == EPOCHS:
             func_module.predict_and_save_plot(
@@ -399,4 +399,4 @@ if __name__ == "__main__":
         / 255.0
     )
     eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_target, img_pred)
-    ppsci.utils.logger.info(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")
+    logger.message(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")

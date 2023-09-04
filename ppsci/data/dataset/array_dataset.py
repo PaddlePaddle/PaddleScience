@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 
@@ -76,7 +78,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray]): Weight dict.
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
 
@@ -92,13 +94,17 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self,
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
-        weight: Dict[str, np.ndarray],
+        weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
-        self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}
+        self.weight = (
+            {key: paddle.to_tensor(value) for key, value in weight.items()}
+            if weight is not None
+            else None
+        )
         self._len = len(next(iter(self.input.values())))
         self.transforms = transforms
 

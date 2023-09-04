@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Tuple
 
@@ -85,11 +87,11 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
             hl.pointsToVTK(filename, axis_x, axis_y, axis_z, data=data_vtu)
 
     if num_timestamps > 1:
-        logger.info(
+        logger.message(
             f"Visualization results are saved to {filename}_t-0.vtu ~ {filename}_t-{num_timestamps - 1}.vtu"
         )
     else:
-        logger.info(f"Visualization result is saved to {filename}.vtu")
+        logger.message(f"Visualization result is saved to {filename}.vtu")
 
 
 def save_vtu_from_dict(

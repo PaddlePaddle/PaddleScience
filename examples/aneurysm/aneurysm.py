@@ -170,6 +170,8 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 1500 if not args.epochs else args.epochs
+
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         EPOCHS,
         ITERS_PER_EPOCH,
@@ -178,8 +180,6 @@ if __name__ == "__main__":
         EPOCHS * ITERS_PER_EPOCH // 100,
         by_epoch=False,
     )()
-
-    # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
