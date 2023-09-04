@@ -94,7 +94,7 @@ examples/shock_wave/shock_wave.py:256:257
 
 ``` py linenums="259"
 --8<--
-examples/shock_wave/shock_wave.py:259:265
+examples/shock_wave/shock_wave.py:259:271
 --8<--
 ```
 
@@ -110,15 +110,15 @@ examples/shock_wave/shock_wave.py:266:266
 --8<--
 ```
 
-``` py linenums="275"
+``` py linenums="273"
 --8<--
-examples/shock_wave/shock_wave.py:275:289
+examples/shock_wave/shock_wave.py:273:288
 --8<--
 ```
 
-``` py linenums="358"
+``` py linenums="356"
 --8<--
-examples/shock_wave/shock_wave.py:358:371
+examples/shock_wave/shock_wave.py:356:370
 --8<--
 ```
 
@@ -132,15 +132,15 @@ examples/shock_wave/shock_wave.py:267:267
 --8<--
 ```
 
-``` py linenums="291"
+``` py linenums="289"
 --8<--
-examples/shock_wave/shock_wave.py:291:333
+examples/shock_wave/shock_wave.py:289:331
 --8<--
 ```
 
-``` py linenums="384"
+``` py linenums="383"
 --8<--
-examples/shock_wave/shock_wave.py:384:408
+examples/shock_wave/shock_wave.py:383:407
 --8<--
 ```
 
@@ -148,33 +148,33 @@ examples/shock_wave/shock_wave.py:384:408
 
 我们将边界条件施加在计算域的初始时刻的点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在初始时刻的计算域内采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="335"
+``` py linenums="333"
 --8<--
-examples/shock_wave/shock_wave.py:335:356
+examples/shock_wave/shock_wave.py:333:354
 --8<--
 ```
 
-``` py linenums="372"
+``` py linenums="371"
 --8<--
-examples/shock_wave/shock_wave.py:372:383
+examples/shock_wave/shock_wave.py:371:382
 --8<--
 ```
 
 在以上三个约束构建完毕之后，需要将他们包装成一个字典，方便后续作为参数传递
 
-``` py linenums="409"
+``` py linenums="408"
 --8<--
-examples/shock_wave/shock_wave.py:409:414
+examples/shock_wave/shock_wave.py:408:413
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数，每轮步数为 1。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="272"
+``` py linenums="419"
 --8<--
-examples/shock_wave/shock_wave.py:272:273
+examples/shock_wave/shock_wave.py:419:419
 --8<--
 ```
 
@@ -182,9 +182,9 @@ examples/shock_wave/shock_wave.py:272:273
 
 训练过程会调用优化器来更新模型参数，此处选择 `L-BFGS` 优化器并设定 `max_iter` 为 100。
 
-``` py linenums="416"
+``` py linenums="415"
 --8<--
-examples/shock_wave/shock_wave.py:416:417
+examples/shock_wave/shock_wave.py:415:416
 --8<--
 ```
 
@@ -192,9 +192,9 @@ examples/shock_wave/shock_wave.py:416:417
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="419"
+``` py linenums="418"
 --8<--
-examples/shock_wave/shock_wave.py:419:433
+examples/shock_wave/shock_wave.py:418:433
 --8<--
 ```
 

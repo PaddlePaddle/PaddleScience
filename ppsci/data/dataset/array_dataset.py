@@ -102,7 +102,11 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
         self.input_keys = tuple(input.keys())
         self.label_keys = tuple(label.keys())
-        self.weight = {} if weight is None else weight
+        self.weight = (
+            {key: paddle.to_tensor(value) for key, value in weight.items()}
+            if weight is not None
+            else None
+        )
         self._len = len(next(iter(self.input.values())))
         self.transforms = transforms
 

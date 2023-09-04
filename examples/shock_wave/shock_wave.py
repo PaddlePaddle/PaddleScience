@@ -269,8 +269,6 @@ if __name__ == "__main__":
     P1 = 3.001
     GAMMA = 1.4
     V1 = 0.0
-    EPOCHS = 100
-    ITERS_PER_EPOCH = 1
 
     # Latin HyperCube Sampling
     # generate PDE data
@@ -356,6 +354,7 @@ if __name__ == "__main__":
     )
 
     # set constraints
+    ITERS_PER_EPOCH = 1
     pde_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -417,6 +416,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.LBFGS(1e-1, max_iter=100)(model)
 
     # initialize solver
+    EPOCHS = 100
     solver = ppsci.solver.Solver(
         model,
         constraint,
