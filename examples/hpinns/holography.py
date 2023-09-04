@@ -265,7 +265,7 @@ if __name__ == "__main__":
             func_module.update_lambda(pred_dict, int(train_dict["bound"]))
 
             func_module.update_mu()
-            ppsci.utils.logger.info(f"Iteration {i}: mu = {func_module.mu}\n")
+            logger.message(f"Iteration {i}: mu = {func_module.mu}\n")
 
             solver = ppsci.solver.Solver(
                 model_list,

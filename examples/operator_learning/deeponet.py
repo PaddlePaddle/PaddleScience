@@ -174,7 +174,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(OUTPUT_DIR, "visual"), exist_ok=True)
     for i, (title, u_func, G_func) in enumerate(func_u_G_pair):
         u, y, G_ref = generate_y_u_G_ref(u_func, G_func)
-        G_pred = solver.predict({"u": u, "y": y})["G"].numpy()
+        G_pred = solver.predict({"u": u, "y": y}, return_numpy=True)["G"]
         plt.plot(y, G_pred, label=r"$G(u)(y)_{ref}$")
         plt.plot(y, G_ref, label=r"$G(u)(y)_{pred}$")
         plt.legend()

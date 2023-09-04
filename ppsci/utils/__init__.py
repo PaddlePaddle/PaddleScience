@@ -19,6 +19,7 @@ from ppsci.utils import profiler
 from ppsci.utils import reader
 from ppsci.utils.checker import dynamic_import_to_globals
 from ppsci.utils.checker import run_check
+from ppsci.utils.checker import run_check_mesh
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
 from ppsci.utils.misc import AverageMeter
@@ -45,6 +46,7 @@ __all__ = [
     "load_vtk_with_time_file",
     "dynamic_import_to_globals",
     "run_check",
+    "run_check_mesh",
     "AttrDict",
     "ExpressionSolver",
     "AverageMeter",

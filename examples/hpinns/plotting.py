@@ -96,6 +96,7 @@ def prepare_data(solver: ppsci.solver.Solver, expr_dict: Dict[str, Callable]):
         expr_dict,
         batch_size=np.shape(valid_dict["x_val"])[0],
         no_grad=False,
+        return_numpy=True,
     )
 
     input_valid = np.stack((valid_dict["x_val"], valid_dict["y_val"]), axis=-1).reshape(
@@ -103,9 +104,9 @@ def prepare_data(solver: ppsci.solver.Solver, expr_dict: Dict[str, Callable]):
     )
     output_valid = np.array(
         [
-            pred_dict_val["e_real"].numpy(),
-            pred_dict_val["e_imaginary"].numpy(),
-            pred_dict_val["epsilon"].numpy(),
+            pred_dict_val["e_real"],
+            pred_dict_val["e_imaginary"],
+            pred_dict_val["epsilon"],
         ]
     ).T.reshape(N[0], N[1], 3)
 
@@ -211,7 +212,7 @@ def plot_6a(log_loss: np.ndarray):
     """
     plt.figure(300, figsize=(8, 6))
     smooth_step = 100  # how many steps of loss are squeezed to one point, num_points is epoch/smooth_step
-    if log_loss.shape[0] % smooth_step is not 0:
+    if log_loss.shape[0] % smooth_step != 0:
         vis_loss_ = log_loss[: -(log_loss.shape[0] % smooth_step), :].reshape(
             -1, smooth_step, log_loss.shape[1]
         )
