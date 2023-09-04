@@ -2,12 +2,14 @@
 
 <!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
-## 1. 问题简介
+## 1. 背景简介
 
-针对如下血管瘤几何模型，通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
+深度学习方法可以用于处理血管瘤问题，其中包括基于物理信息的深度学习方法。这种方法可以用于脑血管瘤的压力建模，以预测和评估血管瘤破裂的风险。
+
+针对如下血管瘤几何模型，本案例通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
 
 <figure markdown>
-  ![equation](../../images/aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 ## 2. 问题定义
@@ -230,9 +232,14 @@ examples/aneurysm/aneurysm.py
 
 ## 5. 结果展示
 
+对于血管瘤测试集（共2,962,708 个三维坐标点），模型预测结果如下所示。
+
 <figure markdown>
-  ![aneurysm_compare.jpg](../../images/aneurysm/aneurysm_compare.png){ loading=lazy }
+  ![aneurysm_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm_compare.png){ loading=lazy }
+  <figcaption> 左侧为PaddleScience预测结果，中间为OpenFOAM求解器预测结果，右侧为两者的差值</figcaption>
 </figure>
+
+可以看到对于管壁压力$p(x,y,z)$，模型的预测结果和 OpenFOAM 结果基本一致。
 
 ## 6. 参考资料
 
