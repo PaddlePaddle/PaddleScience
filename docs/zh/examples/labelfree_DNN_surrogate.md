@@ -1,6 +1,6 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
-## 1. 问题简介
+## 1. 背景简介
 
 流体动力学问题的数值模拟主要依赖于使用多项式将控制方程在空间或/和时间上离散化为有限维代数系统。由于物理的多尺度特性和对复杂几何体进行网格划分的敏感性，这样的过程对于大多数实时应用程序（例如，临床诊断和手术计划）和多查询分析（例如，优化设计和不确定性量化）。在本文中，我们提供了一种物理约束的 DL 方法，用于在不依赖任何模拟数据的情况下对流体流动进行代理建模。 具体来说，设计了一种结构化深度神经网络 (DNN) 架构来强制执行初始条件和边界条件，并将控制偏微分方程（即 Navier-Stokes 方程）纳入 DNN的损失中以驱动训练。 对与血液动力学应用相关的许多内部流动进行了数值实验，并研究了流体特性和域几何中不确定性的前向传播。结果表明，DL 代理近似与第一原理数值模拟之间的流场和前向传播不确定性非常吻合。
 
@@ -33,7 +33,7 @@ $$
 对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
 
 <figure markdown>
-  ![pipe](../../images/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
   <figcaption>流场示意图</figcaption>
 </figure>
 
@@ -113,7 +113,7 @@ examples/pipe/poiseuille_flow.py:134:139
 
 ``` py linenums="67"
 --8<--
-examples/pipe/poiseuille_flow.py:67:86
+examples/pipe/poiseuille_flow.py:67:94
 --8<--
 ```
 
@@ -185,7 +185,7 @@ examples/pipe/poiseuille_flow.py:67:86
 
     第二个参数是约束变量的目标值，在本问题中我们希望 Navier-Stokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
 
-    第三个参数是约束方程作用的计算域，此处填入在 [2.3.2 计算域构建](#232) 章节实例化好的 `interior_geom` 即可；
+    第三个参数是约束方程作用的计算域，此处填入在 [2.2.3 计算域构建](#223) 章节实例化好的 `interior_geom` 即可；
 
     第四个参数是在计算域上的采样配置，此处我们使用分批次数据点训练，因此 `dataset` 字段设置为 `NamedArrayDataset` 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 128；
 
@@ -246,7 +246,7 @@ examples/pipe/poiseuille_flow.py
 ### 2.4. 结果展示
 
 <figure markdown>
-  ![laplace 2d](../../images/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
+  ![laplace 2d]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
   <figcaption>(左)在 x=0 截面速度 u(y) 随 y 在四种不同的动力粘性系数采样下的曲线和解析解的对比 (右)当我们选取截断高斯分布的动力粘性系数 nu 采样(均值为 nu=0.001， 方差 sigma​=2.67×10e−4)，中心处速度的概率密度函数和解析解对比</figcaption>
 </figure>
 
@@ -298,7 +298,7 @@ $$
 对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
 
 <figure markdown>
-  ![pipe](../../images/labelfree_DNN_surrogate/aneurysm.png){ loading=lazy }
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm.png){ loading=lazy }
   <figcaption>流场示意图</figcaption>
 </figure>
 
@@ -527,9 +527,9 @@ examples/aneurysm/aneurysm_flow.py
 ### 3.4. 结果展示
 
 <figure markdown>
-  ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_1.png)
-  ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_2.png)
-  ![pipe](../../images/labelfree_DNN_surrogate/aneurysm_result_3.png)
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_1.png)
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_2.png)
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_3.png)
   <figcaption>第一行为x方向速度，第二行为y方向速度，第三行为壁面剪切应力曲线</figcaption>
 </figure>
 
