@@ -87,8 +87,8 @@ def dereshape_input(
         input = input_dict[key]
         N, _, H, W = input.shape
         if N < C:
-            logger.info(
-                f"Warning: batch_size is smaller than {C}! Tempo needs at least {C} frames, input will be copied."
+            logger.warning(
+                f"batch_size is smaller than {C}! Tempo needs at least {C} frames, input will be copied."
             )
             input_dict[key] = paddle.concat([input[:1]] * C, axis=1)
         else:
