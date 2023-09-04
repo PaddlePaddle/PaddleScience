@@ -42,6 +42,7 @@ nav:
           - ViV: zh/examples/viv.md
         - 流体:
           - Aneurysm: zh/examples/aneurysm.md
+          - ShockWave: zh/examples/shock_wave.md
           - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md

@@ -42,18 +42,18 @@ class Euler2D(equation.PDE):
             )
             t, x, y = out["t"], out["x"], out["y"]
             u, v, rho = out["u"], out["v"], out["rho"]
-            drho_t = jacobian(rho, t)
-            rhou = rho * u
-            rhov = rho * v
-            drhou_x = jacobian(rhou, x)
-            drhov_y = jacobian(rhov, y)
+            rho__t = jacobian(rho, t)
+            rho_u = rho * u
+            rho_v = rho * v
+            rho_u__x = jacobian(rho_u, x)
+            rho_v__y = jacobian(rho_v, y)
 
-            u_x = jacobian(u, x)
-            v_y = jacobian(v, y)
-            deltaU = u_x + v_y
-            nab = paddle.abs(deltaU) - deltaU
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
+            nab = paddle.abs(delta_u) - delta_u
             lam = (0.1 * nab) * relu + 1
-            continuity = (drho_t + drhou_x + drhov_y) / lam
+            continuity = (rho__t + rho_u__x + rho_v__y) / lam
             return continuity
 
         self.add_equation("continuity", continuity_compute_func)
@@ -66,20 +66,20 @@ class Euler2D(equation.PDE):
             )
             t, x, y = out["t"], out["x"], out["y"]
             u, v, p, rho = out["u"], out["v"], out["p"], out["rho"]
-            rhou = rho * u
-            drhou_t = jacobian(rhou, t)
+            rho_u = rho * u
+            rho_u__t = jacobian(rho_u, t)
 
             u1 = rho * u**2 + p
             u2 = rho * u * v
-            du1_x = jacobian(u1, x)
-            du2_y = jacobian(u2, y)
+            u1__x = jacobian(u1, x)
+            u2__y = jacobian(u2, y)
 
-            u_x = jacobian(u, x)
-            v_y = jacobian(v, y)
-            deltaU = u_x + v_y
-            nab = paddle.abs(deltaU) - deltaU
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
+            nab = paddle.abs(delta_u) - delta_u
             lam = (0.1 * nab) * relu + 1
-            x_momentum = (drhou_t + du1_x + du2_y) / lam
+            x_momentum = (rho_u__t + u1__x + u2__y) / lam
             return x_momentum
 
         self.add_equation("x_momentum", x_momentum_compute_func)
@@ -92,20 +92,20 @@ class Euler2D(equation.PDE):
             )
             t, x, y = out["t"], out["x"], out["y"]
             u, v, p, rho = out["u"], out["v"], out["p"], out["rho"]
-            rhov = rho * v
-            drhov_t = jacobian(rhov, t)
+            rho_v = rho * v
+            rho_v__t = jacobian(rho_v, t)
 
             u2 = rho * u * v
             u3 = rho * v**2 + p
-            du2_x = jacobian(u2, x)
-            dU3_y = jacobian(u3, y)
+            u2__x = jacobian(u2, x)
+            u3__y = jacobian(u3, y)
 
-            u_x = jacobian(u, x)
-            v_y = jacobian(v, y)
-            deltaU = u_x + v_y
-            nab = paddle.abs(deltaU) - deltaU
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
+            nab = paddle.abs(delta_u) - delta_u
             lam = (0.1 * nab) * relu + 1
-            y_momentum = (drhov_t + du2_x + dU3_y) / lam
+            y_momentum = (rho_v__t + u2__x + u3__y) / lam
             return y_momentum
 
         self.add_equation("y_momentum", y_momentum_compute_func)
@@ -122,16 +122,16 @@ class Euler2D(equation.PDE):
             e2 = (rho * 0.5 * (u**2 + v**2) + 3.5 * p) * v
             e = rho * 0.5 * (u**2 + v**2) + p / 0.4
 
-            de1_x = jacobian(e1, x)
-            dE2_y = jacobian(e2, y)
-            dE_t = jacobian(e, t)
+            e1__x = jacobian(e1, x)
+            e2__y = jacobian(e2, y)
+            e__t = jacobian(e, t)
 
-            u_x = jacobian(u, x)
-            v_y = jacobian(v, y)
-            deltaU = u_x + v_y
-            nab = paddle.abs(deltaU) - deltaU
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
+            nab = paddle.abs(delta_u) - delta_u
             lam = (0.1 * nab) * relu + 1
-            energy = (dE_t + de1_x + dE2_y) / lam
+            energy = (e__t + e1__x + e2__y) / lam
             return energy
 
         self.add_equation("energy", energy_compute_func)
@@ -153,11 +153,11 @@ class BC_EQ(equation.PDE):
             x, y = out["x"], out["y"]
             u, v = out["u"], out["v"]
             sin, cos = out["sin"], out["cos"]
-            dudx = jacobian(u, x)
-            dvdy = jacobian(v, y)
-            deltau = dudx + dvdy
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
 
-            lam = 0.1 * (paddle.abs(deltau) - deltau) * relu + 1
+            lam = 0.1 * (paddle.abs(delta_u) - delta_u) * relu + 1
             item1 = (u * cos + v * sin) / lam
 
             return item1
@@ -173,14 +173,14 @@ class BC_EQ(equation.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             sin, cos = out["sin"], out["cos"]
-            dpdx = jacobian(p, x)
-            dpdy = jacobian(p, y)
-            dudx = jacobian(u, x)
-            dvdy = jacobian(v, y)
-            deltau = dudx + dvdy
+            p__x = jacobian(p, x)
+            p__y = jacobian(p, y)
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            delta_u = u__x + v__y
 
-            lam = 0.1 * (paddle.abs(deltau) - deltau) * relu + 1
-            item2 = (dpdx * cos + dpdy * sin) / lam
+            lam = 0.1 * (paddle.abs(delta_u) - delta_u) * relu + 1
+            item2 = (p__x * cos + p__y * sin) / lam
 
             return item2
 
@@ -195,14 +195,14 @@ class BC_EQ(equation.PDE):
             x, y = out["x"], out["y"]
             u, v, rho = out["u"], out["v"], out["rho"]
             sin, cos = out["sin"], out["cos"]
-            dudx = jacobian(u, x)
-            dvdy = jacobian(v, y)
-            drhodx = jacobian(rho, x)
-            drhody = jacobian(rho, y)
-            deltau = dudx + dvdy
+            u__x = jacobian(u, x)
+            v__y = jacobian(v, y)
+            rho__x = jacobian(rho, x)
+            rho__y = jacobian(rho, y)
+            delta_u = u__x + v__y
 
-            lam = 0.1 * (paddle.abs(deltau) - deltau) * relu + 1
-            item3 = (drhodx * cos + drhody * sin) / lam
+            lam = 0.1 * (paddle.abs(delta_u) - delta_u) * relu + 1
+            item3 = (rho__x * cos + rho__y * sin) / lam
 
             return item3
 
