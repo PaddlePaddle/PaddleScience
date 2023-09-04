@@ -223,16 +223,16 @@ if __name__ == "__main__":
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
 
-    pred_norm = solver.predict(visu_mat, no_grad=False)
+    pred_norm = solver.predict(visu_mat, no_grad=False, return_numpy=True)
     # inverse normalization
     p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
     u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
     v_pred = pred_norm["v"].reshape([NTIME_PDE, NPOINT_PDE]).T
     pred = {
-        "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]).numpy(),
-        "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]).numpy(),
-        "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]).numpy(),
-        "phil": pred_norm["phil"].numpy(),
+        "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]),
+        "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]),
+        "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
+        "phil": pred_norm["phil"],
     }
     ppsci.visualize.save_vtu_from_dict(
         "f{OUTPUT_DIR}/visual/result.vtu",

@@ -224,8 +224,8 @@ if __name__ == "__main__":
         yt = paddle.to_tensor(y)
         scalet = paddle.full_like(xt, scale)
         input_dict = {"x": xt, "y": yt, "scale": scalet}
-        output_dict = solver.predict(input_dict, batch_size=100)
-        return {k: v.numpy() for k, v in output_dict.items()}
+        output_dict = solver.predict(input_dict, batch_size=100, return_numpy=True)
+        return output_dict
 
     scale_test = np.load("./data/aneurysm_scale0005to002_eval0to002mean001_3sigma.npz")[
         "scale"
@@ -363,9 +363,9 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
         plt.close("all")
-    logger.info(
+    logger.message(
         f"Table 1 : Aneurysm - Geometry error u : {sum(error_u) / len(error_u): .3e}"
     )
-    logger.info(
+    logger.message(
         f"Table 1 : Aneurysm - Geometry error v : {sum(error_v) / len(error_v): .3e}"
     )
