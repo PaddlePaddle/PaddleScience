@@ -2,7 +2,7 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6521709" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
 流体模拟方面的问题，捕捉湍流的复杂细节一直是数值模拟的长期挑战，用离散模型解决这些细节会产生巨大的计算成本，对于人类空间和时间尺度上的流动来说，很快就会变得不可行。因此流体超分辨率的需求应运而生，它旨在通过流体动力学模拟和深度学习技术将低分辨率流体模拟结果恢复为高分辨率结果，以减少生成高分辨率流体过程中的巨大计算成本。该技术可以应用于各种流体模拟，例如水流、空气流动、火焰模拟等。
 
@@ -307,7 +307,7 @@ ppsci/arch/gan.py
 | :---: | :---: | :---: |
 | 8.6e-5 | 43.65 | 0.9973 |
 
-一个流体超分样例结果的视频：
+一个流体超分样例的输入、模型预测结果、[数据集介绍](#31)中开源代码包 mantaflow 直接生成的结果如下，模型预测结果与生成的目标结果基本一致。
 
 <figure markdown>
   ![input](https://paddle-org.bj.bcebos.com/paddlescience/docs/tempoGAN/input.gif){ loading=lazy }
