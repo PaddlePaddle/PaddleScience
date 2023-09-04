@@ -2,7 +2,9 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6178818?sUid=455441&shared=1&ts=1684397945680" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
+
+圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
 
 2D Flow Around a Cylinder，中文名称可译作“2维圆柱绕流”，是指二维圆柱低速定常绕流的流型只与 $Re$ 数有关。在 $Re \le 1$ 时，流场中的惯性力与粘性力相比居次要地位，圆柱上下游的流线前后对称，阻力系数近似与 $Re$ 成反比(阻力系数为 10~60)，此 $Re$ 数范围的绕流称为斯托克斯区；随着 $Re$ 的增大，圆柱上下游的流线逐渐失去对称性。
 
@@ -162,7 +164,7 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:89:97
 在该案例中，Embedding 模型使用了卷积神经网络实现 Embedding 模型，如下图所示。
 
 <figure markdown>
-  ![cylinder-embedding](../../images/cylinder2d_unsteady_transformer_physx/cylinder_embedding.png){ loading=lazy }
+  ![cylinder-embedding](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/cylinder_embedding.png){ loading=lazy }
   <figcaption>Embedding 网络模型</figcaption>
 </figure>
 
@@ -249,7 +251,7 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:106:111
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
-  ![cylinder_transformer](../../images/cylinder2d_unsteady_transformer_physx/cylinder_transformer.png){ loading=lazy }
+  ![cylinder_transformer](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/cylinder_transformer.png){ loading=lazy }
   <figcaption>Transformer 网络模型</figcaption>
 </figure>
 
@@ -339,7 +341,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py
 
 ## 5. 结果展示
 
+针对本案例中的问题，模型的预测结果和传统数值微分的结果如下所示，其中 ux、uy 分别代表 x、y方向上的速度，p 代表压力。
+
 <figure markdown>
-  ![result_states0](../../images/cylinder2d_unsteady_transformer_physx/result_states0.png){ loading=lazy }
-  <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/result_states0.png){ loading=lazy }
+  <figcaption>模型预测结果（"pred"）与传统数值微分结果（"target"）</figcaption>
 </figure>
