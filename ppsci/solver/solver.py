@@ -520,7 +520,8 @@ class Solver:
         expr_dict: Optional[Dict[str, Callable]] = None,
         batch_size: int = 64,
         no_grad: bool = True,
-    ) -> Dict[str, paddle.Tensor]:
+        return_numpy: bool = False,
+    ) -> Dict[str, Union[paddle.Tensor, np.ndarray]]:
         """Pure prediction using model.forward(...) and expression(optional, if given).
 
         Args:
@@ -530,9 +531,11 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+            return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
+                Defaults to False.
 
         Returns:
-            Dict[str, paddle.Tensor]: Prediction in dict.
+            Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -608,6 +611,13 @@ class Solver:
                     key: value[perm_inv][:num_samples]
                     for key, value in pred_dict.items()
                 }
+
+        # convert to numpy ndarray if specified
+        if return_numpy:
+            pred_dict = {
+                k: (v.numpy() if paddle.is_tensor(v) else v)
+                for k, v in pred_dict.items()
+            }
 
         return pred_dict
 

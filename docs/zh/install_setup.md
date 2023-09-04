@@ -12,17 +12,17 @@
 
 ### 1.2 python 环境安装[可选]
 
-如果你还没有 python 环境或者 python 版本小于 3.7，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
+如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤
 
 1. 根据系统环境，从 [https://repo.anaconda.com/archive/](https://repo.anaconda.com/archive/) 中下载对应的 Anaconda3 安装包，并手动安装
-2. 创建 python 3.7 环境，并进入该环境
+2. 创建 python 3.9 环境，并进入该环境
 
     ``` sh
-    # 使用 conda 创建 python 环境，并命名为 "ppsci_py37"
-    conda create -n ppsci_py37 python=3.7 # 3.8 也可以
+    # 使用 conda 创建 python 环境，并命名为 "ppsci_py39"
+    conda create -n ppsci_py39 python=3.9
 
-    # 进入创建好的 "ppsci_py37" 环境
-    conda activate ppsci_py37
+    # 进入创建好的 "ppsci_py39" 环境
+    conda activate ppsci_py39
     ```
 
 ### 1.3 安装 PaddlePaddle
@@ -31,19 +31,18 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.3.1 git 安装](#131-git) 和 [1.3.2 pip 安装](#132-pip) 任选一种安装方式即可
+从 [1.4.1 git 安装](#141-git) 和 [1.4.2 pip 安装](#142-pip) 任选一种安装方式即可
 
-#### 1.4.2 git 安装
+#### 1.4.1 git 安装
 
-1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
+1. 执行以下命令，从 github 上 clone PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
     ``` shell
-    git clone https://github.com/PaddlePaddle/PaddleScience.git
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
     # 若 github clone 速度比较慢，可以使用 gitee clone
-    # git clone https://gitee.com/paddlepaddle/PaddleScience.git
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
 
     cd PaddleScience
-    git checkout develop
     export PYTHONPATH=$PWD:$PYTHONPATH
     ```
 
@@ -53,7 +52,7 @@
     pip install -r requirements.txt
     ```
 
-#### 1.4.3 pip 安装
+#### 1.4.2 pip 安装
 
 执行以下命令进行 pip 安装
 
@@ -61,23 +60,94 @@
 pip install paddlesci
 ```
 
-???+ Info "安装注意事项"
+#### 1.4.3 额外依赖安装[可选]
 
-    如需使用外部导入STL文件来构建几何，以及使用加密采样等功能，还需额外安装四个依赖库：
-    <li> [open3d](https://github.com/isl-org/Open3D/tree/master#python-quick-start)（推荐pip安装）</li>
-    <li> pybind11（Python>=3.10 的用户安装 pysdf 前请先执行 `pip install -U pybind11`）</li>
-    <li> [pysdf](https://github.com/sxyu/sdf)（推荐pip安装）</li>
-    <li> [pymesh](https://pymesh.readthedocs.io/en/latest/installation.html#download-the-source)（推荐编译安装）</li>
+如需通过 STL 文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
+pybind11、pysdf、PyMesh 四个依赖库。
+
+否则无法使用 `ppsci.geometry.Mesh` 等基于 STL 文件的 API，因此也无法运行
+如 [Aneurysm](./examples/aneurysm.md) 等依赖`ppsci.geometry.Mesh` API 的复杂案例。
+
+=== "open3d 安装命令"
+
+    ``` sh
+    pip install open3d -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+
+=== "pybind11 安装命令"
+
+    ``` sh
+    pip install pybind11 -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+
+=== "pysdf 安装命令"
+
+    ``` sh
+    pip install pysdf
+    ```
+
+=== "PyMesh 安装命令"
+
+    PyMesh 库需要以非 pip 的方式手动安装，命令如下：
+
+    ``` sh
+    git clone https://github.com/PyMesh/PyMesh.git
+    cd PyMesh
+
+    git submodule update --init --recursive --progress
+    export PYMESH_PATH=`pwd`
+
+    apt-get install \
+        libeigen3-dev \
+        libgmp-dev \
+        libgmpxx4ldbl \
+        libmpfr-dev \
+        libboost-dev \
+        libboost-thread-dev \
+        libtbb-dev \
+        python3-dev
+
+    python -m pip install -r $PYMESH_PATH/python/requirements.txt
+    python setup.py build
+    python setup.py install --user
+
+    # test whether installed successfully
+    python -c "import pymesh; pymesh.test()"
+
+    # Ran 175 tests in 3.150s
+
+    # OK (SKIP=2)
+    ```
+
+    !!! warning "安装注意事项"
+
+        安装过程中可能会出现两个问题，可以按照以下方式解决：
+
+        1. 由于网络问题，`git submodule update` 过程中可能某些 submodule 会 clone 失败，此时只需
+        反复执行 `git submodule update --init --recursive --progress` 直到所有库都 clone 成功即可。
+
+        2. 所有 submodule 都 clone 成功后，请检查 `PyMesh/third_party/` 下是否有空文件夹，若有则需
+        手动找到并删除这些空文件夹，再执行 `git submodule update --init --recursive --progress` 命
+        令即可恢复这些空文件夹至正常含有文件的状态，此时再继续执行剩余安装命令即可。
 
 ## 2. 验证安装
 
-执行以下代码，验证安装的 PaddleScience 基础功能是否正常
+- 执行以下代码，验证安装的 PaddleScience 基础功能是否正常
 
-``` shell
-python -c "import ppsci; ppsci.utils.run_check()"
-```
+    ``` shell
+    python -c "import ppsci; ppsci.run_check()"
+    ```
 
-如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
+    如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
+
+- [可选]如果已按照 [1.4.3 额外依赖安装](#143) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+    验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行
+
+    ``` shell
+    python -c "import ppsci; ppsci.run_check_mesh()"
+    ```
+
+    如果出现 `ppsci.geometry.Mesh module running successfully.✨ 🍰 ✨`，则说明该模块运行正常。
 
 ## 3. 开始使用
 

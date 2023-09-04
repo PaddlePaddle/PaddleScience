@@ -110,9 +110,9 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.info(f"1D result is saved to {filename}.png")
+        logger.message(f"1D result is saved to {filename}.png")
     else:
-        logger.info(
+        logger.message(
             f"1D result is saved to {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
@@ -350,9 +350,9 @@ def _save_plot_from_3d_array(
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.info(f"3D result is saved to {filename}.png")
+        logger.message(f"3D result is saved to {filename}.png")
     else:
-        logger.info(
+        logger.message(
             f"3D result is saved to {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
