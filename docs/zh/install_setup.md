@@ -88,7 +88,24 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 === "PyMesh 安装命令"
 
-    PyMesh 库需要以非 pip 的方式手动安装，命令如下：
+    在安装 PyMesh 之前，首先需通过 `cmake --version` 确认环境中是否有 cmake
+
+    如果没有，可按照下列命令下载解压 cmake 包，再添加到 `PATH` 变量中即可，
+    执行时请将以下代码中 `/xx/xx/xx/cmake-3.23.0-linux-x86_64/bin` 替换成实际**绝对路径**。
+
+    ``` sh
+    wget https://cmake.org/files/v3.23/cmake-3.23.0-linux-x86_64.tar.gz
+    tar -zxvf cmake-3.23.0-linux-x86_64.tar.gz
+    rm cmake-3.23.0-linux-x86_64.tar.gz
+    PATH=/xx/xx/xx/cmake-3.23.0-linux-x86_64/bin:$PATH
+
+    # cmake --version
+    # cmake version 3.24.0
+
+    # CMake suite maintained and supported by Kitware (kitware.com/cmake).
+    ```
+
+    PyMesh 库需要以 setup 的方式进行安装，命令如下：
 
     ``` sh
     git clone https://github.com/PyMesh/PyMesh.git
