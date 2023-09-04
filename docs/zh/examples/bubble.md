@@ -1,13 +1,13 @@
 # Bubble_flow
 
-## 1. 问题简介
+## 1. 背景简介
 
 多相流是指由两种或两种以上的不同相态物质组成的流动体系。在多相流中，各相之间有明显的界面，并且各自保持相对独立的物质特性，如气-液、气-固、液-液、液-固等。
 
 气泡流作为多相流的典型代表，已广泛应用于生物医学工程，例如血脑屏障和药物输送。由于气泡流是一种具有高密度梯度的经典流体力学问题，因此经常被用于测试算法的有效性。气泡流可以分为单气泡流(图 A )和多气泡流(图 B )。
 
 <figure markdown>
-  ![bubble.png](../../images/bubble/bubble.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![bubble.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/BubbleNet/bubble.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 尽管 PINNs 方法取得了重大发展，但损失函数中物理方程的考虑通常需要物理量的高阶微分。在两相流中，不同流体界面处的相位值呈现出从 0 到 1 的剧烈变化，使得梯度的计算变得非常困难。因此，高分辨率训练数据将是算法成功的先决条件，特别是对于具有高梯度的变量。这将大大增加深度学习的计算量。然而，许多实验很难获得高分辨率的数据。
@@ -91,7 +91,7 @@ examples/bubble/bubble.py:39:83
 气泡流问题的模型结构图为：
 
 <figure markdown>
-  ![pinns.jpeg](../../images/bubble/pinns.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![pinns.jpeg](https://paddle-org.bj.bcebos.com/paddlescience/docs/BubbleNet/pinns.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 在气泡流问题中，每一个已知的坐标点 $(t, x, y)$ 都有自身的流函数 $\psi$、压力 $p$ 和 水平集函数 $\phi$ 三个待求解的未知量，我们在这里使用 3 个并行的的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t, x, y)$ 分别到 $(\psi, p, \phi)$ 的映射函数 $f_i: \mathbb{R}^3 \to \mathbb{R}$，即：
@@ -240,9 +240,9 @@ examples/bubble/bubble.py:168:189
 
 配置与 [3.4 约束构建](#34) 的设置类似。
 
-### 3.8 模型训练、评估与可视化
+### 3.8 模型训练、评估
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
 ``` py linenums="191"
 --8<--
@@ -274,25 +274,17 @@ examples/bubble/bubble.py
 
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
-<figure markdown>
-  ![u.png](../../images/bubble/u.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的速度 u</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/Ub88rh-qACI?si=hEzFu0kE4KhsWWTe)
+<center>在时刻 t=50 时的速度 u</center>
 
-<figure markdown>
-  ![v.png](../../images/bubble/v.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的速度 v</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/KYcXho0DQxc?si=YwexUy4RTIZrUjOG)
+<center>在时刻 t=50 时的速度 v</center>
 
-<figure markdown>
-  ![p.png](../../images/bubble/p.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的压力 p</figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/VHMus9CJWfI?si=klzDydp5gbOV3ZdZ)
+<center>在时刻 t=50 时的压力 p</center>
 
-<figure markdown>
-  ![phil.png](../../images/bubble/phil.png){ loading=lazy style="margin:0 auto"}
-  <figcaption>在时刻 t=50 时的水平集函数 phi </figcaption>
-</figure>
+![type:video](https://www.youtube.com/embed/wtCKbsVnBGs?si=wGJlUdEU3xKe4iLr)
+<center>在时刻 t=50 时的水平集函数 phi</center>
 
 ## 6. 参考资料
 
