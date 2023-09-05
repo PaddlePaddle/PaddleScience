@@ -47,6 +47,7 @@ nav:
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - Darcy2D: zh/examples/darcy2d.md
         - 材料:
+          - Bracket: zh/examples/bracket.md
           - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
         - 方程求解:

@@ -209,6 +209,8 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 2000 if not args.epochs else args.epochs
+
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         EPOCHS,
         ITERS_PER_EPOCH,
@@ -217,8 +219,6 @@ if __name__ == "__main__":
         15000,
         by_epoch=False,
     )()
-
-    # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
@@ -305,7 +305,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": input_dict,
             "label": label_dict,
-            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {
             "name": "BatchSampler",
