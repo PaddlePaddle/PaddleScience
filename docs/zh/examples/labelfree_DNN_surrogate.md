@@ -518,11 +518,11 @@ examples/aneurysm/aneurysm_flow.py
 --8<--
 ```
 
-### 3.4. 结果展示
+### 3.4 结果展示
 
 <figure markdown>
-  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_1.png)
-  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_2.png)
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_1.png)<br>
+  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_2.png)<br>
   ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/aneurysm_result_3.png)
   <figcaption>第一行为x方向速度，第二行为y方向速度，第三行为壁面剪切应力曲线</figcaption>
 </figure>
