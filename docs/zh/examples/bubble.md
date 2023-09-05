@@ -159,7 +159,7 @@ examples/bubble/bubble.py:99:101
 
 本文中单气泡流的训练区域由字典 `train_input` 储存的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 读入数据，组合成时间-空间的计算域。
 
-同时构造可视化区域，即以 [0, 0], [15, 5] 为对角线的二维矩形区域，且时间域为 126 个时刻 [1, 2,..., 124, 126]，该区域可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。代码如下
+同时构造可视化区域，即以 [0, 0], [15, 5] 为对角线的二维矩形区域，且时间域为 126 个时刻 [1, 2,..., 125, 126]，该区域可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。代码如下
 
 ``` py linenums="103"
 --8<--
@@ -169,15 +169,15 @@ examples/bubble/bubble.py:103:115
 
 ???+ tip "提示"
 
-  `Rectangle` 和 `TimeDomain` 是两种可以单独使用的 `Geometry` 派生类。
+    `Rectangle` 和 `TimeDomain` 是两种可以单独使用的 `Geometry` 派生类。
 
-  如输入数据只来自于二维矩形几何域，则可以直接使用 `ppsci.geometry.Rectangle(...)` 创建空间几何域对象；
+    如输入数据只来自于二维矩形几何域，则可以直接使用 `ppsci.geometry.Rectangle(...)` 创建空间几何域对象；
 
-  如输入数据只来自一维时间域，则可以直接使用 `ppsci.geometry.TimeDomain(...)` 构建时间域对象。
+    如输入数据只来自一维时间域，则可以直接使用 `ppsci.geometry.TimeDomain(...)` 构建时间域对象。
 
 ### 3.4 约束构建
 
-根据 [2.2 BubbleNet（Semi-PINNs方法）](#22) 中定义的损失函数表达式，对应了在计算域中指导模型训练的两个约束条件，接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `SupervisedConstraint` 构建上述两种约束条件。
+根据 [2.2 BubbleNet（Semi-PINNs方法）](#22-bubblenetsemi-pinns) 中定义的损失函数表达式，对应了在计算域中指导模型训练的两个约束条件，接下来使用 PaddleScience 内置的 `InteriorConstraint` 和 `SupervisedConstraint` 构建上述两种约束条件。
 
 #### 3.4.1 内部点约束
 
