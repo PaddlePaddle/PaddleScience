@@ -27,6 +27,7 @@ from typing import Union
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
+from paddle import distributed as dist
 
 __all__ = [
     "all_gather",
@@ -41,6 +42,7 @@ __all__ = [
     "combine_array_with_time",
     "set_random_seed",
     "run_on_eval_mode",
+    "run_at_rank0",
     "plot_curve",
 ]
 
@@ -306,6 +308,26 @@ def run_on_eval_mode(func: Callable) -> Callable:
         return result
 
     return function_with_eval_state
+
+
+def run_at_rank0(func: Callable) -> Callable:
+    """A decorator that allow given function run only at rank 0 to avoid
+    multiple logs or other events. Usually effected in distributed environment.
+
+    Args:
+        func (Callable): Given function.
+
+    Returns:
+        Callable: Wrappered function which will only run at at rank 0,
+            skipped at other rank.
+    """
+
+    @functools.wraps(func)
+    def wrapped_func(*args, **kwargs):
+        if dist.get_rank() == 0:
+            return func(*args, **kwargs)
+
+    return wrapped_func
 
 
 def plot_curve(
