@@ -243,7 +243,7 @@ examples/pipe/poiseuille_flow.py
 --8<--
 ```
 
-### 2.4. 结果展示
+### 2.4 结果展示
 
 <figure markdown>
   ![laplace 2d]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
@@ -266,7 +266,7 @@ $$
 
 更多细节请参考论文第九页
 
-## 3 案例二: Aneurysm Flow
+## 3. 案例二: Aneurysm Flow
 
 ### 3.1 问题定义
 
@@ -347,12 +347,6 @@ $$
 ``` py linenums="33"
 --8<--
 examples/aneurysm/aneurysm_flow.py:119:128
---8<--
-```
-
-``` py linenums="33"
---8<--
-examples/aneurysm/aneurysm_flow.py:164:171
 --8<--
 ```
 
