@@ -84,3 +84,4 @@ class CosineAnnealingWarmUpRestarts(lr.LRScheduler):
 
         self.eta_max = self.base_eta_max * (self.gamma**self.cycle)
         self.last_epoch = math.floor(epoch)
+        self.last_lr = self.get_lr()[0]

@@ -45,17 +45,22 @@ def main():
     model = network_model_batch.Networkn(
         nlayer, ndownsample, nkernel, nchannel, in_nc=1, out_nc=1, act_mode="BR"
     )
-    optimizer = paddle.optimizer.Adam(
-        parameters=model.parameters(),
-        learning_rate=config["learning_rate"],
-        weight_decay=1e-6,
-    )
     if config["Scheduler"]:
         scheduler = lr_scheduler.CosineAnnealingWarmUpRestarts(
-            optimizer.get_lr(), T_0=50, T_mult=1, eta_max=0.005, T_up=10, gamma=0.1
+            config["learning_rate"], T_0=50, T_mult=1, eta_max=0.005, T_up=10, gamma=0.1
+        )
+        optimizer = paddle.optimizer.Adam(
+            parameters=model.parameters(),
+            learning_rate=scheduler,
+            weight_decay=1e-6,
         )
     else:
         scheduler = False
+        optimizer = paddle.optimizer.Adam(
+            parameters=model.parameters(),
+            learning_rate=config["learning_rate"],
+            weight_decay=1e-6,
+        )
     epoch, loss_, evalloss_ = (0, [], [])  # train loss, test loss
 
     # load pretrained model

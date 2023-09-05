@@ -117,7 +117,6 @@ def train_one_epoch(
             tq.set_postfix_str(s=f"Loss: {loss.item():.4f}")
         if config["Scheduler"]:
             scheduler.step()
-            optimizer.set_lr(scheduler.get_lr()[0])
 
         # ===================log========================
         end.record()  # Waits for everything to finish running
