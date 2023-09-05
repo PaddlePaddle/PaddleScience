@@ -241,9 +241,45 @@ examples/bracket/bracket.py
 
 ## 5. 结果展示
 
+下面展示了在测试点集上，3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、OpenFOAM结果以及两者的差值。
+
 <figure markdown>
-  ![bracket_compare.jpg](../../images/bracket/bracket_compare.png){ loading=lazy }
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/u.png){ loading=lazy }
 </figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/v.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/w.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xx.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xy.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xz.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yy.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yz.png){ loading=lazy }
+</figure>
+
+<figure markdown>
+  ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_zz.png){ loading=lazy }
+</figure>
+
+可以看到模型预测的结果与 OpenFOAM 的结果基本一致。
 
 ## 6. 参考资料
 
