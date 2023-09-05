@@ -2,9 +2,11 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6508962" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-传统的 PINNs(Physics-informed neural networks)会将 PDE 作为 loss 的一项参与到网络训练中去，这就要求 PDE 公式为已知的先验条件，当 PDE 公式未知时，这种方法就不能实现。
+求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
+
+传统的 PINNs 会将 PDE 作为 loss 的一项参与到网络训练中去，这就要求 PDE 公式为已知的先验条件，当 PDE 公式未知时，这种方法就不能实现。
 
 DeepHPMs 着眼于 PDE 公式未知的情况，通过深度学习网络，从实验产生的高维数据中发现物理规律，即非线性 PDE 方程，并用一个深度学习网络来表征这个 PDE 方程，再将这个 PDE 网络替代传统 PINNs 方法中的 PDE 公式，对新的数据进行预测。
 
@@ -299,17 +301,21 @@ examples/deephpms/burgers.py
 
 ## 5. 结果展示
 
-模拟数据集 1 是 burgers_sine.mat，模拟数据集 2 是 burgers.mat 时：
+参考 [问题定义](#2)，下图横、纵坐标分别为时间、位置参数，颜色表示 burgers 的解 u，大小参照图片右侧的颜色卡。将 burgers 方程应用在不同的问题上，u 存在不同的含义，这里可以简单的认为 u 值代表速度。
+
+下图展示了在一定初始条件(t=0 时刻 x 对应的 u 值)下，随 t 增长，u 随 x 变化 的情况。u 的真实值和模型预测结果如下，与传统的光谱方法相比基本一致。
+
+模拟数据集 1 是初始条件为 sin 方程时的数据集 burgers_sine.mat，模拟数据集 2 是初始条件为 exp 方程时的数据集 burgers.mat：
 
 <figure markdown>
-  ![burgers_diff_lbfgs](../../images/deephpms/burgers_diff_lbfgs.png){ loading=lazy }
+  ![burgers_diff_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_diff_lbfgs.png){ loading=lazy }
   <figcaption> 真实 u 值和推理 u 值对比</figcaption>
 </figure>
 
-模拟数据集 1、2 都是 burgers_sine.mat 时：
+模拟数据集 1、2 都是初始条件为 sin 方程时的数据集 burgers_sine.mat 时：
 
 <figure markdown>
-  ![burgers_same_lbfgs](../../images/deephpms/burgers_same_lbfgs.png){ loading=lazy }
+  ![burgers_same_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_same_lbfgs.png){ loading=lazy }
   <figcaption> 真实 u 值和推理 u 值对比</figcaption>
 </figure>
 

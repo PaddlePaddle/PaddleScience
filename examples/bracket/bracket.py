@@ -390,6 +390,7 @@ if __name__ == "__main__":
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        eval_with_no_grad=True,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

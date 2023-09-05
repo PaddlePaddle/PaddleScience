@@ -2,7 +2,7 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6622866?sUid=438690&shared=1&ts=1691582831601" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
 Volterra integral equation(沃尔泰拉积分方程)是一种积分方程，即方程中含有对待求解函数的积分运算，其有两种形式，如下所示
 
@@ -12,6 +12,10 @@ $$
   x(t) &= f(t)+\int_a^t K(t, s) x(s) d s
 \end{aligned}
 $$
+
+在数学领域，沃尔泰拉方程可以用于表达各种多变量概率分布，是进行多变量统计分析的有力工具。这使得它在处理复杂数据结构时非常有用，例如在机器学习领域。沃尔泰拉方程还可以用于计算不同维度属性的相关性，以及模拟复杂的数据集结构，以便为机器学习任务提供有效的数据支持。
+
+在生物学领域，沃尔泰拉方程被用作渔业生产的指导，对生态平衡和环境保护有重要意义。此外，该方程还在疾病防治，人口统计等方面有应用。值得一提的是，沃尔泰拉方程的建立是数学在生物学领域应用的首次成功尝试，推动了生物数学这门科学的产生和发展。
 
 本案例以第二种方程为例，使用深度学习的方式进行求解。
 
@@ -171,9 +175,14 @@ examples/ide/volterra_ide.py
 
 ## 5. 结果展示
 
+模型预测结果如下所示，$t$为自变量，$u(t)$为积分方程标准解函数，$\hat{u}(t)$为模型预测的积分方程解函数
+
 <figure markdown>
-  ![result](../../images/volterra/Volterra_IDE.png){ loading=lazy }
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/Volterra_IDE/Volterra_IDE.png){ loading=lazy }
+  <figcaption>模型求解结果(橙色散点)和参考结果(蓝色曲线)</figcaption>
 </figure>
+
+可以看到模型对积分方程在$[0,5]$区间内的预测结果$\hat{u}(t)$和标准解结果$u(t)$基本一致。
 
 ## 6. 参考文献
 
