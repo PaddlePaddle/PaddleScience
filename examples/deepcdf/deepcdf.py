@@ -23,8 +23,7 @@ def split_tensors(*tensors, ratio):
 if __name__ == "__main__":
     ppsci.utils.misc.set_random_seed(42)
 
-    # DATASET_PATH = "./datasets/deepCDF/"
-    DATASET_PATH = "/home/my/Share/"
+    DATASET_PATH = "./datasets/deepCDF/"
     OUTPUT_DIR = "./output_deepCDF/"
 
     # initialize datasets
