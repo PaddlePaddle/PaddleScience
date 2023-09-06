@@ -458,7 +458,7 @@ examples/aneurysm/aneurysm_flow.py:51:117
 
     第二个参数是约束变量的目标值，在本问题中我们希望 Navier-Stokes 方程产生的三个中间结果 `continuity`, `momentum_x`, `momentum_y` 被优化至 0，因此将它们的目标值全部设为 0；
 
-    第三个参数是约束方程作用的计算域，此处填入在 [3.3.2 计算域构建](#332) 章节实例化好的 `interior_geom` 即可；
+    第三个参数是约束方程作用的计算域，此处填入在 [3.2.3 计算域构建](#332) 章节实例化好的 `interior_geom` 即可；
 
     第四个参数是在计算域上的采样配置，此处我们使用分批次数据点训练，因此 `dataset` 字段设置为 `NamedArrayDataset` 且 `iters_per_epoch` 也设置为 1，采样点数 `batch_size` 设为 128；
 
