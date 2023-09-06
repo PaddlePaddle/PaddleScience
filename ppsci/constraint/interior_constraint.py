@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class InteriorConstraint(base.Constraint):
-    """Class for integral constraint.
+    """Class for interior constraint.
 
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.

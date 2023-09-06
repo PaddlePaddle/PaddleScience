@@ -42,6 +42,7 @@ nav:
           - ViV: zh/examples/viv.md
         - 流体:
           - Aneurysm: zh/examples/aneurysm.md
+          - ShockWave: zh/examples/shock_wave.md
           - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
@@ -90,7 +91,6 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
-  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:
@@ -115,6 +115,7 @@ theme:
     - content.code.select
     - content.code.annotate
     - search.highlight
+    - content.tabs.link
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -137,6 +138,7 @@ plugins:
       handlers:
         python:
           paths: [./ppsci]
+  - mkdocs-video
 
 # Extensions
 markdown_extensions:
@@ -156,6 +158,8 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 # Extra javascripts
 extra_javascript:

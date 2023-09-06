@@ -2,11 +2,17 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160749?contributionType=1&sUid=438690&shared=1&ts=1683961132625" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-Lid Driven Cavity Flow，中文名称可译作“顶盖驱动方腔流”，一般指顶部平板以恒定速度驱动规则区域内封闭的不可压流体（例如水）的流动。在方腔流中可以观察到几乎所有可能发生在不可压流体中的流动现象，是一种典型的流体案例。
+顶盖方腔驱动流LDC问题在许多领域中都有应用。例如，这个问题可以用于计算流体力学（CFD）领域中验证计算方法的有效性。虽然这个问题的边界条件相对简单，但是其流动特性却非常复杂。在顶盖驱动流LDC中，顶壁朝x方向以U=1的速度移动，而其他三个壁则被定义为无滑移边界条件，即速度为零。
+
+此外，顶盖方腔驱动流LDC问题也被用于研究和预测空气动力学中的流动现象。例如，在汽车工业中，通过模拟和分析车体内部的空气流动，可以帮助优化车辆的设计和性能。
+
+总的来说，顶盖方腔驱动流LDC问题在计算流体力学、空气动力学以及相关领域中都有广泛的应用，对于研究和预测流动现象、优化产品设计等方面都起到了重要的作用。
 
 ## 2. 问题定义
+
+本案例中我们对于 16 个时刻内长宽均为 1 的方腔内部作为计算域，并应用以下公式进行顶盖驱动方腔流研究**瞬态**流场问题：
 
 质量守恒：
 
@@ -349,21 +355,25 @@ examples/ldc/ldc2d_unsteady_Re10.py
 
 ## 5. 结果展示
 
+下方展示了模型对于最后一个时刻，边长为 1 的正方形计算域的内部点进行预测的结果、OpeFOAM求解结果，包括每个点的水平(x)方向流速$u(x,y)$、垂直(y)方向流速$v(x,y)$、压力$p(x,y)$。
+
 ???+ info "说明"
 
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
 <figure markdown>
-  ![u_pred_openfoam](../../images/ldc2d_unsteady/u_pred_openfoam.png){ loading=lazy }
+  ![u_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_unsteady/u_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 u ，右：OpenFOAM结果 u </figcaption>
 </figure>
 
 <figure markdown>
-  ![v_pred_openfoam](../../images/ldc2d_unsteady/v_pred_openfoam.png){ loading=lazy }
+  ![v_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_unsteady/v_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 v ，右：OpenFOAM结果 v </figcaption>
 </figure>
 
 <figure markdown>
-  ![p_pred_openfoam](../../images/ldc2d_unsteady/p_pred_openfoam.png){ loading=lazy }
+  ![p_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_unsteady/p_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 p ，右：OpenFOAM结果 p </figcaption>
 </figure>
+
+可以看到模型预测结果与OpenFOAM的预测结果大致相同。

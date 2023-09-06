@@ -189,10 +189,10 @@ if __name__ == "__main__":
         "y": data_2d_xy[:, 1:2],
         "nu": data_2d_xy[:, 2:3],
     }
-    output_dict = solver.predict(input_dict)
-    u_pred = output_dict["u"].numpy().reshape(N_y, N_x, N_p)
-    v_pred = output_dict["v"].numpy().reshape(N_y, N_x, N_p)
-    p_pred = output_dict["p"].numpy().reshape(N_y, N_x, N_p)
+    output_dict = solver.predict(input_dict, return_numpy=True)
+    u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
+    v_pred = output_dict["v"].reshape(N_y, N_x, N_p)
+    p_pred = output_dict["p"].reshape(N_y, N_x, N_p)
 
     # Analytical result, y = data_1d_y
     u_analytical = np.zeros([N_y, N_x, N_p])
@@ -261,8 +261,8 @@ if __name__ == "__main__":
         "y": data_2d_xy_test[:, 1:2],
         "nu": data_2d_xy_test[:, 2:3],
     }
-    output_dict_test = solver.predict(input_dict_test)
-    u_max_pred = output_dict_test["u"].numpy()
+    output_dict_test = solver.predict(input_dict_test, return_numpy=True)
+    u_max_pred = output_dict_test["u"]
 
     # Analytical result, y = 0
     u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)

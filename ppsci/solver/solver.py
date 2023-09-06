@@ -169,7 +169,7 @@ class Solver:
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        self.train_output_info = {}
+        self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -177,7 +177,7 @@ class Solver:
         self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        self.eval_output_info = {}
+        self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -264,10 +264,6 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # load pretrained model, usually used for transfer learning
-        if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
-
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
@@ -283,11 +279,9 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
-        # decorate model(s) and optimizer(s) for AMP
-        if self.use_amp:
-            self.model, self.optimizer = amp.decorate(
-                self.model, self.optimizer, self.amp_level
-            )
+        # load pretrained model, usually used for transfer learning
+        if pretrained_model_path is not None:
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -301,6 +295,15 @@ class Solver:
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
+
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model, self.optimizer = amp.decorate(
+                self.model,
+                self.optimizer,
+                self.amp_level,
+                save_dtype="float32",
+            )
 
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
@@ -557,7 +560,8 @@ class Solver:
         expr_dict: Optional[Dict[str, Callable]] = None,
         batch_size: int = 64,
         no_grad: bool = True,
-    ) -> Dict[str, paddle.Tensor]:
+        return_numpy: bool = False,
+    ) -> Dict[str, Union[paddle.Tensor, np.ndarray]]:
         """Pure prediction using model.forward(...) and expression(optional, if given).
 
         Args:
@@ -567,9 +571,11 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+            return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
+                Defaults to False.
 
         Returns:
-            Dict[str, paddle.Tensor]: Prediction in dict.
+            Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -645,6 +651,13 @@ class Solver:
                     key: value[perm_inv][:num_samples]
                     for key, value in pred_dict.items()
                 }
+
+        # convert to numpy ndarray if specified
+        if return_numpy:
+            pred_dict = {
+                k: (v.numpy() if paddle.is_tensor(v) else v)
+                for k, v in pred_dict.items()
+            }
 
         return pred_dict
 

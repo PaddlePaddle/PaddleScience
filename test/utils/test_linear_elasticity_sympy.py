@@ -141,25 +141,7 @@ class LinearElasticity_sympy:
             normal_x * sigma_xz + normal_y * sigma_yz + normal_z * sigma_zz
         )
 
-        # Navier equations
-        self.equations["navier_x"] = (
-            rho * ((u.diff(t)).diff(t))
-            - (lambda_ + mu) * (u.diff(x) + v.diff(y) + w.diff(z)).diff(x)
-            - mu * ((u.diff(x)).diff(x) + (u.diff(y)).diff(y) + (u.diff(z)).diff(z))
-        )
-        self.equations["navier_y"] = (
-            rho * ((v.diff(t)).diff(t))
-            - (lambda_ + mu) * (u.diff(x) + v.diff(y) + w.diff(z)).diff(y)
-            - mu * ((v.diff(x)).diff(x) + (v.diff(y)).diff(y) + (v.diff(z)).diff(z))
-        )
-        self.equations["navier_z"] = (
-            rho * ((w.diff(t)).diff(t))
-            - (lambda_ + mu) * (u.diff(x) + v.diff(y) + w.diff(z)).diff(z)
-            - mu * ((w.diff(x)).diff(x) + (w.diff(y)).diff(y) + (w.diff(z)).diff(z))
-        )
-
         if self.dim == 2:
-            self.equations.pop("navier_z")
             self.equations.pop("stress_disp_zz")
             self.equations.pop("stress_disp_xz")
             self.equations.pop("stress_disp_yz")

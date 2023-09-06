@@ -52,8 +52,8 @@ if __name__ == "__main__":
         TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
 
-    logger.info(f"train_timestamps: {train_timestamps.tolist()}")
-    logger.info(f"val_timestamps: {val_timestamps.tolist()}")
+    logger.message(f"train_timestamps: {train_timestamps.tolist()}")
+    logger.message(f"val_timestamps: {val_timestamps.tolist()}")
 
     # set time-geometry
     geom = {

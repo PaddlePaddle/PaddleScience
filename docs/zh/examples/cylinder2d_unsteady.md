@@ -2,7 +2,9 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160381?contributionType=1&sUid=438690&shared=1&ts=1683961158552" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
+
+圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
 
 2D Flow Around a Cylinder，中文名称可译作“2维圆柱绕流”，是指二维圆柱低速定常绕流的流型只与 $Re$ 数有关。在 $Re \le 1$ 时，流场中的惯性力与粘性力相比居次要地位，圆柱上下游的流线前后对称，阻力系数近似与 $Re$ 成反比(阻力系数为 10~60)，此 $Re$ 数范围的绕流称为斯托克斯区；随着 $Re$ 的增大，圆柱上下游的流线逐渐失去对称性。
 
@@ -399,12 +401,13 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py
 
 ## 5. 结果展示
 
+预测结果如下所示，图像的横轴是水平方向，纵轴代表竖直方向，流体流向为从左到右，图片中展示的是模型预测50个时刻对应流场的横向流速$u(t,x,y)$的结果。
 ???+ info "说明"
 
     本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
 
 <figure markdown>
-  ![u_pred.gif](../../images/cylinder2d_unsteady/cylinder_2d_unsteady_Re100.gif){ loading=lazy }
-  <figcaption>模型预测结果 u</figcaption>
+  ![u_pred.gif](https://paddle-org.bj.bcebos.com/paddlescience/docs/Cylinder2D_unsteady/cylinder_2d_unsteady_Re100.gif){ loading=lazy }
+  <figcaption>横向流速u的模型预测结果 </figcaption>
 </figure>
 </figure>

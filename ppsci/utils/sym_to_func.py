@@ -44,6 +44,18 @@ __all__ = [
 
 
 DATA_DICT: TypeAlias = Dict[str, paddle.Tensor]
+PADDLE_FUNC_MAP = {
+    sp.sin: paddle.sin,
+    sp.cos: paddle.cos,
+    sp.exp: paddle.exp,
+    sp.Pow: paddle.pow,
+    sp.log: paddle.log,
+    sp.tan: paddle.tan,
+    sp.Max: paddle.maximum,
+    sp.Min: paddle.minimum,
+    sp.Abs: paddle.abs,
+    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+}
 
 SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.sin,
@@ -146,12 +158,12 @@ class OperatorNode(Node):
         else:
             if self.expr.func == sp.Heaviside:
                 self._operator_func = self._heaviside_operator_func
-                self._mapping_func = PADDLE_FUNC_MAP[sp.Heaviside]
+                self._compute_func = PADDLE_FUNC_MAP[sp.Heaviside]
             else:
                 self._operator_func = self._vanilla_operator_func
-                self._mapping_func = PADDLE_FUNC_MAP[self.expr.func]
+                self._compute_func = PADDLE_FUNC_MAP[self.expr.func]
 
-    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
+    def forward(self, data_dict: Dict):
         # use cache
         if self.key in data_dict:
             return data_dict

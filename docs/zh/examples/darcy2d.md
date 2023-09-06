@@ -2,9 +2,15 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+## 1. 背景简介
 
-2D-Darcy，达西渗流（Darcy flow）的一种，流体在多孔介质中流动时，渗流速度小，流动服从达西定律，渗流速度和压力梯度之间呈线性关系，这种流动称为线性渗流。
+Darcy Flow是一个基于达西定律的工具，用于计算液体的流动。在地下水模拟、水文学、水文地质学和石油工程等领域中，Darcy Flow被广泛应用。
+
+例如，在石油工程中，Darcy Flow被用来预测和模拟石油在多孔介质中的流动。多孔介质是一种由小颗粒组成的物质，颗粒之间存在空隙。石油会填充这些空隙并在其中流动。通过Darcy Flow，工程师可以预测和控制石油的流动，从而优化石油开采和生产过程。
+
+此外，Darcy Flow也被用于研究和预测地下水的流动。例如，在农业领域，通过模拟地下水流动可以预测灌溉对土壤水分的影响，从而优化作物灌溉计划。在城市规划和环境保护中，Darcy Flow也被用来预测和防止地下水污染。
+
+2D-Darcy 是达西渗流（Darcy flow）的一种，流体在多孔介质中流动时，渗流速度小，流动服从达西定律，渗流速度和压力梯度之间呈线性关系，这种流动称为线性渗流。
 
 ## 2. 问题定义
 
@@ -210,11 +216,13 @@ examples/darcy/darcy2d.py
 
 ## 5. 结果展示
 
+下方展示了模型对正方形计算域中每个点的压力$p(x,y)$、x(水平)方向流速$u(x,y)$、y(垂直)方向流速$v(x,y)$的预测结果、参考结果以及两者之差。
+
 <figure markdown>
-  ![darcy 2d](../../images/darcy2d/darcy2d_p.png){ loading=lazy }
+  ![darcy 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/Darcy2D/darcy2d_p.png){ loading=lazy }
   <figcaption>左：预测压力 p，中：参考压力 p，右：压力差</figcaption>
-  ![darcy 2d](../../images/darcy2d/darcy2d_u_x.png){ loading=lazy }
+  ![darcy 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/Darcy2D/darcy2d_u_x.png){ loading=lazy }
   <figcaption>左：预测x方向流速 p，中：参考x方向流速 p，右：x方向流速差</figcaption>
-  ![darcy 2d](../../images/darcy2d/darcy2d_u_y.png){ loading=lazy }
+  ![darcy 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/Darcy2D/darcy2d_u_y.png){ loading=lazy }
   <figcaption>左：预测y方向流速 p，中：参考y方向流速 p，右：y方向流速差</figcaption>
 </figure>

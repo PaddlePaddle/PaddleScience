@@ -183,10 +183,10 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     input_data = geom["timedomain"].uniform_points(100)
     label_data = u_solution_func({"x": input_data})
-    output_data = solver.predict({"x": input_data})["u"].numpy()
+    output_data = solver.predict({"x": input_data}, return_numpy=True)["u"]
 
     plt.plot(input_data, label_data, "-", label=r"$u(t)$")
-    plt.plot(input_data, output_data, "o", label="pred", markersize=4.0)
+    plt.plot(input_data, output_data, "o", label=r"$\hat{u}(t)$", markersize=4.0)
     plt.legend()
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")

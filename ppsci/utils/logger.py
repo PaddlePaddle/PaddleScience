@@ -24,6 +24,8 @@ from typing import Optional
 import colorlog
 import paddle.distributed as dist
 
+from ppsci.utils import misc
+
 _logger: logging.Logger = None
 
 # INFO(20) is white(no color)
@@ -114,20 +116,6 @@ def set_log_level(log_level: int):
         _logger.setLevel(logging.ERROR)
 
 
-def log_at_trainer0(log_func: Callable):
-    """
-    Logs will print multi-times when calling Fleet API.
-    Only display single log and ignore the others.
-    """
-
-    @functools.wraps(log_func)
-    def wrapped_log_func(msg, *args):
-        if dist.get_rank() == 0:
-            log_func(msg, *args)
-
-    return wrapped_log_func
-
-
 def ensure_logger(log_func: Callable):
     """
     Automatically initialize `logger` by default arguments
@@ -151,31 +139,31 @@ def ensure_logger(log_func: Callable):
 
 
 @ensure_logger
-@log_at_trainer0
+@misc.run_at_rank0
 def info(msg, *args):
     _logger.info(msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
+@misc.run_at_rank0
 def message(msg, *args):
     _logger.log(MESSAGE, msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
+@misc.run_at_rank0
 def debug(msg, *args):
     _logger.debug(msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
+@misc.run_at_rank0
 def warning(msg, *args):
     _logger.warning(msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
+@misc.run_at_rank0
 def error(msg, *args):
     _logger.error(msg, *args)
 
