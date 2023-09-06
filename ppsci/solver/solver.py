@@ -315,38 +315,34 @@ class Solver:
         for equation in self.equation.values():
             extra_parameters += list(equation.learnable_parameters)
 
-        if self.constraint:
-            for constraint_ in self.constraint.values():
-                for name, expr in constraint_.output_expr.items():
+        def convert_expr(
+            container_dict: Dict[
+                str,
+                Union[
+                    ppsci.constraint.Constraint,
+                    ppsci.validate.Validator,
+                    ppsci.visualize.Visualizer,
+                ],
+            ]
+        ) -> None:
+            for container in container_dict.values():
+                for name, expr in container.output_expr.items():
                     if isinstance(expr, sp.Basic):
-                        constraint_.output_expr[name] = sym_to_func.sympy_to_function(
+                        container.output_expr[name] = sym_to_func.sympy_to_function(
                             expr,
                             self.model,
-                            constraint_.detach_keys,
+                            container.detach_keys,
                             extra_parameters,
                         )
+
+        if self.constraint:
+            convert_expr(self.constraint)
 
         if self.validator:
-            for validator_ in self.validator.values():
-                for name, expr in validator_.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        validator_.output_expr[name] = sym_to_func.sympy_to_function(
-                            expr,
-                            self.model,
-                            None,
-                            extra_parameters,
-                        )
+            convert_expr(self.validator)
 
         if self.visualizer:
-            for visualizer_ in self.visualizer.values():
-                for name, expr in visualizer_.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        visualizer_.output_expr[name] = sym_to_func.sympy_to_function(
-                            expr,
-                            self.model,
-                            None,
-                            extra_parameters,
-                        )
+            convert_expr(self.visualizer)
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
