@@ -23,7 +23,6 @@ from paddle.nn.utils import weight_norm
 from ppsci.arch import base
 
 
-# 创建基础卷积层
 def create_layer(
     in_channels,
     out_channels,
@@ -46,7 +45,6 @@ def create_layer(
     return nn.Sequential(*layer)
 
 
-# 创建Encoder中的单个块
 def create_encoder_block(
     in_channels,
     out_channels,
@@ -68,7 +66,6 @@ def create_encoder_block(
     return nn.Sequential(*encoder)
 
 
-# 创建Decoder中的单个块
 def create_decoder_block(
     in_channels,
     out_channels,
@@ -100,7 +97,6 @@ def create_decoder_block(
     return nn.Sequential(*decoder)
 
 
-# 创建Encoder
 def create_encoder(
     in_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
 ):
@@ -118,7 +114,6 @@ def create_encoder(
     return nn.Sequential(*encoder)
 
 
-# 创建Decoder
 def create_decoder(
     out_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
 ):
@@ -150,8 +145,29 @@ def create_decoder(
     return nn.Sequential(*decoder)
 
 
-# 创建DeepCFD网络
 class UNetEx(base.Arch):
+    """U-Net with 3 Decoders
+
+    [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
+
+    Args:
+        input_key (str): Name of function data for input.
+        output_key (str): Name of function data for output).
+        in_channels (int): The input tensor channels.
+        out_channels (int): The output tensor channels.
+        kernel_size (int): Size of kernel of convolution layer. Defaults to 3.
+        filters (Tuple[int, ...]): Number of filters. Defaults to [16, 32, 64].
+        layers (int): Number of Decoders. Defaults to 3.
+        weight_norm (bool): Whether use weight normalization layer. Defaults to True.
+        batch_norm (bool): Whether add batch normalization layer. Defaults to True.
+        activation (Optional[paddle.nn.Layer]): Name of activation function. Defaults to nn.ReLU.
+        final_activation (Optional[paddle.nn.Layer]): Name of final activation function. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, [8, 16, 32, 32], 5, Flase, False), wind_model)
+    """
+
     def __init__(
         self,
         input_key: str,

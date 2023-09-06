@@ -2,7 +2,6 @@ import os
 import pickle
 
 import numpy as np
-import paddle
 
 import ppsci
 from ppsci.utils import logger
@@ -22,17 +21,21 @@ def split_tensors(*tensors, ratio):
 
 
 if __name__ == "__main__":
-    paddle.seed(999)
+    ppsci.utils.misc.set_random_seed(42)
 
-    x = pickle.load(open(os.path.join("/home/my/Share/", "dataX.pkl"), "rb"))
-    y = pickle.load(open(os.path.join("/home/my/Share/", "dataY.pkl"), "rb"))
+    # DATASET_PATH = "./datasets/deepCDF/"
+    DATASET_PATH = "/home/my/Share/"
+    OUTPUT_DIR = "./output_deepCDF/"
+
+    # initialize datasets
+    with open(os.path.join(DATASET_PATH, "dataX.pkl"), "rb") as file:
+        x = pickle.load(file)
+    with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
+        y = pickle.load(file)
+
     train_dataset, test_dataset = split_tensors(x, y, ratio=float(0.7))
-
     train_x, train_y = train_dataset[:]
     test_x, test_y = test_dataset[:]
-    # x = np.array(x)
-    # x = x.transpose(0, 2, 3, 1)
-    # print(x.shape)
 
     channels_weights = np.reshape(
         np.sqrt(
@@ -43,6 +46,34 @@ if __name__ == "__main__":
         (1, -1, 1, 1),
     )
 
+    # initialize parameters
+    IN_CHANNELS = 3
+    OUT_CHANNELS = 3
+    KERNET_SIZE = 5
+    FILTERS = [8, 16, 32, 32]
+    BATCH_NORM = False
+    WEIGHT_NORM = False
+    EPOCHS = 1000
+    LEARNING_RATE = 0.001
+    WEIGHT_DECAY = 0.005
+    BATCH_SIZE = 64
+
+    # initialize model
+    model = ppsci.arch.UNetEx(
+        "input",
+        "output",
+        IN_CHANNELS,
+        OUT_CHANNELS,
+        filters=FILTERS,
+        kernel_size=KERNET_SIZE,
+        batch_norm=BATCH_NORM,
+        weight_norm=WEIGHT_NORM,
+    )
+
+    # initialize Adam optimizer
+    optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
+
+    # define loss
     def loss_expr(output_dict, *args):
         output = output_dict["output"]
         y = args[0]["output"]
@@ -59,8 +90,6 @@ if __name__ == "__main__":
         ).abs()
         loss = (lossu + lossv + lossp) / channels_weights
         return loss.sum()
-
-    BATCH_SIZE = 64
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
@@ -80,49 +109,30 @@ if __name__ == "__main__":
         name="sup_constraint",
     )
 
+    # maunally build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
-    IN_CHANNELS = 3
-    OUT_CHANNELS = 3
-    KERNET_SIZE = 5
-    FILTERS = [8, 16, 32, 32]
-    BATCH_NORM = False
-    WEIGHT_NORM = False
-    EPOCHS = 1000
-    LEARNING_RATE = 0.001
-    WEIGHT_DECAY = 0.005
-
-    model = ppsci.arch.UNetEx(
-        "input",
-        "output",
-        IN_CHANNELS,
-        OUT_CHANNELS,
-        filters=FILTERS,
-        kernel_size=KERNET_SIZE,
-        batch_norm=BATCH_NORM,
-        weight_norm=WEIGHT_NORM,
-    )
-
-    optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
+    # initialize solver
     solver = ppsci.solver.Solver(
-        model, constraint=constraint, output_dir=".", optimizer=optimizer, epochs=EPOCHS
+        model,
+        constraint=constraint,
+        output_dir=OUTPUT_DIR,
+        optimizer=optimizer,
+        epochs=EPOCHS,
     )
-    # solver = ppsci.solver.Solver(
-    #     model,
-    #     constraint=constraint,
-    #     output_dir=".",
-    #     optimizer=optimizer,
-    #     epochs=EPOCHS,
-    #     checkpoint_path="./checkpoints/latest",
-    # )
+
     solver.train()
+
+    ############### evaluation after training ###############
     output_dict = solver.predict({"input": test_x})
     out = output_dict["output"]
+
     Total_MSE = ((out - test_y) ** 2).sum() / len(test_x)
     Ux_MSE = ((out[:, 0, :, :] - test_y[:, 0, :, :]) ** 2).sum() / len(test_x)
     Uy_MSE = ((out[:, 1, :, :] - test_y[:, 1, :, :]) ** 2).sum() / len(test_x)
     p_MSE = ((out[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
-    logger.message(
+
+    logger.info(
         "Total MSE is {}, Ux MSE is {}, Uy MSE is {}, p MSE is {}".format(
             Total_MSE.detach().numpy()[0],
             Ux_MSE.detach().numpy()[0],
