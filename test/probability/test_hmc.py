@@ -22,7 +22,7 @@ paddle.seed(1024)
 
 @pytest.mark.parametrize("true_mean", [5.0])
 @pytest.mark.parametrize("true_std", [1.0])
-def test_normal(true_mean, true_std):
+def test_HamiltonianMonteCarlo(true_mean, true_std):
     dist = paddle.distribution.Normal(true_mean, true_std)
     HMC = HamiltonianMonteCarlo(dist, path_len=1.5, step_size=0.25)
     trial = HMC.run_chain(2500, paddle.to_tensor(0.0))
