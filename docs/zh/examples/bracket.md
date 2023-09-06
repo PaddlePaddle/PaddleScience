@@ -9,7 +9,8 @@
 本案例主要研究如下金属连接件的在给定载荷情况下的形变情况，并使用深度学习方法根据线弹性等方程进行求解，连接件如下所示（参考 [Matlab deflection-analysis-of-a-bracket](https://www.mathworks.com/help/pde/ug/deflection-analysis-of-a-bracket.html)）。
 
 <figure markdown>
-  ![bracket](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/stl.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![bracket](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/stl.png){ loading=lazy }
+  <figcaption>Bracket 金属件载荷示意图，红色区域表示载荷面</figcaption>
 </figure>
 
 ## 2. 问题定义
@@ -54,7 +55,18 @@ examples/bracket/bracket.py:23:36
 
 ### 3.2 方程构建
 
-Bracket 案例涉及到线弹性方程，使用 PaddleScience 内置的 `LinearElasticity` 即可。
+Bracket 案例涉及到以下线弹性方程，使用 PaddleScience 内置的 `LinearElasticity` 即可。
+
+$$
+\begin{cases}
+    stress\_disp_{xx} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial u}{\partial x} - \sigma_{xx} \\
+    stress\_disp_{yy} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial v}{\partial y} - \sigma_{yy} \\
+    stress\_disp_{zz} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial w}{\partial z} - \sigma_{zz} \\
+    traction_{x} = n_x \sigma_{xx} + n_y \sigma_{xy} + n_z \sigma_{xz} \\
+    traction_{y} = n_y \sigma_{yx} + n_y \sigma_{yy} + n_z \sigma_{yz} \\
+    traction_{z} = n_z \sigma_{zx} + n_y \sigma_{zy} + n_z \sigma_{zz} \\
+\end{cases}
+$$
 
 ``` py linenums="51"
 --8<--
@@ -245,38 +257,47 @@ examples/bracket/bracket.py
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/u.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应变u；中间表示OpenFOAM计算的应变u；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/v.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应变v；中间表示OpenFOAM计算的应变v；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/w.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应变w；中间表示OpenFOAM计算的应变w；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xx.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_xx；中间表示OpenFOAM计算的应力sigma_xx；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xy.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_xy；中间表示OpenFOAM计算的应力sigma_xy；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xz.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_xz；中间表示OpenFOAM计算的应力sigma_xz；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yy.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_yy；中间表示OpenFOAM计算的应力sigma_yy；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yz.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_yz；中间表示OpenFOAM计算的应力sigma_yz；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_zz.png){ loading=lazy }
+  <figcaption>左侧为金属件表面预测的应力sigma_zz；中间表示OpenFOAM计算的应力sigma_zz；右侧表示两者差值</figcaption>
 </figure>
 
 可以看到模型预测的结果与 OpenFOAM 的结果基本一致。
