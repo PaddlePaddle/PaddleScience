@@ -12,15 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+from typing import Tuple
+
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 from paddle.nn.utils import weight_norm
+
 from ppsci.arch import base
 
+
 # 创建基础卷积层
-def create_layer(in_channels, out_channels, kernel_size, wn=True, bn=True,
-                 activation=nn.ReLU, convolution=nn.Conv2D):
+def create_layer(
+    in_channels,
+    out_channels,
+    kernel_size,
+    wn=True,
+    bn=True,
+    activation=nn.ReLU,
+    convolution=nn.Conv2D,
+):
     assert kernel_size % 2 == 1
     layer = []
     conv = convolution(in_channels, out_channels, kernel_size, padding=kernel_size // 2)
@@ -33,21 +45,40 @@ def create_layer(in_channels, out_channels, kernel_size, wn=True, bn=True,
         layer.append(nn.BatchNorm2D(out_channels))
     return nn.Sequential(*layer)
 
+
 # 创建Encoder中的单个块
-def create_encoder_block(in_channels, out_channels, kernel_size, wn=True, bn=True,
-                         activation=nn.ReLU, layers=2):
+def create_encoder_block(
+    in_channels,
+    out_channels,
+    kernel_size,
+    wn=True,
+    bn=True,
+    activation=nn.ReLU,
+    layers=2,
+):
     encoder = []
     for i in range(layers):
         _in = out_channels
         _out = out_channels
         if i == 0:
             _in = in_channels
-        encoder.append(create_layer(_in, _out, kernel_size, wn, bn, activation, nn.Conv2D))
+        encoder.append(
+            create_layer(_in, _out, kernel_size, wn, bn, activation, nn.Conv2D)
+        )
     return nn.Sequential(*encoder)
 
+
 # 创建Decoder中的单个块
-def create_decoder_block(in_channels, out_channels, kernel_size, wn=True, bn=True,
-                         activation=nn.ReLU, layers=2, final_layer=False):
+def create_decoder_block(
+    in_channels,
+    out_channels,
+    kernel_size,
+    wn=True,
+    bn=True,
+    activation=nn.ReLU,
+    layers=2,
+    final_layer=False,
+):
     decoder = []
     for i in range(layers):
         _in = in_channels
@@ -61,44 +92,102 @@ def create_decoder_block(in_channels, out_channels, kernel_size, wn=True, bn=Tru
             if final_layer:
                 _bn = False
                 _activation = None
-        decoder.append(create_layer(_in, _out, kernel_size, wn, _bn, _activation, nn.Conv2DTranspose))
+        decoder.append(
+            create_layer(
+                _in, _out, kernel_size, wn, _bn, _activation, nn.Conv2DTranspose
+            )
+        )
     return nn.Sequential(*decoder)
 
+
 # 创建Encoder
-def create_encoder(in_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2):
+def create_encoder(
+    in_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
+):
     encoder = []
     for i in range(len(filters)):
         if i == 0:
-            encoder_layer = create_encoder_block(in_channels, filters[i], kernel_size, wn, bn, activation, layers)
+            encoder_layer = create_encoder_block(
+                in_channels, filters[i], kernel_size, wn, bn, activation, layers
+            )
         else:
-            encoder_layer = create_encoder_block(filters[i - 1], filters[i], kernel_size, wn, bn, activation, layers)
+            encoder_layer = create_encoder_block(
+                filters[i - 1], filters[i], kernel_size, wn, bn, activation, layers
+            )
         encoder = encoder + [encoder_layer]
     return nn.Sequential(*encoder)
 
+
 # 创建Decoder
-def create_decoder(out_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2):
+def create_decoder(
+    out_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
+):
     decoder = []
     for i in range(len(filters)):
         if i == 0:
-            decoder_layer = create_decoder_block(filters[i], out_channels, kernel_size, wn, bn, activation, layers,
-                                                 final_layer=True)
+            decoder_layer = create_decoder_block(
+                filters[i],
+                out_channels,
+                kernel_size,
+                wn,
+                bn,
+                activation,
+                layers,
+                final_layer=True,
+            )
         else:
-            decoder_layer = create_decoder_block(filters[i], filters[i - 1], kernel_size, wn, bn, activation, layers,
-                                                 final_layer=False)
+            decoder_layer = create_decoder_block(
+                filters[i],
+                filters[i - 1],
+                kernel_size,
+                wn,
+                bn,
+                activation,
+                layers,
+                final_layer=False,
+            )
         decoder = [decoder_layer] + decoder
     return nn.Sequential(*decoder)
 
+
 # 创建DeepCFD网络
 class UNetEx(base.Arch):
-    def __init__(self, in_channels, out_channels, kernel_size=3, filters=[16, 32, 64], layers=3,
-                 weight_norm=True, batch_norm=True, activation=nn.ReLU, final_activation=None):
+    def __init__(
+        self,
+        input_key: str,
+        output_key: str,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int = 3,
+        filters: Tuple[int, ...] = [16, 32, 64],
+        layers: int = 3,
+        weight_norm: bool = True,
+        batch_norm: bool = True,
+        activation: Optional[paddle.nn.Layer] = nn.ReLU,
+        final_activation: Optional[paddle.nn.Layer] = None,
+    ):
         super().__init__()
+        self.input_keys = (input_key,)
+        self.output_keys = (output_key,)
+
         assert len(filters) > 0
         self.final_activation = final_activation
-        self.encoder = create_encoder(in_channels, filters, kernel_size, weight_norm, batch_norm, activation, layers)
+        self.encoder = create_encoder(
+            in_channels,
+            filters,
+            kernel_size,
+            weight_norm,
+            batch_norm,
+            activation,
+            layers,
+        )
         decoders = []
         for i in range(out_channels):
-            decoders.append(create_decoder(1, filters, kernel_size, weight_norm, batch_norm, activation, layers))
+            decoders.append(
+                create_decoder(
+                    1, filters, kernel_size, weight_norm, batch_norm, activation, layers
+                )
+            )
         self.decoders = nn.Sequential(*decoders)
 
     def encode(self, x):
@@ -132,9 +221,9 @@ class UNetEx(base.Arch):
         return paddle.concat(y, axis=1)
 
     def forward(self, x):
-        x = x['x']
+        x = x[self.input_keys[0]]
         x, tensors, indices, sizes = self.encode(x)
         x = self.decode(x, tensors, indices, sizes)
         if self.final_activation is not None:
             x = self.final_activation(x)
-        return {'x':x}
+        return {self.output_keys[0]: x}
