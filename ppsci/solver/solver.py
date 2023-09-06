@@ -44,6 +44,7 @@ from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
+from ppsci.utils import sym_to_func
 
 
 class Solver:
@@ -220,45 +221,6 @@ class Solver:
         # set visualizer
         self.visualizer = visualizer
 
-        # convert sympy expression to python function using sym_to_func module
-        for equation in self.equation.values():
-            equation.cvt_sympy_to_function(model)
-            if constraint is not None:
-                for constraint in self.constraint.values():
-                    for name, expr in constraint.output_expr.items():
-                        if isinstance(expr, sp.Basic):
-                            converted_func = [
-                                equation.equations_func[e_name]
-                                for e_name, e_expr in equation.equations.items()
-                                if expr == e_expr
-                            ]
-                            print(expr)
-                            if len(converted_func) == 1:
-                                constraint.output_expr[name] = converted_func[0]
-            if validator is not None:
-                for validator in self.validator.values():
-                    for name, expr in validator.output_expr.items():
-                        if isinstance(expr, sp.Basic):
-                            converted_func = [
-                                equation.equations_func[e_name]
-                                for e_name, e_expr in equation.equations.items()
-                                if expr == e_expr
-                            ]
-                            print(expr)
-                            if len(converted_func) == 1:
-                                validator.output_expr[name] = converted_func[0]
-            if visualizer is not None:
-                for visualizer in self.visualizer.values():
-                    for name, expr in visualizer.output_expr.items():
-                        if isinstance(expr, sp.Basic):
-                            converted_func = [
-                                equation.equations_func[e_name]
-                                for e_name, e_expr in equation.equations.items()
-                                if expr == e_expr
-                            ]
-                            print(expr)
-                            if len(converted_func) == 1:
-                                visualizer.output_expr[name] = converted_func[0]
         # set automatic mixed precision(AMP) configuration
         self.use_amp = use_amp
         self.amp_level = amp_level
@@ -347,6 +309,44 @@ class Solver:
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
+
+        # convert sympy to callable object if exist
+        extra_parameters = []
+        for equation in self.equation.values():
+            extra_parameters += list(equation.learnable_parameters)
+
+        if self.constraint:
+            for constraint_ in self.constraint.values():
+                for name, expr in constraint_.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        constraint_.output_expr[name] = sym_to_func.sympy_to_function(
+                            expr,
+                            self.model,
+                            constraint_.detach_keys,
+                            extra_parameters,
+                        )
+
+        if self.validator:
+            for validator_ in self.validator.values():
+                for name, expr in validator_.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        validator_.output_expr[name] = sym_to_func.sympy_to_function(
+                            expr,
+                            self.model,
+                            None,
+                            extra_parameters,
+                        )
+
+        if self.visualizer:
+            for visualizer_ in self.visualizer.values():
+                for name, expr in visualizer_.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        visualizer_.output_expr[name] = sym_to_func.sympy_to_function(
+                            expr,
+                            self.model,
+                            None,
+                            extra_parameters,
+                        )
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:

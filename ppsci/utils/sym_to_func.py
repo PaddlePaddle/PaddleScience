@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -192,11 +193,11 @@ class OperatorNode(Node):
         return data_dict
 
     def _heaviside_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = self._mapping_func(data_dict[self.childs[0]])
+        data_dict[self.key] = self._compute_func(data_dict[self.childs[0]])
         return data_dict
 
     def _vanilla_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = self._mapping_func(
+        data_dict[self.key] = self._compute_func(
             *tuple(data_dict[child] for child in self.childs)
         )
         return data_dict
@@ -336,7 +337,7 @@ def sympy_to_function(
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     detach_keys: Optional[Tuple[str, ...]] = None,
-    parameters: Optional[nn.ParameterList] = None,
+    extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
@@ -344,7 +345,7 @@ def sympy_to_function(
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
         detach_keys (Optional[Tuple[str, ...]], optional): Keys which will be detached in computation. Defaults to None.
-        parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
+        extra_parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data in dict given.
@@ -401,7 +402,7 @@ def sympy_to_function(
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
     # remove unnecessary symbol node for already in input dict(except for paramter symbol)
-    _parameter_names = tuple(param.name for param in parameters)
+    _parameter_names = tuple(param.name for param in extra_parameters)
     sympy_nodes = [
         node
         for node in sympy_nodes
@@ -450,10 +451,10 @@ def sympy_to_function(
         elif node.is_Number or node.is_NumberSymbol:
             callable_nodes.append(ConstantNode(node))
         elif isinstance(node, sp.Symbol):
-            print("ParameterNode", node)
             callable_nodes.append(
                 ParameterNode(
-                    node, *[param for param in parameters if param.name == node.name]
+                    node,
+                    *[param for param in extra_parameters if param.name == node.name],
                 )
             )
         else:

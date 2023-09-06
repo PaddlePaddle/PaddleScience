@@ -47,6 +47,7 @@ class Constraint:
         self.data_iter = iter(self.data_loader)
         self.loss = loss
         self.name = name
+        self.detach_keys = ()
 
     def __str__(self):
         return ", ".join(

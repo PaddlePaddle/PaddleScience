@@ -14,22 +14,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import paddle
 import sympy
 from paddle import nn
-
-from ppsci.utils import sym_to_func
-
-if TYPE_CHECKING:
-    from ppsci import arch
 
 
 class PDE:
@@ -38,8 +30,8 @@ class PDE:
     def __init__(self):
         super().__init__()
         self.equations = {}
-        self.equations_func = {}
-        self.detach_keys = []
+        # self.equations_func = {}
+        # self.detach_keys = []
 
         # for PDE which has learnable parameter(s)
         self.learnable_parameters = nn.ParameterList()
@@ -94,18 +86,18 @@ class PDE:
         """Set state dict from dict."""
         self.learnable_parameters.set_state_dict(state_dict)
 
-    def cvt_sympy_to_function(
-        self, models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]
-    ) -> None:
-        """Convert equation(s) to callable function"""
-        for name, expr in self.equations.items():
-            if isinstance(expr, sympy.Basic):
-                self.equations_func[name] = sym_to_func.sympy_to_function(
-                    expr,
-                    models,
-                    self.detach_keys,
-                    self.learnable_parameters,
-                )
+    # def cvt_sympy_to_function(
+    #     self, models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]
+    # ) -> None:
+    #     """Convert equation(s) to callable function"""
+    #     for name, expr in self.equations.items():
+    #         if isinstance(expr, sympy.Basic):
+    #             self.equations_func[name] = sym_to_func.sympy_to_function(
+    #                 expr,
+    #                 models,
+    #                 self.detach_keys,
+    #                 self.learnable_parameters,
+    #             )
 
     def __str__(self):
         return ", ".join(
