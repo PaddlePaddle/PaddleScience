@@ -35,7 +35,7 @@ class Laplace(base.PDE):
     def __init__(self, dim: int):
         super().__init__()
         self.dim = dim
-        invars = self.create_symbols(("x", "y", "z")[: self.dim])
+        invars = self.create_symbols("x y z")[: self.dim]
         u = self.create_function("u", invars)
 
         laplace = 0

@@ -40,7 +40,7 @@ class Biharmonic(base.PDE):
         self.q = q
         self.D = D
 
-        invars = self.create_symbols(("x", "y", "z")[: self.dim])
+        invars = self.create_symbols("x y z")[: self.dim]
         u = self.create_function("u", invars)
         biharmonic = -self.q / self.D
         for invar_i in invars:

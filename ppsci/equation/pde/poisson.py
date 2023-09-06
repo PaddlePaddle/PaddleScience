@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from ppsci.autodiff import hessian
 from ppsci.equation.pde import base
 
 
@@ -37,11 +36,11 @@ class Poisson(base.PDE):
         super().__init__()
         self.dim = dim
 
-        def poisson_compute_func(out):
-            invars = ("x", "y", "z")[: self.dim]
-            poisson = 0
-            for invar in invars:
-                poisson += hessian(out["p"], out[invar])
-            return poisson
+        invars = self.create_symbols("x y z")[: self.dim]
+        p = self.create_function("p", invars)
 
-        self.add_equation("poisson", poisson_compute_func)
+        poisson = 0
+        for invar in invars:
+            poisson += p.diff(invar).diff(invar)
+
+        self.add_equation("poisson", poisson)

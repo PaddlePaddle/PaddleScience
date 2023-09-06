@@ -86,19 +86,6 @@ class PDE:
         """Set state dict from dict."""
         self.learnable_parameters.set_state_dict(state_dict)
 
-    # def cvt_sympy_to_function(
-    #     self, models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]
-    # ) -> None:
-    #     """Convert equation(s) to callable function"""
-    #     for name, expr in self.equations.items():
-    #         if isinstance(expr, sympy.Basic):
-    #             self.equations_func[name] = sym_to_func.sympy_to_function(
-    #                 expr,
-    #                 models,
-    #                 self.detach_keys,
-    #                 self.learnable_parameters,
-    #             )
-
     def __str__(self):
         return ", ".join(
             [self.__class__.__name__]
