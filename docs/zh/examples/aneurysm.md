@@ -9,7 +9,7 @@
 针对如下血管瘤几何模型，本案例通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
 
 <figure markdown>
-  ![equation](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 ## 2. 问题定义
