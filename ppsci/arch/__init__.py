@@ -14,6 +14,8 @@
 
 import copy
 
+from ppsci.arch.unetex import UNetEx
+
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
@@ -26,7 +28,6 @@ from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
-from ppsci.arch.unetex import UNetEx
 from ppsci.utils import logger  # isort:skip
 
 
@@ -44,7 +45,7 @@ __all__ = [
     "AFNONet",
     "PrecipNet",
     "build_model",
-    "UNetEx"
+    "UNetEx",
 ]
 
 
