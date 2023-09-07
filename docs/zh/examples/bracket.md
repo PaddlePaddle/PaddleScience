@@ -6,7 +6,7 @@
 
 线弹性方程在形变分析中起着核心的作用。在物理和工程领域，形变分析是研究物体在外力作用下的形状和尺寸变化的方法。线弹性方程是描述物体在受力后恢复原状的能力的数学模型。具体来说，线弹性方程通常是指应力和应变之间的关系。应力是一个物理量，用于描述物体内部由于外力而产生的单位面积上的力。应变则描述了物体的形状和尺寸的变化。线弹性方程通常可以表示为应力和应变之间的线性关系，即应力和应变是成比例的。这种关系可以用一个线性方程来表示，其中系数被称为弹性模量（或杨氏模量）。这种模型假设物体在受力后能够完全恢复原状，即没有永久变形。这种假设在许多情况下是合理的，例如在研究金属的力学行为时。然而，对于某些材料（如塑料或橡胶），这种假设可能不准确，因为它们在受力后可能会产生永久变形。线弹性方程只是形变分析中的一部分。要全面理解形变，还需要考虑其他因素，例如物体的初始形状和尺寸、外力的历史、材料的其他物理性质（如热膨胀系数和密度）等。然而，线弹性方程提供了一个基本的框架，用于描述和理解物体在受力后的行为。
 
-本案例主要研究如下金属连接件的在给定载荷情况下的形变情况，并使用深度学习方法根据线弹性等方程进行求解，连接件如下所示（参考 [Matlab deflection-analysis-of-a-bracket](https://www.mathworks.com/help/pde/ug/deflection-analysis-of-a-bracket.html)）。
+本案例主要研究如下金属连接件在给定载荷下的形变情况，并使用深度学习方法根据线弹性等方程进行求解，连接件如下所示（参考 [Matlab deflection-analysis-of-a-bracket](https://www.mathworks.com/help/pde/ug/deflection-analysis-of-a-bracket.html)）。
 
 <figure markdown>
   ![bracket](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/stl.png){ loading=lazy }
@@ -253,54 +253,54 @@ examples/bracket/bracket.py
 
 ## 5. 结果展示
 
-下面展示了在测试点集上，3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、OpenFOAM结果以及两者的差值。
+下面展示了在测试点集上，3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、传统算法求解结果以及两者的差值。
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/u.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变u；中间表示OpenFOAM计算的应变u；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应变 u；中间表示传统算法求解的应变 u；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/v.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变v；中间表示OpenFOAM计算的应变v；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应变 v；中间表示传统算法求解的应变 v；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/w.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变w；中间表示OpenFOAM计算的应变w；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应变 w；中间表示传统算法求解的应变 w；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xx.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_xx；中间表示OpenFOAM计算的应力sigma_xx；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力 sigma_xx；中间表示传统算法求解的应力 sigma_xx；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xy.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_xy；中间表示OpenFOAM计算的应力sigma_xy；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力 sigma_xy；中间表示传统算法求解的应力 sigma_xy；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_xz.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_xz；中间表示OpenFOAM计算的应力sigma_xz；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力 sigma_xz；中间表示传统算法求解的应力 sigma_xz；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yy.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_yy；中间表示OpenFOAM计算的应力sigma_yy；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力 sigma_yy；中间表示传统算法求解的应力 sigma_yy；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_yz.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_yz；中间表示OpenFOAM计算的应力sigma_yz；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力sigma_yz；中间表示传统算法求解的应力sigma_yz；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/sigma_zz.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应力sigma_zz；中间表示OpenFOAM计算的应力sigma_zz；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的应力sigma_zz；中间表示传统算法求解的应力sigma_zz；右侧表示两者差值</figcaption>
 </figure>
 
-可以看到模型预测的结果与 OpenFOAM 的结果基本一致。
+可以看到模型预测的结果与 传统算法求解结果基本一致。
 
 ## 6. 参考资料
 
