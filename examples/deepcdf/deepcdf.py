@@ -146,10 +146,5 @@ if __name__ == "__main__":
     p_MSE = ((out[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
 
     logger.info(
-        "Total MSE is {}, Ux MSE is {}, Uy MSE is {}, p MSE is {}".format(
-            Total_MSE.detach().numpy()[0],
-            Ux_MSE.detach().numpy()[0],
-            Uy_MSE.detach().numpy()[0],
-            p_MSE.detach().numpy()[0],
-        )
+        f"Total MSE is {Total_MSE.detach().numpy()[0]}, Ux MSE is {Ux_MSE.detach().numpy()[0]}, Uy MSE is {Uy_MSE.detach().numpy()[0]}, p MSE is {p_MSE.detach().numpy()[0]}"
     )
