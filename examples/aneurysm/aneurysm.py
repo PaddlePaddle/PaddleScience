@@ -132,7 +132,7 @@ if __name__ == "__main__":
     )
     igc_outlet = ppsci.constraint.IntegralConstraint(
         equation["NormalDotVec"].equations,
-        {"normal_dot_vel": 2.54},
+        {"normal_dot_vec": 2.54},
         geom["outlet_geo"],
         {
             **train_dataloader_cfg,
@@ -141,12 +141,12 @@ if __name__ == "__main__":
             "integral_batch_size": 310,
         },
         ppsci.loss.IntegralLoss("sum"),
-        weight_dict={"normal_dot_vel": 0.1},
+        weight_dict={"normal_dot_vec": 0.1},
         name="igc_outlet",
     )
     igc_integral = ppsci.constraint.IntegralConstraint(
         equation["NormalDotVec"].equations,
-        {"normal_dot_vel": -2.54},
+        {"normal_dot_vec": -2.54},
         geom["integral_geo"],
         {
             **train_dataloader_cfg,
@@ -155,7 +155,7 @@ if __name__ == "__main__":
             "integral_batch_size": 310,
         },
         ppsci.loss.IntegralLoss("sum"),
-        weight_dict={"normal_dot_vel": 0.1},
+        weight_dict={"normal_dot_vec": 0.1},
         name="igc_integral",
     )
     # wrap constraints together
