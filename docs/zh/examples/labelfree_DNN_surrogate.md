@@ -486,7 +486,7 @@ examples/aneurysm/aneurysm_flow.py:168:177
 --8<--
 ```
 
-#### 3.2.7 模型训练、评估与可视化
+#### 3.2.7 模型训练、评估与可视化(需要下载数据)
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
@@ -503,6 +503,21 @@ examples/aneurysm/aneurysm_flow.py:206:218
 2. 在不同狭窄系数 $scale$ 下的中心线壁面剪切应力曲线，与CFD结果的对比
 
 3. 验证误差
+
+本问题的CFD参考数据保存在 npz 文件，按照下方命令，下载并解压到 `aneurysm_flow/` 文件夹下。
+
+``` sh
+# linux
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip
+
+# windows
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip --output data.tar
+
+# unzip it
+unzip data.zip
+```
+
+解压完毕之后，`aneurysm_flow/data/` 文件夹下即存放了评估可视化所需的CFD参考数据。
 
 ``` py linenums="220"
 --8<--
