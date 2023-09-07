@@ -341,7 +341,6 @@ def sympy_to_function(
     Args:
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
-        # detach_keys (Optional[Tuple[str, ...]], optional): Keys which will be detached in computation. Defaults to None.
         extra_parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
 
     Returns:
