@@ -511,7 +511,7 @@ examples/aneurysm/aneurysm_flow.py:206:218
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip
 
 # windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip --output data.tar
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip --output data.zip
 
 # unzip it
 unzip data.zip
