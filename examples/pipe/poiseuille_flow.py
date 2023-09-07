@@ -133,9 +133,7 @@ if __name__ == "__main__":
 
     # set euqation
     equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(
-            nu=lambda out: out["nu"], rho=RHO, dim=2, time=False
-        )
+        "NavierStokes": ppsci.equation.NavierStokes(nu="nu", rho=RHO, dim=2, time=False)
     }
 
     # set constraint

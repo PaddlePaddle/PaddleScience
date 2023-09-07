@@ -331,9 +331,9 @@ class Solver:
                         container.output_expr[name] = sym_to_func.sympy_to_function(
                             expr,
                             self.model,
-                            container.detach_keys,
                             extra_parameters,
                         )
+                        logger.message(f"Convert expression[{name}]: {expr}")
 
         if self.constraint:
             convert_expr(self.constraint)

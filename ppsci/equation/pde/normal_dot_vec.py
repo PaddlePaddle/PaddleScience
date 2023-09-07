@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Optional
 from typing import Tuple
 
 from ppsci.equation.pde import base
@@ -35,12 +36,15 @@ class NormalDotVec(base.PDE):
         >>> pde = ppsci.equation.NormalDotVec(("u", "v", "w"))
     """
 
-    def __init__(self, vec_keys: Tuple[str, ...]):
+    def __init__(
+        self, vec_keys: Tuple[str, ...], detach_keys: Optional[Tuple[str, ...]] = None
+    ):
         super().__init__()
+        self.detach_keys = detach_keys
         if not vec_keys:
             raise ValueError(f"len(vec_keys)({len(vec_keys)}) should be larger than 0.")
-        self.vec_keys = vec_keys
 
+        self.vec_keys = vec_keys
         vec_vars = self.create_symbols(" ".join(vec_keys))
         normals = self.create_symbols("normal_x normal_y normal_z")
 

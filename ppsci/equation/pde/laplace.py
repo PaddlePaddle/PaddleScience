@@ -14,6 +14,9 @@
 
 from __future__ import annotations
 
+from typing import Optional
+from typing import Tuple
+
 from ppsci.equation.pde import base
 
 
@@ -32,11 +35,14 @@ class Laplace(base.PDE):
         >>> pde = ppsci.equation.Laplace(2)
     """
 
-    def __init__(self, dim: int):
+    def __init__(self, dim: int, detach_keys: Optional[Tuple[str, ...]] = None):
         super().__init__()
-        self.dim = dim
-        invars = self.create_symbols("x y z")[: self.dim]
+        self.detach_keys = detach_keys
+
+        invars = self.create_symbols("x y z")[:dim]
         u = self.create_function("u", invars)
+
+        self.dim = dim
 
         laplace = 0
         for invar in invars:

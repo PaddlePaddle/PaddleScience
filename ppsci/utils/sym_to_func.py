@@ -19,7 +19,6 @@ Sympy to python function conversion module
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -32,12 +31,9 @@ import sympy as sp
 from paddle import nn
 from typing_extensions import TypeAlias
 
+from ppsci import arch
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-
-if TYPE_CHECKING:
-    from ppsci import arch
-
 
 __all__ = [
     "sympy_to_function",
@@ -45,18 +41,6 @@ __all__ = [
 
 
 DATA_DICT: TypeAlias = Dict[str, paddle.Tensor]
-PADDLE_FUNC_MAP = {
-    sp.sin: paddle.sin,
-    sp.cos: paddle.cos,
-    sp.exp: paddle.exp,
-    sp.Pow: paddle.pow,
-    sp.log: paddle.log,
-    sp.tan: paddle.tan,
-    sp.Max: paddle.maximum,
-    sp.Min: paddle.minimum,
-    sp.Abs: paddle.abs,
-    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
-}
 
 SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.sin,
@@ -132,6 +116,27 @@ class Node(nn.Layer):
         return f"{self.__class__.__name__}(expr: {self.expr})"
 
 
+class DetachNode(nn.Layer):
+    """Class for detach node in converted expression tree.
+
+    Args:
+        expr (sp.Basic): Sympy expression.
+    """
+
+    def __init__(self, expr: sp.Basic):
+        super().__init__()
+        self.expr = expr
+        self.key = _cvt_to_key(self.expr)
+        self.key_detach = self.key + "_detach"
+
+    def forward(self, data_dict: DATA_DICT):
+        if self.key_detach in data_dict:
+            return data_dict
+
+        data_dict[self.key_detach] = data_dict[self.key].detach()
+        return data_dict
+
+
 class OperatorNode(Node):
     """Class for operator node in converted expression tree.
 
@@ -164,7 +169,7 @@ class OperatorNode(Node):
                 self._operator_func = self._vanilla_operator_func
                 self._compute_func = PADDLE_FUNC_MAP[self.expr.func]
 
-    def forward(self, data_dict: Dict):
+    def forward(self, data_dict: DATA_DICT):
         # use cache
         if self.key in data_dict:
             return data_dict
@@ -215,11 +220,9 @@ class LayerNode(Node):
         self,
         expr: sp.core.function.UndefinedFunction,
         model: arch.Arch,
-        detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__(expr)
         self.model = model
-        self.detach_keys = detach_keys
 
     def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
         # use cache
@@ -228,11 +231,6 @@ class LayerNode(Node):
 
         output_dict = self.model(data_dict)
         data_dict.update(output_dict)
-
-        # detach Tensor(s) if specified
-        if self.detach_keys:
-            for key in self.detach_keys:
-                data_dict[key] = data_dict[key].detach()
 
         return data_dict
 
@@ -336,7 +334,6 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
 def sympy_to_function(
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
-    detach_keys: Optional[Tuple[str, ...]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
@@ -344,7 +341,7 @@ def sympy_to_function(
     Args:
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
-        detach_keys (Optional[Tuple[str, ...]], optional): Keys which will be detached in computation. Defaults to None.
+        # detach_keys (Optional[Tuple[str, ...]], optional): Keys which will be detached in computation. Defaults to None.
         extra_parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
 
     Returns:
@@ -412,10 +409,10 @@ def sympy_to_function(
     # remove duplicates with topo-order kept
     sympy_nodes = list(dict.fromkeys(sympy_nodes))
 
+    if isinstance(models, arch.ModelList):
+        models = tuple(models.model_list[i] for i in range(len(models.model_list)))
     if not isinstance(models, (tuple, list)):
         models = (models,)
-    if detach_keys is None:
-        detach_keys = ()
 
     # convert sympy node to callable node
     callable_nodes = []
@@ -429,25 +426,25 @@ def sympy_to_function(
         ):
             callable_nodes.append(OperatorNode(node))
         elif isinstance(node, sp.Function):
-            match_index = None
-            for j, model in enumerate(models):
-                if str(node.func.name) in model.output_keys:
-                    callable_nodes.append(
-                        LayerNode(
-                            node,
-                            model,
-                            tuple(
-                                key for key in detach_keys if key in model.output_keys
-                            ),
+            if node.name == "detach":
+                callable_nodes.append(DetachNode(node))
+            else:
+                match_index = None
+                for j, model in enumerate(models):
+                    if str(node.func.name) in model.output_keys:
+                        callable_nodes.append(
+                            LayerNode(
+                                node,
+                                model,
+                            )
                         )
-                    )
-                    if match_index is not None:
-                        raise ValueError(
-                            f"Name of function({node}) should be unique along given models,"
-                            f" but got same output_key({node.func.name}) in models[{match_index}]"
-                            f" and models[{j}]."
-                        )
-                    match_index = j
+                        if match_index is not None:
+                            raise ValueError(
+                                f"Name of function({node}) should be unique along given models,"
+                                f" but got same output_key({node.func.name}) in models[{match_index}]"
+                                f" and models[{j}]."
+                            )
+                        match_index = j
         elif node.is_Number or node.is_NumberSymbol:
             callable_nodes.append(ConstantNode(node))
         elif isinstance(node, sp.Symbol):

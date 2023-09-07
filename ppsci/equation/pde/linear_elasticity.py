@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from typing import Tuple
 
 import sympy as sp
 
@@ -61,8 +62,10 @@ class LinearElasticity(base.PDE):
         rho: float = 1,
         dim: int = 3,
         time: bool = False,
+        detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()
+        self.detach_keys = detach_keys
         self.dim = dim
         self.time = time
 

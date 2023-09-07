@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import paddle
@@ -30,11 +31,10 @@ class PDE:
     def __init__(self):
         super().__init__()
         self.equations = {}
-        # self.equations_func = {}
-        # self.detach_keys = []
-
         # for PDE which has learnable parameter(s)
         self.learnable_parameters = nn.ParameterList()
+
+        self.detach_keys: Optional[Tuple[str, ...]] = None
 
     def create_symbols(self, symbol_str: str) -> Tuple[sympy.Symbol, ...]:
         """Create symbols
@@ -59,7 +59,24 @@ class PDE:
         Returns:
             sympy.Function: Named sympy function.
         """
-        return sympy.Function(name)(*invars)
+        expr = sympy.Function(name)(*invars)
+        if self.detach_keys and name in self.detach_keys:
+            expr = sympy.Function("detach")(expr)
+        return expr
+
+    def create_detach(
+        self,
+        expr: sympy.Basic,
+    ) -> sympy.Function:
+        """Create detach function for given expression.
+
+        Args:
+            expr (sympy.Basic): Given expression to be detached.
+
+        Returns:
+            sympy.Function: Detached expression.
+        """
+        return sympy.Function("detach")(expr)
 
     def add_equation(self, name: str, equation: Callable):
         """Add an equation.

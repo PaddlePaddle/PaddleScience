@@ -14,6 +14,9 @@
 
 from __future__ import annotations
 
+from typing import Optional
+from typing import Tuple
+
 from ppsci.equation.pde import base
 
 
@@ -32,12 +35,12 @@ class Poisson(base.PDE):
         >>> pde = ppsci.equation.Poisson(2)
     """
 
-    def __init__(self, dim: int):
+    def __init__(self, dim: int, detach_keys: Optional[Tuple[str, ...]] = None):
         super().__init__()
-        self.dim = dim
-
-        invars = self.create_symbols("x y z")[: self.dim]
+        self.detach_keys = detach_keys
+        invars = self.create_symbols("x y z")[:dim]
         p = self.create_function("p", invars)
+        self.dim = dim
 
         poisson = 0
         for invar in invars:

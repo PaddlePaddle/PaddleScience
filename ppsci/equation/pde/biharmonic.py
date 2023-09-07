@@ -14,6 +14,9 @@
 
 from __future__ import annotations
 
+from typing import Optional
+from typing import Tuple
+
 from ppsci.equation.pde import base
 
 
@@ -34,14 +37,28 @@ class Biharmonic(base.PDE):
         >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
     """
 
-    def __init__(self, dim: int, q: float, D: float):
+    def __init__(
+        self,
+        dim: int,
+        q: float,
+        D: float,
+        detach_keys: Optional[Tuple[str, ...]] = None,
+    ):
         super().__init__()
+        self.detach_keys = detach_keys
+
+        invars = self.create_symbols("x y z")[:dim]
+        u = self.create_function("u", invars)
+
+        if isinstance(q, str):
+            q = self.create_function("q", invars)
+        if isinstance(D, str):
+            D = self.create_function("D", invars)
+
         self.dim = dim
         self.q = q
         self.D = D
 
-        invars = self.create_symbols("x y z")[: self.dim]
-        u = self.create_function("u", invars)
         biharmonic = -self.q / self.D
         for invar_i in invars:
             for invar_j in invars:

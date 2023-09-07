@@ -74,12 +74,15 @@ class PeriodicConstraint(base.Constraint):
         name: str = "PeriodicBC",
     ):
         self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
+        for output_name, expr in self.output_expr.items():
             if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
+                self.output_expr[output_name] = sp_parser.parse_expr(expr)
 
         self.input_keys = geom.dim_keys
         self.output_keys = list(output_expr.keys())
+        self.output_expr = {
+            k: v for k, v in output_expr.items() if k in self.output_keys
+        }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom, geometry.Mesh):
             self.output_keys += ["area"]

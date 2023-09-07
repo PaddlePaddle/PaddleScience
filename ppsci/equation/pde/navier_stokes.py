@@ -15,9 +15,9 @@
 from __future__ import annotations
 
 from typing import Callable
+from typing import Optional
+from typing import Tuple
 from typing import Union
-
-import sympy as sp
 
 from ppsci.equation.pde import base
 
@@ -63,19 +63,37 @@ class NavierStokes(base.PDE):
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
-    def __init__(self, nu: Union[float, Callable], rho: float, dim: int, time: bool):
+    def __init__(
+        self,
+        nu: Union[float, Callable],
+        rho: float,
+        dim: int,
+        time: bool,
+        detach_keys: Optional[Tuple[str, ...]] = None,
+    ):
         super().__init__()
+        self.detach_keys = detach_keys
+        t, x, y, z = self.create_symbols("t x y z")
+        invars = (x, y)
+        if time:
+            invars = (t,) + invars
+        if dim == 3:
+            invars += (z,)
+
         self.nu = nu
         self.rho = rho
         self.dim = dim
         self.time = time
 
-        t, x, y, z = self.create_symbols("t x y z")
-        u, v, w, p = self.create_symbols("u v w p")
-        if self.dim == 2:
-            w = sp.Number(0)
-        if not time:
-            t = sp.Number(0)
+        if isinstance(nu, str):
+            nu = self.create_function(nu, invars)
+        if isinstance(rho, str):
+            rho = self.create_function(rho, invars)
+
+        u = self.create_function("u", invars)
+        v = self.create_function("v", invars)
+        w = self.create_function("w", invars)
+        p = self.create_function("p", invars)
 
         continuity = u.diff(x) + v.diff(y) + w.diff(z)
         momentum_x = (
@@ -105,4 +123,5 @@ class NavierStokes(base.PDE):
         self.add_equation("continuity", continuity)
         self.add_equation("momentum_x", momentum_x)
         self.add_equation("momentum_y", momentum_y)
-        self.add_equation("momentum_z", momentum_z)
+        if self.dim == 3:
+            self.add_equation("momentum_z", momentum_z)

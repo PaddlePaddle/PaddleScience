@@ -90,13 +90,16 @@ class InitialConstraint(base.Constraint):
         name: str = "IC",
     ):
         self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
+        for output_name, expr in self.output_expr.items():
             if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
+                self.output_expr[output_name] = sp_parser.parse_expr(expr)
 
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
         self.output_keys = list(label_dict.keys())
+        self.output_expr = {
+            k: v for k, v in output_expr.items() if k in self.output_keys
+        }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom.geometry, geometry.Mesh):
             self.output_keys += ["area"]
