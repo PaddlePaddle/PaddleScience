@@ -47,6 +47,7 @@ nav:
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - Darcy2D: zh/examples/darcy2d.md
+          - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
         - 材料:
           - hPINNs: zh/examples/hpinns.md
       - 数据驱动:
