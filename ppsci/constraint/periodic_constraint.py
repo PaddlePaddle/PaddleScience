@@ -24,7 +24,6 @@ from typing import Union
 import numpy as np
 import paddle
 import sympy
-from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
@@ -74,10 +73,6 @@ class PeriodicConstraint(base.Constraint):
         name: str = "PeriodicBC",
     ):
         self.output_expr = output_expr
-        for output_name, expr in self.output_expr.items():
-            if isinstance(expr, str):
-                self.output_expr[output_name] = sp_parser.parse_expr(expr)
-
         self.input_keys = geom.dim_keys
         self.output_keys = list(output_expr.keys())
         self.output_expr = {
@@ -146,9 +141,6 @@ class PeriodicConstraint(base.Constraint):
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
             for key, value in weight_dict.items():
-                if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
