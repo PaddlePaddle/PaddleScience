@@ -50,6 +50,8 @@ nav:
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
         - 材料:
           - hPINNs: zh/examples/hpinns.md
+        - 结构:
+          - Bracket: zh/examples/bracket.md
       - 数据驱动:
         - 方程求解:
           - DeepHPMs: zh/examples/deephpms.md
