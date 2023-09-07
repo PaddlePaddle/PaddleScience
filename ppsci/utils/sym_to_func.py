@@ -32,6 +32,7 @@ from paddle import nn
 from typing_extensions import TypeAlias
 
 from ppsci import arch
+from ppsci import equation
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 
@@ -117,7 +118,7 @@ class Node(nn.Layer):
 
 
 class DetachNode(nn.Layer):
-    """Class for detach node in converted expression tree.
+    """Class for detach operation in converted expression tree.
 
     Args:
         expr (sp.Basic): Sympy expression.
@@ -127,13 +128,13 @@ class DetachNode(nn.Layer):
         super().__init__()
         self.expr = expr
         self.key = _cvt_to_key(self.expr)
-        self.key_detach = self.key + "_detach"
+        self.child = _cvt_to_key(self.expr.args[0])
 
     def forward(self, data_dict: DATA_DICT):
-        if self.key_detach in data_dict:
+        if self.key in data_dict:
             return data_dict
 
-        data_dict[self.key_detach] = data_dict[self.key].detach()
+        data_dict[self.key] = data_dict[self.child].detach()
         return data_dict
 
 
@@ -427,7 +428,7 @@ def sympy_to_function(
         ):
             callable_nodes.append(OperatorNode(node))
         elif isinstance(node, sp.Function):
-            if node.name == "detach":
+            if node.name == equation.DETACH_FUNC_NAME:
                 callable_nodes.append(DetachNode(node))
             else:
                 match_index = None

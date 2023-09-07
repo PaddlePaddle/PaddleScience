@@ -24,6 +24,8 @@ import paddle
 import sympy
 from paddle import nn
 
+DETACH_FUNC_NAME = "detach"
+
 
 class PDE:
     """Base class for Partial Differential Equation"""
@@ -60,23 +62,12 @@ class PDE:
             sympy.Function: Named sympy function.
         """
         expr = sympy.Function(name)(*invars)
+
+        # wrap `expression(...)` to `detach(expression(...))`
+        # if name of expression is in given detach_keys
         if self.detach_keys and name in self.detach_keys:
-            expr = sympy.Function("detach")(expr)
+            expr = sympy.Function(DETACH_FUNC_NAME)(expr)
         return expr
-
-    def create_detach(
-        self,
-        expr: sympy.Basic,
-    ) -> sympy.Function:
-        """Create detach function for given expression.
-
-        Args:
-            expr (sympy.Basic): Given expression to be detached.
-
-        Returns:
-            sympy.Function: Detached expression.
-        """
-        return sympy.Function("detach")(expr)
 
     def add_equation(self, name: str, equation: Callable):
         """Add an equation.

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ppsci.equation.pde.base import DETACH_FUNC_NAME
 from ppsci.equation.pde.base import PDE
 from ppsci.equation.pde.biharmonic import Biharmonic
 from ppsci.equation.pde.laplace import Laplace
@@ -23,6 +24,7 @@ from ppsci.equation.pde.viv import Vibration
 
 __all__ = [
     "PDE",
+    "DETACH_FUNC_NAME",
     "Biharmonic",
     "Laplace",
     "LinearElasticity",
