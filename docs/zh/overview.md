@@ -63,7 +63,7 @@ BatchTransform 模块存放各种基于批样本的数据预处理方法。
 ### 2.5 [Equation](./api/equation.md)
 
 <figure markdown>
-  ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes` 表示 N-S 方程，`Vibration` 表示振动方程，每个方程内部含有相关变量的计算函数。
