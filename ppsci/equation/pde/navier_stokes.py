@@ -101,7 +101,11 @@ class NavierStokes(base.PDE):
             + u * u.diff(x)
             + v * u.diff(y)
             + w * u.diff(z)
-            - nu * (u.diff(x).diff(x) + u.diff(y).diff(y) + u.diff(z).diff(z))
+            - (
+                (nu * u.diff(x)).diff(x)
+                + (nu * u.diff(y)).diff(y)
+                + (nu * u.diff(z)).diff(z)
+            )
             + 1 / rho * p.diff(x)
         )
         momentum_y = (
@@ -109,7 +113,11 @@ class NavierStokes(base.PDE):
             + u * v.diff(x)
             + v * v.diff(y)
             + w * v.diff(z)
-            - nu * (v.diff(x).diff(x) + v.diff(y).diff(y) + v.diff(z).diff(z))
+            - (
+                (nu * v.diff(x)).diff(x)
+                + (nu * v.diff(y)).diff(y)
+                + (nu * v.diff(z)).diff(z)
+            )
             + 1 / rho * p.diff(y)
         )
         momentum_z = (
@@ -117,7 +125,11 @@ class NavierStokes(base.PDE):
             + u * w.diff(x)
             + v * w.diff(y)
             + w * w.diff(z)
-            - nu * (w.diff(x).diff(x) + w.diff(y).diff(y) + w.diff(z).diff(z))
+            - (
+                (nu * w.diff(x)).diff(x)
+                + (nu * w.diff(y)).diff(y)
+                + (nu * w.diff(z)).diff(z)
+            )
             + 1 / rho * p.diff(z)
         )
         self.add_equation("continuity", continuity)

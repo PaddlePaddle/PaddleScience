@@ -64,7 +64,14 @@ class Geometry:
         )
         return self.random_points(n)
 
-    def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
+    def sample_interior(
+        self,
+        n,
+        random="pseudo",
+        criteria=None,
+        evenly=False,
+        compute_sdf_derivatives=False,
+    ):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
@@ -103,7 +110,15 @@ class Geometry:
         else:
             sdf_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
-        return {**x_dict, **sdf_dict}
+
+        if compute_sdf_derivatives:
+            sdf_derivatives_dict = misc.convert_to_dict(
+                self.sdf_derivatives(x), (f"sdf__{d}" for d in self.dim_keys)
+            )
+        else:
+            sdf_derivatives_dict = {}
+
+        return {**x_dict, **sdf_dict, **sdf_derivatives_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -188,6 +203,18 @@ class Geometry:
     def periodic_point(self, x: np.ndarray, component: int):
         """Compute the periodic image of x."""
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
+
+    def sdf_derivatives(self, x: np.ndarray, eps=0.0001) -> dict:
+        # compute sdf by centered difference
+        sdf_derivative = np.zeros_like(x)
+        for i in range(len(self.dim_keys)):
+            delta = np.zeros_like(x)
+            delta[:, i] += eps / 2
+            sdf_plus = self.sdf_func(x + delta)
+            sdf_minus = self.sdf_func(x - delta)
+            # store sdf derivative
+            sdf_derivative[:, i] = (sdf_plus - sdf_minus) / eps
+        return sdf_derivative
 
     def union(self, other):
         """CSG Union."""
