@@ -1,7 +1,10 @@
 import paddle
 import pytest
+import sympy as sp
 
+from ppsci import arch
 from ppsci import equation
+from ppsci.utils import sym_to_func
 
 
 def compute_func(x: tuple, y: tuple):
@@ -13,15 +16,34 @@ def compute_func(x: tuple, y: tuple):
 
 def test_normal_dot_vel():
     batch_size = 13
-    u = paddle.randn([batch_size, 1])
-    v = paddle.randn([batch_size, 1])
-    w = paddle.randn([batch_size, 1])
+    x = paddle.randn([batch_size, 1])
+    y = paddle.randn([batch_size, 1])
+    z = paddle.randn([batch_size, 1])
+    input_dims = ("x", "y", "z")
+    output_dims = ("u", "v", "w")
+    model = arch.MLP(input_dims, output_dims, 2, 16)
+    output_dict = model(
+        {
+            "x": x,
+            "y": y,
+            "z": z,
+        }
+    )
+    u = output_dict["u"]
+    v = output_dict["v"]
+    w = output_dict["w"]
 
     normal_x = paddle.randn([batch_size, 1])
     normal_y = paddle.randn([batch_size, 1])
     normal_z = paddle.randn([batch_size, 1])
 
-    pde = equation.NormalDotVec(("u", "v", "w"))
+    norm_doc_vec = equation.NormalDotVec(output_dims)
+    for name, expr in norm_doc_vec.equations.items():
+        if isinstance(expr, sp.Basic):
+            norm_doc_vec.equations[name] = sym_to_func.sympy_to_function(
+                expr,
+                model,
+            )
     out = {
         "u": u,
         "v": v,
@@ -32,7 +54,9 @@ def test_normal_dot_vel():
     }
 
     expected_result = compute_func((u, v, w), (normal_x, normal_y, normal_z))
-    assert paddle.allclose(pde.equations["normal_dot_vel"](out), expected_result)
+    assert paddle.allclose(
+        norm_doc_vec.equations["normal_dot_vec"](out), expected_result
+    )
 
 
 if __name__ == "__main__":

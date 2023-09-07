@@ -14,9 +14,11 @@
 
 import paddle
 import pytest
-from paddle import nn
+import sympy as sp
 
+from ppsci import arch
 from ppsci import equation
+from ppsci.utils import sym_to_func
 
 __all__ = []
 
@@ -40,13 +42,10 @@ def test_poisson(dim):
         input_data = paddle.concat([x, y, z], axis=1)
 
     # build NN model
-    model = nn.Sequential(
-        nn.Linear(len(input_dims), len(output_dims)),
-        nn.Tanh(),
-    )
+    model = arch.MLP(input_dims, output_dims, 2, 16)
 
     # manually generate output
-    p = model(input_data)
+    p = model.forward_tensor(input_data)
 
     def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
         return paddle.grad(y, x, create_graph=True)[0]
@@ -61,6 +60,13 @@ def test_poisson(dim):
 
     # compute result using built-in Laplace module
     poisson_equation = equation.Poisson(dim=dim)
+    for name, expr in poisson_equation.equations.items():
+        if isinstance(expr, sp.Basic):
+            poisson_equation.equations[name] = sym_to_func.sympy_to_function(
+                expr,
+                model,
+            )
+
     data_dict = {
         "x": x,
         "y": y,

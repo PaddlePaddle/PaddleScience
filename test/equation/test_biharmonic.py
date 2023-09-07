@@ -1,8 +1,10 @@
 import paddle
 import pytest
-from paddle import nn
+import sympy as sp
 
+from ppsci import arch
 from ppsci import equation
+from ppsci.utils import sym_to_func
 
 __all__ = []
 
@@ -29,13 +31,10 @@ def test_biharmonic(dim):
         input_data = paddle.concat([x, y, z], axis=1)
 
     # build NN model
-    model = nn.Sequential(
-        nn.Linear(len(input_dims), len(output_dims)),
-        nn.Tanh(),
-    )
+    model = arch.MLP(input_dims, output_dims, 2, 16)
 
     # manually generate output
-    u = model(input_data)
+    u = model.forward_tensor(input_data)
 
     # use self-defined jacobian and hessian
     def jacobian(y: "paddle.Tensor", x: "paddle.Tensor") -> "paddle.Tensor":
@@ -57,6 +56,12 @@ def test_biharmonic(dim):
 
     # compute result using built-in Biharmonic module
     biharmonic_equation = equation.Biharmonic(dim=dim, q=q, D=D)
+    for name, expr in biharmonic_equation.equations.items():
+        if isinstance(expr, sp.Basic):
+            biharmonic_equation.equations[name] = sym_to_func.sympy_to_function(
+                expr,
+                model,
+            )
     data_dict = {
         "x": x,
         "y": y,
