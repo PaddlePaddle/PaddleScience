@@ -105,7 +105,7 @@ class NavierStokes(base.PDE):
             + 1 / rho * p.diff(x)
         )
         momentum_y = (
-            u.diff(t)
+            v.diff(t)
             + u * v.diff(x)
             + v * v.diff(y)
             + w * v.diff(z)
@@ -113,7 +113,7 @@ class NavierStokes(base.PDE):
             + 1 / rho * p.diff(y)
         )
         momentum_z = (
-            u.diff(t)
+            w.diff(t)
             + u * w.diff(x)
             + v * w.diff(y)
             + w * w.diff(z)

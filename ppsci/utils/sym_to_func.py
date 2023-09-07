@@ -399,6 +399,8 @@ def sympy_to_function(
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
     # remove unnecessary symbol node for already in input dict(except for paramter symbol)
+    if not extra_parameters:
+        extra_parameters = ()
     _parameter_names = tuple(param.name for param in extra_parameters)
     sympy_nodes = [
         node
