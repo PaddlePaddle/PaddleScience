@@ -63,7 +63,7 @@ BatchTransform 模块存放各种基于批样本的数据预处理方法。
 ### 2.5 [Equation](./api/equation.md)
 
 <figure markdown>
-  ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](../images/overview/equation.jpg){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes` 表示 N-S 方程，`Vibration` 表示振动方程，每个方程内部含有相关变量的计算函数。
@@ -78,7 +78,9 @@ Geometry 模块负责定义各种常见的几何形状，如 `Interval` 线段�
 
 ### 2.7 [Loss](./api/loss.md)
 
-Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕后，将结果与参考值计算损失值，供后续的梯度优化算法使用。
+Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕后，将结果与参考值计算损失值，供后续的梯度优化算法使用；
+
+同时该模块也提供了常见的多任务学习优化功能，包括 PCGrad、AGDA，进一步提升多个 loss 共同优化（如 PINN 方法）的精度。
 
 ### 2.8 [Optimizer](./api/optimizer.md)
 

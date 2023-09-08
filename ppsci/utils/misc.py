@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import collections
 import functools
+import os
 import random
 from typing import Callable
 from typing import Dict
@@ -23,6 +26,8 @@ from typing import Union
 
 import numpy as np
 import paddle
+from matplotlib import pyplot as plt
+from paddle import distributed as dist
 
 __all__ = [
     "all_gather",
@@ -37,6 +42,8 @@ __all__ = [
     "combine_array_with_time",
     "set_random_seed",
     "run_on_eval_mode",
+    "run_at_rank0",
+    "plot_curve",
 ]
 
 
@@ -59,6 +66,7 @@ class AverageMeter:
         self.avg = 0
         self.sum = 0
         self.count = 0
+        self.history = []
 
     def update(self, val, n=1):
         """Update"""
@@ -66,6 +74,7 @@ class AverageMeter:
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+        self.history.append(val)
 
     @property
     def avg_info(self):
@@ -299,3 +308,76 @@ def run_on_eval_mode(func: Callable) -> Callable:
         return result
 
     return function_with_eval_state
+
+
+def run_at_rank0(func: Callable) -> Callable:
+    """A decorator that allow given function run only at rank 0 to avoid
+    multiple logs or other events. Usually effected in distributed environment.
+
+    Args:
+        func (Callable): Given function.
+
+    Returns:
+        Callable: Wrappered function which will only run at at rank 0,
+            skipped at other rank.
+    """
+
+    @functools.wraps(func)
+    def wrapped_func(*args, **kwargs):
+        if dist.get_rank() == 0:
+            return func(*args, **kwargs)
+
+    return wrapped_func
+
+
+def plot_curve(
+    data: Dict[str, List],
+    xlabel: str = "X",
+    ylabel: str = "Y",
+    output_dir: str = "./output/",
+    smooth_step: int = 1,
+    use_semilogy: bool = False,
+) -> None:
+    """Plotting curve.
+
+    Args:
+        data (Dict[str, List]): Dict of all data, keys are curves' name.
+        xlabel (str, optional): Label of x-axis. Defaults to "X".
+        ylabel (str, optional): Label of y-axis. Defaults to "Y".
+        output_dir (str, optional): Output directory of figure. Defaults to "./output/".
+        smooth_step (int, optional): How many points are squeezed to one point to smooth the curve. Defaults to 1.
+        use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to False.
+    """
+    data_arr = np.concatenate(
+        [np.asarray(arr).reshape(-1, 1) for arr in data.values()], axis=1
+    )
+
+    # smooth
+    if data_arr.shape[0] % smooth_step != 0:
+        data_arr = np.reshape(
+            data_arr[: -(data_arr.shape[0] % smooth_step), :],
+            (-1, smooth_step, data_arr.shape[1]),
+        )
+    else:
+        data_arr = np.reshape(data_arr, (-1, smooth_step, data_arr.shape[1]))
+    data_arr = np.mean(data_arr, axis=1)
+
+    # plot
+    plt.figure()
+    for i in range(data_arr.shape[1]):
+        if use_semilogy:
+            plt.semilogy(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
+        else:
+            plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
+    plt.legend(
+        list(data.keys()),
+        loc="lower left",
+    )
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid()
+    plt.yticks(size=10)
+    plt.xticks(size=10)
+
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.clf()

@@ -21,6 +21,8 @@ This code is based on [torch.nn.init](https://github.com/pytorch/pytorch/blob/ma
 Ths copyright of pytorch/pytorch is a BSD-style license, as found in the LICENSE file.
 """
 
+from __future__ import annotations
+
 import math
 
 import numpy as np

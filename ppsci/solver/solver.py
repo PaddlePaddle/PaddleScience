@@ -37,6 +37,7 @@ from paddle.distributed import fleet
 from typing_extensions import Literal
 
 import ppsci
+from ppsci.loss import mtl
 from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
@@ -78,6 +79,7 @@ class Solver:
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
+        loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -136,6 +138,7 @@ class Solver:
         compute_metric_by_batch: bool = False,
         eval_with_no_grad: bool = False,
         to_static: bool = False,
+        loss_aggregator: Optional[mtl.LossAggregator] = None,
     ):
         # set model
         self.model = model
@@ -165,14 +168,15 @@ class Solver:
         self.eval_freq = eval_freq
 
         # initialize traning log recorder for loss, time cost, metric, etc.
-        self.train_output_info = {}
+        self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
+        self.train_loss_info = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
-        self.eval_output_info = {}
+        self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
@@ -220,10 +224,6 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # load pretrained model, usually used for transfer learning
-        if pretrained_model_path is not None:
-            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
-
         # whether calculate metrics after each batch during evaluate
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
@@ -239,11 +239,9 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
         self.eval_with_no_grad = eval_with_no_grad
 
-        # decorate model(s) and optimizer(s) for AMP
-        if self.use_amp:
-            self.model, self.optimizer = amp.decorate(
-                self.model, self.optimizer, self.amp_level
-            )
+        # load pretrained model, usually used for transfer learning
+        if pretrained_model_path is not None:
+            save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
         # initialize an dict for tracking best metric during training
         self.best_metric = {
@@ -257,6 +255,15 @@ class Solver:
             )
             if isinstance(loaded_metric, dict):
                 self.best_metric.update(loaded_metric)
+
+        # decorate model(s) and optimizer(s) for AMP
+        if self.use_amp:
+            self.model, self.optimizer = amp.decorate(
+                self.model,
+                self.optimizer,
+                self.amp_level,
+                save_dtype="float32",
+            )
 
         # choosing an appropriate training function for different optimizers
         if isinstance(self.optimizer, optim.LBFGS):
@@ -297,6 +304,9 @@ class Solver:
         # whether enable static for forward pass, default to Fals
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for forward computation.")
+
+        # use loss aggregator, use summation if None
+        self.loss_aggregator = loss_aggregator
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -415,8 +425,8 @@ class Solver:
                     save_load.save_checkpoint(
                         self.model,
                         self.optimizer,
-                        self.scaler,
                         self.best_metric,
+                        self.scaler,
                         self.output_dir,
                         "best_model",
                         self.equation,
@@ -425,7 +435,13 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler("eval_metric", cur_metric, epoch_id, self.vdl_writer)
+                logger.scaler(
+                    "eval/metric",
+                    cur_metric,
+                    epoch_id,
+                    self.vdl_writer,
+                    self.wandb_writer,
+                )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
@@ -440,8 +456,8 @@ class Solver:
                 save_load.save_checkpoint(
                     self.model,
                     self.optimizer,
-                    self.scaler,
                     {"metric": cur_metric, "epoch": epoch_id},
+                    self.scaler,
                     self.output_dir,
                     f"epoch_{epoch_id}",
                     self.equation,
@@ -451,8 +467,8 @@ class Solver:
             save_load.save_checkpoint(
                 self.model,
                 self.optimizer,
-                self.scaler,
                 {"metric": cur_metric, "epoch": epoch_id},
+                self.scaler,
                 self.output_dir,
                 "latest",
                 self.equation,
@@ -504,7 +520,8 @@ class Solver:
         expr_dict: Optional[Dict[str, Callable]] = None,
         batch_size: int = 64,
         no_grad: bool = True,
-    ) -> Dict[str, paddle.Tensor]:
+        return_numpy: bool = False,
+    ) -> Dict[str, Union[paddle.Tensor, np.ndarray]]:
         """Pure prediction using model.forward(...) and expression(optional, if given).
 
         Args:
@@ -514,9 +531,11 @@ class Solver:
             batch_size (int, optional): Predicting by batch size. Defaults to 64.
             no_grad (bool): Whether set stop_gradient=True for entire prediction, mainly
                 for memory-efficiency. Defaults to True.
+            return_numpy (bool): Whether convert result from Tensor to numpy ndarray.
+                Defaults to False.
 
         Returns:
-            Dict[str, paddle.Tensor]: Prediction in dict.
+            Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -592,6 +611,13 @@ class Solver:
                     key: value[perm_inv][:num_samples]
                     for key, value in pred_dict.items()
                 }
+
+        # convert to numpy ndarray if specified
+        if return_numpy:
+            pred_dict = {
+                k: (v.numpy() if paddle.is_tensor(v) else v)
+                for k, v in pred_dict.items()
+            }
 
         return pred_dict
 
@@ -671,3 +697,35 @@ class Solver:
                 else contextlib.suppress()
             )
         return ctx_manager
+
+    def plot_loss_history(
+        self,
+        by_epoch: bool = False,
+        smooth_step: int = 1,
+        use_semilogy: bool = True,
+    ) -> None:
+        """Plotting iteration/epoch-loss curve.
+
+        Args:
+            by_epoch (bool, optional): Whether the abscissa axis of the curve is epoch or iteration. Defaults to False.
+            smooth_step (int, optional): How many steps of loss are squeezed to one point to smooth the curve. Defaults to 1.
+            use_semilogy (bool, optional): Whether to set non-uniform coordinates for the y-axis. Defaults to True.
+        """
+        loss_dict = {}
+        for key in self.train_loss_info:
+            loss_arr = np.array(self.train_loss_info[key].history)
+            if by_epoch:
+                loss_arr = np.mean(
+                    np.reshape(loss_arr, (-1, self.iters_per_epoch)),
+                    axis=1,
+                )
+            loss_dict[key] = list(loss_arr)
+
+        misc.plot_curve(
+            data=loss_dict,
+            xlabel="Epoch" if by_epoch else "Iteration",
+            ylabel="Loss",
+            output_dir=self.output_dir,
+            smooth_step=smooth_step,
+            use_semilogy=use_semilogy,
+        )

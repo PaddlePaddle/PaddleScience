@@ -36,7 +36,7 @@ if __name__ == "__main__":
     model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
 
     # set equation
-    equation = {"laplace": ppsci.equation.pde.Laplace(dim=2)}
+    equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}

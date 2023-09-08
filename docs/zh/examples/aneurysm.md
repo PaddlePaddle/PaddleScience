@@ -2,12 +2,14 @@
 
 <!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
-## 1. 问题简介
+## 1. 背景简介
 
-针对如下血管瘤几何模型，通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
+深度学习方法可以用于处理血管瘤问题，其中包括基于物理信息的深度学习方法。这种方法可以用于脑血管瘤的压力建模，以预测和评估血管瘤破裂的风险。
+
+针对如下血管瘤几何模型，本案例通过深度学习方式，在内部和边界施加适当的物理方程约束，以无监督学习的方式对管壁压力进行建模。
 
 <figure markdown>
-  ![equation](../../images/aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![equation](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm.png){ loading=lazy style="height:80%;width:80%"}
 </figure>
 
 ## 2. 问题定义
@@ -71,9 +73,9 @@ tar -xvf aneurysm_dataset.tar
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、pymesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
-然后通过 PaddleScience 内置的 STL 几何模块 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
+然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 
 ``` py linenums="39"
 --8<--
@@ -158,7 +160,7 @@ $$
 
 其中$M$表示离散积分点个数，$s_i$表示某一个点的（近似）面积，$\mathbf{u_i}$表示某一个点的速度矢量，$\mathbf{n_i}$表示某一个点的外法向矢量。
 
-除前面章节所述的共同参数外，此处额外增加了 `integral_batch_size` 参数，这表示用于离散积分的采样点数量，此处使用 100 个离散点来近似积分计算；同时指定损失函数为 `IntegralLoss`，表示计算损失所用的最终预测值由多个离散点近似积分，再与标签值计算损失。
+除前面章节所述的共同参数外，此处额外增加了 `integral_batch_size` 参数，这表示用于离散积分的采样点数量，此处使用 310 个离散点来近似积分计算；同时指定损失函数为 `IntegralLoss`，表示计算损失所用的最终预测值由多个离散点近似积分，再与标签值计算损失。
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
@@ -170,11 +172,11 @@ examples/aneurysm/aneurysm.py:161:169
 
 ### 3.5 超参数设定
 
-接下来需要指定训练轮数和学习率，此处按实验经验，使用一万轮训练轮数。
+接下来需要指定训练轮数和学习率，此处按实验经验，使用 1500 轮训练轮数。
 
 ``` py linenums="171"
 --8<--
-examples/aneurysm/aneurysm.py:171:180
+examples/aneurysm/aneurysm.py:171:172
 --8<--
 ```
 
@@ -182,9 +184,9 @@ examples/aneurysm/aneurysm.py:171:180
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="182"
+``` py linenums="174"
 --8<--
-examples/aneurysm/aneurysm.py:182:183
+examples/aneurysm/aneurysm.py:174:183
 --8<--
 ```
 
@@ -230,9 +232,14 @@ examples/aneurysm/aneurysm.py
 
 ## 5. 结果展示
 
+对于血管瘤测试集（共2,962,708 个三维坐标点），模型预测结果如下所示。
+
 <figure markdown>
-  ![aneurysm_compare.jpg](../../images/aneurysm/aneurysm_compare.png){ loading=lazy }
+  ![aneurysm_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Aneurysm/aneurysm_compare.png){ loading=lazy }
+  <figcaption> 左侧为PaddleScience预测结果，中间为OpenFOAM求解器预测结果，右侧为两者的差值</figcaption>
 </figure>
+
+可以看到对于管壁压力$p(x,y,z)$，模型的预测结果和 OpenFOAM 结果基本一致。
 
 ## 6. 参考资料
 

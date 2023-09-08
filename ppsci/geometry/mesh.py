@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
@@ -151,8 +153,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -175,8 +177,8 @@ class Mesh(geometry.Geometry):
                 "Please install open3d with `pip install open3d` and "
                 "pymesh as https://pymesh.readthedocs.io/en/latest/installation.html."
             )
-        import open3d
-        import pymesh
+        import open3d  # isort:skip
+        import pymesh  # isort:skip
 
         open3d_mesh = open3d.geometry.TriangleMesh(
             open3d.utility.Vector3dVector(vertices),
@@ -430,7 +432,8 @@ class Mesh(geometry.Geometry):
         if evenly:
             # TODO(sensen): implement uniform sample for mesh interior.
             raise NotImplementedError(
-                "uniformly sample for interior in mesh is not support yet"
+                "uniformly sample for interior in mesh is not support yet, "
+                "you may need to set evenly=False in config dict of constraint"
             )
         points, areas = self.random_points(n, random, criteria)
 

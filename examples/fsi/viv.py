@@ -132,7 +132,7 @@ if __name__ == "__main__":
     )
     # train model
     solver.train()
-    # # evaluate after finished training
+    # evaluate after finished training
     solver.eval()
     # visualize prediction after finished training
     solver.visualize()

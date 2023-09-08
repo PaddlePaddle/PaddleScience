@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Union
 
@@ -26,14 +28,14 @@ class NavierStokes(base.PDE):
     $$
     \begin{cases}
         \dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z} = 0 \\
-        \dfrac{\partial u}{\partial t} + u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} + w\dfrac{\partial w}{\partial z} =
+        \dfrac{\partial u}{\partial t} + u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial y} + w\dfrac{\partial u}{\partial z} =
             - \dfrac{1}{\rho}\dfrac{\partial p}{\partial x}
             + \nu(
                 \dfrac{\partial ^2 u}{\partial x ^2}
                 + \dfrac{\partial ^2 u}{\partial y ^2}
                 + \dfrac{\partial ^2 u}{\partial z ^2}
             ) \\
-        \dfrac{\partial v}{\partial t} + u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} + w\dfrac{\partial w}{\partial z} =
+        \dfrac{\partial v}{\partial t} + u\dfrac{\partial v}{\partial x} + v\dfrac{\partial v}{\partial y} + w\dfrac{\partial v}{\partial z} =
             - \dfrac{1}{\rho}\dfrac{\partial p}{\partial y}
             + \nu(
                 \dfrac{\partial ^2 v}{\partial x ^2}

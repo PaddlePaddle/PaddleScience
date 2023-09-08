@@ -16,6 +16,8 @@
 This module is adapted from [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 from typing import Optional
 
 import paddle

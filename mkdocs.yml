@@ -42,12 +42,16 @@ nav:
           - ViV: zh/examples/viv.md
         - 流体:
           - Aneurysm: zh/examples/aneurysm.md
+          - ShockWave: zh/examples/shock_wave.md
           - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - Darcy2D: zh/examples/darcy2d.md
+          - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
         - 材料:
           - hPINNs: zh/examples/hpinns.md
+        - 结构:
+          - Bracket: zh/examples/bracket.md
       - 数据驱动:
         - 方程求解:
           - DeepHPMs: zh/examples/deephpms.md
@@ -60,6 +64,9 @@ nav:
         - 流体:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - tempoGAN: zh/examples/tempoGAN.md
+      - 数理融合:
+        - 流体:
+          - BubbleNet: zh/examples/bubble.md
   - API文档:
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
@@ -79,6 +86,7 @@ nav:
       - ppsci.utils: zh/api/utils.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
+      - ppsci.experimental: zh/api/experimental.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md
@@ -86,7 +94,6 @@ nav:
   - 技术稿件: zh/technical_doc.md
   - 共创计划: zh/cooperation.md
   - 实训社区: https://aistudio.baidu.com/aistudio/projectoverview/public?topic=15
-  - 旧版文档: https://paddlescience.paddlepaddle.org.cn/index.html
 
 # Configuration
 theme:
@@ -111,6 +118,7 @@ theme:
     - content.code.select
     - content.code.annotate
     - search.highlight
+    - content.tabs.link
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -133,6 +141,7 @@ plugins:
       handlers:
         python:
           paths: [./ppsci]
+  - mkdocs-video
 
 # Extensions
 markdown_extensions:
@@ -152,6 +161,8 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 # Extra javascripts
 extra_javascript:

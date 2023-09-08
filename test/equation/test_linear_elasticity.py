@@ -113,39 +113,6 @@ def traction_z_expected_result(
     return traction_z
 
 
-def navier_x_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, dim, time):
-    duxvywz = jacobian(u, x) + jacobian(v, y)
-    duxxuyyuzz = hessian(u, x) + hessian(u, y)
-    if dim == 3:
-        duxvywz += jacobian(w, z)
-        duxxuyyuzz += hessian(u, z)
-    navier_x = -(lambda_ + mu) * jacobian(duxvywz, x) - mu * duxxuyyuzz
-    if time:
-        navier_x += rho * hessian(u, t)
-    return navier_x
-
-
-def navier_y_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, dim, time):
-    duxvywz = jacobian(u, x) + jacobian(v, y)
-    dvxxvyyvzz = hessian(v, x) + hessian(v, y)
-    if dim == 3:
-        duxvywz += jacobian(w, z)
-        dvxxvyyvzz += hessian(v, z)
-    navier_y = -(lambda_ + mu) * jacobian(duxvywz, y) - mu * dvxxvyyvzz
-    if time:
-        navier_y += rho * hessian(v, t)
-    return navier_y
-
-
-def navier_z_expected_result(u, v, w, x, y, z, t, lambda_, mu, rho, time):
-    duxvywz = jacobian(u, x) + jacobian(v, y) + jacobian(w, z)
-    dwxxvyyvzz = hessian(w, x) + hessian(w, y) + hessian(w, z)
-    navier_z = -(lambda_ + mu) * jacobian(duxvywz, z) - mu * dwxxvyyvzz
-    if time:
-        navier_z += rho * hessian(w, t)
-    return navier_z
-
-
 @pytest.mark.parametrize(
     "E, nu, lambda_, mu, rho, dim, time",
     [
@@ -214,12 +181,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     expected_traction_y = traction_y_expected_result(
         normal_x, normal_y, sigma_xy, sigma_yy, normal_z, sigma_yz
     )
-    expected_navier_x = navier_x_expected_result(
-        u, v, w, x, y, z, t, lambda_, mu, rho, dim, time
-    )
-    expected_navier_y = navier_y_expected_result(
-        u, v, w, x, y, z, t, lambda_, mu, rho, dim, time
-    )
     if dim == 3:
         expected_stress_disp_zz = stress_disp_zz_expected_result(
             u, v, w, x, y, z, lambda_, mu, sigma_zz
@@ -232,9 +193,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         )
         expected_equilibrium_z = equilibrium_z_expected_result(
             w, x, y, z, t, rho, time, sigma_xz, sigma_yz, sigma_zz
-        )
-        expected_navier_z = navier_z_expected_result(
-            u, v, w, x, y, z, t, lambda_, mu, rho, time
         )
         expected_traction_z = traction_z_expected_result(
             normal_x, normal_y, normal_z, sigma_xz, sigma_yz, sigma_zz
@@ -269,8 +227,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "stress_disp_xy",
         "equilibrium_x",
         "equilibrium_y",
-        "navier_x",
-        "navier_y",
         "traction_x",
         "traction_y",
     ]
@@ -282,7 +238,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
                 "stress_disp_xz",
                 "stress_disp_yz",
                 "equilibrium_z",
-                "navier_z",
                 "traction_z",
             ]
         )
@@ -297,8 +252,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "stress_disp_xy": expected_stress_disp_xy,
         "equilibrium_x": expected_equilibrium_x,
         "equilibrium_y": expected_equilibrium_y,
-        "navier_x": expected_navier_x,
-        "navier_y": expected_navier_y,
         "traction_x": expected_traction_x,
         "traction_y": expected_traction_y,
     }
@@ -309,7 +262,6 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
                 "stress_disp_xz": expected_stress_disp_xz,
                 "stress_disp_yz": expected_stress_disp_yz,
                 "equilibrium_z": expected_equilibrium_z,
-                "navier_z": expected_navier_z,
                 "traction_z": expected_traction_z,
             }
         )

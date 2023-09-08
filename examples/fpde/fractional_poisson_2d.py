@@ -178,10 +178,8 @@ if __name__ == "__main__":
         "y": y.reshape([-1, 1]),
     }
     label_data = u_solution_func(input_data).reshape([x.shape[0], -1])
-    output_data = solver.predict(input_data)
-    output_data = {
-        k: v.numpy().reshape([x.shape[0], -1]) for k, v in output_data.items()
-    }
+    output_data = solver.predict(input_data, return_numpy=True)
+    output_data = {k: v.reshape([x.shape[0], -1]) for k, v in output_data.items()}
 
     fig = plt.figure()
     # plot prediction

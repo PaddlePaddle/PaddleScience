@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Dict
 from typing import List
@@ -48,7 +50,7 @@ class SGD:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.SGD(1e-3)((model,))
+        >>> opt = ppsci.optimizer.SGD(1e-3)(model)
     """
 
     def __init__(
@@ -98,7 +100,7 @@ class Momentum:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)((model,))
+        >>> opt = ppsci.optimizer.Momentum(1e-3, 0.9)(model)
     """
 
     def __init__(
@@ -190,7 +192,7 @@ class Adam:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.Adam(1e-3)((model,))
+        >>> opt = ppsci.optimizer.Adam(1e-3)(model)
     """
 
     def __init__(
@@ -258,7 +260,7 @@ class LBFGS:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.LBFGS(1e-3)((model,))
+        >>> opt = ppsci.optimizer.LBFGS(1e-3)(model)
     """
 
     def __init__(
@@ -328,7 +330,7 @@ class RMSProp:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.RMSProp(1e-3)((model,))
+        >>> opt = ppsci.optimizer.RMSProp(1e-3)(model)
     """
 
     def __init__(
@@ -388,7 +390,7 @@ class AdamW:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> opt = ppsci.optimizer.AdamW(1e-3)(model)
     """
 
     def __init__(
