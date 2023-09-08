@@ -150,7 +150,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                 tmp = next(iter(tmp.values()))
             target_metric = float(tmp)
 
-    return target_metric
+    return target_metric, metric
 
 
 def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
@@ -251,7 +251,7 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
                 tmp = next(iter(tmp.values()))
             target_metric = tmp
 
-    return target_metric
+    return target_metric, metric
 
 
 def eval_func(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
