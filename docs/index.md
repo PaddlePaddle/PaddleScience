@@ -4,7 +4,7 @@
 
 PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
 
-![panorama](./images/overview/panorama.png)
+![panorama](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png)
 
 ## 特性
 
