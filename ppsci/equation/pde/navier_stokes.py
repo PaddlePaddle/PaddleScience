@@ -20,6 +20,7 @@ from typing import Union
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
+from ppsci.utils.paddle_printer import SympyToPaddle
 
 
 class NavierStokes(base.PDE):
@@ -57,13 +58,21 @@ class NavierStokes(base.PDE):
         rho (float): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
+        use_sympy (bool): Whether the euqation is expressed by sympy(It means paddle_printer.py will be used).
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.NavierStokes(0.1, 1.0, 3, False)
     """
 
-    def __init__(self, nu: Union[float, Callable], rho: float, dim: int, time: bool):
+    def __init__(
+        self,
+        nu: Union[float, Callable],
+        rho: float,
+        dim: int,
+        time: bool,
+        use_sympy: bool = False,
+    ):
         super().__init__()
         self.nu = nu
         self.rho = rho
@@ -86,7 +95,7 @@ class NavierStokes(base.PDE):
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_x = (
-                u * jacobian(u, x)
+                +u * jacobian(u, x)
                 + v * jacobian(u, y)
                 - nu * hessian(u, x)
                 - nu * hessian(u, y)
@@ -101,14 +110,15 @@ class NavierStokes(base.PDE):
                 momentum_x -= nu * hessian(u, z)
             return momentum_x
 
-        self.add_equation("momentum_x", momentum_x_compute_func)
+        if use_sympy is False:
+            self.add_equation("momentum_x", momentum_x_compute_func)
 
         def momentum_y_compute_func(out):
             nu = self.nu(out) if callable(self.nu) else self.nu
             x, y = out["x"], out["y"]
             u, v, p = out["u"], out["v"], out["p"]
             momentum_y = (
-                u * jacobian(v, x)
+                +u * jacobian(v, x)
                 + v * jacobian(v, y)
                 - nu * hessian(v, x)
                 - nu * hessian(v, y)
@@ -123,7 +133,75 @@ class NavierStokes(base.PDE):
                 momentum_y -= nu * hessian(v, z)
             return momentum_y
 
-        self.add_equation("momentum_y", momentum_y_compute_func)
+        if use_sympy is False:
+            self.add_equation("momentum_y", momentum_y_compute_func)
+
+        def momentum_x_symbol_func():
+            x, y, z, t = self.create_symbols("x, y, z, t")
+            input_variables = (x, y, z, t)
+            u = self.create_function("u", input_variables)
+            v = self.create_function("v", input_variables)
+            p = self.create_function("p", input_variables)
+            nu = (
+                self.create_function("nu", input_variables)
+                if callable(self.nu)
+                else self.nu
+            )
+            sympy_expr = 0
+
+            if self.time:
+                sympy_expr += u.diff(t)
+
+            if self.dim == 3:
+                w = self.create_function("w", input_variables)
+                sympy_expr += w * u.diff(z)
+                sympy_expr -= (nu * u.diff(z)).diff(z)
+
+            sympy_expr += (
+                +u * (u.diff(x))
+                + v * (u.diff(y))
+                + 1 / rho * p.diff(x)
+                - (nu * u.diff(x)).diff(x)
+                - (nu * u.diff(y)).diff(y)
+            )
+            return SympyToPaddle(sympy_expr, "momentum_x")
+
+        if use_sympy is True:
+            self.add_equation("momentum_x", momentum_x_symbol_func())
+
+        def momentum_y_symbol_func():
+            x, y, z, t = self.create_symbols("x, y, z, t")
+            input_variables = (x, y, z, t)
+            u = self.create_function("u", input_variables)
+            v = self.create_function("v", input_variables)
+            p = self.create_function("p", input_variables)
+            nu = (
+                self.create_function("nu", input_variables)
+                if callable(self.nu)
+                else self.nu
+            )
+            sympy_expr = 0
+
+            if self.time:
+                sympy_expr += u.diff(t)
+
+            if self.dim == 3:
+                w = self.create_function("w", input_variables)
+                sympy_expr += w * v.diff(z)
+                sympy_expr -= (nu * v.diff(z)).diff(z)
+
+            sympy_expr += (
+                +u * v.diff(x)
+                + v * v.diff(y)
+                + 1 / rho * p.diff(y)
+                - (nu * v.diff(x)).diff(x)
+                - (nu * v.diff(y)).diff(y)
+            )
+
+            return SympyToPaddle(sympy_expr, "momentum_y")
+
+        if use_sympy is True:
+            self.add_equation("momentum_y", momentum_y_symbol_func())
 
         if self.dim == 3:
 
@@ -145,4 +223,5 @@ class NavierStokes(base.PDE):
                     momentum_z += jacobian(w, t)
                 return momentum_z
 
-            self.add_equation("momentum_z", momentum_z_compute_func)
+            if use_sympy is False:
+                self.add_equation("momentum_z", momentum_z_compute_func)

@@ -18,6 +18,7 @@ Code below is heavily based on [https://github.com/lululxvi/deepxde](https://git
 from __future__ import annotations
 
 import abc
+from typing import Dict
 from typing import Tuple
 
 import numpy as np
@@ -64,6 +65,22 @@ class Geometry:
         )
         return self.random_points(n)
 
+    def sdf_func(self, points: np.ndarray) -> np.ndarray:
+        """Compute sdf."""
+        raise NotImplementedError("Geometry.sdf_func is not implemented")
+
+    def sdf_gradient(self, points, delta=(0.0001,)) -> Dict[str, np.ndarray]:
+        """Compute gradient of sdf."""
+        delta = delta * self.ndim
+        sdf_grad = {}
+        for i, key in enumerate(self.dim_keys):
+            d = np.zeros_like(points)
+            d[:, i] += delta[i]
+            sdf_grad["sdf__" + key] = -(
+                self.sdf_func(points + d) - self.sdf_func(points - d)
+            ) / (2 * delta[i])
+        return sdf_grad
+
     def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
@@ -96,14 +113,25 @@ class Geometry:
                     "please check correctness of geometry and given creteria."
                 )
 
-        # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
-        if hasattr(self, "sdf_func"):
-            sdf = -self.sdf_func(x)
-            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        # if sdf_fun/sdf_grad/area added,
+        # return x_dict and sdf_grad_dict/area_dict, else, only return the x_dict
+        sdf = -self.sdf_func(x)
+        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+        sdf_grad_dict = self.sdf_gradient(x)
+
+        if hasattr(self, "area"):
+            if self.ndim == 1:
+                area = self.perimeter
+            elif self.ndim == 2:
+                area = self.area
+            elif self.ndim == 3:
+                area = self.volume
+            area_dict = misc.convert_to_dict(np.full((n, 1), area / n), ("area",))
         else:
-            sdf_dict = {}
+            area_dict = {}
+
         x_dict = misc.convert_to_dict(x, self.dim_keys)
-        return {**x_dict, **sdf_dict}
+        return {**x_dict, **sdf_dict, **sdf_grad_dict, **area_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -167,6 +195,16 @@ class Geometry:
             area_dict = misc.convert_to_dict(area[:, 1:], ["area"])
             return {**x_dict, **normal_dict, **area_dict}
 
+        if self.ndim == 2:
+            if (criteria is not None) and misc.typename(self) == "Line":
+                area = self._approximate_area(criteria)
+            elif criteria is None:
+                area = self.perimeter
+            else:
+                raise NotImplementedError("self._approximate_area is not implemented")
+            area_dict = {"area": np.full_like(next(iter(x_dict.values())), area / n)}
+            return {**x_dict, **normal_dict, **area_dict}
+
         return {**x_dict, **normal_dict}
 
     @abc.abstractmethod
@@ -190,6 +228,12 @@ class Geometry:
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
 
     def union(self, other):
+        """CSG Union."""
+        from ppsci.geometry import csg
+
+        return csg.CSGUnion(self, other)
+
+    def __add__(self, other):
         """CSG Union."""
         from ppsci.geometry import csg
 

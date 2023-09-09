@@ -63,7 +63,7 @@ class SupervisedValidator(base.Validator):
     def __init__(
         self,
         dataloader_cfg: Dict[str, Any],
-        loss: loss.Loss,
+        loss: Optional[loss.Loss] = None,
         output_expr: Optional[Dict[str, Callable]] = None,
         metric: Optional[Dict[str, metric.Metric]] = None,
         name: Optional[str] = None,

@@ -22,8 +22,10 @@ from ppsci.utils.checker import run_check
 from ppsci.utils.checker import run_check_mesh
 from ppsci.utils.config import AttrDict
 from ppsci.utils.expression import ExpressionSolver
+from ppsci.utils.logger import save_to_csv
 from ppsci.utils.misc import AverageMeter
 from ppsci.utils.misc import set_random_seed
+from ppsci.utils.paddle_printer import paddle_lambdify
 from ppsci.utils.reader import load_csv_file
 from ppsci.utils.reader import load_mat_file
 from ppsci.utils.reader import load_npz_file
@@ -38,6 +40,7 @@ __all__ = [
     "logger",
     "misc",
     "reader",
+    "save_to_csv",
     "profiler",
     "load_csv_file",
     "load_mat_file",
@@ -54,4 +57,5 @@ __all__ = [
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
+    "paddle_lambdify",
 ]

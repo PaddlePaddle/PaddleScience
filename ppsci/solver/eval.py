@@ -20,8 +20,7 @@ from paddle import io
 
 from ppsci.solver import printer
 from ppsci.utils import misc
-
-# from ppsci.utils import profiler
+from ppsci.utils import save_to_csv
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -39,6 +38,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
         float: Target metric computed during evaluation.
     """
     target_metric: float = None
+    metric_summary_dict = misc.Prettydefaultdict(float)
     for _, _validator in solver.validator.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
@@ -75,7 +75,7 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
                     label_dict,
                     weight_dict,
                 )
-
+            print(f"loss({_validator.name})")
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
             # collect batch data
@@ -131,17 +131,24 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
 
         metric = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
-            metric_dict = metric_func(all_output, all_label)
+            metric_dict = metric_func({**all_output, **all_input}, all_label)
             metric[metric_name] = metric_dict
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
-                if metric_str not in solver.eval_output_info:
-                    solver.eval_output_info[metric_str] = misc.AverageMeter(
+                if metric_str not in metric_summary_dict:
+                    metric_summary_dict[metric_str] = misc.AverageMeter(
                         metric_str, ".5f"
                     )
-                solver.eval_output_info[metric_str].update(
-                    float(metric_value), num_samples
-                )
+                metric_summary_dict[metric_str].update(float(metric_value), num_samples)
+
+        save_to_csv(
+            solver.output_dir,
+            solver.eval_freq,
+            "validator",
+            epoch_id,
+            _validator.name,
+            metric_dict,
+        )
 
         # use the first metric for return value
         if target_metric is None:
@@ -149,7 +156,6 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             while isinstance(tmp, dict):
                 tmp = next(iter(tmp.values()))
             target_metric = float(tmp)
-
     return target_metric
 
 

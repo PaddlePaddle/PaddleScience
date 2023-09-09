@@ -103,18 +103,23 @@ class IntegralConstraint(base.Constraint):
 
         # prepare input
         input_list = []
-        for _ in range(
+        for i in range(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
         ):
+            random_trans = (
+                criteria.set_trans(i)
+                if criteria and hasattr(criteria, "set_trans")
+                else 0
+            )
             input = geom.sample_boundary(
                 dataloader_cfg["integral_batch_size"], random, criteria
             )
+            input["x"] = input["x"] + random_trans
             input_list.append(input)
         input = misc.stack_dict_list(input_list)
         # shape of each input is [batch_size, integral_batch_size, ndim]
 
         # prepare label
-        # shape of each label is [batch_size, ndim]
         label = {}
         for key, value in label_dict.items():
             if isinstance(value, (int, float)):
@@ -143,6 +148,7 @@ class IntegralConstraint(base.Constraint):
                     )
             else:
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
+        # shape of each label is [batch_size, ndim]
 
         # prepare weight
         # shape of each weight is [batch_size, ndim]

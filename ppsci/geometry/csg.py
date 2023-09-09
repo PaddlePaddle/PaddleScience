@@ -43,6 +43,30 @@ class CSGUnion(geometry.Geometry):
         )
         self.geom1 = geom1
         self.geom2 = geom2
+        self.area = (
+            geom1.area + geom2.area
+        )  # assum no area intersection, fix while sampling
+
+        n = 1000
+        n1 = int(
+            self.geom1.perimeter / (self.geom1.perimeter + self.geom2.perimeter) * n
+        )
+        n2 = n - n1
+        geom1_boundary_points = self.geom1.random_boundary_points(n1, random="pseudo")
+        geom1_boundary_points = geom1_boundary_points[
+            ~self.geom2.is_inside(geom1_boundary_points)
+        ]
+
+        geom2_boundary_points = self.geom2.random_boundary_points(n2, random="pseudo")
+        geom2_boundary_points = geom2_boundary_points[
+            ~self.geom1.is_inside(geom2_boundary_points)
+        ]
+
+        points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
+        points = np.random.permutation(points)
+        self.perimeter = (
+            (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
+        )
 
     def is_inside(self, x):
         return np.logical_or(self.geom1.is_inside(x), self.geom2.is_inside(x))
@@ -84,18 +108,24 @@ class CSGUnion(geometry.Geometry):
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size = 0
         while _size < n:
-            geom1_boundary_points = self.geom1.random_boundary_points(n, random=random)
+            n1 = int(self.geom1.perimeter / self.perimeter * n)
+            n2 = n - n1
+            geom1_boundary_points = self.geom1.random_boundary_points(n1, random=random)
             geom1_boundary_points = geom1_boundary_points[
                 ~self.geom2.is_inside(geom1_boundary_points)
             ]
 
-            geom2_boundary_points = self.geom2.random_boundary_points(n, random=random)
+            geom2_boundary_points = self.geom2.random_boundary_points(n2, random=random)
             geom2_boundary_points = geom2_boundary_points[
                 ~self.geom1.is_inside(geom2_boundary_points)
             ]
 
             points = np.concatenate((geom1_boundary_points, geom2_boundary_points))
             points = np.random.permutation(points)
+
+            self.perimeter = (
+                (self.geom1.perimeter + self.geom2.perimeter) * len(points) / (n1 + n2)
+            )
 
             if len(points) > n - _size:
                 points = points[: n - _size]
@@ -147,6 +177,9 @@ class CSGDifference(geometry.Geometry):
         super().__init__(geom1.ndim, geom1.bbox, geom1.diam)
         self.geom1 = geom1
         self.geom2 = geom2
+        self.area = (
+            geom1.area - geom2.area
+        )  # assum full area intersection, fix while sampling
 
     def is_inside(self, x):
         return np.logical_and(self.geom1.is_inside(x), ~self.geom2.is_inside(x))
@@ -215,7 +248,7 @@ class CSGDifference(geometry.Geometry):
         return x
 
     def sdf_func(self, points: np.ndarray) -> np.ndarray:
-        """Compute signed distance field of CSG difference of two geometries.
+        """Compute signed distance field of CSG difference of two geometries. geom1 - geom2
 
         Args:
             points (np.ndarray): The coordinate points used to calculate the SDF
