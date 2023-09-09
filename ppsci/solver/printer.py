@@ -80,14 +80,15 @@ def log_train_info(
 
     logger.scaler(
         {
-            **{"lr": trainer.optimizer.get_lr()},
+            "train/": trainer.optimizer.get_lr(),
             **{
-                f"train_{key}": trainer.train_output_info[key].avg
+                f"train/{key}": trainer.train_output_info[key].avg
                 for key in trainer.train_output_info
             },
         },
         step=trainer.global_step,
         wandb_writer=trainer.wandb_writer,
+        vdl_writer=trainer.vdl_writer,
     )
 
 
@@ -120,11 +121,15 @@ def log_eval_info(
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 
-    for key in trainer.eval_output_info:
-        logger.scaler(
-            name=f"eval/{key}",
-            value=trainer.eval_output_info[key].avg,
-            step=trainer.global_step,
-            vdl_writer=trainer.vdl_writer,
-            wandb_writer=trainer.wandb_writer,
-        )
+    logger.scaler(
+        {
+            "train/": trainer.optimizer.get_lr(),
+            **{
+                f"train/{key}": trainer.eval_output_info[key].avg
+                for key in trainer.eval_output_info
+            },
+        },
+        step=trainer.global_step,
+        wandb_writer=trainer.wandb_writer,
+        vdl_writer=trainer.vdl_writer,
+    )
