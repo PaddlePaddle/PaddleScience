@@ -54,9 +54,11 @@ SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.Min,
     sp.Abs,
     sp.Heaviside,
+    sp.Add,
+    sp.Mul,
 ]
 
-PADDLE_FUNC_MAP = {
+SYMPT_TO_PADDLE = {
     sp.sin: paddle.sin,
     sp.cos: paddle.cos,
     sp.exp: paddle.exp,
@@ -67,6 +69,8 @@ PADDLE_FUNC_MAP = {
     sp.Min: paddle.minimum,
     sp.Abs: paddle.abs,
     sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+    # NOTE: sp.Add and sp.Mul is not included here for unalignment with sympy
+    # and are implemented manually.
 }
 
 
@@ -157,28 +161,29 @@ class OperatorNode(Node):
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
 
         if self.expr.func == sp.Add:
-            self._operator_func = self._add_operator_func
+            self._apply_func = self._add_operator_func
         elif self.expr.func == sp.Mul:
-            self._operator_func = self._mul_operator_func
+            self._apply_func = self._mul_operator_func
         elif self.expr.func == sp.Derivative:
-            self._operator_func = self._derivate_operator_func
+            self._apply_func = self._derivate_operator_func
+        elif self.expr.func == sp.Heaviside:
+            self._apply_func = self._heaviside_operator_func
+            self._auxiliary_func = SYMPT_TO_PADDLE[sp.Heaviside]
         else:
-            if self.expr.func == sp.Heaviside:
-                self._operator_func = self._heaviside_operator_func
-                self._compute_func = PADDLE_FUNC_MAP[sp.Heaviside]
-            else:
-                self._operator_func = self._vanilla_operator_func
-                self._compute_func = PADDLE_FUNC_MAP[self.expr.func]
+            self._apply_func = self._vanilla_operator_func
+            self._auxiliary_func = SYMPT_TO_PADDLE[self.expr.func]
 
     def forward(self, data_dict: DATA_DICT):
         # use cache
         if self.key in data_dict:
             return data_dict
 
-        return self._operator_func(data_dict)
+        return self._apply_func(data_dict)
 
     def _add_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = sum([data_dict[child] for child in self.childs])
+        data_dict[self.key] = data_dict[self.childs[0]]
+        for p in self.childs[1:]:
+            data_dict[self.key] += data_dict[p]
         return data_dict
 
     def _mul_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
@@ -199,11 +204,11 @@ class OperatorNode(Node):
         return data_dict
 
     def _heaviside_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = self._compute_func(data_dict[self.childs[0]])
+        data_dict[self.key] = self._auxiliary_func(data_dict[self.childs[0]])
         return data_dict
 
     def _vanilla_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
-        data_dict[self.key] = self._compute_func(
+        data_dict[self.key] = self._auxiliary_func(
             *tuple(data_dict[child] for child in self.childs)
         )
         return data_dict
@@ -289,17 +294,17 @@ class ComposedNode(nn.Layer):
     Compose list of several callable objects together.
     """
 
-    def __init__(self, funcs: List[Node]):
+    def __init__(self, callable_nodes: List[Node]):
         super().__init__()
-        self.funcs = funcs
+        self.callable_nodes = callable_nodes
 
     def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
-        # call all funcs in order
-        for func in self.funcs:
+        # call all callable_nodes in order
+        for func in self.callable_nodes:
             data_dict = func(data_dict)
 
         # return result of last node(root node) for target
-        return data_dict[self.funcs[-1].key]
+        return data_dict[self.callable_nodes[-1].key]
 
 
 def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
@@ -332,17 +337,99 @@ def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
     return nodes
 
 
+def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
+    try:
+        import pygraphviz
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            "Please install pygraphviz by steps below:\n"
+            "1. apt-get install graphviz graphviz-dev\n"
+            "2. python -m pip install pygraphviz"
+        )
+
+    SYMPY_BUILTIN_NAME = {
+        sp.sin: "sin",
+        sp.cos: "cos",
+        sp.exp: "exp",
+        sp.Pow: "Pow",
+        sp.log: "log",
+        sp.tan: "tan",
+        sp.Max: "Max",
+        sp.Min: "Min",
+        sp.Abs: "Abs",
+        sp.Heaviside: "Heaviside",
+        sp.Add: "Add",
+        sp.Mul: "Mul",
+    }
+    naming_counter = {k: 0 for k in SYMPY_BUILTIN_NAME}
+
+    def get_operator_name(node):
+        ret = f"{SYMPY_BUILTIN_NAME[node.func]}_{naming_counter[node.func]}"
+        naming_counter[node.func] += 1
+        return ret
+
+    graph = pygraphviz.AGraph(directed=True, rankdir="TB")
+    C_FUNC = "#9196f1"  # purple color function node
+    C_DATA = "#feb64d"  # oringe color for data node
+    C_EDGE = "#000000"  # black color for edge
+
+    def add_edge(u: str, v: str, u_color: str = C_DATA, v_color: str = C_DATA):
+        """Add an edge from `u` to `v`.
+
+        Args:
+            u (str): Name of begin node u.
+            v (str): Name of end node v.
+            u_color (str, optional): _description_. Defaults to C_DATA.
+            v_color (str, optional): _description_. Defaults to C_DATA.
+        """
+        graph.add_node(u, style="filled", shape="ellipse", color=u_color)
+        graph.add_node(v, style="filled", shape="ellipse", color=v_color)
+        graph.add_edge(u, v, color=C_EDGE, style="solid", penwidth=0.5, arrowsize=0.5)
+
+    for node in nodes:
+        if isinstance(node, tuple(SYMPY_BUILTIN_NAME.keys())):
+            operator_str = get_operator_name(node)
+            for arg in node.args:
+                add_edge(_cvt_to_key(arg), operator_str, v_color=C_FUNC)
+            add_edge(operator_str, _cvt_to_key(node), u_color=C_FUNC)
+        if isinstance(node, sp.Function):
+            for arg in node.args:
+                add_edge(_cvt_to_key(arg), str(node), v_color=C_FUNC)
+            add_edge(str(node), _cvt_to_key(node), u_color=C_FUNC)
+        elif isinstance(node, sp.Derivative):
+            add_edge(str(node), _cvt_to_key(node), u_color=C_FUNC)
+            add_edge(_cvt_to_key(node.args[0]), str(node), v_color=C_FUNC)
+            for arg in node.args[1:]:
+                add_edge(_cvt_to_key(arg[0]), str(node), v_color=C_FUNC)
+
+    # export graph to image
+    from ppsci.utils import logger
+
+    graph.layout()
+    image_path = f"{graph_filename}.png"
+    dot_path = f"{graph_filename}.dot"
+    graph.draw(image_path, prog="dot")
+    graph.write(dot_path)
+    logger.message(
+        f"Computational graph has been writen to {image_path} and {dot_path},"
+        "dot file can be visualized at https://dreampuf.github.io/GraphvizOnline/"
+    )
+
+
 def sympy_to_function(
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
+    graph_filename: Optional[str] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
     Args:
         expr (sp.Expr): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
-        extra_parameters (Optional[nn.ParameterList], optional): Extra learnable parameters. Defaults to None.
+        extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters. Defaults to None.
+        graph_filename (Optional[str]): Save computational graph to `graph_filename.png`
+            for given `expr`, if `graph_filename` is not None and a valid string, such as 'momentum_x'. Defaults to None.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data in dict given.
@@ -394,6 +481,9 @@ def sympy_to_function(
     # expr = sp.expand(expr)
     # expr = sp.simplify(expr)
 
+    # remove 1.0 from sympy expression tree
+    expr = expr.subs(1.0, 1)
+
     # convert sympy expression tree to list of nodes in postorder
     sympy_nodes = []
     sympy_nodes = _post_traverse(expr, sympy_nodes)
@@ -419,12 +509,8 @@ def sympy_to_function(
     # convert sympy node to callable node
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
-        if (
-            isinstance(node, tuple(PADDLE_FUNC_MAP.keys()))
-            or node.is_Add
-            or node.is_Mul
-            or node.is_Derivative
-            or node.is_Pow
+        if isinstance(
+            node, tuple(SYMPT_TO_PADDLE.keys()) + (sp.Add, sp.Mul, sp.Derivative)
         ):
             callable_nodes.append(OperatorNode(node))
         elif isinstance(node, sp.Function):
@@ -460,6 +546,10 @@ def sympy_to_function(
             raise NotImplementedError(
                 f"The node {node} is not supported in sympy_to_function."
             )
+
+    # NOTE: Visualize computational graph using 'pygraphviz'
+    if isinstance(graph_filename, str):
+        _visualize_graph(sympy_nodes, graph_filename)
 
     # Compose callable nodes into one callable object
     return ComposedNode(callable_nodes)
