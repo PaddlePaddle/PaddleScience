@@ -19,6 +19,8 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import sympy as sp
+
 from ppsci.equation.pde import base
 
 
@@ -92,7 +94,7 @@ class NavierStokes(base.PDE):
 
         u = self.create_function("u", invars)
         v = self.create_function("v", invars)
-        w = self.create_function("w", invars)
+        w = self.create_function("w", invars) if dim == 3 else sp.Number(0)
         p = self.create_function("p", invars)
 
         continuity = u.diff(x) + v.diff(y) + w.diff(z)

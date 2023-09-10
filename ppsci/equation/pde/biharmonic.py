@@ -62,6 +62,6 @@ class Biharmonic(base.PDE):
         biharmonic = -self.q / self.D
         for invar_i in invars:
             for invar_j in invars:
-                biharmonic += u.diff(invar_i).diff(invar_i).diff(invar_j).diff(invar_j)
+                biharmonic += u.diff(invar_i, 2).diff(invar_j, 2)
 
         self.add_equation("biharmonic", biharmonic)

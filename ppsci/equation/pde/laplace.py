@@ -46,6 +46,6 @@ class Laplace(base.PDE):
 
         laplace = 0
         for invar in invars:
-            laplace += u.diff(invar).diff(invar)
+            laplace += u.diff(invar, 2)
 
         self.add_equation("laplace", laplace)

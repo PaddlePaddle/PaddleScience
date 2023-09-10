@@ -50,6 +50,6 @@ class NormalDotVec(base.PDE):
 
         normal_dot_vec = 0
         for (vec, normal) in zip(vec_vars, normals):
-            normal_dot_vec += vec * normal
+            normal_dot_vec += normal * vec
 
         self.add_equation("normal_dot_vec", normal_dot_vec)

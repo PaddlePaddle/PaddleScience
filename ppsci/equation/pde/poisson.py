@@ -44,6 +44,6 @@ class Poisson(base.PDE):
 
         poisson = 0
         for invar in invars:
-            poisson += p.diff(invar).diff(invar)
+            poisson += p.diff(invar, 2)
 
         self.add_equation("poisson", poisson)

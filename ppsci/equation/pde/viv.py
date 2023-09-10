@@ -60,9 +60,5 @@ class Vibration(base.PDE):
         eta = self.create_function("eta", (t_f,))
         k1 = self.create_symbols(self.k1.name)
         k2 = self.create_symbols(self.k2.name)
-        f = (
-            self.rho * eta.diff(t_f).diff(t_f)
-            + sp.exp(k1) * eta.diff(t_f)
-            + sp.exp(k2) * eta
-        )
+        f = self.rho * eta.diff(t_f, 2) + sp.exp(k1) * eta.diff(t_f) + sp.exp(k2) * eta
         self.add_equation("f", f)
