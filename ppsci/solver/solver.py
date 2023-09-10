@@ -334,7 +334,6 @@ class Solver:
                             extra_parameters,
                             # os.path.join(self.output_dir, container.name, expr),  # HACK: Activate it for DEBUG.
                         )
-                        logger.message(f"Convert expression[{name}]: {expr}")
 
         if self.constraint:
             convert_expr(self.constraint)
