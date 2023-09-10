@@ -37,7 +37,7 @@ from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 
 __all__ = [
-    "sympy_to_function",
+    "lambdify",
 ]
 
 
@@ -45,30 +45,60 @@ DATA_DICT: TypeAlias = Dict[str, paddle.Tensor]
 
 SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.sin,
+    sp.sinh,
+    sp.asin,
     sp.cos,
+    sp.acos,
+    sp.cosh,
+    sp.tan,
+    sp.atan,
+    sp.atan2,
+    sp.acosh,
+    sp.asinh,
+    sp.tanh,
+    sp.atanh,
+    sp.erf,
+    sp.loggamma,
     sp.exp,
     sp.Pow,
     sp.log,
-    sp.tan,
     sp.Max,
     sp.Min,
     sp.Abs,
     sp.Heaviside,
+    sp.sign,
+    sp.ceiling,
+    sp.floor,
     sp.Add,
     sp.Mul,
 ]
 
 SYMPT_TO_PADDLE = {
     sp.sin: paddle.sin,
+    sp.sinh: paddle.sinh,
+    sp.asin: paddle.asin,
     sp.cos: paddle.cos,
+    sp.acos: paddle.acos,
+    sp.cosh: paddle.cosh,
+    sp.tan: paddle.tan,
+    sp.atan: paddle.atan,
+    sp.atan2: paddle.atan2,
+    sp.acosh: paddle.acosh,
+    sp.asinh: paddle.asinh,
+    sp.tanh: paddle.tanh,
+    sp.atanh: paddle.atanh,
+    sp.erf: paddle.erf,
+    sp.loggamma: paddle.lgamma,
     sp.exp: paddle.exp,
     sp.Pow: paddle.pow,
     sp.log: paddle.log,
-    sp.tan: paddle.tan,
     sp.Max: paddle.maximum,
     sp.Min: paddle.minimum,
     sp.Abs: paddle.abs,
     sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+    sp.sign: paddle.sign,
+    sp.ceiling: paddle.ceil,
+    sp.floor: paddle.floor,
     # NOTE: sp.Add and sp.Mul is not included here for unalignment with sympy
     # and are implemented manually.
 }
@@ -115,7 +145,10 @@ class Node(nn.Layer):
         raise NotImplementedError("Node.forward is not implemented")
 
     def __str__(self):
-        return f"{self.__class__.__name__}(expr: {self.expr}, expr_type: {type(self.expr)})"
+        return (
+            f"{self.__class__.__name__}(expr: {self.expr}, "
+            f"expr_type: {type(self.expr)})"
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}(expr: {self.expr})"
@@ -151,7 +184,7 @@ class OperatorNode(Node):
 
     def __init__(self, expr: SYMPY_BUILTIN_FUNC):
         super().__init__(expr)
-        # preprocess childs' key instead of processing at run-time
+        # preprocess childs' key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         if self.expr.func == sp.Derivative:
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
@@ -169,6 +202,10 @@ class OperatorNode(Node):
         elif self.expr.func == sp.Heaviside:
             self._apply_func = self._heaviside_operator_func
             self._auxiliary_func = SYMPT_TO_PADDLE[sp.Heaviside]
+        elif self.expr.func == sp.Min:
+            self._apply_func = self._minimum_operator_func
+        elif self.expr.func == sp.Max:
+            self._apply_func = self._maximum_operator_func
         else:
             self._apply_func = self._vanilla_operator_func
             self._auxiliary_func = SYMPT_TO_PADDLE[self.expr.func]
@@ -205,6 +242,28 @@ class OperatorNode(Node):
 
     def _heaviside_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
         data_dict[self.key] = self._auxiliary_func(data_dict[self.childs[0]])
+        return data_dict
+
+    def _minimum_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        data_dict[self.key] = paddle.minimum(
+            data_dict[self.childs[0]], data_dict[self.childs[1]]
+        )
+        for i in range(2, len(self.childs)):
+            data_dict[self.key] = paddle.minimum(
+                data_dict[data_dict[self.key]],
+                data_dict[data_dict[self.childs[i]]],
+            )
+        return data_dict
+
+    def _maximum_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        data_dict[self.key] = paddle.maximum(
+            data_dict[self.childs[0]], data_dict[self.childs[1]]
+        )
+        for i in range(2, len(self.childs)):
+            data_dict[self.key] = paddle.maximum(
+                data_dict[data_dict[self.key]],
+                data_dict[data_dict[self.childs[i]]],
+            )
         return data_dict
 
     def _vanilla_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
@@ -259,7 +318,8 @@ class ConstantNode(Node):
             self.expr = float(self.expr)
         else:
             raise TypeError(
-                f"expr({expr}) should be Float/Integer/Boolean/Rational, but got {type(self.expr)}"
+                "expr({expr}) should be Float/Integer/Boolean/Rational, "
+                f"but got {type(self.expr)}"
             )
         self.expr = paddle.to_tensor(self.expr)
 
@@ -349,15 +409,30 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
 
     SYMPY_BUILTIN_NAME = {
         sp.sin: "sin",
+        sp.sinh: "sinh",
+        sp.asin: "asin",
         sp.cos: "cos",
+        sp.acos: "acos",
+        sp.cosh: "cosh",
+        sp.tan: "tan",
+        sp.atan: "atan",
+        sp.atan2: "atan2",
+        sp.acosh: "acosh",
+        sp.asinh: "asinh",
+        sp.tanh: "tanh",
+        sp.atanh: "atanh",
+        sp.erf: "erf",
+        sp.loggamma: "loggamma",
         sp.exp: "exp",
         sp.Pow: "Pow",
         sp.log: "log",
-        sp.tan: "tan",
         sp.Max: "Max",
         sp.Min: "Min",
         sp.Abs: "Abs",
         sp.Heaviside: "Heaviside",
+        sp.sign: "sign",
+        sp.ceiling: "ceiling",
+        sp.floor: "floor",
         sp.Add: "Add",
         sp.Mul: "Mul",
     }
@@ -411,12 +486,12 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
     logger.message(
-        f"Computational graph has been writen to {image_path} and {dot_path},"
+        f"Computational graph has been writen to {image_path} and {dot_path}. "
         "dot file can be visualized at https://dreampuf.github.io/GraphvizOnline/"
     )
 
 
-def sympy_to_function(
+def lambdify(
     expr: sp.Expr,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
@@ -426,26 +501,29 @@ def sympy_to_function(
 
     Args:
         expr (sp.Expr): Sympy expression to be converted.
-        models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for computing forward result in `LayerNode`.
-        extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters. Defaults to None.
+        models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for
+            computing forward result in `LayerNode`.
+        extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters.
+            Defaults to None.
         graph_filename (Optional[str]): Save computational graph to `graph_filename.png`
-            for given `expr`, if `graph_filename` is not None and a valid string, such as 'momentum_x'. Defaults to None.
+            for given `expr`, if `graph_filename` is not None and a valid string,
+            such as 'momentum_x'. Defaults to None.
 
     Returns:
-        ComposedNode: Callable object for computing expr with necessary input(s) data in dict given.
+        ComposedNode: Callable object for computing expr with necessary input(s) data
+            in dict given.
 
     Examples:
         >>> import paddle
+        >>> import ppsci
         >>> import sympy as sp
-        >>> from ppsci import arch
-        >>> from ppsci.utils import sym_to_func
 
         >>> a, b, c, x, y = sp.symbols("a b c x y")
         >>> u = sp.Function("u")(x, y)
         >>> v = sp.Function("v")(x, y)
         >>> z = -a + b * (c ** 2) + u * v + 2.3
 
-        >>> model = arch.MLP(("x", "y"), ("u", "v"), 4, 16)
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 4, 16)
 
         >>> batch_size = 13
         >>> a_tensor = paddle.randn([batch_size, 1])
@@ -461,7 +539,7 @@ def sympy_to_function(
         ...     -a_tensor + b_tensor * (c_tensor ** 2)
         ...     + u_tensor * v_tensor + 2.3
         ... )
-        >>> z_tensor_sympy = sym_to_func.sympy_to_function(z, model)(
+        >>> z_tensor_sympy = ppsci.lambdify(z, model)(
         ...     {
         ...         "a": a_tensor,
         ...         "b": b_tensor,
@@ -475,7 +553,7 @@ def sympy_to_function(
         True
     """
 
-    # NOTE: Those simplify methods seem complicate given expr instead, so not use them here
+    # NOTE: Those simplify methods may complicate given expr instead, so not use here
     # simplify expression to reduce nodes in tree
     # expr = sp.nsimplify(expr)
     # expr = sp.expand(expr)
@@ -488,7 +566,7 @@ def sympy_to_function(
     sympy_nodes = []
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
-    # remove unnecessary symbol node for already in input dict(except for paramter symbol)
+    # remove unnecessary symbol nodes already in input dict(except for paramter symbol)
     if not extra_parameters:
         extra_parameters = ()
     _parameter_names = tuple(param.name for param in extra_parameters)
@@ -528,9 +606,9 @@ def sympy_to_function(
                         )
                         if match_index is not None:
                             raise ValueError(
-                                f"Name of function({node}) should be unique along given models,"
-                                f" but got same output_key({node.func.name}) in models[{match_index}]"
-                                f" and models[{j}]."
+                                f"Name of function({node}) should be unique along given"
+                                f" models, but got same output_key({node.func.name}) "
+                                f"in models[{match_index}] and models[{j}]."
                             )
                         match_index = j
         elif node.is_Number or node.is_NumberSymbol:
@@ -543,9 +621,7 @@ def sympy_to_function(
                 )
             )
         else:
-            raise NotImplementedError(
-                f"The node {node} is not supported in sympy_to_function."
-            )
+            raise NotImplementedError(f"The node {node} is not supported in lambdify.")
 
     # NOTE: Visualize computational graph using 'pygraphviz'
     if isinstance(graph_filename, str):

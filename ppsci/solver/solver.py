@@ -44,7 +44,6 @@ from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
 from ppsci.utils import save_load
-from ppsci.utils import sym_to_func
 
 
 class Solver:
@@ -328,7 +327,7 @@ class Solver:
             for container in container_dict.values():
                 for name, expr in container.output_expr.items():
                     if isinstance(expr, sp.Basic):
-                        container.output_expr[name] = sym_to_func.sympy_to_function(
+                        container.output_expr[name] = ppsci.lambdify(
                             expr,
                             self.model,
                             extra_parameters,
