@@ -198,7 +198,7 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
-            if dist.get_rank() in [-1, 0]:
+            if dist.get_rank() == 0:
                 wandb.init(**wandb_config)
                 self.wandb_writer = wandb
                 if dist.get_world_size() > 1:
@@ -441,7 +441,7 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler(metric_dict, epoch_id, self.wandb_writer)
+                logger.scaler(metric_dict, epoch_id, self.vdl_writer, self.wandb_writer)
 
                 # visualize after evaluation
                 if self.visualizer is not None:

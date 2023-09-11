@@ -36,7 +36,8 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        float: Target metric computed during evaluation.
+        target_metric (float): Target metric computed during evaluation.
+        metric_dict_group (Dict[str,Dict[str, float]]): Target metric dict computed during evaluation.
     """
     target_metric: float = None
     for _, _validator in solver.validator.items():
@@ -129,10 +130,10 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
             if len(all_label[key]) > num_samples:
                 all_label[key] = all_label[key][:num_samples]
 
-        metric = misc.PrettyOrderedDict()
+        metric_dict_group = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             metric_dict = metric_func(all_output, all_label)
-            metric[metric_name] = metric_dict
+            metric_dict_group[metric_name] = metric_dict
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
                 if metric_str not in solver.eval_output_info:
@@ -145,12 +146,12 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
 
         # use the first metric for return value
         if target_metric is None:
-            tmp = metric
+            tmp = metric_dict_group
             while isinstance(tmp, dict):
                 tmp = next(iter(tmp.values()))
             target_metric = float(tmp)
 
-    return target_metric, metric
+    return target_metric, metric_dict_group
 
 
 def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
@@ -162,7 +163,8 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        float: Target metric computed during evaluation.
+        target_metric (float): Target metric computed during evaluation.
+        metric_dict_group (Dict[str,Dict[str, float]]): Target metric dict computed during evaluation.
     """
     target_metric: float = None
     for _, _validator in solver.validator.items():
@@ -172,7 +174,7 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
             num_samples = _validator.data_loader.num_samples
 
         loss_dict = misc.Prettydefaultdict(float)
-        metric = misc.PrettyOrderedDict()
+        metric_dict_group = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
@@ -206,10 +208,10 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
             # collect batch metric
             for metric_name, metric_func in _validator.metric.items():
                 metric_dict = metric_func(output_dict, label_dict)
-                if metric_name not in metric:
-                    metric[metric_name] = misc.Prettydefaultdict(list)
+                if metric_name not in metric_dict_group:
+                    metric_dict_group[metric_name] = misc.Prettydefaultdict(list)
                 for var_name, metric_value in metric_dict.items():
-                    metric[metric_name][var_name].append(
+                    metric_dict_group[metric_name][var_name].append(
                         metric_value
                         if solver.world_size == 1
                         else misc.all_gather(metric_value)
@@ -232,11 +234,11 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
             batch_tic = time.perf_counter()
 
         # concate all metric and discard metric of padded sample(s)
-        for metric_name, metric_dict in metric.items():
+        for metric_name, metric_dict in metric_dict_group.items():
             for var_name, metric_value in metric_dict.items():
                 metric_value = paddle.concat(metric_value)[:num_samples]
                 metric_value = float(metric_value.mean())
-                metric[metric_name][var_name] = metric_value
+                metric_dict_group[metric_name][var_name] = metric_value
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
                 if metric_str not in solver.eval_output_info:
                     solver.eval_output_info[metric_str] = misc.AverageMeter(
@@ -246,12 +248,12 @@ def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> flo
 
         # use the first metric for return value
         if target_metric is None:
-            tmp = metric
+            tmp = metric_dict_group
             while isinstance(tmp, dict):
                 tmp = next(iter(tmp.values()))
             target_metric = tmp
 
-    return target_metric, metric
+    return target_metric, metric_dict_group
 
 
 def eval_func(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
