@@ -2,9 +2,9 @@ import paddle
 import pytest
 import sympy as sp
 
+import ppsci
 from ppsci import arch
 from ppsci import equation
-from ppsci.utils import sym_to_func
 
 __all__ = []
 
@@ -58,7 +58,7 @@ def test_biharmonic(dim):
     biharmonic_equation = equation.Biharmonic(dim=dim, q=q, D=D)
     for name, expr in biharmonic_equation.equations.items():
         if isinstance(expr, sp.Basic):
-            biharmonic_equation.equations[name] = sym_to_func.sympy_to_function(
+            biharmonic_equation.equations[name] = ppsci.lambdify(
                 expr,
                 model,
             )

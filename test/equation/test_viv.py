@@ -3,9 +3,9 @@ import pytest
 import sympy as sp
 from paddle.nn import initializer
 
+import ppsci
 from ppsci import arch
 from ppsci.equation.pde import Vibration
-from ppsci.utils import sym_to_func
 
 
 @pytest.mark.parametrize("rho,k1,k2", [(1.0, 4.0, -1.0)])
@@ -54,7 +54,7 @@ def test_vibration(rho, k1, k2):
     vibration_equation = Vibration(rho=rho, k1=k1, k2=k2)
     for name, expr in vibration_equation.equations.items():
         if isinstance(expr, sp.Basic):
-            vibration_equation.equations[name] = sym_to_func.sympy_to_function(
+            vibration_equation.equations[name] = ppsci.lambdify(
                 expr,
                 model,
                 vibration_equation.learnable_parameters,

@@ -2,9 +2,9 @@ import paddle
 import pytest
 import sympy as sp
 
+import ppsci
 from ppsci import arch
 from ppsci import equation
-from ppsci.utils import sym_to_func
 
 __all__ = []
 
@@ -49,7 +49,7 @@ def test_l1loss_mean(dim):
     laplace_equation = equation.Laplace(dim=dim)
     for name, expr in laplace_equation.equations.items():
         if isinstance(expr, sp.Basic):
-            laplace_equation.equations[name] = sym_to_func.sympy_to_function(
+            laplace_equation.equations[name] = ppsci.lambdify(
                 expr,
                 model,
             )

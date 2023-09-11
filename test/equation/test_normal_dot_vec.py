@@ -2,9 +2,9 @@ import paddle
 import pytest
 import sympy as sp
 
+import ppsci
 from ppsci import arch
 from ppsci import equation
-from ppsci.utils import sym_to_func
 
 
 def compute_func(x: tuple, y: tuple):
@@ -40,7 +40,7 @@ def test_normal_dot_vel():
     norm_doc_vec = equation.NormalDotVec(output_dims)
     for name, expr in norm_doc_vec.equations.items():
         if isinstance(expr, sp.Basic):
-            norm_doc_vec.equations[name] = sym_to_func.sympy_to_function(
+            norm_doc_vec.equations[name] = ppsci.lambdify(
                 expr,
                 model,
             )

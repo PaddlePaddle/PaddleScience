@@ -2,9 +2,9 @@ import paddle
 import pytest
 import sympy as sp
 
+import ppsci
 from ppsci import arch
 from ppsci import equation
-from ppsci.utils import sym_to_func
 
 
 def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
@@ -138,7 +138,7 @@ def test_navierstokes(nu, rho, dim, time):
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
     for name, expr in navier_stokes_equation.equations.items():
         if isinstance(expr, sp.Basic):
-            navier_stokes_equation.equations[name] = sym_to_func.sympy_to_function(
+            navier_stokes_equation.equations[name] = ppsci.lambdify(
                 expr,
                 model,
             )

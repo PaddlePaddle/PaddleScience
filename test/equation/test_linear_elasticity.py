@@ -2,9 +2,9 @@ import paddle
 import pytest
 import sympy as sp
 
+import ppsci
 from ppsci import arch
 from ppsci import equation
-from ppsci.utils import sym_to_func
 
 
 def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
@@ -231,7 +231,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     )
     for name, expr in linear_elasticity.equations.items():
         if isinstance(expr, sp.Basic):
-            linear_elasticity.equations[name] = sym_to_func.sympy_to_function(
+            linear_elasticity.equations[name] = ppsci.lambdify(
                 expr,
                 model,
             )
