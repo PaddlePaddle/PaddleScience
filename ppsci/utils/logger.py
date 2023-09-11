@@ -194,11 +194,9 @@ def scaler(
             wandb_writer.add_scalar(name, step, value)
 
     if wandb_writer is not None:
-        wandb_writer.log({"step": step, **metric_dict})
-        if dist.get_world_size() > 1:
-            dist.barrier()
-    else:
-        if dist.get_world_size() > 1:
+        if dist.get_rank() == 0:
+            wandb_writer.log({"step": step, **metric_dict})
+        else:
             dist.barrier()
 
 

@@ -14,6 +14,8 @@
 
 import time
 from typing import TYPE_CHECKING
+from typing import Dict
+from typing import Tuple
 
 import paddle
 from paddle import io
@@ -27,7 +29,9 @@ if TYPE_CHECKING:
     from ppsci import solver
 
 
-def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
+def _eval_by_dataset(
+    solver: "solver.Solver", epoch_id: int, log_freq: int
+) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric on total samples.
 
     Args:
@@ -154,7 +158,9 @@ def _eval_by_dataset(solver: "solver.Solver", epoch_id: int, log_freq: int) -> f
     return target_metric, metric_dict_group
 
 
-def _eval_by_batch(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
+def _eval_by_batch(
+    solver: "solver.Solver", epoch_id: int, log_freq: int
+) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluate with computing metric by batch, which is memory-efficient.
 
     Args:

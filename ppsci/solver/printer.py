@@ -123,11 +123,8 @@ def log_eval_info(
 
     logger.scaler(
         {
-            "eval/lr": trainer.optimizer.get_lr(),
-            **{
-                f"eval/{key}": trainer.eval_output_info[key].avg
-                for key in trainer.eval_output_info
-            },
+            f"eval/{key}": trainer.eval_output_info[key].avg
+            for key in trainer.eval_output_info
         },
         step=trainer.global_step,
         vdl_writer=trainer.vdl_writer,
