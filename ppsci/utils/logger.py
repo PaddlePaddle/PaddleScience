@@ -191,11 +191,13 @@ def scaler(
     """
     if vdl_writer is not None:
         for name, value in metric_dict.items():
-            wandb_writer.add_scalar(name, step, value)
+            vdl_writer.add_scalar(name, step, value)
 
     if wandb_writer is not None:
         if dist.get_rank() == 0:
             wandb_writer.log({"step": step, **metric_dict})
+            if dist.get_world_size() > 1:
+                dist.barrier()
         else:
             dist.barrier()
 
