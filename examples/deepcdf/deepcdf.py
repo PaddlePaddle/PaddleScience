@@ -140,24 +140,6 @@ if __name__ == "__main__":
     # maunally build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
-    # manually build validator
-    # eval_dataloader_cfg = {
-    #     "dataset": {
-    #         "name": "NamedArrayDataset",
-    #         "input": {"input": test_x},
-    #         "label": {"output": train_y},
-    #     },
-    # }
-
-    # sup_validator = ppsci.validate.SupervisedValidator(
-    #     train_dataloader_cfg,
-    #     ppsci.loss.MSELoss("sum"),
-    #     {"u_idn": lambda out: out["u_idn"]},
-    #     {"l2": ppsci.metric.L2Rel()},
-    #     name="u_L2_sup",
-    # )
-    # validator = {sup_validator.name: sup_validator}
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
