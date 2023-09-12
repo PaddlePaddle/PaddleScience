@@ -16,6 +16,7 @@ import os
 import pickle
 from typing import Dict
 from typing import List
+from typing import Tuple
 
 import numpy as np
 
@@ -23,7 +24,9 @@ import ppsci
 from ppsci.utils import logger
 
 
-def split_tensors(*tensors: List[np.array], ratio: float):
+def split_tensors(
+    *tensors: List[np.array], ratio: float
+) -> Tuple[List[np.array], List[np.array]]:
     """Split tensors to two parts.
 
     Args:
@@ -107,7 +110,7 @@ if __name__ == "__main__":
         output_dict: Dict[str, np.ndarray],
         label_dict: Dict[str, np.ndarray] = None,
         weight_dict: Dict[str, np.ndarray] = None,
-    ):
+    ) -> float:
         output = output_dict["output"]
         y = label_dict["output"]
         loss_u = (output[:, 0:1, :, :] - y[:, 0:1, :, :]) ** 2
