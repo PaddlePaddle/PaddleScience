@@ -86,7 +86,7 @@ class GeometryValidator(base.Validator):
         self.output_expr = output_expr
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
 
         nx = dataloader_cfg["total_size"]
         self.num_timestamps = 1

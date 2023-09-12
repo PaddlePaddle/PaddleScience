@@ -85,10 +85,9 @@ class BoundaryConstraint(base.Constraint):
         weight_dict: Optional[Dict[str, Union[float, Callable]]] = None,
         name: str = "BC",
     ):
-        self.output_expr = output_expr
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
         self.output_expr = {
             k: v for k, v in output_expr.items() if k in self.output_keys
         }
