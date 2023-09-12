@@ -14,6 +14,8 @@
 
 import os
 import pickle
+from typing import Dict
+from typing import List
 
 import numpy as np
 
@@ -21,14 +23,23 @@ import ppsci
 from ppsci.utils import logger
 
 
-def split_tensors(*tensors, ratio):
-    assert len(tensors) > 0
+def split_tensors(*tensors: List[np.array], ratio: float):
+    """Split tensors to two parts.
+
+    Args:
+      tensors (List[np.array]): non-empty tensor list.
+      ratio (float): split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
+    """
+    if len(tensors) == 0:
+        raise ValueError("Tensors shouldn't be empty.")
     split1, split2 = [], []
     count = len(tensors[0])
     for tensor in tensors:
-        assert len(tensor) == count
-        split1.append(tensor[: int(len(tensor) * ratio)])
-        split2.append(tensor[int(len(tensor) * ratio) :])
+        if len(tensor) != count:
+            raise ValueError("The size of tensor should be same.")
+        x = int(len(tensor) * ratio)
+        split1.append(tensor[:x])
+        split2.append(tensor[x:])
     if len(tensors) == 1:
         split1, split2 = split1[0], split2[0]
     return split1, split2
@@ -40,17 +51,22 @@ if __name__ == "__main__":
     DATASET_PATH = "./datasets/deepCDF/"
     OUTPUT_DIR = "./output_deepCDF/"
 
+    # initialize logger
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
     # initialize datasets
     with open(os.path.join(DATASET_PATH, "dataX.pkl"), "rb") as file:
         x = pickle.load(file)
     with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
         y = pickle.load(file)
 
-    train_dataset, test_dataset = split_tensors(x, y, ratio=float(0.7))
+    # slipt dataset to train dataset and test datatset
+    SLIPT_RATIO = 0.7
+    train_dataset, test_dataset = split_tensors(x, y, ratio=SLIPT_RATIO)
     train_x, train_y = train_dataset[:]
     test_x, test_y = test_dataset[:]
 
-    channels_weights = np.reshape(
+    CHANNELS_WEIGHTS = np.reshape(
         np.sqrt(
             np.mean(
                 np.transpose(y, (0, 2, 3, 1)).reshape((981 * 172 * 79, 3)) ** 2, axis=0
@@ -62,11 +78,11 @@ if __name__ == "__main__":
     # initialize parameters
     IN_CHANNELS = 3
     OUT_CHANNELS = 3
-    KERNET_SIZE = 5
+    KERNEL_SIZE = 5
     FILTERS = [8, 16, 32, 32]
     BATCH_NORM = False
     WEIGHT_NORM = False
-    EPOCHS = 1000
+    EPOCHS = 1
     LEARNING_RATE = 0.001
     WEIGHT_DECAY = 0.005
     BATCH_SIZE = 64
@@ -77,31 +93,27 @@ if __name__ == "__main__":
         "output",
         IN_CHANNELS,
         OUT_CHANNELS,
-        filters=FILTERS,
-        kernel_size=KERNET_SIZE,
-        batch_norm=BATCH_NORM,
+        KERNEL_SIZE,
+        FILTERS,
         weight_norm=WEIGHT_NORM,
+        batch_norm=BATCH_NORM,
     )
 
     # initialize Adam optimizer
     optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
 
     # define loss
-    def loss_expr(output_dict, *args):
+    def loss_expr(
+        output_dict: Dict[str, np.ndarray],
+        label_dict: Dict[str, np.ndarray] = None,
+        weight_dict: Dict[str, np.ndarray] = None,
+    ):
         output = output_dict["output"]
-        y = args[0]["output"]
-        lossu = ((output[:, 0, :, :] - y[:, 0, :, :]) ** 2).reshape(
-            (output.shape[0], 1, output.shape[2], output.shape[3])
-        )
-        lossv = ((output[:, 1, :, :] - y[:, 1, :, :]) ** 2).reshape(
-            (output.shape[0], 1, output.shape[2], output.shape[3])
-        )
-        lossp = (
-            ((output[:, 2, :, :] - y[:, 2, :, :])).reshape(
-                (output.shape[0], 1, output.shape[2], output.shape[3])
-            )
-        ).abs()
-        loss = (lossu + lossv + lossp) / channels_weights
+        y = label_dict["output"]
+        loss_u = (output[:, 0:1, :, :] - y[:, 0:1, :, :]) ** 2
+        loss_v = (output[:, 1:2, :, :] - y[:, 1:2, :, :]) ** 2
+        loss_p = (output[:, 2:3, :, :] - y[:, 2:3, :, :]).abs()
+        loss = (loss_u + loss_v + loss_p) / CHANNELS_WEIGHTS
         return loss.sum()
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -128,16 +140,16 @@ if __name__ == "__main__":
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint=constraint,
-        output_dir=OUTPUT_DIR,
-        optimizer=optimizer,
+        constraint,
+        OUTPUT_DIR,
+        optimizer,
         epochs=EPOCHS,
     )
 
     solver.train()
 
     ############### evaluation after training ###############
-    output_dict = solver.predict({"input": test_x})
+    output_dict = solver.predict({"input": test_x}, return_numpy=True)
     out = output_dict["output"]
 
     Total_MSE = ((out - test_y) ** 2).sum() / len(test_x)
@@ -146,5 +158,5 @@ if __name__ == "__main__":
     p_MSE = ((out[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
 
     logger.info(
-        f"Total MSE is {Total_MSE.detach().numpy()[0]}, Ux MSE is {Ux_MSE.detach().numpy()[0]}, Uy MSE is {Uy_MSE.detach().numpy()[0]}, p MSE is {p_MSE.detach().numpy()[0]}"
+        f"Total MSE is {Total_MSE:.5f}, Ux MSE is {Ux_MSE:.5f}, Uy MSE is {Uy_MSE:.5f}, p MSE is {p_MSE:.5f}"
     )

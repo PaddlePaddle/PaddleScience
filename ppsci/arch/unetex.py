@@ -16,116 +16,143 @@ from typing import Optional
 from typing import Tuple
 
 import paddle
-import paddle.nn as nn
-import paddle.nn.functional as F
-from paddle.nn.utils import weight_norm
+from paddle import nn
 
 from ppsci.arch import base
 
 
 def create_layer(
-    in_channels,
-    out_channels,
+    in_channel,
+    out_channel,
     kernel_size,
-    wn=True,
-    bn=True,
+    weight_norm=True,
+    batch_norm=True,
     activation=nn.ReLU,
     convolution=nn.Conv2D,
 ):
-    assert kernel_size % 2 == 1
+    if kernel_size % 2 == 0:
+        raise ValueError("kernel_size should even number")
+    conv = convolution(in_channel, out_channel, kernel_size, padding=kernel_size // 2)
+    if weight_norm:
+        conv = nn.util.weight_norm(conv)
     layer = []
-    conv = convolution(in_channels, out_channels, kernel_size, padding=kernel_size // 2)
-    if wn:
-        conv = weight_norm(conv)
     layer.append(conv)
     if activation is not None:
         layer.append(activation())
-    if bn:
-        layer.append(nn.BatchNorm2D(out_channels))
+    if batch_norm:
+        layer.append(nn.BatchNorm2D(out_channel))
     return nn.Sequential(*layer)
 
 
 def create_encoder_block(
-    in_channels,
-    out_channels,
+    in_channel,
+    out_channel,
     kernel_size,
-    wn=True,
-    bn=True,
+    weight_norm=True,
+    batch_norm=True,
     activation=nn.ReLU,
     layers=2,
 ):
     encoder = []
-    for i in range(layers):
-        _in = out_channels
-        _out = out_channels
-        if i == 0:
-            _in = in_channels
+    encoder.append(
+        create_layer(
+            in_channel,
+            out_channel,
+            kernel_size,
+            weight_norm,
+            batch_norm,
+            activation,
+            nn.Conv2D,
+        )
+    )
+    for i in range(layers - 1):
         encoder.append(
-            create_layer(_in, _out, kernel_size, wn, bn, activation, nn.Conv2D)
+            create_layer(
+                out_channel,
+                out_channel,
+                kernel_size,
+                weight_norm,
+                batch_norm,
+                activation,
+                nn.Conv2D,
+            )
         )
     return nn.Sequential(*encoder)
 
 
 def create_decoder_block(
-    in_channels,
-    out_channels,
+    in_channel,
+    out_channel,
     kernel_size,
-    wn=True,
-    bn=True,
+    weight_norm=True,
+    batch_norm=True,
     activation=nn.ReLU,
     layers=2,
     final_layer=False,
 ):
     decoder = []
     for i in range(layers):
-        _in = in_channels
-        _out = in_channels
-        _bn = bn
+        _in = in_channel
+        _out = in_channel
+        _batch_norm = batch_norm
         _activation = activation
         if i == 0:
-            _in = in_channels * 2
+            _in = in_channel * 2
         if i == layers - 1:
-            _out = out_channels
+            _out = out_channel
             if final_layer:
-                _bn = False
+                _batch_norm = False
                 _activation = None
         decoder.append(
             create_layer(
-                _in, _out, kernel_size, wn, _bn, _activation, nn.Conv2DTranspose
+                _in,
+                _out,
+                kernel_size,
+                weight_norm,
+                _batch_norm,
+                _activation,
+                nn.Conv2DTranspose,
             )
         )
     return nn.Sequential(*decoder)
 
 
 def create_encoder(
-    in_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
+    in_channel, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
 ):
     encoder = []
     for i in range(len(filters)):
-        if i == 0:
-            encoder_layer = create_encoder_block(
-                in_channels, filters[i], kernel_size, wn, bn, activation, layers
-            )
-        else:
-            encoder_layer = create_encoder_block(
-                filters[i - 1], filters[i], kernel_size, wn, bn, activation, layers
-            )
+        encoder_layer = create_encoder_block(
+            in_channel if i == 0 else filters[i - 1],
+            filters[i],
+            kernel_size,
+            wn,
+            bn,
+            activation,
+            layers,
+        )
         encoder = encoder + [encoder_layer]
     return nn.Sequential(*encoder)
 
 
 def create_decoder(
-    out_channels, filters, kernel_size, wn=True, bn=True, activation=nn.ReLU, layers=2
+    out_channel,
+    filters,
+    kernel_size,
+    weight_norm=True,
+    batch_norm=True,
+    activation=nn.ReLU,
+    layers=2,
 ):
     decoder = []
     for i in range(len(filters)):
         if i == 0:
             decoder_layer = create_decoder_block(
                 filters[i],
-                out_channels,
+                out_channel,
                 kernel_size,
-                wn,
-                bn,
+                weight_norm,
+                batch_norm,
                 activation,
                 layers,
                 final_layer=True,
@@ -135,8 +162,8 @@ def create_decoder(
                 filters[i],
                 filters[i - 1],
                 kernel_size,
-                wn,
-                bn,
+                weight_norm,
+                batch_norm,
                 activation,
                 layers,
                 final_layer=False,
@@ -146,18 +173,18 @@ def create_decoder(
 
 
 class UNetEx(base.Arch):
-    """U-Net with 3 Decoders
+    """U-Net
 
     [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
 
     Args:
         input_key (str): Name of function data for input.
-        output_key (str): Name of function data for output).
-        in_channels (int): The input tensor channels.
-        out_channels (int): The output tensor channels.
+        output_key (str): Name of function data for output.
+        in_channel (int): Number of channels of input.
+        out_channel (int): Number of channels of output.
         kernel_size (int): Size of kernel of convolution layer. Defaults to 3.
         filters (Tuple[int, ...]): Number of filters. Defaults to [16, 32, 64].
-        layers (int): Number of Decoders. Defaults to 3.
+        layers (int): Number of encoders or decoders. Defaults to 3.
         weight_norm (bool): Whether use weight normalization layer. Defaults to True.
         batch_norm (bool): Whether add batch normalization layer. Defaults to True.
         activation (Optional[paddle.nn.Layer]): Name of activation function. Defaults to nn.ReLU.
@@ -165,31 +192,32 @@ class UNetEx(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, [8, 16, 32, 32], 5, Flase, False), wind_model)
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, [8, 16, 32, 32], 5, Flase, False)
     """
 
     def __init__(
         self,
         input_key: str,
         output_key: str,
-        in_channels: int,
-        out_channels: int,
+        in_channel: int,
+        out_channel: int,
         kernel_size: int = 3,
         filters: Tuple[int, ...] = [16, 32, 64],
         layers: int = 3,
         weight_norm: bool = True,
         batch_norm: bool = True,
-        activation: Optional[paddle.nn.Layer] = nn.ReLU,
-        final_activation: Optional[paddle.nn.Layer] = None,
+        activation: Optional[nn.Layer] = nn.ReLU,
+        final_activation: Optional[nn.Layer] = None,
     ):
+        if len(filters) == 0:
+            raise ValueError("The filters shouldn't be empty ")
+
         super().__init__()
         self.input_keys = (input_key,)
         self.output_keys = (output_key,)
-
-        assert len(filters) > 0
         self.final_activation = final_activation
         self.encoder = create_encoder(
-            in_channels,
+            in_channel,
             filters,
             kernel_size,
             weight_norm,
@@ -197,13 +225,12 @@ class UNetEx(base.Arch):
             activation,
             layers,
         )
-        decoders = []
-        for i in range(out_channels):
-            decoders.append(
-                create_decoder(
-                    1, filters, kernel_size, weight_norm, batch_norm, activation, layers
-                )
+        decoders = [
+            create_decoder(
+                1, filters, kernel_size, weight_norm, batch_norm, activation, layers
             )
+            for i in range(out_channel)
+        ]
         self.decoders = nn.Sequential(*decoders)
 
     def encode(self, x):
@@ -214,26 +241,26 @@ class UNetEx(base.Arch):
             x = encoder(x)
             sizes.append(x.shape)
             tensors.append(x)
-            x, ind = F.max_pool2d(x, 2, 2, return_mask=True)
+            x, ind = nn.functional.max_pool2d(x, 2, 2, return_mask=True)
             indices.append(ind)
         return x, tensors, indices, sizes
 
-    def decode(self, _x, _tensors, _indices, _sizes):
+    def decode(self, x, tensors, indices, sizes):
         y = []
         for _decoder in self.decoders:
-            x = _x
-            tensors = _tensors[:]
-            indices = _indices[:]
-            sizes = _sizes[:]
+            _x = x
+            _tensors = tensors[:]
+            _indices = indices[:]
+            _sizes = sizes[:]
             for decoder in _decoder:
-                tensor = tensors.pop()
-                size = sizes.pop()
-                ind = indices.pop()
-                # 反池化操作，为上采样
-                x = F.max_unpool2d(x, ind, 2, 2, output_size=size)
-                x = paddle.concat([tensor, x], axis=1)
-                x = decoder(x)
-            y.append(x)
+                tensor = _tensors.pop()
+                size = _sizes.pop()
+                indice = _indices.pop()
+                # upsample operations
+                _x = nn.functional.max_unpool2d(_x, indice, 2, 2, output_size=size)
+                _x = paddle.concat([tensor, _x], axis=1)
+                _x = decoder(_x)
+            y.append(_x)
         return paddle.concat(y, axis=1)
 
     def forward(self, x):
