@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 from typing import Tuple
+from typing import Type
 
 import paddle
 from paddle import nn
@@ -206,8 +206,8 @@ class UNetEx(base.Arch):
         layers: int = 3,
         weight_norm: bool = True,
         batch_norm: bool = True,
-        activation: Optional[nn.Layer] = nn.ReLU,
-        final_activation: Optional[nn.Layer] = None,
+        activation: Type[nn.Layer] = nn.ReLU,
+        final_activation: Type[nn.Layer] = None,
     ):
         if len(filters) == 0:
             raise ValueError("The filters shouldn't be empty ")
