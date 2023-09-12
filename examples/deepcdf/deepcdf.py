@@ -30,8 +30,8 @@ def split_tensors(
     """Split tensors to two parts.
 
     Args:
-      tensors (List[np.array]): non-empty tensor list.
-      ratio (float): split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
+      tensors (List[np.array]): Non-empty tensor list.
+      ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
     """
     if len(tensors) == 0:
         raise ValueError("Tensors shouldn't be empty.")
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             },
             "batch_size": BATCH_SIZE,
             "sampler": {
-                "name": "DistributedBatchSampler",
+                "name": "BatchSampler",
                 "drop_last": False,
                 "shuffle": True,
             },
