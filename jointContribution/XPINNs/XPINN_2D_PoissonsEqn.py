@@ -304,14 +304,14 @@ class Trainer:
         )
         self.dataset = dataset
 
-    def train(self, nIter, x_star1, x_star2, x_star3, u_exact2, u_exact3):
+    def train(self, n_iter, x_star1, x_star2, x_star3, u_exact2, u_exact3):
         mse_history1 = []
         mse_history2 = []
         mse_history3 = []
         l2_err2 = []
         l2_err3 = []
 
-        for it in range(nIter):
+        for it in range(n_iter):
             loss1_value, loss2_value, loss3_value = self.model(self.dataset)
             loss = loss1_value + loss2_value + loss3_value
             loss.backward()
