@@ -82,7 +82,7 @@ if __name__ == "__main__":
     FILTERS = [8, 16, 32, 32]
     BATCH_NORM = False
     WEIGHT_NORM = False
-    EPOCHS = 1
+    EPOCHS = 1000
     LEARNING_RATE = 0.001
     WEIGHT_DECAY = 0.005
     BATCH_SIZE = 64
