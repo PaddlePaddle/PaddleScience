@@ -40,8 +40,8 @@ def _eval_by_dataset(
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        target_metric (float): Target metric computed during evaluation.
-        metric_dict_group (Dict[str,Dict[str, float]]): Target metric dict computed during evaluation.
+        Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
+            computed during evaluation.
     """
     target_metric: float = None
     for _, _validator in solver.validator.items():
@@ -169,8 +169,8 @@ def _eval_by_batch(
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        target_metric (float): Target metric computed during evaluation.
-        metric_dict_group (Dict[str,Dict[str, float]]): Target metric dict computed during evaluation.
+        Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
+            computed during evaluation.
     """
     target_metric: float = None
     for _, _validator in solver.validator.items():
@@ -262,7 +262,9 @@ def _eval_by_batch(
     return target_metric, metric_dict_group
 
 
-def eval_func(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
+def eval_func(
+    solver: "solver.Solver", epoch_id: int, log_freq: int
+) -> Tuple[float, Dict[str, Dict[str, float]]]:
     """Evaluation function.
 
     Args:
@@ -271,7 +273,8 @@ def eval_func(solver: "solver.Solver", epoch_id: int, log_freq: int) -> float:
         log_freq (int): Log evaluation information every `log_freq` steps.
 
     Returns:
-        float: Target metric computed during evaluation.
+        Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
+            computed during evaluation.
     """
     if solver.compute_metric_by_batch:
         return _eval_by_batch(solver, epoch_id, log_freq)
