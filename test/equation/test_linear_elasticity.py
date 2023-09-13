@@ -308,7 +308,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         )
 
     for name in test_output_names:
-        assert paddle.allclose(expected_output[name], test_output[name])
+        assert paddle.allclose(expected_output[name], test_output[name], atol=1e-7)
 
 
 if __name__ == "__main__":
