@@ -205,7 +205,7 @@ if __name__ == "__main__":
     }
 
     sup_validator_idn = ppsci.validate.SupervisedValidator(
-        train_dataloader_cfg_idn,
+        eval_dataloader_cfg_idn,
         ppsci.loss.MSELoss("sum"),
         {key: (lambda out, k=key: out[k]) for key in ("u_idn", "v_idn")},
         {"l2": ppsci.metric.L2Rel()},
