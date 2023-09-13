@@ -140,6 +140,48 @@ if __name__ == "__main__":
     # maunally build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
+    # manually build validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {"input": test_x},
+            "label": {"output": test_y},
+        },
+        "batch_size": 8,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+
+    def metric_expr(
+        output_dict: Dict[str, np.ndarray],
+        label_dict: Dict[str, np.ndarray] = None,
+        weight_dict: Dict[str, np.ndarray] = None,
+    ) -> Dict[str, float]:
+        output = output_dict["output"]
+        y = label_dict["output"]
+        total_mse = ((output - y) ** 2).sum() / len(test_x)
+        ux_mse = ((output[:, 0, :, :] - test_y[:, 0, :, :]) ** 2).sum() / len(test_x)
+        uy_mse = ((output[:, 1, :, :] - test_y[:, 1, :, :]) ** 2).sum() / len(test_x)
+        p_mse = ((output[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
+        return {
+            "Total_MSE": total_mse,
+            "Ux_MSE": ux_mse,
+            "Uy_MSE": uy_mse,
+            "p_MSE": p_mse,
+        }
+
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.FunctionalLoss(loss_expr),
+        {"output": lambda out: out["output"]},
+        {"MSE": ppsci.metric.FunctionalMetric(metric_expr)},
+        name="mse_validator",
+    )
+    validator = {sup_validator.name: sup_validator}
+
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -147,19 +189,12 @@ if __name__ == "__main__":
         OUTPUT_DIR,
         optimizer,
         epochs=EPOCHS,
+        eval_during_train=True,
+        validator=validator,
     )
 
+    # train model
     solver.train()
 
-    ############### evaluation after training ###############
-    output_dict = solver.predict({"input": test_x}, return_numpy=True)
-    out = output_dict["output"]
-
-    Total_MSE = ((out - test_y) ** 2).sum() / len(test_x)
-    Ux_MSE = ((out[:, 0, :, :] - test_y[:, 0, :, :]) ** 2).sum() / len(test_x)
-    Uy_MSE = ((out[:, 1, :, :] - test_y[:, 1, :, :]) ** 2).sum() / len(test_x)
-    p_MSE = ((out[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
-
-    logger.info(
-        f"Total MSE is {Total_MSE:.5f}, Ux MSE is {Ux_MSE:.5f}, Uy MSE is {Uy_MSE:.5f}, p MSE is {p_MSE:.5f}"
-    )
+    # evaluate after finished training
+    solver.eval()
