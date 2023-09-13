@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import paddle
     from ppsci import constraint
     from ppsci import validate
+    from ppsci import arch
 
 from ppsci.autodiff import clear
 
@@ -54,7 +55,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dicts: Tuple[Dict[str, Callable], ...],
         input_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
-        model: nn.Layer,
+        model: arch.Arch,
         constraint: Dict[str, "constraint.Constraint"],
         label_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
         weight_dicts: Tuple[Dict[str, "paddle.Tensor"], ...],
@@ -65,7 +66,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dicts (Tuple[Dict[str, Callable], ...]): Tuple of expression dicts.
             input_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of input dicts.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
             constraint (Dict[str, "constraint.Constraint"]): Constraint dict.
             label_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of label dicts.
             weight_dicts (Tuple[Dict[str, paddle.Tensor], ...]): Tuple of weight dicts.
@@ -76,17 +77,13 @@ class ExpressionSolver(nn.Layer):
         output_dicts = []
         for i, expr_dict in enumerate(expr_dicts):
             # model forward
-            if callable(next(iter(expr_dict.values()))):
-                output_dict = model(input_dicts[i])
+            output_dict = model(input_dicts[i])
 
             # equation forward
+            data_dict = {k: v for k, v in input_dicts[i].items()}
+            data_dict.update(output_dict)
             for name, expr in expr_dict.items():
-                if name not in label_dicts[i]:
-                    continue
-                if callable(expr):
-                    output_dict[name] = expr({**output_dict, **input_dicts[i]})
-                else:
-                    raise TypeError(f"expr type({type(expr)}) is invalid")
+                output_dict[name] = expr(data_dict)
 
             # put field 'area' into output_dict
             if "area" in input_dicts[i]:
@@ -113,7 +110,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dict: Dict[str, Callable],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: nn.Layer,
+        model: arch.Arch,
         validator: "validate.Validator",
         label_dict: Dict[str, "paddle.Tensor"],
         weight_dict: Dict[str, "paddle.Tensor"],
@@ -124,7 +121,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dict (Dict[str, Callable]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
             validator (validate.Validator): Validator.
             label_dict (Dict[str, paddle.Tensor]): Label dict.
             weight_dict (Dict[str, paddle.Tensor]): Weight dict.
@@ -134,17 +131,13 @@ class ExpressionSolver(nn.Layer):
                 given validator.
         """
         # model forward
-        if callable(next(iter(expr_dict.values()))):
-            output_dict = model(input_dict)
+        output_dict = model(input_dict)
 
         # equation forward
+        data_dict = {k: v for k, v in input_dict.items()}
+        data_dict.update(output_dict)
         for name, expr in expr_dict.items():
-            if name not in label_dict:
-                continue
-            if callable(expr):
-                output_dict[name] = expr({**output_dict, **input_dict})
-            else:
-                raise TypeError(f"expr type({type(expr)}) is invalid")
+            output_dict[name] = expr(data_dict)
 
         # put field 'area' into output_dict
         if "area" in input_dict:
@@ -165,7 +158,7 @@ class ExpressionSolver(nn.Layer):
         self,
         expr_dict: Optional[Dict[str, Callable]],
         input_dict: Dict[str, "paddle.Tensor"],
-        model: nn.Layer,
+        model: arch.Arch,
     ) -> Dict[str, "paddle.Tensor"]:
         """Forward computation for visualization, including model forward and equation
         forward.
@@ -173,7 +166,7 @@ class ExpressionSolver(nn.Layer):
         Args:
             expr_dict (Optional[Dict[str, Callable]]): Expression dict.
             input_dict (Dict[str, paddle.Tensor]): Input dict.
-            model (nn.Layer): NN model.
+            model (arch.Arch): NN model.
 
         Returns:
             Dict[str, paddle.Tensor]: Result dict for given expression dict.
@@ -183,11 +176,10 @@ class ExpressionSolver(nn.Layer):
 
         if isinstance(expr_dict, dict):
             # equation forward
+            data_dict = {k: v for k, v in input_dict.items()}
+            data_dict.update(output_dict)
             for name, expr in expr_dict.items():
-                if callable(expr):
-                    output_dict[name] = expr({**output_dict, **input_dict})
-                else:
-                    raise TypeError(f"expr type({type(expr)}) is invalid")
+                output_dict[name] = expr(data_dict)
 
             # clear differentiation cache
             clear()

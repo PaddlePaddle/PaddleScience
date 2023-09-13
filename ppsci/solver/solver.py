@@ -27,6 +27,7 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.distributed as dist
+import sympy as sp
 import visualdl as vdl
 from packaging import version
 from paddle import amp
@@ -312,6 +313,40 @@ class Solver:
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
+
+        # convert sympy to callable object if exist
+        extra_parameters = []
+        for equation in self.equation.values():
+            extra_parameters += list(equation.learnable_parameters)
+
+        def convert_expr(
+            container_dict: Dict[
+                str,
+                Union[
+                    ppsci.constraint.Constraint,
+                    ppsci.validate.Validator,
+                    ppsci.visualize.Visualizer,
+                ],
+            ]
+        ) -> None:
+            for container in container_dict.values():
+                for name, expr in container.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        container.output_expr[name] = ppsci.lambdify(
+                            expr,
+                            self.model,
+                            extra_parameters,
+                            # os.path.join(self.output_dir, container.name, expr),  # HACK: Activate it for DEBUG.
+                        )
+
+        if self.constraint:
+            convert_expr(self.constraint)
+
+        if self.validator:
+            convert_expr(self.validator)
+
+        if self.visualizer:
+            convert_expr(self.visualizer)
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:

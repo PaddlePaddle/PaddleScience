@@ -19,5 +19,6 @@
         - load_checkpoint
         - load_pretrain
         - save_checkpoint
+        - lambdify
       show_root_heading: false
       heading_level: 3

@@ -29,9 +29,9 @@ class NamedArrayDataset(io.Dataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Optional[Dict[str, np.ndarray]], optional): Weight dict.
-        transforms (Optional[vision.Compose], optional): Compose object contains sample wise
-            transform(s).
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
 
     Examples:
         >>> import ppsci
