@@ -1,7 +1,0 @@
-numpy
-scipy
-matplotlib
-# GPU
-paddlepaddle-gpu
-# CPU
-# paddlepaddle
