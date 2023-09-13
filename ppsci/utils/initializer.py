@@ -92,9 +92,9 @@ def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=2.0, b=2.0):
 
         # Transform to proper mean, std
         _tensor = paddle.multiply(
-            _tensor, paddle.to_tensor(std * math.sqrt(2.0), _tensor.dtype)
+            _tensor, paddle.to_tensor(std * math.sqrt(2.0), tensor.dtype)
         )
-        _tensor = paddle.add(_tensor, paddle.to_tensor(mean, _tensor.dtype))
+        _tensor = paddle.add(_tensor, paddle.to_tensor(mean, tensor.dtype))
 
         # Clamp to ensure it"s in the proper range
         _tensor = paddle.clip(_tensor, min=a, max=b)
@@ -438,9 +438,10 @@ def linear_init_(module: nn.Layer) -> None:
     Args:
         module (nn.Layer): Linear Layer to be initialized.
     """
-    bound = 1 / math.sqrt(module.weight.shape[0])
-    uniform_(module.weight, -bound, bound)
+    kaiming_uniform_(module.weight, a=math.sqrt(5))
     if module.bias is not None:
+        fan_in, _ = _calculate_fan_in_and_fan_out(module.weight, reverse=True)
+        bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
         uniform_(module.bias, -bound, bound)
 
 
@@ -450,7 +451,9 @@ def conv_init_(module: nn.Layer) -> None:
     Args:
         module (nn.Layer): Convolution Layer to be initialized.
     """
-    bound = 1 / np.sqrt(np.prod(module.weight.shape[1:]))
-    uniform_(module.weight, -bound, bound)
+    kaiming_uniform_(module.weight, a=math.sqrt(5))
     if module.bias is not None:
-        uniform_(module.bias, -bound, bound)
+        fan_in, _ = _calculate_fan_in_and_fan_out(module.weight, reverse=False)
+        if fan_in != 0:
+            bound = 1 / math.sqrt(fan_in)
+            uniform_(module.bias, -bound, bound)

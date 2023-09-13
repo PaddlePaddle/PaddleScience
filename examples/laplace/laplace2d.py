@@ -29,7 +29,7 @@ if __name__ == "__main__":
     EVAL_FREQ = 200
 
     # set output directory
-    OUTPUT_DIR = "./output/laplace2d" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_laplace2d" if not args.output_dir else args.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set model

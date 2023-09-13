@@ -438,11 +438,11 @@ class Mesh(geometry.Geometry):
         points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
-        area_dict = misc.convert_to_dict(areas, ["area"])
+        area_dict = misc.convert_to_dict(areas, ("area",))
 
         # NOTE: add negtive to the sdf values because weight should be positive.
         sdf = -self.sdf_func(points)
-        sdf_dict = misc.convert_to_dict(sdf, ["sdf"])
+        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
 
         return {**x_dict, **area_dict, **sdf_dict}
 

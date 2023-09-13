@@ -64,7 +64,13 @@ class Geometry:
         )
         return self.random_points(n)
 
-    def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
+    def sample_interior(
+        self,
+        n,
+        random="pseudo",
+        criteria=None,
+        evenly=False,
+    ):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
@@ -103,6 +109,7 @@ class Geometry:
         else:
             sdf_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
+
         return {**x_dict, **sdf_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
