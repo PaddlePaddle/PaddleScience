@@ -91,8 +91,10 @@ def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=2.0, b=2.0):
         _tensor.erfinv_()
 
         # Transform to proper mean, std
-        _tensor = paddle.multiply(_tensor, paddle.to_tensor(std * math.sqrt(2.0)))
-        _tensor = paddle.add(_tensor, paddle.to_tensor(mean))
+        _tensor = paddle.multiply(
+            _tensor, paddle.to_tensor(std * math.sqrt(2.0), _tensor.dtype)
+        )
+        _tensor = paddle.add(_tensor, paddle.to_tensor(mean, _tensor.dtype))
 
         # Clamp to ensure it"s in the proper range
         _tensor = paddle.clip(_tensor, min=a, max=b)
