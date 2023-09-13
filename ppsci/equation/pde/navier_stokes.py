@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from typing import Callable
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -55,10 +54,12 @@ class NavierStokes(base.PDE):
     $$
 
     Args:
-        nu (Union[float, Callable]): Dynamic viscosity.
-        rho (float): Density.
+        nu (Union[float, str]): Dynamic viscosity.
+        rho (Union[float, str]): Density.
         dim (int): Dimension of equation.
         time (bool): Whether the euqation is time-dependent.
+        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -67,14 +68,17 @@ class NavierStokes(base.PDE):
 
     def __init__(
         self,
-        nu: Union[float, Callable],
-        rho: float,
+        nu: Union[float, str],
+        rho: Union[float, str],
         dim: int,
         time: bool,
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()
         self.detach_keys = detach_keys
+        self.dim = dim
+        self.time = time
+
         t, x, y, z = self.create_symbols("t x y z")
         invars = (x, y)
         if time:
@@ -82,15 +86,13 @@ class NavierStokes(base.PDE):
         if dim == 3:
             invars += (z,)
 
-        self.nu = nu
-        self.rho = rho
-        self.dim = dim
-        self.time = time
-
         if isinstance(nu, str):
             nu = self.create_function(nu, invars)
         if isinstance(rho, str):
             rho = self.create_function(rho, invars)
+
+        self.nu = nu
+        self.rho = rho
 
         u = self.create_function("u", invars)
         v = self.create_function("v", invars)

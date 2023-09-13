@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from ppsci.equation.pde import base
 
@@ -29,8 +30,10 @@ class Biharmonic(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
-        q (float): Load.
-        D (float): Rigidity.
+        q (Union[float, str]): Load.
+        D (Union[float, str]): Rigidity.
+        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -40,8 +43,8 @@ class Biharmonic(base.PDE):
     def __init__(
         self,
         dim: int,
-        q: float,
-        D: float,
+        q: Union[float, str],
+        D: Union[float, str],
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
         super().__init__()

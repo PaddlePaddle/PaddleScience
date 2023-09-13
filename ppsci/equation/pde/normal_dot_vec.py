@@ -30,6 +30,8 @@ class NormalDotVec(base.PDE):
     Args:
         vec_keys (Tuple[str, ...]): Keys for vectors, such as ("u", "v", "w") for
             velocity vector.
+        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -49,7 +51,7 @@ class NormalDotVec(base.PDE):
         normals = self.create_symbols("normal_x normal_y normal_z")
 
         normal_dot_vec = 0
-        for (vec, normal) in zip(vec_vars, normals):
+        for (normal, vec) in zip(normals, vec_vars):
             normal_dot_vec += normal * vec
 
         self.add_equation("normal_dot_vec", normal_dot_vec)

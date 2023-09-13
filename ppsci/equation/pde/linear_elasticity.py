@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import sympy as sp
 
@@ -38,13 +39,15 @@ class LinearElasticity(base.PDE):
     $$
 
     Args:
-        E (Optional[float]): The Young's modulus. Defaults to None.
-        nu (Optional[float]): The Poisson's ratio. Defaults to None.
-        lambda_ (Optional[float]): Lamé's first parameter. Defaults to None.
-        mu (Optional[float]): Lamé's second parameter (shear modulus). Defaults to None.
-        rho (float, optional): Mass density. Defaults to 1.
+        E (Optional[Union[float, str]]): The Young's modulus. Defaults to None.
+        nu (Optional[Union[float, str]]): The Poisson's ratio. Defaults to None.
+        lambda_ (Optional[Union[float, str]]): Lamé's first parameter. Defaults to None.
+        mu (Optional[Union[float, str]]): Lamé's second parameter (shear modulus). Defaults to None.
+        rho (Union[float, str], optional): Mass density. Defaults to 1.
         dim (int, optional): Dimension of the linear elasticity (2 or 3). Defaults to 3.
         time (bool, optional): Whether contains time data. Defaults to False.
+        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -55,11 +58,11 @@ class LinearElasticity(base.PDE):
 
     def __init__(
         self,
-        E: Optional[float] = None,
-        nu: Optional[float] = None,
-        lambda_: Optional[float] = None,
-        mu: Optional[float] = None,
-        rho: float = 1,
+        E: Optional[Union[float, str]] = None,
+        nu: Optional[Union[float, str]] = None,
+        lambda_: Optional[Union[float, str]] = None,
+        mu: Optional[Union[float, str]] = None,
+        rho: Union[float, str] = 1,
         dim: int = 3,
         time: bool = False,
         detach_keys: Optional[Tuple[str, ...]] = None,

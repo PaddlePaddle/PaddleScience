@@ -29,6 +29,8 @@ class Laplace(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
+        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
