@@ -125,6 +125,7 @@ def traction_z_expected_result(
     ],
 )
 def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
+    paddle.seed(42)
     batch_size = 13
     input_dims = ("x", "y", "z")[:dim]
     if time:
