@@ -52,12 +52,11 @@ $$
 
 数据集为处理好的 holography 数据集，包含训练、测试数据的 $x, y$ 以及表征 optimizer area 数据与全区域数据分界的值 $bound$，以字典的形式存储在 `.mat` 文件中。
 
-运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)， 下载后分别存放在路径：
+运行本问题代码前请按照下方命令下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)：
 
-``` py linenums="36"
---8<--
-examples/hpinns/holography.py:36:37
---8<--
+``` shell
+wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
+wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
 ```
 
 ### 3.2 模型构建
