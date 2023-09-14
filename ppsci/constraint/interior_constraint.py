@@ -53,6 +53,8 @@ class InteriorConstraint(base.Constraint):
             Defaults to False.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the
             weight of each constraint variable. Defaults to None.
+        compute_sdf_derivatives (Optional[bool]): Whether compute derivatives for SDF.
+            Defaults to False.
         name (str, optional): Name of constraint object. Defaults to "EQ".
 
     Examples:
@@ -83,6 +85,7 @@ class InteriorConstraint(base.Constraint):
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
+        compute_sdf_derivatives: bool = False,
         name: str = "EQ",
     ):
         self.label_dict = label_dict
@@ -104,6 +107,7 @@ class InteriorConstraint(base.Constraint):
             random,
             criteria,
             evenly,
+            compute_sdf_derivatives,
         )
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
