@@ -316,8 +316,9 @@ class Solver:
 
         # convert sympy to callable object if exist
         extra_parameters = []
-        for equation in self.equation.values():
-            extra_parameters += list(equation.learnable_parameters)
+        if self.equation:
+            for equation in self.equation.values():
+                extra_parameters += list(equation.learnable_parameters)
 
         def convert_expr(
             container_dict: Dict[
