@@ -219,15 +219,16 @@ class Geometry:
         """
         if not hasattr(self, "sdf_func"):
             raise NotImplementedError(
-                f"'sdf_func' method is not implemented in {misc.typename(self)}."
+                f"{misc.typename(self)}.sdf_func should be implemented "
+                "when using 'sdf_derivatives'."
             )
-        # Only compute those sub-class which implement `sdf_func` method.
+        # Only compute sdf derivatives for those already implement `sdf_func` method.
         sdf_derivs = np.empty_like(x)
         for i in range(self.ndim):
-            h = np.zeros_like(x)  # [N, D]
-            h[:, i] += epsilon / 2  # [N, D]
+            h = np.zeros_like(x)
+            h[:, i] += epsilon / 2
             derivs_at_i = (self.sdf_func(x + h) - self.sdf_func(x - h)) / epsilon
-            sdf_derivs[:, i : i + 1] = derivs_at_i  # [N, 1]
+            sdf_derivs[:, i : i + 1] = derivs_at_i
         return sdf_derivs
 
     def union(self, other):
