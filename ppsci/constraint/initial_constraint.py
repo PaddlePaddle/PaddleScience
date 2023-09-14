@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 
 class InitialConstraint(base.Constraint):
-    """Class for initial constraint.
+    """Class for initial interior constraint.
 
     Args:
         output_expr (Dict[str, Callable]): Function in dict for computing output.
@@ -53,6 +53,8 @@ class InitialConstraint(base.Constraint):
             Defaults to False.
         weight_dict (Optional[Dict[str, Callable]]): Define the weight of each
             constraint variable. Defaults to None.
+        compute_sdf_derivatives (Optional[bool]): Whether compute derivatives for SDF.
+            Defaults to False.
         name (str, optional): Name of constraint object. Defaults to "IC".
 
     Examples:
@@ -86,6 +88,7 @@ class InitialConstraint(base.Constraint):
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Callable]] = None,
+        compute_sdf_derivatives: bool = False,
         name: str = "IC",
     ):
         self.label_dict = label_dict
@@ -107,6 +110,7 @@ class InitialConstraint(base.Constraint):
             random,
             criteria,
             evenly,
+            compute_sdf_derivatives,
         )
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
