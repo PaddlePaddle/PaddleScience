@@ -70,6 +70,7 @@ class Geometry:
         random="pseudo",
         criteria=None,
         evenly=False,
+        compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
@@ -106,11 +107,18 @@ class Geometry:
         if hasattr(self, "sdf_func"):
             sdf = -self.sdf_func(x)
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+            sdf_derivs_dict = {}
+            if compute_sdf_derivatives:
+                sdf_derivs = -self.sdf_derivatives(x)
+                sdf_derivs_dict = misc.convert_to_dict(
+                    sdf_derivs, tuple(f"sdf__{key}" for key in self.dim_keys)
+                )
         else:
             sdf_dict = {}
+            sdf_derivs_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 
-        return {**x_dict, **sdf_dict}
+        return {**x_dict, **sdf_dict, **sdf_derivs_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -195,6 +203,32 @@ class Geometry:
     def periodic_point(self, x: np.ndarray, component: int):
         """Compute the periodic image of x."""
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
+
+    def sdf_derivatives(self, x: np.ndarray, epsilon: float = 1e-4) -> np.ndarray:
+        """Compute derivatives of SDF function.
+
+        Args:
+            x (np.ndarray): Points for computing SDF derivatives using central
+                difference. The shape is [N, D], D is the number of dimension of
+                geometry.
+            epsilon (float): Derivative step. Defaults to 1e-4.
+
+        Returns:
+            np.ndarray: Derivatives of corresponding SDF function.
+                The shape is [N, D]. D is the number of dimension of geometry.
+        """
+        if not hasattr(self, "sdf_func"):
+            raise NotImplementedError(
+                f"'sdf_func' method is not implemented in {misc.typename(self)}."
+            )
+        # Only compute those sub-class which implement `sdf_func` method.
+        sdf_derivs = np.empty_like(x)
+        for i in range(self.ndim):
+            h = np.zeros_like(x)  # [N, D]
+            h[:, i] += epsilon / 2  # [N, D]
+            derivs_at_i = (self.sdf_func(x + h) - self.sdf_func(x - h)) / epsilon
+            sdf_derivs[:, i : i + 1] = derivs_at_i  # [N, 1]
+        return sdf_derivs
 
     def union(self, other):
         """CSG Union."""
