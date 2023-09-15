@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
 from typing import Callable
+from typing import Dict
 
 import paddle
-from paddle.distribution import Normal
-from paddle.distribution import Uniform
+from paddle import distribution
 
-from ppsci.utils import set_random_seed
+from ppsci import utils
 
 
 class EnableGradient:
@@ -27,7 +26,7 @@ class EnableGradient:
     This class is for enabling a dict of tensor for autodiff
     """
 
-    def __init__(self, tensor_dict: OrderedDict):
+    def __init__(self, tensor_dict: Dict[str, paddle.Tensor]):
         self.tensor_dict = tensor_dict
 
     def __enter__(self):
@@ -48,6 +47,8 @@ class HamiltonianMonteCarlo:
         distribution_fn (paddle.distribution.Distribution): The Log (Posterior) Distribution function that of the parameters needed to be sampled.
         path_len (float): The total path length.
         step_size (float): Every step size.
+        num_warmup_steps (int): The number of warm-up steps for the MCMC run.
+        random_seed (int): Random seed number.
 
     Examples:
         >>> import paddle
@@ -67,15 +68,17 @@ class HamiltonianMonteCarlo:
         num_warmup_steps: int = 0,
         random_seed: int = 1024,
     ):
-        self.dist = distribution_fn
+        self.distribution_fn = distribution_fn
         self.steps = int(path_len / step_size)
         self.step_size = step_size
         self.path_len = path_len
         self.num_warmup_steps = num_warmup_steps
-        set_random_seed(random_seed)
-        self._rv_unif = Uniform(0, 1)
+        utils.set_random_seed(random_seed)
+        self._rv_unif = distribution.Uniform(0, 1)
 
-    def sample(self, last_position):
+    def sample(
+        self, last_position: Dict[str, paddle.Tensor]
+    ) -> Dict[str, paddle.Tensor]:
         """
         Single step for sample
         """
@@ -96,7 +99,9 @@ class HamiltonianMonteCarlo:
         # set the next state in the Markov chain
         return q1 if self._check_acceptance(q0, q1, p0, p1) else q0
 
-    def run_chain(self, epochs, initial_position):
+    def run_chain(
+        self, epochs: int, initial_position: Dict[str, paddle.Tensor]
+    ) -> Dict[str, paddle.Tensor]:
         sampling_result = {}
         for k in initial_position.keys():
             sampling_result[k] = []
@@ -117,44 +122,52 @@ class HamiltonianMonteCarlo:
 
         return sampling_result
 
-    def _potential_energy_gradient(self, pos):
+    def _potential_energy_gradient(
+        self, pos: Dict[str, paddle.Tensor]
+    ) -> Dict[str, paddle.Tensor]:
         """
         Calculate the gradient of potential energy
         """
         grads = {}
         with EnableGradient(pos):
-            (-self.dist(**pos)).backward()
+            (-self.distribution_fn(**pos)).backward()
             for k, v in pos.items():
                 grads[k] = v.grad.detach()
         return grads
 
-    def _k_energy_fn(self, r):
+    def _k_energy_fn(self, r: Dict[str, paddle.Tensor]) -> paddle.Tensor:
         energy = 0.0
         for v in r.values():
             energy = energy + v.dot(v)
         return 0.5 * energy
 
-    def _sample_r(self, params_dict):  # sample r for params
+    def _sample_r(
+        self, params_dict: Dict[str, paddle.Tensor]
+    ) -> Dict[str, paddle.Tensor]:
+        # sample r for params
         r = {}
         for k, v in params_dict.items():
-            rv_r = Normal(paddle.zeros_like(v), paddle.ones_like(v))
+            rv_r = distribution.Normal(paddle.zeros_like(v), paddle.ones_like(v))
             r[k] = rv_r.sample([1])
             if not (v.shape == [] or v.shape == 1):
                 r[k] = r[k].squeeze()
         return r
 
-    def _check_acceptance(self, q0, q1, p0, p1):
+    def _check_acceptance(
+        self,
+        q0: Dict[str, paddle.Tensor],
+        q1: Dict[str, paddle.Tensor],
+        p0: Dict[str, paddle.Tensor],
+        p1: Dict[str, paddle.Tensor],
+    ) -> bool:
         # calculate the Metropolis acceptance probability
-        q0_nlp = -self.dist(**q0)
-        q1_nlp = -self.dist(**q1)
-
-        p0_nlp = self._k_energy_fn(p0)
-        p1_nlp = self._k_energy_fn(p1)
+        energy_current = -self.distribution_fn(**q0) + self._k_energy_fn(p0)
+        energy_proposed = -self.distribution_fn(**q1) + self._k_energy_fn(p1)
 
         acceptance = paddle.minimum(
-            paddle.to_tensor(1.0), paddle.exp((q0_nlp + p0_nlp) - (p1_nlp + q1_nlp))
+            paddle.to_tensor(1.0), paddle.exp(energy_current - energy_proposed)
         )
 
         # whether accept the proposed state position
-        event = self._rv_unif.sample([1]).squeeze()
+        event = self._rv_unif.sample([])
         return event <= acceptance
