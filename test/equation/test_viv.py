@@ -26,13 +26,13 @@ def test_vibration(rho, k1, k2):
         default_initializer=initializer.Constant(k2),
     )
     # generate input data
-    eta = paddle.randn([batch_size, 1])
     t_f = paddle.randn([batch_size, 1])
-    eta.stop_gradient = False
+    eta = paddle.randn([batch_size, 1])
     t_f.stop_gradient = False
-    input_data = paddle.concat([eta, t_f], axis=1)
-    input_dims = ("eta", "t_f")
-    output_dims = ("f",)
+    eta.stop_gradient = False
+    input_data = t_f
+    input_dims = ("t_f",)
+    output_dims = ("eta",)
     model = arch.MLP(input_dims, output_dims, 2, 16)
 
     # manually generate output
@@ -59,8 +59,8 @@ def test_vibration(rho, k1, k2):
                 model,
                 vibration_equation.learnable_parameters,
             )
-    data_dict = {"eta": eta, "t_f": t_f}
-    test_result = vibration_equation.equations["f"](data_dict)
+    input_data_dict = {"t_f": t_f}
+    test_result = vibration_equation.equations["f"](input_data_dict)
     # check result whether is equal
     assert paddle.allclose(expected_result, test_result)
 
