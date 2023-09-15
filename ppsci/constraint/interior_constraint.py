@@ -96,7 +96,7 @@ class InteriorConstraint(base.Constraint):
         }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)

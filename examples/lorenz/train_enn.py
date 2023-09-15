@@ -109,7 +109,7 @@ if __name__ == "__main__":
         lr_scheduler,
         weight_decay=1e-8,
         grad_clip=clip,
-    )([model])
+    )(model)
 
     # manually build validator
     weights = (1.0 * (VALID_BLOCK_SIZE - 1), 1.0e4 * VALID_BLOCK_SIZE)
