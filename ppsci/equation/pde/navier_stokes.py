@@ -19,6 +19,7 @@ from typing import Tuple
 from typing import Union
 
 import sympy as sp
+from sympy.parsing import sympy_parser as sp_parser
 
 from ppsci.equation.pde import base
 
@@ -87,9 +88,14 @@ class NavierStokes(base.PDE):
             invars += (z,)
 
         if isinstance(nu, str):
-            nu = self.create_function(nu, invars)
+            nu = sp_parser.parse_expr(nu)
+            if isinstance(nu, sp.Symbol):
+                invars += (nu,)
+
         if isinstance(rho, str):
-            rho = self.create_function(rho, invars)
+            rho = sp_parser.parse_expr(rho)
+            if isinstance(rho, sp.Symbol):
+                invars += (rho,)
 
         self.nu = nu
         self.rho = rho
