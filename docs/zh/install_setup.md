@@ -31,26 +31,15 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.4.1 git 安装](#141-git) 和 [1.4.2 pip 安装](#142-pip) 任选一种安装方式即可
+从 [1.4.1 git 源码安装](#141-git) 和 [1.4.2 pip 安装](#142-pip) 任选一种安装方式即可
 
-#### 1.4.1 git 安装
+#### 1.4.1 git 源码安装[**推荐**]
 
-1. 执行以下命令，从 github 上 clone PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
+执行以下命令，从 github 上 clone PaddleScience 源代码并以 editable 的方式进行安装
 
-    ``` shell
-    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
-    # 若 github clone 速度比较慢，可以使用 gitee clone
-    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
-
-    cd PaddleScience
-    export PYTHONPATH=$PWD:$PYTHONPATH
-    ```
-
-2. 安装必要的依赖包
-
-    ``` shell
-    pip install -r requirements.txt
-    ```
+--8<--
+./README.md:git_install
+--8<--
 
 #### 1.4.2 pip 安装
 
