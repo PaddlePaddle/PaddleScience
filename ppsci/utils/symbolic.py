@@ -19,6 +19,7 @@ Sympy to python function conversion module
 from __future__ import annotations
 
 import functools
+import os
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -483,6 +484,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.layout()
     image_path = f"{graph_filename}.png"
     dot_path = f"{graph_filename}.dot"
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
     logger.message(
@@ -611,6 +613,10 @@ def lambdify(
                                 f"in models[{match_index}] and models[{j}]."
                             )
                         match_index = j
+                if match_index is None:
+                    raise ValueError(
+                        f"Node {node} can not match any model in given model(s)."
+                    )
         elif node.is_Number or node.is_NumberSymbol:
             callable_nodes.append(ConstantNode(node))
         elif isinstance(node, sp.Symbol):
