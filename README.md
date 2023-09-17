@@ -98,7 +98,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:contribution] -->
 ## 贡献代码
 
-PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/development/)。
 <!-- --8<-- [end:contribution] -->
 
 <!-- --8<-- [start:thanks] -->
