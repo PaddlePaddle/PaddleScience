@@ -52,6 +52,10 @@ $$
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
+!!! note "说明"
+
+    本案例默认使用 `MA=2.0` 作为参数，如需使用其他参数，请在 `examples/shock_wave/shock_wave.py` 对 `MA` 进行修改。
+
 ### 3.1 模型构建
 
 在 ShockWave 问题中，给定时间 $t$ 和位置坐标 $(x,y)$，模型负责预测出对应的 $x$ 方向速度、 $y$ 防线速度、压力、密度四个物理量 $(u,v,p,\rho)$，因此我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t,x,y)$ 到 $(u,v,p,\rho)$ 的映射函数 $g: \mathbb{R}^3 \to \mathbb{R}^4$ ，即：
@@ -192,9 +196,9 @@ examples/shock_wave/shock_wave.py:406:407
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="409"
+``` py linenums="410"
 --8<--
-examples/shock_wave/shock_wave.py:409:424
+examples/shock_wave/shock_wave.py:410:424
 --8<--
 ```
 

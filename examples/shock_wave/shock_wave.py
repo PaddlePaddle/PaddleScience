@@ -241,9 +241,10 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     SEED = 42
     ppsci.utils.misc.set_random_seed(SEED)
-    # set output directory
+    # set paramter "MA"
     MA = 2.0
     # MA = 0.728
+    # set output directory
     OUTPUT_DIR = (
         f"./output_shock_wave_{MA:.3f}" if not args.output_dir else args.output_dir
     )
@@ -407,7 +408,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.LBFGS(1e-1, max_iter=100)(model)
 
     # initialize solver
-    EPOCHS = 100
+    EPOCHS = 100 if not args.epochs else args.epochs
     solver = ppsci.solver.Solver(
         model,
         constraint,
