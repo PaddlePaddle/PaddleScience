@@ -46,7 +46,7 @@ class LinearElasticity(base.PDE):
         rho (Union[float, str], optional): Mass density. Defaults to 1.
         dim (int, optional): Dimension of the linear elasticity (2 or 3). Defaults to 3.
         time (bool, optional): Whether contains time data. Defaults to False.
-        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:

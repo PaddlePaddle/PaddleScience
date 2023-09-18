@@ -32,7 +32,7 @@ class Biharmonic(base.PDE):
         dim (int): Dimension of equation.
         q (Union[float, str]): Load.
         D (Union[float, str]): Rigidity.
-        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:
