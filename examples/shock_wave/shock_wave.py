@@ -241,7 +241,6 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     SEED = 42
     ppsci.utils.misc.set_random_seed(SEED)
-    # set paramter "MA"
     MA = 2.0
     # MA = 0.728
     # set output directory

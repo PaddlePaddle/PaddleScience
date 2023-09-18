@@ -17,6 +17,7 @@ site_name: PaddleScience Docs
 site_description: An out-of-the-box open source library for scientific computing based on deep learning.
 site_author: PaddlePaddle
 site_url: "https://github.com/PaddlePaddle/PaddleScience"
+edit_uri: edit/develop/docs/
 strict: false
 
 # Repository
@@ -120,6 +121,11 @@ theme:
     - content.code.annotate
     - search.highlight
     - content.tabs.link
+    - content.action.edit
+    - content.action.view
+  icon:
+    edit: material/pencil
+    view: material/eye
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -143,6 +149,10 @@ plugins:
         python:
           paths: [./ppsci]
   - mkdocs-video
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+      type: date
 
 # Extensions
 markdown_extensions:
