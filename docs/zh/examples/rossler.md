@@ -37,6 +37,8 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 |训练集 |256        |1025      |[rossler_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5)|
 |验证集 |32         |1025      |[rossler_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5)|
 
+数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+
 ### 3.2 Embedding 模型
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。

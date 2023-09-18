@@ -52,6 +52,8 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 |训练集 |2048       |256       |[lorenz_training_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5)|
 |验证集 |64         |1024      |[lorenz_valid_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5)|
 
+数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+
 ### 3.3 Embedding 模型
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。

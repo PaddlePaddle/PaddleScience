@@ -107,6 +107,8 @@ $$Re \sim(100, 750)$$
 |训练集 |27         |400       |[cylinder_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5)|
 |验证集 |6          |400       |[cylinder_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5)|
 
+数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+
 ### 3.2 Embedding 模型
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
