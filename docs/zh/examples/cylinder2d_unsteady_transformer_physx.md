@@ -102,13 +102,10 @@ $$Re \sim(100, 750)$$
 
 数据集的划分如下：
 
-|数据集 |流场仿真的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |27         |400       |
-|验证集 |6          |400       |
-|测试集 |7          |400       |
-
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+|数据集 |流场仿真的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |27         |400       |[cylinder_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5)|
+|验证集 |6          |400       |[cylinder_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5)|
 
 ### 3.2 Embedding 模型
 

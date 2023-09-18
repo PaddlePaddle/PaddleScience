@@ -47,13 +47,10 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
 数据集的划分如下：
 
-|数据集 |时间序列的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |2048       |256       |
-|验证集 |64         |1024      |
-|测试集 |256        |1024      |
-
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+|数据集 |时间序列的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |2048       |256       |[lorenz_training_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5)|
+|验证集 |64         |1024      |[lorenz_valid_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5)|
 
 ### 3.3 Embedding 模型
 

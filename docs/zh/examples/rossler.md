@@ -32,12 +32,10 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集使用龙格－库塔（Runge-Kutta）传统数值求解方法得到，数据集的划分如下：
 
-|数据集 |时间序列的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |256        |1025      |
-|验证集 |32         |1025      |
-
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+|数据集 |时间序列的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |256        |1025      |[rossler_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5)|
+|验证集 |32         |1025      |[rossler_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5)|
 
 ### 3.2 Embedding 模型
 
