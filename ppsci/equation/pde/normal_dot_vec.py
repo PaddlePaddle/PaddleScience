@@ -30,7 +30,7 @@ class NormalDotVec(base.PDE):
     Args:
         vec_keys (Tuple[str, ...]): Keys for vectors, such as ("u", "v", "w") for
             velocity vector.
-        detach_keys(Optional[Tuple[str, ...]]): Keys used for detach during computing.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 
     Examples:
