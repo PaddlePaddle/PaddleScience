@@ -62,7 +62,7 @@ def _no_grad_normal_(tensor, mean=0.0, std=1.0):
         return tensor
 
 
-def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=2.0, b=2.0):
+def _no_grad_trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
     def norm_cdf(x):
         # Computes standard normal cumulative distribution function
