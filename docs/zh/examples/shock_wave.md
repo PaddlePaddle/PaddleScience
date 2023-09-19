@@ -1,6 +1,6 @@
 # Shock Wave
 
-<a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<a href="https://aistudio.baidu.com/projectdetail/6755993?contributionType=1&sUid=438690&shared=1&ts=1694949960479" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 ## 1. 背景简介
 
@@ -51,6 +51,10 @@ $$
 
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+
+!!! note "说明"
+
+    本案例默认使用 `MA=2.0` 作为参数，如需使用其他参数，请在 `examples/shock_wave/shock_wave.py` 对 `MA` 进行修改。
 
 ### 3.1 模型构建
 
@@ -192,9 +196,9 @@ examples/shock_wave/shock_wave.py:406:407
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="409"
+``` py linenums="410"
 --8<--
-examples/shock_wave/shock_wave.py:409:424
+examples/shock_wave/shock_wave.py:410:424
 --8<--
 ```
 
