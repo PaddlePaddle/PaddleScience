@@ -23,8 +23,8 @@ class Trainer:
         ]
         self.y_train = paddle.to_tensor(y_train, dtype=paddle.get_default_dtype())
         self.maxiter = maxiter
-        self.loss_b = []
-        self.loss_g = []
+        self.loss_g = []  # eq loss
+        self.loss_b = []  # boundary loss
         self.iter = 0
         self.a_g = paddle.to_tensor(1.0)
         self.a_b = paddle.to_tensor(1.0)
@@ -36,24 +36,24 @@ class Trainer:
 
     def Loss(self, x, y, a_g, a_b):
         tmp = self.pirbn(x, self.activation_function)
-        loss_b = 0.5 * paddle.mean(paddle.square(tmp[0] - y[0]))
-        loss_g = 0.5 * paddle.mean(paddle.square(tmp[1]))
-        loss = loss_b * a_g + loss_g * a_b
-        return loss, loss_b, loss_g
+        loss_g = 0.5 * paddle.mean(paddle.square(tmp[0] - y[0]))
+        loss_b = 0.5 * paddle.mean(paddle.square(tmp[1]))
+        loss = loss_g * a_g + loss_b * a_b
+        return loss, loss_g, loss_b
 
     def evaluate(self):
         # compute loss
-        loss, loss_b, loss_g = self.Loss(self.x_train, self.y_train, self.a_g, self.a_b)
-        loss_b_numpy = float(loss_b)
+        loss, loss_g, loss_b = self.Loss(self.x_train, self.y_train, self.a_g, self.a_b)
         loss_g_numpy = float(loss_g)
-        # boundary loss
-        self.loss_b.append(loss_b_numpy)
+        loss_b_numpy = float(loss_b)
         # eq loss
         self.loss_g.append(loss_g_numpy)
+        # boundary loss
+        self.loss_b.append(loss_b_numpy)
         if self.iter % 200 == 0:
             self.a_g, self.a_b, _ = self.pirbn.cal_ntk(self.x_train)
             print("\ta_g =", float(self.a_g), "\ta_b =", float(self.a_b))
-            print("Iter: ", self.iter, "\tL1 =", loss_b_numpy, "\tL2 =", loss_g_numpy)
+            print("Iter: ", self.iter, "\tL1 =", loss_g_numpy, "\tL2 =", loss_b_numpy)
         self.iter = self.iter + 1
         return loss
 

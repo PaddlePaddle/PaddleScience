@@ -38,11 +38,11 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
 
     # Loss history of the network during the training process.
     plt.subplot(2, 3, 3)
-    loss_b = train_obj.loss_b
-    x = range(len(loss_b))
+    loss_g = train_obj.loss_g
+    x = range(len(loss_g))
     plt.yscale("log")
-    plt.plot(x, loss_b)
-    plt.plot(x, train_obj.loss_g)
+    plt.plot(x, loss_g)
+    plt.plot(x, train_obj.loss_b)
     plt.legend(["Lg", "Lb"])
     plt.ylabel("Loss")
     plt.xlabel("Iteration")

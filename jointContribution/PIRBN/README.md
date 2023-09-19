@@ -32,6 +32,8 @@ For more details in terms of mathematical proofs and numerical examples, please 
 
 <https://github.com/JinshuaiBai/PIRBN>
 
+<https://arxiv.org/ftp/arxiv/papers/2304/2304.06234.pdf>
+
 # Enviornmental settings
 
 ```
