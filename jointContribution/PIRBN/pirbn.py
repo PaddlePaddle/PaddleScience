@@ -1,56 +1,32 @@
 import paddle
 
 
-class Dif(paddle.nn.Layer):
-    """This function is to initialise for differential operator.
-
-    Args:
-        rbn (model): The Feedforward Neural Network.
-    """
-
-    def __init__(self, rbn, **kwargs):
-        super().__init__(**kwargs)
-        self.rbn = rbn
-
-    def forward(self, x):
-        """This function is to calculate the differential terms.
-
-        Args:
-            x (Tensor): The coordinate array
-
-        Returns:
-            Tuple[Tensor, Tensor]: The first-order derivative of the u with respect to the x; The second-order derivative of the u with respect to the x.
-        """
-        x.stop_gradient = False
-        # Obtain the output from the RBN
-        u = self.rbn(x)
-        # Obtain the first-order derivative of the output with respect to the input
-        u_x = paddle.grad(u, x, retain_graph=True, create_graph=True)[0]
-        # Obtain the second-order derivative of the output with respect to the input
-        u_xx = paddle.grad(u_x, x, retain_graph=True, create_graph=True)[0]
-        return u_x, u_xx
-
-
 class PIRBN(paddle.nn.Layer):
     def __init__(self, rbn):
         super().__init__()
         self.rbn = rbn
 
-    def forward(self, input_data):
+    def forward(self, input_data, activation_function="gaussian_function"):
         xy, xy_b = input_data
         # initialize the differential operators
-        Dif_u = Dif(self.rbn)
-        u_b = self.rbn(xy_b)
+        u_b = self.rbn(xy_b, activation_function)
 
         # obtain partial derivatives of u with respect to x
-        _, u_xx = Dif_u(xy)
+        xy.stop_gradient = False
+        # Obtain the output from the RBN
+        u = self.rbn(xy, activation_function)
+        # Obtain the first-order derivative of the output with respect to the input
+        u_x = paddle.grad(u, xy, retain_graph=True, create_graph=True)[0]
+        # Obtain the second-order derivative of the output with respect to the input
+        u_xx = paddle.grad(u_x, xy, retain_graph=True, create_graph=True)[0]
 
         return [u_xx, u_b]
 
     def cal_ntk(self, x):
-        # Formula (4), Page5, \gamma variable
-        gamma_g = 0.0
-        gamma_b = 0.0
+        # Formula (4), Page5, \lambda variable
+        # Lambda represents the eigenvalues of the matrix(Kg)
+        lambda_g = 0.0
+        lambda_b = 0.0
         n_neu = self.rbn.n_neu
 
         # in-domain
@@ -60,7 +36,7 @@ class PIRBN(paddle.nn.Layer):
             y = self.forward(temp_x)
             l1t = paddle.grad(y[0], self.parameters())
             for j in l1t:
-                gamma_g = gamma_g + paddle.sum(j**2) / n1
+                lambda_g = lambda_g + paddle.sum(j**2) / n1
             temp = paddle.concat((l1t[0], l1t[1].reshape((1, n_neu))), axis=1)
             if i == 0:
                 # Fig.1, Page8, Kg variable
@@ -75,11 +51,11 @@ class PIRBN(paddle.nn.Layer):
             y = self.forward(temp_x)
             l1t = paddle.grad(y[1], self.parameters())
             for j in l1t:
-                gamma_b = gamma_b + paddle.sum(j**2) / n2
+                lambda_b = lambda_b + paddle.sum(j**2) / n2
 
         # calculate adapt factors
-        temp = gamma_g + gamma_b
-        gamma_g = temp / gamma_g
-        gamma_b = temp / gamma_b
+        temp = lambda_g + lambda_b
+        lambda_g = temp / lambda_g
+        lambda_b = temp / lambda_b
 
-        return gamma_g, gamma_b, Kg
+        return lambda_g, lambda_b, Kg

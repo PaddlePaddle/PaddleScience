@@ -36,8 +36,8 @@ class RBN_Net(paddle.nn.Layer):
         )
         self.ini_ab()
 
-    def forward(self, x):
-        temp = self.layer1(x)
+    def forward(self, x, activation_function="gaussian_function"):
+        temp = self.layer1(x, activation_function)
         y = self.linear(temp)
         return y
 
@@ -68,8 +68,17 @@ class RBF_layer1(paddle.nn.Layer):
             default_initializer=paddle.nn.initializer.Normal(mean=0.0, std=0.05),
         )
 
-    def forward(self, inputs):  # Defines the computation from inputs to outputs
+    def forward(
+        self, inputs, activation_function="gaussian_function"
+    ):  # Defines the computation from inputs to outputs
         temp_x = paddle.matmul(inputs, paddle.ones((1, self.n_neu)))
+        if activation_function == "gaussian_function":
+            return self.gaussian_function(temp_x)
+        else:
+            return self.tanh_function(temp_x)
+
+    # Gaussian function，#Formula (19), Page10
+    def gaussian_function(self, temp_x):
         x0 = (
             paddle.reshape(
                 paddle.arange(self.n_neu, dtype=paddle.get_default_dtype()),
@@ -80,9 +89,8 @@ class RBF_layer1(paddle.nn.Layer):
             + self.c[0]
         )
         x_new = temp_x - x0
-        return self.rbf_activate(x_new)
-
-    # activation function
-    def rbf_activate(self, input):
         s = self.b * self.b
-        return paddle.exp(-(input * input) * s)
+        return paddle.exp(-(x_new * x_new) * s)
+
+    def tanh_function(self, temp_x):
+        return paddle.tanh(temp_x)

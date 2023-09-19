@@ -6,7 +6,7 @@ import paddle
 import scipy.io
 
 
-def output_fig(train_obj, mu, b):
+def output_fig(train_obj, mu, b, right_by, activation_function):
     plt.figure(figsize=(15, 9))
     rbn = train_obj.pirbn.rbn
 
@@ -14,34 +14,38 @@ def output_fig(train_obj, mu, b):
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
 
-    # Comparisons between the PINN predictions and the ground truth.
+    # Comparisons between the network predictions and the ground truth.
     plt.subplot(2, 3, 1)
     ns = 1001
     dx = 1 / (ns - 1)
     xy = np.zeros((ns, 1)).astype(np.float32)
     for i in range(0, ns):
-        xy[i, 0] = i * dx
-    y = rbn(paddle.to_tensor(xy))
+        xy[i, 0] = i * dx + right_by
+    y = rbn(paddle.to_tensor(xy), activation_function=activation_function)
     y = y.numpy()
     y_true = np.sin(2 * mu * np.pi * xy)
     plt.plot(xy, y_true)
     plt.plot(xy, y, linestyle="--")
-    plt.legend(["ground truth", "PINN"])
+    plt.legend(["ground truth", "predict"])
+    plt.xlabel("x")
 
     # Point-wise absolute error plot.
     plt.subplot(2, 3, 2)
     plt.plot(xy, np.abs(y_true - y))
-    plt.ylim(top=1e-3)
-    plt.legend(["Absolute Error"])
+    plt.ylim(top=8e-3)
+    plt.ylabel("Absolute Error")
+    plt.xlabel("x")
 
-    # Loss history of the PINN during the training process.
+    # Loss history of the network during the training process.
     plt.subplot(2, 3, 3)
-    his_l1 = train_obj.his_l1
-    x = range(len(his_l1))
+    loss_b = train_obj.loss_b
+    x = range(len(loss_b))
     plt.yscale("log")
-    plt.plot(x, his_l1)
-    plt.plot(x, train_obj.his_l2)
+    plt.plot(x, loss_b)
+    plt.plot(x, train_obj.loss_g)
     plt.legend(["Lg", "Lb"])
+    plt.ylabel("Loss")
+    plt.xlabel("Iteration")
 
     # Visualise NTK after initialisation, The normalised Kg at 0th iteration.
     plt.subplot(2, 3, 4)
@@ -49,6 +53,8 @@ def output_fig(train_obj, mu, b):
     a = np.dot(jac, np.transpose(jac))
     plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
     plt.colorbar()
+    plt.title("Kg at 0th iteration")
+    plt.xlabel("Sample point index")
 
     # Visualise NTK after training, The normalised Kg at 2000th iteration.
     plt.subplot(2, 3, 5)
@@ -57,6 +63,8 @@ def output_fig(train_obj, mu, b):
         a = np.dot(jac, np.transpose(jac))
         plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
         plt.colorbar()
+    plt.title("Kg at 2000th iteration")
+    plt.xlabel("Sample point index")
 
     # The normalised Kg at 20000th iteration.
     plt.subplot(2, 3, 6)
@@ -65,8 +73,14 @@ def output_fig(train_obj, mu, b):
         a = np.dot(jac, np.transpose(jac))
         plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
         plt.colorbar()
+    plt.title("Kg at 20000th iteration")
+    plt.xlabel("Sample point index")
 
-    plt.savefig(os.path.join(target_dir, f"sine_function_{mu}_{b}.png"))
+    plt.savefig(
+        os.path.join(
+            target_dir, f"sine_function_{mu}_{b}_{right_by}_{activation_function}.png"
+        )
+    )
 
     # Save data
     scipy.io.savemat(os.path.join(target_dir, "out.mat"), {"NTK": a, "x": xy, "y": y})

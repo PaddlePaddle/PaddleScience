@@ -13,11 +13,16 @@ Inspired by findings, we proposed the PIRBN, which can exhibit the local propert
 
 Numerical examples include:
 
- - 1D sine funtion (**Eq. 1** in the manuscript)
+ - 1D sine funtion (**Eq. 13** in the manuscript)
 
       **PDE**: $\frac{\partial^2 }{\partial x^2}u(x)-4\mu^2\pi^2 sin(2\mu\pi(x))=0, x\in[0,1]$
 
       **BC**:  $u(0)=u(1)=0.$
+
+ - 1D sine funtion (**Eq. 15** in the manuscript)
+      **PDE**: $\frac{\partial^2 }{\partial x^2}u(x-100)-4\mu^2\pi^2 sin(2\mu\pi(x-100))=0, x\in[100,101]$
+
+      **BC**:  $u(100)=u(101)=0.$
 
 For more details in terms of mathematical proofs and numerical examples, please refer to our paper.
 
