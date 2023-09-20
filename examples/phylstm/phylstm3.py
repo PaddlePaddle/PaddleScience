@@ -16,9 +16,9 @@
 Reference: https://github.com/zhry10/PhyLSTM.git
 """
 
+import functions
 import numpy as np
 import scipy.io
-import util
 
 import ppsci
 from ppsci.utils import config
@@ -60,27 +60,19 @@ if __name__ == "__main__":
     ut_pred = ut_pred.reshape([ut_pred.shape[0], ut_pred.shape[1], 1])
     utt_pred = utt_pred.reshape([utt_pred.shape[0], utt_pred.shape[1], 1])
 
-    n = u_data.shape[1]
+    N = u_data.shape[1]
     phi1 = np.concatenate(
         [
             np.array([-3 / 2, 2, -1 / 2]),
-            np.zeros(
-                [
-                    n - 3,
-                ]
-            ),
+            np.zeros([N - 3]),
         ]
     )
-    temp1 = np.concatenate([-1 / 2 * np.identity(n - 2), np.zeros([n - 2, 2])], axis=1)
-    temp2 = np.concatenate([np.zeros([n - 2, 2]), 1 / 2 * np.identity(n - 2)], axis=1)
+    temp1 = np.concatenate([-1 / 2 * np.identity(N - 2), np.zeros([N - 2, 2])], axis=1)
+    temp2 = np.concatenate([np.zeros([N - 2, 2]), 1 / 2 * np.identity(N - 2)], axis=1)
     phi2 = temp1 + temp2
     phi3 = np.concatenate(
         [
-            np.zeros(
-                [
-                    n - 3,
-                ]
-            ),
+            np.zeros([N - 3]),
             np.array([1 / 2, -2, 3 / 2]),
         ]
     )
@@ -96,7 +88,7 @@ if __name__ == "__main__":
             axis=0,
         )
     )
-    phi_t0 = np.reshape(phi_t0, [1, n, n])
+    phi_t0 = np.reshape(phi_t0, [1, N, N])
 
     ag_star = ag_data
     eta_star = u_data
@@ -125,25 +117,38 @@ if __name__ == "__main__":
     g_train = g
     ag_c_train = ag_c
 
-    loss_bfgs = np.empty([0])
-    loss_val_bfgs = np.empty([0])
     phi_t = np.repeat(phi_t0, ag_c_star.shape[0], axis=0)
 
-    dataset_obj = util.Dataset(eta, eta_t, g, ag, ag_c, lift, phi_t)
+    model = ppsci.arch.DeepPhyLSTM(1, eta.shape[2], 100, 3)
+    model.register_input_transform(functions.transform_in)
+    model.register_output_transform(functions.transform_out)
 
-    input_dict, label_dict, input_dict_val, label_dict_val = dataset_obj.get(EPOCHS)
+    dataset_obj = functions.Dataset(eta, eta_t, g, ag, ag_c, lift, phi_t)
+    (
+        input_dict_train,
+        label_dict_train,
+        input_dict_val,
+        label_dict_val,
+    ) = dataset_obj.get(EPOCHS)
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": input_dict,
-                "label": label_dict,
+                "input": input_dict_train,
+                "label": label_dict_train,
             },
         },
-        ppsci.loss.FunctionalLoss(util.pde_loss_func),
+        ppsci.loss.FunctionalLoss(functions.pde_loss_train_func3),
         {
-            "loss": lambda out: out["loss"],
+            "eta_pred": lambda out: out["eta_pred"],
+            "eta_dot_pred": lambda out: out["eta_dot_pred"],
+            "g_pred": lambda out: out["g_pred"],
+            "eta_t_pred_c": lambda out: out["eta_t_pred_c"],
+            "eta_dot_pred_c": lambda out: out["eta_dot_pred_c"],
+            "lift_pred_c": lambda out: out["lift_pred_c"],
+            "g_t_pred_c": lambda out: out["g_t_pred_c"],
+            "g_dot_pred_c": lambda out: out["g_dot_pred_c"],
         },
         name="loss",
     )
@@ -157,31 +162,37 @@ if __name__ == "__main__":
                 "label": label_dict_val,
             },
         },
-        ppsci.loss.FunctionalLoss(util.pde_loss_val_func),
+        ppsci.loss.FunctionalLoss(functions.pde_loss_val_func3),
         {
-            "loss": lambda out: out["loss"].detach().clone(),
+            "eta_pred": lambda out: out["eta_pred"],
+            "eta_dot_pred": lambda out: out["eta_dot_pred"],
+            "g_pred": lambda out: out["g_pred"],
+            "eta_t_pred_c": lambda out: out["eta_t_pred_c"],
+            "eta_dot_pred_c": lambda out: out["eta_dot_pred_c"],
+            "lift_pred_c": lambda out: out["lift_pred_c"],
+            "g_t_pred_c": lambda out: out["g_t_pred_c"],
+            "g_dot_pred_c": lambda out: out["g_dot_pred_c"],
         },
-        metric={"MSE": ppsci.metric.MSE()},
-        name="loss_val",
+        metric={"metric": ppsci.metric.FunctionalMetric(functions.metric_expr)},
+        name="sup_valid",
     )
     validator_pde = {sup_validator_pde.name: sup_validator_pde}
 
     # initialize solver
     ITERS_PER_EPOCH = 1
-    SAVE_FREQ = 1000
-    model = ppsci.arch.DeepPhyLSTM3(eta.shape[2])
-    opt = ppsci.optimizer.Adam(1e-3)(model)
+    optimizer = ppsci.optimizer.Adam(1e-3)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
         OUTPUT_DIR,
-        opt,
+        optimizer,
         None,
         EPOCHS,
         ITERS_PER_EPOCH,
-        save_freq=SAVE_FREQ,
-        eval_with_no_grad=True,
+        save_freq=1000,
+        log_freq=100,
         validator=validator_pde,
+        eval_with_no_grad=True,
     )
 
     # train model

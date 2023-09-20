@@ -18,246 +18,150 @@ import paddle.nn as nn
 from ppsci.arch import base
 
 
-class DeepPhyLSTM2(base.Arch):
-    """DeepPhyLSTM2 init function.
+class DeepPhyLSTM(base.Arch):
+    """DeepPhyLSTM init function.
 
     Args:
-        eta_shape_3 (int): The shape of the eta third dimension
+        input_size (int): The input size.
+        output_size (int): The output size.
+        hidden_size (int, optional): The hidden size. Defaults to 100.
+        model_type (int, optional): The model type, value is 2 or 3, 2 indicates having two submodels, 3 indicates having three submodels. Defaults to 2.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.DeepPhyLSTM(1, 1, 100)
     """
 
-    def __init__(self, eta_shape_3):
+    def __init__(self, input_size, output_size, hidden_size=100, model_type=2):
         super().__init__()
-        self.eta_shape_3 = eta_shape_3
-        self.dataset = {}
+        self.input_size = input_size
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.model_type = model_type
 
-        self.lstm_model = nn.Sequential(
-            nn.LSTM(1, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.Linear(100, 3 * eta_shape_3),
-        )
-
-        self.lstm_model_f = nn.Sequential(
-            nn.LSTM(3 * eta_shape_3, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.Linear(100, eta_shape_3),
-        )
-
-    def forward(self, dataset):
-        # Reducing the dimension when constructing a data set
-        dataset["ag"] = dataset["ag"][0]
-        dataset["eta"] = dataset["eta"][0]
-        dataset["eta_t"] = dataset["eta_t"][0]
-        dataset["g"] = dataset["g"][0]
-        dataset["lift"] = dataset["lift"][0]
-        dataset["ag_c"] = dataset["ag_c"][0]
-        dataset["phi"] = dataset["phi"][0]
-        self.dataset.update(dataset)
-
-        # physics informed neural networks
-        (
-            self.eta_pred,
-            self.eta_t_pred,
-            self.eta_tt_pred,
-            self.eta_dot_pred,
-            self.g_pred,
-        ) = self.net_structure(self.dataset["ag"])
-
-        self.eta_t_pred_c, self.eta_dot_pred_c, self.lift_c_pred = self.net_f(
-            self.dataset["ag_c"]
-        )
-
-        # loss
-        # for measurements
-        self.loss_u = paddle.mean(paddle.square(self.dataset["eta"] - self.eta_pred))
-        self.loss_udot = paddle.mean(
-            paddle.square(self.dataset["eta_t"] - self.eta_dot_pred)
-        )
-        self.loss_g = paddle.mean(paddle.square(self.dataset["g"] - self.g_pred))
-        # for collocations
-        self.loss_ut_c = paddle.mean(
-            paddle.square(self.eta_t_pred_c - self.eta_dot_pred_c)
-        )
-        self.loss_e = paddle.mean(
-            paddle.square(
-                paddle.matmul(
-                    self.dataset["lift"],
-                    paddle.ones(
-                        [self.dataset["lift"].shape[0], 1, self.eta_shape_3],
-                        dtype=paddle.get_default_dtype(),
-                    ),
-                )
-                - self.lift_c_pred
+        if self.model_type == 2:
+            self.lstm_model = nn.Sequential(
+                nn.LSTM(input_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, hidden_size),
+                nn.Linear(hidden_size, 3 * output_size),
             )
-        )
 
-        # total loss
-        self.loss = self.loss_u + self.loss_udot + self.loss_ut_c + self.loss_e
-        return {
-            "loss": self.loss.reshape([1]),
-            "loss_detach": self.loss.reshape([1]).detach().clone(),
-        }
+            self.lstm_model_f = nn.Sequential(
+                nn.LSTM(3 * output_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, hidden_size),
+                nn.Linear(hidden_size, output_size),
+            )
+        elif self.model_type == 3:
+            self.lstm_model = nn.Sequential(
+                nn.LSTM(1, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, 3 * output_size),
+            )
 
-    def net_structure(self, ag):
-        output = self.lstm_model(ag)
-        eta = output[:, :, 0 : self.eta_shape_3]
-        eta_dot = output[:, :, self.eta_shape_3 : 2 * self.eta_shape_3]
-        g = output[:, :, 2 * self.eta_shape_3 :]
+            self.lstm_model_f = nn.Sequential(
+                nn.LSTM(3 * output_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, output_size),
+            )
 
-        # Phi and eta have different shape[0], using partial data
-        phi = self.dataset["phi"]
-        if eta.shape[0] < phi.shape[0]:
-            phi_calc = phi[0 : eta.shape[0], :, :]
+            self.lstm_model_g = nn.Sequential(
+                nn.LSTM(2 * output_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.LSTM(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, output_size),
+            )
         else:
-            phi_calc = phi
+            raise ValueError(f"model_type should be 2 or 3, but got {model_type})")
 
-        eta_t = paddle.matmul(phi_calc, eta)
-        eta_tt = paddle.matmul(phi_calc, eta_dot)
-        return eta, eta_t, eta_tt, eta_dot, g
+    def forward(self, x):
+        if self._input_transform is not None:
+            x = self._input_transform(x)
 
-    def net_f(self, ag):
-        eta, eta_t, eta_tt, eta_dot, g = self.net_structure(ag)
-        eta_dot1 = eta_dot[:, :, 0:1]
-        tmp = paddle.concat([eta, eta_dot1, g], 2)
+        if self.model_type == 2:
+            result_dict = self._forward_type_2(x)
+        elif self.model_type == 3:
+            result_dict = self._forward_type_3(x)
+        if self._output_transform is not None:
+            result_dict = self._output_transform(x, result_dict)
+        return result_dict
+
+    def _forward_type_2(self, x):
+        output = self.lstm_model(x["ag"])
+        eta_pred = output[:, :, 0 : self.output_size]
+        eta_dot_pred = output[:, :, self.output_size : 2 * self.output_size]
+        g_pred = output[:, :, 2 * self.output_size :]
+
+        # for ag_c
+        output_c = self.lstm_model(x["ag_c"])
+        eta_pred_c = output_c[:, :, 0 : self.output_size]
+        eta_dot_pred_c = output_c[:, :, self.output_size : 2 * self.output_size]
+        g_pred_c = output_c[:, :, 2 * self.output_size :]
+        eta_t_pred_c = paddle.matmul(x["phi"], eta_pred_c)
+        eta_tt_pred_c = paddle.matmul(x["phi"], eta_dot_pred_c)
+        eta_dot1_pred_c = eta_dot_pred_c[:, :, 0:1]
+        tmp = paddle.concat([eta_pred_c, eta_dot1_pred_c, g_pred_c], 2)
         f = self.lstm_model_f(tmp)
-        lift = eta_tt + f
-        return eta_t, eta_dot, lift
+        lift_pred_c = eta_tt_pred_c + f
 
-
-class DeepPhyLSTM3(nn.Layer):
-    """DeepPhyLSTM3 init function.
-
-    Args:
-        eta_shape_3 (int): The shape of the eta third dimension
-    """
-
-    def __init__(self, eta_shape_3):
-        super().__init__()
-        self.eta_shape_3 = eta_shape_3
-        self.dataset = {}
-
-        self.lstm_model = nn.Sequential(
-            nn.LSTM(1, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 3 * eta_shape_3),
-        )
-
-        self.lstm_model_f = nn.Sequential(
-            nn.LSTM(3 * eta_shape_3, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, eta_shape_3),
-        )
-
-        self.lstm_model_g = nn.Sequential(
-            nn.LSTM(2 * eta_shape_3, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.LSTM(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, eta_shape_3),
-        )
-
-    def forward(self, dataset):
-        dataset["ag"] = dataset["ag"][0]
-        dataset["eta"] = dataset["eta"][0]
-        dataset["eta_t"] = dataset["eta_t"][0]
-        dataset["g"] = dataset["g"][0]
-        dataset["lift"] = dataset["lift"][0]
-        dataset["ag_c"] = dataset["ag_c"][0]
-        dataset["phi"] = dataset["phi"][0]
-        self.dataset.update(dataset)
-        # physics informed neural networks
-        (
-            self.eta_pred,
-            self.eta_t_pred,
-            self.eta_tt_pred,
-            self.eta_dot_pred,
-            self.g_pred,
-            self.g_t_pred,
-        ) = self.net_structure(self.dataset["ag"])
-        (
-            self.eta_t_pred_c,
-            self.eta_dot_pred_c,
-            self.g_t_pred_c,
-            self.g_dot_pred_c,
-            self.lift_c_pred,
-        ) = self.net_f(self.dataset["ag_c"])
-
-        # loss
-        # for measurements
-        self.loss_u = paddle.mean(paddle.square(self.dataset["eta"] - self.eta_pred))
-        self.loss_udot = paddle.mean(
-            paddle.square(self.dataset["eta_t"] - self.eta_dot_pred)
-        )
-        self.loss_g = paddle.mean(paddle.square(self.dataset["g"] - self.g_pred))
-        # for collocations
-        self.loss_ut_c = paddle.mean(
-            paddle.square(self.eta_t_pred_c - self.eta_dot_pred_c)
-        )
-        self.loss_gt_c = paddle.mean(paddle.square(self.g_t_pred_c - self.g_dot_pred_c))
-        self.loss_e = paddle.mean(
-            paddle.square(
-                paddle.matmul(
-                    self.dataset["lift"],
-                    paddle.ones(
-                        [self.dataset["lift"].shape[0], 1, self.eta_shape_3],
-                        dtype=paddle.get_default_dtype(),
-                    ),
-                )
-                - self.lift_c_pred
-            )
-        )
-
-        self.loss = (
-            self.loss_u + self.loss_udot + self.loss_ut_c + self.loss_gt_c + self.loss_e
-        )
         return {
-            "loss": self.loss.reshape([1]),
-            "loss_detach": self.loss.reshape([1]).detach().clone(),
+            "eta_pred": eta_pred,
+            "eta_dot_pred": eta_dot_pred,
+            "g_pred": g_pred,
+            "eta_t_pred_c": eta_t_pred_c,
+            "eta_dot_pred_c": eta_dot_pred_c,
+            "lift_pred_c": lift_pred_c,
         }
 
-    def net_structure(self, ag):
-        output = self.lstm_model(ag)
-        eta = output[:, :, 0 : self.eta_shape_3]
-        eta_dot = output[:, :, self.eta_shape_3 : 2 * self.eta_shape_3]
-        g = output[:, :, 2 * self.eta_shape_3 :]
+    def _forward_type_3(self, x):
+        # physics informed neural networks
+        output = self.lstm_model(x["ag"])
+        eta_pred = output[:, :, 0 : self.output_size]
+        eta_dot_pred = output[:, :, self.output_size : 2 * self.output_size]
+        g_pred = output[:, :, 2 * self.output_size :]
 
-        # Phi and eta have different shape[0], using partial data
-        phi = self.dataset["phi"]
-        if eta.shape[0] < phi.shape[0]:
-            phi_calc = phi[0 : eta.shape[0], :, :]
-        else:
-            phi_calc = phi
+        output_c = self.lstm_model(x["ag_c"])
+        eta_pred_c = output_c[:, :, 0 : self.output_size]
+        eta_dot_pred_c = output_c[:, :, self.output_size : 2 * self.output_size]
+        g_pred_c = output_c[:, :, 2 * self.output_size :]
 
-        eta_t = paddle.matmul(phi_calc, eta)
-        eta_tt = paddle.matmul(phi_calc, eta_dot)
-        g_t = paddle.matmul(phi_calc, g)
+        eta_t_pred_c = paddle.matmul(x["phi"], eta_pred_c)
+        eta_tt_pred_c = paddle.matmul(x["phi"], eta_dot_pred_c)
+        g_t_pred_c = paddle.matmul(x["phi"], g_pred_c)
 
-        return eta, eta_t, eta_tt, eta_dot, g, g_t
+        f = self.lstm_model_f(paddle.concat([eta_pred_c, eta_dot_pred_c, g_pred_c], 2))
+        lift_pred_c = eta_tt_pred_c + f
 
-    def net_f(self, ag):
-        eta, eta_t, eta_tt, eta_dot, g, g_t = self.net_structure(ag)
-        f = self.lstm_model_f(paddle.concat([eta, eta_dot, g], 2))
-        lift = eta_tt + f
+        eta_dot1_pred_c = eta_dot_pred_c[:, :, 0:1]
+        g_dot_pred_c = self.lstm_model_g(paddle.concat([eta_dot1_pred_c, g_pred_c], 2))
 
-        eta_dot1 = eta_dot[:, :, 0:1]
-        g_dot = self.lstm_model_g(paddle.concat([eta_dot1, g], 2))
-        return eta_t, eta_dot, g_t, g_dot, lift
+        return {
+            "eta_pred": eta_pred,
+            "eta_dot_pred": eta_dot_pred,
+            "g_pred": g_pred,
+            "eta_t_pred_c": eta_t_pred_c,
+            "eta_dot_pred_c": eta_dot_pred_c,
+            "lift_pred_c": lift_pred_c,
+            "g_t_pred_c": g_t_pred_c,
+            "g_dot_pred_c": g_dot_pred_c,
+        }
