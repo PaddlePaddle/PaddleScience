@@ -16,28 +16,29 @@ PINN-WE 模型通过损失函数加权，在 PINN 优化过程中减弱强梯度
 
 $$
 \begin{array}{cc}
-\dfrac{\partial \hat{U}}{\partial t}+\dfrac{\partial \hat{F}}{\partial \xi}+\dfrac{\partial \hat{G}}{\partial \eta}=0 \\
-\text { 其中, } \quad\left\{\begin{array}{l}
-\hat{U}=J U \\
-\hat{F}=J\left(F \xi_x+G \xi_y\right) \\
-\hat{G}=J\left(F \eta_x+G \eta_y\right)
-\end{array}\right. \\
-U=\left(\begin{array}{l}
-\rho \\
-\rho u \\
-\rho v \\
-\rho E
-\end{array}\right), \quad F=\left(\begin{array}{l}
-\rho u \\
-\rho u^2+p \\
-\rho u v \\
-(\rho E+p) u
-\end{array}\right), \quad G=\left(\begin{array}{l}
-\rho v \\
-\rho v u \\
-\rho v^2+p \\
-(\rho E+p) v
-\end{array}\right)
+  \dfrac{\partial \hat{U}}{\partial t}+\dfrac{\partial \hat{F}}{\partial \xi}+\dfrac{\partial \hat{G}}{\partial \eta}=0 \\
+  \text { 其中, } \quad
+  \begin{cases}
+    \hat{U}=J U \\
+    \hat{F}=J\left(F \xi_x+G \xi_y\right) \\
+    \hat{G}=J\left(F \eta_x+G \eta_y\right)
+  \end{cases} \\
+  U=\left(\begin{array}{l}
+  \rho \\
+  \rho u \\
+  \rho v \\
+  E
+  \end{array}\right), \quad F=\left(\begin{array}{l}
+  \rho u \\
+  \rho u^2+p \\
+  \rho u v \\
+  (E+p) u
+  \end{array}\right), \quad G=\left(\begin{array}{l}
+  \rho v \\
+  \rho v u \\
+  \rho v^2+p \\
+  (E+p) v
+  \end{array}\right)
 \end{array}
 $$
 
