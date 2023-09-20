@@ -77,7 +77,7 @@ class RBF_layer1(paddle.nn.Layer):
         else:
             return self.tanh_function(temp_x)
 
-    # Gaussian function，#Formula (19), Page10
+    # Gaussian function，Formula (19), Page7
     def gaussian_function(self, temp_x):
         x0 = (
             paddle.reshape(

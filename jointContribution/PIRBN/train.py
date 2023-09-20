@@ -1,19 +1,10 @@
 import paddle
 
-# Used to calculate the second-order derivatives
 paddle.framework.core.set_prim_eager_enabled(True)
 
 
 class Trainer:
-    def __init__(
-        self,
-        pirbn,
-        x_train,
-        y_train,
-        learning_rate=0.001,
-        maxiter=10000,
-        activation_function="gaussian_function",
-    ):
+    def __init__(self, pirbn, x_train, y_train, learning_rate=0.001, maxiter=10000):
         # set attributes
         self.pirbn = pirbn
 
@@ -32,10 +23,9 @@ class Trainer:
             learning_rate=0.001, parameters=self.pirbn.parameters()
         )
         self.ntk_list = {}
-        self.activation_function = activation_function
 
     def Loss(self, x, y, a_g, a_b):
-        tmp = self.pirbn(x, self.activation_function)
+        tmp = self.pirbn(x)
         loss_g = 0.5 * paddle.mean(paddle.square(tmp[0] - y[0]))
         loss_b = 0.5 * paddle.mean(paddle.square(tmp[1]))
         loss = loss_g * a_g + loss_b * a_b
