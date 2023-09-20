@@ -63,16 +63,7 @@ def pde_loss_func(result_dict, *args):
     # total loss
     loss = loss_u + loss_udot + loss_ut_c + loss_e
     loss = paddle.square(loss)
-    result_dict = {"loss": loss}
-    return result_dict
-
-
-def pde_loss_train_func(result_dict, *args):
-    return pde_loss_func(result_dict, *args)["loss"]
-
-
-def pde_loss_val_func(result_dict, *args):
-    return pde_loss_func(result_dict, *args)["loss"].reshape([1])
+    return loss
 
 
 def pde_loss_func3(result_dict, *args):
@@ -98,15 +89,7 @@ def pde_loss_func3(result_dict, *args):
 
     loss = loss_u + loss_udot + loss_ut_c + loss_gt_c + loss_e
     loss = paddle.square(loss)
-    return {"loss": loss}
-
-
-def pde_loss_train_func3(result_dict, *args):
-    return pde_loss_func3(result_dict, *args)["loss"]
-
-
-def pde_loss_val_func3(result_dict, *args):
-    return pde_loss_func3(result_dict, *args)["loss"].reshape([1])
+    return loss
 
 
 class Dataset:

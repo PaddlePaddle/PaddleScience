@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 "label": label_dict_train,
             },
         },
-        ppsci.loss.FunctionalLoss(functions.pde_loss_train_func),
+        ppsci.loss.FunctionalLoss(functions.pde_loss_func),
         {
             "eta_pred": lambda out: out["eta_pred"],
             "eta_dot_pred": lambda out: out["eta_dot_pred"],
@@ -146,7 +146,7 @@ if __name__ == "__main__":
                 "label": label_dict_val,
             },
         },
-        ppsci.loss.FunctionalLoss(functions.pde_loss_val_func),
+        ppsci.loss.FunctionalLoss(functions.pde_loss_func),
         {
             "eta_pred": lambda out: out["eta_pred"],
             "eta_dot_pred": lambda out: out["eta_dot_pred"],
