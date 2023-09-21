@@ -391,12 +391,10 @@ class PatchEmbed(nn.Layer):
         return x
 
 
-class AFNONet(base.Arch):
-    """Adaptive Fourier Neural Network.
+class AdaptiveFourierLayers(base.Arch):
+    """Adaptive Fourier Neural Operators Network, core implementation of AFNO.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
         patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
         in_channels (int, optional): The input tensor channels. Defaults to 20.
@@ -413,13 +411,11 @@ class AFNONet(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
+        >>> model = ppsci.arch.AdaptiveFourierLayers()
     """
 
     def __init__(
         self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
         img_size: Tuple[int, ...] = (720, 1440),
         patch_size: Tuple[int, ...] = (8, 8),
         in_channels: int = 20,
@@ -435,9 +431,6 @@ class AFNONet(base.Arch):
         num_timestamps: int = 1,
     ):
         super().__init__()
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-
         self.img_size = img_size
         self.patch_size = patch_size
         self.in_channels = in_channels
@@ -505,7 +498,7 @@ class AFNONet(base.Arch):
         elif isinstance(m, nn.Conv2D):
             initializer.conv_init_(m)
 
-    def forward_tensor(self, x):
+    def forward(self, x):
         B = x.shape[0]
         x = self.patch_embed(x)
         x = x + self.pos_embed
@@ -529,10 +522,68 @@ class AFNONet(base.Arch):
 
         return x
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
+
+class AFNONet(AdaptiveFourierLayers):
+    """Adaptive Fourier Neural Operators Network.
+    Which accepts input/output string key(s) for symbolic computation.
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
+        img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
+        patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
+        in_channels (int, optional): The input tensor channels. Defaults to 20.
+        out_channels (int, optional): The output tensor channels. Defaults to 20.
+        embed_dim (int, optional): The embedding dimension for PatchEmbed. Defaults to 768.
+        depth (int, optional): Number of transformer depth. Defaults to 12.
+        mlp_ratio (float, optional): Number of ratio used in MLP. Defaults to 4.0.
+        drop_rate (float, optional): The drop ratio used in MLP. Defaults to 0.0.
+        drop_path_rate (float, optional): The drop ratio used in DropPath. Defaults to 0.0.
+        num_blocks (int, optional): Number of blocks. Defaults to 8.
+        sparsity_threshold (float, optional): The value of threshold for softshrink. Defaults to 0.01.
+        hard_thresholding_fraction (float, optional): The value of threshold for keep mode. Defaults to 1.0.
+        num_timestamps (int, optional): Number of timestamp. Defaults to 1.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        img_size: Tuple[int, ...] = (720, 1440),
+        patch_size: Tuple[int, ...] = (8, 8),
+        in_channels: int = 20,
+        out_channels: int = 20,
+        embed_dim: int = 768,
+        depth: int = 12,
+        mlp_ratio: float = 4.0,
+        drop_rate: float = 0.0,
+        drop_path_rate: float = 0.0,
+        num_blocks: int = 8,
+        sparsity_threshold: float = 0.01,
+        hard_thresholding_fraction: float = 1.0,
+        num_timestamps: int = 1,
     ):
-        return {key: data_tensors[i] for i, key in enumerate(keys)}
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        super().__init__(
+            img_size,
+            patch_size,
+            in_channels,
+            out_channels,
+            embed_dim,
+            depth,
+            mlp_ratio,
+            drop_rate,
+            drop_path_rate,
+            num_blocks,
+            sparsity_threshold,
+            hard_thresholding_fraction,
+            num_timestamps,
+        )
 
     def forward(self, x):
         if self._input_transform is not None:
@@ -543,7 +594,7 @@ class AFNONet(base.Arch):
         y = []
         input = x_tensor
         for _ in range(self.num_timestamps):
-            out = self.forward_tensor(input)
+            out = super().forward(input)
             y.append(out)
             input = out
         y = self.split_to_dict(y, self.output_keys)
@@ -551,6 +602,11 @@ class AFNONet(base.Arch):
         if self._output_transform is not None:
             y = self._output_transform(x, y)
         return y
+
+    def split_to_dict(
+        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
+    ):
+        return {key: data_tensors[i] for i, key in enumerate(keys)}
 
 
 class PrecipNet(base.Arch):

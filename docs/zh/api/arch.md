@@ -15,6 +15,7 @@
         - Discriminator
         - PhysformerGPT2
         - ModelList
+        - AdaptiveFourierLayers
         - AFNONet
         - PrecipNet
       show_root_heading: false

@@ -26,6 +26,7 @@ from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
+from ppsci.arch.afno import AdaptiveFourierLayers  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
@@ -43,6 +44,7 @@ __all__ = [
     "PhysformerGPT2",
     "ModelList",
     "AFNONet",
+    "AdaptiveFourierLayers",
     "PrecipNet",
     "build_model",
 ]
