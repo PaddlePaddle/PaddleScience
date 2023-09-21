@@ -6,6 +6,7 @@
       members:
         - Arch
         - MLP
+        - FullyConnectedLayers
         - DeepONet
         - LorenzEmbedding
         - RosslerEmbedding
