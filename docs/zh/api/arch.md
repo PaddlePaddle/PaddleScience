@@ -8,6 +8,7 @@
         - MLP
         - FullyConnectedLayers
         - DeepONet
+        - DeepOperatorLayers
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding

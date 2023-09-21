@@ -18,6 +18,7 @@ from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.mlp import FullyConnectedLayers  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
+from ppsci.arch.deeponet import DeepOperatorLayers  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
@@ -36,6 +37,7 @@ __all__ = [
     "MLP",
     "FullyConnectedLayers",
     "DeepONet",
+    "DeepOperatorLayers",
     "LorenzEmbedding",
     "RosslerEmbedding",
     "CylinderEmbedding",
