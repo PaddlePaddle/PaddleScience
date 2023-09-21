@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    OUTPUT_DIR = "./output/phylstm2" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_PhyLSTM2" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     # set training hyper-parameters
@@ -94,8 +94,6 @@ if __name__ == "__main__":
     eta_t_c_star = u_t_all[0:50]
     eta_tt_c_star = u_tt_all[0:50]
 
-    N_train = eta_star.shape[0]
-
     eta = eta_star
     ag = ag_star
     lift = lift_star
@@ -125,7 +123,7 @@ if __name__ == "__main__":
                 "label": label_dict_train,
             },
         },
-        ppsci.loss.FunctionalLoss(functions.pde_loss_func),
+        ppsci.loss.FunctionalLoss(functions.train_loss_func2),
         {
             "eta_pred": lambda out: out["eta_pred"],
             "eta_dot_pred": lambda out: out["eta_dot_pred"],
@@ -134,7 +132,7 @@ if __name__ == "__main__":
             "eta_dot_pred_c": lambda out: out["eta_dot_pred_c"],
             "lift_pred_c": lambda out: out["lift_pred_c"],
         },
-        name="loss",
+        name="sup_train",
     )
     constraint_pde = {sup_constraint_pde.name: sup_constraint_pde}
 
@@ -146,7 +144,7 @@ if __name__ == "__main__":
                 "label": label_dict_val,
             },
         },
-        ppsci.loss.FunctionalLoss(functions.pde_loss_func),
+        ppsci.loss.FunctionalLoss(functions.train_loss_func2),
         {
             "eta_pred": lambda out: out["eta_pred"],
             "eta_dot_pred": lambda out: out["eta_dot_pred"],

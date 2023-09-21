@@ -13,36 +13,45 @@
 # limitations under the License.
 
 import random
+from typing import Dict
 
 import paddle
 import paddle.nn.functional as F
 
 
-def metric_expr(output_dict, *args):
-    return {"loss": paddle.to_tensor(0.0)}
+def metric_expr(output_dict, *args) -> Dict[str, paddle.Tensor]:
+    return {"dummy_loss": paddle.to_tensor(0.0)}
 
 
 # transform
 def transform_in(input):
-    input_transformed = {}
-    input_transformed["ag"] = input["ag"][0]
-    input_transformed["eta"] = input["eta"][0]
-    input_transformed["eta_t"] = input["eta_t"][0]
-    input_transformed["g"] = input["g"][0]
-    input_transformed["lift"] = input["lift"][0]
-    input_transformed["ag_c"] = input["ag_c"][0]
-    input_transformed["phi"] = input["phi"][0]
+    input_transformed = {
+        "ag": input["ag"][0],
+        "eta": input["eta"][0],
+        "eta_t": input["eta_t"][0],
+        "g": input["g"][0],
+        "lift": input["lift"][0],
+        "ag_c": input["ag_c"][0],
+        "phi": input["phi"][0],
+    }
     return input_transformed
 
 
 def transform_out(input, out):
-    # For calculate loss
+    # Add transformed input for computing loss
     out.update(input)
     return out
 
 
-def pde_loss_func(result_dict, *args):
-    # loss
+def train_loss_func2(result_dict, *args) -> paddle.Tensor:
+    """For phylstm2 calculation of loss.
+
+    Args:
+        result_dict (Dict[str, paddle.Tensor]): The result dict.
+
+    Returns:
+        paddle.Tensor: Loss value.
+    """
     # for measurements
     loss_u = F.mse_loss(result_dict["eta"], result_dict["eta_pred"])
     loss_udot = F.mse_loss(result_dict["eta_t"], result_dict["eta_dot_pred"])
@@ -66,8 +75,15 @@ def pde_loss_func(result_dict, *args):
     return loss
 
 
-def pde_loss_func3(result_dict, *args):
-    # loss
+def train_loss_func3(result_dict, *args) -> paddle.Tensor:
+    """For phylstm3 calculation of loss.
+
+    Args:
+        result_dict (Dict[str, paddle.Tensor]): The result dict.
+
+    Returns:
+        paddle.Tensor: Loss value.
+    """
     # for measurements
     loss_u = F.mse_loss(result_dict["eta"], result_dict["eta_pred"])
     loss_udot = F.mse_loss(result_dict["eta_t"], result_dict["eta_dot_pred"])
@@ -113,7 +129,7 @@ class Dataset:
             "ag_c": [],
             "phi": [],
         }
-        label_dict_train = {"loss": []}
+        label_dict_train = {"dummy_loss": []}
         input_dict_val = {
             "ag": [],
             "eta": [],
@@ -123,7 +139,7 @@ class Dataset:
             "ag_c": [],
             "phi": [],
         }
-        label_dict_val = {"loss": []}
+        label_dict_val = {"dummy_loss": []}
         for i in range(epochs):
             ind = list(range(self.ag.shape[0]))
             random.shuffle(ind)
@@ -148,7 +164,7 @@ class Dataset:
             input_dict_train["lift"].append(self.lift)
             input_dict_train["ag_c"].append(self.ag_c)
             input_dict_train["phi"].append(self.phi_t)
-            label_dict_train["loss"].append(paddle.to_tensor(0.0))
+            label_dict_train["dummy_loss"].append(paddle.to_tensor(0.0))
 
             if i == epochs - 1:
                 input_dict_val["ag"].append(self.ag_val)
@@ -158,6 +174,6 @@ class Dataset:
                 input_dict_val["lift"].append(self.lift)
                 input_dict_val["ag_c"].append(self.ag_c)
                 input_dict_val["phi"].append(self.phi_t)
-                label_dict_val["loss"].append(paddle.to_tensor(0.0))
+                label_dict_val["dummy_loss"].append(paddle.to_tensor(0.0))
 
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
