@@ -7,6 +7,7 @@
         - Arch
         - MLP
         - DeepONet
+        - DeepPhyLSTM
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
