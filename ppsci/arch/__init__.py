@@ -48,6 +48,7 @@ __all__ = [
     "AFNONet",
     "AdaptiveFourierLayers",
     "PrecipNet",
+    "PrecipLayers",
     "build_model",
 ]
 

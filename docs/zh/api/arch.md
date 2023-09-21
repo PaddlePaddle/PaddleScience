@@ -19,5 +19,6 @@
         - AdaptiveFourierLayers
         - AFNONet
         - PrecipNet
+        - PrecipLayers
       show_root_heading: false
       heading_level: 3
