@@ -27,7 +27,11 @@ try:
 except ImportError:
     pass
 
-from pyamg.classical.split import RS
+try:
+    from pyamg.classical.split import RS
+except ImportError:
+    pass
+
 from scipy import sparse as sci_sparse
 
 

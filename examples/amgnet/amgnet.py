@@ -133,6 +133,7 @@ if __name__ == "__main__":
         None,
         EPOCHS,
         ITERS_PER_EPOCH,
+        save_freq=50,
         eval_during_train=True,
         eval_freq=50,
         validator=validator,
