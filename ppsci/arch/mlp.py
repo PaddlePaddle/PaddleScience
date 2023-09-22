@@ -50,8 +50,8 @@ class WeightNormLinear(nn.Layer):
         return nn.functional.linear(input, weight, self.bias)
 
 
-class FullyConnectedLayers(base.Arch):
-    """Fully Connected Layers, core implementation of MLP.
+class FullyConnectedLayer(base.Arch):
+    """Fully Connected Layer, core implementation of MLP.
 
     Args:
         input_dim (int): Number of input's dimension.
@@ -65,7 +65,7 @@ class FullyConnectedLayers(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.FullyConnectedLayers(3, 4, num_layers=5, hidden_size=128)
+        >>> model = ppsci.arch.FullyConnectedLayer(3, 4, num_layers=5, hidden_size=128)
     """
 
     def __init__(
@@ -145,9 +145,9 @@ class FullyConnectedLayers(base.Arch):
         return y
 
 
-class MLP(FullyConnectedLayers):
-    """Multi layer perceptron network derivated by FullyConnectedLayers.
-    Different from `FullyConnectedLayers`, this class accepts input/output string key(s) for symbolic computation.
+class MLP(FullyConnectedLayer):
+    """Multi layer perceptron network derivated by FullyConnectedLayer.
+    Different from `FullyConnectedLayer`, this class accepts input/output string key(s) for symbolic computation.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").

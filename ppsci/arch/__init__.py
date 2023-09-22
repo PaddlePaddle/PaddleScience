@@ -16,9 +16,9 @@ import copy
 
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
-from ppsci.arch.mlp import FullyConnectedLayers  # isort:skip
+from ppsci.arch.mlp import FullyConnectedLayer  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
-from ppsci.arch.deeponet import DeepOperatorLayers  # isort:skip
+from ppsci.arch.deeponet import DeepOperatorLayer  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
@@ -27,17 +27,18 @@ from ppsci.arch.gan import Discriminator  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
-from ppsci.arch.afno import AdaptiveFourierLayers  # isort:skip
+from ppsci.arch.afno import AdaptiveFourierLayer  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
+from ppsci.arch.afno import PrecipLayer  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
 __all__ = [
     "Arch",
     "MLP",
-    "FullyConnectedLayers",
+    "FullyConnectedLayer",
     "DeepONet",
-    "DeepOperatorLayers",
+    "DeepOperatorLayer",
     "LorenzEmbedding",
     "RosslerEmbedding",
     "CylinderEmbedding",
@@ -46,9 +47,9 @@ __all__ = [
     "PhysformerGPT2",
     "ModelList",
     "AFNONet",
-    "AdaptiveFourierLayers",
+    "AdaptiveFourierLayer",
     "PrecipNet",
-    "PrecipLayers",
+    "PrecipLayer",
     "build_model",
 ]
 

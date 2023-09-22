@@ -25,7 +25,7 @@ from ppsci.arch import base
 from ppsci.arch import mlp
 
 
-class DeepOperatorLayers(base.Arch):
+class DeepOperatorLayer(base.Arch):
     """Deep operator network, core implementation of `DeepONet`.
 
     [Lu et al. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nat Mach Intell, 2021.](https://doi.org/10.1038/s42256-021-00302-5)
@@ -50,7 +50,7 @@ class DeepOperatorLayers(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.DeepOperatorLayers(
+        >>> model = ppsci.arch.DeepOperatorLayer(
         ...     1,
         ...     100, 40,
         ...     1, 1,
@@ -79,7 +79,7 @@ class DeepOperatorLayers(base.Arch):
     ):
         super().__init__()
         self.trunck_dim = trunck_dim
-        self.branch_net = mlp.FullyConnectedLayers(
+        self.branch_net = mlp.FullyConnectedLayer(
             num_loc,
             num_features,
             branch_num_layers,
@@ -89,7 +89,7 @@ class DeepOperatorLayers(base.Arch):
             branch_weight_norm,
         )
 
-        self.trunk_net = mlp.FullyConnectedLayers(
+        self.trunk_net = mlp.FullyConnectedLayer(
             trunck_dim,
             num_features,
             trunk_num_layers,
@@ -129,9 +129,9 @@ class DeepOperatorLayers(base.Arch):
         return G_u
 
 
-class DeepONet(DeepOperatorLayers):
+class DeepONet(DeepOperatorLayer):
     """Deep operator network.
-    Different from `DeepOperatorLayers`, this class accepts input/output string key(s) for symbolic computation.
+    Different from `DeepOperatorLayer`, this class accepts input/output string key(s) for symbolic computation.
 
     [Lu et al. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nat Mach Intell, 2021.](https://doi.org/10.1038/s42256-021-00302-5)
 

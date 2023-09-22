@@ -6,9 +6,9 @@
       members:
         - Arch
         - MLP
-        - FullyConnectedLayers
+        - FullyConnectedLayer
         - DeepONet
-        - DeepOperatorLayers
+        - DeepOperatorLayer
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
@@ -16,9 +16,9 @@
         - Discriminator
         - PhysformerGPT2
         - ModelList
-        - AdaptiveFourierLayers
+        - AdaptiveFourierLayer
         - AFNONet
         - PrecipNet
-        - PrecipLayers
+        - PrecipLayer
       show_root_heading: false
       heading_level: 3

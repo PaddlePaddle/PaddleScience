@@ -391,7 +391,7 @@ class PatchEmbed(nn.Layer):
         return x
 
 
-class AdaptiveFourierLayers(base.Arch):
+class AdaptiveFourierLayer(base.Arch):
     """Adaptive Fourier Neural Operators Network, core implementation of AFNO.
 
     Args:
@@ -411,7 +411,7 @@ class AdaptiveFourierLayers(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.AdaptiveFourierLayers()
+        >>> model = ppsci.arch.AdaptiveFourierLayer()
     """
 
     def __init__(
@@ -523,9 +523,9 @@ class AdaptiveFourierLayers(base.Arch):
         return x
 
 
-class AFNONet(AdaptiveFourierLayers):
+class AFNONet(AdaptiveFourierLayer):
     """Adaptive Fourier Neural Operators Network.
-    Different from `AdaptiveFourierLayers`, this class accepts input/output string key(s) for symbolic computation.
+    Different from `AdaptiveFourierLayer`, this class accepts input/output string key(s) for symbolic computation.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
@@ -609,7 +609,7 @@ class AFNONet(AdaptiveFourierLayers):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
 
-class PrecipLayers(base.Arch):
+class PrecipLayer(base.Arch):
     """Precipitation Network, core implementation of PrecipNet.
 
     Args:
@@ -661,7 +661,7 @@ class PrecipLayers(base.Arch):
         self.embed_dim = embed_dim
         self.num_blocks = num_blocks
         self.num_timestamps = num_timestamps
-        self.backbone = AdaptiveFourierLayers(
+        self.backbone = AdaptiveFourierLayer(
             img_size=img_size,
             patch_size=patch_size,
             in_channels=in_channels,
@@ -703,9 +703,9 @@ class PrecipLayers(base.Arch):
         return x
 
 
-class PrecipNet(PrecipLayers):
+class PrecipNet(PrecipLayer):
     """Precipitation Network.
-    Different from `PrecipLayers`, this class accepts input/output string key(s) for symbolic computation.
+    Different from `PrecipLayer`, this class accepts input/output string key(s) for symbolic computation.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
