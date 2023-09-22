@@ -21,7 +21,12 @@ from typing import Tuple
 import numpy as np
 import paddle
 import paddle.nn as nn
-import pgl
+
+try:
+    import pgl
+except ImportError:
+    pass
+
 from pyamg.classical.split import RS
 from scipy import sparse as sci_sparse
 
