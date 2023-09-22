@@ -78,6 +78,7 @@ class FullyConnectedLayers(base.Arch):
         skip_connection: bool = False,
         weight_norm: bool = False,
     ):
+        super().__init__()
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -146,7 +147,7 @@ class FullyConnectedLayers(base.Arch):
 
 class MLP(FullyConnectedLayers):
     """Multi layer perceptron network derivated by FullyConnectedLayers.
-    Which accepts input/output string key(s) for symbolic computation.
+    Different from `FullyConnectedLayers`, this class accepts input/output string key(s) for symbolic computation.
 
     Args:
         input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
@@ -194,7 +195,7 @@ class MLP(FullyConnectedLayers):
             x = self._input_transform(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = super().forward(x)
+        y = super().forward(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
