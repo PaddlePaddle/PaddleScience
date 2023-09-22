@@ -16,20 +16,14 @@ from __future__ import annotations
 
 import os
 import pickle
-from os import PathLike
 from os import path as osp
 from typing import Dict
 from typing import List
 from typing import Tuple
-from typing import Union
 
 import numpy as np
 import paddle
-
-try:
-    from pgl.utils import data as pgl_data
-except ImportError:
-    pass
+from paddle import io
 
 try:
     import pgl
@@ -44,7 +38,7 @@ SU2_SHAPE_IDS = {
 
 
 def _get_mesh_graph(
-    mesh_filename: Union[str, PathLike], dtype: np.dtype = np.float32
+    mesh_filename: str, dtype: np.dtype = np.float32
 ) -> Tuple[np.ndarray, np.ndarray, List[List[List[int]]], Dict[str, List[List[int]]]]:
     def get_rhs(s: str) -> str:
         return s.split("=")[-1]
@@ -93,7 +87,7 @@ def _get_mesh_graph(
     return nodes, edges, elems, marker_dict
 
 
-class MeshAirfoilDataset(pgl_data.Dataset):
+class MeshAirfoilDataset(io.Dataset):
     """Dataset for `MeshAirfoil`.
 
     Args:
