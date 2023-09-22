@@ -28,10 +28,12 @@ def test_l1loss_mean(dim):
         input_data = paddle.concat([x, y, z], axis=1)
 
     # build NN model
-    model = arch.MLP(input_dims, output_dims, 2, 16)
+    model = arch.FullyConnectedLayer(len(input_dims), len(output_dims), 2, 16)
+    model_sym = arch.MLP(input_dims, output_dims, 2, 16)
+    model_sym.load_dict(model.state_dict())
 
     # manually generate output
-    u = model.forward_tensor(input_data)
+    u = model(input_data)
 
     # use self-defined jacobian and hessian
     def jacobian(y: "paddle.Tensor", x: "paddle.Tensor") -> "paddle.Tensor":
@@ -51,7 +53,7 @@ def test_l1loss_mean(dim):
         if isinstance(expr, sp.Basic):
             laplace_equation.equations[name] = ppsci.lambdify(
                 expr,
-                model,
+                model_sym,
             )
 
     data_dict = {

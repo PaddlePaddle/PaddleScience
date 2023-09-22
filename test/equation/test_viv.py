@@ -33,10 +33,12 @@ def test_vibration(rho, k1, k2):
     input_data = t_f
     input_dims = ("t_f",)
     output_dims = ("eta",)
-    model = arch.MLP(input_dims, output_dims, 2, 16)
+    model = arch.FullyConnectedLayer(len(input_dims), len(output_dims), 2, 16)
+    model_sym = arch.MLP(input_dims, output_dims, 2, 16)
+    model_sym.load_dict(model.state_dict())
 
     # manually generate output
-    eta = model.forward_tensor(input_data)
+    eta = model(input_data)
 
     def jacobian(y: paddle.Tensor, x: paddle.Tensor) -> paddle.Tensor:
         return paddle.grad(y, x, create_graph=True)[0]
@@ -56,7 +58,7 @@ def test_vibration(rho, k1, k2):
         if isinstance(expr, sp.Basic):
             vibration_equation.equations[name] = ppsci.lambdify(
                 expr,
-                model,
+                model_sym,
                 vibration_equation.learnable_parameters,
             )
     input_data_dict = {"t_f": t_f}

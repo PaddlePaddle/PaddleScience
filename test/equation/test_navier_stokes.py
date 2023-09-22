@@ -110,10 +110,12 @@ def test_navierstokes(nu, rho, dim, time):
         input_dims = input_dims + ("z",)
     input_data = paddle.concat(inputs, axis=1)
 
-    model = arch.MLP(input_dims, output_dims, 2, 16)
+    model = arch.FullyConnectedLayer(len(input_dims), len(output_dims), 2, 16)
+    model_sym = arch.MLP(input_dims, output_dims, 2, 16)
+    model_sym.load_dict(model.state_dict())
 
     # manually generate output
-    output = model.forward_tensor(input_data)
+    output = model(input_data)
 
     if dim == 2:
         u, v, p = paddle.split(output, num_or_sections=len(output_dims), axis=1)
@@ -140,7 +142,7 @@ def test_navierstokes(nu, rho, dim, time):
         if isinstance(expr, sp.Basic):
             navier_stokes_equation.equations[name] = ppsci.lambdify(
                 expr,
-                model,
+                model_sym,
             )
 
     data_dict = {"x": x, "y": y, "u": u, "v": v, "p": p}
