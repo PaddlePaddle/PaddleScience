@@ -22,9 +22,14 @@ from typing import List
 import numpy as np
 import paddle
 
+try:
+    import pgl
+except ImportError:
+    pass
+
 from ppsci.data.process import transform
 
-__all__ = ["build_batch_transforms"]
+__all__ = ["build_batch_transforms", "default_collate_fn"]
 
 
 def default_collate_fn(batch: List[Any]) -> Any:
@@ -39,7 +44,23 @@ def default_collate_fn(batch: List[Any]) -> Any:
         Any: Collated batch data.
     """
     sample = batch[0]
-    if isinstance(sample, np.ndarray):
+    if sample is None:
+        return None
+    elif isinstance(sample, pgl.Graph):
+        graph = pgl.Graph(
+            num_nodes=sample.num_nodes,
+            edges=sample.edges,
+        )
+        graph.x = paddle.concat([g.x for g in batch])
+        graph.y = paddle.concat([g.y for g in batch])
+        graph.edge_index = paddle.concat([g.edge_index for g in batch], axis=1)
+        graph.edge_attr = paddle.concat([g.edge_attr for g in batch])
+        graph.pos = paddle.concat([g.pos for g in batch])
+        graph.shape = [
+            len(batch),
+        ]
+        return graph
+    elif isinstance(sample, np.ndarray):
         batch = np.stack(batch, axis=0)
         return batch
     elif isinstance(sample, (paddle.Tensor, paddle.framework.core.eager.Tensor)):

@@ -18,6 +18,7 @@ import collections
 import functools
 import os
 import random
+import time
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -28,6 +29,8 @@ import numpy as np
 import paddle
 from matplotlib import pyplot as plt
 from paddle import distributed as dist
+
+from ppsci.utils import logger
 
 __all__ = [
     "all_gather",
@@ -44,6 +47,7 @@ __all__ = [
     "run_on_eval_mode",
     "run_at_rank0",
     "plot_curve",
+    "Timer",
 ]
 
 
@@ -381,3 +385,38 @@ def plot_curve(
 
     plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
     plt.clf()
+
+
+class Timer:
+    """Count time cost for code block within context.
+
+    Args:
+        name (str, optional): Name of timer discriminate different code block.
+            Defaults to "Timer".
+        auto_print (bool, optional): Whether print time cost when exit context.
+            Defaults to True.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> with misc.Timer(auto_print=False) as timer:
+        ...     w = sum(range(0, 10))
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        time cost of 'sum(range(0, 10))' is 0.00
+    """
+
+    interval: float  # Time cost for code within Timer context
+
+    def __init__(self, name: str = "Timer", auto_print: bool = True):
+        self.name = name
+        self.auto_print = auto_print
+
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")

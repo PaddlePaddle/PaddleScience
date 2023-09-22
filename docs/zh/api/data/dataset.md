@@ -16,4 +16,5 @@
         - LorenzDataset
         - RosslerDataset
         - VtuDataset
+        - MeshAirfoilDataset
       show_root_heading: false

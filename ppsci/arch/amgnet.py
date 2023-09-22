@@ -95,6 +95,7 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_A.numpy()
     values_A = value_A.numpy()
+    # with misc.Timer("coo_matrix1"):
     coo_A = sci_sparse.coo_matrix(
         (values_A, (indices_A[0], indices_A[1])), shape=(N, N)
     )
@@ -125,6 +126,7 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_St.numpy()
     values_A = value_St.numpy()
+    # with misc.Timer("coo_matrix2"):
     coo_A = sci_sparse.coo_matrix(
         (values_A, (indices_A[0], indices_A[1])), shape=(kN, N)
     )
@@ -259,21 +261,26 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
     mask = (edge_index[0] == perm2).sum(axis=0).astype("bool")
     S0 = edge_index[1][mask].reshape((1, -1))
     S1 = edge_index[0][mask].reshape((1, -1))
+
     index_S = paddle.concat([S0, S1], axis=0)
     value_S = score[mask].detach().squeeze()
     n_idx = paddle.zeros([N], dtype=paddle.int64)
     n_idx[perm] = paddle.arange(perm.shape[0])
+
     index_S = index_S.astype("int64")
     index_S[1] = n_idx[index_S[1]]
     subgraphnode_pos = pos[perm]
     index_A = edge_index.clone()
+
     if edge_weight is None:
         value_A = value_S.new_ones(edge_index[0].shape[0])
     else:
         value_A = edge_weight.clone()
 
     value_A = paddle.squeeze(value_A)
-    value_S = paddle.where(value_S == 0, paddle.to_tensor(0.0001), value_S)
+    eps_mask = (value_S == 0).astype(paddle.get_default_dtype())
+    value_S = paddle.full_like(value_S, 1e-4) * eps_mask + (1 - eps_mask) * value_S
+    # value_S = paddle.where(value_S == 0, paddle.to_tensor(0.0001), value_S)
     attrlist = []
     standard_index, _ = StAS(
         index_A,
@@ -284,15 +291,21 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
         kN,
         nor,
     )
+    # with misc.Timer("range 128"):
     for i in range(128):
-        val_A = paddle.where(
-            value_A[:, i] == 0, paddle.to_tensor(0.0001), value_A[:, i]
-        )
+        mask = (value_A[:, i] == 0).astype(paddle.get_default_dtype())
+        val_A = paddle.full_like(mask, 1e-4) * mask + (1 - mask) * value_A[:, i]
+        # val_A = paddle.where(
+        #     value_A[:, i] == 0, paddle.to_tensor(0.0001), value_A[:, i]
+        # )
+        # with misc.Timer("inner StAS"):
         index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, nor)
 
         if index_E.shape[1] != standard_index.shape[1]:
+            # with misc.Timer("FillZeros"):
             index_E, value_E = FillZeros(index_E, value_E, standard_index, kN)
 
+        # with misc.Timer("remove_self_loops"):
         index_E, value_E = remove_self_loops(edge_index=index_E, edge_attr=value_E)
         attrlist.append(value_E)
     edge_weight = paddle.stack(attrlist, axis=1)
@@ -445,6 +458,7 @@ class Processor(nn.Layer):
                         nor=self.normalization,
                     )
                 elif speed == "norm":
+                    # with misc.Timer("norm_graph_connectivity"):
                     subedge_index, edge_weight, subpos = norm_graph_connectivity(
                         perm=coarsenodes,
                         edge_index=cofe_graph.edge_index,
@@ -498,7 +512,7 @@ class LazyMLP(nn.Layer):
 class Encoder(nn.Layer):
     """Encodes node and edge features into latent features."""
 
-    def __init__(self, input_dim, make_mlp, latent_dim, mode):
+    def __init__(self, input_dim, make_mlp, latent_dim):
         super(Encoder, self).__init__()
         self._make_mlp = make_mlp
         self._latent_dim = latent_dim
@@ -507,7 +521,7 @@ class Encoder(nn.Layer):
         # else:
         self.node_model = self._make_mlp(latent_dim, input_dim=input_dim)  # 4
 
-        self.mesh_edge_model = self._make_mlp(latent_dim, input_dim=input_dim)  # 1
+        self.mesh_edge_model = self._make_mlp(latent_dim, input_dim=1)  # 1
         """
         for _ in graph.edge_sets:
           edge_model = make_mlp(latent_dim)
@@ -516,9 +530,8 @@ class Encoder(nn.Layer):
 
     def forward(self, graph):
         node_latents = self.node_model(graph.x)
-        # print(f">>> graph.x = {graph.x.shape}") # [26736, 5]
         edge_latent = self.mesh_edge_model(graph.edge_attr)
-        # print(f">>> graph.edge_attr = {graph.edge_attr.shape}") # [105344, 1]
+
         graph.x = node_latents
         graph.edge_attr = edge_latent
         return graph
@@ -548,7 +561,6 @@ class AMGNet(nn.Layer):
         num_layers,
         message_passing_aggregator,
         message_passing_steps,
-        mode,
         speed,
         nodes=6684,
     ):
@@ -560,10 +572,7 @@ class AMGNet(nn.Layer):
         self.min_nodes = nodes
         self._message_passing_steps = message_passing_steps
         self._message_passing_aggregator = message_passing_aggregator
-        # self.mode = mode
-        self.encoder = Encoder(
-            make_mlp=self._make_mlp, latent_dim=self._latent_dim, mode=self.mode
-        )
+        self.encoder = Encoder(input_dim, self._make_mlp, latent_dim=self._latent_dim)
         self.processor = Processor(
             make_mlp=self._make_mlp,
             output_dim=self._latent_dim,
@@ -596,19 +605,14 @@ class AMGNet(nn.Layer):
             node_features = self.post_processor(node_features)
         return node_features
 
-    def forward(self, graphs):
-        batch = MyCopy(graphs[0])
-
-        for index, graph in enumerate(graphs):
-            if index > 0:
-                batch = Myadd(batch, graph)
-
-        latent_graph = self.encoder(batch)
-
+    def forward(self, x):
+        graphs = x["input"]
+        # with misc.Timer("encoder"):
+        latent_graph = self.encoder(graphs)
+        # with misc.Timer("processor"):
         x, p = self.processor(latent_graph, speed=self.speed)
-
+        # with misc.Timer("_spa_compute"):
         node_features = self._spa_compute(x, p)
-
+        # with misc.Timer("decoder"):
         pred_field = self.decoder(node_features)
-
-        return pred_field
+        return {"pred": pred_field}

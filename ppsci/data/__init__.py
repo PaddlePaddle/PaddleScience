@@ -83,8 +83,8 @@ def build_dataloader(_dataset, cfg):
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
 
-    collate_fn = None
-    if isinstance(batch_transforms_cfg, dict) and batch_transforms_cfg:
+    collate_fn = batch_transform.default_collate_fn
+    if isinstance(batch_transforms_cfg, (list, tuple)):
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
 
     # build init function
@@ -96,15 +96,28 @@ def build_dataloader(_dataset, cfg):
     )
 
     # build dataloader
-    dataloader_ = io.DataLoader(
-        dataset=_dataset,
-        places=device.get_device(),
-        batch_sampler=sampler,
-        collate_fn=collate_fn,
-        num_workers=cfg.get("num_workers", 0),
-        use_shared_memory=cfg.get("use_shared_memory", False),
-        worker_init_fn=init_fn,
-    )
+    if getattr(_dataset, "use_pgl", False):
+        # Use special dataloader from "Paddle Graph Learning" toolkit.
+        from pgl.utils import data as pgl_data
+
+        dataloader_ = pgl_data.Dataloader(
+            dataset=_dataset,
+            batch_size=cfg["batch_size"],
+            drop_last=sampler_cfg.get("drop_last", False),
+            shuffle=sampler_cfg.get("shuffle", False),
+            num_workers=cfg.get("num_workers", 1),
+            collate_fn=collate_fn,
+        )
+    else:
+        dataloader_ = io.DataLoader(
+            dataset=_dataset,
+            places=device.get_device(),
+            batch_sampler=sampler,
+            collate_fn=collate_fn,
+            num_workers=cfg.get("num_workers", 0),
+            use_shared_memory=cfg.get("use_shared_memory", False),
+            worker_init_fn=init_fn,
+        )
 
     if len(dataloader_) == 0:
         raise ValueError(
