@@ -25,10 +25,14 @@ from typing import Union
 
 import numpy as np
 import paddle
-import pgl
 
 try:
     from pgl.utils import data as pgl_data
+except ImportError:
+    pass
+
+try:
+    import pgl
 except ImportError:
     pass
 
