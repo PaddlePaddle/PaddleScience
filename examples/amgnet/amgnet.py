@@ -12,18 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Dict
+from typing import List
+
 from paddle.nn import functional as F
 
 import ppsci
 from ppsci.utils import config
 from ppsci.utils import logger
 
+if TYPE_CHECKING:
+    import paddle
+    import pgl
 
-def train_mse_func(output_dict, label_dict, *args):
+
+def train_mse_func(
+    output_dict: Dict[str, "paddle.Tensor"], label_dict: Dict[str, "pgl.Graph"], *args
+) -> paddle.Tensor:
     return F.mse_loss(output_dict["pred"], label_dict["label"].y)
 
 
-def eval_rmse_func(output_dict, label_dict, *args):
+def eval_rmse_func(
+    output_dict: Dict[str, List["paddle.Tensor"]],
+    label_dict: Dict[str, List["pgl.Graph"]],
+    *args,
+) -> Dict[str, float]:
     mse_losses = [
         F.mse_loss(pred, label.y)
         for (pred, label) in zip(output_dict["pred"], label_dict["label"])
@@ -40,18 +56,17 @@ if __name__ == "__main__":
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
-    # set model
-    # model for airfoil
+    # set airfoil model
     model = ppsci.arch.AMGNet(
-        5,
-        3,
-        128,
+        input_dim=5,
+        output_dim=3,
+        latent_dim=128,
         num_layers=2,
         message_passing_aggregator="sum",
         message_passing_steps=6,
         speed="norm",
     )
-    # # model for cylinder
+    # set cylinder model
     # model = ppsci.arch.AMGNet(
     #     5,
     #     3,
@@ -89,9 +104,7 @@ if __name__ == "__main__":
         name="Sup",
     )
     # wrap constraints together
-    constraint = {
-        sup_constraint.name: sup_constraint,
-    }
+    constraint = {sup_constraint.name: sup_constraint}
 
     # set training hyper-parameters
     EPOCHS = 500 if not args.epochs else args.epochs
