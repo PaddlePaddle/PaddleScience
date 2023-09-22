@@ -19,6 +19,7 @@ import functools
 import os
 import random
 import time
+from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -387,7 +388,7 @@ def plot_curve(
     plt.clf()
 
 
-class Timer:
+class Timer(ContextDecorator):
     """Count time cost for code block within context.
 
     Args:
@@ -399,15 +400,22 @@ class Timer:
     Examples:
         >>> import paddle
         >>> from ppsci.utils import misc
-        >>> with misc.Timer(auto_print=False) as timer:
+        >>> with misc.Timer("test1", auto_print=False) as timer:
         ...     w = sum(range(0, 10))
         >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
         time cost of 'sum(range(0, 10))' is 0.00
+
+        >>> @misc.Timer("test2", auto_print=True)
+        ... def func():
+        ...     w = sum(range(0, 10))
+        >>> func()  # doctest: +SKIP
+
     """
 
     interval: float  # Time cost for code within Timer context
 
     def __init__(self, name: str = "Timer", auto_print: bool = True):
+        super().__init__()
         self.name = name
         self.auto_print = auto_print
 
