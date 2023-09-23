@@ -22,9 +22,9 @@ $$\nabla \cdot    \bf{u}=0$$
 
 $$\rho(\frac{\partial}{\partial t}  + \bf{u} \cdot  div ) \bf{u} = - \nabla p +  - \nabla \tau + \bf{f}$$
 
-其中 $\bf{u}$ 是速度差（具有 x 和 y 两个维度） $\rho$ 是密度， $p$ 是压强场，$\bf{f}$ 是体积力（例如重力）。
+其中 $\bf{u}$ 是速度差（具有 x 和 y 两个维度），$\rho$ 是密度， $p$ 是压强场，$\bf{f}$ 是体积力（例如重力）。
 
-假设满足非均匀稳态流体条件，可去掉时间相关项，并将 $\bf{u}$ 分解为速度分量 $u_x$ 和 $u_y$，动量方程可重写成：
+假设满足非均匀稳态流体条件，可去掉时间相关项，并将 $\bf{u}$ 分解为速度分量 $u_x$ 和 $u_y$ ，动量方程可重写成：
 
 $$u_x\frac{\partial u_x}{\partial x} + u_y\frac{\partial u_x}{\partial y} = - \frac{1}{\rho}\frac{\partial p}{\partial x} + \nu \nabla^2 u_x + g_x$$
 
@@ -51,7 +51,7 @@ dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一�
 
 数据集官网为：https://zenodo.org/record/3666056/files/DeepCFD.zip?download=1
 
-我们将数据集以7：3的比例划分为训练集和验证集，代码如下：
+我们将数据集以 7:3 的比例划分为训练集和验证集，代码如下：
 
 ``` py linenums="197" title="examples/deepcfd/deepcfd.py"
 --8<--
@@ -128,7 +128,7 @@ examples/deepcfd/deepcfd.py:290:330
 --8<--
 ```
 
-评价指标 `metric` 这里自定义了四个指标 Total_MSE、Ux_MSE、Uy_MSE、p_MSE。
+评价指标 `metric` 这里自定义了四个指标 Total_MSE、Ux_MSE、Uy_MSE 和 p_MSE。
 
 其余配置与 [约束构建](#33) 的设置类似。
 
