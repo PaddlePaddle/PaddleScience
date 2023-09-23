@@ -11,6 +11,14 @@ def readme():
         return f.read()
 
 
+def get_requirements() -> list:
+    """get requirements from PaddleScience/requirements.txt"""
+    req_list = []
+    with open("requirements.txt", "r") as f:
+        req_list = f.read().splitlines()
+    return req_list
+
+
 if __name__ == "__main__":
     setuptools.setup(
         name="paddlesci",
@@ -46,23 +54,5 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
             "Topic :: Scientific/Engineering :: Mathematics",
         ],
-        install_requires=[
-            "numpy>=1.20.0",
-            "scipy",
-            "sympy",
-            "matplotlib",
-            "vtk",
-            "pyevtk",
-            "wget",
-            "scipy",
-            "visualdl",
-            "pyvista==0.37.0",
-            "pyyaml",
-            "scikit-optimize",
-            "h5py",
-            "meshio==5.3.4",
-            "tqdm",
-            "imageio",
-            "colorlog",
-        ],
+        install_requires=get_requirements(),
     )
