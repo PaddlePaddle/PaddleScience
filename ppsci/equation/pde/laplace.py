@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from ppsci.autodiff import hessian
+from typing import Optional
+from typing import Tuple
+
 from ppsci.equation.pde import base
 
 
@@ -27,23 +29,25 @@ class Laplace(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.Laplace(2)
     """
 
-    def __init__(self, dim: int):
+    def __init__(self, dim: int, detach_keys: Optional[Tuple[str, ...]] = None):
         super().__init__()
+        self.detach_keys = detach_keys
+
+        invars = self.create_symbols("x y z")[:dim]
+        u = self.create_function("u", invars)
+
         self.dim = dim
 
-        def laplace_compute_func(out):
-            x, y = out["x"], out["y"]
-            u = out["u"]
-            laplace = hessian(u, x) + hessian(u, y)
-            if self.dim == 3:
-                z = out["z"]
-                laplace += hessian(u, z)
-            return laplace
+        laplace = 0
+        for invar in invars:
+            laplace += u.diff(invar, 2)
 
-        self.add_equation("laplace", laplace_compute_func)
+        self.add_equation("laplace", laplace)

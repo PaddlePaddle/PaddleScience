@@ -60,19 +60,20 @@ class SupervisedConstraint(base.Constraint):
         output_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
-        self.output_expr = output_expr
-
         # build dataset
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 
         self.input_keys = _dataset.input_keys
         self.output_keys = (
-            list(output_expr.keys()) if output_expr is not None else _dataset.label_keys
+            tuple(output_expr.keys())
+            if output_expr is not None
+            else _dataset.label_keys
         )
 
+        self.output_expr = output_expr
         if self.output_expr is None:
             self.output_expr = {
-                key: lambda out, k=key: out[k] for key in self.output_keys
+                key: (lambda out, k=key: out[k]) for key in self.output_keys
             }
 
         # construct dataloader with dataset and dataloader_cfg

@@ -23,7 +23,6 @@ from typing import Union
 
 import numpy as np
 import sympy
-from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
@@ -54,6 +53,8 @@ class InteriorConstraint(base.Constraint):
             Defaults to False.
         weight_dict (Optional[Dict[str, Union[Callable, float]]]): Define the
             weight of each constraint variable. Defaults to None.
+        compute_sdf_derivatives (Optional[bool]): Whether compute derivatives for SDF.
+            Defaults to False.
         name (str, optional): Name of constraint object. Defaults to "EQ".
 
     Examples:
@@ -84,19 +85,18 @@ class InteriorConstraint(base.Constraint):
         criteria: Optional[Callable] = None,
         evenly: bool = False,
         weight_dict: Optional[Dict[str, Union[Callable, float]]] = None,
+        compute_sdf_derivatives: bool = False,
         name: str = "EQ",
     ):
-        self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
-            if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
-
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
+        self.output_expr = {
+            k: v for k, v in output_expr.items() if k in self.output_keys
+        }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)
@@ -107,6 +107,7 @@ class InteriorConstraint(base.Constraint):
             random,
             criteria,
             evenly,
+            compute_sdf_derivatives,
         )
         if "area" in input:
             input["area"] *= dataloader_cfg["iters_per_epoch"]
@@ -114,8 +115,6 @@ class InteriorConstraint(base.Constraint):
         # prepare label
         label = {}
         for key, value in label_dict.items():
-            if isinstance(value, str):
-                value = sp_parser.parse_expr(value)
             if isinstance(value, (int, float)):
                 label[key] = np.full_like(next(iter(input.values())), value)
             elif isinstance(value, sympy.Basic):

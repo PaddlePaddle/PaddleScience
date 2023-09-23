@@ -42,14 +42,14 @@ $$u_x\frac{\partial u_y}{\partial x} + u_y\frac{\partial u_y}{\partial y} = - \f
 
 该数据集中的数据使用 OpenFOAM 求得。数据集有两个文件 dataX 和 dataY。dataX 包含 981 个通道流样本几何形状的输入信息，dataY 包含对应的 OpenFOAM 求解结果。
 
-dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴是 x 和 y 中的元素数量（Nx 和 Ny）。对于输入数据X，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。对于输出 dataY 文件，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
+dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
 
 |数据集 | 下载地址 |
 |:----:|:--------:|
 | dataX | [dataX.pkl](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl) |
 | dataY | [dataY.pkl](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl) |
 
-数据集官网为：https://zenodo.org/record/3666056/files/DeepCFD.zip?download=1
+数据集原始下载地址为：https://zenodo.org/record/3666056/files/DeepCFD.zip?download=1
 
 我们将数据集以 7:3 的比例划分为训练集和验证集，代码如下：
 
@@ -91,7 +91,7 @@ examples/deepcfd/deepcfd.py:248:278
 
 第二个参数是损失函数的定义，这里使用自定义的损失函数，分别计算 Ux 和 Uy 的均方误差，以及 p 的标准差，然后三者加权求和。
 
-第三个参数是约束条件的名字，方便后续对其索引。此次命名为 sup_constraint。
+第三个参数是约束条件的名字，方便后续对其索引。此次命名为 "sup_constraint"。
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
@@ -154,7 +154,7 @@ examples/deepcfd/deepcfd.py:351:356
 
 ``` py linenums="1" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:1:356
+examples/deepcfd/deepcfd.py
 --8<--
 ```
 

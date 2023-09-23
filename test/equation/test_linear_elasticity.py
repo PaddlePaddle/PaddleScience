@@ -1,7 +1,9 @@
 import paddle
 import pytest
-from paddle import nn
+import sympy as sp
 
+import ppsci
+from ppsci import arch
 from ppsci import equation
 
 
@@ -123,7 +125,32 @@ def traction_z_expected_result(
     ],
 )
 def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
+    paddle.seed(42)
     batch_size = 13
+    input_dims = ("x", "y", "z")[:dim]
+    if time:
+        input_dims += ("t",)
+    output_dims = (
+        (
+            "u",
+            "v",
+            "sigma_xx",
+            "sigma_yy",
+            "sigma_xy",
+        )
+        if dim == 2
+        else (
+            "u",
+            "v",
+            "w",
+            "sigma_xx",
+            "sigma_yy",
+            "sigma_xy",
+            "sigma_zz",
+            "sigma_xz",
+            "sigma_yz",
+        )
+    )
     x = paddle.randn([batch_size, 1])
     y = paddle.randn([batch_size, 1])
     z = paddle.randn([batch_size, 1]) if dim == 3 else None
@@ -145,12 +172,14 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     if dim == 3:
         input_data = paddle.concat([input_data, z], axis=1)
 
-    model = nn.Sequential(
-        nn.Linear(input_data.shape[1], 9 if dim == 3 else 5),
-        nn.Tanh(),
-    )
+    model = arch.MLP(input_dims, output_dims, 2, 16)
 
-    output = model(input_data)
+    # model = nn.Sequential(
+    #     nn.Linear(input_data.shape[1], 9 if dim == 3 else 5),
+    #     nn.Tanh(),
+    # )
+
+    output = model.forward_tensor(input_data)
 
     u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
 
@@ -201,15 +230,20 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     linear_elasticity = equation.LinearElasticity(
         E=E, nu=nu, lambda_=lambda_, mu=mu, rho=rho, dim=dim, time=time
     )
-
+    for name, expr in linear_elasticity.equations.items():
+        if isinstance(expr, sp.Basic):
+            linear_elasticity.equations[name] = ppsci.lambdify(
+                expr,
+                model,
+            )
     data_dict = {
+        "t": t,
         "x": x,
         "y": y,
+        "z": z,
         "u": u,
         "v": v,
-        "z": z,
         "w": w,
-        "t": t,
         "sigma_xx": sigma_xx,
         "sigma_xy": sigma_xy,
         "sigma_xz": sigma_xz,
@@ -220,6 +254,14 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         "normal_y": normal_y,
         "normal_z": normal_z,
     }
+    if not time:
+        data_dict.pop("t")
+    if dim == 2:
+        data_dict.pop("w")
+        data_dict.pop("sigma_xz")
+        data_dict.pop("sigma_yz")
+        data_dict.pop("sigma_zz")
+        data_dict.pop("normal_z")
 
     test_output_names = [
         "stress_disp_xx",
@@ -267,7 +309,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         )
 
     for name in test_output_names:
-        assert paddle.allclose(expected_output[name], test_output[name])
+        assert paddle.allclose(expected_output[name], test_output[name], atol=1e-7)
 
 
 if __name__ == "__main__":

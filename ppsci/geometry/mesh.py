@@ -427,7 +427,14 @@ class Mesh(geometry.Geometry):
         all_areas = np.full((n, 1), cuboid_volume * (_nvalid / _nsample) / n)
         return all_points, all_areas
 
-    def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
+    def sample_interior(
+        self,
+        n,
+        random="pseudo",
+        criteria=None,
+        evenly=False,
+        compute_sdf_derivatives: bool = False,
+    ):
         """Sample random points in the geometry and return those meet criteria."""
         if evenly:
             # TODO(sensen): implement uniform sample for mesh interior.
@@ -438,13 +445,20 @@ class Mesh(geometry.Geometry):
         points, areas = self.random_points(n, random, criteria)
 
         x_dict = misc.convert_to_dict(points, self.dim_keys)
-        area_dict = misc.convert_to_dict(areas, ["area"])
+        area_dict = misc.convert_to_dict(areas, ("area",))
 
         # NOTE: add negtive to the sdf values because weight should be positive.
         sdf = -self.sdf_func(points)
-        sdf_dict = misc.convert_to_dict(sdf, ["sdf"])
+        sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
 
-        return {**x_dict, **area_dict, **sdf_dict}
+        sdf_derivs_dict = {}
+        if compute_sdf_derivatives:
+            sdf_derivs = -self.sdf_derivatives(points)
+            sdf_derivs_dict = misc.convert_to_dict(
+                sdf_derivs, tuple(f"sdf__{key}" for key in self.dim_keys)
+            )
+
+        return {**x_dict, **area_dict, **sdf_dict, **sdf_derivs_dict}
 
     def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):

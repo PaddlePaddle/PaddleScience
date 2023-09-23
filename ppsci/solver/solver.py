@@ -27,6 +27,7 @@ from typing import Union
 import numpy as np
 import paddle
 import paddle.distributed as dist
+import sympy as sp
 import visualdl as vdl
 from packaging import version
 from paddle import amp
@@ -198,8 +199,13 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
-            wandb.init(**wandb_config)
-            self.wandb_writer = wandb
+            if dist.get_rank() == 0:
+                wandb.init(**wandb_config)
+                self.wandb_writer = wandb
+                if dist.get_world_size() > 1:
+                    dist.barrier()
+            else:
+                dist.barrier()
 
         # set running device
         if device != "cpu" and paddle.device.get_device() == "cpu":
@@ -307,6 +313,41 @@ class Solver:
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
+
+        # convert sympy to callable object if exist
+        extra_parameters = []
+        if self.equation:
+            for equation in self.equation.values():
+                extra_parameters += list(equation.learnable_parameters)
+
+        def convert_expr(
+            container_dict: Dict[
+                str,
+                Union[
+                    ppsci.constraint.Constraint,
+                    ppsci.validate.Validator,
+                    ppsci.visualize.Visualizer,
+                ],
+            ]
+        ) -> None:
+            for container in container_dict.values():
+                for name, expr in container.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        container.output_expr[name] = ppsci.lambdify(
+                            expr,
+                            self.model,
+                            extra_parameters,
+                            # os.path.join(self.output_dir, container.name, name),  # HACK: Activate it for DEBUG.
+                        )
+
+        if self.constraint:
+            convert_expr(self.constraint)
+
+        if self.validator:
+            convert_expr(self.validator)
+
+        if self.visualizer:
+            convert_expr(self.visualizer)
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -418,7 +459,7 @@ class Solver:
                 and epoch_id % self.eval_freq == 0
                 and epoch_id >= self.start_eval_epoch
             ):
-                cur_metric = self.eval(epoch_id)
+                cur_metric, metric_dict = self.eval(epoch_id)
                 if cur_metric < self.best_metric["metric"]:
                     self.best_metric["metric"] = cur_metric
                     self.best_metric["epoch"] = epoch_id
@@ -435,13 +476,7 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler(
-                    "eval/metric",
-                    cur_metric,
-                    epoch_id,
-                    self.vdl_writer,
-                    self.wandb_writer,
-                )
+                logger.scaler(metric_dict, epoch_id, self.vdl_writer, self.wandb_writer)
 
                 # visualize after evaluation
                 if self.visualizer is not None:

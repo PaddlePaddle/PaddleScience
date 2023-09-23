@@ -22,6 +22,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import ppsci
+from ppsci.utils import config
 from ppsci.utils import logger
 
 
@@ -33,9 +34,12 @@ def split_tensors(
     Args:
       tensors (List[np.array]): Non-empty tensor list.
       ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
+    Returns:
+      Tuple[List[np.array], List[np.array]]: Splited tensors.
     """
     if len(tensors) == 0:
         raise ValueError("Tensors shouldn't be empty.")
+
     split1, split2 = [], []
     count = len(tensors[0])
     for tensor in tensors:
@@ -44,6 +48,7 @@ def split_tensors(
         x = int(len(tensor) * ratio)
         split1.append(tensor[:x])
         split2.append(tensor[x:])
+
     if len(tensors) == 1:
         split1, split2 = split1[0], split2[0]
     return split1, split2
@@ -60,7 +65,6 @@ def predict_and_save_plot(
       index (int): Index of data to visuliaze.
       solver (ppsci.solver.Solver): Trained slover.
       plot_dir (str): Directory to save plot.
-
     """
     min_u = np.min(y[index, 0, :, :])
     max_u = np.max(y[index, 0, :, :])
@@ -194,15 +198,16 @@ def predict_and_save_plot(
 
 
 if __name__ == "__main__":
+    args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
 
-    DATASET_PATH = "./datasets/deepCDF/"
-    OUTPUT_DIR = "./output_deepCDF/"
+    OUTPUT_DIR = "./output_deepCDF/" if args.output_dir is None else args.output_dir
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # initialize datasets
+    DATASET_PATH = "./datasets/deepCDF/"
     with open(os.path.join(DATASET_PATH, "dataX.pkl"), "rb") as file:
         x = pickle.load(file)
     with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
@@ -211,13 +216,23 @@ if __name__ == "__main__":
     # slipt dataset to train dataset and test datatset
     SLIPT_RATIO = 0.7
     train_dataset, test_dataset = split_tensors(x, y, ratio=SLIPT_RATIO)
-    train_x, train_y = train_dataset[:]
-    test_x, test_y = test_dataset[:]
+    train_x, train_y = train_dataset
+    test_x, test_y = test_dataset
+
+    # the shape of x and y is [SAMPLE_SIZE, CHANNEL_SIZE, X_SIZE, Y_SIZE]
+    SAMPLE_SIZE = 981
+    CHANNEL_SIZE = 3
+    X_SIZE = 172
+    Y_SIZE = 79
 
     CHANNELS_WEIGHTS = np.reshape(
         np.sqrt(
             np.mean(
-                np.transpose(y, (0, 2, 3, 1)).reshape((981 * 172 * 79, 3)) ** 2, axis=0
+                np.transpose(y, (0, 2, 3, 1)).reshape(
+                    (SAMPLE_SIZE * X_SIZE * Y_SIZE, CHANNEL_SIZE)
+                )
+                ** 2,
+                axis=0,
             )
         ),
         (1, -1, 1, 1),
@@ -339,7 +354,6 @@ if __name__ == "__main__":
         eval_during_train=True,
         eval_freq=50,
         validator=validator,
-        # visualizer=visualizer,
     )
 
     # train model
@@ -348,7 +362,7 @@ if __name__ == "__main__":
     # evaluate after finished training
     solver.eval()
 
-    PLOT_DIR = os.path.join(OUTPUT_DIR, "visu")
+    PLOT_DIR = os.path.join(OUTPUT_DIR, "visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
     VISU_INDEX = 0
 

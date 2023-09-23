@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
 from typing import Tuple
 from typing import Type
 
@@ -187,8 +188,8 @@ class UNetEx(base.Arch):
         layers (int): Number of encoders or decoders. Defaults to 3.
         weight_norm (bool): Whether use weight normalization layer. Defaults to True.
         batch_norm (bool): Whether add batch normalization layer. Defaults to True.
-        activation (Optional[paddle.nn.Layer]): Name of activation function. Defaults to nn.ReLU.
-        final_activation (Optional[paddle.nn.Layer]): Name of final activation function. Defaults to None.
+        activation (Type[nn.Layer], optional): Name of activation function. Defaults to nn.ReLU.
+        final_activation (Optional[Type[nn.Layer]]): Name of final activation function. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -207,7 +208,7 @@ class UNetEx(base.Arch):
         weight_norm: bool = True,
         batch_norm: bool = True,
         activation: Type[nn.Layer] = nn.ReLU,
-        final_activation: Type[nn.Layer] = None,
+        final_activation: Optional[Type[nn.Layer]] = None,
     ):
         if len(filters) == 0:
             raise ValueError("The filters shouldn't be empty ")

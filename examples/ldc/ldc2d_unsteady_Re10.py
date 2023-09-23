@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # manually collate input data for visualization,
     # (interior+boundary) x all timestamps
     for t in range(NTIME_PDE):
-        for key in vis_points:
+        for key in geom["time_rect"].dim_keys:
             vis_points[key] = np.concatenate(
                 (
                     vis_points[key],
