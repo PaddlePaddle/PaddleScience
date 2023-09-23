@@ -19,6 +19,7 @@ from typing import List
 from typing import Tuple
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 import ppsci
 from ppsci.utils import logger
@@ -46,6 +47,150 @@ def split_tensors(
     if len(tensors) == 1:
         split1, split2 = split1[0], split2[0]
     return split1, split2
+
+
+def predict_and_save_plot(
+    x: np.ndarray, y: np.ndarray, index: int, solver: ppsci.solver.Solver, plot_dir: str
+):
+    """Make prediction and save visulization of result.
+
+    Args:
+      x (np.ndarray): Input of test dataset.
+      y (np.ndarray): Output of test dataset.
+      index (int): Index of data to visuliaze.
+      solver (ppsci.solver.Solver): Trained slover.
+      plot_dir (str): Directory to save plot.
+
+    """
+    min_u = np.min(y[index, 0, :, :])
+    max_u = np.max(y[index, 0, :, :])
+
+    min_v = np.min(y[index, 1, :, :])
+    max_v = np.max(y[index, 1, :, :])
+
+    min_p = np.min(y[index, 2, :, :])
+    max_p = np.max(y[index, 2, :, :])
+
+    output = solver.predict({"input": x}, return_numpy=True)
+    pred_y = output["output"]
+    error = np.abs(y - pred_y)
+
+    min_error_u = np.min(error[index, 0, :, :])
+    max_error_u = np.max(error[index, 0, :, :])
+
+    min_error_v = np.min(error[index, 1, :, :])
+    max_error_v = np.max(error[index, 1, :, :])
+
+    min_error_p = np.min(error[index, 2, :, :])
+    max_error_p = np.max(error[index, 2, :, :])
+
+    plt.figure()
+    fig = plt.gcf()
+    fig.set_size_inches(15, 10)
+    plt.subplot(3, 3, 1)
+    plt.title("OpenFOAM", fontsize=18)
+    plt.imshow(
+        np.transpose(y[index, 0, :, :]),
+        cmap="jet",
+        vmin=min_u,
+        vmax=max_u,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.ylabel("Ux", fontsize=18)
+    plt.subplot(3, 3, 2)
+    plt.title("DeepCFD", fontsize=18)
+    plt.imshow(
+        np.transpose(pred_y[index, 0, :, :]),
+        cmap="jet",
+        vmin=min_u,
+        vmax=max_u,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.subplot(3, 3, 3)
+    plt.title("Error", fontsize=18)
+    plt.imshow(
+        np.transpose(error[index, 0, :, :]),
+        cmap="jet",
+        vmin=min_error_u,
+        vmax=max_error_u,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+
+    plt.subplot(3, 3, 4)
+    plt.imshow(
+        np.transpose(y[index, 1, :, :]),
+        cmap="jet",
+        vmin=min_v,
+        vmax=max_v,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.ylabel("Uy", fontsize=18)
+    plt.subplot(3, 3, 5)
+    plt.imshow(
+        np.transpose(pred_y[index, 1, :, :]),
+        cmap="jet",
+        vmin=min_v,
+        vmax=max_v,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.subplot(3, 3, 6)
+    plt.imshow(
+        np.transpose(error[index, 1, :, :]),
+        cmap="jet",
+        vmin=min_error_v,
+        vmax=max_error_v,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+
+    plt.subplot(3, 3, 7)
+    plt.imshow(
+        np.transpose(y[index, 2, :, :]),
+        cmap="jet",
+        vmin=min_p,
+        vmax=max_p,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.ylabel("p", fontsize=18)
+    plt.subplot(3, 3, 8)
+    plt.imshow(
+        np.transpose(pred_y[index, 2, :, :]),
+        cmap="jet",
+        vmin=min_p,
+        vmax=max_p,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.subplot(3, 3, 9)
+    plt.imshow(
+        np.transpose(error[index, 2, :, :]),
+        cmap="jet",
+        vmin=min_error_p,
+        vmax=max_error_p,
+        origin="lower",
+        extent=[0, 260, 0, 120],
+    )
+    plt.colorbar(orientation="horizontal")
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(
+        os.path.join(PLOT_DIR, f"cfd_{index}.png"),
+        bbox_inches="tight",
+    )
 
 
 if __name__ == "__main__":
@@ -85,8 +230,6 @@ if __name__ == "__main__":
     FILTERS = [8, 16, 32, 32]
     BATCH_NORM = False
     WEIGHT_NORM = False
-    EPOCHS = 1000
-    LEARNING_RATE = 0.001
     WEIGHT_DECAY = 0.005
     BATCH_SIZE = 64
 
@@ -101,9 +244,6 @@ if __name__ == "__main__":
         weight_norm=WEIGHT_NORM,
         batch_norm=BATCH_NORM,
     )
-
-    # initialize Adam optimizer
-    optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
 
     # define loss
     def loss_expr(
@@ -139,6 +279,13 @@ if __name__ == "__main__":
 
     # maunally build constraint
     constraint = {sup_constraint.name: sup_constraint}
+
+    # set training hyper-parameters
+    EPOCHS = 1000
+    LEARNING_RATE = 0.001
+
+    # initialize Adam optimizer
+    optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
 
     # manually build validator
     eval_dataloader_cfg = {
@@ -190,7 +337,9 @@ if __name__ == "__main__":
         optimizer,
         epochs=EPOCHS,
         eval_during_train=True,
+        eval_freq=50,
         validator=validator,
+        # visualizer=visualizer,
     )
 
     # train model
@@ -198,3 +347,10 @@ if __name__ == "__main__":
 
     # evaluate after finished training
     solver.eval()
+
+    PLOT_DIR = os.path.join(OUTPUT_DIR, "visu")
+    os.makedirs(PLOT_DIR, exist_ok=True)
+    VISU_INDEX = 0
+
+    # visualize prediction after finished training
+    predict_and_save_plot(test_x, test_y, VISU_INDEX, solver, PLOT_DIR)
