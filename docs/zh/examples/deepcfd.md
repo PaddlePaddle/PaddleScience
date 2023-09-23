@@ -5,6 +5,10 @@
 
 在某些复杂的应用场景中，如机翼优化和流体与结构相互作用方面，需要使用千万级甚至上亿的网格对问题进行建模（如下图所示，下图展示了 F-18 战斗机的全机内外流一体结构化网格模型），导致 CFD 的计算量非常巨大。因此，目前亟需发展出一种相比于传统 CFD 方法更高效，且可以保持计算精度的方法。
 
+<figure markdown>
+  ![result_states0](http://www.cannews.com.cn/files/Resource/attachement/2017/0511/1494489582596.jpg){ loading=lazy}
+  <figcaption>F-18 战斗机的全机内外流一体结构化网格模型</figcaption>
+</figure>
 
 ## 2. 问题定义
 
@@ -29,10 +33,9 @@ $$u_x\frac{\partial u_y}{\partial x} + u_y\frac{\partial u_y}{\partial y} = - \f
 其中 $g$ 代表重力加速度，$\nu$ 代表流体的动力粘度。
 
 ## 3. 问题求解
-接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。
+上述问题通常可使用 OpenFOAM 进行传统数值方法的求解，但计算量很大，接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。
 
-本案例基于论文
-[Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks](https://arxiv.org/abs/2004.08826) 的方法进行求解，关于该方法的理论部分请参考[原论文](https://arxiv.org/abs/2004.08826)。
+本案例基于论文 [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks](https://arxiv.org/abs/2004.08826) 的方法进行求解，关于该方法的理论部分请参考[原论文](https://arxiv.org/abs/2004.08826)。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
 ### 3.1 数据集介绍
@@ -50,9 +53,9 @@ dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一�
 
 我们将数据集以7：3的比例划分为训练集和验证集，代码如下：
 
-``` py linenums="145" title="examples/deepcfd/deepcfd.py"
+``` py linenums="197" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:145:163
+examples/deepcfd/deepcfd.py:197:215
 --8<--
 ```
 
@@ -60,24 +63,28 @@ examples/deepcfd/deepcfd.py:145:163
 
 在上述问题中，我们确定了输入为 input，输出为 output，按照论文所述，我们使用含有 3 个 encoder 和 decoder 的 UNetEx 网络来创建模型。
 
-![DeepCFD](https://github.com/zbyandmoon/Picture/blob/main/picture_DeepCFD/compute_process.png?raw=true){ loading=lazy }
-
 模型的输入包含了障碍物的 SDF（Signed distance function）、流动区域的标签以及计算域边界的 SDF。模型的输出包含了水平速度分量（Ux），垂直速度分量（Uy）以及流体压强（p）。
+
+<figure markdown>
+  ![DeepCFD](https://ai-studio-static-online.cdn.bcebos.com/150bd6248d5f4c0bb6186e3498e87b57fcc5f67ffa5148fd9b139edb61d370a6){ loading=lazy}
+  <figcaption>DeepCFD网络结构</figcaption>
+</figure>
+
 
 模型创建用 PaddleScience 代码表示如下：
 
-``` py linenums="165" title="examples/deepcfd/deepcfd.py"
+``` py linenums="226" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:165:194
+examples/deepcfd/deepcfd.py:226:246
 --8<--
 ```
 
 ### 3.3 约束构建
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="196" title="examples/deepcfd/deepcfd.py"
+``` py linenums="248" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:196:226
+examples/deepcfd/deepcfd.py:248:278
 --8<--
 ```
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里填入相关数据的变量名。
@@ -88,36 +95,36 @@ examples/deepcfd/deepcfd.py:196:226
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="228" title="examples/deepcfd/deepcfd.py"
+``` py linenums="280" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:228:229
+examples/deepcfd/deepcfd.py:280:281
 --8<--
 ```
 
 ### 3.4 超参数设定
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一千轮训练轮数。
 
-``` py linenums="231" title="examples/deepcfd/deepcfd.py"
+``` py linenums="283" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:231:232
+examples/deepcfd/deepcfd.py:283:285
 --8<--
 ```
 
 ### 3.5 优化器构建
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001。
 
-``` py linenums="233" title="examples/deepcfd/deepcfd.py"
+``` py linenums="287" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:233:236
+examples/deepcfd/deepcfd.py:287:289
 --8<--
 ```
 
 ### 3.6 评估器构建
 在训练过程中通常会按一定轮数间隔，用验证集评估当前模型的训练情况，我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="238" title="examples/deepcfd/deepcfd.py"
+``` py linenums="290" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:238:278
+examples/deepcfd/deepcfd.py:290:330
 --8<--
 ```
 
@@ -128,18 +135,18 @@ examples/deepcfd/deepcfd.py:238:278
 ### 3.7 模型训练、评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="280" title="examples/deepcfd/deepcfd.py"
+``` py linenums="332" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:280:297
+examples/deepcfd/deepcfd.py:332:349
 --8<--
 ```
 
 ### 3.8 结果可视化
 使用 matplotlib 绘制相同输入参数时的 OpenFOAM 和 DeepCFD 的计算结果，进行对比。这里绘制了验证集第 0 个数据的计算结果。
 
-``` py linenums="299" title="examples/deepcfd/deepcfd.py"
+``` py linenums="351" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:299:304
+examples/deepcfd/deepcfd.py:351:356
 --8<--
 ```
 
@@ -147,12 +154,16 @@ examples/deepcfd/deepcfd.py:299:304
 
 ``` py linenums="1" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:1:304
+examples/deepcfd/deepcfd.py:1:356
 --8<--
 ```
 
 ## 5. 结果展示
-![](https://ai-studio-static-online.cdn.bcebos.com/288c37b569d5400aa7b2265ff13fcf0edad3115e70fe4fafb6736215355771fe)
+
+<figure markdown>
+  ![DeepCFD](https://ai-studio-static-online.cdn.bcebos.com/288c37b569d5400aa7b2265ff13fcf0edad3115e70fe4fafb6736215355771fe){ loading=lazy}
+  <figcaption>OpenFOAM 计算结果与 DeepCFD 预测结果对比</figcaption>
+</figure>
 
 ## 6. 参考文献
 
