@@ -42,20 +42,22 @@ $$u_x\frac{\partial u_y}{\partial x} + u_y\frac{\partial u_y}{\partial y} = - \f
 
 该数据集中的数据使用 OpenFOAM 求得。数据集有两个文件 dataX 和 dataY。dataX 包含 981 个通道流样本几何形状的输入信息，dataY 包含对应的 OpenFOAM 求解结果。
 
-dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
+运行本问题代码前请按照下方命令下载 [dataX](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl) 和 [dataY](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl)：
 
-|数据集 | 下载地址 |
-|:----:|:--------:|
-| dataX | [dataX.pkl](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl) |
-| dataY | [dataY.pkl](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl) |
+``` shell
+wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+```
+
+dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
 
 数据集原始下载地址为：https://zenodo.org/record/3666056/files/DeepCFD.zip?download=1
 
 我们将数据集以 7:3 的比例划分为训练集和验证集，代码如下：
 
-``` py linenums="197" title="examples/deepcfd/deepcfd.py"
+``` py linenums="201" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:197:215
+examples/deepcfd/deepcfd.py:201:220
 --8<--
 ```
 
@@ -73,18 +75,18 @@ examples/deepcfd/deepcfd.py:197:215
 
 模型创建用 PaddleScience 代码表示如下：
 
-``` py linenums="226" title="examples/deepcfd/deepcfd.py"
+``` py linenums="223" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:226:246
+examples/deepcfd/deepcfd.py:223:243
 --8<--
 ```
 
 ### 3.3 约束构建
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="248" title="examples/deepcfd/deepcfd.py"
+``` py linenums="245" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:248:278
+examples/deepcfd/deepcfd.py:245:294
 --8<--
 ```
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里填入相关数据的变量名。
@@ -95,36 +97,36 @@ examples/deepcfd/deepcfd.py:248:278
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="280" title="examples/deepcfd/deepcfd.py"
+``` py linenums="296" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:280:281
+examples/deepcfd/deepcfd.py:296:297
 --8<--
 ```
 
 ### 3.4 超参数设定
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一千轮训练轮数。
 
-``` py linenums="283" title="examples/deepcfd/deepcfd.py"
+``` py linenums="299" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:283:285
+examples/deepcfd/deepcfd.py:299:301
 --8<--
 ```
 
 ### 3.5 优化器构建
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001。
 
-``` py linenums="287" title="examples/deepcfd/deepcfd.py"
+``` py linenums="303" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:287:289
+examples/deepcfd/deepcfd.py:303:304
 --8<--
 ```
 
 ### 3.6 评估器构建
 在训练过程中通常会按一定轮数间隔，用验证集评估当前模型的训练情况，我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="290" title="examples/deepcfd/deepcfd.py"
+``` py linenums="306" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:290:330
+examples/deepcfd/deepcfd.py:306:346
 --8<--
 ```
 
@@ -135,18 +137,18 @@ examples/deepcfd/deepcfd.py:290:330
 ### 3.7 模型训练、评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="332" title="examples/deepcfd/deepcfd.py"
+``` py linenums="348" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:332:349
+examples/deepcfd/deepcfd.py:348:364
 --8<--
 ```
 
 ### 3.8 结果可视化
 使用 matplotlib 绘制相同输入参数时的 OpenFOAM 和 DeepCFD 的计算结果，进行对比。这里绘制了验证集第 0 个数据的计算结果。
 
-``` py linenums="351" title="examples/deepcfd/deepcfd.py"
+``` py linenums="366" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:351:356
+examples/deepcfd/deepcfd.py:366:371
 --8<--
 ```
 

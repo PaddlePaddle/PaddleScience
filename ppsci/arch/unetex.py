@@ -183,17 +183,17 @@ class UNetEx(base.Arch):
         output_key (str): Name of function data for output.
         in_channel (int): Number of channels of input.
         out_channel (int): Number of channels of output.
-        kernel_size (int): Size of kernel of convolution layer. Defaults to 3.
-        filters (Tuple[int, ...]): Number of filters. Defaults to [16, 32, 64].
-        layers (int): Number of encoders or decoders. Defaults to 3.
-        weight_norm (bool): Whether use weight normalization layer. Defaults to True.
-        batch_norm (bool): Whether add batch normalization layer. Defaults to True.
+        kernel_size (int, optional): Size of kernel of convolution layer. Defaults to 3.
+        filters (Tuple[int, ...], optional): Number of filters. Defaults to (16, 32, 64).
+        layers (int, optional): Number of encoders or decoders. Defaults to 3.
+        weight_norm (bool, optional): Whether use weight normalization layer. Defaults to True.
+        batch_norm (bool, optional): Whether add batch normalization layer. Defaults to True.
         activation (Type[nn.Layer], optional): Name of activation function. Defaults to nn.ReLU.
         final_activation (Optional[Type[nn.Layer]]): Name of final activation function. Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, [8, 16, 32, 32], 5, Flase, False)
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, (8, 16, 32, 32), 5, Flase, False)
     """
 
     def __init__(
@@ -203,7 +203,7 @@ class UNetEx(base.Arch):
         in_channel: int,
         out_channel: int,
         kernel_size: int = 3,
-        filters: Tuple[int, ...] = [16, 32, 64],
+        filters: Tuple[int, ...] = (16, 32, 64),
         layers: int = 3,
         weight_norm: bool = True,
         batch_norm: bool = True,

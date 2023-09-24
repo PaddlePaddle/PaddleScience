@@ -201,13 +201,13 @@ if __name__ == "__main__":
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
 
-    OUTPUT_DIR = "./output_deepCDF/" if args.output_dir is None else args.output_dir
+    OUTPUT_DIR = "./output_deepCFD/" if args.output_dir is None else args.output_dir
 
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # initialize datasets
-    DATASET_PATH = "./datasets/deepCDF/"
+    DATASET_PATH = "./datasets/"
     with open(os.path.join(DATASET_PATH, "dataX.pkl"), "rb") as file:
         x = pickle.load(file)
     with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
@@ -218,6 +218,28 @@ if __name__ == "__main__":
     train_dataset, test_dataset = split_tensors(x, y, ratio=SLIPT_RATIO)
     train_x, train_y = train_dataset
     test_x, test_y = test_dataset
+
+    # initialize parameters
+    IN_CHANNELS = 3
+    OUT_CHANNELS = 3
+    KERNEL_SIZE = 5
+    FILTERS = (8, 16, 32, 32)
+    BATCH_NORM = False
+    WEIGHT_NORM = False
+    WEIGHT_DECAY = 0.005
+    BATCH_SIZE = 64
+
+    # initialize model
+    model = ppsci.arch.UNetEx(
+        "input",
+        "output",
+        IN_CHANNELS,
+        OUT_CHANNELS,
+        KERNEL_SIZE,
+        FILTERS,
+        weight_norm=WEIGHT_NORM,
+        batch_norm=BATCH_NORM,
+    )
 
     # the shape of x and y is [SAMPLE_SIZE, CHANNEL_SIZE, X_SIZE, Y_SIZE]
     SAMPLE_SIZE = 981
@@ -236,28 +258,6 @@ if __name__ == "__main__":
             )
         ),
         (1, -1, 1, 1),
-    )
-
-    # initialize parameters
-    IN_CHANNELS = 3
-    OUT_CHANNELS = 3
-    KERNEL_SIZE = 5
-    FILTERS = [8, 16, 32, 32]
-    BATCH_NORM = False
-    WEIGHT_NORM = False
-    WEIGHT_DECAY = 0.005
-    BATCH_SIZE = 64
-
-    # initialize model
-    model = ppsci.arch.UNetEx(
-        "input",
-        "output",
-        IN_CHANNELS,
-        OUT_CHANNELS,
-        KERNEL_SIZE,
-        FILTERS,
-        weight_norm=WEIGHT_NORM,
-        batch_norm=BATCH_NORM,
     )
 
     # define loss
