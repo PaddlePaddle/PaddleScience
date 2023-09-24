@@ -75,18 +75,18 @@ examples/deepcfd/deepcfd.py:201:220
 
 模型创建用 PaddleScience 代码表示如下：
 
-``` py linenums="223" title="examples/deepcfd/deepcfd.py"
+``` py linenums="222" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:223:243
+examples/deepcfd/deepcfd.py:222:243
 --8<--
 ```
 
 ### 3.3 约束构建
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="245" title="examples/deepcfd/deepcfd.py"
+``` py linenums="244" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:245:294
+examples/deepcfd/deepcfd.py:244:294
 --8<--
 ```
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里填入相关数据的变量名。
@@ -97,36 +97,36 @@ examples/deepcfd/deepcfd.py:245:294
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="296" title="examples/deepcfd/deepcfd.py"
+``` py linenums="295" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:296:297
+examples/deepcfd/deepcfd.py:295:297
 --8<--
 ```
 
 ### 3.4 超参数设定
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一千轮训练轮数。
 
-``` py linenums="299" title="examples/deepcfd/deepcfd.py"
+``` py linenums="298" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:299:301
+examples/deepcfd/deepcfd.py:298:301
 --8<--
 ```
 
 ### 3.5 优化器构建
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001。
 
-``` py linenums="303" title="examples/deepcfd/deepcfd.py"
+``` py linenums="302" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:303:304
+examples/deepcfd/deepcfd.py:302:304
 --8<--
 ```
 
 ### 3.6 评估器构建
 在训练过程中通常会按一定轮数间隔，用验证集评估当前模型的训练情况，我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="306" title="examples/deepcfd/deepcfd.py"
+``` py linenums="305" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:306:346
+examples/deepcfd/deepcfd.py:305:346
 --8<--
 ```
 
@@ -137,18 +137,18 @@ examples/deepcfd/deepcfd.py:306:346
 ### 3.7 模型训练、评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="348" title="examples/deepcfd/deepcfd.py"
+``` py linenums="347" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:348:364
+examples/deepcfd/deepcfd.py:347:364
 --8<--
 ```
 
 ### 3.8 结果可视化
 使用 matplotlib 绘制相同输入参数时的 OpenFOAM 和 DeepCFD 的计算结果，进行对比。这里绘制了验证集第 0 个数据的计算结果。
 
-``` py linenums="366" title="examples/deepcfd/deepcfd.py"
+``` py linenums="365" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:366:371
+examples/deepcfd/deepcfd.py:365:371
 --8<--
 ```
 
