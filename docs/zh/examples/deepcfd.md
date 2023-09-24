@@ -22,9 +22,9 @@ $$\nabla \cdot    \bf{u}=0$$
 
 $$\rho(\frac{\partial}{\partial t}  + \bf{u} \cdot  div ) \bf{u} = - \nabla p +  - \nabla \tau + \bf{f}$$
 
-其中 $\bf{u}$ 是速度差（具有 x 和 y 两个维度），$\rho$ 是密度， $p$ 是压强场，$\bf{f}$ 是体积力（例如重力）。
+其中 $\bf{u}$ 是速度场（具有 x 和 y 两个维度），$\rho$ 是密度， $p$ 是压强场，$\bf{f}$ 是体积力（例如重力）。
 
-假设满足非均匀稳态流体条件，可去掉时间相关项，并将 $\bf{u}$ 分解为速度分量 $u_x$ 和 $u_y$ ，动量方程可重写成：
+假设满足非均匀稳态流体条件，方程可去掉时间相关项，并将 $\bf{u}$ 分解为速度分量 $u_x$ 和 $u_y$ ，动量方程可重写成：
 
 $$u_x\frac{\partial u_x}{\partial x} + u_y\frac{\partial u_x}{\partial y} = - \frac{1}{\rho}\frac{\partial p}{\partial x} + \nu \nabla^2 u_x + g_x$$
 
@@ -49,7 +49,7 @@ wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/Deep
 wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
 ```
 
-dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
+dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴分别是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出数据 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
 
 数据集原始下载地址为：https://zenodo.org/record/3666056/files/DeepCFD.zip?download=1
 
@@ -164,8 +164,10 @@ examples/deepcfd/deepcfd.py
 
 <figure markdown>
   ![DeepCFD](https://ai-studio-static-online.cdn.bcebos.com/288c37b569d5400aa7b2265ff13fcf0edad3115e70fe4fafb6736215355771fe){ loading=lazy}
-  <figcaption>OpenFOAM 计算结果与 DeepCFD 预测结果对比</figcaption>
+  <figcaption>OpenFOAM 计算结果与 DeepCFD 预测结果对比，从上到下分别为：水平速度分量（Ux），垂直速度分量（Uy）以及流体压强（p）</figcaption>
 </figure>
+
+可以看到DeepCFD方法与OpenFOAM的结果基本一致。
 
 ## 6. 参考文献
 
