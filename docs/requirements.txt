@@ -14,3 +14,4 @@ mkdocstrings
 mkdocstrings-python
 mkdocs-glightbox
 mkdocs-video
+mkdocs-git-revision-date-localized-plugin

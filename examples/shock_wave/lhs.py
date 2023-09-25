@@ -29,18 +29,19 @@ def _partition(n_sample: int, bounds: np.ndarray) -> np.ndarray:
         np.ndarray: Partion range array wieh shape [m, n, 2].
     """
     tmp = np.arange(n_sample, dtype=dtype)  # [0,1,...,n-1].
-    coefficient_lower = np.stack(
-        [1 - tmp / n_sample, tmp / n_sample],
-        axis=1,
+    coefficient_lower = np.stack([1 - tmp / n_sample, tmp / n_sample], axis=1,).astype(
+        dtype
     )  # [n, 2]
     coefficient_upper = np.stack(
         [1 - (tmp + 1) / n_sample, (tmp + 1) / n_sample],
         axis=1,
+    ).astype(
+        dtype
     )  # [n, 2]
     partition_lower = coefficient_lower @ bounds.T
     partition_upper = coefficient_upper @ bounds.T
 
-    partition_range = np.dstack((partition_lower.T, partition_upper.T))
+    partition_range = np.dstack((partition_lower.T, partition_upper.T)).astype(dtype)
     return partition_range
 
 

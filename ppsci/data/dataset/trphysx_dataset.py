@@ -18,6 +18,7 @@ Code below is heavily based on [transformer-physx](https://github.com/zabaras/tr
 
 from __future__ import annotations
 
+import os
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -66,6 +67,13 @@ class LorenzDataset(io.Dataset):
         embedding_model: Optional[base.Arch] = None,
     ):
         super().__init__()
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5."
+            )
+
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -162,6 +170,12 @@ class RosslerDataset(LorenzDataset):
         weight_dict: Optional[Dict[str, float]] = None,
         embedding_model: Optional[base.Arch] = None,
     ):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5."
+            )
         super().__init__(
             file_path,
             input_keys,
@@ -211,6 +225,12 @@ class CylinderDataset(io.Dataset):
         embedding_model: Optional[base.Arch] = None,
         embedding_batch_size: int = 64,
     ):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5."
+            )
         super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
