@@ -458,7 +458,7 @@ class Solver:
                 and epoch_id % self.eval_freq == 0
                 and epoch_id >= self.start_eval_epoch
             ):
-                cur_metric, metric_dict = self.eval(epoch_id)
+                cur_metric, metric_dict_group = self.eval(epoch_id)
                 if cur_metric < self.best_metric["metric"]:
                     self.best_metric["metric"] = cur_metric
                     self.best_metric["epoch"] = epoch_id
@@ -475,7 +475,10 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler(metric_dict, epoch_id, self.vdl_writer, self.wandb_writer)
+                for metric_dict in metric_dict_group.values():
+                    logger.scaler(
+                        metric_dict, epoch_id, self.vdl_writer, self.wandb_writer
+                    )
 
                 # visualize after evaluation
                 if self.visualizer is not None:

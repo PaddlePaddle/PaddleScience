@@ -35,7 +35,7 @@ class Validator:
         dataset (io.Dataset): Dataset for validator.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        metric (Optional[Dict[str, "metric.Metric"]]): Named metric functors in dict.
+        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict.
         name (str): Name of validator.
     """
 
