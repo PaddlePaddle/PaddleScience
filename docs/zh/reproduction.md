@@ -183,15 +183,15 @@
 
 #### 3.2.3 文档规范
 
-AIStudio文档参考：[PaddleScience-DarcyFlow - 飞桨AI Studio](https://aistudio.baidu.com/aistudio/projectdetail/6184070)
+AIStudio 文档参考：[PaddleScience-DarcyFlow - 飞桨AI Studio](https://aistudio.baidu.com/aistudio/projectdetail/6184070)
 
-PaddleScience官网文档需满足：
+PaddleScience 官网文档需满足：
 
 * 复现完成后需撰写模型文档，需包含模型简介、问题定义、问题求解（逐步讲解训练评估以及可视化代码的编写过程）、完整代码、结果展示图等章节。
 * 在文档的开始，需要添加复现的论文题目、论文地址以及参考代码的链接，同时建议对参考代码的作者表示感谢。
 * 代码封装得当，易读性好，不用一些随意的变量/类/函数命名。
 * 注释清晰，不仅说明做了什么，也要说明为什么这么做。
-* 如果模型依赖paddlepaddle未涵盖的依赖（如 pandas），则需要在文档开头对说明需安装哪些依赖项。
-* 随机控制，需要尽量固定含有随机因素模块的随机种子，保证模型可以正常复现（PaddleScience套件提供了ppsci.utils.misc.set_random_seed(42)语句来控制全局随机数）。
+* 如果模型依赖 PaddlePaddle 未涵盖的依赖（如 pandas），则需要在文档开头对说明需安装哪些依赖项。
+* 随机控制，需要尽量固定含有随机因素模块的随机种子，保证模型可以正常复现（PaddleScience 套件提供了 `ppsci.utils.misc.set_random_seed(seed_num)` 语句来控制全局随机数）。
 * 超参数：模型内部超参数禁止写死，尽量都可以通过配置文件进行配置。
 * 文档末尾附上参考论文、参考代码网址、复现训练好的模型参数下载链接。 整体文档撰写可以参考：[文档参考样例(darcy2d)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/darcy2d/)。
