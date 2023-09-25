@@ -83,7 +83,7 @@ examples/phylstm/phylstm2.py:163:163
 
 ``` py linenums="164"
 --8<--
-examples/phylstm/phylstm2.py:164:176
+examples/phylstm/phylstm2.py:164:175
 --8<--
 ```
 
@@ -91,25 +91,37 @@ examples/phylstm/phylstm2.py:164:176
 
 ``` py linenums="178"
 --8<--
-examples/phylstm/phylstm2.py:178:180
+examples/phylstm/phylstm2.py:177:179
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="phylstm2.py"
---8<--
-examples/phylstm/phylstm2.py
---8<--
-```
+=== "phylstm2"
+
+    ``` py linenums="1" title="phylstm2.py"
+    --8<--
+    examples/phylstm/phylstm2.py
+    --8<--
+    ```
+
+=== "phylstm3"
+
+    ``` py linenums="1" title="phylstm3.py"
+    --8<--
+    examples/phylstm/phylstm3.py
+    --8<--
+    ```
 
 ## 5. 结果展示
 
-本案例针对 $EPOCHS=100$ 和 $learning_rate=1e-3$ 的参数配置进行了实验，结果返回Loss为 0.00811。
+本案例针对 $EPOCHS=100$ 和 $learning\_rate=1e-3$ 的参数配置进行了实验，结果返回Loss为 0.00811。
 
-???+ info "说明"
+PhyLSTM3 针对 $EPOCHS=200$ 和 $learning\_rate=1e-3$ 的参数配置进行了实验，结果返回Loss为 0.02833。
 
-    本案例默认使用 $model_type=2$ 作为参数，如需使用其他参数，请在 examples/phylstm/phylstm2.py 对 DeepPhyLSTM model_type 参数进行修改。
+!!! info "说明"
+
+    本案例默认使用 $model\_type=2$ 作为参数，如需使用其他参数，请在 examples/phylstm/phylstm2.py 对 DeepPhyLSTM model_type 参数进行修改。
 
 ## 6. 参考资料
 
