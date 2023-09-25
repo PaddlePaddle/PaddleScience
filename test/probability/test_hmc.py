@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import paddle
 import pytest
 
@@ -24,12 +23,19 @@ paddle.seed(1024)
 @pytest.mark.parametrize("true_mean", [5.0])
 @pytest.mark.parametrize("true_std", [1.0])
 def test_HamiltonianMonteCarlo(true_mean, true_std):
-    dist = paddle.distribution.Normal(true_mean, true_std)
-    HMC = HamiltonianMonteCarlo(dist, path_len=1.5, step_size=0.25)
-    trial = HMC.run_chain(2500, paddle.to_tensor(0.0))
+    initial_params = {"x": paddle.to_tensor(0.0)}
 
-    assert paddle.allclose(trial.mean(), paddle.to_tensor(true_mean), rtol=0.05)
-    assert paddle.allclose(paddle.std(trial), paddle.to_tensor(true_std), rtol=0.05)
+    def log_posterior(**kwargs):
+        dist = paddle.distribution.Normal(true_mean, true_std)
+        return dist.log_prob(kwargs["x"])
+
+    HMC = HamiltonianMonteCarlo(log_posterior, path_len=1.5, step_size=0.25)
+    trial = HMC.run_chain(2500, initial_params)
+
+    assert paddle.allclose(trial["x"].mean(), paddle.to_tensor(true_mean), rtol=0.05)
+    assert paddle.allclose(
+        paddle.std(trial["x"]), paddle.to_tensor(true_std), rtol=0.05
+    )
 
 
 if __name__ == "__main__":
