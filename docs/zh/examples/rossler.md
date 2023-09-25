@@ -244,7 +244,7 @@ examples/rossler/train_transformer.py:167:185
 
 首先使用上文中的 `mse_validator` 中的数据集进行可视化，另外还引入了 `vis_data_nums` 变量用于控制需要可视化样本的数量。最后通过 `VisualizerScatter3D` 构建可视化器。
 
-#### 3.3.5 模型训练、评估与可视化
+#### 3.3.6 模型训练、评估与可视化
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
