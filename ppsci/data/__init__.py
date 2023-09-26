@@ -83,7 +83,7 @@ def build_dataloader(_dataset, cfg):
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
 
-    collate_fn = batch_transform.default_collate_fn
+    collate_fn = None
     if isinstance(batch_transforms_cfg, (list, tuple)):
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
 
@@ -98,8 +98,13 @@ def build_dataloader(_dataset, cfg):
     # build dataloader
     if getattr(_dataset, "use_pgl", False):
         # Use special dataloader from "Paddle Graph Learning" toolkit.
-        from pgl.utils import data as pgl_data
+        try:
+            from pgl.utils import data as pgl_data
+        except ModuleNotFoundError:
+            logger.error("Please install pgl with `pip install pgl`.")
+            raise ModuleNotFoundError("pgl is not installed.")
 
+        collate_fn = batch_transform.default_collate_fn
         dataloader_ = pgl_data.Dataloader(
             dataset=_dataset,
             batch_size=cfg["batch_size"],
