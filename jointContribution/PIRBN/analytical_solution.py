@@ -10,7 +10,7 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
     plt.figure(figsize=(15, 9))
     rbn = train_obj.pirbn.rbn
 
-    target_dir = os.path.join(os.path.dirname(__file__), "../target")
+    target_dir = os.path.join(os.path.dirname(__file__), "target")
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
 
@@ -21,7 +21,7 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
     xy = np.zeros((ns, 1)).astype(np.float32)
     for i in range(0, ns):
         xy[i, 0] = i * dx + right_by
-    y = rbn(paddle.to_tensor(xy), activation_function=activation_function)
+    y = rbn(paddle.to_tensor(xy))
     y = y.numpy()
     y_true = np.sin(2 * mu * np.pi * xy)
     plt.plot(xy, y_true)
@@ -31,8 +31,9 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
 
     # Point-wise absolute error plot.
     plt.subplot(2, 3, 2)
-    plt.plot(xy, np.abs(y_true - y))
-    plt.ylim(top=8e-3)
+    xy_y = np.abs(y_true - y)
+    plt.plot(xy, xy_y)
+    plt.ylim(top=np.max(xy_y))
     plt.ylabel("Absolute Error")
     plt.xlabel("x")
 
@@ -46,6 +47,16 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
     plt.legend(["Lg", "Lb"])
     plt.ylabel("Loss")
     plt.xlabel("Iteration")
+
+    # plt.subplot(2, 3, 3)
+    # loss_g = train_obj.his_a_g
+    # x = range(len(loss_g))
+    # plt.yscale("log")
+    # plt.plot(x, loss_g)
+    # plt.plot(x, train_obj.his_a_b)
+    # plt.legend(["a_g", "a_b"])
+    # plt.ylabel("Loss")
+    # plt.xlabel("Iteration")
 
     # Visualise NTK after initialisation, The normalised Kg at 0th iteration.
     plt.subplot(2, 3, 4)

@@ -2,7 +2,7 @@ import paddle
 
 
 class PIRBN(paddle.nn.Layer):
-    def __init__(self, rbn, activation_function="gaussian_function"):
+    def __init__(self, rbn, activation_function="gaussian"):
         super().__init__()
         self.rbn = rbn
         self.activation_function = activation_function
@@ -10,12 +10,12 @@ class PIRBN(paddle.nn.Layer):
     def forward(self, input_data):
         xy, xy_b = input_data
         # initialize the differential operators
-        u_b = self.rbn(xy_b, self.activation_function)
+        u_b = self.rbn(xy_b)
 
         # obtain partial derivatives of u with respect to x
         xy.stop_gradient = False
         # Obtain the output from the RBN
-        u = self.rbn(xy, self.activation_function)
+        u = self.rbn(xy)
         # Obtain the first-order derivative of the output with respect to the input
         u_x = paddle.grad(u, xy, retain_graph=True, create_graph=True)[0]
         # Obtain the second-order derivative of the output with respect to the input
@@ -37,11 +37,12 @@ class PIRBN(paddle.nn.Layer):
             y = self.forward(temp_x)
             l1t = paddle.grad(y[0], self.parameters(), allow_unused=True)
             for j in l1t:
-                if j is not None:
-                    lambda_g = lambda_g + paddle.sum(j**2) / n1
+                lambda_g = lambda_g + paddle.sum(j**2) / n1
             # When use tanh activation function, the value may be None
-            if l1t[0] is None and l1t[1] is not None:
-                temp = l1t[1].reshape((1, n_neu))
+            if self.activation_function == "tanh":
+                temp = paddle.concat(
+                    (l1t[0], l1t[1], l1t[2].reshape((1, n_neu))), axis=1
+                )
             else:
                 temp = paddle.concat((l1t[0], l1t[1].reshape((1, n_neu))), axis=1)
             if i == 0:
@@ -57,9 +58,7 @@ class PIRBN(paddle.nn.Layer):
             y = self.forward(temp_x)
             l1t = paddle.grad(y[1], self.rbn.parameters(), allow_unused=True)
             for j in l1t:
-                # When use tanh activation function, the value may be None
-                if j is not None:
-                    lambda_b = lambda_b + paddle.sum(j**2) / n2
+                lambda_b = lambda_b + paddle.sum(j**2) / n2
 
         # calculate adapt factors
         temp = lambda_g + lambda_b

@@ -15,15 +15,16 @@ class RBN_Net(paddle.nn.Layer):
         c (List[float32]): Initial value for hyperparameter c.
     """
 
-    def __init__(self, n_in, n_out, n_neu, b, c):
+    def __init__(self, n_in, n_out, n_neu, b, c, activation_function="gaussian"):
         super().__init__()
         self.n_in = n_in
         self.n_out = n_out
         self.n_neu = n_neu
         self.b = paddle.to_tensor(b)
         self.c = paddle.to_tensor(c)
+        self.activation_function = activation_function
 
-        self.layer1 = RBF_layer1(self.n_neu, self.c, n_in)
+        self.layer1 = RBF_layer1(self.n_neu, self.c, n_in, activation_function)
         # LeCun normal
         std = math.sqrt(1 / self.n_neu)
         self.linear = paddle.nn.Linear(
@@ -34,10 +35,12 @@ class RBN_Net(paddle.nn.Layer):
             ),
             bias_attr=False,
         )
-        self.ini_ab()
+        # gaussian activation_function need to set self.b
+        if self.activation_function == "gaussian":
+            self.ini_ab()
 
-    def forward(self, x, activation_function="gaussian_function"):
-        temp = self.layer1(x, activation_function)
+    def forward(self, x):
+        temp = self.layer1(x)
         y = self.linear(temp)
         return y
 
@@ -57,10 +60,18 @@ class RBF_layer1(paddle.nn.Layer):
         input_shape_last (int): Last item of input shape.
     """
 
-    def __init__(self, n_neu, c, input_shape_last):
+    def __init__(self, n_neu, c, input_shape_last, activation_function="gaussian"):
         super(RBF_layer1, self).__init__()
         self.n_neu = n_neu
         self.c = c
+        self.activation_function = activation_function
+        if self.activation_function == "tanh":
+            self.w = self.create_parameter(
+                shape=(input_shape_last, self.n_neu),
+                dtype=paddle.get_default_dtype(),
+                # Convert from tensorflow tf.random_normal_initializer(), default value mean=0.0, std=0.05
+                default_initializer=paddle.nn.initializer.Normal(mean=0.0, std=0.05),
+            )
         self.b = self.create_parameter(
             shape=(input_shape_last, self.n_neu),
             dtype=paddle.get_default_dtype(),
@@ -68,17 +79,15 @@ class RBF_layer1(paddle.nn.Layer):
             default_initializer=paddle.nn.initializer.Normal(mean=0.0, std=0.05),
         )
 
-    def forward(
-        self, inputs, activation_function="gaussian_function"
-    ):  # Defines the computation from inputs to outputs
-        temp_x = paddle.matmul(inputs, paddle.ones((1, self.n_neu)))
-        if activation_function == "gaussian_function":
-            return self.gaussian_function(temp_x)
+    def forward(self, inputs):
+        if self.activation_function == "gaussian":
+            return self.gaussian_function(inputs)
         else:
-            return self.tanh_function(temp_x)
+            return self.tanh_function(inputs)
 
     # Gaussian function，Formula (19), Page7
-    def gaussian_function(self, temp_x):
+    def gaussian_function(self, inputs):
+        temp_x = paddle.matmul(inputs, paddle.ones((1, self.n_neu)))
         x0 = (
             paddle.reshape(
                 paddle.arange(self.n_neu, dtype=paddle.get_default_dtype()),
@@ -92,5 +101,6 @@ class RBF_layer1(paddle.nn.Layer):
         s = self.b * self.b
         return paddle.exp(-(x_new * x_new) * s)
 
-    def tanh_function(self, temp_x):
-        return paddle.tanh(temp_x)
+    def tanh_function(self, inputs):
+        outputs = paddle.add(paddle.matmul(inputs, self.w), self.b)
+        return paddle.tanh(outputs)

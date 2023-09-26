@@ -7,7 +7,7 @@ import train
 
 # mu, Fig.1, Page5
 # right_by, Formula (15) Page5
-def sine_function_main(mu, right_by=0, activation_function="gaussian_function"):
+def sine_function_main(mu, right_by=0, activation_function="gaussian"):
     # Define the number of sample points
     ns = 51
 
@@ -31,7 +31,7 @@ def sine_function_main(mu, right_by=0, activation_function="gaussian_function"):
     c = [right_by - 0.1, right_by + 1.1]
 
     # Set up PIRBN
-    rbn = rbn_net.RBN_Net(n_in, n_out, n_neu, b, c)
+    rbn = rbn_net.RBN_Net(n_in, n_out, n_neu, b, c, activation_function)
     train_obj = train.Trainer(
         pirbn.PIRBN(rbn, activation_function), x, y, learning_rate=0.001, maxiter=20001
     )
@@ -41,11 +41,11 @@ def sine_function_main(mu, right_by=0, activation_function="gaussian_function"):
     analytical_solution.output_fig(train_obj, mu, b, right_by, activation_function)
 
 
-# # Fig.1
-# sine_function_main(mu=4, right_by=0, activation_function="tanh")
+# Fig.1
+sine_function_main(mu=4, right_by=0, activation_function="tanh")
 # # Fig.2
 # sine_function_main(mu=8, right_by=0, activation_function="tanh")
 # # Fig.3
 # sine_function_main(mu=4, right_by=100, activation_function="tanh")
 # Fig.6
-sine_function_main(mu=8, right_by=100, activation_function="gaussian_function")
+sine_function_main(mu=8, right_by=100, activation_function="gaussian")
