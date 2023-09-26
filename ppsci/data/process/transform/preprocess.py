@@ -70,8 +70,8 @@ class Normalize:
     """Normalize data class.
 
     Args:
-        mean (Union[np.array, Tuple[float, ...]]): Mean of training dataset.
-        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
+        mean (Union[np.ndarray, Tuple[float, ...]]): Mean of training dataset.
+        std (Union[np.ndarray, Tuple[float, ...]]): Standard Deviation of training dataset.
         apply_keys (Tuple[str, ...], optional): Which data is the normalization method applied to. Defaults to ("input", "label").
 
     Examples:
@@ -81,8 +81,8 @@ class Normalize:
 
     def __init__(
         self,
-        mean: Union[np.array, Tuple[float, ...]],
-        std: Union[np.array, Tuple[float, ...]],
+        mean: Union[np.ndarray, Tuple[float, ...]],
+        std: Union[np.ndarray, Tuple[float, ...]],
         apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
         if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:

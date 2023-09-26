@@ -32,10 +32,10 @@ def split_tensors(
     """Split tensors to two parts.
 
     Args:
-      tensors (List[np.array]): Non-empty tensor list.
-      ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
+        tensors (List[np.array]): Non-empty tensor list.
+        ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
     Returns:
-      Tuple[List[np.array], List[np.array]]: Splited tensors.
+        Tuple[List[np.array], List[np.array]]: Splited tensors.
     """
     if len(tensors) == 0:
         raise ValueError("Tensors shouldn't be empty.")
@@ -60,11 +60,11 @@ def predict_and_save_plot(
     """Make prediction and save visulization of result.
 
     Args:
-      x (np.ndarray): Input of test dataset.
-      y (np.ndarray): Output of test dataset.
-      index (int): Index of data to visuliaze.
-      solver (ppsci.solver.Solver): Trained slover.
-      plot_dir (str): Directory to save plot.
+        x (np.ndarray): Input of test dataset.
+        y (np.ndarray): Output of test dataset.
+        index (int): Index of data to visuliaze.
+        solver (ppsci.solver.Solver): Trained slover.
+        plot_dir (str): Directory to save plot.
     """
     min_u = np.min(y[index, 0, :, :])
     max_u = np.max(y[index, 0, :, :])
