@@ -24,12 +24,12 @@ import paddle.nn as nn
 
 try:
     import pgl
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 try:
     from pyamg.classical.split import RS
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 from scipy import sparse as sci_sparse

@@ -24,7 +24,7 @@ import paddle
 
 try:
     import pgl
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 from ppsci.data.process import transform

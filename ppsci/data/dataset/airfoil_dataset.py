@@ -27,7 +27,7 @@ from paddle import io
 
 try:
     import pgl
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 SU2_SHAPE_IDS = {
