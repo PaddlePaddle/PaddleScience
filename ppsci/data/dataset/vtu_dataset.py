@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 
@@ -33,7 +34,7 @@ class VtuDataset(io.Dataset):
         label_keys (Optional[Tuple[str, ...]]): Tuple of label keys. Defaults to None.
         time_step (Optional[int]): Time step with unit second. Defaults to None.
         time_index (Optional[Tuple[int, ...]]): Time index tuple in increasing order.
-        labels : Temporary variable for [load_vtk_with_time_file].
+        labels (Optional[Dict[str, float]]): Temporary variable for [load_vtk_with_time_file].
         transforms (vision.Compose, optional): Compose object contains sample wise.
             transform(s).
     """
@@ -45,7 +46,7 @@ class VtuDataset(io.Dataset):
         label_keys: Optional[Tuple[str, ...]] = None,
         time_step: Optional[int] = None,
         time_index: Optional[Tuple[int, ...]] = None,
-        labels=None,
+        labels: Optional[Dict[str, float]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
