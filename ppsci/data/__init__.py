@@ -67,18 +67,21 @@ def build_dataloader(_dataset, cfg):
     cfg = copy.deepcopy(cfg)
 
     # build sampler
-    sampler_cfg = cfg.pop("sampler")
-    sampler_cls = sampler_cfg.pop("name")
-    if sampler_cls == "BatchSampler":
-        if world_size > 1:
-            sampler_cls = "DistributedBatchSampler"
-            logger.warning(
-                f"Automatically use 'DistributedBatchSampler' instead of "
-                f"'BatchSampler' when world_size({world_size}) > 1"
-            )
+    sampler_cfg = cfg.pop("sampler", None)
+    if sampler_cfg is not None:
+        sampler_cls = sampler_cfg.pop("name")
+        if sampler_cls == "BatchSampler":
+            if world_size > 1:
+                sampler_cls = "DistributedBatchSampler"
+                logger.warning(
+                    f"Automatically use 'DistributedBatchSampler' instead of "
+                    f"'BatchSampler' when world_size({world_size}) > 1"
+                )
 
-    sampler_cfg["batch_size"] = cfg["batch_size"]
-    sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+        sampler_cfg["batch_size"] = cfg["batch_size"]
+        sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+    else:
+        sampler = None
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
