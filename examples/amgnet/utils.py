@@ -1,6 +1,8 @@
 import math
+import os
 import pathlib
 import warnings
+from os import path as osp
 from typing import BinaryIO
 from typing import List
 from typing import Optional
@@ -13,10 +15,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 import scipy.sparse as sp
-from paddle.vision.transforms import ToTensor
+from paddle.vision import transforms as T
 from PIL import Image
-from pyamg.classical.split import RS
-from scipy.sparse import coo_matrix
+from pyamg.classical import split
 
 matplotlib.use("Agg")
 
@@ -25,8 +26,8 @@ def getcorsenode(latent_graph):
     row = latent_graph.edge_index[0].numpy()
     col = latent_graph.edge_index[1].numpy()
     data = paddle.ones(shape=[row.size]).numpy()
-    A = coo_matrix((data, (row, col))).tocsr()
-    splitting = RS(A)
+    A = sp.coo_matrix((data, (row, col))).tocsr()
+    splitting = split.RS(A)
     index = np.array(np.nonzero(splitting))
     b = paddle.to_tensor(index)
     b = paddle.squeeze(b)
@@ -49,11 +50,11 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_A.numpy()
     values_A = value_A.numpy()
-    coo_A = coo_matrix((values_A, (indices_A[0], indices_A[1])), shape=(N, N))
+    coo_A = sp.coo_matrix((values_A, (indices_A[0], indices_A[1])), shape=(N, N))
 
     indices_S = index_S.numpy()
     values_S = value_S.numpy()
-    coo_S = coo_matrix((values_S, (indices_S[0], indices_S[1])), shape=(N, kN))
+    coo_S = sp.coo_matrix((values_S, (indices_S[0], indices_S[1])), shape=(N, kN))
 
     ans = coo_A.dot(coo_S).tocoo()
     row = paddle.to_tensor(ans.row)
@@ -75,11 +76,11 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_St.numpy()
     values_A = value_St.numpy()
-    coo_A = coo_matrix((values_A, (indices_A[0], indices_A[1])), shape=(kN, N))
+    coo_A = sp.coo_matrix((values_A, (indices_A[0], indices_A[1])), shape=(kN, N))
 
     indices_S = index_B.numpy()
     values_S = value_B.numpy()
-    coo_S = coo_matrix((values_S, (indices_S[0], indices_S[1])), shape=(N, kN))
+    coo_S = sp.coo_matrix((values_S, (indices_S[0], indices_S[1])), shape=(N, kN))
 
     ans = coo_A.dot(coo_S).tocoo()
     row = paddle.to_tensor(ans.row)
@@ -341,6 +342,7 @@ def save_image(
         paddle.clip(grid * 255 + 0.5, 0, 255).transpose([1, 2, 0]).cast("uint8").numpy()
     )
     im = Image.fromarray(ndarr)
+    os.makedirs(osp.basename(fp), exist_ok=True)
     im.save(fp, format=format)
 
 
@@ -367,8 +369,7 @@ def log_images(
             model=flag,
             col=field,
         )
-        true_img = ToTensor()(true_img)
-        # min_max = (true[:, field].min().item(), true[:, field].max().item())
+        true_img = T.ToTensor()(true_img)
 
         pred_img = plot_field(
             nodes,
@@ -379,7 +380,7 @@ def log_images(
             model=flag,
             col=field,
         )
-        pred_img = ToTensor()(pred_img)
+        pred_img = T.ToTensor()(pred_img)
         imgs = [pred_img, true_img]
         grid = make_grid(paddle.stack(imgs), padding=0)
         out_file = file + f"{field}"
@@ -391,13 +392,17 @@ def log_images(
             save_image(
                 grid, "./result/image/airfoil/" + str(index) + out_file + "_field.png"
             )
-        else:
+        elif flag == "cylinder":
             if aoa == 39.0:
                 save_image(
                     grid, "./result/image/" + str(index) + out_file + "_field.png"
                 )
             save_image(
                 grid, "./result/image/cylinder/" + str(index) + out_file + "_field.png"
+            )
+        else:
+            raise ValueError(
+                f"Argument 'flag' should be 'airfoil' or 'cylinder', but got {flag}."
             )
 
 
