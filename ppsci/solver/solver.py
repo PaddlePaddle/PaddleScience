@@ -523,8 +523,8 @@ class Solver:
             epoch_id (int, optional): Epoch id. Defaults to 0.
 
         Returns:
-            Tuple[float, Dict[str, Dict[str, float]]]: The value of the evaluation,
-                used to judge the quality of the model.
+            Tuple[float, Dict[str, Dict[str, float]]]: A targe metric value(float) and
+                all metric(s)(dict) of evaluation, used to judge the quality of the model.
         """
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
