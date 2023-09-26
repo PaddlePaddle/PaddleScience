@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING
 from typing import Dict
 from typing import List
 
+import utils
 from paddle.nn import functional as F
-from utils import log_images
 
 import ppsci
 from ppsci.utils import config
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         for index, batch in enumerate(rmse_validator.data_loader):
             truefield = batch[0]["input"].y
             prefield = model(batch[0])
-            log_images(
+            utils.log_images(
                 batch[0]["input"].pos,
                 prefield["pred"],
                 truefield,
