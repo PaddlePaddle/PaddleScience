@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 
@@ -102,7 +104,7 @@ class HamiltonianMonteCarlo:
     def run_chain(
         self, epochs: int, initial_position: Dict[str, paddle.Tensor]
     ) -> Dict[str, paddle.Tensor]:
-        sampling_result = {}
+        sampling_result: Dict[str, paddle.Tensor] = {}
         for k in initial_position.keys():
             sampling_result[k] = []
         pos = initial_position

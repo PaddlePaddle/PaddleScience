@@ -43,7 +43,7 @@ def _eval_by_dataset(
         Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
             computed during evaluation.
     """
-    target_metric: float = None
+    target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
@@ -134,7 +134,7 @@ def _eval_by_dataset(
             if len(all_label[key]) > num_samples:
                 all_label[key] = all_label[key][:num_samples]
 
-        metric_dict_group = misc.PrettyOrderedDict()
+        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             metric_dict = metric_func(all_output, all_label)
             metric_dict_group[metric_name] = metric_dict
@@ -149,10 +149,11 @@ def _eval_by_dataset(
                 )
 
         # use the first metric for return value
-        if target_metric is None:
-            tmp = metric_dict_group
-            while isinstance(tmp, dict):
-                tmp = next(iter(tmp.values()))
+        tmp = metric_dict_group
+        while isinstance(tmp, dict):
+            tmp = next(iter(tmp.values()))
+        # avoid that none of metric is set
+        if isinstance(tmp, float):
             target_metric = float(tmp)
 
     return target_metric, metric_dict_group
@@ -172,7 +173,7 @@ def _eval_by_batch(
         Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
             computed during evaluation.
     """
-    target_metric: float = None
+    target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
         if isinstance(_validator.data_loader, io.DataLoader):
             num_samples = len(_validator.data_loader.dataset)
@@ -180,7 +181,7 @@ def _eval_by_batch(
             num_samples = _validator.data_loader.num_samples
 
         loss_dict = misc.Prettydefaultdict(float)
-        metric_dict_group = misc.PrettyOrderedDict()
+        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
@@ -253,10 +254,11 @@ def _eval_by_batch(
                 solver.eval_output_info[metric_str].update(metric_value, num_samples)
 
         # use the first metric for return value
-        if target_metric is None:
-            tmp = metric_dict_group
-            while isinstance(tmp, dict):
-                tmp = next(iter(tmp.values()))
+        tmp = metric_dict_group
+        while isinstance(tmp, dict):
+            tmp = next(iter(tmp.values()))
+        # avoid that none of metric is set
+        if isinstance(tmp, float):
             target_metric = tmp
 
     return target_metric, metric_dict_group
