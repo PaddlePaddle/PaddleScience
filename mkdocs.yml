@@ -66,6 +66,8 @@ nav:
           - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
           - tempoGAN: zh/examples/tempoGAN.md
           - DeepCFD: zh/examples/deepcfd.md
+        - 时序预测:
+          - Phy-LSTM: zh/examples/phylstm.md
       - 数理融合:
         - 流体:
           - BubbleNet: zh/examples/bubble.md

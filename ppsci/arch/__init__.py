@@ -22,6 +22,7 @@ from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
+from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
@@ -34,6 +35,7 @@ __all__ = [
     "Arch",
     "MLP",
     "DeepONet",
+    "DeepPhyLSTM",
     "LorenzEmbedding",
     "RosslerEmbedding",
     "CylinderEmbedding",
