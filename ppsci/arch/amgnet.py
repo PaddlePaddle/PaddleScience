@@ -15,12 +15,16 @@
 from __future__ import annotations
 
 import functools
+from typing import Callable
+from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
 import numpy as np
 import paddle
 import paddle.nn as nn
+from typing_extensions import Literal
 
 try:
     import pgl
@@ -28,19 +32,21 @@ except ModuleNotFoundError:
     pass
 
 try:
-    from pyamg.classical.split import RS
+    from pyamg.classical import split
 except ModuleNotFoundError:
     pass
 
 from scipy import sparse as sci_sparse
 
 
-def _knn_interpolate(features, coarse_nodes, fine_nodes):
+def _knn_interpolate(
+    features: paddle.Tensor, coarse_nodes: paddle.Tensor, fine_nodes: paddle.Tensor
+) -> paddle.Tensor:
     coarse_nodes_input = paddle.repeat_interleave(
-        coarse_nodes.unsqueeze(0), fine_nodes.shape[0], 0
+        coarse_nodes.unsqueeze(0), fine_nodes.shape[0], axis=0
     )  # [6684,352,2]
     fine_nodes_input = paddle.repeat_interleave(
-        fine_nodes.unsqueeze(1), coarse_nodes.shape[0], 1
+        fine_nodes.unsqueeze(1), coarse_nodes.shape[0], axis=1
     )  # [6684,352,2]
     dist_w = 1.0 / (
         paddle.norm(x=coarse_nodes_input - fine_nodes_input, p=2, axis=-1) + 1e-9
@@ -54,34 +60,12 @@ def _knn_interpolate(features, coarse_nodes, fine_nodes):
     return output
 
 
-def MyCopy(graph):
-    data = pgl.Graph(
-        num_nodes=graph.num_nodes,
-        edges=graph.edges,
-    )
-    data.x = graph.x
-    data.y = graph.y
-    data.pos = graph.pos
-    data.edge_index = graph.edge_index
-    data.edge_attr = graph.edge_attr
-    return data
-
-
-def Myadd(g1, g2):
-    g1.x = paddle.concat([g1.x, g2.x], axis=0)
-    g1.y = paddle.concat([g1.y, g2.y], axis=0)
-    g1.edge_index = paddle.concat([g1.edge_index, g2.edge_index], axis=1)
-    g1.edge_attr = paddle.concat([g1.edge_attr, g2.edge_attr], axis=0)
-    g1.pos = paddle.concat([g1.pos, g2.pos], axis=0)
-    return g1
-
-
-def getcorsenode(latent_graph):
+def getcorsenode(latent_graph: "pgl.Graph") -> paddle.Tensor:
     row = latent_graph.edge_index[0].numpy()
     col = latent_graph.edge_index[1].numpy()
     data = paddle.ones(shape=[row.size]).numpy()
     A = sci_sparse.coo_matrix((data, (row, col))).tocsr()
-    splitting = RS(A)
+    splitting = split.RS(A)
     index = np.array(np.nonzero(splitting))
     b = paddle.to_tensor(index)
     b = paddle.squeeze(b)
@@ -89,8 +73,10 @@ def getcorsenode(latent_graph):
 
 
 def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
-    r"""come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
-    for learning hierarchical graph representations. AAAI(2020)"""
+    """
+    Asap: Adaptive structure aware pooling for learning hierarchical graph representations.
+    Ranjan, E., Sanyal, S., Talukdar, P. (2020, April).  AAAI(2020)
+    """
 
     sp_x = paddle.sparse.sparse_coo_tensor(index_A, value_A)
     sp_x = paddle.sparse.coalesce(sp_x)
@@ -104,7 +90,6 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_A.numpy()
     values_A = value_A.numpy()
-    # with misc.Timer("coo_matrix1"):
     coo_A = sci_sparse.coo_matrix(
         (values_A, (indices_A[0], indices_A[1])), shape=(N, N)
     )
@@ -135,7 +120,6 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
 
     indices_A = index_St.numpy()
     values_A = value_St.numpy()
-    # with misc.Timer("coo_matrix2"):
     coo_A = sci_sparse.coo_matrix(
         (values_A, (indices_A[0], indices_A[1])), shape=(kN, N)
     )
@@ -193,13 +177,11 @@ def FillZeros(index_E, value_E, standard_index, kN):
     return index_E, value_E
 
 
-# @brief:删除图中的自循环的边
 def remove_self_loops(
     edge_index: paddle.Tensor, edge_attr: Optional[paddle.Tensor] = None
 ) -> Tuple[paddle.Tensor, Optional[paddle.Tensor]]:
     mask = edge_index[0] != edge_index[1]
     mask = mask.tolist()
-    # edge_index = edge_index[:, mask]
     edge_index = edge_index.t()
     edge_index = edge_index[mask]
     edge_index = edge_index.t()
@@ -238,7 +220,6 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor)
         ("act1", paddle.nn.ReLU()),
         ("l2", paddle.nn.Linear(256, 256)),
         ("act2", paddle.nn.ReLU()),
-        # ('l3', paddle.nn.Linear(256, 256)), ('act3', paddle.nn.ReLU()),
         ("l4", paddle.nn.Linear(256, 128)),
         ("act4", paddle.nn.ReLU()),
         ("l5", paddle.nn.Linear(128, 1)),
@@ -248,7 +229,6 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor)
         ("act1", paddle.nn.ReLU()),
         ("l2", paddle.nn.Linear(64, 128)),
         ("act2", paddle.nn.ReLU()),
-        # ('l3', paddle.nn.Linear(128, 128)),('act3', paddle.nn.ReLU()),
         ("l4", paddle.nn.Linear(128, 128)),
     )
 
@@ -289,7 +269,6 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
     value_A = paddle.squeeze(value_A)
     eps_mask = (value_S == 0).astype(paddle.get_default_dtype())
     value_S = paddle.full_like(value_S, 1e-4) * eps_mask + (1 - eps_mask) * value_S
-    # value_S = paddle.where(value_S == 0, paddle.to_tensor(0.0001), value_S)
     attrlist = []
     standard_index, _ = StAS(
         index_A,
@@ -304,17 +283,11 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
     for i in range(128):
         mask = (value_A[:, i] == 0).astype(paddle.get_default_dtype())
         val_A = paddle.full_like(mask, 1e-4) * mask + (1 - mask) * value_A[:, i]
-        # val_A = paddle.where(
-        #     value_A[:, i] == 0, paddle.to_tensor(0.0001), value_A[:, i]
-        # )
-        # with misc.Timer("inner StAS"):
         index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, nor)
 
         if index_E.shape[1] != standard_index.shape[1]:
-            # with misc.Timer("FillZeros"):
             index_E, value_E = FillZeros(index_E, value_E, standard_index, kN)
 
-        # with misc.Timer("remove_self_loops"):
         index_E, value_E = remove_self_loops(edge_index=index_E, edge_attr=value_E)
         attrlist.append(value_E)
     edge_weight = paddle.stack(attrlist, axis=1)
@@ -412,12 +385,12 @@ class Processor(nn.Layer):
 
     def __init__(
         self,
-        make_mlp,
-        output_dim,
-        message_passing_steps,
-        message_passing_aggregator,
-        attention=False,
-        stochastic_message_passing_used=False,
+        make_mlp: Callable,
+        output_dim: int,
+        message_passing_steps: int,
+        message_passing_aggregator: str,
+        attention: bool = False,
+        stochastic_message_passing_used: bool = False,
     ):
         super().__init__()
         self.stochastic_message_passing_used = stochastic_message_passing_used
@@ -467,7 +440,6 @@ class Processor(nn.Layer):
                         nor=self.normalization,
                     )
                 elif speed == "norm":
-                    # with misc.Timer("norm_graph_connectivity"):
                     subedge_index, edge_weight, subpos = norm_graph_connectivity(
                         perm=coarsenodes,
                         edge_index=cofe_graph.edge_index,
@@ -476,6 +448,10 @@ class Processor(nn.Layer):
                         pos=cofe_graph.pos,
                         N=cofe_graph.x.shape[0],
                         nor=self.normalization,
+                    )
+                else:
+                    raise ValueError(
+                        f"Argument 'speed' should be 'sum' or 'fast', bot got {speed}."
                     )
                 edge_weight = self.normalization(edge_weight)
                 pos.append(subpos)
@@ -495,7 +471,7 @@ class Processor(nn.Layer):
 
 
 class LazyMLP(nn.Layer):
-    def __init__(self, layer, input_dim):
+    def __init__(self, layer: Tuple[int, ...], input_dim: int):
         super(LazyMLP, self).__init__()
         num_layers = len(layer)
         self._layers_ordered_dict = {}
@@ -525,17 +501,8 @@ class Encoder(nn.Layer):
         super(Encoder, self).__init__()
         self._make_mlp = make_mlp
         self._latent_dim = latent_dim
-        # if mode == "airfoil":
-        # self.node_model = self._make_mlp(latent_dim, input_dim=input_dim) # 5
-        # else:
         self.node_model = self._make_mlp(latent_dim, input_dim=input_dim)  # 4
-
         self.mesh_edge_model = self._make_mlp(latent_dim, input_dim=1)  # 1
-        """
-        for _ in graph.edge_sets:
-          edge_model = make_mlp(latent_dim)
-          self.edge_models.append(edge_model)
-        """
 
     def forward(self, graph):
         node_latents = self.node_model(graph.x)
@@ -560,33 +527,47 @@ class Decoder(nn.Layer):
 
 
 class AMGNet(nn.Layer):
-    """Encode-Process-Decode GraphNet model."""
+    """A Multi-scale Graph neural Network model
+    based on Encoder-Process-Decoder structure for flow field prediction.
+
+    https://doi.org/10.1080/09540091.2022.2131737
+
+    Code reference: https://github.com/baoshiaijhin/amgnet
+
+    Args:
+        input_dim (int): Number of input dimension.
+        output_dim (int): Number of output dimension.
+        latent_dim (int): Number of hidden(feature) dimension.
+        num_layers (int): NUmbe of layer(s).
+        message_passing_aggregator (Literal["sum"]): Message aggregator method in graph.
+            Only "sum" available now.
+        message_passing_steps (int): Message passing steps in graph.
+        speed (str): Whether use vanilla method or fast method for graph_connectivity
+            computation.
+    """
 
     def __init__(
         self,
-        input_dim,
-        output_dim,
-        latent_dim,
-        num_layers,
-        message_passing_aggregator,
-        message_passing_steps,
-        speed,
-        nodes=6684,
+        input_dim: int,
+        output_dim: int,
+        latent_dim: int,
+        num_layers: int,
+        message_passing_aggregator: Literal["sum"],
+        message_passing_steps: int,
+        speed: Literal["norm", "fast"],
     ):
         super().__init__()
         self._latent_dim = latent_dim
         self.speed = speed
         self._output_dim = output_dim
         self._num_layers = num_layers
-        self.min_nodes = nodes
-        self._message_passing_steps = message_passing_steps
-        self._message_passing_aggregator = message_passing_aggregator
+
         self.encoder = Encoder(input_dim, self._make_mlp, latent_dim=self._latent_dim)
         self.processor = Processor(
             make_mlp=self._make_mlp,
             output_dim=self._latent_dim,
-            message_passing_steps=self._message_passing_steps,
-            message_passing_aggregator=self._message_passing_aggregator,
+            message_passing_steps=message_passing_steps,
+            message_passing_aggregator=message_passing_aggregator,
             stochastic_message_passing_used=False,
         )
         self.post_processor = self._make_mlp(self._latent_dim, 128)
@@ -595,33 +576,30 @@ class AMGNet(nn.Layer):
             output_dim=self._output_dim,
         )
 
-    def _make_mlp(self, output_dim, input_dim=5, layer_norm=True):
-        """Builds an MLP."""
-        widths = [self._latent_dim] * self._num_layers + [output_dim]
+    def forward(self, x: Dict[str, "pgl.Graph"]) -> Dict[str, paddle.Tensor]:
+        graphs = x["input"]
+        latent_graph = self.encoder(graphs)
+        x, p = self.processor(latent_graph, speed=self.speed)
+        node_features = self._spa_compute(x, p)
+        pred_field = self.decoder(node_features)
+        return {"pred": pred_field}
+
+    def _make_mlp(self, output_dim: int, input_dim: int = 5, layer_norm: bool = True):
+        widths = (self._latent_dim,) * self._num_layers + (output_dim,)
         network = LazyMLP(widths, input_dim)
         if layer_norm:
             network = nn.Sequential(network, nn.LayerNorm(normalized_shape=widths[-1]))
         return network
 
-    def _spa_compute(self, x, p):
+    def _spa_compute(self, x: List["pgl.Graph"], p):
         j = len(x) - 1
         node_features = x[j].x
+
         for k in range(1, j + 1):
             pos = p[-k]
             fine_nodes = x[-(k + 1)].pos
             feature = _knn_interpolate(node_features, pos, fine_nodes)
             node_features = x[-(k + 1)].x + feature
             node_features = self.post_processor(node_features)
-        return node_features
 
-    def forward(self, x):
-        graphs = x["input"]
-        # with misc.Timer("encoder"):
-        latent_graph = self.encoder(graphs)
-        # with misc.Timer("processor"):
-        x, p = self.processor(latent_graph, speed=self.speed)
-        # with misc.Timer("_spa_compute"):
-        node_features = self._spa_compute(x, p)
-        # with misc.Timer("decoder"):
-        pred_field = self.decoder(node_features)
-        return {"pred": pred_field}
+        return node_features
