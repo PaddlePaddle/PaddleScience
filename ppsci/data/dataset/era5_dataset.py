@@ -33,7 +33,7 @@ class ERA5Dataset(io.Dataset):
         file_path (str): Data set path.
         input_keys (Tuple[str, ...]): Input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
-        precip_file_path (str): Precipitation data set path.
+        precip_file_path (Optional[str]): Precipitation data set path. Defaults to None.
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         vars_channel (Optional[Tuple[int, ...]]): The variable channel index in ERA5 dataset. Defaults to None.
         num_label_timestamps (int, optional): Number of timestamp of label. Defaults to 1.
@@ -56,7 +56,7 @@ class ERA5Dataset(io.Dataset):
         file_path: str,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        precip_file_path: str = None,
+        precip_file_path: Optional[str] = None,
         weight_dict: Optional[Dict[str, float]] = None,
         vars_channel: Optional[Tuple[int, ...]] = None,
         num_label_timestamps: int = 1,
