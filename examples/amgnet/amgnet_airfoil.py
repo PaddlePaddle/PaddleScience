@@ -19,6 +19,7 @@ from typing import Dict
 from typing import List
 
 from paddle.nn import functional as F
+from utils import log_images
 
 import ppsci
 from ppsci.utils import config
@@ -66,16 +67,6 @@ if __name__ == "__main__":
         message_passing_steps=6,
         speed="norm",
     )
-    # set cylinder model
-    # model = ppsci.arch.AMGNet(
-    #     5,
-    #     3,
-    #     128,
-    #     num_layers=2,
-    #     message_passing_aggregator="sum",
-    #     message_passing_steps=6,
-    #     speed="norm",
-    # )
 
     # set dataloader config
     ITERS_PER_EPOCH = 42
@@ -151,34 +142,21 @@ if __name__ == "__main__":
         eval_freq=50,
         validator=validator,
         eval_with_no_grad=True,
-        # pretrained_model_path="./output_AMGNet/checkpoints/latest"
     )
     # train model
     solver.train()
-    # solver.eval()
-    # with solver.no_grad_context_manager(True):
-    #     sum_loss = 0
-    #     for index, batch in enumerate(loader):
-    #         truefield = batch[0].y
-    #         prefield = model(batch)
-    #         # print(f"{index }prefield.mean() = {prefield.shape} {prefield.mean().item():.10f}")
-    #         # log_images(
-    #         #     batch[0].pos,
-    #         #     prefield,
-    #         #     truefield,
-    #         #     trainer.data.elems_list,
-    #         #     "test",
-    #         #     index,
-    #         #     flag=my_type,
-    #         # )
-    #         mes_loss = criterion(prefield, truefield)
-    #         # print(f">>> mes_loss = {mes_loss.item():.10f}")
-    #         sum_loss += mes_loss.item()
-    #         print(index)
-    #         # exit()
-    # avg_loss = sum_loss / (len(loader))
-    # avg_loss = np.sqrt(avg_loss)
-    # root_logger.info("        trajectory_loss")
-    # root_logger.info("        " + str(avg_loss))
-    # print("trajectory_loss=", avg_loss)
-    # print("============finish============")
+
+    # visualize prediction
+    with solver.no_grad_context_manager(True):
+        for index, batch in enumerate(rmse_validator.data_loader):
+            truefield = batch[0]["input"].y
+            prefield = model(batch[0])
+            log_images(
+                batch[0]["input"].pos,
+                prefield["pred"],
+                truefield,
+                rmse_validator.data_loader.dataset.elems_list,
+                "test",
+                index,
+                flag="airfoil",
+            )

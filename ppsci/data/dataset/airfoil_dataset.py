@@ -37,6 +37,7 @@ SU2_SHAPE_IDS = {
 }
 
 
+#  HACK: Simplify code below
 def _get_mesh_graph(
     mesh_filename: str, dtype: np.dtype = np.float32
 ) -> Tuple[np.ndarray, np.ndarray, List[List[List[int]]], Dict[str, List[List[int]]]]:
@@ -93,7 +94,7 @@ class MeshAirfoilDataset(io.Dataset):
     Args:
         input_keys (Tuple[str, ...]): Name of input data.
         label_keys (Tuple[str, ...]): Name of label data.
-        data_root (str): Directory of MeshAirfoil data.
+        data_dir (str): Directory of MeshAirfoil data.
         mesh_graph_path (str): Path of mesh graph.
     """
 
@@ -103,12 +104,12 @@ class MeshAirfoilDataset(io.Dataset):
         self,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        data_root: str,
+        data_dir: str,
         mesh_graph_path: str,
     ):
         self.input_keys = input_keys
         self.label_keys = label_keys
-        self.data_dir = osp.join(data_root)
+        self.data_dir = data_dir
         self.file_list = os.listdir(self.data_dir)
         self.len = len(self.file_list)
         self.mesh_graph = _get_mesh_graph(mesh_graph_path)
@@ -126,6 +127,8 @@ class MeshAirfoilDataset(io.Dataset):
                 self.node_markers[elem[0]] = i
                 self.node_markers[elem[1]] = i
 
+        #  HACK: For unsupporting convert to tensor at different workers in runtime,
+        #  so load all graph into GPU-memory at onec. This need to be optimized.
         self.raw_graphs = [self.get(i) for i in range(self.len)]
 
     def __len__(self):

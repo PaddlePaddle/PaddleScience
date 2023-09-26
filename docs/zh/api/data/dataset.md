@@ -17,4 +17,5 @@
         - RosslerDataset
         - VtuDataset
         - MeshAirfoilDataset
+        - MeshCylinderDataset
       show_root_heading: false
