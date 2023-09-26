@@ -39,6 +39,12 @@ DeepPhyLSTM 参数 input_size 是输入大小，output_size 是输出大小，hi
 
 ### 3.2 数据构建
 
+运行本问题代码前请按照下方命令下载 [data_boucwen.mat](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat)
+
+``` shell
+wget -P ./ https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+```
+
 本案例涉及读取数据构建，如下所示
 
 ``` py linenums="38"
@@ -57,7 +63,17 @@ examples/phylstm/phylstm2.py:118:136
 --8<--
 ```
 
-### 3.4 超参数设定
+### 3.4 评估器构建
+
+设置评估数据集和损失计算函数，返回字段，代码如下所示：
+
+``` py linenums="139"
+--8<--
+examples/phylstm/phylstm2.py:139:158
+--8<--
+```
+
+### 3.5 超参数设定
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 100 轮训练轮数。
 
@@ -67,7 +83,7 @@ examples/phylstm/phylstm2.py:36:36
 --8<--
 ```
 
-### 3.5 优化器构建
+### 3.6 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate` 为 1e-3。
 
@@ -77,7 +93,7 @@ examples/phylstm/phylstm2.py:163:163
 --8<--
 ```
 
-### 3.6 模型训练与可视化
+### 3.7 模型训练与评估
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
@@ -87,11 +103,11 @@ examples/phylstm/phylstm2.py:164:175
 --8<--
 ```
 
-最后启动训练即可：
+最后启动训练、评估即可：
 
-``` py linenums="178"
+``` py linenums="177"
 --8<--
-examples/phylstm/phylstm2.py:177:179
+examples/phylstm/phylstm2.py:177:180
 --8<--
 ```
 
@@ -115,9 +131,9 @@ examples/phylstm/phylstm2.py:177:179
 
 ## 5. 结果展示
 
-本案例针对 $EPOCHS=100$ 和 $learning\_rate=1e-3$ 的参数配置进行了实验，结果返回Loss为 0.00811。
+PhyLSTM2 案例针对 epoch=100 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.00811。
 
-PhyLSTM3 针对 $EPOCHS=200$ 和 $learning\_rate=1e-3$ 的参数配置进行了实验，结果返回Loss为 0.02833。
+PhyLSTM3 案例针对 epoch=200 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.02833。
 
 !!! info "说明"
 
