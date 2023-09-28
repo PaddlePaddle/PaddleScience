@@ -348,7 +348,7 @@ class PhyCRNet(nn.Layer):
 
 
 class Conv2DDerivative(nn.Layer):
-    def __init__(self, DerFilter, resol, kernel_size=3, name=""):
+    def __init__(self, der_filter, resol, kernel_size=3, name=""):
         super(Conv2DDerivative, self).__init__()
 
         self.resol = resol  # constant in the finite difference
@@ -373,7 +373,7 @@ class Conv2DDerivative(nn.Layer):
             dtype=self.filter.weight.dtype,
             default_initializer=paddle.nn.initializer.Assign(
                 paddle.to_tensor(
-                    DerFilter, dtype=paddle.get_default_dtype(), stop_gradient=True
+                    der_filter, dtype=paddle.get_default_dtype(), stop_gradient=True
                 )
             ),
         )
@@ -385,7 +385,7 @@ class Conv2DDerivative(nn.Layer):
 
 
 class Conv1DDerivative(nn.Layer):
-    def __init__(self, DerFilter, resol, kernel_size=3, name=""):
+    def __init__(self, der_filter, resol, kernel_size=3, name=""):
         super(Conv1DDerivative, self).__init__()
 
         self.resol = resol  # $\delta$*constant in the finite difference
@@ -410,7 +410,7 @@ class Conv1DDerivative(nn.Layer):
             dtype=self.filter.weight.dtype,
             default_initializer=paddle.nn.initializer.Assign(
                 paddle.to_tensor(
-                    DerFilter, dtype=paddle.get_default_dtype(), stop_gradient=True
+                    der_filter, dtype=paddle.get_default_dtype(), stop_gradient=True
                 )
             ),
         )
@@ -431,20 +431,20 @@ class loss_generator(nn.Layer):
 
         # spatial derivative operator
         self.laplace = Conv2DDerivative(
-            DerFilter=lapl_op, resol=(dx**2), kernel_size=5, name="laplace_operator"
+            der_filter=lapl_op, resol=(dx**2), kernel_size=5, name="laplace_operator"
         )
 
         self.dx = Conv2DDerivative(
-            DerFilter=partial_x, resol=(dx * 1), kernel_size=5, name="dx_operator"
+            der_filter=partial_x, resol=(dx * 1), kernel_size=5, name="dx_operator"
         )
 
         self.dy = Conv2DDerivative(
-            DerFilter=partial_y, resol=(dx * 1), kernel_size=5, name="dy_operator"
+            der_filter=partial_y, resol=(dx * 1), kernel_size=5, name="dy_operator"
         )
 
         # temporal derivative operator
         self.dt = Conv1DDerivative(
-            DerFilter=[[[-1, 0, 1]]], resol=(dt * 2), kernel_size=3, name="partial_t"
+            der_filter=[[[-1, 0, 1]]], resol=(dt * 2), kernel_size=3, name="partial_t"
         )
 
     def get_phy_Loss(self, output):
@@ -462,17 +462,17 @@ class loss_generator(nn.Layer):
         lent = u.shape[0]
         lenx = u.shape[3]
         leny = u.shape[2]
-        u_Conv1D = u.transpose((2, 3, 1, 0))  # [height(Y), width(X), c, step]
-        u_Conv1D = u_Conv1D.reshape((lenx * leny, 1, lent))
-        u_t = self.dt(u_Conv1D)  # lent-2 due to no-padding
+        u_conv1d = u.transpose((2, 3, 1, 0))  # [height(Y), width(X), c, step]
+        u_conv1d = u_conv1d.reshape((lenx * leny, 1, lent))
+        u_t = self.dt(u_conv1d)  # lent-2 due to no-padding
         u_t = u_t.reshape((leny, lenx, 1, lent - 2))
         u_t = u_t.transpose((3, 2, 0, 1))  # [step-2, c, height(Y), width(X)]
 
         # temporal derivative - v
         v = output[:, 1:2, 2:-2, 2:-2]
-        v_Conv1D = v.transpose((2, 3, 1, 0))  # [height(Y), width(X), c, step]
-        v_Conv1D = v_Conv1D.reshape((lenx * leny, 1, lent))
-        v_t = self.dt(v_Conv1D)  # lent-2 due to no-padding
+        v_conv1d = v.transpose((2, 3, 1, 0))  # [height(Y), width(X), c, step]
+        v_conv1d = v_conv1d.reshape((lenx * leny, 1, lent))
+        v_t = self.dt(v_conv1d)  # lent-2 due to no-padding
         v_t = v_t.reshape((leny, lenx, 1, lent - 2))
         v_t = v_t.transpose((3, 2, 0, 1))  # [step-2, c, height(Y), width(X)]
 
