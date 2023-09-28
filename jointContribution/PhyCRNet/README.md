@@ -19,8 +19,8 @@ By: [Pu Ren](https://scholar.google.com/citations?user=7FxlSHEAAAAJ&hl=en), [Che
 
 ## 原仓库环境
 
-- Python 3.6.13
-- [Pytorch](https://pytorch.org/) 1.6.0，使用的torch.ifft在更高版本不支持
+- Python 3.6.13，使用Pytorch 1.6.0
+- [Pytorch](https://pytorch.org/) 1.6.0，random_fields.py使用的torch.ifft在更高版本不支持。如果不生成数据集，可以使用其他版本。
 - matplotlib, numpy, scipy
 - post_process 中 `x = x[:-1]` 一行需要注释
 
