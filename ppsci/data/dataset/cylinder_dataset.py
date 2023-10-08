@@ -78,20 +78,17 @@ class MeshCylinderDataset(io.Dataset):
                 self.node_markers[elem[0]] = i
                 self.node_markers[elem[1]] = i
 
-        #  HACK: For unsupporting convert to tensor at different workers in runtime,
-        #  so load all graph into GPU-memory at onec. This need to be optimized.
-        self.raw_graphs = [self.get(i) for i in range(self.len)]
-
     def __len__(self):
         return self.len
 
     def __getitem__(self, idx):
+        raw_graph = self.get(idx)
         return (
             {
-                self.input_keys[0]: self.raw_graphs[idx],
+                self.input_keys[0]: raw_graph,
             },
             {
-                self.label_keys[0]: self.raw_graphs[idx],
+                self.label_keys[0]: raw_graph,
             },
             None,
         )
@@ -125,7 +122,7 @@ class MeshCylinderDataset(io.Dataset):
         indexlist = paddle.stack(indexlist, axis=0)
         indexlist = paddle.squeeze(indexlist)
         fields = field[indexlist]
-        velocity = self.get_params_from_name(self.file_list[idx])
+        velocity = self._get_params_from_name(self.file_list[idx])
         aoa = paddle.to_tensor(velocity)
 
         norm_aoa = paddle.to_tensor(aoa / 40)
@@ -201,8 +198,7 @@ class MeshCylinderDataset(io.Dataset):
         self.bounder = indexlist
         return data
 
-    @staticmethod
-    def get_params_from_name(filename):
+    def _get_params_from_name(self, filename):
         s = filename.rsplit(".", 1)[0]
         reynolds = np.array(s[13:])[np.newaxis].astype(paddle.get_default_dtype())
         return reynolds
