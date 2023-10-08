@@ -42,7 +42,7 @@ class MeshCylinderDataset(io.Dataset):
     Args:
         input_keys (Tuple[str, ...]): Name of input data.
         label_keys (Tuple[str, ...]): Name of label data.
-        data_root (str): Directory of MeshCylinder data.
+        data_dir (str): Directory of MeshCylinder data.
         mesh_graph_path (str): Path of mesh graph.
     """
 
@@ -52,12 +52,12 @@ class MeshCylinderDataset(io.Dataset):
         self,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        data_root: str,
+        data_dir: str,
         mesh_graph_path: str,
     ):
         self.input_keys = input_keys
         self.label_keys = label_keys
-        self.data_dir = data_root
+        self.data_dir = data_dir
         self.file_list = os.listdir(self.data_dir)
         self.len = len(self.file_list)
         self.mesh_graph = airfoil_dataset._get_mesh_graph(mesh_graph_path)

@@ -160,11 +160,13 @@ def _eval_by_dataset(
                 all_input[key] = paddle.concat(all_input[key])
             if len(all_input[key]) > num_samples:
                 all_input[key] = all_input[key][:num_samples]
+
         for key in all_output:
             if paddle.is_tensor(all_output[key][0]):
                 all_output[key] = paddle.concat(all_output[key])
             if len(all_output[key]) > num_samples:
                 all_output[key] = all_output[key][:num_samples]
+
         for key in all_label:
             if paddle.is_tensor(all_label[key][0]):
                 all_label[key] = paddle.concat(all_label[key])

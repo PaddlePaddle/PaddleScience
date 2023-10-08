@@ -34,10 +34,11 @@ from paddle import distributed as dist
 from ppsci.utils import logger
 
 __all__ = [
-    "all_gather",
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
+    "Timer",
+    "all_gather",
     "concat_dict_list",
     "convert_to_array",
     "convert_to_dict",
@@ -48,7 +49,6 @@ __all__ = [
     "run_on_eval_mode",
     "run_at_rank0",
     "plot_curve",
-    "Timer",
 ]
 
 
@@ -114,6 +114,48 @@ class PrettyOrderedDict(collections.OrderedDict):
 class Prettydefaultdict(collections.defaultdict):
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
+
+
+class Timer(ContextDecorator):
+    """Count time cost for code block within context.
+
+    Args:
+        name (str, optional): Name of timer discriminate different code block.
+            Defaults to "Timer".
+        auto_print (bool, optional): Whether print time cost when exit context.
+            Defaults to True.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> with misc.Timer("test1", auto_print=False) as timer:
+        ...     w = sum(range(0, 10))
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        time cost of 'sum(range(0, 10))' is 0.00
+
+        >>> @misc.Timer("test2", auto_print=True)
+        ... def func():
+        ...     w = sum(range(0, 10))
+        >>> func()  # doctest: +SKIP
+
+    """
+
+    interval: float  # Time cost for code within Timer context
+
+    def __init__(self, name: str = "Timer", auto_print: bool = True):
+        super().__init__()
+        self.name = name
+        self.auto_print = auto_print
+
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
 
 
 def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.ndarray]:
@@ -386,45 +428,3 @@ def plot_curve(
 
     plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
     plt.clf()
-
-
-class Timer(ContextDecorator):
-    """Count time cost for code block within context.
-
-    Args:
-        name (str, optional): Name of timer discriminate different code block.
-            Defaults to "Timer".
-        auto_print (bool, optional): Whether print time cost when exit context.
-            Defaults to True.
-
-    Examples:
-        >>> import paddle
-        >>> from ppsci.utils import misc
-        >>> with misc.Timer("test1", auto_print=False) as timer:
-        ...     w = sum(range(0, 10))
-        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
-        time cost of 'sum(range(0, 10))' is 0.00
-
-        >>> @misc.Timer("test2", auto_print=True)
-        ... def func():
-        ...     w = sum(range(0, 10))
-        >>> func()  # doctest: +SKIP
-
-    """
-
-    interval: float  # Time cost for code within Timer context
-
-    def __init__(self, name: str = "Timer", auto_print: bool = True):
-        super().__init__()
-        self.name = name
-        self.auto_print = auto_print
-
-    def __enter__(self):
-        self.start_time = time.perf_counter()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.end_time = time.perf_counter()
-        self.interval = self.end_time - self.start_time
-        if self.auto_print:
-            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")

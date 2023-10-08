@@ -32,10 +32,11 @@ except ModuleNotFoundError:
     pass
 
 try:
-    from pyamg.classical import split
+    import pyamg
 except ModuleNotFoundError:
     pass
 
+from paddle import sparse as pd_sparse
 from scipy import sparse as sci_sparse
 
 
@@ -60,31 +61,49 @@ def _knn_interpolate(
     return output
 
 
-def getcorsenode(latent_graph: "pgl.Graph") -> paddle.Tensor:
+def _get_corse_node(latent_graph: "pgl.Graph") -> paddle.Tensor:
     row = latent_graph.edge_index[0].numpy()
     col = latent_graph.edge_index[1].numpy()
     data = paddle.ones(shape=[row.size]).numpy()
     A = sci_sparse.coo_matrix((data, (row, col))).tocsr()
-    splitting = split.RS(A)
+    splitting = pyamg.classical.split.RS(A)
     index = np.array(np.nonzero(splitting))
     b = paddle.to_tensor(index)
     b = paddle.squeeze(b)
     return b
 
 
-def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
-    """
-    Asap: Adaptive structure aware pooling for learning hierarchical graph representations.
+def StAS(
+    index_A: paddle.Tensor,
+    value_A: paddle.Tensor,
+    index_S: paddle.Tensor,
+    value_S: paddle.Tensor,
+    N: int,
+    kN: int,
+    norm_layer: nn.Layer,
+) -> Tuple[paddle.Tensor, paddle.Tensor]:
+    """ASAP: Adaptive Structure Aware Pooling for Learning Hierarchical Graph Representations.
     Ranjan, E., Sanyal, S., Talukdar, P. (2020, April).  AAAI(2020)
-    """
 
-    sp_x = paddle.sparse.sparse_coo_tensor(index_A, value_A)
-    sp_x = paddle.sparse.coalesce(sp_x)
+    Args:
+        index_A (paddle.Tensor): Indices of sparse matrix A.
+        value_A (paddle.Tensor): Values of sparse matrix A.
+        index_S (paddle.Tensor): Indices of sparse matrix S.
+        value_S (paddle.Tensor): Values of sparse matrix S.
+        N (int): Dimension N.
+        kN (int): Dimension kN.
+        norm_layer (nn.Layer): Normalization layer.
+
+    Returns:
+        Tuple[paddle.Tensor, paddle.Tensor]: Indices and values of result matrix E.
+    """
+    sp_x = pd_sparse.sparse_coo_tensor(index_A, value_A)
+    sp_x = pd_sparse.coalesce(sp_x)
     index_A = sp_x.indices()
     value_A = sp_x.values()
 
-    sp_s = paddle.sparse.sparse_coo_tensor(index_S, value_S)
-    sp_s = paddle.sparse.coalesce(sp_s)
+    sp_s = pd_sparse.sparse_coo_tensor(index_S, value_S)
+    sp_s = pd_sparse.coalesce(sp_s)
     index_S = sp_s.indices()
     value_S = sp_s.values()
 
@@ -100,21 +119,21 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
         (values_S, (indices_S[0], indices_S[1])), shape=(N, kN)
     )
 
-    ans = coo_A.dot(coo_S).tocoo()
+    ans = coo_A.dot(coo_S).tocoo()  # sp_x @ sp_s
     row = paddle.to_tensor(ans.row)
     col = paddle.to_tensor(ans.col)
     index_B = paddle.stack([row, col], axis=0)
-    value_B = paddle.to_tensor(ans.data)
+    value_B = paddle.to_tensor(ans.data)  # sp_x @ sp_s
 
     indices_A = index_S
     values_A = value_S
-    coo_A = paddle.sparse.sparse_coo_tensor(indices_A, values_A)
-    out = paddle.sparse.transpose(coo_A, [1, 0])
+    coo_A = pd_sparse.sparse_coo_tensor(indices_A, values_A)  # sp_s
+    out = pd_sparse.transpose(coo_A, [1, 0])
     index_St = out.indices()
     value_St = out.values()
 
-    sp_x = paddle.sparse.sparse_coo_tensor(index_B, value_B)
-    sp_x = paddle.sparse.coalesce(sp_x)
+    sp_x = pd_sparse.sparse_coo_tensor(index_B, value_B)  # sp_b
+    sp_x = pd_sparse.coalesce(sp_x)
     index_B = sp_x.indices()
     value_B = sp_x.values()
 
@@ -137,19 +156,20 @@ def StAS(index_A, value_A, index_S, value_S, N, kN, nor):
     value_E = paddle.to_tensor(ans.data)
 
     # index_E排序
-    sp_x = paddle.sparse.sparse_coo_tensor(index_E, value_E)
-    sp_x = paddle.sparse.coalesce(sp_x)
+    sp_x = pd_sparse.sparse_coo_tensor(index_E, value_E)
+    sp_x = pd_sparse.coalesce(sp_x)
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
     return index_E, value_E
 
 
-def FillZeros(index_E, value_E, standard_index, kN):
+def FillZeros(
+    index_E: paddle.Tensor, value_E: paddle.Tensor, standard_index, kN: int
+) -> Tuple[paddle.Tensor, paddle.Tensor]:
     shape = [kN, kN]
     row_E = index_E[0]
     col_E = index_E[1]
-    # coo_E = paddle.sparse.sparse_coo_tensor(index_E, value_E, shape)
     DenseMatrix_E = sci_sparse.coo_matrix(
         (paddle.ones_like(value_E), (row_E, col_E)), shape
     ).toarray()
@@ -169,8 +189,8 @@ def FillZeros(index_E, value_E, standard_index, kN):
     index_E = paddle.concat([index_E, index], axis=1)
     value_E = paddle.concat([value_E, value], axis=-1)
 
-    sp_x = paddle.sparse.sparse_coo_tensor(index_E, value_E)
-    sp_x = paddle.sparse.coalesce(sp_x)
+    sp_x = pd_sparse.sparse_coo_tensor(index_E, value_E)
+    sp_x = pd_sparse.coalesce(sp_x)
     index_E = sp_x.indices()
     value_E = sp_x.values()
 
@@ -192,7 +212,7 @@ def remove_self_loops(
 
 
 def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
-    """come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
+    """Adapted from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
     for learning hierarchical graph representations. AAAI(2020)"""
 
     kN = perm.shape[0]
@@ -241,7 +261,7 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor)
     return index_E, edge_weight, subgraphnode_pos
 
 
-def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
+def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_layer):
     """come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
     for learning hierarchical graph representations. AAAI(2020)"""
 
@@ -277,13 +297,13 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
         paddle.ones_like(value_S),
         N,
         kN,
-        nor,
+        norm_layer,
     )
     # with misc.Timer("range 128"):
     for i in range(128):
         mask = (value_A[:, i] == 0).astype(paddle.get_default_dtype())
         val_A = paddle.full_like(mask, 1e-4) * mask + (1 - mask) * value_A[:, i]
-        index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, nor)
+        index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, norm_layer)
 
         if index_E.shape[1] != standard_index.shape[1]:
             index_E, value_E = FillZeros(index_E, value_E, standard_index, kN)
@@ -299,11 +319,11 @@ class GraphNetBlock(nn.Layer):
     """Multi-Edge Interaction Network with residual connections."""
 
     def __init__(
-        self, model_fn, output_dim, message_passing_aggregator, attention=False
+        self, model_fn, output_dims, message_passing_aggregator, attention=False
     ):
         super().__init__()
-        self.edge_model = model_fn(output_dim, 384)
-        self.node_model = model_fn(output_dim, 256)
+        self.edge_model = model_fn(output_dims, 384)
+        self.node_model = model_fn(output_dims, 256)
         self.message_passing_aggregator = message_passing_aggregator
 
     def _update_edge_features(self, graph):
@@ -403,7 +423,7 @@ class Processor(nn.Layer):
             self.graphnet_blocks.append(
                 GraphNetBlock(
                     model_fn=make_mlp,
-                    output_dim=output_dim,
+                    output_dims=output_dim,
                     message_passing_aggregator=message_passing_aggregator,
                     attention=attention,
                 )
@@ -412,7 +432,7 @@ class Processor(nn.Layer):
             self.pool_blocks.append(
                 GraphNetBlock(
                     model_fn=make_mlp,
-                    output_dim=output_dim,
+                    output_dims=output_dim,
                     message_passing_aggregator=message_passing_aggregator,
                     attention=attention,
                 )
@@ -427,7 +447,7 @@ class Processor(nn.Layer):
                 pre_matrix = graphnet_block(latent_graph)
                 x.append(pre_matrix)
                 cofe_graph = pool(pre_matrix)
-                coarsenodes = getcorsenode(pre_matrix)
+                coarsenodes = _get_corse_node(pre_matrix)
                 nodesfeatures = cofe_graph.x[coarsenodes]
                 if speed == "fast":
                     subedge_index, edge_weight, subpos = faster_graph_connectivity(
@@ -470,28 +490,24 @@ class Processor(nn.Layer):
         return x, pos
 
 
-class LazyMLP(nn.Layer):
-    def __init__(self, layer: Tuple[int, ...], input_dim: int):
-        super(LazyMLP, self).__init__()
-        num_layers = len(layer)
-        self._layers_ordered_dict = {}
-        self.in_dim = input_dim
-        for index, output_dim in enumerate(layer):
-            self._layers_ordered_dict["linear_" + str(index)] = nn.Linear(
-                self.in_dim, output_dim
-            )
-            if index < (num_layers - 1):
-                self._layers_ordered_dict["relu_" + str(index)] = nn.ReLU()
-            self.in_dim = output_dim
+class FullyConnectedLayer(nn.Layer):
+    def __init__(self, input_dim: int, hidden_size: Tuple[int, ...]):
+        super(FullyConnectedLayer, self).__init__()
+        num_layers = len(hidden_size)
+        self.layers = nn.LayerList()
 
-        self.layers = nn.LayerDict(self._layers_ordered_dict)
+        cur_dim = input_dim
+        for i, hidden_size_ in enumerate(hidden_size):
+            self.layers.append(nn.Linear(cur_dim, hidden_size_))
+            if i < (num_layers - 1):
+                self.layers.append(nn.ReLU())
+            cur_dim = hidden_size_
 
     def forward(self, input):
-        for k in self.layers:
-            l = self.layers[k]
-            output = l(input)
-            input = output
-        return input
+        output = input
+        for layer in self.layers:
+            output = layer(output)
+        return output
 
 
 class Encoder(nn.Layer):
@@ -586,7 +602,7 @@ class AMGNet(nn.Layer):
 
     def _make_mlp(self, output_dim: int, input_dim: int = 5, layer_norm: bool = True):
         widths = (self._latent_dim,) * self._num_layers + (output_dim,)
-        network = LazyMLP(widths, input_dim)
+        network = FullyConnectedLayer(input_dim, widths)
         if layer_norm:
             network = nn.Sequential(network, nn.LayerNorm(normalized_shape=widths[-1]))
         return network
