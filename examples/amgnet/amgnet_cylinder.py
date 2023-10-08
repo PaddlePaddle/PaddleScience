@@ -148,15 +148,14 @@ if __name__ == "__main__":
 
     # visualize prediction
     with solver.no_grad_context_manager(True):
-        for index, batch in enumerate(rmse_validator.data_loader):
-            truefield = batch[0]["input"].y
-            prefield = model(batch[0])
+        for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
+            truefield = label["input"].y
+            prefield = model(input_)
             utils.log_images(
-                batch[0]["input"].pos,
+                input_["input"].pos,
                 prefield["pred"],
                 truefield,
                 rmse_validator.data_loader.dataset.elems_list,
-                "test",
                 index,
-                flag="cylinder",
+                "cylinder",
             )

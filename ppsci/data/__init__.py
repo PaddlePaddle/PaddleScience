@@ -119,7 +119,7 @@ def build_dataloader(_dataset, cfg):
             places=device.get_device(),
             batch_sampler=sampler,
             collate_fn=collate_fn,
-            num_workers=cfg.get("num_workers", 0),
+            num_workers=cfg.get("num_workers", 1),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
         )

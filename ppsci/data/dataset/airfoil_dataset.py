@@ -54,7 +54,7 @@ def _get_mesh_graph(
                     for _ in range(num_points)
                 ]
                 nodes = np.array(mesh_points, dtype=dtype)
-            if line.startswith("NMARK"):
+            elif line.startswith("NMARK"):
                 num_markers = int(get_rhs(line))
                 for _ in range(num_markers):
                     line = f.readline()
@@ -66,7 +66,7 @@ def _get_mesh_graph(
                         for _ in range(num_elems)
                     ]
                     marker_dict[marker_tag] = marker_elems
-            if line.startswith("NELEM"):
+            elif line.startswith("NELEM"):
                 edges = []
                 triangles = []
                 quads = []
@@ -127,20 +127,17 @@ class MeshAirfoilDataset(io.Dataset):
                 self.node_markers[elem[0]] = i
                 self.node_markers[elem[1]] = i
 
-        #  HACK: For unsupporting convert to tensor at different workers in runtime,
-        #  so load all graph into GPU-memory at onec. This need to be optimized.
-        self.raw_graphs = [self.get(i) for i in range(self.len)]
-
     def __len__(self):
         return self.len
 
     def __getitem__(self, idx):
+        raw_graph = self.get(idx)
         return (
             {
-                self.input_keys[0]: self.raw_graphs[idx],
+                self.input_keys[0]: raw_graph,
             },
             {
-                self.label_keys[0]: self.raw_graphs[idx],
+                self.label_keys[0]: raw_graph,
             },
             None,
         )
@@ -148,8 +145,8 @@ class MeshAirfoilDataset(io.Dataset):
     def get(self, idx):
         with open(osp.join(self.data_dir, self.file_list[idx]), "rb") as f:
             fields = pickle.load(f)
-        fields = paddle.to_tensor(self.preprocess(fields))
-        aoa, reynolds, mach = self.get_params_from_name(self.file_list[idx])
+        fields = paddle.to_tensor(self._preprocess(fields))
+        aoa, reynolds, mach = self._get_params_from_name(self.file_list[idx])
         aoa = paddle.to_tensor(aoa)
         mach_or_reynolds = mach if reynolds is None else reynolds
         mach_or_reynolds = paddle.to_tensor(mach_or_reynolds)
@@ -168,7 +165,7 @@ class MeshAirfoilDataset(io.Dataset):
                 self.node_markers,
             ],
             axis=-1,
-        ).astype(np.float32)
+        ).astype(paddle.get_default_dtype())
         nodes = paddle.to_tensor(nodes)
         data = pgl.Graph(
             num_nodes=nodes.shape[0],
@@ -195,7 +192,7 @@ class MeshAirfoilDataset(io.Dataset):
         data.norm_mach_or_reynolds = norm_mach_or_reynolds
         return data
 
-    def preprocess(self, tensor_list, stack_output=True):
+    def _preprocess(self, tensor_list, stack_output=True):
         data_max, data_min = self.normalization_factors
         normalized_tensors = []
         for i in range(len(tensor_list)):
@@ -207,15 +204,18 @@ class MeshAirfoilDataset(io.Dataset):
             normalized_tensors = np.stack(normalized_tensors, axis=1)
         return normalized_tensors
 
-    @staticmethod
-    def get_params_from_name(filename):
+    def _get_params_from_name(self, filename):
         s = filename.rsplit(".", 1)[0].split("_")
-        aoa = np.array(s[s.index("aoa") + 1])[np.newaxis].astype(np.float32)
+        aoa = np.array(s[s.index("aoa") + 1])[np.newaxis].astype(
+            paddle.get_default_dtype()
+        )
         reynolds = s[s.index("re") + 1]
         reynolds = (
-            np.array(reynolds)[np.newaxis].astype(np.float32)
+            np.array(reynolds)[np.newaxis].astype(paddle.get_default_dtype())
             if reynolds != "None"
             else None
         )
-        mach = np.array(s[s.index("mach") + 1])[np.newaxis].astype(np.float32)
+        mach = np.array(s[s.index("mach") + 1])[np.newaxis].astype(
+            paddle.get_default_dtype()
+        )
         return aoa, reynolds, mach

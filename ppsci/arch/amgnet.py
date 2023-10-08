@@ -211,7 +211,7 @@ def remove_self_loops(
         return edge_index, edge_attr[mask]
 
 
-def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor):
+def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_layer):
     """Adapted from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
     for learning hierarchical graph representations. AAAI(2020)"""
 
@@ -254,7 +254,7 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, nor)
 
     val_A = model_1(value_A)
     val_A = paddle.squeeze(val_A)
-    index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, nor)
+    index_E, value_E = StAS(index_A, val_A, index_S, value_S, N, kN, norm_layer)
     value_E = paddle.reshape(value_E, shape=[-1, 1])
     edge_weight = model_2(value_E)
 
@@ -299,7 +299,6 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_l
         kN,
         norm_layer,
     )
-    # with misc.Timer("range 128"):
     for i in range(128):
         mask = (value_A[:, i] == 0).astype(paddle.get_default_dtype())
         val_A = paddle.full_like(mask, 1e-4) * mask + (1 - mask) * value_A[:, i]
@@ -337,20 +336,23 @@ class GraphNetBlock(nn.Layer):
         return self.edge_model(features)
 
     def unsorted_segment_operation(self, data, segment_ids, num_segments, operation):
-        """
-        Computes the sum along segments of a tensor. Analogous to tf.unsorted_segment_sum.
+        """Computes the sum along segments of a tensor. Analogous to tf.unsorted_segment_sum.
 
-        :param data: A tensor whose segments are to be summed.
-        :param segment_ids: The segment indices tensor.
-        :param num_segments: The number of segments.
-        :return: A tensor of same data type as the data argument.
+        Args:
+            data (paddle.Tensor): A tensor whose segments are to be summed.
+            segment_ids (paddle.Tensor): The segment indices tensor.
+            num_segments (int): The number of segments.
+            operation (str): _description_
+
+        Returns:
+            paddle.Tensor: A tensor of same data type as the data argument.
         """
-        assert all(
-            [i in data.shape for i in segment_ids.shape]
-        ), "segment_ids.shape should be a prefix of data.shape"
-        assert (
-            data.shape[0] == segment_ids.shape[0]
-        ), "data.shape and segment_ids.shape should be equal"
+        if not all([i in data.shape for i in segment_ids.shape]):
+            raise ValueError("segment_ids.shape should be a prefix of data.shape")
+
+        if not (data.shape[0] == segment_ids.shape[0]):
+            raise ValueError("data.shape and segment_ids.shape should be equal")
+
         shape = [num_segments] + list(data.shape[1:])
         result_shape = paddle.zeros(shape)
         if operation == "sum":
@@ -392,12 +394,17 @@ class GraphNetBlock(nn.Layer):
 
 
 class Processor(nn.Layer):
-    """
-    This class takes the nodes with the most influential feature (sum of square)
+    """This class takes the nodes with the most influential feature (sum of square)
     The the chosen numbers of nodes in each ripple will establish connection(features and distances) with the most influential nodes and this connection will be learned
     Then the result is add to output latent graph of encoder and the modified latent graph will be feed into original processor
 
-    Option: choose whether to normalize the high rank node connection
+    Args:
+        make_mlp (Callable): Function to make MLP.
+        output_dim (int): Number of dimension of output.
+        message_passing_steps (int): Message passing steps.
+        message_passing_aggregator (str): Message passing aggregator.
+        attention (bool, optional): Whether use attention. Defaults to False.
+        use_stochastic_message_passing (bool, optional): Whether use stochastic message passing. Defaults to False.
     """
 
     # Each mesh can be coarsened to have no fewer points than this value
@@ -410,10 +417,10 @@ class Processor(nn.Layer):
         message_passing_steps: int,
         message_passing_aggregator: str,
         attention: bool = False,
-        stochastic_message_passing_used: bool = False,
+        use_stochastic_message_passing: bool = False,
     ):
         super().__init__()
-        self.stochastic_message_passing_used = stochastic_message_passing_used
+        self.use_stochastic_message_passing = use_stochastic_message_passing
         self.graphnet_blocks = nn.LayerList()
         self.cofe_edge_blocks = nn.LayerList()
         self.pool_blocks = nn.LayerList()
@@ -457,7 +464,7 @@ class Processor(nn.Layer):
                         score=cofe_graph.edge_attr[:, 0],
                         pos=cofe_graph.pos,
                         N=cofe_graph.x.shape[0],
-                        nor=self.normalization,
+                        norm_layer=self.normalization,
                     )
                 elif speed == "norm":
                     subedge_index, edge_weight, subpos = norm_graph_connectivity(
@@ -467,7 +474,7 @@ class Processor(nn.Layer):
                         score=cofe_graph.edge_attr[:, 0],
                         pos=cofe_graph.pos,
                         N=cofe_graph.x.shape[0],
-                        nor=self.normalization,
+                        norm_layer=self.normalization,
                     )
                 else:
                     raise ValueError(
@@ -584,7 +591,7 @@ class AMGNet(nn.Layer):
             output_dim=self._latent_dim,
             message_passing_steps=message_passing_steps,
             message_passing_aggregator=message_passing_aggregator,
-            stochastic_message_passing_used=False,
+            use_stochastic_message_passing=False,
         )
         self.post_processor = self._make_mlp(self._latent_dim, 128)
         self.decoder = Decoder(
