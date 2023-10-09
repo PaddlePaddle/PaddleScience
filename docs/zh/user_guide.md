@@ -68,10 +68,8 @@
 import ppsci
 
 ...
-...
 
 solver = ppsci.solver.Solver(
-    ...,
     ...,
     checkpoint_path="/path/to/latest"
 )
