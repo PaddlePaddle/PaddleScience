@@ -40,7 +40,7 @@ def eval_rmse_func(
     output_dict: Dict[str, List["paddle.Tensor"]],
     label_dict: Dict[str, List["pgl.Graph"]],
     *args,
-) -> Dict[str, float]:
+) -> Dict[str, paddle.Tensor]:
     mse_losses = [
         F.mse_loss(pred, label.y)
         for (pred, label) in zip(output_dict["pred"], label_dict["label"])
@@ -53,12 +53,14 @@ if __name__ == "__main__":
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(42)
     # set output directory
-    OUTPUT_DIR = "./output_AMGNet" if not args.output_dir else args.output_dir
+    OUTPUT_DIR = "./output_AMGNet_airfoil" if not args.output_dir else args.output_dir
     # initialize logger
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
     # set airfoil model
     model = ppsci.arch.AMGNet(
+        input_keys=("input",),
+        output_keys=("pred",),
         input_dim=5,
         output_dim=3,
         latent_dim=128,

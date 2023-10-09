@@ -571,6 +571,8 @@ class AMGNet(nn.Layer):
 
     def __init__(
         self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
         input_dim: int,
         output_dim: int,
         latent_dim: int,
@@ -580,6 +582,8 @@ class AMGNet(nn.Layer):
         speed: Literal["norm", "fast"],
     ):
         super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
         self._latent_dim = latent_dim
         self.speed = speed
         self._output_dim = output_dim
@@ -600,12 +604,12 @@ class AMGNet(nn.Layer):
         )
 
     def forward(self, x: Dict[str, "pgl.Graph"]) -> Dict[str, paddle.Tensor]:
-        graphs = x["input"]
+        graphs = x[self.input_keys[0]]
         latent_graph = self.encoder(graphs)
         x, p = self.processor(latent_graph, speed=self.speed)
         node_features = self._spa_compute(x, p)
         pred_field = self.decoder(node_features)
-        return {"pred": pred_field}
+        return {self.output_keys[0]: pred_field}
 
     def _make_mlp(self, output_dim: int, input_dim: int = 5, layer_norm: bool = True):
         widths = (self._latent_dim,) * self._num_layers + (output_dim,)
