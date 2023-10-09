@@ -9,6 +9,7 @@
         - FullyConnectedLayer
         - DeepONet
         - DeepOperatorLayer
+        - DeepPhyLSTM
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
@@ -16,9 +17,10 @@
         - Discriminator
         - PhysformerGPT2
         - ModelList
-        - AdaptiveFourierLayer
         - AFNONet
+        - AdaptiveFourierLayer
         - PrecipNet
         - PrecipLayer
+        - UNetEx
       show_root_heading: false
       heading_level: 3

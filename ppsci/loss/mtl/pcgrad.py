@@ -95,7 +95,7 @@ class PCGrad(LossAggregator):
         grads_list = [proj_grad(grad) for grad in grads_list]
 
         # Unpack flattened projected gradients back to their original shapes.
-        proj_grads = []
+        proj_grads: List[paddle.Tensor] = []
         for j in range(self.loss_num):
             start_idx = 0
             for idx, var in enumerate(self.model.parameters()):
