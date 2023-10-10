@@ -12,9 +12,7 @@
         - CylinderEmbeddingLayer
         - DiscriminatorLayer
         - PhysformerGPT2Layer
-        - AdaptiveFourierLayer
         - GeneratorLayer
-        - PrecipLayer
         - UNetExLayer
         - MLP
         - DeepONet

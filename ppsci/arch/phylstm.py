@@ -105,12 +105,13 @@ class DeepPhyLSTM(base.Arch):
             x = self._input_transform(x)
 
         if self.model_type == 2:
-            result_dict = self._forward_type_2(x)
+            y = self._forward_type_2(x)
         elif self.model_type == 3:
-            result_dict = self._forward_type_3(x)
+            y = self._forward_type_3(x)
+
         if self._output_transform is not None:
-            result_dict = self._output_transform(x, result_dict)
-        return result_dict
+            y = self._output_transform(x, y)
+        return y
 
     def _forward_type_2(self, x):
         output = self.lstm_model(x["ag"])

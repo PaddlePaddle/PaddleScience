@@ -31,9 +31,7 @@ from ppsci.arch import base
 from ppsci.utils import initializer
 
 __all__ = [
-    "AdaptiveFourierLayer",
     "AFNONet",
-    "PrecipLayer",
     "PrecipNet",
 ]
 
@@ -398,10 +396,12 @@ class PatchEmbed(nn.Layer):
         return x
 
 
-class AdaptiveFourierLayer(base.Arch):
-    """Adaptive Fourier Neural Operators Network, core implementation of AFNO.
+class AFNONet(base.Arch):
+    """Adaptive Fourier Neural Network.
 
     Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
         patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
         in_channels (int, optional): The input tensor channels. Defaults to 20.
@@ -418,11 +418,13 @@ class AdaptiveFourierLayer(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.AdaptiveFourierLayer()
+        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
     """
 
     def __init__(
         self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
         img_size: Tuple[int, ...] = (720, 1440),
         patch_size: Tuple[int, ...] = (8, 8),
         in_channels: int = 20,
@@ -438,6 +440,9 @@ class AdaptiveFourierLayer(base.Arch):
         num_timestamps: int = 1,
     ):
         super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+
         self.img_size = img_size
         self.patch_size = patch_size
         self.in_channels = in_channels
@@ -505,7 +510,7 @@ class AdaptiveFourierLayer(base.Arch):
         elif isinstance(m, nn.Conv2D):
             initializer.conv_init_(m)
 
-    def forward(self, x):
+    def forward_tensor(self, x):
         B = x.shape[0]
         x = self.patch_embed(x)
         x = x + self.pos_embed
@@ -529,68 +534,10 @@ class AdaptiveFourierLayer(base.Arch):
 
         return x
 
-
-class AFNONet(AdaptiveFourierLayer):
-    """Adaptive Fourier Neural Operators Network.
-    Different from `AdaptiveFourierLayer`, this class accepts input/output string key(s) for symbolic computation.
-
-    Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-        img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
-        patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
-        in_channels (int, optional): The input tensor channels. Defaults to 20.
-        out_channels (int, optional): The output tensor channels. Defaults to 20.
-        embed_dim (int, optional): The embedding dimension for PatchEmbed. Defaults to 768.
-        depth (int, optional): Number of transformer depth. Defaults to 12.
-        mlp_ratio (float, optional): Number of ratio used in MLP. Defaults to 4.0.
-        drop_rate (float, optional): The drop ratio used in MLP. Defaults to 0.0.
-        drop_path_rate (float, optional): The drop ratio used in DropPath. Defaults to 0.0.
-        num_blocks (int, optional): Number of blocks. Defaults to 8.
-        sparsity_threshold (float, optional): The value of threshold for softshrink. Defaults to 0.01.
-        hard_thresholding_fraction (float, optional): The value of threshold for keep mode. Defaults to 1.0.
-        num_timestamps (int, optional): Number of timestamp. Defaults to 1.
-
-    Examples:
-        >>> import ppsci
-        >>> model = ppsci.arch.AFNONet(("input", ), ("output", ))
-    """
-
-    def __init__(
-        self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
-        img_size: Tuple[int, ...] = (720, 1440),
-        patch_size: Tuple[int, ...] = (8, 8),
-        in_channels: int = 20,
-        out_channels: int = 20,
-        embed_dim: int = 768,
-        depth: int = 12,
-        mlp_ratio: float = 4.0,
-        drop_rate: float = 0.0,
-        drop_path_rate: float = 0.0,
-        num_blocks: int = 8,
-        sparsity_threshold: float = 0.01,
-        hard_thresholding_fraction: float = 1.0,
-        num_timestamps: int = 1,
+    def split_to_dict(
+        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
     ):
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-        super().__init__(
-            img_size,
-            patch_size,
-            in_channels,
-            out_channels,
-            embed_dim,
-            depth,
-            mlp_ratio,
-            drop_rate,
-            drop_path_rate,
-            num_blocks,
-            sparsity_threshold,
-            hard_thresholding_fraction,
-            num_timestamps,
-        )
+        return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
@@ -601,7 +548,7 @@ class AFNONet(AdaptiveFourierLayer):
         y = []
         input = x_tensor
         for _ in range(self.num_timestamps):
-            out = super().forward(input)
+            out = self.forward_tensor(input)
             y.append(out)
             input = out
         y = self.split_to_dict(y, self.output_keys)
@@ -610,16 +557,13 @@ class AFNONet(AdaptiveFourierLayer):
             y = self._output_transform(x, y)
         return y
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
-        return {key: data_tensors[i] for i, key in enumerate(keys)}
 
-
-class PrecipLayer(base.Arch):
-    """Precipitation Network, core implementation of PrecipNet.
+class PrecipNet(base.Arch):
+    """Precipitation Network.
 
     Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         wind_model (base.Arch): Wind model.
         img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
         patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
@@ -643,6 +587,8 @@ class PrecipLayer(base.Arch):
 
     def __init__(
         self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
         wind_model: base.Arch,
         img_size: Tuple[int, ...] = (720, 1440),
         patch_size: Tuple[int, ...] = (8, 8),
@@ -659,6 +605,9 @@ class PrecipLayer(base.Arch):
         num_timestamps=1,
     ):
         super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+
         self.img_size = img_size
         self.patch_size = patch_size
         self.in_channels = in_channels
@@ -666,7 +615,9 @@ class PrecipLayer(base.Arch):
         self.embed_dim = embed_dim
         self.num_blocks = num_blocks
         self.num_timestamps = num_timestamps
-        self.backbone = AdaptiveFourierLayer(
+        self.backbone = AFNONet(
+            ("input",),
+            ("output",),
             img_size=img_size,
             patch_size=patch_size,
             in_channels=in_channels,
@@ -700,79 +651,12 @@ class PrecipLayer(base.Arch):
         elif isinstance(m, nn.Conv2D):
             initializer.conv_init_(m)
 
-    def forward(self, x):
-        x = self.backbone.forward(x)
+    def forward_tensor(self, x):
+        x = self.backbone.forward_tensor(x)
         x = self.ppad(x)
         x = self.conv(x)
         x = self.act(x)
         return x
-
-
-class PrecipNet(PrecipLayer):
-    """Precipitation Network.
-    Different from `PrecipLayer`, this class accepts input/output string key(s) for symbolic computation.
-
-    Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
-        wind_model (base.Arch): Wind model.
-        img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
-        patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).
-        in_channels (int, optional): The input tensor channels. Defaults to 20.
-        out_channels (int, optional): The output tensor channels. Defaults to 1.
-        embed_dim (int, optional): The embedding dimension for PatchEmbed. Defaults to 768.
-        depth (int, optional): Number of transformer depth. Defaults to 12.
-        mlp_ratio (float, optional): Number of ratio used in MLP. Defaults to 4.0.
-        drop_rate (float, optional): The drop ratio used in MLP. Defaults to 0.0.
-        drop_path_rate (float, optional): The drop ratio used in DropPath. Defaults to 0.0.
-        num_blocks (int, optional): Number of blocks. Defaults to 8.
-        sparsity_threshold (float, optional): The value of threshold for softshrink. Defaults to 0.01.
-        hard_thresholding_fraction (float, optional): The value of threshold for keep mode. Defaults to 1.0.
-        num_timestamps (int, optional): Number of timestamp. Defaults to 1.
-
-    Examples:
-        >>> import ppsci
-        >>> wind_model = ppsci.arch.AFNONet(("input", ), ("output", ))
-        >>> model = ppsci.arch.PrecipNet(("input", ), ("output", ), wind_model)
-    """
-
-    def __init__(
-        self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
-        wind_model: base.Arch,
-        img_size: Tuple[int, ...] = (720, 1440),
-        patch_size: Tuple[int, ...] = (8, 8),
-        in_channels: int = 20,
-        out_channels: int = 1,
-        embed_dim: int = 768,
-        depth: int = 12,
-        mlp_ratio: float = 4.0,
-        drop_rate: float = 0.0,
-        drop_path_rate: float = 0.0,
-        num_blocks: int = 8,
-        sparsity_threshold: float = 0.01,
-        hard_thresholding_fraction: float = 1.0,
-        num_timestamps=1,
-    ):
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-        super().__init__(
-            wind_model,
-            img_size,
-            patch_size,
-            in_channels,
-            out_channels,
-            embed_dim,
-            depth,
-            mlp_ratio,
-            drop_rate,
-            drop_path_rate,
-            num_blocks,
-            sparsity_threshold,
-            hard_thresholding_fraction,
-            num_timestamps,
-        )
 
     def split_to_dict(
         self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
@@ -790,10 +674,9 @@ class PrecipNet(PrecipLayer):
         for _ in range(self.num_timestamps):
             with paddle.no_grad():
                 out_wind = self.wind_model.forward_tensor(input_wind)
-            out = super().forward(out_wind)
+            out = self.forward_tensor(out_wind)
             y.append(out)
             input_wind = out_wind
-
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:

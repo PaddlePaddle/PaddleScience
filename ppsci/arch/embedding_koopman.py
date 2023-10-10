@@ -30,12 +30,12 @@ from paddle.nn.initializer import Uniform
 from ppsci.arch import base
 
 __all__ = [
-    "LorenzEmbeddingLayer",
     "LorenzEmbedding",
-    "RosslerEmbeddingLayer",
+    "LorenzEmbeddingLayer",
     "RosslerEmbedding",
-    "CylinderEmbeddingLayer",
+    "RosslerEmbeddingLayer",
     "CylinderEmbedding",
+    "CylinderEmbeddingLayer",
 ]
 
 
@@ -56,7 +56,7 @@ class LorenzEmbeddingLayer(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.LorenzEmbeddingLayer()
     """
 
     def __init__(
@@ -253,7 +253,7 @@ class RosslerEmbeddingLayer(LorenzEmbeddingLayer):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.RosslerEmbeddingLayer()
     """
 
     def __init__(
@@ -329,7 +329,7 @@ class CylinderEmbeddingLayer(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.CylinderEmbeddingLayer()
     """
 
     def __init__(

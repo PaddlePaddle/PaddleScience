@@ -185,7 +185,7 @@ class GeneratorLayer(base.Arch):
         >>> strides_tuple = ((1, 1, 1), ) * 4
         >>> use_bns_tuple = ((True, True, True), ) * 3 + ((False, False, False), )
         >>> acts_tuple = (("relu", None, None), ) * 4
-        >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_tuple, kernel_sizes_tuple, strides_tuple, use_bns_tuple, acts_tuple)
+        >>> model = ppsci.arch.GeneratorLayer(in_channel, out_channels_tuple, kernel_sizes_tuple, strides_tuple, use_bns_tuple, acts_tuple)
     """
 
     def __init__(
@@ -331,7 +331,7 @@ class DiscriminatorLayer(base.Arch):
         >>> use_bns = (False, True, True, True)
         >>> acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
         >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
-        >>> model = ppsci.arch.Discriminator(("in_1","in_2"), output_keys_disc, in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
+        >>> model = ppsci.arch.DiscriminatorLayer(in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
     """
 
     def __init__(

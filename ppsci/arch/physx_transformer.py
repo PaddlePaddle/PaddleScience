@@ -258,7 +258,7 @@ class PhysformerGPT2Layer(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        >>> model = ppsci.arch.PhysformerGPT2Layer(6, 16, 128, 4)
     """
 
     def __init__(
