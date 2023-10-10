@@ -1,4 +1,4 @@
-# Data(数据) 模块
+# Dataset(数据集) 模块
 
 ::: ppsci.data.dataset
     handler: python

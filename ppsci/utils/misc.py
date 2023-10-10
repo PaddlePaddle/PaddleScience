@@ -214,14 +214,14 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
     """Combine given data x with time sequence t.
     Given x with shape (N, D) and t with shape (T, ),
     this function will repeat t_i for N times and will concat it with data x for each t_i in t,
-    finally return the stacked result, which is of shape (NxT, D+1).
+    finally return the stacked result, which is of shape (N×T, D+1).
 
     Args:
         x (np.ndarray): Points data with shape (N, D).
         t (Tuple[int, ...]): Time sequence with shape (T, ).
 
     Returns:
-        np.ndarray: Combined data with shape of (NxT, D+1).
+        np.ndarray: Combined data with shape of (N×T, D+1).
     """
     nx = len(x)
     tx = []

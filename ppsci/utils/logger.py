@@ -172,7 +172,8 @@ def error(msg, *args):
 def scaler(
     metric_dict: Dict[str, float], step: int, vdl_writer=None, wandb_writer=None
 ):
-    """
+    """This function will add scaler data to visualdl or wandb for plotting curve(s).
+
     Args:
         metric_dict (Dict[str, float]): Metrics dict with metric name and value.
         step (int): The step of the metric.

@@ -90,7 +90,7 @@ Optimizer 模块负责定义各种优化器，如 `SGD`、`Adam`、`LBFGS`。
 
 Solver 模块负责定义求解器，作为训练、评估、推理、可视化的启动和管理引擎。
 
-### 2.10 [Utils]
+### 2.10 Utils
 
 Utils 模块内部存放了一些适用于多种场景下的工具类、函数，例如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
 

@@ -12,21 +12,23 @@
 
     ``` py
     import ppsci
+    import numpy as np
+
     # 实例化一个输入为 (x,y,z) 三个维度上的坐标，输出为 (u,v,w) 三个维度上的速度的 model
+
     model = ppsci.arch.MLP(("x", "y", "z"), ("u", "v", "w"), 5, 64, "tanh")
+
     # 用该模型及其对应的预训练模型路径(或下载地址 url)两个参数初始化 solver
     solver = ppsci.solver.Solver(
         model=model,
         pretrained_model_path="/path/to/pretrain.pdparams",
     )
-    # 在 Solver(...) 中会自动从给定的 pretrained_model_path 加载(下载)参数并赋值给 model 的对应
+    # 在 Solver(...) 中会自动从给定的 pretrained_model_path 加载(下载)参数并赋值给 model 的对应参数
     ```
 
 2. 准备好用于预测的输入数据，并以字典 `dict` 的方式传递给 `solver.predict`。
 
     ``` py
-    import numpy as np
-
     N = 100 # 假设要预测100个样本的结果
     x = np.random.randn(N, 1) # 准备 字段
     y = np.random.randn(N, 1)
