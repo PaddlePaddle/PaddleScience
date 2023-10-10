@@ -37,11 +37,12 @@ class Translate:
     def __init__(self, offset: Dict[str, float]):
         self.offset = offset
 
-    def __call__(self, data_dict):
+    def __call__(self, data):
+        data_dict, label_dict, weight_dict = data
         for key in self.offset:
             if key in data_dict:
                 data_dict[key] += self.offset[key]
-        return data_dict
+        return data_dict, label_dict, weight_dict
 
 
 class Scale:
@@ -59,11 +60,12 @@ class Scale:
     def __init__(self, scale: Dict[str, float]):
         self.scale = scale
 
-    def __call__(self, data_dict):
+    def __call__(self, data):
+        data_dict, label_dict, weight_dict = data
         for key in self.scale:
             if key in data_dict:
                 data_dict[key] *= self.scale[key]
-        return data_dict
+        return data_dict, label_dict, weight_dict
 
 
 class Normalize:
@@ -231,11 +233,11 @@ class FunctionalTransform:
     Examples:
         >>> import ppsci
         >>> import numpy as np
-        >>> def transform_func(data_dict):
+        >>> def transform_func(data_dict, label_dict, weight_dict):
         ...     rand_ratio = np.random.rand()
         ...     for key in data_dict:
         ...         data_dict[key] = data_dict[key] * rand_ratio
-        ...     return data_dict
+        ...     return data_dict, label_dict, weight_dict
         >>> transform_cfg = {
         ...     "transforms": (
         ...         {
@@ -253,5 +255,6 @@ class FunctionalTransform:
     ):
         self.transform_func = transform_func
 
-    def __call__(self, data_dict: Dict[str, np.ndarray]):
-        return self.transform_func(data_dict)
+    def __call__(self, data: Tuple[Dict[str, np.ndarray], ...]):
+        data_dict, label_dict, weight_dict = data
+        return self.transform_func(data_dict, label_dict, weight_dict)
