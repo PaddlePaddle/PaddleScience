@@ -90,9 +90,22 @@ Optimizer 模块负责定义各种优化器，如 `SGD`、`Adam`、`LBFGS`。
 
 Solver 模块负责定义求解器，作为训练、评估、推理、可视化的启动和管理引擎。
 
-### 2.10 [Utils](./api/utils.md)
+### 2.10 [Utils]
 
-Utils 模块内部存放了一些适用于多种场景下的工具类、函数，如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
+Utils 模块内部存放了一些适用于多种场景下的工具类、函数，例如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
+
+根据其功能细分为以下 8 个子模块
+
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.utils.checker](./api/utils/checker.md)| ppsci 安装功能检查相关 |
+| [ppsci.utils.expression](./api/utils/expression.md)| python 函数/sympy 表达式前向计算相关 |
+| [ppsci.utils.initializer](./api/utils/initializer.md)| 常用参数初始化方法 |
+| [ppsci.utils.logger](./api/utils/logger.md)| 日志打印模块 |
+| [ppsci.utils.misc](./api/utils/misc.md)| 存放通用函数 |
+| [ppsci.utils.reader](./api/utils/reader.md)| 文件读取模块 |
+| [ppsci.utils.save_load](./api/utils/save_load.md)| 模型参数保存与加载 |
+| [ppsci.utils.symbolic](./api/utils/symbolic.md)| sympy 符号计算功能相关 |
 
 ### 2.11 [Validate](./api/validate.md)
 
