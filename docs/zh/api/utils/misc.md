@@ -1,4 +1,4 @@
-# Utils.misc 模块
+# Utils.misc(通用函数) 模块
 
 ::: ppsci.utils.misc
     handler: python

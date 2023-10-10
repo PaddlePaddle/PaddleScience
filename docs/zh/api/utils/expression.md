@@ -1,4 +1,4 @@
-# Utils.expression 模块
+# Utils.expression(方程计算) 模块
 
 ::: ppsci.utils.expression
     handler: python

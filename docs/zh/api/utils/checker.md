@@ -1,4 +1,4 @@
-# Utils.checker 模块
+# Utils.checker(检查) 模块
 
 ::: ppsci.utils.checker
     handler: python

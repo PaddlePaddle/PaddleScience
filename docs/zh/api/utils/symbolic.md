@@ -1,4 +1,4 @@
-# Utils.symbolic 模块
+# Utils.symbolic(符号计算) 模块
 
 ::: ppsci.utils.symbolic
     handler: python

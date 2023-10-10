@@ -1,4 +1,4 @@
-# Lr_scheduler(学习率) 模块
+# Optimizer.lr_scheduler(学习率) 模块
 
 ::: ppsci.optimizer.lr_scheduler
     handler: python

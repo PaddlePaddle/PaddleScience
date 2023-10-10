@@ -1,4 +1,4 @@
-# Utils.initializer 模块
+# Utils.initializer(初始化) 模块
 
 ::: ppsci.utils.initializer
     handler: python

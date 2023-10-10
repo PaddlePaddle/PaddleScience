@@ -1,4 +1,4 @@
-# Utils.logger 模块
+# Utils.logger(日志记录) 模块
 
 ::: ppsci.utils.logger
     handler: python

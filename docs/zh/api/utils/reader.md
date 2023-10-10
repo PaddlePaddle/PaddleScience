@@ -1,4 +1,4 @@
-# Utils.reader 模块
+# Utils.reader(读取函数) 模块
 
 ::: ppsci.utils.reader
     handler: python
