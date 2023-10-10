@@ -20,17 +20,24 @@ from ppsci.arch.mlp import FullyConnectedLayer  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.deeponet import DeepOperatorLayer  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
+from ppsci.arch.embedding_koopman import LorenzEmbeddingLayer  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
+from ppsci.arch.embedding_koopman import RosslerEmbeddingLayer  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
+from ppsci.arch.embedding_koopman import CylinderEmbeddingLayer  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
+from ppsci.arch.gan import GeneratorLayer  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
+from ppsci.arch.gan import DiscriminatorLayer  # isort:skip
 from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
+from ppsci.arch.physx_transformer import PhysformerGPT2Layer  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import AdaptiveFourierLayer  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.afno import PrecipLayer  # isort:skip
+from ppsci.arch.unetex import UNetExLayer  # isort:skip
 from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
@@ -41,18 +48,25 @@ __all__ = [
     "FullyConnectedLayer",
     "DeepONet",
     "DeepOperatorLayer",
-    "DeepPhyLSTM",
     "LorenzEmbedding",
+    "LorenzEmbeddingLayer",
     "RosslerEmbedding",
+    "RosslerEmbeddingLayer",
     "CylinderEmbedding",
+    "CylinderEmbeddingLayer",
     "Generator",
+    "GeneratorLayer",
     "Discriminator",
+    "DiscriminatorLayer",
+    "DeepPhyLSTM",
     "PhysformerGPT2",
+    "PhysformerGPT2Layer",
     "ModelList",
     "AFNONet",
     "AdaptiveFourierLayer",
     "PrecipNet",
     "PrecipLayer",
+    "UNetExLayer",
     "UNetEx",
     "build_model",
 ]

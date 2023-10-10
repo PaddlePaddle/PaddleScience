@@ -24,6 +24,12 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.utils import initializer
 
+__all__ = [
+    "WeightNormLinear",
+    "FullyConnectedLayer",
+    "MLP",
+]
+
 
 class WeightNormLinear(nn.Layer):
     def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:

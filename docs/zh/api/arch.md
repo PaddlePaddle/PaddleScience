@@ -5,22 +5,29 @@
     options:
       members:
         - Arch
-        - MLP
         - FullyConnectedLayer
-        - DeepONet
         - DeepOperatorLayer
-        - DeepPhyLSTM
+        - LorenzEmbeddingLayer
+        - RosslerEmbeddingLayer
+        - CylinderEmbeddingLayer
+        - DiscriminatorLayer
+        - PhysformerGPT2Layer
+        - AdaptiveFourierLayer
+        - GeneratorLayer
+        - PrecipLayer
+        - UNetExLayer
+        - MLP
+        - DeepONet
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
         - Generator
         - Discriminator
+        - DeepPhyLSTM
         - PhysformerGPT2
         - ModelList
         - AFNONet
-        - AdaptiveFourierLayer
         - PrecipNet
-        - PrecipLayer
         - UNetEx
       show_root_heading: false
       heading_level: 3

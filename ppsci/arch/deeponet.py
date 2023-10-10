@@ -24,6 +24,11 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.arch import mlp
 
+__all__ = [
+    "DeepOperatorLayer",
+    "DeepONet",
+]
+
 
 class DeepOperatorLayer(base.Arch):
     """Deep operator network, core implementation of `DeepONet`.

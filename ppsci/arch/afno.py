@@ -30,6 +30,13 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.utils import initializer
 
+__all__ = [
+    "AdaptiveFourierLayer",
+    "AFNONet",
+    "PrecipLayer",
+    "PrecipNet",
+]
+
 
 def drop_path(
     x: paddle.Tensor,
@@ -613,8 +620,6 @@ class PrecipLayer(base.Arch):
     """Precipitation Network, core implementation of PrecipNet.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         wind_model (base.Arch): Wind model.
         img_size (Tuple[int, ...], optional): Image size. Defaults to (720, 1440).
         patch_size (Tuple[int, ...], optional): Path. Defaults to (8, 8).

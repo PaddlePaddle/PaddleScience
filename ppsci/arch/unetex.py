@@ -21,6 +21,11 @@ from paddle import nn
 
 from ppsci.arch import base
 
+__all__ = [
+    "UNetExLayer",
+    "UNetEx",
+]
+
 
 def create_layer(
     in_channel,
@@ -173,14 +178,12 @@ def create_decoder(
     return nn.Sequential(*decoder)
 
 
-class UNetEx(base.Arch):
-    """U-Net
+class UNetExLayer(base.Arch):
+    """U-NetEx layer, core implementation of UNetEx
 
     [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
 
     Args:
-        input_key (str): Name of function data for input.
-        output_key (str): Name of function data for output.
         in_channel (int): Number of channels of input.
         out_channel (int): Number of channels of output.
         kernel_size (int, optional): Size of kernel of convolution layer. Defaults to 3.
@@ -198,8 +201,6 @@ class UNetEx(base.Arch):
 
     def __init__(
         self,
-        input_key: str,
-        output_key: str,
         in_channel: int,
         out_channel: int,
         kernel_size: int = 3,
@@ -214,8 +215,6 @@ class UNetEx(base.Arch):
             raise ValueError("The filters shouldn't be empty ")
 
         super().__init__()
-        self.input_keys = (input_key,)
-        self.output_keys = (output_key,)
         self.final_activation = final_activation
         self.encoder = create_encoder(
             in_channel,
@@ -265,9 +264,75 @@ class UNetEx(base.Arch):
         return paddle.concat(y, axis=1)
 
     def forward(self, x):
-        x = x[self.input_keys[0]]
         x, tensors, indices, sizes = self.encode(x)
         x = self.decode(x, tensors, indices, sizes)
         if self.final_activation is not None:
             x = self.final_activation(x)
-        return {self.output_keys[0]: x}
+        return x
+
+
+class UNetEx(UNetExLayer):
+    """U-NetEx.
+
+    [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
+
+    Args:
+        input_key (str): Name of function data for input.
+        output_key (str): Name of function data for output.
+        in_channel (int): Number of channels of input.
+        out_channel (int): Number of channels of output.
+        kernel_size (int, optional): Size of kernel of convolution layer. Defaults to 3.
+        filters (Tuple[int, ...], optional): Number of filters. Defaults to (16, 32, 64).
+        layers (int, optional): Number of encoders or decoders. Defaults to 3.
+        weight_norm (bool, optional): Whether use weight normalization layer. Defaults to True.
+        batch_norm (bool, optional): Whether add batch normalization layer. Defaults to True.
+        activation (Type[nn.Layer], optional): Name of activation function. Defaults to nn.ReLU.
+        final_activation (Optional[Type[nn.Layer]]): Name of final activation function. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, (8, 16, 32, 32), 5, Flase, False)
+    """
+
+    def __init__(
+        self,
+        input_key: str,
+        output_key: str,
+        in_channel: int,
+        out_channel: int,
+        kernel_size: int = 3,
+        filters: Tuple[int, ...] = (16, 32, 64),
+        layers: int = 3,
+        weight_norm: bool = True,
+        batch_norm: bool = True,
+        activation: Type[nn.Layer] = nn.ReLU,
+        final_activation: Optional[Type[nn.Layer]] = None,
+    ):
+        if len(filters) == 0:
+            raise ValueError("The filters shouldn't be empty ")
+
+        self.input_keys = (input_key,)
+        self.output_keys = (output_key,)
+        super().__init__(
+            in_channel,
+            out_channel,
+            kernel_size,
+            filters,
+            layers,
+            weight_norm,
+            batch_norm,
+            activation,
+            final_activation,
+        )
+
+    def forward(self, x):
+        if self._input_transform is not None:
+            x = self._input_transform(x)
+
+        x_tensor = x[self.input_keys[0]]
+        y = super().forward(x_tensor)
+        y = {self.output_keys[0]: y}
+
+        if self._output_transform is not None:
+            y = self._output_transform(x, y)
+        return y

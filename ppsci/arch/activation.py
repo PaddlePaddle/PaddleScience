@@ -24,6 +24,10 @@ from paddle import nn
 from ppsci.utils import initializer
 from ppsci.utils import misc
 
+__all__ = [
+    "get_activation",
+]
+
 
 class Stan(nn.Layer):
     """Self-scalable Tanh.
