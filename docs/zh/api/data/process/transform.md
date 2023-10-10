@@ -10,4 +10,5 @@
         - Log1p
         - CropData
         - SqueezeData
+        - FunctionalTransform
       show_root_heading: false
