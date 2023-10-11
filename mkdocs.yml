@@ -127,7 +127,6 @@ theme:
     - navigation.top
     - search.suggest
     - navigation.instant
-    # - navigation.expand
     - content.code.copy
     - content.code.select
     - content.code.annotate
