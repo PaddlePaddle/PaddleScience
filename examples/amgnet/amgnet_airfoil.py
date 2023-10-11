@@ -124,7 +124,7 @@ if __name__ == "__main__":
     rmse_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(train_mse_func),
-        output_expr={"pred": lambda out: out["pred"]},
+        output_expr={"pred": lambda out: out["pred"].unsqueeze(0)},
         metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
         name="RMSE_validator",
     )

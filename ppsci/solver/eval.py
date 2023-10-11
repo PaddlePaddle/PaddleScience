@@ -114,25 +114,21 @@ def _eval_by_dataset(
             # collect batch data
             for key, input in input_dict.items():
                 all_input[key].append(
-                    input.detach()
-                    if hasattr(input, "detach")
-                    else input
+                    (input.detach() if hasattr(input, "detach") else input)
                     if solver.world_size == 1
                     else misc.all_gather(input.detach())
                 )
+
             for key, output in output_dict.items():
                 all_output[key].append(
-                    output.detach()
-                    if hasattr(output, "detach")
-                    else output
+                    (output.detach() if hasattr(output, "detach") else output)
                     if solver.world_size == 1
                     else misc.all_gather(output.detach())
                 )
+
             for key, label in label_dict.items():
                 all_label[key].append(
-                    label.detach()
-                    if hasattr(label, "detach")
-                    else label
+                    (label.detach() if hasattr(label, "detach") else label)
                     if solver.world_size == 1
                     else misc.all_gather(label.detach())
                 )

@@ -279,12 +279,12 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_l
     index_S = index_S.astype("int64")
     index_S[1] = n_idx[index_S[1]]
     subgraphnode_pos = pos[perm]
-    index_A = edge_index.clone()
+    index_A = edge_index
 
     if edge_weight is None:
         value_A = value_S.new_ones(edge_index[0].shape[0])
     else:
-        value_A = edge_weight.clone()
+        value_A = edge_weight
 
     value_A = paddle.squeeze(value_A)
     eps_mask = (value_S == 0).astype(paddle.get_default_dtype())

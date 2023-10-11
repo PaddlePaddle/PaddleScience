@@ -100,9 +100,9 @@ def build_dataloader(_dataset, cfg):
         # Use special dataloader from "Paddle Graph Learning" toolkit.
         try:
             from pgl.utils import data as pgl_data
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as e:
             logger.error("Please install pgl with `pip install pgl`.")
-            raise ModuleNotFoundError("pgl is not installed.")
+            raise ModuleNotFoundError(str(e))
 
         collate_fn = batch_transform.default_collate_fn
         dataloader_ = pgl_data.Dataloader(
