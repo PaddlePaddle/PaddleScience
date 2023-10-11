@@ -1,4 +1,4 @@
-# Optimizer(优化器) 模块
+# Optimizer.optimizer(优化器) 模块
 
 ::: ppsci.optimizer.optimizer
     handler: python

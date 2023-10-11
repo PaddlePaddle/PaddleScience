@@ -4,7 +4,57 @@
 
 ## 1. 基础功能
 
-### 1.1 断点继续训练
+### 1.1 模型推理预测
+
+若需使用训练完毕保存或下载得到的模型文件 `*.pdprams` 直接进行推理（预测），可以参考以下代码示例。
+
+1. 加载 `*.pdparams` 文件内的参数到模型中
+
+    ``` py
+    import ppsci
+    import numpy as np
+
+    # 实例化一个输入为 (x,y,z) 三个维度上的坐标，输出为 (u,v,w) 三个维度上的速度的 model
+
+    model = ppsci.arch.MLP(("x", "y", "z"), ("u", "v", "w"), 5, 64, "tanh")
+
+    # 用该模型及其对应的预训练模型路径(或下载地址 url)两个参数初始化 solver
+    solver = ppsci.solver.Solver(
+        model=model,
+        pretrained_model_path="/path/to/pretrain.pdparams",
+    )
+    # 在 Solver(...) 中会自动从给定的 pretrained_model_path 加载(下载)参数并赋值给 model 的对应参数
+    ```
+
+2. 准备好用于预测的输入数据，并以字典 `dict` 的方式传递给 `solver.predict`。
+
+    ``` py
+    N = 100 # 假设要预测100个样本的结果
+    x = np.random.randn(N, 1) # 准备 字段
+    y = np.random.randn(N, 1)
+    z = np.random.randn(N, 1)
+
+    input_dict = {
+        "x": x,
+        "y": y,
+        "z": z,
+    }
+
+    output_dict = solver.predict(
+        input_dict,
+        batch_size=32, # 推理时的 batch_size
+        return_numpy=True, # 返回结果是否转换为 numpy
+    )
+
+    # output_dict 预测结果同样以字典的形式保存在 output_dict 中，其具体内容如下
+    for k, v in output_dict.items():
+        print(f"{k} {v.shape}")
+    # "u": (100, 1)
+    # "v": (100, 1)
+    # "w": (100, 1)
+    ```
+
+### 1.2 断点继续训练
 
 在模型的日常训练中，可能存在机器故障或者用户手动操作而中断训练的情况，针对这种情况 PaddleScience 提供了断点继续训练的功能，即在训练时默认会保存**最近一个训练完毕的 epoch** 对应的各种参数到以下 5 个文件中：
 
@@ -20,20 +70,18 @@
 import ppsci
 
 ...
-...
 
 solver = ppsci.solver.Solver(
-    ...,
     ...,
     checkpoint_path="/path/to/latest"
 )
 ```
 
-???+ Warning "路径填写注意事项"
+!!! Warning "路径填写注意事项"
 
     此处只需将路径填写到 "latest" 为止即可，不需要加上其后缀，程序会根据 "/path/to/latest"，自动补充不同文件对应的后缀名来加载 `latest.pdparams`、`latest.pdopt` 等文件。
 
-### 1.2 迁移学习
+### 1.3 迁移学习
 
 迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，只需在 `model` 实例化完毕之后，手动为其载入预训练模型权重，即可进行迁移学习。
 
@@ -49,15 +97,15 @@ model = ...
 save_load.load_pretrain(model, "/path/to/pretrain")
 ```
 
-???+ Warning "路径填写注意事项"
+!!! Warning "路径填写注意事项"
 
     同样地，此处只需将路径填写到预训练文件的文件名为止即可，不需要加上其后缀，程序会根据 "/path/to/pretrain"，自动补充 `.pdparams` 后缀名来加载 `/path/to/pretrain.pdparams` 文件。
 
-???+ info "迁移学习建议"
+!!! info "迁移学习建议"
 
     在迁移学习时，相对于完全随机初始化的参数而言，载入的预训练模型权重参数是一个较好的初始化状态，因此不需要使用太大的学习率，而可以将学习率适当调小 2~10 倍以获得更稳定的训练过程和更好的精度。
 
-### 1.3 模型评估
+### 1.4 模型评估
 
 当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
 
@@ -76,11 +124,11 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-???+ Warning "路径填写注意事项"
+!!! Warning "路径填写注意事项"
 
     同样地，此处只需将路径填写到预训练权重的文件名为止即可，不需要加上其后缀，程序会根据 "/path/to/model"，自动补充所需后缀名来加载 `/path/to/model.pdparams` 文件。
 
-### 1.4 使用 WandB 记录实验
+### 1.5 使用 WandB 记录实验
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 
@@ -118,7 +166,7 @@ PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval
 
     如上述代码所示，指定 `use_wandb=True`，并且设置 `wandb_config` 配置字典中的 `project`、`name`、`dir` 三个字段，然后启动训练即可。训练过程会实时上传记录数据至 wandb 服务器，训练结束后可以进入终端打印的预览地址在网页端查看完整训练记录曲线。
 
-    ???+ warning "注意"
+    !!! warning "注意"
 
         由于每次调用 `wandb.log` 会使得其自带的计数器 `Step` 自增 1，因此在 wandb 的网站上查看训练记录时，需要手动更改 x 轴的单位为 `step`(全小写)，如下所示。
 
@@ -236,6 +284,6 @@ solver = ppsci.solver.Solver(
     solver.train()
     ```
 
-    ???+ info "影响说明"
+    !!! info "影响说明"
 
         个别多任务学习方法（如weight based method）可能会改变**训练过程**中损失函数的计算方式，但仅限于影响训练过程，模型**评估过程**的损失计算方式保持不变。
