@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # visualize prediction
     with solver.no_grad_context_manager(True):
         for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
-            truefield = label["input"].y
+            truefield = label["label"].y
             prefield = model(input_)
             utils.log_images(
                 input_["input"].pos,

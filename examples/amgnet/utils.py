@@ -135,7 +135,7 @@ def save_image(
         paddle.clip(grid * 255 + 0.5, 0, 255).transpose([1, 2, 0]).cast("uint8").numpy()
     )
     im = Image.fromarray(ndarr)
-    os.makedirs(osp.basename(fp), exist_ok=True)
+    os.makedirs(osp.dirname(fp), exist_ok=True)
     im.save(fp, format=format)
 
 
