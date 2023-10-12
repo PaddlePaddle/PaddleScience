@@ -26,21 +26,16 @@ By: [Pu Ren](https://scholar.google.com/citations?user=7FxlSHEAAAAJ&hl=en), [Che
 
 ## 数据集
 
-创建目录和生成测试数据集
+生成测试数据集
 
 ``` shell
-mkdir -p output/data/2dBurgers/ output/data/2dFN/
-mkdir -p output/figures/2dBurgers/ output/figures/2dFN/
-
-python Datasets/Burgers_2d_solver_HighOrder.py
-# 暂时没有用到
-# python Datasets/FN_2d_solver_HighOrder.py
+python burgers_data.py
 ```
 
 ## 运行
 
 ``` shell
-python Codes/PhyCRNet_burgers.py
+python main.py
 ```
 
 ## 注意

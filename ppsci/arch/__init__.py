@@ -22,6 +22,7 @@ from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
+from ppsci.arch.phycrnet import PhyCRNet  # isort:skip
 from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
@@ -46,6 +47,7 @@ __all__ = [
     "AFNONet",
     "PrecipNet",
     "UNetEx",
+    "PhyCRNet",
     "build_model",
 ]
 
