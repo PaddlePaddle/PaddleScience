@@ -39,11 +39,11 @@ class Translate:
 
     def __call__(self, data):
         data_dict, label_dict, weight_dict = data
-        data_dict_clone = data_dict.clone()
+        data_dict_copy = {**data_dict}
         for key in self.offset:
-            if key in data_dict_clone:
-                data_dict_clone[key] += self.offset[key]
-        return data_dict_clone, label_dict, weight_dict
+            if key in data_dict_copy:
+                data_dict_copy[key] += self.offset[key]
+        return data_dict_copy, label_dict, weight_dict
 
 
 class Scale:
@@ -63,11 +63,11 @@ class Scale:
 
     def __call__(self, data):
         data_dict, label_dict, weight_dict = data
-        data_dict_clone = data_dict.clone()
+        data_dict_copy = {**data_dict}
         for key in self.scale:
-            if key in data_dict_clone:
-                data_dict_clone[key] *= self.scale[key]
-        return data_dict_clone, label_dict, weight_dict
+            if key in data_dict_copy:
+                data_dict_copy[key] *= self.scale[key]
+        return data_dict_copy, label_dict, weight_dict
 
 
 class Normalize:
@@ -99,15 +99,15 @@ class Normalize:
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        input_item_clone = input_item.clone()
-        label_item_clone = label_item.clone()
+        input_item_copy = {**input_item}
+        label_item_copy = {**label_item}
         if "input" in self.apply_keys:
-            for key, value in input_item_clone.items():
-                input_item_clone[key] = (value - self.mean) / self.std
+            for key, value in input_item_copy.items():
+                input_item_copy[key] = (value - self.mean) / self.std
         if "label" in self.apply_keys:
-            for key, value in label_item_clone.items():
-                label_item_clone[key] = (value - self.mean) / self.std
-        return input_item_clone, label_item_clone, weight_item
+            for key, value in label_item_copy.items():
+                label_item_copy[key] = (value - self.mean) / self.std
+        return input_item_copy, label_item_copy, weight_item
 
 
 class Log1p:
@@ -136,15 +136,15 @@ class Log1p:
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        input_item_clone = input_item.clone()
-        label_item_clone = label_item.clone()
+        input_item_copy = {**input_item}
+        label_item_copy = {**label_item}
         if "input" in self.apply_keys:
-            for key, value in input_item_clone.items():
-                input_item_clone[key] = np.log1p(value / self.scale)
+            for key, value in input_item_copy.items():
+                input_item_copy[key] = np.log1p(value / self.scale)
         if "label" in self.apply_keys:
-            for key, value in label_item_clone.items():
-                label_item_clone[key] = np.log1p(value / self.scale)
-        return input_item_clone, label_item_clone, weight_item
+            for key, value in label_item_copy.items():
+                label_item_copy[key] = np.log1p(value / self.scale)
+        return input_item_copy, label_item_copy, weight_item
 
 
 class CropData:
@@ -176,19 +176,19 @@ class CropData:
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        input_item_clone = input_item.clone()
-        label_item_clone = label_item.clone()
+        input_item_copy = {**input_item}
+        label_item_copy = {**label_item}
         if "input" in self.apply_keys:
-            for key, value in input_item_clone.items():
-                input_item_clone[key] = value[
+            for key, value in input_item_copy.items():
+                input_item_copy[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
                 ]
         if "label" in self.apply_keys:
-            for key, value in label_item_clone.items():
-                label_item_clone[key] = value[
+            for key, value in label_item_copy.items():
+                label_item_copy[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
                 ]
-        return input_item_clone, label_item_clone, weight_item
+        return input_item_copy, label_item_copy, weight_item
 
 
 class SqueezeData:
@@ -211,27 +211,27 @@ class SqueezeData:
 
     def __call__(self, data):
         input_item, label_item, weight_item = data
-        input_item_clone = input_item.clone()
-        label_item_clone = label_item.clone()
+        input_item_copy = {**input_item}
+        label_item_copy = {**label_item}
         if "input" in self.apply_keys:
-            for key, value in input_item_clone.items():
+            for key, value in input_item_copy.items():
                 if value.ndim == 4:
                     B, C, H, W = value.shape
-                    input_item_clone[key] = value.reshape((B * C, H, W))
+                    input_item_copy[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
                         f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
         if "label" in self.apply_keys:
-            for key, value in label_item_clone.items():
+            for key, value in label_item_copy.items():
                 if value.ndim == 4:
                     B, C, H, W = value.shape
-                    label_item_clone[key] = value.reshape((B * C, H, W))
+                    label_item_copy[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
                         f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
-        return input_item_clone, label_item_clone, weight_item
+        return input_item_copy, label_item_copy, weight_item
 
 
 class FunctionalTransform:
@@ -267,7 +267,7 @@ class FunctionalTransform:
 
     def __call__(self, data: Tuple[Dict[str, np.ndarray], ...]):
         data_dict, label_dict, weight_dict = data
-        data_dict_clone = data_dict.clone()
-        label_dict_clone = label_dict.clone()
-        weight_dict_clone = weight_dict.clone() if weight_dict else None
-        return self.transform_func(data_dict_clone, label_dict_clone, weight_dict_clone)
+        data_dict_copy = {**data_dict}
+        label_dict_copy = {**label_dict}
+        weight_dict_copy = {**weight_dict} if weight_dict else None
+        return self.transform_func(data_dict_copy, label_dict_copy, weight_dict_copy)
