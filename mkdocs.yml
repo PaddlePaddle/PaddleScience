@@ -167,6 +167,7 @@ plugins:
 
 # Extensions
 markdown_extensions:
+  - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span

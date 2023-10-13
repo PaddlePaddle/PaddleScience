@@ -4,7 +4,109 @@
 
 ## 1. 基础功能
 
-### 1.1 模型推理预测
+### 1.1 使用 YAML 配置
+
+PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) 文件控制程序训练、评估、推理等过程，其主要原理是利用 [hydra](https://hydra.cc/) 配置管理工具，从 `*.yaml` 格式的文件中解析配置参数，并传递给运行代码，以对程序运行时所使用的超参数等字段进行灵活配置，提高实验效率。本章节主要介绍 hydra 配置管理工具的基本使用方法。
+
+在使用 hydra 配置运行参数前，请先执行以下命令检查是否已安装 `hydra`。
+
+``` shell
+pip show hydra-core
+```
+
+如未安装，则需执行以下命令安装 `hydra`。
+
+``` shell
+pip install hydra-core
+```
+
+#### 1.1.1 运行配置打印
+
+!!! warning
+
+    注意本教程内的运行配置打印方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job --resolve` 参数。
+
+以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job --resolve`，则可以打印出从 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
+
+``` shell title=">>> python bracket.py {++-c job --resolve++}"
+NU: 0.3
+E: 100000000000.0
+CHARACTERISTIC_LENGTH: 1.0
+CHARACTERISTIC_DISPLACEMENT: 0.0001
+...
+...
+EVAL:
+  eval_during_train: true
+  eval_with_no_grad: true
+  batch_size:
+    sup_validator: 128
+```
+
+#### 1.1.2 命令行方式配置参数
+
+仍然以配置文件 `bracket.yaml` 为例，关于学习率部分的参数配置如下所示。
+
+``` yaml title="bracket.yaml"
+...
+TRAIN:
+  epochs: 2000
+  iters_per_epoch: 1000
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 20
+  lr_scheduler:
+    epochs: ${TRAIN.epochs} # (1)
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.001
+    gamma: 0.95
+    decay_steps: 15000
+    by_epoch: false
+...
+```
+
+1. `${...}$` 是 omegaconf 的引用语法，可以引用配置文件中其他位置上的参数，避免同时维护多个相同语义的参数副本，其效果与 yaml 的 anchor 语法类似。
+
+可以看到上述配置文件中的学习率为 `0.001`，若需修改学习率为 `0.002` 以运行新的实验，则有两种方式：
+
+- 将上述配置文件中的 `learning_rate: 0.001` 改为 `learning_rate: 0.002`，然后再运行程序。这种方式虽然简单，但在实验较多时容易造成实验混乱，因此不推荐使用。
+- 通过命令行参数的方式进行修改，如下所示。
+
+    ``` shell
+    python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++} -c job --resolve
+    ```
+
+    这种方式的参数改动只用作在一条运行命令上，而不会对 `bracket.yaml` 文件本身进行修改，能更灵活地控制运行时的配置，适合多个实验并行场景。
+
+#### 1.1.3 自动化运行实验
+
+如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
+
+假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
+
+| 实验编号 | seed | epochs |
+| :-- | :-- | :-- |
+| 1 | 42  | 10   |
+| 2 | 42  | 20 |
+| 3 | 1024  | 10 |
+| 4 | 1024  | 20 |
+
+执行如下命令即可按顺序自动运行这4组实验。
+
+``` shell title=">>> python bracket.py {++-m GLOBAL.seed=42,1024 TRAIN.epochs=10,20++}"
+[HYDRA] Launching 4 jobs locally
+[HYDRA]        #0 : GLOBAL.seed=42 TRAIN.epochs=10 TRAIN.iters_per_epoch=1
+....
+[HYDRA]        #1 : GLOBAL.seed=42 TRAIN.epochs=20 TRAIN.iters_per_epoch=1
+...
+[HYDRA]        #2 : GLOBAL.seed=1024 TRAIN.epochs=10 TRAIN.iters_per_epoch=1
+...
+[HYDRA]        #3 : GLOBAL.seed=1024 TRAIN.epochs=20 TRAIN.iters_per_epoch=1
+...
+```
+
+分别会在输出目录 `outputs` 下找到对应的
+
+### 1.2 模型推理预测
 
 若需使用训练完毕保存或下载得到的模型文件 `*.pdprams` 直接进行推理（预测），可以参考以下代码示例。
 
@@ -15,7 +117,6 @@
     import numpy as np
 
     # 实例化一个输入为 (x,y,z) 三个维度上的坐标，输出为 (u,v,w) 三个维度上的速度的 model
-
     model = ppsci.arch.MLP(("x", "y", "z"), ("u", "v", "w"), 5, 64, "tanh")
 
     # 用该模型及其对应的预训练模型路径(或下载地址 url)两个参数初始化 solver
@@ -54,7 +155,7 @@
     # "w": (100, 1)
     ```
 
-### 1.2 断点继续训练
+### 1.3 断点继续训练
 
 在模型的日常训练中，可能存在机器故障或者用户手动操作而中断训练的情况，针对这种情况 PaddleScience 提供了断点继续训练的功能，即在训练时默认会保存**最近一个训练完毕的 epoch** 对应的各种参数到以下 5 个文件中：
 
@@ -81,7 +182,7 @@ solver = ppsci.solver.Solver(
 
     此处只需将路径填写到 "latest" 为止即可，不需要加上其后缀，程序会根据 "/path/to/latest"，自动补充不同文件对应的后缀名来加载 `latest.pdparams`、`latest.pdopt` 等文件。
 
-### 1.3 迁移学习
+### 1.4 迁移学习
 
 迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，只需在 `model` 实例化完毕之后，手动为其载入预训练模型权重，即可进行迁移学习。
 
@@ -105,7 +206,7 @@ save_load.load_pretrain(model, "/path/to/pretrain")
 
     在迁移学习时，相对于完全随机初始化的参数而言，载入的预训练模型权重参数是一个较好的初始化状态，因此不需要使用太大的学习率，而可以将学习率适当调小 2~10 倍以获得更稳定的训练过程和更好的精度。
 
-### 1.4 模型评估
+### 1.5 模型评估
 
 当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
 
@@ -128,7 +229,7 @@ solver.eval()
 
     同样地，此处只需将路径填写到预训练权重的文件名为止即可，不需要加上其后缀，程序会根据 "/path/to/model"，自动补充所需后缀名来加载 `/path/to/model.pdparams` 文件。
 
-### 1.5 使用 WandB 记录实验
+### 1.6 使用 WandB 记录实验
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 
