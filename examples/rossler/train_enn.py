@@ -43,7 +43,7 @@ def get_mean_std(data: np.ndarray):
 if __name__ == "__main__":
     args = config.parse_args()
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
+    ppsci.utils.misc.set_random_seed(6)
     # set training hyper-parameters
     EPOCHS = 300 if not args.epochs else args.epochs
     TRAIN_BLOCK_SIZE = 16

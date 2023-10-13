@@ -1,6 +1,8 @@
 # 开发指南
 
-本文档介绍如何基于 PaddleScience 套件进行代码开发并最终贡献到 PaddleScience 套件中
+本文档介绍如何基于 PaddleScience 套件进行代码开发并最终贡献到 PaddleScience 套件中。
+
+PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 文档，请参考：[PaddleScience RFC Template](https://github.com/PaddlePaddle/community/blob/master/rfcs/Science/template.md)
 
 ## 1. 准备工作
 
