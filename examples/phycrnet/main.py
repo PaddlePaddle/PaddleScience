@@ -83,10 +83,6 @@ def transform_out(input, out, model):
     return {"loss": batch_loss}
 
 
-def train_loss_func(result_dict, *args) -> paddle.Tensor:
-    return result_dict["loss"]
-
-
 def tranform_output_val(input, out):
     global uv
     output = out["outputs"]
@@ -125,6 +121,10 @@ def tranform_output_val(input, out):
         np.array(ten_pred) - np.array(ten_true)
     ) / functions.frobenius_norm(np.array(ten_true))
     return {"loss": paddle.to_tensor([error])}
+
+
+def train_loss_func(result_dict, *args) -> paddle.Tensor:
+    return result_dict["loss"]
 
 
 def val_loss_func(result_dict, *args) -> paddle.Tensor:
