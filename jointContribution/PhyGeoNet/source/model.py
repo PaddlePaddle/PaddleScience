@@ -1,13 +1,9 @@
-# import torch
-# import torch.nn as nn
-# import torch.nn.init as init
-# import torch.nn.functional as F
 import pdb
 import numpy as np
 import paddle
 from paddle import nn
+from ppsci.arch import base
 
-# torch.manual_seed(123)
 
 def _no_grad_uniform_(tensor, a, b):
     with paddle.no_grad():
@@ -35,7 +31,7 @@ def uniform_(tensor: paddle.Tensor, a: float, b: float) -> paddle.Tensor:
     """
     return _no_grad_uniform_(tensor, a, b)
 
-class USCNN(nn.Layer):
+class USCNN(base.Arch):
 	def __init__(self,h,nx,ny,nVarIn=1,nVarOut=1,initWay=None,k=5,s=1,p=2):
 		super().__init__()
 		"""
@@ -80,17 +76,3 @@ class USCNN(nn.Layer):
 		x=self.pixel_shuffle(self.conv4(x))
 		return x
 
-	# def _initialize_weights(self):
-	# 	if self.initWay=='kaiming':
-	# 		init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
-	# 		init.kaiming_normal_(self.conv2.weight, mode='fan_out', nonlinearity='relu')
-	# 		init.kaiming_normal_(self.conv3.weight, mode='fan_out', nonlinearity='relu')
-	# 		init.kaiming_normal_(self.conv4.weight)
-	# 	elif self.initWay=='ortho':
-	# 		init.orthogonal_(self.conv1.weight, init.calculate_gain('relu'))
-	# 		init.orthogonal_(self.conv2.weight, init.calculate_gain('relu'))
-	# 		init.orthogonal_(self.conv3.weight, init.calculate_gain('relu'))
-	# 		init.orthogonal_(self.conv4.weight)
-	# 	else:
-	# 		print('Only Kaiming or Orthogonal initializer can be used!')
-	# 		exit()

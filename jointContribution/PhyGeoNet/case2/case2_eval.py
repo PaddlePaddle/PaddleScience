@@ -4,7 +4,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import paddle
 from paddle import nn
-from paddle import optimizer as optim
 import pdb
 from paddle.io import DataLoader
 import time

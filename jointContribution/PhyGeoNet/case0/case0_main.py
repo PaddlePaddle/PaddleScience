@@ -4,8 +4,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 import paddle
+import ppsci
 from paddle import nn
-from paddle import optimizer as optim
 from paddle.io import DataLoader
 
 import time
@@ -77,7 +77,7 @@ nu = 0.01
 model = USCNN(h, nx, ny, NvarInput, NvarOutput)
 
 criterion = nn.MSELoss()
-optimizer = optim.Adam(learning_rate=lr, parameters=model.parameters())
+optimizer = ppsci.optimizer.Adam(lr)(model)
 padSingleSide = 1
 udfpad = nn.Pad2D([padSingleSide, padSingleSide, padSingleSide, padSingleSide], value=0)
 MeshList = []
@@ -156,6 +156,7 @@ def train(epoch):
         dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
         d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
         continuity = (d2vdy2 + d2vdx2)
+
         loss = criterion(continuity, continuity * 0)
         loss.backward()
         optimizer.step()
