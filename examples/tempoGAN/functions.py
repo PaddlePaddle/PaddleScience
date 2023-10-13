@@ -443,9 +443,16 @@ class DataFuncs:
         self.density_min = density_min
         self.max_turn = max_turn
 
-    def transform(self, input_item: Dict[str, np.ndarray]) -> Dict[str, paddle.Tensor]:
+    def transform(
+        self,
+        input_item: Dict[str, np.ndarray],
+        label_item: Dict[str, np.ndarray],
+        weight_item: Dict[str, np.ndarray],
+    ) -> Union[
+        Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]
+    ]:
         if self.tile_ratio == 1:
-            return input_item
+            return input_item, label_item, weight_item
         for _ in range(self.max_turn):
             rand_ratio = np.random.rand()
             density_low = self.cut_data(input_item["density_low"], rand_ratio)
@@ -455,7 +462,7 @@ class DataFuncs:
 
         input_item["density_low"] = density_low
         input_item["density_high"] = density_high
-        return input_item
+        return input_item, label_item, weight_item
 
     def cut_data(self, data: np.ndarray, rand_ratio: float) -> paddle.Tensor:
         # data: C,H,W
