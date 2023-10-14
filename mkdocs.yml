@@ -58,6 +58,7 @@ nav:
         - DeepHPMs: zh/examples/deephpms.md
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - Rossler_transform_physx: zh/examples/rossler.md
+        - PhyCRNet: zh/examples/phycrnet.md
       - 算子学习:
         - DeepONet: zh/examples/deeponet.md
       - 气象预测:
