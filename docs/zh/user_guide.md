@@ -24,18 +24,21 @@ pip install hydra-core
 
 !!! warning
 
-    注意本教程内的运行配置打印方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job --resolve` 参数。
+    注意本教程内的运行配置打印方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
 
-以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job --resolve`，则可以打印出从 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
+以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title=">>> python bracket.py {++-c job --resolve++}"
+``` shell title=">>> python bracket.py {++-c job++}"
+mode: train
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
 NU: 0.3
 E: 100000000000.0
-CHARACTERISTIC_LENGTH: 1.0
-CHARACTERISTIC_DISPLACEMENT: 0.0001
 ...
 ...
 EVAL:
+  pretrained_model_path: null
   eval_during_train: true
   eval_with_no_grad: true
   batch_size:
@@ -66,16 +69,16 @@ TRAIN:
 
 1. `${...}$` 是 omegaconf 的引用语法，可以引用配置文件中其他位置上的参数，避免同时维护多个相同语义的参数副本，其效果与 yaml 的 anchor 语法类似。
 
-可以看到上述配置文件中的学习率为 `0.001`，若需修改学习率为 `0.002` 以运行新的实验，则有两种方式：
+可以看到上述配置文件中的学习率为 `0.001`，若需修改学习率为 `0.002` 以运行新的实验，则有以下两种方式：
 
 - 将上述配置文件中的 `learning_rate: 0.001` 改为 `learning_rate: 0.002`，然后再运行程序。这种方式虽然简单，但在实验较多时容易造成实验混乱，因此不推荐使用。
 - 通过命令行参数的方式进行修改，如下所示。
 
     ``` shell
-    python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++} -c job --resolve
+    python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++} -c job
     ```
 
-    这种方式的参数改动只用作在一条运行命令上，而不会对 `bracket.yaml` 文件本身进行修改，能相对灵活地控制运行时的配置，保证不同实验之间互不干扰。
+    这种方式通过命令行参数更新运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能相对灵活地控制运行时的配置，保证不同实验之间互不干扰。
 
 #### 1.1.3 自动化运行实验
 

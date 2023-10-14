@@ -6,6 +6,7 @@ hydra:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
   sweep:
+    # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
 
