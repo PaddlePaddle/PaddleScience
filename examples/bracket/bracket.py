@@ -26,7 +26,7 @@ def train(cfg: DictConfig):
     # wrap to a model_list
     model = ppsci.arch.ModelList((disp_net, stress_net))
 
-    # Specify parameters
+    # specify parameters
     LAMBDA_ = cfg.NU * cfg.E / ((1 + cfg.NU) * (1 - 2 * cfg.NU))
     MU = cfg.E / (2 * (1 + cfg.NU))
     MU_C = 0.01 * MU
