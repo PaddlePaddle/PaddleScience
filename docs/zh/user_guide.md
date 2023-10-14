@@ -75,7 +75,7 @@ TRAIN:
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++} -c job --resolve
     ```
 
-    这种方式的参数改动只用作在一条运行命令上，而不会对 `bracket.yaml` 文件本身进行修改，能更灵活地控制运行时的配置，适合多个实验并行场景。
+    这种方式的参数改动只用作在一条运行命令上，而不会对 `bracket.yaml` 文件本身进行修改，能相对灵活地控制运行时的配置，保证不同实验之间互不干扰。
 
 #### 1.1.3 自动化运行实验
 
@@ -90,7 +90,7 @@ TRAIN:
 | 3 | 1024  | 10 |
 | 4 | 1024  | 20 |
 
-执行如下命令即可按顺序自动运行这4组实验。
+执行如下命令即可按顺序自动运行这 4 组实验。
 
 ``` shell title=">>> python bracket.py {++-m GLOBAL.seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
@@ -104,7 +104,61 @@ TRAIN:
 ...
 ```
 
-分别会在输出目录 `outputs` 下找到对应的
+多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
+
+``` shell title=">>> tree PaddleScience/examples/bracket/outputs_bracket/"
+PaddleScience/examples/bracket/outputs_bracket/
+└──2023-10-14 # (1)
+    └── 04-01-52 # (2)
+        ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
+        │   └── multirun.yaml # multirun 配置文件 (3)
+        ├── {==TRAIN.epochs=10,seed=1024==} # 实验编号3的保存目录
+        │   ├── checkpoints
+        │   │   ├── latest.pdeqn
+        │   │   ├── latest.pdopt
+        │   │   ├── latest.pdparams
+        │   │   └── latest.pdstates
+        │   ├── train.log
+        │   └── visual
+        │       └── epoch_0
+        │           └── result_u_v_w_sigmas.vtu
+        ├── {==TRAIN.epochs=10,seed=42==} # 实验编号1的保存目录
+        │   ├── checkpoints
+        │   │   ├── latest.pdeqn
+        │   │   ├── latest.pdopt
+        │   │   ├── latest.pdparams
+        │   │   └── latest.pdstates
+        │   ├── train.log
+        │   └── visual
+        │       └── epoch_0
+        │           └── result_u_v_w_sigmas.vtu
+        ├── {==TRAIN.epochs=20,seed=1024==} # 实验编号4的保存目录
+        │   ├── checkpoints
+        │   │   ├── latest.pdeqn
+        │   │   ├── latest.pdopt
+        │   │   ├── latest.pdparams
+        │   │   └── latest.pdstates
+        │   ├── train.log
+        │   └── visual
+        │       └── epoch_0
+        │           └── result_u_v_w_sigmas.vtu
+        └── {==TRAIN.epochs=20,seed=42==} # 实验编号2的保存目录
+            ├── checkpoints
+            │   ├── latest.pdeqn
+            │   ├── latest.pdopt
+            │   ├── latest.pdparams
+            │   └── latest.pdstates
+            ├── train.log
+            └── visual
+                └── epoch_0
+                    └── result_u_v_w_sigmas.vtu
+```
+
+1. 该文件夹是程序运行日期，此处表示2023年10月14日
+2. 该文件夹是程序运行时刻(世界标准时间 UTC)，此处表示04点01分52秒
+3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
+
+考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。
 
 ### 1.2 模型推理预测
 
