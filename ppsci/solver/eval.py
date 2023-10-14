@@ -137,7 +137,9 @@ def _eval_by_dataset(
         metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             metric_dict = metric_func(all_output, all_label)
-            metric_dict_group[metric_name] = metric_dict
+            metric_dict_group[metric_name] = {
+                k: float(v) for k, v in metric_dict.items()
+            }
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
                 if metric_str not in solver.eval_output_info:
