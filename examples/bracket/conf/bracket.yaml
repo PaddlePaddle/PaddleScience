@@ -87,7 +87,6 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
-  eval_during_train: true
   eval_with_no_grad: true
   batch_size:
     sup_validator: 128

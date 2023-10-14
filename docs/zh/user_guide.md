@@ -4,9 +4,9 @@
 
 ## 1. 基础功能
 
-### 1.1 使用 YAML 配置
+### 1.1 使用 YAML + hydra
 
-PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) 文件控制程序训练、评估、推理等过程，其主要原理是利用 [hydra](https://hydra.cc/) 配置管理工具，从 `*.yaml` 格式的文件中解析配置参数，并传递给运行代码，以对程序运行时所使用的超参数等字段进行灵活配置，提高实验效率。本章节主要介绍 hydra 配置管理工具的基本使用方法。
+PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) 文件控制程序训练、评估、推理等过程。其主要原理是利用 [hydra](https://hydra.cc/) 配置管理工具，从 `*.yaml` 格式的文件中解析配置参数，并传递给运行代码，以对程序运行时所使用的超参数等字段进行灵活配置，提高实验效率。本章节主要介绍 hydra 配置管理工具的基本使用方法。
 
 在使用 hydra 配置运行参数前，请先执行以下命令检查是否已安装 `hydra`。
 
@@ -20,11 +20,11 @@ pip show hydra-core
 pip install hydra-core
 ```
 
-#### 1.1.1 运行配置打印
+#### 1.1.1 打印运行配置
 
 !!! warning
 
-    注意本教程内的运行配置打印方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
+    注意本教程内的打印运行配置方法**只作为调试使用**，hydra 默认在打印完配置后会立即结束程序。因此在正常运行程序时请勿加上 `-c job` 参数。
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
@@ -75,10 +75,10 @@ TRAIN:
 - 通过命令行参数的方式进行修改，如下所示。
 
     ``` shell
-    python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++} -c job
+    python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
-    这种方式通过命令行参数更新运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能相对灵活地控制运行时的配置，保证不同实验之间互不干扰。
+    这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
 
 #### 1.1.3 自动化运行实验
 
@@ -95,15 +95,15 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title=">>> python bracket.py {++-m GLOBAL.seed=42,1024 TRAIN.epochs=10,20++}"
+``` shell title=">>> python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
-[HYDRA]        #0 : GLOBAL.seed=42 TRAIN.epochs=10 TRAIN.iters_per_epoch=1
+[HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
-[HYDRA]        #1 : GLOBAL.seed=42 TRAIN.epochs=20 TRAIN.iters_per_epoch=1
+[HYDRA]        #1 : seed=42 TRAIN.epochs=20
 ...
-[HYDRA]        #2 : GLOBAL.seed=1024 TRAIN.epochs=10 TRAIN.iters_per_epoch=1
+[HYDRA]        #2 : seed=1024 TRAIN.epochs=10
 ...
-[HYDRA]        #3 : GLOBAL.seed=1024 TRAIN.epochs=20 TRAIN.iters_per_epoch=1
+[HYDRA]        #3 : seed=1024 TRAIN.epochs=20
 ...
 ```
 
@@ -157,8 +157,8 @@ PaddleScience/examples/bracket/outputs_bracket/
                     └── result_u_v_w_sigmas.vtu
 ```
 
-1. 该文件夹是程序运行日期，此处表示2023年10月14日
-2. 该文件夹是程序运行时刻(世界标准时间 UTC)，此处表示04点01分52秒
+1. 该文件夹是程序运行时根据日期自动创建得到，此处表示2023年10月14日
+2. 该文件夹是程序运行时根据运行时刻(世界标准时间,UTC)自动创建得到，此处表示04点01分52秒
 3. 该文件夹是 multirun 模式下额外产生一个总配置目录，主要用于保存 multirun.yaml，其内的 `hydra.overrides.task` 字段记录了用于组合出不同运行参数的原始配置。
 
 考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。

@@ -8,7 +8,7 @@
 [![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
 [![Code Style](https://img.shields.io/badge/code_style-black-black)](https://github.com/psf/black)
 [![Hydra](https://img.shields.io/badge/config-hydra-89b8cd)](https://hydra.cc/)
-[![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](./LICENSE)
+[![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
 <!-- --8<-- [end:status] -->
 
 [**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
