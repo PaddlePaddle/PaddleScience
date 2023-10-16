@@ -127,15 +127,15 @@ if __name__ == "__main__":
     support_interior_constraint = ppsci.constraint.InteriorConstraint(
         equation["LinearElasticity"].equations,
         {
-            "equilibrium_x": 0,
-            "equilibrium_y": 0,
-            "equilibrium_z": 0,
             "stress_disp_xx": 0,
             "stress_disp_yy": 0,
             "stress_disp_zz": 0,
             "stress_disp_xy": 0,
             "stress_disp_xz": 0,
             "stress_disp_yz": 0,
+            "equilibrium_x": 0,
+            "equilibrium_y": 0,
+            "equilibrium_z": 0,
         },
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 2048},
@@ -149,30 +149,30 @@ if __name__ == "__main__":
             & (z < BOUNDS_SUPPORT_Z[1])
         ),
         weight_dict={
-            "equilibrium_x": "sdf",
-            "equilibrium_y": "sdf",
-            "equilibrium_z": "sdf",
             "stress_disp_xx": "sdf",
             "stress_disp_yy": "sdf",
             "stress_disp_zz": "sdf",
             "stress_disp_xy": "sdf",
             "stress_disp_xz": "sdf",
             "stress_disp_yz": "sdf",
+            "equilibrium_x": "sdf",
+            "equilibrium_y": "sdf",
+            "equilibrium_z": "sdf",
         },
         name="support_interior",
     )
     bracket_interior_constraint = ppsci.constraint.InteriorConstraint(
         equation["LinearElasticity"].equations,
         {
-            "equilibrium_x": 0,
-            "equilibrium_y": 0,
-            "equilibrium_z": 0,
             "stress_disp_xx": 0,
             "stress_disp_yy": 0,
             "stress_disp_zz": 0,
             "stress_disp_xy": 0,
             "stress_disp_xz": 0,
             "stress_disp_yz": 0,
+            "equilibrium_x": 0,
+            "equilibrium_y": 0,
+            "equilibrium_z": 0,
         },
         geom["geo"],
         {**train_dataloader_cfg, "batch_size": 1024},
@@ -186,15 +186,15 @@ if __name__ == "__main__":
             & (z < BOUNDS_BRACKET_Z[1])
         ),
         weight_dict={
-            "equilibrium_x": "sdf",
-            "equilibrium_y": "sdf",
-            "equilibrium_z": "sdf",
             "stress_disp_xx": "sdf",
             "stress_disp_yy": "sdf",
             "stress_disp_zz": "sdf",
             "stress_disp_xy": "sdf",
             "stress_disp_xz": "sdf",
             "stress_disp_yz": "sdf",
+            "equilibrium_x": "sdf",
+            "equilibrium_y": "sdf",
+            "equilibrium_z": "sdf",
         },
         name="bracket_interior",
     )
@@ -209,6 +209,8 @@ if __name__ == "__main__":
 
     # set training hyper-parameters
     EPOCHS = 2000 if not args.epochs else args.epochs
+
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         EPOCHS,
         ITERS_PER_EPOCH,
@@ -217,8 +219,6 @@ if __name__ == "__main__":
         15000,
         by_epoch=False,
     )()
-
-    # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
@@ -305,7 +305,6 @@ if __name__ == "__main__":
             "name": "NamedArrayDataset",
             "input": input_dict,
             "label": label_dict,
-            "weight": {k: np.ones_like(v) for k, v in label_dict.items()},
         },
         "sampler": {
             "name": "BatchSampler",

@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from ppsci.autodiff import hessian
+from typing import Optional
+from typing import Tuple
+
 from ppsci.equation.pde import base
 
 
@@ -27,21 +29,23 @@ class Poisson(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.Poisson(2)
     """
 
-    def __init__(self, dim: int):
+    def __init__(self, dim: int, detach_keys: Optional[Tuple[str, ...]] = None):
         super().__init__()
+        self.detach_keys = detach_keys
+        invars = self.create_symbols("x y z")[:dim]
+        p = self.create_function("p", invars)
         self.dim = dim
 
-        def poisson_compute_func(out):
-            invars = ("x", "y", "z")[: self.dim]
-            poisson = 0
-            for invar in invars:
-                poisson += hessian(out["p"], out[invar])
-            return poisson
+        poisson = 0
+        for invar in invars:
+            poisson += p.diff(invar, 2)
 
-        self.add_equation("poisson", poisson_compute_func)
+        self.add_equation("poisson", poisson)

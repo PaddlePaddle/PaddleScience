@@ -21,12 +21,15 @@ import sys
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Mapping
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
 import paddle
 import paddle.distributed as dist
+import sympy as sp
 import visualdl as vdl
 from packaging import version
 from paddle import amp
@@ -125,7 +128,7 @@ class Solver:
         seed: int = 42,
         use_vdl: bool = False,
         use_wandb: bool = False,
-        wandb_config: Optional[Dict[str, str]] = None,
+        wandb_config: Optional[Mapping] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
@@ -173,7 +176,7 @@ class Solver:
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
-        self.train_loss_info = {}
+        self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
@@ -198,8 +201,13 @@ class Solver:
                 raise ModuleNotFoundError(
                     "Please install 'wandb' with `pip install wandb` first."
                 )
-            wandb.init(**wandb_config)
-            self.wandb_writer = wandb
+            if dist.get_rank() == 0:
+                wandb.init(**wandb_config)
+                self.wandb_writer = wandb
+                if dist.get_world_size() > 1:
+                    dist.barrier()
+            else:
+                dist.barrier()
 
         # set running device
         if device != "cpu" and paddle.device.get_device() == "cpu":
@@ -307,6 +315,38 @@ class Solver:
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
+
+        # convert sympy to callable object if exist
+        extra_parameters = []
+        if self.equation:
+            for equation in self.equation.values():
+                extra_parameters += list(equation.learnable_parameters)
+
+        def convert_expr(
+            container_dict: Union[
+                Dict[str, ppsci.constraint.Constraint],
+                Dict[str, ppsci.validate.Validator],
+                Dict[str, ppsci.visualize.Visualizer],
+            ]
+        ) -> None:
+            for container in container_dict.values():
+                for name, expr in container.output_expr.items():
+                    if isinstance(expr, sp.Basic):
+                        container.output_expr[name] = ppsci.lambdify(
+                            expr,
+                            self.model,
+                            extra_parameters,
+                            # os.path.join(self.output_dir, container.name, name),  # HACK: Activate it for DEBUG.
+                        )
+
+        if self.constraint:
+            convert_expr(self.constraint)
+
+        if self.validator:
+            convert_expr(self.validator)
+
+        if self.visualizer:
+            convert_expr(self.visualizer)
 
     @staticmethod
     def from_config(cfg: Dict[str, Any]) -> Solver:
@@ -418,7 +458,7 @@ class Solver:
                 and epoch_id % self.eval_freq == 0
                 and epoch_id >= self.start_eval_epoch
             ):
-                cur_metric = self.eval(epoch_id)
+                cur_metric, metric_dict_group = self.eval(epoch_id)
                 if cur_metric < self.best_metric["metric"]:
                     self.best_metric["metric"] = cur_metric
                     self.best_metric["epoch"] = epoch_id
@@ -435,13 +475,10 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler(
-                    "eval/metric",
-                    cur_metric,
-                    epoch_id,
-                    self.vdl_writer,
-                    self.wandb_writer,
-                )
+                for metric_dict in metric_dict_group.values():
+                    logger.scaler(
+                        metric_dict, epoch_id, self.vdl_writer, self.wandb_writer
+                    )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
@@ -479,14 +516,15 @@ class Solver:
             self.vdl_writer.close()
 
     @misc.run_on_eval_mode
-    def eval(self, epoch_id: int = 0) -> float:
+    def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
 
         Args:
             epoch_id (int, optional): Epoch id. Defaults to 0.
 
         Returns:
-            float: The value of the evaluation, used to judge the quality of the model.
+            Tuple[float, Dict[str, Dict[str, float]]]: A targe metric value(float) and
+                all metric(s)(dict) of evaluation, used to judge the quality of the model.
         """
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
@@ -713,7 +751,7 @@ class Solver:
         """
         loss_dict = {}
         for key in self.train_loss_info:
-            loss_arr = np.array(self.train_loss_info[key].history)
+            loss_arr = np.asarray(self.train_loss_info[key].history)
             if by_epoch:
                 loss_arr = np.mean(
                     np.reshape(loss_arr, (-1, self.iters_per_epoch)),

@@ -17,7 +17,7 @@ from __future__ import annotations
 import importlib.util
 import traceback
 from typing import Dict
-from typing import Tuple
+from typing import Sequence
 from typing import Union
 
 import paddle
@@ -245,12 +245,12 @@ def run_check_mesh() -> None:
 
 
 def dynamic_import_to_globals(
-    names: Union[str, Tuple[str, ...]], alias: Dict[str, str] = None
+    names: Union[str, Sequence[str]], alias: Dict[str, str] = None
 ) -> bool:
     """Import module and add it to globals() by given names dynamically.
 
     Args:
-        names (Union[str, Tuple[str, ...]]): Module name or list of module names.
+        names (Union[str, Sequence[str]]): Module name or sequence of module names.
         alias (Dict[str, str]): Alias name of module when imported into globals().
 
     Returns:

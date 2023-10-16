@@ -32,12 +32,12 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 数据集采用了 [Transformer-Physx](https://github.com/zabaras/transformer-physx) 中提供的数据。该数据集使用龙格－库塔（Runge-Kutta）传统数值求解方法得到，数据集的划分如下：
 
-|数据集 |时间序列的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |256        |1025      |
-|验证集 |32         |1025      |
+|数据集 |时间序列的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |256        |1025      |[rossler_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5)|
+|验证集 |32         |1025      |[rossler_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5)|
 
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
 
 ### 3.2 Embedding 模型
 
@@ -244,7 +244,7 @@ examples/rossler/train_transformer.py:167:185
 
 首先使用上文中的 `mse_validator` 中的数据集进行可视化，另外还引入了 `vis_data_nums` 变量用于控制需要可视化样本的数量。最后通过 `VisualizerScatter3D` 构建可视化器。
 
-#### 3.3.5 模型训练、评估与可视化
+#### 3.3.6 模型训练、评估与可视化
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 

@@ -18,13 +18,13 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
 import numpy as np
 import paddle
 import sympy
-from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
@@ -86,23 +86,21 @@ class IntegralConstraint(base.Constraint):
         weight_dict: Optional[Dict[str, Callable]] = None,
         name: str = "IgC",
     ):
-        self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
-            if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
-
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
+        self.output_expr = {
+            k: v for k, v in output_expr.items() if k in self.output_keys
+        }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
         # prepare input
-        input_list = []
+        input_list: List[Dict[str, np.ndarray]] = []
         for _ in range(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
         ):
@@ -149,9 +147,6 @@ class IntegralConstraint(base.Constraint):
         weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
         if weight_dict is not None:
             for key, value in weight_dict.items():
-                if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):
