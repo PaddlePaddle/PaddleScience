@@ -1,0 +1,92 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_bracket/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set working condition
+NU: 0.3
+E: 100.0e9
+CHARACTERISTIC_LENGTH: 1.0
+CHARACTERISTIC_DISPLACEMENT: 1.0e-4
+
+# set geometry file path
+SUPPORT_PATH: ./stl/support.stl
+BRACKET_PATH: ./stl/bracket.stl
+AUX_LOWER_PATH: ./stl/aux_lower.stl
+AUX_UPPER_PATH: ./stl/aux_upper.stl
+CYLINDER_HOLE_PATH: ./stl/cylinder_hole.stl
+CYLINDER_LOWER_PATH: ./stl/cylinder_lower.stl
+CYLINDER_UPPER_PATH: ./stl/cylinder_upper.stl
+
+# set evaluate data path
+DEFORMATION_X_PATH: ./data/deformation_x.txt
+DEFORMATION_Y_PATH: ./data/deformation_y.txt
+DEFORMATION_Z_PATH: ./data/deformation_z.txt
+NORMAL_X_PATH: ./data/normal_x.txt
+NORMAL_Y_PATH: ./data/normal_y.txt
+NORMAL_Z_PATH: ./data/normal_z.txt
+SHEAR_XY_PATH: ./data/shear_xy.txt
+SHEAR_XZ_PATH: ./data/shear_xz.txt
+SHEAR_YZ_PATH: ./data/shear_yz.txt
+
+# model settings
+MODEL:
+  disp_net:
+    input_keys: ["x", "y", "z"]
+    output_keys: ["u", "v", "w"]
+    num_layers: 6
+    hidden_size: 512
+    activation: "silu"
+    weight_norm: true
+  stress_net:
+    input_keys: ["x", "y", "z"]
+    output_keys: ["sigma_xx", "sigma_yy", "sigma_zz", "sigma_xy", "sigma_xz", "sigma_yz"]
+    num_layers: 6
+    hidden_size: 512
+    activation: "silu"
+    weight_norm: true
+
+# training settings
+TRAIN:
+  epochs: 2000
+  iters_per_epoch: 1000
+  save_freq: 20
+  eval_during_train: true
+  eval_freq: 20
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.001
+    gamma: 0.95
+    decay_steps: 15000
+    by_epoch: false
+  batch_size:
+    bc_back: 1024
+    bc_front: 128
+    bc_surface: 4096
+    support_interior: 2048
+    bracket_interior: 1024
+  weight:
+    bc_back: {"u": 10, "v": 10, "w": 10}
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size:
+    sup_validator: 128
