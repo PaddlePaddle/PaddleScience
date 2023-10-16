@@ -179,7 +179,7 @@ examples/bracket/bracket.py:151:187
 
 #### 3.4.2 边界约束
 
-对于背板后表面，由于被固定，所以其上的点在三个方向的应变均为 0，因此有如下的边界约束条件：
+对于背板后表面，由于被固定，所以其上的点在三个方向的形变均为 0，因此有如下的边界约束条件：
 
 ``` py linenums="84"
 --8<--
@@ -187,7 +187,7 @@ examples/bracket/bracket.py:84:93
 --8<--
 ```
 
-对于带孔平板右侧长方形载荷面，其上的每个点只受 z 正方向的应力，大小为 $T$，其余方向应力为 0，有如下边界条件约束：
+对于带孔平板右侧长方形载荷面，其上的每个点只受 z 正方向的载荷，大小为 $T$，其余方向应力为 0，有如下边界条件约束：
 
 ``` py linenums="94"
 --8<--
@@ -195,7 +195,7 @@ examples/bracket/bracket.py:94:102
 --8<--
 ```
 
-对于除背板后面、带孔平板右侧长方形载荷面外的表面，不受任何应力，即三个方向的应力为 0，有如下边界条件约束：
+对于除背板后面、带孔平板右侧长方形载荷面外的表面，不受任何载荷，即三个方向的内力平衡，合力为 0，有如下边界条件约束：
 
 ``` py linenums="103"
 --8<--
@@ -281,21 +281,21 @@ examples/bracket/bracket.py
 
 ## 5. 结果展示
 
-下面展示了在测试点集上，3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、传统算法求解结果以及两者的差值。
+下面展示了在测试点集上，3 个方向的挠度 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、传统算法求解结果以及两者的差值。
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/u.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 u；中间表示传统算法求解的应变 u；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 u；中间表示传统算法求解的挠度 u；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/v.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 v；中间表示传统算法求解的应变 v；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 v；中间表示传统算法求解的挠度 v；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/w.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 w；中间表示传统算法求解的应变 w；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 w；中间表示传统算法求解的挠度 w；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
