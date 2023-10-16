@@ -16,3 +16,4 @@ imageio
 typing-extensions
 seaborn
 colorlog
+hydra-core

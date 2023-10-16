@@ -123,7 +123,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.tracking
     - navigation.sections
-    - navigation.prune
+    # - navigation.prune # disabled temporarily for rendering speed
     - navigation.top
     - search.suggest
     - navigation.instant
@@ -167,6 +167,7 @@ plugins:
 
 # Extensions
 markdown_extensions:
+  - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
