@@ -1,4 +1,5 @@
 import paddle
+from jacobian_function import jacobian
 
 
 class PIRBN(paddle.nn.Layer):
@@ -11,7 +12,6 @@ class PIRBN(paddle.nn.Layer):
         xy, xy_b = input_data
         # initialize the differential operators
         u_b = self.rbn(xy_b)
-
         # obtain partial derivatives of u with respect to x
         xy.stop_gradient = False
         # Obtain the output from the RBN
@@ -20,8 +20,37 @@ class PIRBN(paddle.nn.Layer):
         u_x = paddle.grad(u, xy, retain_graph=True, create_graph=True)[0]
         # Obtain the second-order derivative of the output with respect to the input
         u_xx = paddle.grad(u_x, xy, retain_graph=True, create_graph=True)[0]
+        return u_xx, u_b, u
 
-        return [u_xx, u_b]
+    def cal_K(self, x):
+        u_xx, _, _ = self.forward(x)
+        w, b = [], []
+
+        if self.activation_function == "gaussian":
+            b.append(self.rbn.activation.b)
+            w.append(self.rbn.last_fc_layer.weight)
+        elif self.activation_function == "tanh":
+            w.append(self.rbn.hidden_layer.weight)
+            b.append(self.rbn.hidden_layer.bias)
+            w.append(self.rbn.last_fc_layer.weight)
+
+        J_list = []
+
+        for w_i in w:
+            J_w = jacobian(u_xx, w_i).squeeze()
+            J_list.append(J_w)
+
+        for b_i in b:
+            J_b = jacobian(u_xx, b_i).squeeze()
+            J_list.append(J_b)
+
+        n_input = x[0].shape[0]  # ns in main.py
+        K = paddle.zeros((n_input, n_input))
+
+        for J in J_list:
+            K += J @ J.T
+
+        return K
 
     def cal_ntk(self, x):
         # Formula (4), Page3, \lambda variable
@@ -36,8 +65,14 @@ class PIRBN(paddle.nn.Layer):
             temp_x = [x[0][i, ...].unsqueeze(0), paddle.to_tensor([[0.0]])]
             y = self.forward(temp_x)
             l1t = paddle.grad(y[0], self.parameters(), allow_unused=True)
-            for j in l1t:
-                lambda_g = lambda_g + paddle.sum(j**2) / n1
+            for j, grad in enumerate(l1t):
+                if grad is None:
+                    grad = paddle.to_tensor([0.0]).broadcast_to(
+                        self.parameters()[j].shape
+                    )
+                    l1t[j] = grad
+                lambda_g = lambda_g + paddle.sum(grad**2) / n1
+
             # When use tanh activation function, the value may be None
             if self.activation_function == "tanh":
                 temp = paddle.concat(

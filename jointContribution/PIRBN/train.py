@@ -4,7 +4,15 @@ paddle.framework.core.set_prim_eager_enabled(True)
 
 
 class Trainer:
-    def __init__(self, pirbn, x_train, y_train, learning_rate=0.001, maxiter=10000):
+    def __init__(
+        self,
+        pirbn,
+        x_train,
+        y_train,
+        learning_rate=0.001,
+        maxiter=10000,
+        adaptive_weights=True,
+    ):
         # set attributes
         self.pirbn = pirbn
 
@@ -13,6 +21,14 @@ class Trainer:
             paddle.to_tensor(x, dtype=paddle.get_default_dtype()) for x in x_train
         ]
         self.y_train = paddle.to_tensor(y_train, dtype=paddle.get_default_dtype())
+
+        # Normalize x
+        # self.mu_X, self.sigma_X = self.x_train[0].mean(0), self.x_train[0].std(0)
+        # self.mu_x, self.sigma_x = self.mu_X[0], self.sigma_X[0]
+        # self.X_u = (self.x_train[1] - self.mu_X) / self.sigma_X
+        # self.X_r = (self.x_train[0] - self.mu_X) / self.sigma_X
+        # self.x_train = [self.X_r, self.X_u]
+
         self.maxiter = maxiter
         self.loss_g = []  # eq loss
         self.loss_b = []  # boundary loss
@@ -26,20 +42,18 @@ class Trainer:
         )
         self.ntk_list = {}
         # Update loss by calculate ntk
-        self.update_loss_by_ntk = True
-
-        # For test
-        # if self.pirbn.activation_function == "tanh":
-        #     self.update_loss_by_ntk = False
+        self.adaptive_weights = (
+            adaptive_weights  # Adaptive weights for physics-informed neural networks
+        )
 
     def Loss(self, x, y, a_g, a_b):
-        tmp = self.pirbn(x)
-        loss_g = 0.5 * paddle.mean(paddle.square(tmp[0] - y[0]))
-        loss_b = 0.5 * paddle.mean(paddle.square(tmp[1]))
-        if self.update_loss_by_ntk:
+        u_xx, u_b, _ = self.pirbn(x)
+        loss_g = 0.5 * paddle.mean(paddle.square(u_xx - y))
+        loss_b = 0.5 * paddle.mean(paddle.square(u_b))
+        if self.adaptive_weights:
             loss = loss_g * a_g + loss_b * a_b
         else:
-            loss = loss_g + loss_b
+            loss = loss_g + 100 * loss_b
         return loss, loss_g, loss_b
 
     def evaluate(self):
@@ -51,18 +65,30 @@ class Trainer:
         self.loss_g.append(loss_g_numpy)
         # boundary loss
         self.loss_b.append(loss_b_numpy)
-        if self.iter % 200 == 0:
-            if self.update_loss_by_ntk:
+        if self.iter % 100 == 0:
+            if self.adaptive_weights:
                 self.a_g, self.a_b, _ = self.pirbn.cal_ntk(self.x_train)
-                print("\ta_g =", float(self.a_g), "\ta_b =", float(self.a_b))
                 print(
-                    "Iter: ", self.iter, "\tL1 =", loss_g_numpy, "\tL2 =", loss_b_numpy
+                    "Iter : ",
+                    self.iter,
+                    "\tloss : ",
+                    float(loss),
+                    "\tboundary loss : ",
+                    float(loss_b),
+                    "\teq loss : ",
+                    float(loss_g),
                 )
+                print("\ta_g =", float(self.a_g), "\ta_b =", float(self.a_b))
             else:
-                a_g, a_b, _ = self.pirbn.cal_ntk(self.x_train)
-                print("\ta_g =", float(a_g), "\ta_b =", float(a_b))
                 print(
-                    "Iter: ", self.iter, "\tL1 =", loss_g_numpy, "\tL2 =", loss_b_numpy
+                    "Iter : ",
+                    self.iter,
+                    "\tloss : ",
+                    float(loss),
+                    "\tboundary loss : ",
+                    float(loss_b),
+                    "\teq loss : ",
+                    float(loss_g),
                 )
         self.his_a_g.append(self.a_g)
         self.his_a_b.append(self.a_b)
@@ -70,11 +96,11 @@ class Trainer:
         self.iter = self.iter + 1
         return loss
 
-    def fit(self):
+    def fit(self, output_Kgg):
         for i in range(0, self.maxiter):
-            if i in [0, 2000, 20000]:
-                self.ntk_list[i] = self.pirbn.cal_ntk(self.x_train)[2].numpy()
             loss = self.evaluate()
             loss.backward()
+            if i in output_Kgg:
+                self.ntk_list[f"{i}"] = self.pirbn.cal_K(self.x_train)
             self.optimizer.step()
             self.optimizer.clear_grad()

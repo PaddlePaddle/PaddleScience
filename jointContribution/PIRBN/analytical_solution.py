@@ -3,16 +3,15 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
-import scipy.io
 
 
-def output_fig(train_obj, mu, b, right_by, activation_function):
+def output_fig(train_obj, mu, b, right_by, activation_function, output_Kgg):
     plt.figure(figsize=(15, 9))
     rbn = train_obj.pirbn.rbn
 
-    target_dir = os.path.join(os.path.dirname(__file__), "target")
-    if not os.path.exists(target_dir):
-        os.mkdir(target_dir)
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
     # Comparisons between the network predictions and the ground truth.
     plt.subplot(2, 3, 1)
@@ -48,50 +47,38 @@ def output_fig(train_obj, mu, b, right_by, activation_function):
     plt.ylabel("Loss")
     plt.xlabel("Iteration")
 
-    # plt.subplot(2, 3, 3)
-    # loss_g = train_obj.his_a_g
-    # x = range(len(loss_g))
-    # plt.yscale("log")
-    # plt.plot(x, loss_g)
-    # plt.plot(x, train_obj.his_a_b)
-    # plt.legend(["a_g", "a_b"])
-    # plt.ylabel("Loss")
-    # plt.xlabel("Iteration")
-
     # Visualise NTK after initialisation, The normalised Kg at 0th iteration.
     plt.subplot(2, 3, 4)
-    jac = train_obj.ntk_list[0]
-    a = np.dot(jac, np.transpose(jac))
-    plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
+    index = str(output_Kgg[0])
+    K = train_obj.ntk_list[index].numpy()
+    plt.imshow(K / (np.max(abs(K))), cmap="bwr", vmax=1, vmin=-1)
     plt.colorbar()
-    plt.title("Kg at 0th iteration")
+    plt.title(f"Kg at {index}-th iteration")
     plt.xlabel("Sample point index")
 
     # Visualise NTK after training, The normalised Kg at 2000th iteration.
     plt.subplot(2, 3, 5)
-    if 2000 in train_obj.ntk_list:
-        jac = train_obj.ntk_list[2000]
-        a = np.dot(jac, np.transpose(jac))
-        plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
-        plt.colorbar()
-    plt.title("Kg at 2000th iteration")
+    index = str(output_Kgg[1])
+    K = train_obj.ntk_list[index].numpy()
+    plt.imshow(K / (np.max(abs(K))), cmap="bwr", vmax=1, vmin=-1)
+    plt.colorbar()
+    plt.title(f"Kg at {index}-th iteration")
     plt.xlabel("Sample point index")
 
     # The normalised Kg at 20000th iteration.
     plt.subplot(2, 3, 6)
-    if 20000 in train_obj.ntk_list:
-        jac = train_obj.ntk_list[20000]
-        a = np.dot(jac, np.transpose(jac))
-        plt.imshow(a / (np.max(abs(a))), cmap="bwr", vmax=1, vmin=-1)
-        plt.colorbar()
-    plt.title("Kg at 20000th iteration")
+    index = str(output_Kgg[2])
+    K = train_obj.ntk_list[index].numpy()
+    plt.imshow(K / (np.max(abs(K))), cmap="bwr", vmax=1, vmin=-1)
+    plt.colorbar()
+    plt.title(f"Kg at {index}-th iteration")
     plt.xlabel("Sample point index")
 
     plt.savefig(
         os.path.join(
-            target_dir, f"sine_function_{mu}_{b}_{right_by}_{activation_function}.png"
+            output_dir, f"sine_function_{mu}_{b}_{right_by}_{activation_function}.png"
         )
     )
 
     # Save data
-    scipy.io.savemat(os.path.join(target_dir, "out.mat"), {"NTK": a, "x": xy, "y": y})
+    # scipy.io.savemat(os.path.join(output_dir, "out.mat"), {"NTK": a, "x": xy, "y": y})
