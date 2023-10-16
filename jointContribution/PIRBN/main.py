@@ -13,7 +13,7 @@ ppsci.utils.misc.set_random_seed(SEED)
 # mu, Fig.1, Page5
 # right_by, Formula (15) Page5
 def sine_function_main(
-    mu, adaptive_weights, right_by=0, activation_function="gaussian"
+    mu, adaptive_weights=True, right_by=0, activation_function="gaussian"
 ):
     # Define the number of sample points
     ns = 50
@@ -27,12 +27,9 @@ def sine_function_main(
     for i in range(0, ns):
         x_eq[i, 0] = i * dx + right_by
     x_bc = np.array([[right_by + 0.0], [right_by + 1.0]])
-    # x_bc = np.ones((50, 1))
-    # x_bc[0:25] = 0
     x = [x_eq, x_bc]
     y = -4 * mu**2 * np.pi**2 * np.sin(2 * mu * np.pi * x_eq)
-    # print(y[:10])
-    # exit()
+
     # Set up radial basis network
     n_in = 1
     n_out = 1
@@ -42,7 +39,6 @@ def sine_function_main(
 
     # Set up PIRBN
     rbn = rbn_net.RBN_Net(n_in, n_out, n_neu, b, c, activation_function)
-    # paddle.summary(rbn, input=paddle.to_tensor(x_eq))
     rbn_loss = pirbn.PIRBN(rbn, activation_function)
     maxiter = 20001
     output_Kgg = [0, int(0.1 * maxiter), maxiter - 1]
@@ -63,10 +59,10 @@ def sine_function_main(
 
 
 # Fig.1
-sine_function_main(mu=4, right_by=0, activation_function="tanh", adaptive_weights=True)
-# # # Fig.2
-# sine_function_main(mu=8, right_by=0, activation_function="tanh")
-# # # Fig.3
-# sine_function_main(mu=4, right_by=100, activation_function="tanh")
+sine_function_main(mu=4, right_by=0, activation_function="tanh")
+# Fig.2
+sine_function_main(mu=8, right_by=0, activation_function="tanh")
+# Fig.3
+sine_function_main(mu=4, right_by=100, activation_function="tanh")
 # Fig.6
-# sine_function_main(mu=8, right_by=100, activation_function="gaussian", adaptive_weights=True)
+sine_function_main(mu=8, right_by=100, activation_function="gaussian")

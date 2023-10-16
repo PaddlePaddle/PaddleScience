@@ -4,6 +4,15 @@
 
 我们最近发现经过训练，物理信息神经网络（PINN）往往会成为局部近似函数。这一观察结果促使我们开发了一种新型的物理-信息径向基网络（PIRBN），该网络在整个训练过程中都能够维持局部近似性质。与深度神经网络不同，PIRBN仅包含一个隐藏层和一个径向基“激活”函数。在适当的条件下，我们证明了使用梯度下降方法训练PIRBN可以收敛到高斯过程。此外，我们还通过神经邻近核（NTK）理论研究了PIRBN的训练动态。此外，我们还对PIRBN的初始化策略进行了全面调查。基于数值示例，我们发现PIRBN在解决具有高频特征和病态计算域的非线性偏微分方程方面比PINN更有效。此外，现有的PINN数值技术，如自适应学习、分解和不同类型的损失函数，也适用于PIRBN。
 
+PIRBN网络的结构
+![介绍](pirbn_images/intro.png)
+
+不同阶数的高斯激活函数
+![gaussian](pirbn_images/gaussian.png)
+(a) 0, 1, 2阶高斯激活函数
+(b) 设置不同b值
+(c) 设置不同c值
+
 ## 2. 问题定义
 
 在NTK和基于NTK的适应性训练方法的帮助下，PINN在处理具有高频特征的问题时的性能可以得到显著提升。例如，考虑一个偏微分方程及其边界条件：
@@ -92,7 +101,14 @@ jointContribution/PIRBN/main.py
 
 ## 5. 结果展示
 
-PIRBN 案例针对 epoch=20001 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.13567。
+PINN 案例针对 epoch=20001 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.13567。
+PIRBN 案例针对 epoch=20001 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.59471。
+
+![PINN](pirbn_images/pinn_result.png)
+![PIRBN](pirbn_images/pirbn_result.png)
+
+![PINN](pirbn_images/sine_function_4_10.0_0_tanh.png)
+![PIRBN](pirbn_images/sine_function_8_10.0_100_gaussian.png)
 
 ## 6. 参考资料
 

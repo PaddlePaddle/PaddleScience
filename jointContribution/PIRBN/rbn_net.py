@@ -42,22 +42,20 @@ class RBN_Net(paddle.nn.Layer):
             )
 
         elif self.activation_function == "tanh":
-            # w = paddle.load("./PINN/w.tensor")
-            # b = paddle.load("./PINN/b.tensor")
             w, b = self.initialize_NN([self.n_in, self.n_neu, self.n_out])
             w_0 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(w[0]))
             b_0 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(b[0]))
             w_1 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(w[1]))
 
             self.hidden_layer = paddle.nn.Linear(
-                self.n_in, self.n_neu, weight_attr=w_0, bias_attr=b_0  # ini,  # ini,
+                self.n_in, self.n_neu, weight_attr=w_0, bias_attr=b_0
             )
 
             self.last_fc_layer = paddle.nn.Linear(
                 self.n_neu,
                 self.n_out,
-                weight_attr=w_1,  # ,ini,
-                bias_attr=False,  # ini,
+                weight_attr=w_1,
+                bias_attr=False,
             )
 
             # b.shape == [1]
@@ -97,8 +95,6 @@ class RBN_Net(paddle.nn.Layer):
             )
             weights.append(W)
             biases.append(b)
-            # self.add_parameter(f"W_{l}", W)
-            # self.add_parameter(f"b_{l}", b)
         return weights, biases
 
     def forward(self, x):
