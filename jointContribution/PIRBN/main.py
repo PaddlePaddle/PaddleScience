@@ -68,5 +68,5 @@ sine_function_main(mu=4, right_by=0, activation_function="tanh", adaptive_weight
 # sine_function_main(mu=8, right_by=0, activation_function="tanh")
 # # # Fig.3
 # sine_function_main(mu=4, right_by=100, activation_function="tanh")
-# # Fig.6
-# sine_function_main(mu=8, right_by=100, activation_function="gaussian")
+# Fig.6
+# sine_function_main(mu=8, right_by=100, activation_function="gaussian", adaptive_weights=True)

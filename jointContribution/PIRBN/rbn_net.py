@@ -42,11 +42,13 @@ class RBN_Net(paddle.nn.Layer):
             )
 
         elif self.activation_function == "tanh":
-            w = paddle.load("./PINN/w.tensor")
-            b = paddle.load("./PINN/b.tensor")
+            # w = paddle.load("./PINN/w.tensor")
+            # b = paddle.load("./PINN/b.tensor")
+            w, b = self.initialize_NN([self.n_in, self.n_neu, self.n_out])
             w_0 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(w[0]))
             b_0 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(b[0]))
             w_1 = paddle.ParamAttr(initializer=paddle.nn.initializer.Assign(w[1]))
+
             self.hidden_layer = paddle.nn.Linear(
                 self.n_in, self.n_neu, weight_attr=w_0, bias_attr=b_0  # ini,  # ini,
             )
@@ -66,6 +68,38 @@ class RBN_Net(paddle.nn.Layer):
             )
         else:
             raise ("Not implemented yet")
+
+    def NTK_init(self, size):
+        in_dim = size[0]
+        out_dim = size[1]
+        std = 1.0 / np.sqrt(in_dim)
+        return self.create_parameter(
+            shape=[in_dim, out_dim],
+            default_initializer=paddle.nn.initializer.Assign(
+                paddle.normal(shape=[in_dim, out_dim]) * std
+            ),
+            dtype=paddle.get_default_dtype(),
+        )
+
+    # Initialize network weights and biases using Xavier initialization
+    def initialize_NN(self, layers):
+        weights = []
+        biases = []
+        num_layers = len(layers)
+        for l in range(0, num_layers - 1):
+            W = self.NTK_init(size=[layers[l], layers[l + 1]])
+            b = self.create_parameter(
+                shape=[1, layers[l + 1]],
+                default_initializer=paddle.nn.initializer.Assign(
+                    paddle.normal(shape=[1, layers[l + 1]])
+                ),
+                dtype=paddle.get_default_dtype(),
+            )
+            weights.append(W)
+            biases.append(b)
+            # self.add_parameter(f"W_{l}", W)
+            # self.add_parameter(f"b_{l}", b)
+        return weights, biases
 
     def forward(self, x):
         if self.activation_function == "gaussian":

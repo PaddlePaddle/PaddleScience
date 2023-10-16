@@ -76,7 +76,10 @@ class PIRBN(paddle.nn.Layer):
             # When use tanh activation function, the value may be None
             if self.activation_function == "tanh":
                 temp = paddle.concat(
-                    (l1t[0], l1t[1], l1t[2].reshape((1, n_neu))), axis=1
+                    # (l1t[0], l1t[1], l1t[2].reshape((1, n_neu))), axis=1
+                    # Not select last_fc_bias
+                    (l1t[1], l1t[2], l1t[3].reshape((1, n_neu))),
+                    axis=1,
                 )
             else:
                 temp = paddle.concat((l1t[0], l1t[1].reshape((1, n_neu))), axis=1)
