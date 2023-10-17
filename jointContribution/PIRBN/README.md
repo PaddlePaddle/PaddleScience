@@ -26,14 +26,20 @@ Numerical examples include:
 
 For more details in terms of mathematical proofs and numerical examples, please refer to our paper.
 
-# Link
+## Link
 
 <https://doi.org/10.1016/j.cma.2023.116290>
 
 <https://github.com/JinshuaiBai/PIRBN>
 
-# Enviornmental settings
+## Enviornmental settings
 
-```
+``` shell
 pip install -r requirements.txt
+```
+
+## Train
+
+``` python
+python main.py
 ```

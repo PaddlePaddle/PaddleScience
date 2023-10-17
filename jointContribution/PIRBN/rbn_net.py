@@ -11,8 +11,9 @@ class RBN_Net(paddle.nn.Layer):
         n_in (int): Number of input of the RBN.
         n_out (int): Number of output of the RBN.
         n_neu (int): Number of neurons in the hidden layer.
-        b (List[float32]|float32): Initial value for hyperparameter b.
-        c (List[float32]): Initial value for hyperparameter c.
+        b (Union[List[float], float]): Initial value for hyperparameter b.
+        c (List[float]): Initial value for hyperparameter c.
+        activation_function (str, optional): The activation function, tanh or gaussian. Defaults to "gaussian".
     """
 
     def __init__(self, n_in, n_out, n_neu, b, c, activation_function="gaussian"):
@@ -33,7 +34,7 @@ class RBN_Net(paddle.nn.Layer):
 
         if self.activation_function == "gaussian":
             # gaussian activation_function need to set self.b
-            self.ini_ab()
+            self.init_ab()
             self.last_fc_layer = paddle.nn.Linear(
                 self.n_neu,
                 self.n_out,
@@ -58,9 +59,8 @@ class RBN_Net(paddle.nn.Layer):
                 bias_attr=False,
             )
 
-            # b.shape == [1]
             self.last_fc_bias = self.create_parameter(
-                shape=[1, 1],
+                shape=b[1].shape,
                 default_initializer=paddle.nn.initializer.Assign(b[1]),
                 dtype=paddle.get_default_dtype(),
             )
@@ -109,12 +109,12 @@ class RBN_Net(paddle.nn.Layer):
             y = self.activation(y)
             y = self.last_fc_layer(y)
             y = paddle.add(y, self.last_fc_bias)
-
         else:
             raise ("Not implemented yet")
         return y
 
-    def ini_ab(self):
+    # gaussian activation_function need to set self.b
+    def init_ab(self):
         b = np.ones((1, self.n_neu)) * self.b
         self.activation.b = self.activation.create_parameter(
             (1, self.n_neu), default_initializer=paddle.nn.initializer.Assign(b)

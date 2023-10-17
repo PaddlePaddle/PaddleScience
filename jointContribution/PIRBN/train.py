@@ -22,13 +22,6 @@ class Trainer:
         ]
         self.y_train = paddle.to_tensor(y_train, dtype=paddle.get_default_dtype())
 
-        # Normalize x
-        # self.mu_X, self.sigma_X = self.x_train[0].mean(0), self.x_train[0].std(0)
-        # self.mu_x, self.sigma_x = self.mu_X[0], self.sigma_X[0]
-        # self.X_u = (self.x_train[1] - self.mu_X) / self.sigma_X
-        # self.X_r = (self.x_train[0] - self.mu_X) / self.sigma_X
-        # self.x_train = [self.X_r, self.X_u]
-
         self.maxiter = maxiter
         self.loss_g = []  # eq loss
         self.loss_b = []  # boundary loss
