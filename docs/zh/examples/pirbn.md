@@ -108,7 +108,7 @@ PIRBN 案例针对 epoch=20001 和 learning\_rate=1e-3 的参数配置进行了�
 
 结果图
 ![PINN](https://paddle-org.bj.bcebos.com/paddlescience/docs/PIRBN/PIRBN_3.png)
-图为使用双曲正切函数（tanh）作为激活函数（activation function），并且使用LuCun初始化方法来初始化神经网络中的所有参数。
+图为使用双曲正切函数（tanh）作为激活函数（activation function），并且使用 LuCun 初始化方法来初始化神经网络中的所有参数。
 图中子图 1 为预测值和真实值的曲线比较
 图中子图 2 为误差值
 图中子图 3 为损失值
