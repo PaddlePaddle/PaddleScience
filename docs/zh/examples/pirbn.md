@@ -145,4 +145,4 @@ PIRBN 案例针对 epoch=20001 和 learning\_rate=1e-3 的参数配置进行了�
 ## 6. 参考资料
 
 - [Physics-informed radial basis network (PIRBN): A local approximating neural network for solving nonlinear PDEs](https://arxiv.org/abs/2304.06234)
-- <https://github.com/JinshuaiBai/PIRBN >
+- <https://github.com/JinshuaiBai/PIRBN>
