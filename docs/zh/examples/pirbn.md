@@ -62,9 +62,9 @@ jointContribution/PIRBN/main.py:18:38
 
 训练和评估构建，设置损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="59"
+``` py linenums="52"
 --8<--
-jointContribution/PIRBN/train.py:59:97
+jointContribution/PIRBN/train.py:52:90
 --8<--
 ```
 
@@ -82,9 +82,9 @@ jointContribution/PIRBN/main.py:43:43
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate` 为 1e-3。
 
-``` py linenums="40"
+``` py linenums="33"
 --8<--
-jointContribution/PIRBN/train.py:40:42
+jointContribution/PIRBN/train.py:33:35
 --8<--
 ```
 
@@ -92,9 +92,9 @@ jointContribution/PIRBN/train.py:40:42
 
 模型训练与评估
 
-``` py linenums="99"
+``` py linenums="92"
 --8<--
-jointContribution/PIRBN/train.py:99:106
+jointContribution/PIRBN/train.py:92:99
 --8<--
 ```
 
