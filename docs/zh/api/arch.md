@@ -7,6 +7,7 @@
         - Arch
         - MLP
         - DeepONet
+        - DeepPhyLSTM
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
@@ -16,5 +17,6 @@
         - ModelList
         - AFNONet
         - PrecipNet
+        - UNetEx
       show_root_heading: false
       heading_level: 3

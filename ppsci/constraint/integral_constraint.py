@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -99,7 +100,7 @@ class IntegralConstraint(base.Constraint):
             criteria = eval(criteria)
 
         # prepare input
-        input_list = []
+        input_list: List[Dict[str, np.ndarray]] = []
         for _ in range(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"]
         ):

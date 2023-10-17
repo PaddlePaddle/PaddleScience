@@ -23,6 +23,7 @@ from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -190,7 +191,7 @@ def all_gather(
     Returns:
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
     """
-    result = []
+    result: List[paddle.Tensor] = []
     paddle.distributed.all_gather(result, tensor)
     if concat:
         return paddle.concat(result, axis)
@@ -211,12 +212,12 @@ def convert_to_array(dict_: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.
 
 
 def concat_dict_list(
-    dict_list: Tuple[Dict[str, np.ndarray], ...]
+    dict_list: Sequence[Dict[str, np.ndarray]]
 ) -> Dict[str, np.ndarray]:
     """Concatenate arrays in tuple of dicts at axis 0.
 
     Args:
-        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+        dict_list (Sequence[Dict[str, np.ndarray]]): Sequence of dicts.
 
     Returns:
         Dict[str, np.ndarray]: A dict with concatenated arrays for each key.
@@ -228,12 +229,12 @@ def concat_dict_list(
 
 
 def stack_dict_list(
-    dict_list: Tuple[Dict[str, np.ndarray], ...]
+    dict_list: Sequence[Dict[str, np.ndarray]]
 ) -> Dict[str, np.ndarray]:
     """Stack arrays in tuple of dicts at axis 0.
 
     Args:
-        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+        dict_list (Sequence[Dict[str, np.ndarray]]): Sequence of dicts.
 
     Returns:
         Dict[str, np.ndarray]: A dict with stacked arrays for each key.
@@ -260,14 +261,14 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
     """Combine given data x with time sequence t.
     Given x with shape (N, D) and t with shape (T, ),
     this function will repeat t_i for N times and will concat it with data x for each t_i in t,
-    finally return the stacked result, which is of shape (NxT, D+1).
+    finally return the stacked result, which is of shape (N×T, D+1).
 
     Args:
         x (np.ndarray): Points data with shape (N, D).
         t (Tuple[int, ...]): Time sequence with shape (T, ).
 
     Returns:
-        np.ndarray: Combined data with shape of (NxT, D+1).
+        np.ndarray: Combined data with shape of (N×T, D+1).
     """
     nx = len(x)
     tx = []

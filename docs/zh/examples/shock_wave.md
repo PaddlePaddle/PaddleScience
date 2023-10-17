@@ -16,28 +16,29 @@ PINN-WE 模型通过损失函数加权，在 PINN 优化过程中减弱强梯度
 
 $$
 \begin{array}{cc}
-\dfrac{\partial \hat{U}}{\partial t}+\dfrac{\partial \hat{F}}{\partial \xi}+\dfrac{\partial \hat{G}}{\partial \eta}=0 \\
-\text { 其中, } \quad\left\{\begin{array}{l}
-\hat{U}=J U \\
-\hat{F}=J\left(F \xi_x+G \xi_y\right) \\
-\hat{G}=J\left(F \eta_x+G \eta_y\right)
-\end{array}\right. \\
-U=\left(\begin{array}{l}
-\rho \\
-\rho u \\
-\rho v \\
-\rho E
-\end{array}\right), \quad F=\left(\begin{array}{l}
-\rho u \\
-\rho u^2+p \\
-\rho u v \\
-(\rho E+p) u
-\end{array}\right), \quad G=\left(\begin{array}{l}
-\rho v \\
-\rho v u \\
-\rho v^2+p \\
-(\rho E+p) v
-\end{array}\right)
+  \dfrac{\partial \hat{U}}{\partial t}+\dfrac{\partial \hat{F}}{\partial \xi}+\dfrac{\partial \hat{G}}{\partial \eta}=0 \\
+  \text { 其中, } \quad
+  \begin{cases}
+    \hat{U}=J U \\
+    \hat{F}=J\left(F \xi_x+G \xi_y\right) \\
+    \hat{G}=J\left(F \eta_x+G \eta_y\right)
+  \end{cases} \\
+  U=\left(\begin{array}{l}
+  \rho \\
+  \rho u \\
+  \rho v \\
+  E
+  \end{array}\right), \quad F=\left(\begin{array}{l}
+  \rho u \\
+  \rho u^2+p \\
+  \rho u v \\
+  (E+p) u
+  \end{array}\right), \quad G=\left(\begin{array}{l}
+  \rho v \\
+  \rho v u \\
+  \rho v^2+p \\
+  (E+p) v
+  \end{array}\right)
 \end{array}
 $$
 
@@ -228,25 +229,43 @@ examples/shock_wave/shock_wave.py:433:504
 
 ## 4. 完整代码
 
-``` py linenums="1" title="shock_wave.py"
---8<--
-examples/shock_wave/shock_wave.py
---8<--
-```
+=== "Ma=2.0"
+
+    ``` py linenums="1" title="shock_wave.py"
+    --8<--
+    examples/shock_wave/shock_wave.py
+    --8<--
+    ```
+
+=== "Ma=0.728"
+
+    ``` py linenums="1" title="shock_wave.py"
+    --8<--
+    examples/shock_wave/shock_wave.py::243
+    --8<--
+        MA=0.728
+        --8<--
+        examples/shock_wave/shock_wave.py:246:
+        --8<--
+    ```
 
 ## 5. 结果展示
 
 本案例针对 $Ma=2.0$ 和 $Ma=0.728$ 两种不同的参数配置进行了实验，结果如下所示
 
-<figure markdown>
-  ![Ma_2.0](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_2.000).png){ loading=lazy }
-  <figcaption> Ma=2.0时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
-</figure>
+=== "Ma=2.0"
 
-<figure markdown>
-  ![Ma_0.728](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_0.728).png){ loading=lazy }
-  <figcaption> Ma=0.728时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
-</figure>
+    <figure markdown>
+      ![Ma_2.0](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_2.000).png){ loading=lazy }
+      <figcaption> Ma=2.0时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
+    </figure>
+
+=== "Ma=0.728"
+
+    <figure markdown>
+      ![Ma_0.728](https://paddle-org.bj.bcebos.com/paddlescience/docs/ShockWave/shock_wave(Ma_0.728).png){ loading=lazy }
+      <figcaption> Ma=0.728时，x方向速度u、y方向速度v、压力p、密度rho的预测结果</figcaption>
+    </figure>
 
 ## 6. 参考资料
 

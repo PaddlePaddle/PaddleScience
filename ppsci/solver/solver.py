@@ -16,12 +16,12 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-import os
 import sys
-from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Mapping
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -39,7 +39,6 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.loss import mtl
-from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -126,7 +125,7 @@ class Solver:
         seed: int = 42,
         use_vdl: bool = False,
         use_wandb: bool = False,
-        wandb_config: Optional[Dict[str, str]] = None,
+        wandb_config: Optional[Mapping] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
         geom: Optional[Dict[str, ppsci.geometry.Geometry]] = None,
@@ -174,7 +173,7 @@ class Solver:
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
             "reader_cost": misc.AverageMeter("reader_cost", ".5f", postfix="s"),
         }
-        self.train_loss_info = {}
+        self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
         # initialize evaluation log recorder for loss, time cost, metric, etc.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
@@ -321,13 +320,10 @@ class Solver:
                 extra_parameters += list(equation.learnable_parameters)
 
         def convert_expr(
-            container_dict: Dict[
-                str,
-                Union[
-                    ppsci.constraint.Constraint,
-                    ppsci.validate.Validator,
-                    ppsci.visualize.Visualizer,
-                ],
+            container_dict: Union[
+                Dict[str, ppsci.constraint.Constraint],
+                Dict[str, ppsci.validate.Validator],
+                Dict[str, ppsci.visualize.Visualizer],
             ]
         ) -> None:
             for container in container_dict.values():
@@ -348,95 +344,6 @@ class Solver:
 
         if self.visualizer:
             convert_expr(self.visualizer)
-
-    @staticmethod
-    def from_config(cfg: Dict[str, Any]) -> Solver:
-        """Initialize solver from given config.
-
-        Args:
-            cfg (Dict[str, Any]): Dict config, e.g. AttrDict parsed from yaml.
-
-        Returns:
-            Solver: Initialized solver object.
-        """
-        config.print_config(cfg)
-        # TODO(sensen): sanity check for config
-        output_dir = cfg["Global"]["output_dir"]
-        epochs = cfg["Global"]["epochs"]
-        iters_per_epoch = cfg["Global"]["iters_per_epoch"]
-        save_freq = cfg["Global"]["save_freq"]
-        eval_during_train = cfg["Global"]["eval_during_train"]
-        eval_freq = cfg["Global"]["eval_freq"]
-
-        seed = cfg["Global"].get("seed", 42)
-        rank = dist.get_rank()
-        misc.set_random_seed(seed + rank)
-
-        model = ppsci.arch.build_model(cfg["Arch"])
-        geom = ppsci.geometry.build_geometry(cfg.get("Geometry", None))
-        equation = ppsci.equation.build_equation(cfg.get("Equation", None))
-        constraint = ppsci.constraint.build_constraint(
-            cfg["Global"].get("Constraint", None),
-            equation,
-            geom,
-        )
-        optimizer, lr_scheduler = ppsci.optimizer.build_optimizer(
-            cfg["Global"]["Optimizer"],
-            model + ([eq for eq in equation.values()] if equation is not None else []),
-            epochs,
-            iters_per_epoch,
-        )
-
-        vdl_writer = None
-        if cfg["Global"].get("vdl_writer", False):
-            vdl_writer_path = os.path.join(output_dir, "vdl")
-            os.makedirs(vdl_writer_path, exist_ok=True)
-            vdl_writer = vdl.LogWriter(vdl_writer_path)
-
-        log_freq = cfg["Global"].get("log_freq", 10)
-        device = cfg["Global"].get("device", "gpu")
-        validator = ppsci.validate.build_validator(
-            cfg.get("Validator", None), equation, geom
-        )
-        visualizer = ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
-        use_amp = "AMP" in cfg
-        amp_level = cfg["AMP"].pop("level", "O1").upper() if use_amp else "O0"
-
-        start_eval_epoch = cfg["Global"].get("start_eval_epoch", 1)
-        update_freq = cfg["Global"].get("update_freq", 1)
-        pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
-        checkpoint_path = cfg["Global"].get("checkpoint_path", None)
-        compute_metric_by_batch = cfg["Global"].get("compute_metric_by_batch", False)
-        eval_with_no_grad = cfg["Global"].get("eval_with_no_grad", False)
-
-        return Solver(
-            model,
-            constraint,
-            output_dir,
-            optimizer,
-            lr_scheduler,
-            epochs,
-            iters_per_epoch,
-            update_freq,
-            save_freq,
-            log_freq,
-            eval_during_train,
-            start_eval_epoch,
-            eval_freq,
-            seed,
-            vdl_writer,
-            device,
-            equation,
-            geom,
-            validator,
-            visualizer,
-            use_amp,
-            amp_level,
-            pretrained_model_path,
-            checkpoint_path,
-            compute_metric_by_batch,
-            eval_with_no_grad,
-        )
 
     def train(self):
         """Training."""
@@ -459,8 +366,7 @@ class Solver:
                 and epoch_id % self.eval_freq == 0
                 and epoch_id >= self.start_eval_epoch
             ):
-                cur_metric = self.eval(epoch_id)
-                cur_metric, metric_dict = self.eval(epoch_id)
+                cur_metric, metric_dict_group = self.eval(epoch_id)
                 if cur_metric < self.best_metric["metric"]:
                     self.best_metric["metric"] = cur_metric
                     self.best_metric["epoch"] = epoch_id
@@ -477,7 +383,10 @@ class Solver:
                     f"[Eval][Epoch {epoch_id}]"
                     f"[best metric: {self.best_metric['metric']}]"
                 )
-                logger.scaler(metric_dict, epoch_id, self.vdl_writer, self.wandb_writer)
+                for metric_dict in metric_dict_group.values():
+                    logger.scaler(
+                        metric_dict, epoch_id, self.vdl_writer, self.wandb_writer
+                    )
 
                 # visualize after evaluation
                 if self.visualizer is not None:
@@ -515,14 +424,15 @@ class Solver:
             self.vdl_writer.close()
 
     @misc.run_on_eval_mode
-    def eval(self, epoch_id: int = 0) -> float:
+    def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
 
         Args:
             epoch_id (int, optional): Epoch id. Defaults to 0.
 
         Returns:
-            float: The value of the evaluation, used to judge the quality of the model.
+            Tuple[float, Dict[str, Dict[str, float]]]: A targe metric value(float) and
+                all metric(s)(dict) of evaluation, used to judge the quality of the model.
         """
         # set eval func
         self.eval_func = ppsci.solver.eval.eval_func
@@ -749,7 +659,7 @@ class Solver:
         """
         loss_dict = {}
         for key in self.train_loss_info:
-            loss_arr = np.array(self.train_loss_info[key].history)
+            loss_arr = np.asarray(self.train_loss_info[key].history)
             if by_epoch:
                 loss_arr = np.mean(
                     np.reshape(loss_arr, (-1, self.iters_per_epoch)),
