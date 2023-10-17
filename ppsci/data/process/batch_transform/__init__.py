@@ -66,11 +66,12 @@ def default_collate_fn(batch: List[Any]) -> Any:
     elif str(type(sample)) == "<class 'pgl.graph.Graph'>":
         # use str(type()) instead of isinstance() in case of pgl is not installed.
         graph = pgl.Graph(num_nodes=sample.num_nodes, edges=sample.edges)
-        graph.x = paddle.concat([g.x for g in batch])
-        graph.y = paddle.concat([g.y for g in batch])
-        graph.edge_index = paddle.concat([g.edge_index for g in batch], axis=1)
-        graph.edge_attr = paddle.concat([g.edge_attr for g in batch])
-        graph.pos = paddle.concat([g.pos for g in batch])
+        graph.x = np.concatenate([g.x for g in batch])
+        graph.y = np.concatenate([g.y for g in batch])
+        graph.edge_index = np.concatenate([g.edge_index for g in batch], axis=1)
+        graph.edge_attr = np.concatenate([g.edge_attr for g in batch])
+        graph.pos = np.concatenate([g.pos for g in batch])
+        graph.tensor()
         graph.shape = [len(batch)]
         return graph
 

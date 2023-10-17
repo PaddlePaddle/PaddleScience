@@ -117,27 +117,28 @@ class MeshAirfoilDataset(io.Dataset):
         with open(osp.join(osp.dirname(self.data_dir), "train_max_min.pkl"), "rb") as f:
             self.normalization_factors = pickle.load(f)
 
-        self.nodes = paddle.to_tensor(self.mesh_graph[0])
-        self.edges = paddle.to_tensor(self.mesh_graph[1])
+        self.nodes = self.mesh_graph[0]
+        self.edges = self.mesh_graph[1]
         self.elems_list = self.mesh_graph[2]
         self.marker_dict = self.mesh_graph[3]
-        self.node_markers = paddle.full([self.nodes.shape[0], 1], fill_value=-1)
+        self.node_markers = np.full([self.nodes.shape[0], 1], fill_value=-1)
         for i, (marker_tag, marker_elems) in enumerate(self.marker_dict.items()):
             for elem in marker_elems:
                 self.node_markers[elem[0]] = i
                 self.node_markers[elem[1]] = i
 
+        self.raw_graphs = [self.get(i) for i in range(len(self))]
+
     def __len__(self):
         return self.len
 
     def __getitem__(self, idx):
-        raw_graph = self.get(idx)
         return (
             {
-                self.input_keys[0]: raw_graph,
+                self.input_keys[0]: self.raw_graphs[idx],
             },
             {
-                self.label_keys[0]: raw_graph,
+                self.label_keys[0]: self.raw_graphs[idx],
             },
             None,
         )
@@ -145,13 +146,13 @@ class MeshAirfoilDataset(io.Dataset):
     def get(self, idx):
         with open(osp.join(self.data_dir, self.file_list[idx]), "rb") as f:
             fields = pickle.load(f)
-        fields = paddle.to_tensor(self._preprocess(fields))
+        fields = self._preprocess(fields)
         aoa, reynolds, mach = self._get_params_from_name(self.file_list[idx])
-        aoa = paddle.to_tensor(aoa)
+        # aoa = aoa
         mach_or_reynolds = mach if reynolds is None else reynolds
-        mach_or_reynolds = paddle.to_tensor(mach_or_reynolds)
-        norm_aoa = paddle.to_tensor(aoa / 10)
-        norm_mach_or_reynolds = paddle.to_tensor(
+        # mach_or_reynolds = mach_or_reynolds
+        norm_aoa = aoa / 10
+        norm_mach_or_reynolds = (
             mach_or_reynolds if reynolds is None else (mach_or_reynolds - 1.5e6) / 1.5e6
         )
 
@@ -166,25 +167,27 @@ class MeshAirfoilDataset(io.Dataset):
             ],
             axis=-1,
         ).astype(paddle.get_default_dtype())
-        nodes = paddle.to_tensor(nodes)
+
         data = pgl.Graph(
             num_nodes=nodes.shape[0],
             edges=self.edges,
         )
-
         data.x = nodes
         data.y = fields
         data.pos = self.nodes
         data.edge_index = self.edges
+
         sender = data.x[data.edge_index[0]]
         receiver = data.x[data.edge_index[1]]
         relation_pos = sender[:, 0:2] - receiver[:, 0:2]
-        post = paddle.linalg.norm(relation_pos, p=2, axis=1, keepdim=True)
+        post = np.linalg.norm(relation_pos, ord=2, axis=1, keepdims=True).astype(
+            paddle.get_default_dtype()
+        )
         data.edge_attr = post
-        std_epsilon = paddle.to_tensor([1e-8])
-        a = paddle.mean(data.edge_attr, axis=0)
+        std_epsilon = [1e-8]
+        a = np.mean(data.edge_attr, axis=0)
         b = data.edge_attr.std(axis=0)
-        b = paddle.maximum(b, std_epsilon)
+        b = np.maximum(b, std_epsilon).astype(paddle.get_default_dtype())
         data.edge_attr = (data.edge_attr - a) / b
         data.aoa = aoa
         data.norm_aoa = norm_aoa

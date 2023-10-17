@@ -62,33 +62,35 @@ class MeshCylinderDataset(io.Dataset):
         self.len = len(self.file_list)
         self.mesh_graph = airfoil_dataset._get_mesh_graph(mesh_graph_path)
 
-        self.normalization_factors = paddle.to_tensor(
-            [[978.6001, 48.9258, 24.8404], [-692.3159, -6.9950, -24.8572]]
+        self.normalization_factors = np.array(
+            [[978.6001, 48.9258, 24.8404], [-692.3159, -6.9950, -24.8572]],
+            dtype=paddle.get_default_dtype(),
         )
 
-        self.nodes = paddle.to_tensor(self.mesh_graph[0])
+        self.nodes = self.mesh_graph[0]
         self.meshnodes = self.mesh_graph[0]
-        self.edges = paddle.to_tensor(self.mesh_graph[1])
+        self.edges = self.mesh_graph[1]
         self.elems_list = self.mesh_graph[2]
         self.marker_dict = self.mesh_graph[3]
         self.bounder = []
-        self.node_markers = paddle.full([self.nodes.shape[0], 1], fill_value=-1)
+        self.node_markers = np.full([self.nodes.shape[0], 1], fill_value=-1)
         for i, (marker_tag, marker_elems) in enumerate(self.marker_dict.items()):
             for elem in marker_elems:
                 self.node_markers[elem[0]] = i
                 self.node_markers[elem[1]] = i
 
+        self.raw_graphs = [self.get(i) for i in range(len(self))]
+
     def __len__(self):
         return self.len
 
     def __getitem__(self, idx):
-        raw_graph = self.get(idx)
         return (
             {
-                self.input_keys[0]: raw_graph,
+                self.input_keys[0]: self.raw_graphs[idx],
             },
             {
-                self.label_keys[0]: raw_graph,
+                self.label_keys[0]: self.raw_graphs[idx],
             },
             None,
         )
@@ -102,30 +104,28 @@ class MeshCylinderDataset(io.Dataset):
                 lines_field = line.split(",")[3:]
                 numbers_float = list(eval(i) for i in lines_pos)
                 array = np.array(numbers_float, paddle.get_default_dtype())
-                a = paddle.to_tensor(array)
-                pos.append(a)
+                pos.append(array)
                 numbers_float = list(eval(i) for i in lines_field)
                 array = np.array(numbers_float, paddle.get_default_dtype())
-                a = paddle.to_tensor(array)
-                field.append(a)
+                field.append(array)
 
-        field = paddle.stack(field, axis=0)
-        pos = paddle.stack(pos, axis=0)
+        field = np.stack(field, axis=0)
+        pos = np.stack(pos, axis=0)
         indexlist = []
         for i in range(self.meshnodes.shape[0]):
-            b = paddle.to_tensor(self.meshnodes[i : (i + 1)])
-            b = paddle.squeeze(b)
-            index = paddle.nonzero(
-                paddle.sum((pos == b), axis=1, dtype="float32") == pos.shape[1]
+            b = self.meshnodes[i : (i + 1)]
+            b = np.squeeze(b)
+            index = np.nonzero(
+                np.sum((pos == b), axis=1, dtype=paddle.get_default_dtype())
+                == pos.shape[1]
             )
             indexlist.append(index)
-        indexlist = paddle.stack(indexlist, axis=0)
-        indexlist = paddle.squeeze(indexlist)
+        indexlist = np.stack(indexlist, axis=0)
+        indexlist = np.squeeze(indexlist)
         fields = field[indexlist]
         velocity = self._get_params_from_name(self.file_list[idx])
-        aoa = paddle.to_tensor(velocity)
 
-        norm_aoa = paddle.to_tensor(aoa / 40)
+        norm_aoa = velocity / 40
         # add physics parameters to graph
         nodes = np.concatenate(
             [
@@ -135,7 +135,6 @@ class MeshCylinderDataset(io.Dataset):
             ],
             axis=-1,
         ).astype(paddle.get_default_dtype())
-        nodes = paddle.to_tensor(nodes)
 
         data = pgl.Graph(
             num_nodes=nodes.shape[0],
@@ -145,21 +144,23 @@ class MeshCylinderDataset(io.Dataset):
         data.y = fields
         data.pos = self.nodes
         data.edge_index = self.edges
-        data.velocity = aoa
+        data.velocity = velocity
 
         sender = data.x[data.edge_index[0]]
         receiver = data.x[data.edge_index[1]]
         relation_pos = sender[:, 0:2] - receiver[:, 0:2]
-        post = paddle.linalg.norm(relation_pos, p=2, axis=1, keepdim=True)
+        post = np.linalg.norm(relation_pos, ord=2, axis=1, keepdims=True).astype(
+            paddle.get_default_dtype()
+        )
         data.edge_attr = post
-        std_epsilon = paddle.to_tensor([1e-8])
-        a = paddle.mean(data.edge_attr, axis=0)
+        std_epsilon = [1e-8]
+        a = np.mean(data.edge_attr, axis=0)
         b = data.edge_attr.std(axis=0)
-        b = paddle.maximum(b, std_epsilon)
+        b = np.maximum(b, std_epsilon).astype(paddle.get_default_dtype())
         data.edge_attr = (data.edge_attr - a) / b
-        a = paddle.mean(data.y, axis=0)
+        a = np.mean(data.y, axis=0)
         b = data.y.std(axis=0)
-        b = paddle.maximum(b, std_epsilon)
+        b = np.maximum(b, std_epsilon).astype(paddle.get_default_dtype())
         data.y = (data.y - a) / b
         data.norm_max = a
         data.norm_min = b
@@ -173,28 +174,26 @@ class MeshCylinderDataset(io.Dataset):
                 lines_field = line.split(",")[3:]
                 numbers_float = list(eval(i) for i in lines_pos)
                 array = np.array(numbers_float, paddle.get_default_dtype())
-                a = paddle.to_tensor(array)
-                pos.append(a)
+                pos.append(array)
                 numbers_float = list(eval(i) for i in lines_field)
                 array = np.array(numbers_float, paddle.get_default_dtype())
-                a = paddle.to_tensor(array)
-                field.append(a)
+                field.append(array)
 
-        field = paddle.stack(field, axis=0)
-        pos = paddle.stack(pos, axis=0)
+        field = np.stack(field, axis=0)
+        pos = np.stack(pos, axis=0)
 
         indexlist = []
         for i in range(pos.shape[0]):
             b = pos[i : (i + 1)]
-            b = paddle.squeeze(b)
-            index = paddle.nonzero(
-                paddle.sum((self.nodes == b), axis=1, dtype="float32")
+            b = np.squeeze(b)
+            index = np.nonzero(
+                np.sum((self.nodes == b), axis=1, dtype=paddle.get_default_dtype())
                 == self.nodes.shape[1]
             )
             indexlist.append(index)
 
-        indexlist = paddle.stack(indexlist, axis=0)
-        indexlist = paddle.squeeze(indexlist)
+        indexlist = np.stack(indexlist, axis=0)
+        indexlist = np.squeeze(indexlist)
         self.bounder = indexlist
         return data
 

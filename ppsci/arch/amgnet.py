@@ -119,20 +119,20 @@ def StAS(
         (values_S, (indices_S[0], indices_S[1])), shape=(N, kN)
     )
 
-    ans = coo_A.dot(coo_S).tocoo()  # sp_x @ sp_s
+    ans = coo_A.dot(coo_S).tocoo()
     row = paddle.to_tensor(ans.row)
     col = paddle.to_tensor(ans.col)
     index_B = paddle.stack([row, col], axis=0)
-    value_B = paddle.to_tensor(ans.data)  # sp_x @ sp_s
+    value_B = paddle.to_tensor(ans.data)
 
     indices_A = index_S
     values_A = value_S
-    coo_A = pd_sparse.sparse_coo_tensor(indices_A, values_A)  # sp_s
+    coo_A = pd_sparse.sparse_coo_tensor(indices_A, values_A)
     out = pd_sparse.transpose(coo_A, [1, 0])
     index_St = out.indices()
     value_St = out.values()
 
-    sp_x = pd_sparse.sparse_coo_tensor(index_B, value_B)  # sp_b
+    sp_x = pd_sparse.sparse_coo_tensor(index_B, value_B)
     sp_x = pd_sparse.coalesce(sp_x)
     index_B = sp_x.indices()
     value_B = sp_x.values()
@@ -200,6 +200,7 @@ def FillZeros(
 def remove_self_loops(
     edge_index: paddle.Tensor, edge_attr: Optional[paddle.Tensor] = None
 ) -> Tuple[paddle.Tensor, Optional[paddle.Tensor]]:
+    # remove self-loop
     mask = edge_index[0] != edge_index[1]
     mask = mask.tolist()
     edge_index = edge_index.t()
@@ -262,8 +263,10 @@ def faster_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm
 
 
 def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_layer):
-    """come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive structure aware pooling
-    for learning hierarchical graph representations. AAAI(2020)"""
+    """
+    come from Ranjan, E., Sanyal, S., Talukdar, P. (2020, April). Asap: Adaptive
+    structure aware pooling for learning hierarchical graph representations. AAAI(2020)
+    """
 
     kN = perm.shape[0]
     perm2 = perm.reshape((-1, 1))
@@ -279,12 +282,12 @@ def norm_graph_connectivity(perm, edge_index, edge_weight, score, pos, N, norm_l
     index_S = index_S.astype("int64")
     index_S[1] = n_idx[index_S[1]]
     subgraphnode_pos = pos[perm]
-    index_A = edge_index
+    index_A = edge_index.clone()
 
     if edge_weight is None:
         value_A = value_S.new_ones(edge_index[0].shape[0])
     else:
-        value_A = edge_weight
+        value_A = edge_weight.clone()
 
     value_A = paddle.squeeze(value_A)
     eps_mask = (value_S == 0).astype(paddle.get_default_dtype())
@@ -318,11 +321,11 @@ class GraphNetBlock(nn.Layer):
     """Multi-Edge Interaction Network with residual connections."""
 
     def __init__(
-        self, model_fn, output_dims, message_passing_aggregator, attention=False
+        self, model_fn, output_dim, message_passing_aggregator, attention=False
     ):
         super().__init__()
-        self.edge_model = model_fn(output_dims, 384)
-        self.node_model = model_fn(output_dims, 256)
+        self.edge_model = model_fn(output_dim, 384)
+        self.node_model = model_fn(output_dim, 256)
         self.message_passing_aggregator = message_passing_aggregator
 
     def _update_edge_features(self, graph):
@@ -430,7 +433,7 @@ class Processor(nn.Layer):
             self.graphnet_blocks.append(
                 GraphNetBlock(
                     model_fn=make_mlp,
-                    output_dims=output_dim,
+                    output_dim=output_dim,
                     message_passing_aggregator=message_passing_aggregator,
                     attention=attention,
                 )
@@ -439,7 +442,7 @@ class Processor(nn.Layer):
             self.pool_blocks.append(
                 GraphNetBlock(
                     model_fn=make_mlp,
-                    output_dims=output_dim,
+                    output_dim=output_dim,
                     message_passing_aggregator=message_passing_aggregator,
                     attention=attention,
                 )
@@ -501,20 +504,24 @@ class FullyConnectedLayer(nn.Layer):
     def __init__(self, input_dim: int, hidden_size: Tuple[int, ...]):
         super(FullyConnectedLayer, self).__init__()
         num_layers = len(hidden_size)
-        self.layers = nn.LayerList()
+        self._layers_ordered_dict = {}
+        self.in_dim = input_dim
+        for index, output_dim in enumerate(hidden_size):
+            self._layers_ordered_dict["linear_" + str(index)] = nn.Linear(
+                self.in_dim, output_dim
+            )
+            if index < (num_layers - 1):
+                self._layers_ordered_dict["relu_" + str(index)] = nn.ReLU()
+            self.in_dim = output_dim
 
-        cur_dim = input_dim
-        for i, hidden_size_ in enumerate(hidden_size):
-            self.layers.append(nn.Linear(cur_dim, hidden_size_))
-            if i < (num_layers - 1):
-                self.layers.append(nn.ReLU())
-            cur_dim = hidden_size_
+        self.layers = nn.LayerDict(self._layers_ordered_dict)
 
     def forward(self, input):
-        output = input
-        for layer in self.layers:
-            output = layer(output)
-        return output
+        for key in self.layers:
+            layer = self.layers[key]
+            output = layer(input)
+            input = output
+        return input
 
 
 class Encoder(nn.Layer):
@@ -524,8 +531,8 @@ class Encoder(nn.Layer):
         super(Encoder, self).__init__()
         self._make_mlp = make_mlp
         self._latent_dim = latent_dim
-        self.node_model = self._make_mlp(latent_dim, input_dim=input_dim)  # 4
-        self.mesh_edge_model = self._make_mlp(latent_dim, input_dim=1)  # 1
+        self.node_model = self._make_mlp(latent_dim, input_dim=input_dim)
+        self.mesh_edge_model = self._make_mlp(latent_dim, input_dim=1)
 
     def forward(self, graph):
         node_latents = self.node_model(graph.x)
@@ -537,9 +544,9 @@ class Encoder(nn.Layer):
 
 
 class Decoder(nn.Layer):
-    """Decodes node features from graph."""
-
-    """Encodes node and edge features into latent features."""
+    """Decodes node features from graph.
+    Encodes node and edge features into latent features.
+    """
 
     def __init__(self, make_mlp, output_dim):
         super(Decoder, self).__init__()
@@ -558,6 +565,8 @@ class AMGNet(nn.Layer):
     Code reference: https://github.com/baoshiaijhin/amgnet
 
     Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
         input_dim (int): Number of input dimension.
         output_dim (int): Number of output dimension.
         latent_dim (int): Number of hidden(feature) dimension.

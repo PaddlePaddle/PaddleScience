@@ -64,7 +64,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
                     solver.train_time_info[key].reset()
             reader_cost += time.perf_counter() - reader_tic
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # gather each constraint's input, label, weight to a list
             input_dicts.append(input_dict)
@@ -165,7 +166,8 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # gather all constraint data into list
             input_dicts.append(input_dict)

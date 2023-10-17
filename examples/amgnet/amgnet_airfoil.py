@@ -31,7 +31,9 @@ if TYPE_CHECKING:
 
 
 def train_mse_func(
-    output_dict: Dict[str, "paddle.Tensor"], label_dict: Dict[str, "pgl.Graph"], *args
+    output_dict: Dict[str, "paddle.Tensor"],
+    label_dict: Dict[str, "pgl.Graph"],
+    *args,
 ) -> paddle.Tensor:
     return F.mse_loss(output_dict["pred"], label_dict["label"].y)
 
