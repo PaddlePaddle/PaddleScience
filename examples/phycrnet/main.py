@@ -17,6 +17,7 @@ PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
 import functions
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 import scipy.io as scio
@@ -131,6 +132,68 @@ def val_loss_func(result_dict, *args) -> paddle.Tensor:
     return result_dict["loss"]
 
 
+def output_graph(model, input_dataset, fig_save_path):
+    output_dataset = model(input_dataset)
+    output = output_dataset["outputs"]
+    input = input_dataset["input"][0]
+
+    # shape: [t, c, h, w]
+    output = paddle.concat(tuple(output), axis=0)
+    output = paddle.concat((input.cuda(), output), axis=0)
+
+    # Padding x and y axis due to periodic boundary condition
+    output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)
+    output = paddle.concat((output[:, :, -1:, :], output, output[:, :, 0:2, :]), axis=2)
+
+    # [t, c, h, w]
+    truth = uv[0:1001, :, :, :]
+
+    # [101, 2, 131, 131]
+    truth = np.concatenate((truth[:, :, :, -1:], truth, truth[:, :, :, 0:2]), axis=3)
+    truth = np.concatenate((truth[:, :, -1:, :], truth, truth[:, :, 0:2, :]), axis=2)
+
+    # post-process
+    ten_true = []
+    ten_pred = []
+    for i in range(0, 50):
+        u_star, u_pred, v_star, v_pred = functions.post_process(
+            output, truth, num=20 * i
+        )
+
+        ten_true.append([u_star, v_star])
+        ten_pred.append([u_pred, v_pred])
+
+    # compute the error
+    error = functions.frobenius_norm(
+        np.array(ten_pred) - np.array(ten_true)
+    ) / functions.frobenius_norm(np.array(ten_true))
+
+    print("The predicted error is: ", error)
+
+    u_pred = output[:-1, 0, :, :].detach().cpu().numpy()
+    u_pred = np.swapaxes(u_pred, 1, 2)  # [h,w] = [y,x]
+    u_true = truth[:, 0, :, :]
+
+    t_true = np.linspace(0, 2, 1001)
+    t_pred = np.linspace(0, 2, time_steps)
+
+    plt.plot(t_pred, u_pred[:, 32, 32], label="x=32, y=32, CRL")
+    plt.plot(t_true, u_true[:, 32, 32], "--", label="x=32, y=32, Ref.")
+    plt.xlabel("t")
+    plt.ylabel("u")
+    plt.xlim(0, 2)
+    plt.legend()
+    plt.savefig(fig_save_path + "x=32,y=32.png")
+    plt.close("all")
+
+    # # plot train loss
+    # plt.figure()
+    # plt.plot(train_loss, label="train loss")
+    # plt.yscale("log")
+    # plt.legend()
+    # plt.savefig(fig_save_path + "train loss.png", dpi=300)
+
+
 if __name__ == "__main__":
     args = config.parse_args()
     # set random seed for reproducibility
@@ -195,7 +258,7 @@ if __name__ == "__main__":
         label_dict_train,
         input_dict_val,
         label_dict_val,
-    ) = dataset_obj.get(EPOCHS)
+    ) = dataset_obj.get(200)
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         {
@@ -253,8 +316,26 @@ if __name__ == "__main__":
         eval_with_no_grad=True,
     )
 
-    # train model
-    solver.train()
-    # evaluate after finished training
-    model.register_output_transform(tranform_output_val)
-    solver.eval()
+    # Used to set whether the graph is generated
+    graph = True
+
+    if not graph:
+        # train model
+        solver.train()
+        # evaluate after finished training
+        model.register_output_transform(tranform_output_val)
+        solver.eval()
+
+        # save the model
+        layer_state_dict = model.state_dict()
+        paddle.save(layer_state_dict, "output/phycrnet.pdparams")
+    else:
+        import os
+
+        fig_save_path = "output/figures/"
+        if not os.path.exists(fig_save_path):
+            os.makedirs(fig_save_path, True)
+        layer_state_dict = paddle.load("output/phycrnet.pdparams")
+        model.set_state_dict(layer_state_dict)
+        model.register_output_transform(None)
+        output_graph(model, input_dict_val, fig_save_path)
