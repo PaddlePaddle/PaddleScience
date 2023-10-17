@@ -42,9 +42,9 @@ $$
 
 在 PIRBN 问题中，建立网络，用 PaddlePaddle 代码表示如下
 
-``` py linenums="44"
+``` py linenums="40"
 --8<--
-jointContribution/PIRBN/main.py:44:46
+jointContribution/PIRBN/main.py:40:42
 --8<--
 ```
 
@@ -54,7 +54,7 @@ jointContribution/PIRBN/main.py:44:46
 
 ``` py linenums="18"
 --8<--
-jointContribution/PIRBN/main.py:18:41
+jointContribution/PIRBN/main.py:18:38
 --8<--
 ```
 
@@ -72,9 +72,9 @@ jointContribution/PIRBN/train.py:59:97
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 20001 轮训练轮数。
 
-``` py linenums="47"
+``` py linenums="43"
 --8<--
-jointContribution/PIRBN/main.py:47:47
+jointContribution/PIRBN/main.py:43:43
 --8<--
 ```
 
