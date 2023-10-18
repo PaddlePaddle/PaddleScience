@@ -77,7 +77,7 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)(model)
+    optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate)(model)
 
     # set validator
     mse_metric = ppsci.validate.GeometryValidator(
@@ -132,7 +132,6 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
-
     # set output directory
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 

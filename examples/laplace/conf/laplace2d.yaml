@@ -35,6 +35,7 @@ TRAIN:
   iters_per_epoch: 1
   eval_during_train: true
   eval_freq: 200
+  learning_rate: 0.001
 
 # evaluation settings
 EVAL:
