@@ -80,12 +80,10 @@ fig.tight_layout(pad=3.0)
 
 idx_xcg=[i for i in range(xcg.shape[1]) if 2*i not in dbc_idx and 2*i+1 not in dbc_idx]
 
-
 ########
 #[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
 obsidx=np.asarray([5,11,26,32,38]) # max is 9
 ########
-
 
 idx_whole=[]
 for i in obsidx:
@@ -95,13 +93,9 @@ for i in obsidx:
 obsxcg=msh_def.xcg[:,obsidx]
 ax1.plot(obsxcg[0,:],obsxcg[1,:],'o')
 
-
-
-
 dbc_idx_new=np.hstack((dbc_idx,idx_whole))
 dbc_val_new=Ufem[dbc_idx_new]
 dbc=create_dbc_strct(msh.xcg.shape[1]*nvar,dbc_idx_new,dbc_val_new)
-
 
 Src_new=(model.source)
 K_new=paddle.to_tensor([[0],[0]], dtype='float32').reshape((2,))
@@ -152,13 +146,7 @@ msh_defGCNN=Mesh(etype,xcg_defGCNN,e2vcg,e2bnd,ndim)
 uabsGCNN=np.sqrt(solution[[i for i in range(ndof) if i%2==0]]**2+\
 	             solution[[i for i in range(ndof) if i%2!=0]]**2)
 
-
-
-
 print('uabs.max=',uabs.max())
-
-
-
 
 fig=plt.figure()
 ax1=plt.subplot(1,2,1)

@@ -30,9 +30,7 @@ class setup_linelptc_sclr_base_handcode(object):
 														  self.f(x,el),
 														  self.Qb(x,n,bnd,el,fc)))
 
-
 														 
-
 
 class LinearEllipticScalarBaseHandcode(object):
 	"""docstring for LinearEllipticScalarBaseHandcode"""
@@ -150,7 +148,6 @@ def eval_linelast_base_handcode_srcflux(UQ, pars, x):
 			dSFdU[i,1+j,j,1+i]=dSFdU[i,1+j,j,1+i]-mu
 	return SF, dSFdU
 
-
 def eval_linelast_base_handcode_bndstvc_intr_bndflux_pars(UQ,pars,x,n):
 	nvar=UQ.shape[0]
 	ndim=UQ.shape[1]-1
@@ -165,8 +162,6 @@ def eval_linelast_base_handcode_bndstvc_intr_bndflux_pars(UQ,pars,x,n):
 	dFn=Double(dFn)
 	#print('Fn=',Fn)
 	return Ub,dUb,Fn,dFn
-
-
 
 """
 #### Inconpressible Navier Stokes Equation
@@ -183,8 +178,6 @@ class setup_ins_base_handcode(object):
 			 										      nu(x,el),
 			 										      tb(x,n,bnd,el,fc)])
 
-
-
 class IncompressibleNavierStokes(object):
 	"""docstring for IncompressibleNavierStokes"""
 	def __init__(self,ndim):
@@ -194,8 +187,6 @@ class IncompressibleNavierStokes(object):
 		             eval_ins_base_handcode_srcflux(UQ,pars,x)
 		self.bndstvcflux=lambda nbcnbr,UQ,pars,x,n:\
 					     eval_ins_base_handcode_bndstvc_intr_bndflux_pars(UQ,pars,x,n)
-
-
 
 def eval_ins_base_handcode_srcflux(UQ,pars,x):
 	u=UQ[:,0]; q=UQ[:,1:]

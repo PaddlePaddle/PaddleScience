@@ -5,7 +5,6 @@ from typing import Dict, List, Any, Optional, Callable, Set
 
 from name import parse_types
 
-
 class Inspector(object):
     def __init__(self, base_class: Any):
         self.base_class: Any = base_class
@@ -60,7 +59,6 @@ class Inspector(object):
             out[key] = data
         return out
 
-
 def func_header_repr(func: Callable, keep_annotation: bool = True) -> str:
     source = inspect.getsource(func)
     signature = inspect.signature(func)
@@ -76,7 +74,6 @@ def func_header_repr(func: Callable, keep_annotation: bool = True) -> str:
             params_repr[-1] += f'={param.default}'
 
     return f'def {func.__name__}({", ".join(params_repr)}):'
-
 
 def func_body_repr(func: Callable, keep_annotation: bool = True) -> str:
     source = inspect.getsource(func)

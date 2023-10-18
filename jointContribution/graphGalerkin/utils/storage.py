@@ -7,7 +7,6 @@ from scatter import scatter_add
 Final = typing.Final
 layouts: Final[List[str]] = ['coo', 'csr', 'csc']
 
-
 def get_layout(layout: Optional[str] = None) -> str:
     if layout is None:
         layout = 'coo'

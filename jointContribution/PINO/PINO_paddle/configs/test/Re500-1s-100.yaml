@@ -1,0 +1,31 @@
+data:
+  datapath: '../data/NS-T4000.npy'
+  Re: 500
+  total_num: 100
+  offset: 0
+  n_sample: 100
+  time_interval: 1
+  nx: 64
+  nt: 64
+  sub: 1
+  sub_t: 1
+  shuffle: False
+
+model:
+  layers: [64, 64, 64, 64, 64]
+  modes1: [8, 8, 8, 8]
+  modes2: [8, 8, 8, 8]
+  modes3: [8, 8, 8, 8]
+  fc_dim: 128
+  act: gelu
+
+test:
+  batchsize: 1
+  ckpt: checkpoints/Re500-FNO-100/FNO-Re500-1s-100.pt
+
+log:
+  entity: hzzheng-pino
+  project: PINO-NS
+  group: eval
+
+
