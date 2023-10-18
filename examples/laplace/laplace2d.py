@@ -136,7 +136,7 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
