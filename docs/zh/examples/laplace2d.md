@@ -6,29 +6,13 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/laplace2d/laplace2d_dataset.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/laplace2d/laplace2d_dataset.tar --output laplace2d_dataset.tar
     # unzip it
-    tar -xvf bracket_dataset.tar
-    python bracket.py
+    tar -xvf laplace2d_dataset.tar
+    python laplace2d.py
     ```
-
-=== "模型评估命令"
-
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
-    # unzip it
-    tar -xvf bracket_dataset.tar
-    python bracket.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
-    ```
-
-| 预训练模型  | 指标 |
-|:--| :--|
-| [bracket_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams) | loss(commercial_ref_u_v_w_sigmas): 32.28704, MSE.u(commercial_ref_u_v_w_sigmas): 0.00005, MSE.v(commercial_ref_u_v_w_sigmas): 0.00000, MSE.w(commercial_ref_u_v_w_sigmas): 0.00734, MSE.sigma_xx(commercial_ref_u_v_w_sigmas): 27.64751, MSE.sigma_yy(commercial_ref_u_v_w_sigmas): 1.23101, MSE.sigma_zz(commercial_ref_u_v_w_sigmas): 0.89106, MSE.sigma_xy(commercial_ref_u_v_w_sigmas): 0.84370, MSE.sigma_xz(commercial_ref_u_v_w_sigmas): 1.42126, MSE.sigma_yz(commercial_ref_u_v_w_sigmas): 0.24510 |
 
 ## 1. 背景简介
 
