@@ -30,13 +30,13 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+    geom = {"rect": ppsci.geometry.Rectangle(cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax)}
 
     # compute ground truth function
     def u_solution_func(out):
@@ -50,9 +50,7 @@ def train(cfg: DictConfig):
         "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
-    NPOINT_INTERIOR = cfg.NPOINT_INTERIOR
-    NPOINT_BC = cfg.NPOINT_BC
-    NPOINT_TOTAL = NPOINT_INTERIOR + NPOINT_BC
+    NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
 
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -68,7 +66,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_BC},
+        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
         name="BC",
     )
@@ -135,8 +133,8 @@ def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
-    # # set output directory
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+    # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
     model = ppsci.arch.MLP(**cfg.model)
@@ -145,7 +143,7 @@ def evaluate(cfg: DictConfig):
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+    geom = {"rect": ppsci.geometry.Rectangle(cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax)}
 
     # compute ground truth function
     def u_solution_func(out):
@@ -153,10 +151,7 @@ def evaluate(cfg: DictConfig):
         x, y = out["x"], out["y"]
         return np.cos(x) * np.cosh(y)
 
-
-    NPOINT_INTERIOR = cfg.NPOINT_INTERIOR
-    NPOINT_BC = cfg.NPOINT_BC
-    NPOINT_TOTAL = NPOINT_INTERIOR + NPOINT_BC
+    NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
 
     # set validator
     mse_metric = ppsci.validate.GeometryValidator(

@@ -14,12 +14,16 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-#log_freq: 20
 NPOINT_INTERIOR: 9801
 NPOINT_BC: 400
 
+# set geometry
+DIAGONAL_COORD:
+  xmin: [0.0, 0.0]
+  xmax: [1.0, 1.0]
+
 # model settings
-model:
+MODEL:
   input_keys: ["x", "y"]
   output_keys: ["u"]
   num_layers: 5
