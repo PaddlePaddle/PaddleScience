@@ -1,0 +1,41 @@
+data:
+  datapath: '/mnt/md1/zongyi/NS_fft_Re500_T4000.npy'
+  Re: 500
+  total_num: 4000
+  offset: 0
+  n_sample: 400
+  time_interval: 0.5
+  nx: 64
+  nt: 64
+  sub: 1
+  sub_t: 1
+  shuffle: True
+  S2: 128
+  T2: 65
+
+model:
+  layers: [64, 64, 64, 64, 64]
+  modes1: [8, 8, 8, 8]
+  modes2: [8, 8, 8, 8]
+  modes3: [8, 8, 8, 8]
+  fc_dim: 128
+
+train:
+  batchsize: 1
+  epochs: 40000
+  milestones: [10000, 20000, 30000]
+  base_lr: 0.001
+  scheduler_gamma: 0.5
+  ic_loss: 1.0
+  f_loss: 1.0
+  xy_loss: 5.0
+  save_dir: 'Re500-FDM'
+  save_name: 'PINO-pretrain-Re500-05s-4C1.pt'
+  data_iter: 4      # number of update steps on data for each epoch
+  eqn_iter: 1       # number of update steps on virtual PDE for each epoch
+
+log:
+  project: 'PINO-pretrain-ICLR'
+  group: 'Re500-05s-4C1'
+
+

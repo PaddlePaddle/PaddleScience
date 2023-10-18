@@ -15,8 +15,6 @@ from pyCaMOtk.create_femsp_cg import create_femsp_cg
 from pyCaMOtk.solve_fem import solve_fem
 from pyCaMOtk.visualize_fem import visualize_fem
 
-
-
 sys.path.insert(0, 'source')
 from FEM_ForwardModel import analyticalPossion, analyticalConeInterpolation
 from GCNNModel import e2vcg2connectivity,PossionNet
@@ -25,7 +23,6 @@ import setup_prob_eqn_handcode
 
 sys.path.insert(0, 'utils')
 from utils import Data
-
 
 """
 Hyper prameters
@@ -80,7 +77,6 @@ dbc_idx_new=np.hstack((np.asarray(dbc_idx),obsidx))
 dbc_val_new=Ufem[dbc_idx_new]
 dbc=create_dbc_strct(xcg.shape[1]*nvar,dbc_idx_new,dbc_val_new) # Create the class of boundary condition
 
-
 Src_new=model.source
 K_new=paddle.to_tensor([[1],[0],[0],[1]], dtype='float32').reshape((4,))
 parsfuncI=lambda x: paddle.concat((K_new,Src_new),axis=0)
@@ -129,7 +125,6 @@ solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
 solution=solution.detach().cpu().numpy()
 Ue=Ue.detach().cpu().numpy()
 
-
 ax1=plt.subplot(1,1,1)
 _,cbar1=visualize_fem(ax1,msh,solution[e2vcg],{"plot_elem":True,"nref":6},[])
 ax1.tick_params(axis='both',which='both',bottom=False,left=False,top=False,labelbottom=False,labelleft=False)
@@ -148,9 +143,4 @@ ax2.axis('off')
 cbar2.remove()
 plt.margins(0,0)
 plt.savefig('exact_possion_circle.png',bbox_inches='tight',pad_inches=-0.11,dpi=800)
-
-
-
-
-
 

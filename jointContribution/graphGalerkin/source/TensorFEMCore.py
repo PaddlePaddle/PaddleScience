@@ -195,8 +195,6 @@ def solve_fem_GCNN(DataLoader,LossF,model,tol=1e-3,maxit=2000,qoiidx=None,softid
 	print('wallclock time of all epochs = ',time.time()-startime)
 	return model, info
 
-
-
 def solve_SGD(DataLoader,LossF,model,tol,maxit,qoiidx,softidx,penaltyConstant,plotFlag='True'):
 	"""
 	DataLoader: training data
@@ -334,8 +332,6 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 	#print('mean loss = ',loss.norm().item()/len(DataLoader))
 	return er_0/len(DataLoader),loss.norm().item()/len(DataLoader),model
 
-
-
 '''
 def trainmodel(DataLoader,fcn,model,optimizer,criterion):
 	model.train()
@@ -361,8 +357,6 @@ def trainmodel(DataLoader,fcn,model,optimizer,criterion):
 	return er_0/len(DataLoader),loss_0/len(DataLoader),model
 '''	
 
-
-
 def Reshape(input, Shape,order='F'):
 	if order=='F':
 		return paddle.reshape(input,[Shape[len(Shape)-1-i] \
@@ -372,7 +366,6 @@ def Reshape(input, Shape,order='F'):
 		return paddle.reshape(input, Shape)
 	else:
 		raise ValueError('Reshape Only Support Fortran or C')
-
 
 def ReshapeFix(input, Shape,order='F'):
 	if order=='F':

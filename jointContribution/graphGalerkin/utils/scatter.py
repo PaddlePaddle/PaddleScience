@@ -31,7 +31,6 @@ def scatter_add_(dim, index, src, x):
         output = paddle.scatter_nd_add(x, index, updates)
     return output
 
-
 def scatter_sum(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                 out: Optional[paddle.Tensor] = None,
                 dim_size: Optional[int] = None) -> paddle.Tensor:
@@ -49,18 +48,15 @@ def scatter_sum(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
     else:
         return scatter_add_(0, index, src, out)
 
-
 def scatter_add(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                 out: Optional[paddle.Tensor] = None,
                 dim_size: Optional[int] = None) -> paddle.Tensor:
     return scatter_sum(src, index, dim, out, dim_size)
 
-
 def scatter_mul(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                 out: Optional[paddle.Tensor] = None,
                 dim_size: Optional[int] = None) -> paddle.Tensor:
     return paddle.ops.torch_scatter.scatter_mul(src, index, dim, out, dim_size)
-
 
 def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                  out: Optional[paddle.Tensor] = None,
@@ -85,20 +81,17 @@ def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         out.floor_divide_(count)
     return out
 
-
 def scatter_min(
         src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         out: Optional[paddle.Tensor] = None,
         dim_size: Optional[int] = None) -> Tuple[paddle.Tensor, paddle.Tensor]:
     return paddle.ops.torch_scatter.scatter_min(src, index, dim, out, dim_size)
 
-
 def scatter_max(
         src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         out: Optional[paddle.Tensor] = None,
         dim_size: Optional[int] = None) -> Tuple[paddle.Tensor, paddle.Tensor]:
     return paddle.ops.torch_scatter.scatter_max(src, index, dim, out, dim_size)
-
 
 def scatter(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
             out: Optional[paddle.Tensor] = None, dim_size: Optional[int] = None,

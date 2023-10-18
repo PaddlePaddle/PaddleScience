@@ -1,0 +1,40 @@
+data:
+  name: KF
+  paths: ['/raid/hongkai/NS-Re500_T300_id0-shuffle.npy']
+  Re: 500
+  offset: 0
+  total_num: 300
+  raw_res: [256, 256, 513]
+  n_data_samples: 100
+  data_res: [64, 64, 257]  # resolution in 1 second
+  pde_res: [64, 64, 129]   # resolution in 1 second
+  a_offset: 0
+  n_a_samples: 250
+  testoffset: 275
+  n_test_samples: 25
+  t_duration: 0.125
+  shuffle: True
+
+model:
+  f_maps: 128
+
+train:
+  batchsize: 2
+  start_iter: 0
+  num_iter: 50_001
+  milestones: [20_000, 40_000]
+  base_lr: 0.0002
+  scheduler_gamma: 0.5
+  save_step: 5000
+  eval_step: 5000
+
+test:
+  batchsize: 1
+  data_res: [64, 64, 257]
+  ckpt: model-5000.pt
+
+log:
+  logdir: Re500-1_8s-800-UNet
+  entity: hzzheng-pino
+  project: PINO-KF-Re500
+  group: Re500-1_8s-800-UNet

@@ -158,8 +158,6 @@ class PossionNet(Layer):
 		x = self.conv8(x, edge_index)
 		return x#F.log_softmax(x, dim=1)
 
-
-
 ########## Test ############
 def torch2paddle0(conv, params_dict):
 	for i in range(len(conv.lins)):
@@ -314,8 +312,6 @@ class LinearElasticityNet2D(Layer):
 			self.conv77=last_chance0(self.conv77)
 			self.conv88=last_chance1(self.conv88)
 
-
-
 	def forward(self, data):
 		x, edge_index = data.x, data.edge_index
 		n1=int(max(x.shape)/2)
@@ -358,8 +354,6 @@ class LinearElasticityNet2D(Layer):
 		x2 = relu(x2)
 		x2 = self.conv88(x2, edge_index2)
 
-
-
 		uv=[]
 		for i in range(n1):
 			uv.append(paddle.concat([x1[i:i+1,0:],x2[i:i+1,0:]],axis=0))
@@ -390,7 +384,6 @@ class Ns_Chebnet(Layer):
 		self.conv66 = ChebConv(128, 64,K=kk)
 		self.conv77 = ChebConv(64, 32,K=kk)
 		self.conv88 = ChebConv(32, nco,K=kk)
-
 
 		self.conv111 = ChebConv(nci, 32,K=kk)
 		self.conv222 = ChebConv(32, 64,K=kk)

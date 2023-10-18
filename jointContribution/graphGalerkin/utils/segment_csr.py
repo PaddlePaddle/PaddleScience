@@ -2,21 +2,17 @@ from typing import Optional, Tuple
 
 import paddle
 
-
 def segment_sum_csr(src: paddle.Tensor, indptr: paddle.Tensor,
                     out: Optional[paddle.Tensor] = None) -> paddle.Tensor:
     return paddle.ops.paddle_scatter.segment_sum_csr(src, indptr, out)
-
 
 def segment_add_csr(src: paddle.Tensor, indptr: paddle.Tensor,
                     out: Optional[paddle.Tensor] = None) -> paddle.Tensor:
     return paddle.ops.paddle_scatter.segment_sum_csr(src, indptr, out)
 
-
 def segment_mean_csr(src: paddle.Tensor, indptr: paddle.Tensor,
                      out: Optional[paddle.Tensor] = None) -> paddle.Tensor:
     return paddle.ops.paddle_scatter.segment_mean_csr(src, indptr, out)
-
 
 def segment_min_csr(
         src: paddle.Tensor, indptr: paddle.Tensor,
@@ -24,13 +20,11 @@ def segment_min_csr(
 ) -> Tuple[paddle.Tensor, paddle.Tensor]:
     return paddle.ops.paddle_scatter.segment_min_csr(src, indptr, out)
 
-
 def segment_max_csr(
         src: paddle.Tensor, indptr: paddle.Tensor,
         out: Optional[paddle.Tensor] = None
 ) -> Tuple[paddle.Tensor, paddle.Tensor]:
     return paddle.ops.paddle_scatter.segment_max_csr(src, indptr, out)
-
 
 def segment_csr(src: paddle.Tensor, indptr: paddle.Tensor,
                 out: Optional[paddle.Tensor] = None,
@@ -107,7 +101,6 @@ def segment_csr(src: paddle.Tensor, indptr: paddle.Tensor,
         return segment_max_csr(src, indptr, out)[0]
     else:
         raise ValueError
-
 
 def gather_csr(src: paddle.Tensor, indptr: paddle.Tensor,
                out: Optional[paddle.Tensor] = None) -> paddle.Tensor:

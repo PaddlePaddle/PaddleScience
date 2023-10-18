@@ -1,0 +1,14 @@
+data
+log
+.vscode
+wandb
+**/__pycache__/**
+.idea
+figs
+checkpoints
+.ipynb_checkpoints
+*.ipynb
+*.pt
+*.pth
+tensordiffeq
+exp

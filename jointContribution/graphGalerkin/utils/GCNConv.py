@@ -18,13 +18,11 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
     # type: (Tensor, OptTensor, Optional[int], bool, bool, Optional[int]) -> PairTensor  # noqa
     pass
 
-
 # @paddle.jit._overload
 def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
              add_self_loops=True, dtype=None):
     # type: (SparseTensor, OptTensor, Optional[int], bool, bool, Optional[int]) -> SparseTensor  # noqa
     pass
-
 
 def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
              dtype=None):
@@ -60,7 +58,6 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt = masked_fill(deg_inv_sqrt, deg_inv_sqrt == float('inf'),0)
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-
 
 class GCNConv(MessagePassing):
     r"""The graph convolutional operator from the `"Semi-supervised

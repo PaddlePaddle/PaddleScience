@@ -2,7 +2,6 @@ import numpy as np
 import pdb
 import matplotlib.pyplot as plt
 
-
 from pyCaMOtk.create_mesh_hsphere import mesh_hsphere 
 from pyCaMOtk.setup_linelptc_sclr_base_handcode import setup_linelptc_sclr_base_handcode
 from pyCaMOtk.create_dbc_strct import create_dbc_strct

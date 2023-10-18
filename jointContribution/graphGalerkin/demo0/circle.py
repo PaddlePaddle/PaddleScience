@@ -39,7 +39,6 @@ Hyper prameters
 tol=1.0e-16
 maxit=10
 
-
 									
 """
 Set up GCNN-FEM Possion problem

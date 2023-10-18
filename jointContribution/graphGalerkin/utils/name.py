@@ -87,7 +87,6 @@ def param_type_repr(param) -> str:
         return 'torch.Tensor'
     return sanitize(re.split(r':|='.strip(), str(param))[1])
 
-
 def return_type_repr(signature) -> str:
     return_type = signature.return_annotation
     if return_type is inspect.Parameter.empty:

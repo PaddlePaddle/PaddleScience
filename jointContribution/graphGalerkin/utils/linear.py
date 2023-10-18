@@ -12,7 +12,6 @@ from paddle.nn.initializer import Uniform
 
 import init as inits
 
-
 class Linear(nn.Layer):
     r"""Applies a linear tranformation to the incoming data
 

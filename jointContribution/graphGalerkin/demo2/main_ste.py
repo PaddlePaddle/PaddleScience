@@ -90,7 +90,6 @@ for Re in ReList:
 		dbc_idx.append(ndofU+dbc_idx3[i])
 		dbc_val.append(dbc_val3[i])
 
-
 	dbc_idx,I=np.unique(np.asarray(dbc_idx),return_index=True)
 	dbc_idx=[i for i in dbc_idx]
 	dbc_val=np.asarray(dbc_val)
@@ -101,8 +100,6 @@ for Re in ReList:
 	dbc_val=np.asarray(dbc_val)
 	dbc=create_dbc_strct(ndofUP,dbc_idx,dbc_val)
 
-
-
 	# ReDefine Mesh
 	xcg_=msh_.xcg
 	shrinkScalar=lambda y :(1-s*np.cos(np.pi*(y-L/2)))
@@ -112,14 +109,12 @@ for Re in ReList:
 	for i in range(xcg_.shape[1]):
 		xcg_[0,i]=(xcg_[0,i]-L/2)*shrinkScalar(xcg_[1,i])+L/2
 
-
 	msh=Mesh(etype,xcg,e2vcg,msh.e2bnd,2)
 	msh_=Mesh(etype,xcg_,e2vcg2,msh_.e2bnd,2)
 	e2vcg2=msh_.e2vcg
 	xcg=msh.xcg
 	e2vcg=msh.e2vcg
 	nnode=xcg.shape[1]
-
 
 	# Create finite element space
 	neqn1=ndim; neqn2=1
@@ -133,11 +128,6 @@ for Re in ReList:
 								e2vcg2,e2vcg2)
 	ldof2gdof = femsp.ldof2gdof_var.ldof2gdof
 	femsp.dbc=dbc
-
-
-
-
-
 
 	tol=1.0e-8
 	maxit=10000
@@ -235,7 +225,6 @@ ax2.set_title('GCNN Velocity Magnitude')
 fig.tight_layout(pad=2)
 plt.savefig('StenosisNSU.pdf',bbox_inches='tight')
 
-
 fig=plt.figure()
 ax1=plt.subplot(1,2,1)
 visualize_fem(ax1,msh_,p[e2vcg2],{"plot_elem":False,"nref":4},[])
@@ -245,49 +234,4 @@ visualize_fem(ax2,msh_,pGCNN[e2vcg2],{"plot_elem":False,"nref":4},[])
 ax2.set_title('GCNN Pressure Magnitude')
 fig.tight_layout(pad=2)
 plt.savefig('StenosisNSP.pdf',bbox_inches='tight')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

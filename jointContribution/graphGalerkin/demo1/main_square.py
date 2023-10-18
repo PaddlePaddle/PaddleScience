@@ -38,7 +38,6 @@ porder=msh.porder
 nvar=ndim
 ndof=nnode*nvar
 
-
 lam=lambda x,el:1
 mu=lambda x,el:1
 f=lambda x,el:np.zeros([ndim,1])
@@ -113,7 +112,6 @@ TrainDataloader=DataList
 model=LinearElasticityNet2D()
 [model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)
 
-
 solution=model(Graph[0].to('cuda'))
 solution=ReshapeFix(paddle.clone(solution),[len(solution.flatten()),1],'C')
 solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
@@ -122,7 +120,6 @@ xcg_defGCNN=xcg+np.reshape(solution,[ndim,nnode],order='F')
 msh_defGCNN=Mesh(etype,xcg_defGCNN,e2vcg,e2bnd,ndim)
 uabsGCNN=np.sqrt(solution[[i for i in range(ndof) if i%2==0]]**2+\
 	         solution[[i for i in range(ndof) if i%2!=0]]**2)
-
 
 plt.figure()
 ax1=plt.subplot(1,1,1)

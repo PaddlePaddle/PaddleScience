@@ -6,7 +6,6 @@ import paddle
 from paddle import Tensor
 from paddle.nn.initializer import Orthogonal
 
-
 def uniform(size: int, value: Any):
     if isinstance(value, Tensor):
         bound = 1.0 / math.sqrt(size)
@@ -17,7 +16,6 @@ def uniform(size: int, value: Any):
         for v in value.buffers() if hasattr(value, 'buffers') else []:
             uniform(size, v)
 
-
 def kaiming_uniform(value: Any, fan: int, a: float):
     if isinstance(value, Tensor):
         bound = math.sqrt(6 / ((1 + a**2) * fan))
@@ -27,7 +25,6 @@ def kaiming_uniform(value: Any, fan: int, a: float):
             kaiming_uniform(v, fan, a)
         for v in value.buffers() if hasattr(value, 'buffers') else []:
             kaiming_uniform(v, fan, a)
-
 
 def glorot(value: Any):
     if isinstance(value, Tensor):
@@ -40,14 +37,12 @@ def glorot(value: Any):
         for v in value.buffers() if hasattr(value, 'buffers') else []:
             glorot(v)
 
-
 def glorot_orthogonal(tensor, scale):
     if tensor is not None:
         tensor = paddle.create_parameter(tensor.shape, attr=Orthogonal())
         # paddle.nn.initializer.Othogonal()
         scale /= ((tensor.size(-2) + tensor.size(-1)) * tensor.var())
         tensor.data *= scale.sqrt()
-
 
 def constant(value: Any, fill_value: float):
     if isinstance(value, Tensor):
@@ -59,14 +54,11 @@ def constant(value: Any, fill_value: float):
         for v in value.buffers() if hasattr(value, 'buffers') else []:
             constant(v, fill_value)
 
-
 def zeros(value: Any):
     constant(value, 0.)
 
-
 def ones(tensor: Any):
     constant(tensor, 1.)
-
 
 def normal(value: Any, mean: float, std: float):
     if isinstance(value, Tensor):
@@ -76,7 +68,6 @@ def normal(value: Any, mean: float, std: float):
             normal(v, mean, std)
         for v in value.buffers() if hasattr(value, 'buffers') else []:
             normal(v, mean, std)
-
 
 def reset(value: Any):
     if hasattr(value, 'reset_parameters'):
