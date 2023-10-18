@@ -1,6 +1,61 @@
-# 2D-Darcy
+# AMGNet
 
 <!-- <a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
+
+=== "模型训练命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_airfoil.py
+        ```
+    === "amgnet_cylinder"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_cylinder.py
+        ```
+
+=== "模型评估命令"
+
+    === "amgnet_airfoil"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_airfoil.py mode=eval EVAL.pretained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        ```
+    === "amgnet_cylinder"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
+        # unzip it
+        unzip data.zip
+        python amgnet_cylinder.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams
+        ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [amgnet_airfoil_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams) | loss(RMSE_validator): 0.0001 <br> RMSE.RMSE(RMSE_validator): 0.01315 |
+| [amgnet_cylinder_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_cylinder_pretrained.pdparams) | loss(RMSE_validator): 0.00048 <br> RMSE.RMSE(RMSE_validator): 0.02197 |
 
 ## 1. 背景简介
 
@@ -29,7 +84,7 @@
 
 !!! info "注意事项"
 
-    本案例运行前需通过 `pip install pgl` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具
+    本案例运行前需通过 `pip install pgl pyamg` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [PyAMG](https://github.com/pyamg/pyamg) 代数多重网格工具。
 
 ### 3.1 数据集下载
 
@@ -48,17 +103,17 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="60"
+    ``` py linenums="61"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:60:71
+    examples/amgnet/amgnet_airfoil.py:61:62
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="60"
+    ``` py linenums="61"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:60:71
+    examples/amgnet/amgnet_cylinder.py:61:62
     --8<--
     ```
 
@@ -68,21 +123,21 @@ unzip data.zip
 
 在本案例中，我们使用监督数据集对模型进行训练，因此需要构建监督约束。
 
-在定义约束之前，我们需要指定数据集的路径、`batch_size` 等相关配置，将这些信息封装到字典中，如下所示。
+在定义约束之前，我们需要指定数据集的路径等相关配置，将这些信息存放到对应的 YAML 文件中，如下所示。
 
 === "airfoil"
 
-    ``` py linenums="73"
+    ``` py linenums="21"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:73:90
+    examples/amgnet/conf/amgnet_airfoil.yaml:21:27
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="73"
+    ``` py linenums="21"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:73:90
+    examples/amgnet/conf/amgnet_cylinder.yaml:21:27
     --8<--
     ```
 
@@ -90,17 +145,17 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="33"
+    ``` py linenums="35"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:33:36
+    examples/amgnet/amgnet_airfoil.py:35:40
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="33"
+    ``` py linenums="35"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:33:36
+    examples/amgnet/amgnet_cylinder.py:35:40
     --8<--
     ```
 
@@ -108,37 +163,37 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="92"
+    ``` py linenums="82"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:92:100
+    examples/amgnet/amgnet_airfoil.py:82:90
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="92"
+    ``` py linenums="82"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:92:100
+    examples/amgnet/amgnet_cylinder.py:82:90
     --8<--
     ```
 
 ### 3.4 超参数设定
 
-接下来我们需要指定训练轮数，此处使用 500 轮训练轮数。
+设置训练轮数等参数，如下所示。
 
 === "airfoil"
 
-    ``` py linenums="102"
+    ``` py linenums="41"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:102:103
+    examples/amgnet/conf/amgnet_airfoil.yaml:41:51
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="102"
+    ``` py linenums="41"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:102:103
+    examples/amgnet/conf/amgnet_cylinder.yaml:41:51
     --8<--
     ```
 
@@ -148,36 +203,36 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="105"
+    ``` py linenums="92"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:105:106
+    examples/amgnet/amgnet_airfoil.py:92:93
     --8<--
     ```
 
 === "cylinder"
 
-    ``` py linenums="105"
+    ``` py linenums="92"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:105:106
+    examples/amgnet/amgnet_cylinder.py:92:93
     --8<--
     ```
 
 ### 3.6 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](#34) 类似，只需把数据目录改为测试集的目录，并设置 `batch_size=1` 即可。
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](#34) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
 === "airfoil"
 
-    ``` py linenums="108"
+    ``` py linenums="95"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:108:131
+    examples/amgnet/amgnet_airfoil.py:95:118
     --8<--
     ```
 === "cylinder"
 
-    ``` py linenums="108"
+    ``` py linenums="95"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:108:131
+    examples/amgnet/amgnet_cylinder.py:95:118
     --8<--
     ```
 
@@ -185,16 +240,16 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="39"
+    ``` py linenums="43"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:39:48
+    examples/amgnet/amgnet_airfoil.py:43:52
     --8<--
     ```
 === "cylinder"
 
-    ``` py linenums="39"
+    ``` py linenums="43"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:39:48
+    examples/amgnet/amgnet_cylinder.py:43:52
     --8<--
     ```
 
@@ -204,16 +259,16 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="133"
+    ``` py linenums="120"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:133:149
+    examples/amgnet/amgnet_airfoil.py:120:136
     --8<--
     ```
 === "cylinder"
 
-    ``` py linenums="133"
+    ``` py linenums="120"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:133:149
+    examples/amgnet/amgnet_cylinder.py:120:136
     --8<--
     ```
 
@@ -223,16 +278,16 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="151"
+    ``` py linenums="138"
     --8<--
-    examples/amgnet/amgnet_airfoil.py:151:
+    examples/amgnet/amgnet_airfoil.py:138:
     --8<--
     ```
 === "cylinder"
 
-    ``` py linenums="151"
+    ``` py linenums="138"
     --8<--
-    examples/amgnet/amgnet_cylinder.py:151:
+    examples/amgnet/amgnet_cylinder.py:138:
     --8<--
     ```
 
@@ -276,7 +331,7 @@ unzip data.zip
         ![Cylinder_0_p](https://paddle-org.bj.bcebos.com/paddlescience/docs/AMGNet/cylinder_0field.png1_field.png){ loading=lazy }
         <figcaption>左：预测压力 p，右：实际压力 p</figcaption>
         ![Cylinder_0_vec_y](https://paddle-org.bj.bcebos.com/paddlescience/docs/AMGNet/cylinder_0field.png2_field.png){ loading=lazy }
-        <figcaption>左：预测y方向流速 p，右：实际 y 方向流速</figcaption>
+        <figcaption>左：预测 y 方向流速 p，右：实际 y 方向流速</figcaption>
     </figure>
 
 可以看到模型预测结果与真实结果基本一致。
