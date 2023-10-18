@@ -24,6 +24,7 @@ from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
+from ppsci.data.dataset.npz_dataset import VAECustomDataset
 from ppsci.data.dataset.trphysx_dataset import CylinderDataset
 from ppsci.data.dataset.trphysx_dataset import LorenzDataset
 from ppsci.data.dataset.trphysx_dataset import RosslerDataset

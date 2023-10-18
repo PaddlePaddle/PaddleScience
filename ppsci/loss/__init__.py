@@ -25,6 +25,7 @@ from ppsci.loss.l2 import PeriodicL2Loss
 from ppsci.loss.mse import MSELoss
 from ppsci.loss.mse import MSELossWithL2Decay
 from ppsci.loss.mse import PeriodicMSELoss
+from ppsci.loss.kl import KLLoss01
 
 __all__ = [
     "Loss",
@@ -38,6 +39,7 @@ __all__ = [
     "MSELoss",
     "MSELossWithL2Decay",
     "PeriodicMSELoss",
+    "KLLoss01"
 ]
 
 

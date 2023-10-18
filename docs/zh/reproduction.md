@@ -22,7 +22,7 @@
 
 ## 2. 复现步骤
 
-优先基于 PaddleScience 复现，如复现代码的实现逻辑和 PaddleSciecne 存在严重冲突，可考虑使用 PaddlePaddle 框架复现。
+优先基于 PaddleScience 复现，如复现代码的实现逻辑和 PaddleScience 存在严重冲突，可考虑使用 PaddlePaddle 框架复现。
 
 ![reproduce process](../images/overview/reproduction_process.png)
 

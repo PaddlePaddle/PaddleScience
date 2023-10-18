@@ -17,6 +17,7 @@ import copy
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
+from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
@@ -43,6 +44,7 @@ __all__ = [
     "AFNONet",
     "PrecipNet",
     "build_model",
+    "AutoEncoder",
 ]
 
 

@@ -16,4 +16,5 @@
         - LorenzDataset
         - RosslerDataset
         - VtuDataset
+        - VAECustomDataset
       show_root_heading: false
