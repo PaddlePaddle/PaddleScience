@@ -22,11 +22,11 @@ PaddlePaddle目前无相关模型实现。
 ## 3.1 解决的问题
 本项目基于嵌入物理信息的图神经网络求解偏微分方程，方程主要以以下形式出现：
 $$
-\nabla \cdot F(u, \nabla u; \boldsymbol\mu) = S(u, \nabla u; \boldsymbol\mu) \: in \:  \Omega 
+\nabla \cdot F(u, \nabla u; \boldsymbol\mu) = S(u, \nabla u; \boldsymbol\mu) \: in \: \Omega 
 $$
 边界条件为：
 $$
-\mathbf\R_u(U_u(\boldsymbol\mu),U_e;\boldsymbol\mu)=0
+\mathbf\R_u(U_u(\boldsymbol\mu), U_e;\boldsymbol\mu)=0
 $$
 ## 3.2 解决的方法
 | 算法 : 基于图卷积网络求解PDE|
