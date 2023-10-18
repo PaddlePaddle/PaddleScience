@@ -213,11 +213,11 @@ examples/bracket/bracket.py:201:208
 
 ### 3.5 超参数设定
 
-接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数。
+接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数，每轮进行 1000 步优化。
 
 ``` py linenums="62"
 --8<--
-examples/bracket/conf/bracket.yaml:62:65
+examples/bracket/conf/bracket.yaml:71:74
 --8<--
 ```
 
