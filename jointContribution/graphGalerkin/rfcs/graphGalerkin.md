@@ -21,19 +21,23 @@ PaddlePaddle目前无相关模型实现。
 # 3. 业内方案调研
 ## 3.1 解决的问题
 本项目基于嵌入物理信息的图神经网络求解偏微分方程，方程主要以以下形式出现：
-$$ \nabla \cdot F(u, \nabla u; \boldsymbol\mu) = S(u, \nabla u; \boldsymbol\mu) \: in \:  \Omega $$
+$$
+\nabla \cdot F(u, \nabla u; \boldsymbol\mu) = S(u, \nabla u; \boldsymbol\mu) \: in \:  \Omega 
+$$
 边界条件为：
-$$ \mathbf\R_u(U_u(\boldsymbol\mu),U_e;\boldsymbol\mu)=0$$
+$$
+\mathbf\R_u(U_u(\boldsymbol\mu),U_e;\boldsymbol\mu)=0
+$$
 ## 3.2 解决的方法
-| Algorithm 1 : Solve forward PDE-governed problems via GCN|
+| 算法 : 基于图卷积网络求解PDE|
 | ------|
-|Input: PDE parameter $\overline \mu$ , node coordinates $\chi$ and adjacency matrix A|
-|Output: The solution $\hat U$|
-1. Pre-compute the matrix basis function $\Phi$ on the qudrature points to obtain $\Phi(\widetilde x^v)$, $\Phi(\widetilde x^s)$, $\nabla \Phi(\widetilde x^v)$,$\nabla \Phi(\widetilde x^s)$;
-2. Formulate the residual function $R(\widetilde U;\mu)$;
-3. Apply the static condensation;
-4. Partition the degrees of freedom $\hat U(\Theta)=(\hat U_u(\Theta)^T,\hat {U_e}^T)^T$ and enforce the essential condition, $\hat U_e=U_e$, to formulate the physics-informed loss function;
-5. Solve the optimization problem to obtain $\hat U=(\hat U_u(\Theta^*)^T,{U^T}_e)^T$;
+|输入: 方程参数 $\overline \mu$ , 节点坐标 $\chi$ 和邻接矩阵 A|
+|输出: 解函数 $\hat U$|
+1. 在积分点上求解基函数 $\Phi$ 以得到 $\Phi(\widetilde x^v)$, $\Phi(\widetilde x^s)$, $\nabla \Phi(\widetilde x^v)$, $\nabla \Phi(\widetilde x^s)$;
+2. 计算残差函数 $R(\widetilde U;\mu)$;
+3. 应用静力凝聚法;
+4. 分割自由度 $\hat U(\Theta)=(\hat U_u(\Theta)^T,\hat {U_e}^T)^T$ 并对关键条件实施强约束, $\hat U_e=U_e$, 并构建物理信息嵌入的损失函数;
+5. 求解该优化问题得到解函数 $\hat U=(\hat U_u(\Theta^*)^T,{U^T}_e)^T$;
 ## 3.3 复现目标
 ![result1](figs/fig1.png)
 ## 3.4 可能存在的难点
@@ -61,6 +65,7 @@ $$ \mathbf\R_u(U_u(\boldsymbol\mu),U_e;\boldsymbol\mu)=0$$
 测试与验收参考[PaddleScience模型复现流程及验收标准](https://paddlescience-docs.readthedocs.io/zh/latest/zh/reproduction/)。
 
 1. 提供完整的基于Paddle API的复现方法
+2. 方程求解精度与论文对齐
 # 6. 可行性分析和排期规划
 
 ## 6.1 可行性分析
