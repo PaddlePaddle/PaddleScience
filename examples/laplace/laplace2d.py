@@ -13,27 +13,24 @@
 # limitations under the License.
 
 # This code is based on PaddleScience/ppsci API
+from os import path as osp
+
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set training hyper-parameters
-    EPOCHS = 20000 if not args.epochs else args.epochs
-    ITERS_PER_EPOCH = 1
-    EVAL_FREQ = 200
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
-    # set output directory
-    OUTPUT_DIR = "./output_laplace2d" if not args.output_dir else args.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    # # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u",), 5, 20)
+    model = ppsci.arch.MLP(**cfg.model)
 
     # set equation
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
@@ -50,11 +47,11 @@ if __name__ == "__main__":
     # set train dataloader config
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
-    NPOINT_INTERIOR = 99**2
-    NPOINT_BC = 400
+    NPOINT_INTERIOR = cfg.NPOINT_INTERIOR
+    NPOINT_BC = cfg.NPOINT_BC
     NPOINT_TOTAL = NPOINT_INTERIOR + NPOINT_BC
 
     # set constraint
@@ -116,12 +113,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=EVAL_FREQ,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -134,18 +131,85 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
+    # # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.model)
+
+    # set equation
+    equation = {"laplace": ppsci.equation.Laplace(dim=2)}
+
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+
+    # compute ground truth function
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x, y = out["x"], out["y"]
+        return np.cos(x) * np.cosh(y)
+
+
+    NPOINT_INTERIOR = cfg.NPOINT_INTERIOR
+    NPOINT_BC = cfg.NPOINT_BC
+    NPOINT_TOTAL = NPOINT_INTERIOR + NPOINT_BC
+
+    # set validator
+    mse_metric = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": NPOINT_TOTAL,
+        },
+        ppsci.loss.MSELoss(),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        with_initial=True,
+        name="MSE_Metric",
+    )
+    validator = {mse_metric.name: mse_metric}
+
+    # set visualizer(optional)
+    vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+    visualizer = {
+        "visulzie_u": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {"u": lambda d: d["u"]},
+            num_timestamps=1,
+            prefix="result_u",
+        )
+    }
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        output_dir=cfg.output_dir,
+        seed=cfg.seed,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
-    # visualize prediction from pretrained_model_path(optional)
+    # visualize prediction after finished training
     solver.visualize()
+
+@hydra.main(version_base=None, config_path="./conf", config_name="laplace2d.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
