@@ -114,6 +114,7 @@ def FDM_Burgers(u, v, D=1):
 测试与验收参考[PaddleScience模型复现流程及验收标准](https://paddlescience-docs.readthedocs.io/zh/latest/zh/reproduction/)。
 
 1. 提供完整的基于Paddle API的复现方法
+2. 方程求解精度与论文对齐
 # 6. 可行性分析和排期规划
 
 ## 6.1 可行性分析
