@@ -66,7 +66,9 @@ if __name__ == "__main__":
     # set constraint
     ITERS_PER_EPOCH = 1
     # set input transform
-    def quad_transform(in_: Dict[str, paddle.Tensor]) -> Dict[str, paddle.Tensor]:
+    def quad_transform(
+        in_: Dict[str, paddle.Tensor], *args
+    ) -> Dict[str, paddle.Tensor]:
         """Get sampling points for integral.
 
         Args:
@@ -81,7 +83,7 @@ if __name__ == "__main__":
         return {
             **in_,
             "x": x_quad,
-        }
+        }, *args
 
     # interior constraint
     ide_constraint = ppsci.constraint.InteriorConstraint(

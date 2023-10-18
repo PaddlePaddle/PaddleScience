@@ -69,7 +69,7 @@ if __name__ == "__main__":
         return np.abs(1 - (out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
 
     # set input transform
-    def fpde_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def fpde_transform(in_: Dict[str, np.ndarray], *args) -> Dict[str, np.ndarray]:
         """Get sampling points for integral.
 
         Args:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         return {
             **in_,
             **{k: paddle.to_tensor(v) for k, v in x.items()},
-        }
+        }, *args
 
     fpde_constraint = ppsci.constraint.InteriorConstraint(
         equation["fpde"].equations,

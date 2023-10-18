@@ -83,7 +83,7 @@ examples/ide/volterra_ide.py:44:64
 
 ``` py linenums="66"
 --8<--
-examples/ide/volterra_ide.py:66:108
+examples/ide/volterra_ide.py:66:110
 --8<--
 ```
 
@@ -97,17 +97,17 @@ $$
 
 因此可以加入 `t=0` 时的初值条件，代码如下所示
 
-``` py linenums="110"
+``` py linenums="112"
 --8<--
-examples/ide/volterra_ide.py:110:128
+examples/ide/volterra_ide.py:112:130
 --8<--
 ```
 
 在微分方程约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="129"
+``` py linenums="131"
 --8<--
-examples/ide/volterra_ide.py:129:133
+examples/ide/volterra_ide.py:131:135
 --8<--
 ```
 
@@ -115,9 +115,9 @@ examples/ide/volterra_ide.py:129:133
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，让 `L-BFGS` 优化器进行一轮优化即可，但一轮优化内的 `max_iters` 数可以设置为一个较大的一个数 `15000`。
 
-``` py linenums="135"
+``` py linenums="137"
 --8<--
-examples/ide/volterra_ide.py:135:136
+examples/ide/volterra_ide.py:137:138
 --8<--
 ```
 
@@ -125,9 +125,9 @@ examples/ide/volterra_ide.py:135:136
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `LBFGS` 优化器。
 
-``` py linenums="138"
+``` py linenums="140"
 --8<--
-examples/ide/volterra_ide.py:138:146
+examples/ide/volterra_ide.py:140:148
 --8<--
 ```
 
@@ -135,9 +135,9 @@ examples/ide/volterra_ide.py:138:146
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="148"
+``` py linenums="150"
 --8<--
-examples/ide/volterra_ide.py:148:163
+examples/ide/volterra_ide.py:150:165
 --8<--
 ```
 
@@ -149,9 +149,9 @@ examples/ide/volterra_ide.py:148:163
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="165"
+``` py linenums="167"
 --8<--
-examples/ide/volterra_ide.py:165:181
+examples/ide/volterra_ide.py:167:183
 --8<--
 ```
 
@@ -159,9 +159,9 @@ examples/ide/volterra_ide.py:165:181
 
 在模型训练完毕之后，我们可以手动构造 0 ~ 5 区间内均匀 100 个点，作为评估的积分上限 `t` 进行预测，并可视化结果。
 
-``` py linenums="183"
+``` py linenums="185"
 --8<--
-examples/ide/volterra_ide.py:183:
+examples/ide/volterra_ide.py:185:
 --8<--
 ```
 

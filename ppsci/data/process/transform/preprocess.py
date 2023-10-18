@@ -265,7 +265,9 @@ class FunctionalTransform:
     ):
         self.transform_func = transform_func
 
-    def __call__(self, data: Tuple[Dict[str, np.ndarray], ...]):
+    def __call__(
+        self, *data: Tuple[Dict[str, np.ndarray], ...]
+    ) -> Tuple[Dict[str, np.ndarray], ...]:
         data_dict, label_dict, weight_dict = data
         data_dict_copy = {**data_dict}
         label_dict_copy = {**label_dict}
