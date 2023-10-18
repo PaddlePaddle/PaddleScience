@@ -63,7 +63,7 @@ def _get_datset_length(
 def _eval_by_dataset(
     solver: "solver.Solver", epoch_id: int, log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
-    """Evaluate with computing metric on total samples(default progress).
+    """Evaluate with computing metric on total samples(default process).
 
     Args:
         solver (solver.Solver): Main Solver.

@@ -76,7 +76,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
         return graph
 
     raise TypeError(
-        "batch data can only contains: Tensor, numpy.ndarray, "
+        "batch data can only contains: paddle.Tensor, numpy.ndarray, "
         f"dict, list, number, None, pgl.Graph, but got {type(sample)}"
     )
 

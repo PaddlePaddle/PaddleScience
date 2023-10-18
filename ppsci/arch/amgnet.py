@@ -565,8 +565,8 @@ class AMGNet(nn.Layer):
     Code reference: https://github.com/baoshiaijhin/amgnet
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input", ).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("pred", ).
         input_dim (int): Number of input dimension.
         output_dim (int): Number of output dimension.
         latent_dim (int): Number of hidden(feature) dimension.
@@ -576,6 +576,10 @@ class AMGNet(nn.Layer):
         message_passing_steps (int): Message passing steps in graph.
         speed (str): Whether use vanilla method or fast method for graph_connectivity
             computation.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.AMGNet(("input", ), ("pred", ), 5, 3, 64, 2)
     """
 
     def __init__(
