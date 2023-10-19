@@ -5,6 +5,15 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -21,10 +30,9 @@ DATA_FILE_PATH: data_boucwen.mat
 
 # model settings
 MODEL:
-  phylstm2_net:
-    input_size: 1
-    hidden_size: 100
-    model_type: 2
+  input_size: 1
+  hidden_size: 100
+  model_type: 2
 
 # training settings
 TRAIN:
