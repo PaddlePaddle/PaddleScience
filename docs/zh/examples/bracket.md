@@ -28,7 +28,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [bracket_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams) | loss(commercial_ref_u_v_w_sigmas): 32.28704, MSE.u(commercial_ref_u_v_w_sigmas): 0.00005, MSE.v(commercial_ref_u_v_w_sigmas): 0.00000, MSE.w(commercial_ref_u_v_w_sigmas): 0.00734, MSE.sigma_xx(commercial_ref_u_v_w_sigmas): 27.64751, MSE.sigma_yy(commercial_ref_u_v_w_sigmas): 1.23101, MSE.sigma_zz(commercial_ref_u_v_w_sigmas): 0.89106, MSE.sigma_xy(commercial_ref_u_v_w_sigmas): 0.84370, MSE.sigma_xz(commercial_ref_u_v_w_sigmas): 1.42126, MSE.sigma_yz(commercial_ref_u_v_w_sigmas): 0.24510 |
+| [bracket_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams) | loss(commercial_ref_u_v_w_sigmas): 32.28704<br>MSE.u(commercial_ref_u_v_w_sigmas): 0.00005<br>MSE.v(commercial_ref_u_v_w_sigmas): 0.00000<br>MSE.w(commercial_ref_u_v_w_sigmas): 0.00734<br>MSE.sigma_xx(commercial_ref_u_v_w_sigmas): 27.64751<br>MSE.sigma_yy(commercial_ref_u_v_w_sigmas): 1.23101<br>MSE.sigma_zz(commercial_ref_u_v_w_sigmas): 0.89106<br>MSE.sigma_xy(commercial_ref_u_v_w_sigmas): 0.84370<br>MSE.sigma_xz(commercial_ref_u_v_w_sigmas): 1.42126<br>MSE.sigma_yz(commercial_ref_u_v_w_sigmas): 0.24510 |
 
 ## 1. 背景简介
 
@@ -213,11 +213,11 @@ examples/bracket/bracket.py:188:195
 
 ### 3.5 超参数设定
 
-接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数。
+接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数，每轮进行 1000 步优化。
 
 ``` py linenums="62"
 --8<--
-examples/bracket/conf/bracket.yaml:62:65
+examples/bracket/conf/bracket.yaml:71:74
 --8<--
 ```
 
