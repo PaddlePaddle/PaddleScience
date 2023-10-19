@@ -129,6 +129,7 @@ def train(cfg: DictConfig):
     # visualize prediction after finished training
     solver.visualize()
 
+
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
@@ -194,6 +195,7 @@ def evaluate(cfg: DictConfig):
     solver.eval()
     # visualize prediction after finished training
     solver.visualize()
+
 
 @hydra.main(version_base=None, config_path="./conf", config_name="laplace2d.yaml")
 def main(cfg: DictConfig):

@@ -5,7 +5,6 @@
 === "模型训练命令"
 
     ``` sh
-    tar -xvf laplace2d_dataset.tar
     python laplace2d.py
     ```
 
@@ -76,9 +75,9 @@ examples/laplace/laplace2d.py:38:39
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="17"
+``` py linenums="26"
 --8<--
-examples/laplace/conf/laplace2d.yaml:17:18
+examples/laplace/conf/laplace2d.yaml:26:27
 --8<--
 ```
 
@@ -132,9 +131,9 @@ examples/laplace/laplace2d.py:41:45
 
 接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。
 
-``` py linenums="32"
+``` py linenums="41"
 --8<--
-examples/laplace/conf/laplace2d.yaml:32:37
+examples/laplace/conf/laplace2d.yaml:41:46
 --8<--
 ```
 
@@ -176,7 +175,7 @@ examples/laplace/laplace2d.py:99:108
 
 ``` py linenums="110"
 --8<--
-examples/laplace/laplace2d.py:110：130:
+examples/laplace/laplace2d.py:110:130
 --8<--
 ```
 
