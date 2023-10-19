@@ -29,9 +29,9 @@ $$
 
 在 PhyLSTM 问题中，建立 LSTM 网络 Deep LSTM network，用 PaddleScience 代码表示如下
 
-``` py linenums="101"
+``` py linenums="102"
 --8<--
-examples/phylstm/phylstm2.py:101:106
+examples/phylstm/phylstm2.py:102:107
 --8<--
 ```
 
@@ -47,9 +47,9 @@ wget -P ./ https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_
 
 本案例涉及读取数据构建，如下所示
 
-``` py linenums="36"
+``` py linenums="37"
 --8<--
-examples/phylstm/phylstm2.py:36:99
+examples/phylstm/phylstm2.py:37:100
 --8<--
 ```
 
@@ -57,9 +57,9 @@ examples/phylstm/phylstm2.py:36:99
 
 设置训练数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="116"
+``` py linenums="119"
 --8<--
-examples/phylstm/phylstm2.py:116:135
+examples/phylstm/phylstm2.py:119:137
 --8<--
 ```
 
@@ -67,9 +67,9 @@ examples/phylstm/phylstm2.py:116:135
 
 设置评估数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="137"
+``` py linenums="140"
 --8<--
-examples/phylstm/phylstm2.py:137:157
+examples/phylstm/phylstm2.py:140:159
 --8<--
 ```
 
@@ -77,9 +77,9 @@ examples/phylstm/phylstm2.py:137:157
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="167"
+``` py linenums="170"
 --8<--
-examples/phylstm/phylstm2.py:167:167
+examples/phylstm/phylstm2.py:170:170
 --8<--
 ```
 
@@ -87,9 +87,9 @@ examples/phylstm/phylstm2.py:167:167
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate` 为 1e-3。
 
-``` py linenums="160"
+``` py linenums="163"
 --8<--
-examples/phylstm/phylstm2.py:160:160
+examples/phylstm/phylstm2.py:163:163
 --8<--
 ```
 
@@ -97,17 +97,17 @@ examples/phylstm/phylstm2.py:160:160
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="161"
+``` py linenums="164"
 --8<--
-examples/phylstm/phylstm2.py:161:175
+examples/phylstm/phylstm2.py:164:178
 --8<--
 ```
 
 最后启动训练、评估即可：
 
-``` py linenums="177"
+``` py linenums="180"
 --8<--
-examples/phylstm/phylstm2.py:177:180
+examples/phylstm/phylstm2.py:180:183
 --8<--
 ```
 
