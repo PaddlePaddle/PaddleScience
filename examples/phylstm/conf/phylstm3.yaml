@@ -1,0 +1,39 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_PhyLSTM3/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+data_file: data_boucwen.mat
+
+# model settings
+MODEL:
+  phylstm3_net:
+    input_size: 1
+    hidden_size: 100
+    model_type: 3
+
+# training settings
+TRAIN:
+  epochs: 200
+  iters_per_epoch: 1
+  save_freq: 50
+  pretrained_model_path: null
+  checkpoint_path: null
+  learning_rate: 0.001
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
