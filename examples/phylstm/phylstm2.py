@@ -100,10 +100,10 @@ def train(cfg: DictConfig):
     phi_t = np.repeat(phi_t0, ag_c_star.shape[0], axis=0)
 
     model = ppsci.arch.DeepPhyLSTM(
-        cfg.MODEL.phylstm2_net.input_size,
+        cfg.MODEL.input_size,
         eta.shape[2],
-        cfg.MODEL.phylstm2_net.hidden_size,
-        cfg.MODEL.phylstm2_net.model_type,
+        cfg.MODEL.hidden_size,
+        cfg.MODEL.model_type,
     )
     model.register_input_transform(functions.transform_in)
     model.register_output_transform(functions.transform_out)
@@ -255,10 +255,10 @@ def evaluate(cfg: DictConfig):
     phi_t = np.repeat(phi_t0, ag_c_star.shape[0], axis=0)
 
     model = ppsci.arch.DeepPhyLSTM(
-        cfg.MODEL.phylstm2_net.input_size,
+        cfg.MODEL.input_size,
         eta.shape[2],
-        cfg.MODEL.phylstm2_net.hidden_size,
-        cfg.MODEL.phylstm2_net.model_type,
+        cfg.MODEL.hidden_size,
+        cfg.MODEL.model_type,
     )
     model.register_input_transform(functions.transform_in)
     model.register_output_transform(functions.transform_out)
@@ -299,7 +299,7 @@ def evaluate(cfg: DictConfig):
         output_dir=cfg.output_dir,
         seed=cfg.seed,
         validator=validator_pde,
-        checkpoint_path=cfg.EVAL.pretrained_model_path,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # evaluate after finished training

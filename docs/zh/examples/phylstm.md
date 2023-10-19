@@ -97,9 +97,9 @@ examples/phylstm/phylstm2.py:140:159
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="31"
+``` py linenums="39"
 --8<--
-examples/phylstm/conf/phylstm2.yaml:31:31
+examples/phylstm/conf/phylstm2.yaml:39:39
 --8<--
 ```
 
