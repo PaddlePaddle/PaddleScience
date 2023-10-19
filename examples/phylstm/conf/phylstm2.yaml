@@ -15,7 +15,9 @@ mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
-data_file: data_boucwen.mat
+
+# set data file path
+DATA_FILE_PATH: data_boucwen.mat
 
 # model settings
 MODEL:
@@ -29,9 +31,9 @@ TRAIN:
   epochs: 100
   iters_per_epoch: 1
   save_freq: 50
+  learning_rate: 0.001
   pretrained_model_path: null
   checkpoint_path: null
-  learning_rate: 0.001
 
 # evaluation settings
 EVAL:

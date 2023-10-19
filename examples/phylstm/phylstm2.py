@@ -34,7 +34,7 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
-    mat = scipy.io.loadmat(cfg.data_file)
+    mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
     ag_data = mat["input_tf"]  # ag, ad, av
     u_data = mat["target_X_tf"]
     ut_data = mat["target_Xd_tf"]
@@ -189,7 +189,7 @@ def evaluate(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
-    mat = scipy.io.loadmat(cfg.data_file)
+    mat = scipy.io.loadmat(cfg.DATA_FILE_PATH)
     ag_data = mat["input_tf"]  # ag, ad, av
     u_data = mat["target_X_tf"]
     ut_data = mat["target_Xd_tf"]
