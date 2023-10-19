@@ -65,6 +65,7 @@ def main():
         evenly=True,
         name="EQ",
     )
+
     bc_top = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
         {"u": 0},
@@ -77,7 +78,6 @@ def main():
         criteria=lambda x, y: np.isclose(y, 1),
         name="BC_top",
     )
-
     bc_bottom = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
         {"u": 50 / 75},
@@ -90,7 +90,6 @@ def main():
         criteria=lambda x, y: np.isclose(y, -1),
         name="BC_bottom",
     )
-
     bc_left = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
         {"u": 1},
@@ -103,7 +102,6 @@ def main():
         criteria=lambda x, y: np.isclose(x, -1),
         name="BC_left",
     )
-
     bc_right = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
         {"u": 0},
@@ -116,6 +114,7 @@ def main():
         criteria=lambda x, y: np.isclose(x, 1),
         name="BC_right",
     )
+
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
@@ -154,7 +153,7 @@ def main():
     y = input_data["y"].reshape(n, n)
 
     plt.subplot(2, 1, 1)
-    plt.pcolormesh(x, y, pinn_output, cmap="magma")
+    plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
     plt.colorbar()
     plt.title("PINN")
     plt.xlabel("x")
@@ -170,7 +169,7 @@ def main():
     plt.title("FDM")
     plt.tight_layout()
     plt.axis("square")
-    plt.savefig(os.path.join(OUTPUT_DIR, "fdm.png"))
+    plt.savefig(os.path.join(OUTPUT_DIR, "pinn_fdm_comparison.png"))
     plt.close()
 
     frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
