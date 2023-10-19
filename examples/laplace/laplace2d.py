@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This code is based on PaddleScience/ppsci API
 from os import path as osp
 
 import hydra
@@ -21,6 +20,7 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
+
 
 def train(cfg: DictConfig):
     # set random seed for reproducibility
@@ -36,7 +36,11 @@ def train(cfg: DictConfig):
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle(cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax)}
+    geom = {
+        "rect": ppsci.geometry.Rectangle(
+            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        )
+    }
 
     # compute ground truth function
     def u_solution_func(out):
@@ -143,7 +147,11 @@ def evaluate(cfg: DictConfig):
     equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
     # set geometry
-    geom = {"rect": ppsci.geometry.Rectangle(cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax)}
+    geom = {
+        "rect": ppsci.geometry.Rectangle(
+            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        )
+    }
 
     # compute ground truth function
     def u_solution_func(out):
