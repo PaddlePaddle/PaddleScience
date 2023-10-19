@@ -28,6 +28,9 @@ from ppsci.utils import logger
 class Arch(nn.Layer):
     """Base class for Network."""
 
+    input_keys: Tuple[str, ...]
+    output_keys: Tuple[str, ...]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._input_transform: Callable[
