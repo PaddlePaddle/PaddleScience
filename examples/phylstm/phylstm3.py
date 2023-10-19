@@ -317,7 +317,7 @@ def evaluate(cfg: DictConfig):
         output_dir=cfg.output_dir,
         seed=cfg.seed,
         validator=validator_pde,
-        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        checkpoint_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
