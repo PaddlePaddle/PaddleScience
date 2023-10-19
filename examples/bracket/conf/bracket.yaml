@@ -4,7 +4,7 @@ hydra:
     dir: outputs_bracket/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
+    chdir: false # keep current working direcotry unchanged
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}

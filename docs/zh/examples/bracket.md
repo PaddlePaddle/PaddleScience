@@ -205,9 +205,9 @@ examples/bracket/bracket.py:103:113
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="201"
+``` py linenums="188"
 --8<--
-examples/bracket/bracket.py:201:208
+examples/bracket/bracket.py:188:195
 --8<--
 ```
 
