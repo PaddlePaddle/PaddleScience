@@ -17,27 +17,28 @@ Reference: https://github.com/hanfengzhai/BubbleNet
 Bubble data files download link: https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
 """
 
+from os import path as osp
+
+import hydra
 import numpy as np
 import paddle
-import scipy.io
+import scipy
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train_or_evaluate(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set output directory
-    OUTPUT_DIR = "./output_bubble" if not args.output_dir else args.output_dir
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # load Data
-    data = scipy.io.loadmat("bubble.mat")
+    data = scipy.io.loadmat(cfg.DATA_PATH)
     # normalize data
     p_max = data["p"].max(axis=0)
     p_min = data["p"].min(axis=0)
@@ -83,9 +84,9 @@ if __name__ == "__main__":
     test_label = {"u": u, "v": v, "p": p, "phil": phil}
 
     # set model
-    model_psi = ppsci.arch.MLP(("t", "x", "y"), ("psi",), 9, 30, "tanh")
-    model_p = ppsci.arch.MLP(("t", "x", "y"), ("p",), 9, 30, "tanh")
-    model_phil = ppsci.arch.MLP(("t", "x", "y"), ("phil",), 9, 30, "tanh")
+    model_psi = ppsci.arch.MLP(**cfg.MODEL.psi_net)
+    model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
+    model_phil = ppsci.arch.MLP(**cfg.MODEL.phil_net)
 
     # transform
     def transform_out(in_, out):
@@ -118,7 +119,6 @@ if __name__ == "__main__":
     NPOINT_PDE, NTIME_PDE = 300 * 100, NTIME_ALL - 1
 
     # set constraint
-    ITERS_PER_EPOCH = 1
     pde_constraint = ppsci.constraint.InteriorConstraint(
         {
             "pressure_Poisson": lambda out: hessian(out["p"], out["x"])
@@ -128,8 +128,8 @@ if __name__ == "__main__":
         geom["time_rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "batch_size": 228595,
-            "iters_per_epoch": ITERS_PER_EPOCH,
+            "batch_size": cfg.TRAIN.batch_size.pde_constraint,
+            "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
         },
         ppsci.loss.MSELoss("mean"),
         name="EQ",
@@ -142,7 +142,7 @@ if __name__ == "__main__":
                 "input": train_input,
                 "label": train_label,
             },
-            "batch_size": 2419,
+            "batch_size": cfg.TRAIN.batch_size.sup_constraint,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -159,11 +159,8 @@ if __name__ == "__main__":
         pde_constraint.name: pde_constraint,
     }
 
-    # set training hyper-parameters
-    EPOCHS = 10000 if not args.epochs else args.epochs
-    EVAL_FREQ = 1000
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(0.001)(model_list)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_list)
 
     # set validator
     mse_validator = ppsci.validate.SupervisedValidator(
@@ -173,7 +170,7 @@ if __name__ == "__main__":
                 "input": test_input,
                 "label": test_label,
             },
-            "batch_size": 2419,
+            "batch_size": cfg.TRAIN.batch_size.mse_validator,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -188,64 +185,77 @@ if __name__ == "__main__":
         mse_validator.name: mse_validator,
     }
 
-    # initialize solver
-    solver = ppsci.solver.Solver(
-        model_list,
-        constraint,
-        OUTPUT_DIR,
-        optimizer,
-        None,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=EVAL_FREQ,
-        geom=geom,
-        validator=validator,
-    )
-    # train model
-    solver.train()
-    # evaluate after finished training
-    solver.eval()
+    if cfg.mode == "train":
+        # initialize solver
+        solver = ppsci.solver.Solver(
+            model_list,
+            constraint,
+            cfg.output_dir,
+            optimizer,
+            None,
+            cfg.TRAIN.epochs,
+            cfg.TRAIN.iters_per_epoch,
+            eval_during_train=cfg.TRAIN.eval_during_train,
+            eval_freq=cfg.TRAIN.eval_freq,
+            geom=geom,
+            validator=validator,
+        )
+        # train model
+        solver.train()
+        # evaluate after finished training
+        solver.eval()
+    elif cfg.mode == "eval":
+        # directly evaluate pretrained model(optional)
+        solver = ppsci.solver.Solver(
+            model_list,
+            constraint,
+            cfg.output_dir,
+            geom=geom,
+            validator=validator,
+            pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        )
+        solver.eval()
 
-    # directly evaluate pretrained model(optional)
-    solver = ppsci.solver.Solver(
-        model_list,
-        constraint,
-        OUTPUT_DIR,
-        geom=geom,
-        validator=validator,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
-    )
-    solver.eval()
+        # visualize prediction after finished training
+        visu_mat = geom["time_rect_visu"].sample_interior(
+            NPOINT_PDE * NTIME_PDE, evenly=True
+        )
 
-    # visualize prediction after finished training
-    visu_mat = geom["time_rect_visu"].sample_interior(
-        NPOINT_PDE * NTIME_PDE, evenly=True
-    )
+        pred_norm = solver.predict(visu_mat, no_grad=False, return_numpy=True)
+        # inverse normalization
+        p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
+        u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
+        v_pred = pred_norm["v"].reshape([NTIME_PDE, NPOINT_PDE]).T
+        pred = {
+            "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]),
+            "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]),
+            "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
+            "phil": pred_norm["phil"],
+        }
+        ppsci.visualize.save_vtu_from_dict(
+            "f{cfg.output_dir}/visual/result.vtu",
+            {
+                "t": visu_mat["t"],
+                "x": visu_mat["x"],
+                "y": visu_mat["y"],
+                "u": pred["u"],
+                "v": pred["v"],
+                "p": pred["p"],
+                "phil": pred["phil"],
+            },
+            ("t", "x", "y"),
+            ("u", "v", "p", "phil"),
+            NTIME_PDE,
+        )
 
-    pred_norm = solver.predict(visu_mat, no_grad=False, return_numpy=True)
-    # inverse normalization
-    p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
-    u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
-    v_pred = pred_norm["v"].reshape([NTIME_PDE, NPOINT_PDE]).T
-    pred = {
-        "p": (p_pred * (p_max - p_min) + p_min).T.reshape([-1, 1]),
-        "u": (u_pred * (u_max - u_min) + u_min).T.reshape([-1, 1]),
-        "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
-        "phil": pred_norm["phil"],
-    }
-    ppsci.visualize.save_vtu_from_dict(
-        "f{OUTPUT_DIR}/visual/result.vtu",
-        {
-            "t": visu_mat["t"],
-            "x": visu_mat["x"],
-            "y": visu_mat["y"],
-            "u": pred["u"],
-            "v": pred["v"],
-            "p": pred["p"],
-            "phil": pred["phil"],
-        },
-        ("t", "x", "y"),
-        ("u", "v", "p", "phil"),
-        NTIME_PDE,
-    )
+
+@hydra.main(version_base=None, config_path="./conf", config_name="bubble.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train" or cfg.mode == "eval":
+        train_or_evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

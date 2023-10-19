@@ -1,5 +1,25 @@
 # Bubble_flow
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat --output bubble.mat
+    python bubble.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat --output bubble.mat
+    python bubble.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bubble/bubble_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 ### 1.1 气泡流
@@ -111,9 +131,9 @@ $$\mathcal{L}=\frac{1}{m} \sum_{i=1}^m\left(\mathcal{W}_{\text {pred }(i)}-\math
 
 下载后，我们需要首先对数据集进行时间离散归一化（TDN）处理，同时构造训练集和验证集。
 
-``` py linenums="39"
+``` py linenums="40"
 --8<--
-examples/bubble/bubble.py:39:83
+examples/bubble/bubble.py:40:84
 --8<--
 ```
 
@@ -131,25 +151,25 @@ $$
 
 上式中 $f_1,f_2,f_3$ 均为 MLP 模型，用 PaddleScience 代码表示如下
 
-``` py linenums="85"
+``` py linenums="86"
 --8<--
-examples/bubble/bubble.py:85:88
+examples/bubble/bubble.py:86:89
 --8<--
 ```
 
 使用  `transform_out` 函数实现流函数 $\psi$ 到速度 $u,~v$ 的变换，代码如下
 
-``` py linenums="90"
+``` py linenums="91"
 --8<--
-examples/bubble/bubble.py:90:97
+examples/bubble/bubble.py:91:98
 --8<--
 ```
 
 同时需要对模型 `model_psi` 注册相应的 transform ，然后将 3 个 MLP 模型组成 `Model_List`
 
-``` py linenums="99"
+``` py linenums="100"
 --8<--
-examples/bubble/bubble.py:99:101
+examples/bubble/bubble.py:100:102
 --8<--
 ```
 
@@ -161,9 +181,9 @@ examples/bubble/bubble.py:99:101
 
 同时构造可视化区域，即以 [0, 0], [15, 5] 为对角线的二维矩形区域，且时间域为 126 个时刻 [1, 2,..., 125, 126]，该区域可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。代码如下
 
-``` py linenums="103"
+``` py linenums="104"
 --8<--
-examples/bubble/bubble.py:103:115
+examples/bubble/bubble.py:104:116
 --8<--
 ```
 
@@ -183,9 +203,9 @@ examples/bubble/bubble.py:103:115
 
 我们以内部点约束 `InteriorConstraint` 来实现在损失函数中加入压力泊松方程的约束，代码如下：
 
-``` py linenums="120"
+``` py linenums="121"
 --8<--
-examples/bubble/bubble.py:120:136
+examples/bubble/bubble.py:121:136
 --8<--
 ```
 
@@ -235,9 +255,9 @@ examples/bubble/bubble.py:156:160
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，评估间隔为一千轮，学习率设为 0.001。
 
-``` py linenums="162"
+``` py linenums="52"
 --8<--
-examples/bubble/bubble.py:162:164
+examples/bubble/conf/bubble.yaml:52:56
 --8<--
 ```
 
@@ -245,9 +265,9 @@ examples/bubble/bubble.py:162:164
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="165"
+``` py linenums="162"
 --8<--
-examples/bubble/bubble.py:165:166
+examples/bubble/bubble.py:162:163
 --8<--
 ```
 
@@ -255,9 +275,9 @@ examples/bubble/bubble.py:165:166
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="168"
+``` py linenums="165"
 --8<--
-examples/bubble/bubble.py:168:189
+examples/bubble/bubble.py:165:186
 --8<--
 ```
 
@@ -267,9 +287,9 @@ examples/bubble/bubble.py:168:189
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="191"
+``` py linenums="189"
 --8<--
-examples/bubble/bubble.py:191:219
+examples/bubble/bubble.py:189:206
 --8<--
 ```
 
@@ -277,9 +297,9 @@ examples/bubble/bubble.py:191:219
 
 最后在给定的可视化区域上进行预测并可视化，可视化数据是区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$，在此我们对预测得到的 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$ 进行反归一化，我们将反归一化后的数据按时刻保存成 126 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="225"
+``` py linenums="219"
 --8<--
-examples/bubble/bubble.py:221:251
+examples/bubble/bubble.py:219:249
 --8<--
 ```
 
