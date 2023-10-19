@@ -46,19 +46,13 @@ AutoDiff 模块负责计算高阶微分功能，内置基于 Paddle 自动微分
 
 ### 2.4 Data
 
-Data 模块负责数据的读取、包装和预处理，由以下 3 个子模块分别负责。
+Data 模块负责数据的读取、包装和预处理，如下所示。
 
-#### 2.4.1 [Dataset](./api/data/dataset.md)
-
-Dataset 模块存放各种数据集的包装类，将数据包装成统一的结构再用于读取。
-
-#### 2.4.2 [Transform](./api/data/process/transform.md)
-
-Transform 模块存放各种基于单样本的数据预处理方法，包括数据平移 `Translate` 和数据缩放 `Scale`，一般与 `data.dataset` 结合使用。
-
-#### 2.4.3 [BatchTransform](./api/data/process/batch_transform.md)
-
-BatchTransform 模块存放各种基于批样本的数据预处理方法。
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.data.dataset](./api/data/dataset.md)| 数据集相关 |
+| [ppsci.data.transform](./api/data/process/transform.md)| 单个数据样本预处理相关方法 |
+| [ppsci.data.batch_transform](./api/data/process/batch_transform.md)| 批数据预处理相关方法 |
 
 ### 2.5 [Equation](./api/equation.md)
 
@@ -82,17 +76,35 @@ Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕
 
 同时该模块也提供了常见的多任务学习优化功能，包括 PCGrad、AGDA，进一步提升多个 loss 共同优化（如 PINN 方法）的精度。
 
-### 2.8 [Optimizer](./api/optimizer.md)
+### 2.8 Optimizer
 
-Optimizer 模块负责定义各种优化器，如 `SGD`、`Adam`、`LBFGS`。
+Optimizer 模块包含 [`ppsci.optimizer.optimizer`](./api/optimizer.md) 与 [`ppsci.optimizer.lr_scheduler`](./api/lr_scheduler.md) 两个子模块，如下所示。
+
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.utils.optimizer](./api/optimizer.md)| 优化器相关 |
+| [ppsci.utils.lr_scheduler](./api/lr_scheduler.md)| 学习率调节器相关 |
 
 ### 2.9 [Solver](./api/solver.md)
 
 Solver 模块负责定义求解器，作为训练、评估、推理、可视化的启动和管理引擎。
 
-### 2.10 [Utils](./api/utils.md)
+### 2.10 Utils
 
-Utils 模块内部存放了一些适用于多种场景下的工具类、函数，如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
+Utils 模块内部存放了一些适用于多种场景下的工具类、函数，例如在 `reader.py` 下的数据读取函数，在 `logger.py` 下的日志打印函数，以及在 `expression.py` 下的方程计算类。
+
+根据其功能细分为以下 8 个子模块
+
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.utils.checker](./api/utils/checker.md)| ppsci 安装功能检查相关 |
+| [ppsci.utils.expression](./api/utils/expression.md)| 负责训练、评估、可视化过程中涉及模型、方程的前向计算 |
+| [ppsci.utils.initializer](./api/utils/initializer.md)| 常用参数初始化方法 |
+| [ppsci.utils.logger](./api/utils/logger.md)| 日志打印模块 |
+| [ppsci.utils.misc](./api/utils/misc.md)| 存放通用函数 |
+| [ppsci.utils.reader](./api/utils/reader.md)| 文件读取模块 |
+| [ppsci.utils.save_load](./api/utils/save_load.md)| 模型参数保存与加载 |
+| [ppsci.utils.symbolic](./api/utils/symbolic.md)| sympy 符号计算功能相关 |
 
 ### 2.11 [Validate](./api/validate.md)
 

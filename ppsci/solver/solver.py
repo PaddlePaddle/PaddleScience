@@ -16,9 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-import os
 import sys
-from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Mapping
@@ -41,7 +39,6 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.loss import mtl
-from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -289,6 +286,8 @@ class Solver:
             # TODO(sensen): support different kind of DistributedStrategy
             fleet.init(is_collective=True)
             self.model = fleet.distributed_model(self.model)
+            self.model.input_keys = self.model._layers.input_keys
+            self.model.output_keys = self.model._layers.output_keys
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
             logger.warning(
@@ -347,95 +346,6 @@ class Solver:
 
         if self.visualizer:
             convert_expr(self.visualizer)
-
-    @staticmethod
-    def from_config(cfg: Dict[str, Any]) -> Solver:
-        """Initialize solver from given config.
-
-        Args:
-            cfg (Dict[str, Any]): Dict config, e.g. AttrDict parsed from yaml.
-
-        Returns:
-            Solver: Initialized solver object.
-        """
-        config.print_config(cfg)
-        # TODO(sensen): sanity check for config
-        output_dir = cfg["Global"]["output_dir"]
-        epochs = cfg["Global"]["epochs"]
-        iters_per_epoch = cfg["Global"]["iters_per_epoch"]
-        save_freq = cfg["Global"]["save_freq"]
-        eval_during_train = cfg["Global"]["eval_during_train"]
-        eval_freq = cfg["Global"]["eval_freq"]
-
-        seed = cfg["Global"].get("seed", 42)
-        rank = dist.get_rank()
-        misc.set_random_seed(seed + rank)
-
-        model = ppsci.arch.build_model(cfg["Arch"])
-        geom = ppsci.geometry.build_geometry(cfg.get("Geometry", None))
-        equation = ppsci.equation.build_equation(cfg.get("Equation", None))
-        constraint = ppsci.constraint.build_constraint(
-            cfg["Global"].get("Constraint", None),
-            equation,
-            geom,
-        )
-        optimizer, lr_scheduler = ppsci.optimizer.build_optimizer(
-            cfg["Global"]["Optimizer"],
-            model + ([eq for eq in equation.values()] if equation is not None else []),
-            epochs,
-            iters_per_epoch,
-        )
-
-        vdl_writer = None
-        if cfg["Global"].get("vdl_writer", False):
-            vdl_writer_path = os.path.join(output_dir, "vdl")
-            os.makedirs(vdl_writer_path, exist_ok=True)
-            vdl_writer = vdl.LogWriter(vdl_writer_path)
-
-        log_freq = cfg["Global"].get("log_freq", 10)
-        device = cfg["Global"].get("device", "gpu")
-        validator = ppsci.validate.build_validator(
-            cfg.get("Validator", None), equation, geom
-        )
-        visualizer = ppsci.visualize.build_visualizer(cfg.get("Visualizer", None))
-        use_amp = "AMP" in cfg
-        amp_level = cfg["AMP"].pop("level", "O1").upper() if use_amp else "O0"
-
-        start_eval_epoch = cfg["Global"].get("start_eval_epoch", 1)
-        update_freq = cfg["Global"].get("update_freq", 1)
-        pretrained_model_path = cfg["Global"].get("pretrained_model_path", None)
-        checkpoint_path = cfg["Global"].get("checkpoint_path", None)
-        compute_metric_by_batch = cfg["Global"].get("compute_metric_by_batch", False)
-        eval_with_no_grad = cfg["Global"].get("eval_with_no_grad", False)
-
-        return Solver(
-            model,
-            constraint,
-            output_dir,
-            optimizer,
-            lr_scheduler,
-            epochs,
-            iters_per_epoch,
-            update_freq,
-            save_freq,
-            log_freq,
-            eval_during_train,
-            start_eval_epoch,
-            eval_freq,
-            seed,
-            vdl_writer,
-            device,
-            equation,
-            geom,
-            validator,
-            visualizer,
-            use_amp,
-            amp_level,
-            pretrained_model_path,
-            checkpoint_path,
-            compute_metric_by_batch,
-            eval_with_no_grad,
-        )
 
     def train(self):
         """Training."""

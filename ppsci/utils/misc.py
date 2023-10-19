@@ -214,14 +214,14 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
     """Combine given data x with time sequence t.
     Given x with shape (N, D) and t with shape (T, ),
     this function will repeat t_i for N times and will concat it with data x for each t_i in t,
-    finally return the stacked result, which is of shape (NxT, D+1).
+    finally return the stacked result, which is of shape (N×T, D+1).
 
     Args:
         x (np.ndarray): Points data with shape (N, D).
         t (Tuple[int, ...]): Time sequence with shape (T, ).
 
     Returns:
-        np.ndarray: Combined data with shape of (NxT, D+1).
+        np.ndarray: Combined data with shape of (N×T, D+1).
     """
     nx = len(x)
     tx = []
@@ -237,13 +237,17 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
 
 def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     """Cartesian product for input sequence of array(s).
+
     Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 
-    Assume input arrays shape are: (N_1,), (N_2,), (N_3,), ..., (N_M,),
-    then the cartesian product result will be shape of (N_1*N_2*N_3*...*N_M, M).
+    Assume shapes of input arrays are: $(N_1,), (N_2,), (N_3,), ..., (N_M,)$,
+    then the cartesian product result will be shape of $(N_1×N_2×N_3×...×N_M, M)$.
+
+    Args:
+        arrays (np.ndarray): Input arrays.
 
     Returns:
-        np.ndarray: Cartesian product result of shape (N_1*N_2*N_3*...*N_M, M).
+        np.ndarray: Cartesian product result of shape $(N_1×N_2×N_3×...×N_M, M)$.
 
     Examples:
         >>> t = np.array([1, 2])

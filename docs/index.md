@@ -50,6 +50,6 @@
 ./README.md:thanks
 --8<--
 
---8<--
-./README.md:license
---8<--
+## 证书
+
+[Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
