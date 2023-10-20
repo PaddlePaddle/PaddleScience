@@ -1,89 +1,115 @@
-*Current version of PaddleScience is v1.0 Beta.*
+# PaddleScience
 
-# Introduction
-PaddleScience extends the PaddlePaddle framework with reusable
-software components for developing novel scientific computing applications. Such new
-applications include Physics-informed Machine Learning, neural network based PDE solvers,
-machine learning for CFD, and so on. PaddleScience is currently under active development.
-Its design is evolving and its APIs are subject to change.  
+<!-- --8<-- [start:status] -->
+> *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
 
-# Core features and organization
+[![Version](https://img.shields.io/pypi/v/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Python Version](https://img.shields.io/pypi/pyversions/paddlesci)](https://pypi.org/project/paddlesci/)
+[![Doc](https://img.shields.io/readthedocs/paddlescience-docs/latest)](https://paddlescience-docs.readthedocs.io/zh/latest/)
+[![Code Style](https://img.shields.io/badge/code_style-black-black)](https://github.com/psf/black)
+[![Hydra](https://img.shields.io/badge/config-hydra-89b8cd)](https://hydra.cc/)
+[![License](https://img.shields.io/github/license/PaddlePaddle/PaddleScience)](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
+<!-- --8<-- [end:status] -->
 
-PaddleScience currently focuses on the PINNs model. The core components are as follows.
+[**PaddleScience使用文档**](https://paddlescience-docs.readthedocs.io/zh/latest/)
 
-- PDE, delineating partial differential equations in symbolic forms. Specific PDEs derive the
-    the base PDE class. 
+<!-- --8<-- [start:description] -->
+## 简介
 
-- Geometry, a declarative interface for defining the geometric domain. Automatic
-    discretization is supported 
+PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
+<!-- --8<-- [end:description] -->
 
-- Neural net, currently supporting fully connected layers with customizable size and depth.
+<div align="center">
+    <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" width="100%" height="100%">
+</div>
 
-- Loss, defining what exact penalties are enforced during the training process. By default,
-    the L2 loss is applied. In the current design, the total loss is a weighted sum of
-    four parts, the equation loss, the boundary condition loss, the initial condition loss and the data loss.
+<!-- --8<-- [start:update] -->
+## 最近更新
 
-- Optimizer, specifying which optimizer to use for training. Adam is the default option. More
-    optimizers, such as BFGS, will be available in the future.
+- 添加二维血管案例([LabelFree-DNN-Surrogate](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate/#4))、空气激波案例([ShockWave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/shock_wave/))、去噪网络模型([DUCNN](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/DU_CNN))、风电预测模型([Deep Spatial Temporal](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/Deep-Spatio-Temporal))、域分解模型([XPINNs](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/XPINNs))、积分方程求解案例([Volterra Equation](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide/))、分数阶方程求解案例([Fractional Poisson 2D](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py))。
+- 针对串联方程和复杂方程场景，`Equation` 模块支持基于 [sympy](https://docs.sympy.org/dev/tutorials/intro-tutorial/intro.html) 的符号计算，并支持和 python 函数混合使用([#507](https://github.com/PaddlePaddle/PaddleScience/pull/507)、[#505](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
+- `Geometry` 模块和 `InteriorConstraint`、`InitialConstraint` 支持计算 SDF 微分功能([#539](https://github.com/PaddlePaddle/PaddleScience/pull/539))。
+- 添加 **M**ulti**T**ask**L**earning(`ppsci.loss.mtl`) 多任务学习模块，针对多任务优化(如 PINN 方法)进一步提升性能，使用方式：[多任务学习指南](https://paddlescience-docs.readthedocs.io/zh/latest/zh/user_guide/#24)([#493](https://github.com/PaddlePaddle/PaddleScience/pull/505)、[#492](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
+<!-- --8<-- [end:update] -->
 
-- Solver, managing the training process given the training data in a batchly fashion.
+<!-- --8<-- [start:feature] -->
+## 特性
 
-- Visualization, an easy access to the graph drawing utilities. 
+- 支持简单几何和复杂 STL 几何的采样与布尔运算。
+- 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
+- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。
+- 支持结果可视化输出与日志结构化保存。
+- 完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。
+- 支持基于 sympy 符号计算库的方程表示。
+- 更多特性正在开发中...
+<!-- --8<-- [end:feature] -->
 
-The component organization is illustrated in the following figure. 
+## 安装使用
 
-![image](./docs/source/img/PaddleScience_arch.png)
+1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
 
+    <!-- --8<-- [start:git_install] -->
+    ``` shell
+    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+    # 若 github clone 速度比较慢，可以使用 gitee clone
+    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
 
-# Getting started
+    cd PaddleScience
+    # install paddlesci with editable mode
+    pip install -e .
+    ```
+    <!-- --8<-- [end:git_install] -->
 
-## Prerequisites: 
+2. 安装必要的依赖包
 
-Hardware requirements: NVIDIA GPU V100, NVIDIA GPU A100
+    ``` shell
+    pip install -r requirements.txt
+    ```
 
-Package dependencies: paddle, cuda (11.0 or higher), numpy, scipy, sympy, matplotlib, vtk, pyevtk, wget. 
+3. 验证安装
 
-PaddleScience currently relies on new features of the Paddle framework so please be advised to download the latest version of Paddle on GitHub or on Gitee. 
+    ``` py
+    python -c "import ppsci; ppsci.utils.run_check()"
+    ```
 
-For more details on installation, please refer to the offical [PaddlePaddle repository on GitHub](https://github.com/PaddlePaddle/Paddle) or [PaddlePaddle repository on Gitee](https://gitee.com/paddlepaddle/Paddle).
+4. 开始使用
 
-## Download and environment setup
+    ``` py
+    import ppsci
 
-```
-Download from GitHub: git clone https://github.com/PaddlePaddle/PaddleScience.git
-Download from Gitee:  git clone https://gitee.com/PaddlePaddle/PaddleScience.git
+    # write your code here...
+    ```
 
-cd PaddleScience
-export PYTHONPATH=$PWD:$PYTHONPATH
+更多安装方式请参考 [**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
 
-pip install -r requirements.txt
-```
+## 快速开始
 
-## Run examples
+请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/quickstart/)
 
-Some examples are baked in for quick demonstration. Please find them in the `examples` directory. To run an example, just enter the subdirectory and run the demo code in Python commandline. 
+## 经典案例
 
-```
-# Darcy flow (Poisson equation)
-cd examples/darcy
-python darcy2d.py
+请参考 [**经典案例**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/viv/)
 
-# LDC steady (Steady Navier-Stokes eqution)
-cd examples/ldc
-python ldc2d_steady_train.py
+<!-- --8<-- [start:support] -->
+## 支持
 
-# Lid Driven Cavity unsteady with continue-time method (Unsteady Navier-Stokes equation)
-cd examples/ldc
-python ldc2d_unsteady_t.py
+如使用过程中遇到问题或想提出开发建议，欢迎在 [**Discussion**](https://github.com/PaddlePaddle/PaddleScience/discussions/new?category=general) 提出建议，或者在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue。
+<!-- --8<-- [end:support] -->
 
-# Flow around a circular cylinder with discrete-time method (Unsteady Navier-Stokes equation)
-cd examples/cylinder/3d_unsteady_discrete/baseline
-python cylinder3d_unsteady.py
+<!-- --8<-- [start:contribution] -->
+## 贡献代码
 
-```
+PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/development/)。
+<!-- --8<-- [end:contribution] -->
 
-## Short tutorials on how to construct and solve a PINN model
+<!-- --8<-- [start:thanks] -->
+## 致谢
 
-[A tutorial on Lid Driven Cavity flow](./examples/ldc/README.md)
+PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
+<!-- --8<-- [end:thanks] -->
 
-[A tutorial on Darcy flow in porous medium](./examples/darcy/README.md)
+<!-- --8<-- [start:license] -->
+## 证书
+
+[Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
+<!-- --8<-- [end:license] -->

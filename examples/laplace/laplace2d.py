@@ -1,4 +1,4 @@
-# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,113 +12,208 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddlescience as psci
+from os import path as osp
+
+import hydra
 import numpy as np
-import paddle
+from omegaconf import DictConfig
 
-cfg = psci.utils.parse_args()
+import ppsci
+from ppsci.utils import logger
 
-if cfg is not None:
-    # Geometry
-    npoints = cfg['Geometry']['npoints']
-    seed_num = cfg['Geometry']['seed']
-    sampler_method = cfg['Geometry']['sampler_method']
-    # Network
-    epochs = cfg['Global']['epochs']
-    num_layers = cfg['Model']['num_layers']
-    hidden_size = cfg['Model']['hidden_size']
-    activation = cfg['Model']['activation']
-    # Optimizer
-    learning_rate = cfg['Optimizer']['lr']['learning_rate']
-    # Post-processing
-    solution_filename = cfg['Post-processing']['solution_filename']
-    vtk_filename = cfg['Post-processing']['vtk_filename']
-    checkpoint_path = cfg['Post-processing']['checkpoint_path']
-else:
-    # Geometry
-    npoints = 10201
-    seed_num = 1
-    sampler_method = 'uniform'
-    # Network
-    epochs = 20000
-    num_layers = 5
-    hidden_size = 20
-    activation = 'tanh'
-    # Optimizer
-    learning_rate = 0.001
-    # Post-processing
-    solution_filename = 'output_laplace2d'
-    vtk_filename = 'output_laplace2d'
-    checkpoint_path = 'checkpoints'
 
-paddle.seed(seed_num)
-np.random.seed(seed_num)
+def train(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
-# analytical solution 
-ref_sol = lambda x, y: np.cos(x) * np.cosh(y)
+    # # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
-# set geometry and boundary
-geo = psci.geometry.Rectangular(origin=(0.0, 0.0), extent=(1.0, 1.0))
-geo.add_boundary(
-    name="around",
-    criteria=lambda x, y: (y == 1.0) | (y == 0.0) | (x == 0.0) | (x == 1.0))
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
-# discretize geometry
-geo_disc = geo.discretize(npoints=npoints, method=sampler_method)
+    # set equation
+    equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
-# Laplace
-pde = psci.pde.Laplace(dim=2)
+    # set geometry
+    geom = {
+        "rect": ppsci.geometry.Rectangle(
+            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        )
+    }
 
-# set bounday condition
-bc_around = psci.bc.Dirichlet('u', rhs=ref_sol)
+    # compute ground truth function
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x, y = out["x"], out["y"]
+        return np.cos(x) * np.cosh(y)
 
-# add bounday and boundary condition
-pde.add_bc("around", bc_around)
+    # set train dataloader config
+    train_dataloader_cfg = {
+        "dataset": "IterableNamedArrayDataset",
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
+    }
 
-# discretization pde
-pde_disc = pde.discretize(geo_disc=geo_disc)
+    NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
 
-# Network
-# TODO: remove num_ins and num_outs
-net = psci.network.FCNet(
-    num_ins=2,
-    num_outs=1,
-    num_layers=num_layers,
-    hidden_size=hidden_size,
-    activation=activation)
+    # set constraint
+    pde_constraint = ppsci.constraint.InteriorConstraint(
+        equation["laplace"].equations,
+        {"laplace": 0},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": NPOINT_TOTAL},
+        ppsci.loss.MSELoss("sum"),
+        evenly=True,
+        name="EQ",
+    )
+    bc = ppsci.constraint.BoundaryConstraint(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_BC},
+        ppsci.loss.MSELoss("sum"),
+        name="BC",
+    )
+    # wrap constraints together
+    constraint = {
+        pde_constraint.name: pde_constraint,
+        bc.name: bc,
+    }
 
-# Loss
-loss = psci.loss.L2()
+    # set optimizer
+    optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate)(model)
 
-# Algorithm
-algo = psci.algorithm.PINNs(net=net, loss=loss)
+    # set validator
+    mse_metric = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": NPOINT_TOTAL,
+        },
+        ppsci.loss.MSELoss(),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        with_initial=True,
+        name="MSE_Metric",
+    )
+    validator = {mse_metric.name: mse_metric}
 
-# Optimizer
-opt = psci.optimizer.Adam(
-    learning_rate=learning_rate, parameters=net.parameters())
+    # set visualizer(optional)
+    vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+    visualizer = {
+        "visulzie_u": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {"u": lambda d: d["u"]},
+            num_timestamps=1,
+            prefix="result_u",
+        )
+    }
 
-# Solver
-solver = psci.solver.Solver(pde=pde_disc, algo=algo, opt=opt)
-solution = solver.solve(num_epoch=epochs)
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        constraint,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
+        equation=equation,
+        geom=geom,
+        validator=validator,
+        visualizer=visualizer,
+    )
+    # train model
+    solver.train()
+    # evaluate after finished training
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
 
-psci.visu.save_vtk(
-    filename=vtk_filename, geo_disc=pde_disc.geometry, data=solution)
 
-psci.visu.save_npy(
-    filename=solution_filename, geo_disc=pde_disc.geometry, data=solution)
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
-# MSE
-# TODO: solution array to dict: interior, bc
-cord = pde_disc.geometry.interior
-ref = ref_sol(cord[:, 0], cord[:, 1])
-mse2 = np.linalg.norm(solution[0][:, 0] - ref, ord=2)**2
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
-n = 1
-for cord in pde_disc.geometry.boundary.values():
-    ref = ref_sol(cord[:, 0], cord[:, 1])
-    mse2 += np.linalg.norm(solution[n][:, 0] - ref, ord=2)**2
-    n += 1
+    # set equation
+    equation = {"laplace": ppsci.equation.Laplace(dim=2)}
 
-mse = mse2 / npoints
+    # set geometry
+    geom = {
+        "rect": ppsci.geometry.Rectangle(
+            cfg.DIAGONAL_COORD.xmin, cfg.DIAGONAL_COORD.xmax
+        )
+    }
 
-print("MSE is: ", mse)
+    # compute ground truth function
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x, y = out["x"], out["y"]
+        return np.cos(x) * np.cosh(y)
+
+    NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
+
+    # set validator
+    mse_metric = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["rect"],
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": NPOINT_TOTAL,
+        },
+        ppsci.loss.MSELoss(),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        with_initial=True,
+        name="MSE_Metric",
+    )
+    validator = {mse_metric.name: mse_metric}
+
+    # set visualizer(optional)
+    vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
+    visualizer = {
+        "visulzie_u": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {"u": lambda d: d["u"]},
+            num_timestamps=1,
+            prefix="result_u",
+        )
+    }
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        seed=cfg.seed,
+        equation=equation,
+        geom=geom,
+        validator=validator,
+        visualizer=visualizer,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+    )
+    solver.eval()
+    # visualize prediction after finished training
+    solver.visualize()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="laplace2d.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
