@@ -207,8 +207,6 @@ def train_or_evaluate(cfg: DictConfig):
         # evaluate after finished training
         solver.eval()
 
-        # set training hyper-parameters
-        EPOCHS_LBFGS = 1
         # initialize LBFGS optimizer
         optimizer_lbfgs = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(
             (model_re, model_im, model_eps)
@@ -222,7 +220,7 @@ def train_or_evaluate(cfg: DictConfig):
                 cfg.output_dir,
                 optimizer_lbfgs,
                 None,
-                EPOCHS_LBFGS,
+                cfg.TRAIN.epochs_lbfgs,
                 cfg.TRAIN.iters_per_epoch,
                 eval_during_train=cfg.TRAIN.eval_during_train,
                 validator=validator,
@@ -272,7 +270,7 @@ def train_or_evaluate(cfg: DictConfig):
                     cfg.output_dir,
                     optimizer_lbfgs,
                     None,
-                    EPOCHS_LBFGS,
+                    cfg.TRAIN.epochs_lbfgs,
                     cfg.TRAIN.iters_per_epoch,
                     eval_during_train=cfg.TRAIN.eval_during_train,
                     validator=validator,

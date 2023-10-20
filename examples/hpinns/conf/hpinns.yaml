@@ -55,6 +55,7 @@ TRAIN:
   eval_during_train: false
   learning_rate: 0.001
   max_iter: 15000
+  epochs_lbfgs: 1
   pretrained_model_path: null
   checkpoint_path: null
 

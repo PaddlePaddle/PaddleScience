@@ -181,9 +181,9 @@ examples/hpinns/holography.py:68:71
 --8<--
 ```
 
-``` py linenums="212"
+``` py linenums="210"
 --8<--
-examples/hpinns/holography.py:212:215
+examples/hpinns/holography.py:210:213
 --8<--
 ```
 
@@ -279,9 +279,9 @@ examples/hpinns/holography.py:191:208
 
 PaddleScience 中提供了可视化器，但由于本问题图片数量较多且较为复杂，代码中自定义了可视化函数，调用自定义函数即可实现可视化
 
-``` py linenums="289"
+``` py linenums="287"
 --8<--
-examples/hpinns/holography.py:289:
+examples/hpinns/holography.py:287:
 --8<--
 ```
 
