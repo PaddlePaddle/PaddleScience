@@ -18,7 +18,6 @@ import numpy as np
 from omegaconf import DictConfig
 
 import ppsci
-# from ppsci.utils import config
 from ppsci.utils import logger
 
 def train(cfg: DictConfig):
@@ -26,12 +25,16 @@ def train(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL.model)
+
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+
     # set timestamps(including initial t0)
     timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
+
     # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
@@ -122,7 +125,6 @@ def train(cfg: DictConfig):
     }
 
     # set training hyper-parameters
-
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **cfg.TRAIN.lr_scheduler,
         warmup_epoch=int(0.05 * cfg.TRAIN.epochs),
@@ -213,12 +215,16 @@ def evaluate(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL.model)
+
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+
     # set timestamps(including initial t0)
     timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
+
     # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
@@ -226,6 +232,7 @@ def evaluate(cfg: DictConfig):
             ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05)),
         )
     }
+
     # pde/bc constraint use t1~tn, initial constraint use t0
     NTIME_ALL = len(timestamps)
     NPOINT_PDE, NTIME_PDE = 99**2, NTIME_ALL - 1
@@ -234,8 +241,6 @@ def evaluate(cfg: DictConfig):
     NPOINT_LEFT, NTIME_LEFT = 99, NTIME_ALL - 1
     NPOINT_RIGHT, NTIME_RIGHT = 99, NTIME_ALL - 1
     NPOINT_IC, NTIME_IC = 99**2, 1
-
-
 
     # set validator
     NPOINT_EVAL = NPOINT_PDE * NTIME_ALL
@@ -256,6 +261,7 @@ def evaluate(cfg: DictConfig):
         name="Residual",
     )
     validator = {residual_validator.name: residual_validator}
+
     # set visualizer(optional)
     NPOINT_BC = NPOINT_TOP + NPOINT_DOWN + NPOINT_LEFT + NPOINT_RIGHT
     vis_initial_points = geom["time_rect"].sample_initial_interior(
@@ -288,16 +294,6 @@ def evaluate(cfg: DictConfig):
             prefix="result_u_v",
         )
     }
-    # set visualizer(optional)
-    NPOINT_BC = NPOINT_TOP + NPOINT_DOWN + NPOINT_LEFT + NPOINT_RIGHT
-    vis_initial_points = geom["time_rect"].sample_initial_interior(
-        (NPOINT_IC + NPOINT_BC), evenly=True
-    )
-    vis_pde_points = geom["time_rect"].sample_interior(
-        (NPOINT_PDE + NPOINT_BC) * NTIME_PDE, evenly=True
-    )
-    vis_points = vis_initial_points
-    
 
     # directly evaluate pretrained model(optional)
     solver = ppsci.solver.Solver(
