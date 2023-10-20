@@ -221,7 +221,7 @@ def train(cfg: DictConfig):
         "phil": pred_norm["phil"],
     }
     ppsci.visualize.save_vtu_from_dict(
-        "f{cfg.output_dir}/visual/result.vtu",
+        osp.join(cfg.output_dir, "visual/result.vtu"),
         {
             "t": visu_mat["t"],
             "x": visu_mat["x"],
@@ -373,7 +373,7 @@ def evaluate(cfg: DictConfig):
         "phil": pred_norm["phil"],
     }
     ppsci.visualize.save_vtu_from_dict(
-        "f{cfg.output_dir}/visual/result.vtu",
+        osp.join(cfg.output_dir, "visual/result.vtu"),
         {
             "t": visu_mat["t"],
             "x": visu_mat["x"],
