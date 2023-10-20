@@ -47,7 +47,7 @@
 * CFDGCN模型：通过MPI调用SU2进行加速计算，需同时使用CPU和GPU资源。
 
 ### 硬件
-* 模型：gpu memory >= 6GB 
+* 模型：gpu memory >= 6GB
 
 ### 框架
 * paddle == 2.4.1
@@ -61,7 +61,7 @@
 ### 本地安装
 ```bash
 conda create -n paddle_env python=3.8
-conda install paddlepaddle-gpu==2.4.1 cudatoolkit=11.6 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/ -c conda-forge 
+conda install paddlepaddle-gpu==2.4.1 cudatoolkit=11.6 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/ -c conda-forge
 conda install scipy h5py matplotlib scikit-learn
 pip install mpi4py
 ```
@@ -193,13 +193,13 @@ class MyDataset(Dataset):
         return self.data[idx]
     def __len__(self):
         return len(self.data)
-    
+
 def collate_fn(batch_examples):
     inputs = np.array(batch_examples, dtype="int64")
     return inputs
 
 dataset = MyDataset()
-loader = Dataloader(dataset, 
+loader = Dataloader(dataset,
                     batch_size=3,
                     drop_last=False,
                     shuffle=True,
@@ -292,11 +292,11 @@ batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
 ### RMSE对比
 
 |模型/指标 | INTERPOLATION (RMSE) | GENERALIZATION (RMSE) |
-| -------- | -------- | -------- | 
-| CFD-GCN （原论文）     | 1.8 * 10^-2     | 5.4 * 10^-2     | 
-| CFD-GCN （复现）     | 1.7 * 10^-2     | 5.3 * 10^-2      | 
-| GCN （原论文）     | 1.4 * 10^-2     | 9.5 * 10^-2     | 
-| GCN （复现）     | 1.1 * 10^-2     | 9.4 * 10^-2     | 
+| -------- | -------- | -------- |
+| CFD-GCN （原论文）     | 1.8 * 10^-2     | 5.4 * 10^-2     |
+| CFD-GCN （复现）     | 1.7 * 10^-2     | 5.3 * 10^-2      |
+| GCN （原论文）     | 1.4 * 10^-2     | 9.5 * 10^-2     |
+| GCN （复现）     | 1.1 * 10^-2     | 9.4 * 10^-2     |
 
 
 ### 可视化展示
@@ -311,11 +311,11 @@ True:
 
 ## 7.模型信息
 
-| 信息                | 说明| 
-| --------          | -------- | 
-| 发布者               | 朱卫国 (DrownFish19)    | 
-| 发布时间              | 2023.01     | 
-| 框架版本              | paddle 2.4.1     | 
-| 支持硬件              | GPU、CPU     | 
+| 信息                | 说明|
+| --------          | -------- |
+| 发布者               | 朱卫国 (DrownFish19)    |
+| 发布时间              | 2023.01     |
+| 框架版本              | paddle 2.4.1     |
+| 支持硬件              | GPU、CPU     |
 | 预训练模型训练时间 (V100)| GCN (1-2h) CFDGCN(3-6h)    |
 | aistudio              | [notebook](https://aistudio.baidu.com/aistudio/projectdetail/5216848)     |
