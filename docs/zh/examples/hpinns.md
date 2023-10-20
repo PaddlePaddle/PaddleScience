@@ -2,6 +2,30 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6390502" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat --output ./datasets/hpinns_holo_train.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat --output ./datasets/hpinns_holo_valid.mat
+    python holography.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat --output ./datasets/hpinns_holo_train.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat --output ./datasets/hpinns_holo_valid.mat
+    python holography.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/hpinns/hpinns_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
@@ -84,9 +108,9 @@ $$
 
 上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
-``` py linenums="43"
+``` py linenums="42"
 --8<--
-examples/hpinns/holography.py:43:51
+examples/hpinns/holography.py:42:50
 --8<--
 ```
 
@@ -105,9 +129,9 @@ examples/hpinns/functions.py:49:92
 
 需要对每个 MLP 模型分别注册相应的 transform ，然后将 3 个 MLP 模型组成 Model List
 
-``` py linenums="59"
+``` py linenums="57"
 --8<--
-examples/hpinns/holography.py:59:68
+examples/hpinns/holography.py:57:66
 --8<--
 ```
 
@@ -117,15 +141,15 @@ examples/hpinns/holography.py:59:68
 
 我们需要指定问题相关的参数，如通过 `train_mode` 参数指定应用增强的拉格朗日方法的硬约束进行训练
 
-``` py linenums="31"
+``` py linenums="35"
 --8<--
-examples/hpinns/holography.py:31:41
+examples/hpinns/holography.py:35:40
 --8<--
 ```
 
-``` py linenums="53"
+``` py linenums="52"
 --8<--
-examples/hpinns/holography.py:53:57
+examples/hpinns/holography.py:52:55
 --8<--
 ```
 
@@ -141,15 +165,9 @@ $\mu_k = \beta \mu_{k-1}$, $\lambda_k = \beta \lambda_{k-1}$
 
 同时需要指定训练轮数和学习率等超参数
 
-``` py linenums="70"
+``` py linenums="53"
 --8<--
-examples/hpinns/holography.py:70:72
---8<--
-```
-
-``` py linenums="212"
---8<--
-examples/hpinns/holography.py:212:214
+examples/hpinns/conf/hpinns.yaml:53:57
 --8<--
 ```
 
@@ -159,13 +177,13 @@ examples/hpinns/holography.py:212:214
 
 ``` py linenums="74"
 --8<--
-examples/hpinns/holography.py:74:75
+examples/hpinns/holography.py:68:71
 --8<--
 ```
 
-``` py linenums="216"
+``` py linenums="212"
 --8<--
-examples/hpinns/holography.py:216:219
+examples/hpinns/holography.py:212:215
 --8<--
 ```
 
@@ -175,9 +193,9 @@ examples/hpinns/holography.py:216:219
 
 虽然我们不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
-``` py linenums="113"
+``` py linenums="109"
 --8<--
-examples/hpinns/holography.py:113:118
+examples/hpinns/holography.py:109:114
 --8<--
 ```
 
@@ -185,9 +203,9 @@ examples/hpinns/holography.py:113:118
 
 下面是约束等具体内容，要注意上述提到的给定“假的”标签数据：
 
-``` py linenums="77"
+``` py linenums="73"
 --8<--
-examples/hpinns/holography.py:77:138
+examples/hpinns/holography.py:73:134
 --8<--
 ```
 
@@ -207,9 +225,9 @@ examples/hpinns/holography.py:77:138
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="139"
+``` py linenums="135"
 --8<--
-examples/hpinns/holography.py:139:142
+examples/hpinns/holography.py:135:138
 --8<--
 ```
 
@@ -217,9 +235,9 @@ examples/hpinns/holography.py:139:142
 
 与约束同理，虽然本问题使用无监督学习，但仍可以使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="144"
+``` py linenums="140"
 --8<--
-examples/hpinns/holography.py:144:192
+examples/hpinns/holography.py:140:188
 --8<--
 ```
 
@@ -249,9 +267,9 @@ examples/hpinns/functions.py:320:336
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="194"
+``` py linenums="191"
 --8<--
-examples/hpinns/holography.py:194:210
+examples/hpinns/holography.py:191:208
 --8<--
 ```
 

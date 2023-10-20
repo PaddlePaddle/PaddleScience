@@ -16,29 +16,28 @@
 This module is heavily adapted from https://github.com/lululxvi/hpinn
 """
 
+from os import path as osp
+
 import functions as func_module
+import hydra
 import numpy as np
 import paddle
 import plotting as plot_module
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
+
+def train_or_evaluate(cfg: DictConfig):
     # open FLAG for higher order differential operator
     paddle.framework.core.set_prim_eager_enabled(True)
 
-    args = config.parse_args()
-    ppsci.utils.misc.set_random_seed(42)
-    DATASET_PATH = "./datasets/hpinns_holo_train.mat"
-    DATASET_PATH_VALID = "./datasets/hpinns_holo_valid.mat"
-    OUTPUT_DIR = "./output_hpinns/" if args.output_dir is None else args.output_dir
-
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # initialize models
     in_keys = ()
@@ -46,14 +45,13 @@ if __name__ == "__main__":
         in_keys += (f"x_cos_{t}", f"x_sin_{t}")
     in_keys += ("y", "y_cos_1", "y_sin_1")
 
-    model_re = ppsci.arch.MLP(in_keys, ("e_re",), 4, 48, "tanh")
-    model_im = ppsci.arch.MLP(in_keys, ("e_im",), 4, 48, "tanh")
-    model_eps = ppsci.arch.MLP(in_keys, ("eps",), 4, 48, "tanh")
+    model_re = ppsci.arch.MLP(in_keys, **cfg.MODEL.re_net)
+    model_im = ppsci.arch.MLP(in_keys, **cfg.MODEL.im_net)
+    model_eps = ppsci.arch.MLP(in_keys, **cfg.MODEL.eps_net)
 
     # intialize params
-    train_mode = "aug_lag"  # "soft", "penalty", "aug_lag"
-    k = 9
-    func_module.train_mode = train_mode
+    k = cfg.TRAIN_K
+    func_module.train_mode = cfg.TRAIN_MODE
     loss_log_obj = []
 
     # register transform
@@ -67,12 +65,10 @@ if __name__ == "__main__":
 
     model_list = ppsci.arch.ModelList((model_re, model_im, model_eps))
 
-    # set training hyper-parameters
-    ITERS_PER_EPOCH = 1
-    EPOCHS = 20000 if args.epochs is None else args.epochs
-
     # initialize Adam optimizer
-    optimizer_adam = ppsci.optimizer.Adam(1e-3)((model_re, model_im, model_eps))
+    optimizer_adam = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(
+        (model_re, model_im, model_eps)
+    )
 
     # manually build constraint(s)
     label_keys = ("x", "y", "bound", "e_real", "e_imaginary", "epsilon")
@@ -107,7 +103,7 @@ if __name__ == "__main__":
         {
             "dataset": {
                 "name": "IterableMatDataset",
-                "file_path": DATASET_PATH,
+                "file_path": cfg.DATASET_PATH,
                 "input_keys": ("x", "y", "bound"),
                 "label_keys": label_keys + label_keys_derivative,
                 "alias_dict": {
@@ -126,7 +122,7 @@ if __name__ == "__main__":
         {
             "dataset": {
                 "name": "IterableMatDataset",
-                "file_path": DATASET_PATH,
+                "file_path": cfg.DATASET_PATH,
                 "input_keys": ("x", "y", "bound"),
                 "label_keys": label_keys,
                 "alias_dict": {"e_real": "x", "e_imaginary": "x", "epsilon": "x"},
@@ -146,7 +142,7 @@ if __name__ == "__main__":
         {
             "dataset": {
                 "name": "IterableMatDataset",
-                "file_path": DATASET_PATH_VALID,
+                "file_path": cfg.DATASET_PATH_VALID,
                 "input_keys": ("x", "y", "bound"),
                 "label_keys": label_keys + label_keys_derivative,
                 "alias_dict": {
@@ -168,7 +164,7 @@ if __name__ == "__main__":
         {
             "dataset": {
                 "name": "IterableMatDataset",
-                "file_path": DATASET_PATH_VALID,
+                "file_path": cfg.DATASET_PATH_VALID,
                 "input_keys": ("x", "y", "bound"),
                 "label_keys": label_keys + label_keys_derivative,
                 "alias_dict": {
@@ -191,45 +187,19 @@ if __name__ == "__main__":
         sup_validator_val.name: sup_validator_val,
     }
 
-    # initialize solver
-    solver = ppsci.solver.Solver(
-        model_list,
-        constraint,
-        OUTPUT_DIR,
-        optimizer_adam,
-        None,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=False,
-        validator=validator,
-    )
-
-    # train model
-    solver.train()
-    # evaluate after finished training
-    solver.eval()
-
-    # set training hyper-parameters
-    EPOCHS_LBFGS = 1
-    MAX_ITER = 15000
-
-    # initialize LBFGS optimizer
-    optimizer_lbfgs = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)(
-        (model_re, model_im, model_eps)
-    )
-
-    # train: soft constraint, epoch=1 for lbfgs
-    if train_mode == "soft":
+    if cfg.mode == "train":
+        # initialize solver
         solver = ppsci.solver.Solver(
             model_list,
             constraint,
-            OUTPUT_DIR,
-            optimizer_lbfgs,
+            cfg.output_dir,
+            optimizer_adam,
             None,
-            EPOCHS_LBFGS,
-            ITERS_PER_EPOCH,
-            eval_during_train=False,
+            cfg.TRAIN.epochs,
+            cfg.TRAIN.iters_per_epoch,
+            eval_during_train=cfg.TRAIN.eval_during_train,
             validator=validator,
+            checkpoint_path=cfg.TRAIN.checkpoint_path,
         )
 
         # train model
@@ -237,64 +207,123 @@ if __name__ == "__main__":
         # evaluate after finished training
         solver.eval()
 
-    # append objective loss for plot
-    loss_log_obj.append(func_module.loss_obj)
-
-    # penalty and augmented Lagrangian, difference between the two is updating of lambda
-    if train_mode != "soft":
-        train_dict = ppsci.utils.reader.load_mat_file(DATASET_PATH, ("x", "y", "bound"))
-        in_dict = {"x": train_dict["x"], "y": train_dict["y"]}
-        expr_dict = output_expr.copy()
-        expr_dict.pop("bound")
-
-        func_module.init_lambda(in_dict, int(train_dict["bound"]))
-        func_module.lambda_log.append(
-            [
-                func_module.lambda_re.copy().squeeze(),
-                func_module.lambda_im.copy().squeeze(),
-            ]
+        # set training hyper-parameters
+        EPOCHS_LBFGS = 1
+        # initialize LBFGS optimizer
+        optimizer_lbfgs = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(
+            (model_re, model_im, model_eps)
         )
 
-        for i in range(1, k + 1):
-            pred_dict = solver.predict(
-                in_dict,
-                expr_dict,
-                batch_size=np.shape(train_dict["x"])[0],
-                no_grad=False,
-            )
-            func_module.update_lambda(pred_dict, int(train_dict["bound"]))
-
-            func_module.update_mu()
-            logger.message(f"Iteration {i}: mu = {func_module.mu}\n")
-
+        # train: soft constraint, epoch=1 for lbfgs
+        if cfg.TRAIN_MODE == "soft":
             solver = ppsci.solver.Solver(
                 model_list,
                 constraint,
-                OUTPUT_DIR,
+                cfg.output_dir,
                 optimizer_lbfgs,
                 None,
                 EPOCHS_LBFGS,
-                ITERS_PER_EPOCH,
-                eval_during_train=False,
+                cfg.TRAIN.iters_per_epoch,
+                eval_during_train=cfg.TRAIN.eval_during_train,
                 validator=validator,
+                checkpoint_path=cfg.TRAIN.checkpoint_path,
             )
 
             # train model
             solver.train()
             # evaluate after finished training
             solver.eval()
-            # append objective loss for plot
-            loss_log_obj.append(func_module.loss_obj)
 
-    ################# plotting ###################
-    # log of loss
-    loss_log = np.array(func_module.loss_log).reshape(-1, 3)
+        # append objective loss for plot
+        loss_log_obj.append(func_module.loss_obj)
 
-    plot_module.set_params(train_mode, OUTPUT_DIR, DATASET_PATH, DATASET_PATH_VALID)
-    plot_module.plot_6a(loss_log)
-    if train_mode != "soft":
-        plot_module.prepare_data(solver, expr_dict)
-        plot_module.plot_6b(loss_log_obj)
-        plot_module.plot_6c7c(func_module.lambda_log)
-        plot_module.plot_6d(func_module.lambda_log)
-        plot_module.plot_6ef(func_module.lambda_log)
+        # penalty and augmented Lagrangian, difference between the two is updating of lambda
+        if cfg.TRAIN_MODE != "soft":
+            train_dict = ppsci.utils.reader.load_mat_file(
+                cfg.DATASET_PATH, ("x", "y", "bound")
+            )
+            in_dict = {"x": train_dict["x"], "y": train_dict["y"]}
+            expr_dict = output_expr.copy()
+            expr_dict.pop("bound")
+
+            func_module.init_lambda(in_dict, int(train_dict["bound"]))
+            func_module.lambda_log.append(
+                [
+                    func_module.lambda_re.copy().squeeze(),
+                    func_module.lambda_im.copy().squeeze(),
+                ]
+            )
+
+            for i in range(1, k + 1):
+                pred_dict = solver.predict(
+                    in_dict,
+                    expr_dict,
+                    batch_size=np.shape(train_dict["x"])[0],
+                    no_grad=False,
+                )
+                func_module.update_lambda(pred_dict, int(train_dict["bound"]))
+
+                func_module.update_mu()
+                logger.message(f"Iteration {i}: mu = {func_module.mu}\n")
+
+                solver = ppsci.solver.Solver(
+                    model_list,
+                    constraint,
+                    cfg.output_dir,
+                    optimizer_lbfgs,
+                    None,
+                    EPOCHS_LBFGS,
+                    cfg.TRAIN.iters_per_epoch,
+                    eval_during_train=cfg.TRAIN.eval_during_train,
+                    validator=validator,
+                    checkpoint_path=cfg.TRAIN.checkpoint_path,
+                )
+
+                # train model
+                solver.train()
+                # evaluate after finished training
+                solver.eval()
+                # append objective loss for plot
+                loss_log_obj.append(func_module.loss_obj)
+
+        ################# plotting ###################
+        # log of loss
+        loss_log = np.array(func_module.loss_log).reshape(-1, 3)
+
+        plot_module.set_params(
+            cfg.TRAIN_MODE, cfg.output_dir, cfg.DATASET_PATH, cfg.DATASET_PATH_VALID
+        )
+        plot_module.plot_6a(loss_log)
+        if cfg.TRAIN_MODE != "soft":
+            plot_module.prepare_data(solver, expr_dict)
+            plot_module.plot_6b(loss_log_obj)
+            plot_module.plot_6c7c(func_module.lambda_log)
+            plot_module.plot_6d(func_module.lambda_log)
+            plot_module.plot_6ef(func_module.lambda_log)
+    elif cfg.mode == "eval":
+        solver = ppsci.solver.Solver(
+            model_list,
+            constraint,
+            cfg.output_dir,
+            optimizer_adam,
+            None,
+            validator=validator,
+            pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        )
+
+        # train model
+        solver.train()
+        # evaluate after finished training
+        solver.eval()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="hpinns.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train" or cfg.mode == "eval":
+        train_or_evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
