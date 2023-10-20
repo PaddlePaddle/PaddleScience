@@ -267,9 +267,9 @@ examples/hpinns/functions.py:320:336
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="191"
+``` py linenums="190"
 --8<--
-examples/hpinns/holography.py:191:208
+examples/hpinns/holography.py:190:207
 --8<--
 ```
 
@@ -279,9 +279,9 @@ examples/hpinns/holography.py:191:208
 
 PaddleScience 中提供了可视化器，但由于本问题图片数量较多且较为复杂，代码中自定义了可视化函数，调用自定义函数即可实现可视化
 
-``` py linenums="287"
+``` py linenums="286"
 --8<--
-examples/hpinns/holography.py:287:
+examples/hpinns/holography.py:286:299
 --8<--
 ```
 
