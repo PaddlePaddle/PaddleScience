@@ -297,9 +297,9 @@ examples/bubble/bubble.py:189:206
 
 最后在给定的可视化区域上进行预测并可视化，可视化数据是区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$，在此我们对预测得到的 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$ 进行反归一化，我们将反归一化后的数据按时刻保存成 126 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="219"
+``` py linenums="212"
 --8<--
-examples/bubble/bubble.py:219:249
+examples/bubble/bubble.py:212:237
 --8<--
 ```
 
