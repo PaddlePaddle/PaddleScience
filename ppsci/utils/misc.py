@@ -284,13 +284,17 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
 
 def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     """Cartesian product for input sequence of array(s).
+
     Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 
-    Assume input arrays shape are: (N_1,), (N_2,), (N_3,), ..., (N_M,),
-    then the cartesian product result will be shape of (N_1*N_2*N_3*...*N_M, M).
+    Assume shapes of input arrays are: $(N_1,), (N_2,), (N_3,), ..., (N_M,)$,
+    then the cartesian product result will be shape of $(N_1×N_2×N_3×...×N_M, M)$.
+
+    Args:
+        arrays (np.ndarray): Input arrays.
 
     Returns:
-        np.ndarray: Cartesian product result of shape (N_1*N_2*N_3*...*N_M, M).
+        np.ndarray: Cartesian product result of shape $(N_1×N_2×N_3×...×N_M, M)$.
 
     Examples:
         >>> t = np.array([1, 2])

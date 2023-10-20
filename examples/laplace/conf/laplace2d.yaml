@@ -1,0 +1,53 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: output_laplace2d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+NPOINT_INTERIOR: 9801
+NPOINT_BC: 400
+
+# set geometry
+DIAGONAL_COORD:
+  xmin: [0.0, 0.0]
+  xmax: [1.0, 1.0]
+
+# model settings
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["u"]
+  num_layers: 5
+  hidden_size: 20
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 200
+  learning_rate: 0.001
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+
