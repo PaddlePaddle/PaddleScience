@@ -29,11 +29,11 @@ TRAIN_FILE_PATH: ./datasets/lorenz_training_rk.hdf5
 VALID_FILE_PATH: ./datasets/lorenz_valid_rk.hdf5
 
 # set working condition
-EMBEDDING_MODEL_PATH: ./outputs_lorenz_transformer/checkpoints/latest
+EMBEDDING_MODEL_PATH: ./outputs_lorenz_enn/checkpoints/latest
 VIS_DATA_NUMS: 16
 
 # model settings
-MODEL:    
+MODEL:
   input_keys: ["embeds"]
   output_keys: ["pred_embeds"]
   num_layers: 4

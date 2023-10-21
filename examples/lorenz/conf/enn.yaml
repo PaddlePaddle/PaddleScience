@@ -29,7 +29,7 @@ TRAIN_FILE_PATH: ./datasets/lorenz_training_rk.hdf5
 VALID_FILE_PATH: ./datasets/lorenz_valid_rk.hdf5
 
 # model settings
-MODEL:    
+MODEL:
   input_keys: ["states"]
   output_keys: ["pred_states", "recover_states"]
 
