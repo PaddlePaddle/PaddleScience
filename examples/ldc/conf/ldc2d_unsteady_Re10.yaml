@@ -17,10 +17,16 @@ hydra:
     # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
+
 # general settings
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
+
+# set working condition
+NU: 0.01
+RHO: 1.0
+NTIME_ALL: 16
 
 # model settings
 MODEL:

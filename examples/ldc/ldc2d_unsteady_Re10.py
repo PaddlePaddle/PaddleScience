@@ -20,6 +20,7 @@ from omegaconf import DictConfig
 import ppsci
 from ppsci.utils import logger
 
+
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
@@ -30,10 +31,10 @@ def train(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL.model)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, True)}
 
     # set timestamps(including initial t0)
-    timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
+    timestamps = np.linspace(0.0, 1.5, cfg.NTIME_ALL, endpoint=True)
 
     # set time-geometry
     geom = {
@@ -50,12 +51,11 @@ def train(cfg: DictConfig):
     }
 
     # pde/bc constraint use t1~tn, initial constraint use t0
-    NTIME_ALL = len(timestamps)
-    NPOINT_PDE, NTIME_PDE = 99**2, NTIME_ALL - 1
-    NPOINT_TOP, NTIME_TOP = 101, NTIME_ALL - 1
-    NPOINT_DOWN, NTIME_DOWN = 101, NTIME_ALL - 1
-    NPOINT_LEFT, NTIME_LEFT = 99, NTIME_ALL - 1
-    NPOINT_RIGHT, NTIME_RIGHT = 99, NTIME_ALL - 1
+    NPOINT_PDE, NTIME_PDE = 99**2, cfg.NTIME_ALL - 1
+    NPOINT_TOP, NTIME_TOP = 101, cfg.NTIME_ALL - 1
+    NPOINT_DOWN, NTIME_DOWN = 101, cfg.NTIME_ALL - 1
+    NPOINT_LEFT, NTIME_LEFT = 99, cfg.NTIME_ALL - 1
+    NPOINT_RIGHT, NTIME_RIGHT = 99, cfg.NTIME_ALL - 1
     NPOINT_IC, NTIME_IC = 99**2, 1
 
     # set constraint
@@ -134,7 +134,7 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
-    NPOINT_EVAL = NPOINT_PDE * NTIME_ALL
+    NPOINT_EVAL = NPOINT_PDE * cfg.NTIME_ALL
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
@@ -181,7 +181,7 @@ def train(cfg: DictConfig):
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            num_timestamps=NTIME_ALL,
+            num_timestamps=cfg.NTIME_ALL,
             prefix="result_u_v",
         )
     }
@@ -214,16 +214,16 @@ def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL.model)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, True)}
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, True)}
 
     # set timestamps(including initial t0)
-    timestamps = np.linspace(0.0, 1.5, 16, endpoint=True)
+    timestamps = np.linspace(0.0, 1.5, cfg.NTIME_ALL, endpoint=True)
 
     # set time-geometry
     geom = {
@@ -234,16 +234,16 @@ def evaluate(cfg: DictConfig):
     }
 
     # pde/bc constraint use t1~tn, initial constraint use t0
-    NTIME_ALL = len(timestamps)
-    NPOINT_PDE, NTIME_PDE = 99**2, NTIME_ALL - 1
-    NPOINT_TOP, NTIME_TOP = 101, NTIME_ALL - 1
-    NPOINT_DOWN, NTIME_DOWN = 101, NTIME_ALL - 1
-    NPOINT_LEFT, NTIME_LEFT = 99, NTIME_ALL - 1
-    NPOINT_RIGHT, NTIME_RIGHT = 99, NTIME_ALL - 1
-    NPOINT_IC, NTIME_IC = 99**2, 1
+    NPOINT_PDE = 99**2
+    NPOINT_TOP = 101
+    NPOINT_DOWN = 101
+    NPOINT_LEFT = 99
+    NPOINT_RIGHT = 99
+    NPOINT_IC = 99**2
+    NTIME_PDE = cfg.NTIME_ALL - 1
 
     # set validator
-    NPOINT_EVAL = NPOINT_PDE * NTIME_ALL
+    NPOINT_EVAL = NPOINT_PDE * cfg.NTIME_ALL
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
@@ -290,7 +290,7 @@ def evaluate(cfg: DictConfig):
         "visulzie_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
-            num_timestamps=NTIME_ALL,
+            num_timestamps=cfg.NTIME_ALL,
             prefix="result_u_v",
         )
     }
@@ -299,6 +299,8 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
+        equation=equation,
+        geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
@@ -307,7 +309,10 @@ def evaluate(cfg: DictConfig):
     # visualize prediction for pretrained model(optional)
     solver.visualize()
 
-@hydra.main(version_base=None, config_path="./conf", config_name="ldc2d_unsteady_Re10.yaml")
+
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="ldc2d_unsteady_Re10.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
