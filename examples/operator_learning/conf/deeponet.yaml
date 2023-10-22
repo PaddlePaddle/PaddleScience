@@ -47,16 +47,18 @@ MODEL:
 # training settings
 TRAIN:
   epochs: 10000
-  iters_per_epoch: 1
   learning_rate: 1.0e-3
-  save_freq: 500
-  eval_freq: 500
-  log_freq: 20
-  eval_during_train: true
-  seed: 2023
-  eval_with_no_grad: true
-  pretrained_model_path: null
-  checkpoint_path: null
+  solver:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: 1
+    save_freq: 500
+    eval_freq: 500
+    log_freq: 20
+    eval_during_train: true
+    seed: 2023
+    eval_with_no_grad: true
+    pretrained_model_path: null
+    checkpoint_path: null
 
 # evaluation settings
 EVAL:

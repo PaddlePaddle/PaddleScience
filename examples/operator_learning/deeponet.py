@@ -18,7 +18,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    print(cfg.TRAIN)
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
@@ -76,7 +75,7 @@ def train(cfg: DictConfig):
         optimizer,
         None,
         validator=validator,
-        **cfg.TRAIN,
+        **cfg.TRAIN.solver,
     )
     # train model
     solver.train()
