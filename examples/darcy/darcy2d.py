@@ -40,10 +40,9 @@ def train(cfg: DictConfig):
     geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
 
     # set dataloader config
-    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
     NPOINT_PDE = cfg.NPOINT_PDE
