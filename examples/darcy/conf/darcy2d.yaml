@@ -1,0 +1,64 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_darcy2d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+
+# set working condition
+NPOINT_PDE: 9801  # 99 ** 2
+NPOINT_BC: 400  # 100 * 4
+
+# model settings
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["p"]
+  num_layers: 5
+  hidden_size: 20
+  activation: "stan"
+
+# training settings
+TRAIN:
+  epochs: 10000
+  iters_per_epoch: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    max_learning_rate: 1.0e-3
+    end_learning_rate: 1.0e-7
+  batch_size:
+    residual_validator: 8192
+  eval_freq: 200
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
+  lbfgs:
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    output_dir: ./outputs_darcy2d_L-BFGS
+    learning_rate: 1.0
+    max_iter: 10
+    eval_freq: ${TRAIN.eval_freq}
+    eval_during_train: ${TRAIN.eval_during_train}
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null

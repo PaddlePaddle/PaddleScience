@@ -12,25 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import path as osp
+
+import hydra
 import numpy as np
 import paddle
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set output directory
-    OUTPUT_DIR = "./output_darcy2d" if not args.output_dir else args.output_dir
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("p",), 5, 20, "stan")
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"Poisson": ppsci.equation.Poisson(2)}
@@ -45,8 +46,8 @@ if __name__ == "__main__":
         "iters_per_epoch": ITERS_PER_EPOCH,
     }
 
-    NPOINT_PDE = 99**2
-    NPOINT_BC = 100 * 4
+    NPOINT_PDE = cfg.NPOINT_PDE
+    NPOINT_BC = cfg.NPOINT_BC
 
     # set constraint
     def poisson_ref_compute_func(_in):
@@ -84,16 +85,8 @@ if __name__ == "__main__":
         bc.name: bc,
     }
 
-    # set training hyper-parameters
-    EPOCHS = 10000 if not args.epochs else args.epochs
-
     # set optimizer
-    lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        max_learning_rate=1e-3,
-        end_learning_rate=1e-7,
-    )()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(**cfg.TRAIN.lr_scheduler)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
@@ -105,7 +98,7 @@ if __name__ == "__main__":
         {
             "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
-            "batch_size": 8192,
+            "batch_size": cfg.TRAIN.batch_size.residual_validator,
             "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
@@ -159,13 +152,13 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=200,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -179,10 +172,12 @@ if __name__ == "__main__":
     solver.visualize()
 
     # finetuning pretrained model with L-BFGS
-    OUTPUT_DIR = "./output_darcy2d_L-BFGS"
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    EPOCHS = EPOCHS // 10
-    optimizer_lbfgs = ppsci.optimizer.LBFGS(1.0, max_iter=10)(model)
+    OUTPUT_DIR = cfg.TRAIN.lbfgs.output_dir
+    logger.init_logger("ppsci", osp.join(OUTPUT_DIR, f"{cfg.mode}.log"), "info")
+    EPOCHS = cfg.TRAIN.epochs // 10
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(
+        cfg.TRAIN.lbfgs.learning_rate, cfg.TRAIN.lbfgs.max_iter
+    )(model)
     solver = ppsci.solver.Solver(
         model,
         constraint,
@@ -190,9 +185,9 @@ if __name__ == "__main__":
         optimizer_lbfgs,
         None,
         EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=200,
+        cfg.TRAIN.lbfgs.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
+        eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -205,18 +200,116 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set equation
+    equation = {"Poisson": ppsci.equation.Poisson(2)}
+
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
+
+    NPOINT_PDE = cfg.NPOINT_PDE
+    NPOINT_BC = cfg.NPOINT_BC
+
+    # set constraint
+    def poisson_ref_compute_func(_in):
+        return (
+            -8.0
+            * (np.pi**2)
+            * np.sin(2.0 * np.pi * _in["x"])
+            * np.cos(2.0 * np.pi * _in["y"])
+        )
+
+    # set validator
+    NPOINT_EVAL = NPOINT_PDE
+    residual_validator = ppsci.validate.GeometryValidator(
+        equation["Poisson"].equations,
+        {"poisson": poisson_ref_compute_func},
+        geom["rect"],
+        {
+            "dataset": "NamedArrayDataset",
+            "total_size": NPOINT_EVAL,
+            "batch_size": cfg.TRAIN.batch_size.residual_validator,
+            "sampler": {"name": "BatchSampler"},
+        },
+        ppsci.loss.MSELoss("sum"),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        name="Residual",
+    )
+    validator = {residual_validator.name: residual_validator}
+
+    # set visualizer(optional)
+    # manually collate input data for visualization,
+    vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
+    visualizer = {
+        "visulzie_p": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {
+                "p": lambda d: d["p"],
+                "p_ref": lambda d: paddle.sin(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "p_diff": lambda d: paddle.sin(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"])
+                - d["p"],
+                "ux": lambda d: jacobian(d["p"], d["x"]),
+                "ux_ref": lambda d: 2
+                * np.pi
+                * paddle.cos(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "ux_diff": lambda d: jacobian(d["p"], d["x"])
+                - 2
+                * np.pi
+                * paddle.cos(2 * np.pi * d["x"])
+                * paddle.cos(2 * np.pi * d["y"]),
+                "uy": lambda d: jacobian(d["p"], d["y"]),
+                "uy_ref": lambda d: -2
+                * np.pi
+                * paddle.sin(2 * np.pi * d["x"])
+                * paddle.sin(2 * np.pi * d["y"]),
+                "uy_diff": lambda d: jacobian(d["p"], d["y"])
+                - (
+                    -2
+                    * np.pi
+                    * paddle.sin(2 * np.pi * d["x"])
+                    * paddle.sin(2 * np.pi * d["y"])
+                ),
+            },
+            prefix="result_p_ux_uy",
+        )
+    }
+
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)
     solver.visualize()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="darcy2d.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
