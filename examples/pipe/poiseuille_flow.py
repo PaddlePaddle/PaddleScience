@@ -18,47 +18,43 @@ Reference: https://github.com/Jianxun-Wang/LabelFree-DNN-Surrogate
 
 import copy
 import os
-import os.path as osp
+from os import path as osp
 
+import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+from omegaconf import DictConfig
 
+import ppsci
 from ppsci.utils import checker
+from ppsci.utils import logger
 
 if not checker.dynamic_import_to_globals("seaborn"):
     raise ModuleNotFoundError("Please install seaborn through pip first.")
 
 import seaborn as sns
 
-import ppsci
-from ppsci.utils import config
-from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-
-    # set output directory
-    OUTPUT_DIR = "./output_poiseuille_flow"
-
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    NU_MEAN = 0.001
-    NU_STD = 0.9
-    L = 1.0  # length of pipe
-    R = 0.05  # radius of pipe
-    RHO = 1  # density
-    P_OUT = 0  # pressure at the outlet of pipe
-    P_IN = 0.1  # pressure at the inlet of pipe
+    NU_MEAN = cfg.NU_MEAN
+    NU_STD = cfg.NU_STD
+    L = cfg.L  # length of pipe
+    R = cfg.R  # radius of pipe
+    RHO = cfg.RHO  # density
+    P_OUT = cfg.P_OUT  # pressure at the outlet of pipe
+    P_IN = cfg.P_IN  # pressure at the inlet of pipe
 
-    N_x = 10
-    N_y = 50
-    N_p = 50
+    N_x = cfg.N_x
+    N_y = cfg.N_y
+    N_p = cfg.N_p
 
-    X_IN = 0
+    X_IN = cfg.X_IN
     X_OUT = X_IN + L
     Y_START = -R
     Y_END = Y_START + 2 * R
@@ -86,16 +82,16 @@ if __name__ == "__main__":
     input_y = data_2d_xy_shuffle[:, 1].reshape(data_2d_xy_shuffle.shape[0], 1)
     input_nu = data_2d_xy_shuffle[:, 2].reshape(data_2d_xy_shuffle.shape[0], 1)
 
-    interior_data = {"x": input_x, "y": input_y, "nu": input_nu}
+    interior_data = {"x": input_x, "y": input_y, "nu": input_nu}  # noqa: F841
     interior_geom = ppsci.geometry.PointCloud(
         interior={"x": input_x, "y": input_y, "nu": input_nu},
         coord_keys=("x", "y", "nu"),
     )
 
     # set model
-    model_u = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("u",), 3, 50, "swish")
-    model_v = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("v",), 3, 50, "swish")
-    model_p = ppsci.arch.MLP(("sin(x)", "cos(x)", "y", "nu"), ("p",), 3, 50, "swish")
+    model_u = ppsci.arch.MLP(**cfg.MODEL.u_net)
+    model_v = ppsci.arch.MLP(**cfg.MODEL.v_net)
+    model_p = ppsci.arch.MLP(**cfg.MODEL.p_net)
 
     def input_trans(input):
         x, y = input["x"], input["y"]
@@ -137,7 +133,7 @@ if __name__ == "__main__":
     }
 
     # set constraint
-    BATCH_SIZE = 128
+    BATCH_SIZE = cfg.TRAIN.batch_size.pde_constraint
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
@@ -163,18 +159,16 @@ if __name__ == "__main__":
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
 
-    EPOCHS = 3000 if not args.epochs else args.epochs
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
+        epochs=cfg.TRAIN.epochs,
         iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=False,
-        save_freq=10,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        save_freq=cfg.TRAIN.save_freq,
         equation=equation,
     )
 
@@ -189,8 +183,8 @@ if __name__ == "__main__":
     }
     output_dict = solver.predict(input_dict, return_numpy=True)
     u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
-    v_pred = output_dict["v"].reshape(N_y, N_x, N_p)
-    p_pred = output_dict["p"].reshape(N_y, N_x, N_p)
+    v_pred = output_dict["v"].reshape(N_y, N_x, N_p)  # noqa: F841
+    p_pred = output_dict["p"].reshape(N_y, N_x, N_p)  # noqa: F841
 
     # Analytical result, y = data_1d_y
     u_analytical = np.zeros([N_y, N_x, N_p])
@@ -206,7 +200,7 @@ if __name__ == "__main__":
     ytext = [0.45, 0.28, 0.1, 0.01]
 
     # Plot
-    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
+    PLOT_DIR = osp.join(cfg.output_dir, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     plt.figure(1)
     plt.clf()
@@ -291,3 +285,21 @@ if __name__ == "__main__":
     ax1.tick_params(axis="x", labelsize=fontsize)
     ax1.tick_params(axis="y", labelsize=fontsize)
     plt.savefig(osp.join(PLOT_DIR, "pipe_unformUQ.png"), bbox_inches="tight")
+
+
+def evaluate(cfg: DictConfig):
+    print("Not supported.")
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="poiseuille_flow.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
