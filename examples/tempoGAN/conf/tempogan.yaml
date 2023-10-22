@@ -1,0 +1,62 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_tempoGAN/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+DATASET_PATH: ./datasets/tempoGAN/2d_train.mat
+DATASET_PATH_VALID: ./datasets/tempoGAN/2d_valid.mat
+
+# set working condition
+USE_AMP: true
+USE_SPATIALDISC: true
+USE_TEMPODISC: true
+WEIGHT_GEN: [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
+WEIGHT_GEN_LAYER: [-1.0e-5, -1.0e-5, -1.0e-5, -1.0e-5, -1.0e-5]
+WEIGHT_DISC: 1.0
+TILE_RATIO: 1
+
+# model settings
+MODEL:
+  input_keys: ["input_gen"]
+  output_keys: ["output_gen"]
+
+# training settings
+TRAIN:
+  epochs: 40000
+  iters_per_epoch: 2
+  batch_size:
+    sup_constraint: 8
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 2.0e-4
+    gamma: 0.05
+    by_epoch: true
+  eval_during_train: false
+  amp_level: O2
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null

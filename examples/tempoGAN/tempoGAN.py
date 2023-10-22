@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import os
+from os import path as osp
 
 import functions as func_module
+import hydra
 import numpy as np
 import paddle
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import checker
-from ppsci.utils import config
 from ppsci.utils import logger
 
 if not checker.dynamic_import_to_globals("hdf5storage"):
@@ -30,35 +32,31 @@ if not checker.dynamic_import_to_globals("hdf5storage"):
     )
 import hdf5storage
 
-if __name__ == "__main__":
-    args = config.parse_args()
-    ppsci.utils.misc.set_random_seed(42)
-    DATASET_PATH = "./datasets/tempoGAN/2d_train.mat"
-    DATASET_PATH_VALID = "./datasets/tempoGAN/2d_valid.mat"
-    OUTPUT_DIR = "./output_tempoGAN/" if args.output_dir is None else args.output_dir
 
+def train(cfg: DictConfig):
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # initialize parameters and import classes
-    USE_AMP = True
-    USE_SPATIALDISC = True
-    USE_TEMPODISC = True
+    USE_AMP = cfg.USE_AMP
+    USE_SPATIALDISC = cfg.USE_SPATIALDISC
+    USE_TEMPODISC = cfg.USE_TEMPODISC
 
-    weight_gen = [5.0, 0.0, 1.0]  # lambda_l1, lambda_l2, lambda_t
+    weight_gen = cfg.WEIGHT_GEN  # lambda_l1, lambda_l2, lambda_t
     weight_gen_layer = (
-        [-1e-5, -1e-5, -1e-5, -1e-5, -1e-5] if USE_SPATIALDISC else None
+        cfg.WEIGHT_GEN_LAYER if USE_SPATIALDISC else None
     )  # lambda_layer, lambda_layer1, lambda_layer2, lambda_layer3, lambda_layer4
-    weight_disc = 1.0
-    tile_ratio = 1
+    weight_disc = cfg.WEIGHT_DISC
+    tile_ratio = cfg.TILE_RATIO
 
     gen_funcs = func_module.GenFuncs(weight_gen, weight_gen_layer)
     dics_funcs = func_module.DiscFuncs(weight_disc)
     data_funcs = func_module.DataFuncs(tile_ratio)
 
     # load dataset
-    dataset_train = hdf5storage.loadmat(DATASET_PATH)
-    dataset_valid = hdf5storage.loadmat(DATASET_PATH_VALID)
+    dataset_train = hdf5storage.loadmat(cfg.DATASET_PATH)
+    dataset_valid = hdf5storage.loadmat(cfg.DATASET_PATH_VALID)
 
     # init Generator params
     in_channel = 1
@@ -74,8 +72,8 @@ if __name__ == "__main__":
 
     # define Generator model
     model_gen = ppsci.arch.Generator(
-        ("input_gen",),  # 'NCHW'
-        ("output_gen",),
+        cfg.MODEL.input_keys,  # 'NCHW'
+        cfg.MODEL.output_keys,
         in_channel,
         out_channels_tuple,
         kernel_sizes_tuple,
@@ -152,29 +150,24 @@ if __name__ == "__main__":
     model_list = ppsci.arch.ModelList(model_tuple)
 
     # set training hyper-parameters
-    ITERS_PER_EPOCH = 2
-    EPOCHS = 40000 if args.epochs is None else args.epochs
+    ITERS_PER_EPOCH = cfg.TRAIN.iters_per_epoch
+    EPOCHS = cfg.TRAIN.epochs
     EPOCHS_GEN = EPOCHS_DISC = EPOCHS_DISC_TEMPO = 1
-    BATCH_SIZE = 8
+    BATCH_SIZE = cfg.TRAIN.batch_size.sup_constraint
 
     # initialize Adam optimizer
     lr_scheduler_gen = ppsci.optimizer.lr_scheduler.Step(
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        learning_rate=2e-4,
-        step_size=EPOCHS // 2,
-        gamma=0.05,
-        by_epoch=True,
+        step_size=EPOCHS // 2, **cfg.TRAIN.lr_scheduler
     )()
     optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
     if USE_SPATIALDISC:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
-            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
+            step_size=EPOCHS // 2, **cfg.TRAIN.lr_scheduler
         )()
         optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
     if USE_TEMPODISC:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
-            EPOCHS, ITERS_PER_EPOCH, 2e-4, EPOCHS // 2, 0.05, by_epoch=True
+            step_size=EPOCHS // 2, **cfg.TRAIN.lr_scheduler
         )()
         optimizer_disc_tempo = ppsci.optimizer.Adam(lr_scheduler_disc_tempo)(
             (model_disc_tempo,)
@@ -330,40 +323,40 @@ if __name__ == "__main__":
     solver_gen = ppsci.solver.Solver(
         model_list,
         constraint_gen,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer_gen,
         lr_scheduler_gen,
         EPOCHS_GEN,
         ITERS_PER_EPOCH,
-        eval_during_train=False,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         use_amp=USE_AMP,
-        amp_level="O2",
+        amp_level=cfg.TRAIN.amp_level,
     )
     if USE_SPATIALDISC:
         solver_disc = ppsci.solver.Solver(
             model_list,
             constraint_disc,
-            OUTPUT_DIR,
+            cfg.output_dir,
             optimizer_disc,
             lr_scheduler_disc,
             EPOCHS_DISC,
             ITERS_PER_EPOCH,
-            eval_during_train=False,
+            eval_during_train=cfg.TRAIN.eval_during_train,
             use_amp=USE_AMP,
-            amp_level="O2",
+            amp_level=cfg.TRAIN.amp_level,
         )
     if USE_TEMPODISC:
         solver_disc_tempo = ppsci.solver.Solver(
             model_list,
             constraint_disc_tempo,
-            OUTPUT_DIR,
+            cfg.output_dir,
             optimizer_disc_tempo,
             lr_scheduler_disc_tempo,
             EPOCHS_DISC_TEMPO,
             ITERS_PER_EPOCH,
-            eval_during_train=False,
+            eval_during_train=cfg.TRAIN.eval_during_train,
             use_amp=USE_AMP,
-            amp_level="O2",
+            amp_level=cfg.TRAIN.amp_level,
         )
 
     PRED_INTERVAL = 200
@@ -372,7 +365,7 @@ if __name__ == "__main__":
         # plotting during training
         if i == 1 or i % PRED_INTERVAL == 0 or i == EPOCHS:
             func_module.predict_and_save_plot(
-                OUTPUT_DIR, i, solver_gen, dataset_valid, tile_ratio
+                cfg.output_dir, i, solver_gen, dataset_valid, tile_ratio
             )
 
         dics_funcs.model_gen = model_gen
@@ -387,16 +380,36 @@ if __name__ == "__main__":
         # train gen, input: (x,)
         solver_gen.train()
 
+
+def evaluate(cfg: DictConfig):
     ############### evaluation after training ###############
     img_target = (
-        func_module.get_image_array(os.path.join(OUTPUT_DIR, "predict", "target.png"))
+        func_module.get_image_array(
+            os.path.join(cfg.output_dir, "predict", "target.png")
+        )
         / 255.0
     )
     img_pred = (
         func_module.get_image_array(
-            os.path.join(OUTPUT_DIR, "predict", f"pred_epoch_{EPOCHS}.png")
+            os.path.join(
+                cfg.output_dir, "predict", f"pred_epoch_{cfg.TRAIN.epochs}.png"
+            )
         )
         / 255.0
     )
     eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_target, img_pred)
     logger.message(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="tempogan.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
