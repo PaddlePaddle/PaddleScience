@@ -82,7 +82,6 @@ def train(cfg: DictConfig):
     input_y = data_2d_xy_shuffle[:, 1].reshape(data_2d_xy_shuffle.shape[0], 1)
     input_nu = data_2d_xy_shuffle[:, 2].reshape(data_2d_xy_shuffle.shape[0], 1)
 
-    interior_data = {"x": input_x, "y": input_y, "nu": input_nu}  # noqa: F841
     interior_geom = ppsci.geometry.PointCloud(
         interior={"x": input_x, "y": input_y, "nu": input_nu},
         coord_keys=("x", "y", "nu"),
@@ -125,7 +124,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(5e-3)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set euqation
     equation = {
@@ -183,8 +182,6 @@ def train(cfg: DictConfig):
     }
     output_dict = solver.predict(input_dict, return_numpy=True)
     u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
-    v_pred = output_dict["v"].reshape(N_y, N_x, N_p)  # noqa: F841
-    p_pred = output_dict["p"].reshape(N_y, N_x, N_p)  # noqa: F841
 
     # Analytical result, y = data_1d_y
     u_analytical = np.zeros([N_y, N_x, N_p])

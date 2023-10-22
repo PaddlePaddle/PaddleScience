@@ -63,6 +63,7 @@ TRAIN:
   epochs: 3000
   batch_size:
     pde_constraint: 128
+  learning_rate: 5.0e-3
   eval_during_train: false
   save_freq: 10
   pretrained_model_path: null
