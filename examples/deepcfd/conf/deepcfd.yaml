@@ -26,8 +26,8 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set data file path
-DATAX_PATH: ./data/dataX.pkl
-DATAY_PATH: ./data/dataY.pkl
+DATAX_PATH: ./datasets/dataX.pkl
+DATAY_PATH: ./datasets/dataY.pkl
 SLIPT_RATIO: 0.7 # slipt dataset to train dataset and test datatset
 SAMPLE_SIZE: 981 # the shape of dataX and dataY is [SAMPLE_SIZE, CHANNEL_SIZE, X_SIZE, Y_SIZE]
 CHANNEL_SIZE: 3
