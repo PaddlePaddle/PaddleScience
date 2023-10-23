@@ -34,9 +34,9 @@
     pip install paddlesci
     ```
 
---8<--
-./README.md:update
---8<--
+    ``` shell
+    pip install paddlesci
+    ```
 
 --8<--
 ./README.md:feature
