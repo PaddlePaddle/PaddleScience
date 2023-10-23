@@ -56,6 +56,20 @@
 
 - PaddleScience 的部分代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
 
+    <style>
+        .avatar {
+            height: 64px;
+            width: 64px;
+            border: 2px solid rgba(128, 128, 128, 0.308);
+            border-radius: 50%;
+        }
+
+        .avatar:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.4);
+            transition: 0.4s;
+            transform:translateY(-10px);
+        }
+    </style>
     <a href="https://github.com/Asthestarsfalll"><img class="avatar" src="https://avatars.githubusercontent.com/Asthestarsfalll" alt="avatar" /></a>
     <a href="https://github.com/co63oc"><img class="avatar" src="https://avatars.githubusercontent.com/co63oc" alt="avatar" /></a>
     <a href="https://github.com/AndPuQing"><img class="avatar" src="https://avatars.githubusercontent.com/AndPuQing" alt="avatar" /></a>
