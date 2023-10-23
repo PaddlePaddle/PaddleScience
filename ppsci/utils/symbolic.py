@@ -189,7 +189,7 @@ class OperatorNode(Node):
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         if self.expr.func == sp.Derivative:
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
-                (_cvt_to_key(arg), order) for (arg, order) in self.expr.args[1:]
+                (_cvt_to_key(arg), int(order)) for (arg, order) in self.expr.args[1:]
             ]
         else:
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
