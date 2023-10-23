@@ -143,6 +143,7 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
     [xusuyong](https://github.com/xusuyong)，
     [NKNaN](https://github.com/NKNaN)，
     [ruoyunbai](https://github.com/ruoyunbai)，
+    [sanbuphy](https://github.com/sanbuphy)，
     [ccsuzzh](https://github.com/ccsuzzh)，
     [enkilee](https://github.com/enkilee)，
     [GreatV](https://github.com/GreatV)
