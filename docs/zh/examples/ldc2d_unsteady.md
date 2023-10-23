@@ -123,9 +123,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="29"
+``` py linenums="30"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:29:30
+examples/ldc/ldc2d_unsteady_Re10.py:30:31
 --8<--
 ```
 
@@ -137,9 +137,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:29:30
 
 由于 2D-LDC 使用的是 Navier-Stokes 方程的2维瞬态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="31"
+``` py linenums="33"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:31:32
+examples/ldc/ldc2d_unsteady_Re10.py:33:34
 --8<--
 ```
 
@@ -150,9 +150,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:31:32
 本文中 2D-LDC 问题作用在以 [-0.05, -0.05], [0.05, 0.05] 为对角线的二维矩形区域，且时间域为 16 个时刻 [0.0, 0.1, ..., 1.4, 1.5]，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
-``` py linenums="33"
+``` py linenums="36"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:33:41
+examples/ldc/ldc2d_unsteady_Re10.py:36:44
 --8<--
 ```
 
@@ -206,9 +206,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:33:41
 
 在定义约束之前，需要给每一种约束指定采样点个数，这表示某种约束在其对应计算域内采样数据的数量，以及指定通用的采样配置。
 
-``` py linenums="43"
+``` py linenums="46"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:43:56
+examples/ldc/ldc2d_unsteady_Re10.py:46:58
 --8<--
 ```
 
@@ -216,20 +216,16 @@ examples/ldc/ldc2d_unsteady_Re10.py:43:56
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="59"
+``` py linenums="60"
 # set constraint
-pde_constraint = ppsci.constraint.InteriorConstraint(
+pde = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
     {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
     geom["time_rect"],
     {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
     ppsci.loss.MSELoss("sum"),
     evenly=True,
-    weight_dict={
-        "continuity": 0.0001, # (1)
-        "momentum_x": 0.0001,
-        "momentum_y": 0.0001,
-    },
+    weight_dict=cfg.TRAIN.weight.pde, # (1)
     name="EQ",
 )
 ```
@@ -264,9 +260,9 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
-``` py linenums="69"
+``` py linenums="71"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:77:104
+examples/ldc/ldc2d_unsteady_Re10.py:71:106
 --8<--
 ```
 
@@ -274,17 +270,17 @@ examples/ldc/ldc2d_unsteady_Re10.py:77:104
 
 最后我们还需要对 $t=t_0$ 时刻的矩形内部点施加 N-S 方程约束，代码如下：
 
-``` py linenums="105"
+``` py linenums="107"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:105:113
+examples/ldc/ldc2d_unsteady_Re10.py:107:115
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="114"
+``` py linenums="116"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:114:122
+examples/ldc/ldc2d_unsteady_Re10.py:116:124
 --8<--
 ```
 
@@ -292,9 +288,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:114:122
 
 接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="26"
+``` py linenums="40"
 --8<--
-examples/ldc/conf/ldc2d_unsteady_Re10.yaml:26:29
+examples/ldc/conf/ldc2d_unsteady_Re10.yaml:40:43
 --8<--
 ```
 
@@ -302,9 +298,9 @@ examples/ldc/conf/ldc2d_unsteady_Re10.yaml:26:29
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="131"
+``` py linenums="132"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:131:132
+examples/ldc/ldc2d_unsteady_Re10.py:132:133
 --8<--
 ```
 
@@ -312,9 +308,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:131:132
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="134"
+``` py linenums="135"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:134:152
+examples/ldc/ldc2d_unsteady_Re10.py:135:153
 --8<--
 ```
 
@@ -336,9 +332,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:134:152
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i,y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 16 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="154"
+``` py linenums="155"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:154:185
+examples/ldc/ldc2d_unsteady_Re10.py:155:186
 --8<--
 ```
 
@@ -346,9 +342,9 @@ examples/ldc/ldc2d_unsteady_Re10.py:154:185
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="187"
+``` py linenums="188"
 --8<--
-examples/ldc/ldc2d_unsteady_Re10.py:187:208
+examples/ldc/ldc2d_unsteady_Re10.py:188:209
 --8<--
 ```
 

@@ -35,7 +35,6 @@ def train(cfg: DictConfig):
 
     # set timestamps(including initial t0)
     timestamps = np.linspace(0.0, 1.5, cfg.NTIME_ALL, endpoint=True)
-
     # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
@@ -66,7 +65,7 @@ def train(cfg: DictConfig):
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
-        weight_dict=cfg.TRAIN.weight.pde,
+        weight_dict=cfg.TRAIN.weight.pde,  # (1)
         name="EQ",
     )
     bc_top = ppsci.constraint.BoundaryConstraint(
@@ -224,7 +223,6 @@ def evaluate(cfg: DictConfig):
 
     # set timestamps(including initial t0)
     timestamps = np.linspace(0.0, 1.5, cfg.NTIME_ALL, endpoint=True)
-
     # set time-geometry
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
