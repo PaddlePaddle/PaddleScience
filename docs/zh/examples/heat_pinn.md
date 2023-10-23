@@ -1,7 +1,5 @@
 # Heat_PINN
 
-<a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a>
-
 ## 1. 背景简介
 
 热传导是自然界中的常见现象，广泛应用于工程、科学和技术领域。热传导问题在多个领域中都具有广泛的应用和重要性，对于提高能源效率、改进材料性能、促进科学研究和推动技术创新都起着至关重要的作用。因此了解和模拟传热过程对于设计和优化热传导设备、材料和系统至关重要。2D 定常热传导方程描述了稳态热传导过程，传统的求解方法涉及使用数值方法如有限元法或有限差分法，这些方法通常需要离散化领域并求解大规模矩阵系统。近年来，基于物理信息的神经网络（Physics-informed neural networks, PINN）逐渐成为求解偏微分方程的新方法。PINN 结合了神经网络的灵活性和对物理约束的建模能力，能够直接在连续领域中解决偏微分方程问题。
@@ -181,14 +179,19 @@ examples/Heat_PINN/heat_pinn.py
 
 ## 5. 结果展示
 
-下方展示了 PINN 与 FDM 在计算域中整体与剖面的温度 $T(x,y)$ 对比。
+<figure markdown>
+  ![T_comparison](https://paddle-org.bj.bcebos.com/paddlescience/docs/Heat_PINN/pinn_fdm_comparison.png.PNG){ loading=lazy }
+  <figcaption>上：PINN计算结果，下：FDM计算结果
+</figure>
+
+上图展示了使用 PINN 和 FDM 方法分别计算出的温度分布图，从中可以看出它们之间的结果非常接近。此外，PINN 和 FDM 两者之间的均方误差（MSE Loss）仅为 0.0013。综合考虑图形和数值结果，可以得出结论，PINN 能够有效地解决本案例的传热问题。
 
 <figure markdown>
-  ![T_comparison](/docs/images/tmp/pinn_fdm_comparison.png){ loading=lazy }
-  <figcaption>上：PINN计算结果，下：FDM计算结果
-  ![profile](/docs/images/tmp/profiles.png){ loading=lazy }
+  ![profile](https://paddle-org.bj.bcebos.com/paddlescience/docs/Heat_PINN/profiles.PNG){ loading=lazy }
   <figcaption>上：PINN与FDM 在 x 方向 T 结果对比，下：PINN与FDM在 y 方向 T 结果对比
 </figure>
+
+上图分别为温度 $T$ 的横截线图（ $y=\\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\\}$ ）和纵截线图（ $x=\\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\\}$ ），可以看到 PINN 与 FDM 方法的计算结果基本一致。
 
 ## 6.参考资料
 
