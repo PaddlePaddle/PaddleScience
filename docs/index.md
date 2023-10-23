@@ -10,29 +10,29 @@
 
 ![panorama](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png)
 
-!!! tip "快速安装"
-
-    === "方式1: 源码安装[推荐]"
-
-        --8<--
-        ./README.md:git_install
-        --8<--
-
-    === "方式2: pip安装"
-
-        ``` shell
-        pip install paddlesci
-        ```
-
-    === "[完整安装流程](./zh/install_setup.md)"
-
-        ``` shell
-        pip install paddlesci
-        ```
-
 --8<--
 ./README.md:update
 --8<--
+
+## 快速安装
+
+=== "方式1: 源码安装[推荐]"
+
+    --8<--
+    ./README.md:git_install
+    --8<--
+
+=== "方式2: pip安装"
+
+    ``` shell
+    pip install paddlesci
+    ```
+
+=== "[完整安装流程](./zh/install_setup.md)"
+
+    ``` shell
+    pip install paddlesci
+    ```
 
 --8<--
 ./README.md:feature
