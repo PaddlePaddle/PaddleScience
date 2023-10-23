@@ -14,10 +14,12 @@
 
 import copy
 
+from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.csv_dataset import IterableCSVDataset
+from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
@@ -46,6 +48,8 @@ __all__ = [
     "LorenzDataset",
     "RosslerDataset",
     "VtuDataset",
+    "MeshAirfoilDataset",
+    "MeshCylinderDataset",
     "build_dataset",
 ]
 
