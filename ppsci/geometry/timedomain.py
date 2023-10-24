@@ -541,7 +541,12 @@ class TimeXGeometry(geometry.Geometry):
         return txp
 
     def sample_initial_interior(
-        self, n: int, random: str = "pseudo", criteria=None, evenly=False
+        self,
+        n: int,
+        random: str = "pseudo",
+        criteria=None,
+        evenly=False,
+        compute_sdf_derivatives: bool = False,
     ):
         """Sample random points in the time-geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
@@ -570,7 +575,25 @@ class TimeXGeometry(geometry.Geometry):
                     "Sample initial interior points failed, "
                     "please check correctness of geometry and given creteria."
                 )
-        return misc.convert_to_dict(x, self.dim_keys)
+
+        # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
+        if hasattr(self.geometry, "sdf_func"):
+            # compute sdf excluding timet t
+            sdf = -self.geometry.sdf_func(x[..., 1:])
+            sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+            sdf_derivs_dict = {}
+            if compute_sdf_derivatives:
+                # compute sdf derivatives excluding timet t
+                sdf_derivs = -self.geometry.sdf_derivatives(x[..., 1:])
+                sdf_derivs_dict = misc.convert_to_dict(
+                    sdf_derivs, tuple(f"sdf__{key}" for key in self.geometry.dim_keys)
+                )
+        else:
+            sdf_dict = {}
+            sdf_derivs_dict = {}
+        x_dict = misc.convert_to_dict(x, self.dim_keys)
+
+        return {**x_dict, **sdf_dict, **sdf_derivs_dict}
 
     def __str__(self) -> str:
         """Return the name of class"""

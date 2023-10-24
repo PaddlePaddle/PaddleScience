@@ -17,11 +17,15 @@ from __future__ import annotations
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import paddle
 import sympy
 from paddle import nn
+
+DETACH_FUNC_NAME = "detach"
 
 
 class PDE:
@@ -30,22 +34,27 @@ class PDE:
     def __init__(self):
         super().__init__()
         self.equations = {}
-
         # for PDE which has learnable parameter(s)
         self.learnable_parameters = nn.ParameterList()
 
-    def create_symbols(self, symbol_str) -> Tuple[sympy.Symbol, ...]:
+        self.detach_keys: Optional[Tuple[str, ...]] = None
+
+    def create_symbols(
+        self, symbol_str: str
+    ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
         """Create symbols
 
         Args:
             symbol_str (str): String contains symbols, such as "x", "x y z".
 
         Returns:
-            Tuple[sympy.Symbol, ...]: Created symbol(s).
+            Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]: Created symbol(s).
         """
         return sympy.symbols(symbol_str)
 
-    def create_function(self, name, invars) -> sympy.Function:
+    def create_function(
+        self, name: str, invars: Tuple[sympy.Symbol, ...]
+    ) -> sympy.Function:
         """Create named function depending on given invars.
 
         Args:
@@ -55,7 +64,13 @@ class PDE:
         Returns:
             sympy.Function: Named sympy function.
         """
-        return sympy.Function(name)(*invars)
+        expr = sympy.Function(name)(*invars)
+
+        # wrap `expression(...)` to `detach(expression(...))`
+        # if name of expression is in given detach_keys
+        if self.detach_keys and name in self.detach_keys:
+            expr = sympy.Function(DETACH_FUNC_NAME)(expr)
+        return expr
 
     def add_equation(self, name: str, equation: Callable):
         """Add an equation.

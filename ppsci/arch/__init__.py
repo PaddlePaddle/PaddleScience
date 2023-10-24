@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 
 from ppsci.arch.base import Arch  # isort:skip
+from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
@@ -22,17 +25,21 @@ from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import CylinderEmbedding  # isort:skip
 from ppsci.arch.gan import Generator  # isort:skip
 from ppsci.arch.gan import Discriminator  # isort:skip
+from ppsci.arch.phylstm import DeepPhyLSTM  # isort:skip
 from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
+from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
 __all__ = [
     "Arch",
+    "AMGNet",
     "MLP",
     "DeepONet",
+    "DeepPhyLSTM",
     "LorenzEmbedding",
     "RosslerEmbedding",
     "CylinderEmbedding",
@@ -42,6 +49,7 @@ __all__ = [
     "ModelList",
     "AFNONet",
     "PrecipNet",
+    "UNetEx",
     "build_model",
 ]
 

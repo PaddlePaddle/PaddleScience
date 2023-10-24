@@ -18,6 +18,7 @@ This module is adapted from [https://github.com/lululxvi/deepxde](https://github
 
 from __future__ import annotations
 
+from typing import Dict
 from typing import Optional
 
 import paddle
@@ -42,7 +43,7 @@ class _Jacobian:
         self.dim_y = ys.shape[1]
         self.dim_x = xs.shape[1]
 
-        self.J = {}
+        self.J: Dict[str, paddle.Tensor] = {}
 
     def __call__(self, i: int = 0, j: Optional[int] = None) -> "paddle.Tensor":
         """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,

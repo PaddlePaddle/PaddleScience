@@ -134,7 +134,7 @@ if __name__ == "__main__":
         lr_scheduler,
         weight_decay=1e-8,
         grad_clip=clip,
-    )([model])
+    )(model)
 
     # manually build validator
     eval_dataloader_cfg = {

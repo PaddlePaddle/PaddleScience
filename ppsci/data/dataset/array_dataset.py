@@ -29,9 +29,9 @@ class NamedArrayDataset(io.Dataset):
     Args:
         input (Dict[str, np.ndarray]): Input dict.
         label (Dict[str, np.ndarray]): Label dict.
-        weight (Optional[Dict[str, np.ndarray]], optional): Weight dict.
-        transforms (Optional[vision.Compose], optional): Compose object contains sample wise
-            transform(s).
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -62,9 +62,10 @@ class NamedArrayDataset(io.Dataset):
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
 
-        # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
-            input_item = self.transforms(input_item)
+            input_item, label_item, weight_item = self.transforms(
+                (input_item, label_item, weight_item)
+            )
 
         return (input_item, label_item, weight_item)
 
@@ -100,6 +101,8 @@ class IterableNamedArrayDataset(io.IterableDataset):
         super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
         self.weight = (
             {key: paddle.to_tensor(value) for key, value in weight.items()}
             if weight is not None

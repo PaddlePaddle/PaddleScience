@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
     args = config.parse_args()
     ppsci.utils.misc.set_random_seed(42)
-    DATASET_PATH = "./datasets/hPINNs/hpinns_holo_train.mat"
-    DATASET_PATH_VALID = "./datasets/hPINNs/hpinns_holo_valid.mat"
+    DATASET_PATH = "./datasets/hpinns_holo_train.mat"
+    DATASET_PATH_VALID = "./datasets/hpinns_holo_valid.mat"
     OUTPUT_DIR = "./output_hpinns/" if args.output_dir is None else args.output_dir
 
     # initialize logger

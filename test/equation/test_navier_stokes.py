@@ -1,7 +1,9 @@
 import paddle
 import pytest
-from paddle import nn
+import sympy as sp
 
+import ppsci
+from ppsci import arch
 from ppsci import equation
 
 
@@ -26,8 +28,8 @@ def momentum_x_compute_func(
     momentum_x = (
         u * jacobian(u, x)
         + v * jacobian(u, y)
-        - nu / rho * hessian(u, x)
-        - nu / rho * hessian(u, y)
+        - nu * hessian(u, x)
+        - nu * hessian(u, y)
         + 1 / rho * jacobian(p, x)
     )
 
@@ -35,7 +37,7 @@ def momentum_x_compute_func(
         momentum_x += jacobian(u, t)
     if dim == 3:
         momentum_x += w * jacobian(u, z)
-        momentum_x -= nu / rho * hessian(u, z)
+        momentum_x -= nu * hessian(u, z)
     return momentum_x
 
 
@@ -45,8 +47,8 @@ def momentum_y_compute_func(
     momentum_y = (
         u * jacobian(v, x)
         + v * jacobian(v, y)
-        - nu / rho * hessian(v, x)
-        - nu / rho * hessian(v, y)
+        - nu * hessian(v, x)
+        - nu * hessian(v, y)
         + 1 / rho * jacobian(p, y)
     )
 
@@ -54,7 +56,7 @@ def momentum_y_compute_func(
         momentum_y += jacobian(v, t)
     if dim == 3:
         momentum_y += w * jacobian(v, z)
-        momentum_y -= nu / rho * hessian(v, z)
+        momentum_y -= nu * hessian(v, z)
     return momentum_y
 
 
@@ -65,9 +67,9 @@ def momentum_z_compute_func(
         u * jacobian(w, x)
         + v * jacobian(w, y)
         + w * jacobian(w, z)
-        - nu / rho * hessian(w, x)
-        - nu / rho * hessian(w, y)
-        - nu / rho * hessian(w, z)
+        - nu * hessian(w, x)
+        - nu * hessian(w, y)
+        - nu * hessian(w, z)
         + 1 / rho * jacobian(p, z)
     )
     if time:
@@ -91,40 +93,33 @@ def test_navierstokes(nu, rho, dim, time):
     y = paddle.randn([batch_size, 1])
     x.stop_gradient = False
     y.stop_gradient = False
-    input_dims = 2
+
+    input_dims = ("x", "y")
+    output_dims = ("u", "v", "p") if dim == 2 else ("u", "v", "w", "p")
     inputs = (x, y)
+
     if time:
         t = paddle.randn([batch_size, 1])
         t.stop_gradient = False
         inputs = (t,) + inputs
-        input_dims += 1
+        input_dims = ("t",) + input_dims
     if dim == 3:
         z = paddle.randn([batch_size, 1])
         z.stop_gradient = False
         inputs = inputs + (z,)
-        input_dims += 1
+        input_dims = input_dims + ("z",)
     input_data = paddle.concat(inputs, axis=1)
 
-    """
-    Use the relatively simple Multilayer Perceptron 
-    to represent the mapping function from (t, x, y, z) to (u, v, w, p):
-    f(x, y) = (u, v, p) or
-    f(t, x, y) = (u, v, p) or
-    f(t, x, y, z) = (u, v, w, p)
-    """
-    model = nn.Sequential(
-        nn.Linear(input_dims, 3 if dim == 2 else 4),
-        nn.Tanh(),
-    )
+    model = arch.MLP(input_dims, output_dims, 2, 16)
 
     # manually generate output
-    output = model(input_data)
+    output = model.forward_tensor(input_data)
 
     if dim == 2:
-        u, v, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
+        u, v, p = paddle.split(output, num_or_sections=len(output_dims), axis=1)
         w, z = None, None
     else:
-        u, v, w, p = paddle.split(output, num_or_sections=output.shape[1], axis=1)
+        u, v, w, p = paddle.split(output, num_or_sections=len(output_dims), axis=1)
     if not time:
         t = None
     expected_continuity = continuity_compute_func(x=x, y=y, u=u, v=v, dim=dim, w=w, z=z)
@@ -141,6 +136,12 @@ def test_navierstokes(nu, rho, dim, time):
 
     # compute result using NavierStokes class
     navier_stokes_equation = equation.NavierStokes(nu=nu, rho=rho, dim=dim, time=time)
+    for name, expr in navier_stokes_equation.equations.items():
+        if isinstance(expr, sp.Basic):
+            navier_stokes_equation.equations[name] = ppsci.lambdify(
+                expr,
+                model,
+            )
 
     data_dict = {"x": x, "y": y, "u": u, "v": v, "p": p}
     if time:
@@ -156,9 +157,7 @@ def test_navierstokes(nu, rho, dim, time):
     ]
 
     if dim == 3:
-        test_output_names.append(
-            "momentum_z",
-        )
+        test_output_names.append("momentum_z")
 
     test_output = {}
     for name in test_output_names:
@@ -174,7 +173,9 @@ def test_navierstokes(nu, rho, dim, time):
 
     # check result whether is equal
     for name in test_output_names:
-        assert paddle.allclose(expected_output[name], test_output[name])
+        assert paddle.allclose(
+            expected_output[name], test_output[name], atol=1e-7
+        ), f"{name}"
 
 
 if __name__ == "__main__":

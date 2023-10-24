@@ -55,8 +55,8 @@ class AGDA(LossAggregator):
         self.gamma = gamma
         self.Lf_smooth = 0
         self.Lu_smooth = 0
-        self.Lf_tilde_acc = 0
-        self.Lu_tilde_acc = 0
+        self.Lf_tilde_acc = 0.0
+        self.Lu_tilde_acc = 0.0
 
     def __call__(self, losses, step: int = 0):
         if len(losses) != 2:
@@ -133,7 +133,7 @@ class AGDA(LossAggregator):
             gu_bar = gu_bar - (dot_product / (gf_bar * gf_bar).sum()) * gf_bar
         grads_list = [gf_bar, gu_bar]
 
-        proj_grads = []
+        proj_grads: List[paddle.Tensor] = []
         for j in range(len(self.losses)):
             start_idx = 0
             for idx, var in enumerate(self.model.parameters()):

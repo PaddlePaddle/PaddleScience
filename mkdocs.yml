@@ -17,6 +17,7 @@ site_name: PaddleScience Docs
 site_description: An out-of-the-box open source library for scientific computing based on deep learning.
 site_author: PaddlePaddle
 site_url: "https://github.com/PaddlePaddle/PaddleScience"
+edit_uri: edit/develop/docs/
 strict: false
 
 # Repository
@@ -34,55 +35,74 @@ nav:
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
   - 经典案例:
-      - PINNs:
-        - 方程求解:
-          - Volterra_IDE: zh/examples/volterra_ide.md
-          - Laplace2D: zh/examples/laplace2d.md
-        - 振动:
-          - ViV: zh/examples/viv.md
-        - 流体:
-          - Aneurysm: zh/examples/aneurysm.md
-          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
-          - LDC2D_steady: zh/examples/ldc2d_steady.md
-          - Darcy2D: zh/examples/darcy2d.md
-        - 材料:
-          - hPINNs: zh/examples/hpinns.md
-      - 数据驱动:
-        - 方程求解:
-          - DeepHPMs: zh/examples/deephpms.md
-          - Lorenz_transform_physx: zh/examples/lorenz.md
-          - Rossler_transform_physx: zh/examples/rossler.md
-        - 算子学习:
-          - DeepONet: zh/examples/deeponet.md
-        - 气象预测:
-          - FourCastNet: zh/examples/fourcastnet.md
-        - 流体:
-          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
-          - tempoGAN: zh/examples/tempoGAN.md
-      - 数理融合:
-        - 流体:
-          - BubbleNet: zh/examples/bubble.md
+    - PINNs:
+      - 方程求解:
+        - Volterra_IDE: zh/examples/volterra_ide.md
+        - Laplace2D: zh/examples/laplace2d.md
+        - PIRBN: zh/examples/pirbn.md
+      - 振动:
+        - ViV: zh/examples/viv.md
+      - 流体:
+        - Aneurysm: zh/examples/aneurysm.md
+        - ShockWave: zh/examples/shock_wave.md
+        - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+        - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
+        - LDC2D_steady: zh/examples/ldc2d_steady.md
+        - Darcy2D: zh/examples/darcy2d.md
+        - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+      - 材料:
+        - hPINNs: zh/examples/hpinns.md
+      - 结构:
+        - Bracket: zh/examples/bracket.md
+    - 数据驱动:
+      - 方程求解:
+        - DeepHPMs: zh/examples/deephpms.md
+        - Lorenz_transform_physx: zh/examples/lorenz.md
+        - Rossler_transform_physx: zh/examples/rossler.md
+      - 算子学习:
+        - DeepONet: zh/examples/deeponet.md
+      - 气象预测:
+        - FourCastNet: zh/examples/fourcastnet.md
+      - 流体:
+        - AMGNet: zh/examples/amgnet.md
+        - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+        - tempoGAN: zh/examples/tempoGAN.md
+        - DeepCFD: zh/examples/deepcfd.md
+      - 时序预测:
+        - Phy-LSTM: zh/examples/phylstm.md
+    - 数理融合:
+      - 流体:
+        - BubbleNet: zh/examples/bubble.md
   - API文档:
+    - " ":
       - ppsci.arch: zh/api/arch.md
       - ppsci.autodiff: zh/api/autodiff.md
       - ppsci.constraint: zh/api/constraint.md
       - ppsci.data:
-          - ppsci.data.dataset: zh/api/data/dataset.md
-          - ppsci.data.transform: zh/api/data/process/transform.md
-          - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
+        - ppsci.data.dataset: zh/api/data/dataset.md
+        - ppsci.data.transform: zh/api/data/process/transform.md
+        - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
       - ppsci.loss: zh/api/loss.md
       - ppsci.metric: zh/api/metric.md
       - ppsci.optimizer:
-          - ppsci.optimizer.optimizer: zh/api/optimizer.md
-          - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
+        - ppsci.optimizer.optimizer: zh/api/optimizer.md
+        - ppsci.optimizer.lr_scheduler: zh/api/lr_scheduler.md
       - ppsci.solver: zh/api/solver.md
-      - ppsci.utils: zh/api/utils.md
+      - ppsci.utils:
+        - ppsci.utils.checker: zh/api/utils/checker.md
+        - ppsci.utils.expression: zh/api/utils/expression.md
+        - ppsci.utils.initializer: zh/api/utils/initializer.md
+        - ppsci.utils.logger: zh/api/utils/logger.md
+        - ppsci.utils.misc: zh/api/utils/misc.md
+        - ppsci.utils.reader: zh/api/utils/reader.md
+        - ppsci.utils.save_load: zh/api/utils/save_load.md
+        - ppsci.utils.symbolic: zh/api/utils/symbolic.md
       - ppsci.validate: zh/api/validate.md
       - ppsci.visualize: zh/api/visualize.md
       - ppsci.experimental: zh/api/experimental.md
+      - ppsci.probability: zh/api/probability.md
   - 使用指南: zh/user_guide.md
   - 开发与复现指南:
     - 开发指南: zh/development.md
@@ -105,16 +125,20 @@ theme:
     - navigation.tabs.sticky
     - navigation.tracking
     - navigation.sections
-    - navigation.prune
+    # - navigation.prune # disabled temporarily for rendering speed
     - navigation.top
     - search.suggest
     - navigation.instant
-    - navigation.expand
     - content.code.copy
     - content.code.select
     - content.code.annotate
     - search.highlight
     - content.tabs.link
+    - content.action.edit
+    - content.action.view
+  icon:
+    edit: material/pencil
+    view: material/eye
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -138,9 +162,14 @@ plugins:
         python:
           paths: [./ppsci]
   - mkdocs-video
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+      type: date
 
 # Extensions
 markdown_extensions:
+  - pymdownx.critic
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -152,7 +181,11 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - pymdownx.details
   - attr_list

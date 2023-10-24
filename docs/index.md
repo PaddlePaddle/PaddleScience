@@ -1,32 +1,93 @@
 # PaddleScience
 
-> *Developed with [PaddlePaddle](https://www.paddlepaddle.org.cn/)*
+--8<--
+./README.md:status
+--8<--
 
-PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
+--8<--
+./README.md:description
+--8<--
 
-![panorama](./images/overview/panorama.png)
+![panorama](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png)
 
-## 特性
+--8<--
+./README.md:examples_list
+--8<--
 
-- 支持简单几何和复杂 STL 几何的采样与布尔运算。
-- 支持包括 Dirichlet、Neumann、Robin 以及自定义边界条件。
-- 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 14+ 案例。
-- 支持结果可视化输出与日志结构化保存。
-- 完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。
-- 更多特性正在开发中...
+## 🚀快速安装
 
-## 支持
+=== "方式1: 源码安装[推荐]"
 
-- 如使用过程中遇到问题或想提出开发建议，欢迎在 [**Issue**](https://github.com/PaddlePaddle/PaddleScience/issues/new/choose) 页面新建 issue。
+    --8<--
+    ./README.md:git_install
+    --8<--
 
-## 贡献代码
+=== "方式2: pip安装"
 
-PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，请参阅 [**贡献指南**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/contribute/)。
+    ``` shell
+    pip install paddlesci
+    ```
 
-## 致谢
+=== "[完整安装流程](./zh/install_setup.md)"
 
-PaddleScience 的部分模块和案例设计受 [NVIDIA-Modulus](https://github.com/NVIDIA/modulus/tree/main)、[DeepXDE](https://github.com/lululxvi/deepxde/tree/master)、[PaddleNLP](https://github.com/PaddlePaddle/PaddleNLP/tree/develop)、[PaddleClas](https://github.com/PaddlePaddle/PaddleClas/tree/develop) 等优秀开源套件的启发。
+    ``` shell
+    pip install paddlesci
+    ```
 
-## 证书
+    ``` shell
+    pip install paddlesci
+    ```
 
-[Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
+--8<--
+./README.md:feature
+--8<--
+
+--8<--
+./README.md:support
+--8<--
+
+--8<--
+./README.md:contribution
+--8<--
+
+--8<--
+./README.md:thanks
+--8<--
+
+- PaddleScience 的部分代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
+
+    <style>
+        .avatar {
+            height: 64px;
+            width: 64px;
+            border: 2px solid rgba(128, 128, 128, 0.308);
+            border-radius: 50%;
+        }
+
+        .avatar:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.4);
+            transition: 0.4s;
+            transform:translateY(-10px);
+        }
+    </style>
+    <a href="https://github.com/Asthestarsfalll"><img class="avatar" src="https://avatars.githubusercontent.com/Asthestarsfalll" alt="avatar" /></a>
+    <a href="https://github.com/co63oc"><img class="avatar" src="https://avatars.githubusercontent.com/co63oc" alt="avatar" /></a>
+    <a href="https://github.com/AndPuQing"><img class="avatar" src="https://avatars.githubusercontent.com/AndPuQing" alt="avatar" /></a>
+    <a href="https://github.com/MayYouBeProsperous"><img class="avatar" src="https://avatars.githubusercontent.com/MayYouBeProsperous" alt="avatar" /></a>
+    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
+    <a href="https://github.com/mrcangye"><img class="avatar" src="https://avatars.githubusercontent.com/mrcangye" alt="avatar" /></a>
+    <a href="https://github.com/jjyaoao"><img class="avatar" src="https://avatars.githubusercontent.com/jjyaoao" alt="avatar" /></a>
+    <a href="https://github.com/jiamingkong"><img class="avatar" src="https://avatars.githubusercontent.com/jiamingkong" alt="avatar" /></a>
+    <a href="https://github.com/Liyulingyue"><img class="avatar" src="https://avatars.githubusercontent.com/Liyulingyue" alt="avatar" /></a>
+    <a href="https://github.com/XYM-1"><img class="avatar" src="https://avatars.githubusercontent.com/XYM-1" alt="avatar" /></a>
+    <a href="https://github.com/xusuyong"><img class="avatar" src="https://avatars.githubusercontent.com/xusuyong" alt="avatar" /></a>
+    <a href="https://github.com/NKNaN"><img class="avatar" src="https://avatars.githubusercontent.com/NKNaN" alt="avatar" /></a>
+    <a href="https://github.com/ruoyunbai"><img class="avatar" src="https://avatars.githubusercontent.com/ruoyunbai" alt="avatar" /></a>
+    <a href="https://github.com/sanbuphy"><img class="avatar" src="https://avatars.githubusercontent.com/sanbuphy" alt="avatar" /></a>
+    <a href="https://github.com/ccsuzzh"><img class="avatar" src="https://avatars.githubusercontent.com/ccsuzzh" alt="avatar" /></a>
+    <a href="https://github.com/enkilee"><img class="avatar" src="https://avatars.githubusercontent.com/enkilee" alt="avatar" /></a>
+    <a href="https://github.com/GreatV"><img class="avatar" src="https://avatars.githubusercontent.com/GreatV" alt="avatar" /></a>
+
+--8<--
+./README.md:license
+--8<--

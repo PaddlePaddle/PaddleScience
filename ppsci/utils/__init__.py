@@ -32,8 +32,12 @@ from ppsci.utils.reader import load_vtk_with_time_file
 from ppsci.utils.save_load import load_checkpoint
 from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
+from ppsci.utils.symbolic import lambdify
 
 __all__ = [
+    "AttrDict",
+    "AverageMeter",
+    "ExpressionSolver",
     "initializer",
     "logger",
     "misc",
@@ -47,11 +51,9 @@ __all__ = [
     "dynamic_import_to_globals",
     "run_check",
     "run_check_mesh",
-    "AttrDict",
-    "ExpressionSolver",
-    "AverageMeter",
     "set_random_seed",
     "load_checkpoint",
     "load_pretrain",
     "save_checkpoint",
+    "lambdify",
 ]
