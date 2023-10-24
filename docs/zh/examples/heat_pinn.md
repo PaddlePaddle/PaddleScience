@@ -40,16 +40,15 @@ $$
 ，我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(x, y)$ 到 $u$ 的映射函数 $f: \mathbb{R}^2 \to \mathbb{R}^1$ ，即：
 
 $$
-u = f(x, y)
+u = f(x, y),
 $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-```py linenums="35"
+```py linenums="34"
 --8<--
-examples/Heat_PINN/heat_pinn.py:35:36
+examples/Heat_PINN/heat_pinn.py:34:35
 --8<--
-```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("x", "y")`，输出变量名是 `"u"`，这些命名与后续代码保持一致。
 
@@ -59,11 +58,10 @@ examples/Heat_PINN/heat_pinn.py:35:36
 
 由于二维热传导方程使用的是 Laplace 方程的 2 维形式，因此可以直接使用 PaddleScience 内置的 `Laplace`，指定该类的参数 `dim` 为 2。
 
-```py linenums="38"
+```py linenums="37"
 --8<--
-examples/Heat_PINN/heat_pinn.py:37:39
+examples/Heat_PINN/heat_pinn.py:37:38
 --8<--
-```
 
 ### 3.3 计算域构建
 
@@ -92,7 +90,7 @@ examples/Heat_PINN/heat_pinn.py:49:53
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-```py linenums="56"
+```py linenums="55"
 --8<--
 examples/Heat_PINN/heat_pinn.py:55:67
 --8<--
@@ -152,7 +150,7 @@ examples/Heat_PINN/heat_pinn.py:127:128
 
 完成上述设置之后，只需要将所有上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-```py linenums="131"
+```py linenums="130"
 --8<--
 examples/Heat_PINN/heat_pinn.py:130:142
 --8<--
