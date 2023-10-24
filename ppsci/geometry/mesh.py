@@ -341,7 +341,7 @@ class Mesh(geometry.Geometry):
                     evenly,
                     inflation_dist=None,
                 )
-                for key, value in data_dict:
+                for key, value in data_dict.items():
                     if key not in inflated_data_dict:
                         inflated_data_dict[key] = value
                     else:

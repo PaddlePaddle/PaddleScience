@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import time
 from typing import TYPE_CHECKING
 from typing import Dict
 from typing import Tuple
+from typing import Union
 
 import paddle
 from paddle import io
@@ -26,13 +29,41 @@ from ppsci.utils import misc
 # from ppsci.utils import profiler
 
 if TYPE_CHECKING:
+    from pgl.utils import data as pgl_data
+
     from ppsci import solver
+
+
+def _get_datset_length(
+    data_loader: Union["io.DataLoader", "pgl_data.Dataloader", "io.IterableDataset"]
+) -> int:
+    """Get full dataset length of given dataloader.
+
+    Args:
+        data_loader (Union[io.DataLoader, pgl_data.Dataloader, io.IterableDataset]):
+            Given dataloader.
+
+    Returns:
+        int: Length of full dataset.
+    """
+    if isinstance(data_loader, io.DataLoader):
+        num_samples = len(data_loader.dataset)
+    elif isinstance(data_loader, io.IterableDataset):
+        num_samples = data_loader.num_samples
+    elif str(type(data_loader)) == "<class 'pgl.utils.data.dataloader.Dataloader'>":
+        num_samples = len(data_loader.dataset)
+    else:
+        raise NotImplementedError(
+            f"Can not fetch the length of given dataset({type(data_loader)})."
+        )
+
+    return num_samples
 
 
 def _eval_by_dataset(
     solver: "solver.Solver", epoch_id: int, log_freq: int
 ) -> Tuple[float, Dict[str, Dict[str, float]]]:
-    """Evaluate with computing metric on total samples.
+    """Evaluate with computing metric on total samples(default process).
 
     Args:
         solver (solver.Solver): Main Solver.
@@ -43,15 +74,12 @@ def _eval_by_dataset(
         Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
             computed during evaluation.
     """
-    target_metric: float = None
+    target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
-        if isinstance(_validator.data_loader, io.DataLoader):
-            num_samples = len(_validator.data_loader.dataset)
-        else:
-            num_samples = _validator.data_loader.num_samples
+        num_samples = _get_datset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
         reader_tic = time.perf_counter()
@@ -86,19 +114,21 @@ def _eval_by_dataset(
             # collect batch data
             for key, input in input_dict.items():
                 all_input[key].append(
-                    input.detach()
+                    (input.detach() if hasattr(input, "detach") else input)
                     if solver.world_size == 1
                     else misc.all_gather(input.detach())
                 )
+
             for key, output in output_dict.items():
                 all_output[key].append(
-                    output.detach()
+                    (output.detach() if hasattr(output, "detach") else output)
                     if solver.world_size == 1
                     else misc.all_gather(output.detach())
                 )
+
             for key, label in label_dict.items():
                 all_label[key].append(
-                    label.detach()
+                    (label.detach() if hasattr(label, "detach") else label)
                     if solver.world_size == 1
                     else misc.all_gather(label.detach())
                 )
@@ -122,22 +152,29 @@ def _eval_by_dataset(
 
         # concate all data and discard padded sample(s)
         for key in all_input:
-            all_input[key] = paddle.concat(all_input[key])
+            if paddle.is_tensor(all_input[key][0]):
+                all_input[key] = paddle.concat(all_input[key])
             if len(all_input[key]) > num_samples:
                 all_input[key] = all_input[key][:num_samples]
+
         for key in all_output:
-            all_output[key] = paddle.concat(all_output[key])
+            if paddle.is_tensor(all_output[key][0]):
+                all_output[key] = paddle.concat(all_output[key])
             if len(all_output[key]) > num_samples:
                 all_output[key] = all_output[key][:num_samples]
+
         for key in all_label:
-            all_label[key] = paddle.concat(all_label[key])
+            if paddle.is_tensor(all_label[key][0]):
+                all_label[key] = paddle.concat(all_label[key])
             if len(all_label[key]) > num_samples:
                 all_label[key] = all_label[key][:num_samples]
 
-        metric_dict_group = misc.PrettyOrderedDict()
+        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         for metric_name, metric_func in _validator.metric.items():
             metric_dict = metric_func(all_output, all_label)
-            metric_dict_group[metric_name] = metric_dict
+            metric_dict_group[metric_name] = {
+                k: float(v) for k, v in metric_dict.items()
+            }
             for var_name, metric_value in metric_dict.items():
                 metric_str = f"{metric_name}.{var_name}({_validator.name})"
                 if metric_str not in solver.eval_output_info:
@@ -149,10 +186,11 @@ def _eval_by_dataset(
                 )
 
         # use the first metric for return value
-        if target_metric is None:
-            tmp = metric_dict_group
-            while isinstance(tmp, dict):
-                tmp = next(iter(tmp.values()))
+        tmp = metric_dict_group
+        while isinstance(tmp, dict):
+            tmp = next(iter(tmp.values()))
+        # avoid that none of metric is set
+        if isinstance(tmp, float):
             target_metric = float(tmp)
 
     return target_metric, metric_dict_group
@@ -172,15 +210,12 @@ def _eval_by_batch(
         Tuple[float, Dict[str, Dict[str, float]]]: Target metric and all metric dicts
             computed during evaluation.
     """
-    target_metric: float = None
+    target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
-        if isinstance(_validator.data_loader, io.DataLoader):
-            num_samples = len(_validator.data_loader.dataset)
-        else:
-            num_samples = _validator.data_loader.num_samples
+        num_samples = _get_datset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
-        metric_dict_group = misc.PrettyOrderedDict()
+        metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
         reader_tic = time.perf_counter()
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
@@ -253,10 +288,11 @@ def _eval_by_batch(
                 solver.eval_output_info[metric_str].update(metric_value, num_samples)
 
         # use the first metric for return value
-        if target_metric is None:
-            tmp = metric_dict_group
-            while isinstance(tmp, dict):
-                tmp = next(iter(tmp.values()))
+        tmp = metric_dict_group
+        while isinstance(tmp, dict):
+            tmp = next(iter(tmp.values()))
+        # avoid that none of metric is set
+        if isinstance(tmp, float):
             target_metric = tmp
 
     return target_metric, metric_dict_group

@@ -18,9 +18,12 @@ import collections
 import functools
 import os
 import random
+import time
+from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -29,11 +32,14 @@ import paddle
 from matplotlib import pyplot as plt
 from paddle import distributed as dist
 
+from ppsci.utils import logger
+
 __all__ = [
-    "all_gather",
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
+    "Timer",
+    "all_gather",
     "concat_dict_list",
     "convert_to_array",
     "convert_to_dict",
@@ -111,6 +117,48 @@ class Prettydefaultdict(collections.defaultdict):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
+class Timer(ContextDecorator):
+    """Count time cost for code block within context.
+
+    Args:
+        name (str, optional): Name of timer discriminate different code block.
+            Defaults to "Timer".
+        auto_print (bool, optional): Whether print time cost when exit context.
+            Defaults to True.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> with misc.Timer("test1", auto_print=False) as timer:
+        ...     w = sum(range(0, 10))
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        time cost of 'sum(range(0, 10))' is 0.00
+
+        >>> @misc.Timer("test2", auto_print=True)
+        ... def func():
+        ...     w = sum(range(0, 10))
+        >>> func()  # doctest: +SKIP
+
+    """
+
+    interval: float  # Time cost for code within Timer context
+
+    def __init__(self, name: str = "Timer", auto_print: bool = True):
+        super().__init__()
+        self.name = name
+        self.auto_print = auto_print
+
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+
 def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.ndarray]:
     """Split given array into single channel array at axis -1 in order of given keys.
 
@@ -143,7 +191,7 @@ def all_gather(
     Returns:
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
     """
-    result = []
+    result: List[paddle.Tensor] = []
     paddle.distributed.all_gather(result, tensor)
     if concat:
         return paddle.concat(result, axis)
@@ -164,12 +212,12 @@ def convert_to_array(dict_: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.
 
 
 def concat_dict_list(
-    dict_list: Tuple[Dict[str, np.ndarray], ...]
+    dict_list: Sequence[Dict[str, np.ndarray]]
 ) -> Dict[str, np.ndarray]:
     """Concatenate arrays in tuple of dicts at axis 0.
 
     Args:
-        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+        dict_list (Sequence[Dict[str, np.ndarray]]): Sequence of dicts.
 
     Returns:
         Dict[str, np.ndarray]: A dict with concatenated arrays for each key.
@@ -181,12 +229,12 @@ def concat_dict_list(
 
 
 def stack_dict_list(
-    dict_list: Tuple[Dict[str, np.ndarray], ...]
+    dict_list: Sequence[Dict[str, np.ndarray]]
 ) -> Dict[str, np.ndarray]:
     """Stack arrays in tuple of dicts at axis 0.
 
     Args:
-        dict_list (Tuple[Dict[str, np.ndarray], ...]): Tuple of dicts.
+        dict_list (Sequence[Dict[str, np.ndarray]]): Sequence of dicts.
 
     Returns:
         Dict[str, np.ndarray]: A dict with stacked arrays for each key.
@@ -213,14 +261,14 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
     """Combine given data x with time sequence t.
     Given x with shape (N, D) and t with shape (T, ),
     this function will repeat t_i for N times and will concat it with data x for each t_i in t,
-    finally return the stacked result, which is of shape (NxT, D+1).
+    finally return the stacked result, which is of shape (N×T, D+1).
 
     Args:
         x (np.ndarray): Points data with shape (N, D).
         t (Tuple[int, ...]): Time sequence with shape (T, ).
 
     Returns:
-        np.ndarray: Combined data with shape of (NxT, D+1).
+        np.ndarray: Combined data with shape of (N×T, D+1).
     """
     nx = len(x)
     tx = []
@@ -236,13 +284,17 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
 
 def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     """Cartesian product for input sequence of array(s).
+
     Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 
-    Assume input arrays shape are: (N_1,), (N_2,), (N_3,), ..., (N_M,),
-    then the cartesian product result will be shape of (N_1*N_2*N_3*...*N_M, M).
+    Assume shapes of input arrays are: $(N_1,), (N_2,), (N_3,), ..., (N_M,)$,
+    then the cartesian product result will be shape of $(N_1×N_2×N_3×...×N_M, M)$.
+
+    Args:
+        arrays (np.ndarray): Input arrays.
 
     Returns:
-        np.ndarray: Cartesian product result of shape (N_1*N_2*N_3*...*N_M, M).
+        np.ndarray: Cartesian product result of shape $(N_1×N_2×N_3×...×N_M, M)$.
 
     Examples:
         >>> t = np.array([1, 2])

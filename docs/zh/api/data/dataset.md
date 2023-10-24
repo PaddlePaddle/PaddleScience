@@ -1,4 +1,4 @@
-# Data(数据) 模块
+# Data.dataset(数据集) 模块
 
 ::: ppsci.data.dataset
     handler: python
@@ -17,4 +17,6 @@
         - RosslerDataset
         - VtuDataset
         - VAECustomDataset
+        - MeshAirfoilDataset
+        - MeshCylinderDataset
       show_root_heading: false

@@ -189,7 +189,7 @@ class OperatorNode(Node):
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         if self.expr.func == sp.Derivative:
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
-                (_cvt_to_key(arg), order) for (arg, order) in self.expr.args[1:]
+                (_cvt_to_key(arg), int(order)) for (arg, order) in self.expr.args[1:]
             ]
         else:
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
@@ -494,7 +494,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
 
 
 def lambdify(
-    expr: sp.Expr,
+    expr: sp.Basic,
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
     graph_filename: Optional[str] = None,
@@ -502,7 +502,7 @@ def lambdify(
     """Convert sympy expression to callable function.
 
     Args:
-        expr (sp.Expr): Sympy expression to be converted.
+        expr (sp.Basic): Sympy expression to be converted.
         models (Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]]): Model(s) for
             computing forward result in `LayerNode`.
         extra_parameters (Optional[nn.ParameterList]): Extra learnable parameters.
@@ -565,7 +565,7 @@ def lambdify(
     expr = expr.subs(1.0, 1)
 
     # convert sympy expression tree to list of nodes in postorder
-    sympy_nodes = []
+    sympy_nodes: List[sp.Basic] = []
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
     # remove unnecessary symbol nodes already in input dict(except for paramter symbol)

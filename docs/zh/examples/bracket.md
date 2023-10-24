@@ -2,6 +2,34 @@
 
 <!-- <a href="TODO" class="md-button md-button--primary" style>AI Studio快速体验</a> -->
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # unzip it
+    tar -xvf bracket_dataset.tar
+    python bracket.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
+    # unzip it
+    tar -xvf bracket_dataset.tar
+    python bracket.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [bracket_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/bracket/bracket_pretrained.pdparams) | loss(commercial_ref_u_v_w_sigmas): 32.28704<br>MSE.u(commercial_ref_u_v_w_sigmas): 0.00005<br>MSE.v(commercial_ref_u_v_w_sigmas): 0.00000<br>MSE.w(commercial_ref_u_v_w_sigmas): 0.00734<br>MSE.sigma_xx(commercial_ref_u_v_w_sigmas): 27.64751<br>MSE.sigma_yy(commercial_ref_u_v_w_sigmas): 1.23101<br>MSE.sigma_zz(commercial_ref_u_v_w_sigmas): 0.89106<br>MSE.sigma_xy(commercial_ref_u_v_w_sigmas): 0.84370<br>MSE.sigma_xz(commercial_ref_u_v_w_sigmas): 1.42126<br>MSE.sigma_yz(commercial_ref_u_v_w_sigmas): 0.24510 |
+
 ## 1. 背景简介
 
 线弹性方程在形变分析中起着核心的作用。在物理和工程领域，形变分析是研究物体在外力作用下的形状和尺寸变化的方法。线弹性方程是描述物体在受力后恢复原状的能力的数学模型。具体来说，线弹性方程通常是指应力和应变之间的关系。应力是一个物理量，用于描述物体内部由于外力而产生的单位面积上的力。应变则描述了物体的形状和尺寸的变化。线弹性方程通常可以表示为应力和应变之间的线性关系，即应力和应变是成比例的。这种关系可以用一个线性方程来表示，其中系数被称为弹性模量（或杨氏模量）。这种模型假设物体在受力后能够完全恢复原状，即没有永久变形。这种假设在许多情况下是合理的，例如在研究金属的力学行为时。然而，对于某些材料（如塑料或橡胶），这种假设可能不准确，因为它们在受力后可能会产生永久变形。线弹性方程只是形变分析中的一部分。要全面理解形变，还需要考虑其他因素，例如物体的初始形状和尺寸、外力的历史、材料的其他物理性质（如热膨胀系数和密度）等。然而，线弹性方程提供了一个基本的框架，用于描述和理解物体在受力后的行为。
@@ -17,9 +45,9 @@
 
 上述连接件包括一个垂直于 x 轴的背板和与之连接的垂直于 z 轴的带孔平板。其中背板处于固定状态，带孔平板的最右侧表面（红色区域）受到 z 轴负方向，单位面积大小为 $4 \times 10^4 Pa$ 的应力；除此之外，其他参数包括弹性模量 $E=10^{11} Pa$，泊松比 $\nu=0.3$。通过设置特征长度 $L=1m$，特征位移 $U=0.0001m$，无量纲剪切模量 $0.01\mu$，目标求解该金属件表面每个点的 $u$、$v$、$w$、$\sigma_{xx}$、$\sigma_{yy}$、$\sigma_{zz}$、$\sigma_{xy}$、$\sigma_{xz}$、$\sigma_{yz}$ 共 9 个物理量。常量定义代码如下：
 
-``` py linenums="38"
+``` py linenums="29"
 --8<--
-examples/bracket/bracket.py:38:49
+examples/bracket/bracket.py:29:38
 --8<--
 ```
 
@@ -45,7 +73,7 @@ $$
 
 ``` py linenums="23"
 --8<--
-examples/bracket/bracket.py:23:36
+examples/bracket/bracket.py:23:27
 --8<--
 ```
 
@@ -68,9 +96,9 @@ $$
 \end{cases}
 $$
 
-``` py linenums="51"
+``` py linenums="40"
 --8<--
-examples/bracket/bracket.py:51:56
+examples/bracket/bracket.py:40:45
 --8<--
 ```
 
@@ -99,9 +127,9 @@ tar -xvf bracket_dataset.tar
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 
-``` py linenums="58"
+``` py linenums="47"
 --8<--
-examples/bracket/bracket.py:58:71
+examples/bracket/bracket.py:47:59
 --8<--
 ```
 
@@ -109,9 +137,9 @@ examples/bracket/bracket.py:58:71
 
 本案例共涉及到 5 个约束，在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="73"
+``` py linenums="61"
 --8<--
-examples/bracket/bracket.py:73:84
+examples/bracket/bracket.py:61:71
 --8<--
 ```
 
@@ -119,9 +147,9 @@ examples/bracket/bracket.py:73:84
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="127"
+``` py linenums="114"
 --8<--
-examples/bracket/bracket.py:127:163
+examples/bracket/bracket.py:114:150
 --8<--
 ```
 
@@ -143,53 +171,53 @@ examples/bracket/bracket.py:127:163
 
 另一个作用在带孔平板上的约束条件则与之类似，代码如下：
 
-``` py linenums="164"
+``` py linenums="151"
 --8<--
-examples/bracket/bracket.py:164:200
+examples/bracket/bracket.py:151:187
 --8<--
 ```
 
 #### 3.4.2 边界约束
 
-对于背板后表面，由于被固定，所以其上的点在三个方向的应变均为 0，因此有如下的边界约束条件：
+对于背板后表面，由于被固定，所以其上的点在三个方向的形变均为 0，因此有如下的边界约束条件：
 
-``` py linenums="97"
+``` py linenums="84"
 --8<--
-examples/bracket/bracket.py:97:106
---8<--
-```
-
-对于带孔平板右侧长方形载荷面，其上的每个点只受 z 正方向的应力，大小为 $T$，其余方向应力为 0，有如下边界条件约束：
-
-``` py linenums="107"
---8<--
-examples/bracket/bracket.py:107:115
+examples/bracket/bracket.py:84:93
 --8<--
 ```
 
-对于除背板后面、带孔平板右侧长方形载荷面外的表面，不受任何应力，即三个方向的应力为 0，有如下边界条件约束：
+对于带孔平板右侧长方形载荷面，其上的每个点只受 z 正方向的载荷，大小为 $T$，其余方向应力为 0，有如下边界条件约束：
 
-``` py linenums="116"
+``` py linenums="94"
 --8<--
-examples/bracket/bracket.py:116:126
+examples/bracket/bracket.py:94:102
+--8<--
+```
+
+对于除背板后面、带孔平板右侧长方形载荷面外的表面，不受任何载荷，即三个方向的内力平衡，合力为 0，有如下边界条件约束：
+
+``` py linenums="103"
+--8<--
+examples/bracket/bracket.py:103:113
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="201"
+``` py linenums="188"
 --8<--
-examples/bracket/bracket.py:201:208
+examples/bracket/bracket.py:188:195
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来需要指定训练轮数和学习率，此处按实验经验，使用 2000 轮训练轮数。
+接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数，每轮进行 1000 步优化。
 
-``` py linenums="210"
+``` py linenums="62"
 --8<--
-examples/bracket/bracket.py:210:211
+examples/bracket/conf/bracket.yaml:71:74
 --8<--
 ```
 
@@ -197,9 +225,9 @@ examples/bracket/bracket.py:210:211
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 ExponentialDecay 学习率调整策略。
 
-``` py linenums="213"
+``` py linenums="197"
 --8<--
-examples/bracket/bracket.py:213:222
+examples/bracket/bracket.py:197:201
 --8<--
 ```
 
@@ -207,17 +235,17 @@ examples/bracket/bracket.py:213:222
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，而验证集的数据来自外部 txt 文件，因此首先使用 `ppsci.utils.reader` 模块从 txt 文件中读取验证点集：
 
-``` py linenums="224"
+``` py linenums="203"
 --8<--
-examples/bracket/bracket.py:224:285
+examples/bracket/bracket.py:203:264
 --8<--
 ```
 
 然后将其转换为字典并进行无量纲化和归一化，再将其包装成字典和 `eval_dataloader_cfg`（验证集dataloader配置，构造方式与 `train_dataloader_cfg` 类似）一起传递给 `ppsci.validate.SupervisedValidator` 构造评估器。
 
-``` py linenums="287"
+``` py linenums="266"
 --8<--
-examples/bracket/bracket.py:287:332
+examples/bracket/bracket.py:266:311
 --8<--
 ```
 
@@ -227,9 +255,9 @@ examples/bracket/bracket.py:287:332
 
 本文中的输入数据是评估器构建中准备好的输入字典 `input_dict`，输出数据是对应的 9 个预测的物理量，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="334"
+``` py linenums="313"
 --8<--
-examples/bracket/bracket.py:334:351
+examples/bracket/bracket.py:313:330
 --8<--
 ```
 
@@ -237,9 +265,9 @@ examples/bracket/bracket.py:334:351
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="353"
+``` py linenums="332"
 --8<--
-examples/bracket/bracket.py:353:379
+examples/bracket/bracket.py:332:359
 --8<--
 ```
 
@@ -253,21 +281,21 @@ examples/bracket/bracket.py
 
 ## 5. 结果展示
 
-下面展示了在测试点集上，3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、传统算法求解结果以及两者的差值。
+下面展示了在测试点集上，3 个方向的挠度 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果、传统算法求解结果以及两者的差值。
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/u.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 u；中间表示传统算法求解的应变 u；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 u；中间表示传统算法求解的挠度 u；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/v.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 v；中间表示传统算法求解的应变 v；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 v；中间表示传统算法求解的挠度 v；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>
   ![bracket_compare.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/Bracket/w.png){ loading=lazy }
-  <figcaption>左侧为金属件表面预测的应变 w；中间表示传统算法求解的应变 w；右侧表示两者差值</figcaption>
+  <figcaption>左侧为金属件表面预测的挠度 w；中间表示传统算法求解的挠度 w；右侧表示两者差值</figcaption>
 </figure>
 
 <figure markdown>

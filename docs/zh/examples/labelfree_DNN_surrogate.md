@@ -101,7 +101,7 @@ examples/pipe/poiseuille_flow.py:123:129
 
 ``` py linenums="134"
 --8<--
-examples/pipe/poiseuille_flow.py:134:139
+examples/pipe/poiseuille_flow.py:134:137
 --8<--
 ```
 
@@ -175,9 +175,9 @@ examples/pipe/poiseuille_flow.py:67:94
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="145"
+    ``` py linenums="143"
     --8<--
-    examples/pipe/poiseuille_flow.py:145:164
+    examples/pipe/poiseuille_flow.py:143:164
     --8<--
     ```
 
@@ -197,12 +197,6 @@ examples/pipe/poiseuille_flow.py:67:94
 
 接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，学习率设为 0.005。
 
-``` py linenums="168"
---8<--
-examples/pipe/poiseuille_flow.py:168:168
---8<--
-```
-
 #### 2.2.6 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
@@ -217,9 +211,9 @@ examples/pipe/poiseuille_flow.py:131:132
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="170"
+``` py linenums="167"
 --8<--
-examples/pipe/poiseuille_flow.py:170:183
+examples/pipe/poiseuille_flow.py:167:181
 --8<--
 ```
 
@@ -344,7 +338,7 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="33"
+``` py linenums="119"
 --8<--
 examples/aneurysm/aneurysm_flow.py:119:128
 --8<--
@@ -473,6 +467,12 @@ examples/aneurysm/aneurysm_flow.py:51:117
 ``` py linenums="204"
 --8<--
 examples/aneurysm/aneurysm_flow.py:204:204
+--8<--
+```
+
+``` py linenums="166"
+--8<--
+examples/aneurysm/aneurysm_flow.py:166:166
 --8<--
 ```
 
