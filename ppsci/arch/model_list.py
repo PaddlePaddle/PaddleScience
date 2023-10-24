@@ -39,6 +39,9 @@ class ModelList(base.Arch):
         model_list: Tuple[base.Arch, ...],
     ):
         super().__init__()
+        self.input_keys = sum([model.input_keys for model in model_list], ())
+        self.input_keys = set(self.input_keys)
+
         output_keys_set = set()
         for model in model_list:
             if len(output_keys_set & set(model.output_keys)):
@@ -47,6 +50,7 @@ class ModelList(base.Arch):
                     f"but got duplicate keys: {output_keys_set & set(model.output_keys)}"
                 )
             output_keys_set = output_keys_set | set(model.output_keys)
+        self.output_keys = tuple(output_keys_set)
 
         self.model_list = nn.LayerList(model_list)
 

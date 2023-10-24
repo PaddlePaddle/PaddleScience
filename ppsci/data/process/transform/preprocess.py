@@ -271,5 +271,5 @@ class FunctionalTransform:
         data_dict, label_dict, weight_dict = data
         data_dict_copy = {**data_dict}
         label_dict_copy = {**label_dict}
-        weight_dict_copy = {**weight_dict} if weight_dict else None
+        weight_dict_copy = {**weight_dict} if weight_dict is not None else {}
         return self.transform_func(data_dict_copy, label_dict_copy, weight_dict_copy)

@@ -547,7 +547,7 @@ eta_mse_validator = ppsci.validate.SupervisedValidator(
     ]
     ```
 
-完成上述新评估器代码编写的工作之后，我们就能像 PaddleScience 内置评估器一样，以 `ppsci.equation.NewValidator` 的方式，调用我们编写的新评估器类，并用于创建评估器实例。同样地，在评估器构建完毕后之后，建议将所有评估器包装到一个字典中方便后续索引。
+完成上述新评估器代码编写的工作之后，我们就能像 PaddleScience 内置评估器一样，以 `ppsci.validate.NewValidator` 的方式，调用我们编写的新评估器类，并用于创建评估器实例。同样地，在评估器构建完毕后之后，建议将所有评估器包装到一个字典中方便后续索引。
 
 ``` py title="examples/demo/demo.py"
 new_validator = ppsci.validate.NewValidator(...)
