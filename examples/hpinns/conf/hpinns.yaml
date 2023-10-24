@@ -33,16 +33,19 @@ TRAIN_K: 9
 # model settings
 MODEL:
   re_net:
+    input_keys: ['x_cos_1', 'x_sin_1', 'x_cos_2', 'x_sin_2', 'x_cos_3', 'x_sin_3', 'x_cos_4', 'x_sin_4', 'x_cos_5', 'x_sin_5', 'x_cos_6', 'x_sin_6', 'y', 'y_cos_1', 'y_sin_1']
     output_keys: ["e_re"]
     num_layers: 4
     hidden_size: 48
     activation: "tanh"
   im_net:
+    input_keys: ${MODEL.re_net.input_keys}
     output_keys: ["e_im"]
     num_layers: 4
     hidden_size: 48
     activation: "tanh"
   eps_net:
+    input_keys: ${MODEL.re_net.input_keys}
     output_keys: ["eps"]
     num_layers: 4
     hidden_size: 48

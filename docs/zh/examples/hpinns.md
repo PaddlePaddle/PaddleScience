@@ -110,7 +110,7 @@ $$
 
 ``` py linenums="42"
 --8<--
-examples/hpinns/holography.py:42:50
+examples/hpinns/holography.py:42:44
 --8<--
 ```
 
@@ -129,9 +129,9 @@ examples/hpinns/functions.py:49:92
 
 需要对每个 MLP 模型分别注册相应的 transform ，然后将 3 个 MLP 模型组成 Model List
 
-``` py linenums="57"
+``` py linenums="50"
 --8<--
-examples/hpinns/holography.py:57:66
+examples/hpinns/holography.py:50:59
 --8<--
 ```
 
@@ -147,9 +147,9 @@ examples/hpinns/holography.py:35:40
 --8<--
 ```
 
-``` py linenums="52"
+``` py linenums="46"
 --8<--
-examples/hpinns/holography.py:52:55
+examples/hpinns/holography.py:46:48
 --8<--
 ```
 
@@ -175,15 +175,15 @@ examples/hpinns/conf/hpinns.yaml:53:57
 
 训练分为两个阶段，先使用 Adam 优化器进行大致训练，再使用 LBFGS 优化器逼近最优点，因此需要两个优化器，这也对应了上一部分超参数中的两种 `EPOCHS` 值
 
-``` py linenums="74"
+``` py linenums="62"
 --8<--
-examples/hpinns/holography.py:68:71
+examples/hpinns/holography.py:62:64
 --8<--
 ```
 
-``` py linenums="210"
+``` py linenums="203"
 --8<--
-examples/hpinns/holography.py:210:213
+examples/hpinns/holography.py:203:205
 --8<--
 ```
 
@@ -193,9 +193,9 @@ examples/hpinns/holography.py:210:213
 
 虽然我们不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
-``` py linenums="109"
+``` py linenums="102"
 --8<--
-examples/hpinns/holography.py:109:114
+examples/hpinns/holography.py:102:107
 --8<--
 ```
 
@@ -203,9 +203,9 @@ examples/hpinns/holography.py:109:114
 
 下面是约束等具体内容，要注意上述提到的给定“假的”标签数据：
 
-``` py linenums="73"
+``` py linenums="66"
 --8<--
-examples/hpinns/holography.py:73:134
+examples/hpinns/holography.py:66:127
 --8<--
 ```
 
@@ -225,9 +225,9 @@ examples/hpinns/holography.py:73:134
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="135"
+``` py linenums="128"
 --8<--
-examples/hpinns/holography.py:135:138
+examples/hpinns/holography.py:128:131
 --8<--
 ```
 
@@ -235,9 +235,9 @@ examples/hpinns/holography.py:135:138
 
 与约束同理，虽然本问题使用无监督学习，但仍可以使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="140"
+``` py linenums="133"
 --8<--
-examples/hpinns/holography.py:140:188
+examples/hpinns/holography.py:133:181
 --8<--
 ```
 
@@ -267,9 +267,9 @@ examples/hpinns/functions.py:320:336
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="190"
+``` py linenums="183"
 --8<--
-examples/hpinns/holography.py:190:207
+examples/hpinns/holography.py:183:200
 --8<--
 ```
 
@@ -279,9 +279,9 @@ examples/hpinns/holography.py:190:207
 
 PaddleScience 中提供了可视化器，但由于本问题图片数量较多且较为复杂，代码中自定义了可视化函数，调用自定义函数即可实现可视化
 
-``` py linenums="286"
+``` py linenums="279"
 --8<--
-examples/hpinns/holography.py:286:299
+examples/hpinns/holography.py:279:292
 --8<--
 ```
 

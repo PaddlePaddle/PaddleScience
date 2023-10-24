@@ -39,18 +39,11 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # initialize models
-    in_keys = ()
-    for t in range(1, 7):
-        in_keys += (f"x_cos_{t}", f"x_sin_{t}")
-    in_keys += ("y", "y_cos_1", "y_sin_1")
-
-    model_re = ppsci.arch.MLP(in_keys, **cfg.MODEL.re_net)
-    model_im = ppsci.arch.MLP(in_keys, **cfg.MODEL.im_net)
-    model_eps = ppsci.arch.MLP(in_keys, **cfg.MODEL.eps_net)
+    model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
+    model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
+    model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
 
     # intialize params
-    k = cfg.TRAIN_K
     func_module.train_mode = cfg.TRAIN_MODE
     loss_log_obj = []
 
@@ -251,7 +244,7 @@ def train(cfg: DictConfig):
             ]
         )
 
-        for i in range(1, k + 1):
+        for i in range(1, cfg.TRAIN_K + 1):
             pred_dict = solver.predict(
                 in_dict,
                 expr_dict,
@@ -307,15 +300,9 @@ def evaluate(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # initialize models
-    in_keys = ()
-    for t in range(1, 7):
-        in_keys += (f"x_cos_{t}", f"x_sin_{t}")
-    in_keys += ("y", "y_cos_1", "y_sin_1")
-
-    model_re = ppsci.arch.MLP(in_keys, **cfg.MODEL.re_net)
-    model_im = ppsci.arch.MLP(in_keys, **cfg.MODEL.im_net)
-    model_eps = ppsci.arch.MLP(in_keys, **cfg.MODEL.eps_net)
+    model_re = ppsci.arch.MLP(**cfg.MODEL.re_net)
+    model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
+    model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
 
     # intialize params
     func_module.train_mode = cfg.TRAIN_MODE
