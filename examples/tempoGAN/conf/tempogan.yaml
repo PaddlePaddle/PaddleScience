@@ -37,12 +37,42 @@ TILE_RATIO: 1
 
 # model settings
 MODEL:
-  input_keys: ["input_gen"]
-  output_keys: ["output_gen"]
+  gen_net:
+    input_keys: ["input_gen"]  # 'NCHW'
+    output_keys: ["output_gen"]
+    in_channel: 1
+    out_channels_tuple: [[2, 8, 8], [128, 128, 128], [32, 8, 8], [2, 1, 1]]
+    kernel_sizes_tuple: [[[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]], [[5, 5], [5, 5], [1, 1]]]
+    strides_tuple: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+    use_bns_tuple: [[true, true, true], [true, true, true], [true, true, true], [False, False, False]]
+    acts_tuple: [['relu', null, null], ['relu', null, null], ['relu', null, null], ['relu', null, null]]
+  disc_net:
+    input_keys:  ['input_disc_from_target', 'input_disc_from_gen']  # 'NCHW'
+    output_keys:  ['out0_layer0', 'out0_layer1', 'out0_layer2', 'out0_layer3', 'out_disc_from_target', 'out1_layer0', 'out1_layer1', 'out1_layer2', 'out1_layer3', 'out_disc_from_gen']
+    in_channel:  2
+    out_channels:  [32, 64, 128, 256]
+    fc_channel:  1048576
+    kernel_sizes:  [[4, 4], [4, 4], [4, 4], [4, 4]]
+    strides:  [2, 2, 2, 1]
+    use_bns:  [false, true, true, true]
+    acts:  ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', null]
+  tempo_net:
+    input_keys:  ['input_tempo_disc_from_target', 'input_tempo_disc_from_gen']  # 'NCHW'
+    output_keys:  ['out0_tempo_layer0', 'out0_tempo_layer1', 'out0_tempo_layer2', 'out0_tempo_layer3', 'out_disc_tempo_from_target', 'out1_tempo_layer0', 'out1_tempo_layer1', 'out1_tempo_layer2', 'out1_tempo_layer3', 'out_disc_tempo_from_gen']
+    in_channel:  3
+    out_channels:  [32, 64, 128, 256]
+    fc_channel:  1048576
+    kernel_sizes:  [[4, 4], [4, 4], [4, 4], [4, 4]]
+    strides:  [2, 2, 2, 1]
+    use_bns:  [false, true, true, true]
+    acts:  ['leaky_relu', 'leaky_relu', 'leaky_relu', 'leaky_relu', null]
 
 # training settings
 TRAIN:
   epochs: 40000
+  epochs_gen: 1
+  epochs_disc: 1
+  epochs_disc_tempo: 1
   iters_per_epoch: 2
   batch_size:
     sup_constraint: 8
