@@ -45,9 +45,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-```py linenums="34"
+```py linenums="48"
 --8<--
-examples/Heat_PINN/heat_pinn.py:34:35
+examples/Heat_PINN/heat_pinn.py:48:49
 --8<--
 ```
 
@@ -59,9 +59,9 @@ examples/Heat_PINN/heat_pinn.py:34:35
 
 由于二维热传导方程使用的是 Laplace 方程的 2 维形式，因此可以直接使用 PaddleScience 内置的 `Laplace`，指定该类的参数 `dim` 为 2。
 
-```py linenums="37"
+```py linenums="51"
 --8<--
-examples/Heat_PINN/heat_pinn.py:37:38
+examples/Heat_PINN/heat_pinn.py:51:52
 --8<--
 ```
 
@@ -70,9 +70,9 @@ examples/Heat_PINN/heat_pinn.py:37:38
 本文中二维热传导问题作用在以 (-1.0, -1.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-```py linenums="40"
+```py linenums="54"
 --8<--
-examples/Heat_PINN/heat_pinn.py:40:41
+examples/Heat_PINN/heat_pinn.py:54:55
 --8<--
 ```
 
@@ -82,9 +82,9 @@ examples/Heat_PINN/heat_pinn.py:40:41
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-```py linenums="49"
+```py linenums="57"
 --8<--
-examples/Heat_PINN/heat_pinn.py:49:53
+examples/Heat_PINN/heat_pinn.py:57:67
 --8<--
 ```
 
@@ -92,9 +92,9 @@ examples/Heat_PINN/heat_pinn.py:49:53
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-```py linenums="55"
+```py linenums="69"
 --8<--
-examples/Heat_PINN/heat_pinn.py:55:67
+examples/Heat_PINN/heat_pinn.py:69:81
 --8<--
 ```
 
@@ -118,9 +118,9 @@ examples/Heat_PINN/heat_pinn.py:55:67
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-```py linenums="69"
+```py linenums="83"
 --8<--
-examples/Heat_PINN/heat_pinn.py:69:116
+examples/Heat_PINN/heat_pinn.py:83:130
 --8<--
 ```
 
@@ -132,9 +132,9 @@ examples/Heat_PINN/heat_pinn.py:69:116
 
 在微分方程约束和边界约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-```py linenums="118"
+```py linenums="132"
 --8<--
-examples/Heat_PINN/heat_pinn.py:118:125
+examples/Heat_PINN/heat_pinn.py:132:139
 --8<--
 ```
 
@@ -142,9 +142,9 @@ examples/Heat_PINN/heat_pinn.py:118:125
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器
 
-```py linenums="127"
+```py linenums="141"
 --8<--
-examples/Heat_PINN/heat_pinn.py:127:128
+examples/Heat_PINN/heat_pinn.py:141:142
 --8<--
 ```
 
@@ -152,9 +152,9 @@ examples/Heat_PINN/heat_pinn.py:127:128
 
 完成上述设置之后，只需要将所有上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-```py linenums="130"
+```py linenums="144"
 --8<--
-examples/Heat_PINN/heat_pinn.py:130:142
+examples/Heat_PINN/heat_pinn.py:144:156
 --8<--
 ```
 
@@ -163,9 +163,9 @@ examples/Heat_PINN/heat_pinn.py:130:142
 模型训练完成之后就需要进行与正式 FDM 方法计算出来的结果进行对比，这里我们使用了 `geom["rect"].sample_interior` 采样出测试所需要的坐标数据。
 然后，再将采样出来的坐标数据输入到模型中，得到模型的预测结果，最后将预测结果与 FDM 结果进行对比，得到模型的误差。
 
-```py linenums="144"
+```py linenums="158"
 --8<--
-examples/Heat_PINN/heat_pinn.py:144:150
+examples/Heat_PINN/heat_pinn.py:158:164
 --8<--
 ```
 
