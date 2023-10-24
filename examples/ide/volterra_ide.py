@@ -37,7 +37,7 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set geometry
     geom = {"timedomain": ppsci.geometry.TimeDomain(*cfg.BOUNDS)}
@@ -188,7 +188,7 @@ def train(cfg: DictConfig):
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")
     plt.title(r"$u-t$")
-    plt.savefig("./Volterra_IDE.png", dpi=200)
+    plt.savefig(osp.join(cfg.output_dir, "./Volterra_IDE.png"), dpi=200)
 
 
 def evaluate(cfg: DictConfig):
@@ -199,7 +199,7 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set geometry
     geom = {"timedomain": ppsci.geometry.TimeDomain(*cfg.BOUNDS)}
@@ -246,7 +246,7 @@ def evaluate(cfg: DictConfig):
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")
     plt.title(r"$u-t$")
-    plt.savefig("./Volterra_IDE.png", dpi=200)
+    plt.savefig(osp.join(cfg.output_dir, "./Volterra_IDE.png"), dpi=200)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="volterra_ide.yaml")
