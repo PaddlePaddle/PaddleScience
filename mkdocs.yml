@@ -42,6 +42,8 @@ nav:
         - PIRBN: zh/examples/pirbn.md
       - 振动:
         - ViV: zh/examples/viv.md
+      - 传热:
+        - Heat_PINN: zh/examples/heat_pinn.md
       - 流体:
         - Aneurysm: zh/examples/aneurysm.md
         - ShockWave: zh/examples/shock_wave.md
