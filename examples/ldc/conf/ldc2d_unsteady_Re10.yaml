@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: ldc2d_unsteady_Re10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: output_ldc2d_unsteady_Re10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged

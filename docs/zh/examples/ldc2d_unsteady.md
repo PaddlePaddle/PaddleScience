@@ -3,11 +3,9 @@
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160749?contributionType=1&sUid=438690&shared=1&ts=1683961132625" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
-``` sh
+    ``` sh
     python ldc2d_unsteady_Re10.py
-```
-
-
+    ```
 
 ## 1. 背景简介
 
@@ -225,7 +223,7 @@ pde = ppsci.constraint.InteriorConstraint(
     {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
     ppsci.loss.MSELoss("sum"),
     evenly=True,
-    weight_dict=cfg.TRAIN.weight.pde, # (1)
+    weight_dict=cfg.TRAIN.weight.pde,  # (1)
     name="EQ",
 )
 ```
