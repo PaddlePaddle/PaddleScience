@@ -55,7 +55,6 @@ def train(cfg: DictConfig):
 
     # define Generator model
     model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
-
     model_gen.register_input_transform(gen_funcs.transform_in)
     dics_funcs.model_gen = model_gen
 
