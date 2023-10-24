@@ -1,0 +1,67 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_bubble/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+DATA_PATH: bubble.mat
+
+# model settings
+MODEL:
+  psi_net:
+    input_keys: ["t", "x", "y"]
+    output_keys: ["psi"]
+    num_layers: 9
+    hidden_size: 30
+    activation: "tanh"
+  p_net:
+    input_keys: ["t", "x", "y"]
+    output_keys: ["p"]
+    num_layers: 9
+    hidden_size: 30
+    activation: "tanh"
+  phil_net:
+    input_keys: ["t", "x", "y"]
+    output_keys: ["phil"]
+    num_layers: 9
+    hidden_size: 30
+    activation: "tanh"
+
+# training settings
+TRAIN:
+  epochs: 10000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 1000
+  learning_rate: 0.001
+  batch_size:
+    pde_constraint: 228595
+    sup_constraint: 2419
+    mse_validator: 2419
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
