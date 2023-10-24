@@ -2,6 +2,11 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+    ``` sh
+    python ldc2d_unsteady_Re10.py
+    ```
+
 ## 1. 背景简介
 
 顶盖方腔驱动流LDC问题在许多领域中都有应用。例如，这个问题可以用于计算流体力学（CFD）领域中验证计算方法的有效性。虽然这个问题的边界条件相对简单，但是其流动特性却非常复杂。在顶盖驱动流LDC中，顶壁朝x方向以U=1的速度移动，而其他三个壁则被定义为无滑移边界条件，即速度为零。
@@ -201,20 +206,16 @@ examples/ldc/ldc2d_steady_Re10.py:39:50
 
 ``` py linenums="63"
 # set constraint
-pde_constraint = ppsci.constraint.InteriorConstraint(
-      equation["NavierStokes"].equations,
-      {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-      geom["rect"],
-      {**train_dataloader_cfg, "batch_size": npoint_pde},
-      ppsci.loss.MSELoss("sum"),
-      evenly=True,
-      weight_dict={
-          "continuity": 0.0001, # (1)
-          "momentum_x": 0.0001,
-          "momentum_y": 0.0001,
-      },
-      name="EQ",
-  )
+    pde = ppsci.constraint.InteriorConstraint(
+        equation["NavierStokes"].equations,
+        {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
+        geom["rect"],
+        {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+        ppsci.loss.MSELoss("sum"),
+        evenly=True,
+        weight_dict=cfg.TRAIN.weight.pde, # (1)
+        name="EQ",
+    )
 ```
 
 1. 本案例中PDE约束损失的数量级远大于边界约束损失，因此需要给PDE约束权重设置一个较小的值，有利于模型收敛
@@ -261,11 +262,11 @@ examples/ldc/ldc2d_steady_Re10.py:103:110
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
+接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="112"
+``` py linenums="39"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:112:119
+examples/ldc/conf/ldc2d_steady_Re10.yaml:39:42
 --8<--
 ```
 

@@ -1,0 +1,58 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: output_ldc2d_steady_Re10/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config: 
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+
+# set working condition
+NU: 0.01
+RHO: 1.0
+
+# model settings
+MODEL:
+  model:
+    input_keys: ["x", "y"]
+    output_keys: ["u", "v", "p"]
+    num_layers: 9
+    hidden_size: 50
+    activation: "tanh"
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: true
+  eval_freq: 200
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.001
+  weight:
+    pde: {"continuity": 0.0001,"momentum_x": 0.0001,"momentum_y": 0.0001}
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  batch_size:
+    residual_validator: 8192
