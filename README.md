@@ -19,23 +19,40 @@
 PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计算套件，利用深度神经网络的学习能力和 PaddlePaddle 框架的自动(高阶)微分机制，解决物理、化学、气象等领域的问题。支持物理机理驱动、数据驱动、数理融合三种求解方式，并提供了基础 API 和详尽文档供用户使用与二次开发。
 <!-- --8<-- [end:description] -->
 
-<div align="center">
-    <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" width="100%" height="100%">
-</div>
+## 📝案例列表
 
-<!-- --8<-- [start:examples_list] -->
-<!-- ## 📝案例列表
-
-| 案例名称 | 优化算法 | 所属领域 | 问题类型 | 数据来源 | 参考结果 |
-|:--|:--|:--|:--|:--|:--|
-| - | - | - | - | - | - |
-| - | - | - | - | - | - |
-| - | - | - | - | - | - |
-| - | - | - | - | - | - |
-| - | - | - | - | - | - |
-| - | - | - | - | - | - |
-| - | - | - | - | - | - | -->
-<!-- --8<-- [end:examples_list] -->
+| 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
+|-----|---------|-----|---------|----|---------|---------|
+| 微分方程 | [拉普拉斯方程](./docs/zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
+| 微分方程 | [伯格斯方程](./docs/zh/examples/deephpms.md) | 机理驱动 | DeepHPMs | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
+| 微分方程 | [洛伦兹方程](./docs/zh/examples/lorenz.md) | 数据驱动 | Transformer-Physx | 监督学习 | - | [Paper](https://arxiv.org/abs/2010.03957) |
+| 微分方程 | [若斯叻方程](./docs/zh/examples/rossler.md) | 数据驱动 | Transformer-Physx | 监督学习 | - | [Paper](https://arxiv.org/abs/2010.03957) |
+| 算子学习 | [DeepONet](./docs/zh/examples/deeponet.md) | 数据驱动 | MLP | 监督学习 | [Turorial](https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html) | [Paper](https://export.arxiv.org/pdf/1910.03193.pdf) |
+| 微分方程 | 梯度增强的物理知识融合PDE求解<sup>coming soon</sup> | 机理驱动 | gPINN | 半监督学习 | - |  [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0045782522001438?via%3Dihub) |
+| 积分方程 | [沃尔泰拉积分方程](./docs/zh/examples/volterra_ide.md) | 机理驱动 | MLP | 无监督学习 | - | [Project](https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py) |
+| 定常不可压流体 | [2D 定常方腔流](./docs/zh/examples/ldc2d_steady.md) | 机理驱动 | MLP | 无监督学习 | - |  |
+| 定常不可压流体 | [2D 达西流](./docs/zh/examples/darcy2d.md) | 机理驱动 | MLP | 无监督学习 | - |   |
+| 定常不可压流体 | [2D 管道流](./docs/zh/examples/labelfree_DNN_surrogate.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/1906.02382) |
+| 定常不可压流体 | [3D 血管瘤](./docs/zh/examples/aneurysm.md) | 机理驱动 | MLP | 无监督学习 | - | [Project](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html)|
+| 定常不可压流体 | [任意 2D 几何体绕流](docs/zh/examples/deepcfd.md) | 数据驱动 | DeepCFD | 有监督学习 | - | [Paper](https://arxiv.org/abs/2004.08826)|
+| 非定常不可压流体 | [2D 非定常方腔流](./docs/zh/examples/ldc2d_unsteady.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2004.08826)|
+| 非定常不可压流体 | [Re100 2D 圆柱绕流](docs/zh/examples/cylinder2d_unsteady.md) | 机理驱动 | MLP | 半监督学习 | - | [Paper](https://arxiv.org/abs/2004.08826)|
+| 非定常不可压流体 | [Re100~750 2D 圆柱绕流](./docs/zh/examples/cylinder2d_unsteady_transformer_physx.md) | 数据驱动 | Transformer-Physx | 有监督学习 | - | [Paper](https://arxiv.org/abs/2010.03957)|
+| 可压缩流体 | [2D 空气激波](./docs/zh/examples/shock_wave.md) | 机理驱动 | PINN-WE | 无监督学习 | - | [Paper](https://arxiv.org/abs/2206.03864)|
+| 流固耦合 | [涡激振动](./docs/zh/examples/viv.md) | 机理驱动 | MLP | 半监督学习 | - | [Paper](https://arxiv.org/abs/2206.03864)|
+| 多相流 | [气液两相流](./docs/zh/examples/bubble.md) | 机理驱动 | BubbleNet | 半监督学习 | - | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
+| 多相流 | 非高斯渗透率场估计<sup>coming soon</sup> | 机理驱动 | cINN | 有监督学习 | - | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
+| 流场高分辨率重构 | 2D 湍流流场重构<sup>coming soon</sup> | 数据驱动 | tempoGAN | 有监督学习 | - | [Paper](https://dl.acm.org/doi/10.1145/3197517.3201304)|
+| 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 有监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
+| 受力分析 | 1D 欧拉梁变形 | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | 2D 平板变形<sup>coming soon</sup> | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | [3D 连接件变形](./docs/zh/examples/bracket.md) | 机理驱动 | MLP | 无监督学习 | - | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
+| 受力分析 | [结构震动模拟](./docs/zh/examples/phylstm.md) | 机理驱动 | PhyLSTM | 有监督学习 | - | [Paper](https://arxiv.org/abs/2002.10253) |
+| 材料设计 | [散射板设计(反问题)](./docs/zh/examples/hpinns.md) | 数理融合 | 数据驱动 | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 材料生成 | 面向对称感知的周期性材料生成<sup>coming soon</sup> | 数据驱动 | SyMat | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 天气预报 | [FourCastNet 气象预报](./docs/zh/examples/fourcastnet.md) | 数据驱动 | FourCastNet | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 天气预报 | [GraphCast 气象预报]<sup>coming soon</sup> | 数据驱动 | GraphCastNet* | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 大气污染物 | [UNet 污染物扩散](./https://aistudio.baidu.com/projectdetail/5663515?channelType=0&channel=0) | 数据驱动 | UNet | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
