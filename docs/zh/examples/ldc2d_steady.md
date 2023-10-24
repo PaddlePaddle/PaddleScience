@@ -4,7 +4,7 @@
 
 === "模型训练命令"
     ``` sh
-    python ldc2d_unsteady_Re10.py
+    python ldc2d_steady_Re10.py
     ```
 
 ## 1. 背景简介
