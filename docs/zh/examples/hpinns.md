@@ -167,7 +167,7 @@ $\mu_k = \beta \mu_{k-1}$, $\lambda_k = \beta \lambda_{k-1}$
 
 ``` py linenums="53"
 --8<--
-examples/hpinns/conf/hpinns.yaml:53:57
+examples/hpinns/conf/hpinns.yaml:53:61
 --8<--
 ```
 
