@@ -67,7 +67,6 @@ def build_dataloader(_dataset, cfg):
     cfg = copy.deepcopy(cfg)
 
     # build sampler
-    print("build sampler")
     sampler_cfg = cfg.pop("sampler", None)
     if sampler_cfg is not None:
         sampler_cls = sampler_cfg.pop("name")
