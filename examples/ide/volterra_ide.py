@@ -31,7 +31,7 @@ from ppsci.utils import logger
 
 def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     # set output directory
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
@@ -73,9 +73,12 @@ def train(cfg: DictConfig):
 
         Args:
             input (Dict[str, paddle.Tensor]): Raw input dict.
+            weight (Dict[str, paddle.Tensor]): Raw weight dict.
+            label (Dict[str, paddle.Tensor]): Raw label dict.
 
         Returns:
-            Dict[str, paddle.Tensor]: Input dict contained sampling points.
+            Tuple[ Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor] ]:
+                Input dict contained sampling points, weight dict and label dict.
         """
         x = input["x"]  # N points.
         x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])  # NxQ
@@ -139,7 +142,7 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.LBFGS(**cfg.optimizer)(model)
+    optimizer = ppsci.optimizer.LBFGS(**cfg.TRAIN.optimizer)(model)
 
     # set validator
     l2rel_validator = ppsci.validate.GeometryValidator(
@@ -193,7 +196,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     # set output directory
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
@@ -234,9 +237,11 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
+    # evaluate model
+    solver.eval()
 
     # visualize prediction
-    input_data = geom["timedomain"].uniform_points(100)
+    input_data = geom["timedomain"].uniform_points(cfg.EVAL.npoint_eval)
     label_data = u_solution_func({"x": input_data})
     output_data = solver.predict({"x": input_data}, return_numpy=True)["u"]
 

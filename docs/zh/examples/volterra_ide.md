@@ -16,7 +16,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [volterra_ide_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams) |  |
+| [volterra_ide_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams) | loss(L2Rel_Validator): 0.00023 <br> L2Rel.u(L2Rel_Validator): 0.00023 |
 
 ## 1. 背景简介
 
@@ -99,7 +99,7 @@ examples/ide/volterra_ide.py:45:61
 
 ``` py linenums="63"
 --8<--
-examples/ide/volterra_ide.py:63:114
+examples/ide/volterra_ide.py:63:117
 --8<--
 ```
 
@@ -113,17 +113,17 @@ $$
 
 因此可以加入 `t=0` 时的初值条件，代码如下所示
 
-``` py linenums="116"
+``` py linenums="119"
 --8<--
-examples/ide/volterra_ide.py:116:134
+examples/ide/volterra_ide.py:119:137
 --8<--
 ```
 
 在微分方程约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="135"
+``` py linenums="138"
 --8<--
-examples/ide/volterra_ide.py:135:139
+examples/ide/volterra_ide.py:138:142
 --8<--
 ```
 
@@ -133,7 +133,7 @@ examples/ide/volterra_ide.py:135:139
 
 ``` yaml linenums="39"
 --8<--
-examples/ide/conf/volterra_ide.yaml:39:55
+examples/ide/conf/volterra_ide.yaml:39:57
 --8<--
 ```
 
@@ -141,9 +141,9 @@ examples/ide/conf/volterra_ide.yaml:39:55
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `LBFGS` 优化器。
 
-``` py linenums="141"
+``` py linenums="144"
 --8<--
-examples/ide/volterra_ide.py:141:142
+examples/ide/volterra_ide.py:144:145
 --8<--
 ```
 
@@ -151,9 +151,9 @@ examples/ide/volterra_ide.py:141:142
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="144"
+``` py linenums="147"
 --8<--
-examples/ide/volterra_ide.py:144:158
+examples/ide/volterra_ide.py:147:161
 --8<--
 ```
 
@@ -165,9 +165,9 @@ examples/ide/volterra_ide.py:144:158
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="160"
+``` py linenums="163"
 --8<--
-examples/ide/volterra_ide.py:160:178
+examples/ide/volterra_ide.py:163:181
 --8<--
 ```
 
@@ -175,9 +175,9 @@ examples/ide/volterra_ide.py:160:178
 
 在模型训练完毕之后，我们可以手动构造 0 ~ 5 区间内均匀 100 个点，作为评估的积分上限 `t` 进行预测，并可视化结果。
 
-``` py linenums="180"
+``` py linenums="183"
 --8<--
-examples/ide/volterra_ide.py:180:191
+examples/ide/volterra_ide.py:183:194
 --8<--
 ```
 
