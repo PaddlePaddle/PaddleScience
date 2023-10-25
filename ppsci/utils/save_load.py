@@ -52,7 +52,7 @@ def _load_pretrain_from_path(
         )
 
     param_state_dict = paddle.load(f"{path}.pdparams")
-    model.set_dict(param_state_dict)
+    model.set_state_dict(param_state_dict)
     if equation is not None:
         if not os.path.exists(f"{path}.pdeqn"):
             logger.warning(f"{path}.pdeqn not found.")
@@ -75,7 +75,11 @@ def load_pretrain(
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
     if path.startswith("http"):
-        path = download.get_weights_path_from_url(path).replace(".pdparams", "")
+        path = download.get_weights_path_from_url(path)
+
+    # remove ".pdparams" in suffix of path for convenient
+    if path.endswith(".pdparams"):
+        path = path[:-9]
     _load_pretrain_from_path(path, model, equation)
 
 
