@@ -94,7 +94,7 @@ examples/lorenz/conf/enn.yaml:26:34
 
 ``` py linenums="51" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:51:68
+examples/lorenz/train_enn.py:51:70
 --8<--
 ```
 
@@ -113,9 +113,9 @@ examples/lorenz/train_enn.py:51:68
 
 定义监督约束的代码如下：
 
-``` py linenums="70" title="examples/lorenz/train_enn.py"
+``` py linenums="72" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:70:80
+examples/lorenz/train_enn.py:72:85
 --8<--
 ```
 
@@ -156,9 +156,9 @@ examples/lorenz/train_enn.py:32:39
 
 本案例中使用的学习率方法为 `ExponentialDecay` ，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下
 
-``` py linenums="92" title="examples/lorenz/train_enn.py"
+``` py linenums="99" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:92:100
+examples/lorenz/train_enn.py:99:108
 --8<--
 ```
 
@@ -166,9 +166,9 @@ examples/lorenz/train_enn.py:92:100
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="103" title="examples/lorenz/train_enn.py"
+``` py linenums="111" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:103:121
+examples/lorenz/train_enn.py:111:131
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/lorenz/train_enn.py:103:121
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="132" title="examples/lorenz/train_enn.py"
+``` py linenums="142" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:132:146
+examples/lorenz/train_enn.py:142:156
 --8<--
 ```
 
