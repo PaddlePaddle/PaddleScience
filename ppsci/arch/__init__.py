@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 
 from ppsci.arch.base import Arch  # isort:skip
+from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
@@ -33,6 +36,7 @@ from ppsci.utils import logger  # isort:skip
 
 __all__ = [
     "Arch",
+    "AMGNet",
     "MLP",
     "DeepONet",
     "DeepPhyLSTM",

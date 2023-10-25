@@ -286,6 +286,8 @@ class Solver:
             # TODO(sensen): support different kind of DistributedStrategy
             fleet.init(is_collective=True)
             self.model = fleet.distributed_model(self.model)
+            self.model.input_keys = self.model._layers.input_keys
+            self.model.output_keys = self.model._layers.output_keys
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
             logger.warning(
