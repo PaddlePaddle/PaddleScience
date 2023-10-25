@@ -14,38 +14,35 @@
 
 # Reference: https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py
 
+from os import path as osp
 from typing import Dict
+from typing import Tuple
 
+import hydra
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
+    ppsci.utils.misc.set_random_seed(cfg.SEED)
 
     # set output directory
-    OUTPUT_DIR = "./output_Volterra_IDE" if not args.output_dir else args.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set geometry
-    BOUNDS = (0, 5)
-    geom = {"timedomain": ppsci.geometry.TimeDomain(BOUNDS[0], BOUNDS[1])}
+    geom = {"timedomain": ppsci.geometry.TimeDomain(*cfg.BOUNDS)}
 
     # set equation
-    QUAD_DEG = 20
-    NPOINT_INTERIOR = 12
-    NPOINT_IC = 1
-
     def kernel_func(x, s):
         return np.exp(s - x)
 
@@ -55,35 +52,42 @@ if __name__ == "__main__":
 
     equation = {
         "volterra": ppsci.equation.Volterra(
-            BOUNDS[0],
-            NPOINT_INTERIOR,
-            QUAD_DEG,
+            cfg.BOUNDS[0],
+            cfg.TRAIN.npoint_interior,
+            cfg.TRAIN.quad_deg,
             kernel_func,
             func,
         )
     }
 
     # set constraint
-    ITERS_PER_EPOCH = 1
     # set input transform
     def quad_transform(
-        in_: Dict[str, paddle.Tensor], *args
-    ) -> Dict[str, paddle.Tensor]:
+        input: Dict[str, np.ndarray],
+        weight: Dict[str, np.ndarray],
+        label: Dict[str, np.ndarray],
+    ) -> Tuple[
+        Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]
+    ]:
         """Get sampling points for integral.
 
         Args:
-            in_ (Dict[str, paddle.Tensor]): Raw input dict.
+            input (Dict[str, paddle.Tensor]): Raw input dict.
 
         Returns:
             Dict[str, paddle.Tensor]: Input dict contained sampling points.
         """
-        x = in_["x"]  # N points.
+        x = input["x"]  # N points.
         x_quad = equation["volterra"].get_quad_points(x).reshape([-1, 1])  # NxQ
         x_quad = paddle.concat((x, x_quad), axis=0)  # M+MxQ: [M|Q1|Q2,...,QM|]
-        return {
-            **in_,
-            "x": x_quad,
-        }, *args
+        return (
+            {
+                **input,
+                "x": x_quad,
+            },
+            weight,
+            label,
+        )
 
     # interior constraint
     ide_constraint = ppsci.constraint.InteriorConstraint(
@@ -101,8 +105,8 @@ if __name__ == "__main__":
                     },
                 ),
             },
-            "batch_size": NPOINT_INTERIOR,
-            "iters_per_epoch": ITERS_PER_EPOCH,
+            "batch_size": cfg.TRAIN.npoint_interior,
+            "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
@@ -121,8 +125,8 @@ if __name__ == "__main__":
         geom["timedomain"],
         {
             "dataset": {"name": "IterableNamedArrayDataset"},
-            "batch_size": NPOINT_IC,
-            "iters_per_epoch": ITERS_PER_EPOCH,
+            "batch_size": cfg.TRAIN.npoint_ic,
+            "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
         },
         ppsci.loss.MSELoss("mean"),
         criteria=geom["timedomain"].on_initial,
@@ -134,28 +138,17 @@ if __name__ == "__main__":
         ic.name: ic,
     }
 
-    # set training hyper-parameters
-    EPOCHS = 1 if not args.epochs else args.epochs
-
     # set optimizer
-    optimizer = ppsci.optimizer.LBFGS(
-        learning_rate=1,
-        max_iter=15000,
-        max_eval=1250,
-        tolerance_grad=1e-8,
-        tolerance_change=0,
-        history_size=100,
-    )(model)
+    optimizer = ppsci.optimizer.LBFGS(**cfg.optimizer)(model)
 
     # set validator
-    NPOINT_EVAL = 100
     l2rel_validator = ppsci.validate.GeometryValidator(
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["timedomain"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": NPOINT_EVAL,
+            "total_size": cfg.EVAL.npoint_eval,
         },
         ppsci.loss.L2RelLoss(),
         evenly=True,
@@ -168,16 +161,18 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=1,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
-        eval_with_no_grad=True,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # train model
     solver.train()
@@ -193,4 +188,76 @@ if __name__ == "__main__":
     plt.xlabel(r"$t$")
     plt.ylabel(r"$u$")
     plt.title(r"$u-t$")
-    plt.savefig("./Volterra_IDE.png", dpi=200)
+    plt.savefig(osp.join(cfg.output_dir, "./Volterra_IDE.png"), dpi=200)
+
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.SEED)
+
+    # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set geometry
+    geom = {"timedomain": ppsci.geometry.TimeDomain(*cfg.BOUNDS)}
+    # set validator
+
+    def u_solution_func(in_) -> np.ndarray:
+        if isinstance(in_["x"], paddle.Tensor):
+            return paddle.exp(-in_["x"]) * paddle.cosh(in_["x"])
+        return np.exp(-in_["x"]) * np.cosh(in_["x"])
+
+    l2rel_validator = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["timedomain"],
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": cfg.EVAL.npoint_eval,
+        },
+        ppsci.loss.L2RelLoss(),
+        evenly=True,
+        metric={"L2Rel": ppsci.metric.L2Rel()},
+        name="L2Rel_Validator",
+    )
+    validator = {l2rel_validator.name: l2rel_validator}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        geom=geom,
+        validator=validator,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+    )
+
+    # visualize prediction
+    input_data = geom["timedomain"].uniform_points(100)
+    label_data = u_solution_func({"x": input_data})
+    output_data = solver.predict({"x": input_data}, return_numpy=True)["u"]
+
+    plt.plot(input_data, label_data, "-", label=r"$u(t)$")
+    plt.plot(input_data, output_data, "o", label=r"$\hat{u}(t)$", markersize=4.0)
+    plt.legend()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$u$")
+    plt.title(r"$u-t$")
+    plt.savefig(osp.join(cfg.output_dir, "./Volterra_IDE.png"), dpi=200)
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="volterra_ide.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

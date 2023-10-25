@@ -2,6 +2,22 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6622866?sUid=438690&shared=1&ts=1691582831601" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    python volterra_ide.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python volterra_ide.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [volterra_ide_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams) |  |
+
 ## 1. 背景简介
 
 Volterra integral equation(沃尔泰拉积分方程)是一种积分方程，即方程中含有对待求解函数的积分运算，其有两种形式，如下所示
@@ -45,9 +61,9 @@ $$
 
 在上述问题中，我们确定了输入为 $x$，输出为 $u(x)$，因此我们使用，用 PaddleScience 代码表示如下：
 
-``` py linenums="37"
+``` py linenums="39"
 --8<--
-examples/ide/volterra_ide.py:37:38
+examples/ide/volterra_ide.py:39:40
 --8<--
 ```
 
@@ -57,9 +73,9 @@ examples/ide/volterra_ide.py:37:38
 
 Volterra_IDE 问题的积分域是 $a$ ~ $t$，其中 `a` 为固定常数 0，`t` 的范围为 0 ~ 5，因此可以使用PaddleScience 内置的一维几何 `TimeDomain` 作为计算域。
 
-``` py linenums="40"
+``` py linenums="42"
 --8<--
-examples/ide/volterra_ide.py:40:42
+examples/ide/volterra_ide.py:42:43
 --8<--
 ```
 
@@ -67,9 +83,9 @@ examples/ide/volterra_ide.py:40:42
 
 由于 Volterra_IDE 使用的是积分方程，因此可以直接使用 PaddleScience 内置的 `ppsci.equation.Volterra`，并指定所需的参数：积分下限 `a`、`t` 的离散取值点数 `num_points`、一维高斯积分点的个数 `quad_deg`、$K(t,s)$ 核函数 `kernel_func`、$u(t) - f(t)$ 等式右侧表达式 `func`。
 
-``` py linenums="44"
+``` py linenums="45"
 --8<--
-examples/ide/volterra_ide.py:44:64
+examples/ide/volterra_ide.py:45:61
 --8<--
 ```
 
@@ -81,9 +97,9 @@ examples/ide/volterra_ide.py:44:64
 
 由于等式左侧涉及到积分计算（实际采用高斯积分近似计算），因此在 0 ~ 5 区间内采样出多个 `t_i` 点后，还需要计算其用于高斯积分的点集，即对每一个 `(0,t_i)` 区间，都计算出一一对应的高斯积分点集 `quad_i` 和点权 `weight_i`。PaddleScience 将这一步作为输入数据的预处理，加入到代码中，如下所示
 
-``` py linenums="66"
+``` py linenums="63"
 --8<--
-examples/ide/volterra_ide.py:66:110
+examples/ide/volterra_ide.py:63:114
 --8<--
 ```
 
@@ -97,17 +113,17 @@ $$
 
 因此可以加入 `t=0` 时的初值条件，代码如下所示
 
-``` py linenums="112"
+``` py linenums="116"
 --8<--
-examples/ide/volterra_ide.py:112:130
+examples/ide/volterra_ide.py:116:134
 --8<--
 ```
 
 在微分方程约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="131"
+``` py linenums="135"
 --8<--
-examples/ide/volterra_ide.py:131:135
+examples/ide/volterra_ide.py:135:139
 --8<--
 ```
 
@@ -115,9 +131,9 @@ examples/ide/volterra_ide.py:131:135
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，让 `L-BFGS` 优化器进行一轮优化即可，但一轮优化内的 `max_iters` 数可以设置为一个较大的一个数 `15000`。
 
-``` py linenums="137"
+``` yaml linenums="39"
 --8<--
-examples/ide/volterra_ide.py:137:138
+examples/ide/conf/volterra_ide.yaml:39:55
 --8<--
 ```
 
@@ -125,9 +141,9 @@ examples/ide/volterra_ide.py:137:138
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `LBFGS` 优化器。
 
-``` py linenums="140"
+``` py linenums="141"
 --8<--
-examples/ide/volterra_ide.py:140:148
+examples/ide/volterra_ide.py:141:142
 --8<--
 ```
 
@@ -135,9 +151,9 @@ examples/ide/volterra_ide.py:140:148
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="150"
+``` py linenums="144"
 --8<--
-examples/ide/volterra_ide.py:150:165
+examples/ide/volterra_ide.py:144:158
 --8<--
 ```
 
@@ -149,9 +165,9 @@ examples/ide/volterra_ide.py:150:165
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="167"
+``` py linenums="160"
 --8<--
-examples/ide/volterra_ide.py:167:183
+examples/ide/volterra_ide.py:160:178
 --8<--
 ```
 
@@ -159,9 +175,9 @@ examples/ide/volterra_ide.py:167:183
 
 在模型训练完毕之后，我们可以手动构造 0 ~ 5 区间内均匀 100 个点，作为评估的积分上限 `t` 进行预测，并可视化结果。
 
-``` py linenums="185"
+``` py linenums="180"
 --8<--
-examples/ide/volterra_ide.py:185:
+examples/ide/volterra_ide.py:180:191
 --8<--
 ```
 
