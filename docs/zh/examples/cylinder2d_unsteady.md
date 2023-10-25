@@ -95,6 +95,13 @@ $$
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
+在开始构建代码之前，请先按照下列命令下载训练、评估所需的数据集
+
+``` sh
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+tar -xf cylinder2d_unsteady_Re100_dataset.tar
+```
+
 ### 3.1 模型构建
 
 在 2D-Cylinder 问题中，每一个已知的坐标点 $(t, x, y)$ 都有自身的横向速度 $u$、纵向速度 $v$、压力 $p$
