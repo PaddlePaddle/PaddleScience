@@ -52,7 +52,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 材料生成 | 面向对称感知的周期性材料生成<sup>coming soon</sup> | 数据驱动 | SyMat | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
 | 天气预报 | [FourCastNet 气象预报](./docs/zh/examples/fourcastnet.md) | 数据驱动 | FourCastNet | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 | 天气预报 | [GraphCast 气象预报]<sup>coming soon</sup> | 数据驱动 | GraphCastNet* | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
-| 大气污染物 | [UNet 污染物扩散](./https://aistudio.baidu.com/projectdetail/5663515?channelType=0&channel=0) | 数据驱动 | UNet | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 有监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
