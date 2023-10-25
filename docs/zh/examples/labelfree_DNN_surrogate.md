@@ -91,15 +91,15 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="91"
+``` py linenums="78"
 --8<--
-examples/pipe/poiseuille_flow.py:91:93
+examples/pipe/poiseuille_flow.py:78:80
 --8<--
 ```
 
-``` py linenums="118"
+``` py linenums="105"
 --8<--
-examples/pipe/poiseuille_flow.py:118:124
+examples/pipe/poiseuille_flow.py:105:111
 --8<--
 ```
 
@@ -111,9 +111,9 @@ examples/pipe/poiseuille_flow.py:118:124
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="130"
+``` py linenums="117"
 --8<--
-examples/pipe/poiseuille_flow.py:130:132
+examples/pipe/poiseuille_flow.py:117:121
 --8<--
 ```
 
@@ -123,9 +123,9 @@ examples/pipe/poiseuille_flow.py:130:132
 
 本文中本案例的计算域和参数自变量 $\nu$ 由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="64"
+``` py linenums="52"
 --8<--
-examples/pipe/poiseuille_flow.py:64:88
+examples/pipe/poiseuille_flow.py:52:75
 --8<--
 ```
 
@@ -187,9 +187,9 @@ examples/pipe/poiseuille_flow.py:64:88
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="138"
+    ``` py linenums="128"
     --8<--
-    examples/pipe/poiseuille_flow.py:138:159
+    examples/pipe/poiseuille_flow.py:128:146
     --8<--
     ```
 
@@ -215,7 +215,7 @@ examples/pipe/poiseuille_flow.py:64:88
 
 ``` py linenums="127"
 --8<--
-examples/pipe/poiseuille_flow.py:127:127
+examples/pipe/poiseuille_flow.py:114:114
 --8<--
 ```
 
@@ -223,9 +223,9 @@ examples/pipe/poiseuille_flow.py:127:127
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="162"
+``` py linenums="152"
 --8<--
-examples/pipe/poiseuille_flow.py:162:174
+examples/pipe/poiseuille_flow.py:152:164
 --8<--
 ```
 
@@ -235,9 +235,9 @@ examples/pipe/poiseuille_flow.py:162:174
 
 2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
-``` py linenums="176"
+``` py linenums="166"
 --8<--
-examples/pipe/poiseuille_flow.py:176:284
+examples/pipe/poiseuille_flow.py:166:274
 --8<--
 ```
 

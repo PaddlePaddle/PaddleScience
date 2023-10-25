@@ -42,34 +42,21 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    NU_MEAN = cfg.NU_MEAN
-    NU_STD = cfg.NU_STD
-    L = cfg.L  # length of pipe
-    R = cfg.R  # radius of pipe
-    RHO = cfg.RHO  # density
-    P_OUT = cfg.P_OUT  # pressure at the outlet of pipe
-    P_IN = cfg.P_IN  # pressure at the inlet of pipe
-
-    N_x = cfg.N_x
-    N_y = cfg.N_y
-    N_p = cfg.N_p
-
-    X_IN = cfg.X_IN
-    X_OUT = X_IN + L
-    Y_START = -R
-    Y_END = Y_START + 2 * R
-    NU_START = NU_MEAN - NU_MEAN * NU_STD  # 0.0001
-    NU_END = NU_MEAN + NU_MEAN * NU_STD  # 0.1
+    X_OUT = cfg.X_IN + cfg.L
+    Y_START = -cfg.R
+    Y_END = Y_START + 2 * cfg.R
+    NU_START = cfg.NU_MEAN - cfg.NU_MEAN * cfg.NU_STD  # 0.0001
+    NU_END = cfg.NU_MEAN + cfg.NU_MEAN * cfg.NU_STD  # 0.1
 
     ## prepare data with (?, 2)
     data_1d_x = np.linspace(
-        X_IN, X_OUT, N_x, endpoint=True, dtype=paddle.get_default_dtype()
+        cfg.X_IN, X_OUT, cfg.N_x, endpoint=True, dtype=paddle.get_default_dtype()
     )
     data_1d_y = np.linspace(
-        Y_START, Y_END, N_y, endpoint=True, dtype=paddle.get_default_dtype()
+        Y_START, Y_END, cfg.N_y, endpoint=True, dtype=paddle.get_default_dtype()
     )
     data_1d_nu = np.linspace(
-        NU_START, NU_END, N_p, endpoint=True, dtype=paddle.get_default_dtype()
+        NU_START, NU_END, cfg.N_p, endpoint=True, dtype=paddle.get_default_dtype()
     )
 
     data_2d_xy = (
@@ -95,23 +82,23 @@ def train(cfg: DictConfig):
     def input_trans(input):
         x, y = input["x"], input["y"]
         nu = input["nu"]
-        b = 2 * np.pi / (X_OUT - X_IN)
-        c = np.pi * (X_IN + X_OUT) / (X_IN - X_OUT)
-        sin_x = X_IN * paddle.sin(b * x + c)
-        cos_x = X_IN * paddle.cos(b * x + c)
+        b = 2 * np.pi / (X_OUT - cfg.X_IN)
+        c = np.pi * (cfg.X_IN + X_OUT) / (cfg.X_IN - X_OUT)
+        sin_x = cfg.X_IN * paddle.sin(b * x + c)
+        cos_x = cfg.X_IN * paddle.cos(b * x + c)
         return {"sin(x)": sin_x, "cos(x)": cos_x, "x": x, "y": y, "nu": nu}
 
     def output_trans_u(input, out):
-        return {"u": out["u"] * (R**2 - input["y"] ** 2)}
+        return {"u": out["u"] * (cfg.R**2 - input["y"] ** 2)}
 
     def output_trans_v(input, out):
-        return {"v": (R**2 - input["y"] ** 2) * out["v"]}
+        return {"v": (cfg.R**2 - input["y"] ** 2) * out["v"]}
 
     def output_trans_p(input, out):
         return {
             "p": (
-                (P_IN - P_OUT) * (X_OUT - input["x"]) / L
-                + (X_IN - input["x"]) * (X_OUT - input["x"]) * out["p"]
+                (cfg.P_IN - cfg.P_OUT) * (X_OUT - input["x"]) / cfg.L
+                + (cfg.X_IN - input["x"]) * (X_OUT - input["x"]) * out["p"]
             )
         }
 
@@ -128,12 +115,15 @@ def train(cfg: DictConfig):
 
     # set euqation
     equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(nu="nu", rho=RHO, dim=2, time=False)
+        "NavierStokes": ppsci.equation.NavierStokes(
+            nu="nu", rho=cfg.RHO, dim=2, time=False
+        )
     }
 
     # set constraint
-    BATCH_SIZE = cfg.TRAIN.batch_size.pde_constraint
-    ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
+    ITERS_PER_EPOCH = int(
+        (cfg.N_x * cfg.N_y * cfg.N_p) / cfg.TRAIN.batch_size.pde_constraint
+    )
 
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
@@ -142,7 +132,7 @@ def train(cfg: DictConfig):
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
             "num_workers": 1,
-            "batch_size": BATCH_SIZE,
+            "batch_size": cfg.TRAIN.batch_size.pde_constraint,
             "iters_per_epoch": ITERS_PER_EPOCH,
             "sampler": {
                 "name": "BatchSampler",
@@ -181,18 +171,18 @@ def train(cfg: DictConfig):
         "nu": data_2d_xy[:, 2:3],
     }
     output_dict = solver.predict(input_dict, return_numpy=True)
-    u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
+    u_pred = output_dict["u"].reshape(cfg.N_y, cfg.N_x, cfg.N_p)
 
     # Analytical result, y = data_1d_y
-    u_analytical = np.zeros([N_y, N_x, N_p])
-    dP = P_IN - P_OUT
+    u_analytical = np.zeros([cfg.N_y, cfg.N_x, cfg.N_p])
+    dP = cfg.P_IN - cfg.P_OUT
 
-    for i in range(N_p):
-        uy = (R**2 - data_1d_y**2) * dP / (2 * L * data_1d_nu[i] * RHO)
-        u_analytical[:, :, i] = np.tile(uy.reshape([N_y, 1]), N_x)
+    for i in range(cfg.N_p):
+        uy = (cfg.R**2 - data_1d_y**2) * dP / (2 * cfg.L * data_1d_nu[i] * cfg.RHO)
+        u_analytical[:, :, i] = np.tile(uy.reshape([cfg.N_y, 1]), cfg.N_x)
 
     fontsize = 16
-    idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
+    idx_X = int(round(cfg.N_x / 2))  # pipe velocity section at L/2
     nu_index = [3, 6, 14, 49]  # pick 4 nu samples
     ytext = [0.45, 0.28, 0.1, 0.01]
 
@@ -238,9 +228,9 @@ def train(cfg: DictConfig):
     # Distribution of center velocity
     # Predicted result
     num_test = 500
-    data_1d_nu_distribution = np.random.normal(NU_MEAN, 0.2 * NU_MEAN, num_test)
+    data_1d_nu_distribution = np.random.normal(cfg.NU_MEAN, 0.2 * cfg.NU_MEAN, num_test)
     data_2d_xy_test = (
-        np.array(np.meshgrid((X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution))
+        np.array(np.meshgrid((cfg.X_IN - X_OUT) / 2.0, 0, data_1d_nu_distribution))
         .reshape(3, -1)
         .T
     )
@@ -254,7 +244,7 @@ def train(cfg: DictConfig):
     u_max_pred = output_dict_test["u"]
 
     # Analytical result, y = 0
-    u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)
+    u_max_a = (cfg.R**2) * dP / (2 * cfg.L * data_1d_nu_distribution * cfg.RHO)
 
     # Plot
     plt.figure(2)
