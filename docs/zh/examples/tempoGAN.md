@@ -78,9 +78,9 @@ examples/tempoGAN/conf/tempogan.yaml:26:27
 
 由于 GAN 网络中生成器和判别器的中间结果要相互调用，参与对方的 loss 计算，因此使用 Model List 实现，用 PaddleScience 代码表示如下：
 
-``` py linenums="56"
+``` py linenums="54"
 --8<--
-examples/tempoGAN/tempoGAN.py:56:75
+examples/tempoGAN/tempoGAN.py:54:73
 --8<--
 ```
 
@@ -120,9 +120,9 @@ examples/tempoGAN/functions.py:368:368
 
 我们需要指定问题相关的参数，如数据集路径、各项 loss 的权重参数等。
 
-``` py linenums="41"
+``` py linenums="26"
 --8<--
-examples/tempoGAN/tempoGAN.py:41:54
+examples/tempoGAN/conf/tempogan.yaml:26:36
 --8<--
 ```
 
@@ -140,9 +140,9 @@ examples/tempoGAN/conf/tempogan.yaml:30:32
 
 训练使用 Adam 优化器，学习率在 `Epoch` 达到一半时减小到原来的 $1/20$，因此使用 `Step` 方法作为学习率策略。如果将 `by_epoch` 设为 True，学习率将根据训练的 `Epoch` 改变，否则将根据 `Iteration` 改变。
 
-``` py linenums="77"
+``` py linenums="75"
 --8<--
-examples/tempoGAN/tempoGAN.py:77:93
+examples/tempoGAN/tempoGAN.py:75:91
 --8<--
 ```
 
@@ -150,9 +150,9 @@ examples/tempoGAN/tempoGAN.py:77:93
 
 本问题采用无监督学习的方式，虽然不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据。
 
-``` py linenums="99"
+``` py linenums="97"
 --8<--
-examples/tempoGAN/tempoGAN.py:99:113
+examples/tempoGAN/tempoGAN.py:97:111
 --8<--
 ```
 
@@ -164,7 +164,7 @@ examples/tempoGAN/tempoGAN.py:99:113
 
 ``` py linenums="97"
 --8<--
-examples/tempoGAN/tempoGAN.py:97:123
+examples/tempoGAN/tempoGAN.py:95:121
 --8<--
 ```
 
@@ -191,15 +191,15 @@ examples/tempoGAN/tempoGAN.py:97:123
 
 ``` py linenums="125"
 --8<--
-examples/tempoGAN/tempoGAN.py:125:153
+examples/tempoGAN/tempoGAN.py:123:151
 --8<--
 ```
 
 #### 3.6.2 Discriminator 的约束
 
-``` py linenums="158"
+``` py linenums="156"
 --8<--
-examples/tempoGAN/tempoGAN.py:158:196
+examples/tempoGAN/tempoGAN.py:156:194
 --8<--
 ```
 
@@ -207,9 +207,9 @@ examples/tempoGAN/tempoGAN.py:158:196
 
 #### 3.6.3 Discriminator_tempo 的约束
 
-``` py linenums="201"
+``` py linenums="199"
 --8<--
-examples/tempoGAN/tempoGAN.py:201:239
+examples/tempoGAN/tempoGAN.py:199:237
 --8<--
 ```
 
@@ -225,9 +225,9 @@ examples/tempoGAN/functions.py:153:229
 --8<--
 ```
 
-``` py linenums="365"
+``` py linenums="303"
 --8<--
-examples/tempoGAN/tempoGAN.py:305:320
+examples/tempoGAN/tempoGAN.py:303:318
 --8<--
 ```
 
@@ -281,9 +281,9 @@ examples/tempoGAN/functions.py:430:488
 
 完成上述设置之后，首先需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="242"
+``` py linenums="240"
 --8<--
-examples/tempoGAN/tempoGAN.py:242:253
+examples/tempoGAN/tempoGAN.py:240:251
 --8<--
 ```
 
@@ -293,9 +293,9 @@ examples/tempoGAN/tempoGAN.py:242:253
 
 由于本问题的输出为图片，评估指标需要使用针对图片的评估指标，因此不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估，而是在训练结束后针对最后一个 `Epoch` 进行一次评估:
 
-``` py linenums="282"
+``` py linenums="280"
 --8<--
-examples/tempoGAN/tempoGAN.py:282:289
+examples/tempoGAN/tempoGAN.py:280:287
 --8<--
 ```
 
