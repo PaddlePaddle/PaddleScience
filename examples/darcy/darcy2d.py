@@ -45,9 +45,6 @@ def train(cfg: DictConfig):
         "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
-    NPOINT_PDE = cfg.NPOINT_PDE
-    NPOINT_BC = cfg.NPOINT_BC
-
     # set constraint
     def poisson_ref_compute_func(_in):
         return (
@@ -61,7 +58,7 @@ def train(cfg: DictConfig):
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -74,7 +71,7 @@ def train(cfg: DictConfig):
             * np.cos(2.0 * np.pi * _in["y"])
         },
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_BC},
+        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
         name="BC",
     )
@@ -89,7 +86,7 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
-    NPOINT_EVAL = NPOINT_PDE
+    NPOINT_EVAL = cfg.NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
@@ -109,7 +106,9 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     # manually collate input data for visualization,
-    vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
+    vis_points = geom["rect"].sample_interior(
+        cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
+    )
     visualizer = {
         "visulzie_p": ppsci.visualize.VisualizerVtu(
             vis_points,
@@ -215,9 +214,6 @@ def evaluate(cfg: DictConfig):
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
 
-    NPOINT_PDE = cfg.NPOINT_PDE
-    NPOINT_BC = cfg.NPOINT_BC
-
     # set constraint
     def poisson_ref_compute_func(_in):
         return (
@@ -228,7 +224,7 @@ def evaluate(cfg: DictConfig):
         )
 
     # set validator
-    NPOINT_EVAL = NPOINT_PDE
+    NPOINT_EVAL = cfg.NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
@@ -248,7 +244,9 @@ def evaluate(cfg: DictConfig):
 
     # set visualizer(optional)
     # manually collate input data for visualization,
-    vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
+    vis_points = geom["rect"].sample_interior(
+        cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
+    )
     visualizer = {
         "visulzie_p": ppsci.visualize.VisualizerVtu(
             vis_points,
