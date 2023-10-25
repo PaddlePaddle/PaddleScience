@@ -42,12 +42,10 @@ def train(cfg: DictConfig):
     weight_gen_layer = (
         cfg.WEIGHT_GEN_LAYER if cfg.USE_SPATIALDISC else None
     )  # lambda_layer, lambda_layer1, lambda_layer2, lambda_layer3, lambda_layer4
-    weight_disc = cfg.WEIGHT_DISC
-    tile_ratio = cfg.TILE_RATIO
 
     gen_funcs = func_module.GenFuncs(weight_gen, weight_gen_layer)
-    dics_funcs = func_module.DiscFuncs(weight_disc)
-    data_funcs = func_module.DataFuncs(tile_ratio)
+    dics_funcs = func_module.DiscFuncs(cfg.WEIGHT_DISC)
+    data_funcs = func_module.DataFuncs(cfg.TILE_RATIO)
 
     # load dataset
     dataset_train = hdf5storage.loadmat(cfg.DATASET_PATH)
@@ -284,7 +282,7 @@ def train(cfg: DictConfig):
         # plotting during training
         if i == 1 or i % PRED_INTERVAL == 0 or i == cfg.TRAIN.epochs:
             func_module.predict_and_save_plot(
-                cfg.output_dir, i, solver_gen, dataset_valid, tile_ratio
+                cfg.output_dir, i, solver_gen, dataset_valid, cfg.TILE_RATIO
             )
 
         dics_funcs.model_gen = model_gen
