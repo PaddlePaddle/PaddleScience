@@ -36,7 +36,7 @@ nav:
       - 快速开始: zh/quickstart.md
   - 经典案例:
     - " ":
-      - 数学(AI for Math): 
+      - 数学(AI for Math):
         - Laplace2D: zh/examples/laplace2d.md
         - DeepHPMs: zh/examples/deephpms.md
         - PIRBN: zh/examples/pirbn.md
