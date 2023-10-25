@@ -61,8 +61,6 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    input_keys = cfg.MODEL.input_keys
-    output_keys = cfg.MODEL.output_keys
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
@@ -70,8 +68,8 @@ def train(cfg: DictConfig):
     train_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "file_path": cfg.TRAIN_FILE_PATH,
             "block_size": cfg.TRAIN_BLOCK_SIZE,
             "stride": 64,
@@ -113,8 +111,8 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,
@@ -181,8 +179,6 @@ def evaluate(cfg: DictConfig):
     # directly evaluate pretrained model(optional)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    input_keys = cfg.MODEL.input_keys
-    output_keys = cfg.MODEL.output_keys
     embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
@@ -194,8 +190,8 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,

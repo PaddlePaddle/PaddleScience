@@ -45,8 +45,6 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    input_keys = cfg.MODEL.input_keys
-    output_keys = cfg.MODEL.output_keys
     weights = (1.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 1.0e4 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)
@@ -54,11 +52,13 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.TRAIN_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.TRAIN_BLOCK_SIZE,
             "stride": 16,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
@@ -76,7 +76,10 @@ def train(cfg: DictConfig):
                 regularization_key: 1.0e-1 * (cfg.TRAIN_BLOCK_SIZE - 1)
             }
         ),
-        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
+        {
+            key: lambda out, k=key: out[k]
+            for key in cfg.MODEL.output_keys + (regularization_key,)
+        },
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -87,7 +90,10 @@ def train(cfg: DictConfig):
     # manually init model
     data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
     model = ppsci.arch.LorenzEmbedding(
-        input_keys, output_keys + (regularization_key,), data_mean, data_std
+        cfg.MODEL.input_keys,
+        cfg.MODEL.output_keys + (regularization_key,),
+        data_mean,
+        data_std,
     )
 
     # init optimizer and lr scheduler
@@ -107,11 +113,13 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 32,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
@@ -154,8 +162,6 @@ def evaluate(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    input_keys = cfg.MODEL.input_keys
-    output_keys = cfg.MODEL.output_keys
     weights = (1.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 1.0e4 * cfg.TRAIN_BLOCK_SIZE)
     regularization_key = "k_matrix"
     # manually build constraint(s)
@@ -163,11 +169,13 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.TRAIN_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.TRAIN_BLOCK_SIZE,
             "stride": 16,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
@@ -185,14 +193,20 @@ def evaluate(cfg: DictConfig):
                 regularization_key: 1.0e-1 * (cfg.TRAIN_BLOCK_SIZE - 1)
             }
         ),
-        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
+        {
+            key: lambda out, k=key: out[k]
+            for key in cfg.MODEL.output_keys + (regularization_key,)
+        },
         name="Sup",
     )
 
     # manually init model
     data_mean, data_std = get_mean_std(sup_constraint.data_loader.dataset.data)
     model = ppsci.arch.LorenzEmbedding(
-        input_keys, output_keys + (regularization_key,), data_mean, data_std
+        cfg.MODEL.input_keys,
+        cfg.MODEL.output_keys + (regularization_key,),
+        data_mean,
+        data_std,
     )
 
     # manually build validator
@@ -201,11 +215,13 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "LorenzDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
             "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 32,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
