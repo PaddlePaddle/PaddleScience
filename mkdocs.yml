@@ -58,6 +58,7 @@ nav:
         - ViV: zh/examples/viv.md
         - tempoGAN: zh/examples/tempoGAN.md
         - AMGNet: zh/examples/amgnet.md
+        - Heat_PINN: zh/examples/heat_pinn.md
       - 结构:
         - Bracket: zh/examples/bracket.md
         - Phy-LSTM: zh/examples/phylstm.md
