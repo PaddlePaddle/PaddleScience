@@ -101,9 +101,9 @@ examples/darcy/darcy2d.py:42:46
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="51"
+``` py linenums="48"
 --8<--
-examples/darcy/darcy2d.py:51:68
+examples/darcy/darcy2d.py:48:65
 --8<--
 ```
 
@@ -125,9 +125,9 @@ examples/darcy/darcy2d.py:51:68
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-``` py linenums="70"
+``` py linenums="67"
 --8<--
-examples/darcy/darcy2d.py:70:80
+examples/darcy/darcy2d.py:67:77
 --8<--
 ```
 
@@ -143,9 +143,9 @@ lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="81"
+``` py linenums="78"
 --8<--
-examples/darcy/darcy2d.py:81:85
+examples/darcy/darcy2d.py:78:82
 --8<--
 ```
 
@@ -163,9 +163,9 @@ examples/darcy/conf/darcy2d.yaml:41:47
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="87"
+``` py linenums="84"
 --8<--
-examples/darcy/darcy2d.py:87:89
+examples/darcy/darcy2d.py:84:86
 --8<--
 ```
 
@@ -173,9 +173,9 @@ examples/darcy/darcy2d.py:87:89
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="91"
+``` py linenums="88"
 --8<--
-examples/darcy/darcy2d.py:91:108
+examples/darcy/darcy2d.py:88:105
 --8<--
 ```
 
@@ -185,9 +185,9 @@ examples/darcy/darcy2d.py:91:108
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="110"
+``` py linenums="107"
 --8<--
-examples/darcy/darcy2d.py:110:148
+examples/darcy/darcy2d.py:107:148
 --8<--
 ```
 
@@ -197,9 +197,9 @@ examples/darcy/darcy2d.py:110:148
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="151"
+``` py linenums="149"
 --8<--
-examples/darcy/darcy2d.py:151:171
+examples/darcy/darcy2d.py:149:170
 --8<--
 ```
 
@@ -209,7 +209,7 @@ examples/darcy/darcy2d.py:151:171
 
 ``` py linenums="173"
 --8<--
-examples/darcy/darcy2d.py:173:194
+examples/darcy/darcy2d.py:173:193
 --8<--
 
 ```
