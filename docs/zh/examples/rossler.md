@@ -79,7 +79,7 @@ examples/rossler/conf/enn.yaml:22:34
 
 ``` py linenums="57" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:57:74
+examples/rossler/train_enn.py:55:74
 --8<--
 ```
 
@@ -100,7 +100,7 @@ examples/rossler/train_enn.py:57:74
 
 ``` py linenums="76" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:76:84
+examples/rossler/train_enn.py:76:86
 --8<--
 ```
 
@@ -125,7 +125,7 @@ examples/rossler/train_enn.py:76:84
 
 ``` py linenums="89" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:89:93
+examples/rossler/train_enn.py:93:99
 --8<--
 ```
 
@@ -141,9 +141,9 @@ examples/rossler/train_enn.py:32:43
 
 本案例中使用的学习率方法为 `ExponentialDecay` ，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下
 
-``` py linenums="95" title="examples/rossler/train_enn.py"
+``` py linenums="101" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:95:104
+examples/rossler/train_enn.py:101:110
 --8<--
 ```
 
@@ -151,9 +151,9 @@ examples/rossler/train_enn.py:95:104
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="107" title="examples/rossler/train_enn.py"
+``` py linenums="114" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:107:125
+examples/rossler/train_enn.py:114:133
 --8<--
 ```
 
@@ -163,9 +163,9 @@ examples/rossler/train_enn.py:107:125
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="135" title="examples/rossler/train_enn.py"
+``` py linenums="143" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:135:149
+examples/rossler/train_enn.py:143:157
 --8<--
 ```
 
@@ -185,7 +185,7 @@ Transformer 模型同样基于数据驱动的方法求解问题，因此需要�
 
 ``` py linenums="67" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:67:84
+examples/rossler/train_transformer.py:65:82
 --8<--
 ```
 
@@ -193,9 +193,9 @@ examples/rossler/train_transformer.py:67:84
 
 定义监督约束的代码如下：
 
-``` py linenums="86" title="examples/rossler/train_transformer.py"
+``` py linenums="84" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:86:91
+examples/rossler/train_transformer.py:84:89
 --8<--
 ```
 
@@ -210,9 +210,9 @@ examples/rossler/train_transformer.py:86:91
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="97" title="examples/rossler/train_transformer.py"
+``` py linenums="95" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:97:97
+examples/rossler/train_transformer.py:95:95
 --8<--
 ```
 
@@ -222,9 +222,9 @@ examples/rossler/train_transformer.py:97:97
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="99" title="examples/rossler/train_transformer.py"
+``` py linenums="97" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:99:106
+examples/rossler/train_transformer.py:97:104
 --8<--
 ```
 
@@ -232,9 +232,9 @@ examples/rossler/train_transformer.py:99:106
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="109" title="examples/rossler/train_transformer.py"
+``` py linenums="107" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:109:126
+examples/rossler/train_transformer.py:107:124
 --8<--
 ```
 
@@ -260,9 +260,9 @@ examples/rossler/train_transformer.py:63:64
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="136" title="examples/rossler/train_transformer.py"
+``` py linenums="134" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:136:154
+examples/rossler/train_transformer.py:134:152
 --8<--
 ```
 
@@ -272,9 +272,9 @@ examples/rossler/train_transformer.py:136:154
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="156" title="examples/rossler/train_transformer.py"
+``` py linenums="154" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:156:174
+examples/rossler/train_transformer.py:154:172
 --8<--
 ```
 
