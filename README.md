@@ -44,7 +44,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 多相流 | 非高斯渗透率场估计<sup>coming soon</sup> | 机理驱动 | cINN | 有监督学习 | - | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 流场高分辨率重构 | 2D 湍流流场重构<sup>coming soon</sup> | 数据驱动 | tempoGAN | 有监督学习 | - | [Paper](https://dl.acm.org/doi/10.1145/3197517.3201304)|
 | 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 有监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
-| 受力分析 | 1D 欧拉梁变形 | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | [1D 欧拉梁变形](https://github.com/HydrogenSulfate/PaddleScience/blob/add_exm_table/examples/euler_beam/euler_beam.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | 2D 平板变形<sup>coming soon</sup> | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [3D 连接件变形](./docs/zh/examples/bracket.md) | 机理驱动 | MLP | 无监督学习 | - | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
 | 受力分析 | [结构震动模拟](./docs/zh/examples/phylstm.md) | 机理驱动 | PhyLSTM | 有监督学习 | - | [Paper](https://arxiv.org/abs/2002.10253) |
