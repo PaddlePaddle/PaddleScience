@@ -83,7 +83,6 @@ def train(cfg: DictConfig):
     solver.eval()
 
     # visualize prediction for different functions u and corresponding G(u)
-    NUM_Y = cfg.NUM_Y  # number of y point for G(u) to be visualized
     dtype = paddle.get_default_dtype()
 
     def generate_y_u_G_ref(
@@ -102,9 +101,9 @@ def train(cfg: DictConfig):
             [1, cfg.MODEL.num_loc]
         )
         u = u_func(x)
-        u = np.tile(u, [NUM_Y, 1])
+        u = np.tile(u, [cfg.NUM_Y, 1])
 
-        y = np.linspace(0, 1, NUM_Y, dtype=dtype).reshape([NUM_Y, 1])
+        y = np.linspace(0, 1, cfg.NUM_Y, dtype=dtype).reshape([cfg.NUM_Y, 1])
         G_ref = G_u_func(y)
         return u, y, G_ref
 
@@ -184,7 +183,6 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
     # visualize prediction for different functions u and corresponding G(u)
-    NUM_Y = cfg.NUM_Y  # number of y point for G(u) to be visualized
     dtype = paddle.get_default_dtype()
 
     def generate_y_u_G_ref(
@@ -203,9 +201,9 @@ def evaluate(cfg: DictConfig):
             [1, cfg.MODEL.num_loc]
         )
         u = u_func(x)
-        u = np.tile(u, [NUM_Y, 1])
+        u = np.tile(u, [cfg.NUM_Y, 1])
 
-        y = np.linspace(0, 1, NUM_Y, dtype=dtype).reshape([NUM_Y, 1])
+        y = np.linspace(0, 1, cfg.NUM_Y, dtype=dtype).reshape([cfg.NUM_Y, 1])
         G_ref = G_u_func(y)
         return u, y, G_ref
 

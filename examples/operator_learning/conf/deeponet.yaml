@@ -27,7 +27,7 @@ TRAIN_FILE_PATH: ./antiderivative_unaligned_train.npz
 VALID_FILE_PATH: ./antiderivative_unaligned_test.npz
 
 # set working condition
-NUM_Y: 1000
+NUM_Y: 1000  # number of y point for G(u) to be visualized
 
 # model settings
 MODEL:
