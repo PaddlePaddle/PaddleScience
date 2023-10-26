@@ -86,15 +86,14 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
-    NPOINT_EVAL = cfg.NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": NPOINT_EVAL,
-            "batch_size": cfg.TRAIN.batch_size.residual_validator,
+            "total_size": cfg.NPOINT_PDE,
+            "batch_size": cfg.EVAL.batch_size.residual_validator,
             "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
@@ -224,15 +223,14 @@ def evaluate(cfg: DictConfig):
         )
 
     # set validator
-    NPOINT_EVAL = cfg.NPOINT_PDE
     residual_validator = ppsci.validate.GeometryValidator(
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
             "dataset": "NamedArrayDataset",
-            "total_size": NPOINT_EVAL,
-            "batch_size": cfg.TRAIN.batch_size.residual_validator,
+            "total_size": cfg.NPOINT_PDE,
+            "batch_size": cfg.EVAL.batch_size.residual_validator,
             "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),

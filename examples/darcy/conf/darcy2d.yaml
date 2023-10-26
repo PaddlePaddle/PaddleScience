@@ -45,12 +45,6 @@ TRAIN:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     max_learning_rate: 1.0e-3
     end_learning_rate: 1.0e-7
-  batch_size:
-    residual_validator: 8192
-  eval_freq: 200
-  eval_during_train: true
-  pretrained_model_path: null
-  checkpoint_path: null
   lbfgs:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     output_dir: ./outputs_darcy2d_L-BFGS
@@ -58,7 +52,13 @@ TRAIN:
     max_iter: 10
     eval_freq: ${TRAIN.eval_freq}
     eval_during_train: ${TRAIN.eval_during_train}
+  eval_freq: 200
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
 
 # evaluation settings
 EVAL:
-eval_with_no_grad: false
+  batch_size:
+    residual_validator: 8192
+  pretrained_model_path: null
