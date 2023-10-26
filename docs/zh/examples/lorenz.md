@@ -82,7 +82,7 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="26" title="examples/conf/enn.yaml"
+``` yaml linenums="26" title="examples/conf/enn.yaml"
 --8<--
 examples/lorenz/conf/enn.yaml:26:34
 --8<--
@@ -188,7 +188,7 @@ examples/lorenz/train_enn.py:142:156
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="26" title="examples/lorenz/conf/transformer.yaml"
+``` yaml linenums="26" title="examples/lorenz/conf/transformer.yaml"
 --8<--
 examples/lorenz/conf/transformer.yaml:26:42
 --8<--
