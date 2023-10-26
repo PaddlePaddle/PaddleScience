@@ -56,7 +56,7 @@ def train(cfg: DictConfig):
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
-        weight_dict=cfg.TRAIN.weight.pde,  # (1)
+        weight_dict=cfg.TRAIN.weight.pde,
         name="EQ",
     )
     bc_top = ppsci.constraint.BoundaryConstraint(
@@ -104,13 +104,11 @@ def train(cfg: DictConfig):
         bc_right.name: bc_right,
     }
 
-    # set training hyper-parameters
+    # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **cfg.TRAIN.lr_scheduler,
         warmup_epoch=int(0.05 * cfg.TRAIN.epochs),
     )()
-
-    # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
@@ -159,6 +157,7 @@ def train(cfg: DictConfig):
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
     # train model
     solver.train()

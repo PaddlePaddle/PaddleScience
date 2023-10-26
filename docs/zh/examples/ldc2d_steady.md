@@ -204,7 +204,7 @@ examples/ldc/ldc2d_steady_Re10.py:39:49
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="63"
+``` py linenums="51"
 # set constraint
 pde = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
@@ -264,7 +264,7 @@ examples/ldc/ldc2d_steady_Re10.py:98:105
 
 接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="39"
+``` yaml linenums="39"
 --8<--
 examples/ldc/conf/ldc2d_steady_Re10.yaml:39:42
 --8<--
@@ -274,9 +274,9 @@ examples/ldc/conf/ldc2d_steady_Re10.yaml:39:42
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="113"
+``` py linenums="107"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:113:114
+examples/ldc/ldc2d_steady_Re10.py:107:112
 --8<--
 ```
 
@@ -284,9 +284,9 @@ examples/ldc/ldc2d_steady_Re10.py:113:114
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="116"
+``` py linenums="114"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:116:133
+examples/ldc/ldc2d_steady_Re10.py:114:131
 --8<--
 ```
 
@@ -308,9 +308,9 @@ examples/ldc/ldc2d_steady_Re10.py:116:133
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="135"
+``` py linenums="133"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:135:145
+examples/ldc/ldc2d_steady_Re10.py:133:143
 --8<--
 ```
 
@@ -318,9 +318,9 @@ examples/ldc/ldc2d_steady_Re10.py:135:145
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="147"
+``` py linenums="145"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:147:168
+examples/ldc/ldc2d_steady_Re10.py:145:167
 --8<--
 ```
 
