@@ -118,7 +118,10 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     def __iter__(self):
         if callable(self.transforms):
-            yield self.transforms(self.input), self.label, self.weight
+            input_, label_, weight_ = self.transforms(
+                self.input, self.label, self.weight
+            )
+            yield input_, label_, weight_
         else:
             yield self.input, self.label, self.weight
 
