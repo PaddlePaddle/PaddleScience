@@ -2,6 +2,29 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6508962" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
+    python burgers.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
+    python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deephpms/burgers_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
@@ -39,7 +62,7 @@ $$
 
 运行本问题代码前请下载 [模拟数据集1](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat) 和 [模拟数据集2](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat)， 下载后分别存放在路径：
 
-``` py linenums="26"
+``` yaml linenums="26"
 --8<--
 examples/deephpms/conf/burgers.yaml:26:27
 --8<--
@@ -105,7 +128,7 @@ examples/deephpms/burgers.py:236:237
 
 我们需要指定问题相关的参数，如数据集路径、输出文件路径、定义域的值等
 
-``` py linenums="26"
+``` yaml linenums="26"
 --8<--
 examples/deephpms/conf/burgers.yaml:26:33
 --8<--
@@ -113,7 +136,7 @@ examples/deephpms/conf/burgers.yaml:26:33
 
 同时需要指定训练轮数和学习率等超参数
 
-``` py linenums="57"
+``` yaml linenums="57"
 --8<--
 examples/deephpms/conf/burgers.yaml:57:61
 --8<--
