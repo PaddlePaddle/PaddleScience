@@ -81,13 +81,12 @@ def build_dataloader(_dataset, cfg):
         sampler_cfg["batch_size"] = cfg["batch_size"]
         sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
     else:
-        batch_size = cfg["batch_size"]
-        if batch_size != 1:
-            raise ValueError(f"batch_size : {batch_size} != 1")
+        if cfg["batch_size"] != 1:
+            raise ValueError(f"`batch_size` should be 1 when sampler config is None, but got 
+        {cfg['batch_size']}")
         logger.warning(
-                    f"No sampler specified, it means : input['x'] = NamedArrayDataset.__getitem__(i), batch_size = 1"
-                    f"More information can be found in [https://www.paddlepaddle.org.cn/documentation/docs/zh/api/paddle/io/DataLoader_cn.html]"
-                )
+            f"`batch_size` is set to 1 as neither sampler config or batch_size is set."
+        )
         sampler = None
 
     # build collate_fn if specified
