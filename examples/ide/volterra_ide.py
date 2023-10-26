@@ -61,8 +61,8 @@ def train(cfg: DictConfig):
     }
 
     # set constraint
-    # set input transform
-    def quad_transform(
+    # set transform for input data
+    def input_data_quad_transform(
         input: Dict[str, np.ndarray],
         weight: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
@@ -103,7 +103,7 @@ def train(cfg: DictConfig):
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "transform_func": quad_transform,
+                            "transform_func": input_data_quad_transform,
                         },
                     },
                 ),
