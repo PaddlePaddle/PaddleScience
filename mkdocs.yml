@@ -65,6 +65,7 @@ nav:
           - Phy-LSTM: zh/examples/phylstm.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
+        - EPNN: zh/examples/epnn.md
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
   - API文档:

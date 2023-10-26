@@ -9,6 +9,7 @@
         - L1Loss
         - L2Loss
         - L2RelLoss
+        - MAELoss
         - MSELoss
         - MSELossWithL2Decay
         - IntegralLoss
