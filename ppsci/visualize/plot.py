@@ -80,6 +80,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
         value_keys (Tuple[str, ...]): Value keys.
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     fig, a = plt.subplots(len(value_keys), num_timestamps, squeeze=False)
     fig.subplots_adjust(hspace=0.8)
 
@@ -173,6 +174,7 @@ def _save_plot_from_2d_array(
         xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
         yticks (Optional[Tuple[float, ...]]): Tuple of ytick locations. Defaults to None.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     plt.close("all")
     matplotlib.rcParams["xtick.labelsize"] = 5
@@ -319,6 +321,7 @@ def _save_plot_from_3d_array(
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     fig = plt.figure(figsize=(10, 10))
     len_ts = len(visu_data[0]) // num_timestamps
@@ -447,6 +450,7 @@ def _save_plot_weather_from_array(
             )
         plt.colorbar(mappable=map_, cax=None, ax=None, shrink=0.5, label=colorbar_label)
 
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     fig = plt.figure(facecolor="w", figsize=(7, 7))
     ax = fig.add_subplot(2, 1, 1)
     plot_weather(

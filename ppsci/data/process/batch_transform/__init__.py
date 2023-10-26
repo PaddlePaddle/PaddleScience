@@ -35,6 +35,9 @@ __all__ = ["build_batch_transforms", "default_collate_fn"]
 def default_collate_fn(batch: List[Any]) -> Any:
     """Default_collate_fn for paddle dataloader.
 
+    NOTE: This `default_collate_fn` is different from official `default_collate_fn`
+    which specially adapt case where sample is `None` and `pgl.Graph`.
+
     ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/io/dataloader/collate.py#L25
 
     Args:
