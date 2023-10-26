@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import path as osp
+
+import hydra
 import numpy as np
 import paddle
 import paddle.nn.functional as F
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
 
@@ -67,39 +70,22 @@ def sol_l2_rel_func(output_dict, label_dict):
     return metric_dict
 
 
-if __name__ == "__main__":
-    args = config.parse_args()
-    ppsci.utils.misc.set_random_seed(42)
-    DATASET_PATH = "./datasets/DeepHPMs/NLS.mat"
-    DATASET_PATH_SOL = "./datasets/DeepHPMs/NLS.mat"
-    OUTPUT_DIR = "./output_schrodinger/" if args.output_dir is None else args.output_dir
-
+def train(cfg: DictConfig):
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # initialize boundaries
-    t_lb = paddle.to_tensor([0.0])
-    t_ub = paddle.to_tensor([np.pi / 2.0])
-    x_lb = paddle.to_tensor([-5.0])
-    x_ub = paddle.to_tensor([5.0])
+    t_lb = paddle.to_tensor(list(cfg.T_LB))
+    t_ub = paddle.to_tensor([np.pi / cfg.T_UB])
+    x_lb = paddle.to_tensor(list(cfg.X_LB))
+    x_ub = paddle.to_tensor(list(cfg.X_UB))
 
     # initialize models
-    model_idn_u = ppsci.arch.MLP(("t", "x"), ("u_idn",), 4, 50, "sin")
-    model_idn_v = ppsci.arch.MLP(("t", "x"), ("v_idn",), 4, 50, "sin")
-    model_pde_f = ppsci.arch.MLP(
-        ("u", "v", "du_x", "dv_x", "du_xx", "dv_xx"),
-        ("f_pde",),
-        2,
-        100,
-        "sin",
-    )
-    model_pde_g = ppsci.arch.MLP(
-        ("u", "v", "du_x", "dv_x", "du_xx", "dv_xx"),
-        ("g_pde",),
-        2,
-        100,
-        "sin",
-    )
+    model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)
+    model_idn_v = ppsci.arch.MLP(**cfg.MODEL.idn_v_net)
+    model_pde_f = ppsci.arch.MLP(**cfg.MODEL.pde_f_net)
+    model_pde_g = ppsci.arch.MLP(**cfg.MODEL.pde_g_net)
 
     # initialize transform
     def transform_uv(_in):
@@ -142,27 +128,25 @@ if __name__ == "__main__":
         (model_idn_u, model_idn_v, model_pde_f, model_pde_g)
     )
 
-    # set training hyper-parameters
-    ITERS_PER_EPOCH = 1
-    EPOCHS = 50000 if args.epochs is None else args.epochs  # set 1 for LBFGS
-    # MAX_ITER = 50000  # for LBFGS
-    EVAL_BATCH_SIZE = 10000
-
     # initialize optimizer
     # Adam
-    optimizer_idn = ppsci.optimizer.Adam(1e-4)((model_idn_u, model_idn_v))
-    optimizer_pde = ppsci.optimizer.Adam(1e-4)((model_pde_f, model_pde_g))
+    optimizer_idn = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(
+        (model_idn_u, model_idn_v)
+    )
+    optimizer_pde = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(
+        (model_pde_f, model_pde_g)
+    )
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_idn_u, model_idn_v))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=MAX_ITER)((model_pde_f, model_pde_g))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn_u, model_idn_v))
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde_f, model_pde_g))
 
     # stage 1: training identification net
     # manually build constraint(s)
     train_dataloader_cfg_idn = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": DATASET_PATH,
+            "file_path": cfg.DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
             "alias_dict": {
@@ -186,7 +170,7 @@ if __name__ == "__main__":
     eval_dataloader_cfg_idn = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": DATASET_PATH,
+            "file_path": cfg.DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
             "alias_dict": {
@@ -196,7 +180,7 @@ if __name__ == "__main__":
                 "v_idn": "v_star",
             },
         },
-        "batch_size": EVAL_BATCH_SIZE,
+        "batch_size": cfg.TRAIN.batch_size.eval,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -217,12 +201,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model_list,
         constraint_idn,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer_idn,
         None,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=False,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         validator=validator_idn,
     )
 
@@ -236,7 +220,7 @@ if __name__ == "__main__":
     train_dataloader_cfg_pde = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": DATASET_PATH,
+            "file_path": cfg.DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("du_t", "dv_t"),
             "alias_dict": {
@@ -265,7 +249,7 @@ if __name__ == "__main__":
     eval_dataloader_cfg_pde = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": DATASET_PATH,
+            "file_path": cfg.DATASET_PATH,
             "input_keys": ("t", "x"),
             "label_keys": ("du_t", "dv_t"),
             "alias_dict": {
@@ -275,7 +259,7 @@ if __name__ == "__main__":
                 "dv_t": "t_star",
             },
         },
-        "batch_size": EVAL_BATCH_SIZE,
+        "batch_size": cfg.TRAIN.batch_size.eval,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -301,12 +285,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model_list,
         constraint_pde,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer_pde,
         None,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=False,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         validator=validator_pde,
     )
 
@@ -324,7 +308,7 @@ if __name__ == "__main__":
     train_dataloader_cfg_sol_f = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": DATASET_PATH_SOL,
+            "file_path": cfg.DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("du_t", "dv_t"),
             "alias_dict": {
@@ -338,7 +322,7 @@ if __name__ == "__main__":
     train_dataloader_cfg_sol_init = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": DATASET_PATH_SOL,
+            "file_path": cfg.DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
             "alias_dict": {"t": "t0", "x": "x0", "u_idn": "u0", "v_idn": "v0"},
@@ -347,7 +331,7 @@ if __name__ == "__main__":
     train_dataloader_cfg_sol_bc = {
         "dataset": {
             "name": "IterableMatDataset",
-            "file_path": DATASET_PATH_SOL,
+            "file_path": cfg.DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("x",),
             "alias_dict": {"t": "tb", "x": "xb"},
@@ -391,7 +375,7 @@ if __name__ == "__main__":
     eval_dataloader_cfg_sol = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": DATASET_PATH_SOL,
+            "file_path": cfg.DATASET_PATH_SOL,
             "input_keys": ("t", "x"),
             "label_keys": ("u_idn", "v_idn"),
             "alias_dict": {
@@ -401,7 +385,7 @@ if __name__ == "__main__":
                 "v_idn": "v_star",
             },
         },
-        "batch_size": EVAL_BATCH_SIZE,
+        "batch_size": cfg.TRAIN.batch_size.eval,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -424,12 +408,12 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model_list,
         constraint_sol,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer_idn,
         None,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=False,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         validator=validator_sol,
     )
 
@@ -437,3 +421,21 @@ if __name__ == "__main__":
     solver.train()
     # evaluate after finished training
     solver.eval()
+
+
+def evaluate(cfg: DictConfig):
+    print("Not supported.")
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="schrodinger.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
