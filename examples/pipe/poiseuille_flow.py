@@ -271,7 +271,7 @@ def train(cfg: DictConfig):
     plt.ylabel(r"PDF", fontsize=fontsize)
     ax1.tick_params(axis="x", labelsize=fontsize)
     ax1.tick_params(axis="y", labelsize=fontsize)
-    plt.savefig(osp.join(PLOT_DIR, "pipe_unformUQ.png"), bbox_inches="tight")
+    plt.savefig(osp.join(PLOT_DIR, "pipe_uniformUQ.png"), bbox_inches="tight")
 
 
 def evaluate(cfg: DictConfig):

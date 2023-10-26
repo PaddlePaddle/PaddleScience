@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # manually collate input data for visualization,
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
-        "visulzie_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # finetuning pretrained model with L-BFGS
+    # fine-tuning pretrained model with L-BFGS
     OUTPUT_DIR = "./output_darcy2d_L-BFGS"
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     EPOCHS = EPOCHS // 10

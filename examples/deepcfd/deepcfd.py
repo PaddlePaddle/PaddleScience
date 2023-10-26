@@ -35,7 +35,7 @@ def split_tensors(
         tensors (List[np.array]): Non-empty tensor list.
         ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
     Returns:
-        Tuple[List[np.array], List[np.array]]: Splited tensors.
+        Tuple[List[np.array], List[np.array]]: Split tensors.
     """
     if len(tensors) == 0:
         raise ValueError("Tensors shouldn't be empty.")
@@ -57,13 +57,13 @@ def split_tensors(
 def predict_and_save_plot(
     x: np.ndarray, y: np.ndarray, index: int, solver: ppsci.solver.Solver, plot_dir: str
 ):
-    """Make prediction and save visulization of result.
+    """Make prediction and save visualization of result.
 
     Args:
         x (np.ndarray): Input of test dataset.
         y (np.ndarray): Output of test dataset.
-        index (int): Index of data to visuliaze.
-        solver (ppsci.solver.Solver): Trained slover.
+        index (int): Index of data to visualizer.
+        solver (ppsci.solver.Solver): Trained solver.
         plot_dir (str): Directory to save plot.
     """
     min_u = np.min(y[index, 0, :, :])
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
         y = pickle.load(file)
 
-    # slipt dataset to train dataset and test datatset
+    # slipt dataset to train dataset and test dataset
     SLIPT_RATIO = 0.7
     train_dataset, test_dataset = split_tensors(x, y, ratio=SLIPT_RATIO)
     train_x, train_y = train_dataset
@@ -292,7 +292,7 @@ if __name__ == "__main__":
         name="sup_constraint",
     )
 
-    # maunally build constraint
+    # manually build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
     # set training hyper-parameters
