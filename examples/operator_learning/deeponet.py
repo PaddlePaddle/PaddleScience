@@ -74,8 +74,15 @@ def train(cfg: DictConfig):
         cfg.output_dir,
         optimizer,
         None,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        save_freq=cfg.TRAIN.save_freq,
+        eval_freq=cfg.TRAIN.eval_freq,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
         validator=validator,
-        **cfg.TRAIN.solver,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
     # train model
     solver.train()
