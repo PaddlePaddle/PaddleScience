@@ -51,7 +51,7 @@ GAN 网络为无监督学习，本问题网络设计中将目标值作为一个�
 
 运行本问题代码前请下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat)， 下载后分别存放在路径：
 
-``` py linenums="26"
+``` yaml linenums="26"
 --8<--
 examples/tempoGAN/conf/tempogan.yaml:26:27
 --8<--
@@ -120,7 +120,7 @@ examples/tempoGAN/functions.py:368:368
 
 我们需要指定问题相关的参数，如数据集路径、各项 loss 的权重参数等。
 
-``` py linenums="26"
+``` yaml linenums="26"
 --8<--
 examples/tempoGAN/conf/tempogan.yaml:26:36
 --8<--
@@ -130,7 +130,7 @@ examples/tempoGAN/conf/tempogan.yaml:26:36
 
 同时需要指定训练轮数和学习率等超参数，注意由于 GAN 网络训练流程与一般单个模型的网络不同，`EPOCHS` 的设置也有所不同。
 
-``` py linenums="30"
+``` yaml linenums="30"
 --8<--
 examples/tempoGAN/conf/tempogan.yaml:30:32
 --8<--
