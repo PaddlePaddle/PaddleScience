@@ -147,9 +147,9 @@ examples/operator_learning/deeponet.py:45:46
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
 
-``` py linenums="49"
+``` yaml linenums="49"
 --8<--
-examples/operator_learning/conf/deeponet.yaml:49:50
+examples/operator_learning/conf/deeponet.yaml:49:55
 --8<--
 ```
 
