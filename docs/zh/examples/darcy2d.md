@@ -185,9 +185,9 @@ examples/darcy/darcy2d.py:88:105
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="107"
+``` py linenums="106"
 --8<--
-examples/darcy/darcy2d.py:107:148
+examples/darcy/darcy2d.py:106:147
 --8<--
 ```
 
@@ -197,9 +197,9 @@ examples/darcy/darcy2d.py:107:148
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="149"
+``` py linenums="148"
 --8<--
-examples/darcy/darcy2d.py:149:170
+examples/darcy/darcy2d.py:148:169
 --8<--
 ```
 
@@ -207,9 +207,9 @@ examples/darcy/darcy2d.py:149:170
 
 在使用 `Adam` 优化器训练完毕之后，我们可以将优化器更换成二阶优化器 `L-BFGS` 继续训练少量轮数（此处我们使用 `Adam` 优化轮数的 10% 即可），从而进一步提高模型精度。
 
-``` py linenums="173"
+``` py linenums="172"
 --8<--
-examples/darcy/darcy2d.py:173:193
+examples/darcy/darcy2d.py:172:192
 --8<--
 
 ```
