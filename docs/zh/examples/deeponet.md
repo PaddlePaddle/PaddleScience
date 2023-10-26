@@ -6,9 +6,11 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
     python deeponet.py
     ```
 
@@ -16,9 +18,11 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
     python deeponet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams
     ```
 
@@ -179,7 +183,7 @@ examples/operator_learning/deeponet.py:51:60
 
 ``` py linenums="71"
 --8<--
-examples/operator_learning/deeponet.py:71:79
+examples/operator_learning/deeponet.py:71:90
 --8<--
 ```
 
@@ -187,9 +191,9 @@ examples/operator_learning/deeponet.py:71:79
 
 在模型训练完毕之后，我们可以手动构造 $u$、$y$ 并在适当范围内进行离散化，得到对应输入数据，继而预测出 $G(u)(y)$，并和 $G(u)$ 的标准解共同绘制图像，进行对比。（此处我们构造了 9 组 $u-G(u)$ 函数对）进行测试
 
-``` py linenums="85"
+``` py linenums="92"
 --8<--
-examples/operator_learning/deeponet.py:85:145
+examples/operator_learning/deeponet.py:92:151
 --8<--
 ```
 
