@@ -255,7 +255,7 @@ examples/bubble/bubble.py:156:160
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，评估间隔为一千轮，学习率设为 0.001。
 
-``` py linenums="52"
+``` yaml linenums="52"
 --8<--
 examples/bubble/conf/bubble.yaml:52:56
 --8<--

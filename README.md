@@ -21,19 +21,19 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 📝案例列表
 
-<center>数学(AI for Math)</center>
+<p align="center">数学(AI for Math)</p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 微分方程 | [拉普拉斯方程](./docs/zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
-| 微分方程 | [伯格斯方程](./docs/zh/examples/deephpms.md) | 机理驱动 |<center> MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |</center>
+| 微分方程 | [伯格斯方程](./docs/zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |</center>
 | 微分方程 | [洛伦兹方程](./docs/zh/examples/lorenz.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 微分方程 | [若斯叻方程](./docs/zh/examples/rossler.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 算子学习 | [DeepONet](./docs/zh/examples/deeponet.md) | 数据驱动 | MLP | 监督学习 | [Data](https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html) | [Paper](https://export.arxiv.org/pdf/1910.03193.pdf) |
 | 微分方程 | 梯度增强的物理知识融合PDE求解<sup>coming soon</sup> | 机理驱动 | gPINN | 半监督学习 | - |  [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0045782522001438?via%3Dihub) |
 | 积分方程 | [沃尔泰拉积分方程](./docs/zh/examples/volterra_ide.md) | 机理驱动 | MLP | 无监督学习 | - | [Project](https://github.com/lululxvi/deepxde/blob/master/examples/pinn_forward/Volterra_IDE.py) |
 
-<center>技术科学(AI for Technology)</center>
+<p align="center">技术科学(AI for Technology)</p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
@@ -56,14 +56,14 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 受力分析 | [3D 连接件变形](./docs/zh/examples/bracket.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar) | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
 | 受力分析 | [结构震动模拟](./docs/zh/examples/phylstm.md) | 机理驱动 | PhyLSTM | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat) | [Paper](https://arxiv.org/abs/2002.10253) |
 
-<center>材料科学(AI for Material)</center>
+<p align="center">材料科学(AI for Material)</p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 材料设计 | [散射板设计(反问题)](./zh/examples/hpinns.md) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
 | 材料生成 | 面向对称感知的周期性材料生成<sup>coming soon</sup> | 数据驱动 | SyMat | 监督学习 | - | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
 
-<center>地球科学(AI for Earth Science)</center>
+<p align="center">地球科学(AI for Earth Science)</p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
