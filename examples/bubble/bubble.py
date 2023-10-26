@@ -298,8 +298,8 @@ def evaluate(cfg: DictConfig):
         psi_y = out["psi"]
         y = in_["y"]
         x = in_["x"]
-        u = jacobian(psi_y, y)
-        v = -jacobian(psi_y, x)
+        u = jacobian(psi_y, y, create_graph=False)
+        v = -jacobian(psi_y, x, create_graph=False)
         return {"u": u, "v": v}
 
     # register transform

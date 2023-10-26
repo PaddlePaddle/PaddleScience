@@ -58,9 +58,26 @@ class Mesh(geometry.Geometry):
         elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
-            raise ValueError("arg `mesh` should be path string or or `pymesh.Mesh`")
+            raise ValueError("arg `mesh` should be path string or `pymesh.Mesh`")
 
         self.init_mesh()
+
+    @classmethod
+    def from_pymesh(cls, mesh: "pymesh.Mesh") -> "Mesh":
+        # check if pymesh is installed when using Mesh Class
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ImportError(
+                "Could not import pymesh python package."
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
+        import pymesh
+
+        if isinstance(mesh, pymesh.Mesh):
+            return cls(mesh)
+        else:
+            raise ValueError(
+                f"arg `mesh` should be type of `pymesh.Mesh`, but got {type(mesh)}"
+            )
 
     def init_mesh(self):
         """Initialize necessary variables for mesh"""
@@ -161,11 +178,10 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3iVector(faces),
         )
         open3d_mesh = open3d_mesh.translate(translation, relative)
-        self.py_mesh = pymesh.form_mesh(
+        translated_mesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
-        self.init_mesh()
-        return self
+        return Mesh.from_pymesh(translated_mesh)
 
     def scale(self, scale, center=(0, 0, 0)):
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
@@ -185,11 +201,10 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3iVector(faces),
         )
         open3d_mesh = open3d_mesh.scale(scale, center)
-        self.py_mesh = pymesh.form_mesh(
+        scaled_pymesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
-        self.init_mesh()
-        return self
+        return Mesh.from_pymesh(scaled_pymesh)
 
     def uniform_boundary_points(self, n: int):
         """Compute the equispaced points on the boundary."""

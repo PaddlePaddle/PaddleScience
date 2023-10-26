@@ -2,6 +2,30 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6566389?sUid=438690&shared=1&ts=1690775701017" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
+    python deeponet.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
+    python deeponet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 根据机器学习领域的万能近似定理，一个神经网络模型不仅可以拟合输入数据到输出数据的函数映射关系，也可以扩展到对函数与函数之间的映射关系进行拟合，称之为“算子”学习。
@@ -77,7 +101,7 @@ $$
 
 ``` py linenums="27"
 --8<--
-examples/operator_learning/deeponet.py:27:43
+examples/operator_learning/deeponet.py:27:27
 --8<--
 ```
 
@@ -89,9 +113,9 @@ examples/operator_learning/deeponet.py:27:43
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置，包括文件路径、输入数据字段名、标签数据字段名、数据转换前后的别名字典。
 
-``` py linenums="45"
+``` py linenums="30"
 --8<--
-examples/operator_learning/deeponet.py:45:55
+examples/operator_learning/deeponet.py:30:38
 --8<--
 ```
 
@@ -99,9 +123,9 @@ examples/operator_learning/deeponet.py:45:55
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="57"
+``` py linenums="40"
 --8<--
-examples/operator_learning/deeponet.py:57:61
+examples/operator_learning/deeponet.py:40:44
 --8<--
 ```
 
@@ -113,19 +137,19 @@ examples/operator_learning/deeponet.py:57:61
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="62"
+``` py linenums="45"
 --8<--
-examples/operator_learning/deeponet.py:62:63
+examples/operator_learning/deeponet.py:45:46
 --8<--
 ```
 
 ### 3.4 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
 
-``` py linenums="65"
+``` yaml linenums="49"
 --8<--
-examples/operator_learning/deeponet.py:65:66
+examples/operator_learning/conf/deeponet.yaml:49:55
 --8<--
 ```
 
@@ -133,9 +157,9 @@ examples/operator_learning/deeponet.py:65:66
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 `0.001`。
 
-``` py linenums="68"
+``` py linenums="48"
 --8<--
-examples/operator_learning/deeponet.py:68:69
+examples/operator_learning/deeponet.py:48:49
 --8<--
 ```
 
@@ -143,9 +167,9 @@ examples/operator_learning/deeponet.py:68:69
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="71"
+``` py linenums="51"
 --8<--
-examples/operator_learning/deeponet.py:71:88
+examples/operator_learning/deeponet.py:51:60
 --8<--
 ```
 
@@ -157,9 +181,9 @@ examples/operator_learning/deeponet.py:71:88
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="90"
+``` py linenums="71"
 --8<--
-examples/operator_learning/deeponet.py:90:123
+examples/operator_learning/deeponet.py:71:90
 --8<--
 ```
 
@@ -167,9 +191,9 @@ examples/operator_learning/deeponet.py:90:123
 
 在模型训练完毕之后，我们可以手动构造 $u$、$y$ 并在适当范围内进行离散化，得到对应输入数据，继而预测出 $G(u)(y)$，并和 $G(u)$ 的标准解共同绘制图像，进行对比。（此处我们构造了 9 组 $u-G(u)$ 函数对）进行测试
 
-``` py linenums="125"
+``` py linenums="92"
 --8<--
-examples/operator_learning/deeponet.py:125:
+examples/operator_learning/deeponet.py:92:151
 --8<--
 ```
 
