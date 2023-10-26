@@ -242,7 +242,7 @@ def evaluate(cfg: DictConfig):
     )
     validator = {residual_validator.name: residual_validator}
 
-    # set visualizer(optional)
+    # set visualizer
     # manually collate input data for visualization,
     vis_points = geom["rect"].sample_interior(
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
@@ -294,7 +294,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
-    # visualize prediction for pretrained model(optional)
+    # visualize prediction
     solver.visualize()
 
 

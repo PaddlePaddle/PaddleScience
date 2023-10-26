@@ -61,4 +61,4 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: null
+eval_with_no_grad: false

@@ -153,7 +153,7 @@ examples/darcy/darcy2d.py:78:82
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数。
 
-``` py linenums="41"
+``` yaml linenums="41"
 --8<--
 examples/darcy/conf/darcy2d.yaml:41:47
 --8<--
