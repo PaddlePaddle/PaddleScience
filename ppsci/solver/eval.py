@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from ppsci import solver
 
 
-def _get_datset_length(
+def _get_dataset_length(
     data_loader: Union["io.DataLoader", "pgl_data.Dataloader", "io.IterableDataset"]
 ) -> int:
     """Get full dataset length of given dataloader.
@@ -79,7 +79,7 @@ def _eval_by_dataset(
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
-        num_samples = _get_datset_length(_validator.data_loader)
+        num_samples = _get_dataset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
         reader_tic = time.perf_counter()
@@ -150,7 +150,7 @@ def _eval_by_dataset(
             reader_tic = time.perf_counter()
             batch_tic = time.perf_counter()
 
-        # concate all data and discard padded sample(s)
+        # concatenate all data and discard padded sample(s)
         for key in all_input:
             if paddle.is_tensor(all_input[key][0]):
                 all_input[key] = paddle.concat(all_input[key])
@@ -212,7 +212,7 @@ def _eval_by_batch(
     """
     target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
-        num_samples = _get_datset_length(_validator.data_loader)
+        num_samples = _get_dataset_length(_validator.data_loader)
 
         loss_dict = misc.Prettydefaultdict(float)
         metric_dict_group: Dict[str, Dict[str, float]] = misc.PrettyOrderedDict()
@@ -274,7 +274,7 @@ def _eval_by_batch(
             reader_tic = time.perf_counter()
             batch_tic = time.perf_counter()
 
-        # concate all metric and discard metric of padded sample(s)
+        # concatenate all metric and discard metric of padded sample(s)
         for metric_name, metric_dict in metric_dict_group.items():
             for var_name, metric_value in metric_dict.items():
                 metric_value = paddle.concat(metric_value)[:num_samples]

@@ -74,7 +74,7 @@ SYMPY_BUILTIN_FUNC: TypeAlias = Union[
     sp.Mul,
 ]
 
-SYMPT_TO_PADDLE = {
+SYMPY_TO_PADDLE = {
     sp.sin: paddle.sin,
     sp.sinh: paddle.sinh,
     sp.asin: paddle.asin,
@@ -100,7 +100,7 @@ SYMPT_TO_PADDLE = {
     sp.sign: paddle.sign,
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
-    # NOTE: sp.Add and sp.Mul is not included here for unalignment with sympy
+    # NOTE: sp.Add and sp.Mul is not included here for un-alignment with sympy
     # and are implemented manually.
 }
 
@@ -185,7 +185,7 @@ class OperatorNode(Node):
 
     def __init__(self, expr: SYMPY_BUILTIN_FUNC):
         super().__init__(expr)
-        # preprocess childs' key instead of processing at run-time in forward
+        # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         if self.expr.func == sp.Derivative:
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
@@ -202,14 +202,14 @@ class OperatorNode(Node):
             self._apply_func = self._derivate_operator_func
         elif self.expr.func == sp.Heaviside:
             self._apply_func = self._heaviside_operator_func
-            self._auxiliary_func = SYMPT_TO_PADDLE[sp.Heaviside]
+            self._auxiliary_func = SYMPY_TO_PADDLE[sp.Heaviside]
         elif self.expr.func == sp.Min:
             self._apply_func = self._minimum_operator_func
         elif self.expr.func == sp.Max:
             self._apply_func = self._maximum_operator_func
         else:
             self._apply_func = self._vanilla_operator_func
-            self._auxiliary_func = SYMPT_TO_PADDLE[self.expr.func]
+            self._auxiliary_func = SYMPY_TO_PADDLE[self.expr.func]
 
     def forward(self, data_dict: DATA_DICT):
         # use cache
@@ -369,14 +369,14 @@ class ComposedNode(nn.Layer):
 
 
 def _post_traverse(cur_node: sp.Basic, nodes: List[sp.Basic]) -> List[sp.Basic]:
-    """Traverse sympy expression tree in postorder.
+    """Traverse sympy expression tree in post-order.
 
     Args:
         cur_node (sp.Basic): Sympy expression of current node.
-        nodes (List[sp.Basic]): Node list storing all tree nodes in postorder.
+        nodes (List[sp.Basic]): Node list storing all tree nodes in post-order.
 
     Returns:
-        List[sp.Basic]: Node list storing all tree nodes in postorder.
+        List[sp.Basic]: Node list storing all tree nodes in post-order.
     """
     # traverse into sub-nodes
     if isinstance(cur_node, sp.Function):
@@ -446,7 +446,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
 
     graph = pygraphviz.AGraph(directed=True, rankdir="TB")
     C_FUNC = "#9196f1"  # purple color function node
-    C_DATA = "#feb64d"  # oringe color for data node
+    C_DATA = "#feb64d"  # orange color for data node
     C_EDGE = "#000000"  # black color for edge
 
     def add_edge(u: str, v: str, u_color: str = C_DATA, v_color: str = C_DATA):
@@ -488,7 +488,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
     logger.message(
-        f"Computational graph has been writen to {image_path} and {dot_path}. "
+        f"Computational graph has been written to {image_path} and {dot_path}. "
         "dot file can be visualized at https://dreampuf.github.io/GraphvizOnline/"
     )
 
@@ -564,11 +564,11 @@ def lambdify(
     # remove 1.0 from sympy expression tree
     expr = expr.subs(1.0, 1)
 
-    # convert sympy expression tree to list of nodes in postorder
+    # convert sympy expression tree to list of nodes in post-order
     sympy_nodes: List[sp.Basic] = []
     sympy_nodes = _post_traverse(expr, sympy_nodes)
 
-    # remove unnecessary symbol nodes already in input dict(except for paramter symbol)
+    # remove unnecessary symbol nodes already in input dict(except for parameter symbol)
     if not extra_parameters:
         extra_parameters = ()
     _parameter_names = tuple(param.name for param in extra_parameters)
@@ -578,7 +578,7 @@ def lambdify(
         if (not node.is_Symbol) or (_cvt_to_key(node) in _parameter_names)
     ]
 
-    # remove duplicates with topo-order kept
+    # remove duplicates with topological order kept
     sympy_nodes = list(dict.fromkeys(sympy_nodes))
 
     if isinstance(models, arch.ModelList):
@@ -590,7 +590,7 @@ def lambdify(
     callable_nodes = []
     for i, node in enumerate(sympy_nodes):
         if isinstance(
-            node, tuple(SYMPT_TO_PADDLE.keys()) + (sp.Add, sp.Mul, sp.Derivative)
+            node, tuple(SYMPY_TO_PADDLE.keys()) + (sp.Add, sp.Mul, sp.Derivative)
         ):
             callable_nodes.append(OperatorNode(node))
         elif isinstance(node, sp.Function):

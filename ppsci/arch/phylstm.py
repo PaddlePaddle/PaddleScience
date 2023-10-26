@@ -25,7 +25,7 @@ class DeepPhyLSTM(base.Arch):
         input_size (int): The input size.
         output_size (int): The output size.
         hidden_size (int, optional): The hidden size. Defaults to 100.
-        model_type (int, optional): The model type, value is 2 or 3, 2 indicates having two submodels, 3 indicates having three submodels. Defaults to 2.
+        model_type (int, optional): The model type, value is 2 or 3, 2 indicates having two sub-models, 3 indicates having three submodels. Defaults to 2.
 
     Examples:
         >>> import ppsci

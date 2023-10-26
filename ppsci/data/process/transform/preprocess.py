@@ -192,7 +192,7 @@ class CropData:
 
 
 class SqueezeData:
-    """Squeeze data clsss.
+    """Squeeze data class.
 
     Args:
         apply_keys (Tuple[str, ...], optional): Which data is the squeeze method applied to. Defaults to ("input", "label").
