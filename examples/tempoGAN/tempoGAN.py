@@ -38,12 +38,9 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
-    weight_gen = cfg.WEIGHT_GEN  # lambda_l1, lambda_l2, lambda_t
-    weight_gen_layer = (
-        cfg.WEIGHT_GEN_LAYER if cfg.USE_SPATIALDISC else None
-    )  # lambda_layer, lambda_layer1, lambda_layer2, lambda_layer3, lambda_layer4
-
-    gen_funcs = func_module.GenFuncs(weight_gen, weight_gen_layer)
+    gen_funcs = func_module.GenFuncs(
+        cfg.WEIGHT_GEN, (cfg.WEIGHT_GEN_LAYER if cfg.USE_SPATIALDISC else None)
+    )
     dics_funcs = func_module.DiscFuncs(cfg.WEIGHT_DISC)
     data_funcs = func_module.DataFuncs(cfg.TILE_RATIO)
 
