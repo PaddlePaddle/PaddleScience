@@ -58,7 +58,7 @@ class NavierStokes(base.PDE):
         nu (Union[float, str]): Dynamic viscosity.
         rho (Union[float, str]): Density.
         dim (int): Dimension of equation.
-        time (bool): Whether the euqation is time-dependent.
+        time (bool): Whether the equation is time-dependent.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
 

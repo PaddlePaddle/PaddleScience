@@ -64,7 +64,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
     elif isinstance(sample, Sequence):
         sample_fields_num = len(sample)
         if not all(len(sample) == sample_fields_num for sample in iter(batch)):
-            raise RuntimeError("fileds number not same among samples in a batch")
+            raise RuntimeError("Fields number not same among samples in a batch")
         return [default_collate_fn(fields) for fields in zip(*batch)]
     elif str(type(sample)) == "<class 'pgl.graph.Graph'>":
         # use str(type()) instead of isinstance() in case of pgl is not installed.
@@ -89,7 +89,7 @@ def build_batch_transforms(cfg):
     batch_transforms = transform.build_transforms(cfg)
 
     def collate_fn_batch_transforms(batch: List[Any]):
-        # apply batch transform on uncollated data
+        # apply batch transform on separate data
         batch = batch_transforms(batch)
         # then do collate
         return default_collate_fn(batch)

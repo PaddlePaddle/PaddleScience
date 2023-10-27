@@ -85,7 +85,7 @@ class LRBase:
         self.verbose = verbose
 
     @abc.abstractmethod
-    def __call__(self, *kargs, **kwargs) -> lr.LRScheduler:
+    def __call__(self, *args, **kwargs) -> lr.LRScheduler:
         """Generate an learning rate scheduler.
 
         Returns:
@@ -656,9 +656,9 @@ class OneCycleLR(LRBase):
 
     It has been proposed in [Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates](https://arxiv.org/abs/1708.07120).
 
-    Please note that the default behaviour of this scheduler follows the fastai implementation of one cycle,
+    Please note that the default behavior of this scheduler follows the fastai implementation of one cycle,
     which claims that **"unpublished work has shown even better results by using only two phases"**.
-    If you want the behaviour of this scheduler to be consistent with the paper, please set `three_phase=True`.
+    If you want the behavior of this scheduler to be consistent with the paper, please set `three_phase=True`.
 
     Args:
         epochs (int): Total epoch(s).
