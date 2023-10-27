@@ -36,7 +36,7 @@ def split_tensors(
         tensors (List[np.array]): Non-empty tensor list.
         ratio (float): Split ratio. For example, tensor list A is split to A1 and A2. len(A1) / len(A) = ratio.
     Returns:
-        Tuple[List[np.array], List[np.array]]: Splited tensors.
+        Tuple[List[np.array], List[np.array]]: Split tensors.
     """
     if len(tensors) == 0:
         raise ValueError("Tensors shouldn't be empty.")
@@ -58,13 +58,13 @@ def split_tensors(
 def predict_and_save_plot(
     x: np.ndarray, y: np.ndarray, index: int, solver: ppsci.solver.Solver, plot_dir: str
 ):
-    """Make prediction and save visulization of result.
+    """Make prediction and save visualization of result.
 
     Args:
         x (np.ndarray): Input of test dataset.
         y (np.ndarray): Output of test dataset.
-        index (int): Index of data to visuliaze.
-        solver (ppsci.solver.Solver): Trained slover.
+        index (int): Index of data to visualizer.
+        solver (ppsci.solver.Solver): Trained solver.
         plot_dir (str): Directory to save plot.
     """
     min_u = np.min(y[index, 0, :, :])
@@ -210,7 +210,7 @@ def train(cfg: DictConfig):
     with open(cfg.DATAY_PATH, "rb") as file:
         y = pickle.load(file)
 
-    # slipt dataset to train dataset and test datatset
+    # split dataset to train dataset and test dataset
     train_dataset, test_dataset = split_tensors(x, y, ratio=cfg.SLIPT_RATIO)
     train_x, train_y = train_dataset
     test_x, test_y = test_dataset
@@ -263,7 +263,7 @@ def train(cfg: DictConfig):
         name="sup_constraint",
     )
 
-    # maunally build constraint
+    # manually build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
     # initialize Adam optimizer
@@ -353,7 +353,7 @@ def evaluate(cfg: DictConfig):
     with open(cfg.DATAY_PATH, "rb") as file:
         y = pickle.load(file)
 
-    # slipt dataset to train dataset and test datatset
+    # split dataset to train dataset and test dataset
     train_dataset, test_dataset = split_tensors(x, y, ratio=cfg.SLIPT_RATIO)
     train_x, train_y = train_dataset
     test_x, test_y = test_dataset

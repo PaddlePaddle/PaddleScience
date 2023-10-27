@@ -87,11 +87,11 @@ TRAIN:
 假设这四组实验围绕随机种子 `seed` 和训练轮数 `epochs` 进行配置，组合如下：
 
 | 实验编号 | seed | epochs |
-| :-- | :-- | :-- |
-| 1 | 42  | 10   |
-| 2 | 42  | 20 |
-| 3 | 1024  | 10 |
-| 4 | 1024  | 20 |
+| :------- | :--- | :----- |
+| 1        | 42   | 10     |
+| 2        | 42   | 20     |
+| 3        | 1024 | 10     |
+| 4        | 1024 | 20     |
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
@@ -254,10 +254,6 @@ from ppsci.utils import save_load
 model = ...
 save_load.load_pretrain(model, "/path/to/pretrain")
 ```
-
-!!! Warning "路径填写注意事项"
-
-    同样地，此处只需将路径填写到预训练文件的文件名为止即可，不需要加上其后缀，程序会根据 "/path/to/pretrain"，自动补充 `.pdparams` 后缀名来加载 `/path/to/pretrain.pdparams` 文件。
 
 !!! info "迁移学习建议"
 

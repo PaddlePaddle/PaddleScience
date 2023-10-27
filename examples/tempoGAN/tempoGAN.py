@@ -41,7 +41,7 @@ def train(cfg: DictConfig):
     gen_funcs = func_module.GenFuncs(
         cfg.WEIGHT_GEN, (cfg.WEIGHT_GEN_LAYER if cfg.USE_SPATIALDISC else None)
     )
-    dics_funcs = func_module.DiscFuncs(cfg.WEIGHT_DISC)
+    disc_funcs = func_module.DiscFuncs(cfg.WEIGHT_DISC)
     data_funcs = func_module.DataFuncs(cfg.TILE_RATIO)
 
     # load dataset
@@ -51,19 +51,19 @@ def train(cfg: DictConfig):
     # define Generator model
     model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
     model_gen.register_input_transform(gen_funcs.transform_in)
-    dics_funcs.model_gen = model_gen
+    disc_funcs.model_gen = model_gen
 
     model_tuple = (model_gen,)
     # define Discriminators
     if cfg.USE_SPATIALDISC:
         model_disc = ppsci.arch.Discriminator(**cfg.MODEL.disc_net)
-        model_disc.register_input_transform(dics_funcs.transform_in)
+        model_disc.register_input_transform(disc_funcs.transform_in)
         model_tuple += (model_disc,)
 
     # define temporal Discriminators
     if cfg.USE_TEMPODISC:
         model_disc_tempo = ppsci.arch.Discriminator(**cfg.MODEL.tempo_net)
-        model_disc_tempo.register_input_transform(dics_funcs.transform_in_tempo)
+        model_disc_tempo.register_input_transform(disc_funcs.transform_in_tempo)
         model_tuple += (model_disc_tempo,)
 
     # define model_list
@@ -88,7 +88,7 @@ def train(cfg: DictConfig):
         )
 
     # Generator
-    # maunally build constraint(s)
+    # manually build constraint(s)
     sup_constraint_gen = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -148,7 +148,7 @@ def train(cfg: DictConfig):
         constraint_gen[sup_constraint_gen_tempo.name] = sup_constraint_gen_tempo
 
     # Discriminators
-    # maunally build constraint(s)
+    # manually build constraint(s)
     if cfg.USE_SPATIALDISC:
         sup_constraint_disc = ppsci.constraint.SupervisedConstraint(
             {
@@ -183,7 +183,7 @@ def train(cfg: DictConfig):
                     "shuffle": False,
                 },
             },
-            ppsci.loss.FunctionalLoss(dics_funcs.loss_func),
+            ppsci.loss.FunctionalLoss(disc_funcs.loss_func),
             name="sup_constraint_disc",
         )
         constraint_disc = {
@@ -191,7 +191,7 @@ def train(cfg: DictConfig):
         }
 
     # temporal Discriminators
-    # maunally build constraint(s)
+    # manually build constraint(s)
     if cfg.USE_TEMPODISC:
         sup_constraint_disc_tempo = ppsci.constraint.SupervisedConstraint(
             {
@@ -226,7 +226,7 @@ def train(cfg: DictConfig):
                     "shuffle": False,
                 },
             },
-            ppsci.loss.FunctionalLoss(dics_funcs.loss_func_tempo),
+            ppsci.loss.FunctionalLoss(disc_funcs.loss_func_tempo),
             name="sup_constraint_disc_tempo",
         )
         constraint_disc_tempo = {
@@ -282,7 +282,7 @@ def train(cfg: DictConfig):
                 cfg.output_dir, i, solver_gen, dataset_valid, cfg.TILE_RATIO
             )
 
-        dics_funcs.model_gen = model_gen
+        disc_funcs.model_gen = model_gen
         # train disc, input: (x,y,G(x))
         if cfg.USE_SPATIALDISC:
             solver_disc.train()

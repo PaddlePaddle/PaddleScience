@@ -163,11 +163,11 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
     """Split given array into single channel array at axis -1 in order of given keys.
 
     Args:
-        array (np.ndarray): Array to be splited.
+        array (np.ndarray): Array to be split.
         keys (Tuple[str, ...]):Keys used in split.
 
     Returns:
-        Dict[str, np.ndarray]: Splited dict.
+        Dict[str, np.ndarray]: Split dict.
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -370,7 +370,7 @@ def run_at_rank0(func: Callable) -> Callable:
         func (Callable): Given function.
 
     Returns:
-        Callable: Wrappered function which will only run at at rank 0,
+        Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
     """
 

@@ -135,7 +135,7 @@ def train(cfg: DictConfig):
     NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             prefix="result_u_v",
@@ -212,7 +212,7 @@ def evaluate(cfg: DictConfig):
     NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
     vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             prefix="result_u_v",

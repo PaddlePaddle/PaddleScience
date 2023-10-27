@@ -88,7 +88,7 @@ class Disk(geometry.Geometry):
                 the shape is [N, 2]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -211,7 +211,7 @@ class Rectangle(geometry_nd.Hypercube):
                 the shape of the array is [N, 2].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -412,7 +412,7 @@ class Triangle(geometry.Geometry):
                 the shape of the array is [N, 2].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -457,7 +457,7 @@ class Polygon(geometry.Geometry):
 
     Args:
         vertices (Tuple[Tuple[float, float], ...]): The order of vertices can be in a
-            clockwise or counterclockwisedirection. The vertices will be re-ordered in
+            clockwise or counter-clockwise direction. The vertices will be re-ordered in
             counterclockwise (right hand rule).
 
     Examples:
@@ -611,7 +611,7 @@ class Polygon(geometry.Geometry):
             points (np.ndarray): The coordinate points used to calculate the SDF value,
                 the shape is [N, 2]
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
         the object(interior points) is negative, the outside is positive, and the edge

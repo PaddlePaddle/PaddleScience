@@ -167,7 +167,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize traning log recorder for loss, time cost, metric, etc.
+        # initialize training log recorder for loss, time cost, metric, etc.
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -308,7 +308,7 @@ class Solver:
 
         self.forward_helper = expression.ExpressionSolver()
 
-        # whether enable static for forward pass, default to Fals
+        # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for forward computation.")
 
@@ -545,7 +545,7 @@ class Solver:
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
 
-                # rearange predictions as the same order of input_dict according to inverse
+                # rearrange predictions as the same order of input_dict according to inverse
                 # permutation, then discard predictions of padding data at the end
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(

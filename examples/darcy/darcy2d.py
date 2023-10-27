@@ -109,7 +109,7 @@ def train(cfg: DictConfig):
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
     )
     visualizer = {
-        "visulzie_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],
@@ -168,7 +168,7 @@ def train(cfg: DictConfig):
     # visualize prediction after finished training
     solver.visualize()
 
-    # finetuning pretrained model with L-BFGS
+    # fine-tuning pretrained model with L-BFGS
     OUTPUT_DIR = cfg.TRAIN.lbfgs.output_dir
     logger.init_logger("ppsci", osp.join(OUTPUT_DIR, f"{cfg.mode}.log"), "info")
     EPOCHS = cfg.TRAIN.epochs // 10
@@ -246,7 +246,7 @@ def evaluate(cfg: DictConfig):
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
     )
     visualizer = {
-        "visulzie_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],

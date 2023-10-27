@@ -56,7 +56,7 @@ def worker_init_fn(worker_id, num_workers, rank, base_seed):
 
 def build_dataloader(_dataset, cfg):
     world_size = dist.get_world_size()
-    # just return IterableDataset as datalaoder
+    # just return IterableDataset as dataloader
     if isinstance(_dataset, io.IterableDataset):
         if world_size > 1:
             raise ValueError(

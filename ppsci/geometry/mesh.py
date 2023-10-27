@@ -134,7 +134,7 @@ class Mesh(geometry.Geometry):
                 the shape is [N, 3]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -396,7 +396,7 @@ class Mesh(geometry.Geometry):
                 if _ntry >= 1000 and _nsuc == 0:
                     raise ValueError(
                         "Sample boundary points failed, "
-                        "please check correctness of geometry and given creteria."
+                        "please check correctness of geometry and given criteria."
                     )
 
             all_points = np.concatenate(all_points, axis=0)
@@ -462,18 +462,18 @@ class Mesh(geometry.Geometry):
         x_dict = misc.convert_to_dict(points, self.dim_keys)
         area_dict = misc.convert_to_dict(areas, ("area",))
 
-        # NOTE: add negtive to the sdf values because weight should be positive.
+        # NOTE: add negative to the sdf values because weight should be positive.
         sdf = -self.sdf_func(points)
         sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
 
-        sdf_derivs_dict = {}
+        sdf_derives_dict = {}
         if compute_sdf_derivatives:
-            sdf_derivs = -self.sdf_derivatives(points)
-            sdf_derivs_dict = misc.convert_to_dict(
-                sdf_derivs, tuple(f"sdf__{key}" for key in self.dim_keys)
+            sdf_derives = -self.sdf_derivatives(points)
+            sdf_derives_dict = misc.convert_to_dict(
+                sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
             )
 
-        return {**x_dict, **area_dict, **sdf_dict, **sdf_derivs_dict}
+        return {**x_dict, **area_dict, **sdf_dict, **sdf_derives_dict}
 
     def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):
