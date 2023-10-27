@@ -1,5 +1,17 @@
 # DeepCFD(Deep Computational Fluid Dynamics)
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    # windows
+    # curl -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    # curl -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    python deepcfd.py
+    ```
+
 ## 1. 背景简介
 计算流体力学（Computational fluid dynamics, CFD）模拟通过求解 Navier-Stokes 方程（N-S 方程），可以获得流体的各种物理量的分布，如密度、压力和速度等。在微电子系统、土木工程和航空航天等领域应用广泛。
 
@@ -55,9 +67,9 @@ dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一�
 
 我们将数据集以 7:3 的比例划分为训练集和验证集，代码如下：
 
-``` py linenums="201" title="examples/deepcfd/deepcfd.py"
+``` py linenums="202" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:201:220
+examples/deepcfd/deepcfd.py:202:216
 --8<--
 ```
 
@@ -75,18 +87,18 @@ examples/deepcfd/deepcfd.py:201:220
 
 模型创建用 PaddleScience 代码表示如下：
 
-``` py linenums="222" title="examples/deepcfd/deepcfd.py"
+``` py linenums="218" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:222:243
+examples/deepcfd/deepcfd.py:218:219
 --8<--
 ```
 
 ### 3.3 约束构建
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="244" title="examples/deepcfd/deepcfd.py"
+``` py linenums="234" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:244:294
+examples/deepcfd/deepcfd.py:234:264
 --8<--
 ```
 `SupervisedConstraint` 的第一个参数是数据的加载方式，这里填入相关数据的变量名。
@@ -97,36 +109,36 @@ examples/deepcfd/deepcfd.py:244:294
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="295" title="examples/deepcfd/deepcfd.py"
+``` py linenums="266" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:295:297
+examples/deepcfd/deepcfd.py:266:267
 --8<--
 ```
 
 ### 3.4 超参数设定
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一千轮训练轮数。
+接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用一千轮训练轮数。
 
-``` py linenums="298" title="examples/deepcfd/deepcfd.py"
+``` yaml linenums="47" title="examples/deepcfd/conf/deepcfd.yaml"
 --8<--
-examples/deepcfd/deepcfd.py:298:301
+examples/deepcfd/conf/deepcfd.yaml:47:52
 --8<--
 ```
 
 ### 3.5 优化器构建
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001，权重衰减设置为 0.005。
 
-``` py linenums="302" title="examples/deepcfd/deepcfd.py"
+``` py linenums="269" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:302:304
+examples/deepcfd/deepcfd.py:269:272
 --8<--
 ```
 
 ### 3.6 评估器构建
 在训练过程中通常会按一定轮数间隔，用验证集评估当前模型的训练情况，我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="305" title="examples/deepcfd/deepcfd.py"
+``` py linenums="274" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:305:346
+examples/deepcfd/deepcfd.py:274:314
 --8<--
 ```
 
@@ -137,18 +149,18 @@ examples/deepcfd/deepcfd.py:305:346
 ### 3.7 模型训练、评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="347" title="examples/deepcfd/deepcfd.py"
+``` py linenums="316" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:347:364
+examples/deepcfd/deepcfd.py:316:335
 --8<--
 ```
 
 ### 3.8 结果可视化
 使用 matplotlib 绘制相同输入参数时的 OpenFOAM 和 DeepCFD 的计算结果，进行对比。这里绘制了验证集第 0 个数据的计算结果。
 
-``` py linenums="365" title="examples/deepcfd/deepcfd.py"
+``` py linenums="337" title="examples/deepcfd/deepcfd.py"
 --8<--
-examples/deepcfd/deepcfd.py:365:371
+examples/deepcfd/deepcfd.py:337:342
 --8<--
 ```
 
