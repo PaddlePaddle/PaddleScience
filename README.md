@@ -164,7 +164,7 @@ PaddleScience 项目欢迎并依赖开发人员和开源社区中的用户，会
 <!-- --8<-- [end:contribution] -->
 
 <!-- --8<-- [start:collaboration] -->
-## 🤝共创计划
+## 🎯共创计划
 
 PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共建基于飞桨的 AI for Science 领域顶尖开源项目, 打造活跃的前瞻性的 AI for Science 开源社区，建立产学研闭环，推动科研创新与产业赋能。点击了解 [飞桨AI for Science共创计划](https://www.paddlepaddle.org.cn/science)。
 <!-- --8<-- [end:collaboration] -->
@@ -192,6 +192,12 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [ccsuzzh](https://github.com/ccsuzzh)，
     [enkilee](https://github.com/enkilee)，
     [GreatV](https://github.com/GreatV)
+
+<!-- --8<-- [start:cooperation] -->
+## 🤝合作单位
+
+![cooperation](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/cooperation.png)
+<!-- --8<-- [end:cooperation] -->
 
 <!-- --8<-- [start:license] -->
 ## 📜证书

@@ -151,5 +151,9 @@
     <a href="https://github.com/GreatV"><img class="avatar" src="https://avatars.githubusercontent.com/GreatV" alt="avatar" /></a>
 
 --8<--
+./README.md:cooperation
+--8<--
+
+--8<--
 ./README.md:license
 --8<--
