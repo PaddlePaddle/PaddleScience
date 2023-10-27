@@ -37,13 +37,12 @@ class Translate:
     def __init__(self, offset: Dict[str, float]):
         self.offset = offset
 
-    def __call__(self, data):
-        data_dict, label_dict, weight_dict = data
-        data_dict_copy = {**data_dict}
+    def __call__(self, input_dict, label_dict, weight_dict):
+        input_dict_copy = {**input_dict}
         for key in self.offset:
-            if key in data_dict_copy:
-                data_dict_copy[key] += self.offset[key]
-        return data_dict_copy, label_dict, weight_dict
+            if key in input_dict:
+                input_dict_copy[key] += self.offset[key]
+        return input_dict_copy, label_dict, weight_dict
 
 
 class Scale:
@@ -61,13 +60,12 @@ class Scale:
     def __init__(self, scale: Dict[str, float]):
         self.scale = scale
 
-    def __call__(self, data):
-        data_dict, label_dict, weight_dict = data
-        data_dict_copy = {**data_dict}
+    def __call__(self, input_dict, label_dict, weight_dict):
+        input_dict_copy = {**input_dict}
         for key in self.scale:
-            if key in data_dict_copy:
-                data_dict_copy[key] *= self.scale[key]
-        return data_dict_copy, label_dict, weight_dict
+            if key in input_dict:
+                input_dict_copy[key] *= self.scale[key]
+        return input_dict_copy, label_dict, weight_dict
 
 
 class Normalize:
@@ -97,8 +95,7 @@ class Normalize:
         self.std = std
         self.apply_keys = apply_keys
 
-    def __call__(self, data):
-        input_item, label_item, weight_item = data
+    def __call__(self, input_item, label_item, weight_item):
         input_item_copy = {**input_item}
         label_item_copy = {**label_item}
         if "input" in self.apply_keys:
@@ -134,8 +131,7 @@ class Log1p:
         self.scale = scale
         self.apply_keys = apply_keys
 
-    def __call__(self, data):
-        input_item, label_item, weight_item = data
+    def __call__(self, input_item, label_item, weight_item):
         input_item_copy = {**input_item}
         label_item_copy = {**label_item}
         if "input" in self.apply_keys:
@@ -174,8 +170,7 @@ class CropData:
         self.xmax = xmax
         self.apply_keys = apply_keys
 
-    def __call__(self, data):
-        input_item, label_item, weight_item = data
+    def __call__(self, input_item, label_item, weight_item):
         input_item_copy = {**input_item}
         label_item_copy = {**label_item}
         if "input" in self.apply_keys:
@@ -209,8 +204,7 @@ class SqueezeData:
             )
         self.apply_keys = apply_keys
 
-    def __call__(self, data):
-        input_item, label_item, weight_item = data
+    def __call__(self, input_item, label_item, weight_item):
         input_item_copy = {**input_item}
         label_item_copy = {**label_item}
         if "input" in self.apply_keys:
@@ -265,9 +259,11 @@ class FunctionalTransform:
     ):
         self.transform_func = transform_func
 
-    def __call__(self, data: Tuple[Dict[str, np.ndarray], ...]):
+    def __call__(
+        self, *data: Tuple[Dict[str, np.ndarray], ...]
+    ) -> Tuple[Dict[str, np.ndarray], ...]:
         data_dict, label_dict, weight_dict = data
         data_dict_copy = {**data_dict}
         label_dict_copy = {**label_dict}
-        weight_dict_copy = {**weight_dict} if weight_dict else None
+        weight_dict_copy = {**weight_dict} if weight_dict is not None else {}
         return self.transform_func(data_dict_copy, label_dict_copy, weight_dict_copy)

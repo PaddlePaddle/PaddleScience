@@ -1,0 +1,62 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_deeponet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+TRAIN_FILE_PATH: ./antiderivative_unaligned_train.npz
+VALID_FILE_PATH: ./antiderivative_unaligned_test.npz
+
+# set working condition
+NUM_Y: 1000  # number of y point for G(u) to be visualized
+
+# model settings
+MODEL:
+  u_key: "u"
+  y_key: "y"
+  G_key: "G"
+  num_loc: 100
+  num_features: 40
+  branch_num_layers: 1
+  trunk_num_layers: 1
+  branch_hidden_size: 40
+  trunk_hidden_size: 40
+  branch_activation: relu
+  trunk_activation: relu
+  use_bias: true
+
+# training settings
+TRAIN:
+  epochs: 10000
+  iters_per_epoch: 1
+  learning_rate: 1.0e-3
+  save_freq: 500
+  eval_freq: 500
+  eval_during_train: true
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true

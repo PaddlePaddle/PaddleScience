@@ -1,5 +1,25 @@
 # PhyLSTM
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+    python phylstm2.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+    python phylstm2.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 我们引入了一种创新的物理知识LSTM框架，用于对缺乏数据的非线性结构系统进行元建模。基本概念是将可用但尚不完整的物理知识（如物理定律、科学原理）整合到深度长短时记忆（LSTM）网络中，该网络在可行的解决方案空间内限制和促进学习。物理约束嵌入在损失函数中，以强制执行模型训练，即使在可用训练数据集非常有限的情况下，也能准确地捕捉潜在的系统非线性。特别是对于动态结构，考虑运动方程的物理定律、状态依赖性和滞后本构关系来构建物理损失。嵌入式物理可以缓解过拟合问题，减少对大型训练数据集的需求，并提高训练模型的鲁棒性，使其具有外推能力，从而进行更可靠的预测。因此，物理知识指导的深度学习范式优于传统的非物理指导的数据驱动神经网络。
@@ -29,9 +49,9 @@ $$
 
 在 PhyLSTM 问题中，建立 LSTM 网络 Deep LSTM network，用 PaddleScience 代码表示如下
 
-``` py linenums="105"
+``` py linenums="102"
 --8<--
-examples/phylstm/phylstm2.py:105:106
+examples/phylstm/phylstm2.py:102:107
 --8<--
 ```
 
@@ -47,9 +67,9 @@ wget -P ./ https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_
 
 本案例涉及读取数据构建，如下所示
 
-``` py linenums="38"
+``` py linenums="37"
 --8<--
-examples/phylstm/phylstm2.py:38:105
+examples/phylstm/phylstm2.py:37:100
 --8<--
 ```
 
@@ -57,9 +77,9 @@ examples/phylstm/phylstm2.py:38:105
 
 设置训练数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="118"
+``` py linenums="119"
 --8<--
-examples/phylstm/phylstm2.py:118:136
+examples/phylstm/phylstm2.py:119:137
 --8<--
 ```
 
@@ -67,9 +87,9 @@ examples/phylstm/phylstm2.py:118:136
 
 设置评估数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="139"
+``` py linenums="140"
 --8<--
-examples/phylstm/phylstm2.py:139:158
+examples/phylstm/phylstm2.py:140:159
 --8<--
 ```
 
@@ -77,9 +97,9 @@ examples/phylstm/phylstm2.py:139:158
 
 接下来我们需要指定训练轮数，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="36"
+``` py linenums="39"
 --8<--
-examples/phylstm/phylstm2.py:36:36
+examples/phylstm/conf/phylstm2.yaml:39:39
 --8<--
 ```
 
@@ -99,15 +119,15 @@ examples/phylstm/phylstm2.py:163:163
 
 ``` py linenums="164"
 --8<--
-examples/phylstm/phylstm2.py:164:175
+examples/phylstm/phylstm2.py:164:178
 --8<--
 ```
 
 最后启动训练、评估即可：
 
-``` py linenums="177"
+``` py linenums="180"
 --8<--
-examples/phylstm/phylstm2.py:177:180
+examples/phylstm/phylstm2.py:180:183
 --8<--
 ```
 
