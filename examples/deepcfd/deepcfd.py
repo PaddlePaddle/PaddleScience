@@ -278,7 +278,7 @@ def train(cfg: DictConfig):
             "input": {"input": test_x},
             "label": {"output": test_y},
         },
-        "batch_size": 8,
+        "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
