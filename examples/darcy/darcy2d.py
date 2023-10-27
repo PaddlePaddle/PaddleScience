@@ -246,7 +246,7 @@ def evaluate(cfg: DictConfig):
         cfg.NPOINT_PDE + cfg.NPOINT_BC, evenly=True
     )
     visualizer = {
-        "visulzie_p": ppsci.visualize.VisualizerVtu(
+        "visualize_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {
                 "p": lambda d: d["p"],
