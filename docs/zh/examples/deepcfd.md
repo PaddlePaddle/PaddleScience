@@ -4,11 +4,11 @@
 
     ``` sh
     # linux
-    wget wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
-    wget wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
     # windows
-    # curl wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl --output dataX.pkl
-    # curl wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl --output dataY.pkl
+    # curl -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+    # curl -o ./datasets/dataX.pkl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
     python deepcfd.py
     ```
 
@@ -118,14 +118,14 @@ examples/deepcfd/deepcfd.py:266:267
 ### 3.4 超参数设定
 接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用一千轮训练轮数。
 
-``` py linenums="47" title="examples/deepcfd/conf/deepcfd.yaml"
+``` yaml linenums="47" title="examples/deepcfd/conf/deepcfd.yaml"
 --8<--
 examples/deepcfd/conf/deepcfd.yaml:47:51
 --8<--
 ```
 
 ### 3.5 优化器构建
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001，权值衰减设置为 0.005。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 0.001，权重衰减设置为 0.005。
 
 ``` py linenums="269" title="examples/deepcfd/deepcfd.py"
 --8<--

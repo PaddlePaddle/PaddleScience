@@ -216,7 +216,7 @@ def train(cfg: DictConfig):
     test_x, test_y = test_dataset
 
     # initialize model
-    model = ppsci.arch.UNetEx("input", "output", **cfg.MODEL.unetex)
+    model = ppsci.arch.UNetEx(**cfg.MODEL)
 
     CHANNELS_WEIGHTS = np.reshape(
         np.sqrt(
@@ -336,17 +336,16 @@ def train(cfg: DictConfig):
 
     PLOT_DIR = os.path.join(cfg.output_dir, "visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
-    VISU_INDEX = 0
 
     # visualize prediction after finished training
-    predict_and_save_plot(test_x, test_y, VISU_INDEX, solver, PLOT_DIR)
+    predict_and_save_plot(test_x, test_y, 0, solver, PLOT_DIR)
 
 
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
+    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "eval.log"), "info")
 
     # initialize datasets
     with open(cfg.DATAX_PATH, "rb") as file:
@@ -360,7 +359,7 @@ def evaluate(cfg: DictConfig):
     test_x, test_y = test_dataset
 
     # initialize model
-    model = ppsci.arch.UNetEx("input", "output", **cfg.MODEL.unetex)
+    model = ppsci.arch.UNetEx(**cfg.MODEL)
 
     CHANNELS_WEIGHTS = np.reshape(
         np.sqrt(
@@ -446,10 +445,9 @@ def evaluate(cfg: DictConfig):
 
     PLOT_DIR = os.path.join(cfg.output_dir, "visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
-    VISU_INDEX = 0
 
     # visualize prediction after finished training
-    predict_and_save_plot(test_x, test_y, VISU_INDEX, solver, PLOT_DIR)
+    predict_and_save_plot(test_x, test_y, 0, solver, PLOT_DIR)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="deepcfd.yaml")

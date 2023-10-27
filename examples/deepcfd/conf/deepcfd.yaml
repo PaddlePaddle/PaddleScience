@@ -36,13 +36,14 @@ Y_SIZE: 79
 
 # model settings
 MODEL:
-  unetex:
-    in_channel: 3
-    out_channel: 3
-    kernel_size: 5
-    filters: [8, 16, 32, 32]
-    weight_norm: false
-    batch_norm: false
+  input_key: "input"
+  output_key: "output"
+  in_channel: 3
+  out_channel: 3
+  kernel_size: 5
+  filters: [8, 16, 32, 32]
+  weight_norm: false
+  batch_norm: false
 
 # training settings
 TRAIN:
