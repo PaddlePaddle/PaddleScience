@@ -43,7 +43,7 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # initialize burgers boundaries
+    # initialize boundaries
     # t, x, y
     lb = paddle.to_tensor(list(cfg.LB))
     ub = paddle.to_tensor(list(cfg.UB))

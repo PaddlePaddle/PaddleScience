@@ -22,7 +22,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
-    python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deephpms/burgers_pretrained.pdparams
+    python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
     ```
 
 ## 1. 背景简介

@@ -66,11 +66,11 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # initialize burgers boundaries
-    t_lb = paddle.to_tensor(list(cfg.T_LB))
-    t_ub = paddle.to_tensor(list(cfg.T_UB))
-    x_lb = paddle.to_tensor(list(cfg.X_LB))
-    x_ub = paddle.to_tensor(list(cfg.T_UB))
+    # initialize boundaries
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.T_UB)
 
     # boundaries of KS_chaotic.mat
     # t_lb = paddle.to_tensor([0.0])

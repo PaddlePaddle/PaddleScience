@@ -76,10 +76,10 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # initialize boundaries
-    t_lb = paddle.to_tensor(list(cfg.T_LB))
-    t_ub = paddle.to_tensor([np.pi / cfg.T_UB])
-    x_lb = paddle.to_tensor(list(cfg.X_LB))
-    x_ub = paddle.to_tensor(list(cfg.X_UB))
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.X_UB)
 
     # initialize models
     model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)

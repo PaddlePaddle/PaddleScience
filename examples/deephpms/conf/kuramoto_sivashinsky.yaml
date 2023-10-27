@@ -27,10 +27,10 @@ DATASET_PATH: ./datasets/DeepHPMs/KS.mat
 DATASET_PATH_SOL: ./datasets/DeepHPMs/KS.mat
 
 # set working condition
-T_LB: [0.0]
-T_UB: [50.0]
-X_LB: [-10.0]
-X_UB: [10.0]
+T_LB: 0.0
+T_UB: 50.0
+X_LB: -10.0
+X_UB: 10.0
 
 # model settings
 MODEL:

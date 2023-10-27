@@ -27,10 +27,10 @@ DATASET_PATH: ./datasets/DeepHPMs/KdV_sine.mat
 DATASET_PATH_SOL: ./datasets/DeepHPMs/KdV_cos.mat
 
 # set working condition
-T_LB: [0.0]
-T_UB: [40.0]
-X_LB: [-20.0]
-X_UB: [20.0]
+T_LB: 0.0
+T_UB: 40.0
+X_LB: -20.0
+X_UB: 20.0
 
 # model settings
 MODEL:
