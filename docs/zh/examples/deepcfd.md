@@ -120,7 +120,7 @@ examples/deepcfd/deepcfd.py:266:267
 
 ``` yaml linenums="47" title="examples/deepcfd/conf/deepcfd.yaml"
 --8<--
-examples/deepcfd/conf/deepcfd.yaml:47:51
+examples/deepcfd/conf/deepcfd.yaml:47:52
 --8<--
 ```
 
