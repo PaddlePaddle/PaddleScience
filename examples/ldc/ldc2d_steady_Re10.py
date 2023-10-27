@@ -11,36 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from os import path as osp
 
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set output directory
-    OUTPUT_DIR = "./ldc2d_steady_Re10" if not args.output_dir else args.output_dir
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
+    model = ppsci.arch.MLP(**cfg.MODEL.model)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.01, 1.0, 2, False)}
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, False)}
 
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
 
     # set dataloader config
-    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
     NPOINT_PDE = 99**2
@@ -50,18 +49,14 @@ if __name__ == "__main__":
     NPOINT_RIGHT = 99
 
     # set constraint
-    pde_constraint = ppsci.constraint.InteriorConstraint(
+    pde = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
-        weight_dict={
-            "continuity": 0.0001,
-            "momentum_x": 0.0001,
-            "momentum_y": 0.0001,
-        },
+        weight_dict=cfg.TRAIN.weight.pde,
         name="EQ",
     )
     bc_top = ppsci.constraint.BoundaryConstraint(
@@ -102,23 +97,18 @@ if __name__ == "__main__":
     )
     # wrap constraints together
     constraint = {
-        pde_constraint.name: pde_constraint,
+        pde.name: pde,
         bc_top.name: bc_top,
         bc_bottom.name: bc_bottom,
         bc_left.name: bc_left,
         bc_right.name: bc_right,
     }
 
-    # set training hyper-parameters
-    EPOCHS = 20000 if not args.epochs else args.epochs
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        0.001,
-        warmup_epoch=int(0.05 * EPOCHS),
-    )()
-
     # set optimizer
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
+        **cfg.TRAIN.lr_scheduler,
+        warmup_epoch=int(0.05 * cfg.TRAIN.epochs),
+    )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
@@ -130,7 +120,7 @@ if __name__ == "__main__":
         {
             "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
-            "batch_size": 8192,
+            "batch_size": cfg.EVAL.batch_size.residual_validator,
             "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
@@ -156,17 +146,18 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=200,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.EVAL.pretrained_model_path,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
     # train model
     solver.train()
@@ -175,18 +166,85 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL.model)
+
+    # set equation
+    equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, False)}
+
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
+
+    NPOINT_PDE = 99**2
+    NPOINT_TOP = 101
+    NPOINT_BOTTOM = 101
+    NPOINT_LEFT = 99
+    NPOINT_RIGHT = 99
+
+    # set validator
+    NPOINT_EVAL = NPOINT_PDE
+    residual_validator = ppsci.validate.GeometryValidator(
+        equation["NavierStokes"].equations,
+        {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
+        geom["rect"],
+        {
+            "dataset": "NamedArrayDataset",
+            "total_size": NPOINT_EVAL,
+            "batch_size": cfg.EVAL.batch_size.residual_validator,
+            "sampler": {"name": "BatchSampler"},
+        },
+        ppsci.loss.MSELoss("sum"),
+        evenly=True,
+        metric={"MSE": ppsci.metric.MSE()},
+        name="Residual",
+    )
+    validator = {residual_validator.name: residual_validator}
+
+    # set visualizer(optional)
+    # manually collate input data for visualization,
+    NPOINT_BC = NPOINT_TOP + NPOINT_BOTTOM + NPOINT_LEFT + NPOINT_RIGHT
+    vis_points = geom["rect"].sample_interior(NPOINT_PDE + NPOINT_BC, evenly=True)
+    visualizer = {
+        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+            vis_points,
+            {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
+            prefix="result_u_v",
+        )
+    }
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)
     solver.visualize()
+
+
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="ldc2d_steady_Re10.yaml"
+)
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
