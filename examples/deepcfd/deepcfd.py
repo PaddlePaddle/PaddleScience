@@ -18,11 +18,12 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
+import hydra
 import numpy as np
 from matplotlib import pyplot as plt
+from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
 
@@ -192,66 +193,36 @@ def predict_and_save_plot(
     plt.tight_layout()
     plt.show()
     plt.savefig(
-        os.path.join(PLOT_DIR, f"cfd_{index}.png"),
+        os.path.join(plot_dir, f"cfd_{index}.png"),
         bbox_inches="tight",
     )
 
 
-if __name__ == "__main__":
-    args = config.parse_args()
-    ppsci.utils.misc.set_random_seed(42)
-
-    OUTPUT_DIR = "./output_deepCFD/" if args.output_dir is None else args.output_dir
-
+def train(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
     # initialize datasets
-    DATASET_PATH = "./datasets/"
-    with open(os.path.join(DATASET_PATH, "dataX.pkl"), "rb") as file:
+    with open(cfg.DATAX_PATH, "rb") as file:
         x = pickle.load(file)
-    with open(os.path.join(DATASET_PATH, "dataY.pkl"), "rb") as file:
+    with open(cfg.DATAY_PATH, "rb") as file:
         y = pickle.load(file)
 
-    # slipt dataset to train dataset and test dataset
-    SLIPT_RATIO = 0.7
-    train_dataset, test_dataset = split_tensors(x, y, ratio=SLIPT_RATIO)
+    # split dataset to train dataset and test dataset
+    train_dataset, test_dataset = split_tensors(x, y, ratio=cfg.SLIPT_RATIO)
     train_x, train_y = train_dataset
     test_x, test_y = test_dataset
 
-    # initialize parameters
-    IN_CHANNELS = 3
-    OUT_CHANNELS = 3
-    KERNEL_SIZE = 5
-    FILTERS = (8, 16, 32, 32)
-    BATCH_NORM = False
-    WEIGHT_NORM = False
-    WEIGHT_DECAY = 0.005
-    BATCH_SIZE = 64
-
     # initialize model
-    model = ppsci.arch.UNetEx(
-        "input",
-        "output",
-        IN_CHANNELS,
-        OUT_CHANNELS,
-        KERNEL_SIZE,
-        FILTERS,
-        weight_norm=WEIGHT_NORM,
-        batch_norm=BATCH_NORM,
-    )
-
-    # the shape of x and y is [SAMPLE_SIZE, CHANNEL_SIZE, X_SIZE, Y_SIZE]
-    SAMPLE_SIZE = 981
-    CHANNEL_SIZE = 3
-    X_SIZE = 172
-    Y_SIZE = 79
+    model = ppsci.arch.UNetEx(**cfg.MODEL)
 
     CHANNELS_WEIGHTS = np.reshape(
         np.sqrt(
             np.mean(
                 np.transpose(y, (0, 2, 3, 1)).reshape(
-                    (SAMPLE_SIZE * X_SIZE * Y_SIZE, CHANNEL_SIZE)
+                    (cfg.SAMPLE_SIZE * cfg.X_SIZE * cfg.Y_SIZE, cfg.CHANNEL_SIZE)
                 )
                 ** 2,
                 axis=0,
@@ -281,7 +252,7 @@ if __name__ == "__main__":
                 "input": {"input": train_x},
                 "label": {"output": train_y},
             },
-            "batch_size": BATCH_SIZE,
+            "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -295,12 +266,10 @@ if __name__ == "__main__":
     # manually build constraint
     constraint = {sup_constraint.name: sup_constraint}
 
-    # set training hyper-parameters
-    EPOCHS = 1000
-    LEARNING_RATE = 0.001
-
     # initialize Adam optimizer
-    optimizer = ppsci.optimizer.Adam(LEARNING_RATE, weight_decay=WEIGHT_DECAY)(model)
+    optimizer = ppsci.optimizer.Adam(
+        cfg.TRAIN.learning_rate, weight_decay=cfg.TRAIN.weight_decay
+    )(model)
 
     # manually build validator
     eval_dataloader_cfg = {
@@ -309,7 +278,7 @@ if __name__ == "__main__":
             "input": {"input": test_x},
             "label": {"output": test_y},
         },
-        "batch_size": 8,
+        "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -348,12 +317,15 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
-        eval_during_train=True,
-        eval_freq=50,
+        epochs=cfg.TRAIN.epochs,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
+        seed=cfg.seed,
         validator=validator,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
     # train model
@@ -362,9 +334,131 @@ if __name__ == "__main__":
     # evaluate after finished training
     solver.eval()
 
-    PLOT_DIR = os.path.join(OUTPUT_DIR, "visual")
+    PLOT_DIR = os.path.join(cfg.output_dir, "visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
-    VISU_INDEX = 0
 
     # visualize prediction after finished training
-    predict_and_save_plot(test_x, test_y, VISU_INDEX, solver, PLOT_DIR)
+    predict_and_save_plot(test_x, test_y, 0, solver, PLOT_DIR)
+
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "eval.log"), "info")
+
+    # initialize datasets
+    with open(cfg.DATAX_PATH, "rb") as file:
+        x = pickle.load(file)
+    with open(cfg.DATAY_PATH, "rb") as file:
+        y = pickle.load(file)
+
+    # split dataset to train dataset and test dataset
+    train_dataset, test_dataset = split_tensors(x, y, ratio=cfg.SLIPT_RATIO)
+    train_x, train_y = train_dataset
+    test_x, test_y = test_dataset
+
+    # initialize model
+    model = ppsci.arch.UNetEx(**cfg.MODEL)
+
+    CHANNELS_WEIGHTS = np.reshape(
+        np.sqrt(
+            np.mean(
+                np.transpose(y, (0, 2, 3, 1)).reshape(
+                    (cfg.SAMPLE_SIZE * cfg.X_SIZE * cfg.Y_SIZE, cfg.CHANNEL_SIZE)
+                )
+                ** 2,
+                axis=0,
+            )
+        ),
+        (1, -1, 1, 1),
+    )
+
+    # define loss
+    def loss_expr(
+        output_dict: Dict[str, np.ndarray],
+        label_dict: Dict[str, np.ndarray] = None,
+        weight_dict: Dict[str, np.ndarray] = None,
+    ) -> float:
+        output = output_dict["output"]
+        y = label_dict["output"]
+        loss_u = (output[:, 0:1, :, :] - y[:, 0:1, :, :]) ** 2
+        loss_v = (output[:, 1:2, :, :] - y[:, 1:2, :, :]) ** 2
+        loss_p = (output[:, 2:3, :, :] - y[:, 2:3, :, :]).abs()
+        loss = (loss_u + loss_v + loss_p) / CHANNELS_WEIGHTS
+        return loss.sum()
+
+    # manually build validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {"input": test_x},
+            "label": {"output": test_y},
+        },
+        "batch_size": cfg.EVAL.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+
+    def metric_expr(
+        output_dict: Dict[str, np.ndarray],
+        label_dict: Dict[str, np.ndarray] = None,
+        weight_dict: Dict[str, np.ndarray] = None,
+    ) -> Dict[str, float]:
+        output = output_dict["output"]
+        y = label_dict["output"]
+        total_mse = ((output - y) ** 2).sum() / len(test_x)
+        ux_mse = ((output[:, 0, :, :] - test_y[:, 0, :, :]) ** 2).sum() / len(test_x)
+        uy_mse = ((output[:, 1, :, :] - test_y[:, 1, :, :]) ** 2).sum() / len(test_x)
+        p_mse = ((output[:, 2, :, :] - test_y[:, 2, :, :]) ** 2).sum() / len(test_x)
+        return {
+            "Total_MSE": total_mse,
+            "Ux_MSE": ux_mse,
+            "Uy_MSE": uy_mse,
+            "p_MSE": p_mse,
+        }
+
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.FunctionalLoss(loss_expr),
+        {"output": lambda out: out["output"]},
+        {"MSE": ppsci.metric.FunctionalMetric(metric_expr)},
+        name="mse_validator",
+    )
+    validator = {sup_validator.name: sup_validator}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        seed=cfg.seed,
+        validator=validator,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+    )
+
+    # evaluate
+    solver.eval()
+
+    PLOT_DIR = os.path.join(cfg.output_dir, "visual")
+    os.makedirs(PLOT_DIR, exist_ok=True)
+
+    # visualize prediction after finished training
+    predict_and_save_plot(test_x, test_y, 0, solver, PLOT_DIR)
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="deepcfd.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
