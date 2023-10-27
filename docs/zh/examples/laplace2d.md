@@ -75,7 +75,7 @@ examples/laplace/laplace2d.py:38:43
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="26"
+``` yaml linenums="26"
 --8<--
 examples/laplace/conf/laplace2d.yaml:26:27
 --8<--
