@@ -1,0 +1,54 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_cylinder2d_unsteady_transformer_physx_enn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+TRAIN_BLOCK_SIZE: 4
+VALID_BLOCK_SIZE: 32
+TRAIN_FILE_PATH: ./datasets/cylinder_training.hdf5
+VALID_FILE_PATH: ./datasets/cylinder_valid.hdf5
+
+# model settings
+MODEL:
+  input_keys: ["states", "visc"]
+  output_keys: ["pred_states", "recover_states"]
+
+# training settings
+TRAIN:
+  epochs: 300
+  batch_size:
+    train: 64
+    eval: 8
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 0.001
+    gamma: 0.995
+    by_epoch: true
+  optimizer:
+    weight_decay: 1e-8
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
