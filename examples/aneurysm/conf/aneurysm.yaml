@@ -1,0 +1,83 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: output_aneurysm/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+
+# set working condition
+NU: 0.0025
+SCALE: 0.4
+
+# model settings
+MODEL:
+  model:
+    input_keys: ["x", "y", "z"]
+    output_keys: ["u", "v", "p"]
+    num_layers: 9
+    hidden_size: 50
+    activation: "tanh"
+
+# training settings
+TRAIN:
+  epochs: 1500
+  iters_per_epoch: 1000
+  eval_during_train: true
+  eval_freq: 200
+  learning_rate: 0.001
+  gamma: 0.95
+  save_freq: 20
+  eval_during_train: true
+  log_freq: 20
+  eval_freq: 20
+  batch_size:
+    bc_inlet: 1100
+    bc_outlet: 650
+    bc_noslip: 5200
+    pde_constraint: 6000
+    igc_outlet: 1
+    igc_integral: 1
+    sup_validator: 4096
+    visualizer: 4096
+  iters_per_epoch:
+    igc_outlet: 100
+    igc_integral:100
+  integral_batch_size:
+    igc_outlet: 310
+    igc_integral: 310
+
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: ${TRAIN.learning_rate}
+    gamma: ${TRAIN.gamma}
+    decay_steps: 1500*1000 // 100
+  weight:
+    igc_outlet: {"normal_dot_vec": 0.1}
+    igc_integral: {"normal_dot_vec": 0.1}
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  batch_size:
+    residual_validator: 8192
