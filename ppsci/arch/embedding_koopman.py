@@ -29,16 +29,24 @@ from paddle.nn.initializer import Uniform
 
 from ppsci.arch import base
 
+__all__ = [
+    "LorenzEmbedding",
+    "LorenzEmbeddingLayer",
+    "RosslerEmbedding",
+    "RosslerEmbeddingLayer",
+    "CylinderEmbedding",
+    "CylinderEmbeddingLayer",
+]
+
+
 zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
 
 
-class LorenzEmbedding(base.Arch):
-    """Embedding Koopman model for the Lorenz ODE system.
+class LorenzEmbeddingLayer(base.Arch):
+    """Embedding Koopman layer for the Lorenz ODE system, core implementation of LorenzEmbedding
 
     Args:
-        input_keys (Tuple[str, ...]): Input keys, such as ("states",).
-        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
         mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
         std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         input_size (int, optional): Size of input data. Defaults to 3.
@@ -48,13 +56,11 @@ class LorenzEmbedding(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.LorenzEmbeddingLayer()
     """
 
     def __init__(
         self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
         mean: Optional[Tuple[float, ...]] = None,
         std: Optional[Tuple[float, ...]] = None,
         input_size: int = 3,
@@ -63,8 +69,6 @@ class LorenzEmbedding(base.Arch):
         drop: float = 0.0,
     ):
         super().__init__()
-        self.input_keys = input_keys
-        self.output_keys = output_keys
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.embed_size = embed_size
@@ -167,7 +171,7 @@ class LorenzEmbedding(base.Arch):
         k_matrix = k_matrix + paddle.diag(self.k_diag)
         return k_matrix
 
-    def forward_tensor(self, x):
+    def forward(self, x):
         k_matrix = self.get_koopman_matrix()
         embed_data = self.encoder(x)
         recover_data = self.decoder(embed_data)
@@ -176,6 +180,47 @@ class LorenzEmbedding(base.Arch):
         pred_data = self.decoder(embed_pred_data)
 
         return (pred_data[:, :-1, :], recover_data, k_matrix)
+
+
+class LorenzEmbedding(LorenzEmbeddingLayer):
+    """Embedding Koopman model for the Lorenz ODE system.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("states",).
+        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
+        input_size (int, optional): Size of input data. Defaults to 3.
+        hidden_size (int, optional): Number of hidden size. Defaults to 500.
+        embed_size (int, optional): Number of embedding size. Defaults to 32.
+        drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        input_size: int = 3,
+        hidden_size: int = 500,
+        embed_size: int = 32,
+        drop: float = 0.0,
+    ):
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        super().__init__(
+            mean,
+            std,
+            input_size,
+            hidden_size,
+            embed_size,
+            drop,
+        )
 
     def split_to_dict(
         self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
@@ -187,12 +232,47 @@ class LorenzEmbedding(base.Arch):
             x = self._input_transform(x)
 
         x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = self.forward_tensor(x_tensor)
+        y = super().forward(x_tensor)
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
             y = self._output_transform(x, y)
         return y
+
+
+class RosslerEmbeddingLayer(LorenzEmbeddingLayer):
+    """Embedding Koopman layer for the Rossler ODE system, core implementation of RosslerEmbedding.
+
+    Args:
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
+        input_size (int, optional): Size of input data. Defaults to 3.
+        hidden_size (int, optional): Number of hidden size. Defaults to 500.
+        embed_size (int, optional): Number of embedding size. Defaults to 32.
+        drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.RosslerEmbeddingLayer()
+    """
+
+    def __init__(
+        self,
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        input_size: int = 3,
+        hidden_size: int = 500,
+        embed_size: int = 32,
+        drop: float = 0.0,
+    ):
+        super().__init__(
+            mean,
+            std,
+            input_size,
+            hidden_size,
+            embed_size,
+            drop,
+        )
 
 
 class RosslerEmbedding(LorenzEmbedding):
@@ -236,12 +316,10 @@ class RosslerEmbedding(LorenzEmbedding):
         )
 
 
-class CylinderEmbedding(base.Arch):
-    """Embedding Koopman model for the Cylinder system.
+class CylinderEmbeddingLayer(base.Arch):
+    """Embedding Koopman layer for the Cylinder system, core implementation of CylinderEmbedding.
 
     Args:
-        input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
-        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
         mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
         std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
         embed_size (int, optional): Number of embedding size. Defaults to 128.
@@ -251,13 +329,11 @@ class CylinderEmbedding(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.CylinderEmbeddingLayer()
     """
 
     def __init__(
         self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
         mean: Optional[Tuple[float, ...]] = None,
         std: Optional[Tuple[float, ...]] = None,
         embed_size: int = 128,
@@ -266,8 +342,6 @@ class CylinderEmbedding(base.Arch):
         drop: float = 0.0,
     ):
         super().__init__()
-        self.input_keys = input_keys
-        self.output_keys = output_keys
         self.embed_size = embed_size
 
         X, Y = np.meshgrid(np.linspace(-2, 14, 128), np.linspace(-4, 4, 64))
@@ -471,7 +545,7 @@ class CylinderEmbedding(base.Arch):
     def _unnormalize(self, x: paddle.Tensor):
         return self.std[:, :3] * x + self.mean[:, :3]
 
-    def forward_tensor(self, states, visc):
+    def forward(self, states, visc):
         # states.shape=(B, T, C, H, W)
         embed_data = self.encoder(states, visc)
         recover_data = self.decoder(embed_data)
@@ -482,17 +556,58 @@ class CylinderEmbedding(base.Arch):
 
         return (pred_data[:, :-1], recover_data, k_matrix)
 
+
+class CylinderEmbedding(CylinderEmbeddingLayer):
+    """Embedding Koopman model for the Cylinder system.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("states", "visc").
+        output_keys (Tuple[str, ...]): Output keys, such as ("pred_states", "recover_states").
+        mean (Optional[Tuple[float, ...]]): Mean of training dataset. Defaults to None.
+        std (Optional[Tuple[float, ...]]): Standard Deviation of training dataset. Defaults to None.
+        embed_size (int, optional): Number of embedding size. Defaults to 128.
+        encoder_channels (Optional[Tuple[int, ...]]): Number of channels in encoder network. Defaults to None.
+        decoder_channels (Optional[Tuple[int, ...]]): Number of channels in decoder network. Defaults to None.
+        drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.CylinderEmbedding(("x", "y"), ("u", "v"))
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        embed_size: int = 128,
+        encoder_channels: Optional[Tuple[int, ...]] = None,
+        decoder_channels: Optional[Tuple[int, ...]] = None,
+        drop: float = 0.0,
+    ):
+        super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        super().__init__(
+            mean,
+            std,
+            embed_size,
+            encoder_channels,
+            decoder_channels,
+            drop,
+        )
+
     def split_to_dict(
         self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
     ):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
-
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        y = self.forward_tensor(**x)
+        y = super().forward(**x)
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:

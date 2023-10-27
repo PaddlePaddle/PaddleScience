@@ -24,6 +24,10 @@ from paddle import nn
 
 from ppsci.utils import logger
 
+__all__ = [
+    "Arch",
+]
+
 
 class Arch(nn.Layer):
     """Base class for Network."""

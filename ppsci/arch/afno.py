@@ -30,6 +30,11 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.utils import initializer
 
+__all__ = [
+    "AFNONet",
+    "PrecipNet",
+]
+
 
 def drop_path(
     x: paddle.Tensor,

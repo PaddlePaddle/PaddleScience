@@ -24,6 +24,13 @@ import paddle.nn as nn
 from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 
+__all__ = [
+    "GeneratorLayer",
+    "Generator",
+    "DiscriminatorLayer",
+    "Discriminator",
+]
+
 
 class Conv2DBlock(nn.Layer):
     def __init__(
@@ -151,7 +158,84 @@ class FCBlock(nn.Layer):
         return y
 
 
-class Generator(base.Arch):
+class GeneratorLayer(base.Arch):
+    """Generator Layer of GAN, core implementation of Generator.
+
+    Args:
+        in_channel (int): Number of input channels of the first conv layer.
+        out_channels_tuple (Tuple[Tuple[int, ...], ...]): Number of output channels of all conv layers,
+            such as [[out_res0_conv0, out_res0_conv1], [out_res1_conv0, out_res1_conv1]]
+        kernel_sizes_tuple (Tuple[Tuple[int, ...], ...]): Number of kernel_size of all conv layers,
+            such as [[kernel_size_res0_conv0, kernel_size_res0_conv1], [kernel_size_res1_conv0, kernel_size_res1_conv1]]
+        strides_tuple (Tuple[Tuple[int, ...], ...]): Number of stride of all conv layers,
+            such as [[stride_res0_conv0, stride_res0_conv1], [stride_res1_conv0, stride_res1_conv1]]
+        use_bns_tuple (Tuple[Tuple[bool, ...], ...]): Whether to use the batch_norm layer after each conv layer.
+        acts_tuple (Tuple[Tuple[str, ...], ...]): Whether to use the activation layer after each conv layer. If so, witch activation to use,
+            such as [[act_res0_conv0, act_res0_conv1], [act_res1_conv0, act_res1_conv1]]
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 1
+        >>> rb_channel0 = (2, 8, 8)
+        >>> rb_channel1 = (128, 128, 128)
+        >>> rb_channel2 = (32, 8, 8)
+        >>> rb_channel3 = (2, 1, 1)
+        >>> out_channels_tuple = (rb_channel0, rb_channel1, rb_channel2, rb_channel3)
+        >>> kernel_sizes_tuple = (((5, 5), ) * 2 + ((1, 1), ), ) * 4
+        >>> strides_tuple = ((1, 1, 1), ) * 4
+        >>> use_bns_tuple = ((True, True, True), ) * 3 + ((False, False, False), )
+        >>> acts_tuple = (("relu", None, None), ) * 4
+        >>> model = ppsci.arch.GeneratorLayer(in_channel, out_channels_tuple, kernel_sizes_tuple, strides_tuple, use_bns_tuple, acts_tuple)
+    """
+
+    def __init__(
+        self,
+        in_channel: int,
+        out_channels_tuple: Tuple[Tuple[int, ...], ...],
+        kernel_sizes_tuple: Tuple[Tuple[int, ...], ...],
+        strides_tuple: Tuple[Tuple[int, ...], ...],
+        use_bns_tuple: Tuple[Tuple[bool, ...], ...],
+        acts_tuple: Tuple[Tuple[str, ...], ...],
+    ):
+        super().__init__()
+        self.in_channel = in_channel
+        self.out_channels_tuple = out_channels_tuple
+        self.kernel_sizes_tuple = kernel_sizes_tuple
+        self.strides_tuple = strides_tuple
+        self.use_bns_tuple = use_bns_tuple
+        self.acts_tuple = acts_tuple
+
+        self.init_blocks()
+
+    def init_blocks(self):
+        blocks_list = []
+        for i in range(len(self.out_channels_tuple)):
+            in_channel = (
+                self.in_channel if i == 0 else self.out_channels_tuple[i - 1][-1]
+            )
+            blocks_list.append(
+                VariantResBlock(
+                    in_channel=in_channel,
+                    out_channels=self.out_channels_tuple[i],
+                    kernel_sizes=self.kernel_sizes_tuple[i],
+                    strides=self.strides_tuple[i],
+                    use_bns=self.use_bns_tuple[i],
+                    acts=self.acts_tuple[i],
+                    mean=0.0,
+                    std=0.04,
+                    value=0.1,
+                )
+            )
+        self.blocks = nn.LayerList(blocks_list)
+
+    def forward(self, x):
+        y = x
+        for block in self.blocks:
+            y = block(y)
+        return y
+
+
+class Generator(GeneratorLayer):
     """Generator Net of GAN. Attention, the net using a kind of variant of ResBlock which is
         unique to "tempoGAN" example but not an open source network.
 
@@ -195,51 +279,23 @@ class Generator(base.Arch):
         use_bns_tuple: Tuple[Tuple[bool, ...], ...],
         acts_tuple: Tuple[Tuple[str, ...], ...],
     ):
-        super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.in_channel = in_channel
-        self.out_channels_tuple = out_channels_tuple
-        self.kernel_sizes_tuple = kernel_sizes_tuple
-        self.strides_tuple = strides_tuple
-        self.use_bns_tuple = use_bns_tuple
-        self.acts_tuple = acts_tuple
-
-        self.init_blocks()
-
-    def init_blocks(self):
-        blocks_list = []
-        for i in range(len(self.out_channels_tuple)):
-            in_channel = (
-                self.in_channel if i == 0 else self.out_channels_tuple[i - 1][-1]
-            )
-            blocks_list.append(
-                VariantResBlock(
-                    in_channel=in_channel,
-                    out_channels=self.out_channels_tuple[i],
-                    kernel_sizes=self.kernel_sizes_tuple[i],
-                    strides=self.strides_tuple[i],
-                    use_bns=self.use_bns_tuple[i],
-                    acts=self.acts_tuple[i],
-                    mean=0.0,
-                    std=0.04,
-                    value=0.1,
-                )
-            )
-        self.blocks = nn.LayerList(blocks_list)
-
-    def forward_tensor(self, x):
-        y = x
-        for block in self.blocks:
-            y = block(y)
-        return y
+        super().__init__(
+            in_channel,
+            out_channels_tuple,
+            kernel_sizes_tuple,
+            strides_tuple,
+            use_bns_tuple,
+            acts_tuple,
+        )
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = self.forward_tensor(y)
+        y = super().forward(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
@@ -247,7 +303,91 @@ class Generator(base.Arch):
         return y
 
 
-class Discriminator(base.Arch):
+class DiscriminatorLayer(base.Arch):
+    """Discriminator Net of GAN, core implementation of Discriminator.
+
+    Args:
+        in_channel (int):  Number of input channels of the first conv layer.
+        out_channels (Tuple[int, ...]): Number of output channels of all conv layers,
+            such as (out_conv0, out_conv1, out_conv2).
+        fc_channel (int):  Number of input features of linear layer. Number of output features of the layer
+            is set to 1 in this Net to construct a fully_connected layer.
+        kernel_sizes (Tuple[int, ...]): Number of kernel_size of all conv layers,
+            such as (kernel_size_conv0, kernel_size_conv1, kernel_size_conv2).
+        strides (Tuple[int, ...]): Number of stride of all conv layers,
+            such as (stride_conv0, stride_conv1, stride_conv2).
+        use_bns (Tuple[bool, ...]): Whether to use the batch_norm layer after each conv layer.
+        acts (Tuple[str, ...]): Whether to use the activation layer after each conv layer. If so, witch activation to use,
+            such as (act_conv0, act_conv1, act_conv2).
+
+    Examples:
+        >>> import ppsci
+        >>> in_channel = 2
+        >>> in_channel_tempo = 3
+        >>> out_channels = (32, 64, 128, 256)
+        >>> fc_channel = 65536
+        >>> kernel_sizes = ((4, 4), (4, 4), (4, 4), (4, 4))
+        >>> strides = (2, 2, 2, 1)
+        >>> use_bns = (False, True, True, True)
+        >>> acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
+        >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
+        >>> model = ppsci.arch.DiscriminatorLayer(in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
+    """
+
+    def __init__(
+        self,
+        in_channel: int,
+        out_channels: Tuple[int, ...],
+        fc_channel: int,
+        kernel_sizes: Tuple[int, ...],
+        strides: Tuple[int, ...],
+        use_bns: Tuple[bool, ...],
+        acts: Tuple[str, ...],
+    ):
+        super().__init__()
+        self.in_channel = in_channel
+        self.out_channels = out_channels
+        self.fc_channel = fc_channel
+        self.kernel_sizes = kernel_sizes
+        self.strides = strides
+        self.use_bns = use_bns
+        self.acts = acts
+
+        self.init_layers()
+
+    def init_layers(self):
+        layers_list = []
+        for i in range(len(self.out_channels)):
+            in_channel = self.in_channel if i == 0 else self.out_channels[i - 1]
+            layers_list.append(
+                Conv2DBlock(
+                    in_channel=in_channel,
+                    out_channel=self.out_channels[i],
+                    kernel_size=self.kernel_sizes[i],
+                    stride=self.strides[i],
+                    use_bn=self.use_bns[i],
+                    act=self.acts[i],
+                    mean=0.0,
+                    std=0.04,
+                    value=0.1,
+                )
+            )
+
+        layers_list.append(
+            FCBlock(self.fc_channel, self.acts[4], mean=0.0, std=0.04, value=0.1)
+        )
+        self.layers = nn.LayerList(layers_list)
+
+    def forward(self, x):
+        y = x
+        y_list = []
+        for layer in self.layers:
+            y = layer(y)
+            y_list.append(y)
+        return y_list  # y_conv1, y_conv2, y_conv3, y_conv4, y_fc(y_out)
+
+
+class Discriminator(DiscriminatorLayer):
     """Discriminator Net of GAN.
 
     Args:
@@ -292,49 +432,17 @@ class Discriminator(base.Arch):
         use_bns: Tuple[bool, ...],
         acts: Tuple[str, ...],
     ):
-        super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.in_channel = in_channel
-        self.out_channels = out_channels
-        self.fc_channel = fc_channel
-        self.kernel_sizes = kernel_sizes
-        self.strides = strides
-        self.use_bns = use_bns
-        self.acts = acts
-
-        self.init_layers()
-
-    def init_layers(self):
-        layers_list = []
-        for i in range(len(self.out_channels)):
-            in_channel = self.in_channel if i == 0 else self.out_channels[i - 1]
-            layers_list.append(
-                Conv2DBlock(
-                    in_channel=in_channel,
-                    out_channel=self.out_channels[i],
-                    kernel_size=self.kernel_sizes[i],
-                    stride=self.strides[i],
-                    use_bn=self.use_bns[i],
-                    act=self.acts[i],
-                    mean=0.0,
-                    std=0.04,
-                    value=0.1,
-                )
-            )
-
-        layers_list.append(
-            FCBlock(self.fc_channel, self.acts[4], mean=0.0, std=0.04, value=0.1)
+        super().__init__(
+            in_channel,
+            out_channels,
+            fc_channel,
+            kernel_sizes,
+            strides,
+            use_bns,
+            acts,
         )
-        self.layers = nn.LayerList(layers_list)
-
-    def forward_tensor(self, x):
-        y = x
-        y_list = []
-        for layer in self.layers:
-            y = layer(y)
-            y_list.append(y)
-        return y_list  # y_conv1, y_conv2, y_conv3, y_conv4, y_fc(y_out)
 
     def forward(self, x):
         if self._input_transform is not None:
@@ -343,7 +451,7 @@ class Discriminator(base.Arch):
         y_list = []
         # y1_conv1, y1_conv2, y1_conv3, y1_conv4, y1_fc, y2_conv1, y2_conv2, y2_conv3, y2_conv4, y2_fc
         for k in x:
-            y_list.extend(self.forward_tensor(x[k]))
+            y_list.extend(super().forward(x[k]))
 
         y = self.split_to_dict(y_list, self.output_keys)
 

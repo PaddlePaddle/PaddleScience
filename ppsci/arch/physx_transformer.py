@@ -29,6 +29,12 @@ from paddle.nn.initializer import Normal
 
 from ppsci.arch import base
 
+__all__ = [
+    "PhysformerGPT2Layer",
+    "PhysformerGPT2",
+]
+
+
 zeros_ = Constant(value=0.0)
 ones_ = Constant(value=1.0)
 
@@ -237,12 +243,10 @@ class Block(nn.Layer):
         return outputs
 
 
-class PhysformerGPT2(base.Arch):
-    """Transformer decoder model for modeling physics.
+class PhysformerGPT2Layer(base.Arch):
+    """Transformer decoder layer for modeling physics, core implementation of PhysformerGPT2.
 
     Args:
-        input_keys (Tuple[str, ...]): Input keys, such as ("embeds",).
-        output_keys (Tuple[str, ...]): Output keys, such as ("pred_embeds",).
         num_layers (int): Number of transformer layers.
         num_ctx (int): Contex length of block.
         embed_size (int): The number of embedding size.
@@ -254,13 +258,11 @@ class PhysformerGPT2(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+        >>> model = ppsci.arch.PhysformerGPT2Layer(6, 16, 128, 4)
     """
 
     def __init__(
         self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
         num_layers: int,
         num_ctx: int,
         embed_size: int,
@@ -271,9 +273,6 @@ class PhysformerGPT2(base.Arch):
         initializer_range: float = 0.05,
     ):
         super().__init__()
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-
         self.num_layers = num_layers
         self.num_ctx = num_ctx
         self.embed_size = embed_size
@@ -349,7 +348,7 @@ class PhysformerGPT2(base.Arch):
         outputs = self._generate_time_series(x, max_length)
         return outputs
 
-    def forward_tensor(self, x):
+    def forward(self, x):
         position_embeds = self.get_position_embed(x)
         # Combine input embedding, position embeding
         hidden_states = x + position_embeds
@@ -367,18 +366,69 @@ class PhysformerGPT2(base.Arch):
         outputs = self.generate(input_embeds)
         return (outputs[:, 1:],)
 
+
+class PhysformerGPT2(PhysformerGPT2Layer):
+    """Transformer decoder model for modeling physics.
+
+    Args:
+        input_keys (Tuple[str, ...]): Input keys, such as ("embeds",).
+        output_keys (Tuple[str, ...]): Output keys, such as ("pred_embeds",).
+        num_layers (int): Number of transformer layers.
+        num_ctx (int): Contex length of block.
+        embed_size (int): The number of embedding size.
+        num_heads (int): The number of heads in multi-head attention.
+        embd_pdrop (float, optional): The dropout probability used on embedding features. Defaults to 0.0.
+        attn_pdrop (float, optional): The dropout probability used on attention weights. Defaults to 0.0.
+        resid_pdrop (float, optional): The dropout probability used on block outputs. Defaults to 0.0.
+        initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.PhysformerGPT2(("embeds", ), ("pred_embeds", ), 6, 16, 128, 4)
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        num_layers: int,
+        num_ctx: int,
+        embed_size: int,
+        num_heads: int,
+        embd_pdrop: float = 0.0,
+        attn_pdrop: float = 0.0,
+        resid_pdrop: float = 0.0,
+        initializer_range: float = 0.05,
+    ):
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        super().__init__(
+            num_layers,
+            num_ctx,
+            embed_size,
+            num_heads,
+            embd_pdrop,
+            attn_pdrop,
+            resid_pdrop,
+            initializer_range,
+        )
+
     def split_to_dict(self, data_tensors, keys):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
+
         x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
+
         if self.training:
-            y = self.forward_tensor(x_tensor)
+            y = super().forward(x_tensor)
         else:
-            y = self.forward_eval(x_tensor)
+            y = super().forward_eval(x_tensor)
+
         y = self.split_to_dict(y, self.output_keys)
+
         if self._output_transform is not None:
             y = self._output_transform(x, y)
         return y

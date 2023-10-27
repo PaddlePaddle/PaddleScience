@@ -20,6 +20,10 @@ from paddle import nn
 
 from ppsci.arch import base
 
+__all__ = [
+    "ModelList",
+]
+
 
 class ModelList(base.Arch):
     """ModelList layer which wrap more than one model that shares inputs.

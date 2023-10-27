@@ -5,14 +5,23 @@
     options:
       members:
         - Arch
+        - FullyConnectedLayer
+        - DeepOperatorLayer
+        - LorenzEmbeddingLayer
+        - RosslerEmbeddingLayer
+        - CylinderEmbeddingLayer
+        - DiscriminatorLayer
+        - PhysformerGPT2Layer
+        - GeneratorLayer
+        - UNetExLayer
         - MLP
         - DeepONet
-        - DeepPhyLSTM
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding
         - Generator
         - Discriminator
+        - DeepPhyLSTM
         - PhysformerGPT2
         - ModelList
         - AFNONet

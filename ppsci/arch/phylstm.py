@@ -17,9 +17,15 @@ import paddle.nn as nn
 
 from ppsci.arch import base
 
+__all__ = [
+    "DeepPhyLSTM",
+]
+
 
 class DeepPhyLSTM(base.Arch):
-    """DeepPhyLSTM init function.
+    """Physics-informed LSTM Network.
+    Zhang, R., Liu, Y., & Sun, H. (2020). Physics-informed multi-LSTM networks for metamodeling of nonlinear structures.
+    Computer Methods in Applied Mechanics and Engineering 369, 113226.
 
     Args:
         input_size (int): The input size.
@@ -99,12 +105,13 @@ class DeepPhyLSTM(base.Arch):
             x = self._input_transform(x)
 
         if self.model_type == 2:
-            result_dict = self._forward_type_2(x)
+            y = self._forward_type_2(x)
         elif self.model_type == 3:
-            result_dict = self._forward_type_3(x)
+            y = self._forward_type_3(x)
+
         if self._output_transform is not None:
-            result_dict = self._output_transform(x, result_dict)
-        return result_dict
+            y = self._output_transform(x, y)
+        return y
 
     def _forward_type_2(self, x):
         output = self.lstm_model(x["ag"])

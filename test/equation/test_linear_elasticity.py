@@ -172,14 +172,12 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
     if dim == 3:
         input_data = paddle.concat([input_data, z], axis=1)
 
-    model = arch.MLP(input_dims, output_dims, 2, 16)
+    model = arch.FullyConnectedLayer(len(input_dims), len(output_dims), 2, 16)
+    model_sym = arch.MLP(input_dims, output_dims, 2, 16)
+    model_sym.load_dict(model.state_dict())
 
-    # model = nn.Sequential(
-    #     nn.Linear(input_data.shape[1], 9 if dim == 3 else 5),
-    #     nn.Tanh(),
-    # )
-
-    output = model.forward_tensor(input_data)
+    # manually generate output
+    output = model(input_data)
 
     u, v, *other_outputs = paddle.split(output, num_or_sections=output.shape[1], axis=1)
 
@@ -234,7 +232,7 @@ def test_linear_elasticity(E, nu, lambda_, mu, rho, dim, time):
         if isinstance(expr, sp.Basic):
             linear_elasticity.equations[name] = ppsci.lambdify(
                 expr,
-                model,
+                model_sym,
             )
     data_dict = {
         "t": t,

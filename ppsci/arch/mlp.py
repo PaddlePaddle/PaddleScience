@@ -24,6 +24,12 @@ from ppsci.arch import activation as act_mod
 from ppsci.arch import base
 from ppsci.utils import initializer
 
+__all__ = [
+    "WeightNormLinear",
+    "FullyConnectedLayer",
+    "MLP",
+]
+
 
 class WeightNormLinear(nn.Layer):
     def __init__(self, in_features: int, out_features: int, bias: bool = True) -> None:
@@ -50,43 +56,35 @@ class WeightNormLinear(nn.Layer):
         return nn.functional.linear(input, weight, self.bias)
 
 
-class MLP(base.Arch):
-    """Multi layer perceptron network.
+class FullyConnectedLayer(base.Arch):
+    """Fully Connected Layer, core implementation of MLP.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
-        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
+        input_dim (int): Number of input's dimension.
+        output_dim (int): Number of output's dimension.
         num_layers (int): Number of hidden layers.
         hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
             An integer for all layers, or list of integer specify each layer's size.
         activation (str, optional): Name of activation function. Defaults to "tanh".
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
-        input_dim (Optional[int]): Number of input's dimension. Defaults to None.
-        output_dim (Optional[int]): Number of output's dimension. Defaults to None.
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
+        >>> model = ppsci.arch.FullyConnectedLayer(3, 4, num_layers=5, hidden_size=128)
     """
 
     def __init__(
         self,
-        input_keys: Tuple[str, ...],
-        output_keys: Tuple[str, ...],
+        input_dim: int,
+        output_dim: int,
         num_layers: int,
         hidden_size: Union[int, Tuple[int, ...]],
         activation: str = "tanh",
         skip_connection: bool = False,
         weight_norm: bool = False,
-        input_dim: Optional[int] = None,
-        output_dim: Optional[int] = None,
     ):
         super().__init__()
-        self.input_keys = input_keys
-        self.output_keys = output_keys
-        self.linears = []
-        self.acts = []
         if isinstance(hidden_size, (tuple, list)):
             if num_layers is not None:
                 raise ValueError(
@@ -104,8 +102,11 @@ class MLP(base.Arch):
                 f"but got {type(hidden_size)}"
             )
 
+        self.linears = nn.LayerList()
+        self.acts = nn.LayerList()
+
         # initialize FC layer(s)
-        cur_size = len(self.input_keys) if input_dim is None else input_dim
+        cur_size = input_dim
         for i, _size in enumerate(hidden_size):
             self.linears.append(
                 WeightNormLinear(cur_size, _size)
@@ -128,16 +129,11 @@ class MLP(base.Arch):
 
             cur_size = _size
 
-        self.linears = nn.LayerList(self.linears)
-        self.acts = nn.LayerList(self.acts)
-        self.last_fc = nn.Linear(
-            cur_size,
-            len(self.output_keys) if output_dim is None else output_dim,
-        )
+        self.last_fc = nn.Linear(cur_size, output_dim)
 
         self.skip_connection = skip_connection
 
-    def forward_tensor(self, x):
+    def forward(self, x):
         y = x
         skip = None
         for i, linear in enumerate(self.linears):
@@ -154,12 +150,58 @@ class MLP(base.Arch):
 
         return y
 
+
+class MLP(FullyConnectedLayer):
+    """Multi layer perceptron network derivated by FullyConnectedLayer.
+    Different from `FullyConnectedLayer`, this class accepts input/output string key(s) for symbolic computation.
+
+    Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
+        num_layers (int): Number of hidden layers.
+        hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
+            An integer for all layers, or list of integer specify each layer's size.
+        activation (str, optional): Name of activation function. Defaults to "tanh".
+        skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
+        weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
+        input_dim (Optional[int]): Number of input's dimension. Defaults to None.
+        output_dim (Optional[int]): Number of output's dimension. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), num_layers=5, hidden_size=128)
+    """
+
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        num_layers: int,
+        hidden_size: Union[int, Tuple[int, ...]],
+        activation: str = "tanh",
+        skip_connection: bool = False,
+        weight_norm: bool = False,
+        input_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
+    ):
+        self.input_keys = input_keys
+        self.output_keys = output_keys
+        super().__init__(
+            len(input_keys) if not input_dim else input_dim,
+            len(output_keys) if not output_dim else output_dim,
+            num_layers,
+            hidden_size,
+            activation,
+            skip_connection,
+            weight_norm,
+        )
+
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = self.forward_tensor(y)
+        y = super().forward(y)
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
