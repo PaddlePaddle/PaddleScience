@@ -1,0 +1,57 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_amgnet_airfoil/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set working condition
+
+# set training data path
+TRAIN_DATA_DIR: "./data/NACA0012_interpolate/outputs_train"
+TRAIN_MESH_GRAPH_PATH: "./data/NACA0012_interpolate/mesh_fine.su2"
+
+# set evaluate data path
+EVAL_DATA_DIR: "./data/NACA0012_interpolate/outputs_test"
+EVAL_MESH_GRAPH_PATH: "./data/NACA0012_interpolate/mesh_fine.su2"
+
+# model settings
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["pred"]
+  input_dim: 5
+  output_dim: 3
+  latent_dim: 128
+  num_layers: 2
+  message_passing_aggregator: "sum"
+  message_passing_steps: 6
+  speed: "norm"
+
+# training settings
+TRAIN:
+  epochs: 500
+  iters_per_epoch: 42
+  save_freq: 50
+  eval_during_train: true
+  eval_freq: 50
+  learning_rate: 5.0e-4
+  batch_size: 4
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 1
+  pretrained_model_path: null
+  eval_with_no_grad: true
