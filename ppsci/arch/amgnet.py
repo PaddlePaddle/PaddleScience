@@ -329,7 +329,7 @@ class GraphNetBlock(nn.Layer):
         self.message_passing_aggregator = message_passing_aggregator
 
     def _update_edge_features(self, graph):
-        """Aggregrates node features, and applies edge function."""
+        """Aggregates node features, and applies edge function."""
         senders = graph.edge_index[0]
         receivers = graph.edge_index[1]
         sender_features = paddle.index_select(x=graph.x, index=senders, axis=0)
@@ -363,7 +363,7 @@ class GraphNetBlock(nn.Layer):
         return result
 
     def _update_node_features(self, node_features, edge_attr, edge_index):
-        """Aggregrates edge features, and applies node function."""
+        """Aggregates edge features, and applies node function."""
         num_nodes = node_features.shape[0]
         features = [node_features]
         features.append(
@@ -570,7 +570,7 @@ class AMGNet(nn.Layer):
         input_dim (int): Number of input dimension.
         output_dim (int): Number of output dimension.
         latent_dim (int): Number of hidden(feature) dimension.
-        num_layers (int): NUmbe of layer(s).
+        num_layers (int): Number of layer(s).
         message_passing_aggregator (Literal["sum"]): Message aggregator method in graph.
             Only "sum" available now.
         message_passing_steps (int): Message passing steps in graph.

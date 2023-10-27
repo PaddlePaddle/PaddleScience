@@ -43,7 +43,7 @@ def train(cfg: DictConfig):
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
     model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
 
-    # intialize params
+    # initialize params
     func_module.train_mode = cfg.TRAIN_MODE
     loss_log_obj = []
 
@@ -304,7 +304,7 @@ def evaluate(cfg: DictConfig):
     model_im = ppsci.arch.MLP(**cfg.MODEL.im_net)
     model_eps = ppsci.arch.MLP(**cfg.MODEL.eps_net)
 
-    # intialize params
+    # initialize params
     func_module.train_mode = cfg.TRAIN_MODE
 
     # register transform
