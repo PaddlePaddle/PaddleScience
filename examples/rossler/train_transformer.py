@@ -134,14 +134,14 @@ def train(cfg: DictConfig):
     # set visualizer(optional)
     states = mse_validator.data_loader.dataset.data
     embedding_data = mse_validator.data_loader.dataset.embedding_data
-    vis_datas = {
+    vis_data = {
         "embeds": embedding_data[: cfg.VIS_DATA_NUMS, :-1, :],
         "states": states[: cfg.VIS_DATA_NUMS, 1:, :],
     }
 
     visualizer = {
-        "visulzie_states": ppsci.visualize.VisualizerScatter3D(
-            vis_datas,
+        "visualize_states": ppsci.visualize.VisualizerScatter3D(
+            vis_data,
             {
                 "pred_states": lambda d: output_transform(d),
                 "states": lambda d: d["states"],
