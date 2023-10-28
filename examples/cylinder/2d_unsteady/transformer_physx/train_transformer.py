@@ -144,7 +144,7 @@ def train(cfg: DictConfig):
     }
 
     visualizer = {
-        "visulzie_states": ppsci.visualize.Visualizer2DPlot(
+        "visualize_states": ppsci.visualize.Visualizer2DPlot(
             vis_datas,
             {
                 "target_ux": lambda d: d["states"][:, :, 0],

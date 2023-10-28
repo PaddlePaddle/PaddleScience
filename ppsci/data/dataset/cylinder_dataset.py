@@ -165,7 +165,7 @@ class MeshCylinderDataset(io.Dataset):
         data.norm_max = a
         data.norm_min = b
 
-        # find the face of the boundery,our cylinder dataset come from fluent solver
+        # find the face of the boundary,our cylinder dataset come from fluent solver
         with open(osp.join(osp.dirname(self.data_dir), "bounder"), "r") as f:
             field = []
             pos = []

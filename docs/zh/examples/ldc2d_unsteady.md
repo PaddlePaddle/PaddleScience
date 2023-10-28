@@ -286,7 +286,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:116:124
 
 接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="40"
+``` yaml linenums="40"
 --8<--
 examples/ldc/conf/ldc2d_unsteady_Re10.yaml:40:43
 --8<--

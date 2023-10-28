@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import collections
 import csv
-import sys
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -25,8 +24,6 @@ import meshio
 import numpy as np
 import paddle
 import scipy.io as sio
-
-from ppsci.utils import logger
 
 __all__ = [
     "load_csv_file",
@@ -67,9 +64,8 @@ def load_csv_file(
             for _, line_dict in enumerate(reader):
                 for key, value in line_dict.items():
                     raw_data[key].append(value)
-    except FileNotFoundError:
-        logger.error(f"{file_path} isn't a valid csv file.")
-        sys.exit()
+    except FileNotFoundError as e:
+        raise e
 
     # convert to numpy array
     data_dict = {}
@@ -105,9 +101,8 @@ def load_mat_file(
     try:
         # read all data from mat file
         raw_data = sio.loadmat(file_path)
-    except FileNotFoundError:
-        logger.error(f"{file_path} isn't a valid mat file.")
-        raise
+    except FileNotFoundError as e:
+        raise e
 
     # convert to numpy array
     data_dict = {}
@@ -143,9 +138,8 @@ def load_npz_file(
     try:
         # read all data from npz file
         raw_data = np.load(file_path, allow_pickle=True)
-    except FileNotFoundError:
-        logger.error(f"{file_path} isn't a valid npz file.")
-        raise
+    except FileNotFoundError as e:
+        raise e
 
     # convert to numpy array
     data_dict = {}

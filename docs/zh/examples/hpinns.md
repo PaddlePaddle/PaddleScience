@@ -165,7 +165,7 @@ $\mu_k = \beta \mu_{k-1}$, $\lambda_k = \beta \lambda_{k-1}$
 
 同时需要指定训练轮数和学习率等超参数
 
-``` py linenums="53"
+``` yaml linenums="53"
 --8<--
 examples/hpinns/conf/hpinns.yaml:53:61
 --8<--

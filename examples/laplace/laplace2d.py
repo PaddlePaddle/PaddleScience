@@ -103,7 +103,7 @@ def train(cfg: DictConfig):
     # set visualizer(optional)
     vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
+        "visualize_u": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"]},
             num_timestamps=1,
@@ -181,7 +181,7 @@ def evaluate(cfg: DictConfig):
     # set visualizer(optional)
     vis_points = geom["rect"].sample_interior(NPOINT_TOTAL, evenly=True)
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerVtu(
+        "visualize_u": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"]},
             num_timestamps=1,

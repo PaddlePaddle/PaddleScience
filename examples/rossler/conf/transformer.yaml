@@ -29,7 +29,7 @@ TRAIN_FILE_PATH: ./datasets/rossler_training.hdf5
 VALID_FILE_PATH: ./datasets/rossler_valid.hdf5
 
 # set working condition
-EMBEDDING_MODEL_PATH: ./outputs_lorenz_enn/checkpoints/latest
+EMBEDDING_MODEL_PATH: ./outputs_rossler_enn/checkpoints/latest
 VIS_DATA_NUMS: 16
 
 # model settings

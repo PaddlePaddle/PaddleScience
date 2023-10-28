@@ -26,7 +26,7 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def get_vis_datas(
+def get_vis_data(
     wind_file_path: str,
     file_path: str,
     date_strings: Tuple[str, ...],
@@ -48,12 +48,12 @@ def get_vis_datas(
     wind_data = np.asarray(wind_data)
     data = np.asarray(data)
 
-    vis_datas = {"input": (wind_data - data_mean) / data_std}
+    vis_data = {"input": (wind_data - data_mean) / data_std}
     for t in range(num_timestamps):
         hour = (t + 1) * 6
         data_t = data[:, t]
-        vis_datas[f"target_{hour}h"] = np.asarray(data_t)
-    return vis_datas
+        vis_data[f"target_{hour}h"] = np.asarray(data_t)
+    return vis_data
 
 
 if __name__ == "__main__":
@@ -164,7 +164,7 @@ if __name__ == "__main__":
         "batch_size": 1,
     }
 
-    # set metirc
+    # set metric
     metric = {
         "MAE": ppsci.metric.MAE(keep_batch=True),
         "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
@@ -246,9 +246,9 @@ if __name__ == "__main__":
     )
     validator = {sup_validator.name: sup_validator}
 
-    # set set visualizer datas
+    # set set visualizer data
     DATE_STRINGS = ("2018-04-04 00:00:00",)
-    vis_datas = get_vis_datas(
+    vis_data = get_vis_data(
         WIND_TEST_FILE_PATH,
         TEST_FILE_PATH,
         DATE_STRINGS,
@@ -275,8 +275,8 @@ if __name__ == "__main__":
         )
     # set visualizer
     visualizer = {
-        "visulize_precip": ppsci.visualize.VisualizerWeather(
-            vis_datas,
+        "visualize_precip": ppsci.visualize.VisualizerWeather(
+            vis_data,
             visu_output_expr,
             xticks=np.linspace(0, 1439, 13),
             xticklabels=[str(i) for i in range(360, -1, -30)],

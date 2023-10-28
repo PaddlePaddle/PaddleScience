@@ -77,7 +77,7 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
                     else misc.all_gather(batch_output.detach().astype("float32"))
                 )
 
-        # concate all data
+        # concatenate all data
         for key in all_input:
             all_input[key] = paddle.concat(all_input[key])
         for key in all_output:

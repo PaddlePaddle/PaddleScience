@@ -56,7 +56,7 @@ def worker_init_fn(worker_id, num_workers, rank, base_seed):
 
 def build_dataloader(_dataset, cfg):
     world_size = dist.get_world_size()
-    # just return IterableDataset as datalaoder
+    # just return IterableDataset as dataloader
     if isinstance(_dataset, io.IterableDataset):
         if world_size > 1:
             raise ValueError(
@@ -81,6 +81,13 @@ def build_dataloader(_dataset, cfg):
         sampler_cfg["batch_size"] = cfg["batch_size"]
         sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
     else:
+        if cfg["batch_size"] != 1:
+            raise ValueError(
+                f"`batch_size` should be 1 when sampler config is None, but got {cfg['batch_size']}."
+            )
+        logger.warning(
+            "`batch_size` is set to 1 as neither sampler config or batch_size is set."
+        )
         sampler = None
 
     # build collate_fn if specified
