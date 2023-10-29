@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -64,6 +65,14 @@ class Mesh(geometry.Geometry):
 
     @classmethod
     def from_pymesh(cls, mesh: "pymesh.Mesh") -> "Mesh":
+        """Instantiate Mesh object with given PyMesh object.
+
+        Args:
+            mesh (pymesh.Mesh): PyMesh object.
+
+        Returns:
+            Mesh: Instantiated ppsci.geometry.Mesh object.
+        """
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
             raise ImportError(
@@ -160,7 +169,20 @@ class Mesh(geometry.Geometry):
     def on_boundary(self, x):
         return np.isclose(self.sdf_func(x), 0.0).flatten()
 
-    def translate(self, translation, relative=True):
+    def translate(self, translation: np.ndarray, relative: bool = True) -> "Mesh":
+        """Translate by given offsets.
+
+        NOTE: This API generate a completely new Mesh object with translated geometry,
+        without modifying original Mesh object inplace.
+
+        Args:
+            translation (np.ndarray): Translation offsets, numpy array of shape (3,):
+                [offset_x, offset_y, offset_z].
+            relative (bool, optional): Whether translate relatively. Defaults to True.
+
+        Returns:
+            Mesh: Translated Mesh object.
+        """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
 
@@ -181,9 +203,23 @@ class Mesh(geometry.Geometry):
         translated_mesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
+        # Generate a new Mesh object using class method
         return Mesh.from_pymesh(translated_mesh)
 
-    def scale(self, scale, center=(0, 0, 0)):
+    def scale(self, scale: float, center: Tuple[float, float, float] = (0, 0, 0)):
+        """Scale by given scale coefficient and center coordinate.
+
+        NOTE: This API generate a completely new Mesh object with scaled geometry,
+        without modifying original Mesh object inplace.
+
+        Args:
+            scale (float): Scale coefficient.
+            center (Tuple[float,float,float], optional): Center coordinate, [x, y, z].
+                Defaults to (0, 0, 0).
+
+        Returns:
+            Mesh: Scaled Mesh object.
+        """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
@@ -204,6 +240,7 @@ class Mesh(geometry.Geometry):
         scaled_pymesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
+        # Generate a new Mesh object using class method
         return Mesh.from_pymesh(scaled_pymesh)
 
     def uniform_boundary_points(self, n: int):
