@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import paddle
 from data_utils import augmentation
 from eval import evaluation_and_plot
@@ -100,16 +98,10 @@ if __name__ == "__main__":
 
         # initialize logger
         OUTPUT_DIR = "Output_TopOpt" if args.output_dir is None else args.output_dir
-        OUTPUT_DIR = os.path.join(
-            OUTPUT_DIR,
-            "".join(
-                [
-                    sampler_key,
-                    str(num) if num is not None else "",
-                    "_vol_coeff",
-                    str(VOL_COEFF),
-                ]
-            ),
+        OUTPUT_DIR = (
+            f"{OUTPUT_DIR}/{sampler_key}{num}_vol_coeff{VOL_COEFF}"
+            if num is not None
+            else f"{OUTPUT_DIR}/{sampler_key}_vol_coeff{VOL_COEFF}"
         )
         logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
 
@@ -144,4 +136,4 @@ if __name__ == "__main__":
         solver.train()
 
     # evaluate 4 models
-    evaluation_and_plot(sup_constraint.data_loader)
+    evaluation_and_plot()

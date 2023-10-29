@@ -20,6 +20,28 @@ import ppsci
 
 # NCHW data format
 class TopOptNN(ppsci.arch.UNetEx):
+    """Neural network for Topology Optimization, inherited from `ppsci.arch.UNetEx`
+
+    [Sosnovik, I., & Oseledets, I. (2019). Neural networks for topology optimization. Russian Journal of Numerical Analysis and Mathematical Modelling, 34(4), 215-223.](https://arxiv.org/pdf/1709.09578)
+
+    Args:
+        input_key (str): Name of function data for input.
+        output_key (str): Name of function data for output.
+        in_channel (int): Number of channels of input.
+        out_channel (int): Number of channels of output.
+        kernel_size (int, optional): Size of kernel of convolution layer. Defaults to 3.
+        filters (Tuple[int, ...], optional): Number of filters. Defaults to (16, 32, 64).
+        layers (int, optional): Number of encoders or decoders. Defaults to 3.
+        channel_sampler (callable): The sampling function for the initial iteration time (corresponding to the channel number of the input) of SIMP algorithm.
+        weight_norm (bool, optional): Whether use weight normalization layer. Defaults to True.
+        batch_norm (bool, optional): Whether add batch normalization layer. Defaults to True.
+        activation (Type[nn.Layer], optional): Name of activation function. Defaults to nn.ReLU.
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 2, 1, 3, (16, 32, 64), 2, lambda: 1, Flase, False)
+    """
+
     def __init__(
         self,
         input_key="input",

@@ -16,7 +16,10 @@ import os
 
 import numpy as np
 import paddle
+from data_utils import augmentation
 from matplotlib import pyplot as plt
+from paddle import nn
+from prepare_datasets import generate_train_test
 from sampler_utils import generate_sampler
 from TopOptModel import TopOptNN
 
@@ -25,60 +28,63 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def evaluation_and_plot(dataloader):
+def evaluation_and_plot():
     args = config.parse_args()
     OUTPUT_DIR = "Output_TopOpt" if args.output_dir is None else args.output_dir
-    OUTPUT_DIR = os.path.join(OUTPUT_DIR, "results")
+    RESULT_DIR = os.path.join(OUTPUT_DIR, "results")
+    DATA_PATH = "./Dataset/PreparedData/top_dataset.h5"
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/results.log", "info")
+    logger.init_logger("ppsci", f"{RESULT_DIR}/results.log", "info")
 
     # specify evaluation parameters
     BATCH_SIZE = 32
     VOL_COEFF = 1  # coefficient for volume fraction constraint in the loss - beta in equation (3) in paper
-    NUM_VAL_STEP = 20  # the number of iteration for each evaluation case
+    NUM_VAL_STEP = 10  # the number of iteration for each evaluation case
     MODEL_LIST = ["Poisson5", "Poisson10", "Poisson30", "Uniform"]
 
+    # define loss
+    def loss_expr(output_dict, label_dict, weight_dict=None):
+        y = label_dict["output"].reshape((-1, 1))
+        y_pred = output_dict["output"].reshape((-1, 1))
+        conf_loss = paddle.mean(
+            nn.functional.log_loss(y_pred, y, epsilon=1e-7)
+        )  # epsilon = 1e-07 is the default in tf
+        vol_loss = paddle.square(paddle.mean(y - y_pred))
+        return conf_loss + VOL_COEFF * vol_loss
+
     # define metric
-    def metric_expr(output_dict, label_dict, weight_dict=None):
+    def val_metric(output_dict, label_dict, weight_dict=None):
         output = output_dict["output"]
         y = label_dict["output"]
         accurates = paddle.equal(paddle.round(y), paddle.round(output))
         acc = paddle.mean(paddle.cast(accurates, dtype="float32"))
-        w00 = paddle.cast(
-            paddle.sum(
-                paddle.multiply(
-                    paddle.equal(paddle.round(output), 0.0),
-                    paddle.equal(paddle.round(y), 0.0),
-                )
+        w00 = paddle.sum(
+            paddle.multiply(
+                paddle.equal(paddle.round(output), 0.0),
+                paddle.equal(paddle.round(y), 0.0),
             ),
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
         )
-        w11 = paddle.cast(
-            paddle.sum(
-                paddle.multiply(
-                    paddle.equal(paddle.round(output), 1.0),
-                    paddle.equal(paddle.round(y), 1.0),
-                )
+        w11 = paddle.sum(
+            paddle.multiply(
+                paddle.equal(paddle.round(output), 1.0),
+                paddle.equal(paddle.round(y), 1.0),
             ),
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
         )
-        w01 = paddle.cast(
-            paddle.sum(
-                paddle.multiply(
-                    paddle.equal(paddle.round(output), 1.0),
-                    paddle.equal(paddle.round(y), 0.0),
-                )
+        w01 = paddle.sum(
+            paddle.multiply(
+                paddle.equal(paddle.round(output), 1.0),
+                paddle.equal(paddle.round(y), 0.0),
             ),
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
         )
-        w10 = paddle.cast(
-            paddle.sum(
-                paddle.multiply(
-                    paddle.equal(paddle.round(output), 0.0),
-                    paddle.equal(paddle.round(y), 1.0),
-                )
+        w10 = paddle.sum(
+            paddle.multiply(
+                paddle.equal(paddle.round(output), 0.0),
+                paddle.equal(paddle.round(y), 1.0),
             ),
-            dtype="float32",
+            dtype=paddle.get_default_dtype(),
         )
         n0 = paddle.add(w01, w00)
         n1 = paddle.add(w11, w10)
@@ -86,6 +92,8 @@ def evaluation_and_plot(dataloader):
             paddle.divide(w00, paddle.add(n0, w10)),
             paddle.divide(w11, paddle.add(n1, w01)),
         )
+        current_acc_results.append(np.array(acc))
+        current_iou_results.append(np.array(iou))
         return {"Binary_Acc": acc, "IoU": iou}
 
     # fixed iteration stop times for evaluation
@@ -98,37 +106,57 @@ def evaluation_and_plot(dataloader):
     for model_name in MODEL_LIST:
 
         # load model parameters
-        model_path = "Output_TopOpt" if args.output_dir is None else args.output_dir
-        model_path = os.path.join(
-            model_path,
-            "".join([model_name, "_vol_coeff", str(VOL_COEFF)]),
-            "checkpoints",
-            "latest",
+        model_path = (
+            f"{OUTPUT_DIR}/{model_name}_vol_coeff{VOL_COEFF}/checkpoints/latest"
         )
         solver = ppsci.solver.Solver(model, pretrained_model_path=model_path)
+        solver.epochs = 1
+        solver.iters_per_epoch = NUM_VAL_STEP
         acc_results = []
         iou_results = []
 
         # evaluation for different fixed iteration stop times
         for stop_iter in iterations_stop_times:
+            # only evaluate for NUM_VAL_STEP times of iteration
+            X_data, Y_data = generate_train_test(
+                DATA_PATH, 1, BATCH_SIZE * NUM_VAL_STEP
+            )
+            sup_validator = ppsci.validate.SupervisedValidator(
+                {
+                    "dataset": {
+                        "name": "NamedArrayDataset",
+                        "input": {"input": X_data},
+                        "label": {"output": Y_data},
+                    },
+                    "batch_size": BATCH_SIZE,
+                    "sampler": {
+                        "name": "BatchSampler",
+                        "drop_last": False,
+                        "shuffle": True,
+                    },
+                    "transforms": (
+                        {
+                            "FunctionalTransform": {
+                                "transform_func": augmentation,
+                            },
+                        },
+                    ),
+                },
+                ppsci.loss.FunctionalLoss(loss_expr),
+                {"output": lambda out: out["output"]},
+                {"metric": ppsci.metric.FunctionalMetric(val_metric)},
+                name="sup_validator",
+            )
+            validator = {sup_validator.name: sup_validator}
+            solver.validator = validator
 
             # modify the channel_sampler in model
             SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
             solver.model.channel_sampler = SIMP_stop_point_sampler
 
-            total_val_steps = 0
             current_acc_results = []
             current_iou_results = []
-
-            # only evaluate for NUM_VAL_STEP times of iteration
-            for x, y, _ in iter(dataloader):
-                if total_val_steps >= NUM_VAL_STEP:
-                    break
-                out = solver.predict(x, batch_size=BATCH_SIZE)
-                metric = metric_expr(out, y)
-                current_acc_results.append(np.array(metric["Binary_Acc"]))
-                current_iou_results.append(np.array(metric["IoU"]))
-                total_val_steps += 1
+            solver.eval()
 
             acc_results.append(np.mean(current_acc_results))
             iou_results.append(np.mean(current_iou_results))
@@ -142,24 +170,19 @@ def evaluation_and_plot(dataloader):
     for stop_iter in iterations_stop_times:
         SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
 
-        total_val_steps = 0
         current_acc_results = []
         current_iou_results = []
 
         # only calculate for NUM_VAL_STEP times of iteration
-        for x, y, _ in iter(dataloader):
-            if total_val_steps >= NUM_VAL_STEP:
-                break
+        for i in range(10):
+            x, y = generate_train_test(DATA_PATH, 1, BATCH_SIZE)
             # thresholding
             k = SIMP_stop_point_sampler()
-            x1 = x["input"][:, k, :, :]
-            x2 = x["input"][:, k - 1, :, :]
+            x1 = paddle.to_tensor(x)[:, k, :, :]
+            x2 = paddle.to_tensor(x)[:, k - 1, :, :]
             x = paddle.stack((x1, x1 - x2), axis=1)
-            out = paddle.cast(x[:, 0:1, :, :] > 0.5, dtype="float32")
-            metric = metric_expr({"output": out}, y)
-            current_acc_results.append(np.array(metric["Binary_Acc"]))
-            current_iou_results.append(np.array(metric["IoU"]))
-            total_val_steps += 1
+            out = paddle.cast(paddle.to_tensor(x)[:, 0:1, :, :] > 0.5, dtype="float32")
+            val_metric({"output": out}, {"output": paddle.to_tensor(y)})
 
         th_acc_results.append(np.mean(current_acc_results))
         th_iou_results.append(np.mean(current_iou_results))
@@ -176,7 +199,7 @@ def evaluation_and_plot(dataloader):
     plt.ylabel("accuracy", fontsize=14)
     plt.legend(loc="best", fontsize=13)
     plt.grid()
-    plt.savefig(os.path.join(OUTPUT_DIR, "Binary_Accuracy.png"))
+    plt.savefig(os.path.join(RESULT_DIR, "Binary_Accuracy.png"))
     plt.show()
 
     plt.figure(figsize=(12, 6))
@@ -187,5 +210,5 @@ def evaluation_and_plot(dataloader):
     plt.ylabel("accuracy", fontsize=14)
     plt.legend(loc="best", fontsize=13)
     plt.grid()
-    plt.savefig(os.path.join(OUTPUT_DIR, "IoU.png"))
+    plt.savefig(os.path.join(RESULT_DIR, "IoU.png"))
     plt.show()
