@@ -560,7 +560,7 @@ class KFaDataset(Dataset):
         else:
             a_data = raw_data[self.offset: self.offset + self.n_samples, 0:1, ::a_sub_x, ::a_sub_x]
 
-        # convert into torch tensor
+        # convert into tensor
         a_data = paddle.to_tensor(a_data, dtype='float32').permute(0, 2, 3, 1)
         S = self.pde_res[1]
         a_data = a_data[:, :, :, :, None]   # N x S x S x 1 x 1
