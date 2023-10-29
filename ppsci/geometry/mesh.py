@@ -207,7 +207,7 @@ class Mesh(geometry.Geometry):
         return Mesh.from_pymesh(scaled_pymesh)
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         return self.pysdf.sample_surface(n)
 
     def inflated_random_points(self, n, distance, random="pseudo", criteria=None):
