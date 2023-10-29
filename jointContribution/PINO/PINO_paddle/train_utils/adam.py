@@ -17,7 +17,6 @@ def adam(params: List[paddle.Tensor],
          weight_decay: float,
          eps: float):
     r"""Functional API that performs Adam algorithm computation.
-    See :class:`~torch.optim.Adam` for details.
     """
 
     for i, param in enumerate(params):
