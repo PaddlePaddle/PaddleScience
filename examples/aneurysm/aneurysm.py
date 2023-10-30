@@ -131,7 +131,7 @@ def train(cfg: DictConfig):
         geom["outlet_geo"],
         {
             **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_per_epoch.igc_outlet,
+            "iters_per_epoch": cfg.TRAIN.iters_igc_outlet,
             "batch_size": cfg.TRAIN.batch_size.igc_outlet,
             "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_outlet,
         },
@@ -145,7 +145,7 @@ def train(cfg: DictConfig):
         geom["integral_geo"],
         {
             **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_per_epoch.igc_integral,
+            "iters_per_epoch": cfg.TRAIN.iters_igc_integral,
             "batch_size": cfg.TRAIN.batch_size.igc_integral,
             "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_integral,
         },
@@ -235,7 +235,7 @@ def train(cfg: DictConfig):
                 "v": lambda out: out["v"],
                 "w": lambda out: out["w"],
             },
-            batch_size=cfg.EVAL.batch_size.visualizer,
+            batch_size=cfg.EVAL.batch_size.sup_validator,
             prefix="result_u_v_w_p",
         ),
     }
@@ -259,7 +259,7 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=visualizer,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
-        eval_with_no_grad=True,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # train model
     solver.train()
@@ -287,30 +287,9 @@ def evaluate(cfg: DictConfig):
         "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v", "w")),
     }
 
-    # set geometry
-    inlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_inlet.stl")
-    outlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_outlet.stl")
-    noslip_geo = ppsci.geometry.Mesh("./stl/aneurysm_noslip.stl")
-    integral_geo = ppsci.geometry.Mesh("./stl/aneurysm_integral.stl")
-    interior_geo = ppsci.geometry.Mesh("./stl/aneurysm_closed.stl")
-
     # inlet velocity profile
     CENTER = (-18.40381048596882, -50.285383353981196, 12.848136936899031)
     SCALE = 0.4
-
-    # normalize meshes
-    inlet_geo = inlet_geo.translate(-np.array(CENTER)).scale(SCALE)
-    outlet_geo = outlet_geo.translate(-np.array(CENTER)).scale(SCALE)
-    noslip_geo = noslip_geo.translate(-np.array(CENTER)).scale(SCALE)
-    integral_geo = integral_geo.translate(-np.array(CENTER)).scale(SCALE)
-    interior_geo = interior_geo.translate(-np.array(CENTER)).scale(SCALE)
-    geom = {
-        "inlet_geo": inlet_geo,
-        "outlet_geo": outlet_geo,
-        "noslip_geo": noslip_geo,
-        "integral_geo": integral_geo,
-        "interior_geo": interior_geo,
-    }
 
     # set validator
     eval_data_dict = reader.load_csv_file(
@@ -350,7 +329,7 @@ def evaluate(cfg: DictConfig):
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
         ppsci.loss.MSELoss("mean"),
         {
             "p": lambda out: out["p"],
@@ -373,7 +352,7 @@ def evaluate(cfg: DictConfig):
                 "v": lambda out: out["v"],
                 "w": lambda out: out["w"],
             },
-            batch_size=cfg.TRAIN.batch_size.visualizer,
+            batch_size=cfg.EVAL.batch_size.sup_validator,
             prefix="result_u_v_w_p",
         ),
     }
@@ -383,11 +362,10 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=True,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)

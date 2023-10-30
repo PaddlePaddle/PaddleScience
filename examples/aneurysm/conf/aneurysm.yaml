@@ -49,13 +49,10 @@ TRAIN:
   epochs: 1500
   iters_per_epoch: 1000
   eval_during_train: true
-  eval_freq: 200
-  learning_rate: 0.001
-  gamma: 0.95
-  save_freq: 20
-  eval_during_train: true
-  log_freq: 20
   eval_freq: 20
+  learning_rate: 0.001
+  save_freq: 20
+  log_freq: 20
   batch_size:
     bc_inlet: 1100
     bc_outlet: 650
@@ -63,9 +60,8 @@ TRAIN:
     pde_constraint: 6000
     igc_outlet: 1
     igc_integral: 1
-  iters_per_epoch:
-    igc_outlet: 100
-    igc_integral: 100
+  iters_igc_outlet: 100
+  iters_igc_integral: 100
   integral_batch_size:
     igc_outlet: 310
     igc_integral: 310
@@ -73,8 +69,7 @@ TRAIN:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     learning_rate: ${TRAIN.learning_rate}
-    gamma: ${TRAIN.gamma}
-    decay_steps: 1500*1000 // 100
+    gamma: 0.95
   weight:
     igc_outlet: {"normal_dot_vec": 0.1}
     igc_integral: {"normal_dot_vec": 0.1}
@@ -84,7 +79,7 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+  eval_with_no_grad: true
   batch_size:
     residual_validator: 8192
     sup_validator: 4096
-    visualizer: 4096

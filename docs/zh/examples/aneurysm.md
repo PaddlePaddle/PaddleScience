@@ -5,12 +5,24 @@
 === "模型训练命令"
 
     ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # unzip it
+    tar -xvf aneurysm_dataset.tar
     python aneurysm.py
     ```
 
 === "模型评估命令"
 
     ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+    # unzip it
+    tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
     ```
 
