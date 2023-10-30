@@ -312,7 +312,7 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "u": lambda out: out["u"],
@@ -493,7 +493,7 @@ def evaluate(cfg: DictConfig):
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "u": lambda out: out["u"],

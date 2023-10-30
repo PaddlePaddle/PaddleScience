@@ -85,7 +85,7 @@ class LRBase:
         self.verbose = verbose
 
     @abc.abstractmethod
-    def __call__(self, *kargs, **kwargs) -> lr.LRScheduler:
+    def __call__(self, *args, **kwargs) -> lr.LRScheduler:
         """Generate an learning rate scheduler.
 
         Returns:
@@ -150,7 +150,7 @@ class Linear(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
+        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
     """
 
     def __init__(
@@ -218,7 +218,7 @@ class ExponentialDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
+        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)()
     """
 
     def __init__(
@@ -280,7 +280,7 @@ class Cosine(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)
+        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)()
     """
 
     def __init__(
@@ -345,7 +345,7 @@ class Step(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
+        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)()
     """
 
     def __init__(
@@ -407,7 +407,9 @@ class Piecewise(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(10, 1, [2, 4], (1e-3, 1e-4))
+        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(
+        ...     10, 1, [2, 4], (1e-3, 1e-4, 1e-5)
+        ... )()
     """
 
     def __init__(
@@ -467,7 +469,7 @@ class MultiStepDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))
+        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))()
     """
 
     def __init__(
@@ -601,7 +603,7 @@ class CosineWarmRestarts(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)
+        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)()
     """
 
     def __init__(
@@ -656,9 +658,9 @@ class OneCycleLR(LRBase):
 
     It has been proposed in [Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates](https://arxiv.org/abs/1708.07120).
 
-    Please note that the default behaviour of this scheduler follows the fastai implementation of one cycle,
+    Please note that the default behavior of this scheduler follows the fastai implementation of one cycle,
     which claims that **"unpublished work has shown even better results by using only two phases"**.
-    If you want the behaviour of this scheduler to be consistent with the paper, please set `three_phase=True`.
+    If you want the behavior of this scheduler to be consistent with the paper, please set `three_phase=True`.
 
     Args:
         epochs (int): Total epoch(s).
@@ -676,7 +678,7 @@ class OneCycleLR(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(1e-3, 100)
+        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(100, 1, 1e-3)()
     """
 
     def __init__(

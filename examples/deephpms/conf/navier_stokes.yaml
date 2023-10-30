@@ -1,0 +1,62 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_navier_stokes/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+DATASET_PATH: ./datasets/DeepHPMs/cylinder.mat
+DATASET_PATH_SOL: ./datasets/DeepHPMs/cylinder.mat
+
+# set working condition
+LB: [0.0, 1, -1.7]
+UB: [30.0, 7.5, 1.7]
+
+# model settings
+MODEL:
+  idn_net:
+    input_keys: ["t", "x", "y"]
+    output_keys: ["w_idn"]
+    num_layers: 4
+    hidden_size: 200
+    activation: "sin"
+  pde_net:
+    input_keys: ["u", "v", "w", "dw_x", "dw_y", "dw_xx", "dw_xy", "dw_yy"]
+    output_keys: ["f_pde"]
+    num_layers: 2
+    hidden_size: 100
+    activation: "sin"
+
+# training settings
+TRAIN:
+  epochs: 50000
+  iters_per_epoch: 1
+  max_iter: 50000  # for LBFGS
+  learning_rate: 1.0e-4
+  batch_size:
+    eval: 10000
+  eval_during_train: false
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null

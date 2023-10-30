@@ -13,11 +13,14 @@
 # limitations under the License.
 
 import copy
+from typing import TYPE_CHECKING
 
+from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
 from ppsci.data.dataset.csv_dataset import IterableCSVDataset
+from ppsci.data.dataset.cylinder_dataset import MeshCylinderDataset
 from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
@@ -30,6 +33,9 @@ from ppsci.data.dataset.trphysx_dataset import RosslerDataset
 from ppsci.data.dataset.vtu_dataset import VtuDataset
 from ppsci.data.process import transform
 from ppsci.utils import logger
+
+if TYPE_CHECKING:
+    from paddle import io
 
 __all__ = [
     "IterableNamedArrayDataset",
@@ -46,11 +52,13 @@ __all__ = [
     "LorenzDataset",
     "RosslerDataset",
     "VtuDataset",
+    "MeshAirfoilDataset",
+    "MeshCylinderDataset",
     "build_dataset",
 ]
 
 
-def build_dataset(cfg):
+def build_dataset(cfg) -> "io.Dataset":
     """Build dataset
 
     Args:

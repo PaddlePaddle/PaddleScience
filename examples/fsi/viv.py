@@ -71,7 +71,7 @@ if __name__ == "__main__":
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set validator
-    valida_dataloader_cfg = {
+    valid_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
             "file_path": "./VIV_Training_Neta100.mat",
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         },
     }
     eta_mse_validator = ppsci.validate.SupervisedValidator(
-        valida_dataloader_cfg,
+        valid_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
         {"eta": lambda out: out["eta"], **equation["VIV"].equations},
         metric={"MSE": ppsci.metric.MSE()},
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         alias_dict={"eta_gt": "eta", "f_gt": "f"},
     )
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerScatter1D(
+        "visualize_u": ppsci.visualize.VisualizerScatter1D(
             visu_mat,
             ("t_f",),
             {

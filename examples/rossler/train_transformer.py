@@ -167,14 +167,14 @@ if __name__ == "__main__":
     # set visualizer(optional)
     states = mse_validator.data_loader.dataset.data
     embedding_data = mse_validator.data_loader.dataset.embedding_data
-    vis_datas = {
+    vis_data = {
         "embeds": embedding_data[:VIS_DATA_NUMS, :-1, :],
         "states": states[:VIS_DATA_NUMS, 1:, :],
     }
 
     visualizer = {
-        "visulzie_states": ppsci.visualize.VisualizerScatter3D(
-            vis_datas,
+        "visualize_states": ppsci.visualize.VisualizerScatter3D(
+            vis_data,
             {
                 "pred_states": lambda d: output_transform(d),
                 "states": lambda d: d["states"],

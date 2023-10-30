@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# from ppsci.data.process.postprocess import *
 import copy
+import traceback
+from typing import Any
+from typing import Tuple
 
 from paddle import vision
 
@@ -37,9 +39,27 @@ __all__ = [
 ]
 
 
+class Compose(vision.Compose):
+    """Custom Compose for multiple items in given data."""
+
+    def __call__(self, *data: Tuple[Any, ...]):
+        for f in self.transforms:
+            try:
+                # NOTE: This is different from vision.Compose to allow receive multiple data items
+                data = f(*data)
+            except Exception as e:
+                stack_info = traceback.format_exc()
+                print(
+                    f"fail to perform transform [{f}] with error: "
+                    f"{e} and stack:\n{str(stack_info)}"
+                )
+                raise e
+        return data
+
+
 def build_transforms(cfg):
     if not cfg:
-        return vision.Compose([])
+        return Compose([])
     cfg = copy.deepcopy(cfg)
 
     transform_list = []
@@ -49,4 +69,4 @@ def build_transforms(cfg):
         transform = eval(transform_cls)(**transform_cfg)
         transform_list.append(transform)
 
-    return vision.Compose(transform_list)
+    return Compose(transform_list)
