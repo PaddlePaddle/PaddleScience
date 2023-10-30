@@ -155,8 +155,8 @@ def main(cfg: DictConfig):
     epoch_list = cfg.epoch_list
     new_epoch_list = []
     for i, _ in enumerate(epoch_list):
-        new_epoch_list.append(sum(epoch_list[:i]))
-    EPOCHS = new_epoch_list[-1] + epoch_list[-1]
+        new_epoch_list.append(sum(epoch_list[:i+1]))
+    EPOCHS = new_epoch_list[-1]
     lr_list = cfg.lr_list
 
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list)()
