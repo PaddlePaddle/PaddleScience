@@ -27,7 +27,7 @@ from omegaconf import DictConfig
 
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="epnn.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet1.yaml")
 def main(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
