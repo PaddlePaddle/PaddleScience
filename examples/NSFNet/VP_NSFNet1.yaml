@@ -1,6 +1,6 @@
 seed: 12
 
-output_dir: ./output
+output_dir: './output'
 
 iters_per_epoch: 1
 
