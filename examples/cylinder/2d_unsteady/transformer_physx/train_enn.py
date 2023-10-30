@@ -75,7 +75,7 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "batch_size": cfg.TRAIN.batch_size.train,
+        "batch_size": cfg.TRAIN.batch_size,
         "num_workers": 4,
     }
 
@@ -138,7 +138,7 @@ def train(cfg: DictConfig):
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": cfg.TRAIN.batch_size.eval,
+        "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
 
@@ -195,7 +195,7 @@ def evaluate(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "batch_size": cfg.TRAIN.batch_size.train,
+        "batch_size": cfg.TRAIN.batch_size,
         "num_workers": 4,
     }
 
@@ -243,7 +243,7 @@ def evaluate(cfg: DictConfig):
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": cfg.TRAIN.batch_size.eval,
+        "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
 

@@ -12,6 +12,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5 --output rossler_training.hdf5
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5 --output rossler_valid.hdf5
     python train_enn.py
+    python train_transformer.py
     ```
 
 === "模型评估命令"
@@ -24,6 +25,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5 --output rossler_training.hdf5
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5 --output rossler_valid.hdf5
     python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_pretrained.pdparams
+    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_transformer_pretrained.pdparams
     ```
 
 ## 1. 背景简介

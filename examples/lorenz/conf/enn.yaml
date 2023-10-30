@@ -36,9 +36,7 @@ MODEL:
 # training settings
 TRAIN:
   epochs: 300
-  batch_size:
-    train: 512
-    eval: 512
+  batch_size: 512
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     learning_rate: 0.001
@@ -51,4 +49,5 @@ TRAIN:
 
 # evaluation settings
 EVAL:
+  batch_size: 512
   pretrained_model_path: null
