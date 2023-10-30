@@ -23,7 +23,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat --output datasets/tempoGAN/2d_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
-    python tempoGAN.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/tempogan/tempogan_pretrained.pdparams
+    python tempoGAN.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams
     ```
 
 ## 1. 背景简介
@@ -291,7 +291,8 @@ examples/tempoGAN/tempoGAN.py:237:248
 
 ### 3.10 模型评估
 
-由于本问题的输出为图片，评估指标需要使用针对图片的评估指标，因此不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估，而是在训练结束后针对最后一个 `Epoch` 进行一次评估:
+#### 3.10.1 训练中评估
+训练中仅在特定 `Epoch` 保存特定图片的目标结果和模型输出结果，训练结束后针对最后一个 `Epoch` 的输出结果进行一次评估，以便直观评价模型优化效果。不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估:
 
 ``` py linenums="277"
 --8<--
@@ -299,7 +300,47 @@ examples/tempoGAN/tempoGAN.py:277:284
 --8<--
 ```
 
+``` py linenums="297"
+--8<--
+examples/tempoGAN/tempoGAN.py:297:313
+--8<--
+```
+
 具体代码请参考 [完整代码](#4) 中 tempoGAN.py 文件。
+
+#### 3.10.2 评估器构建
+
+在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，进行评估时，对所有验证集数据都进行，因此将 `eval_dataloader_cfg`（验证集dataloader配置，构造方式与 `train_dataloader_cfg` 类似）传递给`ppsci.validate.SupervisedValidator` 来构造评估器：
+
+``` py linenums="374"
+--8<--
+examples/tempoGAN/tempoGAN.py:374:396
+--8<--
+```
+
+由于图片的评价指标较为特殊，评估器的 `metric` 需要单独构建:
+
+``` py linenums="334"
+--8<--
+examples/tempoGAN/tempoGAN.py:334:372
+--8<--
+```
+
+其中：
+
+``` py linenums="357"
+--8<--
+examples/tempoGAN/tempoGAN.py:357:368
+--8<--
+```
+
+提供了保存模型输出结果的选择，以便更直观的看出超分后的结果。是否开启由配置文件 `EVAL` 中的 `save_outs` 指定：
+
+``` yaml linenums="91"
+--8<--
+examples/tempoGAN/conf/tempogan.yaml:91:97
+--8<--
+```
 
 ## 4. 完整代码
 
