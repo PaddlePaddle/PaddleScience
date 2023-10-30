@@ -294,9 +294,7 @@ def train(cfg: DictConfig):
         # train gen, input: (x,)
         solver_gen.train()
 
-
-def evaluate(cfg: DictConfig):
-    ############### evaluation after training ###############
+    ############### evaluation for training ###############
     img_target = (
         func_module.get_image_array(
             os.path.join(cfg.output_dir, "predict", "target.png")
@@ -313,6 +311,103 @@ def evaluate(cfg: DictConfig):
     )
     eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_target, img_pred)
     logger.message(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")
+
+
+def evaluate(cfg: DictConfig):
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+
+    gen_funcs = func_module.GenFuncs(cfg.WEIGHT_GEN, None)
+
+    # load dataset
+    dataset_valid = hdf5storage.loadmat(cfg.DATASET_PATH_VALID)
+
+    # define Generator model
+    model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
+    model_gen.register_input_transform(gen_funcs.transform_in)
+
+    # define model_list
+    model_list = ppsci.arch.ModelList((model_gen,))
+
+    # Generator
+    def metric_func_eval(output_dict, label_dict):
+        output_arr = np.squeeze(output_dict["output_gen"].numpy())
+        target_arr = np.squeeze(label_dict["density_high"].numpy())
+
+        def scale(data):
+            smax = np.max(data)
+            smin = np.min(data)
+            return (data - smin) / (smax - smin)
+
+        eval_mse_list = []
+        eval_psnr_list = []
+        eval_ssim_list = []
+        for i in range(output_arr.shape[0]):
+            img_pred = scale(output_arr[i])
+            img_target = scale(target_arr[i])
+
+            eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(
+                img_target, img_pred
+            )
+            eval_mse_list.append(eval_mse)
+            eval_psnr_list.append(eval_psnr)
+            eval_ssim_list.append(eval_ssim)
+
+        if cfg.EVAL.save_outs:
+            from matplotlib import image as Img
+
+            os.mkdir(f"{cfg.output_dir}eval_outs/")
+            for i, image in enumerate(output_arr):
+                Img.imsave(
+                    f"{cfg.output_dir}eval_outs/out_{i}.png",
+                    image,
+                    vmin=0.0,
+                    vmax=1.0,
+                    cmap="gray",
+                )
+        logger.message(
+            f"MSE: {np.mean(eval_mse_list)}, PSNR: {np.mean(eval_psnr_list)}, SSIM: {np.mean(eval_ssim_list)}"
+        )
+        return {"dummy": 0.0}
+
+    # set validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {
+                "density_low": dataset_valid["density_low"],
+            },
+            "label": {"density_high": dataset_valid["density_high"]},
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+    sup_validator = ppsci.validate.SupervisedValidator(
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
+        ppsci.loss.MSELoss("mean"),
+        {"density_high": lambda out: out["output_gen"]},
+        metric={"metric": ppsci.metric.FunctionalMetric(metric_func_eval)},
+        name="sup_validator_gen",
+    )
+    validator = {sup_validator.name: sup_validator}
+
+    # initialize solver
+    solver_gen = ppsci.solver.Solver(
+        model_list,
+        output_dir=cfg.output_dir,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
+        validator=validator,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+    )
+
+    # eval gen, input: (x,)
+    solver_gen.eval()
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="tempogan.yaml")
