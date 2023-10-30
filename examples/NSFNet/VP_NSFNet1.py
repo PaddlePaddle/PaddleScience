@@ -63,23 +63,6 @@ v_star = (lam / (2 * np.pi)) * np.exp(lam * x_star) * np.sin(2 * np.pi * y_star)
 p_star = 0.5 * (1 - np.exp(2 * lam * x_star))
 
 
-## Dimensionless
-
-# Xb = np.concatenate([xb_train, yb_train], 1)
-# lowb = Xb.min(0)
-# upb = Xb.max(0)
-# Xb = 2.0 * (Xb - lowb) / (upb - lowb) - 1.0
-# xb_train, yb_train = Xb[:, 0:1], Xb[:, 1:2]
-# X = np.concatenate([x_train, y_train], 1)
-# X = 2.0 * (X - lowb) / (upb - lowb) - 1.0
-
-# x_train, y_train = X[:, 0:1], X[:, 1:2]
-
-# X_star = np.concatenate([x_star, y_star], 1)
-# X_star = 2.0 * (X_star - lowb) / (upb - lowb) - 1.0
-# x_star = X_star[:, 0:1]
-# y_star = X_star[:, 1:2]
-
 input_train = {"x": xb_train,"y":yb_train}
 label_train = {"u": ub_train,"v":vb_train}
 
