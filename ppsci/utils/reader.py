@@ -38,7 +38,7 @@ def load_csv_file(
     file_path: str,
     keys: Tuple[str, ...],
     alias_dict: Optional[Dict[str, str]] = None,
-    delimeter: str = ",",
+    delimiter: str = ",",
     encoding: str = "utf-8",
 ) -> Dict[str, np.ndarray]:
     """Load *.csv file and fetch data as given keys.
@@ -59,7 +59,7 @@ def load_csv_file(
     try:
         # read all data from csv file
         with open(file_path, "r", encoding=encoding) as csv_file:
-            reader = csv.DictReader(csv_file, delimiter=delimeter)
+            reader = csv.DictReader(csv_file, delimiter=delimiter)
             raw_data = collections.defaultdict(list)
             for _, line_dict in enumerate(reader):
                 for key, value in line_dict.items():
