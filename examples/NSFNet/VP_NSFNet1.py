@@ -14,6 +14,8 @@
 
 """
 Reference: https://github.com/Alexzihaohu/NSFnets/tree/master
+
+Corresponding AIstudio: https://aistudio.baidu.com/studio/project/partial/verify/6832363/c3b2af9c2b8243548daa037ee4342f2e
 """
 
 import ppsci
