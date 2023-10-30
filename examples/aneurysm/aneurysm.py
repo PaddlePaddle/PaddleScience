@@ -26,16 +26,18 @@ def train(cfg: DictConfig):
 
     # set equation
     equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(cfg.NU * cfg.SCALE, 1.0, 3, False),
+        "NavierStokes": ppsci.equation.NavierStokes(
+            cfg.NU * cfg.SCALE, cfg.RHO, 3, False
+        ),
         "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v", "w")),
     }
 
     # set geometry
-    inlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_inlet.stl")
-    outlet_geo = ppsci.geometry.Mesh("./stl/aneurysm_outlet.stl")
-    noslip_geo = ppsci.geometry.Mesh("./stl/aneurysm_noslip.stl")
-    integral_geo = ppsci.geometry.Mesh("./stl/aneurysm_integral.stl")
-    interior_geo = ppsci.geometry.Mesh("./stl/aneurysm_closed.stl")
+    inlet_geo = ppsci.geometry.Mesh(cfg.INLET_PATH)
+    outlet_geo = ppsci.geometry.Mesh(cfg.OUTLET_PATH)
+    noslip_geo = ppsci.geometry.Mesh(cfg.NOSLIP_PATH)
+    integral_geo = ppsci.geometry.Mesh(cfg.INTEGRAL_PATH)
+    interior_geo = ppsci.geometry.Mesh(cfg.CLOSED_PATH)
 
     # inlet velocity profile
     CENTER = (-18.40381048596882, -50.285383353981196, 12.848136936899031)
@@ -160,9 +162,6 @@ def train(cfg: DictConfig):
         igc_outlet.name: igc_outlet,
         igc_integral.name: igc_integral,
     }
-
-    # set training hyper-parameters
-    # EPOCHS = 1500 if not args.epochs else args.epochs
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
@@ -213,7 +212,7 @@ def train(cfg: DictConfig):
         "num_workers": 1,
     }
     sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.sup_validator},
+        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
         ppsci.loss.MSELoss("mean"),
         {
             "p": lambda out: out["p"],
@@ -236,7 +235,7 @@ def train(cfg: DictConfig):
                 "v": lambda out: out["v"],
                 "w": lambda out: out["w"],
             },
-            batch_size=cfg.TRAIN.batch_size.visualizer,
+            batch_size=cfg.EVAL.batch_size.visualizer,
             prefix="result_u_v_w_p",
         ),
     }
@@ -259,6 +258,7 @@ def train(cfg: DictConfig):
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
         eval_with_no_grad=True,
     )
     # train model
@@ -274,14 +274,16 @@ def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL.model)
 
     # set equation
     equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(cfg.NU * cfg.SCALE, 1.0, 3, False),
+        "NavierStokes": ppsci.equation.NavierStokes(
+            cfg.NU * cfg.SCALE, cfg.RHO, 3, False
+        ),
         "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v", "w")),
     }
 
@@ -308,112 +310,6 @@ def evaluate(cfg: DictConfig):
         "noslip_geo": noslip_geo,
         "integral_geo": integral_geo,
         "interior_geo": interior_geo,
-    }
-
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": "NamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": True,
-            "shuffle": True,
-        },
-        "num_workers": 1,
-    }
-
-    # set constraint
-    INLET_NORMAL = (0.8526, -0.428, 0.299)
-    INLET_AREA = 21.1284 * (SCALE**2)
-    INLET_CENTER = (-4.24298030045776, 4.082857101816247, -4.637790193399717)
-    INLET_RADIUS = np.sqrt(INLET_AREA / np.pi)
-    INLET_VEL = 1.5
-
-    def _compute_parabola(_in):
-        centered_x = _in["x"] - INLET_CENTER[0]
-        centered_y = _in["y"] - INLET_CENTER[1]
-        centered_z = _in["z"] - INLET_CENTER[2]
-        distance = np.sqrt(centered_x**2 + centered_y**2 + centered_z**2)
-        parabola = INLET_VEL * np.maximum((1 - (distance / INLET_RADIUS) ** 2), 0)
-        return parabola
-
-    def inlet_u_ref_func(_in):
-        return INLET_NORMAL[0] * _compute_parabola(_in)
-
-    def inlet_v_ref_func(_in):
-        return INLET_NORMAL[1] * _compute_parabola(_in)
-
-    def inlet_w_ref_func(_in):
-        return INLET_NORMAL[2] * _compute_parabola(_in)
-
-    bc_inlet = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
-        {"u": inlet_u_ref_func, "v": inlet_v_ref_func, "w": inlet_w_ref_func},
-        geom["inlet_geo"],
-        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.bc_inlet},
-        ppsci.loss.MSELoss("sum"),
-        name="inlet",
-    )
-    bc_outlet = ppsci.constraint.BoundaryConstraint(
-        {"p": lambda d: d["p"]},
-        {"p": 0},
-        geom["outlet_geo"],
-        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.bc_outlet},
-        ppsci.loss.MSELoss("sum"),
-        name="outlet",
-    )
-    bc_noslip = ppsci.constraint.BoundaryConstraint(
-        {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
-        {"u": 0, "v": 0, "w": 0},
-        geom["noslip_geo"],
-        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.bc_noslip},
-        ppsci.loss.MSELoss("sum"),
-        name="no_slip",
-    )
-    pde_constraint = ppsci.constraint.InteriorConstraint(
-        equation["NavierStokes"].equations,
-        {"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
-        geom["interior_geo"],
-        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.pde_constraint},
-        ppsci.loss.MSELoss("sum"),
-        name="interior",
-    )
-    igc_outlet = ppsci.constraint.IntegralConstraint(
-        equation["NormalDotVec"].equations,
-        {"normal_dot_vec": 2.54},
-        geom["outlet_geo"],
-        {
-            **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_per_epoch.igc_outlet,
-            "batch_size": cfg.TRAIN.batch_size.igc_outlet,
-            "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_outlet,
-        },
-        ppsci.loss.IntegralLoss("sum"),
-        weight_dict=cfg.TRAIN.weight.igc_outlet,
-        name="igc_outlet",
-    )
-    igc_integral = ppsci.constraint.IntegralConstraint(
-        equation["NormalDotVec"].equations,
-        {"normal_dot_vec": -2.54},
-        geom["integral_geo"],
-        {
-            **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_per_epoch.igc_integral,
-            "batch_size": cfg.TRAIN.batch_size.igc_integral,
-            "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_integral,
-        },
-        ppsci.loss.IntegralLoss("sum"),
-        weight_dict=cfg.TRAIN.weight.igc_integral,
-        name="igc_integral",
-    )
-    # wrap constraints together
-    constraint = {
-        bc_inlet.name: bc_inlet,
-        bc_outlet.name: bc_outlet,
-        bc_noslip.name: bc_noslip,
-        pde_constraint.name: pde_constraint,
-        igc_outlet.name: igc_outlet,
-        igc_integral.name: igc_integral,
     }
 
     # set validator
@@ -483,11 +379,9 @@ def evaluate(cfg: DictConfig):
     }
 
     # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        cfg.output_dir,
+        output_dir=cfg.output_dir,
         equation=equation,
         geom=geom,
         validator=validator,

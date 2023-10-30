@@ -26,6 +26,14 @@ output_dir: ${hydra:run.dir}
 # set working condition
 NU: 0.0025
 SCALE: 0.4
+RHO: 1.0
+
+# set geometry file path
+INLET_PATH: ./stl/aneurysm_inlet.stl
+OUTLET_PATH: ./stl/aneurysm_outlet.stl
+NOSLIP_PATH: ./stl/aneurysm_noslip.stl
+INTEGRAL_PATH: ./stl/aneurysm_integral.stl
+CLOSED_PATH: ./stl/aneurysm_closed.stl
 
 # model settings
 MODEL:
@@ -55,15 +63,12 @@ TRAIN:
     pde_constraint: 6000
     igc_outlet: 1
     igc_integral: 1
-    sup_validator: 4096
-    visualizer: 4096
   iters_per_epoch:
     igc_outlet: 100
-    igc_integral:100
+    igc_integral: 100
   integral_batch_size:
     igc_outlet: 310
     igc_integral: 310
-
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
@@ -81,3 +86,5 @@ EVAL:
   pretrained_model_path: null
   batch_size:
     residual_validator: 8192
+    sup_validator: 4096
+    visualizer: 4096
