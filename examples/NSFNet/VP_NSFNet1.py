@@ -154,6 +154,7 @@ def main(cfg: DictConfig):
     # wrap validator
     validator = {residual_validator.name: residual_validator}
 
+    # set learning rate scheduler
     epoch_list = cfg.epoch_list
     new_epoch_list = []
     for i, _ in enumerate(epoch_list):
@@ -166,6 +167,7 @@ def main(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+    
     # initialize solver
     solver = ppsci.solver.Solver(
         model=model,
@@ -187,6 +189,7 @@ def main(cfg: DictConfig):
     )
     # train model
     solver.train()
+    
     solver.eval()
 
     # plot the loss
@@ -197,6 +200,7 @@ def main(cfg: DictConfig):
     optimizer = ppsci.optimizer.LBFGS(max_iter=50000, tolerance_change=np.finfo(float).eps, history_size=50)(model)
 
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+    
     # initialize solver
     solver = ppsci.solver.Solver(
         model=model,
@@ -220,5 +224,6 @@ def main(cfg: DictConfig):
 
     # evaluate after finished training
     solver.eval()
+    
 if __name__ == "__main__":
     main()
