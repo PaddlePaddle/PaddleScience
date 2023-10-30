@@ -146,9 +146,7 @@ residual_validator_mse = ppsci.validate.SupervisedValidator(
 validator = {residual_validator.name: residual_validator}
 
 # set optimizer
-#decay_epochs=[5000,10000,60000]
 EPOCHS=5000
-# lr = ppsci.optimizer.lr_scheduler.Piecewise(EPOCHS, ITERS_PER_EPOCH, decay_epochs, (1e-3, 1e-4,1e-5,1e-6))()
 optimizer = ppsci.optimizer.Adam(1e-3)(model)
 
 logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
