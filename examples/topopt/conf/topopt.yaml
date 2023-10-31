@@ -1,0 +1,52 @@
+hydra:
+  run:
+    # dynamic output directory
+    dir: outputs_topopt/
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+
+# set default cases parameters
+CASE_PARAM: [[Poisson, 5], [Poisson, 10], [Poisson, 30], [Uniform, null]]
+
+# set data path
+DATA_PATH: ./Dataset/PreparedData/top_dataset.h5
+
+# model settings
+MODEL:
+  in_channel: 2
+  out_channel: 1
+  kernel_size: 3
+  filters: [16, 32, 64]
+  layers: 2
+
+# training settings
+TRAIN:
+  n_samples: 10000
+  train_test_ratio: 1.0 # use 10000 original data with different channels for training
+  num_epochs: 30
+  epsilon:
+    log_loss: 0.0000001
+    optimizer: 0.0000001
+  vol_coeff: 1 # coefficient for volume fraction constraint in the loss - beta in equation (3) in paper
+  num_params: 192113 # the number of parameters in Unet specified in paper, used to verify the parameter number
+  batch_size: 64
+  drop_last: false
+  shuffle: true
+
+# evaluation settings
+EVAL:
+  model_list: [Poisson5, Poisson10, Poisson30, Uniform]
+  num_val_step: 10 # the number of iteration for each evaluation case
+  batch_size: 32
+  drop_last: false
+  shuffle: true

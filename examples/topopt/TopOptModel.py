@@ -72,6 +72,7 @@ class TopOptNN(ppsci.arch.UNetEx):
         self.out_channel = out_channel
         self.filters = filters
         self.channel_sampler = channel_sampler
+        self.activation = activation
 
         # Modify Layers
         self.encoder[1] = nn.Sequential(
@@ -88,32 +89,32 @@ class TopOptNN(ppsci.arch.UNetEx):
             nn.Conv2D(
                 self.filters[-1], self.filters[-1], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
             nn.Conv2D(
                 self.filters[-1], self.filters[-1], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
         )
         self.decoders[1] = nn.Sequential(
             nn.Conv2D(
                 sum(self.filters[-2:]), self.filters[-2], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
             nn.Dropout2D(0.1),
             nn.Conv2D(
                 self.filters[-2], self.filters[-2], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
         )
         self.decoders[2] = nn.Sequential(
             nn.Conv2D(
                 sum(self.filters[:-1]), self.filters[-3], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
             nn.Conv2D(
                 self.filters[-3], self.filters[-3], kernel_size=3, padding="SAME"
             ),
-            nn.ReLU(),
+            self.activation(),
         )
         self.output = nn.Sequential(
             nn.Conv2D(
