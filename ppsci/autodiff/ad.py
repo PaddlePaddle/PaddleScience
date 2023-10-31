@@ -100,12 +100,12 @@ class Jacobians:
             xs (paddle.Tensor): Input tensor.
             i (int, optional): i-th output variable. Defaults to 0.
             j (Optional[int]): j-th input variable. Defaults to None.
-            retain_graph (Optional[bool]): whether to retain the forward graph which
+            retain_graph (Optional[bool]): Whether to retain the forward graph which
                 is used to calculate the gradient. When it is True, the graph would
                 be retained, in which way users can calculate backward twice for the
                 same graph. When it is False, the graph would be freed. Default None,
                 which means it is equal to `create_graph`.
-            create_graph (bool, optional): whether to create the gradient graphs of
+            create_graph (bool, optional): Whether to create the gradient graphs of
                 the computing process. When it is True, higher order derivatives are
                 supported to compute; when it is False, the gradient graphs of the
                 computing process would be discarded. Default False.
@@ -231,12 +231,12 @@ class Hessians:
             j (int, optional): j-th input variable. Defaults to 0.
             grad_y (Optional[paddle.Tensor]): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
                 duplicate computation. Defaults to None.
-            retain_graph (Optional[bool]): whether to retain the forward graph which
+            retain_graph (Optional[bool]): Whether to retain the forward graph which
                 is used to calculate the gradient. When it is True, the graph would
                 be retained, in which way users can calculate backward twice for the
                 same graph. When it is False, the graph would be freed. Default None,
                 which means it is equal to `create_graph`.
-            create_graph (bool, optional): whether to create the gradient graphs of
+            create_graph (bool, optional): Whether to create the gradient graphs of
                 the computing process. When it is True, higher order derivatives are
                 supported to compute; when it is False, the gradient graphs of the
                 computing process would be discarded. Default False.

@@ -26,6 +26,10 @@
     python deeponet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams
     ```
 
+| 预训练模型  | 指标 |
+|:--| :--|
+| [deeponet_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams) | loss(G_eval): 0.00003<br>L2Rel.G(G_eval): 0.01799 |
+
 ## 1. 背景简介
 
 根据机器学习领域的万能近似定理，一个神经网络模型不仅可以拟合输入数据到输出数据的函数映射关系，也可以扩展到对函数与函数之间的映射关系进行拟合，称之为“算子”学习。

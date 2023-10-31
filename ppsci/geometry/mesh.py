@@ -206,7 +206,9 @@ class Mesh(geometry.Geometry):
         # Generate a new Mesh object using class method
         return Mesh.from_pymesh(translated_mesh)
 
-    def scale(self, scale: float, center: Tuple[float, float, float] = (0, 0, 0)):
+    def scale(
+        self, scale: float, center: Tuple[float, float, float] = (0, 0, 0)
+    ) -> "Mesh":
         """Scale by given scale coefficient and center coordinate.
 
         NOTE: This API generate a completely new Mesh object with scaled geometry,
