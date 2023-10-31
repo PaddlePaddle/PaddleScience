@@ -229,7 +229,7 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # whether calculate metrics after each batch during evaluate
+        # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
             for metric in itertools.chain(
@@ -241,7 +241,7 @@ class Solver:
                         f"{compute_metric_by_batch} when compute_metric_by_batch="
                         f"{compute_metric_by_batch}."
                     )
-        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
+        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         self.eval_with_no_grad = eval_with_no_grad
 
         # load pretrained model, usually used for transfer learning
