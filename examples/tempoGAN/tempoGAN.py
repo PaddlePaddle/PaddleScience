@@ -24,6 +24,7 @@ from omegaconf import DictConfig
 import ppsci
 from ppsci.utils import checker
 from ppsci.utils import logger
+from ppsci.utils import save_load
 
 if not checker.dynamic_import_to_globals("hdf5storage"):
     raise ImportError(
@@ -314,6 +315,11 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    if cfg.EVAL.save_outs:
+        from matplotlib import image as Img
+
+        os.makedirs(osp.join(cfg.output_dir, "eval_outs"), exist_ok=True)
+
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
@@ -330,84 +336,48 @@ def evaluate(cfg: DictConfig):
     # define model_list
     model_list = ppsci.arch.ModelList((model_gen,))
 
-    # Generator
-    def metric_func_eval(output_dict, label_dict):
-        output_arr = np.squeeze(output_dict["output_gen"].numpy())
-        target_arr = np.squeeze(label_dict["density_high"].numpy())
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-        def scale(data):
-            smax = np.max(data)
-            smin = np.min(data)
-            return (data - smin) / (smax - smin)
+    # customized evalution
+    def scale(data):
+        smax = np.max(data)
+        smin = np.min(data)
+        return (data - smin) / (smax - smin)
 
-        eval_mse_list = []
-        eval_psnr_list = []
-        eval_ssim_list = []
-        for i in range(output_arr.shape[0]):
-            img_pred = scale(output_arr[i])
-            img_target = scale(target_arr[i])
+    input_data = np.expand_dims(dataset_valid["density_low"], axis=1)
+    eval_mse_list = []
+    eval_psnr_list = []
+    eval_ssim_list = []
+    for i in range(input_data.shape[0]):
+        output_dict = model_list(
+            {
+                "density_low": paddle.to_tensor(
+                    input_data[i], dtype=paddle.get_default_dtype()
+                )
+            }
+        )
+        output_arr = scale(np.squeeze(output_dict["output_gen"].numpy()))
+        target_arr = scale(np.squeeze(dataset_valid["density_high"][i]))
 
-            eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(
-                img_target, img_pred
-            )
-            eval_mse_list.append(eval_mse)
-            eval_psnr_list.append(eval_psnr)
-            eval_ssim_list.append(eval_ssim)
+        eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(
+            target_arr, output_arr
+        )
+        eval_mse_list.append(eval_mse)
+        eval_psnr_list.append(eval_psnr)
+        eval_ssim_list.append(eval_ssim)
 
         if cfg.EVAL.save_outs:
-            from matplotlib import image as Img
-
-            os.mkdir(f"{cfg.output_dir}eval_outs/")
-            for i, image in enumerate(output_arr):
-                Img.imsave(
-                    f"{cfg.output_dir}eval_outs/out_{i}.png",
-                    image,
-                    vmin=0.0,
-                    vmax=1.0,
-                    cmap="gray",
-                )
-        logger.message(
-            f"MSE: {np.mean(eval_mse_list)}, PSNR: {np.mean(eval_psnr_list)}, SSIM: {np.mean(eval_ssim_list)}"
-        )
-        return {"dummy": 0.0}
-
-    # set validator
-    eval_dataloader_cfg = {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": {
-                "density_low": dataset_valid["density_low"],
-            },
-            "label": {"density_high": dataset_valid["density_high"]},
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
-    }
-    sup_validator = ppsci.validate.SupervisedValidator(
-        {**eval_dataloader_cfg, "batch_size": cfg.EVAL.batch_size.sup_validator},
-        ppsci.loss.MSELoss("mean"),
-        {"density_high": lambda out: out["output_gen"]},
-        metric={"metric": ppsci.metric.FunctionalMetric(metric_func_eval)},
-        name="sup_validator_gen",
+            Img.imsave(
+                osp.join(cfg.output_dir, "eval_outs", f"out_{i}.png"),
+                output_arr,
+                vmin=0.0,
+                vmax=1.0,
+                cmap="gray",
+            )
+    logger.message(
+        f"MSE: {np.mean(eval_mse_list)}, PSNR: {np.mean(eval_psnr_list)}, SSIM: {np.mean(eval_ssim_list)}"
     )
-    validator = {sup_validator.name: sup_validator}
-
-    # initialize solver
-    solver_gen = ppsci.solver.Solver(
-        model_list,
-        output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
-        seed=cfg.seed,
-        validator=validator,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
-    )
-
-    # eval gen, input: (x,)
-    solver_gen.eval()
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="tempogan.yaml")

@@ -6,8 +6,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -O datasets/tempoGAN/2d_train.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -O datasets/tempoGAN/2d_valid.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat --output datasets/tempoGAN/2d_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
@@ -18,8 +18,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -O datasets/tempoGAN/2d_train.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -O datasets/tempoGAN/2d_valid.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat -P datasets/tempoGAN/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat -P datasets/tempoGAN/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat --output datasets/tempoGAN/2d_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat --output datasets/tempoGAN/2d_valid.mat
@@ -308,37 +308,29 @@ examples/tempoGAN/tempoGAN.py:297:313
 
 具体代码请参考 [完整代码](#4) 中 tempoGAN.py 文件。
 
-#### 3.10.2 评估器构建
+#### 3.10.2 eval 中评估
 
-在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，进行评估时，对所有验证集数据都进行，因此将 `eval_dataloader_cfg`（验证集dataloader配置，构造方式与 `train_dataloader_cfg` 类似）传递给`ppsci.validate.SupervisedValidator` 来构造评估器：
+本问题的评估指标为，将模型输出的超分结果与实际高分辨率图片做对比，使用三个指标 MSE(Mean-Square Error) 、PSNR(Peak Signal-to-Noise Ratio) 、SSIM(Structural SIMilarity) 来评价图片相似度。因此没有使用 PaddleScience 中的内置评估器，也没有 `Solver.eval()` 过程。
 
-``` py linenums="374"
+``` py linenums="317"
 --8<--
-examples/tempoGAN/tempoGAN.py:374:396
---8<--
-```
-
-由于图片的评价指标较为特殊，评估器的 `metric` 需要单独构建:
-
-``` py linenums="334"
---8<--
-examples/tempoGAN/tempoGAN.py:334:372
+examples/tempoGAN/tempoGAN.py:317:380
 --8<--
 ```
 
-其中：
+另外，其中：
 
-``` py linenums="357"
+``` py linenums="370"
 --8<--
-examples/tempoGAN/tempoGAN.py:357:368
+examples/tempoGAN/tempoGAN.py:370:377
 --8<--
 ```
 
-提供了保存模型输出结果的选择，以便更直观的看出超分后的结果。是否开启由配置文件 `EVAL` 中的 `save_outs` 指定：
+提供了保存模型输出结果的选择，以便更直观的看出超分后的结果，是否开启由配置文件 `EVAL` 中的 `save_outs` 指定：
 
 ``` yaml linenums="91"
 --8<--
-examples/tempoGAN/conf/tempogan.yaml:91:97
+examples/tempoGAN/conf/tempogan.yaml:91:94
 --8<--
 ```
 
@@ -370,7 +362,7 @@ ppsci/arch/gan.py
 
 | MSE | PSNR | SSIM |
 | :---: | :---: | :---: |
-| 8.6e-5 | 43.65 | 0.9973 |
+| 4.21e-5 | 47.19 | 0.9974 |
 
 一个流体超分样例的输入、模型预测结果、[数据集介绍](#31)中开源代码包 mantaflow 直接生成的结果如下，模型预测结果与生成的目标结果基本一致。
 
