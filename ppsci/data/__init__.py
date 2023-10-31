@@ -38,18 +38,18 @@ __all__ = [
 ]
 
 
-def worker_init_fn(worker_id, num_workers, rank, base_seed):
+def worker_init_fn(worker_id: int, num_workers: int, rank: int, base_seed: int) -> None:
     """Callback function on each worker subprocess after seeding and before data loading.
 
     Args:
-        worker_id (int): Worker id in [0, num_workers - 1]
+        worker_id (int): Worker id in [0, num_workers - 1].
         num_workers (int): Number of subprocesses to use for data loading.
-        rank (int): Rank of process in distributed environment. If in non-distributed environment, it is a constant number `0`.
-        seed (int): Random seed
+        rank (int): Rank of process in distributed environment. If in non-distributed
+            environment, it is a constant number `0`.
+        base_seed (int): Base random seed.
     """
-    # The seed of each worker equals to
-    # num_worker * rank + worker_id + user_seed
-    worker_seed = num_workers * rank + worker_id + base_seed
+    # The seed of each worker equals to: user_seed + num_worker * rank + worker_id
+    worker_seed = base_seed + num_workers * rank + worker_id
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
@@ -60,7 +60,7 @@ def build_dataloader(_dataset, cfg):
     if isinstance(_dataset, io.IterableDataset):
         if world_size > 1:
             raise ValueError(
-                f"world_size({world_size}) should be 1 when using IterableDataset"
+                f"world_size({world_size}) should be 1 when using IterableDataset."
             )
         return _dataset
 
@@ -70,12 +70,13 @@ def build_dataloader(_dataset, cfg):
     sampler_cfg = cfg.pop("sampler", None)
     if sampler_cfg is not None:
         sampler_cls = sampler_cfg.pop("name")
+
         if sampler_cls == "BatchSampler":
             if world_size > 1:
                 sampler_cls = "DistributedBatchSampler"
                 logger.warning(
                     f"Automatically use 'DistributedBatchSampler' instead of "
-                    f"'BatchSampler' when world_size({world_size}) > 1"
+                    f"'BatchSampler' when world_size({world_size}) > 1."
                 )
 
         sampler_cfg["batch_size"] = cfg["batch_size"]
@@ -86,7 +87,7 @@ def build_dataloader(_dataset, cfg):
                 f"`batch_size` should be 1 when sampler config is None, but got {cfg['batch_size']}."
             )
         logger.warning(
-            "`batch_size` is set to 1 as neither sampler config or batch_size is set."
+            "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
         )
         sampler = None
 
@@ -114,7 +115,8 @@ def build_dataloader(_dataset, cfg):
             logger.error("Please install pgl with `pip install pgl`.")
             raise ModuleNotFoundError(str(e))
 
-        collate_fn = batch_transform.default_collate_fn
+        if collate_fn is None:
+            collate_fn = batch_transform.default_collate_fn
         dataloader_ = pgl_data.Dataloader(
             dataset=_dataset,
             batch_size=cfg["batch_size"],
