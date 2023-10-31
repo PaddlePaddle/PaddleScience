@@ -183,12 +183,12 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [AndPuQing](https://github.com/AndPuQing)，
     [lknt](https://github.com/lknt)，
-    [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [yangguohao](https://github.com/yangguohao)，
     [mrcangye](https://github.com/mrcangye)，
     [jjyaoao](https://github.com/jjyaoao)，
     [jiamingkong](https://github.com/jiamingkong)，
     [Liyulingyue](https://github.com/Liyulingyue)，
+    [Gxinhu](https://github.com/Gxinhu)，
     [XYM](https://github.com/XYM)，
     [xusuyong](https://github.com/xusuyong)，
     [NKNaN](https://github.com/NKNaN)，
