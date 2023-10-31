@@ -61,7 +61,7 @@ def add_self_loops(
             features. (default: :obj:`None`)
         fill_value (float or Tensor or str, optional): The way to generate
             edge features of self-loops (in case :obj:`edge_attr != None`).
-            If given as :obj:`float` or :class:`torch.Tensor`, edge features of
+            If given as :obj:`float` or :class:`paddle.Tensor`, edge features of
             self-loops will be directly given by :obj:`fill_value`.
             If given as :obj:`str`, edge features of self-loops are computed by
             aggregating all features of edges that point to the specific node,
@@ -123,7 +123,7 @@ def get_laplacian(edge_index, edge_weight: Optional[paddle.Tensor] = None,
 
             3. :obj:`"rw"`: Random-walk normalization
             :math:`\mathbf{L} = \mathbf{I} - \mathbf{D}^{-1} \mathbf{A}`
-        dtype (torch.dtype, optional): The desired data type of returned tensor
+        dtype (paddle.dtype, optional): The desired data type of returned tensor
             in case :obj:`edge_weight=None`. (default: :obj:`None`)
         num_nodes (int, optional): The number of nodes, *i.e.*
             :obj:`max_val + 1` of :attr:`edge_index`. (default: :obj:`None`)
@@ -188,7 +188,7 @@ def add_remaining_self_loops(
             features. (default: :obj:`None`)
         fill_value (float or Tensor or str, optional): The way to generate
             edge features of self-loops (in case :obj:`edge_attr != None`).
-            If given as :obj:`float` or :class:`torch.Tensor`, edge features of
+            If given as :obj:`float` or :class:`paddle.Tensor`, edge features of
             self-loops will be directly given by :obj:`fill_value`.
             If given as :obj:`str`, edge features of self-loops are computed by
             aggregating all features of edges that point to the specific node,
@@ -225,10 +225,12 @@ def add_remaining_self_loops(
             raise AttributeError("No valid 'fill_value' provided")
 
         inv_mask = ~mask
-        # loop_attr[edge_index[0][inv_mask]] = edge_attr[inv_mask]
 
         edge_attr = paddle.concat([edge_attr, loop_attr], axis=0)
-    # for _ in range(edge_index.dim()):
-    #   edge_index[_] = paddle.masked_select(edge_index[_], mask)
     edge_index = paddle.concat([edge_index, loop_index], axis=1)
     return edge_index, edge_attr
+
+def expand_left(src: paddle.Tensor, dim: int, dims: int) -> paddle.Tensor:
+    for _ in range(dims + dim if dim < 0 else dim):
+        src = src.unsqueeze(0)
+    return src

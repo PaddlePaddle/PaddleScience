@@ -157,26 +157,12 @@ def train_2d_burger(model,
             optimizer.clear_grad()
             total_loss.backward()
             optimizer.step()
-            print(optimizer.get_lr())
-            # for i, param in enumerate(model.parameters()):
-            #     print(i, '\n')
-            #     grad = param.grad
-            #     if grad is None:
-            #         pass
-            #     else:
-            #         g = grad.numpy().mean().item()
-            #         print(g)
             if i % 10==0:
                 exit()
 
             data_l2 += data_loss.item()
             train_pino += loss_f.item()
             train_loss += total_loss.item()
-        #     if i%10==0:
-        #         print(i,'\n')
-        #         print(total_loss.item())
-        #         print(scheduler.get_lr())
-        # exit()
         scheduler.step()
         data_l2 /= len(train_loader)
         train_pino /= len(train_loader)

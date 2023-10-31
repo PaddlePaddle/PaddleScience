@@ -42,7 +42,6 @@ def plot(msh_defGCNN,uabsGCNN):
 
 if __name__=='__main__':
 
-	# device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	model=LinearElasticityNet2D()
 	param_state_dict = paddle.load('demo1/init.pdparams')
 	model.set_dict(param_state_dict)
@@ -97,7 +96,6 @@ if __name__=='__main__':
 	idx_xcg=[i for i in range(xcg.shape[1]) if 2*i not in dbc_idx and 2*i+1 not in dbc_idx]
 
 	########
-	#[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
 	obsidx=np.asarray([5,11,26,32,38]) # max is 9
 	########
 
@@ -105,7 +103,6 @@ if __name__=='__main__':
 	for i in obsidx:
 		idx_whole.append(2*i)
 		idx_whole.append(2*i+1)
-	#np.savetxt('sampleidx,txt',np.asarray(idx_whole))
 	obsxcg=msh_def.xcg[:,obsidx]
 	ax1.plot(obsxcg[0,:],obsxcg[1,:],'o')
 

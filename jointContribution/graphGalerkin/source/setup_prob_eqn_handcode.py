@@ -137,9 +137,7 @@ def eval_linelast_base_handcode_srcflux(UQ, pars, x):
 		S=Double(f.reshape([ndim,1],order='F'))
 	except:
 		S=f.reshape([ndim,1])
-	#pdb.set_trace()
 	SF=paddle.concat((S,F),axis=1)
-	#print('SF=',SF)
 	dSFdU=Double(np.zeros([neqn,ndim+1,ncomp,ndim+1]))
 	for i in range(ndim):
 		for j in range(ndim):
@@ -160,7 +158,6 @@ def eval_linelast_base_handcode_bndstvc_intr_bndflux_pars(UQ,pars,x,n):
 	dUb=Double(dUb)
 	Fn=ReshapeFix(Double(Fn),[len(Fn),1],order='F')
 	dFn=Double(dFn)
-	#print('Fn=',Fn)
 	return Ub,dUb,Fn,dFn
 
 """
@@ -198,20 +195,15 @@ def eval_ins_base_handcode_srcflux(UQ,pars,x):
 	v=u[0:ndim]
 
 	v=ReshapeFix(v,[len(v),1],'F')
-	#v=v.reshape([-1,1],order='F')
 	
 	p=u[-1]
 	dv=q[0:ndim,:]
 	S=paddle.concat([-rho*paddle.mm(dv,v),-paddle.trace(dv).reshape([1,1])],axis=0)
-	#S=np.vstack([-rho*dv.dot(v),-np.trace(dv)])
 	
-	#F=np.vstack([-rho*nu*dv+p*np.eye(ndim),
-	#	         np.zeros([1,ndim])])
 	F=paddle.concat([-rho*nu*dv+p*paddle.eye(ndim, dtype='float32'),
 	             paddle.zeros([1,ndim], dtype='float32')],axis=0)
 	
 	
-	#SF= np.hstack([S,F])
 	SF=paddle.concat([S,F],axis=1)
 
 	dSFdUQ=np.zeros([neqn,ndim+1,ncomp,ndim+1])

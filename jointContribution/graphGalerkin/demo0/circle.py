@@ -25,8 +25,6 @@ sys.path.insert(0, 'utils')
 from utils import Data
 
 paddle.set_default_dtype("float32")
-# device = paddle.get_device()
-# os.environ['CUDA_VISIBLE_DEVICES'] = device.replace()
 
 def train(num):
 	# Define the Training Data
@@ -54,7 +52,6 @@ def train(num):
 	print('Min Error=',info['Er'].min())
 	print('Mean Error Last 10 iterations=',np.mean(info['Er'][-10:]))
 	print('Var  Error Last 10 iterations=',np.var(info['Er'][-10:]))
-	# paddle.save(model, './modelCircleDet.pth')
 
 	np.savetxt('demo0\ErFinal.txt', info['Er'])
 	np.savetxt('demo0\Loss.txt', info['Loss'])

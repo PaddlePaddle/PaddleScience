@@ -14,18 +14,12 @@ def broadcast(src: paddle.Tensor, other: paddle.Tensor, dim: int):
     return src
 
 def scatter_add_(dim, index, src, x):
-    # for i in range(len(index)):
-    #     x[index[i]] += src[i]
     if x.dim()==1:
         output = paddle.scatter_nd_add(x.unsqueeze(-1), index.unsqueeze(-1), src.unsqueeze(-1)).squeeze(-1)
     else:
         i, j = index.shape
         grid_x , grid_y = paddle.meshgrid(paddle.arange(i), paddle.arange(j))
-        # 若 PyTorch 的 dim 取 0
         index = paddle.stack([index.flatten(), grid_y.flatten()], axis=1)
-        # 若 PyTorch 的 dim 取 1
-        # index = paddle.stack([grid_x.flatten(), index.flatten()], axis=1)
-        # PaddlePaddle updates 的 shape 大小必须与 index 对应
         updates_index = paddle.stack([grid_x.flatten(), grid_y.flatten()], axis=1)
         updates = paddle.gather_nd(src, index=updates_index)
         output = paddle.scatter_nd_add(x, index, updates)
@@ -53,11 +47,6 @@ def scatter_add(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                 dim_size: Optional[int] = None) -> paddle.Tensor:
     return scatter_sum(src, index, dim, out, dim_size)
 
-def scatter_mul(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-                out: Optional[paddle.Tensor] = None,
-                dim_size: Optional[int] = None) -> paddle.Tensor:
-    return paddle.ops.torch_scatter.scatter_mul(src, index, dim, out, dim_size)
-
 def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
                  out: Optional[paddle.Tensor] = None,
                  dim_size: Optional[int] = None) -> paddle.Tensor:
@@ -81,31 +70,10 @@ def scatter_mean(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         out.floor_divide_(count)
     return out
 
-def scatter_min(
-        src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-        out: Optional[paddle.Tensor] = None,
-        dim_size: Optional[int] = None) -> Tuple[paddle.Tensor, paddle.Tensor]:
-    return paddle.ops.torch_scatter.scatter_min(src, index, dim, out, dim_size)
-
-def scatter_max(
-        src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
-        out: Optional[paddle.Tensor] = None,
-        dim_size: Optional[int] = None) -> Tuple[paddle.Tensor, paddle.Tensor]:
-    return paddle.ops.torch_scatter.scatter_max(src, index, dim, out, dim_size)
-
 def scatter(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
             out: Optional[paddle.Tensor] = None, dim_size: Optional[int] = None,
             reduce: str = "sum") -> paddle.Tensor:
     r"""
-    |
-
-    .. image:: https://raw.githubusercontent.com/rusty1s/pytorch_scatter/
-            master/docs/source/_figures/add.svg?sanitize=true
-        :align: center
-        :width: 400px
-
-    |
-
     Reduces all values from the :attr:`src` tensor into :attr:`out` at the
     indices specified in the :attr:`index` tensor along a given axis
     :attr:`dim`.
@@ -152,32 +120,10 @@ def scatter(src: paddle.Tensor, index: paddle.Tensor, dim: int = -1,
         :obj:`"mean"`, :obj:`"min"` or :obj:`"max"`). (default: :obj:`"sum"`)
 
     :rtype: :class:`Tensor`
-
-    .. code-block:: python
-
-        from torch_scatter import scatter
-
-        src = torch.randn(10, 6, 64)
-        index = torch.tensor([0, 1, 0, 1, 2, 1])
-
-        # Broadcasting in the first and last dim.
-        out = scatter(src, index, dim=1, reduce="sum")
-
-        print(out.size())
-
-    .. code-block::
-
-        torch.Size([10, 3, 64])
     """
     if reduce == 'sum' or reduce == 'add':
         return scatter_sum(src, index, dim, out, dim_size)
-    if reduce == 'mul':
-        return scatter_mul(src, index, dim, out, dim_size)
     elif reduce == 'mean':
         return scatter_mean(src, index, dim, out, dim_size)
-    elif reduce == 'min':
-        return scatter_min(src, index, dim, out, dim_size)[0]
-    elif reduce == 'max':
-        return scatter_max(src, index, dim, out, dim_size)[0]
     else:
         raise ValueError

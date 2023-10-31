@@ -74,10 +74,6 @@ def train_3d(args, config):
 def train_2d(args, config):
     data_config = config['data']
 
-    # dataset = DarcyFlow(data_config['datapath'],
-                        # nx=data_config['nx'], sub=data_config['sub'],
-                        # offset=data_config['offset'], num=data_config['n_sample'])
-
     dataset = DarcyCombo(datapath=data_config['datapath'], 
                          nx=data_config['nx'], 
                          sub=data_config['sub'], 

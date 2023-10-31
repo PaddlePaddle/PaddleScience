@@ -53,9 +53,6 @@ def get_sample(N, T, s, p, q):
     sample_bc_t =  paddle.cat([sample_bc, sample_bc],dim=1)
     sample_bc_x = paddle.cat([paddle.zeros(N, p//2), paddle.ones(N, p//2)],dim=1)
 
-    # sample I
-    # sample_i_t = paddle.rand(size=(N,q))
-    # sample_i_t = paddle.rand(size=(N,q))**2
     sample_i_t = -paddle.cos(paddle.rand(size=(N, q))*np.pi/2) + 1
     sample_i_x = paddle.rand(size=(N,q))
 
@@ -89,7 +86,7 @@ def get_2dgrid(S):
     points = np.stack([xx.ravel(), yy.ravel()], axis=0).T
     return points
 
-def torch2dgrid(num_x, num_y, bot=(0,0), top=(1,1)):
+def paddle2dgrid(num_x, num_y, bot=(0,0), top=(1,1)):
     x_bot, y_bot = bot
     x_top, y_top = top
     x_arr = paddle.linspace(x_bot, x_top, num=num_x)

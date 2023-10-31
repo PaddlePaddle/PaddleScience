@@ -39,7 +39,6 @@ def train():
 	Graph.append(graph)
 	DataList=[[Graph[0]]]
 	TrainDataloader=DataList
-	# device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	model=LinearElasticityNet2D()
 	[model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)
 	np.save('modelCircleDet.npy',info)

@@ -10,23 +10,10 @@ def FDM_Darcy(u, a, D=1):
     dx = D / (size - 1)
     dy = dx
 
-    # ux: (batch, size-2, size-2)
     ux = (u[:, 2:, 1:-1] - u[:, :-2, 1:-1]) / (2 * dx)
     uy = (u[:, 1:-1, 2:] - u[:, 1:-1, :-2]) / (2 * dy)
 
-    # ax = (a[:, 2:, 1:-1] - a[:, :-2, 1:-1]) / (2 * dx)
-    # ay = (a[:, 1:-1, 2:] - a[:, 1:-1, :-2]) / (2 * dy)
-    # uxx = (u[:, 2:, 1:-1] -2*u[:,1:-1,1:-1] +u[:, :-2, 1:-1]) / (dx**2)
-    # uyy = (u[:, 1:-1, 2:] -2*u[:,1:-1,1:-1] +u[:, 1:-1, :-2]) / (dy**2)
-
     a = a[:, 1:-1, 1:-1]
-    # u = u[:, 1:-1, 1:-1]
-    # Du = -(ax*ux + ay*uy + a*uxx + a*uyy)
-
-    # inner1 = paddle.mean(a*(ux**2 + uy**2), dim=[1,2])
-    # inner2 = paddle.mean(f*u, dim=[1,2])
-    # return 0.5*inner1 - inner2
-
     aux = a * ux
     auy = a * uy
     auxx = (aux[:, 2:, 1:-1] - aux[:, :-2, 1:-1]) / (2 * dx)
@@ -41,25 +28,9 @@ def darcy_loss(u, a):
     a = a.reshape(batchsize, size, size)
     lploss = LpLoss(size_average=True)
 
-    # index_x = paddle.cat([paddle.tensor(range(0, size)), (size - 1) * paddle.ones(size), paddle.tensor(range(size-1, 1, -1)),
-    #                      paddle.zeros(size)], dim=0).long()
-    # index_y = paddle.cat([(size - 1) * paddle.ones(size), paddle.tensor(range(size-1, 1, -1)), paddle.zeros(size),
-    #                      paddle.tensor(range(0, size))], dim=0).long()
-
-    # boundary_u = u[:, index_x, index_y]
-    # truth_u = paddle.zeros(boundary_u.shape, device=u.device)
-    # loss_u = lploss.abs(boundary_u, truth_u)
-
     Du = FDM_Darcy(u, a)
     f = paddle.ones(Du.shape)
     loss_f = lploss.rel(Du, f)
-
-    # im = (Du-f)[0].detach().cpu().numpy()
-    # plt.imshow(im)
-    # plt.show()
-
-    # loss_f = FDM_Darcy(u, a)
-    # loss_f = paddle.mean(loss_f)
     return loss_f
 
 def FDM_NS_vorticity(w, v=1/40, t_interval=1.0):
@@ -112,7 +83,6 @@ def Autograd_Burgers(u, grid, v=1/100):
 
 def AD_loss(u, u0, grid, index_ic=None, p=None, q=None):
     batchsize = u.size(0)
-    # lploss = LpLoss(size_average=True)
 
     Du, ux, uxx, ut = Autograd_Burgers(u, grid)
 
@@ -125,17 +95,11 @@ def AD_loss(u, u0, grid, index_ic=None, p=None, q=None):
         index_t = paddle.zeros(nx,).long()
         index_x = paddle.tensor(range(nx)).long()
         boundary_u = u[:, index_t, index_x]
-
-        # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
-        # loss_bc1 = F.mse_loss(ux[:, :, 0], ux[:, :, -1])
     else:
         # u is randomly sampled, 0:p are BC, p:2p are ic, 2p:2p+q are interior
         boundary_u = u[:, :p]
         batch_index = paddle.tensor(range(batchsize)).reshape(batchsize, 1).repeat(1, p)
         u0 = u0[batch_index, index_ic]
-
-        # loss_bc0 = F.mse_loss(u[:, p:p+p//2], u[:, p+p//2:2*p])
-        # loss_bc1 = F.mse_loss(ux[:, p:p+p//2], ux[:, p+p//2:2*p])
 
     loss_ic = F.mse_loss(boundary_u, u0)
     f = paddle.zeros(Du.shape, device=u.device)
@@ -218,22 +182,16 @@ def PINO_loss(u, u0, v):
     nx = u.shape[2]
 
     u = u.reshape([batchsize, nt, nx])
-    # lploss = LpLoss(size_average=True)
 
     index_t = paddle.zeros(1,'int32')
     index_x = paddle.to_tensor(list(range(nx)),'int32')
     boundary_u = paddle.index_select(u, index_t, axis=1).squeeze(1)
-    # boundary_u = paddle.index_select(boundary_u, index_x, axis=2)
-    # boundary_u = u[:, index_t, index_x]
     loss_u = F.mse_loss(boundary_u, u0)
 
     Du = FDM_Burgers(u, v)[:, :, :]
     f = paddle.zeros(Du.shape)
     loss_f = F.mse_loss(Du, f)
 
-    # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
-    # loss_bc1 = F.mse_loss((u[:, :, 1] - u[:, :, -1]) /
-    #                       (2/(nx)), (u[:, :, 0] - u[:, :, -2])/(2/(nx)))
     return loss_u, loss_f
 
 def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):

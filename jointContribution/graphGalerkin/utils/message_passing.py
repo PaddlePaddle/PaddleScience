@@ -1,26 +1,17 @@
-from typing import List, Optional, Set, Callable, get_type_hints
+from typing import List, Optional, Set, Tuple
 
-import os
-import re
-import inspect
-import os.path as osp
 from uuid import uuid1
-from itertools import chain
 from inspect import Parameter
 from collections import OrderedDict
 
 import paddle
 from paddle import Tensor
-from jinja2 import Template
 
 from inspector import Inspector
-from name import Size, Adj
-from helpers import expand_left
-from segment_csr import segment_csr, gather_csr
 from scatter import scatter
-from sparsetensor import SparseTensor
 from paddle.nn import Layer
 
+Size = Optional[Tuple[int, int]]
 class MessagePassing(Layer):
     r"""Base class for creating message passing layers of the form
 
@@ -33,8 +24,6 @@ class MessagePassing(Layer):
     function, *e.g.*, sum, mean or max, and :math:`\gamma_{\mathbf{\Theta}}`
     and :math:`\phi_{\mathbf{\Theta}}` denote differentiable functions such as
     MLPs.
-    See `here <https://pytorch-geometric.readthedocs.io/en/latest/notes/
-    create_gnn.html>`__ for the accompanying tutorial.
 
     Args:
         aggr (string, optional): The aggregation scheme to use
@@ -53,11 +42,6 @@ class MessagePassing(Layer):
             the feature dimensions into separated feature decomposition layers
             during GNN aggregation.
             This method can accelerate GNN execution on CPU-based platforms
-            (*e.g.*, 2-3x speedup on the
-            :class:`~torch_geometric.datasets.Reddit` dataset) for common GNN
-            models such as :class:`~torch_geometric.nn.models.GCN`,
-            :class:`~torch_geometric.nn.models.GraphSAGE`,
-            :class:`~torch_geometric.nn.models.GIN`, etc.
             However, this method is not applicable to all GNN operators
             available, in particular for operators in which message computation
             can not easily be decomposed, *e.g.* in attention-based GNNs.
@@ -93,7 +77,6 @@ class MessagePassing(Layer):
         self.inspector = Inspector(self)
         self.inspector.inspect(self.message)
         self.inspector.inspect(self.aggregate, pop_first=True)
-        self.inspector.inspect(self.message_and_aggregate, pop_first=True)
         self.inspector.inspect(self.update, pop_first=True)
         self.inspector.inspect(self.edge_update)
 
@@ -137,14 +120,6 @@ class MessagePassing(Layer):
         if isinstance(edge_index, Tensor):
             index = edge_index[dim]
             return src.index_select(index, self.node_dim)
-        elif isinstance(edge_index, SparseTensor):
-            if dim == 1:
-                rowptr = edge_index.storage.rowptr()
-                rowptr = expand_left(rowptr, dim=self.node_dim, dims=src.dim())
-                return gather_csr(src, rowptr)
-            elif dim == 0:
-                col = edge_index.storage.col() ###########
-                return src.index_select(self.node_dim, col) 
         raise ValueError
     
     def __collect__(self, args, edge_index, size, kwargs):
@@ -177,18 +152,6 @@ class MessagePassing(Layer):
             out['edge_index_i'] = edge_index[i]
             out['edge_index_j'] = edge_index[j]
             out['ptr'] = None
-        elif isinstance(edge_index, SparseTensor):
-            out['adj_t'] = edge_index
-            out['edge_index'] = None
-            out['edge_index_i'] = edge_index.storage.row()
-            out['edge_index_j'] = edge_index.storage.col()
-            out['ptr'] = edge_index.storage.rowptr()
-            if out.get('edge_weight', None) is None:
-                out['edge_weight'] = edge_index.storage.value()
-            if out.get('edge_attr', None) is None:
-                out['edge_attr'] = edge_index.storage.value()
-            if out.get('edge_type', None) is None:
-                out['edge_type'] = edge_index.storage.value()
 
         out['index'] = out['edge_index_i']
         out['size'] = size
@@ -210,78 +173,24 @@ class MessagePassing(Layer):
                 the_size[1] = size[1]
             return the_size
 
-        elif isinstance(edge_index, SparseTensor):
-            if self.flow == 'target_to_source':
-                raise ValueError(
-                    ('Flow direction "target_to_source" is invalid for '
-                     'message propagation via `torch_sparse.SparseTensor`. If '
-                     'you really want to make use of a reverse message '
-                     'passing flow, pass in the transposed sparse tensor to '
-                     'the message passing module, e.g., `adj_t.t()`.'))
-            the_size[0] = edge_index.sparse_size(1)
-            the_size[1] = edge_index.sparse_size(0)
-            return the_size
-
         raise ValueError(
-            ('`MessagePassing.propagate` only supports `torch.LongTensor` of '
-             'shape `[2, num_messages]` or `torch_sparse.SparseTensor` for '
+            ('`MessagePassing.propagate` only supports `int` of '
+             'shape `[2, num_messages]` for '
              'argument `edge_index`.'))
-    
-    # def register_parameter(self, name: str, param: Optional[Parameter]) -> None:
-        r"""Adds a parameter to the module.
 
-        The parameter can be accessed as an attribute using given name.
-
-        Args:
-            name (string): name of the parameter. The parameter can be accessed
-                from this module using the given name
-            param (Parameter): parameter to be added to the module.
-        """
-        if '_parameters' not in self.__dict__:
-            raise AttributeError(
-                "cannot assign parameter before Module.__init__() call")
-
-        elif not isinstance(name, torch._six.string_classes):
-            raise TypeError("parameter name should be a string. "
-                            "Got {}".format(torch.typename(name)))
-        elif '.' in name:
-            raise KeyError("parameter name can't contain \".\"")
-        elif name == '':
-            raise KeyError("parameter name can't be empty string \"\"")
-        elif hasattr(self, name) and name not in self._parameters:
-            raise KeyError("attribute '{}' already exists".format(name))
-
-        if param is None:
-            self._parameters[name] = None
-        elif not isinstance(param, Parameter):
-            raise TypeError("cannot assign '{}' object to parameter '{}' "
-                            "(torch.nn.Parameter or None required)"
-                            .format(torch.typename(param), name))
-        elif param.grad_fn:
-            raise ValueError(
-                "Cannot assign non-leaf Tensor to parameter '{0}'. Model "
-                "parameters must be created explicitly. To express '{0}' "
-                "as a function of another Tensor, compute the value in "
-                "the forward() method.".format(name))
-        else:
-            self._parameters[name] = param
-
-    def propagate(self, edge_index: Adj, size: Size = None, **kwargs):
+    def propagate(self, edge_index: Tensor, size: Size = None, **kwargs):
         r"""The initial call to start propagating messages.
 
         Args:
-            edge_index (Tensor or SparseTensor): A :obj:`torch.LongTensor` or a
-                :obj:`torch_sparse.SparseTensor` that defines the underlying
-                graph connectivity/message passing flow.
+            edge_index (Tensor): A :obj:`int` or a
                 :obj:`edge_index` holds the indices of a general (sparse)
                 assignment matrix of shape :obj:`[N, M]`.
-                If :obj:`edge_index` is of type :obj:`torch.LongTensor`, its
+                If :obj:`edge_index` is of type :obj:`int`, its
                 shape must be defined as :obj:`[2, num_messages]`, where
                 messages from nodes in :obj:`edge_index[0]` are sent to
                 nodes in :obj:`edge_index[1]`
                 (in case :obj:`flow="source_to_target"`).
                 If :obj:`edge_index` is of type
-                :obj:`torch_sparse.SparseTensor`, its sparse indices
                 :obj:`(row, col)` should relate to :obj:`row = edge_index[1]`
                 and :obj:`col = edge_index[0]`.
                 The major difference between both formats is that we need to
@@ -291,8 +200,6 @@ class MessagePassing(Layer):
                 matrix in case :obj:`edge_index` is a :obj:`LongTensor`.
                 If set to :obj:`None`, the size will be automatically inferred
                 and assumed to be quadratic.
-                This argument is ignored in case :obj:`edge_index` is a
-                :obj:`torch_sparse.SparseTensor`. (default: :obj:`None`)
             **kwargs: Any additional data which is needed to construct and
                 aggregate messages, and to update node embeddings.
         """
@@ -305,29 +212,7 @@ class MessagePassing(Layer):
 
         size = self.__check_input__(edge_index, size)
 
-        # Run "fused" message and aggregation (if applicable).
-        if (isinstance(edge_index, SparseTensor) and self.fuse
-                and not self.__explain__):
-            coll_dict = self.__collect__(self.__fused_user_args__, edge_index,
-                                         size, kwargs)
-
-            msg_aggr_kwargs = self.inspector.distribute(
-                'message_and_aggregate', coll_dict)
-            for hook in self._message_and_aggregate_forward_pre_hooks.values():
-                res = hook(self, (edge_index, msg_aggr_kwargs))
-                if res is not None:
-                    edge_index, msg_aggr_kwargs = res
-            out = self.message_and_aggregate(edge_index, **msg_aggr_kwargs)
-            for hook in self._message_and_aggregate_forward_hooks.values():
-                res = hook(self, (edge_index, msg_aggr_kwargs), out)
-                if res is not None:
-                    out = res
-
-            update_kwargs = self.inspector.distribute('update', coll_dict)
-            out = self.update(out, **update_kwargs)
-
-        # Otherwise, run both functions in separation.
-        elif isinstance(edge_index, Tensor) or not self.fuse:
+        if isinstance(edge_index, Tensor) or not self.fuse:
             if decomposed_layers > 1:
                 user_args = self.__user_args__
                 decomp_args = {a[:-2] for a in user_args if a[-2:] == '_j'}
@@ -423,12 +308,8 @@ class MessagePassing(Layer):
         that support "add", "mean" and "max" operations as specified in
         :meth:`__init__` by the :obj:`aggr` argument.
         """
-        if ptr is not None:
-            ptr = expand_left(ptr, dim=self.node_dim, dims=inputs.dim())
-            return segment_csr(inputs, ptr, reduce=self.aggr)
-        else:
-            return scatter(inputs, index, dim=self.node_dim, dim_size=dim_size,
-                           reduce=self.aggr)
+        return scatter(inputs, index, dim=self.node_dim, dim_size=dim_size,
+                        reduce=self.aggr)
         
     def update(self, inputs: Tensor) -> Tensor:
         r"""Updates node embeddings in analogy to
@@ -446,15 +327,5 @@ class MessagePassing(Layer):
         Furthermore, tensors passed to :meth:`edge_updater` can be mapped to
         the respective nodes :math:`i` and :math:`j` by appending :obj:`_i` or
         :obj:`_j` to the variable name, *.e.g.* :obj:`x_i` and :obj:`x_j`.
-        """
-        raise NotImplementedError
-    
-    def message_and_aggregate(self, adj_t: SparseTensor) -> Tensor:
-        r"""Fuses computations of :func:`message` and :func:`aggregate` into a
-        single function.
-        If applicable, this saves both time and memory since messages do not
-        explicitly need to be materialized.
-        This function will only gets called in case it is implemented and
-        propagation takes place based on a :obj:`torch_sparse.SparseTensor`.
         """
         raise NotImplementedError

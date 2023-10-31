@@ -5,7 +5,6 @@ import paddle
 from paddle.optimizer.lr import MultiStepDecay
 from paddle.optimizer import Adam
 from models import FNO2d
-# from train_utils import Adam
 from train_utils.datasets import BurgersLoader
 from train_utils.train_2d import train_2d_burger
 from train_utils.eval_2d import eval_burgers
@@ -18,7 +17,7 @@ def run(args, config):
     train_loader = dataset.make_loader(n_sample=data_config['n_sample'],
                                        batch_size=config['train']['batchsize'],
                                        start=data_config['offset'])
-    # NOTE:the loader shuffle is false
+
     model = FNO2d(modes1=config['model']['modes1'],
                   modes2=config['model']['modes2'],
                   fc_dim=config['model']['fc_dim'],
