@@ -155,9 +155,9 @@
     <a href="https://github.com/enkilee"><img class="avatar" src="https://avatars.githubusercontent.com/enkilee" alt="avatar" /></a>
     <a href="https://github.com/GreatV"><img class="avatar" src="https://avatars.githubusercontent.com/GreatV" alt="avatar" /></a>
 
---8<--
-./README.md:cooperation
---8<--
+## 🤝合作单位
+
+![cooperation](./images/overview/collaboration.png)
 
 --8<--
 ./README.md:license

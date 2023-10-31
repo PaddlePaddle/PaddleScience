@@ -201,7 +201,7 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 <!-- --8<-- [start:cooperation] -->
 ## 🤝合作单位
 
-![cooperation](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/cooperation.png)
+![cooperation](./docs/images/overview/collaboration.png)
 <!-- --8<-- [end:cooperation] -->
 
 <!-- --8<-- [start:license] -->
