@@ -180,7 +180,9 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 - PaddleScience 的部分案例和代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
     [Asthestarsfalll](https://github.com/Asthestarsfalll)，
     [co63oc](https://github.com/co63oc)，
+    [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [AndPuQing](https://github.com/AndPuQing)，
+    [lknt](https://github.com/lknt)，
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [yangguohao](https://github.com/yangguohao)，
     [mrcangye](https://github.com/mrcangye)，
