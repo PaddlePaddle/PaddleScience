@@ -40,15 +40,12 @@ def create_fem_resjac(fespc,Uf,transf_data,elem,elem_data,ldof2gdof_eqn,ldof2gdo
 	dbc_idx=paddle.to_tensor(dbc.dbc_idx)
 	dbc_val=dbc.dbc_val
 	free_idx=dbc.free_idx
-	# Uf is the GCNN output
 	Uf=ReshapeFix(Uf,[ndof_var,1],'C')
 	U_temp=paddle.to_tensor(paddle.zeros([ndof_var,1]), dtype='float32', place=place, stop_gradient=False)
 	src = paddle.to_tensor(dbc_val, dtype='float32', place=place, stop_gradient=False).reshape([len(dbc_val),1])-paddle.index_select(Uf,dbc_idx)
 	U_temp = paddle.scatter_nd_add(U_temp, dbc_idx.reshape([-1, 1]), src.reshape([-1, 1]))
 	U_temp[dbc_idx]=paddle.to_tensor(dbc_val, dtype='float32', place=place, stop_gradient=False).reshape([len(dbc_val),1])-Uf[dbc_idx]
 	U=U_temp+Uf
-	# U = Uf
-	# 
 	# U is the GCNN output hardimpose BC but can backPP
 	if fespc=='cg' or fespc=='CG':
 		Re,dRe=eval_unassembled_resjac_claw_cg(U,transf_data,elem,elem_data,
@@ -98,7 +95,6 @@ def intg_elem_claw_vol(Ue,transf_data,elem,elem_data,e,parsfuncI=None, model=Non
 		dSFdU=ReshapeFix(dSFdU,[neqn*(ndim+1),nvar*(ndim+1)],order='F')
 		Teqn=Double(Teqn)
 		Tvar=Double(Tvar)
-		#SF=SF.flatten()
 		SF=ReshapeFix(SF,[len(SF.flatten()),1])
 		Re=Re-w[k]*ReshapeFix(paddle.matmul(Teqn,SF),Re.shape,order='F')
 		dRe=dRe-w[k]*paddle.matmul(Teqn,paddle.matmul(dSFdU,Tvar.T))
@@ -165,29 +161,11 @@ def assemble_nobc_vec(Fe,ldof2gdof_eqn):
 	F=np.zeros(shape=[ndof, 1])
 	F=Double(F)
 	F.stop_gradient=False
-	# for e in range(nelem):
 	idx=paddle.to_tensor(ldof2gdof_eqn.reshape([-1, 1]))
 	src = Fe.reshape([-1, 1])
 	F = paddle.scatter_nd_add(F, idx, src)
 	return F
 
-'''
-def solve_fem(fespc,transf_data,elem, 
-			  elem_data,ldof2gdof_eqn, 
-			  ldof2gdof_var, e2e, spmat, 
-			  dbc,DataLoader,model,tol=1e-3,maxit=2000):
-	"""Wrapper""" 
-	ndof_var=np.max(ldof2gdof_var[:])+1
-	dbc_idx=dbc.dbc_idx
-	dbc_val=dbc.dbc_val
-	free_idx=dbc.free_idx
-
-	fcn=lambda u_:create_fem_resjac(fespc,u_,transf_data,
-	                                elem,elem_data,ldof2gdof_eqn,
-									ldof2gdof_var,e2e,spmat,dbc)
-	model,info=solve_SGD(DataLoader,fcn,model,tol,maxit)
-	return model, info
-'''
 def solve_fem_GCNN(DataLoader,LossF,model,tol=1e-3,maxit=2000,qoiidx=None,softidx=None,penaltyConstant=None):
 	"""Wrapper""" 
 	startime=time.time()
@@ -222,11 +200,7 @@ def solve_SGD(DataLoader,LossF,model,tol,maxit,qoiidx,softidx,penaltyConstant,pl
 		if loss<tol or er<tol_e[idx_tol_e]:
 			idx_tol_e=idx_tol_e+1
 			print('The training reaches the expected loss!')
-			# paddle.save(model,'./Er_'+str(er)+'Epoch_'+str(epoch)+'.pth')
-			# np.savetxt('./Er_'+str(er)+'Epoch_'+str(epoch)+'.txt',np.asarray(Er))
-			# np.savetxt('./Loss_'+str(loss)+'Epoch_'+str(epoch)+'.txt',np.asarray(Loss))
 			pass
-	# paddle.save(model,'./Er_'+str(er)+'Epoch_'+str(epoch)+'.pth')
 	np.savetxt('./Er_'+str(er)+'Epoch_'+str(epoch)+'.txt',np.asarray(Er))
 	np.savetxt('./Loss_'+str(loss)+'Epoch_'+str(epoch)+'.txt',np.asarray(Loss))
 	if plotFlag:
@@ -250,7 +224,6 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 	optimizer.clear_grad()
 	for data in DataLoader:
 		input=data[0]
-		# .to('cuda')
 		fcn_id=data[0].y[0,0]
 		truth=data[0].y[1:,0:]
 		fcn=LossF[int(fcn_id)]
@@ -258,28 +231,21 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 		'The loss function is selected right!'
 		tic=time.time()
 		output = model(input)
-		# print(paddle.grad(output, model.parameters(), retain_graph=True))
-		# raise ValueError
 		Re,dRe,dbc=fcn(output)
 		print('wallclock time of evl Res= ',time.time()-tic)
 		ReList.append(paddle.abs(Re))
-		#loss=loss+torch.norm(Re)#criterion(output,truth)#torch.max(torch.abs(Re)) #
 		solution=ReshapeFix(paddle.clone(output),[len(output.flatten()),1],'C')
 		solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
 		er_0=er_0+paddle.sqrt(criterion(solution,truth)/criterion(truth,truth*0)).item()
-		#loss_0=loss_0+loss.item()
 		erlist.append(paddle.sqrt(criterion(solution,truth)/criterion(truth,truth*0)).item())
 	loss=ReList[0]*0
 	for i in range(len(ReList)):
 		loss=loss+ReList[i]
 	print('max Res=',loss.abs().max().item())
-	#print(loss)
-	loss=paddle.norm(loss)#loss.max()#
+	loss=paddle.norm(loss)
 	if softidx is not None and penaltyConstant is not None:
 		print('DataLoss = ',criterion(solution[softidx],truth[softidx])*penaltyConstant)
 		loss=criterion(solution[softidx],truth[softidx])*penaltyConstant + loss
-		#print(solution-truth)
-		#pdb.set_trace()
 	else:
 		pass
 	if qoiidx is not None:
@@ -301,18 +267,11 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 	grad_list = []
 	for n, tensor in model.named_parameters():
 		grad = tensor.grad
-		# print('gradient is',n, grad)
 		grad_list.append(grad.numpy()) 
 		break
-	# exit()
-	# np.savetxt('demo1/grad.txt',grad_list, fmt='%s')
 	print('wallclock time of this BP= ',time.time()-tic)
 	optimizer.step()
 	param_list = []
-	# for tensor in model.parameters():
-	# 	param_list.append(tensor.numpy())
-	# 	print('param is',tensor)
-	# 	break
 	np.savetxt('demo1/param.txt',param_list, fmt='%s')
 	print('>>>>>>>max error<<<<<<< ====================================', max(erlist))
 	try:
@@ -328,34 +287,7 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 		file3.close()
 	except:
 		pass
-	#print('mean error = ',er_0/len(DataLoader))
-	#print('mean loss = ',loss.norm().item()/len(DataLoader))
 	return er_0/len(DataLoader),loss.norm().item()/len(DataLoader),model
-
-'''
-def trainmodel(DataLoader,fcn,model,optimizer,criterion):
-	model.train()
-	er_0=0;loss_0=0
-	batchNum=0
-	for data,truth in DataLoader:
-		data = data.to('cuda')
-		truth = truth.to('cuda').reshape([1,-1,1])
-		optimizer.zero_grad()
-		output = model(data)
-		Re,dRe,dbc=fcn(output)
-		loss=torch.norm(Re)#torch.max(torch.abs(Re)) #
-		solution=output
-		solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
-		print('Batch '+str(batchNum)+', Relative Error = ', 
-			  torch.sqrt(criterion(solution,truth)/criterion(truth,truth*0)).item())
-		print('Batch '+str(batchNum)+', Loss = ',loss.item())
-		loss.backward()
-		optimizer.step()
-		er_0=er_0+torch.sqrt(criterion(solution,truth)/criterion(truth,truth*0)).item()
-		loss_0=loss_0+loss.item()
-		batchNum=batchNum+1
-	return er_0/len(DataLoader),loss_0/len(DataLoader),model
-'''	
 
 def Reshape(input, Shape,order='F'):
 	if order=='F':

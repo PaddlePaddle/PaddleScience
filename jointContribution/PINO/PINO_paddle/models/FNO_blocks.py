@@ -82,7 +82,6 @@ def _contract_cp(x, cp_weight, separable=False):
         x_syms + "," + rank_sym + "," + ",".join(factor_syms) + "->" + "".join(out_syms)
     )
 
-    # return tl.einsum(eq, x, cp_weight.weights, *cp_weight.factors)
     return paddle.einsum(eq, x, cp_weight.weights, *cp_weight.factors)
 
 def _contract_tucker(x, tucker_weight, separable=False):
@@ -94,7 +93,6 @@ def _contract_tucker(x, tucker_weight, separable=False):
     out_syms = list(x_syms)
     if separable:
         core_syms = einsum_symbols[order + 1 : 2 * order]
-        # factor_syms = [einsum_symbols[1]+core_syms[0]] #in only
         factor_syms = [xs + rs for (xs, rs) in zip(x_syms[1:], core_syms)]  # x, y, ...
 
     else:
@@ -118,7 +116,6 @@ def _contract_tucker(x, tucker_weight, separable=False):
         + "".join(out_syms)
     )
     print(eq)  # 'abcd,fghi,bf,eg,ch,di->aecd'
-    # return tl.einsum(eq, x, tucker_weight.core, *tucker_weight.factors)
     return paddle.einsum(eq, x, tucker_weight.core, *tucker_weight.factors)
 
 def _contract_tt(x, tt_weight, separable=False):
@@ -145,7 +142,6 @@ def _contract_tt(x, tt_weight, separable=False):
         + "".join(out_syms)
     )
 
-    # return tl.einsum(eq, x, *tt_weight.factors)
     return paddle.einsum(eq, x, *tt_weight.factors)
 
 def get_contract_fun(weight, implementation="reconstructed", separable=False):
@@ -153,7 +149,7 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
     
     Parameters
     ----------
-    weight : tensorly-torch's FactorizedTensor
+    weight : tensorl-paddle's FactorizedTensor
     implementation : {'reconstructed', 'factorized'}, default is 'reconstructed'
         whether to reconstruct the weight and do a forward pass (reconstructed)
         or contract directly the factors of the factorized weight with the input (factorized)
@@ -169,22 +165,8 @@ def get_contract_fun(weight, implementation="reconstructed", separable=False):
         else:
             return _contract_dense
     elif implementation == "factorized":
-        # if torch.is_tensor(weight):
-        #     return _contract_dense
         if isinstance(weight, paddle.Tensor):
             return _contract_dense_trick
-        # TODO: FactorizedTensor not supported yet
-        # elif isinstance(weight, FactorizedTensor):
-        #     if weight.name.lower() == 'complexdense':
-        #         return _contract_dense
-        #     elif weight.name.lower() == 'complextucker':
-        #         return _contract_tucker
-        #     elif weight.name.lower() == 'complextt':
-        #         return _contract_tt
-        #     elif weight.name.lower() == 'complexcp':
-        #         return _contract_cp
-        #     else:
-        #         raise ValueError(f'Got unexpected factorized weight type {weight.name}')
         else:
             raise ValueError(
                 f"Got unexpected weight type of class {weight.__class__.__name__}"
@@ -316,18 +298,10 @@ class FactorizedSpectralConv(nn.Layer):
         self.separable = separable
 
         if joint_factorization:
-            # self.weight = FactorizedTensor.new(
-            #     ((2 ** (self.order - 1)) * n_layers, *weight_shape),
-            #     rank=self.rank,
-            #     factorization=factorization,
-            #     fixed_rank_modes=fixed_rank_modes,
-            #     **decomposition_kwargs,
-            # )
             self.weight = paddle.create_parameter(
                 shape=((2 ** (self.order - 1)) * n_layers, *weight_shape),
                 dtype="float32",
             )
-            # self.weight.normal_(0, scale)
         else:
             self.weight = nn.LayerList(
                 [
@@ -353,7 +327,7 @@ class FactorizedSpectralConv(nn.Layer):
         
         Parameters 
         ----------
-        x : torch.Tensor
+        x : paddle.Tensor
             input activation of size (batch_size, channels, d1, ..., dN)
         indices : int, default is 0
             if joint_factorization, index of the layers for n_layers > 1
@@ -369,7 +343,7 @@ class FactorizedSpectralConv(nn.Layer):
         # Compute Fourier coeffcients
         fft_dims = list(range(-self.order, 0))
 
-        # put x back in to real, as in torch x.float()
+        # put x back in to real, as in paddle x.float()
         x_float = paddle.cast(x, dtype="float32")
         x = paddle.fft.rfftn(x_float, norm=self.fft_norm, axes=fft_dims)
 

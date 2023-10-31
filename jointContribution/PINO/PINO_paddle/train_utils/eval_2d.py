@@ -13,7 +13,6 @@ except ImportError:
 def eval_darcy(model,
                dataloader,
                config,
-               device,
                use_tqdm=True):
     model.eval()
     myloss = LpLoss(size_average=True)
@@ -24,17 +23,13 @@ def eval_darcy(model,
 
     mesh = dataloader.dataset.mesh
     mollifier = paddle.sin(np.pi * mesh[..., 0]) * paddle.sin(np.pi * mesh[..., 1]) * 0.001
-    mollifier = mollifier.to(device)
     f_val = []
     test_err = []
-
     with paddle.no_grad():
         for x, y in pbar:
-            x, y = x.to(device), y.to(device)
 
             pred = model(x).reshape(y.shape)
             pred = pred * mollifier
-
             data_loss = myloss(pred, y)
             a = x[..., 0]
             f_loss = darcy_loss(pred, a)
@@ -70,12 +65,10 @@ def eval_burgers(model,
 
     test_err = []
     f_err = []
-
     for x, y in pbar:
         x, y = x, y
         out = model(x).reshape(y.shape)
         data_loss = myloss(out, y)
-
         loss_u, f_loss = PINO_loss(out, x[:, 0, :, 0], v)
         test_err.append(data_loss.item())
         f_err.append(f_loss.item())

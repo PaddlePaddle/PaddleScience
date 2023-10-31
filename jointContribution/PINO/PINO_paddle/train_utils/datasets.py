@@ -9,7 +9,7 @@ except ImportError:
 
 import paddle
 from paddle.io import Dataset
-from .utils import get_grid3d, convert_ic, torch2dgrid
+from .utils import get_grid3d, convert_ic, paddle2dgrid
 
 def online_loader(sampler, S, T, time_scale, batchsize=1):
     while True:
@@ -25,10 +25,10 @@ def sample_data(loader):
             yield batch
 
 class MatReader(object):
-    def __init__(self, file_path, to_torch=True, to_cuda=False, to_float=True):
+    def __init__(self, file_path, to_paddle=True, to_cuda=False, to_float=True):
         super(MatReader, self).__init__()
 
-        self.to_torch = to_torch
+        self.to_paddle = to_paddle
         self.to_cuda = to_cuda
         self.to_float = to_float
 
@@ -56,7 +56,7 @@ class MatReader(object):
         if self.to_float:
             x = x.astype(np.float32)
 
-        if self.to_torch:
+        if self.to_paddle:
 
             x = paddle.to_tensor(x)
             if self.to_cuda:
@@ -67,8 +67,8 @@ class MatReader(object):
     def set_cuda(self, to_cuda):
         self.to_cuda = to_cuda
 
-    def set_torch(self, to_torch):
-        self.to_torch = to_torch
+    def set_paddle(self, to_paddle):
+        self.to_paddle = to_paddle
 
     def set_float(self, to_float):
         self.to_float = to_float
@@ -203,88 +203,6 @@ class NSLoader(object):
                     new_data[i * 4 + j, interval: T + 1] = data[i + 1, 0:interval + 1]
         return new_data
 
-class NS3DDataset(Dataset):
-    def __init__(self, paths, 
-                 data_res, pde_res,
-                 n_samples=None, 
-                 offset=0,
-                 t_duration=1.0, 
-                 sub_x=1, 
-                 sub_t=1,
-                 train=True):
-        super().__init__()
-        self.data_res = data_res
-        self.pde_res = pde_res
-        self.t_duration = t_duration
-        self.paths = paths
-        self.offset = offset
-        self.n_samples = n_samples
-        self.load(train=train, sub_x=sub_x, sub_t=sub_t)
-    
-    def load(self, train=True, sub_x=1, sub_t=1):
-        data_list = []
-        for datapath in self.paths:
-            batch = np.load(datapath, mmap_mode='r')
-
-            batch = paddle.to_tensor(batch[:, ::sub_t, ::sub_x, ::sub_x], dtype='float32')
-            if self.t_duration == 0.5:
-                batch = self.extract(batch)
-            data_list.append(batch.permute(0, 2, 3, 1))
-        data = paddle.concat(data_list, axis=0)
-        if self.n_samples:
-            if train:
-                data = data[self.offset: self.offset + self.n_samples]
-            else:
-                data = data[self.offset + self.n_samples:]
-        
-        N = data.shape[0]
-        S = data.shape[1]
-        T = data.shape[-1]
-        a_data = data[:, :, :, 0:1, None].tile([1, 1, 1, T, 1])
-        gridx, gridy, gridt = get_grid3d(S, T)
-        a_data = paddle.concat((
-            gridx.tile([N, 1, 1, 1, 1]),
-            gridy.tile([N, 1, 1, 1, 1]),
-            gridt.tile([N, 1, 1, 1, 1]),
-            a_data), axis=-1)
-        self.data = data        # N, S, S, T, 1
-        self.a_data = a_data    # N, S, S, T, 4
-        
-        self.data_s_step = data.shape[1] // self.data_res[0]
-        self.data_t_step = data.shape[3] // (self.data_res[2] - 1)
-
-    def __getitem__(self, idx):
-        return self.data[idx, ::self.data_s_step, ::self.data_s_step, ::self.data_t_step], self.a_data[idx]
-
-    def __len__(self, ):
-        return self.data.shape[0]
-
-    @staticmethod
-    def extract(data):
-        '''
-        Extract data with time range 0-0.5, 0.25-0.75, 0.5-1.0, 0.75-1.25,...
-        Args:
-            data: tensor with size N x 129 x 128 x 128
-
-        Returns:
-            output: (4*N-1) x 65 x 128 x 128
-        '''
-        T = data.shape[1] // 2
-        interval = data.shape[1] // 4
-        N = data.shape[0]
-        new_data = paddle.zeros(4 * N - 1, T + 1, data.shape[2], data.shape[3])
-        for i in range(N):
-            for j in range(4):
-                if i == N - 1 and j == 3:
-                    # reach boundary
-                    break
-                if j != 3:
-                    new_data[i * 4 + j] = data[i, interval * j:interval * j + T + 1]
-                else:
-                    new_data[i * 4 + j, 0: interval] = data[i, interval * j:interval * j + interval]
-                    new_data[i * 4 + j, interval: T + 1] = data[i + 1, 0:interval + 1]
-        return new_data
-
 class KFDataset(Dataset):
     def __init__(self, paths, 
                  data_res, pde_res, 
@@ -337,7 +255,7 @@ class KFDataset(Dataset):
         else:
             a_data = raw_data[self.offset: self.offset + self.n_samples, 0:1, ::a_sub_x, ::a_sub_x]
 
-        # convert into torch tensor
+        # convert into paddle tensor
         data = paddle.to_tensor(data, dtype='float32')
         a_data = paddle.to_tensor(a_data, dtype='float32').transpose([0, 2, 3, 1])
         self.data = data.transpose([0, 2, 3, 1])
@@ -459,7 +377,7 @@ class DarcyFlow(Dataset):
         u = data['sol']
         self.a = paddle.to_tensor(a[offset: offset + num, ::sub, ::sub], dtype='float32')
         self.u = paddle.to_tensor(u[offset: offset + num, ::sub, ::sub], dtype='float32')
-        self.mesh = torch2dgrid(self.S, self.S)
+        self.mesh = paddle2dgrid(self.S, self.S)
 
     def __len__(self):
         return self.a.shape[0]
@@ -478,13 +396,13 @@ class DarcyIC(Dataset):
         data = scipy.io.loadmat(datapath)
         a = data['coeff']
         self.a = paddle.to_tensor(a[offset: offset + num, ::sub, ::sub], dtype='float32')
-        self.mesh = torch2dgrid(self.S, self.S)
+        self.mesh = paddle2dgrid(self.S, self.S)
         data = scipy.io.loadmat(datapath)
         a = data['coeff']
         u = data['sol']
         self.a = paddle.to_tensor(a[offset: offset + num, ::sub, ::sub], dtype='float32')
         self.u = paddle.to_tensor(u[offset: offset + num, ::sub, ::sub], dtype='float32')
-        self.mesh = torch2dgrid(self.S, self.S)
+        self.mesh = paddle2dgrid(self.S, self.S)
 
     def __len__(self):
         return self.a.shape[0]
@@ -507,9 +425,9 @@ class DarcyCombo(Dataset):
         u = data['sol']
         self.a = paddle.to_tensor(a[offset: offset + num, ::sub, ::sub], dtype='float32')
         self.u = paddle.to_tensor(u[offset: offset + num, ::sub, ::sub], dtype='float32')
-        self.mesh = torch2dgrid(self.S, self.S)
+        self.mesh = paddle2dgrid(self.S, self.S)
         self.pde_a = paddle.to_tensor(a[offset: offset + num, ::pde_sub, ::pde_sub], dtype='float32')
-        self.pde_mesh = torch2dgrid(self.pde_S, self.pde_S)
+        self.pde_mesh = paddle2dgrid(self.pde_S, self.pde_S)
 
     def __len__(self):
         return self.a.shape[0]

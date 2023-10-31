@@ -30,7 +30,6 @@ def glorot(value: Any):
     if isinstance(value, Tensor):
         stdv = math.sqrt(6.0 / (value.shape[-2] + value.shape[-1]))
         value = paddle.uniform(value.shape, value.dtype, -stdv, stdv)
-        # value.uniform(-stdv, stdv)
     else:
         for v in value.parameters() if hasattr(value, 'parameters') else []:
             glorot(v)
@@ -40,14 +39,12 @@ def glorot(value: Any):
 def glorot_orthogonal(tensor, scale):
     if tensor is not None:
         tensor = paddle.create_parameter(tensor.shape, attr=Orthogonal())
-        # paddle.nn.initializer.Othogonal()
         scale /= ((tensor.size(-2) + tensor.size(-1)) * tensor.var())
         tensor.data *= scale.sqrt()
 
 def constant(value: Any, fill_value: float):
     if isinstance(value, Tensor):
         value = paddle.full(value.shape, fill_value, value.dtype)
-        # value.data.fill_(fill_value)
     else:
         for v in value.parameters() if hasattr(value, 'parameters') else []:
             constant(v, fill_value)

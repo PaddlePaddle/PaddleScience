@@ -30,7 +30,6 @@ def plot(solution, Ue):
 	ax1=plt.subplot(1,1,1)
 	_,cbar1=visualize_fem(ax1,msh,solution[e2vcg],{"plot_elem":True,"nref":6},[])
 	ax1.tick_params(axis='both',which='both',bottom=False,left=False,top=False,labelbottom=False,labelleft=False)
-	#ax1.set_title('GCNN solution')
 	ax1.axis('off')
 	cbar1.remove()
 	plt.margins(0,0)
@@ -39,7 +38,6 @@ def plot(solution, Ue):
 
 	ax2=plt.subplot(1,1,1)
 	_,cbar2=visualize_fem(ax2,msh,Ue[e2vcg],{"plot_elem":True,"nref":6},[])
-	#ax2.set_title('Exact solution')
 	ax2.tick_params(axis='both',which='both',bottom=False,left=False,top=False,labelbottom=False,labelleft=False)
 	ax2.axis('off')
 	cbar2.remove()
@@ -74,11 +72,10 @@ if __name__=='__main__':
 	connectivity=e2vcg2connectivity(msh.e2vcg,'ele')
 	"""
 	e2vcg is a 2D array (NNODE PER ELEM, NELEM): The connectivity of the
-	mesh. The (:, e)´entries are the global node numbers of the nodes
+	mesh. The (:, e) entries are the global node numbers of the nodes
 	that comprise element e. The local node numbers of each element are
 	defined by the columns of this matrix, e.g., e2vcg(i, e) is the
 	global node number of the ith local node of element e. 
-	Han Gao currently does not use this information in e2vcg2connectivity function!
 	"""
 	bnd2nbc=np.asarray([0]) # Define the boundary tag!
 	K=lambda x,el: np.asarray([[1],[0],[0],[1]])

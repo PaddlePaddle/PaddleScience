@@ -65,7 +65,6 @@ def train():
 	Graph.append(graph)
 	DataList=[[Graph[0]]]
 	TrainDataloader=DataList
-	# device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	split=[xcg.shape[1],msh_.xcg.shape[1],connectivity_uv.shape[1]]
 	model=Ns_Chebnet(split)
 	[model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)

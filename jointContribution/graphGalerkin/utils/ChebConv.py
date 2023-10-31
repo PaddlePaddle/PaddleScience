@@ -2,13 +2,14 @@ from typing import Optional
 import paddle
 
 from message_passing import MessagePassing
-from linear import Linear
 from init import zeros
-from name import OptTensor
 from utils import add_self_loops, remove_self_loops, get_laplacian, masked_fill
 
 from paddle.nn import LayerList
+from paddle.nn import Linear
+from paddle import Tensor
 
+OptTensor = Optional[Tensor]
 class ChebConv(MessagePassing):
     r"""The chebyshev spectral graph convolutional operator from the
     `"Convolutional Neural Networks on Graphs with Fast Localized Spectral
@@ -51,15 +52,13 @@ class ChebConv(MessagePassing):
 
             You need to pass :obj:`lambda_max` to the :meth:`forward` method of
             this operator in case the normalization is non-symmetric.
-            :obj:`\lambda_max` should be a :class:`torch.Tensor` of size
+            :obj:`\lambda_max` should be a :class:`paddle.Tensor` of size
             :obj:`[num_graphs]` in a mini-batch scenario and a
             scalar/zero-dimensional tensor when operating on single graphs.
-            You can pre-compute :obj:`lambda_max` via the
-            :class:`torch_geometric.transforms.LaplacianLambdaMax` transform.
         bias (bool, optional): If set to :obj:`False`, the layer will not learn
             an additive bias. (default: :obj:`True`)
         **kwargs (optional): Additional arguments of
-            :class:`torch_geometric.nn.conv.MessagePassing`.
+            :class:`MessagePassing`.
 
     Shapes:
         - **input:**
@@ -83,9 +82,11 @@ class ChebConv(MessagePassing):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.normalization = normalization
+        weight_attr = paddle.ParamAttr(
+                        name="weight",
+                        initializer=paddle.nn.initializer.Constant(value=0.5))
         self.lins = LayerList([
-            Linear(in_channels, out_channels, bias=False,
-                   weight_initializer='glorot') for _ in range(K)
+            Linear(in_channels, out_channels, bias_attr=False) for _ in range(K)
         ])
         if bias:
             self.bias = paddle.create_parameter([out_channels], paddle.float32)
