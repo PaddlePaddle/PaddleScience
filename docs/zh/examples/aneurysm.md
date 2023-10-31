@@ -25,6 +25,9 @@
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
     ```
+| 预训练模型  | 指标 |
+|:--| :--|
+| [aneurysm_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams) | loss(ref_u_v_w_p): 0.01488<br>MSE.p(ref_u_v_w_p): 0.01412<br>MSE.u(ref_u_v_w_p): 0.00021<br>MSE.v(ref_u_v_w_p): 0.00024<br>MSE.w(ref_u_v_w_p): 0.00032 |
 
 ## 1. 背景简介
 
