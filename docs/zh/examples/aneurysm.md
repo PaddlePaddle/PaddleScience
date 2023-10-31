@@ -56,9 +56,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="23"
+``` py linenums="25"
 --8<--
-examples/aneurysm/aneurysm.py:23
+examples/aneurysm/aneurysm.py:25
 --8<--
 ```
 
@@ -70,9 +70,9 @@ examples/aneurysm/aneurysm.py:23
 
 血管瘤模型涉及到 2 个方程，一是流体 N-S 方程，二是流量计算方程，因此使用 PaddleScience 内置的 `NavierStokes` 和 `NormalDotVec` 即可。
 
-``` py linenums="25"
+``` py linenums="27"
 --8<--
-examples/aneurysm/aneurysm.py:25:30
+examples/aneurysm/aneurysm.py:27:33
 --8<--
 ```
 
@@ -101,17 +101,17 @@ tar -xvf aneurysm_dataset.tar
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 
-``` py linenums="30"
+``` py linenums="35"
 --8<--
-examples/aneurysm/aneurysm.py:30:35
+examples/aneurysm/aneurysm.py:35:40
 --8<--
 ```
 
 在此之后可以对几何域进行缩放和平移，以缩放输入数据的坐标范围，促进模型训练收敛。
 
-``` py linenums="37"
+``` py linenums="42"
 --8<--
-examples/aneurysm/aneurysm.py:37:53
+examples/aneurysm/aneurysm.py:42:54
 --8<--
 ```
 
@@ -119,9 +119,9 @@ examples/aneurysm/aneurysm.py:37:53
 
 本案例共涉及到 6 个约束，在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="55"
+``` py linenums="56"
 --8<--
-examples/aneurysm/aneurysm.py:55:65
+examples/aneurysm/aneurysm.py:56:66
 --8<--
 ```
 
@@ -129,9 +129,9 @@ examples/aneurysm/aneurysm.py:55:65
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="115"
+``` py linenums="113"
 --8<--
-examples/aneurysm/aneurysm.py:115:122
+examples/aneurysm/aneurysm.py:113:120
 --8<--
 ```
 
@@ -152,17 +152,17 @@ examples/aneurysm/aneurysm.py:115:122
 接着需要对**血管入口、出口、血管壁**这三个表面施加约束，包括入口速度约束、出口压力约束、血管壁无滑移约束。
 在 `bc_inlet` 约束中，入口处的流速满足从中心点开始向周围呈二次抛物线衰减，此处使用抛物线函数表示速度随着远离圆心而衰减，再将其作为 `BoundaryConstraint` 的第二个参数(字典)的 value。
 
-``` py linenums="67"
+``` py linenums="68"
 --8<--
-examples/aneurysm/aneurysm.py:67:98
+examples/aneurysm/aneurysm.py:68:96
 --8<--
 ```
 
 血管出口、血管壁约束的构建方法类似，如下所示：
 
-``` py linenums="99"
+``` py linenums="97"
 --8<--
-examples/aneurysm/aneurysm.py:99:114
+examples/aneurysm/aneurysm.py:97:112
 --8<--
 ```
 
@@ -170,9 +170,9 @@ examples/aneurysm/aneurysm.py:99:114
 
 对于血管入口下方的一段区域和出口区域（面），需额外施加流入和流出的流量约束，由于流量计算涉及到具体面积，因此需要使用离散积分的方式进行计算，这些过程已经内置在了 `IntegralConstraint` 这一约束条件中。如下所示：
 
-``` py linenums="123"
+``` py linenums="121"
 --8<--
-examples/aneurysm/aneurysm.py:123:150
+examples/aneurysm/aneurysm.py:123:148
 --8<--
 ```
 
@@ -188,9 +188,9 @@ $$
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="151"
+``` py linenums="149"
 --8<--
-examples/aneurysm/aneurysm.py:151:159
+examples/aneurysm/aneurysm.py:149:157
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/aneurysm/aneurysm.py:151:159
 
 接下来需要指定训练轮数和学习率，此处按实验经验，使用 1500 轮训练轮数。
 
-``` py linenums="161"
+``` py linenums="61"
 --8<--
-examples/aneurysm/aneurysm.py:161:162
+examples/aneurysm/conf/aneurysm.yaml:61:61
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/aneurysm/aneurysm.py:161:162
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="164"
+``` py linenums="166"
 --8<--
-examples/aneurysm/aneurysm.py:164:173
+examples/aneurysm/aneurysm.py:166:214
 --8<--
 ```
 
@@ -218,9 +218,9 @@ examples/aneurysm/aneurysm.py:164:173
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="175"
+``` py linenums="216"
 --8<--
-examples/aneurysm/aneurysm.py:175:224
+examples/aneurysm/aneurysm.py:216:229
 --8<--
 ```
 
@@ -230,9 +230,9 @@ examples/aneurysm/aneurysm.py:175:224
 
 本文中的输出数据是一个区域内的三维点集，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="226"
+``` py linenums="231"
 --8<--
-examples/aneurysm/aneurysm.py:226:240
+examples/aneurysm/aneurysm.py:231:259
 --8<--
 ```
 

@@ -22,33 +22,29 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
-            cfg.NU * cfg.SCALE, cfg.RHO, 3, False
+            cfg.NU * cfg.SCALE, cfg.RHO, cfg.DIM, False
         ),
         "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v", "w")),
     }
 
     # set geometry
-    inlet_geo = ppsci.geometry.Mesh(cfg.INLET_PATH)
-    outlet_geo = ppsci.geometry.Mesh(cfg.OUTLET_PATH)
-    noslip_geo = ppsci.geometry.Mesh(cfg.NOSLIP_PATH)
-    integral_geo = ppsci.geometry.Mesh(cfg.INTEGRAL_PATH)
-    interior_geo = ppsci.geometry.Mesh(cfg.CLOSED_PATH)
-
-    # inlet velocity profile
-    CENTER = (-18.40381048596882, -50.285383353981196, 12.848136936899031)
-    SCALE = 0.4
+    inlet_geo = ppsci.geometry.Mesh(cfg.INLET_STL_PATH)
+    outlet_geo = ppsci.geometry.Mesh(cfg.OUTLET_STL_PATH)
+    noslip_geo = ppsci.geometry.Mesh(cfg.NOSLIP_STL_PATH)
+    integral_geo = ppsci.geometry.Mesh(cfg.INTEGRAL_STL_PATH)
+    interior_geo = ppsci.geometry.Mesh(cfg.INTERIOR_STL_PATH)
 
     # normalize meshes
-    inlet_geo = inlet_geo.translate(-np.array(CENTER)).scale(SCALE)
-    outlet_geo = outlet_geo.translate(-np.array(CENTER)).scale(SCALE)
-    noslip_geo = noslip_geo.translate(-np.array(CENTER)).scale(SCALE)
-    integral_geo = integral_geo.translate(-np.array(CENTER)).scale(SCALE)
-    interior_geo = interior_geo.translate(-np.array(CENTER)).scale(SCALE)
+    inlet_geo = inlet_geo.translate(-np.array(cfg.CENTER)).scale(cfg.SCALE)
+    outlet_geo = outlet_geo.translate(-np.array(cfg.CENTER)).scale(cfg.SCALE)
+    noslip_geo = noslip_geo.translate(-np.array(cfg.CENTER)).scale(cfg.SCALE)
+    integral_geo = integral_geo.translate(-np.array(cfg.CENTER)).scale(cfg.SCALE)
+    interior_geo = interior_geo.translate(-np.array(cfg.CENTER)).scale(cfg.SCALE)
     geom = {
         "inlet_geo": inlet_geo,
         "outlet_geo": outlet_geo,
@@ -70,28 +66,25 @@ def train(cfg: DictConfig):
     }
 
     # set constraint
-    INLET_NORMAL = (0.8526, -0.428, 0.299)
-    INLET_AREA = 21.1284 * (SCALE**2)
-    INLET_CENTER = (-4.24298030045776, 4.082857101816247, -4.637790193399717)
+    INLET_AREA = 21.1284 * (cfg.SCALE**2)
     INLET_RADIUS = np.sqrt(INLET_AREA / np.pi)
-    INLET_VEL = 1.5
 
     def _compute_parabola(_in):
-        centered_x = _in["x"] - INLET_CENTER[0]
-        centered_y = _in["y"] - INLET_CENTER[1]
-        centered_z = _in["z"] - INLET_CENTER[2]
+        centered_x = _in["x"] - cfg.INLET_CENTER[0]
+        centered_y = _in["y"] - cfg.INLET_CENTER[1]
+        centered_z = _in["z"] - cfg.INLET_CENTER[2]
         distance = np.sqrt(centered_x**2 + centered_y**2 + centered_z**2)
-        parabola = INLET_VEL * np.maximum((1 - (distance / INLET_RADIUS) ** 2), 0)
+        parabola = cfg.INLET_VEL * np.maximum((1 - (distance / INLET_RADIUS) ** 2), 0)
         return parabola
 
     def inlet_u_ref_func(_in):
-        return INLET_NORMAL[0] * _compute_parabola(_in)
+        return cfg.INLET_NORMAL[0] * _compute_parabola(_in)
 
     def inlet_v_ref_func(_in):
-        return INLET_NORMAL[1] * _compute_parabola(_in)
+        return cfg.INLET_NORMAL[1] * _compute_parabola(_in)
 
     def inlet_w_ref_func(_in):
-        return INLET_NORMAL[2] * _compute_parabola(_in)
+        return cfg.INLET_NORMAL[2] * _compute_parabola(_in)
 
     bc_inlet = ppsci.constraint.BoundaryConstraint(
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "w": lambda d: d["w"]},
@@ -117,11 +110,11 @@ def train(cfg: DictConfig):
         ppsci.loss.MSELoss("sum"),
         name="no_slip",
     )
-    pde_constraint = ppsci.constraint.InteriorConstraint(
+    pde = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
         geom["interior_geo"],
-        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.pde_constraint},
+        {**train_dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.pde},
         ppsci.loss.MSELoss("sum"),
         name="interior",
     )
@@ -131,7 +124,7 @@ def train(cfg: DictConfig):
         geom["outlet_geo"],
         {
             **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_igc_outlet,
+            "iters_per_epoch": cfg.TRAIN.iters_integral.igc_outlet,
             "batch_size": cfg.TRAIN.batch_size.igc_outlet,
             "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_outlet,
         },
@@ -145,7 +138,7 @@ def train(cfg: DictConfig):
         geom["integral_geo"],
         {
             **train_dataloader_cfg,
-            "iters_per_epoch": cfg.TRAIN.iters_igc_integral,
+            "iters_per_epoch": cfg.TRAIN.iters_integral.igc_integral,
             "batch_size": cfg.TRAIN.batch_size.igc_integral,
             "integral_batch_size": cfg.TRAIN.integral_batch_size.igc_integral,
         },
@@ -158,25 +151,20 @@ def train(cfg: DictConfig):
         bc_inlet.name: bc_inlet,
         bc_outlet.name: bc_outlet,
         bc_noslip.name: bc_noslip,
-        pde_constraint.name: pde_constraint,
+        pde.name: pde,
         igc_outlet.name: igc_outlet,
         igc_integral.name: igc_integral,
     }
 
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
-        cfg.TRAIN.epochs,
-        cfg.TRAIN.iters_per_epoch,
-        cfg.TRAIN.learning_rate,
-        cfg.TRAIN.gamma,
-        cfg.TRAIN.epochs * cfg.TRAIN.iters_per_epoch // 100,
-        by_epoch=False,
+        **cfg.TRAIN.lr_scheduler
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator
     eval_data_dict = reader.load_csv_file(
-        "./data/aneurysm_parabolicInlet_sol0.csv",
+        cfg.EVAL_CSV_PATH,
         ("x", "y", "z", "u", "v", "w", "p"),
         {
             "x": "Points:0",
@@ -189,12 +177,12 @@ def train(cfg: DictConfig):
         },
     )
     input_dict = {
-        "x": (eval_data_dict["x"] - CENTER[0]) * SCALE,
-        "y": (eval_data_dict["y"] - CENTER[1]) * SCALE,
-        "z": (eval_data_dict["z"] - CENTER[2]) * SCALE,
+        "x": (eval_data_dict["x"] - cfg.CENTER[0]) * cfg.SCALE,
+        "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
+        "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
     }
     if "area" in input_dict.keys():
-        input_dict["area"] *= SCALE ** (equation["NavierStokes"].dim)
+        input_dict["area"] *= cfg.SCALE ** (equation["NavierStokes"].dim)
 
     label_dict = {
         "p": eval_data_dict["p"],
@@ -227,7 +215,7 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_p": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_p": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "p": lambda out: out["p"],
@@ -250,20 +238,20 @@ def train(cfg: DictConfig):
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        log_freq=cfg.TRAIN.log_freq,
+        log_freq=cfg.log_freq,
+        eval_during_train=True,
         eval_freq=cfg.TRAIN.eval_freq,
         seed=cfg.seed,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # train model
     solver.train()
-
     # evaluate after finished training
     solver.eval()
     # visualize prediction after finished training
@@ -277,23 +265,11 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL.model)
-
-    # set equation
-    equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(
-            cfg.NU * cfg.SCALE, cfg.RHO, 3, False
-        ),
-        "NormalDotVec": ppsci.equation.NormalDotVec(("u", "v", "w")),
-    }
-
-    # inlet velocity profile
-    CENTER = (-18.40381048596882, -50.285383353981196, 12.848136936899031)
-    SCALE = 0.4
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set validator
     eval_data_dict = reader.load_csv_file(
-        "./data/aneurysm_parabolicInlet_sol0.csv",
+        cfg.EVAL_CSV_PATH,
         ("x", "y", "z", "u", "v", "w", "p"),
         {
             "x": "Points:0",
@@ -306,12 +282,12 @@ def evaluate(cfg: DictConfig):
         },
     )
     input_dict = {
-        "x": (eval_data_dict["x"] - CENTER[0]) * SCALE,
-        "y": (eval_data_dict["y"] - CENTER[1]) * SCALE,
-        "z": (eval_data_dict["z"] - CENTER[2]) * SCALE,
+        "x": (eval_data_dict["x"] - cfg.CENTER[0]) * cfg.SCALE,
+        "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
+        "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
     }
     if "area" in input_dict.keys():
-        input_dict["area"] *= SCALE ** (equation["NavierStokes"].dim)
+        input_dict["area"] *= cfg.SCALE**cfg.DIM
 
     label_dict = {
         "p": eval_data_dict["p"],
@@ -342,9 +318,9 @@ def evaluate(cfg: DictConfig):
     )
     validator = {sup_validator.name: sup_validator}
 
-    # set visualizer(optional)
+    # set visualizer
     visualizer = {
-        "visulzie_u_v_w_p": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_p": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "p": lambda out: out["p"],
@@ -357,18 +333,22 @@ def evaluate(cfg: DictConfig):
         ),
     }
 
-    # directly evaluate pretrained model(optional)
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        equation=equation,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
+    # evaluate
     solver.eval()
-    # visualize prediction for pretrained model(optional)
+    # visualize prediction
     solver.visualize()
 
 
