@@ -155,7 +155,7 @@ examples/rossler/train_enn.py:101:110
 
 ``` py linenums="114" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:114:133
+examples/rossler/train_enn.py:114:141
 --8<--
 ```
 
@@ -236,7 +236,7 @@ examples/rossler/train_transformer.py:97:104
 
 ``` py linenums="107" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:107:124
+examples/rossler/train_transformer.py:107:132
 --8<--
 ```
 

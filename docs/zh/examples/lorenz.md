@@ -168,9 +168,9 @@ examples/lorenz/train_enn.py:99:108
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="133" title="examples/lorenz/train_enn.py"
+``` py linenums="112" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:133:139
+examples/lorenz/train_enn.py:112:139
 --8<--
 ```
 
