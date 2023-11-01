@@ -25,6 +25,7 @@
     tar -xvf aneurysm_dataset.tar
     python aneurysm.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
     ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [aneurysm_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams) | loss(ref_u_v_w_p): 0.01488<br>MSE.p(ref_u_v_w_p): 0.01412<br>MSE.u(ref_u_v_w_p): 0.00021<br>MSE.v(ref_u_v_w_p): 0.00024<br>MSE.w(ref_u_v_w_p): 0.00032 |
@@ -59,9 +60,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="25"
+``` py linenums="24"
 --8<--
-examples/aneurysm/aneurysm.py:25
+examples/aneurysm/aneurysm.py:24:25
 --8<--
 ```
 
@@ -175,7 +176,7 @@ examples/aneurysm/aneurysm.py:97:112
 
 ``` py linenums="121"
 --8<--
-examples/aneurysm/aneurysm.py:123:148
+examples/aneurysm/aneurysm.py:121:148
 --8<--
 ```
 
@@ -201,9 +202,9 @@ examples/aneurysm/aneurysm.py:149:157
 
 接下来需要指定训练轮数和学习率，此处按实验经验，使用 1500 轮训练轮数。
 
-``` py linenums="61"
+``` py linenums="59"
 --8<--
-examples/aneurysm/conf/aneurysm.yaml:61:61
+examples/aneurysm/conf/aneurysm.yaml:59:75
 --8<--
 ```
 
@@ -211,9 +212,9 @@ examples/aneurysm/conf/aneurysm.yaml:61:61
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="166"
+``` py linenums="159"
 --8<--
-examples/aneurysm/aneurysm.py:166:214
+examples/aneurysm/aneurysm.py:159:163
 --8<--
 ```
 
@@ -221,9 +222,9 @@ examples/aneurysm/aneurysm.py:166:214
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="216"
+``` py linenums="165"
 --8<--
-examples/aneurysm/aneurysm.py:216:229
+examples/aneurysm/aneurysm.py:165:241
 --8<--
 ```
 
@@ -233,9 +234,9 @@ examples/aneurysm/aneurysm.py:216:229
 
 本文中的输出数据是一个区域内的三维点集，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="231"
+``` py linenums="216"
 --8<--
-examples/aneurysm/aneurysm.py:231:259
+examples/aneurysm/aneurysm.py:216:229
 --8<--
 ```
 
@@ -243,9 +244,9 @@ examples/aneurysm/aneurysm.py:231:259
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="241"
+``` py linenums="231"
 --8<--
-examples/aneurysm/aneurysm.py:241:267
+examples/aneurysm/aneurysm.py:231:258
 --8<--
 ```
 
