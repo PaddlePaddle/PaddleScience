@@ -27,10 +27,17 @@ DATASET_PATH: ./datasets/DeepHPMs/KS.mat
 DATASET_PATH_SOL: ./datasets/DeepHPMs/KS.mat
 
 # set working condition
+# for KS.mat
 T_LB: 0.0
 T_UB: 50.0
 X_LB: -10.0
 X_UB: 10.0
+
+# for KS_chaotic.mat
+# T_LB: 0.0
+# T_UB: 100.0
+# X_LB: 0.0
+# X_UB: 32.0
 
 # model settings
 MODEL:
