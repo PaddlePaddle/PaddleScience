@@ -157,7 +157,7 @@
 
 ## 🤝合作单位
 
-![cooperation](./images/overview/cooperation_thumbnail.png)
+![cooperation](./images/overview/cooperation.png)
 
 --8<--
 ./README.md:license
