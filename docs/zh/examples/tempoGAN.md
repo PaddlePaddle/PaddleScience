@@ -314,15 +314,15 @@ examples/tempoGAN/tempoGAN.py:297:313
 
 ``` py linenums="317"
 --8<--
-examples/tempoGAN/tempoGAN.py:317:380
+examples/tempoGAN/tempoGAN.py:317:397
 --8<--
 ```
 
 另外，其中：
 
-``` py linenums="370"
+``` py linenums="387"
 --8<--
-examples/tempoGAN/tempoGAN.py:370:377
+examples/tempoGAN/tempoGAN.py:387:394
 --8<--
 ```
 

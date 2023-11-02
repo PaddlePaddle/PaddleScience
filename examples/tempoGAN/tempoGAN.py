@@ -339,26 +339,43 @@ def evaluate(cfg: DictConfig):
     # load pretrained model
     save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
+    # set validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {
+                "density_low": dataset_valid["density_low"],
+            },
+            "label": {"density_high": dataset_valid["density_high"]},
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 1,
+    }
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss("mean"),
+        {"density_high": lambda out: out["output_gen"]},
+        metric={"metric": ppsci.metric.L2Rel()},
+        name="sup_validator_gen",
+    )
+
     # customized evalution
     def scale(data):
         smax = np.max(data)
         smin = np.min(data)
         return (data - smin) / (smax - smin)
 
-    input_data = np.expand_dims(dataset_valid["density_low"], axis=1)
     eval_mse_list = []
     eval_psnr_list = []
     eval_ssim_list = []
-    for i in range(input_data.shape[0]):
-        output_dict = model_list(
-            {
-                "density_low": paddle.to_tensor(
-                    input_data[i], dtype=paddle.get_default_dtype()
-                )
-            }
-        )
+    for i, (input, label, _) in enumerate(sup_validator.data_loader):
+        output_dict = model_list({"density_low": input["density_low"]})
         output_arr = scale(np.squeeze(output_dict["output_gen"].numpy()))
-        target_arr = scale(np.squeeze(dataset_valid["density_high"][i]))
+        target_arr = scale(np.squeeze(label["density_high"].numpy()))
 
         eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(
             target_arr, output_arr
