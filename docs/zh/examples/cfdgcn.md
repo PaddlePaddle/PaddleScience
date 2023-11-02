@@ -69,6 +69,21 @@ pip install mpi4py
 
 ## 4.快速开始
 
+### 直接运行GCN模型需要修改的位置
+
+
+在main.py中注释
+```python
+# from su2paddle.su2_function_mpi import activate_su2_mpi (line19)
+
+# activate_su2_mpi(remove_temp_files=True) (line386)
+```
+
+在models.py中注释
+```python
+# from su2paddle import SU2Module (line12)
+```
+
 ### aistudio
 1. 从data中找到SU2Bin.tgz, 解压到本环境目录下，/home/aistudio/SU2Bin
 
@@ -90,13 +105,15 @@ export PATH=$PATH:$SU2_RUN
 export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
 # Prediction experiments
+# for CFDGCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_interp > /dev/null
-
+#for GCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate/ -e gcn_interp
 
 # Generalization experiments
+# for CFDGCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_gen > /dev/null
-
+# for GCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
 ```
 
@@ -115,13 +132,15 @@ export PATH=$PATH:$SU2_RUN
 export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
 # Prediction experiments
+# for CFDGCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_interp > /dev/null
-
+# for GCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate/ -e gcn_interp
 
 # Generalization experiments
+# for CFDGCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_gen > /dev/null
-
+# for GCN
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
 ```
 
@@ -161,21 +180,6 @@ mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_
     ├── su2_function_mpi.py
     ├── su2_function.py
     └── su2_numpy.py
-```
-
-### 直接运行GCN模型需要修改的位置
-
-
-在main.py中注释
-```python
-# from su2paddle import activate_su2_mpi (line24)
-
-# activate_su2_mpi(remove_temp_files=True) (line291)
-```
-
-在models.py中注释
-```python
-# from su2paddle import SU2Module (line9)
 ```
 
 ### 使用pgl替换torch_geometric

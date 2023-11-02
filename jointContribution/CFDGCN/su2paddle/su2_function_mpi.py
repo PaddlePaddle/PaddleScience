@@ -326,8 +326,8 @@ def main(remove_temp_files: bool = True) -> None:
                 z[batch_index, : output_lengths[i]] for i, z in enumerate(grad_outputs)
             ]
 
-            batch_adjoint_config = "b{}_{}_adjoint_{}".format(
-                batch_index, str(os.getppid()), forward_config
+            batch_adjoint_config = (
+                f"b{batch_index}_{str(os.getppid())}_adjoint_{forward_config}"
             )
             if batch_rank == 0:
                 old_config = SU2.io.Config(forward_config)

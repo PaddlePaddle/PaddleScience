@@ -67,13 +67,8 @@ class SU2Numpy:
                 For example, a batch of 10 scalars would have input shape 10 x 1,
                 a batch of 10 vectors of length N would have input shape 10 x N.
 
-        Raises:
-            TypeError: _description_
-            TypeError: _description_
-            TypeError: _description_
-
         Returns:
-            _type_: A tuple of tensors with the batch of differentiable outputs.
+            tuple: A tuple of tensors with the batch of differentiable outputs.
                 Number of outputs depends on the number of DIFF_OUTPUTS set in the configuration file.
                 As for the inputs, each output is of shape BATCH_SIZE x SHAPE,
                 where SHAPE is the shape of the given output.
@@ -123,7 +118,7 @@ class SU2Numpy:
             TypeError: _description_
 
         Returns:
-            _type_: The gradients of the loss with respect to the forward inputs.
+            tuple: The gradients of the loss with respect to the forward inputs.
         """
 
         if (

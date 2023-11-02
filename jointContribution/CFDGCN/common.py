@@ -1,5 +1,4 @@
 import math
-import pathlib
 import warnings
 from typing import BinaryIO
 from typing import List
@@ -169,7 +168,7 @@ def make_grid(
 @paddle.no_grad()
 def save_image(
     tensor: Union[paddle.Tensor, List[paddle.Tensor]],
-    fp: Union[Text, pathlib.Path, BinaryIO],
+    fp: Union[Text, str, BinaryIO],
     format: Optional[str] = None,
     **kwargs,
 ) -> None:

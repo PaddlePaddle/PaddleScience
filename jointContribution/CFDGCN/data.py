@@ -1,5 +1,4 @@
 import os
-import pathlib
 import pickle
 
 import mesh_utils
@@ -14,13 +13,11 @@ class MeshAirfoilDataset(pgl_dataloader.Dataset):
         super().__init__()
 
         self.mode = mode
-        self.data_dir = pathlib.Path(root) / f"outputs_${mode}"
+        self.data_dir = os.path.join(root, f"outputs_${mode}")
         self.file_list = os.listdir(self.data_dir)
         self.len = len(self.file_list)
 
-        self.mesh_graph = mesh_utils.get_mesh_graph(
-            pathlib.Path(root) / "mesh_fine.su2"
-        )
+        self.mesh_graph = mesh_utils.get_mesh_graph(os.path.join(root, "mesh_fine.su2"))
 
         # either [maxes, mins] or [means, stds] from data for normalization
         # with open(self.data_dir / 'train_mean_std.pkl', 'rb') as f:

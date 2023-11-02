@@ -1,13 +1,12 @@
 import os
-import random
 import sys
 from argparse import ArgumentParser
 
+import mesh_utils
 import numpy as np
 import paddle
+import PIL
 from data import MeshAirfoilDataset
-from mesh_utils import is_ccw
-from mesh_utils import plot_field
 from models import CFD
 from models import CFDGCN
 from models import UCM
@@ -15,9 +14,9 @@ from models import MeshGCN
 from paddle import nn
 from paddle import optimizer
 from pgl.utils.data.dataloader import Dataloader
-from PIL import Image
 from su2paddle.su2_function_mpi import activate_su2_mpi
 
+import ppsci
 from ppsci.utils import logger
 
 os.environ["SU2_RUN"] = "/root/autodl-tmp/SU2_bin"
@@ -87,7 +86,7 @@ def parse_args():
         "-dw",
         type=int,
         default=2,
-        help="Number of Pytorch Dataloader workers to use.",
+        help="Number of Paddle Dataloader workers to use.",
     )
     parser.add_argument(
         "--train-val-split",
@@ -152,7 +151,7 @@ def collate_fn(batch_data):
     return batch_data
 
 
-class PaddleWrapper:
+class Runner:
     def __init__(self, hparams):
         self.hparams = hparams
         self.step = None  # count test step because apparently Trainer doesnt
@@ -240,7 +239,7 @@ class PaddleWrapper:
 
     def on_epoch_end(self):
         avg_loss = self.sum_loss / max(len(self.train_loader), 1)
-        logger.info("train_loss:{},step:{}".format(avg_loss, self.global_step))
+        logger.info(f"train_loss:{avg_loss},step:{self.global_step}")
 
     def common_step(self, graphs):
         loss = 0.0
@@ -259,7 +258,7 @@ class PaddleWrapper:
         loss, pred = self.common_step(batch)
         self.sum_loss += loss.item()
 
-        logger.info("batch_train_loss:{}".format(loss.item()))
+        logger.info(f"batch_train_loss:{loss.item()}")
 
         if batch_idx == 0 and not self.hparams.no_log:
             self.log_images(
@@ -357,25 +356,25 @@ class PaddleWrapper:
 
     def log_images(self, nodes, pred, true, elems_list, mode, log_idx=0, epoch_idx=0):
         for field in range(pred.shape[1]):
-            true_img = plot_field(nodes, elems_list, true[:, field], title="true")
-            # true_img = to_tensor(true_img, dtype=paddle.float32)
+            true_img = mesh_utils.plot_field(
+                nodes, elems_list, true[:, field], title="true"
+            )
             min_max = (true[:, field].min().item(), true[:, field].max().item())
-            pred_img = plot_field(
+            pred_img = mesh_utils.plot_field(
                 nodes, elems_list, pred[:, field], title="pred", clim=min_max
             )
-            # pred_img = to_tensor(pred_img, dtype=paddle.float32)
             os.makedirs(f"{self.hparams.model}-fig", exist_ok=True)
             img_true_name = f"{self.hparams.model}-fig/{mode}_true_f{field}_idx{log_idx}_{epoch_idx}.png"
             img_pred_name = f"{self.hparams.model}-fig/{mode}_pred_f{field}_idx{log_idx}_{epoch_idx}.png"
-            im = Image.fromarray(true_img)
+            im = PIL.Image.fromarray(true_img)
             im.save(img_true_name)
-            im = Image.fromarray(pred_img)
+            im = PIL.Image.fromarray(pred_img)
             im.save(img_pred_name)
 
     @staticmethod
     def get_cross_prods(meshes, store_elems):
         cross_prods = [
-            is_ccw(mesh[e, :2], ret_val=True)
+            mesh_utils.is_ccw(mesh[e, :2], ret_val=True)
             for mesh, elems in zip(meshes, store_elems)
             for e in elems
         ]
@@ -388,30 +387,44 @@ if __name__ == "__main__":
 
     args = parse_args()
     logger.info(args)
-    random.seed(args.seed)
-    paddle.seed(args.seed)
-    np.random.seed(args.seed)
+    ppsci.utils.misc.set_random_seed(args.seed)
 
-    trainer = PaddleWrapper(args)
+    trainer = Runner(args)
 
     # test for special epoch
     # epoch = 4
-    # trainer.model.set_state_dict(paddle.load("{}/model{}.pdparams".format(trainer.hparams.model, epoch)))
-    # trainer.optimizer.set_state_dict(paddle.load("{}/adam{}.pdopt".format(trainer.hparams.model, epoch)))
+    # trainer.model.set_state_dict(
+    #     paddle.load(
+    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #     )
+    # )
+    # trainer.optimizer.set_state_dict(
+    #     paddle.load(
+    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #     )
+    # )
     # total_test_loss = []
     # for i, x in enumerate(trainer.test_loader):
     #     test_loss = trainer.test_step(x, i)
     #     total_test_loss.append(test_loss)
     # mean_test_loss = np.stack(total_test_loss).mean()
-    # logger.info("test_loss (mean):{}".format(mean_test_loss))
+    # logger.info(f"test_loss (mean):{mean_test_loss}")
 
     # load model from special epoch
     # epoch = 254
-    # trainer.model.set_state_dict(paddle.load("{}/model{}.pdparams".format(trainer.hparams.model, epoch)))
-    # trainer.optimizer.set_state_dict(paddle.load("{}/adam{}.pdopt".format(trainer.hparams.model, epoch)))
+    # trainer.model.set_state_dict(
+    #     paddle.load(
+    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #     )
+    # )
+    # trainer.optimizer.set_state_dict(
+    #     paddle.load(
+    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #     )
+    # )
 
     for epoch in range(args.max_epochs):
-        logger.info("epoch:{}".format(epoch))
+        logger.info(f"epoch:{epoch}")
         trainer.on_epoch_start()
 
         # for train
@@ -426,7 +439,7 @@ if __name__ == "__main__":
             val_loss = trainer.validation_step(x, i)
             total_val_loss.append(val_loss)
         mean_val_loss = np.stack(total_val_loss).mean()
-        logger.info("val_loss (mean):{}".format(mean_val_loss))
+        logger.info(f"val_loss (mean):{mean_val_loss}")
 
         # for test
         total_test_loss = []
@@ -434,14 +447,14 @@ if __name__ == "__main__":
             test_loss = trainer.test_step(x, i)
             total_test_loss.append(test_loss)
         mean_test_loss = np.stack(total_test_loss).mean()
-        logger.info("test_loss (mean):{}".format(mean_test_loss))
+        logger.info(f"test_loss (mean):{mean_test_loss}")
 
-        os.makedirs("params_{}".format(trainer.hparams.model), exist_ok=True)
+        os.makedirs(f"params_{trainer.hparams.model}", exist_ok=True)
         paddle.save(
             trainer.model.state_dict(),
-            "params_{}/model{}.pdparams".format(trainer.hparams.model, epoch),
+            os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams"),
         )
         paddle.save(
             trainer.optimizer.state_dict(),
-            "params_{}/adam{}.pdopt".format(trainer.hparams.model, epoch),
+            os.path.join(f"params_{trainer.hparams.model}", f"adam{epoch}.pdopt"),
         )

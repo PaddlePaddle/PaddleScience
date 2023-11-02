@@ -196,12 +196,12 @@ class CFDGCN(nn.Layer):
     def upsample(self, features, coarse_nodes, fine_nodes):
         """
         Args:
-            features (_type_): [353, 3]
-            coarse_nodes (_type_): [353, 2]
-            fine_nodes (_type_): [6684, 2]
+            features (tensor): [353, 3]
+            coarse_nodes (tensor): [353, 2]
+            fine_nodes (tensor): [6684, 2]
 
         Returns:
-            _type_: _description_
+            tensor: upsample result [6684, 3]
         """
         coarse_nodes_input = paddle.repeat_interleave(
             coarse_nodes.unsqueeze(0), fine_nodes.shape[0], 0

@@ -267,8 +267,8 @@ def delauney(x):
         face = np.array([[0, 1, 2]])
     else:
         raise ValueError(
-            "Not enough points to contruct Delaunay triangulation, got {} "
-            "but expected at least 3".format(pos.size(0))
+            f"Not enough points to contruct Delaunay triangulation, got {pos.shape[0]} "
+            + "but expected at least 3"
         )
 
     elems = face.astype(np.compat.long)
