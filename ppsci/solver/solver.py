@@ -75,7 +75,7 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
-        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
+        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
@@ -229,7 +229,7 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # whether calculate metrics after each batch during evaluate
+        # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
             for metric in itertools.chain(
@@ -241,7 +241,7 @@ class Solver:
                         f"{compute_metric_by_batch} when compute_metric_by_batch="
                         f"{compute_metric_by_batch}."
                     )
-        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
+        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         self.eval_with_no_grad = eval_with_no_grad
 
         # load pretrained model, usually used for transfer learning
