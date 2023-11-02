@@ -2,6 +2,32 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6209280?sUid=455441&shared=1&ts=1684495132419" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5 --output rossler_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5 --output rossler_valid.hdf5
+    python train_enn.py
+    python train_transformer.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5 --output rossler_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5 --output rossler_valid.hdf5
+    python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_pretrained.pdparams
+    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_transformer_pretrained.pdparams
+    ```
+
 ## 1. 背景简介
 
 Rossler System，最早由德国科学家 Rossler 提出，也是常见的混沌系统。该系统在混沌理论的研究中具有重要地位，为混沌现象提供了一种数学描述和理解方法。同时由于该系统对数值扰动极为敏感，因此也是是评估机器学习（深度学习）模型准确性的良好基准。
@@ -43,9 +69,9 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="44" title="examples/rossler/train_enn.py"
+``` yaml linenums="22" title="examples/rossler/conf/enn.yaml"
 --8<--
-examples/rossler/train_enn.py:44:59
+examples/rossler/conf/enn.yaml:22:34
 --8<--
 ```
 
@@ -53,9 +79,9 @@ examples/rossler/train_enn.py:44:59
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="64" title="examples/rossler/train_enn.py"
+``` py linenums="57" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:64:81
+examples/rossler/train_enn.py:55:74
 --8<--
 ```
 
@@ -74,9 +100,9 @@ examples/rossler/train_enn.py:64:81
 
 定义监督约束的代码如下：
 
-``` py linenums="83" title="examples/rossler/train_enn.py"
+``` py linenums="76" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:83:91
+examples/rossler/train_enn.py:76:86
 --8<--
 ```
 
@@ -99,17 +125,17 @@ examples/rossler/train_enn.py:83:91
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="96" title="examples/rossler/train_enn.py"
+``` py linenums="89" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:96:100
+examples/rossler/train_enn.py:93:99
 --8<--
 ```
 
 其中，`RosslerEmbedding` 的前两个参数在前文中已有描述，这里不再赘述，网络模型的第三、四个参数是训练数据集的均值和方差，用于归一化输入数据。计算均值、方差的的代码表示如下：
 
-``` py linenums="29" title="examples/rossler/train_enn.py"
+``` py linenums="32" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:29:40
+examples/rossler/train_enn.py:32:43
 --8<--
 ```
 
@@ -117,9 +143,9 @@ examples/rossler/train_enn.py:29:40
 
 本案例中使用的学习率方法为 `ExponentialDecay` ，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下
 
-``` py linenums="102" title="examples/rossler/train_enn.py"
+``` py linenums="101" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:102:116
+examples/rossler/train_enn.py:101:110
 --8<--
 ```
 
@@ -127,9 +153,9 @@ examples/rossler/train_enn.py:102:116
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="118" title="examples/rossler/train_enn.py"
+``` py linenums="114" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:118:145
+examples/rossler/train_enn.py:114:141
 --8<--
 ```
 
@@ -139,9 +165,9 @@ examples/rossler/train_enn.py:118:145
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="147" title="examples/rossler/train_enn.py"
+``` py linenums="143" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:147:
+examples/rossler/train_enn.py:143:157
 --8<--
 ```
 
@@ -149,9 +175,9 @@ examples/rossler/train_enn.py:147:
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="54" title="examples/rossler/train_transformer.py"
+``` yaml linenums="23" title="examples/rossler/conf/transformer.yaml"
 --8<--
-examples/rossler/train_transformer.py:54:76
+examples/rossler/conf/transformer.yaml:23:33
 --8<--
 ```
 
@@ -159,9 +185,9 @@ examples/rossler/train_transformer.py:54:76
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="84" title="examples/rossler/train_transformer.py"
+``` py linenums="67" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:84:101
+examples/rossler/train_transformer.py:65:82
 --8<--
 ```
 
@@ -169,9 +195,9 @@ examples/rossler/train_transformer.py:84:101
 
 定义监督约束的代码如下：
 
-``` py linenums="103" title="examples/rossler/train_transformer.py"
+``` py linenums="84" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:103:108
+examples/rossler/train_transformer.py:84:89
 --8<--
 ```
 
@@ -186,9 +212,9 @@ examples/rossler/train_transformer.py:103:108
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="113" title="examples/rossler/train_transformer.py"
+``` py linenums="95" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:113:121
+examples/rossler/train_transformer.py:95:95
 --8<--
 ```
 
@@ -198,9 +224,9 @@ examples/rossler/train_transformer.py:113:121
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="123" title="examples/rossler/train_transformer.py"
+``` py linenums="97" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:123:137
+examples/rossler/train_transformer.py:97:104
 --8<--
 ```
 
@@ -208,9 +234,9 @@ examples/rossler/train_transformer.py:123:137
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="139" title="examples/rossler/train_transformer.py"
+``` py linenums="107" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:139:165
+examples/rossler/train_transformer.py:107:132
 --8<--
 ```
 
@@ -220,15 +246,15 @@ examples/rossler/train_transformer.py:139:165
 
 在本文中首先定义了对 Transformer 模型输出数据变换到物理状态空间的代码：
 
-``` py linenums="32" title="examples/rossler/train_transformer.py"
+``` py linenums="34" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:32:50
+examples/rossler/train_transformer.py:34:52
 --8<--
 ```
 
-``` py linenums="80" title="examples/rossler/train_transformer.py"
+``` py linenums="63" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:80:81
+examples/rossler/train_transformer.py:63:64
 --8<--
 ```
 
@@ -236,9 +262,9 @@ examples/rossler/train_transformer.py:80:81
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="167" title="examples/rossler/train_transformer.py"
+``` py linenums="134" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:167:185
+examples/rossler/train_transformer.py:134:152
 --8<--
 ```
 
@@ -248,9 +274,9 @@ examples/rossler/train_transformer.py:167:185
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="187" title="examples/rossler/train_transformer.py"
+``` py linenums="154" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:187:
+examples/rossler/train_transformer.py:154:172
 --8<--
 ```
 
