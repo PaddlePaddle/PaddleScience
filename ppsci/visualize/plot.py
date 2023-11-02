@@ -80,6 +80,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
         value_keys (Tuple[str, ...]): Value keys.
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     fig, a = plt.subplots(len(value_keys), num_timestamps, squeeze=False)
     fig.subplots_adjust(hspace=0.8)
 
@@ -173,6 +174,7 @@ def _save_plot_from_2d_array(
         xticks (Optional[Tuple[float, ...]]): Tuple of xtick locations. Defaults to None.
         yticks (Optional[Tuple[float, ...]]): Tuple of ytick locations. Defaults to None.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     plt.close("all")
     matplotlib.rcParams["xtick.labelsize"] = 5
@@ -281,7 +283,7 @@ class HandlerColormap(HandlerBase):
 
     Args:
         cmap (matplotlib.cm): Matplotlib colormap.
-        num_stripes (int, optional): Number of countour levels (strips) in rectangle. Defaults to 8.
+        num_stripes (int, optional): Number of contour levels (strips) in rectangle. Defaults to 8.
     """
 
     def __init__(self, cmap: matplotlib.cm, num_stripes: int = 8, **kw):
@@ -319,6 +321,7 @@ def _save_plot_from_3d_array(
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamps coord/value contains. Defaults to 1.
     """
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     fig = plt.figure(figsize=(10, 10))
     len_ts = len(visu_data[0]) // num_timestamps
@@ -404,12 +407,12 @@ def _save_plot_weather_from_array(
         pred_key (str): The key of predict data.
         target_key (str): The key of target data.
         xticks (Tuple[float, ...]): The list of xtick locations.
-        xticklabels (Tuple[str, ...]): The xaxis' tick labels.
+        xticklabels (Tuple[str, ...]): The x-axis' tick labels.
         yticks (Tuple[float, ...]): The list of ytick locations.
-        yticklabels (Tuple[str, ...]): The yaxis' tick labels.
+        yticklabels (Tuple[str, ...]): The y-axis' tick labels.
         vmin (float): Minimum value that the colormap covers.
         vmax (float):  Maximal value that the colormap covers.
-        colorbar_label (str, optional): The colorbar label. Defaults to "".
+        colorbar_label (str, optional): The color-bar label. Defaults to "".
         log_norm (bool, optional): Whether use log norm. Defaults to False.
     """
 
@@ -447,6 +450,7 @@ def _save_plot_weather_from_array(
             )
         plt.colorbar(mappable=map_, cax=None, ax=None, shrink=0.5, label=colorbar_label)
 
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     fig = plt.figure(facecolor="w", figsize=(7, 7))
     ax = fig.add_subplot(2, 1, 1)
     plot_weather(
@@ -478,7 +482,7 @@ def _save_plot_weather_from_array(
 
 
 def save_plot_weather_from_dict(
-    flodername: str,
+    foldername: str,
     data_dict: Dict[str, Union[np.ndarray, paddle.Tensor]],
     visu_keys: Tuple[str, ...],
     xticks: Tuple[float, ...],
@@ -494,20 +498,20 @@ def save_plot_weather_from_dict(
     """Plot weather result as file from dict data.
 
     Args:
-        flodername (str): Output floder name.
+        foldername (str): Output folder name.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("output_6h", "target_6h").
         xticks (Tuple[float, ...]): The list of xtick locations.
-        xticklabels (Tuple[str, ...]): The xaxis' tick labels.
+        xticklabels (Tuple[str, ...]): The x-axis' tick labels.
         yticks (Tuple[float, ...]): The list of ytick locations,
-        yticklabels (Tuple[str, ...]): The yaxis' tick labels.
+        yticklabels (Tuple[str, ...]): The y-axis' tick labels.
         vmin (float): Minimum value that the colormap covers.
         vmax (float): Maximal value that the colormap covers.
         colorbar_label (str, optional): The colorbar label. Defaults to "".
         log_norm (bool, optional): Whether use log norm. Defaults to False.
         num_timestamps (int): Number of timestamp in data_dict. Defaults to 1.
     """
-    os.makedirs(flodername, exist_ok=True)
+    os.makedirs(foldername, exist_ok=True)
 
     visu_data = [data_dict[k] for k in visu_keys]
     if isinstance(visu_data[0], paddle.Tensor):
@@ -518,7 +522,7 @@ def save_plot_weather_from_dict(
         pred_key, target_key = visu_keys[2 * t], visu_keys[2 * t + 1]
         pred_data = visu_data[2 * t]
         target_data = visu_data[2 * t + 1]
-        filename_t = os.path.join(flodername, f"{t}.png")
+        filename_t = os.path.join(foldername, f"{t}.png")
         _save_plot_weather_from_array(
             filename_t,
             pred_data,
@@ -535,7 +539,7 @@ def save_plot_weather_from_dict(
             log_norm=log_norm,
         )
         frames.append(imageio.imread(filename_t))
-    filename = os.path.join(flodername, "result.gif")
+    filename = os.path.join(foldername, "result.gif")
     imageio.mimsave(
         filename,
         frames,

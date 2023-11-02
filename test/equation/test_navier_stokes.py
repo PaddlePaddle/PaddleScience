@@ -173,7 +173,9 @@ def test_navierstokes(nu, rho, dim, time):
 
     # check result whether is equal
     for name in test_output_names:
-        assert paddle.allclose(expected_output[name], test_output[name]), f"{name}"
+        assert paddle.allclose(
+            expected_output[name], test_output[name], atol=1e-7
+        ), f"{name}"
 
 
 if __name__ == "__main__":

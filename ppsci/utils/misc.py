@@ -18,6 +18,8 @@ import collections
 import functools
 import os
 import random
+import time
+from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -30,11 +32,14 @@ import paddle
 from matplotlib import pyplot as plt
 from paddle import distributed as dist
 
+from ppsci.utils import logger
+
 __all__ = [
-    "all_gather",
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
+    "Timer",
+    "all_gather",
     "concat_dict_list",
     "convert_to_array",
     "convert_to_dict",
@@ -112,15 +117,57 @@ class Prettydefaultdict(collections.defaultdict):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
+class Timer(ContextDecorator):
+    """Count time cost for code block within context.
+
+    Args:
+        name (str, optional): Name of timer discriminate different code block.
+            Defaults to "Timer".
+        auto_print (bool, optional): Whether print time cost when exit context.
+            Defaults to True.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> with misc.Timer("test1", auto_print=False) as timer:
+        ...     w = sum(range(0, 10))
+        >>> print(f"time cost of 'sum(range(0, 10))' is {timer.interval:.2f}")
+        time cost of 'sum(range(0, 10))' is 0.00
+
+        >>> @misc.Timer("test2", auto_print=True)
+        ... def func():
+        ...     w = sum(range(0, 10))
+        >>> func()  # doctest: +SKIP
+
+    """
+
+    interval: float  # Time cost for code within Timer context
+
+    def __init__(self, name: str = "Timer", auto_print: bool = True):
+        super().__init__()
+        self.name = name
+        self.auto_print = auto_print
+
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+
 def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.ndarray]:
     """Split given array into single channel array at axis -1 in order of given keys.
 
     Args:
-        array (np.ndarray): Array to be splited.
+        array (np.ndarray): Array to be split.
         keys (Tuple[str, ...]):Keys used in split.
 
     Returns:
-        Dict[str, np.ndarray]: Splited dict.
+        Dict[str, np.ndarray]: Split dict.
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -323,7 +370,7 @@ def run_at_rank0(func: Callable) -> Callable:
         func (Callable): Given function.
 
     Returns:
-        Callable: Wrappered function which will only run at at rank 0,
+        Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
     """
 

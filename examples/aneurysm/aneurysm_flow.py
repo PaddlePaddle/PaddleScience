@@ -56,10 +56,10 @@ if __name__ == "__main__":
     mu = 0.5 * (X_OUT - X_IN)
     N_Y = 20
 
-    x_inital = np.linspace(X_IN, X_OUT, 100, dtype=paddle.get_default_dtype()).reshape(
+    x_initial = np.linspace(X_IN, X_OUT, 100, dtype=paddle.get_default_dtype()).reshape(
         100, 1
     )
-    x_20_copy = np.tile(x_inital, (20, 1))  # duplicate 20 times of x for dataloader
+    x_20_copy = np.tile(x_initial, (20, 1))  # duplicate 20 times of x for dataloader
 
     SIGMA = 0.1
     SCALE_START = -0.02
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         len(scale), 1
     )
 
-    # Axisymetric boundary
+    # Axisymmetric boundary
     r_func = (
         scale
         / math.sqrt(2 * np.pi * SIGMA**2)
@@ -85,18 +85,18 @@ if __name__ == "__main__":
     os.makedirs(PLOT_DIR, exist_ok=True)
     y_up = (R_INLET - r_func) * np.ones_like(x)
     y_down = (-R_INLET + r_func) * np.ones_like(x)
-    idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indexs
+    idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indices
     plt.figure()
     plt.scatter(x[idx], y_up[idx])
     plt.scatter(x[idx], y_down[idx])
     plt.axis("equal")
-    plt.savefig(osp.join(PLOT_DIR, "idealized_stenotid_vessel"), bbox_inches="tight")
+    plt.savefig(osp.join(PLOT_DIR, "idealized_stenotic_vessel"), bbox_inches="tight")
 
     # Points and shuffle(for alignment)
     y = np.zeros([len(x), 1], dtype=paddle.get_default_dtype())
-    for x0 in x_inital:
+    for x0 in x_initial:
         index = np.where(x[:, 0] == x0)[0]
-        # y is linear to scale, so we place linespace to get 1000 x, it coressponds to vessels
+        # y is linear to scale, so we place linspace to get 1000 x, it corresponds to vessels
         y[index] = np.linspace(
             -max(y_up[index]),
             max(y_up[index]),
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             dtype=paddle.get_default_dtype(),
         ).reshape(len(index), -1)
 
-    idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indexs
+    idx = np.where(scale == 0)  # plot vessel which scale is 0.2 by finding its indices
     plt.figure()
     plt.scatter(x[idx], y[idx])
     plt.axis("equal")
@@ -274,7 +274,7 @@ if __name__ == "__main__":
         )
         # error_p = np.linalg.norm(p - p_cfd) / (D_P * D_P)
 
-        # Streamwise velocity component u
+        # Stream-wise velocity component u
         plt.figure()
         plt.subplot(212)
         plt.scatter(x, y, c=u_vec[:, 0], vmin=min(u_cfd[:, 0]), vmax=max(u_cfd[:, 0]))
@@ -291,7 +291,7 @@ if __name__ == "__main__":
             bbox_inches="tight",
         )
 
-        # Spanwise velocity component v
+        # Span-wise velocity component v
         plt.figure()
         plt.subplot(212)
         plt.scatter(x, y, c=u_vec[:, 1], vmin=min(u_cfd[:, 1]), vmax=max(u_cfd[:, 1]))
@@ -311,10 +311,10 @@ if __name__ == "__main__":
 
         # Centerline wall shear profile tau_c (downside)
         data_CFD_wss = np.load(osp.join(path, f"{case_id}CFD_wss.npz"))
-        x_inital = data_CFD_wss["x"]
+        x_initial = data_CFD_wss["x"]
         wall_shear_mag_up = data_CFD_wss["wss"]
 
-        D_H = 0.001  # The spanwise distance is approximately the height of the wall
+        D_H = 0.001  # The span-wise distance is approximately the height of the wall
         r_cl = (
             scale
             / np.sqrt(2 * np.pi * SIGMA**2)
@@ -337,7 +337,7 @@ if __name__ == "__main__":
 
         plt.figure()
         plt.plot(
-            x_inital,
+            x_initial,
             wall_shear_mag_up,
             label="CFD",
             color="darkblue",
@@ -346,7 +346,7 @@ if __name__ == "__main__":
             alpha=1.0,
         )
         plt.plot(
-            x_inital,
+            x_initial,
             tau_c,
             label="DNN",
             color="red",

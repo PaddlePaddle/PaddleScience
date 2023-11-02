@@ -45,7 +45,13 @@ class _Jacobian:
 
         self.J: Dict[str, paddle.Tensor] = {}
 
-    def __call__(self, i: int = 0, j: Optional[int] = None) -> "paddle.Tensor":
+    def __call__(
+        self,
+        i: int = 0,
+        j: Optional[int] = None,
+        retain_graph: Optional[bool] = None,
+        create_graph: bool = True,
+    ) -> "paddle.Tensor":
         """Returns J[`i`][`j`]. If `j` is ``None``, returns the gradient of y_i, i.e.,
         J[i].
         """
@@ -56,7 +62,9 @@ class _Jacobian:
         # Compute J[i]
         if i not in self.J:
             y = self.ys[:, i : i + 1] if self.dim_y > 1 else self.ys
-            self.J[i] = paddle.grad(y, self.xs, create_graph=True)[0]
+            self.J[i] = paddle.grad(
+                y, self.xs, retain_graph=retain_graph, create_graph=create_graph
+            )[0]
 
         return self.J[i] if (j is None or self.dim_x == 1) else self.J[i][:, j : j + 1]
 
@@ -82,6 +90,8 @@ class Jacobians:
         xs: "paddle.Tensor",
         i: int = 0,
         j: Optional[int] = None,
+        retain_graph: Optional[bool] = None,
+        create_graph: bool = True,
     ) -> "paddle.Tensor":
         """Compute jacobians for given ys and xs.
 
@@ -90,6 +100,15 @@ class Jacobians:
             xs (paddle.Tensor): Input tensor.
             i (int, optional): i-th output variable. Defaults to 0.
             j (Optional[int]): j-th input variable. Defaults to None.
+            retain_graph (Optional[bool]): whether to retain the forward graph which
+                is used to calculate the gradient. When it is True, the graph would
+                be retained, in which way users can calculate backward twice for the
+                same graph. When it is False, the graph would be freed. Default None,
+                which means it is equal to `create_graph`.
+            create_graph (bool, optional): whether to create the gradient graphs of
+                the computing process. When it is True, higher order derivatives are
+                supported to compute; when it is False, the gradient graphs of the
+                computing process would be discarded. Default False.
 
         Returns:
             paddle.Tensor: Jacobian matrix of ys[i] to xs[j].
@@ -105,7 +124,7 @@ class Jacobians:
         key = (ys, xs)
         if key not in self.Js:
             self.Js[key] = _Jacobian(ys, xs)
-        return self.Js[key](i, j)
+        return self.Js[key](i, j, retain_graph, create_graph)
 
     def _clear(self):
         """Clear cached Jacobians."""
@@ -157,12 +176,21 @@ class _Hessian:
             component = 0
 
         if grad_y is None:
-            grad_y = jacobian(ys, xs, i=component, j=None)
+            # `create_graph` of first order(jacobian) should be `True` in _Hessian.
+            grad_y = jacobian(
+                ys, xs, i=component, j=None, retain_graph=None, create_graph=True
+            )
         self.H = _Jacobian(grad_y, xs)
 
-    def __call__(self, i: int = 0, j: int = 0):
+    def __call__(
+        self,
+        i: int = 0,
+        j: int = 0,
+        retain_graph: Optional[bool] = None,
+        create_graph: bool = True,
+    ):
         """Returns H[`i`][`j`]."""
-        return self.H(i, j)
+        return self.H(i, j, retain_graph, create_graph)
 
 
 class Hessians:
@@ -188,6 +216,8 @@ class Hessians:
         i: int = 0,
         j: int = 0,
         grad_y: Optional["paddle.Tensor"] = None,
+        retain_graph: Optional[bool] = None,
+        create_graph: bool = True,
     ) -> "paddle.Tensor":
         """Compute hessian matrix for given ys and xs.
 
@@ -201,6 +231,15 @@ class Hessians:
             j (int, optional): j-th input variable. Defaults to 0.
             grad_y (Optional[paddle.Tensor]): The gradient of `y` w.r.t. `xs`. Provide `grad_y` if known to avoid
                 duplicate computation. Defaults to None.
+            retain_graph (Optional[bool]): whether to retain the forward graph which
+                is used to calculate the gradient. When it is True, the graph would
+                be retained, in which way users can calculate backward twice for the
+                same graph. When it is False, the graph would be freed. Default None,
+                which means it is equal to `create_graph`.
+            create_graph (bool, optional): whether to create the gradient graphs of
+                the computing process. When it is True, higher order derivatives are
+                supported to compute; when it is False, the gradient graphs of the
+                computing process would be discarded. Default False.
 
         Returns:
             paddle.Tensor: Hessian matrix.
@@ -216,7 +255,7 @@ class Hessians:
         key = (ys, xs, component)
         if key not in self.Hs:
             self.Hs[key] = _Hessian(ys, xs, component=component, grad_y=grad_y)
-        return self.Hs[key](i, j)
+        return self.Hs[key](i, j, retain_graph, create_graph)
 
     def _clear(self):
         """Clear cached Hessians."""

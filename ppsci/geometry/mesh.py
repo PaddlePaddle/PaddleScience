@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -58,9 +59,34 @@ class Mesh(geometry.Geometry):
         elif isinstance(mesh, pymesh.Mesh):
             self.py_mesh = mesh
         else:
-            raise ValueError("arg `mesh` should be path string or or `pymesh.Mesh`")
+            raise ValueError("arg `mesh` should be path string or `pymesh.Mesh`")
 
         self.init_mesh()
+
+    @classmethod
+    def from_pymesh(cls, mesh: "pymesh.Mesh") -> "Mesh":
+        """Instantiate Mesh object with given PyMesh object.
+
+        Args:
+            mesh (pymesh.Mesh): PyMesh object.
+
+        Returns:
+            Mesh: Instantiated ppsci.geometry.Mesh object.
+        """
+        # check if pymesh is installed when using Mesh Class
+        if not checker.dynamic_import_to_globals(["pymesh"]):
+            raise ImportError(
+                "Could not import pymesh python package."
+                "Please install it as https://pymesh.readthedocs.io/en/latest/installation.html."
+            )
+        import pymesh
+
+        if isinstance(mesh, pymesh.Mesh):
+            return cls(mesh)
+        else:
+            raise ValueError(
+                f"arg `mesh` should be type of `pymesh.Mesh`, but got {type(mesh)}"
+            )
 
     def init_mesh(self):
         """Initialize necessary variables for mesh"""
@@ -117,7 +143,7 @@ class Mesh(geometry.Geometry):
                 the shape is [N, 3]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -143,7 +169,20 @@ class Mesh(geometry.Geometry):
     def on_boundary(self, x):
         return np.isclose(self.sdf_func(x), 0.0).flatten()
 
-    def translate(self, translation, relative=True):
+    def translate(self, translation: np.ndarray, relative: bool = True) -> "Mesh":
+        """Translate by given offsets.
+
+        NOTE: This API generate a completely new Mesh object with translated geometry,
+        without modifying original Mesh object inplace.
+
+        Args:
+            translation (np.ndarray): Translation offsets, numpy array of shape (3,):
+                [offset_x, offset_y, offset_z].
+            relative (bool, optional): Whether translate relatively. Defaults to True.
+
+        Returns:
+            Mesh: Translated Mesh object.
+        """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces)
 
@@ -161,13 +200,26 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3iVector(faces),
         )
         open3d_mesh = open3d_mesh.translate(translation, relative)
-        self.py_mesh = pymesh.form_mesh(
+        translated_mesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
-        self.init_mesh()
-        return self
+        # Generate a new Mesh object using class method
+        return Mesh.from_pymesh(translated_mesh)
 
-    def scale(self, scale, center=(0, 0, 0)):
+    def scale(self, scale: float, center: Tuple[float, float, float] = (0, 0, 0)):
+        """Scale by given scale coefficient and center coordinate.
+
+        NOTE: This API generate a completely new Mesh object with scaled geometry,
+        without modifying original Mesh object inplace.
+
+        Args:
+            scale (float): Scale coefficient.
+            center (Tuple[float,float,float], optional): Center coordinate, [x, y, z].
+                Defaults to (0, 0, 0).
+
+        Returns:
+            Mesh: Scaled Mesh object.
+        """
         vertices = np.array(self.vertices, dtype=paddle.get_default_dtype())
         faces = np.array(self.faces, dtype=paddle.get_default_dtype())
 
@@ -185,14 +237,14 @@ class Mesh(geometry.Geometry):
             open3d.utility.Vector3iVector(faces),
         )
         open3d_mesh = open3d_mesh.scale(scale, center)
-        self.py_mesh = pymesh.form_mesh(
+        scaled_pymesh = pymesh.form_mesh(
             np.asarray(open3d_mesh.vertices, dtype=paddle.get_default_dtype()), faces
         )
-        self.init_mesh()
-        return self
+        # Generate a new Mesh object using class method
+        return Mesh.from_pymesh(scaled_pymesh)
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         return self.pysdf.sample_surface(n)
 
     def inflated_random_points(self, n, distance, random="pseudo", criteria=None):
@@ -381,7 +433,7 @@ class Mesh(geometry.Geometry):
                 if _ntry >= 1000 and _nsuc == 0:
                     raise ValueError(
                         "Sample boundary points failed, "
-                        "please check correctness of geometry and given creteria."
+                        "please check correctness of geometry and given criteria."
                     )
 
             all_points = np.concatenate(all_points, axis=0)
@@ -447,18 +499,18 @@ class Mesh(geometry.Geometry):
         x_dict = misc.convert_to_dict(points, self.dim_keys)
         area_dict = misc.convert_to_dict(areas, ("area",))
 
-        # NOTE: add negtive to the sdf values because weight should be positive.
+        # NOTE: add negative to the sdf values because weight should be positive.
         sdf = -self.sdf_func(points)
         sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
 
-        sdf_derivs_dict = {}
+        sdf_derives_dict = {}
         if compute_sdf_derivatives:
-            sdf_derivs = -self.sdf_derivatives(points)
-            sdf_derivs_dict = misc.convert_to_dict(
-                sdf_derivs, tuple(f"sdf__{key}" for key in self.dim_keys)
+            sdf_derives = -self.sdf_derivatives(points)
+            sdf_derives_dict = misc.convert_to_dict(
+                sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
             )
 
-        return {**x_dict, **area_dict, **sdf_dict, **sdf_derivs_dict}
+        return {**x_dict, **area_dict, **sdf_dict, **sdf_derives_dict}
 
     def union(self, other: "Mesh"):
         if not checker.dynamic_import_to_globals(["pymesh"]):

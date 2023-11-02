@@ -58,7 +58,7 @@ class Geometry:
         raise NotImplementedError(f"{self}.boundary_normal is not implemented")
 
     def uniform_points(self, n: int, boundary=True):
-        """Compute the equispaced points in the geometry."""
+        """Compute the equi-spaced points in the geometry."""
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
         )
@@ -100,25 +100,25 @@ class Geometry:
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample interior points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
         if hasattr(self, "sdf_func"):
             sdf = -self.sdf_func(x)
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
-            sdf_derivs_dict = {}
+            sdf_derives_dict = {}
             if compute_sdf_derivatives:
-                sdf_derivs = -self.sdf_derivatives(x)
-                sdf_derivs_dict = misc.convert_to_dict(
-                    sdf_derivs, tuple(f"sdf__{key}" for key in self.dim_keys)
+                sdf_derives = -self.sdf_derivatives(x)
+                sdf_derives_dict = misc.convert_to_dict(
+                    sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
                 )
         else:
             sdf_dict = {}
-            sdf_derivs_dict = {}
+            sdf_derives_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 
-        return {**x_dict, **sdf_dict, **sdf_derivs_dict}
+        return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -189,7 +189,7 @@ class Geometry:
         """Compute the random points in the geometry."""
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         logger.warning(
             f"{self}.uniform_boundary_points not implemented. "
             f"Use random_boundary_points instead."
@@ -223,13 +223,13 @@ class Geometry:
                 "when using 'sdf_derivatives'."
             )
         # Only compute sdf derivatives for those already implement `sdf_func` method.
-        sdf_derivs = np.empty_like(x)
+        sdf_derives = np.empty_like(x)
         for i in range(self.ndim):
             h = np.zeros_like(x)
             h[:, i] += epsilon / 2
-            derivs_at_i = (self.sdf_func(x + h) - self.sdf_func(x - h)) / epsilon
-            sdf_derivs[:, i : i + 1] = derivs_at_i
-        return sdf_derivs
+            derives_at_i = (self.sdf_func(x + h) - self.sdf_func(x - h)) / epsilon
+            sdf_derives[:, i : i + 1] = derives_at_i
+        return sdf_derives
 
     def union(self, other):
         """CSG Union."""

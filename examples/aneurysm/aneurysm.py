@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_p": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_p": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "p": lambda out: out["p"],

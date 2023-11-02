@@ -499,7 +499,7 @@ PaddleScience 内置了一些常见的评估器，如下所示。
 ``` py title="examples/demo/demo.py"
 # create a SupervisedValidator
 eta_mse_validator = ppsci.validate.SupervisedValidator(
-    valida_dataloader_cfg,
+    valid_dataloader_cfg,
     ppsci.loss.MSELoss("mean"),
     {"eta": lambda out: out["eta"], **equation["VIV"].equations},
     metric={"MSE": ppsci.metric.MSE()},
@@ -547,7 +547,7 @@ eta_mse_validator = ppsci.validate.SupervisedValidator(
     ]
     ```
 
-完成上述新评估器代码编写的工作之后，我们就能像 PaddleScience 内置评估器一样，以 `ppsci.equation.NewValidator` 的方式，调用我们编写的新评估器类，并用于创建评估器实例。同样地，在评估器构建完毕后之后，建议将所有评估器包装到一个字典中方便后续索引。
+完成上述新评估器代码编写的工作之后，我们就能像 PaddleScience 内置评估器一样，以 `ppsci.validate.NewValidator` 的方式，调用我们编写的新评估器类，并用于创建评估器实例。同样地，在评估器构建完毕后之后，建议将所有评估器包装到一个字典中方便后续索引。
 
 ``` py title="examples/demo/demo.py"
 new_validator = ppsci.validate.NewValidator(...)
@@ -557,7 +557,7 @@ validator = {..., new_validator.name: new_validator}
 ### 2.10 构建可视化器[可选]
 
 PaddleScience 内置了一些常见的可视化器，如 `VisualizerVtu` 可视化器等，如果您想使用这些内置的可视
-化器，可以直接调用 [`ppsci.visulizer.*`](./api/visualize.md) 下的 API，并填入可视化器实例化所需的
+化器，可以直接调用 [`ppsci.visualizer.*`](./api/visualize.md) 下的 API，并填入可视化器实例化所需的
 参数，即可快速构建模型。
 
 ``` py title="examples/demo/demo.py"
@@ -570,7 +570,7 @@ for key in vis_interior_points:
     )
 
 visualizer = {
-    "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+    "visualize_u_v": ppsci.visualize.VisualizerVtu(
         vis_points,
         {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
         prefix="result_u_v",
@@ -620,7 +620,7 @@ solver.eval()
 
 ### 2.14 可视化[可选]
 
-若 `Solver` 实例化时传入了 `visualzer` 参数，则 PaddleScience 模型的可视化只需调用一行代码。
+若 `Solver` 实例化时传入了 `visualizer` 参数，则 PaddleScience 模型的可视化只需调用一行代码。
 
 ``` py title="examples/demo/demo.py"
 solver.visualize()
