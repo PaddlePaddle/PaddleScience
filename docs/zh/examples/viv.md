@@ -2,6 +2,12 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    python viv.py
+    ```
+
 ## 1. 背景简介
 
 涡激振动（Vortex-Induced Vibration，VIV）是一种流固耦合振动现象，主要发生在流体绕过柱体或管体时。在海洋工程和风工程中，这种振动现象具有重要应用。
@@ -15,13 +21,6 @@
 当涡流脱落频率接近结构的固有频率时，圆柱会发生涡激振动，VIV系统相当于一个弹簧-阻尼系统：
 
 ![VIV_1D_SpringDamper](https://paddle-org.bj.bcebos.com/paddlescience/docs/ViV/VIV_1D_SpringDamper.png)
-
-
-=== "模型训练命令"
-
-    ``` sh
-    python viv.py
-    ```
 
 ## 2. 问题定义
 
@@ -119,9 +118,9 @@ examples/fsi/viv.py:61:64
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔1000个epochs评估一次模型精度。
 
-``` yaml linenums="40"
+``` yaml linenums="38"
 --8<--
-examples/fsi/conf/viv.yaml:40:45
+examples/fsi/conf/viv.yaml:38:51
 --8<--
 ```
 
