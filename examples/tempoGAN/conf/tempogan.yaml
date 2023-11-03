@@ -23,6 +23,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
+log_freq: 20
 DATASET_PATH: ./datasets/tempoGAN/2d_train.mat
 DATASET_PATH_VALID: ./datasets/tempoGAN/2d_valid.mat
 
@@ -90,3 +91,4 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+  save_outs: true
