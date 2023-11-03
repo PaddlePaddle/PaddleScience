@@ -1,4 +1,26 @@
 # 飞桨论文复现营 科学计算 Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction
+* [飞桨论文复现营 科学计算 Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction](#飞桨论文复现营科学计算combining-differentiable-pde-solvers-and-graph-neural-networks-for-fluid-flow-prediction)
+  + [1. 简介](#1简介)
+    - [1.1 模型结构](#1-1模型结构)
+  + [2. 数据集](#2数据集)
+    - [2.1 数据下载使用](#2-1数据下载使用)
+  + [3. 环境依赖](#3环境依赖)
+    - [3.1 硬件](#3-1硬件)
+    - [3.2 框架](#3-2框架)
+    - [3.3 本地安装](#3-3本地安装)
+  + [4. 快速开始](#4快速开始)
+    - [4.1 GCN模型运行](#4-1-gcn模型运行)
+    - [4.2 AIStudio上运行](#4-2-aistudio上运行)
+    - [4.3 本地运行](#4-3本地运行)
+  + [5. 项目结构与实现细节](#5项目结构与实现细节)
+    - [5.1 使用pgl替换torch_geometric](#5-1使用-pgl替换torch-geometric)
+      - [5.1.1 Dataset与Dataloader修改](#5-1-1-dataset与dataloader修改)
+      - [5.1.2 knn_interpolate方法实现](#5-1-2-knn-interpolate方法实现)
+    - [5.2 SU2项目和paddle的结合使用](#5-2-su2项目和paddle的结合使用)
+  + [6. 复现结果](#6复现结果)
+    - [6.1 RMSE对比](#6-1-rmse对比)
+    - [6.2 可视化展示](#6-2可视化展示)
+  + [7. 模型信息](#7模型信息)
 
 ## 1. 简介
 
@@ -35,10 +57,13 @@
 
 数据集为作者提供，可通过[此处链接](https://github.com/locuslab/cfd-gcn)进行下载。
 
-数据集aistudio地址：
-* 数据: https://aistudio.baidu.com/aistudio/datasetdetail/184778
+* 数据集aistudio地址: https://aistudio.baidu.com/aistudio/datasetdetail/184778
+* mesh数据下载
 
-本项目已经关联以上数据集，可直接在项目data文件夹下找到对应数据集
+```shell
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+tar -xf meshes.tar
+```
 
 ## 3. 环境依赖
 
@@ -71,7 +96,7 @@ pip install mpi4py
 
 ## 4. 快速开始
 
-### 4.1 直接运行GCN模型需要修改的位置
+### 4.1 GCN模型运行
 
 在main.py中注释
 
@@ -87,7 +112,7 @@ pip install mpi4py
 # import su2paddle (line7)
 ```
 
-### 4.2 aistudio
+### 4.2 AIStudio上运行
 
 1. 从data中找到SU2Bin.tgz, 解压到本环境目录下，/home/aistudio/SU2Bin
 
@@ -188,7 +213,7 @@ mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_
 
 ### 5.1 使用pgl替换torch_geometric
 
-#### 5.2 Dataset与Dataloader修改
+#### 5.1.1 Dataset与Dataloader修改
 
 ```python
 # 此处来自pgl官方代码说明（Dataset和Dataloader使用）
@@ -237,7 +262,7 @@ for graph in graphs:
 
 , 最后的x即为输出结果。
 
-### 5.3 knn_interpolate方法实现
+#### 5.1.2 knn_interpolate方法实现
 
 计算方法如下（计算方式与torch_geometric相同）：
 
@@ -260,7 +285,7 @@ features_input = features[knn_index]
 output = paddle.bmm(weight, features_input).squeeze(-2) / paddle.sum(knn_value, axis=-1, keepdim=True)
 ```
 
-### 5.4 SU2项目和paddle的结合使用
+### 5.2 SU2项目和paddle的结合使用
 
 SU2模型为预编译模型，具体编译过程参考https://github.com/locuslab/cfd-gcn/Dockerfile
 

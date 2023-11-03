@@ -281,7 +281,8 @@ def get_dists(edge_index, pos, norm=True, max=None):
     (row, col), pos = edge_index, pos
     dist = paddle.norm(pos[col] - pos[row], p=2, axis=-1).view(-1, 1)
     if norm and dist.numel() > 0:
-        dist = (dist / dist.max()) if max is None else max
+        max_value = dist.max() if max is None else max
+        dist = dist / max_value
     return dist
 
 
