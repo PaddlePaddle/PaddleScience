@@ -24,6 +24,7 @@ from omegaconf import DictConfig
 import ppsci
 from ppsci.utils import checker
 from ppsci.utils import logger
+from ppsci.utils import save_load
 
 if not checker.dynamic_import_to_globals("hdf5storage"):
     raise ImportError(
@@ -186,9 +187,7 @@ def train(cfg: DictConfig):
             ppsci.loss.FunctionalLoss(disc_funcs.loss_func),
             name="sup_constraint_disc",
         )
-        constraint_disc = {
-            sup_constraint_disc.name: sup_constraint_disc,
-        }
+        constraint_disc = {sup_constraint_disc.name: sup_constraint_disc}
 
     # temporal Discriminators
     # manually build constraint(s)
@@ -230,7 +229,7 @@ def train(cfg: DictConfig):
             name="sup_constraint_disc_tempo",
         )
         constraint_disc_tempo = {
-            sup_constraint_disc_tempo.name: sup_constraint_disc_tempo,
+            sup_constraint_disc_tempo.name: sup_constraint_disc_tempo
         }
 
     # initialize solver
@@ -294,9 +293,7 @@ def train(cfg: DictConfig):
         # train gen, input: (x,)
         solver_gen.train()
 
-
-def evaluate(cfg: DictConfig):
-    ############### evaluation after training ###############
+    ############### evaluation for training ###############
     img_target = (
         func_module.get_image_array(
             os.path.join(cfg.output_dir, "predict", "target.png")
@@ -313,6 +310,89 @@ def evaluate(cfg: DictConfig):
     )
     eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(img_target, img_pred)
     logger.message(f"MSE: {eval_mse}, PSNR: {eval_psnr}, SSIM: {eval_ssim}")
+
+
+def evaluate(cfg: DictConfig):
+    if cfg.EVAL.save_outs:
+        from matplotlib import image as Img
+
+        os.makedirs(osp.join(cfg.output_dir, "eval_outs"), exist_ok=True)
+
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    gen_funcs = func_module.GenFuncs(cfg.WEIGHT_GEN, None)
+
+    # load dataset
+    dataset_valid = hdf5storage.loadmat(cfg.DATASET_PATH_VALID)
+
+    # define Generator model
+    model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
+    model_gen.register_input_transform(gen_funcs.transform_in)
+
+    # define model_list
+    model_list = ppsci.arch.ModelList((model_gen,))
+
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # set validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {
+                "density_low": dataset_valid["density_low"],
+            },
+            "label": {"density_high": dataset_valid["density_high"]},
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": 1,
+    }
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss("mean"),
+        {"density_high": lambda out: out["output_gen"]},
+        metric={"metric": ppsci.metric.L2Rel()},
+        name="sup_validator_gen",
+    )
+
+    # customized evalution
+    def scale(data):
+        smax = np.max(data)
+        smin = np.min(data)
+        return (data - smin) / (smax - smin)
+
+    eval_mse_list = []
+    eval_psnr_list = []
+    eval_ssim_list = []
+    for i, (input, label, _) in enumerate(sup_validator.data_loader):
+        output_dict = model_list({"density_low": input["density_low"]})
+        output_arr = scale(np.squeeze(output_dict["output_gen"].numpy()))
+        target_arr = scale(np.squeeze(label["density_high"].numpy()))
+
+        eval_mse, eval_psnr, eval_ssim = func_module.evaluate_img(
+            target_arr, output_arr
+        )
+        eval_mse_list.append(eval_mse)
+        eval_psnr_list.append(eval_psnr)
+        eval_ssim_list.append(eval_ssim)
+
+        if cfg.EVAL.save_outs:
+            Img.imsave(
+                osp.join(cfg.output_dir, "eval_outs", f"out_{i}.png"),
+                output_arr,
+                vmin=0.0,
+                vmax=1.0,
+                cmap="gray",
+            )
+    logger.message(
+        f"MSE: {np.mean(eval_mse_list)}, PSNR: {np.mean(eval_psnr_list)}, SSIM: {np.mean(eval_ssim_list)}"
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="tempogan.yaml")
