@@ -12,27 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import hydra
+from omegaconf import DictConfig
+
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
     # set output directory
-    OUTPUT_DIR = "./output_viv" if args.output_dir is None else args.output_dir
-    # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("t_f",), ("eta",), 5, 50, "tanh")
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
 
     # set dataloader config
-    ITERS_PER_EPOCH = 1
     train_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
@@ -48,6 +50,7 @@ if __name__ == "__main__":
             "shuffle": True,
         },
     }
+
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -60,14 +63,8 @@ if __name__ == "__main__":
         sup_constraint.name: sup_constraint,
     }
 
-    # set training hyper-parameters
-    EPOCHS = 100000 if args.epochs is None else args.epochs
-    EVAL_FREQ = 1000
-
     # set optimizer
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(
-        EPOCHS, ITERS_PER_EPOCH, 0.001, step_size=20000, gamma=0.9
-    )()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.optimizer)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set validator
@@ -119,17 +116,18 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
-        ITERS_PER_EPOCH,
+        cfg.TRAIN.epochs,
+        cfg.TRAIN.iters_per_epoch,
         eval_during_train=True,
-        eval_freq=EVAL_FREQ,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
     )
+
     # train model
     solver.train()
     # evaluate after finished training
@@ -137,17 +135,91 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
+    # set output directory
+    logger.init_logger("ppsci", os.path.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set equation
+    equation = {"VIV": ppsci.equation.Vibration(2, -4, 0)}
+
+    # set validator
+    valid_dataloader_cfg = {
+        "dataset": {
+            "name": "MatDataset",
+            "file_path": "./VIV_Training_Neta100.mat",
+            "input_keys": ("t_f",),
+            "label_keys": ("eta", "f"),
+        },
+        "batch_size": 32,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+    eta_mse_validator = ppsci.validate.SupervisedValidator(
+        valid_dataloader_cfg,
+        ppsci.loss.MSELoss("mean"),
+        {"eta": lambda out: out["eta"], **equation["VIV"].equations},
+        metric={"MSE": ppsci.metric.MSE()},
+        name="eta_mse",
+    )
+    validator = {eta_mse_validator.name: eta_mse_validator}
+
+    # set visualizer(optional)
+    visu_mat = ppsci.utils.reader.load_mat_file(
+        "./VIV_Training_Neta100.mat",
+        ("t_f", "eta_gt", "f_gt"),
+        alias_dict={"eta_gt": "eta", "f_gt": "f"},
+    )
+
+    visualizer = {
+        "visualize_u": ppsci.visualize.VisualizerScatter1D(
+            visu_mat,
+            ("t_f",),
+            {
+                r"$\eta$": lambda d: d["eta"],  # plot with latex title
+                r"$\eta_{gt}$": lambda d: d["eta_gt"],  # plot with latex title
+                r"$f$": equation["VIV"].equations["f"],  # plot with latex title
+                r"$f_{gt}$": lambda d: d["f_gt"],  # plot with latex title
+            },
+            num_timestamps=1,
+            prefix="viv_pred",
+        )
+    }
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         equation=equation,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
+
+    # evaluate after finished training
     solver.eval()
-    # visualize prediction from pretrained_model_path(optional)
+    # visualize prediction after finished training
     solver.visualize()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()
