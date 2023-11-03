@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from omegaconf import DictConfig
 from os import path as osp
 
 import hydra
+import numpy as np
+from omegaconf import DictConfig
+
 import ppsci
 from ppsci.utils import logger
 from ppsci.utils import reader
@@ -25,7 +26,7 @@ from ppsci.utils import reader
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
-    
+
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
@@ -33,9 +34,11 @@ def train(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.viscosity, cfg.density, 2, True)}
+    equation = {
+        "NavierStokes": ppsci.equation.NavierStokes(cfg.viscosity, cfg.density, 2, True)
+    }
 
-    # set timestamps 
+    # set timestamps
     train_timestamps = np.linspace(
         cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
@@ -169,7 +172,9 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set validator
-    NPOINT_EVAL = (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS
+    NPOINT_EVAL = (
+        NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET
+    ) * cfg.NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -188,7 +193,7 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS,
+        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS,
         evenly=True,
     )
     visualizer = {
@@ -199,7 +204,7 @@ def train(cfg: DictConfig):
             prefix="result_u_v_p",
         )
     }
-    
+
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -228,7 +233,7 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
-    
+
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
@@ -238,7 +243,7 @@ def evaluate(cfg: DictConfig):
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
 
-    # set timestamps 
+    # set timestamps
     train_timestamps = np.linspace(
         cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
@@ -279,14 +284,10 @@ def evaluate(cfg: DictConfig):
         ),
     }
 
-    # pde/bc/sup constraint use t1~tn, initial constraint use t0
-    NPOINT_PDE, NTIME_PDE = 9420, len(train_timestamps)
-    NPOINT_INLET_CYLINDER = 161
-    NPOINT_OUTLET = 81
-    ALIAS_DICT = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
-
     # set validator
-    NPOINT_EVAL = (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS
+    NPOINT_EVAL = (
+        cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET
+    ) * cfg.NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -305,7 +306,8 @@ def evaluate(cfg: DictConfig):
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS,
+        (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET)
+        * cfg.NUM_TIMESTAMPS,
         evenly=True,
     )
     visualizer = {
@@ -316,7 +318,7 @@ def evaluate(cfg: DictConfig):
             prefix="result_u_v_p",
         )
     }
-    
+
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -331,7 +333,9 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="cylinder2d_unsteady.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="cylinder2d_unsteady.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

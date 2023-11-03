@@ -63,7 +63,6 @@ TRAIN:
   checkpoint_path: null
   pretrained_model_path: null
 
-
 # evaluation settings
 EVAL:
   batch_size: 10240
