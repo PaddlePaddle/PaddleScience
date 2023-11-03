@@ -15,6 +15,7 @@
 from os import path as osp
 
 import hydra
+import numpy as np
 import paddle
 import paddle.nn.functional as F
 import plotting as plot_func
@@ -24,6 +25,7 @@ import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
 from ppsci.utils import save_load
 
 
@@ -99,8 +101,8 @@ def train(cfg: DictConfig):
     optimizer_pde = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_pde)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn, ))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde, ))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
 
     # stage 1: training identification net
     # manually build constraint(s)
@@ -350,9 +352,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.L2Rel()},
         name="w_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -430,63 +430,51 @@ def evaluate(cfg: DictConfig):
     # load pretrained model
     save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-    # manually build validator
-    eval_dataloader_cfg_sol = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": cfg.DATASET_PATH_SOL,
-            "input_keys": ("t", "x", "y"),
-            "label_keys": ("w_sol",),
-            "alias_dict": {
-                "t": "t_ori",
-                "x": "x_ori",
-                "y": "y_ori",
-                "w_sol": "Exact_ori",
-            },
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "y", "w_sol", "grid_data"),
+        alias_dict={
+            "t": "t_star",
+            "x": "x_star",
+            "y": "y_star",
+            "w_sol": "w_star",
+            "grid_data": "X_star",
         },
-    }
-    eval_dataloader_cfg_sol = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": cfg.DATASET_PATH_SOL,
-            "input_keys": ("t", "x", "y"),
-            "label_keys": ("w_sol", "grid_data"),
-            "alias_dict": {
-                "t": "t_star",
-                "x": "x_star",
-                "y": "y_star",
-                "w_sol": "w_star",
-                "grid_data": "X_star",
-            },
-        },
+    )
+    input_dict = {
+        "t": paddle.to_tensor(
+            dataset_val["t"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
+        "x": paddle.to_tensor(
+            dataset_val["x"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
+        "y": paddle.to_tensor(
+            dataset_val["y"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
     }
 
-    sup_validator_sol = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg_sol,
-        ppsci.loss.MSELoss("sum"),
-        {"w_sol": lambda out: out["w_sol"]},
-        {"l2": ppsci.metric.L2Rel()},
-        name="w_L2_sup",
-    )
+    w_sol_pred = model_idn(input_dict)
+
+    # eval
+    l2_error = np.linalg.norm(
+        dataset_val["w_sol"] - w_sol_pred["w_idn"], 2
+    ) / np.linalg.norm(
+        dataset_val["w_sol"], 2
+    )  # stage 1&3 use the same net in this example
+    logger.info(f"l2_error: {l2_error}")
 
     # plotting
-    for input, label, _ in sup_validator_sol.data_loader:
-        for key in input:
-            input[key].stop_gradient = False
-        w_sol_pred = model_idn(input)
-
-        l2_error = ppsci.metric.L2Rel()(
-            {"w_sol": label["w_sol"]}, {"w_sol": w_sol_pred["w_idn"]}
-        )  # stage 1&3 use the same net in this example
-        logger.info(f"l2_error: {float(l2_error['w_sol'])}")
-
-        plot_func.draw_and_save_ns(
-            figname="navier_stokes_sol",
-            data_exact=label["w_sol"].reshape([-1, 151]).numpy(),
-            data_learned=w_sol_pred["w_idn"].reshape([-1, 151]).numpy(),
-            grid_data=label["grid_data"].reshape([-1, 2]).numpy(),
-            save_path=cfg.output_dir,
-        )
+    plot_func.draw_and_save_ns(
+        figname="navier_stokes_sol",
+        data_exact=dataset_val["w_sol"].reshape([-1, 151]),
+        data_learned=w_sol_pred["w_idn"].reshape([-1, 151]).numpy(),
+        grid_data=dataset_val["grid_data"].reshape([-1, 2]),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="navier_stokes.yaml")

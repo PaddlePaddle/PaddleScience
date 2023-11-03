@@ -25,6 +25,7 @@ import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
 from ppsci.utils import save_load
 
 
@@ -402,9 +403,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
         name="uv_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -486,61 +485,54 @@ def evaluate(cfg: DictConfig):
     # load pretrained model
     save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-    # manually build validator
-    eval_dataloader_cfg_sol = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": cfg.DATASET_PATH_SOL,
-            "input_keys": ("t", "x"),
-            "label_keys": ("uv_sol", "u_sol", "v_sol"),
-            "alias_dict": {
-                "t": "t_ori",
-                "x": "x_ori",
-                "uv_sol": "Exact_uv_ori",
-                "u_sol": "u_star",
-                "v_sol": "v_star",
-            },
-        },
-    }
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-    sup_validator_sol = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg_sol,
-        ppsci.loss.MSELoss("sum"),
-        {"u_sol": lambda out: out["u_sol"]},
-        {"l2": ppsci.metric.L2Rel()},
-        name="u_L2_sup",
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "uv_sol", "u_sol", "v_sol"),
+        alias_dict={
+            "t": "t_ori",
+            "x": "x_ori",
+            "uv_sol": "Exact_uv_ori",
+            "u_sol": "u_star",
+            "v_sol": "v_star",
+        },
     )
 
+    t_sol, x_sol = np.meshgrid(
+        np.squeeze(dataset_val["t"]), np.squeeze(dataset_val["x"])
+    )
+    t_sol_flatten = paddle.to_tensor(
+        t_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    x_sol_flatten = paddle.to_tensor(
+        x_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
+    u_sol_pred = pred["u_idn"].numpy()
+    v_sol_pred = pred["v_idn"].numpy()
+    uv_sol_pred = np.sqrt(u_sol_pred**2 + v_sol_pred**2)
+
+    # eval
+    uv_sol_star = np.sqrt(dataset_val["u_sol"] ** 2 + dataset_val["v_sol"] ** 2)
+    error_uv = np.linalg.norm(uv_sol_star - uv_sol_pred, 2) / np.linalg.norm(
+        uv_sol_star, 2
+    )
+    logger.info(f"l2_error_uv: {error_uv}")
+
     # plotting
-    for input, label, _ in sup_validator_sol.data_loader:
-        x_sol, t_sol = paddle.meshgrid(
-            paddle.squeeze(input["x"]), paddle.squeeze(input["t"])
-        )
-        t_sol_flatten = t_sol.flatten()[:, None]
-        x_sol_flatten = x_sol.flatten()[:, None]
-        t_sol_flatten.stop_gradient = False
-        x_sol_flatten.stop_gradient = False
-        pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
-        u_sol_pred = pred["u_idn"].numpy()
-        v_sol_pred = pred["v_idn"].numpy()
-        uv_sol_pred = np.sqrt(u_sol_pred**2 + v_sol_pred**2)
-
-        uv_sol_star = np.sqrt(label["u_sol"].numpy() ** 2 + label["v_sol"].numpy() ** 2)
-        error_uv = np.linalg.norm(uv_sol_star - uv_sol_pred, 2) / np.linalg.norm(
-            uv_sol_star, 2
-        )
-        logger.info(f"l2_error_uv: {error_uv}")
-
-        plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
-        plot_func.draw_and_save(
-            figname="schrodinger_uv_sol",
-            data_exact=label["uv_sol"].numpy(),
-            data_learned=uv_sol_pred,
-            boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
-            griddata_points=plot_points,
-            griddata_xi=(t_sol, x_sol),
-            save_path=cfg.output_dir,
-        )
+    plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
+    plot_func.draw_and_save(
+        figname="schrodinger_uv_sol",
+        data_exact=dataset_val["uv_sol"],
+        data_learned=uv_sol_pred,
+        boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
+        griddata_points=plot_points,
+        griddata_xi=(t_sol, x_sol),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="schrodinger.yaml")

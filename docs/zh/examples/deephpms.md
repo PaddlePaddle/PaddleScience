@@ -5,8 +5,8 @@
 === "模型训练命令"
 
     ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/DeepHPMs/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/DeepHPMs/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
@@ -17,13 +17,29 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/DeepHPMs/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/DeepHPMs/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
     python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
     ```
+
+## 0. 数据集、预训练模型和评估指标说明
+
+| 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | l2 error |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | burgers | burgers_sine.mat | burgers_sine.mat | burgers_pretrained.pdparams | later |
+| 2 | burgers | burgers_sine.mat | burgers.mat | burgers_diff_pretrained.pdparams | later |
+| 3 | burgers | burgers.mat | burgers_sine.mat | burgers_diff_swap_pretrained.pdparams | later |
+| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | kdv_same_pretrained.pdparams | later |
+| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | kdv_diff_pretrained.pdparams | later |
+| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | ks_pretrained.pdparams | later |
+| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | ks_chaotic_pretrained.pdparams | later |
+| 8 | navier_stokes | cylinder.mat | cylinder.mat | ns_pretrained.pdparams | 0.0288 |
+| 9 | schrodinger | NLS.mat | NLS.mat | schrodinger_pretrained.pdparams | 0.0735 |
+
+*注：根据 [参考文献](#6), 序号 3，7 的效果较差。`l2 error` 为 `later` 的案例，预训练模型待补充。*
 
 ## 1. 背景简介
 
@@ -80,9 +96,9 @@ Net1 通过数据驱动的方式，使用输入的某种模拟情况 1 下的少
 
 因为训练中后一个阶段网络需要使用前一个阶段网络的前向推理值，因此本问题使用 Model List 来实现，上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
-``` py linenums="99"
+``` py linenums="103"
 --8<--
-examples/deephpms/burgers.py:99:100
+examples/deephpms/burgers.py:103:104
 --8<--
 ```
 
@@ -92,33 +108,33 @@ examples/deephpms/burgers.py:99:100
 
 对于 Net1，输入为 $(x, t)$ 本来不需要 transform，但由于训练中根据数据的定义域对输入数据进行了数值变换，因此同样需要transform，同样，Net3 也需要对输入进行数值变换的 transform
 
-``` py linenums="72"
+``` py linenums="76"
 --8<--
-examples/deephpms/burgers.py:72:77
+examples/deephpms/burgers.py:76:81
 --8<--
 ```
 
 对于 Net2，因为它的输入为 $u, u_x, u_{xx}$ 而 $u$ 为其他两个网络的输出，只要进行 Net2 的前向推理，就需要 transform，因此需要两种 transform。同时，在训练 Net3 之前，需要重新注册 transform
 
-``` py linenums="88"
+``` py linenums="83"
 --8<--
-examples/deephpms/burgers.py:88:92
+examples/deephpms/burgers.py:83:93
 --8<--
 ```
 
 然后依次注册 transform 后，将3 个 MLP 模型组成 Model List
 
-``` py linenums="100"
+``` py linenums="98"
 --8<--
-examples/deephpms/burgers.py:95:100
+examples/deephpms/burgers.py:98:104
 --8<--
 ```
 
 注意 Net3 开始训练前，重新注册 Net2 的transform
 
-``` py linenums="243"
+``` py linenums="240"
 --8<--
-examples/deephpms/burgers.py:236:237
+examples/deephpms/burgers.py:240:241
 --8<--
 ```
 
@@ -146,9 +162,9 @@ examples/deephpms/conf/burgers.yaml:57:61
 
 本问题提供了两种优化器，分别为 Adam 优化器和 LBFGS 优化器，训练时只选择其中一种，需要将另一种优化器注释掉。
 
-``` py linenums="103"
+``` py linenums="106"
 --8<--
-examples/deephpms/burgers.py:103:111
+examples/deephpms/burgers.py:106:115
 --8<--
 ```
 
@@ -158,9 +174,9 @@ examples/deephpms/burgers.py:103:111
 
 无监督仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据，例如
 
-``` py linenums="115"
+``` py linenums="119"
 --8<--
-examples/deephpms/burgers.py:115:123
+examples/deephpms/burgers.py:119:127
 --8<--
 ```
 
@@ -170,9 +186,9 @@ examples/deephpms/burgers.py:115:123
 
 第一阶段对 Net1 的训练是纯监督学习，此处采用监督约束 `SupervisedConstraint`
 
-``` py linenums="125"
+``` py linenums="129"
 --8<--
-examples/deephpms/burgers.py:125:131
+examples/deephpms/burgers.py:129:135
 --8<--
 ```
 
@@ -196,9 +212,9 @@ examples/deephpms/burgers.py:125:131
 
 第二阶段对 Net2 的训练是无监督学习，但仍可采用监督约束 `SupervisedConstraint`，要注意上述提到的给定“假的”标签数据
 
-``` py linenums="144"
+``` py linenums="187"
 --8<--
-examples/deephpms/burgers.py:144:151
+examples/deephpms/burgers.py:187:196
 --8<--
 ```
 
@@ -210,9 +226,9 @@ examples/deephpms/burgers.py:144:151
 
 第三阶段 Net3 的训练复杂，包含了对部分初始点的监督学习、与 PDE 有关的无监督学习以及与边界条件有关的无监督学习，这里仍采用监督约束 `SupervisedConstraint`，同样要注意给定“假的”标签数据，各参数含义同上
 
-``` py linenums="183"
+``` py linenums="272"
 --8<--
-examples/deephpms/burgers.py:183:192
+examples/deephpms/burgers.py:272:300
 --8<--
 ```
 
@@ -226,9 +242,9 @@ examples/deephpms/burgers.py:183:192
 
 评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="205"
+``` py linenums="148"
 --8<--
-examples/deephpms/burgers.py:205:215
+examples/deephpms/burgers.py:148:155
 --8<--
 ```
 
@@ -236,9 +252,9 @@ examples/deephpms/burgers.py:205:215
 
 评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38)。
 
-``` py linenums="268"
+``` py linenums="209"
 --8<--
-examples/deephpms/burgers.py:268:291
+examples/deephpms/burgers.py:209:219
 --8<--
 ```
 
@@ -246,9 +262,9 @@ examples/deephpms/burgers.py:268:291
 
 因为第三阶段评价时只需要对训练得到的点的值进行评价，而不需要对边界条件满足程度或 PDE 满足程度进行评价，因此评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="309"
+``` py linenums="313"
 --8<--
-examples/deephpms/burgers.py:309:318
+examples/deephpms/burgers.py:313:320
 --8<--
 ```
 
@@ -260,25 +276,25 @@ examples/deephpms/burgers.py:309:318
 
 与 PDE 相关的自定义 loss 函数为
 
-``` py linenums="28"
+``` py linenums="32"
 --8<--
-examples/deephpms/burgers.py:28:30
+examples/deephpms/burgers.py:32:34
 --8<--
 ```
 
 与 PDE 相关的自定义 metric 函数为
 
-``` py linenums="33"
+``` py linenums="37"
 --8<--
-examples/deephpms/burgers.py:33:38
+examples/deephpms/burgers.py:37:42
 --8<--
 ```
 
 与边界条件相关的自定义 loss 函数为
 
-``` py linenums="41"
+``` py linenums="45"
 --8<--
-examples/deephpms/burgers.py:41:52
+examples/deephpms/burgers.py:45:56
 --8<--
 ```
 
@@ -288,9 +304,9 @@ examples/deephpms/burgers.py:41:52
 
 第一阶段训练、评估
 
-``` py linenums="154"
+``` py linenums="157"
 --8<--
-examples/deephpms/burgers.py:154:169
+examples/deephpms/burgers.py:157:173
 --8<--
 ```
 
@@ -298,15 +314,15 @@ examples/deephpms/burgers.py:154:169
 
 ``` py linenums="218"
 --8<--
-examples/deephpms/burgers.py:218:233
+examples/deephpms/burgers.py:221:237
 --8<--
 ```
 
 第三阶段训练、评估
 
-``` py linenums="321"
+``` py linenums="322"
 --8<--
-examples/deephpms/burgers.py:321:336
+examples/deephpms/burgers.py:322:338
 --8<--
 ```
 
@@ -314,9 +330,9 @@ examples/deephpms/burgers.py:321:336
 
 本问题训练结束后，可以在 `evalution` 中使用第三阶段网络 Net3 对模拟情况 2 的数据进行推理，结果为 $u|_{(x,t)}$ 值，同时输出 `l2 error` 的值。画图部分在 plotting.py 文件中。
 
-``` py linenums="412"
+``` py linenums="385"
 --8<--
-examples/deephpms/burgers.py:412:437
+examples/deephpms/burgers.py:385:427
 --8<--
 ```
 
@@ -344,14 +360,14 @@ examples/deephpms/plotting.py
 
 <figure markdown>
   ![burgers_diff_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_diff_lbfgs.png){ loading=lazy }
-  <figcaption> 真实 u 值和推理 u 值对比</figcaption>
+  <figcaption> 真实 u 值和预测 u 值对比</figcaption>
 </figure>
 
 模拟数据集 1、2 都是初始条件为 sin 方程时的数据集 burgers_sine.mat 时：
 
 <figure markdown>
   ![burgers_same_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_same_lbfgs.png){ loading=lazy }
-  <figcaption> 真实 u 值和推理 u 值对比</figcaption>
+  <figcaption> 真实 u 值和预测 u 值对比</figcaption>
 </figure>
 
 ## 6. 参考文献

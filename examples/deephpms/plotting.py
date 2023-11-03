@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
 
 
-def draw_subplot(subfigname, figdata, fig, gs, cmap, boundary, loc):
+def _draw_subplot(subfigname, figdata, fig, gs, cmap, boundary, loc):
     ax = plt.subplot(gs[:, loc])
     h = ax.imshow(
         figdata,
@@ -38,12 +38,12 @@ def draw_and_save(
     plot_data_label = griddata(
         griddata_points, data_exact.flatten(), griddata_xi, method="cubic"
     )
-    draw_subplot("Exact Dynamics", plot_data_label, fig, gs, "jet", boundary, loc=0)
+    _draw_subplot("Exact Dynamics", plot_data_label, fig, gs, "jet", boundary, loc=0)
     # Predicted p(t,x,y)
     plot_data_pred = griddata(
         griddata_points, data_learned.flatten(), griddata_xi, method="cubic"
     )
-    draw_subplot("Learned Dynamics", plot_data_pred, fig, gs, "jet", boundary, loc=1)
+    _draw_subplot("Learned Dynamics", plot_data_pred, fig, gs, "jet", boundary, loc=1)
 
     plt.savefig(osp.join(save_path, figname))
     plt.close()
@@ -68,7 +68,7 @@ def draw_and_save_ns(figname, data_exact, data_learned, grid_data, save_path):
         (X_plot, Y_plot),
         method="cubic",
     )
-    draw_subplot(
+    _draw_subplot(
         "Exact Dynamics",
         plot_data_label,
         fig,
@@ -84,7 +84,7 @@ def draw_and_save_ns(figname, data_exact, data_learned, grid_data, save_path):
         (X_plot, Y_plot),
         method="cubic",
     )
-    draw_subplot(
+    _draw_subplot(
         "Learned Dynamics",
         plot_data_pred,
         fig,

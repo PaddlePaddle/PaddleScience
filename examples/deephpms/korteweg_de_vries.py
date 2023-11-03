@@ -15,6 +15,7 @@
 from os import path as osp
 
 import hydra
+import numpy as np
 import paddle
 import paddle.nn.functional as F
 import plotting as plot_func
@@ -24,6 +25,7 @@ import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
 from ppsci.utils import save_load
 
 
@@ -115,9 +117,9 @@ def train(cfg: DictConfig):
     optimizer_sol = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_sol)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn, ))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde, ))
-    # optimizer_sol = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_sol, ))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
+    # optimizer_sol = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_sol,))
 
     # stage 1: training identification net
     # manually build constraint(s)
@@ -322,9 +324,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -382,15 +382,12 @@ def evaluate(cfg: DictConfig):
         input_trans = {"u_x": u, "du_x": du_x, "du_xx": du_xx, "du_xxx": du_xxx}
         return input_trans
 
-    def transform_f_idn(_in):
-        return transform_f(_in, model_idn, "u_idn")
-
     def transform_f_sol(_in):
         return transform_f(_in, model_sol, "u_sol")
 
     # register transform
     model_idn.register_input_transform(transform_u)
-    model_pde.register_input_transform(transform_f_idn)
+    model_pde.register_input_transform(transform_f_sol)
     model_sol.register_input_transform(transform_u)
 
     # initialize model list
@@ -400,55 +397,48 @@ def evaluate(cfg: DictConfig):
     # load pretrained model
     save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-    # manually build validator
-    eval_dataloader_cfg_sol = {
-        "dataset": {
-            "name": "IterableMatDataset",
-            "file_path": cfg.DATASET_PATH_SOL,
-            "input_keys": ("t", "x"),
-            "label_keys": ("u_sol",),
-            "alias_dict": {
-                "t": "t_ori",
-                "x": "x_ori",
-                "u_sol": "Exact_ori",
-            },
-        },
-    }
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
 
-    sup_validator_sol = ppsci.validate.SupervisedValidator(
-        eval_dataloader_cfg_sol,
-        ppsci.loss.MSELoss("sum"),
-        {"u_sol": lambda out: out["u_sol"]},
-        {"l2": ppsci.metric.L2Rel()},
-        name="u_L2_sup",
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "u_sol"),
+        alias_dict={
+            "t": "t_ori",
+            "x": "x_ori",
+            "u_sol": "Exact_ori",
+        },
     )
 
+    t_sol, x_sol = np.meshgrid(
+        np.squeeze(dataset_val["t"]), np.squeeze(dataset_val["x"])
+    )
+    t_sol_flatten = paddle.to_tensor(
+        t_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    x_sol_flatten = paddle.to_tensor(
+        x_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    u_sol_pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
+
+    # eval
+    l2_error = np.linalg.norm(
+        dataset_val["u_sol"] - u_sol_pred["u_sol"], 2
+    ) / np.linalg.norm(dataset_val["u_sol"], 2)
+    logger.info(f"l2_error: {l2_error}")
+
     # plotting
-    for input, label, _ in sup_validator_sol.data_loader:
-        x_sol, t_sol = paddle.meshgrid(
-            paddle.squeeze(input["x"]), paddle.squeeze(input["t"])
-        )
-        t_sol_flatten = t_sol.flatten()[:, None]
-        x_sol_flatten = x_sol.flatten()[:, None]
-        t_sol_flatten.stop_gradient = False
-        x_sol_flatten.stop_gradient = False
-        u_sol_pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
-
-        l2_error = ppsci.metric.L2Rel()(
-            {"u_sol": label["u_sol"]}, {"u_sol": u_sol_pred["u_sol"]}
-        )
-        logger.info(f"l2_error: {float(l2_error['u_sol'])}")
-
-        plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
-        plot_func.draw_and_save(
-            figname="korteweg_de_vries_sol",
-            data_exact=label["u_sol"].numpy(),
-            data_learned=u_sol_pred["u_sol"].numpy(),
-            boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
-            griddata_points=plot_points,
-            griddata_xi=(t_sol, x_sol),
-            save_path=cfg.output_dir,
-        )
+    plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
+    plot_func.draw_and_save(
+        figname="korteweg_de_vries_sol",
+        data_exact=dataset_val["u_sol"],
+        data_learned=u_sol_pred["u_sol"].numpy(),
+        boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
+        griddata_points=plot_points,
+        griddata_xi=(t_sol, x_sol),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(
