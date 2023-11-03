@@ -25,21 +25,19 @@
     python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
     ```
 
-## 0. 数据集、预训练模型和评估指标说明
+| 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | 指标 |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| 1 | burgers | burgers_sine.mat | burgers_sine.mat | burgers_pretrained.pdparams | - |
+| 2 | burgers | burgers_sine.mat | burgers.mat | burgers_diff_pretrained.pdparams | - |
+| 3 | burgers | burgers.mat | burgers_sine.mat | burgers_diff_swap_pretrained.pdparams | - |
+| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | kdv_same_pretrained.pdparams | - |
+| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | kdv_diff_pretrained.pdparams | - |
+| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | ks_pretrained.pdparams | - |
+| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | ks_chaotic_pretrained.pdparams | - |
+| 8 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
+| 9 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
 
-| 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | l2 error |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | burgers | burgers_sine.mat | burgers_sine.mat | burgers_pretrained.pdparams | later |
-| 2 | burgers | burgers_sine.mat | burgers.mat | burgers_diff_pretrained.pdparams | later |
-| 3 | burgers | burgers.mat | burgers_sine.mat | burgers_diff_swap_pretrained.pdparams | later |
-| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | kdv_same_pretrained.pdparams | later |
-| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | kdv_diff_pretrained.pdparams | later |
-| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | ks_pretrained.pdparams | later |
-| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | ks_chaotic_pretrained.pdparams | later |
-| 8 | navier_stokes | cylinder.mat | cylinder.mat | ns_pretrained.pdparams | 0.0288 |
-| 9 | schrodinger | NLS.mat | NLS.mat | schrodinger_pretrained.pdparams | 0.0735 |
-
-*注：根据 [参考文献](#6), 序号 3，7 的效果较差。`l2 error` 为 `later` 的案例，预训练模型待补充。*
+*注：根据 [参考文献](#6), 序号 3，7 的效果较差。*
 
 ## 1. 背景简介
 
