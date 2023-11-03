@@ -5,11 +5,13 @@
 === "模型训练命令"
 
     ``` sh
-    ```
-
-=== "模型评估命令"
-
-    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar --output cylinder2d_unsteady_Re100_dataset.tar
+    # unzip it
+    tar -xvf bracket_dataset.tar
+    python cylinder2d_unsteady_Re100.py
     ```
 
 ## 1. 背景简介
@@ -254,7 +256,7 @@ geom = {
 
 ``` py linenums="82"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:82:87
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:82:84
 --8<--
 ```
 
@@ -262,9 +264,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:82:87
 
 以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="89"
+``` py linenums="86"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:89:101
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:86:98
 --8<--
 ```
 
@@ -306,9 +308,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:89:101
 
 剩下的 `bc_outlet` 按照相同原理构建，代码如下所示：
 
-``` py linenums="102"
+``` py linenums="99"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:102:130
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:99:127
 --8<--
 ```
 
@@ -316,9 +318,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:102:130
 
 对于 $t=t_0$ 时刻的流体域内的点，我们还需要对 $u$, $v$, $p$ 施加初值约束，代码如下：
 
-``` py linenums="131"
+``` py linenums="128"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:131:145
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:128:142
 --8<--
 ```
 
@@ -326,17 +328,17 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:131:145
 
 本案例在流体域内部加入了一定数量的监督点来保证模型最终的收敛情况，因此最后还需要加入一个监督约束，数据同样来自 CSV 文件，代码如下：
 
-``` py linenums="146"
+``` py linenums="143"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:146:160
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:143:157
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束、监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="162"
+``` py linenums="159"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:162:169
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:159:166
 --8<--
 ```
 
@@ -344,9 +346,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:162:169
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数，评估间隔为四百轮，学习率设为 0.001。
 
-``` py linenums="59"
+``` py linenums="61"
 --8<--
-examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:59:61
+examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:61:63
 --8<--
 ```
 
@@ -354,9 +356,9 @@ examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:59:61
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="171"
+``` py linenums="168"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:171:172
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:168:169
 --8<--
 ```
 
@@ -364,9 +366,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:171:172
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="174"
+``` py linenums="171"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:174:192
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:171:189
 --8<--
 ```
 
@@ -388,9 +390,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:174:192
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 50 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="194"
+``` py linenums="191"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:194:206
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:191:204
 --8<--
 ```
 
@@ -398,9 +400,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:194:206
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="208"
+``` py linenums="206"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:208:230
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:206:228
 --8<--
 ```
 

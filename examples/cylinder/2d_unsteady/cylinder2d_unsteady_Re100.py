@@ -35,7 +35,7 @@ def train(cfg: DictConfig):
 
     # set equation
     equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(cfg.viscosity, cfg.density, 2, True)
+        "NavierStokes": ppsci.equation.NavierStokes(cfg.VISCOSITY, cfg.DENSITY, 2, True)
     }
 
     # set timestamps
@@ -63,7 +63,7 @@ def train(cfg: DictConfig):
             ),
             ppsci.geometry.PointCloud(
                 reader.load_csv_file(
-                    "./datasets/domain_train.csv",
+                    cfg.DOMAIN_TRAIN_PATH,
                     ("x", "y"),
                     alias_dict={"x": "Points:0", "y": "Points:1"},
                 ),
@@ -72,7 +72,7 @@ def train(cfg: DictConfig):
         ),
         "time_rect_eval": ppsci.geometry.PointCloud(
             reader.load_csv_file(
-                "./datasets/domain_eval.csv",
+                cfg.DOMAIN_EVAL_PATH,
                 ("t", "x", "y"),
             ),
             ("t", "x", "y"),
@@ -80,10 +80,7 @@ def train(cfg: DictConfig):
     }
 
     # pde/bc/sup constraint use t1~tn, initial constraint use t0
-    NPOINT_PDE = cfg.NPOINT_PDE
     NTIME_PDE = len(train_timestamps)
-    NPOINT_INLET_CYLINDER = cfg.NPOINT_INLET_CYLINDER
-    NPOINT_OUTLET = cfg.NPOINT_OUTLET
     ALIAS_DICT = {"x": "Points:0", "y": "Points:1", "u": "U:0", "v": "U:1"}
 
     # set constraint
@@ -93,7 +90,7 @@ def train(cfg: DictConfig):
         geom["time_rect"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "batch_size": NPOINT_PDE * NTIME_PDE,
+            "batch_size": cfg.NPOINT_PDE * NTIME_PDE,
             "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
         },
         ppsci.loss.MSELoss("mean"),
@@ -173,7 +170,7 @@ def train(cfg: DictConfig):
 
     # set validator
     NPOINT_EVAL = (
-        NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET
+        cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET
     ) * cfg.NUM_TIMESTAMPS
     residual_validator = ppsci.validate.GeometryValidator(
         equation["NavierStokes"].equations,
@@ -193,7 +190,8 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     vis_points = geom["time_rect_eval"].sample_interior(
-        (NPOINT_PDE + NPOINT_INLET_CYLINDER + NPOINT_OUTLET) * cfg.NUM_TIMESTAMPS,
+        (cfg.NPOINT_PDE + cfg.NPOINT_INLET_CYLINDER + cfg.NPOINT_OUTLET)
+        * cfg.NUM_TIMESTAMPS,
         evenly=True,
     )
     visualizer = {
@@ -215,7 +213,7 @@ def train(cfg: DictConfig):
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
         eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.EVAL_FREQ,
+        eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -241,43 +239,22 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
-    equation = {"NavierStokes": ppsci.equation.NavierStokes(0.02, 1.0, 2, True)}
+    equation = {
+        "NavierStokes": ppsci.equation.NavierStokes(cfg.VISCOSITY, cfg.DENSITY, 2, True)
+    }
 
     # set timestamps
-    train_timestamps = np.linspace(
-        cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
-    ).astype("float32")
-    train_timestamps = np.random.choice(train_timestamps, cfg.TRAIN_NUM_TIMESTAMPS)
-    train_timestamps.sort()
-    t0 = np.array([cfg.TIME_START], dtype="float32")
-
     val_timestamps = np.linspace(
         cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
     ).astype("float32")
 
-    logger.message(f"train_timestamps: {train_timestamps.tolist()}")
     logger.message(f"val_timestamps: {val_timestamps.tolist()}")
 
     # set time-geometry
     geom = {
-        "time_rect": ppsci.geometry.TimeXGeometry(
-            ppsci.geometry.TimeDomain(
-                cfg.TIME_START,
-                cfg.TIME_END,
-                timestamps=np.concatenate((t0, train_timestamps), axis=0),
-            ),
-            ppsci.geometry.PointCloud(
-                reader.load_csv_file(
-                    "./datasets/domain_train.csv",
-                    ("x", "y"),
-                    alias_dict={"x": "Points:0", "y": "Points:1"},
-                ),
-                ("x", "y"),
-            ),
-        ),
         "time_rect_eval": ppsci.geometry.PointCloud(
             reader.load_csv_file(
-                "./datasets/domain_eval.csv",
+                cfg.DOMAIN_EVAL_PATH,
                 ("t", "x", "y"),
             ),
             ("t", "x", "y"),
@@ -322,14 +299,15 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
+        geom=geom,
         output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
-    # evaluate after finished training
+    # evaluate
     solver.eval()
-    # visualize prediction after finished training
+    # visualize prediction
     solver.visualize()
 
 

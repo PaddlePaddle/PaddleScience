@@ -24,6 +24,8 @@ DOMAIN_INLET_CYLINDER_PATH: ./datasets/domain_inlet_cylinder.csv
 DOMAIN_OUTLET_PATH: ./datasets/domain_outlet.csv
 IC0_1_PATH: ./datasets/initial/ic0.1.csv
 PROBE1_50_PATH: ./datasets/probe/probe1_50.csv
+DOMAIN_EVAL_PATH: ./datasets/domain_eval.csv
+DOMAIN_TRAIN_PATH: ./datasets/domain_train.csv
 
 # general settings
 mode: train # running mode: train/eval
@@ -32,8 +34,8 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # equation
-viscosity: 0.02
-density: 1.0
+VISCOSITY: 0.02
+DENSITY: 1.0
 
 # timestamps
 TIME_START: 1
@@ -57,11 +59,10 @@ MODEL:
 TRAIN:
   iters_per_epoch: 1
   epochs: 40000
-  EVAL_FREQ: 400
+  eval_freq: 400
   learning_rate: 0.001
   eval_during_train: true
   checkpoint_path: null
-  pretrained_model_path: null
 
 # evaluation settings
 EVAL:
