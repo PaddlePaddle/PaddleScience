@@ -10,13 +10,13 @@ from typing import Tuple
 from typing import TypeVar
 from typing import Union
 
+import mpi4py
 import numpy as np
 import paddle
 import pysu2
 import pysu2ad
 import SU2
 import su2paddle.su2_function
-from mpi4py import MPI
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -34,7 +34,7 @@ class RunCode(IntEnum):
 
 
 def run_forward(
-    comm: MPI.Intracomm,
+    comm: mpi4py.MPI.Intracomm,
     forward_driver: pysu2.CSinglezoneDriver,
     inputs: Sequence[GenTensor],
 ) -> Tuple[GenTensor, ...]:
@@ -42,7 +42,7 @@ def run_forward(
     defined in DIFF_INPUTS in the config file.
 
     Args:
-        comm (MPI.Intracomm): The communicator for the processes running the simulation.
+        comm (mpi4py.MPI.Intracomm): The communicator for the processes running the simulation.
         forward_driver (pysu2.CSinglezoneDriver): The driver for the simulation, created using the same comm
                                                 as passed into this function.
         inputs (Sequence[GenTensor]): The inputs used to set the DIFF_INPUTS as defined in the configuration file.
@@ -104,7 +104,7 @@ def run_forward(
 
 
 def run_adjoint(
-    comm: MPI.Intracomm,
+    comm: mpi4py.MPI.Intracomm,
     adjoint_driver: pysu2ad.CDiscAdjSinglezoneDriver,
     inputs: Sequence[GenTensor],
     grad_outputs: Sequence[GenTensor],
@@ -113,7 +113,7 @@ def run_adjoint(
     defined in DIFF_INPUTS in the config file.
 
     Args:
-        comm (MPI.Intracomm): The communicator for the processes running the simulation.
+        comm (mpi4py.MPI.Intracomm): The communicator for the processes running the simulation.
         adjoint_driver (pysu2ad.CDiscAdjSinglezoneDriver): The driver for the adjoint computation,
                                             created using the same comm as passed into this function.
         inputs (Sequence[GenTensor]): The same inputs used to set the DIFF_INPUTS in the forward pass.
@@ -194,10 +194,10 @@ def activate_su2_mpi(
     non_busy_wait_max_time: float = 0.1,
 ) -> None:
     assert (
-        MPI.COMM_WORLD.Get_size() > 1
+        mpi4py.MPI.COMM_WORLD.Get_size() > 1
     ), 'Need at least 1 master and 1 worker process, run with "mpirun -np ...'
 
-    if MPI.COMM_WORLD.Get_rank() != 0:
+    if mpi4py.MPI.COMM_WORLD.Get_rank() != 0:
         global _non_busy_wait_max_time
         _non_busy_wait_max_time = non_busy_wait_max_time
         main(remove_temp_files=remove_temp_files)
@@ -205,21 +205,21 @@ def activate_su2_mpi(
 
     # Only rank 0 from here on
     def stop():
-        non_busy_post(MPI.COMM_WORLD)
-        MPI.COMM_WORLD.bcast(RunCode.STOP, root=0)
+        non_busy_post(mpi4py.MPI.COMM_WORLD)
+        mpi4py.MPI.COMM_WORLD.bcast(RunCode.STOP, root=0)
 
     atexit.register(stop)
     su2paddle.su2_function._global_max_ppe = max_procs_per_example
 
 
-def non_busy_wait(comm: MPI.Intracomm) -> None:
+def non_busy_wait(comm: mpi4py.MPI.Intracomm) -> None:
     b = comm.Ibarrier()
     start = time.time()
     while not b.Get_status():
         time.sleep(min((time.time() - start) / 2, _non_busy_wait_max_time))
 
 
-def non_busy_post(comm: MPI.Intracomm) -> None:
+def non_busy_post(comm: mpi4py.MPI.Intracomm) -> None:
     comm.Ibarrier()
 
 
@@ -228,8 +228,8 @@ def main(remove_temp_files: bool = True) -> None:
     Can be signaled to run either a forward simulation or an adjoint computation
     using RunCodes.
     """
-    local_comm = MPI.COMM_WORLD.Create_group(
-        MPI.Group.Excl(MPI.COMM_WORLD.Get_group(), [0])
+    local_comm = mpi4py.MPI.COMM_WORLD.Create_group(
+        mpi4py.MPI.Group.Excl(mpi4py.MPI.COMM_WORLD.Get_group(), [0])
     )
     local_rank = local_comm.Get_rank()
     local_size = local_comm.Get_size()
@@ -239,8 +239,8 @@ def main(remove_temp_files: bool = True) -> None:
     num_zones = dims = batch_solution_filename = batch_restart_filename = None
     batch_size = procs_per_example = 1
     while True:
-        non_busy_wait(MPI.COMM_WORLD)
-        run_type = MPI.COMM_WORLD.bcast(None, root=0)
+        non_busy_wait(mpi4py.MPI.COMM_WORLD)
+        run_type = mpi4py.MPI.COMM_WORLD.bcast(None, root=0)
         if run_type == RunCode.STOP:
             # remove temporary files
             if local_rank == 0 and remove_temp_files:
@@ -258,20 +258,18 @@ def main(remove_temp_files: bool = True) -> None:
                 mesh_file,
                 procs_per_example,
                 inputs,
-            ) = MPI.COMM_WORLD.bcast(None, root=0)
-            print("214 inputs", inputs, True)
-            # inputs = tuple([paddle.to_tensor(i) for i in inputs])
+            ) = mpi4py.MPI.COMM_WORLD.bcast(None, root=0)
             batch_size = inputs[0].shape[0]
             batch_index = local_rank // procs_per_example
             if procs_per_example == 1:
-                batch_comm = MPI.COMM_SELF
+                batch_comm = mpi4py.MPI.COMM_SELF
             elif procs_per_example == local_size:
                 batch_comm = local_comm
             else:
                 batch_comm = local_comm.Split(batch_index, local_rank)
             if local_rank >= batch_size * procs_per_example:
                 # these procs wont be used
-                non_busy_post(MPI.COMM_WORLD)
+                non_busy_post(mpi4py.MPI.COMM_WORLD)
                 continue
             batch_rank = batch_comm.Get_rank()
             x = [z[batch_index] for z in inputs]
@@ -293,7 +291,7 @@ def main(remove_temp_files: bool = True) -> None:
                 shutil.copy(forward_config, batch_forward_config)
                 modify_config(old_config, new_config, outfile=batch_forward_config)
             if local_rank == 0:
-                MPI.COMM_WORLD.send(batch_forward_config, dest=0)
+                mpi4py.MPI.COMM_WORLD.send(batch_forward_config, dest=0)
             batch_comm.Barrier()
 
             forward_driver = pysu2.CSinglezoneDriver(
@@ -303,9 +301,9 @@ def main(remove_temp_files: bool = True) -> None:
             # forward_driver.SetRestart_FlowFileName(batch_restart_filename)
             outputs = run_forward(batch_comm, forward_driver, x)
             output_lengths = [o.shape[0] for o in outputs]
-            non_busy_post(MPI.COMM_WORLD)
+            non_busy_post(mpi4py.MPI.COMM_WORLD)
             if batch_rank == 0:
-                MPI.COMM_WORLD.send(outputs, dest=0)
+                mpi4py.MPI.COMM_WORLD.send(outputs, dest=0)
                 # TODO Way to get results in-memory, without writing to file?
                 batch_solution_filename = batch_restart_filename.replace(
                     "restart", "solution"
@@ -314,13 +312,12 @@ def main(remove_temp_files: bool = True) -> None:
             forward_driver.Postprocessing()
 
         elif run_type == RunCode.RUN_ADJOINT:
-            print("259 inputs", inputs, True)
             # assert inputs is not None, 'Run forward simulation before running the adjoint.'
             inputs = None
-            grad_outputs = MPI.COMM_WORLD.bcast(None, root=0)
+            grad_outputs = mpi4py.MPI.COMM_WORLD.bcast(None, root=0)
             if local_rank >= batch_size * procs_per_example:
                 # these procs wont be used
-                non_busy_post(MPI.COMM_WORLD)
+                non_busy_post(mpi4py.MPI.COMM_WORLD)
                 continue
             dl = [
                 z[batch_index, : output_lengths[i]] for i, z in enumerate(grad_outputs)
@@ -351,7 +348,9 @@ def main(remove_temp_files: bool = True) -> None:
                 batch_adjoint_config, num_zones, dims, batch_comm
             )
             grads = run_adjoint(batch_comm, adjoint_driver, x, dl)
-            non_busy_post(MPI.COMM_WORLD)
+            non_busy_post(mpi4py.MPI.COMM_WORLD)
             if batch_rank == 0:
-                MPI.COMM_WORLD.send(grads, dest=0)
+                mpi4py.MPI.COMM_WORLD.send(grads, dest=0)
             adjoint_driver.Postprocessing()
+        else:
+            raise NotImplementedError

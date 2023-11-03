@@ -9,7 +9,7 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import paddle
-from PIL import Image
+import PIL
 
 plt.switch_backend("agg")
 
@@ -174,5 +174,5 @@ def save_image(
 ) -> None:
     grid = make_grid(tensor, **kwargs)
     ndarr = paddle.clip(grid * 255 + 0.5, 0, 255).cast("uint8").numpy()
-    im = Image.fromarray(ndarr)
+    im = PIL.Image.fromarray(ndarr)
     im.save(fp, format=format)

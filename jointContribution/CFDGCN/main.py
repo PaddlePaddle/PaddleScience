@@ -1,20 +1,15 @@
+import argparse
 import os
 import sys
-from argparse import ArgumentParser
 
+import data
 import mesh_utils
+import models
 import numpy as np
 import paddle
+import pgl.utils.data.dataloader as pgl_dataloader
 import PIL
-from data import MeshAirfoilDataset
-from models import CFD
-from models import CFDGCN
-from models import UCM
-from models import MeshGCN
-from paddle import nn
-from paddle import optimizer
-from pgl.utils.data.dataloader import Dataloader
-from su2paddle.su2_function_mpi import activate_su2_mpi
+import su2paddle.su2_function_mpi as su2_function_mpi
 
 import ppsci
 from ppsci.utils import logger
@@ -25,7 +20,7 @@ sys.path.append("/root/autodl-tmp/SU2_bin")
 
 # GCN
 def parse_args():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--exp-name",
         "-e",
@@ -155,17 +150,17 @@ class Runner:
     def __init__(self, hparams):
         self.hparams = hparams
         self.step = None  # count test step because apparently Trainer doesnt
-        self.criterion = nn.MSELoss()
-        self.data = MeshAirfoilDataset(hparams.data_dir, mode="train")
-        self.val_data = MeshAirfoilDataset(hparams.data_dir, mode="test")
-        self.test_data = MeshAirfoilDataset(hparams.data_dir, mode="test")
+        self.criterion = paddle.nn.MSELoss()
+        self.data = data.MeshAirfoilDataset(hparams.data_dir, mode="train")
+        self.val_data = data.MeshAirfoilDataset(hparams.data_dir, mode="test")
+        self.test_data = data.MeshAirfoilDataset(hparams.data_dir, mode="test")
 
         in_channels = self.data[0].node_feat["feature"].shape[-1]
         out_channels = self.data[0].y.shape[-1]
         hidden_channels = hparams.hidden_size
 
         if hparams.model == "cfd_gcn":
-            self.model = CFDGCN(
+            self.model = models.CFDGCN(
                 hparams.su2_config,
                 self.hparams.coarse_mesh,
                 fine_marker_dict=self.data.marker_dict,
@@ -177,28 +172,12 @@ class Runner:
                 freeze_mesh=self.hparams.freeze_mesh,
             )
         elif hparams.model == "gcn":
-            self.model = MeshGCN(
+            self.model = models.MeshGCN(
                 in_channels,
                 hidden_channels,
                 out_channels,
                 fine_marker_dict=self.data.marker_dict,
                 num_layers=hparams.num_layers,
-            )
-        elif hparams.model == "ucm":
-            self.model = UCM(
-                hparams.su2_config,
-                self.hparams.coarse_mesh,
-                fine_marker_dict=self.data.marker_dict,
-                process_sim=self.data.preprocess,
-                freeze_mesh=self.hparams.freeze_mesh,
-            )
-        elif hparams.model == "cfd":
-            self.model = CFD(
-                hparams.su2_config,
-                self.hparams.coarse_mesh,
-                fine_marker_dict=self.data.marker_dict,
-                process_sim=self.data.preprocess,
-                freeze_mesh=self.hparams.freeze_mesh,
             )
         else:
             raise NotImplementedError
@@ -206,20 +185,23 @@ class Runner:
         # config optimizer
         self.parameters = self.model.parameters()
         if self.hparams.optim.lower() == "adam":
-            self.optimizer = optimizer.Adam(
+            self.optimizer = paddle.optimizer.Adam(
                 parameters=self.parameters, learning_rate=self.hparams.lr
             )
         elif self.hparams.optim.lower() == "rmsprop":
-            self.optimizer = optimizer.RMSProp(
+            self.optimizer = paddle.optimizer.RMSProp(
                 parameters=self.parameters, learning_rate=self.hparams.lr
             )
         elif self.hparams.optim.lower() == "sgd":
-            self.optimizer = optimizer.SGD(
+            self.optimizer = paddle.optimizer.SGD(
                 parameters=self.parameters, learning_rate=self.hparams.lr
             )
         else:
-            self.optimizer = optimizer.SGD(
+            self.optimizer = paddle.optimizer.SGD(
                 parameters=self.parameters, learning_rate=self.hparams.lr
+            )
+            logger.warning(
+                f"Please confirm optimizer type: {self.hparams.optim}, we set SGD as default optimizer."
             )
 
         # config dataloader
@@ -239,7 +221,7 @@ class Runner:
 
     def on_epoch_end(self):
         avg_loss = self.sum_loss / max(len(self.train_loader), 1)
-        logger.info(f"train_loss:{avg_loss},step:{self.global_step}")
+        logger.info(f"train_loss:{avg_loss}, step:{self.global_step}")
 
     def common_step(self, graphs):
         loss = 0.0
@@ -307,7 +289,7 @@ class Runner:
         return loss.item()
 
     def train_dataloader(self):
-        train_loader = Dataloader(
+        train_loader = pgl_dataloader.Dataloader(
             self.data,
             batch_size=self.hparams.batch_size,
             shuffle=(
@@ -325,7 +307,7 @@ class Runner:
 
     def val_dataloader(self):
         # use test data here to get full training curve for test set
-        val_loader = Dataloader(
+        val_loader = pgl_dataloader.Dataloader(
             self.val_data,
             batch_size=self.hparams.batch_size,
             shuffle=False,
@@ -340,7 +322,7 @@ class Runner:
         return val_loader
 
     def test_dataloader(self):
-        test_loader = Dataloader(
+        test_loader = pgl_dataloader.Dataloader(
             self.test_data,
             batch_size=self.hparams.batch_size,
             shuffle=False,
@@ -374,7 +356,7 @@ class Runner:
     @staticmethod
     def get_cross_prods(meshes, store_elems):
         cross_prods = [
-            mesh_utils.is_ccw(mesh[e, :2], ret_val=True)
+            mesh_utils.is_counter_clock_wise(mesh[e, :2], ret_val=True)
             for mesh, elems in zip(meshes, store_elems)
             for e in elems
         ]
@@ -383,7 +365,7 @@ class Runner:
 
 if __name__ == "__main__":
     paddle.set_device("gpu")
-    activate_su2_mpi(remove_temp_files=True)
+    su2_function_mpi.activate_su2_mpi(remove_temp_files=True)
 
     args = parse_args()
     logger.info(args)
@@ -400,7 +382,7 @@ if __name__ == "__main__":
     # )
     # trainer.optimizer.set_state_dict(
     #     paddle.load(
-    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #         os.path.join(f"params_{trainer.hparams.model}", f"opt{epoch}.pdopt")
     #     )
     # )
     # total_test_loss = []
@@ -419,7 +401,7 @@ if __name__ == "__main__":
     # )
     # trainer.optimizer.set_state_dict(
     #     paddle.load(
-    #         os.path.join(f"params_{trainer.hparams.model}", f"model{epoch}.pdparams")
+    #         os.path.join(f"params_{trainer.hparams.model}", f"opt{epoch}.pdopt")
     #     )
     # )
 
@@ -456,5 +438,5 @@ if __name__ == "__main__":
         )
         paddle.save(
             trainer.optimizer.state_dict(),
-            os.path.join(f"params_{trainer.hparams.model}", f"adam{epoch}.pdopt"),
+            os.path.join(f"params_{trainer.hparams.model}", f"opt{epoch}.pdopt"),
         )

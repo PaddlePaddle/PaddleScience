@@ -1,6 +1,6 @@
 # 飞桨论文复现营 科学计算 Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction
 
-## 1.简介
+## 1. 简介
 
 本项目基于paddle框架复现，论文主要点如下：
 
@@ -19,20 +19,20 @@
 论文信息：
 * Filipe de Avila Belbute-Peres, Thomas D. Economon, and J. Zico Kolter. 2020. Combining differentiable PDE solvers and graph neural networks for fluid flow prediction. In Proceedings of the 37th International Conference on Machine Learning (ICML'20). JMLR.org, Article 224, 2402–2411.
 
-
 参考GitHub地址：
 * https://github.com/locuslab/cfd-gcn
 
 项目aistudio地址：
 * https://aistudio.baidu.com/aistudio/projectdetail/5216848
 
-### 模型结构
+### 1.1 模型结构
+
 ![](https://ai-studio-static-online.cdn.bcebos.com/d3c10c571f68481888cbe212b5019fce9806ef52f8bc4eeeb4c2349c6072fd4a)
 
+## 2. 数据集
 
-## 2.数据集
+### 2.1 数据下载使用
 
-### 数据下载使用
 数据集为作者提供，可通过[此处链接](https://github.com/locuslab/cfd-gcn)进行下载。
 
 数据集aistudio地址：
@@ -40,16 +40,18 @@
 
 本项目已经关联以上数据集，可直接在项目data文件夹下找到对应数据集
 
+## 3. 环境依赖
 
-## 3.环境依赖
 本项目实现了GCN模型和CFDGCN模型两种模型。
 * GCN模型：仅需要GPU计算资源即可完整运行（轻微修改代码，后续会说明）；
 * CFDGCN模型：通过MPI调用SU2进行加速计算，需同时使用CPU和GPU资源。
 
-### 硬件
+### 3.1 硬件
+
 * 模型：gpu memory >= 6GB
 
-### 框架
+### 3.2 框架
+
 * paddle == 2.4.1
 * pgl == 2.2.4
 * matplotlib
@@ -58,7 +60,8 @@
 * scikit-learn
 * mpi4py (使用pip安装)
 
-### 本地安装
+### 3.3 本地安装
+
 ```bash
 conda create -n paddle_env python=3.8
 conda install paddlepaddle-gpu==2.4.1 cudatoolkit=11.6 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/ -c conda-forge
@@ -66,25 +69,26 @@ conda install scipy h5py matplotlib scikit-learn
 pip install mpi4py
 ```
 
+## 4. 快速开始
 
-## 4.快速开始
-
-### 直接运行GCN模型需要修改的位置
-
+### 4.1 直接运行GCN模型需要修改的位置
 
 在main.py中注释
-```python
-# from su2paddle.su2_function_mpi import activate_su2_mpi (line19)
 
-# activate_su2_mpi(remove_temp_files=True) (line386)
+```python
+# import su2paddle.su2_function_mpi as su2_function_mpi (line12)
+
+# su2_function_mpi.activate_su2_mpi(remove_temp_files=True) (line368)
 ```
 
 在models.py中注释
+
 ```python
-# from su2paddle import SU2Module (line12)
+# import su2paddle (line7)
 ```
 
-### aistudio
+### 4.2 aistudio
+
 1. 从data中找到SU2Bin.tgz, 解压到本环境目录下，/home/aistudio/SU2Bin
 
 2. 从CFDGCN文件夹解压数据data.tzg，目录结构见5.代码结构与详细说明。
@@ -92,7 +96,6 @@ pip install mpi4py
 3. 本项目推荐使用命令行进行运行。本项目代码同[PaddlePaddle/PaddleScience](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution)中相同代码，可任选一处运行。
 * GCN模型推荐在aistudio中运行，仅需要GPU资源。
 * CFDGCN模型推荐在本地进行运行或者选择 v100 32g版本环境（可使用4个cpu core）
-
 
 ```bash
 # 此处运行命令无需修改代码即可运行
@@ -117,7 +120,8 @@ mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
 ```
 
-### 本地运行
+### 4.3 本地运行
+
 * 下载数据集文件和预编译SU2Bin文件, 此部分参考aistudio部分
 * 从github下载本项目代码，[PaddlePaddle/PaddleScience](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution)
 * 运行
@@ -144,7 +148,7 @@ mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_
 mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
 ```
 
-## 5.代码结构与详细说明
+## 5. 项目结构与实现细节
 
 ```txt
 ├── coarse.cfg # SU2配置文件
@@ -182,9 +186,9 @@ mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_
     └── su2_numpy.py
 ```
 
-### 使用pgl替换torch_geometric
+### 5.1 使用pgl替换torch_geometric
 
-#### Dataset与Dataloader修改
+#### 5.2 Dataset与Dataloader修改
 
 ```python
 # 此处来自pgl官方代码说明（Dataset和Dataloader使用）
@@ -230,14 +234,14 @@ for graph in graphs:
         x = conv(graph, x)
         x = F.relu(x)
 ```
+
 , 最后的x即为输出结果。
 
-
-### knn_interpolate方法实现
+### 5.3 knn_interpolate方法实现
 
 计算方法如下（计算方式与torch_geometric相同）：
 
-$\mathbf{f}(y) = \frac{\sum_{i=1}^k w(x_i) \mathbf{f}(x_i)}{\sum_{i=1}^k w(x_i)} \textrm{, where } w(x_i) = \frac{1}{d(\mathbf{p}(y),\mathbf{p}(x_i))^2}$
+$\mathbf{f}(y) = \frac{\sum_{i=1}^k w(x_i) \mathbf{f}(x_i)}{\sum_{i=1}^k w(x_i)} \textrm{, where } w(x_i) = \frac{1}{d(\mathbf{p}(y), \mathbf{p}(x_i))^2}$
 
 ```python
 #param features: [353，3]
@@ -256,10 +260,7 @@ features_input = features[knn_index]
 output = paddle.bmm(weight, features_input).squeeze(-2) / paddle.sum(knn_value, axis=-1, keepdim=True)
 ```
 
-
-
-
-### SU2项目和paddle的结合使用
+### 5.4 SU2项目和paddle的结合使用
 
 SU2模型为预编译模型，具体编译过程参考https://github.com/locuslab/cfd-gcn/Dockerfile
 
@@ -267,17 +268,20 @@ SU2模型为预编译模型，具体编译过程参考https://github.com/locusla
 
 使用方式如下：
 模型引用：
+
 ```python
 os.environ['SU2_RUN'] = '/home/aistudio/SU2Bin'
 sys.path.append('/home/aistudio/SU2Bin')
 ```
 
 模型构建：
+
 ```python
 self.su2 = SU2Module(config_file, mesh_file=self.mesh_file) # 参考CFDGCN/model.py line 97
 ```
 
 模型调用：
+
 ```python
 batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
                    aoa_input[..., None], mach_or_reynolds_input[..., None])
@@ -290,10 +294,9 @@ batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
 # batch_y =>list [batch_size, node_number] * 3
 ```
 
+## 6. 复现结果
 
-## 6.复现结果
-
-### RMSE对比
+### 6.1 RMSE对比
 
 |模型/指标 | INTERPOLATION (RMSE) | GENERALIZATION (RMSE) |
 | -------- | -------- | -------- |
@@ -302,8 +305,7 @@ batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
 | GCN （原论文）     | 1.4 * 10^-2     | 9.5 * 10^-2     |
 | GCN （复现）     | 1.1 * 10^-2     | 9.4 * 10^-2     |
 
-
-### 可视化展示
+### 6.2 可视化展示
 
 Pred:
 ![](https://ai-studio-static-online.cdn.bcebos.com/1c9624e5d9714c4488510d74b361b44b67087f37f7074e8dbf290772ca2f5437)
@@ -311,9 +313,7 @@ Pred:
 True:
 ![](https://ai-studio-static-online.cdn.bcebos.com/a0cc2fa767434f9e843c158d725d6a9c6e1be0d92dde4a2395848f73658c827a)
 
-
-
-## 7.模型信息
+## 7. 模型信息
 
 | 信息                | 说明|
 | --------          | -------- |

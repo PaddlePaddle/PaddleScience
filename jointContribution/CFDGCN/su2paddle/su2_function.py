@@ -1,15 +1,12 @@
 import math
 from typing import Tuple
 
+import common
+import mpi4py
 import paddle
 import pysu2
-from common import pad_sequence
-from mpi4py import MPI
-from su2_function_mpi import RunCode
-from su2_function_mpi import non_busy_post
-from su2_function_mpi import non_busy_wait
+import su2_function_mpi
 
-# Must be imported before pysu2 or else MPI error happens at some point  # NOQA
 _global_max_ppe = -1
 
 
@@ -33,7 +30,7 @@ class SU2Module(paddle.nn.Layer):
         super().__init__()
         if num_zones != 1:
             raise ValueError("Only supports 1 zone for now.")
-        if MPI.COMM_WORLD.Get_rank() != 0:
+        if mpi4py.MPI.COMM_WORLD.Get_rank() != 0:
             raise ValueError("Only rank 0 can run SU2Function, not rank 0 in comm")
         if _global_max_ppe <= 0:
             raise ValueError(
@@ -78,7 +75,7 @@ class SU2Function(paddle.autograd.PyLayer):
 
     @staticmethod
     def forward(ctx, *inputs):
-        non_busy_post(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_post(mpi4py.MPI.COMM_WORLD)
         x = inputs[: -SU2Function.num_params]
         forward_config, mesh_file, num_zones, dims, set_forward_driver_hook = inputs[
             -SU2Function.num_params :
@@ -91,25 +88,25 @@ class SU2Function(paddle.autograd.PyLayer):
             )
         batch_size = x[0].shape[0]
         max_ppe = _global_max_ppe
-        workers = MPI.COMM_WORLD.Get_size() - 1
+        workers = mpi4py.MPI.COMM_WORLD.Get_size() - 1
         if 0 <= workers < batch_size:
             raise TypeError(
                 "Batch size is larger than number of workers, not enough processes to run batch."
             )
 
-        MPI.COMM_WORLD.bcast(RunCode.RUN_FORWARD, root=0)
+        mpi4py.MPI.COMM_WORLD.bcast(su2_function_mpi.RunCode.RUN_FORWARD, root=0)
         procs_per_example = min(max_ppe, math.ceil(workers / batch_size))
 
         x = tuple((i.numpy() for i in x))
 
-        MPI.COMM_WORLD.bcast(
+        mpi4py.MPI.COMM_WORLD.bcast(
             [num_zones, dims, forward_config, mesh_file, procs_per_example, x], root=0
         )
 
         # instantiate forward_driver while workers work
-        worker_forward_config = MPI.COMM_WORLD.recv(source=1)
+        worker_forward_config = mpi4py.MPI.COMM_WORLD.recv(source=1)
         forward_driver = pysu2.CSinglezoneDriver(
-            worker_forward_config, num_zones, dims, MPI.COMM_SELF
+            worker_forward_config, num_zones, dims, mpi4py.MPI.COMM_SELF
         )
         num_diff_inputs = forward_driver.GetnDiff_Inputs()
         num_diff_outputs = forward_driver.GetnDiff_Outputs()
@@ -129,12 +126,12 @@ class SU2Function(paddle.autograd.PyLayer):
         ctx.num_diff_inputs = num_diff_inputs
 
         outputs = []
-        non_busy_wait(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_wait(mpi4py.MPI.COMM_WORLD)
         for i in range(batch_size):
-            output = MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
+            output = mpi4py.MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
             outputs.append(output)
         outputs = tuple(
-            pad_sequence(
+            common.pad_sequence(
                 [paddle.to_tensor(o[i], dtype=paddle.float32) for o in outputs],
                 batch_first=True,
             )
@@ -144,22 +141,22 @@ class SU2Function(paddle.autograd.PyLayer):
 
     @staticmethod
     def backward(ctx, *grad_outputs):
-        non_busy_post(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_post(mpi4py.MPI.COMM_WORLD)
         max_ppe = _global_max_ppe
-        workers = MPI.COMM_WORLD.Get_size() - 1
-        MPI.COMM_WORLD.bcast(RunCode.RUN_ADJOINT, root=0)
+        workers = mpi4py.MPI.COMM_WORLD.Get_size() - 1
+        mpi4py.MPI.COMM_WORLD.bcast(su2_function_mpi.RunCode.RUN_ADJOINT, root=0)
         grad_outputs = tuple([i.numpy() for i in grad_outputs])
-        MPI.COMM_WORLD.bcast(grad_outputs, root=0)
+        mpi4py.MPI.COMM_WORLD.bcast(grad_outputs, root=0)
         batch_size = grad_outputs[0].shape[0]
         procs_per_example = min(max_ppe, math.ceil(workers / batch_size))
-        non_busy_wait(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_wait(mpi4py.MPI.COMM_WORLD)
         grads = []
         for i in range(batch_size):
-            grad = MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
+            grad = mpi4py.MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
             grads.append(grad)
         print("grads", len(grads), flush=True)
         grads = tuple(
-            pad_sequence(
+            common.pad_sequence(
                 [paddle.to_tensor(g[i], dtype=paddle.float32) for g in grads],
                 batch_first=True,
             )

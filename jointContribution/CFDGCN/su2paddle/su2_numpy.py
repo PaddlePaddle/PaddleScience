@@ -1,14 +1,11 @@
 import math
 
+import mpi4py
 import numpy as np
 import pysu2
-from mpi4py import MPI
-from su2_function_mpi import RunCode
-
-# MPI Must be imported before pysu2 or else MPI error happens at some point  # NOQA
+import su2_function_mpi
 
 
-# TODO Outdated, update to match the Torch version (su2_function.py)
 class SU2Numpy:
     """Class that uses the SU2 in-memory python wrapper
     to provide differentiable physics simulations.
@@ -35,10 +32,10 @@ class SU2Numpy:
         """
         if num_zones != 1:
             raise ValueError("Only supports 1 zone for now.")
-        if MPI.COMM_WORLD.Get_rank() != 0:
+        if mpi4py.MPI.COMM_WORLD.Get_rank() != 0:
             raise ValueError("Only rank 0 can run SU2Function, not rank 0 in comm")
 
-        self.comm = MPI.COMM_WORLD
+        self.comm = mpi4py.MPI.COMM_WORLD
         self.workers = self.comm.Get_size() - 1
         if self.workers <= 0:
             raise ValueError("Need at least 1 master and 1 worker process.")
@@ -49,7 +46,7 @@ class SU2Numpy:
 
         self.forward_config = config_file
         self.forward_driver = pysu2.CSinglezoneDriver(
-            self.forward_config, self.num_zones, self.dims, MPI.COMM_SELF
+            self.forward_config, self.num_zones, self.dims, mpi4py.MPI.COMM_SELF
         )
         self.num_diff_inputs = self.forward_driver.GetnDiff_Inputs()
         self.num_diff_outputs = self.forward_driver.GetnDiff_Outputs()
@@ -90,7 +87,7 @@ class SU2Numpy:
             )
         procs_per_example = math.ceil(self.workers / self.batch_size)
 
-        self.comm.bcast(RunCode.RUN_FORWARD, root=0)
+        self.comm.bcast(su2_function_mpi.RunCode.RUN_FORWARD, root=0)
         self.comm.bcast(
             [self.num_zones, self.dims, self.forward_config, inputs], root=0
         )
@@ -136,7 +133,7 @@ class SU2Numpy:
             )
 
         procs_per_example = math.ceil(self.workers / self.batch_size)
-        self.comm.bcast(RunCode.RUN_ADJOINT, root=0)
+        self.comm.bcast(su2_function_mpi.RunCode.RUN_ADJOINT, root=0)
         self.comm.bcast(grad_outputs, root=0)
         grads = []
         for i in range(self.batch_size):

@@ -1,20 +1,15 @@
 import os
 
+import mesh_utils
 import paddle
 import paddle.nn.functional as F
-from mesh_utils import get_mesh_graph
-from mesh_utils import is_cw
-from mesh_utils import quad2tri
-from mesh_utils import signed_dist_graph
-from mesh_utils import write_graph_mesh
-from paddle import nn
-from pgl.nn import GCNConv
-from su2paddle import SU2Module
+import pgl
+import su2paddle
 
 from ppsci.utils import logger
 
 
-class MeshGCN(nn.Layer):
+class MeshGCN(paddle.nn.Layer):
     def __init__(
         self,
         in_channels,
@@ -34,9 +29,9 @@ class MeshGCN(nn.Layer):
         channels += [hidden_channels] * (num_layers - 1)
         channels += [out_channels]
 
-        self.convs = nn.LayerList()
+        self.convs = paddle.nn.LayerList()
         for i in range(num_layers):
-            self.convs.append(GCNConv(channels[i], channels[i + 1]))
+            self.convs.append(pgl.nn.GCNConv(channels[i], channels[i + 1]))
 
     def forward(self, graphs):
         pred_fields = []
@@ -45,7 +40,7 @@ class MeshGCN(nn.Layer):
 
             if self.sdf is None:
                 with paddle.no_grad():
-                    self.sdf = signed_dist_graph(
+                    self.sdf = mesh_utils.signed_dist_graph(
                         x[:, :2], self.fine_marker_dict
                     ).unsqueeze(1)
             x = paddle.concat([x, self.sdf], axis=-1)
@@ -59,7 +54,7 @@ class MeshGCN(nn.Layer):
         return pred_fields
 
 
-class CFDGCN(nn.Layer):
+class CFDGCN(paddle.nn.Layer):
     def __init__(
         self,
         config_file,
@@ -79,24 +74,29 @@ class CFDGCN(nn.Layer):
 
         if not coarse_mesh:
             raise ValueError("Need to provide a coarse mesh for CFD-GCN.")
-        nodes, edges, self.elems, self.marker_dict = get_mesh_graph(coarse_mesh)
+        nodes, edges, self.elems, self.marker_dict = mesh_utils.get_mesh_graph(
+            coarse_mesh
+        )
         if not freeze_mesh:
             self.nodes = paddle.to_tensor(nodes, stop_gradient=False)
         else:
             self.nodes = paddle.to_tensor(nodes, stop_gradient=True)
 
-        self.elems, new_edges = quad2tri(sum(self.elems, []))
+        self.elems, new_edges = mesh_utils.quad2tri(sum(self.elems, []))
         self.elems = [self.elems]
         self.edges = paddle.to_tensor(edges)
         logger.info(self.edges.dtype, new_edges.dtype)
         self.edges = paddle.concat([self.edges, new_edges], axis=1)
         self.marker_inds = paddle.to_tensor(sum(self.marker_dict.values(), [])).unique()
         assert (
-            is_cw(self.nodes, paddle.to_tensor(self.elems[0])).nonzero().shape[0] == 0
+            mesh_utils.is_clock_wise(self.nodes, paddle.to_tensor(self.elems[0]))
+            .nonzero()
+            .shape[0]
+            == 0
         ), "Mesh has flipped elems"
 
         self.process_sim = process_sim
-        self.su2 = SU2Module(config_file, mesh_file=self.mesh_file)
+        self.su2 = su2paddle.SU2Module(config_file, mesh_file=self.mesh_file)
         logger.info(
             f'Mesh filename: {self.mesh_file.format(batch_index="*")}', flush=True
         )
@@ -107,22 +107,22 @@ class CFDGCN(nn.Layer):
         self.num_convs = num_end_convs
         self.convs = []
         if self.num_convs > 0:
-            self.convs = nn.LayerList()
+            self.convs = paddle.nn.LayerList()
             in_channels = out_channels + hidden_channels
             for i in range(self.num_convs - 1):
-                self.convs.append(GCNConv(in_channels, hidden_channels))
+                self.convs.append(pgl.nn.GCNConv(in_channels, hidden_channels))
                 in_channels = hidden_channels
-            self.convs.append(GCNConv(in_channels, out_channels))
+            self.convs.append(pgl.nn.GCNConv(in_channels, out_channels))
 
         self.num_pre_convs = num_convs - num_end_convs
         self.pre_convs = []
         if self.num_pre_convs > 0:
             in_channels = 5 + 1  # one extra channel for sdf
-            self.pre_convs = nn.LayerList()
+            self.pre_convs = paddle.nn.LayerList()
             for i in range(self.num_pre_convs - 1):
-                self.pre_convs.append(GCNConv(in_channels, hidden_channels))
+                self.pre_convs.append(pgl.nn.GCNConv(in_channels, hidden_channels))
                 in_channels = hidden_channels
-            self.pre_convs.append(GCNConv(in_channels, hidden_channels))
+            self.pre_convs.append(pgl.nn.GCNConv(in_channels, hidden_channels))
 
         self.sim_info = {}  # store output of coarse simulation for logging / debugging
 
@@ -137,7 +137,7 @@ class CFDGCN(nn.Layer):
 
             if self.sdf is None:
                 with paddle.no_grad():
-                    self.sdf = signed_dist_graph(
+                    self.sdf = mesh_utils.signed_dist_graph(
                         x[:, :2], self.fine_marker_dict
                     ).unsqueeze(1)
             fine_x = paddle.concat([x, self.sdf], axis=1)
@@ -231,7 +231,7 @@ class CFDGCN(nn.Layer):
 
     @staticmethod
     def write_mesh_file(x, elems, marker_dict, filename="mesh.su2"):
-        write_graph_mesh(filename, x[:, :2], elems, marker_dict)
+        mesh_utils.write_graph_mesh(filename, x[:, :2], elems, marker_dict)
 
     @staticmethod
     def contiguous_elems_list(elems, inds):

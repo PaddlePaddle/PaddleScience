@@ -5,7 +5,7 @@ import mesh_utils
 import numpy as np
 import paddle
 import pgl
-from pgl.utils.data import dataloader as pgl_dataloader
+import pgl.utils.data.dataloader as pgl_dataloader
 
 
 class MeshAirfoilDataset(pgl_dataloader.Dataset):
@@ -20,8 +20,7 @@ class MeshAirfoilDataset(pgl_dataloader.Dataset):
         self.mesh_graph = mesh_utils.get_mesh_graph(os.path.join(root, "mesh_fine.su2"))
 
         # either [maxes, mins] or [means, stds] from data for normalization
-        # with open(self.data_dir / 'train_mean_std.pkl', 'rb') as f:
-        with open(self.data_dir.parent / "train_max_min.pkl", "rb") as f:
+        with open(os.path.join(root, "train_max_min.pkl"), "rb") as f:
             self.normalization_factors = pickle.load(f)
 
         self.nodes = self.mesh_graph[0]
@@ -83,7 +82,6 @@ class MeshAirfoilDataset(pgl_dataloader.Dataset):
         data_max, data_min = self.normalization_factors
         normalized_tensors = []
         for i in range(len(tensor_list)):
-            # tensor_list[i] = (tensor_list[i] - data_means[i]) / data_stds[i] / 10
             normalized = (tensor_list[i] - data_min[i]) / (
                 data_max[i] - data_min[i]
             ) * 2 - 1
@@ -110,17 +108,3 @@ class MeshAirfoilDataset(pgl_dataloader.Dataset):
 
     def __getitem__(self, idx):
         return self.graphs[idx]
-
-
-if __name__ == "__main__":
-
-    train_data = MeshAirfoilDataset("data/NACA0012_interpolate", mode="train")
-    val_data = MeshAirfoilDataset("data/NACA0012_interpolate", mode="test")
-
-    val_loader = pgl_dataloader.Dataloader(
-        train_data, batch_size=2, shuffle=False, num_workers=1
-    )
-
-    for i, x in enumerate(val_loader):
-        print(i)
-        print(x)

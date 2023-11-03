@@ -1,4 +1,5 @@
 import pickle
+import time
 from os import PathLike
 from typing import Dict
 from typing import List
@@ -10,7 +11,7 @@ import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
-from scipy.spatial import Delaunay
+import scipy
 
 from ppsci.utils import logger
 
@@ -261,7 +262,7 @@ def delauney(x):
     """Adapted from torch_geometric.transforms.delaunay.Delaunay."""
     pos = x[:, :2]
     if pos.shape[0] > 3:
-        tri = Delaunay(pos, qhull_options="QJ")
+        tri = scipy.spatial.Delaunay(pos, qhull_options="QJ")
         face = tri.simplices
     elif pos.size(0) == 3:
         face = np.array([[0, 1, 2]])
@@ -280,11 +281,11 @@ def get_dists(edge_index, pos, norm=True, max=None):
     (row, col), pos = edge_index, pos
     dist = paddle.norm(pos[col] - pos[row], p=2, axis=-1).view(-1, 1)
     if norm and dist.numel() > 0:
-        dist = dist / dist.max() if max is None else max
+        dist = (dist / dist.max()) if max is None else max
     return dist
 
 
-def is_ccw(points, ret_val=False):
+def is_counter_clock_wise(points, ret_val=False):
     """From: https://stackoverflow.com/questions/1165647#1180256"""
     n = points.shape[0]
     a = paddle.argmin(points[:, 1])
@@ -301,7 +302,7 @@ def is_ccw(points, ret_val=False):
         return cross
 
 
-def is_cw(points, triangles, ret_val=False):
+def is_clock_wise(points, triangles, ret_val=False):
     tri_pts = points[triangles]
     a = tri_pts[:, 0] - tri_pts[:, 1]
     b = tri_pts[:, 1] - tri_pts[:, 2]
@@ -406,7 +407,6 @@ def plot_field(
         plt.close()
 
     if show:
-        # plt.show()
         raise NotImplementedError
 
     if get_array:
@@ -447,37 +447,6 @@ def write_tecplot(graph, fields, elems_list, filename="flow.dat"):
             f.write("\n")
 
 
-if __name__ == "__main__":
-    import time
-
-    mesh = "mesh_NACA0012_fine.su2"
-    start = time.time()
-    x, edge_index, _, marker_dict = get_mesh_graph(f"meshes/{mesh}")
-
-    x = paddle.to_tensor(x, dtype=paddle.float32)
-    edge_index = paddle.to_tensor(edge_index)
-
-    triangulation = Delaunay(x)
-    airfoil_markers = set(marker_dict["airfoil"][0])
-    elems = triangulation.simplices
-    keep_inds = [
-        i
-        for i in range(elems.shape[1])
-        if not (
-            elems[0, i].item() in airfoil_markers
-            and elems[1, i].item() in airfoil_markers
-            and elems[2, i].item() in airfoil_markers
-        )
-    ]
-    elems = elems[:, keep_inds]
-
-    write_graph_mesh("test_mesh.su2", x, [elems], marker_dict)
-    logger.info(f"Took: {time.time() - start}")
-
-    with open(f"meshes/graph_{mesh}.pkl", "wb") as f:
-        pickle.dump([x, edge_index], f)
-
-
 def visualize_mesh(
     nodes, elements, xlims=None, ylims=None, marker=".", plot_inds=False
 ):
@@ -515,3 +484,32 @@ def visualize_mesh(
         plt.ylim(top=ylims[1], bottom=ylims[0])
 
     plt.show()
+
+
+if __name__ == "__main__":
+    mesh = "mesh_NACA0012_fine.su2"
+    start = time.time()
+    x, edge_index, _, marker_dict = get_mesh_graph(f"meshes/{mesh}")
+
+    x = paddle.to_tensor(x, dtype=paddle.float32)
+    edge_index = paddle.to_tensor(edge_index)
+
+    triangulation = scipy.spatial.Delaunay(x)
+    airfoil_markers = set(marker_dict["airfoil"][0])
+    elems = triangulation.simplices
+    keep_inds = [
+        i
+        for i in range(elems.shape[1])
+        if not (
+            elems[0, i].item() in airfoil_markers
+            and elems[1, i].item() in airfoil_markers
+            and elems[2, i].item() in airfoil_markers
+        )
+    ]
+    elems = elems[:, keep_inds]
+
+    write_graph_mesh("test_mesh.su2", x, [elems], marker_dict)
+    logger.info(f"Took: {time.time() - start}")
+
+    with open(f"meshes/graph_{mesh}.pkl", "wb") as f:
+        pickle.dump([x, edge_index], f)
