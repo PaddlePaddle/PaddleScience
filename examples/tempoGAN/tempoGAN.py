@@ -187,9 +187,7 @@ def train(cfg: DictConfig):
             ppsci.loss.FunctionalLoss(disc_funcs.loss_func),
             name="sup_constraint_disc",
         )
-        constraint_disc = {
-            sup_constraint_disc.name: sup_constraint_disc,
-        }
+        constraint_disc = {sup_constraint_disc.name: sup_constraint_disc}
 
     # temporal Discriminators
     # manually build constraint(s)
@@ -231,7 +229,7 @@ def train(cfg: DictConfig):
             name="sup_constraint_disc_tempo",
         )
         constraint_disc_tempo = {
-            sup_constraint_disc_tempo.name: sup_constraint_disc_tempo,
+            sup_constraint_disc_tempo.name: sup_constraint_disc_tempo
         }
 
     # initialize solver
@@ -322,7 +320,7 @@ def evaluate(cfg: DictConfig):
 
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     gen_funcs = func_module.GenFuncs(cfg.WEIGHT_GEN, None)
 
