@@ -25,6 +25,7 @@ seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
+VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
 
 # model settings
 MODEL:
@@ -37,13 +38,14 @@ MODEL:
 # training settings
 TRAIN:
   epochs: 100000
-  eval_freq: 1000
   iters_per_epoch: 1
   save_freq: 1
   eval_during_train: true
-  optimizer:
-    epochs: 100000
-    iters_per_epoch: 1
+  eval_freq: 1000
+  batch_size: 100
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
     learning_rate: 0.001
     step_size: 20000
     gamma: 0.9
@@ -53,3 +55,4 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
+  batch_size: 32

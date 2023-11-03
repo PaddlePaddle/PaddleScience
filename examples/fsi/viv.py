@@ -38,12 +38,12 @@ def train(cfg: DictConfig):
     train_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": "./VIV_Training_Neta100.mat",
+            "file_path": cfg.VIV_DATA_PATH,
             "input_keys": ("t_f",),
             "label_keys": ("eta", "f"),
             "weight_dict": {"eta": 100},
         },
-        "batch_size": 100,
+        "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -64,18 +64,18 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.optimizer)()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set validator
     valid_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": "./VIV_Training_Neta100.mat",
+            "file_path": cfg.VIV_DATA_PATH,
             "input_keys": ("t_f",),
             "label_keys": ("eta", "f"),
         },
-        "batch_size": 32,
+        "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -93,7 +93,7 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
-        "./VIV_Training_Neta100.mat",
+        cfg.VIV_DATA_PATH,
         ("t_f", "eta_gt", "f_gt"),
         alias_dict={"eta_gt": "eta", "f_gt": "f"},
     )
@@ -121,7 +121,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        eval_during_train=True,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         validator=validator,
@@ -153,11 +153,11 @@ def evaluate(cfg: DictConfig):
     valid_dataloader_cfg = {
         "dataset": {
             "name": "MatDataset",
-            "file_path": "./VIV_Training_Neta100.mat",
+            "file_path": cfg.VIV_DATA_PATH,
             "input_keys": ("t_f",),
             "label_keys": ("eta", "f"),
         },
-        "batch_size": 32,
+        "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -175,7 +175,7 @@ def evaluate(cfg: DictConfig):
 
     # set visualizer(optional)
     visu_mat = ppsci.utils.reader.load_mat_file(
-        "./VIV_Training_Neta100.mat",
+        cfg.VIV_DATA_PATH,
         ("t_f", "eta_gt", "f_gt"),
         alias_dict={"eta_gt": "eta", "f_gt": "f"},
     )
@@ -205,9 +205,9 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
-    # evaluate after finished training
+    # evaluate
     solver.eval()
-    # visualize prediction after finished training
+    # visualize prediction
     solver.visualize()
 
 
