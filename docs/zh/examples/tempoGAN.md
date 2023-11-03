@@ -26,11 +26,10 @@
     python tempoGAN.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams
     ```
 
-## 0. 数据集、预训练模型和评估指标说明
+| 预训练模型  | 指标 |
+|:--| :--|
+| [tempogan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/tempoGAN/tempogan_pretrained.pdparams) | MSE: 4.21e-5<br>PSNR: 47.19<br>SSIM: 0.9974 |
 
-| 案例名称 | 训练数据集 | 测试数据集 | 预训练模型 | MSE | PSNR | SSIM |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| tempoGAN | 2d_train.mat | 2d_valid.mat | tempogan_pretrained.pdparams | 4.21e-5 | 47.19 | 0.9974 |
 
 ## 1. 背景简介
 
