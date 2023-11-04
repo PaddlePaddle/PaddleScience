@@ -33,7 +33,11 @@ if TYPE_CHECKING:
     from ppsci import equation
 
 
-__all__ = ["load_checkpoint", "save_checkpoint", "load_pretrain"]
+__all__ = [
+    "load_checkpoint",
+    "save_checkpoint",
+    "load_pretrain",
+]
 
 
 def _load_pretrain_from_path(
