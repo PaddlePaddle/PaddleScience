@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from os import path as osp
 
-import os
-
+import h5py
 import hydra
 import numpy as np
 import paddle
 from functions import augmentation
 from functions import generate_sampler
 from functions import generate_train_test
-from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 from paddle import nn
 from TopOptModel import TopOptNN
@@ -33,49 +32,42 @@ def train(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
     # 4 training cases parameters
-    LEARNING_RATE = 0.001 / (1 + cfg.TRAIN.num_epochs // 15)
-    ITERS_PER_EPOCH = int(
-        cfg.TRAIN.n_samples * cfg.TRAIN.train_test_ratio / cfg.TRAIN.batch_size
-    )
+    LEARNING_RATE = cfg.TRAIN.learning_rate / (1 + cfg.TRAIN.epochs // 15)
+    ITERS_PER_EPOCH = int(cfg.n_samples * cfg.train_test_ratio / cfg.TRAIN.batch_size)
+
+    # read h5 data
+    h5data = h5py.File(cfg.DATA_PATH, "r")
+    data_iters = np.array(h5data["iters"])
+    data_targets = np.array(h5data["targets"])
 
     # generate training dataset
-    X_train, Y_train = generate_train_test(
-        cfg.DATA_PATH, cfg.TRAIN.train_test_ratio, cfg.TRAIN.n_samples
+    inputs_train, labels_train = generate_train_test(
+        data_iters, data_targets, cfg.train_test_ratio, cfg.n_samples
     )
-
-    # define loss
-    def loss_expr(output_dict, label_dict, weight_dict=None):
-        y = label_dict["output"].reshape((-1, 1))
-        y_pred = output_dict["output"].reshape((-1, 1))
-        conf_loss = paddle.mean(
-            nn.functional.log_loss(y_pred, y, epsilon=cfg.TRAIN.epsilon.log_loss)
-        )
-        vol_loss = paddle.square(paddle.mean(y - y_pred))
-        return conf_loss + cfg.TRAIN.vol_coeff * vol_loss
 
     # set constraints
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": {"input": X_train},
-                "label": {"output": Y_train},
+                "input": {"input": inputs_train},
+                "label": {"output": labels_train},
+                "transforms": (
+                    {
+                        "FunctionalTransform": {
+                            "transform_func": augmentation,
+                        },
+                    },
+                ),
             },
             "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": cfg.TRAIN.drop_last,
-                "shuffle": cfg.TRAIN.shuffle,
+                "drop_last": False,
+                "shuffle": True,
             },
-            "transforms": (
-                {
-                    "FunctionalTransform": {
-                        "transform_func": augmentation,
-                    },
-                },
-            ),
         },
-        ppsci.loss.FunctionalLoss(loss_expr),
+        ppsci.loss.FunctionalLoss(loss_wrapper(cfg)),
         name="sup_constraint",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -87,24 +79,15 @@ def train(cfg: DictConfig):
         SIMP_stop_point_sampler = generate_sampler(sampler_key, num)
 
         # initialize logger for training
-        OUTPUT_DIR = cfg.output_dir
-        OUTPUT_DIR = (
-            f"{OUTPUT_DIR}/{sampler_key}{num}_vol_coeff{cfg.TRAIN.vol_coeff}"
-            if num is not None
-            else f"{OUTPUT_DIR}/{sampler_key}_vol_coeff{cfg.TRAIN.vol_coeff}"
+        sampler_name = sampler_key + str(num) if num else sampler_key
+        OUTPUT_DIR = osp.join(
+            cfg.output_dir, f"{sampler_name}_vol_coeff{cfg.vol_coeff}"
         )
-        logger.init_logger("ppsci", os.path.join(OUTPUT_DIR, "train.log"), "info")
+        logger.init_logger("ppsci", osp.join(OUTPUT_DIR, "train.log"), "info")
 
         # set model
-        model = TopOptNN(
-            in_channel=cfg.MODEL.in_channel,
-            out_channel=cfg.MODEL.out_channel,
-            kernel_size=cfg.MODEL.kernel_size,
-            filters=cfg.MODEL.filters,
-            layers=cfg.MODEL.layers,
-            channel_sampler=SIMP_stop_point_sampler,
-        )
-        assert model.num_params == cfg.TRAIN.num_params
+        model = TopOptNN(**cfg.MODEL, channel_sampler=SIMP_stop_point_sampler)
+        assert model.num_params == cfg.num_params
 
         # set optimizer
         optimizer = ppsci.optimizer.Adam(
@@ -117,140 +100,42 @@ def train(cfg: DictConfig):
             constraint,
             OUTPUT_DIR,
             optimizer,
-            epochs=cfg.TRAIN.num_epochs,
+            epochs=cfg.TRAIN.epochs,
             iters_per_epoch=ITERS_PER_EPOCH,
+            eval_during_train=cfg.TRAIN.eval_during_train,
+            seed=cfg.seed,
         )
 
         # train model
         solver.train()
 
 
-def evaluate_and_plot(cfg: DictConfig):
+# evaluate 4 models
+def evaluate(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
-    # evaluate 4 models
-    RESULT_DIR = os.path.join(cfg.output_dir, "results")
-
     # initialize logger for evaluation
-    logger.init_logger("ppsci", os.path.join(RESULT_DIR, "results.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "results.log"), "info")
 
     # fixed iteration stop times for evaluation
     iterations_stop_times = range(5, 85, 5)
     model = TopOptNN()
 
-    # define loss
-    def loss_expr(output_dict, label_dict, weight_dict=None):
-        y = label_dict["output"].reshape((-1, 1))
-        y_pred = output_dict["output"].reshape((-1, 1))
-        conf_loss = paddle.mean(
-            nn.functional.log_loss(y_pred, y, epsilon=cfg.TRAIN.epsilon.log_loss)
-        )
-        vol_loss = paddle.square(paddle.mean(y - y_pred))
-        return conf_loss + cfg.TRAIN.vol_coeff * vol_loss
-
-    # define metric
-    def val_metric(output_dict, label_dict, weight_dict=None):
-        output = output_dict["output"]
-        y = label_dict["output"]
-        accurates = paddle.equal(paddle.round(y), paddle.round(output))
-        acc = paddle.mean(paddle.cast(accurates, dtype="float32"))
-        w00 = paddle.sum(
-            paddle.multiply(
-                paddle.equal(paddle.round(output), 0.0),
-                paddle.equal(paddle.round(y), 0.0),
-            ),
-            dtype=paddle.get_default_dtype(),
-        )
-        w11 = paddle.sum(
-            paddle.multiply(
-                paddle.equal(paddle.round(output), 1.0),
-                paddle.equal(paddle.round(y), 1.0),
-            ),
-            dtype=paddle.get_default_dtype(),
-        )
-        w01 = paddle.sum(
-            paddle.multiply(
-                paddle.equal(paddle.round(output), 1.0),
-                paddle.equal(paddle.round(y), 0.0),
-            ),
-            dtype=paddle.get_default_dtype(),
-        )
-        w10 = paddle.sum(
-            paddle.multiply(
-                paddle.equal(paddle.round(output), 0.0),
-                paddle.equal(paddle.round(y), 1.0),
-            ),
-            dtype=paddle.get_default_dtype(),
-        )
-        n0 = paddle.add(w01, w00)
-        n1 = paddle.add(w11, w10)
-        iou = 0.5 * paddle.add(
-            paddle.divide(w00, paddle.add(n0, w10)),
-            paddle.divide(w11, paddle.add(n1, w01)),
-        )
-        current_acc_results.append(np.array(acc))
-        current_iou_results.append(np.array(iou))
-        return {"Binary_Acc": acc, "IoU": iou}
-
     # evaluation for 4 cases
     acc_results_summary = {}
     iou_results_summary = {}
-    for model_name in cfg.EVAL.model_list:
 
-        # load model parameters
-        model_path = f"{cfg.output_dir}/{model_name}_vol_coeff{cfg.TRAIN.vol_coeff}/checkpoints/latest"
-        solver = ppsci.solver.Solver(model, pretrained_model_path=model_path)
-        solver.epochs = 1
-        solver.iters_per_epoch = cfg.EVAL.num_val_step
-        acc_results = []
-        iou_results = []
+    # read h5 data
+    h5data = h5py.File(cfg.DATA_PATH, "r")
+    data_iters = np.array(h5data["iters"])
+    data_targets = np.array(h5data["targets"])
+    for model_path in cfg.EVAL.pretrained_model_path:
 
-        # evaluation for different fixed iteration stop times
-        for stop_iter in iterations_stop_times:
-            # only evaluate for NUM_VAL_STEP times of iteration
-            X_data, Y_data = generate_train_test(
-                cfg.DATA_PATH, 1, cfg.EVAL.batch_size * cfg.EVAL.num_val_step
-            )
-            sup_validator = ppsci.validate.SupervisedValidator(
-                {
-                    "dataset": {
-                        "name": "NamedArrayDataset",
-                        "input": {"input": X_data},
-                        "label": {"output": Y_data},
-                    },
-                    "batch_size": cfg.EVAL.batch_size,
-                    "sampler": {
-                        "name": "BatchSampler",
-                        "drop_last": cfg.EVAL.drop_last,
-                        "shuffle": cfg.EVAL.shuffle,
-                    },
-                    "transforms": (
-                        {
-                            "FunctionalTransform": {
-                                "transform_func": augmentation,
-                            },
-                        },
-                    ),
-                },
-                ppsci.loss.FunctionalLoss(loss_expr),
-                {"output": lambda out: out["output"]},
-                {"metric": ppsci.metric.FunctionalMetric(val_metric)},
-                name="sup_validator",
-            )
-            validator = {sup_validator.name: sup_validator}
-            solver.validator = validator
+        acc_results, iou_results = evaluate_model(
+            cfg, model, model_path, data_iters, data_targets, iterations_stop_times
+        )
 
-            # modify the channel_sampler in model
-            SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
-            solver.model.channel_sampler = SIMP_stop_point_sampler
-
-            current_acc_results = []
-            current_iou_results = []
-            solver.eval()
-
-            acc_results.append(np.mean(current_acc_results))
-            iou_results.append(np.mean(current_iou_results))
-
+        model_name = model_path.split("\\")[-3].split("_")[0]
         acc_results_summary[model_name] = acc_results
         iou_results_summary[model_name] = iou_results
 
@@ -264,15 +149,31 @@ def evaluate_and_plot(cfg: DictConfig):
         current_iou_results = []
 
         # only calculate for NUM_VAL_STEP times of iteration
-        for i in range(10):
-            x, y = generate_train_test(cfg.DATA_PATH, 1, cfg.EVAL.batch_size)
+        for _ in range(10):
+            input_full_channel, label = generate_train_test(
+                data_iters, data_targets, 1.0, cfg.EVAL.batch_size
+            )
             # thresholding
-            k = SIMP_stop_point_sampler()
-            x1 = paddle.to_tensor(x)[:, k, :, :]
-            x2 = paddle.to_tensor(x)[:, k - 1, :, :]
-            x = paddle.stack((x1, x1 - x2), axis=1)
-            out = paddle.cast(paddle.to_tensor(x)[:, 0:1, :, :] > 0.5, dtype="float32")
-            val_metric({"output": out}, {"output": paddle.to_tensor(y)})
+            SIMP_initial_iter_time = SIMP_stop_point_sampler()  # channel k
+            input_channel_k = paddle.to_tensor(
+                input_full_channel, dtype=paddle.get_default_dtype()
+            )[:, SIMP_initial_iter_time, :, :]
+            input_channel_k_minus_1 = paddle.to_tensor(
+                input_full_channel, dtype=paddle.get_default_dtype()
+            )[:, SIMP_initial_iter_time - 1, :, :]
+            input = paddle.stack(
+                (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
+            )
+            out = paddle.cast(
+                paddle.to_tensor(input)[:, 0:1, :, :] > 0.5, dtype="float32"
+            )
+            th_result = val_metric(
+                {"output": out},
+                {"output": paddle.to_tensor(label, dtype=paddle.get_default_dtype())},
+            )
+            acc_results, iou_results = th_result["Binary_Acc"], th_result["IoU"]
+            current_acc_results.append(acc_results)
+            current_iou_results.append(iou_results)
 
         th_acc_results.append(np.mean(current_acc_results))
         th_iou_results.append(np.mean(current_iou_results))
@@ -280,28 +181,158 @@ def evaluate_and_plot(cfg: DictConfig):
     acc_results_summary["thresholding"] = th_acc_results
     iou_results_summary["thresholding"] = th_iou_results
 
-    # plot and save figures
-    plt.figure(figsize=(12, 6))
-    for k, v in acc_results_summary.items():
-        plt.plot(iterations_stop_times, v, label=k, lw=4)
-    plt.title("Binary accuracy", fontsize=16)
-    plt.xlabel("iteration", fontsize=14)
-    plt.ylabel("accuracy", fontsize=14)
-    plt.legend(loc="best", fontsize=13)
-    plt.grid()
-    plt.savefig(os.path.join(RESULT_DIR, "Binary_Accuracy.png"))
-    plt.show()
+    # # plot and save figures
+    # plt.figure(figsize=(12, 6))
+    # for k, v in acc_results_summary.items():
+    #     plt.plot(iterations_stop_times, v, label=k, lw=4)
+    # plt.title("Binary accuracy", fontsize=16)
+    # plt.xlabel("iteration", fontsize=14)
+    # plt.ylabel("accuracy", fontsize=14)
+    # plt.legend(loc="best", fontsize=13)
+    # plt.grid()
+    # plt.savefig(osp.join(cfg.output_dir, "Binary_Accuracy.png"))
+    # plt.show()
 
-    plt.figure(figsize=(12, 6))
-    for k, v in iou_results_summary.items():
-        plt.plot(iterations_stop_times, v, label=k, lw=4)
-    plt.title("IoU", fontsize=16)
-    plt.xlabel("iteration", fontsize=14)
-    plt.ylabel("accuracy", fontsize=14)
-    plt.legend(loc="best", fontsize=13)
-    plt.grid()
-    plt.savefig(os.path.join(RESULT_DIR, "IoU.png"))
-    plt.show()
+    # plt.figure(figsize=(12, 6))
+    # for k, v in iou_results_summary.items():
+    #     plt.plot(iterations_stop_times, v, label=k, lw=4)
+    # plt.title("IoU", fontsize=16)
+    # plt.xlabel("iteration", fontsize=14)
+    # plt.ylabel("iou", fontsize=14)
+    # plt.legend(loc="best", fontsize=13)
+    # plt.grid()
+    # plt.savefig(osp.join(cfg.output_dir, "IoU.png"))
+    # plt.show()
+    ppsci.utils.misc.plot_curve(
+        acc_results_summary,
+        xlabel="iteration",
+        ylabel="accuracy",
+        output_dir=cfg.output_dir,
+    )
+    ppsci.utils.misc.plot_curve(
+        iou_results_summary, xlabel="iteration", ylabel="iou", output_dir=cfg.output_dir
+    )
+
+
+def evaluate_model(
+    cfg, model, pretrained_model_path, data_iters, data_targets, iterations_stop_times
+):
+    # load model parameters
+    solver = ppsci.solver.Solver(model, pretrained_model_path=pretrained_model_path)
+    solver.epochs = 1
+    solver.iters_per_epoch = cfg.EVAL.num_val_step
+    solver.eval_with_no_grad = True
+    acc_results = []
+    iou_results = []
+
+    # evaluation for different fixed iteration stop times
+    for stop_iter in iterations_stop_times:
+        # only evaluate for NUM_VAL_STEP times of iteration
+        inputs_eval, labels_eval = generate_train_test(
+            data_iters, data_targets, 1.0, cfg.EVAL.batch_size * cfg.EVAL.num_val_step
+        )
+
+        sup_validator = ppsci.validate.SupervisedValidator(
+            {
+                "dataset": {
+                    "name": "NamedArrayDataset",
+                    "input": {"input": inputs_eval},
+                    "label": {"output": labels_eval},
+                    "transforms": (
+                        {
+                            "FunctionalTransform": {
+                                "transform_func": augmentation,
+                            },
+                        },
+                    ),
+                },
+                "batch_size": cfg.EVAL.batch_size,
+                "sampler": {
+                    "name": "BatchSampler",
+                    "drop_last": False,
+                    "shuffle": True,
+                },
+            },
+            ppsci.loss.FunctionalLoss(loss_wrapper(cfg)),
+            {"output": lambda out: out["output"]},
+            {"metric": ppsci.metric.FunctionalMetric(val_metric)},
+            name="sup_validator",
+        )
+        validator = {sup_validator.name: sup_validator}
+        solver.validator = validator
+
+        # modify the channel_sampler in model
+        SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
+        solver.model.channel_sampler = SIMP_stop_point_sampler
+
+        _, eval_result = solver.eval()
+
+        current_acc_results = eval_result["metric"]["Binary_Acc"]
+        current_iou_results = eval_result["metric"]["IoU"]
+
+        acc_results.append(current_acc_results)
+        iou_results.append(current_iou_results)
+
+    return acc_results, iou_results
+
+
+# define loss wrapper
+def loss_wrapper(cfg: DictConfig):
+    def loss_expr(output_dict, label_dict, weight_dict=None):
+        label_true = label_dict["output"].reshape((-1, 1))
+        label_pred = output_dict["output"].reshape((-1, 1))
+        conf_loss = paddle.mean(
+            nn.functional.log_loss(
+                label_pred, label_true, epsilon=cfg.TRAIN.epsilon.log_loss
+            )
+        )
+        vol_loss = paddle.square(paddle.mean(label_true - label_pred))
+        return conf_loss + cfg.vol_coeff * vol_loss
+
+    return loss_expr
+
+
+# define metric
+def val_metric(output_dict, label_dict, weight_dict=None):
+    label_pred = output_dict["output"]
+    label_true = label_dict["output"]
+    accurates = paddle.equal(paddle.round(label_true), paddle.round(label_pred))
+    acc = paddle.mean(paddle.cast(accurates, dtype="float32"))
+    w00 = paddle.sum(
+        paddle.multiply(
+            paddle.equal(paddle.round(label_pred), 0.0),
+            paddle.equal(paddle.round(label_true), 0.0),
+        ),
+        dtype=paddle.get_default_dtype(),
+    )
+    w11 = paddle.sum(
+        paddle.multiply(
+            paddle.equal(paddle.round(label_pred), 1.0),
+            paddle.equal(paddle.round(label_true), 1.0),
+        ),
+        dtype=paddle.get_default_dtype(),
+    )
+    w01 = paddle.sum(
+        paddle.multiply(
+            paddle.equal(paddle.round(label_pred), 1.0),
+            paddle.equal(paddle.round(label_true), 0.0),
+        ),
+        dtype=paddle.get_default_dtype(),
+    )
+    w10 = paddle.sum(
+        paddle.multiply(
+            paddle.equal(paddle.round(label_pred), 0.0),
+            paddle.equal(paddle.round(label_true), 1.0),
+        ),
+        dtype=paddle.get_default_dtype(),
+    )
+    n0 = paddle.add(w01, w00)
+    n1 = paddle.add(w11, w10)
+    iou = 0.5 * paddle.add(
+        paddle.divide(w00, paddle.add(n0, w10)),
+        paddle.divide(w11, paddle.add(n1, w01)),
+    )
+    return {"Binary_Acc": acc, "IoU": iou}
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="topopt.yaml")
@@ -309,7 +340,7 @@ def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
-        evaluate_and_plot(cfg)
+        evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 

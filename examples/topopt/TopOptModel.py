@@ -124,10 +124,14 @@ class TopOptNN(ppsci.arch.UNetEx):
         )
 
     def forward(self, x):
-        k = self.channel_sampler()
-        x1 = x[self.input_keys[0]][:, k, :, :]
-        x2 = x[self.input_keys[0]][:, k - 1, :, :]
-        x = paddle.stack((x1, x1 - x2), axis=1)
+        SIMP_initial_iter_time = self.channel_sampler()  # channel k
+        input_channel_k = x[self.input_keys[0]][:, SIMP_initial_iter_time, :, :]
+        input_channel_k_minus_1 = x[self.input_keys[0]][
+            :, SIMP_initial_iter_time - 1, :, :
+        ]
+        x = paddle.stack(
+            (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
+        )
 
         # encode
         upsampling_size = []

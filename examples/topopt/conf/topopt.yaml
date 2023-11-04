@@ -1,10 +1,21 @@
 hydra:
   run:
     # dynamic output directory
-    dir: outputs_topopt/
+    dir: outputs_topopt2/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.epochs
+          - TRAIN.learning_rate
+          - TRAIN.batch_size
+          - EVAL.pretrained_model_path
+          - EVAL.num_val_step
+          - EVAL.batch_size
+          - mode
+          - vol_coeff
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -19,7 +30,7 @@ output_dir: ${hydra:run.dir}
 CASE_PARAM: [[Poisson, 5], [Poisson, 10], [Poisson, 30], [Uniform, null]]
 
 # set data path
-DATA_PATH: ./Dataset/PreparedData/top_dataset.h5
+DATA_PATH: ./Dataset/top_dataset.h5
 
 # model settings
 MODEL:
@@ -29,24 +40,25 @@ MODEL:
   filters: [16, 32, 64]
   layers: 2
 
+# other parameters
+n_samples: 10000
+train_test_ratio: 1.0 # use 10000 original data with different channels for training
+vol_coeff: 1 # coefficient for volume fraction constraint in the loss - beta in equation (3) in paper
+num_params: 192113 # the number of parameters in Unet specified in paper, used to verify the parameter number
+model_list: [Poisson5, Poisson10, Poisson30, Uniform]
+
 # training settings
 TRAIN:
-  n_samples: 10000
-  train_test_ratio: 1.0 # use 10000 original data with different channels for training
-  num_epochs: 30
+  epochs: 30
+  learning_rate: 0.001
   epsilon:
     log_loss: 0.0000001
     optimizer: 0.0000001
-  vol_coeff: 1 # coefficient for volume fraction constraint in the loss - beta in equation (3) in paper
-  num_params: 192113 # the number of parameters in Unet specified in paper, used to verify the parameter number
   batch_size: 64
-  drop_last: false
-  shuffle: true
+  eval_during_train: false
 
 # evaluation settings
 EVAL:
-  model_list: [Poisson5, Poisson10, Poisson30, Uniform]
+  pretrained_model_path: null
   num_val_step: 10 # the number of iteration for each evaluation case
-  batch_size: 32
-  drop_last: false
-  shuffle: true
+  batch_size: 16
