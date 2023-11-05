@@ -26,7 +26,7 @@
 ## 2. 问题定义
 
 ## 3. 问题求解
-
+为节约篇幅，问题求解以NSFNet3为例
 ### 3.1 模型构建
 
 ### 3.2 数据生成
@@ -44,14 +44,33 @@
 ### 3.8 模型训练与评估
 
 ## 4. 完整代码
-
+``` py linenums="1" title="epnn.py"
+--8<--
+examples/NSFNet/VP_NSFNet1.py
+examples/NSFNet/VP_NSFNet2.py
+examples/NSFNet/VP_NSFNet3.py
+--8<--
+```
 ## 5. 结果展示
 ### NSFNet1:
-
+| size 4*50 | paper  | code(without BFGS) | PaddleScience  |
+|-------------------|--------|--------------------|---------|
+| u                 | 0.084% | 0.062%             | 0.055%  |
+| v                 | 0.425% | 0.431%             | 0.399%  |
 ### NSFNet2:
+| size 10*100 t=0| paper  | code(without BFGS) | PaddleScience  |
+|-------------------|--------|--------------------|---------|
+| u                 | /| 0.403%         | /  |
+| v                 | / | 1.5%             | /  |
+
 ![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/movie.gif)
 
 ### NSFNet3:
+| size 10*100 t=1 | paper  | code(without BFGS) | PaddleScience  |
+|-------------------|--------|--------------------|---------|
+| u                 | 0.426%| /         | /  |
+| v                 | 0.366% | /            | /  |
+| w                 | 0.587% | /            | /  |
 
 ## 6. 参考资料
 [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
