@@ -84,4 +84,4 @@ T=1
 ## 6. 参考资料
 [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
 
-[NSFnets](https://github.com/Alexzihaohu/NSFnets/tree/master)
+[Github NSFnets](https://github.com/Alexzihaohu/NSFnets/tree/master)
