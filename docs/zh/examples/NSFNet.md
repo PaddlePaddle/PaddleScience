@@ -57,7 +57,7 @@ $$w(x, y, z, t)= -a\left[e^{a z} \sin (a x+d y)+e^{a y} \cos (a z+d x)\right] e^
 
 $$p(x, y, z, t)= -\frac{1}{2} a^2\left[e^{2 a x}+e^{2 a y}+e^{2 a z}+2 \sin (a x+d y) \cos (a z+d x) e^{a(y+z)} +2 \sin (a y+d z) \cos (a x+d y) e^{a(z+x)} +2 \sin (a z+d x) \cos (a y+d z) e^{a(x+y)}\right] e^{-2 d^2 t}.$$
 ## 3. 问题求解
-为节约篇幅，问题求解以NSFNet3为例,其余细节请参考 [API文档](../api/arch.md)
+为节约篇幅，问题求解以NSFNet3为例。
 ### 3.1 模型构建
 本文使用PINN经典的MLP模型进行训练。
 ``` py linenums="33"
@@ -65,7 +65,14 @@ $$p(x, y, z, t)= -\frac{1}{2} a^2\left[e^{2 a x}+e^{2 a y}+e^{2 a z}+2 \sin (a x
 examples/hpinns/holography.py:33:38
 --8<--
 ```
-### 3.2 数据生成
+### 3.2 超参数设定
+指定残差点、边界点、初值点的个数，以及可以指定边界损失函数和初值损失函数的权重
+``` py linenums="41"
+--8<--
+examples/hpinns/holography.py:41:50
+--8<--
+```
+### 3.3 数据生成
 因数据集为解析解，我们先构造解析解函数
 ``` py linenums="10"
 --8<--
@@ -79,7 +86,7 @@ examples/hpinns/holography.py:10:21
 examples/hpinns/holography.py:53:125
 --8<--
 ```
-### 3.3 约束构建
+### 3.4 约束构建
 由于我们边界点和初值点具有解析解，因此我们使用监督约束
 ``` py linenums="173"
 --8<--
@@ -95,7 +102,7 @@ examples/hpinns/holography.py:173:185
 examples/hpinns/holography.py:188:203
 --8<--
 ```
-### 3.4 评估器构建
+### 3.5 评估器构建
 使用在数据生成时生成的测试点构造的测试集用于模型评估：
 ``` py linenums="208"
 --8<--
@@ -103,15 +110,15 @@ examples/hpinns/holography.py:208:216
 --8<--
 ```
 
-### 3.5 优化器构建
-与论文中描述相同，我们使用分段学习率构造Adam优化器
+### 3.6 优化器构建
+与论文中描述相同，我们使用分段学习率构造Adam优化器，其中可以通过调节_epoch_list_来调节训练轮数。
 ``` py linenums="219"
 --8<--
 examples/hpinns/holography.py:219:226
 --8<--
 ```
 
-### 3.6 模型训练与评估
+### 3.7 模型训练与评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
 ``` py linenums="230"
