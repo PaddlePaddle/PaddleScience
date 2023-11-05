@@ -32,7 +32,7 @@ def main(cfg: DictConfig):
     ## set the number of initial samples
     N0_TRAIN = cfg.n0_train
 
-    data = scipy.io.loadmat(cfg.data_path)
+    data = scipy.io.loadmat(cfg.data_dir)
 
     U_star = data['U_star'].astype('float32')  # N x 2 x T
     P_star = data['p_star'].astype('float32')  # N x T
