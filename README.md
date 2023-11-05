@@ -104,7 +104,15 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 🚀安装使用
 
-1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
+### 安装 PaddlePaddle
+
+<!-- --8<-- [start:paddle_install] -->
+请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>develop</b></font> 版的 PaddlePaddle。
+<!-- --8<-- [end:paddle_install] -->
+
+### 安装 PaddleScience
+
+1. 执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
 
     <!-- --8<-- [start:git_install] -->
     ``` shell
@@ -118,19 +126,13 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     ```
     <!-- --8<-- [end:git_install] -->
 
-2. 安装必要的依赖包
-
-    ``` shell
-    pip install -r requirements.txt
-    ```
-
-3. 验证安装
+2. 验证安装
 
     ``` py
     python -c "import ppsci; ppsci.utils.run_check()"
     ```
 
-4. 开始使用
+3. 开始使用
 
     ``` py
     import ppsci
@@ -138,7 +140,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     # write your code here...
     ```
 
-完整安装流程请参考 [**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
+如需读取复杂几何文件，并进行解析、采样等操作，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
 
 ## ⚡️快速开始
 
