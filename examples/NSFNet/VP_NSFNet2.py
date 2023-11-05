@@ -7,7 +7,7 @@ from ppsci.utils import logger
 import scipy
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="epnn.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet2.yaml")
 def main(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
