@@ -60,28 +60,28 @@ $$p(x, y, z, t)= -\frac{1}{2} a^2\left[e^{2 a x}+e^{2 a y}+e^{2 a z}+2 \sin (a x
 为节约篇幅，问题求解以NSFNet3为例,其余细节请参考 [API文档](../api/arch.md)
 ### 3.1 模型构建
 本文使用PINN经典的MLP模型进行训练。
-``` py linenums="42"
+``` py linenums="33"
 --8<--
 examples/hpinns/holography.py:33:38
 --8<--
 ```
 ### 3.2 数据生成
 因数据集为解析解，我们先构造解析解函数
-``` py linenums="42"
+``` py linenums="10"
 --8<--
 examples/hpinns/holography.py:10:21
 --8<--
 ```
 
 然后先后取边界点、初值点、以及用于计算残差的内部点（具体取法见[论文](https://arxiv.org/abs/2003.06496)节3.3）以及生成测试点。
-``` py linenums="42"
+``` py linenums="53"
 --8<--
 examples/hpinns/holography.py:53:125
 --8<--
 ```
 ### 3.3 约束构建
 由于我们边界点和初值点具有解析解，因此我们使用监督约束
-``` py linenums="42"
+``` py linenums="173"
 --8<--
 examples/hpinns/holography.py:173:185
 --8<--
@@ -90,14 +90,14 @@ examples/hpinns/holography.py:173:185
 其中alpha和beta为该损失函数的权重，在本代码中与论文中描述一致，都取为100
 
 使用内部点构造纳韦斯托克方程的残差约束
-``` py linenums="42"
+``` py linenums="188"
 --8<--
 examples/hpinns/holography.py:188:203
 --8<--
 ```
 ### 3.4 评估器构建
 使用在数据生成时生成的测试点构造的测试集用于模型评估：
-``` py linenums="42"
+``` py linenums="208"
 --8<--
 examples/hpinns/holography.py:208:216
 --8<--
@@ -105,13 +105,29 @@ examples/hpinns/holography.py:208:216
 
 ### 3.5 优化器构建
 与论文中描述相同，我们使用分段学习率构造Adam优化器
-``` py linenums="42"
+``` py linenums="219"
 --8<--
 examples/hpinns/holography.py:219:226
 --8<--
 ```
 
 ### 3.6 模型训练与评估
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
+
+``` py linenums="230"
+--8<--
+examples/epnn/epnn.py:230:247
+--8<--
+```
+
+最后启动训练即可：
+
+``` py linenums="249"
+--8<--
+examples/epnn/epnn.py:249:249
+--8<--
+```
+
 
 ## 4. 完整代码
 ``` py linenums="1" title="epnn.py"
