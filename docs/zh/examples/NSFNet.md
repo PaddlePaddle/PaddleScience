@@ -66,6 +66,12 @@ examples/NSFNet/VP_NSFNet3.py
 ![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/movie.gif)
 
 ### NSFNet3:
+| size 10*100 | paper  | code(without BFGS) | PaddleScience  |
+|-------------------|--------|--------------------|---------|
+| u                 | /| 0.0766%        | /  |
+| v                 | / | 0.0689%            | /  |
+| w                 | / |  0.109%           | /  |
+
 | size 10*100 t=1 | paper  | code(without BFGS) | PaddleScience  |
 |-------------------|--------|--------------------|---------|
 | u                 | 0.426%| /         | /  |
