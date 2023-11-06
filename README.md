@@ -27,6 +27,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 |-----|---------|-----|---------|----|---------|---------|
 | 微分方程 | [拉普拉斯方程](./docs/zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
 | 微分方程 | [伯格斯方程](./docs/zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |</center>
+| 微分方程 | [非线性偏微分方程](./zh/examples/pirbn.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [洛伦兹方程](./docs/zh/examples/lorenz.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 微分方程 | [若斯叻方程](./docs/zh/examples/rossler.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 算子学习 | [DeepONet](./docs/zh/examples/deeponet.md) | 数据驱动 | MLP | 监督学习 | [Data](https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html) | [Paper](https://export.arxiv.org/pdf/1910.03193.pdf) |
@@ -58,7 +59,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 流场高分辨率重构 | [2D 湍流流场重构](https://aistudio.baidu.com/projectdetail/4493261?contributionType=1) | 数据驱动 | cycleGAN | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/tempoGAN/2d_valid.mat) | [Paper](https://arxiv.org/abs/2007.15324)|
 | 流场高分辨率重构 | [基于Voronoi嵌入辅助深度学习的稀疏传感器全局场重建](https://aistudio.baidu.com/projectdetail/5807904) | 数据驱动 | CNN | 监督学习 | [Data1](https://drive.google.com/drive/folders/1K7upSyHAIVtsyNAqe6P8TY1nS5WpxJ2c)<br>[Data2](https://drive.google.com/drive/folders/1pVW4epkeHkT2WHZB7Dym5IURcfOP4cXu)<br>[Data3](https://drive.google.com/drive/folders/1xIY_jIu-hNcRY-TTf4oYX1Xg4_fx8ZvD) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 | 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
-| 受力分析 | [1D 欧拉梁变形](../examples/euler_beam/euler_beam.py) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | [1D 欧拉梁变形](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/euler_beam/euler_beam.py) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [2D 平板变形](https://aistudio.baidu.com/aistudio/projectdetail/5792325) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [3D 连接件变形](./docs/zh/examples/bracket.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar) | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
 | 受力分析 | [结构震动模拟](./docs/zh/examples/phylstm.md) | 机理驱动 | PhyLSTM | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat) | [Paper](https://arxiv.org/abs/2002.10253) |
@@ -103,7 +104,15 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 ## 🚀安装使用
 
-1. 执行以下命令，从 github 上克隆 PaddleScience 项目，进入 PaddleScience 目录，并将该目录添加到系统环境变量中
+### 安装 PaddlePaddle
+
+<!-- --8<-- [start:paddle_install] -->
+请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>develop</b></font> 版的 PaddlePaddle。
+<!-- --8<-- [end:paddle_install] -->
+
+### 安装 PaddleScience
+
+1. 执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
 
     <!-- --8<-- [start:git_install] -->
     ``` shell
@@ -117,19 +126,13 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     ```
     <!-- --8<-- [end:git_install] -->
 
-2. 安装必要的依赖包
-
-    ``` shell
-    pip install -r requirements.txt
-    ```
-
-3. 验证安装
+2. 验证安装
 
     ``` py
     python -c "import ppsci; ppsci.utils.run_check()"
     ```
 
-4. 开始使用
+3. 开始使用
 
     ``` py
     import ppsci
@@ -137,7 +140,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
     # write your code here...
     ```
 
-完整安装流程请参考 [**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
+如需读取复杂几何文件，并进行解析、采样等操作，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
 
 ## ⚡️快速开始
 
