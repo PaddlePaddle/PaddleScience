@@ -5,6 +5,7 @@
     options:
       members:
         - Arch
+        - AMGNet
         - MLP
         - DeepONet
         - DeepPhyLSTM
