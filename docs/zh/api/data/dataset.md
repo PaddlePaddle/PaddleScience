@@ -12,10 +12,13 @@
         - ERA5SampledDataset
         - IterableMatDataset
         - MatDataset
+        - IterableNPZDataset
+        - NPZDataset
         - CylinderDataset
         - LorenzDataset
         - RosslerDataset
         - VtuDataset
         - MeshAirfoilDataset
         - MeshCylinderDataset
+        - build_dataset
       show_root_heading: false

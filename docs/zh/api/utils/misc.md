@@ -4,10 +4,11 @@
     handler: python
     options:
       members:
-        - all_gather
         - AverageMeter
         - PrettyOrderedDict
         - Prettydefaultdict
+        - Timer
+        - all_gather
         - concat_dict_list
         - convert_to_array
         - convert_to_dict
