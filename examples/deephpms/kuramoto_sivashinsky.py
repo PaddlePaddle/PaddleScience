@@ -15,14 +15,18 @@
 from os import path as osp
 
 import hydra
+import numpy as np
 import paddle
 import paddle.nn.functional as F
+import plotting as plot_func
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
+from ppsci.utils import save_load
 
 
 def pde_loss_func(output_dict, *args):
@@ -70,13 +74,7 @@ def train(cfg: DictConfig):
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)
     x_lb = paddle.to_tensor(cfg.X_LB)
-    x_ub = paddle.to_tensor(cfg.T_UB)
-
-    # boundaries of KS_chaotic.mat
-    # t_lb = paddle.to_tensor([0.0])
-    # t_ub = paddle.to_tensor([100.0])
-    # x_lb = paddle.to_tensor([0.0])
-    # x_ub = paddle.to_tensor([32.0 * np.pi])
+    x_ub = paddle.to_tensor(cfg.T_UB)  # (cfg.T_UB * np.pi) for KS_chaotic.mat
 
     # initialize models
     model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)
@@ -123,8 +121,8 @@ def train(cfg: DictConfig):
     optimizer_pde = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_pde)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn, ))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde, ))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
 
     # stage 1: training identification net
     # manually build constraint(s)
@@ -326,9 +324,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.L2Rel()},
         name="u_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -350,7 +346,106 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    print("Not supported.")
+    # open FLAG for higher order differential operator when order >= 4
+    paddle.framework.core.set_prim_eager_enabled(True)
+
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # initialize boundaries
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.T_UB)  # (cfg.T_UB * np.pi) for KS_chaotic.mat
+
+    # initialize models
+    model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)
+    model_pde = ppsci.arch.MLP(**cfg.MODEL.pde_net)
+
+    # initialize transform
+    def transform_u(_in):
+        t, x = _in["t"], _in["x"]
+        t = 2.0 * (t - t_lb) * paddle.pow((t_ub - t_lb), -1) - 1.0
+        x = 2.0 * (x - x_lb) * paddle.pow((x_ub - x_lb), -1) - 1.0
+        input_trans = {"t": t, "x": x}
+        return input_trans
+
+    def transform_f(input, model, out_key):
+        in_idn = {"t": input["t"], "x": input["x"]}
+        x = input["x"]
+        u = model(in_idn)[out_key]
+        du_x = jacobian(u, x)
+        du_xx = hessian(u, x)
+        du_xxx = jacobian(du_xx, x)
+        du_xxxx = hessian(du_xx, x)
+        input_trans = {
+            "u_x": u,
+            "du_x": du_x,
+            "du_xx": du_xx,
+            "du_xxx": du_xxx,
+            "du_xxxx": du_xxxx,
+        }
+        return input_trans
+
+    def transform_f_idn(_in):
+        return transform_f(_in, model_idn, "u_idn")
+
+    # register transform
+    model_idn.register_input_transform(transform_u)
+    model_pde.register_input_transform(transform_f_idn)
+
+    # initialize model list
+    model_list = ppsci.arch.ModelList((model_idn, model_pde))
+
+    # stage 3: solution net
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "u_sol"),
+        alias_dict={
+            "t": "t_ori",
+            "x": "x_ori",
+            "u_sol": "Exact_ori",
+        },
+    )
+
+    t_sol, x_sol = np.meshgrid(
+        np.squeeze(dataset_val["t"]), np.squeeze(dataset_val["x"])
+    )
+    t_sol_flatten = paddle.to_tensor(
+        t_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    x_sol_flatten = paddle.to_tensor(
+        x_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    u_sol_pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
+
+    # eval
+    l2_error = np.linalg.norm(
+        dataset_val["u_sol"] - u_sol_pred["u_idn"], 2
+    ) / np.linalg.norm(
+        dataset_val["u_sol"], 2
+    )  # stage 1&3 use the same net in this example
+    logger.info(f"l2_error: {l2_error}")
+
+    # plotting
+    plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
+    plot_func.draw_and_save(
+        figname="kuramoto_sivashinsky_sol",
+        data_exact=dataset_val["u_sol"],
+        data_learned=u_sol_pred["u_idn"].numpy(),
+        boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
+        griddata_points=plot_points,
+        griddata_xi=(t_sol, x_sol),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(
