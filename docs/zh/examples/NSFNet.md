@@ -171,8 +171,11 @@ T=0
 | u                 | /| 0.403%         | 0.138%  |
 | v                 | / | 1.5%             |  0.488% |
 
+速度场
 ![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/movie.gif)
 
+涡流场（t=4.0）
+![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/NSFNet2_vorticity.png)
 ### NSFNet3:
 Test dataset:
 | size 10*100 |  code(without BFGS) | PaddleScience  |
