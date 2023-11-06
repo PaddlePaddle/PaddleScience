@@ -19,11 +19,11 @@ import lhs
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
+from functools import partial
 
 
 from omegaconf import DictConfig
 
-import sys; sys.path.append(r"")
 
 import ppsci
 from ppsci import equation
@@ -32,7 +32,6 @@ from ppsci.utils import config
 from ppsci.utils import logger
 from ppsci.utils import misc
 
-
 class Euler2D(equation.PDE):
     def __init__(self):
         super().__init__()
@@ -40,10 +39,10 @@ class Euler2D(equation.PDE):
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
-        def continuity_compute_func(out):
+        def continuity_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -62,12 +61,12 @@ class Euler2D(equation.PDE):
             continuity = (rho__t + rho_u__x + rho_v__y) / lam
             return continuity
 
-        self.add_equation("continuity", continuity_compute_func)
+        self.add_equation("continuity", partial(continuity_compute_func, self))
 
-        def x_momentum_compute_func(out):
+        def x_momentum_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -88,12 +87,12 @@ class Euler2D(equation.PDE):
             x_momentum = (rho_u__t + u1__x + u2__y) / lam
             return x_momentum
 
-        self.add_equation("x_momentum", x_momentum_compute_func)
+        self.add_equation("x_momentum", partial(x_momentum_compute_func, self))
 
-        def y_momentum_compute_func(out):
+        def y_momentum_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -114,12 +113,12 @@ class Euler2D(equation.PDE):
             y_momentum = (rho_v__t + u2__x + u3__y) / lam
             return y_momentum
 
-        self.add_equation("y_momentum", y_momentum_compute_func)
+        self.add_equation("y_momentum", partial(y_momentum_compute_func, self))
 
-        def energy_compute_func(out):
+        def energy_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -140,7 +139,7 @@ class Euler2D(equation.PDE):
             energy = (e__t + e1__x + e2__y) / lam
             return energy
 
-        self.add_equation("energy", energy_compute_func)
+        self.add_equation("energy", partial(energy_compute_func, self))
 
 
 class BC_EQ(equation.PDE):
@@ -150,10 +149,10 @@ class BC_EQ(equation.PDE):
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
-        def item1_compute_func(out):
+        def item1_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -168,12 +167,12 @@ class BC_EQ(equation.PDE):
 
             return item1
 
-        self.add_equation("item1", item1_compute_func)
+        self.add_equation("item1", partial(item1_compute_func, self))
 
-        def item2_compute_func(out):
+        def item2_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -190,12 +189,12 @@ class BC_EQ(equation.PDE):
 
             return item2
 
-        self.add_equation("item2", item2_compute_func)
+        self.add_equation("item2", partial(item2_compute_func, self))
 
-        def item3_compute_func(out):
+        def item3_compute_func(self, out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -212,7 +211,7 @@ class BC_EQ(equation.PDE):
 
             return item3
 
-        self.add_equation("item3", item3_compute_func)
+        self.add_equation("item3", partial(item3_compute_func, self))
 
 
 dtype = paddle.get_default_dtype()

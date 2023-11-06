@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_bracket/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_shock_wave/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
@@ -59,8 +59,8 @@ MODEL:
 
 # training settings
 TRAIN:
-  epochs: 2000
-  iters_per_epoch: 1000
+  epochs: 100
+  iters_per_epoch: 1
   save_freq: 50
   eval_during_train: true
   eval_freq: 20
@@ -69,14 +69,6 @@ TRAIN:
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     learning_rate: 1e-1
     max_iter: 100
-  # batch_size:
-  #   bc_back: 1024
-  #   bc_front: 128
-  #   bc_surface: 4096
-  #   support_interior: 2048
-  #   bracket_interior: 1024
-  # weight:
-  #   bc_back: {"u": 10, "v": 10, "w": 10}
   pretrained_model_path: null
   checkpoint_path: null
 
@@ -84,5 +76,3 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
-  # batch_size:
-  #   sup_validator: 128
