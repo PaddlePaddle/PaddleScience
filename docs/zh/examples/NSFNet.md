@@ -16,11 +16,24 @@
     python VP_NSFNet2.py
 
     # VP_NSFNet3
-    python VP_NSFNet2.py
+    python VP_NSFNet3.py
     ```
 
 === "模型评估命令"
+    ``` sh
+    # VP_NSFNet1
+    python VP_NSFNet1_eval.py
 
+    # VP_NSFNet2
+    # linux
+    wget 
+    # windows
+    # curl 
+    python VP_NSFNet2_eval.py
+
+    # VP_NSFNet3
+    python VP_NSFNet3_eval.py
+    ```
 ## 1. 背景简介
  最近几年，深度学习在很多领域取得了非凡的成就，尤其是计算机视觉和自然语言处理方面，而受启发于深度学习的快速发展，基于深度学习强大的函数逼近能力，神经网络在科学计算领域也取得了成功，现阶段的研究主要分为两大类，一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Retz Net，另一类是通过数据驱动的深度神经网络算子，其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用，比如天气预测，量子化学，生物工程，以及计算流体等领域。而为充分探索PINN对流体方程的求解能力，本次复现[论文](https://arxiv.org/abs/2003.06496)作者先后使用具有解析解或数值解的二维、三维纳韦斯托克方程以及使用DNS方法进行高进度求解的数据集进行训练。论文实验表明PINN对不可压纳韦斯托克方程具有优秀的数值求解能力，本项目主要目标是使用PaddleScience复现论文所实现的高精度求解纳韦斯托克方程的代码。
 ## 2. 问题定义
