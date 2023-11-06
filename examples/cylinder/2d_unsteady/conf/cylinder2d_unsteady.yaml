@@ -1,0 +1,70 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_cylinder2d_unsteady/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# set constraint data path
+DOMAIN_INLET_CYLINDER_PATH: ./datasets/domain_inlet_cylinder.csv
+DOMAIN_OUTLET_PATH: ./datasets/domain_outlet.csv
+IC0_1_PATH: ./datasets/initial/ic0.1.csv
+PROBE1_50_PATH: ./datasets/probe/probe1_50.csv
+DOMAIN_EVAL_PATH: ./datasets/domain_eval.csv
+DOMAIN_TRAIN_PATH: ./datasets/domain_train.csv
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# equation
+VISCOSITY: 0.02
+DENSITY: 1.0
+
+# timestamps
+TIME_START: 1
+TIME_END: 50
+NUM_TIMESTAMPS: 50
+TRAIN_NUM_TIMESTAMPS: 30
+
+NPOINT_PDE: 9420
+NPOINT_INLET_CYLINDER: 161
+NPOINT_OUTLET: 81
+
+# model settings
+MODEL:
+  input_keys: ["t", "x", "y"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 5
+  hidden_size: 50
+  activation: "tanh"
+
+# training settings
+TRAIN:
+  iters_per_epoch: 1
+  epochs: 40000
+  eval_freq: 400
+  learning_rate: 0.001
+  eval_during_train: true
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 10240
+  pretrained_model_path: null

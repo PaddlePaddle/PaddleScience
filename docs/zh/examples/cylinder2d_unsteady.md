@@ -2,6 +2,18 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160381?contributionType=1&sUid=438690&shared=1&ts=1683961158552" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar --output cylinder2d_unsteady_Re100_dataset.tar
+    # unzip it
+    tar -xvf cylinder2d_unsteady_Re100_dataset.tar
+    python cylinder2d_unsteady_Re100.py
+    ```
+
 ## 1. 背景简介
 
 圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
@@ -129,7 +141,7 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:33:34
 
 ``` py linenums="36"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:39
 --8<--
 ```
 
@@ -139,32 +151,28 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:36:37
 
 本文中 2D-Cylinder 的计算域由 CSV 文件储存的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。
 
-``` py linenums="39"
+``` py linenums="41"
 # set timestamps
-TIME_START, TIME_END = 1, 50
-NUM_TIMESTAMPS = 50
-TRAIN_NUM_TIMESTAMPS = 30
-
 train_timestamps = np.linspace(
-    TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
+    cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
 ).astype("float32")
-train_timestamps = np.random.choice(train_timestamps, TRAIN_NUM_TIMESTAMPS)
+train_timestamps = np.random.choice(train_timestamps, cfg.TRAIN_NUM_TIMESTAMPS)
 train_timestamps.sort()
-t0 = np.array([TIME_START], dtype="float32")
+t0 = np.array([cfg.TIME_START], dtype="float32")
 
 val_timestamps = np.linspace(
-    TIME_START, TIME_END, NUM_TIMESTAMPS, endpoint=True
+    cfg.TIME_START, cfg.TIME_END, cfg.NUM_TIMESTAMPS, endpoint=True
 ).astype("float32")
 
-logger.info(f"train_timestamps: {train_timestamps.tolist()}")
-logger.info(f"val_timestamps: {val_timestamps.tolist()}")
+logger.message(f"train_timestamps: {train_timestamps.tolist()}")
+logger.message(f"val_timestamps: {val_timestamps.tolist()}")
 
 # set time-geometry
 geom = {
     "time_rect": ppsci.geometry.TimeXGeometry(
         ppsci.geometry.TimeDomain(
-            TIME_START,
-            TIME_END,
+            cfg.TIME_START,
+            cfg.TIME_END,
             timestamps=np.concatenate((t0, train_timestamps), axis=0),
         ),
         ppsci.geometry.PointCloud(
@@ -246,9 +254,9 @@ geom = {
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="84"
+``` py linenums="82"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:84:91
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:82:84
 --8<--
 ```
 
@@ -256,9 +264,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:84:91
 
 以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="93"
+``` py linenums="86"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:93:105
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:86:98
 --8<--
 ```
 
@@ -300,9 +308,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:93:105
 
 剩下的 `bc_outlet` 按照相同原理构建，代码如下所示：
 
-``` py linenums="106"
+``` py linenums="99"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:106:134
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:99:127
 --8<--
 ```
 
@@ -310,9 +318,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:106:134
 
 对于 $t=t_0$ 时刻的流体域内的点，我们还需要对 $u$, $v$, $p$ 施加初值约束，代码如下：
 
-``` py linenums="135"
+``` py linenums="128"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:135:149
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:128:142
 --8<--
 ```
 
@@ -320,17 +328,17 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:135:149
 
 本案例在流体域内部加入了一定数量的监督点来保证模型最终的收敛情况，因此最后还需要加入一个监督约束，数据同样来自 CSV 文件，代码如下：
 
-``` py linenums="150"
+``` py linenums="143"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:150:164
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:143:157
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束、监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="165"
+``` py linenums="159"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:165:172
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:159:166
 --8<--
 ```
 
@@ -338,9 +346,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:165:172
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数，评估间隔为四百轮，学习率设为 0.001。
 
-``` py linenums="174"
+``` py linenums="61"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:174:176
+examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:61:63
 --8<--
 ```
 
@@ -348,9 +356,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:174:176
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="178"
+``` py linenums="168"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:178:179
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:168:169
 --8<--
 ```
 
@@ -358,9 +366,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:178:179
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="181"
+``` py linenums="171"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:181:197
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:171:189
 --8<--
 ```
 
@@ -382,9 +390,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:181:197
 
 本文中的输出数据是一个区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i)$，因此我们只需要将评估的输出数据按时刻保存成 50 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="199"
+``` py linenums="191"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:199:211
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:191:204
 --8<--
 ```
 
@@ -392,9 +400,9 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:199:211
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="213"
+``` py linenums="206"
 --8<--
-examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:213:
+examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:206:228
 --8<--
 ```
 
