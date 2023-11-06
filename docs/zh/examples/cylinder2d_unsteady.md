@@ -10,7 +10,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar --output cylinder2d_unsteady_Re100_dataset.tar
     # unzip it
-    tar -xvf bracket_dataset.tar
+    tar -xvf cylinder2d_unsteady_Re100_dataset.tar
     python cylinder2d_unsteady_Re100.py
     ```
 
