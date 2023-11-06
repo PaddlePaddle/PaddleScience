@@ -2,6 +2,29 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/6755993?contributionType=1&sUid=438690&shared=1&ts=1694949960479" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+
+
+
+
+=== "模型训练命令"
+
+    ``` sh
+    python poiseuille_flow.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    ```
+
+
+
+
+
+
+
+
 ## 1. 背景简介
 
 激波是自然界以及工程应用中经常发现的现象。它们不仅广泛地存在于航空航天领域的可压缩流动中，而且也表现在理论与应用物理以及工程应用等其它领域。在超声速与高超声速流动中，激波的出现对流体流动的整体特征会产生重要影响。激波捕捉问题已在CFD领域发展了数十年，以弱解的数学理论为基础的激波捕捉方法以其简单易实现的特点发展迅速，并在复杂超声速、高超声速流动数值模拟中得到了广泛应用。
