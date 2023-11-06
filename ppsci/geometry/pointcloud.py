@@ -119,7 +119,7 @@ class PointCloud(geometry.Geometry):
         return self
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         raise NotImplementedError(
             "PointCloud do not have 'uniform_boundary_points' method"
         )
@@ -147,7 +147,7 @@ class PointCloud(geometry.Geometry):
         ]
 
     def uniform_points(self, n: int, boundary=True):
-        """Compute the equispaced points in the geometry."""
+        """Compute the equi-spaced points in the geometry."""
         return self.interior[:n]
 
     def union(self, other):

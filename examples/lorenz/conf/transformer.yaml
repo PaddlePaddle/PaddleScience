@@ -1,0 +1,64 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_lorenz_transformer/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+TRAIN_BLOCK_SIZE: 64
+VALID_BLOCK_SIZE: 256
+TRAIN_FILE_PATH: ./datasets/lorenz_training_rk.hdf5
+VALID_FILE_PATH: ./datasets/lorenz_valid_rk.hdf5
+
+# set working condition
+EMBEDDING_MODEL_PATH: ./outputs_lorenz_enn/checkpoints/latest
+VIS_DATA_NUMS: 16
+
+# model settings
+MODEL:
+  input_keys: ["embeds"]
+  output_keys: ["pred_embeds"]
+  num_layers: 4
+  num_ctx: 64
+  embed_size: 32
+  num_heads: 4
+
+# training settings
+TRAIN:
+  epochs: 200
+  batch_size: 16
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    learning_rate: 0.001
+    T_0: 14
+    T_mult: 2
+    eta_min: 1.0e-9
+  optimizer:
+    weight_decay: 1.0e-8
+  eval_during_train: true
+  eval_freq: 50
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 16
+  pretrained_model_path: null

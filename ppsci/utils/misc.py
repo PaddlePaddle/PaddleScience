@@ -416,11 +416,10 @@ def plot_curve(
 
     # plot
     plt.figure()
-    for i in range(data_arr.shape[1]):
-        if use_semilogy:
-            plt.semilogy(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
-        else:
-            plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
+    if use_semilogy:
+        plt.yscale("log")
+        plt.xscale("log")
+    plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
         loc="lower left",

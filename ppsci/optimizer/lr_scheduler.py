@@ -151,7 +151,7 @@ class Linear(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
+        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
     """
 
     def __init__(
@@ -219,7 +219,7 @@ class ExponentialDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
+        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)()
     """
 
     def __init__(
@@ -281,7 +281,7 @@ class Cosine(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)
+        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)()
     """
 
     def __init__(
@@ -346,7 +346,7 @@ class Step(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
+        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)()
     """
 
     def __init__(
@@ -408,7 +408,9 @@ class Piecewise(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(10, 1, [2, 4], (1e-3, 1e-4))
+        >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(
+        ...     10, 1, [2, 4], (1e-3, 1e-4, 1e-5)
+        ... )()
     """
 
     def __init__(
@@ -468,7 +470,7 @@ class MultiStepDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))
+        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))()
     """
 
     def __init__(
@@ -602,7 +604,7 @@ class CosineWarmRestarts(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)
+        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)()
     """
 
     def __init__(
@@ -677,7 +679,7 @@ class OneCycleLR(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(1e-3, 100)
+        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(100, 1, 1e-3)()
     """
 
     def __init__(

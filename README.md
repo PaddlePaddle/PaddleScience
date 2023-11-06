@@ -47,6 +47,9 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 非定常不可压流体 | [Re100 2D 圆柱绕流](./docs/zh/examples/cylinder2d_unsteady.md) | 机理驱动 | MLP | 半监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar) | [Paper](https://arxiv.org/abs/2004.08826)|
 | 非定常不可压流体 | [Re100~750 2D 圆柱绕流](./docs/zh/examples/cylinder2d_unsteady_transformer_physx.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957)|
 | 可压缩流体 | [2D 空气激波](./docs/zh/examples/shock_wave.md) | 机理驱动 | PINN-WE | 无监督学习 | - | [Paper](https://arxiv.org/abs/2206.03864)|
+| 飞行器设计 | [MeshGraphNets](https://aistudio.baidu.com/projectdetail/5322713) | 数据驱动 | GNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/184320) | [Paper](https://arxiv.org/abs/2010.03409)|
+| 飞行器设计 | [火箭发动机真空羽流](https://aistudio.baidu.com/projectdetail/4486133) | 数据驱动 | CNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/167250) | - |
+| 飞行器设计 | [Deep-Flow-Prediction](https://aistudio.baidu.com/projectdetail/5671596) | 数据驱动 | TurbNetG | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/197778) | [Paper](https://arxiv.org/abs/1810.08217) |
 | 流固耦合 | [涡激振动](./docs/zh/examples/viv.md) | 机理驱动 | MLP | 半监督学习 | [Data](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fsi/VIV_Training_Neta100.mat) | [Paper](https://arxiv.org/abs/2206.03864)|
 | 多相流 | [气液两相流](./docs/zh/examples/bubble.md) | 机理驱动 | BubbleNet | 半监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat) | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 多相流 | [twophasePINN](https://aistudio.baidu.com/projectdetail/5379212) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1016/j.mlwa.2021.100029)|
@@ -177,13 +180,15 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 - PaddleScience 的部分案例和代码由以下优秀社区开发者贡献（按 [Contributors](https://github.com/PaddlePaddle/PaddleScience/graphs/contributors) 排序）：
     [Asthestarsfalll](https://github.com/Asthestarsfalll)，
     [co63oc](https://github.com/co63oc)，
-    [AndPuQing](https://github.com/AndPuQing)，
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
+    [AndPuQing](https://github.com/AndPuQing)，
+    [lknt](https://github.com/lknt)，
     [yangguohao](https://github.com/yangguohao)，
     [mrcangye](https://github.com/mrcangye)，
     [jjyaoao](https://github.com/jjyaoao)，
     [jiamingkong](https://github.com/jiamingkong)，
     [Liyulingyue](https://github.com/Liyulingyue)，
+    [Gxinhu](https://github.com/Gxinhu)，
     [XYM](https://github.com/XYM)，
     [xusuyong](https://github.com/xusuyong)，
     [NKNaN](https://github.com/NKNaN)，
@@ -193,11 +198,9 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [enkilee](https://github.com/enkilee)，
     [GreatV](https://github.com/GreatV)
 
-<!-- --8<-- [start:cooperation] -->
 ## 🤝合作单位
 
-![cooperation](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/cooperation.png)
-<!-- --8<-- [end:cooperation] -->
+![cooperation](./docs/images/overview/cooperation.png)
 
 <!-- --8<-- [start:license] -->
 ## 📜证书
