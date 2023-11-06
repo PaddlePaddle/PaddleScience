@@ -5,11 +5,12 @@
 === "模型训练命令"
 
     ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/DeepHPMs/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/DeepHPMs/
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
     python burgers.py
     ```
 
@@ -17,23 +18,23 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/DeepHPMs/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/DeepHPMs/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
     python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
     ```
 
 | 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | 指标 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| 1 | burgers | burgers_sine.mat | burgers_sine.mat | burgers_pretrained.pdparams | - |
-| 2 | burgers | burgers_sine.mat | burgers.mat | burgers_diff_pretrained.pdparams | - |
-| 3 | burgers | burgers.mat | burgers_sine.mat | burgers_diff_swap_pretrained.pdparams | - |
-| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | kdv_same_pretrained.pdparams | - |
-| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | kdv_diff_pretrained.pdparams | - |
-| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | ks_pretrained.pdparams | - |
-| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | ks_chaotic_pretrained.pdparams | - |
+| 1 | burgers | burgers_sine.mat | burgers_sine.mat | [burgers_same_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_same_pretrained.pdparams) | l2 error: 0.0088 |
+| 2 | burgers | burgers_sine.mat | burgers.mat | [burgers_diff_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_pretrained.pdparams) | l2 error: 0.0379 |
+| 3 | burgers | burgers.mat | burgers_sine.mat | [burgers_diff_swap_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_swap_pretrained.pdparams) | l2 error: 0.2904 |
+| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | [kdv_same_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_same_pretrained.pdparams) | l2 error: 0.0567 |
+| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | [kdv_diff_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_diff_pretrained.pdparams) | l2 error: 0.1142 |
+| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | [ks_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams) | l2 error: 0.1166 |
+| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | [ks_chaotic_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_chaotic_pretrained.pdparams) | l2 error: 0.3664 |
 | 8 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
 | 9 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
 

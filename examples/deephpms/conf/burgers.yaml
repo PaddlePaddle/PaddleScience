@@ -23,8 +23,8 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-DATASET_PATH: ./datasets/DeepHPMs/burgers_sine.mat
-DATASET_PATH_SOL: ./datasets/DeepHPMs/burgers_sine.mat
+DATASET_PATH: ./datasets/burgers_sine.mat
+DATASET_PATH_SOL: ./datasets/burgers_sine.mat
 
 # set working condition
 T_LB: 0.0

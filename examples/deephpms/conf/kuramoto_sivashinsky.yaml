@@ -23,8 +23,8 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-DATASET_PATH: ./datasets/DeepHPMs/KS.mat
-DATASET_PATH_SOL: ./datasets/DeepHPMs/KS.mat
+DATASET_PATH: ./datasets/KS.mat
+DATASET_PATH_SOL: ./datasets/KS.mat
 
 # set working condition
 # for KS.mat

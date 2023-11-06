@@ -74,13 +74,7 @@ def train(cfg: DictConfig):
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)
     x_lb = paddle.to_tensor(cfg.X_LB)
-    x_ub = paddle.to_tensor(cfg.T_UB)
-
-    # boundaries of KS_chaotic.mat
-    # t_lb = paddle.to_tensor([0.0])
-    # t_ub = paddle.to_tensor([100.0])
-    # x_lb = paddle.to_tensor([0.0])
-    # x_ub = paddle.to_tensor([32.0 * np.pi])
+    x_ub = paddle.to_tensor(cfg.T_UB)  # (cfg.T_UB * np.pi) for KS_chaotic.mat
 
     # initialize models
     model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)
