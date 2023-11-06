@@ -25,3 +25,5 @@ eval_freq: 5000
 epoch_list: [5000, 5000, 50000, 50000]
 
 lr_list: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+
+pretrained_model_path: ./nsfnet2
