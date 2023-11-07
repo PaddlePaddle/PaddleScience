@@ -20,20 +20,22 @@ hydra:
     subdir: ./
 
 # set constraint data path
+DOMAIN_TRAIN_PATH: ./datasets/domain_train.csv
 DOMAIN_INLET_CYLINDER_PATH: ./datasets/domain_inlet_cylinder.csv
 DOMAIN_OUTLET_PATH: ./datasets/domain_outlet.csv
 IC0_1_PATH: ./datasets/initial/ic0.1.csv
 PROBE1_50_PATH: ./datasets/probe/probe1_50.csv
+
+# set validator data path
 DOMAIN_EVAL_PATH: ./datasets/domain_eval.csv
-DOMAIN_TRAIN_PATH: ./datasets/domain_train.csv
 
 # general settings
 mode: train # running mode: train/eval
-seed: 2023
+seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
-# equation
+# set working condition
 VISCOSITY: 0.02
 DENSITY: 1.0
 

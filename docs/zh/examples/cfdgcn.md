@@ -1,26 +1,6 @@
-# 飞桨论文复现营 科学计算 Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction
-* [飞桨论文复现营 科学计算 Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction](#飞桨论文复现营科学计算combining-differentiable-pde-solvers-and-graph-neural-networks-for-fluid-flow-prediction)
-  + [1. 简介](#1简介)
-    - [1.1 模型结构](#1-1模型结构)
-  + [2. 数据集](#2数据集)
-    - [2.1 数据下载使用](#2-1数据下载使用)
-  + [3. 环境依赖](#3环境依赖)
-    - [3.1 硬件](#3-1硬件)
-    - [3.2 框架](#3-2框架)
-    - [3.3 本地安装](#3-3本地安装)
-  + [4. 快速开始](#4快速开始)
-    - [4.1 GCN模型运行](#4-1-gcn模型运行)
-    - [4.2 AIStudio上运行](#4-2-aistudio上运行)
-    - [4.3 本地运行](#4-3本地运行)
-  + [5. 项目结构与实现细节](#5项目结构与实现细节)
-    - [5.1 使用pgl替换torch_geometric](#5-1使用-pgl替换torch-geometric)
-      - [5.1.1 Dataset与Dataloader修改](#5-1-1-dataset与dataloader修改)
-      - [5.1.2 knn_interpolate方法实现](#5-1-2-knn-interpolate方法实现)
-    - [5.2 SU2项目和paddle的结合使用](#5-2-su2项目和paddle的结合使用)
-  + [6. 复现结果](#6复现结果)
-    - [6.1 RMSE对比](#6-1-rmse对比)
-    - [6.2 可视化展示](#6-2可视化展示)
-  + [7. 模型信息](#7模型信息)
+# Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction
+
+<a href="https://aistudio.baidu.com/projectdetail/5216848?channel=0&channelType=0&sUid=438690&shared=1&ts=1699275733220" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 ## 1. 简介
 
@@ -30,22 +10,19 @@
 * 作者在模型中嵌入了可微分的CFD求解器。
 
 关键技术要点：
+
 * 转换torch_geometric为paddle的pgl图计算库，并实现Dataloader等方法的重新实现，可作为转换样例参考；
 * 实现torch_geometric中的knn_interpolate方法。通过paddle api实现，无需再使用torch_geometric组件完成计算；
 * 实现SU2项目和paddle的结合使用，通过MPI加速，加快计算速度，减少训练时间。
 
 实验结果要点：
+
 * 成功复现CFDGCN网络，并能够完成模型训练与预测；
 * 模型精度均优于论文中报告结果。
 
 论文信息：
+
 * Filipe de Avila Belbute-Peres, Thomas D. Economon, and J. Zico Kolter. 2020. Combining differentiable PDE solvers and graph neural networks for fluid flow prediction. In Proceedings of the 37th International Conference on Machine Learning (ICML'20). JMLR.org, Article 224, 2402–2411.
-
-参考GitHub地址：
-* https://github.com/locuslab/cfd-gcn
-
-项目aistudio地址：
-* https://aistudio.baidu.com/aistudio/projectdetail/5216848
 
 ### 1.1 模型结构
 
@@ -68,6 +45,7 @@ tar -xf meshes.tar
 ## 3. 环境依赖
 
 本项目实现了GCN模型和CFDGCN模型两种模型。
+
 * GCN模型：仅需要GPU计算资源即可完整运行（轻微修改代码，后续会说明）；
 * CFDGCN模型：通过MPI调用SU2进行加速计算，需同时使用CPU和GPU资源。
 
@@ -119,8 +97,10 @@ pip install mpi4py
 2. 从CFDGCN文件夹解压数据data.tzg，目录结构见5.代码结构与详细说明。
 
 3. 本项目推荐使用命令行进行运行。本项目代码同[PaddlePaddle/PaddleScience](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution)中相同代码，可任选一处运行。
-* GCN模型推荐在aistudio中运行，仅需要GPU资源。
-* CFDGCN模型推荐在本地进行运行或者选择 v100 32g版本环境（可使用4个cpu core）
+
+    * GCN模型推荐在aistudio中运行，仅需要GPU资源。
+
+    * CFDGCN模型推荐在本地进行运行或者选择 v100 32g版本环境（可使用4个cpu core）
 
 ```bash
 # 此处运行命令无需修改代码即可运行
@@ -245,6 +225,7 @@ for batch_data in loader:
 缺点：此部分文档没有说明图数据的调用与处理方式，并且图数据构建后不存在.batch属性，与torch_geometric用法不一致，导致复现困难。
 
 此处给出torch_geometric对GCN实现的说明：
+
 1. 构建大图数据，即多图合一。
 2. 通过batch属性确定大图数据的其中一个图，进行GCN计算
 3. 将每个batch数据计算后数据合并输出
@@ -287,7 +268,7 @@ output = paddle.bmm(weight, features_input).squeeze(-2) / paddle.sum(knn_value, 
 
 ### 5.2 SU2项目和paddle的结合使用
 
-SU2模型为预编译模型，具体编译过程参考https://github.com/locuslab/cfd-gcn/Dockerfile
+SU2模型为预编译模型，具体编译过程参考：https://github.com/locuslab/cfd-gcn/Dockerfile
 
 本项目提供预编译可使用版本，目录为/home/aistudio/SU2Bin，CFDGCN/su2paddle为SU2预编译版本与paddle连接文件，其中构建了MPI多线程计算方式，将batch_data的每个item分布式计算，加快计算速度。
 
@@ -323,12 +304,12 @@ batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
 
 ### 6.1 RMSE对比
 
-|模型/指标 | INTERPOLATION (RMSE) | GENERALIZATION (RMSE) |
-| -------- | -------- | -------- |
-| CFD-GCN （原论文）     | 1.8 * 10^-2     | 5.4 * 10^-2     |
-| CFD-GCN （复现）     | 1.7 * 10^-2     | 5.3 * 10^-2      |
-| GCN （原论文）     | 1.4 * 10^-2     | 9.5 * 10^-2     |
-| GCN （复现）     | 1.1 * 10^-2     | 9.4 * 10^-2     |
+| 模型/指标        | INTERPOLATION (RMSE) | GENERALIZATION (RMSE) |
+|----------------|----------------------|-----------------------|
+| CFD-GCN （原论文） | 1.8 * 10^-2          | 5.4 * 10^-2           |
+| CFD-GCN （复现）   | 1.7 * 10^-2          | 5.3 * 10^-2           |
+| GCN （原论文）     | 1.4 * 10^-2          | 9.5 * 10^-2           |
+| GCN （复现）       | 1.1 * 10^-2          | 9.4 * 10^-2           |
 
 ### 6.2 可视化展示
 
@@ -340,11 +321,16 @@ True:
 
 ## 7. 模型信息
 
-| 信息                | 说明|
-| --------          | -------- |
-| 发布者               | 朱卫国 (DrownFish19)    |
-| 发布时间              | 2023.01     |
-| 框架版本              | paddle 2.4.1     |
-| 支持硬件              | GPU、CPU     |
-| 预训练模型训练时间 (V100)| GCN (1-2h) CFDGCN(3-6h)    |
-| aistudio              | [notebook](https://aistudio.baidu.com/aistudio/projectdetail/5216848)     |
+| 信息                      | 说明                                                                  |
+|---------------------------|-----------------------------------------------------------------------|
+| 发布者                    | 朱卫国 (DrownFish19)                                                  |
+| 发布时间                  | 2023.01                                                               |
+| 框架版本                  | paddle 2.4.1                                                          |
+| 支持硬件                  | GPU、CPU                                                               |
+| 预训练模型训练时间 (V100) | GCN (1-2h) CFDGCN(3-6h)                                               |
+| aistudio                  | [notebook](https://aistudio.baidu.com/aistudio/projectdetail/5216848) |
+
+## 8. 参考资料
+
+* [Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction](https://arxiv.org/abs/2007.04439)
+* [locuslab/cfd-gcnCFDGCN](https://github.com/locuslab/cfd-gcn)
