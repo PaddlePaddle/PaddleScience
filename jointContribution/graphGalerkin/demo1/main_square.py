@@ -13,10 +13,10 @@ from pyCaMOtk.create_dbc_strct import create_dbc_strct
 from pyCaMOtk.create_femsp_cg import create_femsp_cg
 from pyCaMOtk.solve_fem import solve_fem
 from pyCaMOtk.visualize_fem import visualize_fem
-from pyCaMOtk.geom_mltdim import Simplex, Hypercube
+from pyCaMOtk.geom_mltdim import Hypercube
 from pyCaMOtk.create_fem_resjac  import create_fem_resjac
 
-sys.path.insert(0, '../source')
+sys.path.insert(0, 'source')
 import TensorFEMCore
 from GCNNModel import e2vcg2connectivity,LinearElasticityNet2D
 from TensorFEMCore import Double,solve_fem_GCNN, ReshapeFix

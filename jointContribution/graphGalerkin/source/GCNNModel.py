@@ -1,5 +1,4 @@
 # from pgl.nn import GCNConv
-import pgl
 import numpy as np
 import paddle
 import paddle.nn.initializer as Initializer
@@ -118,13 +117,13 @@ class LinearElasticityNet2D(Layer):
 		edge_index1=edge_index
 		edge_index2=edge_index
 		for i, (conv, last_chance) in enumerate(self.conv_layers_1):
-			x = conv(x1, edge_index1)
+			x1 = conv(x1, edge_index1)
 			if i < len(self.conv_layers_1) - 2:
-				x = relu(x) 
+				x1 = relu(x1) 
 		for i, (conv, last_chance) in enumerate(self.conv_layers_2):
-			x = conv(x2, edge_index2)
+			x2 = conv(x2, edge_index2)
 			if i < len(self.conv_layers_2) - 2:
-				x = relu(x) 
+				x2 = relu(x2) 
 
 		uv=[]
 		for i in range(n1):
@@ -170,25 +169,25 @@ class Ns_Chebnet(Layer):
 		idx1=[2*i for i in range(n1)]
 		idx2=[2*i+1 for i in range(n1)]
 		idx3=[i+n1*2 for i in range(n2)]
-		x1=x[idx1,:]
-		x2=x[idx2,:]
-		x3=x[idx3,:]
+		x1=x[idx1]
+		x2=x[idx2]
+		x3=x[idx3]
 		edge_index1=edge_index[:,0:n3]
 		edge_index2=edge_index[:,n3:2*n3]
 		edge_index3=edge_index[:,2*n3:]
 
 		for i, (conv, last_chance) in enumerate(self.conv_layers_1):
-			x = conv(x1, edge_index1)
+			x1 = conv(x1, edge_index1)
 			if i < len(self.conv_layers_1) - 2:
-				x = relu(x) 
+				x1 = relu(x1) 
 		for i, (conv, last_chance) in enumerate(self.conv_layers_2):
-			x = conv(x2, edge_index2)
+			x2 = conv(x2, edge_index2)
 			if i < len(self.conv_layers_2) - 2:
-				x = relu(x) 
+				x2 = relu(x2) 
 		for i, (conv, last_chance) in enumerate(self.conv_layers_3):
-			x = conv(x3, edge_index3)
+			x2 = conv(x3, edge_index3)
 			if i < len(self.conv_layers_3) - 2:
-				x = relu(x) 
+				x2 = relu(x2) 
 
 		uv=[]
 		for i in range(n1):

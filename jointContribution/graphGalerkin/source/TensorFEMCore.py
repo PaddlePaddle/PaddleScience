@@ -91,7 +91,7 @@ def intg_elem_claw_vol(Ue,transf_data,elem,elem_data,e,parsfuncI=None, model=Non
 			pars=elem_data.vol_pars[:,k,e]
 		else:
 			pars=parsfuncI(x)	
-		SF,dSFdU=elem.eqn.srcflux(UQq[:,:,k],pars,x,model)
+		SF,dSFdU=elem.eqn.srcflux(UQq[:,:,k],pars,x)
 		dSFdU=ReshapeFix(dSFdU,[neqn*(ndim+1),nvar*(ndim+1)],order='F')
 		Teqn=Double(Teqn)
 		Tvar=Double(Tvar)
@@ -264,15 +264,8 @@ def trainmodel(DataLoader,LossF,model,optimizer,criterion,qoiidx,softidx,penalty
 		pass
 	tic=time.time()
 	loss.backward()
-	grad_list = []
-	for n, tensor in model.named_parameters():
-		grad = tensor.grad
-		grad_list.append(grad.numpy()) 
-		break
 	print('wallclock time of this BP= ',time.time()-tic)
 	optimizer.step()
-	param_list = []
-	np.savetxt('demo1/param.txt',param_list, fmt='%s')
 	print('>>>>>>>max error<<<<<<< ====================================', max(erlist))
 	try:
 		print('>>>>>>>model source<<<<<<< =======================',model.source)

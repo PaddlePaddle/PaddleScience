@@ -79,6 +79,7 @@ class MessagePassing(Layer):
         self.inspector.inspect(self.aggregate, pop_first=True)
         self.inspector.inspect(self.update, pop_first=True)
         self.inspector.inspect(self.edge_update)
+        self.inspector.inspect(self.message_and_aggregate, pop_first=True)
 
         self.__user_args__ = self.inspector.keys(
             ['message', 'aggregate', 'update']).difference(self.special_args)
@@ -327,5 +328,14 @@ class MessagePassing(Layer):
         Furthermore, tensors passed to :meth:`edge_updater` can be mapped to
         the respective nodes :math:`i` and :math:`j` by appending :obj:`_i` or
         :obj:`_j` to the variable name, *.e.g.* :obj:`x_i` and :obj:`x_j`.
+        """
+        raise NotImplementedError
+    def message_and_aggregate(self, adj_t) -> Tensor:
+        r"""Fuses computations of :func:`message` and :func:`aggregate` into a
+        single function.
+        If applicable, this saves both time and memory since messages do not
+        explicitly need to be materialized.
+        This function will only gets called in case it is implemented and
+        propagation takes place based on a :obj:`torch_sparse.SparseTensor`.
         """
         raise NotImplementedError
