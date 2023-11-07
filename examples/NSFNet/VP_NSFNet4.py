@@ -177,12 +177,12 @@ def main(cfg: DictConfig):
     validator = {residual_validator.name: residual_validator}
 
     # set optimizer
-    epoch_list = [5000, 5000, 50000, 50000]
+    epoch_list = cfg.epoch_list
     new_epoch_list = []
     for i, _ in enumerate(epoch_list):
         new_epoch_list.append(sum(epoch_list[:i + 1]))
     EPOCHS = new_epoch_list[-1]
-    lr_list = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+    lr_list = cfg.lr_list
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
