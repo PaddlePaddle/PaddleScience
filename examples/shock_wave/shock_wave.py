@@ -37,7 +37,8 @@ class Euler2D(equation.PDE):
         def continuity_compute_func(out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -61,7 +62,8 @@ class Euler2D(equation.PDE):
         def x_momentum_compute_func(out):
             relu = max(
                 0.0,
-                (solver.global_step // solver.iters_per_epoch + 1) / solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
