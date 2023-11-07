@@ -344,11 +344,11 @@ examples/cylinder/2d_unsteady/cylinder2d_unsteady_Re100.py:159:166
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数，评估间隔为四百轮，学习率设为 0.001。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用四万轮训练轮数，评估间隔为四百轮，学习率设为 0.001。
 
-``` py linenums="61"
+``` yaml linenums="60"
 --8<--
-examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:61:63
+examples/cylinder/2d_unsteady/conf/cylinder2d_unsteady.yaml:60:65
 --8<--
 ```
 

@@ -312,7 +312,9 @@ def evaluate(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./conf", config_name="cylinder2d_unsteady.yaml"
+    version_base=None,
+    config_path="./conf",
+    config_name="cylinder2d_unsteady_Re100.yaml",
 )
 def main(cfg: DictConfig):
     if cfg.mode == "train":
