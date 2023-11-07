@@ -18,7 +18,7 @@ from random import sample
 
 sys.path.insert(0, 'source')
 import TensorFEMCore
-from GCNNModel import e2vcg2connectivity,LinearElasticityNet2D, TestNet
+from GCNNModel import e2vcg2connectivity,LinearElasticityNet2D
 from TensorFEMCore import Double,solve_fem_GCNN, ReshapeFix
 import setup_prob_eqn_handcode
 
@@ -40,11 +40,37 @@ def plot(msh_defGCNN,uabsGCNN):
 	fig.tight_layout(pad=3.0)
 	plt.savefig('GCNN.pdf',bbox_inches='tight')
 
+def train():
+	ii=0
+	Graph=[]
+	Ue=Double(Ufem.flatten().reshape(ndof,1))
+	fcn_id=Double(np.asarray([ii]))
+	Ue_aug=paddle.concat((fcn_id,Ue),axis=0)
+	xcg_gcnn=np.zeros((2,2*xcg.shape[1]))
+	for i in range(xcg.shape[1]):
+		xcg_gcnn[:,2*i]=xcg[:,i]
+		xcg_gcnn[:,2*i+1]=xcg[:,i]
+	Uin=Double(xcg_gcnn.T)
+	graph=Data(x=Uin,y=Ue_aug,edge_index=connectivity)
+	Graph.append(graph)
+	DataList=[[Graph[0]]]
+	TrainDataloader=DataList
+	model=LinearElasticityNet2D()
+	[model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)
+	np.save('modelCircleDet.npy',info)
+	solution=model(Graph[0].to('cuda'))
+	solution=ReshapeFix(paddle.clone(solution),[len(solution.flatten()),1],'C')
+	solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
+	solution=solution.detach().cpu().numpy()
+	xcg_defGCNN=xcg+np.reshape(solution,[ndim,nnode],order='F')
+	msh_defGCNN=Mesh(etype,xcg_defGCNN,e2vcg,e2bnd,ndim)
+	uabsGCNN=np.sqrt(solution[[i for i in range(ndof) if i%2==0]]**2+\
+				solution[[i for i in range(ndof) if i%2!=0]]**2)
+	return msh_defGCNN, uabsGCNN
+
 if __name__=='__main__':
 
 	model=LinearElasticityNet2D()
-	param_state_dict = paddle.load('demo1/init.pdparams')
-	model.set_dict(param_state_dict)
 	############################################################
 	# FEM
 	etype='simplex'; ndim=2

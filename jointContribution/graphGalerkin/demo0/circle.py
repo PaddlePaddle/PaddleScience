@@ -2,7 +2,6 @@ import numpy as np
 import pdb
 import sys
 import paddle
-import pgl
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, 'pycamotk')
@@ -17,7 +16,7 @@ paddle.seed(2268)
 
 sys.path.insert(0, 'source')
 from FEM_ForwardModel import analyticalPossion
-from GCNNModel import e2vcg2connectivity, PossionNet, TestNet
+from GCNNModel import e2vcg2connectivity, PossionNet
 from TensorFEMCore import Double, create_fem_resjac, solve_fem_GCNN
 from setup_prob_eqn_handcode import setup_linelptc_sclr_base_handcode
 
@@ -26,7 +25,7 @@ from utils import Data
 
 paddle.set_default_dtype("float32")
 
-def train(num):
+def train(S):
 	# Define the Training Data
 	Graph=[]
 	ii=0
@@ -43,8 +42,6 @@ def train(num):
 	# GCNN model
 	device=paddle.device.set_device('gpu:0')
 	model=PossionNet()
-	param_state_dict = paddle.load('demo0/init.pdparams')
-	model.set_dict(param_state_dict)
 
 	# Training Data
 	[model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)
@@ -74,12 +71,11 @@ def plot(solution, Ue):
 	plt.savefig('demo0\Demo.pdf',bbox_inches='tight')
 
 if __name__=='__main__':
-	train()
 	"""
 	Hyper prameters
 	"""
 	tol=1.0e-16
-	maxit=10	
+	maxit=500	
 	"""
 	Set up GCNN-FEM Possion problem
 	"""
@@ -121,5 +117,5 @@ if __name__=='__main__':
 										msh.e2e,femsp.spmat,dbc)
 		LossF.append(fcn)
 
-	solution, Ue = train()
+	solution, Ue = train(S)
 	plot(solution, Ue)

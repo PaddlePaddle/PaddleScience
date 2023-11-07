@@ -1,3 +1,9 @@
+import numpy as np
+import pdb
+import sys
+import matplotlib.pyplot as plt
+
+import paddle
 sys.path.insert(0, 'pycamotk')
 from pyCaMOtk.create_mesh_hcube import mesh_hcube
 from pyCaMOtk.setup_ins_base_handcode import \
@@ -7,13 +13,6 @@ from pyCaMOtk.create_dbc_strct import create_dbc_strct
 from pyCaMOtk.solve_fem import solve_fem
 from pyCaMOtk.visualize_fem import visualize_fem
 from pyCaMOtk.mesh import Mesh
-
-import numpy as np
-import pdb
-import sys
-import matplotlib.pyplot as plt
-
-import paddle
 
 sys.path.insert(0, 'source')
 import TensorFEMCore

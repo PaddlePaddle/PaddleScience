@@ -9,14 +9,12 @@ from random import sample
 
 sys.path.insert(0, 'pycamotk')
 from pyCaMOtk.create_mesh_hsphere import mesh_hsphere 
-from pyCaMOtk.setup_linelptc_sclr_base_handcode import setup_linelptc_sclr_base_handcode
 from pyCaMOtk.create_dbc_strct import create_dbc_strct
 from pyCaMOtk.create_femsp_cg import create_femsp_cg
-from pyCaMOtk.solve_fem import solve_fem
 from pyCaMOtk.visualize_fem import visualize_fem
 
 sys.path.insert(0, 'source')
-from FEM_ForwardModel import analyticalPossion, analyticalConeInterpolation
+from FEM_ForwardModel import analyticalPossion
 from GCNNModel import e2vcg2connectivity,PossionNet
 from TensorFEMCore import Double,solve_fem_GCNN,create_fem_resjac
 import setup_prob_eqn_handcode
@@ -25,6 +23,40 @@ sys.path.insert(0, 'utils')
 from utils import Data
 
 from circle import train
+
+def train(S):
+	# Define the Training Data
+	Graph=[]
+	ii=0
+	for i in S:
+		Ue=Double(analyticalPossion(xcg,i).flatten().reshape(ndof,1))
+		fcn_id=Double(np.asarray([ii]))
+		Ue_aug=paddle.concat((fcn_id,Ue),axis=0)
+		Uin=Double(xcg.T)
+		graph=Data(x=Uin,y=Ue_aug,edge_index=connectivity)
+		Graph.append(graph)
+		ii=ii+1
+	DataList=[[Graph[i]] for i in range(len(S))]
+	TrainDataloader=DataList
+	# GCNN model
+	device=paddle.device.set_device('gpu:0')
+	model=PossionNet()
+
+	# Training Data
+	[model,info]=solve_fem_GCNN(TrainDataloader,LossF,model,tol,maxit)
+	print('K=',K)
+	print('Min Error=',info['Er'].min())
+	print('Mean Error Last 10 iterations=',np.mean(info['Er'][-10:]))
+	print('Var  Error Last 10 iterations=',np.var(info['Er'][-10:]))
+
+	np.savetxt('demo0\ErFinal.txt', info['Er'])
+	np.savetxt('demo0\Loss.txt', info['Loss'])
+
+	solution=model(Graph[0])
+	solution[dbc.dbc_idx]=Double(dbc.dbc_val.reshape([len(dbc.dbc_val),1]))
+	solution=solution.detach().cpu().numpy()
+	Ue=Ue.detach().cpu().numpy()
+	return solution, Ue
 
 def plot(solution, Ue):
 	ax1=plt.subplot(1,1,1)
@@ -52,9 +84,7 @@ if __name__=='__main__':
 	maxit=3000
 
 	# GCNN model
-	model=PossionNet()
-	param_state_dict = paddle.load('demo0/init.pdparams')
-	model.set_dict(param_state_dict)										
+	model=PossionNet()									
 	"""
 	Set up GCNN-FEM Possion problem
 	"""
@@ -113,5 +143,5 @@ if __name__=='__main__':
 										msh.e2e,femsp.spmat,dbc,[i for i in range(ndof) if i not in dbc_idx],parsfuncI,None,model)
 		LossF.append(fcn)
 
-	solution, Ue = train()
+	solution, Ue = train(S)
 	plot(solution, Ue)

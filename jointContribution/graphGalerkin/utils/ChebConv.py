@@ -6,7 +6,7 @@ from init import zeros
 from utils import add_self_loops, remove_self_loops, get_laplacian, masked_fill
 
 from paddle.nn import LayerList
-from paddle.nn import Linear
+from linear import Linear
 from paddle import Tensor
 
 OptTensor = Optional[Tensor]
@@ -86,7 +86,8 @@ class ChebConv(MessagePassing):
                         name="weight",
                         initializer=paddle.nn.initializer.Constant(value=0.5))
         self.lins = LayerList([
-            Linear(in_channels, out_channels, bias_attr=False) for _ in range(K)
+            Linear(in_channels, out_channels, bias=False,
+                   weight_initializer='glorot') for _ in range(K)
         ])
         if bias:
             self.bias = paddle.create_parameter([out_channels], paddle.float32)
