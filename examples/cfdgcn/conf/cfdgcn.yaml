@@ -1,0 +1,63 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_deepcfd/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 20
+
+# set training data path
+TRAIN_DATA_DIR: "./data/NACA0012_interpolate/outputs_train"
+TRAIN_MESH_GRAPH_PATH: "./data/NACA0012_interpolate/mesh_fine.su2"
+
+# set evaluate data path
+EVAL_DATA_DIR: "./data/NACA0012_interpolate/outputs_test"
+EVAL_MESH_GRAPH_PATH: "./data/NACA0012_interpolate/mesh_fine.su2"
+
+# model settings
+MODEL:
+  input_keys: ["input"]
+  output_keys: ["pred"]
+  coarse_mesh: "./data/meshes/mesh_NACA0012_xcoarse.su2"
+  freeze_mesh: False
+  num_convs: 6
+  num_end_convs: 3
+  hidden_channels: 512
+  out_channels: 3
+
+# training settings
+TRAIN:
+  epochs: 500
+  iters_per_epoch: 42
+  save_freq: 50
+  eval_during_train: true
+  eval_freq: 50
+  learning_rate: 5.0e-4
+  batch_size: 4
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  batch_size: 1
+  pretrained_model_path: null
+  eval_with_no_grad: true
