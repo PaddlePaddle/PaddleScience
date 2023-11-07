@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_lorenz_enn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_lorenz_enn
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
