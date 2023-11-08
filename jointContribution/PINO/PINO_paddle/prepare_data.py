@@ -29,6 +29,5 @@ def plot_test(datapath):
     
 
 if __name__ == '__main__':
-
     datapath = '/raid/hongkai/NS-Re500_T300_id0-shuffle.npy'
     get_slice(datapath)

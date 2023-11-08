@@ -7,10 +7,6 @@ from .losses import LpLoss, PINO_loss3d, get_forcing
 from .distributed import reduce_loss_dict
 from .data_utils import sample_data
 
-try:
-    import wandb
-except ImportError:
-    wandb = None
     
 
 def train(model,
@@ -24,13 +20,6 @@ def train(model,
           tags=['Nan'],
           use_tqdm=True,
           profile=False):
-    if rank == 0 and wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -111,15 +100,11 @@ def train(model,
                         f'Train loss: {train_loss:.5f}; Test l2 error: {test_l2:.5f}'
                     )
                 )
-            if wandb and log:
-                wandb.log(log_dict)
 
     if rank == 0:
         save_checkpoint(config['train']['save_dir'],
                         config['train']['save_name'],
                         model, optimizer)
-        if wandb and log:
-            run.finish()
 
 def mixed_train(model,              # model of neural operator
                 train_loader,       # dataloader for training with data
@@ -134,13 +119,6 @@ def mixed_train(model,              # model of neural operator
                 group='FDM',        # group name
                 tags=['Nan'],       # tags
                 use_tqdm=True):     # turn on tqdm
-    if wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -234,23 +212,10 @@ def mixed_train(model,              # model of neural operator
                     f'Eqn loss: {err_eqn:.5f}'
                 )
             )
-        if wandb and log:
-            wandb.log(
-                {
-                    'Data f error': train_f,
-                    'Data IC L2 error': train_ic,
-                    'Data train loss': train_loss,
-                    'Data L2 error': test_l2,
-                    'Random IC Train equation loss': err_eqn,
-                    'Time cost': t2 - t1
-                }
-            )
 
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
-    if wandb and log:
-        run.finish()
 
 def progressive_train(model,
                       loader, train_loader,
@@ -261,13 +226,6 @@ def progressive_train(model,
                       group='FDM',
                       tags=['Nan'],
                       use_tqdm=True):
-    if wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     # data parameters
     v = 1 / config['data']['Re']
@@ -338,20 +296,8 @@ def progressive_train(model,
                         f'Train loss: {train_loss:.5f}; Test l2 error: {test_l2:.5f}'
                     )
                 )
-            if wandb and log:
-                wandb.log(
-                    {
-                        'Train f error': train_f,
-                        'Train L2 error': train_ic,
-                        'Train loss': train_loss,
-                        'Test L2 error': test_l2,
-                        'Time cost': t2 - t1
-                    }
-                )
 
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
-    if wandb and log:
-        run.finish()
 

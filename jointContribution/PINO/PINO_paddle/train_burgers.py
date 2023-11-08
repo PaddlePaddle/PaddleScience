@@ -1,6 +1,5 @@
-from argparse import ArgumentParser
 import yaml
-
+from argparse import ArgumentParser
 import paddle
 from paddle.optimizer.lr import MultiStepDecay
 from paddle.optimizer import Adam

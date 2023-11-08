@@ -4,11 +4,6 @@ from tqdm import tqdm
 from .utils import save_checkpoint
 from .losses import LpLoss, darcy_loss, PINO_loss
 
-try:
-    import wandb
-except ImportError:
-    wandb = None
-
 def train_2d_operator(model,
                       train_loader,
                       optimizer, scheduler,
@@ -19,32 +14,6 @@ def train_2d_operator(model,
                       tags=['default'],
                       use_tqdm=True,
                       profile=False):
-    '''
-    train PINO on Darcy Flow
-    Args:
-        model:
-        train_loader:
-        optimizer:
-        scheduler:
-        config:
-        rank:
-        log:
-        project:
-        group:
-        tags:
-        use_tqdm:
-        profile:
-
-    Returns:
-
-    '''
-    if rank == 0 and wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     data_weight = config['train']['xy_loss']
     f_weight = config['train']['f_loss']
@@ -55,10 +24,8 @@ def train_2d_operator(model,
         pbar = tqdm(pbar, dynamic_ncols=True, smoothing=0.1)
     mesh = train_loader.dataset.mesh
     mollifier = paddle.sin(np.pi * mesh[..., 0]) * paddle.sin(np.pi * mesh[..., 1]) * 0.001
-    mollifier = mollifier.to(rank)
     pde_mesh = train_loader.dataset.pde_mesh
     pde_mol = paddle.sin(np.pi * pde_mesh[..., 0]) * paddle.sin(np.pi * pde_mesh[..., 1]) * 0.001
-    pde_mol = pde_mol.to(rank)
     for e in pbar:
         loss_dict = {'train_loss': 0.0,
                      'data_loss': 0.0,
@@ -75,7 +42,7 @@ def train_2d_operator(model,
                 pred = pred * mollifier
                 data_loss = myloss(pred, y)
 
-            a = x[..., 0]
+            a = data_ic[..., 0]
             f_loss = darcy_loss(pred, a)
 
             loss = data_weight * data_loss + f_weight * f_loss
@@ -99,19 +66,9 @@ def train_2d_operator(model,
                     f'data loss: {data_loss_val:.5f}'
                 )
             )
-        if wandb and log:
-            wandb.log(
-                {
-                    'train loss': train_loss_val,
-                    'f loss': f_loss_val,
-                    'data loss': data_loss_val
-                }
-            )
     save_checkpoint(config['train']['save_dir'],
                     config['train']['save_name'],
                     model, optimizer)
-    if wandb and log:
-        run.finish()
     print('Done!')
 
 def train_2d_burger(model,
@@ -123,13 +80,6 @@ def train_2d_burger(model,
                     group='default',
                     tags=['default'],
                     use_tqdm=True):
-    if rank == 0 and wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
 
     data_weight = config['train']['xy_loss']
     f_weight = config['train']['f_loss']
@@ -152,17 +102,16 @@ def train_2d_burger(model,
             data_loss = myloss(out, y)
 
             loss_u, loss_f = PINO_loss(out, x[:, 0, :, 0], v)
-            total_loss = loss_f * f_weight + loss_u * ic_weight + data_loss * data_weight
-
+            total_loss = loss_u * ic_weight + loss_f * f_weight + data_loss * data_weight
+            
             optimizer.clear_grad()
             total_loss.backward()
             optimizer.step()
-            if i % 10==0:
-                exit()
 
             data_l2 += data_loss.item()
             train_pino += loss_f.item()
             train_loss += total_loss.item()
+            
         scheduler.step()
         data_l2 /= len(train_loader)
         train_pino /= len(train_loader)
@@ -174,14 +123,6 @@ def train_2d_burger(model,
                     f'train f error: {train_pino:.5f}; '
                     f'data l2 error: {data_l2:.5f}'
                 )
-            )
-        if wandb and log:
-            wandb.log(
-                {
-                    'Train f error': train_pino,
-                    'Train L2 error': data_l2,
-                    'Train loss': train_loss,
-                }
             )
 
         if e % 100 == 0:

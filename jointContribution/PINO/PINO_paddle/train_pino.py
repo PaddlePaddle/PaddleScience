@@ -1,28 +1,17 @@
-from datetime import datetime
 import os
 import yaml
 import random
 from argparse import ArgumentParser
-import math
 from tqdm import tqdm
-
 import numpy as np
-
 import paddle
 from paddle.optimizer import Adam
 from paddle.io import DataLoader
 from paddle.optimizer.lr import MultiStepDecay
-
 from models import FNO3d
-
 from train_utils.losses import LpLoss, PINO_loss3d, get_forcing
 from train_utils.datasets import KFDataset, KFaDataset, sample_data
 from train_utils.utils import save_ckpt, count_params, dict2str
-
-try:
-    import wandb
-except ImportError:
-    wandb = None
 
 @paddle.no_grad()
 def eval_ns(model, val_loader, criterion):
@@ -66,13 +55,6 @@ def train_ns(model,
     
     S = config['data']['pde_res'][0]
     forcing = get_forcing(S)
-    # set up wandb
-    if wandb and args.log:
-        run = wandb.init(project=config['log']['project'], 
-                         entity=config['log']['entity'], 
-                         group=config['log']['group'], 
-                         config=config, reinit=True, 
-                         settings=wandb.Settings(start_method='fork'))
     
     pbar = range(start_iter, config['train']['num_iter'])
     if args.tqdm:
@@ -126,15 +108,9 @@ def train_ns(model,
                     logstr
                 )
             )
-        if wandb and args.log:
-            wandb.log(log_dict)
         if e % save_step == 0 and e > 0:
             ckpt_path = os.path.join(ckpt_dir, f'model-{e}.pt')
             save_ckpt(ckpt_path, model, optimizer, scheduler)
-
-    # clean up wandb
-    if wandb and args.log:
-        run.finish()
 
 def subprocess(args):
     with open(args.config, 'r') as f:

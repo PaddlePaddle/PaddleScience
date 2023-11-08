@@ -6,17 +6,12 @@ from timeit import default_timer
 
 from .losses import LpLoss, PINO_loss3d
 
-try:
-    import wandb
-except ImportError:
-    wandb = None
-
-def eval_ns(model,  # model
-            loader,  # dataset instance
-            dataloader,  # dataloader
-            forcing,  # forcing
-            config,  # configuration dict
-            device,  # device id
+def eval_ns(model,  
+            loader,  
+            dataloader, 
+            forcing,  
+            config,  
+            device,  
             log=False,
             project='PINO-default',
             group='FDM',
@@ -25,13 +20,6 @@ def eval_ns(model,  # model
     '''
     Evaluate the model for Navier Stokes equation
     '''
-    if wandb and log:
-        run = wandb.init(project=project,
-                         entity=config['log']['entity'],
-                         group=group,
-                         config=config,
-                         tags=tags, reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
     # data parameters
     v = 1 / config['data']['Re']
     S, T = loader.S, loader.T
@@ -72,12 +60,3 @@ def eval_ns(model,  # model
     print(f'==Averaged relative L2 error is: {test_l2}==\n'
           f'==Averaged equation error is: {loss_f}==')
     print(f'Time cost: {end_time - start_time} s')
-    if device == 0:
-        if wandb and log:
-            wandb.log(
-                {
-                    'Train f error': loss_f,
-                    'Test L2 error': test_l2,
-                }
-            )
-            run.finish()

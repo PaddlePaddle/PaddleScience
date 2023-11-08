@@ -1,14 +1,7 @@
 from tqdm import tqdm
 import numpy as np
-
 import paddle
-
 from .losses import LpLoss, darcy_loss, PINO_loss
-
-try:
-    import wandb
-except ImportError:
-    wandb = None
 
 def eval_darcy(model,
                dataloader,
