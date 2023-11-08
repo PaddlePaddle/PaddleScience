@@ -1,7 +1,7 @@
 # Set directories
 export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
 export TEST_DIR="${PDSC_DIR}"
-export TIPC_TEST="ON" # open tipc log in solver.py 
+export TIPC_TEST="ON" # open tipc log in solver.py
 export PYTHONPATH=${PDSC_DIR}
 
 BENCHMARK_ROOT="${TEST_DIR}/test_tipc/tools"

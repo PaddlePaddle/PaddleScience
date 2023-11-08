@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -76,11 +76,11 @@ export_key2=$(func_parser_key "${lines[34]}")
 export_value2=$(func_parser_value "${lines[34]}")
 inference_dir=$(func_parser_value "${lines[35]}")
 
-# parser inference model 
+# parser inference model
 infer_model_dir_list=$(func_parser_value "${lines[36]}")
 infer_export_list=$(func_parser_value "${lines[37]}")
 infer_is_quant=$(func_parser_value "${lines[38]}")
-# parser inference 
+# parser inference
 inference_py=$(func_parser_value "${lines[39]}")
 use_gpu_key=$(func_parser_key "${lines[40]}")
 use_gpu_list=$(func_parser_value "${lines[40]}")
@@ -111,11 +111,11 @@ if [ ${MODE} = "klquant_whole_infer" ]; then
     python=$(func_parser_value "${lines[2]}")
     export_weight=$(func_parser_key "${lines[3]}")
     save_infer_key=$(func_parser_key "${lines[4]}")
-    # parser inference model 
+    # parser inference model
     infer_model_dir_list=$(func_parser_value "${lines[5]}")
     infer_export_list=$(func_parser_value "${lines[6]}")
     infer_is_quant=$(func_parser_value "${lines[7]}")
-    # parser inference 
+    # parser inference
     inference_py=$(func_parser_value "${lines[8]}")
     use_gpu_key=$(func_parser_key "${lines[9]}")
     use_gpu_list=$(func_parser_value "${lines[9]}")
@@ -153,7 +153,7 @@ function func_inference(){
     _log_path=$4
     _img_dir=$5
     _flag_quant=$6
-    # inference 
+    # inference
     for use_gpu in ${use_gpu_list[*]}; do
         if [ ${use_gpu} = "False" ] || [ ${use_gpu} = "cpu" ]; then
             for use_mkldnn in ${use_mkldnn_list[*]}; do
@@ -170,7 +170,7 @@ function func_inference(){
                                 continue
                             fi # skip when quant model inference but precision is not int8
                             set_precision=$(func_set_params "${precision_key}" "${precision}")
-                            
+
                             _save_log_path="${_log_path}/python_infer_cpu_usemkldnn_${use_mkldnn}_threads_${threads}_precision_${precision}_batchsize_${batch_size}.log"
                             set_infer_data=$(func_set_params "${image_dir_key}" "${_img_dir}")
                             set_benchmark=$(func_set_params "${benchmark_key}" "${benchmark_value}")
@@ -194,7 +194,7 @@ function func_inference(){
                 for precision in ${precision_list[*]}; do
                     if [[ ${_flag_quant} = "False" ]] && [[ ${precision} =~ "int8" ]]; then
                         continue
-                    fi 
+                    fi
                     if [[ ${precision} =~ "fp16" || ${precision} =~ "int8" ]] && [ ${use_trt} = "False" ]; then
                         continue
                     fi
@@ -216,7 +216,7 @@ function func_inference(){
                         last_status=${PIPESTATUS[0]}
                         eval "cat ${_save_log_path}"
                         status_check $last_status "${command}" "${status_log}"
-                        
+
                     done
                 done
             done
@@ -251,7 +251,7 @@ if [ ${MODE} = "whole_infer" ] || [ ${MODE} = "klquant_whole_infer" ]; then
             set_export_weight=$(func_set_params "${export_weight}" "${infer_model}")
             set_save_infer_key=$(func_set_params "${save_infer_key}" "${save_infer_dir}")
             export_cmd="${python} ${infer_run_exports[Count]} ${set_export_weight} ${set_save_infer_key}"
-            echo ${infer_run_exports[Count]} 
+            echo ${infer_run_exports[Count]}
             echo $export_cmd
             eval $export_cmd
             status_export=$?
@@ -292,13 +292,13 @@ else
             IFS="|"
             env=" "
         fi
-        for autocast in ${autocast_list[*]}; do 
+        for autocast in ${autocast_list[*]}; do
             if [ ${autocast} = "amp" ]; then
                 set_amp_config="Global.use_amp=True Global.scale_loss=1024.0 Global.use_dynamic_loss_scaling=True"
             else
                 set_amp_config=" "
-            fi          
-            for trainer in ${trainer_list[*]}; do 
+            fi
+            for trainer in ${trainer_list[*]}; do
                 flag_quant=False
                 if [ ${trainer} = ${pact_key} ]; then
                     run_train=${pact_trainer}
@@ -357,16 +357,16 @@ else
 
                 set_eval_pretrain=$(func_set_params "${pretrain_model_key}" "${save_log}/${train_model_name}")
 
-                # run eval 
+                # run eval
                 if [ ${eval_py} != "null" ]; then
                     eval ${env}
                     set_eval_params1=$(func_set_params "${eval_key1}" "${eval_value1}")
-                    eval_cmd="${python} ${eval_py} ${set_eval_pretrain} ${set_use_gpu} ${set_eval_params1}" 
+                    eval_cmd="${python} ${eval_py} ${set_eval_pretrain} ${set_use_gpu} ${set_eval_params1}"
                     eval $eval_cmd
                     status_check $? "${eval_cmd}" "${status_log}"
                 fi
                 # run export model
-                if [ ${run_export} != "null" ]; then 
+                if [ ${run_export} != "null" ]; then
                     # run export model
                     save_infer_path="${save_log}"
                     set_export_weight=$(func_set_params "${export_weight}" "${save_log}/${train_model_name}")
@@ -384,10 +384,10 @@ else
                         infer_model_dir=${save_infer_path}
                     fi
                     func_inference "${python}" "${inference_py}" "${infer_model_dir}" "${LOG_PATH}" "${train_infer_img_dir}" "${flag_quant}"
-                    
+
                     eval "unset CUDA_VISIBLE_DEVICES"
                 fi
-            done  # done with:    for trainer in ${trainer_list[*]}; do 
-        done      # done with:    for autocast in ${autocast_list[*]}; do 
+            done  # done with:    for trainer in ${trainer_list[*]}; do
+        done      # done with:    for autocast in ${autocast_list[*]}; do
     done          # done with:    for gpu in ${gpu_list[*]}; do
 fi  # end if [ ${MODE} = "infer" ]; then
