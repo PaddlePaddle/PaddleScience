@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_cylinder2d_unsteady_transformer_physx_enn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_cylinder2d_unsteady_transformer_physx_enn
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned

@@ -6,8 +6,8 @@
 
     ``` sh
     # linux
-    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
-    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat --output ./datasets/hpinns_holo_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat --output ./datasets/hpinns_holo_valid.mat
@@ -18,13 +18,17 @@
 
     ``` sh
     # linux
-    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
-    wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat --output ./datasets/hpinns_holo_train.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat --output ./datasets/hpinns_holo_valid.mat
-    python holography.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/hpinns/hpinns_pretrained.pdparams
+    python holography.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/hPINNs/hpinns_pretrained.pdparams
     ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [hpinns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/hPINNs/hpinns_pretrained.pdparams) | loss(opt_sup): 0.05352<br>MSE.eval_metric(opt_sup): 0.00002<br>loss(val_sup): 0.02205<br>MSE.eval_metric(val_sup): 0.00001 |
 
 ## 1. 背景简介
 
@@ -233,7 +237,7 @@ examples/hpinns/holography.py:128:131
 
 ### 3.7 评估器构建
 
-与约束同理，虽然本问题使用无监督学习，但仍可以使用 `ppsci.validate.SupervisedValidator` 构建评估器。
+与约束同理，虽然本问题使用无监督学习，但仍可以使用 `ppsci.validate.SupervisedValidator` 构建评估器。本问题存在两个采样点区域，一个是较大的完整定义区域，另一个是定义域中的一块 objective 区域，评估器分别对这两个区域进行评估，因此需要构建两个评估器。`opt`对应 objective 区域，`val` 对应整个定义域。
 
 ``` py linenums="133"
 --8<--
