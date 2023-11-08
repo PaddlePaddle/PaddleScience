@@ -5,7 +5,7 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged
-    config: 
+    config:
       override_dirname:
         exclude_keys:
           - TRAIN.checkpoint_path
