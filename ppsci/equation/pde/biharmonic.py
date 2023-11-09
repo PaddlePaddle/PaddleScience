@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Callable
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -22,7 +23,7 @@ from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    r"""Class for biharmonic equation.
+    r"""Class for biharmonic equation with supporting special load.
 
     $$
     \nabla^4 \varphi = \dfrac{q}{D}
@@ -30,7 +31,7 @@ class Biharmonic(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
-        q (Union[float, str]): Load.
+        q (Union[float, str, Callable]): Load.
         D (Union[float, str]): Rigidity.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
@@ -43,7 +44,7 @@ class Biharmonic(base.PDE):
     def __init__(
         self,
         dim: int,
-        q: Union[float, str],
+        q: Union[float, str, Callable],
         D: Union[float, str],
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
@@ -55,6 +56,8 @@ class Biharmonic(base.PDE):
 
         if isinstance(q, str):
             q = self.create_function("q", invars)
+        elif isinstance(q, Callable):
+            q = q(invars)
         if isinstance(D, str):
             D = self.create_function("D", invars)
 
