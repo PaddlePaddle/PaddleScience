@@ -182,16 +182,16 @@ T=0
 Test dataset:
 | size 10*100 |  code(without BFGS) | PaddleScience  |
 |-------------------|--------------------|---------|
-| u                 |  0.0766%        | /  |
-| v                 | 0.0689%            | /  |
-| w                 |   0.109%           | /  |
+| u                 |  0.0766%        | 0.059%  |
+| v                 | 0.0689%            | 0.082%  |
+| w                 |   0.109%           | 0.0732%  |
 
 T=1
 | size 10*100 | paper   | PaddleScience  |
 |-------------------|--------|---------|
-| u                 | 0.426%        | /  |
-| v                 | 0.366%            | /  |
-| w                 | 0.587%            | /  |
+| u                 | 0.426%        | 0.115%  |
+| v                 | 0.366%            | 0.199%  |
+| w                 | 0.587%            | 0.217%  |
 
 ## 6. 参考资料
 [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
