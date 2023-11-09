@@ -173,7 +173,7 @@ T=0
 
 速度场
 
-![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/movie.gif)
+![image](ttps://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/Cylinder%20wake.gif)
 
 涡流场（t=4.0）
 
@@ -192,6 +192,9 @@ T=1
 | u                 | 0.426%        | 0.115%  |
 | v                 | 0.366%            | 0.199%  |
 | w                 | 0.587%            | 0.217%  |
+
+速度场 z=0
+![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/Beltrami%20flow.gif)
 
 ## 6. 参考资料
 [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
