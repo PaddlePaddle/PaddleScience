@@ -173,7 +173,7 @@ T=0
 
 速度场
 
-![image](ttps://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/Cylinder%20wake.gif)
+![image](https://github.com/DUCH714/hackthon5th53/blob/develop/examples/NSFNet/fig/Cylinder%20wake.gif)
 
 涡流场（t=4.0）
 
