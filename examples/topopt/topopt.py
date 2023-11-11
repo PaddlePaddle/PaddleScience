@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from os import path as osp
 
 import h5py
@@ -129,15 +130,14 @@ def evaluate(cfg: DictConfig):
     h5data = h5py.File(cfg.DATA_PATH, "r")
     data_iters = np.array(h5data["iters"])
     data_targets = np.array(h5data["targets"])
-    for model_path in cfg.EVAL.pretrained_model_path:
 
+    for case_name, model_path in cfg.EVAL.pretrained_model_path_dict.items():
         acc_results, iou_results = evaluate_model(
             cfg, model, model_path, data_iters, data_targets, iterations_stop_times
         )
 
-        model_name = model_path.split("\\")[-3].split("_")[0]
-        acc_results_summary[model_name] = acc_results
-        iou_results_summary[model_name] = iou_results
+        acc_results_summary[case_name] = acc_results
+        iou_results_summary[case_name] = iou_results
 
     # calculate thresholding results
     th_acc_results = []
@@ -149,7 +149,7 @@ def evaluate(cfg: DictConfig):
         current_iou_results = []
 
         # only calculate for NUM_VAL_STEP times of iteration
-        for _ in range(10):
+        for _ in range(cfg.EVAL.num_val_step):
             input_full_channel, label = generate_train_test(
                 data_iters, data_targets, 1.0, cfg.EVAL.batch_size
             )
@@ -165,7 +165,8 @@ def evaluate(cfg: DictConfig):
                 (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
             )
             out = paddle.cast(
-                paddle.to_tensor(input)[:, 0:1, :, :] > 0.5, dtype="float32"
+                paddle.to_tensor(input)[:, 0:1, :, :] > 0.5,
+                dtype=paddle.get_default_dtype(),
             )
             th_result = val_metric(
                 {"output": out},
@@ -181,28 +182,6 @@ def evaluate(cfg: DictConfig):
     acc_results_summary["thresholding"] = th_acc_results
     iou_results_summary["thresholding"] = th_iou_results
 
-    # # plot and save figures
-    # plt.figure(figsize=(12, 6))
-    # for k, v in acc_results_summary.items():
-    #     plt.plot(iterations_stop_times, v, label=k, lw=4)
-    # plt.title("Binary accuracy", fontsize=16)
-    # plt.xlabel("iteration", fontsize=14)
-    # plt.ylabel("accuracy", fontsize=14)
-    # plt.legend(loc="best", fontsize=13)
-    # plt.grid()
-    # plt.savefig(osp.join(cfg.output_dir, "Binary_Accuracy.png"))
-    # plt.show()
-
-    # plt.figure(figsize=(12, 6))
-    # for k, v in iou_results_summary.items():
-    #     plt.plot(iterations_stop_times, v, label=k, lw=4)
-    # plt.title("IoU", fontsize=16)
-    # plt.xlabel("iteration", fontsize=14)
-    # plt.ylabel("iou", fontsize=14)
-    # plt.legend(loc="best", fontsize=13)
-    # plt.grid()
-    # plt.savefig(osp.join(cfg.output_dir, "IoU.png"))
-    # plt.show()
     ppsci.utils.misc.plot_curve(
         acc_results_summary,
         xlabel="iteration",
@@ -252,6 +231,7 @@ def evaluate_model(
                     "drop_last": False,
                     "shuffle": True,
                 },
+                "num_workers": 0,
             },
             ppsci.loss.FunctionalLoss(loss_wrapper(cfg)),
             {"output": lambda out: out["output"]},
@@ -297,7 +277,7 @@ def val_metric(output_dict, label_dict, weight_dict=None):
     label_pred = output_dict["output"]
     label_true = label_dict["output"]
     accurates = paddle.equal(paddle.round(label_true), paddle.round(label_pred))
-    acc = paddle.mean(paddle.cast(accurates, dtype="float32"))
+    acc = paddle.mean(paddle.cast(accurates, dtype=paddle.get_default_dtype()))
     w00 = paddle.sum(
         paddle.multiply(
             paddle.equal(paddle.round(label_pred), 0.0),

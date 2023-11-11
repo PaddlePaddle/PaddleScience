@@ -18,7 +18,6 @@ from typing import Tuple
 from typing import Union
 
 import numpy as np
-import paddle
 
 
 def uniform_sampler() -> Callable[[], int]:
@@ -104,35 +103,30 @@ def augmentation(
     input_dict: Dict[str, np.ndarray],
     label_dict: Dict[str, np.ndarray],
     weight_dict: Dict[str, np.ndarray] = None,
-) -> Tuple[
-    Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]
-]:
+) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """Apply random transformation from D4 symmetry group
 
     Args:
-        input_dict (Dict[str, np.adarray]): input dict of np.adarray size `(batch_size, any, height, width)`
-        label_dict (Dict[str, np.adarray]): label dict of np.adarray size `(batch_size, 1, height, width)`
-        weight_dict (Dict[str, np.adarray]): weight dict if any
-
-    Returns:
-        Tuple[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]]: (transformed_input_dict, transformed_label_dict, transformed_weight_dict)
+        input_dict (Dict[str, np.ndarray]): input dict of np.ndarray size `(batch_size, any, height, width)`
+        label_dict (Dict[str, np.ndarray]): label dict of np.ndarray size `(batch_size, 1, height, width)`
+        weight_dict (Dict[str, np.ndarray]): weight dict if any
     """
-    inputs = paddle.to_tensor(input_dict["input"], dtype=paddle.get_default_dtype())
-    labels = paddle.to_tensor(label_dict["output"], dtype=paddle.get_default_dtype())
+    inputs = input_dict["input"]
+    labels = label_dict["output"]
 
     # random horizontal flip
     if np.random.random() > 0.5:
-        inputs = paddle.flip(inputs, axis=2)
-        labels = paddle.flip(labels, axis=2)
+        inputs = np.flip(inputs, axis=2)
+        labels = np.flip(labels, axis=2)
     # random vertical flip
     if np.random.random() > 0.5:
-        inputs = paddle.flip(inputs, axis=1)
-        labels = paddle.flip(labels, axis=1)
+        inputs = np.flip(inputs, axis=1)
+        labels = np.flip(labels, axis=1)
     # random 90* rotation
     if np.random.random() > 0.5:
         new_perm = list(range(len(inputs.shape)))
         new_perm[1], new_perm[2] = new_perm[2], new_perm[1]
-        inputs = paddle.transpose(inputs, perm=new_perm)
-        labels = paddle.transpose(labels, perm=new_perm)
+        inputs = np.transpose(inputs, new_perm)
+        labels = np.transpose(labels, new_perm)
 
     return {"input": inputs}, {"output": labels}, weight_dict
