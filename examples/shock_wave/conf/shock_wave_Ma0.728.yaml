@@ -26,7 +26,7 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set working condition
-MA: 2.0
+MA: 0.728
 
 # set hyper-parameters
 Lt: 0.4

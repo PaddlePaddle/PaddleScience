@@ -425,6 +425,37 @@ def train(cfg: DictConfig):
     # train model
     solver.train()
 
+
+def evaluate(cfg: DictConfig):
+
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set equation
+    equation = {"Euler2D": Euler2D(), "BC_EQ": BC_EQ()}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        seed=cfg.seed,
+        equation=equation,
+        eval_with_no_grad=True,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+    )
+    # HACK: Given entire solver to euaqtion object for tracking run-time epoch
+    # to compute factor `relu` dynamically.
+    equation["Euler2D"].solver = solver
+    equation["BC_EQ"].solver = solver
+
+    solver.eval()
+
     # visualize prediction
     t = np.linspace(cfg.T, cfg.T, 1)
     x = np.linspace(0.0, cfg.Lx, cfg.Nd)
@@ -432,6 +463,7 @@ def train(cfg: DictConfig):
     _, x_grid, y_grid = np.meshgrid(t, x, y)
 
     x_test = misc.cartesian_product(t, x, y)
+    name_value = cfg.MODEL.input_keys
     x_test_dict = misc.convert_to_dict(
         x_test,
         name_value,
@@ -503,8 +535,10 @@ def train(cfg: DictConfig):
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train'], but got '{cfg.mode}'")
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
