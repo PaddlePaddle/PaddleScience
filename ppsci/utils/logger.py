@@ -31,14 +31,25 @@ _logger: logging.Logger = None
 
 # INFO(20) is white(no color)
 # use custom log level `MESSAGE` for printing message in color
-MESSAGE = 25
+_MESSAGE_LEVEL = 25
 
-COLORLOG_CONFIG = {
+_COLORLOG_CONFIG = {
     "DEBUG": "green",
     "WARNING": "yellow",
     "ERROR": "red",
     "MESSAGE": "cyan",
 }
+
+__all__ = [
+    "init_logger",
+    "set_log_level",
+    "info",
+    "message",
+    "debug",
+    "warning",
+    "error",
+    "scaler",
+]
 
 
 def init_logger(
@@ -62,7 +73,7 @@ def init_logger(
             "Error" thus be silent most of the time. Defaults to logging.INFO.
     """
     # Add custom log level MESSAGE(25), between WARNING(30) and INFO(20)
-    logging.addLevelName(MESSAGE, "MESSAGE")
+    logging.addLevelName(_MESSAGE_LEVEL, "MESSAGE")
 
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper())
@@ -77,7 +88,7 @@ def init_logger(
     stream_formatter = colorlog.ColoredFormatter(
         "%(log_color)s[%(asctime)s] %(name)s %(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
-        log_colors=COLORLOG_CONFIG,
+        log_colors=_COLORLOG_CONFIG,
     )
     stream_handler = logging.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(stream_formatter)
@@ -148,7 +159,7 @@ def info(msg, *args):
 @ensure_logger
 @misc.run_at_rank0
 def message(msg, *args):
-    _logger.log(MESSAGE, msg, *args)
+    _logger.log(_MESSAGE_LEVEL, msg, *args)
 
 
 @ensure_logger

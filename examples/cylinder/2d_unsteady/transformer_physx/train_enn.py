@@ -18,11 +18,14 @@
 
 # This file is for step1: training a embedding model.
 # This file is based on PaddleScience/ppsci API.
+from os import path as osp
+
+import hydra
 import numpy as np
 import paddle
+from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
 
@@ -46,52 +49,47 @@ def get_mean_std(data: np.ndarray, visc: np.ndarray):
     return mean, std
 
 
-if __name__ == "__main__":
-    args = config.parse_args()
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set training hyper-parameters
-    EPOCHS = 300 if not args.epochs else args.epochs
-    TRAIN_BLOCK_SIZE = 4
-    VALID_BLOCK_SIZE = 32
-
-    input_keys = ("states", "visc")
-    output_keys = ("pred_states", "recover_states")
-    weights = (10.0 * (TRAIN_BLOCK_SIZE - 1), 10.0 * TRAIN_BLOCK_SIZE)
-    regularization_key = "k_matrix"
-
-    OUTPUT_DIR = "./output/cylinder_enn" if not args.output_dir else args.output_dir
-    TRAIN_FILE_PATH = "./datasets/cylinder_training.hdf5"
-    VALID_FILE_PATH = "./datasets/cylinder_valid.hdf5"
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
+    weights = (10.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 10.0 * cfg.TRAIN_BLOCK_SIZE)
+    regularization_key = "k_matrix"
     # manually build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
-            "file_path": TRAIN_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
-            "block_size": TRAIN_BLOCK_SIZE,
+            "file_path": cfg.TRAIN_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.TRAIN_BLOCK_SIZE,
             "stride": 16,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
             "drop_last": True,
             "shuffle": True,
         },
-        "batch_size": 64,
+        "batch_size": cfg.TRAIN.batch_size,
         "num_workers": 4,
     }
 
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         ppsci.loss.MSELossWithL2Decay(
-            regularization_dict={regularization_key: 1.0e-2 * (TRAIN_BLOCK_SIZE - 1)}
+            regularization_dict={
+                regularization_key: 1.0e-2 * (cfg.TRAIN_BLOCK_SIZE - 1)
+            }
         ),
-        {key: lambda out, k=key: out[k] for key in output_keys + (regularization_key,)},
+        {
+            key: lambda out, k=key: out[k]
+            for key in cfg.MODEL.output_keys + (regularization_key,)
+        },
         name="Sup",
     )
     constraint = {sup_constraint.name: sup_constraint}
@@ -104,43 +102,43 @@ if __name__ == "__main__":
         sup_constraint.data_loader.dataset.data, sup_constraint.data_loader.dataset.visc
     )
     model = ppsci.arch.CylinderEmbedding(
-        input_keys, output_keys + (regularization_key,), data_mean, data_std
+        cfg.MODEL.input_keys,
+        cfg.MODEL.output_keys + (regularization_key,),
+        data_mean,
+        data_std,
     )
 
     # init optimizer and lr scheduler
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        0.001,
-        gamma=0.995,
+        iters_per_epoch=ITERS_PER_EPOCH,
         decay_steps=ITERS_PER_EPOCH,
-        by_epoch=True,
+        **cfg.TRAIN.lr_scheduler,
     )()
     optimizer = ppsci.optimizer.Adam(
-        lr_scheduler,
-        weight_decay=1e-8,
-        grad_clip=clip,
+        lr_scheduler, grad_clip=clip, **cfg.TRAIN.optimizer
     )(model)
 
     # manually build validator
-    weights = (10.0 * (VALID_BLOCK_SIZE - 1), 10.0 * VALID_BLOCK_SIZE)
+    weights = (10.0 * (cfg.VALID_BLOCK_SIZE - 1), 10.0 * cfg.VALID_BLOCK_SIZE)
     eval_dataloader_cfg = {
         "dataset": {
             "name": "CylinderDataset",
-            "file_path": VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
-            "block_size": VALID_BLOCK_SIZE,
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 32,
-            "weight_dict": {key: value for key, value in zip(output_keys, weights)},
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
         },
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": 8,
+        "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
 
@@ -156,10 +154,10 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
+        cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
         eval_during_train=True,
         eval_freq=50,
@@ -170,12 +168,111 @@ if __name__ == "__main__":
     # evaluate after finished training
     solver.eval()
 
-    # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    weights = (10.0 * (cfg.TRAIN_BLOCK_SIZE - 1), 10.0 * cfg.TRAIN_BLOCK_SIZE)
+    regularization_key = "k_matrix"
+    # manually build constraint(s)
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "CylinderDataset",
+            "file_path": cfg.TRAIN_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.TRAIN_BLOCK_SIZE,
+            "stride": 16,
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": True,
+            "shuffle": True,
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "num_workers": 4,
+    }
+
+    sup_constraint = ppsci.constraint.SupervisedConstraint(
+        train_dataloader_cfg,
+        ppsci.loss.MSELossWithL2Decay(
+            regularization_dict={
+                regularization_key: 1.0e-2 * (cfg.TRAIN_BLOCK_SIZE - 1)
+            }
+        ),
+        {
+            key: lambda out, k=key: out[k]
+            for key in cfg.MODEL.output_keys + (regularization_key,)
+        },
+        name="Sup",
+    )
+
+    # manually init model
+    data_mean, data_std = get_mean_std(
+        sup_constraint.data_loader.dataset.data, sup_constraint.data_loader.dataset.visc
+    )
+    model = ppsci.arch.CylinderEmbedding(
+        cfg.MODEL.input_keys,
+        cfg.MODEL.output_keys + (regularization_key,),
+        data_mean,
+        data_std,
+    )
+
+    # manually build validator
+    weights = (10.0 * (cfg.VALID_BLOCK_SIZE - 1), 10.0 * cfg.VALID_BLOCK_SIZE)
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "CylinderDataset",
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.VALID_BLOCK_SIZE,
+            "stride": 32,
+            "weight_dict": {
+                key: value for key, value in zip(cfg.MODEL.output_keys, weights)
+            },
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": cfg.EVAL.batch_size,
+        "num_workers": 4,
+    }
+
+    mse_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        metric={"MSE": ppsci.metric.MSE()},
+        name="MSE_Validator",
+    )
+    validator = {mse_validator.name: mse_validator}
+
     solver = ppsci.solver.Solver(
         model,
-        output_dir=OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         validator=validator,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="enn.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

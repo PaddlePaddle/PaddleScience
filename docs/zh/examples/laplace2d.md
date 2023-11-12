@@ -131,7 +131,7 @@ examples/laplace/laplace2d.py:45:49
 
 接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。
 
-``` py linenums="41"
+``` yaml linenums="41"
 --8<--
 examples/laplace/conf/laplace2d.yaml:41:46
 --8<--

@@ -4,11 +4,12 @@
     handler: python
     options:
       members:
-        - Translate
-        - Scale
-        - Normalize
-        - Log1p
         - CropData
-        - SqueezeData
         - FunctionalTransform
+        - Log1p
+        - Normalize
+        - Scale
+        - SqueezeData
+        - Translate
+        - build_transforms
       show_root_heading: false

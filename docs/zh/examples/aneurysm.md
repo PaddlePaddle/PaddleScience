@@ -202,7 +202,7 @@ examples/aneurysm/aneurysm.py:149:157
 
 接下来需要指定训练轮数和学习率，此处按实验经验，使用 1500 轮训练轮数，0.001 的初始学习率。
 
-``` py linenums="59"
+``` yaml linenums="59"
 --8<--
 examples/aneurysm/conf/aneurysm.yaml:59:75
 --8<--

@@ -25,7 +25,6 @@ repos:
       - id: end-of-file-fixer
         files: \.md$
       - id: trailing-whitespace
-        files: \.md$
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.0.1

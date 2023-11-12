@@ -23,8 +23,8 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-DATASET_PATH: ./datasets/DeepHPMs/cylinder.mat
-DATASET_PATH_SOL: ./datasets/DeepHPMs/cylinder.mat
+DATASET_PATH: ./datasets/cylinder.mat
+DATASET_PATH_SOL: ./datasets/cylinder.mat
 
 # set working condition
 LB: [0.0, 1, -1.7]
