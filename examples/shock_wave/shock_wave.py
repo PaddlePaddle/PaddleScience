@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import partial
 from os import path as osp
 
 import hydra
@@ -19,18 +20,14 @@ import lhs
 import numpy as np
 import paddle
 from matplotlib import pyplot as plt
-from functools import partial
-
-
 from omegaconf import DictConfig
-
 
 import ppsci
 from ppsci import equation
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 from ppsci.utils import misc
+
 
 class Euler2D(equation.PDE):
     def __init__(self):
@@ -42,7 +39,8 @@ class Euler2D(equation.PDE):
         def continuity_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -66,7 +64,8 @@ class Euler2D(equation.PDE):
         def x_momentum_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -92,7 +91,8 @@ class Euler2D(equation.PDE):
         def y_momentum_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -118,7 +118,8 @@ class Euler2D(equation.PDE):
         def energy_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             t, x, y = out["t"], out["x"], out["y"]
@@ -152,7 +153,8 @@ class BC_EQ(equation.PDE):
         def item1_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -172,7 +174,8 @@ class BC_EQ(equation.PDE):
         def item2_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -194,7 +197,8 @@ class BC_EQ(equation.PDE):
         def item3_compute_func(self, out):
             relu = max(
                 0.0,
-                (self.solver.global_step // self.solver.iters_per_epoch + 1) / self.solver.epochs
+                (self.solver.global_step // self.solver.iters_per_epoch + 1)
+                / self.solver.epochs
                 - 0.05,
             )
             x, y = out["x"], out["y"]
@@ -242,36 +246,34 @@ def generate_bc_left_points(
 
 
 def train(cfg: DictConfig):
-    
+
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
-    
-    # set output directory
-    OUTPUT_DIR = (
-        f"./output_shock_wave_{cfg.MA:.3f}" if not cfg.output_dir else cfg.output_dir
-    )
+
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"Euler2D": Euler2D(), "BC_EQ": BC_EQ()}
 
-
     # Latin HyperCube Sampling
     # generate PDE data
     xlimits = np.array([[0.0, 0.0, 0.0], [cfg.Lt, cfg.Lx, cfg.Ly]]).T
-    name_value = cfg.MODEL.model.input_keys
+    name_value = cfg.MODEL.input_keys
     doe_lhs = lhs.LHS(cfg.N_INTERIOR, xlimits)
     x_int_train = doe_lhs.get_sample()
     x_int_train = x_int_train[
-        ~((x_int_train[:, 1] - cfg.rx) ** 2 + (x_int_train[:, 2] - cfg.ry) ** 2 < cfg.rd**2)
+        ~(
+            (x_int_train[:, 1] - cfg.rx) ** 2 + (x_int_train[:, 2] - cfg.ry) ** 2
+            < cfg.rd**2
+        )
     ]
     x_int_train_dict = misc.convert_to_dict(x_int_train, name_value)
 
-    y_int_train = np.zeros([len(x_int_train), len(cfg.MODEL.model.output_keys)], dtype)
+    y_int_train = np.zeros([len(x_int_train), len(cfg.MODEL.output_keys)], dtype)
     y_int_train_dict = misc.convert_to_dict(
         y_int_train, tuple(equation["Euler2D"].equations.keys())
     )
@@ -316,7 +318,10 @@ def train(cfg: DictConfig):
     doe_lhs = lhs.LHS(cfg.N_BOUNDARY, xlimits)
     x_ic_train = doe_lhs.get_sample()
     x_ic_train = x_ic_train[
-        ~((x_ic_train[:, 1] - cfg.rx) ** 2 + (x_ic_train[:, 2] - cfg.ry) ** 2 < cfg.rd**2)
+        ~(
+            (x_ic_train[:, 1] - cfg.rx) ** 2 + (x_ic_train[:, 2] - cfg.ry) ** 2
+            < cfg.rd**2
+        )
     ]
     x_ic_train_dict = misc.convert_to_dict(x_ic_train, name_value)
     U1 = np.sqrt(cfg.GAMMA * cfg.P1 / cfg.RHO1) * cfg.MA
@@ -393,18 +398,18 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.LBFGS(cfg.TRAIN.lr_scheduler.learning_rate, 
-                                      max_iter=cfg.TRAIN.lr_scheduler.max_iter)(model)
+    optimizer = ppsci.optimizer.LBFGS(
+        cfg.TRAIN.learning_rate, max_iter=cfg.TRAIN.max_iter
+    )(model)
 
     # initialize solver
-    EPOCHS = 100 if not cfg.TRAIN.epochs else cfg.TRAIN.epochs
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         None,
-        EPOCHS,
+        cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
@@ -440,7 +445,9 @@ def train(cfg: DictConfig):
         output_dict["rho"],
     )
 
-    zero_mask = ((x_test[:, 1] - cfg.rx) ** 2 + (x_test[:, 2] - cfg.ry) ** 2) < cfg.rd**2
+    zero_mask = (
+        (x_test[:, 1] - cfg.rx) ** 2 + (x_test[:, 2] - cfg.ry) ** 2
+    ) < cfg.rd**2
     u[zero_mask] = 0
     v[zero_mask] = 0
     p[zero_mask] = 0
@@ -489,7 +496,7 @@ def train(cfg: DictConfig):
     axe.set_aspect(1)
     plt.colorbar()
 
-    plt.savefig(osp.join(OUTPUT_DIR, f"shock_wave(Ma_{cfg.MA:.3f}).png"))
+    plt.savefig(osp.join(cfg.output_dir, f"shock_wave(Ma_{cfg.MA:.3f}).png"))
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="shock_wave.yaml")
