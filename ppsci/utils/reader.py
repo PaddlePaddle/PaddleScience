@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import collections
 import csv
+import pickle
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -31,6 +32,7 @@ __all__ = [
     "load_npz_file",
     "load_vtk_file",
     "load_vtk_with_time_file",
+    "load_dat_file",
 ]
 
 
@@ -179,14 +181,18 @@ def load_vtk_file(
         i = 0
         for key in input_dict:
             if key == "t":
-                input_dict[key].append(np.full((n, 1), index * time_step, "float32"))
+                input_dict[key].append(
+                    np.full((n, 1), index * time_step, paddle.get_default_dtype())
+                )
             else:
                 input_dict[key].append(
-                    mesh.points[:, i].reshape(n, 1).astype("float32")
+                    mesh.points[:, i].reshape(n, 1).astype(paddle.get_default_dtype())
                 )
                 i += 1
         for i, key in enumerate(label_dict):
-            label_dict[key].append(np.array(mesh.point_data[key], "float32"))
+            label_dict[key].append(
+                np.array(mesh.point_data[key], paddle.get_default_dtype())
+            )
     for key in input_dict:
         input_dict[key] = np.concatenate(input_dict[key])
     for key in label_dict:
@@ -212,3 +218,42 @@ def load_vtk_with_time_file(file: str) -> Dict[str, np.ndarray]:
     z = mesh.points[:, 2].reshape(n, 1)
     input_dict = {"t": t, "x": x, "y": y, "z": z}
     return input_dict
+
+
+def load_dat_file(
+    file_path: str,
+    keys: Tuple[str, ...] = None,
+    alias_dict: Optional[Dict[str, str]] = None,
+) -> Dict[str, np.ndarray]:
+    """Load *.dat file and fetch data as given keys.
+
+    Args:
+        file_path (str): Dat file path.
+        keys (Tuple[str, ...]): Required fetching keys.
+        alias_dict (Optional[Dict[str, str]]): Alias for keys,
+            i.e. {original_key: original_key}. Defaults to None.
+
+    Returns:
+        Dict[str, np.ndarray]: Loaded data in dict.
+    """
+
+    if alias_dict is None:
+        alias_dict = {}
+
+    try:
+        # read all data from .dat file
+        raw_data = pickle.load(open(file_path, "rb"))
+    except FileNotFoundError as e:
+        raise e
+
+    # convert to numpy array
+    data_dict = {}
+    if keys is None:
+        keys = raw_data.keys()
+    for key in keys:
+        fetch_key = alias_dict[key] if key in alias_dict else key
+        if fetch_key not in raw_data:
+            raise KeyError(f"fetch_key({fetch_key}) do not exist in raw_data.")
+        data_dict[key] = np.asarray(raw_data[fetch_key], paddle.get_default_dtype())
+
+    return data_dict
