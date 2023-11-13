@@ -3,8 +3,15 @@
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
+
     ``` sh
     python ldc2d_steady_Re10.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/output_ldc2d_steady_Re10_pretrain.pdparams
     ```
 
 ## 1. 背景简介
