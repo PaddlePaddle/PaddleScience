@@ -102,7 +102,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
         self.label = (
             {key: paddle.to_tensor(value) for key, value in label.items()}
-            if weight is not None
+            if label is not None
             else {}
         )
         self.input_keys = tuple(input.keys())
