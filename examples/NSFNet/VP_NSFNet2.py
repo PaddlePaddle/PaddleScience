@@ -14,10 +14,12 @@ paddle.set_default_dtype("float32")
 def main(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
     # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     ITERS_PER_EPOCH = cfg.iters_per_epoch
+
     # set model
     input_key = ("x", "y", "t")
     output_key = ("u", "v", "p")
