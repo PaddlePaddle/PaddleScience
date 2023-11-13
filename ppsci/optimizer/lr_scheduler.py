@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import abc
 import math
+from typing import List
 from typing import Tuple
 from typing import Union
 
@@ -732,3 +733,43 @@ class OneCycleLR(LRBase):
 
         setattr(learning_rate, "by_epoch", self.by_epoch)
         return learning_rate
+
+
+class SchedulerList:
+    """SchedulerList which wrap more than one scheduler.
+    Args:
+        scheduler_list (Tuple[lr.LRScheduler, ...]): Schedulers listed in a tuple.
+        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
+    Examples:
+        >>> import ppsci
+        >>> sch1 = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
+        >>> sch2 = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)()
+        >>> sch = ppsci.optimizer.lr_scheduler.SchedulerList((sch1, sch2))
+    """
+
+    def __init__(
+        self, scheduler_list: Tuple[lr.LRScheduler, ...], by_epoch: bool = False
+    ):
+        super().__init__()
+        self._sch_list = scheduler_list
+        self.by_epoch = by_epoch
+
+    def step(self):
+        for sch in self._sch_list:
+            sch.step()
+
+    def get_lr(self) -> float:
+        """Return learning rate of first scheduler"""
+        return self._sch_list[0].get_lr()
+
+    def _state_keys(self) -> List[str]:
+        return ["last_epoch", "last_lr"]
+
+    def __len__(self) -> int:
+        return len(self._sch_list)
+
+    def __getitem__(self, idx):
+        return self._sch_list[idx]
+
+    def __setitem__(self, idx, sch):
+        raise NotImplementedError("Can not modify any item in SchedulerList.")
