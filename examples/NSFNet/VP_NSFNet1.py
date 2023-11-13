@@ -191,7 +191,7 @@ def main(cfg: DictConfig):
     # plot the loss
     solver.plot_loss_history()
 
-    # set optimizer
+    # set LBFGS optimizer
     EPOCHS = 5000
     optimizer = ppsci.optimizer.LBFGS(
         max_iter=50000, tolerance_change=np.finfo(float).eps, history_size=50

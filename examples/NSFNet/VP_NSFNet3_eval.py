@@ -133,6 +133,7 @@ def main(cfg: DictConfig):
     # wrap validator
     validator = {residual_validator.name: residual_validator}
 
+    # load solver
     solver = ppsci.solver.Solver(
         model,
         equation=equation,

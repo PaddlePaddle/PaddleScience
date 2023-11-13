@@ -87,7 +87,7 @@ def main(cfg: DictConfig):
     N0_TRAIN = cfg.n0_train
     ALPHA = cfg.alpha
     BETA = cfg.beta
-
+    # generate data
     x1 = np.linspace(-1, 1, 31)
     y1 = np.linspace(-1, 1, 31)
     z1 = np.linspace(-1, 1, 31)
