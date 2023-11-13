@@ -27,8 +27,6 @@ from ppsci.utils import logger
 import hydra
 from omegaconf import DictConfig
 
-import numpy
-
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet1.yaml")
 def main(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
@@ -51,7 +49,7 @@ def main(cfg: DictConfig):
     ## set the number of boundary samples
     Nb_TRAIN = cfg.nb_train
 
-    # load data
+    # generate data
 
     # set the Reynolds number and the corresponding lambda which is the parameter in the exact solution.
     Re = cfg.re
@@ -76,7 +74,7 @@ def main(cfg: DictConfig):
     x_train = ((np.random.rand(N_TRAIN, 1) - 1 / 3) * 3 / 2)
     y_train = ((np.random.rand(N_TRAIN, 1) - 1 / 4) * 2)
 
-    # load test Data
+    # generate test data
     np.random.seed(SEED)
     x_star = ((np.random.rand(1000, 1) - 1 / 3) * 3 / 2).astype('float32')
     y_star = ((np.random.rand(1000, 1) - 1 / 4) * 2).astype('float32')
@@ -116,7 +114,7 @@ def main(cfg: DictConfig):
 
     geom = ppsci.geometry.PointCloud({"x": x_train, "y": y_train}, ("x", "y"))
 
-    ## supervised constraint s.t ||u-u_0||
+    # supervised constraint s.t ||u-u_0||
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
         ppsci.loss.MSELoss("mean"),
