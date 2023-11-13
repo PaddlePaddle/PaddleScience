@@ -11,7 +11,7 @@
 === "模型评估命令"
 
     ``` sh
-    python ldc2d_steady_Re10.py mode=EVAL EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/output_ldc2d_steady_Re10_pretrain.pdparams
+    python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/output_ldc2d_steady_Re10_pretrain.pdparams
     ```
 
 ## 1. 背景简介
