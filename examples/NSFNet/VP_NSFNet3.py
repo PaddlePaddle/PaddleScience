@@ -47,8 +47,8 @@ def main(cfg: DictConfig):
     N0_TRAIN = cfg.n0_train
 
     ALPHA = cfg.alpha
-    BETA = cfg.beta
 
+    BETA = cfg.beta
 
     x1 = np.linspace(-1, 1, 31)
     y1 = np.linspace(-1, 1, 31)
@@ -168,7 +168,7 @@ def main(cfg: DictConfig):
             "shuffle": False,
         },
     }
-    geom = ppsci.geometry.PointCloud({"x": x_train,"y":y_train,"z":z_train,"t":t_train}, ("x","y","z","t"))
+    geom = ppsci.geometry.PointCloud({"x": x_train, "y": y_train, "z": z_train, "t": t_train}, ("x", "y", "z", "t"))
 
     ## supervised constraint s.t ||u-u_b||
     sup_constraint_b = ppsci.constraint.SupervisedConstraint(
@@ -217,6 +217,7 @@ def main(cfg: DictConfig):
 
     # set optimizer
     epoch_list = [5000, 5000, 50000, 50000]
+    
     new_epoch_list = []
     for i, _ in enumerate(epoch_list):
         new_epoch_list.append(sum(epoch_list[:i + 1]))
