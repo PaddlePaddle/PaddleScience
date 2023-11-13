@@ -27,7 +27,7 @@ from ppsci.utils import logger
 import hydra
 from omegaconf import DictConfig
 
-
+import numpy
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet1.yaml")
 def main(cfg: DictConfig):
