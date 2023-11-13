@@ -53,7 +53,7 @@ examples/epnn/functions.py:370:390
 --8<--
 ```
 
-Epnn 参数 input_keys 是输入字段名，output_keys 是输出字段名，node_sizes 是节点大小列表，activations 是激活函数字符串列表，drop_p 是节点丢弃概率。
+EPNN 参数 `input_keys` 是输入字段名，`output_keys` 是输出字段名，`node_sizes` 是节点大小列表，`activations` 是激活函数字符串列表，`drop_p` 是节点丢弃概率。
 
 ### 3.2 数据生成
 
@@ -120,7 +120,7 @@ examples/epnn/conf/epnn.yaml:40:41
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 ExponentialDecay 学习率调整策略。
 
-由于使用多个模型，需要设置多个优化器，对 Epnn 网络部分，需要设置 `Adam` 优化器。
+由于使用多个模型，需要设置多个优化器，对 EPNN 网络部分，需要设置 `Adam` 优化器。
 
 ``` py linenums="395"
 --8<--
