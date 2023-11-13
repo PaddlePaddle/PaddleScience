@@ -4,8 +4,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
@@ -16,8 +16,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
