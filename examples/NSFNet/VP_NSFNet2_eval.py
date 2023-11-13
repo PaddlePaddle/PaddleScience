@@ -1,14 +1,16 @@
-import ppsci
+import hydra
+import matplotlib.pyplot as plt
+import numpy as np
 import paddle
+import scipy
+from omegaconf import DictConfig
+from scipy.interpolate import griddata
+
+import ppsci
+from ppsci.utils import logger
 
 paddle.set_default_dtype("float32")
-import numpy as np
-from ppsci.utils import logger
-import scipy
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-import pandas as pd
-import matplotlib.ticker as mtick
+
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet2.yaml")
 def main(cfg: DictConfig):
@@ -17,30 +19,35 @@ def main(cfg: DictConfig):
     # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    ITERS_PER_EPOCH = cfg.iters_per_epoch
+
     # set model
     input_key = ("x", "y", "t")
     output_key = ("u", "v", "p")
     model = ppsci.arch.MLP(
-        input_key, output_key, cfg.model.ihlayers, cfg.model.ineurons, "tanh", input_dim=len(input_key),
-        output_dim=len(output_key), Xavier=True
+        input_key,
+        output_key,
+        cfg.model.ihlayers,
+        cfg.model.ineurons,
+        "tanh",
+        input_dim=len(input_key),
+        output_dim=len(output_key),
+        Xavier=True,
     )
 
-    ## set the number of residual samples
+    # set the number of residual samples
     N_TRAIN = cfg.ntrain
 
     data = scipy.io.loadmat(cfg.data_dir)
 
-    U_star = data['U_star'].astype('float32')  # N x 2 x T
-    P_star = data['p_star'].astype('float32')  # N x T
-    t_star = data['t'].astype('float32')  # T x 1
-    X_star = data['X_star'].astype('float32')  # N x 2
+    U_star = data["U_star"].astype("float32")  # N x 2 x T
+    P_star = data["p_star"].astype("float32")  # N x T
+    t_star = data["t"].astype("float32")  # T x 1
+    X_star = data["X_star"].astype("float32")  # N x 2
 
     N = X_star.shape[0]
     T = t_star.shape[0]
 
-    # Rearrange Data
-
+    # rearrange data
     XX = np.tile(X_star[:, 0:1], (1, T))  # N x T
     YY = np.tile(X_star[:, 1:2], (1, T))  # N x T
     TT = np.tile(t_star, (1, N)).T  # N x T
@@ -56,8 +63,6 @@ def main(cfg: DictConfig):
     u = UU.flatten()[:, None]  # NT x 1
     v = VV.flatten()[:, None]  # NT x 1
     p = PP.flatten()[:, None]  # NT x 1
-
-    # need add unsupervised part
 
     data1 = np.concatenate([x, y, t, u, v, p], 1)
     data2 = data1[:, :][data1[:, 2] <= 7]
@@ -85,8 +90,9 @@ def main(cfg: DictConfig):
         "dataset": {
             "name": "NamedArrayDataset",
             "input": {"x": x_star, "y": y_star, "t": t_star},
-            "label": {"u": u_star, "v": v_star, "p": p_star}},
-        'total_size': u_star.shape[0],
+            "label": {"u": u_star, "v": v_star, "p": p_star},
+        },
+        "total_size": u_star.shape[0],
         "batch_size": u_star.shape[0],
         "sampler": {
             "name": "BatchSampler",
@@ -95,7 +101,9 @@ def main(cfg: DictConfig):
         },
     }
 
-    geom = ppsci.geometry.PointCloud({"x": x_train, "y": y_train, "t": t_train}, ("x", "y", "t"))
+    geom = ppsci.geometry.PointCloud(
+        {"x": x_train, "y": y_train, "t": t_train}, ("x", "y", "t")
+    )
 
     # set equation constarint s.t. ||F(u)||
     equation = {
@@ -137,9 +145,9 @@ def main(cfg: DictConfig):
         p_star = paddle.to_tensor(P_star[:, snap])
 
         solution = solver.predict({"x": x_star, "y": y_star, "t": t_star})
-        u_pred = solution['u']
-        v_pred = solution['v']
-        p_pred = solution['p']
+        u_pred = solution["u"]
+        v_pred = solution["v"]
+        p_pred = solution["p"]
         p_pred = p_pred - p_pred.mean() + p_star.mean()
         error_u = np.linalg.norm(u_star - u_pred, 2) / np.linalg.norm(u_star, 2)
         error_v = np.linalg.norm(v_star - v_pred, 2) / np.linalg.norm(v_star, 2)
@@ -153,16 +161,16 @@ def main(cfg: DictConfig):
     # plot
     ## vorticity
     grid_x, grid_y = np.mgrid[0.0:8.0:1000j, -2.0:2.0:1000j]
-    x_star = paddle.to_tensor(grid_x.reshape(-1, 1).astype('float32'))
-    y_star = paddle.to_tensor(grid_y.reshape(-1, 1).astype('float32'))
-    t_star = paddle.to_tensor((4.0) * np.ones(x_star.shape).astype('float32'))
+    x_star = paddle.to_tensor(grid_x.reshape(-1, 1).astype("float32"))
+    y_star = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
+    t_star = paddle.to_tensor((4.0) * np.ones(x_star.shape).astype("float32"))
     x_star.stop_gradient = False
     y_star.stop_gradient = False
     t_star.stop_gradient = False
     sol = model.forward({"x": x_star, "y": y_star, "t": t_star})
-    u_y = paddle.grad(sol['u'], y_star)
-    v_x = paddle.grad(sol['v'], x_star)
-    w = (np.array(u_y) - np.array(v_x))
+    u_y = paddle.grad(sol["u"], y_star)
+    v_x = paddle.grad(sol["v"], x_star)
+    w = np.array(u_y) - np.array(v_x)
     w = w.reshape(1000, 1000)
     plt.contour(grid_x, grid_y, w, levels=np.arange(-4, 5, 0.25))
 
@@ -188,21 +196,22 @@ def main(cfg: DictConfig):
         v_star = U_star[:, 1, snap]
 
         solution = solver.predict({"x": x_star, "y": y_star, "t": t_star})
-        u_pred = solution['u']
-        v_pred = solution['v']
-        u_star_ = griddata(points, u_star, (grid_x, grid_y), method='cubic')
-        u_pred_ = griddata(points, u_pred, (grid_x, grid_y), method='cubic')
-        v_star_ = griddata(points, v_star, (grid_x, grid_y), method='cubic')
-        v_pred_ = griddata(points, v_pred, (grid_x, grid_y), method='cubic')
+        u_pred = solution["u"]
+        v_pred = solution["v"]
+        u_star_ = griddata(points, u_star, (grid_x, grid_y), method="cubic")
+        u_pred_ = griddata(points, u_pred, (grid_x, grid_y), method="cubic")
+        v_star_ = griddata(points, v_star, (grid_x, grid_y), method="cubic")
+        v_pred_ = griddata(points, v_pred, (grid_x, grid_y), method="cubic")
         fig, ax = plt.subplots(2, 2, figsize=(12, 8))
         ax[0, 0].contourf(grid_x, grid_y, u_star_[:, :, 0])
         ax[0, 1].contourf(grid_x, grid_y, u_pred_[:, :, 0])
         ax[1, 0].contourf(grid_x, grid_y, v_star_[:, :, 0])
         ax[1, 1].contourf(grid_x, grid_y, v_pred_[:, :, 0])
-        ax[0, 0].set_title('u_exact')
-        ax[0, 1].set_title('u_pred')
-        ax[1, 0].set_title('v_exact')
-        ax[1, 1].set_title('v_pred')
+        ax[0, 0].set_title("u_exact")
+        ax[0, 1].set_title("u_pred")
+        ax[1, 0].set_title("v_exact")
+        ax[1, 1].set_title("v_pred")
+
 
 if __name__ == "__main__":
     main()
