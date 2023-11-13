@@ -4,11 +4,11 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
     python epnn.py
     ```
 
@@ -16,11 +16,11 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -O datasets/dstate-16-plas.dat
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -O datasets/dstress-16-plas.dat
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
     python epnn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/epnn/epnn_pretrained.pdparams
     ```
 
