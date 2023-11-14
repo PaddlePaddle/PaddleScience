@@ -18,6 +18,7 @@ class NowcastNet(base.Arch):
         image_width (int, optional): Image width. Defaults to 512.
         image_ch (int, optional): Image channel. Defaults to 2.
         ngf (int, optional): Noise Projector input length. Defaults to 32.
+
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.NowcastNet(("input", ), ("output", ))

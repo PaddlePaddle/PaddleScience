@@ -8,10 +8,10 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/nowcastnet.zip
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/nowcastnet.zip --output nowcastnet.zip
-    unzip nowcastnet.zip -d datasets/
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar --output mrms.tar
+    tar -xvf mrms.tar -C datasets/
     python nowcastnet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nowcastnet/nowcastnet_pretrained.pdparams
     ```
 
@@ -27,7 +27,7 @@
 模型的总体结构如图所示：
 
 <figure markdown>
-  ![nowcastnet-arch](nowcastnet/nowcastnet.png){ loading=lazy style="margin:0 auto"}
+  ![nowcastnet-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/nowcastnet/nowcastnet.png){ loading=lazy style="margin:0 auto"}
   <figcaption>NowcastNet 网络模型</figcaption>
 </figure>
 
@@ -67,6 +67,7 @@ examples/nowcastnet/nowcastnet.py:57:61
 --8<--
 examples/nowcastnet/nowcastnet.py:69:82
 --8<--
+```
 
 ## 5. 完整代码
 
@@ -81,11 +82,11 @@ examples/nowcastnet/nowcastnet.py
 下图展示了模型的预测结果和真值结果。
 
 <figure markdown>
-  ![result](nowcastnet/pd.gif){ loading=lazy style="margin:0 auto;"}
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/nowcastnet/pd.gif){ loading=lazy style="margin:0 auto;"}
   <figcaption>模型预测结果</figcaption>
 </figure>
 
 <figure markdown>
-  ![result](nowcastnet/gt.gif){ loading=lazy style="margin:0 auto;"}
+  ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/nowcastnet/gt.gif){ loading=lazy style="margin:0 auto;"}
   <figcaption>模型真值结果</figcaption>
 </figure>

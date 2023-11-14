@@ -38,17 +38,12 @@ class VisualizerRadar(base.Visualizer):
 
     Examples:
         >>> import ppsci
-        >>> vis_points = {
-        ...     "x": np.random.randn(128, 1),
-        ...     "y": np.random.randn(128, 1),
-        ...     "u": np.random.randn(128, 1),
-        ...     "v": np.random.randn(128, 1),
-        ... }
-        >>> visualizer_u_v =  ppsci.visualize.VisualizerRadar(
-        ...     vis_points,
-        ...     {"u": lambda d: d["u"], "v": lambda d: d["v"]},
+        >>> frames_tensor = paddle.randn([1, 29, 512, 512, 2])
+        >>> visualizer =  ppsci.visualize.VisualizerRadar(
+        ...     {"input": frames_tensor},
+        ...     {"output": lambda out: out["output"]},
         ...     num_timestamps=1,
-        ...     prefix="result_u_v",
+        ...     prefix="v_nowcastnet",
         ... )
     """
 
