@@ -19,5 +19,6 @@
         - AFNONet
         - PrecipNet
         - UNetEx
+        - NowcastNet
       show_root_heading: false
       heading_level: 3
