@@ -179,7 +179,7 @@ PaddleScience/examples/bracket/outputs_bracket/
     # 用该模型及其对应的预训练模型路径(或下载地址 url)两个参数初始化 solver
     solver = ppsci.solver.Solver(
         model=model,
-        pretrained_model_path="/path/to/pretrain.pdparams",
+        pretrained_model_path="/path/to/pretrained.pdparams",
     )
     # 在 Solver(...) 中会自动从给定的 pretrained_model_path 加载(下载)参数并赋值给 model 的对应参数
     ```
