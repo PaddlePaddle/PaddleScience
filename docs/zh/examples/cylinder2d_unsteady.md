@@ -14,6 +14,22 @@
     python cylinder2d_unsteady_Re100.py
     ```
 
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar --output cylinder2d_unsteady_Re100_dataset.tar
+    # unzip it
+    tar -xvf cylinder2d_unsteady_Re100_dataset.tar
+    python cylinder2d_unsteady_Re100.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrain.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [cylinder2d_unsteady_Re100_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrain.pdparams) | loss(Residual): 0.00398<br>MSE.continuity(Residual): 0.00126<br>MSE.momentum_x(Residual): 0.00151<br>MSE.momentum_y(Residual): 0.00120 |
+
 ## 1. 背景简介
 
 圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
