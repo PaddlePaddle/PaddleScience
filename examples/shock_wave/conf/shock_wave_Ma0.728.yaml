@@ -63,7 +63,6 @@ TRAIN:
   eval_freq: 20
   learning_rate: 1e-1
   max_iter: 100
-
   pretrained_model_path: null
   checkpoint_path: null
 

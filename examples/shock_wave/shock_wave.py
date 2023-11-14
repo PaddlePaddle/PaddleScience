@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import partial
 from os import path as osp
 
 import hydra
@@ -36,7 +35,7 @@ class Euler2D(equation.PDE):
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
-        def continuity_compute_func(self, out):
+        def continuity_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -59,9 +58,9 @@ class Euler2D(equation.PDE):
             continuity = (rho__t + rho_u__x + rho_v__y) / lam
             return continuity
 
-        self.add_equation("continuity", partial(continuity_compute_func, self))
+        self.add_equation("continuity", continuity_compute_func)
 
-        def x_momentum_compute_func(self, out):
+        def x_momentum_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -86,9 +85,9 @@ class Euler2D(equation.PDE):
             x_momentum = (rho_u__t + u1__x + u2__y) / lam
             return x_momentum
 
-        self.add_equation("x_momentum", partial(x_momentum_compute_func, self))
+        self.add_equation("x_momentum", x_momentum_compute_func)
 
-        def y_momentum_compute_func(self, out):
+        def y_momentum_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -113,9 +112,9 @@ class Euler2D(equation.PDE):
             y_momentum = (rho_v__t + u2__x + u3__y) / lam
             return y_momentum
 
-        self.add_equation("y_momentum", partial(y_momentum_compute_func, self))
+        self.add_equation("y_momentum", y_momentum_compute_func)
 
-        def energy_compute_func(self, out):
+        def energy_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -140,7 +139,7 @@ class Euler2D(equation.PDE):
             energy = (e__t + e1__x + e2__y) / lam
             return energy
 
-        self.add_equation("energy", partial(energy_compute_func, self))
+        self.add_equation("energy", energy_compute_func)
 
 
 class BC_EQ(equation.PDE):
@@ -150,7 +149,7 @@ class BC_EQ(equation.PDE):
         # compute loss factor `relu` dynamically.
         self.solver: ppsci.solver.Solver = None
 
-        def item1_compute_func(self, out):
+        def item1_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -169,9 +168,9 @@ class BC_EQ(equation.PDE):
 
             return item1
 
-        self.add_equation("item1", partial(item1_compute_func, self))
+        self.add_equation("item1", item1_compute_func)
 
-        def item2_compute_func(self, out):
+        def item2_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -192,9 +191,9 @@ class BC_EQ(equation.PDE):
 
             return item2
 
-        self.add_equation("item2", partial(item2_compute_func, self))
+        self.add_equation("item2", item2_compute_func)
 
-        def item3_compute_func(self, out):
+        def item3_compute_func(out):
             relu = max(
                 0.0,
                 (self.solver.global_step // self.solver.iters_per_epoch + 1)
@@ -215,7 +214,7 @@ class BC_EQ(equation.PDE):
 
             return item3
 
-        self.add_equation("item3", partial(item3_compute_func, self))
+        self.add_equation("item3", item3_compute_func)
 
 
 dtype = paddle.get_default_dtype()
@@ -262,7 +261,6 @@ def train(cfg: DictConfig):
     # Latin HyperCube Sampling
     # generate PDE data
     xlimits = np.array([[0.0, 0.0, 0.0], [cfg.Lt, cfg.Lx, cfg.Ly]]).T
-    name_value = cfg.MODEL.input_keys
     doe_lhs = lhs.LHS(cfg.N_INTERIOR, xlimits)
     x_int_train = doe_lhs.get_sample()
     x_int_train = x_int_train[
@@ -271,7 +269,7 @@ def train(cfg: DictConfig):
             < cfg.rd**2
         )
     ]
-    x_int_train_dict = misc.convert_to_dict(x_int_train, name_value)
+    x_int_train_dict = misc.convert_to_dict(x_int_train, cfg.MODEL.input_keys)
 
     y_int_train = np.zeros([len(x_int_train), len(cfg.MODEL.output_keys)], dtype)
     y_int_train_dict = misc.convert_to_dict(
@@ -282,7 +280,7 @@ def train(cfg: DictConfig):
     xlimits = np.array([[0.0, 0.0, 0.0], [cfg.Lt, 0.0, cfg.Ly]]).T
     doe_lhs = lhs.LHS(cfg.N_BOUNDARY, xlimits)
     x_bcL_train = doe_lhs.get_sample()
-    x_bcL_train_dict = misc.convert_to_dict(x_bcL_train, name_value)
+    x_bcL_train_dict = misc.convert_to_dict(x_bcL_train, cfg.MODEL.input_keys)
 
     u_bcL_train, v_bcL_train, p_bcL_train, rho_bcL_train = generate_bc_left_points(
         x_bcL_train, cfg.MA, cfg.RHO1, cfg.P1, cfg.V1, cfg.GAMMA
@@ -306,7 +304,7 @@ def train(cfg: DictConfig):
     )
     x_bcI_train_dict = misc.convert_to_dict(
         np.concatenate([x_bcI_train, sin_bcI_train, cos_bcI_train], axis=1),
-        name_value + ("sin", "cos"),
+        cfg.MODEL.input_keys + ("sin", "cos"),
     )
     y_bcI_train_dict = misc.convert_to_dict(
         np.zeros((len(x_bcI_train), 3), dtype),
@@ -323,7 +321,7 @@ def train(cfg: DictConfig):
             < cfg.rd**2
         )
     ]
-    x_ic_train_dict = misc.convert_to_dict(x_ic_train, name_value)
+    x_ic_train_dict = misc.convert_to_dict(x_ic_train, cfg.MODEL.input_keys)
     U1 = np.sqrt(cfg.GAMMA * cfg.P1 / cfg.RHO1) * cfg.MA
     y_ic_train = np.concatenate(
         [
@@ -427,7 +425,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
@@ -437,22 +434,14 @@ def evaluate(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
-    # set equation
-    equation = {"Euler2D": Euler2D(), "BC_EQ": BC_EQ()}
-
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
         seed=cfg.seed,
-        equation=equation,
         eval_with_no_grad=True,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
-    # HACK: Given entire solver to euaqtion object for tracking run-time epoch
-    # to compute factor `relu` dynamically.
-    equation["Euler2D"].solver = solver
-    equation["BC_EQ"].solver = solver
 
     solver.eval()
 
@@ -463,10 +452,9 @@ def evaluate(cfg: DictConfig):
     _, x_grid, y_grid = np.meshgrid(t, x, y)
 
     x_test = misc.cartesian_product(t, x, y)
-    name_value = cfg.MODEL.input_keys
     x_test_dict = misc.convert_to_dict(
         x_test,
-        name_value,
+        cfg.MODEL.input_keys,
     )
 
     output_dict = solver.predict(x_test_dict, return_numpy=True)
