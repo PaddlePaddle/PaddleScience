@@ -23,12 +23,12 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_dataset.tar --output cylinder2d_unsteady_Re100_dataset.tar
     # unzip it
     tar -xvf cylinder2d_unsteady_Re100_dataset.tar
-    python cylinder2d_unsteady_Re100.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrain.pdparams
+    python cylinder2d_unsteady_Re100.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrained.pdparams
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [cylinder2d_unsteady_Re100_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrain.pdparams) | loss(Residual): 0.00398<br>MSE.continuity(Residual): 0.00126<br>MSE.momentum_x(Residual): 0.00151<br>MSE.momentum_y(Residual): 0.00120 |
+| [cylinder2d_unsteady_Re100_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder2d_unsteady_Re100/cylinder2d_unsteady_Re100_pretrained.pdparams) | loss(Residual): 0.00398<br>MSE.continuity(Residual): 0.00126<br>MSE.momentum_x(Residual): 0.00151<br>MSE.momentum_y(Residual): 0.00120 |
 
 ## 1. 背景简介
 
