@@ -304,7 +304,7 @@ def train(cfg: DictConfig):
     )
     x_bcI_train_dict = misc.convert_to_dict(
         np.concatenate([x_bcI_train, sin_bcI_train, cos_bcI_train], axis=1),
-        cfg.MODEL.input_keys + ("sin", "cos"),
+        cfg.MODEL.input_keys + ["sin", "cos"],
     )
     y_bcI_train_dict = misc.convert_to_dict(
         np.zeros((len(x_bcI_train), 3), dtype),
@@ -413,7 +413,9 @@ def train(cfg: DictConfig):
         log_freq=cfg.log_freq,
         seed=cfg.seed,
         equation=equation,
-        eval_with_no_grad=True,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # HACK: Given entire solver to euaqtion object for tracking run-time epoch
     # to compute factor `relu` dynamically.

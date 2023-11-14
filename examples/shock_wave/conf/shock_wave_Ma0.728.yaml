@@ -21,7 +21,7 @@ hydra:
 
 # general settings
 mode: train # running mode: train/eval
-seed: 2023
+seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
