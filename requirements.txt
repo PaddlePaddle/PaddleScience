@@ -17,3 +17,4 @@ typing-extensions
 seaborn
 colorlog
 hydra-core
+opencv-python
