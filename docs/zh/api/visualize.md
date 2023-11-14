@@ -12,6 +12,7 @@
         - Visualizer2DPlot
         - Visualizer3D
         - VisualizerWeather
+        - VisualizerRadar
         - save_vtu_from_dict
         - save_vtu_to_mesh
         - save_plot_from_1d_dict

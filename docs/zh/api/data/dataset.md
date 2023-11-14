@@ -20,5 +20,6 @@
         - VtuDataset
         - MeshAirfoilDataset
         - MeshCylinderDataset
+        - RadarDataset
         - build_dataset
       show_root_heading: false
