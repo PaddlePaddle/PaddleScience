@@ -1,0 +1,57 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_nowcastnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: eval # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+NORMAL_DATASET_PATH: datasets/mrms/figure
+LARGE_DATASET_PATH: datasets/mrms/large_figure
+
+# set working condition
+CASE_TYPE: normal  # normal/large
+NUM_SAVE_SAMPLES: 10
+CPU_WORKER: 0
+
+# model settings
+MODEL:
+  normal:
+    input_keys: ["input"]
+    output_keys: ["output"]
+    input_length: 9
+    total_length: 29
+    image_width: 512
+    image_height: 512
+    image_ch: 2
+    ngf: 32
+  large:
+    input_keys: ["input"]
+    output_keys: ["output"]
+    input_length: 9
+    total_length: 29
+    image_width: 1024
+    image_height: 1024
+    image_ch: 2
+    ngf: 32
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: checkpoints/paddle_mrms_model

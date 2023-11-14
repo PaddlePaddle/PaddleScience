@@ -69,6 +69,7 @@ nav:
         - EPNN: zh/examples/epnn.md
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
+        - NowcastNet: zh/examples/nowcastnet.md
   - API文档:
     - " ":
       - ppsci.arch: zh/api/arch.md
