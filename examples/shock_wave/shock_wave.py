@@ -441,7 +441,7 @@ def evaluate(cfg: DictConfig):
         model,
         output_dir=cfg.output_dir,
         seed=cfg.seed,
-        eval_with_no_grad=True,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
