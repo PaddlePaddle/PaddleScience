@@ -6,9 +6,14 @@ data_dir: ./cylinder_nektar_wake.mat
 
 iters_per_epoch: 1
 
-model:
-  ihlayers: 10
-  ineurons: 100
+MODEL:
+  input_keys: ["x", "y","t"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 10
+  hidden_size: 100
+  activation: "tanh"
+
+mode: train
 
 ntrain: 140000
 

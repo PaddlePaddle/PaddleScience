@@ -4,9 +4,14 @@ output_dir: ./output
 
 iters_per_epoch: 1
 
-model:
-  ihlayers: 10
-  ineurons: 100
+MODEL:
+  input_keys: ["x", "y","z","t"]
+  output_keys: ["u", "v", "w","p"]
+  num_layers: 10
+  hidden_size: 100
+  activation: "tanh"
+
+mode: train
 
 ntrain: 70000
 

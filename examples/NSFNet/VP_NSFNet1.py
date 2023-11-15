@@ -6,42 +6,24 @@ import ppsci
 from ppsci.utils import logger
 
 
+def analytic_solution_generate(x, y, lam):
+    u = 1 - np.exp(lam * x) * np.cos(2 * np.pi * y)
+    v = lam / (2 * np.pi) * np.exp(lam * x) * np.sin(2 * np.pi * y)
+    p = 0.5 * (1 - np.exp(2 * lam * x))
+    return u, v, p
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet1.yaml")
 def main(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
-    # set random seed for reproducibility
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
 
-    ITERS_PER_EPOCH = cfg.iters_per_epoch
-    # set model
-    input_key = ("x", "y")
-    output_key = ("u", "v", "p")
-    model = ppsci.arch.MLP(
-        input_key,
-        output_key,
-        cfg.model.ihlayers,
-        cfg.model.ineurons,
-        "tanh",
-        input_dim=len(input_key),
-        output_dim=len(output_key),
-        Xavier=True,
-    )
-
-    # set the number of residual samples
-    N_TRAIN = cfg.ntrain
-
-    # set the number of boundary samples
-    Nb_TRAIN = cfg.nb_train
-
-    # generate data
-
-    # set the Reynolds number and the corresponding lambda which is the parameter in the exact solution.
-    Re = cfg.re
-    lam = 0.5 * Re - np.sqrt(0.25 * (Re**2) + 4 * (np.pi**2))
-
+def generate_data(N_TRAIN, NB_TRAIN, lam, seed):
     x = np.linspace(-0.5, 1.0, 101)
     y = np.linspace(-0.5, 1.5, 101)
 
@@ -55,20 +37,70 @@ def main(cfg: DictConfig):
 
     xb_train = x_train1.reshape(x_train1.shape[0], 1).astype("float32")
     yb_train = y_train1.reshape(y_train1.shape[0], 1).astype("float32")
-    ub_train = 1 - np.exp(lam * xb_train) * np.cos(2 * np.pi * yb_train)
-    vb_train = lam / (2 * np.pi) * np.exp(lam * xb_train) * np.sin(2 * np.pi * yb_train)
+    ub_train, vb_train, _ = analytic_solution_generate(xb_train, yb_train, lam)
 
     x_train = (np.random.rand(N_TRAIN, 1) - 1 / 3) * 3 / 2
     y_train = (np.random.rand(N_TRAIN, 1) - 1 / 4) * 2
 
     # generate test data
-    np.random.seed(SEED)
+    np.random.seed(seed)
     x_star = ((np.random.rand(1000, 1) - 1 / 3) * 3 / 2).astype("float32")
     y_star = ((np.random.rand(1000, 1) - 1 / 4) * 2).astype("float32")
 
-    u_star = 1 - np.exp(lam * x_star) * np.cos(2 * np.pi * y_star)
-    v_star = (lam / (2 * np.pi)) * np.exp(lam * x_star) * np.sin(2 * np.pi * y_star)
-    p_star = 0.5 * (1 - np.exp(2 * lam * x_star))
+    u_star, v_star, p_star = analytic_solution_generate(x_star, y_star, lam)
+
+    return (
+        x_train,
+        y_train,
+        xb_train,
+        yb_train,
+        ub_train,
+        vb_train,
+        x_star,
+        y_star,
+        u_star,
+        v_star,
+        p_star,
+    )
+
+
+def train(cfg: DictConfig):
+    OUTPUT_DIR = cfg.output_dir
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
+    # set random seed for reproducibility
+    SEED = cfg.seed
+    ppsci.utils.misc.set_random_seed(SEED)
+
+    ITERS_PER_EPOCH = cfg.iters_per_epoch
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set the number of residual samples
+    N_TRAIN = cfg.ntrain
+
+    # set the number of boundary samples
+    NB_TRAIN = cfg.nb_train
+
+    # generate data
+
+    # set the Reynolds number and the corresponding lambda which is the parameter in the exact solution.
+    Re = cfg.re
+    lam = 0.5 * Re - np.sqrt(0.25 * (Re**2) + 4 * (np.pi**2))
+
+    (
+        x_train,
+        y_train,
+        xb_train,
+        yb_train,
+        ub_train,
+        vb_train,
+        x_star,
+        y_star,
+        u_star,
+        v_star,
+        p_star,
+    ) = generate_data(N_TRAIN, NB_TRAIN, lam, SEED)
 
     train_dataloader_cfg = {
         "dataset": {
@@ -76,7 +108,7 @@ def main(cfg: DictConfig):
             "input": {"x": xb_train, "y": yb_train},
             "label": {"u": ub_train, "v": vb_train},
         },
-        "batch_size": Nb_TRAIN,
+        "batch_size": NB_TRAIN,
         "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
@@ -218,6 +250,93 @@ def main(cfg: DictConfig):
     solver.train()
 
     # evaluate after finished training
+    solver.eval()
+
+
+def evaluate(cfg: DictConfig):
+    OUTPUT_DIR = cfg.output_dir
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+
+    # set random seed for reproducibility
+    SEED = cfg.seed
+    ppsci.utils.misc.set_random_seed(SEED)
+
+    # set model
+    input_key = ("x", "y")
+    output_key = ("u", "v", "p")
+    model = ppsci.arch.MLP(
+        input_key,
+        output_key,
+        cfg.model.ihlayers,
+        cfg.model.ineurons,
+        "tanh",
+        input_dim=len(input_key),
+        output_dim=len(output_key),
+        Xavier=True,
+    )
+
+    # set the number of residual samples
+    N_TRAIN = cfg.ntrain
+
+    # set the Reynolds number and the corresponding lambda which is the parameter in the exact solution.
+    Re = cfg.re
+    lam = 0.5 * Re - np.sqrt(0.25 * (Re**2) + 4 * (np.pi**2))
+
+    x_train = (np.random.rand(N_TRAIN, 1) - 1 / 3) * 3 / 2
+    y_train = (np.random.rand(N_TRAIN, 1) - 1 / 4) * 2
+
+    # generate test data
+    np.random.seed(SEED)
+    x_star = ((np.random.rand(1000, 1) - 1 / 3) * 3 / 2).astype("float32")
+    y_star = ((np.random.rand(1000, 1) - 1 / 4) * 2).astype("float32")
+    u_star = 1 - np.exp(lam * x_star) * np.cos(2 * np.pi * y_star)
+    v_star = (lam / (2 * np.pi)) * np.exp(lam * x_star) * np.sin(2 * np.pi * y_star)
+    p_star = 0.5 * (1 - np.exp(2 * lam * x_star))
+
+    valida_dataloader_cfg = {
+        "dataset": {
+            "name": "NamedArrayDataset",
+            "input": {"x": x_star, "y": y_star},
+            "label": {"u": u_star, "v": v_star, "p": p_star},
+        },
+        "total_size": u_star.shape[0],
+        "batch_size": u_star.shape[0],
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+
+    geom = ppsci.geometry.PointCloud({"x": x_train, "y": y_train}, ("x", "y"))
+
+    # set equation constarint s.t. ||F(u)||
+    equation = {
+        "NavierStokes": ppsci.equation.NavierStokes(
+            nu=1.0 / Re, rho=1.0, dim=2, time=False
+        ),
+    }
+
+    residual_validator = ppsci.validate.SupervisedValidator(
+        valida_dataloader_cfg,
+        ppsci.loss.L2RelLoss(),
+        metric={"L2R": ppsci.metric.L2Rel()},
+        name="Residual",
+    )
+
+    # wrap validator
+    validator = {residual_validator.name: residual_validator}
+
+    # load solver
+    solver = ppsci.solver.Solver(
+        model,
+        equation=equation,
+        geom=geom,
+        validator=validator,
+        pretrained_model_path=cfg.pretrained_model_path,  ### the path of the model
+    )
+
+    # eval model
     solver.eval()
 
 
