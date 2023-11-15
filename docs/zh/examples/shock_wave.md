@@ -96,9 +96,9 @@ $$
 
 上式中 $g$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="256"
+``` py linenums="255"
 --8<--
-examples/shock_wave/shock_wave.py:256:257
+examples/shock_wave/shock_wave.py:255:256
 --8<--
 ```
 
@@ -110,15 +110,15 @@ examples/shock_wave/shock_wave.py:256:257
 
 本案例涉及二维欧拉方程和边界上的方程，如下所示
 
-``` py linenums="35"
+``` py linenums="31"
 --8<--
-examples/shock_wave/shock_wave.py:35:214
+examples/shock_wave/shock_wave.py:31:217
 --8<--
 ```
 
-``` py linenums="259"
+``` py linenums="258"
 --8<--
-examples/shock_wave/shock_wave.py:259:260
+examples/shock_wave/shock_wave.py:258:259
 --8<--
 ```
 
@@ -128,7 +128,7 @@ examples/shock_wave/shock_wave.py:259:260
 
 ``` py linenums="31"
 --8<--
-examples/shock_wave/conf/shock_wave.yaml:31:43
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:31:43
 --8<--
 ```
 
@@ -140,19 +140,19 @@ examples/shock_wave/conf/shock_wave.yaml:31:43
 
 ``` py linenums="38"
 --8<--
-examples/shock_wave/conf/shock_wave.yaml:38:38
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:38:38
 --8<--
 ```
 
-``` py linenums="263"
+``` py linenums="261"
 --8<--
-examples/shock_wave/shock_wave.py:263:277
+examples/shock_wave/shock_wave.py:261:277
 --8<--
 ```
 
-``` py linenums="337"
+``` py linenums="340"
 --8<--
-examples/shock_wave/shock_wave.py:337:350
+examples/shock_wave/shock_wave.py:340:353
 --8<--
 ```
 
@@ -162,7 +162,7 @@ examples/shock_wave/shock_wave.py:337:350
 
 ``` py linenums="39"
 --8<--
-examples/shock_wave/conf/shock_wave.yaml:39:39
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:39:39
 --8<--
 ```
 
@@ -172,9 +172,9 @@ examples/shock_wave/shock_wave.py:279:312
 --8<--
 ```
 
-``` py linenums="363"
+``` py linenums="366"
 --8<--
-examples/shock_wave/shock_wave.py:363:387
+examples/shock_wave/shock_wave.py:366:390
 --8<--
 ```
 
@@ -184,21 +184,21 @@ examples/shock_wave/shock_wave.py:363:387
 
 ``` py linenums="314"
 --8<--
-examples/shock_wave/shock_wave.py:314:335
+examples/shock_wave/shock_wave.py:314:338
 --8<--
 ```
 
-``` py linenums="351"
+``` py linenums="354"
 --8<--
-examples/shock_wave/shock_wave.py:351:362
+examples/shock_wave/shock_wave.py:354:365
 --8<--
 ```
 
 在以上三个约束构建完毕之后，需要将他们包装成一个字典，方便后续作为参数传递
 
-``` py linenums="388"
+``` py linenums="391"
 --8<--
-examples/shock_wave/shock_wave.py:388:393
+examples/shock_wave/shock_wave.py:391:396
 --8<--
 ```
 
@@ -206,9 +206,9 @@ examples/shock_wave/shock_wave.py:388:393
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="400"
+``` py linenums="59"
 --8<--
-examples/shock_wave/shock_wave.py:400:400
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:59:59
 --8<--
 ```
 
@@ -216,9 +216,9 @@ examples/shock_wave/shock_wave.py:400:400
 
 训练过程会调用优化器来更新模型参数，此处选择 `L-BFGS` 优化器并设定 `max_iter` 为 100。
 
-``` py linenums="395"
+``` py linenums="398"
 --8<--
-examples/shock_wave/shock_wave.py:395:397
+examples/shock_wave/shock_wave.py:398:401
 --8<--
 ```
 
@@ -226,33 +226,33 @@ examples/shock_wave/shock_wave.py:395:397
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="401"
+``` py linenums="403"
 --8<--
-examples/shock_wave/shock_wave.py:401:414
+examples/shock_wave/shock_wave.py:403:419
 --8<--
 ```
 
 本案例需要根据每一轮训练的 epoch 值，计算PDE、BC方程内的权重系数 `relu`。因此在 solver 实例化完毕之后，需额外将其传递给方程本身，代码如下：
 
-``` py linenums="415"
+``` py linenums="420"
 --8<--
-examples/shock_wave/shock_wave.py:415:418
+examples/shock_wave/shock_wave.py:420:423
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="420"
+``` py linenums="425"
 --8<--
-examples/shock_wave/shock_wave.py:420:421
+examples/shock_wave/shock_wave.py:425:426
 --8<--
 ```
 
 训练完毕后，我们可视化最后一个时刻的计算域内辨率为 600x600 的激波，共 360000 个点，代码如下：
 
-``` py linenums="423"
+``` py linenums="448"
 --8<--
-examples/shock_wave/shock_wave.py:423:492
+examples/shock_wave/shock_wave.py:448:519
 --8<--
 ```
 
