@@ -591,7 +591,7 @@ class Solver:
         # convert model to static graph
         from paddle.static import InputSpec
 
-        static_model = paddle.jit.to_static(
+        static_model = jit.to_static(
             self.model,
             input_spec=[
                 {
