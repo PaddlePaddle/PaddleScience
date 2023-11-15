@@ -6,33 +6,49 @@
 
 === "模型训练命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
-    wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
+    === "Ma=2"
 
-    python shock_wave.py
-    # another configuration file
-    # python shock_wave.py -cn=shock_wave_Ma0.728
-    ```
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
+
+        python shock_wave.py
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
+
+        python shock_wave.py -cn=shock_wave_Ma0.728
+        ```
 
 === "模型评估命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
-    wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
+    === "Ma=2"
 
-    python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
-    # another configuration file
-    # python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
-    ```
+        ``` sh
+        python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+
+
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
+        ```
+
+
+
+
+
+
+
+
 
 
 ## 1. 背景简介
