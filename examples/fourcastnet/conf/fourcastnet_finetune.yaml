@@ -5,6 +5,15 @@ hydra:
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -17,7 +26,6 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set training hyper-parameters
-input_keys: ["input"]
 IMG_H: 720
 IMG_W: 1440
 # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
@@ -26,7 +34,6 @@ IMG_W: 1440
 # You can obtain detailed information about each variable from
 # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
 VARS_CHANNEL: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-
 
 # set train data path
 TRAIN_FILE_PATH: ./datasets/era5/train
@@ -43,7 +50,7 @@ TEST_FILE_PATH: ./datasets/era5/out_of_sample/2018.h5
 # model settings
 MODEL:
   afno:
-    input_keys: ${input_keys}
+    input_keys: ["input"]
 
 # training settings
 TRAIN:
@@ -56,15 +63,14 @@ TRAIN:
     learning_rate: 1e-4
     by_epoch: true
   batch_size: 1
-  num_workers: 8
+  num_timestamps: 2
   pretrained_model_path: outputs_fourcastnet_pretrain/checkpoints/latest
   checkpoint_path: null
-  num_timestamps: 2
 
 # evaluation settings
 EVAL:
+  num_timestamps: 32
   pretrained_model_path: null
   compute_metric_by_batch: true
   eval_with_no_grad: true
   batch_size: 1
-  num_timestamps: 32

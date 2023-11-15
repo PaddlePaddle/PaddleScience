@@ -20,7 +20,6 @@ import h5py
 import hydra
 import numpy as np
 import paddle
-import paddle.distributed as dist
 from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
@@ -60,9 +59,7 @@ def get_vis_data(
 
 def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.set_random_seed(1024)
-    # Initialize distributed environment
-    dist.init_parallel_env()
+    ppsci.utils.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", f"{cfg.output_dir}/train.log", "info")
 
@@ -92,8 +89,8 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ERA5Dataset",
             "file_path": cfg.WIND_TRAIN_FILE_PATH,
-            "input_keys": cfg.input_keys,
-            "label_keys": cfg.output_keys,
+            "input_keys": cfg.MODEL.precip.input_keys,
+            "label_keys": cfg.MODEL.precip.output_keys,
             "vars_channel": cfg.VARS_CHANNEL,
             "precip_file_path": cfg.TRAIN_FILE_PATH,
             "transforms": transforms,
@@ -104,7 +101,7 @@ def train(cfg: DictConfig):
             "shuffle": True,
         },
         "batch_size": cfg.TRAIN.batch_size,
-        "num_workers": cfg.TRAIN.num_workers,
+        "num_workers": 8,
     }
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -122,8 +119,8 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ERA5Dataset",
             "file_path": cfg.WIND_VALID_FILE_PATH,
-            "input_keys": cfg.input_keys,
-            "label_keys": cfg.output_keys,
+            "input_keys": cfg.MODEL.precip.input_keys,
+            "label_keys": cfg.MODEL.precip.output_keys,
             "vars_channel": cfg.VARS_CHANNEL,
             "precip_file_path": cfg.VALID_FILE_PATH,
             "transforms": transforms,
@@ -237,7 +234,7 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "ERA5Dataset",
             "file_path": cfg.WIND_TEST_FILE_PATH,
-            "input_keys": cfg.input_keys,
+            "input_keys": cfg.MODEL.precip.input_keys,
             "label_keys": output_keys,
             "vars_channel": cfg.VARS_CHANNEL,
             "precip_file_path": cfg.TEST_FILE_PATH,
@@ -328,7 +325,7 @@ def evaluate(cfg: DictConfig):
         compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
-    # solver.eval()
+    solver.eval()
     # visualize prediction
     solver.visualize()
 

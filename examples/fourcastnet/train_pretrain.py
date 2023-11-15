@@ -42,8 +42,6 @@ def train(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-    # Initialize distributed environment
-    dist.init_parallel_env()
 
     data_mean, data_std = fourcast_utils.get_mean_std(
         cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
@@ -67,8 +65,8 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "ERA5Dataset",
                 "file_path": cfg.TRAIN_FILE_PATH,
-                "input_keys": cfg.input_keys,
-                "label_keys": cfg.output_keys,
+                "input_keys": cfg.MODEL.afno.input_keys,
+                "label_keys": cfg.MODEL.afno.output_keys,
                 "vars_channel": cfg.VARS_CHANNEL,
                 "transforms": transforms,
             },
@@ -78,7 +76,7 @@ def train(cfg: DictConfig):
                 "shuffle": True,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": cfg.TRAIN.num_workers,
+            "num_workers": 8,
         }
     else:
         NUM_GPUS_PER_NODE = 8
@@ -86,8 +84,8 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "ERA5SampledDataset",
                 "file_path": cfg.TRAIN_FILE_PATH,
-                "input_keys": cfg.input_keys,
-                "label_keys": cfg.output_keys,
+                "input_keys": cfg.MODEL.afno.input_keys,
+                "label_keys": cfg.MODEL.afno.output_keys,
             },
             "sampler": {
                 "name": "DistributedBatchSampler",
@@ -97,7 +95,7 @@ def train(cfg: DictConfig):
                 "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": cfg.TRAIN.num_workers,
+            "num_workers": 8,
         }
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -115,8 +113,8 @@ def train(cfg: DictConfig):
         "dataset": {
             "name": "ERA5Dataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": cfg.input_keys,
-            "label_keys": cfg.output_keys,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.MODEL.afno.output_keys,
             "vars_channel": cfg.VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
@@ -210,8 +208,8 @@ def evaluate(cfg: DictConfig):
         "dataset": {
             "name": "ERA5Dataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": cfg.input_keys,
-            "label_keys": cfg.output_keys,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.MODEL.afno.output_keys,
             "vars_channel": cfg.VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
