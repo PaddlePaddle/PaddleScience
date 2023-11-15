@@ -3,7 +3,6 @@
 <a href="https://aistudio.baidu.com/projectdetail/6755993?contributionType=1&sUid=438690&shared=1&ts=1694949960479" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 
-
 === "模型训练命令"
 
     === "Ma=2"
@@ -13,7 +12,6 @@
         wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
-
         python shock_wave.py
         ```
     === "Ma=0.728"
@@ -23,7 +21,6 @@
         wget https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
-
         python shock_wave.py -cn=shock_wave_Ma0.728
         ```
 
@@ -33,23 +30,12 @@
 
         ``` sh
         python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
-
-
         ```
     === "Ma=0.728"
 
         ``` sh
         python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
         ```
-
-
-
-
-
-
-
-
-
 
 ## 1. 背景简介
 
