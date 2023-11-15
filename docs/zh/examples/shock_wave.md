@@ -14,7 +14,9 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
     # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
 
-    python bracket.py
+    python shock_wave.py
+    # another configuration file
+    # python shock_wave.py -cn=shock_wave_Ma0.728
     ```
 
 === "模型评估命令"
@@ -27,7 +29,9 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams --output shock_wave_Ma2_pretrained.pdparams
     # curl https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams --output shock_wave_Ma0728_pretrained.pdparams
 
-    python bracket.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+    python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+    # another configuration file
+    # python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
     ```
 
 
