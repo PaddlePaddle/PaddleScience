@@ -445,8 +445,6 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
-    solver.eval()
-
     # visualize prediction
     t = np.linspace(cfg.T, cfg.T, 1)
     x = np.linspace(0.0, cfg.Lx, cfg.Nd)
