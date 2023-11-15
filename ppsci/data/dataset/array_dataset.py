@@ -28,7 +28,7 @@ class NamedArrayDataset(io.Dataset):
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
+        label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
         weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
@@ -44,15 +44,15 @@ class NamedArrayDataset(io.Dataset):
     def __init__(
         self,
         input: Dict[str, np.ndarray],
-        label: Dict[str, np.ndarray],
+        label: Optional[Dict[str, np.ndarray]] = None,
         weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = input
-        self.label = label
+        self.label = {} if label is None else label
         self.input_keys = tuple(input.keys())
-        self.label_keys = tuple(label.keys())
+        self.label_keys = tuple(self.label.keys())
         self.weight = {} if weight is None else weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))
@@ -78,7 +78,7 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
+        label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
         weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
@@ -94,15 +94,19 @@ class IterableNamedArrayDataset(io.IterableDataset):
     def __init__(
         self,
         input: Dict[str, np.ndarray],
-        label: Dict[str, np.ndarray],
+        label: Optional[Dict[str, np.ndarray]] = None,
         weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
-        self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
+        self.label = (
+            {key: paddle.to_tensor(value) for key, value in label.items()}
+            if label is not None
+            else {}
+        )
         self.input_keys = tuple(input.keys())
-        self.label_keys = tuple(label.keys())
+        self.label_keys = tuple(self.label.keys())
         self.weight = (
             {key: paddle.to_tensor(value) for key, value in weight.items()}
             if weight is not None
