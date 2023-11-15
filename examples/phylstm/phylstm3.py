@@ -321,7 +321,7 @@ def evaluate(cfg: DictConfig):
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
-    # evaluate after finished training
+    # evaluate
     solver.eval()
 
 
