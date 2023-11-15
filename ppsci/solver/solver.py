@@ -245,6 +245,7 @@ class Solver:
         self.eval_with_no_grad = eval_with_no_grad
 
         # load pretrained model, usually used for transfer learning
+        self.pretrained_model_path = pretrained_model_path
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
@@ -575,9 +576,41 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self):
-        """Export to inference model."""
-        raise NotImplementedError("model export is not supported yet.")
+    def export(self, export_path: str):
+        """
+        Convert model to static graph model and export to files.
+        """
+        jit.enable_to_static(True)
+
+        if self.pretrained_model_path is None:
+            logger.warning(
+                "'pretrained_model_path' is not given, so the weights of exported "
+                "model might be random initialized."
+            )
+
+        # convert model to static graph
+        from paddle.static import InputSpec
+
+        static_model = paddle.jit.to_static(
+            self.model,
+            input_spec=[
+                {
+                    key: InputSpec(shape=[None, 1], name=key)
+                    for key in self.model.input_keys
+                },
+            ],
+        )
+
+        # save static graph model to disk
+        try:
+            jit.save(static_model, export_path)
+        except Exception as e:
+            raise e
+        logger.message(
+            f"Static graph model has been exported to {export_path}, including "
+            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+        )
+        jit.enable_to_static(False)
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"

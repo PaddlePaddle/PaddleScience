@@ -302,7 +302,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
-    # evaluate after finished training
+    # evaluate
     solver.eval()
 
 

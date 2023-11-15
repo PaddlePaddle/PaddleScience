@@ -95,3 +95,18 @@ EVAL:
   eval_with_no_grad: true
   batch_size:
     sup_validator: 4096
+
+EXPORT:
+  export_path: ./aneurysm
+
+INFERENCE:
+  pdmodel_path: ./aneurysm.pdmodel
+  pdpiparams_path: ./aneurysm.pdiparams
+  use_gpu: true
+  use_fp16: false
+  use_int8: false
+  use_tensorrt: false
+  use_onnx: false
+  onnx_path: null
+  ir_optim: false
+  cpu_num_threads: false
