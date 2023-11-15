@@ -201,7 +201,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
-    # visualize prediction after finished training
+    # visualize prediction
     solver.visualize()
 
 

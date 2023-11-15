@@ -356,7 +356,7 @@ def evaluate(cfg: DictConfig):
     )
     solver.eval()
 
-    # visualize prediction after finished training
+    # visualize prediction
     visu_mat = geom["time_rect_visu"].sample_interior(
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
