@@ -519,7 +519,9 @@ def evaluate(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, f"shock_wave(Ma_{cfg.MA:.3f}).png"))
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="shock_wave.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="shock_wave_Ma2.0.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
