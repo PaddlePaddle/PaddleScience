@@ -102,11 +102,14 @@ EXPORT:
 INFERENCE:
   pdmodel_path: ./aneurysm.pdmodel
   pdpiparams_path: ./aneurysm.pdiparams
-  use_gpu: true
-  use_fp16: false
-  use_int8: false
-  use_tensorrt: false
-  use_onnx: false
-  onnx_path: null
-  ir_optim: false
-  cpu_num_threads: false
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: ./aneurysm.onnx
+  ir_optim: true
+  min_subgraph_size: 30
+  gpu_mem: 2000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 1024
