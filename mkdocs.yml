@@ -37,36 +37,36 @@ nav:
   - 经典案例:
     - " ":
       - 数学(AI for Math):
-        - Laplace2D: zh/examples/laplace2d.md
         - DeepHPMs: zh/examples/deephpms.md
-        - PIRBN: zh/examples/pirbn.md
-        - Lorenz_transform_physx: zh/examples/lorenz.md
-        - Rossler_transform_physx: zh/examples/rossler.md
         - DeepONet: zh/examples/deeponet.md
+        - Laplace2D: zh/examples/laplace2d.md
+        - Lorenz_transform_physx: zh/examples/lorenz.md
+        - PIRBN: zh/examples/pirbn.md
+        - Rossler_transform_physx: zh/examples/rossler.md
         - Volterra_IDE: zh/examples/volterra_ide.md
       - 技术科学(AI for Technology):
         - 流体:
-          - LDC2D_steady: zh/examples/ldc2d_steady.md
-          - Darcy2D: zh/examples/darcy2d.md
-          - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+          - AMGNet: zh/examples/amgnet.md
           - Aneurysm: zh/examples/aneurysm.md
-          - DeepCFD: zh/examples/deepcfd.md
-          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
-          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
-          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
-          - ShockWave: zh/examples/shock_wave.md
           - BubbleNet: zh/examples/bubble.md
           - CFDGCN: zh/examples/cfdgcn.md
+          - Cylinder2D_unsteady: zh/examples/cylinder2d_unsteady.md
+          - Cylinder2D_unsteady_transform_physx: zh/examples/cylinder2d_unsteady_transformer_physx.md
+          - Darcy2D: zh/examples/darcy2d.md
+          - DeepCFD: zh/examples/deepcfd.md
+          - Heat_PINN: zh/examples/heat_pinn.md
+          - LDC2D_steady: zh/examples/ldc2d_steady.md
+          - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
+          - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+          - ShockWave: zh/examples/shock_wave.md
           - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
-          - AMGNet: zh/examples/amgnet.md
-          - Heat_PINN: zh/examples/heat_pinn.md
         - 结构:
           - Bracket: zh/examples/bracket.md
           - Phy-LSTM: zh/examples/phylstm.md
       - 材料科学(AI for Material):
-        - hPINNs: zh/examples/hpinns.md
         - EPNN: zh/examples/epnn.md
+        - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
         - FourCastNet: zh/examples/fourcastnet.md
         - NowcastNet: zh/examples/nowcastnet.md
