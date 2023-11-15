@@ -2,6 +2,35 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/6755993?contributionType=1&sUid=438690&shared=1&ts=1694949960479" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+
+=== "模型训练命令"
+
+    === "Ma=2.0"
+
+        ``` sh
+        # linux
+        python shock_wave.py
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        # linux
+        python shock_wave.py -cn=shock_wave_Ma0.728
+        ```
+
+=== "模型预测命令"
+
+    === "Ma=2.0"
+
+        ``` sh
+        python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
+        ```
+
 ## 1. 背景简介
 
 激波是自然界以及工程应用中经常发现的现象。它们不仅广泛地存在于航空航天领域的可压缩流动中，而且也表现在理论与应用物理以及工程应用等其它领域。在超声速与高超声速流动中，激波的出现对流体流动的整体特征会产生重要影响。激波捕捉问题已在CFD领域发展了数十年，以弱解的数学理论为基础的激波捕捉方法以其简单易实现的特点发展迅速，并在复杂超声速、高超声速流动数值模拟中得到了广泛应用。
@@ -81,9 +110,9 @@ examples/shock_wave/shock_wave.py:255:256
 
 本案例涉及二维欧拉方程和边界上的方程，如下所示
 
-``` py linenums="32"
+``` py linenums="31"
 --8<--
-examples/shock_wave/shock_wave.py:32:211
+examples/shock_wave/shock_wave.py:31:217
 --8<--
 ```
 
@@ -97,9 +126,9 @@ examples/shock_wave/shock_wave.py:258:259
 
 本案例的计算域为 0 ~ 0.4 单位时间，长为 1.5，宽为 2.0 的长方形区域，其内含有一个圆心坐标为 [1, 1]，半径为 0.25 的圆，代码如下所示
 
-``` py linenums="261"
+``` py linenums="31"
 --8<--
-examples/shock_wave/shock_wave.py:261:273
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:31:43
 --8<--
 ```
 
@@ -109,21 +138,21 @@ examples/shock_wave/shock_wave.py:261:273
 
 我们将欧拉方程施加在计算域的内部点上，并且使用拉丁超立方(Latin HyperCube Sampling, LHS)方法采样共 `N_INTERIOR` 个训练点，代码如下所示：
 
-``` py linenums="268"
+``` py linenums="38"
 --8<--
-examples/shock_wave/shock_wave.py:268:268
---8<--
-```
-
-``` py linenums="275"
---8<--
-examples/shock_wave/shock_wave.py:275:289
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:38:38
 --8<--
 ```
 
-``` py linenums="349"
+``` py linenums="261"
 --8<--
-examples/shock_wave/shock_wave.py:349:363
+examples/shock_wave/shock_wave.py:261:277
+--8<--
+```
+
+``` py linenums="340"
+--8<--
+examples/shock_wave/shock_wave.py:340:353
 --8<--
 ```
 
@@ -131,21 +160,21 @@ examples/shock_wave/shock_wave.py:349:363
 
 我们将边界条件施加在计算域的边界点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在边界上采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="269"
+``` py linenums="39"
 --8<--
-examples/shock_wave/shock_wave.py:269:269
---8<--
-```
-
-``` py linenums="291"
---8<--
-examples/shock_wave/shock_wave.py:291:324
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:39:39
 --8<--
 ```
 
-``` py linenums="376"
+``` py linenums="279"
 --8<--
-examples/shock_wave/shock_wave.py:376:400
+examples/shock_wave/shock_wave.py:279:312
+--8<--
+```
+
+``` py linenums="366"
+--8<--
+examples/shock_wave/shock_wave.py:366:390
 --8<--
 ```
 
@@ -153,23 +182,23 @@ examples/shock_wave/shock_wave.py:376:400
 
 我们将边界条件施加在计算域的初始时刻的点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在初始时刻的计算域内采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="326"
+``` py linenums="314"
 --8<--
-examples/shock_wave/shock_wave.py:326:347
+examples/shock_wave/shock_wave.py:314:338
 --8<--
 ```
 
-``` py linenums="364"
+``` py linenums="354"
 --8<--
-examples/shock_wave/shock_wave.py:364:375
+examples/shock_wave/shock_wave.py:354:365
 --8<--
 ```
 
 在以上三个约束构建完毕之后，需要将他们包装成一个字典，方便后续作为参数传递
 
-``` py linenums="401"
+``` py linenums="391"
 --8<--
-examples/shock_wave/shock_wave.py:401:406
+examples/shock_wave/shock_wave.py:391:396
 --8<--
 ```
 
@@ -177,9 +206,9 @@ examples/shock_wave/shock_wave.py:401:406
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="412"
+``` py linenums="59"
 --8<--
-examples/shock_wave/shock_wave.py:412:412
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:59:59
 --8<--
 ```
 
@@ -187,9 +216,9 @@ examples/shock_wave/shock_wave.py:412:412
 
 训练过程会调用优化器来更新模型参数，此处选择 `L-BFGS` 优化器并设定 `max_iter` 为 100。
 
-``` py linenums="408"
+``` py linenums="398"
 --8<--
-examples/shock_wave/shock_wave.py:408:409
+examples/shock_wave/shock_wave.py:398:401
 --8<--
 ```
 
@@ -197,57 +226,43 @@ examples/shock_wave/shock_wave.py:408:409
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="412"
+``` py linenums="403"
 --8<--
-examples/shock_wave/shock_wave.py:412:426
+examples/shock_wave/shock_wave.py:403:419
 --8<--
 ```
 
 本案例需要根据每一轮训练的 epoch 值，计算PDE、BC方程内的权重系数 `relu`。因此在 solver 实例化完毕之后，需额外将其传递给方程本身，代码如下：
 
-``` py linenums="427"
+``` py linenums="420"
 --8<--
-examples/shock_wave/shock_wave.py:427:430
+examples/shock_wave/shock_wave.py:420:423
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="432"
+``` py linenums="425"
 --8<--
-examples/shock_wave/shock_wave.py:432:433
+examples/shock_wave/shock_wave.py:425:426
 --8<--
 ```
 
 训练完毕后，我们可视化最后一个时刻的计算域内辨率为 600x600 的激波，共 360000 个点，代码如下：
 
-``` py linenums="435"
+``` py linenums="448"
 --8<--
-examples/shock_wave/shock_wave.py:435:506
+examples/shock_wave/shock_wave.py:448:519
 --8<--
 ```
 
 ## 4. 完整代码
 
-=== "Ma=2.0"
-
-    ``` py linenums="1" title="shock_wave.py"
-    --8<--
-    examples/shock_wave/shock_wave.py
-    --8<--
-    ```
-
-=== "Ma=0.728"
-
-    ``` py linenums="1" title="shock_wave.py"
-    --8<--
-    examples/shock_wave/shock_wave.py::245
-    --8<--
-        MA=0.728
-        --8<--
-        examples/shock_wave/shock_wave.py:248:
-        --8<--
-    ```
+``` py linenums="1" title="shock_wave.py"
+--8<--
+examples/shock_wave/shock_wave.py
+--8<--
+```
 
 ## 5. 结果展示
 
