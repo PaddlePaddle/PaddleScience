@@ -192,6 +192,8 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [jjyaoao](https://github.com/jjyaoao)，
     [jiamingkong](https://github.com/jiamingkong)，
     [Liyulingyue](https://github.com/Liyulingyue)，
+    [DrRyanHuang](https://github.com/DrRyanHuang)，
+    [zbt78](https://github.com/zbt78)，
     [Gxinhu](https://github.com/Gxinhu)，
     [XYM](https://github.com/XYM)，
     [xusuyong](https://github.com/xusuyong)，
