@@ -1,13 +1,10 @@
 import hydra
 import numpy as np
-import paddle
 import scipy
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
-
-paddle.set_default_dtype("float32")
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet2.yaml")

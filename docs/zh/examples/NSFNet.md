@@ -1,4 +1,4 @@
-# NSFNet 
+# NSFNet
 
 <a href="https://aistudio.baidu.com/studio/project/partial/verify/6832363/da4e1b9b08f14bd4baf9b8b6922b5b7e" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
@@ -10,9 +10,9 @@
 
     # VP_NSFNet2
     # linux
-    wget 
+    wget
     # windows
-    # curl 
+    # curl
     python VP_NSFNet2.py
 
     # VP_NSFNet3
@@ -27,9 +27,9 @@
 
     # VP_NSFNet2
     # linux
-    wget 
+    wget
     # windows
-    # curl 
+    # curl
     python VP_NSFNet2_eval.py
 
     # VP_NSFNet3
@@ -43,7 +43,7 @@
 主要介绍所求解的几类纳韦斯托克方程：
 
 不可压纳韦斯托克方程可以表示为：
-$$\frac{\partial \mathbf{u}}{\partial t}+(\mathbf{u} \cdot \nabla) \mathbf{u} =-\nabla p+\frac{1}{Re} \nabla^2 \mathbf{u} \quad \text { in } \Omega,$$ 
+$$\frac{\partial \mathbf{u}}{\partial t}+(\mathbf{u} \cdot \nabla) \mathbf{u} =-\nabla p+\frac{1}{Re} \nabla^2 \mathbf{u} \quad \text { in } \Omega,$$
 
 $$\nabla \cdot \mathbf{u} =0 \quad  \text { in } \Omega,$$
 

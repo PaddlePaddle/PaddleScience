@@ -1,13 +1,10 @@
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
-import paddle
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
-
-paddle.set_default_dtype("float32")
 
 
 def data_generate(x, y, z, t):

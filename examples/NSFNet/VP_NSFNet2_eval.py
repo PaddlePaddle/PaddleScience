@@ -9,8 +9,6 @@ from scipy.interpolate import griddata
 import ppsci
 from ppsci.utils import logger
 
-paddle.set_default_dtype("float32")
-
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet2.yaml")
 def main(cfg: DictConfig):
