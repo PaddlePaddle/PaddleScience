@@ -262,18 +262,7 @@ def evaluate(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(SEED)
 
     # set model
-    input_key = ("x", "y")
-    output_key = ("u", "v", "p")
-    model = ppsci.arch.MLP(
-        input_key,
-        output_key,
-        cfg.model.ihlayers,
-        cfg.model.ineurons,
-        "tanh",
-        input_dim=len(input_key),
-        output_dim=len(output_key),
-        Xavier=True,
-    )
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set the number of residual samples
     N_TRAIN = cfg.ntrain
