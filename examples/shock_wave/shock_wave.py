@@ -245,7 +245,6 @@ def generate_bc_left_points(
 
 
 def train(cfg: DictConfig):
-
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
 
