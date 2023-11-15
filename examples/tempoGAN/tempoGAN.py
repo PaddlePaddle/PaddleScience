@@ -98,7 +98,6 @@ def train(cfg: DictConfig):
                     "density_low": dataset_train["density_low"],
                     "density_high": dataset_train["density_high"],
                 },
-                "label": {"density_high": dataset_train["density_high"]},
                 "transforms": (
                     {
                         "FunctionalTransform": {
@@ -115,6 +114,10 @@ def train(cfg: DictConfig):
             },
         },
         ppsci.loss.FunctionalLoss(gen_funcs.loss_func_gen),
+        {
+            "output_gen": lambda out: out["output_gen"],
+            "density_high": lambda out: out["density_high"],
+        },
         name="sup_constraint_gen",
     )
     constraint_gen = {sup_constraint_gen.name: sup_constraint_gen}
@@ -127,7 +130,6 @@ def train(cfg: DictConfig):
                         "density_low": dataset_train["density_low_tempo"],
                         "density_high": dataset_train["density_high_tempo"],
                     },
-                    "label": {"density_high": dataset_train["density_high_tempo"]},
                     "transforms": (
                         {
                             "FunctionalTransform": {
@@ -144,6 +146,10 @@ def train(cfg: DictConfig):
                 },
             },
             ppsci.loss.FunctionalLoss(gen_funcs.loss_func_gen_tempo),
+            {
+                "output_gen": lambda out: out["output_gen"],
+                "density_high": lambda out: out["density_high"],
+            },
             name="sup_constraint_gen_tempo",
         )
         constraint_gen[sup_constraint_gen_tempo.name] = sup_constraint_gen_tempo
