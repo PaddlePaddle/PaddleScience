@@ -446,7 +446,7 @@ def evaluate(cfg: DictConfig):
     PLOT_DIR = os.path.join(cfg.output_dir, "visual")
     os.makedirs(PLOT_DIR, exist_ok=True)
 
-    # visualize prediction after finished training
+    # visualize prediction
     predict_and_save_plot(test_x, test_y, 0, solver, PLOT_DIR)
 
 
