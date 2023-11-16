@@ -28,6 +28,10 @@
     python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_transformer_pretrained.pdparams
     ```
 
+| 模型 | MSE |
+| :-- | :-- |
+| [rossler_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_transformer_pretrained.pdparams) | 0.022 |
+
 ## 1. 背景简介
 
 Rossler System，最早由德国科学家 Rossler 提出，也是常见的混沌系统。该系统在混沌理论的研究中具有重要地位，为混沌现象提供了一种数学描述和理解方法。同时由于该系统对数值扰动极为敏感，因此也是是评估机器学习（深度学习）模型准确性的良好基准。
