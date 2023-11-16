@@ -5,25 +5,149 @@
 === "模型训练命令"
 
     ``` sh
+    # 案例 1
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat
+
+    # 案例 2
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
-    python burgers.py
+    python burgers.py DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers.mat
+
+    # 案例 3
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py DATASET_PATH=./datasets/burgers.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat
+
+    # 案例 4
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_sine.mat
+
+    # 案例 5
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat --output ./datasets/KdV_cos.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_cos.mat
+
+    # 案例 6
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat --output ./datasets/KS.mat
+    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat
+
+    # 案例 7
+    # 运行前请注意 kuramoto_sivashinsky.py 和 kuramoto_sivashinsky.yaml 文件中有关 T_LB/T_UB/X_LB/X_UB 的注释
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat --output ./datasets/KS_chaotic.mat
+    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS_chaotic.mat DATASET_PATH_SOL=./datasets/KS_chaotic.mat
+
+    # 案例 8
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
+    python navier_stokes.py DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat
+
+    # 案例 9
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat --output ./datasets/NLS.mat
+    python schrodinger.py DATASET_PATH=./datasets/NLS.mat DATASET_PATH_SOL=./datasets/NLS.mat
     ```
 
 === "模型评估命令"
 
     ``` sh
+    # 案例 1
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py mode=eval DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_same_pretrained.pdparams
+
+    # 案例 2
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
-    python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
+    python burgers.py DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_pretrained.pdparams
+
+    # 案例 3
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py DATASET_PATH=./datasets/burgers.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_swap_pretrained.pdparams
+
+    # 案例 4
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_same_pretrained.pdparams
+
+    # 案例 5
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat --output ./datasets/KdV_cos.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_cos.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_diff_pretrained.pdparams
+
+    # 案例 6
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat --output ./datasets/KS.mat
+    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams
+
+    # 案例 7
+    # 运行前请注意 kuramoto_sivashinsky.py 和 kuramoto_sivashinsky.yaml 文件中有关 T_LB/T_UB/X_LB/X_UB 的注释
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat --output ./datasets/KS_chaotic.mat
+    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS_chaotic.mat DATASET_PATH_SOL=./datasets/KS_chaotic.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_chaotic_pretrained.pdparams
+
+    # 案例 8
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
+    python navier_stokes.py DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams
+
+    # 案例 9
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat --output ./datasets/NLS.mat
+    python schrodinger.py DATASET_PATH=./datasets/NLS.mat DATASET_PATH_SOL=./datasets/NLS.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams
     ```
 
 | 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | 指标 |
