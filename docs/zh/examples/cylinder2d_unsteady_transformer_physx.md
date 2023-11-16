@@ -28,6 +28,10 @@
     python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams
     ```
 
+| 模型 | MSE |
+| :-- | :-- |
+| [cylinder_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams) | 1.093 |
+
 ## 1. 背景简介
 
 圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
