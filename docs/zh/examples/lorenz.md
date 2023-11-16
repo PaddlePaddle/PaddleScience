@@ -28,6 +28,10 @@
     python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams
     ```
 
+| 模型 | MSE |
+| :-- | :-- |
+| [lorenz_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams) | 0.054 |
+
 ## 1. 背景简介
 
 Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹混沌系统”，最早由美国气象学家爱德华·洛伦兹（Edward N.Lorenz）在1963年的一篇文章中提出。著名的“蝴蝶效应”，即“一只南美洲亚马逊河流域热带雨林中的蝴蝶，偶尔扇动几下翅膀，可以在两周以后引起美国得克萨斯州的一场龙卷风”，也是最早起源于这篇文章。洛伦兹系统的特点是在一定参数条件下展现出复杂、不确定的动态行为，包括对初始条件的敏感性和长期行为的不可预测性。这种混沌行为在自然界和许多实际应用领域中都存在，例如气候变化、股票市场波动等。洛伦兹系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
