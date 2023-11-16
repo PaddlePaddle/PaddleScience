@@ -64,6 +64,7 @@ nav:
         - 结构:
           - Bracket: zh/examples/bracket.md
           - Phy-LSTM: zh/examples/phylstm.md
+          - TopOpt: zh/examples/topopt.md
       - 材料科学(AI for Material):
         - EPNN: zh/examples/epnn.md
         - hPINNs: zh/examples/hpinns.md

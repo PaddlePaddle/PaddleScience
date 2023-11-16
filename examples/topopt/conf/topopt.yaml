@@ -30,7 +30,7 @@ output_dir: ${hydra:run.dir}
 CASE_PARAM: [[Poisson, 5], [Poisson, 10], [Poisson, 30], [Uniform, null]]
 
 # set data path
-DATA_PATH: ./Dataset/top_dataset.h5
+DATA_PATH: ./datasets/top_dataset.h5
 
 # model settings
 MODEL:
@@ -51,8 +51,8 @@ TRAIN:
   epochs: 30
   learning_rate: 0.001
   epsilon:
-    log_loss: 0.0000001
-    optimizer: 0.0000001
+    log_loss: 1.0e-7
+    optimizer: 1.0e-7
   batch_size: 64
   eval_during_train: false
 
