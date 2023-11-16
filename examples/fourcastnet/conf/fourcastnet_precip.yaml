@@ -26,8 +26,6 @@ output_dir: ${hydra:run.dir}
 log_freq: 20
 
 # set training hyper-parameters
-input_keys: ["input"]
-output_keys: ["output"]
 IMG_H: 720
 IMG_W: 1440
 # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
