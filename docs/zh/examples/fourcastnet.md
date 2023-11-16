@@ -22,11 +22,17 @@
     python train_pretrain.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/pretrain.pdparams
     # 风速微调模型评估
     python train_finetune.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams
-    # 降水模型评估
+    # 降水量模型评估
     python train_precip.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams WIND_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams
     ```
 
-TODO: 添加模型评估结果
+| 模型 | 变量名称 | ACC/RMSE(6h) | ACC/RMSE(30h) | ACC/RMSE(60h) | ACC/RMSE(120h) | ACC/RMSE(192h) |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [风速模型](https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams) | U10 | 0.991/0.567 | 0.963/1.130 | 0.891/1.930 | 0.645/3.438 | 0.371/4.915 |
+
+| 模型 | 变量名称 | ACC/RMSE(6h) | ACC/RMSE(12h) | ACC/RMSE(24h) | ACC/RMSE(36h) |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| [降水量模型](https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams) | TP | 0.808/1.390 | 0.760/1.540 | 0.668/1.690 | 0.590/1.920 |
 
 ## 1. 背景简介
 
