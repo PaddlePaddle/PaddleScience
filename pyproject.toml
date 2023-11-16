@@ -33,8 +33,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 dependencies = [
-    "numpy>=1.20.0",
-    "scipy",
+    "numpy>=1.20.0,<=1.23.1",
     "sympy",
     "matplotlib",
     "vtk",
@@ -49,7 +48,11 @@ dependencies = [
     "meshio==5.3.4",
     "tqdm",
     "imageio",
+    "typing-extensions",
+    "seaborn",
     "colorlog",
+    "hydra-core",
+    "opencv-python",
 ]
 
 [project.urls]
@@ -65,4 +68,4 @@ exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "t
 [tool.ruff]
 line-length = 88
 ignore = ["E501", "E741"]
-extend-exclude = ["./ppsci/geometry/inflation.py"]
+extend-exclude = ["./ppsci/geometry/inflation.py", "./ppsci/autodiff/__init__.py"]
