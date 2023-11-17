@@ -11,12 +11,12 @@ repos:
       - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.5'
+    rev: 'v0.0.272'
     hooks:
       - id: ruff
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: a11d9314b22d8f8c7556443875b731ef05965464
     hooks:
       - id: check-merge-conflict
       - id: check-symlinks
@@ -27,7 +27,6 @@ repos:
       - id: check-case-conflict
       - id: check-yaml
         exclude: "mkdocs.yml"
-      - id: check-toml
       - id: pretty-format-json
       - id: requirements-txt-fixer
 
