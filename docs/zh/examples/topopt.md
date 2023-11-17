@@ -5,13 +5,21 @@
 === "模型训练命令"
 
     ``` sh
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
     python topopt.py
     ```
 
 === "模型评估命令"
 
     ``` sh
-    python topopt.py 'mode=eval' 'EVAL.pretrained_model_path_dict={"Uniform": "path1",  "Poisson5": "path2",  "Poisson10": "path3",  "Poisson30": "path4"}'
+    # linux
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py 'mode=eval' 'EVAL.pretrained_model_path_dict={"Uniform": "https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams",  "Poisson5": "https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams",  "Poisson10": "https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams",  "Poisson30": "https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams"}'
     ```
 
 ## 1. 背景简介
@@ -40,8 +48,7 @@ $$
 
 ### 3.1 数据集准备
 
-数据集为整理过的合成数据：[下载地址](https://aistudio.baidu.com/datasetdetail/245115/0)  
-整理后的格式为 `"iters": shape = (10000, 100, 40, 40)`，`"target": shape = (10000, 1, 40, 40)`
+下载的数据集为整理过的合成数据，整理后的格式为 `"iters": shape = (10000, 100, 40, 40)`，`"target": shape = (10000, 1, 40, 40)`  
 
 - 10000 - 随机生成问题的个数
 
@@ -50,7 +57,6 @@ $$
 - 40 - 图像高度
 
 - 40 - 图像宽度
-
 
 数据集地址请存储于 `./datasets/top_dataset.h5`  
 
@@ -62,9 +68,9 @@ examples/topopt/functions.py:68:101
 --8<--
 ```
 
-``` py linenums="39"
+``` py linenums="37"
 --8<--
-examples/topopt/topopt.py:39:48
+examples/topopt/topopt.py:37:46
 --8<--
 ```
 
@@ -73,14 +79,13 @@ examples/topopt/topopt.py:39:48
 经过 SIMP 的 $N_{0}$ 次初始迭代步骤得到的图像 $I$ 可以看作是模糊了的最终结构。由于最终的优化解给出的图像 $I^*$ 并不包含中间过程的信息，因此 $I^*$ 可以被解释为图像 $I$ 的掩码。于是 $I \rightarrow I^*$ 这一优化过程可以看作是二分类的图像分割或者前景-背景分割过程，因此构建 Unet 模型进行预测，具体网络结构如图所示：
 ![Unet](https://ai-studio-static-online.cdn.bcebos.com/7a0e54df9c9d48e5841423546e851f620e73ea917f9e4258aefc47c498bba85e)
 
-``` py linenums="89"
+``` py linenums="87"
 --8<--
-examples/topopt/topopt.py:89:92
+examples/topopt/topopt.py:87:89
 --8<--
 ```
-这里 `assert` 的原因是论文中已给出模型的参数量为 192113, 此处做以验证。
 
-详细的模型代码在 `examples/topopt/TopOptModel.py` 中。
+详细的模型代码在 `examples/topopt/topoptmodel.py` 中。
 
 
 ### 3.3 参数设定
@@ -89,20 +94,20 @@ examples/topopt/topopt.py:89:92
 
 ``` yaml linenums="49"
 --8<--
-examples/topopt/conf/topopt.yaml:49:58
+examples/topopt/conf/topopt.yaml:49:54
 --8<--
 ```
 
-``` py linenums="35"
+``` py linenums="33"
 --8<--
-examples/topopt/topopt.py:35:38
+examples/topopt/topopt.py:33:36
 --8<--
 ```
 
 
-### 3.4 transform构建
+### 3.4 data transform
 
-根据论文以及原始代码给出以下自定义 transform 代码，包括随机水平或垂直翻转和随机90度旋转，对 input 和 label 同时 transform：
+根据论文以及原始代码给出以下自定义的 data transform 代码，包括随机水平或垂直翻转和随机90度旋转，对 input 和 label 同时 transform：
 
 ``` py linenums="102"
 --8<--
@@ -115,9 +120,9 @@ examples/topopt/functions.py:102:133
 
 在本案例中，我们采用监督学习方式进行训练，所以使用监督约束 `SupervisedConstraint`，代码如下：
 
-``` py linenums="49"
+``` py linenums="47"
 --8<--
-examples/topopt/topopt.py:49:75
+examples/topopt/topopt.py:47:73
 --8<--
 ```
 
@@ -139,7 +144,7 @@ examples/topopt/topopt.py:49:75
 
 ### 3.6 采样器构建
 
-原始数据有100个通道对应的是 SIMP 算法 100 次的迭代结果，本案例模型目标是用 SIMP 中间某一步的迭代结果直接预测 SIMP 最后一步的迭代结果，而论文原始代码中的模型输入是原始数据对通道进行采样后的数据，为应用 PaddleScience API，本案例将采样步骤放入模型的 forward 方法中，所以需要传入不同的采样器。
+原始数据第二维有100个通道，对应的是 SIMP 算法 100 次的迭代结果，本案例模型目标是用 SIMP 中间某一步的迭代结果直接预测 SIMP 算法100步迭代后最终的优化求解结果，这里需要构建一个通道采样器，用来将输入模型数据的第二维按一定的概率分布随机抽取某一通道或直接指定某一通道，再输入网络进行训练或推理。本案例将采样步骤放入模型的 forward 方法中。
 
 ``` py linenums="23"
 --8<--
@@ -147,9 +152,9 @@ examples/topopt/functions.py:23:67
 --8<--
 ```
 
-``` py linenums="79"
+``` py linenums="77"
 --8<--
-examples/topopt/topopt.py:79:81
+examples/topopt/topopt.py:77:79
 --8<--
 ```
 
@@ -157,9 +162,9 @@ examples/topopt/topopt.py:79:81
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器。
 
-``` py linenums="93"
+``` py linenums="90"
 --8<--
-examples/topopt/topopt.py:93:97
+examples/topopt/topopt.py:90:94
 --8<--
 ```
 
@@ -186,9 +191,9 @@ $$
 
 loss 构建代码如下：
 
-``` py linenums="259"
+``` py linenums="260"
 --8<--
-examples/topopt/topopt.py:259:274
+examples/topopt/topopt.py:260:273
 --8<--
 ```
 
@@ -206,9 +211,9 @@ $$
 其中 $n_{0} = w_{00} + w_{01}$ ， $n_{1} = w_{10} + w_{11}$ ，$w_{tp}$ 表示实际是 $t$ 类且被预测为 $p$ 类的像素点的数量
 metric 构建代码如下：
 
-``` py linenums="275"
+``` py linenums="274"
 --8<--
-examples/topopt/topopt.py:275:317
+examples/topopt/topopt.py:274:316
 --8<--
 ```
 
@@ -225,9 +230,9 @@ examples/topopt/conf/topopt.yaml:29:31
 
 训练代码如下：
 
-``` py linenums="76"
+``` py linenums="74"
 --8<--
-examples/topopt/topopt.py:76:113
+examples/topopt/topopt.py:74:110
 --8<--
 ```
 
@@ -240,9 +245,9 @@ examples/topopt/topopt.py:76:113
 #### 3.10.1 评估器构建
 为应用 PaddleScience API，此处在每一次评估时构建一个评估器 SupervisedValidator 进行评估：
 
-``` py linenums="214"
+``` py linenums="215"
 --8<--
-examples/topopt/topopt.py:214:241
+examples/topopt/topopt.py:215:242
 --8<--
 ```
 
@@ -253,9 +258,9 @@ examples/topopt/topopt.py:214:241
 
 使用 `ppsci.utils.misc.plot_curve()` 方法直接绘制 Binary Accuracy 和 IoU 的结果：
 
-``` py linenums="185"
+``` py linenums="182"
 --8<--
-examples/topopt/topopt.py:185:195
+examples/topopt/topopt.py:182:192
 --8<--
 ```
 
@@ -274,9 +279,9 @@ examples/topopt/functions.py
 --8<--
 ```
 
-``` py linenums="1" title="TopOptModel.py"
+``` py linenums="1" title="topoptmodel.py"
 --8<--
-examples/topopt/TopOptModel.py
+examples/topopt/topoptmodel.py
 --8<--
 ```
 
@@ -295,9 +300,8 @@ examples/topopt/TopOptModel.py
   <figcaption>IoU结果</figcaption>
 </figure>
 
-结果与[原始代码结果](https://github.com/ISosnovik/nn4topopt/blob/master/results.ipynb)基本一致
 
-此外将这些计算的指标与论文中展示的对应指标 (`table 1` 与 `table2` 中的) 对比，指标相对误差均小于 10%，以下表格是所有的指标计算结果：
+用表格表示上图指标为：
 
 | bin_acc | eval_dataset_ch_5 | eval_dataset_ch_10 | eval_dataset_ch_15 | eval_dataset_ch_20 | eval_dataset_ch_25 | eval_dataset_ch_30 | eval_dataset_ch_35 | eval_dataset_ch_40 | eval_dataset_ch_45 | eval_dataset_ch_50 | eval_dataset_ch_55 | eval_dataset_ch_60 | eval_dataset_ch_65 | eval_dataset_ch_70 | eval_dataset_ch_75 | eval_dataset_ch_80 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
