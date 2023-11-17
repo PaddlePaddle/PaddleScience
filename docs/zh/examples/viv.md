@@ -84,7 +84,7 @@ examples/fsi/viv.py:34:35
 
 ``` py linenums="37"
 --8<--
-examples/fsi/viv.py:37:52
+examples/fsi/viv.py:37:53
 --8<--
 ```
 
@@ -92,9 +92,9 @@ examples/fsi/viv.py:37:52
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="54"
+``` py linenums="55"
 --8<--
-examples/fsi/viv.py:54:60
+examples/fsi/viv.py:55:61
 --8<--
 ```
 
@@ -108,15 +108,15 @@ examples/fsi/viv.py:54:60
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="61"
+``` py linenums="62"
 --8<--
-examples/fsi/viv.py:61:64
+examples/fsi/viv.py:62:65
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔1000个epochs评估一次模型精度。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 10000 轮训练轮数，并每隔 10000 个epochs评估一次模型精度。
 
 ``` yaml linenums="38"
 --8<--
@@ -128,9 +128,9 @@ examples/fsi/conf/viv.yaml:38:51
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
 
-``` py linenums="66"
+``` py linenums="67"
 --8<--
-examples/fsi/viv.py:66:68
+examples/fsi/viv.py:67:69
 --8<--
 ```
 
@@ -142,9 +142,9 @@ examples/fsi/viv.py:66:68
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="70"
+``` py linenums="71"
 --8<--
-examples/fsi/viv.py:70:92
+examples/fsi/viv.py:71:93
 --8<--
 ```
 
@@ -158,9 +158,9 @@ examples/fsi/viv.py:70:92
 
 本文需要可视化的数据是 $t-\eta$ 和 $t-f$ 两组关系图，假设每个时刻 $t$ 的坐标是 $t_i$，则对应网络输出为 $\eta_i$，升力为 $f_i$，因此我们只需要将评估过程中产生的所有 $(t_i, \eta_i, f_i)$ 保存成图片即可。代码如下：
 
-``` py linenums="94"
+``` py linenums="95"
 --8<--
-examples/fsi/viv.py:94:113
+examples/fsi/viv.py:95:114
 --8<--
 ```
 
@@ -168,9 +168,9 @@ examples/fsi/viv.py:94:113
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="115"
+``` py linenums="116"
 --8<--
-examples/fsi/viv.py:115:136
+examples/fsi/viv.py:116:140
 --8<--
 ```
 
