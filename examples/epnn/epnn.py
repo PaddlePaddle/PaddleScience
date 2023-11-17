@@ -144,12 +144,14 @@ def evaluate(cfg: DictConfig):
     model_state_elasto, model_state_plastic, model_stress = model_list
     model_list_obj = ppsci.arch.ModelList(model_list)
 
-    def transform_f_stress(_in):
-        return functions.transform_f(_in, model_state_elasto, "out_state_elasto")
+    def _transform_in_stress(_in):
+        return functions.transform_in_stress(
+            _in, model_state_elasto, "out_state_elasto"
+        )
 
     model_state_elasto.register_input_transform(functions.transform_in)
     model_state_plastic.register_input_transform(functions.transform_in)
-    model_stress.register_input_transform(transform_f_stress)
+    model_stress.register_input_transform(_transform_in_stress)
     model_stress.register_output_transform(functions.transform_out)
 
     output_keys = [
