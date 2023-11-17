@@ -14,16 +14,14 @@
 
 from os import path as osp
 
+import functions as func_module
 import h5py
 import hydra
 import numpy as np
 import paddle
-from functions import augmentation
-from functions import generate_sampler
-from functions import generate_train_test
 from omegaconf import DictConfig
 from paddle import nn
-from TopOptModel import TopOptNN
+from topoptmodel import TopOptNN
 
 import ppsci
 from ppsci.utils import logger
@@ -42,7 +40,7 @@ def train(cfg: DictConfig):
     data_targets = np.array(h5data["targets"])
 
     # generate training dataset
-    inputs_train, labels_train = generate_train_test(
+    inputs_train, labels_train = func_module.generate_train_test(
         data_iters, data_targets, cfg.train_test_ratio, cfg.n_samples
     )
 
@@ -56,7 +54,7 @@ def train(cfg: DictConfig):
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "transform_func": augmentation,
+                            "transform_func": func_module.augmentation,
                         },
                     },
                 ),
@@ -77,7 +75,7 @@ def train(cfg: DictConfig):
     for sampler_key, num in cfg.CASE_PARAM:
 
         # initialize SIMP iteration stop time sampler
-        SIMP_stop_point_sampler = generate_sampler(sampler_key, num)
+        SIMP_stop_point_sampler = func_module.generate_sampler(sampler_key, num)
 
         # initialize logger for training
         sampler_name = sampler_key + str(num) if num else sampler_key
@@ -88,12 +86,11 @@ def train(cfg: DictConfig):
 
         # set model
         model = TopOptNN(**cfg.MODEL, channel_sampler=SIMP_stop_point_sampler)
-        assert model.num_params == cfg.num_params
 
         # set optimizer
-        optimizer = ppsci.optimizer.Adam(
-            learning_rate=LEARNING_RATE, epsilon=cfg.TRAIN.epsilon.optimizer
-        )(model)
+        optimizer = ppsci.optimizer.Adam(learning_rate=LEARNING_RATE, epsilon=1.0e-7)(
+            model
+        )
 
         # initialize solver
         solver = ppsci.solver.Solver(
@@ -143,14 +140,14 @@ def evaluate(cfg: DictConfig):
     th_acc_results = []
     th_iou_results = []
     for stop_iter in iterations_stop_times:
-        SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
+        SIMP_stop_point_sampler = func_module.generate_sampler("Fixed", stop_iter)
 
         current_acc_results = []
         current_iou_results = []
 
         # only calculate for NUM_VAL_STEP times of iteration
         for _ in range(cfg.EVAL.num_val_step):
-            input_full_channel, label = generate_train_test(
+            input_full_channel, label = func_module.generate_train_test(
                 data_iters, data_targets, 1.0, cfg.EVAL.batch_size
             )
             # thresholding
@@ -197,17 +194,21 @@ def evaluate_model(
     cfg, model, pretrained_model_path, data_iters, data_targets, iterations_stop_times
 ):
     # load model parameters
-    solver = ppsci.solver.Solver(model, pretrained_model_path=pretrained_model_path)
-    solver.epochs = 1
-    solver.iters_per_epoch = cfg.EVAL.num_val_step
-    solver.eval_with_no_grad = True
+    solver = ppsci.solver.Solver(
+        model,
+        epochs=1,
+        iters_per_epoch=cfg.EVAL.num_val_step,
+        eval_with_no_grad=True,
+        pretrained_model_path=pretrained_model_path,
+    )
+
     acc_results = []
     iou_results = []
 
     # evaluation for different fixed iteration stop times
     for stop_iter in iterations_stop_times:
         # only evaluate for NUM_VAL_STEP times of iteration
-        inputs_eval, labels_eval = generate_train_test(
+        inputs_eval, labels_eval = func_module.generate_train_test(
             data_iters, data_targets, 1.0, cfg.EVAL.batch_size * cfg.EVAL.num_val_step
         )
 
@@ -220,7 +221,7 @@ def evaluate_model(
                     "transforms": (
                         {
                             "FunctionalTransform": {
-                                "transform_func": augmentation,
+                                "transform_func": func_module.augmentation,
                             },
                         },
                     ),
@@ -242,7 +243,7 @@ def evaluate_model(
         solver.validator = validator
 
         # modify the channel_sampler in model
-        SIMP_stop_point_sampler = generate_sampler("Fixed", stop_iter)
+        SIMP_stop_point_sampler = func_module.generate_sampler("Fixed", stop_iter)
         solver.model.channel_sampler = SIMP_stop_point_sampler
 
         _, eval_result = solver.eval()
@@ -262,9 +263,7 @@ def loss_wrapper(cfg: DictConfig):
         label_true = label_dict["output"].reshape((-1, 1))
         label_pred = output_dict["output"].reshape((-1, 1))
         conf_loss = paddle.mean(
-            nn.functional.log_loss(
-                label_pred, label_true, epsilon=cfg.TRAIN.epsilon.log_loss
-            )
+            nn.functional.log_loss(label_pred, label_true, epsilon=1.0e-7)
         )
         vol_loss = paddle.square(paddle.mean(label_true - label_pred))
         return conf_loss + cfg.vol_coeff * vol_loss
@@ -278,39 +277,39 @@ def val_metric(output_dict, label_dict, weight_dict=None):
     label_true = label_dict["output"]
     accurates = paddle.equal(paddle.round(label_true), paddle.round(label_pred))
     acc = paddle.mean(paddle.cast(accurates, dtype=paddle.get_default_dtype()))
-    w00 = paddle.sum(
+    true_negative = paddle.sum(
         paddle.multiply(
             paddle.equal(paddle.round(label_pred), 0.0),
             paddle.equal(paddle.round(label_true), 0.0),
         ),
         dtype=paddle.get_default_dtype(),
     )
-    w11 = paddle.sum(
+    true_positive = paddle.sum(
         paddle.multiply(
             paddle.equal(paddle.round(label_pred), 1.0),
             paddle.equal(paddle.round(label_true), 1.0),
         ),
         dtype=paddle.get_default_dtype(),
     )
-    w01 = paddle.sum(
+    false_negative = paddle.sum(
         paddle.multiply(
             paddle.equal(paddle.round(label_pred), 1.0),
             paddle.equal(paddle.round(label_true), 0.0),
         ),
         dtype=paddle.get_default_dtype(),
     )
-    w10 = paddle.sum(
+    false_positive = paddle.sum(
         paddle.multiply(
             paddle.equal(paddle.round(label_pred), 0.0),
             paddle.equal(paddle.round(label_true), 1.0),
         ),
         dtype=paddle.get_default_dtype(),
     )
-    n0 = paddle.add(w01, w00)
-    n1 = paddle.add(w11, w10)
+    n_negative = paddle.add(false_negative, true_negative)
+    n_positive = paddle.add(true_positive, false_positive)
     iou = 0.5 * paddle.add(
-        paddle.divide(w00, paddle.add(n0, w10)),
-        paddle.divide(w11, paddle.add(n1, w01)),
+        paddle.divide(true_negative, paddle.add(n_negative, false_positive)),
+        paddle.divide(true_positive, paddle.add(n_positive, false_negative)),
     )
     return {"Binary_Acc": acc, "IoU": iou}
 

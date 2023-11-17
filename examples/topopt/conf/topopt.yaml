@@ -44,15 +44,11 @@ MODEL:
 n_samples: 10000
 train_test_ratio: 1.0 # use 10000 original data with different channels for training
 vol_coeff: 1 # coefficient for volume fraction constraint in the loss - beta in equation (3) in paper
-num_params: 192113 # the number of parameters in Unet specified in paper, used to verify the parameter number
 
 # training settings
 TRAIN:
   epochs: 30
   learning_rate: 0.001
-  epsilon:
-    log_loss: 1.0e-7
-    optimizer: 1.0e-7
   batch_size: 64
   eval_during_train: false
 
