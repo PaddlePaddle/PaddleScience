@@ -193,7 +193,7 @@ examples/Heat_PINN/heat_pinn.py
 
 上图分别为温度 $T$ 的横截线图（ $y=\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\}$ ）和纵截线图（ $x=\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\}$ ），可以看到 PINN 与 FDM 方法的计算结果基本一致。
 
-## 6.参考资料
+## 6. 参考资料
 
 - [Physics Informed Deep Learning (Part I): Data-driven Solutions of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1711.10561)
 - [Heat-PINN](https://github.com/314arhaam/heat-pinn)

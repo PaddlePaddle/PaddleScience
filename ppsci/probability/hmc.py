@@ -56,8 +56,8 @@ class HamiltonianMonteCarlo:
         >>> import paddle
         >>> from ppsci.probability.hmc import HamiltonianMonteCarlo
         >>> def log_posterior(**kwargs):
-        >>>    dist = paddle.distribution.Normal(loc=0, scale=1)
-        >>>    return dist.log_prob(kwargs['x'])
+        ...     dist = paddle.distribution.Normal(loc=0, scale=1)
+        ...     return dist.log_prob(kwargs['x'])
         >>> HMC = HamiltonianMonteCarlo(log_posterior, path_len=1.5, step_size=0.25)
         >>> trial = HMC.run_chain(1000, {'x': paddle.to_tensor(0.0)})
     """

@@ -215,7 +215,7 @@ examples/bracket/bracket.py:188:195
 
 接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数，每轮进行 1000 步优化。
 
-``` yaml linenums="62"
+``` yaml linenums="71"
 --8<--
 examples/bracket/conf/bracket.yaml:71:74
 --8<--
