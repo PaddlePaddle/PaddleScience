@@ -17,6 +17,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 import sys
+from os import path as osp
 from typing import Callable
 from typing import Dict
 from typing import Mapping
@@ -188,7 +189,7 @@ class Solver:
         # set VisualDL tool
         self.vdl_writer = None
         if use_vdl:
-            self.vdl_writer = vdl.LogWriter(f"{output_dir}/vdl")
+            self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
         # set WandB tool
         self.wandb_writer = None
         if use_wandb:
@@ -512,6 +513,7 @@ class Solver:
             else input_dict
         )
         local_batch_num = (local_num_samples_pad + (batch_size - 1)) // batch_size
+
         pred_dict = misc.Prettydefaultdict(list)
         with self.no_grad_context_manager(no_grad), self.no_sync_context_manager(
             self.world_size > 1, self.model

@@ -23,8 +23,12 @@ repos:
       - id: detect-private-key
         files: (?!.*paddle)^.*$
       - id: end-of-file-fixer
-        files: \.md$
       - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-yaml
+        exclude: "mkdocs.yml"
+      - id: pretty-format-json
+      - id: requirements-txt-fixer
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.0.1

@@ -18,7 +18,7 @@ from paddle import nn
 
 
 class LossAggregator:
-    """Base class of loss aggregator mainly for multi-task learning.
+    """Base class of loss aggregator mainly for multitask learning.
 
     Args:
         model (nn.Layer): Training model.
