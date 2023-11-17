@@ -24,6 +24,10 @@
     python epnn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/epnn/epnn_pretrained.pdparams
     ```
 
+| 预训练模型  | 指标 |
+|:--| :--|
+| [epnn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/epnn/epnn_pretrained.pdparams) | error(total): 3.96903<br> error(error_elasto): 0.65328<br> error(error_plastic): 3.04176<br> error(error_stress): 0.27399 |
+
 ## 1. 背景简介
 
 这里主要为复现 Elasto-Plastic Neural Network (EPNN) 的 Physics-Informed Neural Network (PINN) 代理模型。将这些物理嵌入神经网络的架构中，可以更有效地训练网络，同时使用更少的数据进行训练，同时增强对训练数据外加载制度的推断能力。EPNN 的架构是模型和材料无关的，即它可以适应各种弹塑性材料类型，包括地质材料和金属；并且实验数据可以直接用于训练网络。为了证明所提出架构的稳健性，我们将其一般框架应用于砂土的弹塑性行为。EPNN 在预测不同初始密度砂土的未观测应变控制加载路径方面优于常规神经网络架构。
@@ -199,7 +203,7 @@ EPNN 案例针对 epoch=10000 的参数配置进行了实验，结果返回 Loss
 下图分别为不同 epoch 的 Loss, Training error, Cross validation error 图形：
 
 <figure markdown>
-  ![loss_trend](epnn_images/loss_trend.png){ loading=lazy }
+  ![loss_trend](https://paddle-org.bj.bcebos.com/paddlescience/docs/EPNN/loss_trend.png){ loading=lazy }
   <figcaption> 训练 loss 图形 </figcaption>
 </figure>
 
