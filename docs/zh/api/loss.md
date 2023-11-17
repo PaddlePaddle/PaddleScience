@@ -16,7 +16,7 @@
         - PeriodicL1Loss
         - PeriodicL2Loss
         - PeriodicMSELoss
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3
 
 ::: ppsci.loss.mtl
@@ -26,5 +26,5 @@
         - LossAggregator
         - PCGrad
         - AGDA
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

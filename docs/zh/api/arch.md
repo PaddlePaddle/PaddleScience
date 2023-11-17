@@ -20,5 +20,5 @@
         - PrecipNet
         - UNetEx
         - NowcastNet
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

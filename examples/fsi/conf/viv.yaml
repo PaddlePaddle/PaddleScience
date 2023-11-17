@@ -39,7 +39,7 @@ MODEL:
 TRAIN:
   epochs: 100000
   iters_per_epoch: 1
-  save_freq: 1
+  save_freq: 10000
   eval_during_train: true
   eval_freq: 1000
   batch_size: 100
