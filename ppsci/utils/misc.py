@@ -136,25 +136,31 @@ class RankZeroOnly(ContextDecorator):
         bool: True if the current process is the master (rank zero), False otherwise.
 
     Example:
-        >>> with RankZeroOnly(rank=0):
-        ...    # code that should only be executed by the master process
+        >>> import paddle.distributed as dist
+        >>> with RankZeroOnly(dist.get_rank()) as is_master:
+        ...     if is_master:
+        ...         # code here that should only be executed by the master process
     """
 
-    def __enter__(self, rank: Optional[int] = None) -> bool:
+    def __init__(self, rank: Optional[int] = None):
         """
         Enter the context and check if the current process is the master.
 
         Args:
             rank (Optional[int]): The rank of the current process. If not provided,
                 it will be obtained from `dist.get_rank()`.
+        """
+        super().__init__()
+        self.rank = rank if (rank is not None) else dist.get_rank()
+        self.is_master = self.rank == 0
+
+    def __enter__(self) -> bool:
+        """
+        Enter the context and check if the current process is the master.
 
         Returns:
             bool: True if the current process is the master (rank zero), False otherwise.
         """
-        if rank is None:
-            rank = dist.get_rank()
-
-        self.is_master = rank == 0
         return self.is_master
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -166,10 +172,7 @@ class RankZeroOnly(ContextDecorator):
             exc_value: The exception raised, if any.
             traceback: The traceback of the exception raised, if any.
         """
-        if self.is_master:
-            if dist.get_world_size() > 1:
-                dist.barrier()
-        else:
+        if dist.get_world_size() > 1:
             dist.barrier()
 
 
@@ -220,7 +223,7 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
     Args:
         array (np.ndarray): Array to be split.
-        keys (Tuple[str, ...]):Keys used in split.
+        keys (Tuple[str, ...]): Keys used in split.
 
     Returns:
         Dict[str, np.ndarray]: Split dict.
@@ -248,7 +251,7 @@ def all_gather(
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
     """
     result: List[paddle.Tensor] = []
-    paddle.distributed.all_gather(result, tensor)
+    dist.all_gather(result, tensor)
     if concat:
         return paddle.concat(result, axis)
     return result

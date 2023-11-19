@@ -29,9 +29,8 @@ import paddle.distributed as dist
 from ppsci.utils import misc
 
 if TYPE_CHECKING:
-    import visualdl
-
-    import wandb
+    import visualdl  # isort:skip
+    import wandb  # isort:skip
 
 _logger: logging.Logger = None
 
@@ -192,13 +191,13 @@ def scaler(
     vdl_writer: Optional["visualdl.LogWriter"] = None,
     wandb_writer: Optional["wandb.run"] = None,
 ):
-    """This function will add scaler data to visualdl or wandb for plotting curve(s).
+    """This function will add scaler data to VisualDL or WandB for plotting curve(s).
 
     Args:
         metric_dict (Dict[str, float]): Metrics dict with metric name and value.
         step (int): The step of the metric.
-        vdl_writer (visualdl.LogWriter): Visualdl writer to record metrics. Defaults to None.
-        wandb_writer (wandb.run): Wandb writer to record metrics. Defaults to None.
+        vdl_writer (visualdl.LogWriter): VisualDL writer to record metrics. Defaults to None.
+        wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
         for name, value in metric_dict.items():

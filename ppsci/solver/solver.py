@@ -66,7 +66,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
-        wandb_config (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
+        wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
@@ -224,6 +224,18 @@ class Solver:
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         self.eval_with_no_grad = eval_with_no_grad
 
+        self.rank = dist.get_rank()
+        self.world_size = dist.get_world_size()
+        # initialize distributed environment
+        if self.world_size > 1:
+            # TODO(sensen): support different kind of DistributedStrategy
+            fleet.init(is_collective=True)
+            logger.warning(
+                f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
+                "scale up the learning rate and reduce the 'epochs' or "
+                "'iters_per_epoch' according to the 'world_size' both linearly."
+            )
+
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
@@ -235,6 +247,11 @@ class Solver:
         }
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
+            if pretrained_model_path is not None:
+                logger.warning(
+                    "Detected 'pretrained_model_path' is given, weights in which might be"
+                    "overridden by weights loaded from given 'checkpoint_path'."
+                )
             loaded_metric = save_load.load_checkpoint(
                 checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
@@ -260,27 +277,18 @@ class Solver:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
         # wrap model and optimizer to parallel object
-        self.rank = dist.get_rank()
-        self.world_size = dist.get_world_size()
         if self.world_size > 1:
-            # TODO(sensen): support different kind of DistributedStrategy
             if isinstance(self.model, paddle.DataParallel):
                 raise ValueError(
-                    "Given model is already wrapped by DataParallel."
+                    "Given model is already wrapped by paddle.DataParallel."
                     "Please do not wrap your model with DataParallel "
                     "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
                 )
-            fleet.init(is_collective=True)
             self.model = fleet.distributed_model(self.model)
             self.model.input_keys = self.model._layers.input_keys
             self.model.output_keys = self.model._layers.output_keys
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
-            logger.warning(
-                f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
-                "scale up the learning rate and reduce the 'epochs' or "
-                "'iters_per_epoch' according to the 'world_size' both linearly."
-            )
 
         # set VisualDL tool
         self.vdl_writer = None
@@ -321,7 +329,7 @@ class Solver:
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set 'to_static'={to_static} for computational optimization.")
+        logger.info(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
@@ -432,13 +440,6 @@ class Solver:
                 self.equation,
             )
 
-        # close VisualDL
-        if self.vdl_writer is not None:
-            self.vdl_writer.close()
-        # close WandB
-        if self.wandb_writer is not None:
-            self.wandb_writer.finish()
-
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
@@ -473,7 +474,7 @@ class Solver:
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
-        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finish visualization")
 
     @misc.run_on_eval_mode
     def predict(
