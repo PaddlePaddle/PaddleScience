@@ -189,7 +189,14 @@ class Solver:
         # set VisualDL tool
         self.vdl_writer = None
         if use_vdl:
-            self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+            if dist.get_rank() == 0:
+                self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+                # NOTE: Manually barrier for visualDL initialization
+                if dist.get_world_size() > 1:
+                    dist.barrier()
+            else:
+                dist.barrier()
+
         # set WandB tool
         self.wandb_writer = None
         if use_wandb:
@@ -200,8 +207,8 @@ class Solver:
                     "Please install 'wandb' with `pip install wandb` first."
                 )
             if dist.get_rank() == 0:
-                wandb.init(**wandb_config)
-                self.wandb_writer = wandb
+                self.wandb_writer = wandb.init(**wandb_config)
+                # NOTE: Manually barrier for wandb initialization
                 if dist.get_world_size() > 1:
                     dist.barrier()
             else:
@@ -276,7 +283,7 @@ class Solver:
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
-                logger.warning("Set update_freq to to 1 when using L-BFGS optimizer.")
+                logger.warning("Set 'update_freq' to to 1 when using L-BFGS optimizer.")
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
@@ -298,9 +305,9 @@ class Solver:
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
             logger.warning(
-                f"Detected world_size({self.world_size}) > 1, it is recommended to "
-                "scale up the learning rate and reduce the epochs or "
-                "iters_per_epoch according to the world_size both linearly."
+                f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
+                "scale up the learning rate and reduce the 'epochs' or "
+                "'iters_per_epoch' according to the 'world_size' both linearly."
             )
 
         self.global_step = 0
@@ -322,7 +329,7 @@ class Solver:
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for forward computation.")
+        logger.info(f"Set 'to_static'={to_static} for computational optimization.")
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
