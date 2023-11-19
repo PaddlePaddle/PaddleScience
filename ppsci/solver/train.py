@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 
 def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
-    """Train program for one epoch
+    """Train program for one epoch.
 
     Args:
         solver (solver.Solver): Main solver.
