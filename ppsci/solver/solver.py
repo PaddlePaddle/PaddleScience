@@ -285,6 +285,12 @@ class Solver:
         self.world_size = dist.get_world_size()
         if self.world_size > 1:
             # TODO(sensen): support different kind of DistributedStrategy
+            if isinstance(self.model, paddle.DataParallel):
+                raise ValueError(
+                    "Given model is already wrapped by DataParallel."
+                    "Please do not wrap your model with DataParallel "
+                    "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
+                )
             fleet.init(is_collective=True)
             self.model = fleet.distributed_model(self.model)
             self.model.input_keys = self.model._layers.input_keys
