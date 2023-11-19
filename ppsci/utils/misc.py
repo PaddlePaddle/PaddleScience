@@ -23,6 +23,7 @@ from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import Union
@@ -38,6 +39,7 @@ __all__ = [
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
+    "RankZeroOnly",
     "Timer",
     "all_gather",
     "concat_dict_list",
@@ -115,6 +117,60 @@ class PrettyOrderedDict(collections.OrderedDict):
 class Prettydefaultdict(collections.defaultdict):
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
+
+
+class RankZeroOnly(ContextDecorator):
+    """
+    A context manager that ensures the code inside it is only executed by the process
+    with rank zero. All rank will be synchronized by `dist.barrier` in
+    distributed environment.
+
+    NOTE: Always used for time consuming code blocks, such as initialization of log
+    writer, saving result to disk, etc.
+
+    Args:
+        rank (Optional[int]): The rank of the current process. If not provided,
+            it will be obtained from `dist.get_rank()`.
+
+    Returns:
+        bool: True if the current process is the master (rank zero), False otherwise.
+
+    Example:
+        >>> with RankZeroOnly(rank=0):
+        ...    # code that should only be executed by the master process
+    """
+
+    def __enter__(self, rank: Optional[int] = None) -> bool:
+        """
+        Enter the context and check if the current process is the master.
+
+        Args:
+            rank (Optional[int]): The rank of the current process. If not provided,
+                it will be obtained from `dist.get_rank()`.
+
+        Returns:
+            bool: True if the current process is the master (rank zero), False otherwise.
+        """
+        if rank is None:
+            rank = dist.get_rank()
+
+        self.is_master = rank == 0
+        return self.is_master
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Exit the context and synchronize all processes if the current process is the master.
+
+        Args:
+            exc_type: The type of the exception raised, if any.
+            exc_value: The exception raised, if any.
+            traceback: The traceback of the exception raised, if any.
+        """
+        if self.is_master:
+            if dist.get_world_size() > 1:
+                dist.barrier()
+        else:
+            dist.barrier()
 
 
 class Timer(ContextDecorator):

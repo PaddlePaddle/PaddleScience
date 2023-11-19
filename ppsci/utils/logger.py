@@ -134,7 +134,7 @@ def set_log_level(log_level: int):
         _logger.setLevel(logging.ERROR)
 
 
-def ensure_logger(log_func: Callable):
+def ensure_logger(log_func: Callable) -> Callable:
     """
     Automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
@@ -205,12 +205,9 @@ def scaler(
             vdl_writer.add_scalar(name, step, value)
 
     if wandb_writer is not None:
-        if dist.get_rank() == 0:
-            wandb_writer.log({"step": step, **metric_dict})
-            if dist.get_world_size() > 1:
-                dist.barrier()
-        else:
-            dist.barrier()
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                wandb_writer.log({"step": step, **metric_dict})
 
 
 def advertise():

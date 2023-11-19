@@ -85,15 +85,11 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
             all_output[key] = paddle.concat(all_output[key])
 
         # save visualization
-        if solver.rank == 0:
-            visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
-            os.makedirs(visual_dir, exist_ok=True)
-            _visualizer.save(
-                osp.join(visual_dir, _visualizer.prefix), {**all_input, **all_output}
-            )
-            # NOTE: Visualization result is always time-consuming, therefore
-            # manually synchronize the process of all ranks here by 'barrier'.
-            if solver.world_size > 1:
-                paddle.distributed.barrier()
-        else:
-            paddle.distributed.barrier()
+        with misc.RankZeroOnly(solver.rank) as is_master:
+            if is_master:
+                visual_dir = osp.join(solver.output_dir, "visual", f"epoch_{epoch_id}")
+                os.makedirs(visual_dir, exist_ok=True)
+                _visualizer.save(
+                    osp.join(visual_dir, _visualizer.prefix),
+                    {**all_input, **all_output},
+                )

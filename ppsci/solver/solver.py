@@ -186,34 +186,6 @@ class Solver:
         # fix seed for reproducibility
         self.seed = seed
 
-        # set VisualDL tool
-        self.vdl_writer = None
-        if use_vdl:
-            if dist.get_rank() == 0:
-                self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
-                # NOTE: Manually barrier for visualDL initialization
-                if dist.get_world_size() > 1:
-                    dist.barrier()
-            else:
-                dist.barrier()
-
-        # set WandB tool
-        self.wandb_writer = None
-        if use_wandb:
-            try:
-                import wandb
-            except ModuleNotFoundError:
-                raise ModuleNotFoundError(
-                    "Please install 'wandb' with `pip install wandb` first."
-                )
-            if dist.get_rank() == 0:
-                self.wandb_writer = wandb.init(**wandb_config)
-                # NOTE: Manually barrier for wandb initialization
-                if dist.get_world_size() > 1:
-                    dist.barrier()
-            else:
-                dist.barrier()
-
         # set running device
         if device != "cpu" and paddle.device.get_device() == "cpu":
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
@@ -309,6 +281,26 @@ class Solver:
                 "scale up the learning rate and reduce the 'epochs' or "
                 "'iters_per_epoch' according to the 'world_size' both linearly."
             )
+
+        # set VisualDL tool
+        self.vdl_writer = None
+        if use_vdl:
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+
+        # set WandB tool
+        self.wandb_writer = None
+        if use_wandb:
+            try:
+                import wandb
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'wandb' with `pip install wandb` first."
+                )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.wandb_writer = wandb.init(**wandb_config)
 
         self.global_step = 0
 
@@ -443,6 +435,9 @@ class Solver:
         # close VisualDL
         if self.vdl_writer is not None:
             self.vdl_writer.close()
+        # close WandB
+        if self.wandb_writer is not None:
+            self.wandb_writer.finish()
 
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:

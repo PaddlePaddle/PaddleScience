@@ -7,6 +7,7 @@
         - AverageMeter
         - PrettyOrderedDict
         - Prettydefaultdict
+        - RankZeroOnly
         - Timer
         - all_gather
         - concat_dict_list
