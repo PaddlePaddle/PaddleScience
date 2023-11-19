@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 def visualize_func(solver: "solver.Solver", epoch_id: int):
-    """Visualization program
+    """Visualization program.
 
     Args:
         solver (solver.Solver): Main Solver.
@@ -34,6 +34,12 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
     for _, _visualizer in solver.visualizer.items():
         all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
+
+        # NOTE: 'visualize_func' now do not apply data sharding(different from 'Solver.predict'),
+        # where every rank receive same input data and compute same output data
+        # (which will cause computational redundancy),
+        # but only the 0-rank(master) device save the visualization result into disk.
+        # TODO(HydrogenSulfate): This will be optimized in the future.
 
         input_dict = _visualizer.input_dict
         batch_size = _visualizer.batch_size
@@ -63,19 +69,12 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
                     _visualizer.output_expr, batch_input_dict, solver.model
                 )
 
-            # collect batch data with float32 dtype
+            # collect batch data with dtype fixed to float32 regardless of the dtypes of
+            # paddle runtime, which is most compatible with almost visualization tools.
             for key, batch_input in batch_input_dict.items():
-                all_input[key].append(
-                    batch_input.detach().astype("float32")
-                    if solver.world_size == 1
-                    else misc.all_gather(batch_input.detach().astype("float32"))
-                )
+                all_input[key].append(batch_input.detach().astype("float32"))
             for key, batch_output in batch_output_dict.items():
-                all_output[key].append(
-                    batch_output.detach().astype("float32")
-                    if solver.world_size == 1
-                    else misc.all_gather(batch_output.detach().astype("float32"))
-                )
+                all_output[key].append(batch_output.detach().astype("float32"))
 
         # concatenate all data
         for key in all_input:
@@ -90,3 +89,9 @@ def visualize_func(solver: "solver.Solver", epoch_id: int):
             _visualizer.save(
                 osp.join(visual_dir, _visualizer.prefix), {**all_input, **all_output}
             )
+            # NOTE: Visualization result is always time-consuming, therefore
+            # manually synchronize the process of all ranks here by 'barrier'.
+            if solver.world_size > 1:
+                paddle.distributed.barrier()
+        else:
+            paddle.distributed.barrier()

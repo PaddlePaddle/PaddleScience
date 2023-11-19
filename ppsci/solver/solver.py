@@ -347,7 +347,7 @@ class Solver:
                             expr,
                             self.model,
                             extra_parameters,
-                            # os.path.join(self.output_dir, container.name, name),  # HACK: Activate it for DEBUG.
+                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
                         )
 
         if self.constraint:
