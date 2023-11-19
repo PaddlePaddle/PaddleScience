@@ -26,6 +26,7 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
+import su2paddle
 
 def train_mse_func(
     output_dict: Dict[str, "paddle.Tensor"],
@@ -47,13 +48,15 @@ def eval_rmse_func(
     return {"RMSE": (sum(mse_losses) / len(mse_losses)) ** 0.5}
 
 
+
 def train(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
-    #安装ujson
+
+    su2paddle.activate_su2_mpi(remove_temp_files=True)
     
     # set dataloader config
     train_dataloader_cfg = {
@@ -87,7 +90,8 @@ def train(cfg: DictConfig):
     # print(sup_constraint.dataset.marker_dict['airfoil'])
 
     # set airfoil model
-    model = ppsci.arch.CFDGCN(**cfg.MODEL, process_sim=sup_constraint.dataset._preprocess,fine_marker_dict=sup_constraint.dataset.marker_dict)
+    model = ppsci.arch.CFDGCN(**cfg.MODEL, process_sim=sup_constraint.dataset._preprocess,fine_marker_dict=sup_constraint.dataset.marker_dict,
+    su2_module = su2paddle.SU2Module)
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)

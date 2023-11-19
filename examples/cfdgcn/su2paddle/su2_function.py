@@ -5,7 +5,7 @@ import paddle
 import pysu2
 from mpi4py import MPI  # Must be imported before pysu2 or else MPI error happens at some point
 
-from common import pad_sequence
+from .common import pad_sequence
 from .su2_function_mpi import RunCode, non_busy_post, non_busy_wait
 
 _global_max_ppe = -1

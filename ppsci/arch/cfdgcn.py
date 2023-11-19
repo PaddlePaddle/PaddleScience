@@ -120,6 +120,7 @@ class CFDGCN(nn.Layer):
         num_end_convs=3,
         hidden_channels=512,
         out_channels=3,
+        su2_module=None
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -147,7 +148,7 @@ class CFDGCN(nn.Layer):
         ), "Mesh has flipped elems"
 
         self.process_sim = process_sim
-        # self.su2 = su2paddle.SU2Module(config_file, mesh_file=self.mesh_file)
+        self.su2 = su2_module(config_file, mesh_file=self.mesh_file)
         # print(f'Mesh filename: {self.mesh_file.format(batch_index="*")}', flush=True)
         self.fine_marker_dict = paddle.to_tensor(fine_marker_dict["airfoil"]).unique()
         self.sdf = None
@@ -175,70 +176,75 @@ class CFDGCN(nn.Layer):
         self.sim_info = {}  # store output of coarse simulation for logging / debugging
 
     def forward(self, x: Dict[str, "pgl.Graph"]) -> Dict[str, paddle.Tensor]:
-        graphs = x[self.input_keys[0]]
-        batch_size = len(graphs)
-        nodes_list = []
-        aoa_list = []
-        mach_or_reynolds_list = []
-        fine_x_list = []
-        for graph in graphs:
-            x = graph.node_feat["feature"]
+        graph = x[self.input_keys[0]]
+        # batch_size = len(graphs)
+        # nodes_list = []
+        # aoa_list = []
+        # mach_or_reynolds_list = []
+        # fine_x_list = []
+        #for graph in graphs:
+        x = graph.node_feat["feature"]
 
-            if self.sdf is None:
-                with paddle.no_grad():
-                    self.sdf = signed_dist_graph(
-                        x[:, :2], self.fine_marker_dict
-                    ).unsqueeze(1)
-            fine_x = paddle.concat([x, self.sdf], axis=1)
+        if self.sdf is None:
+            with paddle.no_grad():
+                self.sdf = signed_dist_graph(
+                    x[:, :2], self.fine_marker_dict
+                ).unsqueeze(1)
+        fine_x = paddle.concat([x, self.sdf], axis=1)
 
-            for i, conv in enumerate(self.pre_convs):
-                fine_x = nn.functional.relu(conv(graph, fine_x))
-            fine_x_list.append(fine_x)
+        for i, conv in enumerate(self.pre_convs):
+            fine_x = nn.functional.relu(conv(graph, fine_x))
+        fine_x_list.append(fine_x)
 
-            nodes = self.get_nodes()  # [353,2]
-            self.write_mesh_file(
-                nodes, self.elems, self.marker_dict, filename=self.mesh_file
-            )
+        nodes = self.get_nodes()  # [353,2]
+        self.write_mesh_file(
+            nodes, self.elems, self.marker_dict, filename=self.mesh_file
+        )
 
-            nodes_list.append(nodes)
-            aoa_list.append(graph.aoa)
-            mach_or_reynolds_list.append(graph.mach_or_reynolds)
+        # nodes_list.append(nodes)
+        # aoa_list.append(graph.aoa)
+        # mach_or_reynolds_list.append(graph.mach_or_reynolds)
 
         # paddle stack for [batch,nodes],[batch,nodes],[batch,1],[batch,1] for su2
         # su2 can apply each item of one batch with mpi
-        nodes_input = paddle.stack(nodes_list, axis=0)
-        aoa_input = paddle.stack(aoa_list, axis=0)
-        mach_or_reynolds_input = paddle.stack(mach_or_reynolds_list, axis=0)
 
-        # batch_y = self.su2(
-        #     nodes_input[..., 0],
-        #     nodes_input[..., 1],
-        #     aoa_input[..., None],
-        #     mach_or_reynolds_input[..., None],
-        # )
+        nodes_input = [nodes]
+        aoa_input = [graph.aoa]
+        mach_or_reynolds_list= [graph.mach_or_reynolds]
+        # nodes_input = paddle.stack(nodes_list, axis=0)
+        # aoa_input = paddle.stack(aoa_list, axis=0)
+        # mach_or_reynolds_input = paddle.stack(mach_or_reynolds_list, axis=0)
+
+        batch_y = self.su2(
+            nodes_input[..., 0],
+            nodes_input[..., 1],
+            aoa_input[..., None],
+            mach_or_reynolds_input[..., None],
+        )
         batch_y = self.process_sim(
             batch_y, False
         )  # [8,353] * 3, a list with three items
 
         pred_fields = []
-        for idx in range(batch_size):
-            graph = graphs[idx]
-            coarse_y = paddle.stack([y[idx].flatten() for y in batch_y], axis=1).astype(
-                "float32"
-            )  # features [353,3]
-            nodes = self.get_nodes()  # [353,2]
-            x = graph.node_feat[
-                "feature"
-            ]  # [6684,5] the two-first columns are the node locations
-            fine_y = self.upsample(
-                features=coarse_y, coarse_nodes=nodes[:, :2], fine_nodes=x[:, :2]
-            )
-            fine_y = paddle.concat([fine_y, fine_x_list[idx]], axis=1)
+        
+        # for idx in range(batch_size):
+        #     graph = graphs[idx]
+        coarse_y = paddle.stack([y.flatten() for y in batch_y], axis=1).astype(
+            "float32"
+        )  # features [353,3]
+        nodes = self.get_nodes()  # [353,2]
+        x = graph.node_feat[
+            "feature"
+        ]  # [6684,5] the two-first columns are the node locations
+        fine_y = self.upsample(
+            features=coarse_y, coarse_nodes=nodes[:, :2], fine_nodes=x[:, :2]
+        )
+        fine_y = paddle.concat([fine_y, fine_x_list[idx]], axis=1)
 
-            for i, conv in enumerate(self.convs[:-1]):
-                fine_y = nn.functional.relu(conv(graph, fine_y))
-            fine_y = self.convs[-1](graph, fine_y)
-            pred_fields.append(fine_y)
+        for i, conv in enumerate(self.convs[:-1]):
+            fine_y = nn.functional.relu(conv(graph, fine_y))
+        fine_y = self.convs[-1](graph, fine_y)
+        pred_fields.append(fine_y)
 
         # self.sim_info['nodes'] = nodes[:, :2]
         # self.sim_info['elems'] = [self.elems] * batch_size
