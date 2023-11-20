@@ -135,7 +135,7 @@ class RankZeroOnly:
     Returns:
         bool: True if the current process is the master (rank zero), False otherwise.
 
-    Example:
+    Examples:
         >>> import paddle.distributed as dist
         >>> with RankZeroOnly(dist.get_rank()) as is_master:
         ...     if is_master:
