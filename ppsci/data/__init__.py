@@ -99,11 +99,13 @@ def build_dataloader(_dataset, cfg):
         collate_fn = batch_transform.build_batch_transforms(batch_transforms_cfg)
 
     # build init function
+    _DEFAULT_NUM_WORKERS = 1
+    _DEFAULT_SEED = 42
     init_fn = partial(
         worker_init_fn,
-        num_workers=cfg.get("num_workers", 0),
+        num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
         rank=dist.get_rank(),
-        base_seed=cfg.get("seed", 42),
+        base_seed=cfg.get("seed", _DEFAULT_SEED),
     )
 
     # build dataloader
@@ -122,7 +124,7 @@ def build_dataloader(_dataset, cfg):
             batch_size=cfg["batch_size"],
             drop_last=sampler_cfg.get("drop_last", False),
             shuffle=sampler_cfg.get("shuffle", False),
-            num_workers=cfg.get("num_workers", 1),
+            num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             collate_fn=collate_fn,
         )
     else:
@@ -131,7 +133,7 @@ def build_dataloader(_dataset, cfg):
             places=device.get_device(),
             batch_sampler=sampler,
             collate_fn=collate_fn,
-            num_workers=cfg.get("num_workers", 1),
+            num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
         )
