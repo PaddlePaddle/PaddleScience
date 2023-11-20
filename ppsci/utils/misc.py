@@ -119,7 +119,7 @@ class Prettydefaultdict(collections.defaultdict):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
-class RankZeroOnly(ContextDecorator):
+class RankZeroOnly:
     """
     A context manager that ensures the code inside it is only executed by the process
     with rank zero. All rank will be synchronized by `dist.barrier` in
