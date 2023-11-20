@@ -76,7 +76,6 @@ def _eval_by_dataset(
     """
     target_metric: float = float("inf")
     for _, _validator in solver.validator.items():
-        all_input = misc.Prettydefaultdict(list)
         all_output = misc.Prettydefaultdict(list)
         all_label = misc.Prettydefaultdict(list)
         num_samples = _get_dataset_length(_validator.data_loader)
@@ -111,20 +110,6 @@ def _eval_by_dataset(
 
             loss_dict[f"loss({_validator.name})"] = float(validator_loss)
 
-            # collect batch data
-            for key, input in input_dict.items():
-                # NOTE: convert CUDAPinnedPlace into CUDAPlace for communication,
-                # or else will raise device context not found error, this should be
-                # optimized in the future.
-                if input.place._type() == 3:
-                    input = input.cuda()
-
-                all_input[key].append(
-                    (input.detach() if hasattr(input, "detach") else input)
-                    if solver.world_size == 1
-                    else misc.all_gather(input.detach())
-                )
-
             for key, output in output_dict.items():
                 all_output[key].append(
                     (output.detach() if hasattr(output, "detach") else output)
@@ -157,12 +142,6 @@ def _eval_by_dataset(
             batch_tic = time.perf_counter()
 
         # concatenate all data and discard padded sample(s)
-        for key in all_input:
-            if paddle.is_tensor(all_input[key][0]):
-                all_input[key] = paddle.concat(all_input[key])
-            if len(all_input[key]) > num_samples:
-                all_input[key] = all_input[key][:num_samples]
-
         for key in all_output:
             if paddle.is_tensor(all_output[key][0]):
                 all_output[key] = paddle.concat(all_output[key])
