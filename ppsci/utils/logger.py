@@ -18,6 +18,7 @@ import functools
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -26,6 +27,10 @@ import colorlog
 import paddle.distributed as dist
 
 from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    import visualdl  # isort:skip
+    import wandb  # isort:skip
 
 _logger: logging.Logger = None
 
@@ -128,7 +133,7 @@ def set_log_level(log_level: int):
         _logger.setLevel(logging.ERROR)
 
 
-def ensure_logger(log_func: Callable):
+def ensure_logger(log_func: Callable) -> Callable:
     """
     Automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
@@ -181,27 +186,27 @@ def error(msg, *args):
 
 
 def scaler(
-    metric_dict: Dict[str, float], step: int, vdl_writer=None, wandb_writer=None
+    metric_dict: Dict[str, float],
+    step: int,
+    vdl_writer: Optional["visualdl.LogWriter"] = None,
+    wandb_writer: Optional["wandb.run"] = None,
 ):
-    """This function will add scaler data to visualdl or wandb for plotting curve(s).
+    """This function will add scaler data to VisualDL or WandB for plotting curve(s).
 
     Args:
         metric_dict (Dict[str, float]): Metrics dict with metric name and value.
         step (int): The step of the metric.
-        vdl_writer (None): Visualdl writer to record metrics.
-        wandb_writer (None): Wandb writer to record metrics.
+        vdl_writer (visualdl.LogWriter): VisualDL writer to record metrics. Defaults to None.
+        wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
         for name, value in metric_dict.items():
             vdl_writer.add_scalar(name, step, value)
 
     if wandb_writer is not None:
-        if dist.get_rank() == 0:
-            wandb_writer.log({"step": step, **metric_dict})
-            if dist.get_world_size() > 1:
-                dist.barrier()
-        else:
-            dist.barrier()
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                wandb_writer.log({"step": step, **metric_dict})
 
 
 def advertise():
