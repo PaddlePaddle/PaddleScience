@@ -113,6 +113,12 @@ def _eval_by_dataset(
 
             # collect batch data
             for key, input in input_dict.items():
+                # NOTE: convert CUDAPinnedPlace into CUDAPlace for communication,
+                # or else will raise device context not found error, this should be
+                # optimized in the future.
+                if input.place._type() == 3:
+                    input = input.cuda()
+
                 all_input[key].append(
                     (input.detach() if hasattr(input, "detach") else input)
                     if solver.world_size == 1
