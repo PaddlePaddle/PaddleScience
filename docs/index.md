@@ -21,6 +21,7 @@
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 微分方程 | [拉普拉斯方程](./zh/examples/laplace2d.md) | 机理驱动 | MLP | 无监督学习 | -        | - |
+| 微分方程 | [物理-信息径向基网络](./zh/examples/pirbn.md) | 机理驱动 | PIRBN | 无监督学习 | -        | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [伯格斯方程](./zh/examples/deephpms.md) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |
 | 微分方程 | [非线性偏微分方程](./zh/examples/pirbn.md) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [洛伦兹方程](./zh/examples/lorenz.md) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
