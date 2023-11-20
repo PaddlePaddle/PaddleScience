@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 
 def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
-    """Train program for one epoch
+    """Train program for one epoch.
 
     Args:
         solver (solver.Solver): Main solver.
@@ -139,6 +139,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
 
 def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     """Train function for one epoch with L-BFGS optimizer.
+
+    NOTE: L-BFGS training program do not support AMP now.
 
     Args:
         solver (solver.Solver): Main solver.
