@@ -26,9 +26,8 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 微分方程 | [拉普拉斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/laplace2d) | 机理驱动 | MLP | 无监督学习 | -        | - |
-| 微分方程 | [物理-信息径向基网络](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/pirbn.md) | 机理驱动 | PIRBN | 无监督学习 | -        | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [伯格斯方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deephpms) | 机理驱动 | MLP | 无监督学习 | [Data](https://github.com/maziarraissi/DeepHPMs/tree/master/Data) | [Paper](https://arxiv.org/pdf/1801.06637.pdf) |</center>
-| 微分方程 | [非线性偏微分方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/pirbn) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
+| 微分方程 | [非线性偏微分方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/pirbn) | 机理驱动 | PIRBN | 无监督学习 | - | [Paper](https://arxiv.org/abs/2304.06234) |
 | 微分方程 | [洛伦兹方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/lorenz) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 微分方程 | [若斯叻方程](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/rossler) | 数据驱动 | Transformer-Physx | 监督学习 | [Data](https://github.com/zabaras/transformer-physx) | [Paper](https://arxiv.org/abs/2010.03957) |
 | 算子学习 | [DeepONet](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deeponet) | 数据驱动 | MLP | 监督学习 | [Data](https://deepxde.readthedocs.io/en/latest/demos/operator/antiderivative_unaligned.html) | [Paper](https://export.arxiv.org/pdf/1910.03193.pdf) |
