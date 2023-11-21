@@ -76,11 +76,11 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set models
-    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    disp_net = ppsci.arch.MLP(**cfg.MODEL)
 
     # set optimizer
-    optimizer_adam = ppsci.optimizer.Adam(**cfg.TRAIN.opt.adam)((disp_net,))
-    optimizer_lbfgs = ppsci.optimizer.LBFGS(**cfg.TRAIN.opt.lbfgs)((disp_net,))
+    optimizer_adam = ppsci.optimizer.Adam(**cfg.TRAIN.optimizer.adam)(disp_net)
+    optimizer_lbfgs = ppsci.optimizer.LBFGS(**cfg.TRAIN.optimizer.lbfgs)(disp_net)
 
     # set equation
     x, y = sp.symbols("x y")
@@ -104,7 +104,7 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 0,
+        "num_workers": 1,
     }
 
     # set constraint
@@ -150,11 +150,9 @@ def train(cfg: DictConfig):
     )
     bc_left_My = ppsci.constraint.BoundaryConstraint(
         {
-            "x": lambda d: d["x"],
-            "y": lambda d: d["y"],
             "M_y": lambda d: -(
                 cfg.NU * hessian(d["u"], d["x"]) + hessian(d["u"], d["y"])
-            ),
+            )
         },
         {"M_y": 0},
         geom["geo"],
@@ -166,11 +164,9 @@ def train(cfg: DictConfig):
     )
     bc_right_My = ppsci.constraint.BoundaryConstraint(
         {
-            "x": lambda d: d["x"],
-            "y": lambda d: d["y"],
             "M_y": lambda d: -(
                 cfg.NU * hessian(d["u"], d["x"]) + hessian(d["u"], d["y"])
-            ),
+            )
         },
         {"M_y": 0},
         geom["geo"],
@@ -182,11 +178,9 @@ def train(cfg: DictConfig):
     )
     bc_up_Mx = ppsci.constraint.BoundaryConstraint(
         {
-            "x": lambda d: d["x"],
-            "y": lambda d: d["y"],
             "M_x": lambda d: -(
                 hessian(d["u"], d["x"]) + cfg.NU * hessian(d["u"], d["y"])
-            ),
+            )
         },
         {"M_x": 0},
         geom["geo"],
@@ -198,11 +192,9 @@ def train(cfg: DictConfig):
     )
     bc_bottom_Mx = ppsci.constraint.BoundaryConstraint(
         {
-            "x": lambda d: d["x"],
-            "y": lambda d: d["y"],
             "M_x": lambda d: -(
                 hessian(d["u"], d["x"]) + cfg.NU * hessian(d["u"], d["y"])
-            ),
+            )
         },
         {"M_x": 0},
         geom["geo"],
@@ -284,7 +276,7 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set models
-    disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
+    disp_net = ppsci.arch.MLP(**cfg.MODEL)
 
     # load pretrained model
     save_load.load_pretrain(disp_net, cfg.EVAL.pretrained_model_path)

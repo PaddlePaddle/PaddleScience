@@ -24,7 +24,7 @@
 
 ## 2. 问题定义
 
-本案例结构为一个长、宽和厚分别为 2 m、3 m 和 0.01 m 的矩形平板，平板四周固定，表面则被施加一个正弦分布载荷平板 $q=q_0sin(\dfrac{\pi x}{a})sin(\dfrac{\pi x}{b})$，其中 $q_0=980 Pa$。PDE 方程为 2D 下的 Biharmonic 方程，公式为：
+本案例结构为一个长、宽和厚分别为 2 m、3 m 和 0.01 m 的矩形平板，平板四周固定，表面则被施加一个正弦分布载荷 $q=q_0sin(\dfrac{\pi x}{a})sin(\dfrac{\pi x}{b})$，其中 $q_0=980 Pa$。PDE 方程为 2D 下的 Biharmonic 方程，公式为：
 
 $$\nabla^4w=(\dfrac{\partial^2}{\partial x^2}+\dfrac{\partial^2}{\partial y^2})(\dfrac{\partial^2}{\partial x^2}+\dfrac{\partial^2}{\partial y^2})w=\dfrac{q}{D}$$
 
@@ -122,9 +122,9 @@ examples/biharmonic2d/biharmonic2d.py:98:108
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="215"
+``` py linenums="207"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:215:224
+examples/biharmonic2d/biharmonic2d.py:207:216
 --8<--
 ```
 
@@ -136,9 +136,9 @@ examples/biharmonic2d/biharmonic2d.py:215:224
 
 第四个参数是在计算域上的采样配置，此处设置 `batch_size` 为：
 
-``` yaml linenums="58"
+``` yaml linenums="57"
 --8<--
-examples/biharmonic2d/conf/biharmonic2d.yaml:58:60
+examples/biharmonic2d/conf/biharmonic2d.yaml:57:59
 --8<--
 ```
 
@@ -148,9 +148,9 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:58:60
 
 第七个参数是每个点参与损失计算时的权重，此处设置为：
 
-``` yaml linenums="61"
+``` yaml linenums="60"
 --8<--
-examples/biharmonic2d/conf/biharmonic2d.yaml:61:63
+examples/biharmonic2d/conf/biharmonic2d.yaml:60:62
 --8<--
 ```
 
@@ -168,9 +168,9 @@ examples/biharmonic2d/biharmonic2d.py:111:120
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="225"
+``` py linenums="217"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:225:236
+examples/biharmonic2d/biharmonic2d.py:217:228
 --8<--
 ```
 
@@ -188,9 +188,9 @@ examples/biharmonic2d/biharmonic2d.py:81:83
 
 接下来需要在配置文件中指定训练轮数和学习率等优化器参数。
 
-``` yaml linenums="47"
+``` yaml linenums="46"
 --8<--
-examples/biharmonic2d/conf/biharmonic2d.yaml:47:57
+examples/biharmonic2d/conf/biharmonic2d.yaml:46:56
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:47:57
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练，注意两个优化过程需要分别构建 `Solver`。
 
-``` py linenums="238"
+``` py linenums="230"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:238:277
+examples/biharmonic2d/biharmonic2d.py:230:269
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/biharmonic2d/biharmonic2d.py:238:277
 
 训练完成后，可以在 `eval` 模式中对训练好的模型进行评估和可视化。由于案例的特殊性，不需构建评估器和可视化器，而是使用自定义代码。
 
-``` py linenums="280"
+``` py linenums="272"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:280:356
+examples/biharmonic2d/biharmonic2d.py:272:348
 --8<--
 ```
 

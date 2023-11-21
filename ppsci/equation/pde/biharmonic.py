@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from typing import Callable
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -58,8 +57,6 @@ class Biharmonic(base.PDE):
 
         if isinstance(q, str):
             q = self.create_function("q", invars)
-        elif isinstance(q, Callable):
-            q = q(invars)
         if isinstance(D, str):
             D = self.create_function("D", invars)
 

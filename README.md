@@ -61,7 +61,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
 | 求解器耦合 | [CFD-GCN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/cfdgcn) | 数据驱动 | GCN | 监督学习 | [Data](https://aistudio.baidu.com/aistudio/datasetdetail/184778)<br>[Mesh](https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar) | [Paper](https://arxiv.org/abs/2007.04439)|
 | 受力分析 | [1D 欧拉梁变形](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/euler_beam/euler_beam.py) | 机理驱动 | MLP | 无监督学习 | - | - |
-| 受力分析 | [2D 平板变形](https://aistudio.baidu.com/aistudio/projectdetail/5792325) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | [2D 平板变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2108.07243) |
 | 受力分析 | [3D 连接件变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bracket) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar) | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
 | 受力分析 | [结构震动模拟](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/phylstm) | 机理驱动 | PhyLSTM | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat) | [Paper](https://arxiv.org/abs/2002.10253) |
 

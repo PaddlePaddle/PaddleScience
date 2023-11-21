@@ -35,19 +35,18 @@ HEIGHT: 0.01        # m
 
 # model settings
 MODEL:
-  disp_net:
-    input_keys: ["x", "y"]
-    output_keys: ["u",]
-    num_layers: 5
-    hidden_size: 20
-    activation: "tanh"
-    weight_norm: true
+  input_keys: ["x", "y"]
+  output_keys: ["u",]
+  num_layers: 5
+  hidden_size: 20
+  activation: "tanh"
+  weight_norm: true
 
 # training settings
 TRAIN:
   epochs: 1000
   iters_per_epoch: 1
-  opt:
+  optimizer:
     adam:
       learning_rate: 1.0e-3
     lbfgs:
