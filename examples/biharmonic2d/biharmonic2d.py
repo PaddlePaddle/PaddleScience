@@ -84,7 +84,7 @@ def train(cfg: DictConfig):
 
     # set equation
     x, y = sp.symbols("x y")
-    Q = cfg.Q_0 * sp.sin(sp.pi * x / cfg.LENGTH) * sp.sin(sp.pi * y / cfg.WIDTH)
+    Q = cfg.Q_0 * sp.sin(np.pi * x / cfg.LENGTH) * sp.sin(np.pi * y / cfg.WIDTH)
     equation = {
         "Biharmonic": ppsci.equation.Biharmonic(
             dim=2, q=Q, D=cfg.E * (cfg.HEIGHT**3) / (12.0 * (1.0 - cfg.NU**2))
