@@ -33,7 +33,7 @@ from ppsci.utils import save_load
 
 def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
     plt.clf()
-    fig = plt.figure(figname, figsize=(24, 12))
+    fig = plt.figure(figname, figsize=(15, 12))
     gs = gridspec.GridSpec(2, 3)
     gs.update(top=0.8, bottom=0.2, left=0.1, right=0.9, wspace=0.5)
 
@@ -356,7 +356,7 @@ def evaluate(cfg: DictConfig):
     )
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="rec_plate.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="biharmonic2d.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
