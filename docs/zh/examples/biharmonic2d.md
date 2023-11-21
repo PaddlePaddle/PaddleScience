@@ -94,7 +94,7 @@ examples/biharmonic2d/biharmonic2d.py:78:79
 
 ``` py linenums="85"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:85:94
+examples/biharmonic2d/biharmonic2d.py:85:92
 --8<--
 ```
 
@@ -102,9 +102,9 @@ examples/biharmonic2d/biharmonic2d.py:85:94
 
 由于平板的高很小，本问题的几何区域认为是长为 2 宽为 3 的 2D 矩形，通过 PaddleScience 内置的 `ppsci.geometry.Rectangle` API 构建：
 
-``` py linenums="96"
+``` py linenums="94"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:96:98
+examples/biharmonic2d/biharmonic2d.py:94:96
 --8<--
 ```
 
@@ -112,9 +112,9 @@ examples/biharmonic2d/biharmonic2d.py:96:98
 
 本案例共涉及到 9 个约束，在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="101"
+``` py linenums="98"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:101:110
+examples/biharmonic2d/biharmonic2d.py:98:108
 --8<--
 ```
 
@@ -122,9 +122,9 @@ examples/biharmonic2d/biharmonic2d.py:101:110
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="217"
+``` py linenums="215"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:217:226
+examples/biharmonic2d/biharmonic2d.py:215:224
 --8<--
 ```
 
@@ -160,17 +160,17 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:61:63
 
 如 [2 问题定义](#2) 中所述，$x=0$ 处的挠度 $w$ 为 0，有如下边界条件，其他 7 个边界条件也与之类似：
 
-``` py linenums="113"
+``` py linenums="111"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:113:122
+examples/biharmonic2d/biharmonic2d.py:111:120
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="227"
+``` py linenums="225"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:227:238
+examples/biharmonic2d/biharmonic2d.py:225:236
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:47:57
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练，注意两个优化过程需要分别构建 `Solver`。
 
-``` py linenums="240"
+``` py linenums="238"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:240:279
+examples/biharmonic2d/biharmonic2d.py:238:277
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/biharmonic2d/biharmonic2d.py:240:279
 
 训练完成后，可以在 `eval` 模式中对训练好的模型进行评估和可视化。由于案例的特殊性，不需构建评估器和可视化器，而是使用自定义代码。
 
-``` py linenums="282"
+``` py linenums="280"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:282:358
+examples/biharmonic2d/biharmonic2d.py:280:356
 --8<--
 ```
 

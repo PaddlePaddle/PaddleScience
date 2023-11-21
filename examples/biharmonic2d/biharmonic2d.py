@@ -83,13 +83,11 @@ def train(cfg: DictConfig):
     optimizer_lbfgs = ppsci.optimizer.LBFGS(**cfg.TRAIN.opt.lbfgs)((disp_net,))
 
     # set equation
-    def Q_func(invars):
-        x, y = invars
-        return cfg.Q_0 * sp.sin(np.pi * x / cfg.LENGTH) * sp.sin(np.pi * y / cfg.WIDTH)
-
+    x, y = sp.symbols("x y")
+    Q = cfg.Q_0 * sp.sin(sp.pi * x / cfg.LENGTH) * sp.sin(sp.pi * y / cfg.WIDTH)
     equation = {
         "Biharmonic": ppsci.equation.Biharmonic(
-            dim=2, q=Q_func, D=cfg.E * (cfg.HEIGHT**3) / (12.0 * (1.0 - cfg.NU**2))
+            dim=2, q=Q, D=cfg.E * (cfg.HEIGHT**3) / (12.0 * (1.0 - cfg.NU**2))
         ),
     }
 
