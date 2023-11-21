@@ -167,7 +167,7 @@ def predict_and_save_plot(
         tile_ratio (int, optional): How many tiles of one dim. Defaults to 1.
     """
     dir_pred = "predict/"
-    os.makedirs(f"{OUTPUT_DIR}{dir_pred}", exist_ok=True)
+    os.makedirs(os.path.join(OUTPUT_DIR, dir_pred), exist_ok=True)
 
     start_idx = 190
     density_low = dataset_valid["density_low"][start_idx : start_idx + 3]
