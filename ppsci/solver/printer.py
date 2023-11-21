@@ -25,6 +25,7 @@ from ppsci.utils import misc
 
 if TYPE_CHECKING:
     from ppsci import solver
+import paddle
 
 
 def update_train_loss(
@@ -72,10 +73,12 @@ def log_train_info(
         (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
+    max_mem_reserved_msg = f"max_mem_reserved: {paddle.device.cuda.max_memory_reserved()} B"
+    max_mem_allocated_msg = f"max_mem_allocated: {paddle.device.cuda.max_memory_allocated()} B"
     logger.info(
         f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
         f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
-        f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
+        f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}, {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     )
 
     logger.scaler(
