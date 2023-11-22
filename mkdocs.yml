@@ -62,6 +62,7 @@ nav:
           - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
         - 结构:
+          - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
