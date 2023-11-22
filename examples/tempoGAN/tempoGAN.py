@@ -46,8 +46,13 @@ def train(cfg: DictConfig):
     data_funcs = func_module.DataFuncs(cfg.TILE_RATIO)
 
     # load dataset
+    logger.message(
+        "Attention! Start loading datasets, this will take tens of seconds to several minutes, please wait patiently."
+    )
     dataset_train = hdf5storage.loadmat(cfg.DATASET_PATH)
+    logger.message("Finish loading training dataset.")
     dataset_valid = hdf5storage.loadmat(cfg.DATASET_PATH_VALID)
+    logger.message("Finish loading validation dataset.")
 
     # define Generator model
     model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
