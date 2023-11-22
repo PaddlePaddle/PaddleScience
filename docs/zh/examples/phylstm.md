@@ -2,15 +2,25 @@
 
 === "模型训练命令"
 
-    === phylstm2
+    === "phylstm2"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm2.py
-    ```
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm2.py
+        ```
+
+    === "phylstm3"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm3.py
+        ```
 
     === phylstm3
 
@@ -24,15 +34,30 @@
 
 === "模型评估命令"
 
-    === phylstm2
+    === "phylstm2"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm2.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams
-    ```
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm2.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams
+        ```
+
+    === "phylstm3"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm3.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams
+        ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [phylstm2_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams) | loss(sup_valid): 0.00799 |
+| [phylstm3_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams) | loss(sup_valid): 0.03098 |
 
     === phylstm3
 
