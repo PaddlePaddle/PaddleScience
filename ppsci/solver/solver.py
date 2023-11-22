@@ -550,7 +550,9 @@ class Solver:
 
                 # collect batch data
                 for key, batch_output in batch_output_dict.items():
-                    pred_dict[key].append(batch_output.detach())
+                    pred_dict[key].append(
+                        batch_output.detach() if no_grad else batch_output
+                    )
 
             # concatenate local predictions
             pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}

@@ -78,9 +78,9 @@ $$w = f(x,y)$$
 
 上式中 $f$ 即为挠度模型 `disp_net`，用 PaddleScience 代码表示如下：
 
-``` py linenums="78"
+``` py linenums="77"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:78:79
+examples/biharmonic2d/biharmonic2d.py:77:78
 --8<--
 ```
 
@@ -92,9 +92,9 @@ examples/biharmonic2d/biharmonic2d.py:78:79
 
 本案例涉及到双调和方程，使用 PaddleScience 内置的 `ppsci.equation.Biharmonic` 即可，由于载荷 $q$ 为非均匀载荷，需要自定义载荷分布函数，并传入 API。
 
-``` py linenums="85"
+``` py linenums="84"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:85:92
+examples/biharmonic2d/biharmonic2d.py:84:91
 --8<--
 ```
 
@@ -102,9 +102,9 @@ examples/biharmonic2d/biharmonic2d.py:85:92
 
 由于平板的高很小，本问题的几何区域认为是长为 2 宽为 3 的 2D 矩形，通过 PaddleScience 内置的 `ppsci.geometry.Rectangle` API 构建：
 
-``` py linenums="94"
+``` py linenums="93"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:94:96
+examples/biharmonic2d/biharmonic2d.py:93:95
 --8<--
 ```
 
@@ -112,9 +112,9 @@ examples/biharmonic2d/biharmonic2d.py:94:96
 
 本案例共涉及到 9 个约束，在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="98"
+``` py linenums="97"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:98:108
+examples/biharmonic2d/biharmonic2d.py:97:107
 --8<--
 ```
 
@@ -122,9 +122,9 @@ examples/biharmonic2d/biharmonic2d.py:98:108
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="207"
+``` py linenums="206"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:207:216
+examples/biharmonic2d/biharmonic2d.py:206:215
 --8<--
 ```
 
@@ -160,17 +160,17 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:60:62
 
 如 [2 问题定义](#2) 中所述，$x=0$ 处的挠度 $w$ 为 0，有如下边界条件，其他 7 个边界条件也与之类似：
 
-``` py linenums="111"
+``` py linenums="110"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:111:120
+examples/biharmonic2d/biharmonic2d.py:110:119
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="217"
+``` py linenums="216"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:217:228
+examples/biharmonic2d/biharmonic2d.py:216:227
 --8<--
 ```
 
@@ -178,9 +178,9 @@ examples/biharmonic2d/biharmonic2d.py:217:228
 
 训练过程会调用优化器来更新模型参数，此处选择使用 `Adam` 先进行少量训练后，再使用 `LBFGS` 优化器精调。
 
-``` py linenums="81"
+``` py linenums="80"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:81:83
+examples/biharmonic2d/biharmonic2d.py:80:82
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:46:56
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练，注意两个优化过程需要分别构建 `Solver`。
 
-``` py linenums="230"
+``` py linenums="229"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:230:269
+examples/biharmonic2d/biharmonic2d.py:229:268
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/biharmonic2d/biharmonic2d.py:230:269
 
 训练完成后，可以在 `eval` 模式中对训练好的模型进行评估和可视化。由于案例的特殊性，不需构建评估器和可视化器，而是使用自定义代码。
 
-``` py linenums="272"
+``` py linenums="271"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:272:348
+examples/biharmonic2d/biharmonic2d.py:271:351
 --8<--
 ```
 

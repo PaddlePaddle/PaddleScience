@@ -28,7 +28,6 @@ import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
-from ppsci.utils import save_load
 
 
 def plotting(figname, output_dir, data, griddata_points, griddata_xi, boundary):
@@ -279,7 +278,9 @@ def evaluate(cfg: DictConfig):
     disp_net = ppsci.arch.MLP(**cfg.MODEL)
 
     # load pretrained model
-    save_load.load_pretrain(disp_net, cfg.EVAL.pretrained_model_path)
+    solver = ppsci.solver.Solver(
+        model=disp_net, pretrained_model_path=cfg.EVAL.pretrained_model_path
+    )
 
     # generate samples
     num_x = 201
@@ -296,7 +297,9 @@ def evaluate(cfg: DictConfig):
     y_faltten = paddle.to_tensor(
         y_grad.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
     )
-    outs_pred = disp_net({"x": x_faltten, "y": y_faltten})
+    outs_pred = solver.predict(
+        {"x": x_faltten, "y": y_faltten}, batch_size=num_cords, no_grad=False
+    )
 
     # generate label
     D = cfg.E * (cfg.HEIGHT**3) / (12.0 * (1.0 - cfg.NU**2))
