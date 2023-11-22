@@ -370,6 +370,6 @@ k=1,4,9 时对应参数 lambda 实部和虚部的值：
 
 ## 6. 参考文献
 
-参考文献： [PHYSICS-INFORMED NEURAL NETWORKS WITH HARD CONSTRAINTS FOR INVERSE DESIGN](https://arxiv.org/pdf/2102.04626.pdf)
+- [PHYSICS-INFORMED NEURAL NETWORKS WITH HARD CONSTRAINTS FOR INVERSE DESIGN](https://arxiv.org/pdf/2102.04626.pdf)
 
-参考代码： [hPINNs-DeepXDE](https://github.com/lululxvi/hpinn)
+- [参考代码](https://github.com/lululxvi/hpinn)
