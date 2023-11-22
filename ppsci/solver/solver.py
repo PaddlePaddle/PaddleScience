@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import itertools
+import os
 import sys
 from os import path as osp
 from typing import Callable
@@ -365,6 +366,9 @@ class Solver:
 
         if self.visualizer:
             convert_expr(self.visualizer)
+
+        # set up benchmark flag, will print memory stat if enabled
+        self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
     def train(self):
         """Training."""
