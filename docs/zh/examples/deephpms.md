@@ -478,6 +478,6 @@ examples/deephpms/plotting.py
 
 ## 6. 参考文献
 
-参考文献： [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
+- [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
 
-参考代码： [DeepHPMs](https://github.com/maziarraissi/DeepHPMs)
+- [参考代码](https://github.com/maziarraissi/DeepHPMs)

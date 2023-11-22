@@ -318,5 +318,6 @@ examples/topopt/topoptmodel.py
 | Uniform | 0.8887 | 0.9367 | 0.9452 | 0.9468 | 0.9644 | 0.9655 | 0.9659 | 0.9695 | 0.9717 | 0.9787 | 0.9787 | 0.9816 | 0.9784 | 0.9835 | 0.9831 | 0.9845 |
 
 ## 参考文献
-* [Sosnovik I, & Oseledets I. Neural networks for topology optimization](https://arxiv.org/pdf/1709.09578)
-* [原始代码](https://github.com/ISosnovik/nn4topopt/blob/master/)
+- [Sosnovik I, & Oseledets I. Neural networks for topology optimization](https://arxiv.org/pdf/1709.09578)
+
+- [参考代码](https://github.com/ISosnovik/nn4topopt/blob/master/)

@@ -209,6 +209,6 @@ EPNN 案例针对 epoch=10000 的参数配置进行了实验，结果返回 Loss
 
 ## 6. 参考资料
 
-- [A physics-informed deep neural network for surrogate
-modeling in classical elasto-plasticity](https://arxiv.org/abs/2204.12088)
-- <https://github.com/meghbali/ANNElastoplasticity>
+- [A physics-informed deep neural network for surrogate modeling in classical elasto-plasticity](https://arxiv.org/abs/2204.12088)
+
+- [参考代码](https://github.com/meghbali/ANNElastoplasticity)
