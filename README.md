@@ -109,6 +109,14 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 
 <!-- --8<-- [start:paddle_install] -->
 请在 [PaddlePaddle](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) 官网按照您的运行环境，安装 <font color="red"><b>develop</b></font> 版的 PaddlePaddle。
+
+安装完毕之后，运行以下命令，验证 Paddle 是否安装成功。
+
+``` shell
+python -c "import paddle; paddle.utils.run_check()"
+```
+
+如果出现 `PaddlePaddle is installed successfully! Let's start deep learning with PaddlePaddle now.` 信息，说明您已成功安装，可以继续安装 PaddleScience。
 <!-- --8<-- [end:paddle_install] -->
 
 ### 安装 PaddleScience
