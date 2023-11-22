@@ -51,9 +51,9 @@ $$
 
 在 EPNN 问题中，建立网络，用 PaddleScience 代码表示如下
 
-``` py linenums="370"
+``` py linenums="371"
 --8<--
-examples/epnn/functions.py:370:390
+examples/epnn/functions.py:371:391
 --8<--
 ```
 
@@ -69,9 +69,9 @@ examples/epnn/epnn.py:36:41
 --8<--
 ```
 
-``` py linenums="305"
+``` py linenums="306"
 --8<--
-examples/epnn/functions.py:305:320
+examples/epnn/functions.py:306:321
 --8<--
 ```
 这里使用 Data 读取文件构造数据类，然后使用 get_shuffled_data 混淆数据，然后计算需要获取的混淆数据数量 itrain，最后使用 get 获取每组 itrain 数量的 10 组数据。
@@ -128,15 +128,15 @@ examples/epnn/conf/epnn.yaml:40:41
 
 ``` py linenums="395"
 --8<--
-examples/epnn/functions.py:395:403
+examples/epnn/functions.py:395:404
 --8<--
 ```
 
 然后对增加的 gkratio 参数，需要再设置优化器。
 
-``` py linenums="405"
+``` py linenums="406"
 --8<--
-examples/epnn/functions.py:405:412
+examples/epnn/functions.py:406:413
 --8<--
 ```
 
@@ -156,9 +156,9 @@ examples/epnn/functions.py:395:413
 
 相关的自定义 loss 函数使用 `MAELoss` 计算，代码为
 
-``` py linenums="113"
+``` py linenums="114"
 --8<--
-examples/epnn/functions.py:113:125
+examples/epnn/functions.py:114:126
 --8<--
 ```
 
