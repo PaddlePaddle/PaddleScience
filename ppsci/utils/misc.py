@@ -132,9 +132,6 @@ class RankZeroOnly:
         rank (Optional[int]): The rank of the current process. If not provided,
             it will be obtained from `dist.get_rank()`.
 
-    Returns:
-        bool: True if the current process is the master (rank zero), False otherwise.
-
     Examples:
         >>> import paddle.distributed as dist
         >>> with RankZeroOnly(dist.get_rank()) as is_master:
@@ -164,14 +161,6 @@ class RankZeroOnly:
         return self.is_master
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """
-        Exit the context and synchronize all processes if the current process is the master.
-
-        Args:
-            exc_type: The type of the exception raised, if any.
-            exc_value: The exception raised, if any.
-            traceback: The traceback of the exception raised, if any.
-        """
         if dist.get_world_size() > 1:
             dist.barrier()
 

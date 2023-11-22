@@ -18,11 +18,13 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import sympy
+
 from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    r"""Class for biharmonic equation.
+    r"""Class for biharmonic equation with supporting special load.
 
     $$
     \nabla^4 \varphi = \dfrac{q}{D}
@@ -30,7 +32,7 @@ class Biharmonic(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
-        q (Union[float, str]): Load.
+        q (Union[float, str, sympy.Basic]): Load.
         D (Union[float, str]): Rigidity.
         detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
             Defaults to None.
@@ -43,7 +45,7 @@ class Biharmonic(base.PDE):
     def __init__(
         self,
         dim: int,
-        q: Union[float, str],
+        q: Union[float, str, sympy.Basic],
         D: Union[float, str],
         detach_keys: Optional[Tuple[str, ...]] = None,
     ):
