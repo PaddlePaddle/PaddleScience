@@ -15,6 +15,7 @@
 import random
 from typing import Dict
 
+import numpy as np
 import paddle
 import paddle.nn.functional as F
 
@@ -110,13 +111,13 @@ def train_loss_func3(result_dict, *args) -> paddle.Tensor:
 
 class Dataset:
     def __init__(self, eta, eta_t, g, ag, ag_c, lift, phi_t, ratio_split=0.8):
-        self.eta = paddle.to_tensor(eta, dtype=paddle.get_default_dtype())
-        self.eta_t = paddle.to_tensor(eta_t, dtype=paddle.get_default_dtype())
-        self.g = paddle.to_tensor(g, dtype=paddle.get_default_dtype())
-        self.ag = paddle.to_tensor(ag, dtype=paddle.get_default_dtype())
-        self.lift = paddle.to_tensor(lift, dtype=paddle.get_default_dtype())
-        self.ag_c = paddle.to_tensor(ag_c, dtype=paddle.get_default_dtype())
-        self.phi_t = paddle.to_tensor(phi_t, dtype=paddle.get_default_dtype())
+        self.eta = np.asarray(eta, dtype=paddle.get_default_dtype())
+        self.eta_t = np.asarray(eta_t, dtype=paddle.get_default_dtype())
+        self.g = np.asarray(g, dtype=paddle.get_default_dtype())
+        self.ag = np.asarray(ag, dtype=paddle.get_default_dtype())
+        self.lift = np.asarray(lift, dtype=paddle.get_default_dtype())
+        self.ag_c = np.asarray(ag_c, dtype=paddle.get_default_dtype())
+        self.phi_t = np.asarray(phi_t, dtype=paddle.get_default_dtype())
         self.ratio_split = ratio_split
 
     def get(self, epochs=1):
@@ -164,7 +165,9 @@ class Dataset:
             input_dict_train["lift"].append(self.lift)
             input_dict_train["ag_c"].append(self.ag_c)
             input_dict_train["phi"].append(self.phi_t)
-            label_dict_train["dummy_loss"].append(paddle.to_tensor(0.0))
+            label_dict_train["dummy_loss"].append(
+                np.asarray(0.0, dtype=paddle.get_default_dtype())
+            )
 
             if i == epochs - 1:
                 input_dict_val["ag"].append(self.ag_val)
@@ -174,6 +177,8 @@ class Dataset:
                 input_dict_val["lift"].append(self.lift)
                 input_dict_val["ag_c"].append(self.ag_c)
                 input_dict_val["phi"].append(self.phi_t)
-                label_dict_val["dummy_loss"].append(paddle.to_tensor(0.0))
+                label_dict_val["dummy_loss"].append(
+                    np.asarray(0.0, dtype=paddle.get_default_dtype())
+                )
 
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
