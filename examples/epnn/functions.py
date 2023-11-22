@@ -63,6 +63,7 @@ for key in plot_keys:
     loss_log[key] = []
     eval_log[key] = []
 
+
 # transform
 def transform_in(input):
     input_transformed = {}
@@ -147,7 +148,7 @@ def eval_loss_func(output_dict, *args) -> paddle.Tensor:
     eval_log["state_plastic"].append(float(error_plastic))
     eval_log["stress"].append(float(error_stress))
     logger.message(
-        f"Error: {float(error)},{float(error_elasto)},{float(error_plastic)},{float(error_stress)}"
+        f"error(total): {float(error)}, error(error_elasto): {float(error_elasto)}, error(error_plastic): {float(error_plastic)}, error(error_stress): {float(error_stress)}"
     )
     return error
 

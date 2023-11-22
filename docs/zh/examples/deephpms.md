@@ -54,21 +54,13 @@
     python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat
 
     # 案例 7
-    # 运行前请注意 kuramoto_sivashinsky.py 和 kuramoto_sivashinsky.yaml 文件中有关 T_LB/T_UB/X_LB/X_UB 的注释
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat -P ./datasets/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat --output ./datasets/KS_chaotic.mat
-    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS_chaotic.mat DATASET_PATH_SOL=./datasets/KS_chaotic.mat
-
-    # 案例 8
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
     python navier_stokes.py DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat
 
-    # 案例 9
+    # 案例 8
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
     # windows
@@ -128,21 +120,13 @@
     python kuramoto_sivashinsky.py mode=eval DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams
 
     # 案例 7
-    # 运行前请注意 kuramoto_sivashinsky.py 和 kuramoto_sivashinsky.yaml 文件中有关 T_LB/T_UB/X_LB/X_UB 的注释
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat -P ./datasets/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS_chaotic.mat --output ./datasets/KS_chaotic.mat
-    python kuramoto_sivashinsky.py mode=eval DATASET_PATH=./datasets/KS_chaotic.mat DATASET_PATH_SOL=./datasets/KS_chaotic.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_chaotic_pretrained.pdparams
-
-    # 案例 8
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
     python navier_stokes.py mode=eval DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams
 
-    # 案例 9
+    # 案例 8
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
     # windows
@@ -158,11 +142,10 @@
 | 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | [kdv_same_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_same_pretrained.pdparams) | l2 error: 0.0567 |
 | 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | [kdv_diff_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_diff_pretrained.pdparams) | l2 error: 0.1142 |
 | 6 | kuramoto_sivashinsky | KS.mat | KS.mat | [ks_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams) | l2 error: 0.1166 |
-| 7 | kuramoto_sivashinsky | KS_chaotic.mat | KS_chaotic.mat | [ks_chaotic_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_chaotic_pretrained.pdparams) | l2 error: 0.3664 |
-| 8 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
-| 9 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
+| 7 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
+| 8 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
 
-*注：根据 [参考文献](#6), 序号 3，7 的效果较差。*
+*注：根据 [参考文献](#6), 序号 3 的效果较差。*
 
 ## 1. 背景简介
 
@@ -495,6 +478,6 @@ examples/deephpms/plotting.py
 
 ## 6. 参考文献
 
-参考文献： [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
+- [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
 
-参考代码： [DeepHPMs](https://github.com/maziarraissi/DeepHPMs)
+- [参考代码](https://github.com/maziarraissi/DeepHPMs)

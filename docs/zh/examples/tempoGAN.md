@@ -382,6 +382,6 @@ ppsci/arch/gan.py
 
 ## 6. 参考文献
 
-参考文献及视频材料： [tempoGAN: A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow](https://dl.acm.org/doi/10.1145/3197517.3201304)
+- [tempoGAN: A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow](https://dl.acm.org/doi/10.1145/3197517.3201304)
 
-参考代码： [tempoGAN](https://github.com/thunil/tempoGAN)
+- [参考代码](https://github.com/thunil/tempoGAN)
