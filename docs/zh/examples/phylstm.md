@@ -49,21 +49,6 @@
 | [phylstm2_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams) | loss(sup_valid): 0.00799 |
 | [phylstm3_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams) | loss(sup_valid): 0.03098 |
 
-    === phylstm3
-
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm3.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams
-    ```
-
-| 预训练模型  | 指标 |
-|:--| :--|
-| [phylstm2_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams) | loss(sup_valid): 0.00799 |
-| [phylstm3_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams) | loss(sup_valid): 0.03098 |
-
 ## 1. 背景简介
 
 我们引入了一种创新的物理知识LSTM框架，用于对缺乏数据的非线性结构系统进行元建模。基本概念是将可用但尚不完整的物理知识（如物理定律、科学原理）整合到深度长短时记忆（LSTM）网络中，该网络在可行的解决方案空间内限制和促进学习。物理约束嵌入在损失函数中，以强制执行模型训练，即使在可用训练数据集非常有限的情况下，也能准确地捕捉潜在的系统非线性。特别是对于动态结构，考虑运动方程的物理定律、状态依赖性和滞后本构关系来构建物理损失。嵌入式物理可以缓解过拟合问题，减少对大型训练数据集的需求，并提高训练模型的鲁棒性，使其具有外推能力，从而进行更可靠的预测。因此，物理知识指导的深度学习范式优于传统的非物理指导的数据驱动神经网络。
