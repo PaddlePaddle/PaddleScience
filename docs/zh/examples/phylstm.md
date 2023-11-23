@@ -22,16 +22,6 @@
         python phylstm3.py
         ```
 
-    === phylstm3
-
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm3.py
-    ```
-
 === "模型评估命令"
 
     === "phylstm2"
