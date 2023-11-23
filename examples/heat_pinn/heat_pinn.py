@@ -12,41 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import os
+from os import path as osp
 
 import fdm
+import hydra
 import matplotlib.pyplot as plt
 import numpy as np
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Solve a 2D heat equation by PINN")
-    parser.add_argument("--epoch", default=1000, type=int, help="max epochs")
-    parser.add_argument("--lr", default=5e-4, type=float, help="learning rate")
-    parser.add_argument(
-        "--output_dir",
-        default="./output_heat2d",
-        type=str,
-        help="output folder",
-    )
-
-    args = parser.parse_args()
+def train(cfg: DictConfig):
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(2)
-    # set training hyper-parameters
-    EPOCHS = args.epoch
-    ITERS_PER_EPOCH = 1
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     # set output directory
-    OUTPUT_DIR = args.output_dir
-    logger.init_logger("ppsci", os.path.join(OUTPUT_DIR, "train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x", "y"), ("u",), 9, 20, "tanh")
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"heat": ppsci.equation.Laplace(dim=2)}
@@ -57,38 +43,31 @@ def main():
     # set train dataloader config
     train_dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
 
+    # set constraint
     NPOINT_PDE = 99**2
     NPOINT_TOP = 25
     NPOINT_BOTTOM = 25
     NPOINT_LEFT = 25
     NPOINT_RIGHT = 25
-
-    # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["heat"].equations,
         {"laplace": 0},
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("mean"),
-        weight_dict={
-            "laplace": 1,
-        },
         evenly=True,
         name="EQ",
     )
-
     bc_top = ppsci.constraint.BoundaryConstraint(
         {"u": lambda out: out["u"]},
         {"u": 0},
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_TOP},
         ppsci.loss.MSELoss("mean"),
-        weight_dict={
-            "u": 0.25,
-        },
+        weight_dict={"u": cfg.TRAIN.weight.bc_top},
         criteria=lambda x, y: np.isclose(y, 1),
         name="BC_top",
     )
@@ -98,9 +77,7 @@ def main():
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_BOTTOM},
         ppsci.loss.MSELoss("mean"),
-        weight_dict={
-            "u": 0.25,
-        },
+        weight_dict={"u": cfg.TRAIN.weight.bc_bottom},
         criteria=lambda x, y: np.isclose(y, -1),
         name="BC_bottom",
     )
@@ -110,9 +87,7 @@ def main():
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_LEFT},
         ppsci.loss.MSELoss("mean"),
-        weight_dict={
-            "u": 0.25,
-        },
+        weight_dict={"u": cfg.TRAIN.weight.bc_left},
         criteria=lambda x, y: np.isclose(x, -1),
         name="BC_left",
     )
@@ -122,13 +97,10 @@ def main():
         geom["rect"],
         {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT},
         ppsci.loss.MSELoss("mean"),
-        weight_dict={
-            "u": 0.25,
-        },
+        weight_dict={"u": cfg.TRAIN.weight.bc_right},
         criteria=lambda x, y: np.isclose(x, 1),
         name="BC_right",
     )
-
     # wrap constraints together
     constraint = {
         pde_constraint.name: pde_constraint,
@@ -139,32 +111,39 @@ def main():
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=args.lr)(model)
+    optimizer = ppsci.optimizer.Adam(learning_rate=cfg.TRAIN.learning_rate)(model)
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        save_freq=cfg.TRAIN.save_freq,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
         equation=equation,
         geom=geom,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
     # train model
     solver.train()
 
     # begin eval
-    n = 100
-    input_data = geom["rect"].sample_interior(n**2, evenly=True)
-    pinn_output = solver.predict(input_data, return_numpy=True)["u"].reshape(n, n)
-    fdm_output = fdm.solve(n, 1).T
+    N_EVAL = 100
+    input_data = geom["rect"].sample_interior(N_EVAL**2, evenly=True)
+    pinn_output = solver.predict(input_data, return_numpy=True)["u"].reshape(
+        N_EVAL, N_EVAL
+    )
+    fdm_output = fdm.solve(N_EVAL, 1).T
     mes_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
     logger.info(f"The norm MSE loss between the FDM and PINN is {mes_loss}")
 
-    x = input_data["x"].reshape(n, n)
-    y = input_data["y"].reshape(n, n)
+    x = input_data["x"].reshape(N_EVAL, N_EVAL)
+    y = input_data["y"].reshape(N_EVAL, N_EVAL)
 
     plt.subplot(2, 1, 1)
     plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
@@ -183,11 +162,11 @@ def main():
     plt.title("FDM")
     plt.tight_layout()
     plt.axis("square")
-    plt.savefig(os.path.join(OUTPUT_DIR, "pinn_fdm_comparison.png"))
+    plt.savefig(osp.join(cfg.output_dir, "pinn_fdm_comparison.png"))
     plt.close()
 
     frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
-    frames = [*map(int, (frames_val + 1) / 2 * (n - 1))]
+    frames = [*map(int, (frames_val + 1) / 2 * (N_EVAL - 1))]
     height = 3
     plt.figure("", figsize=(len(frames) * height, 2 * height))
 
@@ -227,7 +206,115 @@ def main():
         plt.tight_layout()
         plt.legend()
 
-    plt.savefig(os.path.join(OUTPUT_DIR, "profiles.png"))
+    plt.savefig(osp.join(cfg.output_dir, "profiles.png"))
+
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+
+    # set output directory
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set geometry
+    geom = {"rect": ppsci.geometry.Rectangle((-1.0, -1.0), (1.0, 1.0))}
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+    )
+    # begin eval
+    N_EVAL = 100
+    input_data = geom["rect"].sample_interior(N_EVAL**2, evenly=True)
+    pinn_output = solver.predict(input_data, no_grad=True, return_numpy=True)[
+        "u"
+    ].reshape(N_EVAL, N_EVAL)
+    fdm_output = fdm.solve(N_EVAL, 1).T
+    mes_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
+    logger.info(f"The norm MSE loss between the FDM and PINN is {mes_loss}")
+
+    x = input_data["x"].reshape(N_EVAL, N_EVAL)
+    y = input_data["y"].reshape(N_EVAL, N_EVAL)
+
+    plt.subplot(2, 1, 1)
+    plt.pcolormesh(x, y, pinn_output * 75.0, cmap="magma")
+    plt.colorbar()
+    plt.title("PINN")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.tight_layout()
+    plt.axis("square")
+
+    plt.subplot(2, 1, 2)
+    plt.pcolormesh(x, y, fdm_output, cmap="magma")
+    plt.colorbar()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("FDM")
+    plt.tight_layout()
+    plt.axis("square")
+    plt.savefig(osp.join(cfg.output_dir, "pinn_fdm_comparison.png"))
+    plt.close()
+
+    frames_val = np.array([-0.75, -0.5, -0.25, 0.0, +0.25, +0.5, +0.75])
+    frames = [*map(int, (frames_val + 1) / 2 * (N_EVAL - 1))]
+    height = 3
+    plt.figure("", figsize=(len(frames) * height, 2 * height))
+
+    for i, var_index in enumerate(frames):
+        plt.subplot(2, len(frames), i + 1)
+        plt.title(f"y = {frames_val[i]:.2f}")
+        plt.plot(
+            x[:, var_index],
+            pinn_output[:, var_index] * 75.0,
+            "r--",
+            lw=4.0,
+            label="pinn",
+        )
+        plt.plot(x[:, var_index], fdm_output[:, var_index], "b", lw=2.0, label="FDM")
+        plt.ylim(0.0, 100.0)
+        plt.xlim(-1.0, +1.0)
+        plt.xlabel("x")
+        plt.ylabel("T")
+        plt.tight_layout()
+        plt.legend()
+
+    for i, var_index in enumerate(frames):
+        plt.subplot(2, len(frames), len(frames) + i + 1)
+        plt.title(f"x = {frames_val[i]:.2f}")
+        plt.plot(
+            y[var_index, :],
+            pinn_output[var_index, :] * 75.0,
+            "r--",
+            lw=4.0,
+            label="pinn",
+        )
+        plt.plot(y[var_index, :], fdm_output[var_index, :], "b", lw=2.0, label="FDM")
+        plt.ylim(0.0, 100.0)
+        plt.xlim(-1.0, +1.0)
+        plt.xlabel("y")
+        plt.ylabel("T")
+        plt.tight_layout()
+        plt.legend()
+
+    plt.savefig(osp.join(cfg.output_dir, "profiles.png"))
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="heat_pinn.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
