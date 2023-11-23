@@ -46,7 +46,7 @@ def _load_pretrain_from_path(
     """Load pretrained model from given path.
 
     Args:
-        path (str): Pretrained model path.
+        path (str): File path of pretrained model, i.e. `/path/to/model.pdparams`.
         model (nn.Layer): Model with parameters.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
@@ -84,7 +84,8 @@ def load_pretrain(
 
     Args:
         model (nn.Layer): Model with parameters.
-        path (str): Pretrained model url.
+        path (str): File path or url of pretrained model, i.e. `/path/to/model.pdparams`
+            or `http://xxx.com/model.pdparams`.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
     if path.startswith("http"):
