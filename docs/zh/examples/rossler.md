@@ -181,7 +181,7 @@ examples/rossler/train_enn.py:143:157
 
 ``` yaml linenums="23" title="examples/rossler/conf/transformer.yaml"
 --8<--
-examples/rossler/conf/transformer.yaml:23:33
+examples/rossler/conf/transformer.yaml:23:34
 --8<--
 ```
 
