@@ -73,9 +73,9 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` yaml linenums="23" title="examples/rossler/conf/enn.yaml"
+``` yaml linenums="22" title="examples/rossler/conf/enn.yaml"
 --8<--
-examples/rossler/conf/enn.yaml:23:34
+examples/rossler/conf/enn.yaml:22:34
 --8<--
 ```
 
@@ -181,7 +181,7 @@ examples/rossler/train_enn.py:143:157
 
 ``` yaml linenums="23" title="examples/rossler/conf/transformer.yaml"
 --8<--
-examples/rossler/conf/transformer.yaml:23:33
+examples/rossler/conf/transformer.yaml:23:34
 --8<--
 ```
 
