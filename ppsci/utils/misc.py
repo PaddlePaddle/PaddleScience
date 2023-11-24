@@ -240,7 +240,10 @@ def all_gather(
         Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
     """
     result: List[paddle.Tensor] = []
-    dist.all_gather(result, tensor)
+    # TODO(HydrogenSulfate): As non-contiguous(strided) tensor is not supported in
+    # dist.all_gather, manually convert given Tensor to contiguous below. Strided tensor
+    # will be supported in future.
+    dist.all_gather(result, tensor.contiguous())
     if concat:
         return paddle.concat(result, axis)
     return result
