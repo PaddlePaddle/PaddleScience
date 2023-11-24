@@ -286,8 +286,10 @@ class Solver:
                     "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
                 )
             self.model = fleet.distributed_model(self.model)
-            self.model.input_keys = self.model._layers.input_keys
-            self.model.output_keys = self.model._layers.output_keys
+            if hasattr(self.model, "input_keys"):
+                self.model.input_keys = self.model._layers.input_keys
+            if hasattr(self.model, "output_keys"):
+                self.model.output_keys = self.model._layers.output_keys
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
 
