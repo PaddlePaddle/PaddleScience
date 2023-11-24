@@ -237,13 +237,19 @@ def all_gather(
         axis (int, optional): Axis which concatenated along. Defaults to 0.
 
     Returns:
-        Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
+        Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors.
     """
     result: List[paddle.Tensor] = []
+
+    # NOTE: Put tensor to CUDAPlace from CUDAPinnedPlace to use communication.
+    if tensor.place.is_cuda_pinned_place():
+        tensor = tensor.cuda()
+
     # TODO(HydrogenSulfate): As non-contiguous(strided) tensor is not supported in
     # dist.all_gather, manually convert given Tensor to contiguous below. Strided tensor
     # will be supported in future.
     dist.all_gather(result, tensor.contiguous())
+
     if concat:
         return paddle.concat(result, axis)
     return result
