@@ -512,8 +512,6 @@ class Solver:
         # pad with last element if `num_samples` is not divisible by `world_size`
         # ensuring every device get same number of data.
         if num_pad > 0:
-            # NOTE: This will modify input_dict inplace by appending padding data at the
-            # end if num_pad > 0.
             for k, v in input_dict.items():
                 repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
                 if isinstance(v, np.ndarray):
@@ -599,9 +597,7 @@ class Solver:
                     }
                     # NOTE: Discard padding data in input_dict for consistency
                     for k in input_dict:
-                        print(id(input_dict[k]))
                         input_dict[k] = input_dict[k][:num_samples]
-                        print(id(input_dict[k]))
 
         # convert to numpy ndarray if specified
         if return_numpy:

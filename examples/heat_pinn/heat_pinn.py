@@ -139,8 +139,8 @@ def train(cfg: DictConfig):
         N_EVAL, N_EVAL
     )
     fdm_output = fdm.solve(N_EVAL, 1).T
-    mes_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
-    logger.info(f"The norm MSE loss between the FDM and PINN is {mes_loss}")
+    mse_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
+    logger.info(f"The norm MSE loss between the FDM and PINN is {mse_loss}")
 
     x = input_data["x"].reshape(N_EVAL, N_EVAL)
     y = input_data["y"].reshape(N_EVAL, N_EVAL)
@@ -237,8 +237,8 @@ def evaluate(cfg: DictConfig):
         "u"
     ].reshape(N_EVAL, N_EVAL)
     fdm_output = fdm.solve(N_EVAL, 1).T
-    mes_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
-    logger.info(f"The norm MSE loss between the FDM and PINN is {mes_loss}")
+    mse_loss = np.mean(np.square(pinn_output - (fdm_output / 75.0)))
+    logger.info(f"The norm MSE loss between the FDM and PINN is {mse_loss:.5e}")
 
     x = input_data["x"].reshape(N_EVAL, N_EVAL)
     y = input_data["y"].reshape(N_EVAL, N_EVAL)
