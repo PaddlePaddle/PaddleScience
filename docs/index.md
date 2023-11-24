@@ -95,14 +95,6 @@
 
 === "[完整安装流程](./zh/install_setup.md)"
 
-    ``` shell
-    pip install paddlesci
-    ```
-
-    ``` shell
-    pip install paddlesci
-    ```
-
 --8<--
 ./README.md:feature
 --8<--
