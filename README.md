@@ -132,8 +132,12 @@ python -c "import paddle; paddle.utils.run_check()"
     # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
 
     cd PaddleScience
+
+    # windows 用户安装前请执行如下命令，否则可能因为gbk编码问题导致安装失败
+    set PYTHONUTF8=1
+
     # install paddlesci with editable mode
-    pip install -e .
+    pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
     <!-- --8<-- [end:git_install] -->
 
