@@ -509,14 +509,26 @@ class Solver:
         # pad with last element if `num_samples` is not divisible by `world_size`
         # ensuring every device get same number of data.
         if num_pad > 0:
+            # NOTE: This will modify input_dict inplace by appending padding data at the
+            # end if num_pad > 0.
             for k, v in input_dict.items():
                 repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
-                input_dict[k] = paddle.concat(
-                    (
-                        v,
-                        paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
-                    ),
-                )
+                if isinstance(v, np.ndarray):
+                    input_dict[k] = np.concatenate(
+                        (
+                            v,
+                            np.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                elif isinstance(v, paddle.Tensor):
+                    input_dict[k] = paddle.concat(
+                        (
+                            v,
+                            paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                else:
+                    raise ValueError(f"Unsupported data type {type(v)}.")
 
         num_samples_pad = num_samples + num_pad
         local_num_samples_pad = num_samples_pad // self.world_size
@@ -566,9 +578,8 @@ class Solver:
                 pred_dict = {
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
-
-                # rearrange predictions as the same order of input_dict according to inverse
-                # permutation, then discard predictions of padding data at the end
+                # rearrange predictions as the same order of input_dict according
+                # to inverse permutation
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(
                     [perm[rank :: self.world_size] for rank in range(self.world_size)],
@@ -577,10 +588,12 @@ class Solver:
                 perm_inv = np.empty_like(perm)
                 perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
                 perm_inv = paddle.to_tensor(perm_inv)
-                pred_dict = {
-                    key: value[perm_inv][:num_samples]
-                    for key, value in pred_dict.items()
-                }
+                pred_dict = {key: value[perm_inv] for key, value in pred_dict.items()}
+                # then discard predictions of padding data at the end if num_pad > 0
+                if num_pad > 0:
+                    pred_dict = {
+                        key: value[:num_samples] for key, value in pred_dict.items()
+                    }
 
         # convert to numpy ndarray if specified
         if return_numpy:
