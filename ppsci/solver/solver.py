@@ -234,7 +234,8 @@ class Solver:
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
                 "scale up the learning rate and reduce the 'epochs' or "
-                "'iters_per_epoch' according to the 'world_size' both linearly."
+                "'iters_per_epoch' according to the 'world_size' both linearly if you "
+                "are training model."
             )
 
         # load pretrained model, usually used for transfer learning
@@ -596,6 +597,11 @@ class Solver:
                     pred_dict = {
                         key: value[:num_samples] for key, value in pred_dict.items()
                     }
+                    # NOTE: Discard padding data in input_dict for consistency
+                    for k in input_dict:
+                        print(id(input_dict[k]))
+                        input_dict[k] = input_dict[k][:num_samples]
+                        print(id(input_dict[k]))
 
         # convert to numpy ndarray if specified
         if return_numpy:
