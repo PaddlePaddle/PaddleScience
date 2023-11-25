@@ -299,6 +299,10 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+            logger.info(
+                "Set VisualDL tool for logging, you can view it by "
+                f"running 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+            )
 
         # set WandB tool
         self.wandb_writer = None

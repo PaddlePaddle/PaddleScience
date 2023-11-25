@@ -201,7 +201,7 @@ def scaler(
     """
     if vdl_writer is not None:
         for name, value in metric_dict.items():
-            vdl_writer.add_scalar(name, step, value)
+            vdl_writer.add_scalar(name, value, step)
 
     if wandb_writer is not None:
         with misc.RankZeroOnly() as is_master:
