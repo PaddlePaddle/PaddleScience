@@ -100,9 +100,9 @@ def init_logger(
     stream_handler._name = "stream_handler"
     _logger.addHandler(stream_handler)
 
-    # add file_handler, output to log_file(if specified)
+    # add file_handler, output to log_file(if specified), only for rank 0 device
     if log_file is not None and dist.get_rank() == 0:
-        log_file_folder = os.path.split(log_file)[0]
+        log_file_folder = os.path.dirname(log_file)
         os.makedirs(log_file_folder, exist_ok=True)
         file_formatter = logging.Formatter(
             "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
@@ -122,7 +122,18 @@ def init_logger(
 
 
 def set_log_level(log_level: int):
-    """Set logger level, only msg of level >= `log_level` will be printed.
+    """Set logger level, only message of level >= `log_level` will be printed.
+
+    Built-in log level are below:
+
+    CRITICAL = 50,
+    FATAL = 50,
+    ERROR = 40,
+    WARNING = 30,
+    WARN = 30,
+    INFO = 20,
+    DEBUG = 10,
+    NOTSET = 0.
 
     Args:
         log_level (int): Log level.
@@ -135,7 +146,7 @@ def set_log_level(log_level: int):
 
 def ensure_logger(log_func: Callable) -> Callable:
     """
-    Automatically initialize `logger` by default arguments
+    A decorator which automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
     """
 
