@@ -234,7 +234,8 @@ class Solver:
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
                 "scale up the learning rate and reduce the 'epochs' or "
-                "'iters_per_epoch' according to the 'world_size' both linearly."
+                "'iters_per_epoch' according to the 'world_size' both linearly if you "
+                "are training model."
             )
 
         # load pretrained model, usually used for transfer learning
@@ -511,8 +512,6 @@ class Solver:
         # pad with last element if `num_samples` is not divisible by `world_size`
         # ensuring every device get same number of data.
         if num_pad > 0:
-            # NOTE: This will modify input_dict inplace by appending padding data at the
-            # end if num_pad > 0.
             for k, v in input_dict.items():
                 repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
                 if isinstance(v, np.ndarray):
@@ -596,6 +595,9 @@ class Solver:
                     pred_dict = {
                         key: value[:num_samples] for key, value in pred_dict.items()
                     }
+                    # NOTE: Discard padding data in input_dict for consistency
+                    for k in input_dict:
+                        input_dict[k] = input_dict[k][:num_samples]
 
         # convert to numpy ndarray if specified
         if return_numpy:
