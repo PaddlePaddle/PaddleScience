@@ -64,10 +64,10 @@ nav:
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
+          - Control_arm: zh/examples/control_arm.md
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
-          - Control_arm: zh/examples/control_arm.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
