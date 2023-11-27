@@ -300,6 +300,10 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+            logger.info(
+                "VisualDL tool is enabled for logging, you can view it by "
+                f"running: 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+            )
 
         # set WandB tool
         self.wandb_writer = None
@@ -413,7 +417,10 @@ class Solver:
                 )
                 for metric_dict in metric_dict_group.values():
                     logger.scaler(
-                        metric_dict, epoch_id, self.vdl_writer, self.wandb_writer
+                        {f"eval/{k}": v for k, v in metric_dict.items()},
+                        epoch_id,
+                        self.vdl_writer,
+                        self.wandb_writer,
                     )
 
                 # visualize after evaluation
