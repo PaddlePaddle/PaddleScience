@@ -373,57 +373,6 @@ class CFDGCN(nn.Layer):
         pred_fields = paddle.stack(pred_fields)
         return {self.output_keys[0]: pred_fields}
 
-        # batch = x[self.input_keys[0]]
-        # batch_size = batch.aoa.shape[0]
-
-        # if self.sdf is None:
-        #     with paddle.no_grad():
-        #         self.sdf = signed_dist_graph(batch.x[:, :2], self.fine_marker_dict).unsqueeze(1)
-        # fine_x = paddle.concat([batch.x, self.sdf.tile(batch_size, 1)], axis=1)
-
-        # for i, conv in enumerate(self.pre_convs):
-        #     fine_x = F.relu(conv(batch,fine_x))
-
-        # nodes = self.get_nodes()
-        # num_nodes = nodes.shape[0]
-        # self.write_mesh_file(nodes, self.elems, self.marker_dict, filename=self.mesh_file)
-
-        # params = paddle.stack([batch.aoa, batch.mach_or_reynolds], axis=1)
-        # # batch_aoa = params[:, 0].to('cpu', non_blocking=True)
-        # # batch_aoa = params[:, 0].to('cpu', non_blocking=True)
-        # # batch_mach_or_reynolds = params[:, 1].to('cpu', non_blocking=True)
-        # batch_aoa = params[:, 0]
-        # batch_aoa = params[:, 0]
-        # batch_mach_or_reynolds = params[:, 1]
-
-        # batch_x = nodes.unsqueeze(0).expand([batch_size, -1, -1])
-        # # batch_x = batch_x.to('cpu', non_blocking=True)
-        # batch_y = self.su2(batch_x[..., 0], batch_x[..., 1],
-        #                    batch_aoa[..., None], batch_mach_or_reynolds[..., None])
-        # # batch_y = [y.to(batch.x.device) for y in batch_y]
-        # batch_y = [y for y in batch_y]
-        # batch_y = self.process_sim(batch_y, False)
-
-        # coarse_y = paddle.stack([y.flatten() for y in batch_y], axis=1)
-        # coarse_x = nodes.tile(batch_size, 1)[:, :2]
-        # # zeros = paddle.zeros(num_nodes)
-        # # coarse_batch = paddle.concat([zeros + i for i in range(batch_size)])
-
-        # fine_y = _knn_interpolate(coarse_y, coarse_x, batch.x[:, :2])
-
-        # fine_y = paddle.concat([fine_y, fine_x], axis=1)
-
-        # for i, conv in enumerate(self.convs[:-1]):
-        #     fine_y = F.relu(conv(batch,fine_y))
-        # fine_y = self.convs[-1](batch,fine_y)
-
-        # # self.sim_info['nodes'] = coarse_x[:, :2]
-        # # self.sim_info['elems'] = [self.elems] * batch_size
-        # # self.sim_info['batch'] = coarse_batch
-        # # self.sim_info['output'] = coarse_y
-
-        # return {self.output_keys[0]: fine_y}
-
     def get_nodes(self):
         return self.nodes
 
