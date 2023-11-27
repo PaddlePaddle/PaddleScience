@@ -94,7 +94,8 @@ def _eval_by_dataset(
                     solver.eval_time_info[key].reset()
             reader_cost = time.perf_counter() - reader_tic
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # forward
             with solver.autocast_context_manager(
@@ -229,7 +230,8 @@ def _eval_by_batch(
             reader_cost = time.perf_counter() - reader_tic
             batch_size = next(iter(input_dict.values())).shape[0]
             for v in input_dict.values():
-                v.stop_gradient = False
+                if hasattr(v, "stop_gradient"):
+                    v.stop_gradient = False
 
             # forward
             with solver.autocast_context_manager(

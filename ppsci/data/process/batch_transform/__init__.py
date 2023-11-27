@@ -22,12 +22,13 @@ from typing import List
 import numpy as np
 import paddle
 
-try:
-    import pgl
-except ModuleNotFoundError:
-    pass
-
 from ppsci.data.process import transform
+
+# try:
+#     import pgl
+# except ModuleNotFoundError:
+#     pass
+
 
 __all__ = ["build_batch_transforms", "default_collate_fn"]
 
@@ -68,15 +69,17 @@ def default_collate_fn(batch: List[Any]) -> Any:
         return [default_collate_fn(fields) for fields in zip(*batch)]
     elif str(type(sample)) == "<class 'pgl.graph.Graph'>":
         # use str(type()) instead of isinstance() in case of pgl is not installed.
-        graph = pgl.Graph(num_nodes=sample.num_nodes, edges=sample.edges)
-        graph.x = np.concatenate([g.x for g in batch])
-        graph.y = np.concatenate([g.y for g in batch])
-        graph.edge_index = np.concatenate([g.edge_index for g in batch], axis=1)
-        graph.edge_attr = np.concatenate([g.edge_attr for g in batch])
-        graph.pos = np.concatenate([g.pos for g in batch])
-        graph.tensor()
-        graph.shape = [len(batch)]
-        return graph
+        # graph = pgl.Graph(num_nodes=sample.num_nodes, edges=sample.edges)
+        # graph.x = np.concatenate([g.x for g in batch])
+        # graph.y = np.concatenate([g.y for g in batch])
+        # graph.edge_index = np.concatenate([g.edge_index for g in batch], axis=1)
+        # graph.edge_attr = np.concatenate([g.edge_attr for g in batch])
+        # graph.pos = np.concatenate([g.pos for g in batch])
+        # graph.tensor()
+        # graph.shape = [len(batch)]
+        # return graph
+        batch = np.array(batch)
+        return batch
 
     raise TypeError(
         "batch data can only contains: paddle.Tensor, numpy.ndarray, "

@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import shutil
 import time
@@ -11,11 +25,12 @@ from typing import Union
 
 import numpy as np
 import paddle
-import pysu2
-import pysu2ad
 import SU2
 import su2paddle.su2_function
-from mpi4py import MPI
+
+from mpi4py import MPI  # isort:skip
+import pysu2  # isort:skip
+import pysu2ad  # isort:skip
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -40,10 +55,12 @@ def run_forward(
     """Runs a simulation with the provided driver, using the inputs to set the values
     defined in DIFF_INPUTS in the config file.
 
-    :param comm: The communicator for the processes running the simulation.
-    :param forward_driver: The driver for the simulation, created using the same comm as passed into this function.
-    :param inputs: The inputs used to set the DIFF_INPUTS as defined in the configuration file.
-    :return: The outputs of the simulation, as defined in DIFF_OUTPUTS in the config file.
+    Args:
+        comm: The communicator for the processes running the simulation.
+        forward_driver: The driver for the simulation, created using the same comm as passed into this function.
+        inputs: The inputs used to set the DIFF_INPUTS as defined in the configuration file.
+    Returns:
+        The outputs of the simulation, as defined in DIFF_OUTPUTS in the config file.
     """
     rank = comm.Get_rank()
     for i, x in enumerate(inputs):
@@ -86,9 +103,10 @@ def run_forward(
             if rank == 0:
                 # TODO Make the list integers on the C side
                 global_inds = np.array(global_inds, dtype=np.long)
-                assert outputs[i].shape[0] == len(
-                    global_inds
-                ), "Only full grid outputs supported by now (besides scalars)."
+                if outputs[i].shape[0] != len(global_inds):
+                    raise ValueError(
+                        "Only full grid outputs supported by now (besides scalars)."
+                    )
                 # order by global_inds
                 outputs[i][global_inds] = (
                     outputs[i].copy() if is_numpy else outputs[i].clone()
@@ -107,11 +125,13 @@ def run_adjoint(
     """Runs a simulation with the provided driver, using the inputs to set the values
     defined in DIFF_INPUTS in the config file.
 
-    :param comm: The communicator for the processes running the simulation.
-    :param adjoint_driver: The driver for the adjoint computation, created using the same comm as passed into this function.
-    :param inputs: The same inputs used to set the DIFF_INPUTS in the forward pass.
-    :param grad_outputs: Gradients of a scalar loss with respect to the forward outputs, see SU2Function's backward() method.
-    :return: The gradients of the loss with respect to the inputs.
+    Args:
+        comm: The communicator for the processes running the simulation.
+        adjoint_driver: The driver for the adjoint computation, created using the same comm as passed into this function.
+        inputs: The same inputs used to set the DIFF_INPUTS in the forward pass.
+         grad_outputs: Gradients of a scalar loss with respect to the forward outputs, see SU2Function's backward() method.
+    Return:
+        The gradients of the loss with respect to the inputs.
     """
     rank = comm.Get_rank()
     for i, x in enumerate(inputs):
@@ -153,9 +173,10 @@ def run_adjoint(
 
             if rank == 0:
                 global_inds = np.array(global_inds, dtype=np.long)
-                assert grads[i].shape[0] == len(
-                    global_inds
-                ), "Only full grid outputs supported by now (besides scalars)."
+                if grads[i].shape[0] != len(global_inds):
+                    raise ValueError(
+                        "Only full grid outputs supported by now (besides scalars)."
+                    )
                 # order by global_inds
                 grads[i][global_inds] = (
                     grads[i].copy() if is_numpy else grads[i].clone()
@@ -184,9 +205,10 @@ def activate_su2_mpi(
     max_procs_per_example: int = 1,
     non_busy_wait_max_time: float = 0.1,
 ) -> None:
-    assert (
-        MPI.COMM_WORLD.Get_size() > 1
-    ), 'Need at least 1 master and 1 worker process, run with "mpirun -np ...'
+    if MPI.COMM_WORLD.Get_size() <= 1:
+        raise ValueError(
+            'Need at least 1 master and 1 worker process, run with "mpirun -np ...'
+        )
 
     if MPI.COMM_WORLD.Get_rank() != 0:
         global _non_busy_wait_max_time
@@ -231,6 +253,10 @@ def main(remove_temp_files: bool = True) -> None:
     x = inputs = batch_comm = batch_index = batch_rank = forward_config = None
     num_zones = dims = batch_solution_filename = batch_restart_filename = None
     batch_size = procs_per_example = 1
+
+    temp_data_dir = "temp_data"
+    os.makedirs(temp_data_dir, exist_ok=True)
+
     while True:
         non_busy_wait(MPI.COMM_WORLD)
         run_type = MPI.COMM_WORLD.bcast(None, root=0)
@@ -252,7 +278,7 @@ def main(remove_temp_files: bool = True) -> None:
                 procs_per_example,
                 inputs,
             ) = MPI.COMM_WORLD.bcast(None, root=0)
-            print("214 inputs", inputs, True)
+            # print("214 inputs", inputs, True)
             # inputs = tuple([paddle.to_tensor(i) for i in inputs])
             batch_size = inputs[0].shape[0]
             batch_index = local_rank // procs_per_example
@@ -269,11 +295,15 @@ def main(remove_temp_files: bool = True) -> None:
             batch_rank = batch_comm.Get_rank()
             x = [z[batch_index] for z in inputs]
 
-            batch_forward_config = f"b{batch_index}_{ppid}_{forward_config}"
+            batch_forward_config = os.path.join(
+                temp_data_dir, f"b{batch_index}_{ppid}_{forward_config}"
+            )
             if batch_rank == 0:
                 old_config = SU2.io.Config(forward_config)
                 restart_filename = old_config["RESTART_FLOW_FILENAME"]
-                batch_restart_filename = f"b{batch_index}_{ppid}_{restart_filename}"
+                batch_restart_filename = os.path.join(
+                    temp_data_dir, f"b{batch_index}_{ppid}_{restart_filename}"
+                )
                 mesh_file = (
                     mesh_file.format(batch_index=batch_index)
                     if mesh_file
@@ -307,7 +337,7 @@ def main(remove_temp_files: bool = True) -> None:
             forward_driver.Postprocessing()
 
         elif run_type == RunCode.RUN_ADJOINT:
-            print("259 inputs", inputs, True)
+            # print("259 inputs", inputs, True)
             # assert inputs is not None, 'Run forward simulation before running the adjoint.'
             inputs = None
             grad_outputs = MPI.COMM_WORLD.bcast(None, root=0)
@@ -319,9 +349,10 @@ def main(remove_temp_files: bool = True) -> None:
                 z[batch_index, : output_lengths[i]] for i, z in enumerate(grad_outputs)
             ]
 
-            batch_adjoint_config = "b{}_{}_adjoint_{}".format(
-                batch_index, str(os.getppid()), forward_config
+            batch_adjoint_config = os.path.join(
+                temp_data_dir, f"b{batch_index}_{ppid}_adjoint_{forward_config}"
             )
+
             if batch_rank == 0:
                 old_config = SU2.io.Config(forward_config)
                 mesh_file = (

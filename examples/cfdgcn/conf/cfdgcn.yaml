@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_deepcfd/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_cfdgcn/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
@@ -21,7 +21,7 @@ hydra:
 
 # general settings
 mode: train # running mode: train/eval
-seed: 2023
+seed: 2024
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
@@ -37,20 +37,21 @@ EVAL_MESH_GRAPH_PATH: "./data/NACA0012_interpolate/mesh_fine.su2"
 MODEL:
   input_keys: ["input"]
   output_keys: ["pred"]
-  coarse_mesh: "./data/meshes/mesh_NACA0012_xcoarse.su2"
+  config_file: "coarse.cfg"
+  coarse_mesh: "./meshes/mesh_NACA0012_xcoarse.su2"
   freeze_mesh: False
   num_convs: 6
   num_end_convs: 3
-  hidden_channels: 512
-  out_channels: 3
+  hidden_channel: 512
+  out_channel: 3
 
 # training settings
 TRAIN:
-  epochs: 500
+  epochs: 1000
   iters_per_epoch: 42
   save_freq: 50
   eval_during_train: true
-  eval_freq: 50
+  eval_freq: 10
   learning_rate: 5.0e-4
   batch_size: 4
   pretrained_model_path: null

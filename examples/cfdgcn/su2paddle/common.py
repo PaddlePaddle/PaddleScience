@@ -1,18 +1,25 @@
+import math
 import pathlib
 import warnings
-from typing import Union, Optional, List, Tuple, Text, BinaryIO
+from typing import BinaryIO
+from typing import List
+from typing import Optional
+from typing import Text
+from typing import Tuple
+from typing import Union
 
-import math
 import matplotlib.pyplot as plt
 import paddle
 from PIL import Image
 
-plt.switch_backend('agg')
+plt.switch_backend("agg")
 
-
-def pad_sequence(sequences: List[paddle.Tensor],
-                 batch_first: bool = False,
-                 padding_value: float = 0.0) -> paddle.Tensor:
+# https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/paddlespeech/audio/utils/tensor_utils.py#L40
+def pad_sequence(
+    sequences: List[paddle.Tensor],
+    batch_first: bool = False,
+    padding_value: float = 0.0,
+) -> paddle.Tensor:
     r"""Pad a list of variable length Tensors with ``padding_value``
     ``pad_sequence`` stacks a list of Tensors along a new dimension,
     and pads them to equal length. For example, if the input is list of
@@ -47,8 +54,9 @@ def pad_sequence(sequences: List[paddle.Tensor],
     max_size = paddle.shape(sequences[0])
     # (TODO Hui Zhang): slice not supprot `end==start`
     # trailing_dims = max_size[1:]
-    trailing_dims = tuple(
-        max_size[1:].numpy().tolist()) if sequences[0].ndim >= 2 else ()
+    trailing_dims = (
+        tuple(max_size[1:].numpy().tolist()) if sequences[0].ndim >= 2 else ()
+    )
     max_len = max([s.shape[0] for s in sequences])
     if batch_first:
         out_dims = (len(sequences), max_len) + trailing_dims
@@ -79,13 +87,24 @@ def pad_sequence(sequences: List[paddle.Tensor],
 
 
 @paddle.no_grad()
-def make_grid(tensor: Union[paddle.Tensor, List[paddle.Tensor]], nrow: int = 8, padding: int = 2,
-              normalize: bool = False,
-              value_range: Optional[Tuple[int, int]] = None, scale_each: bool = False, pad_value: int = 0,
-              **kwargs) -> paddle.Tensor:
-    if not (isinstance(tensor, paddle.Tensor) or (
-            isinstance(tensor, list) and all(isinstance(t, paddle.Tensor) for t in tensor))):
-        raise TypeError(f'tensor or list of tensors expected, got {type(tensor)}')
+def make_grid(
+    tensor: Union[paddle.Tensor, List[paddle.Tensor]],
+    nrow: int = 8,
+    padding: int = 2,
+    normalize: bool = False,
+    value_range: Optional[Tuple[int, int]] = None,
+    scale_each: bool = False,
+    pad_value: int = 0,
+    **kwargs,
+) -> paddle.Tensor:
+    if not (
+        isinstance(tensor, paddle.Tensor)
+        or (
+            isinstance(tensor, list)
+            and all(isinstance(t, paddle.Tensor) for t in tensor)
+        )
+    ):
+        raise TypeError(f"tensor or list of tensors expected, got {type(tensor)}")
 
     if "range" in kwargs.keys():
         warning = "range will be deprecated, please use value_range instead."
@@ -107,8 +126,10 @@ def make_grid(tensor: Union[paddle.Tensor, List[paddle.Tensor]], nrow: int = 8, 
 
     if normalize is True:
         if value_range is not None:
-            assert isinstance(value_range,
-                              tuple), "value_range has to be a tuple (min, max) if specified. min and max are numbers"
+            if not isinstance(value_range, tuple):
+                raise TypeError(
+                    "value_range has to be a tuple (min, max) if specified. min and max are numbers"
+                )
 
         def norm_ip(img, low, high):
             img.clip(min=low, max=high)
@@ -136,21 +157,30 @@ def make_grid(tensor: Union[paddle.Tensor, List[paddle.Tensor]], nrow: int = 8, 
     ymaps = int(math.ceil(float(nmaps) / xmaps))
     height, width = int(tensor.shape[2] + padding), int(tensor.shape[3] + padding)
     num_channels = tensor.shape[1]
-    grid = paddle.full((num_channels, height * ymaps + padding, width * xmaps + padding), pad_value)
+    grid = paddle.full(
+        (num_channels, height * ymaps + padding, width * xmaps + padding), pad_value
+    )
     k = 0
     for y in range(ymaps):
         for x in range(xmaps):
             if k >= nmaps:
                 break
-            grid[:, y * height + padding:(y + 1) * height, x * width + padding:(x + 1) * width] = tensor[k]
+            grid[
+                :,
+                y * height + padding : (y + 1) * height,
+                x * width + padding : (x + 1) * width,
+            ] = tensor[k]
             k = k + 1
     return grid
 
 
 @paddle.no_grad()
-def save_image(tensor: Union[paddle.Tensor, List[paddle.Tensor]], fp: Union[Text, pathlib.Path, BinaryIO],
-               format: Optional[str] = None,
-               **kwargs) -> None:
+def save_image(
+    tensor: Union[paddle.Tensor, List[paddle.Tensor]],
+    fp: Union[Text, pathlib.Path, BinaryIO],
+    format: Optional[str] = None,
+    **kwargs,
+) -> None:
     grid = make_grid(tensor, **kwargs)
     ndarr = paddle.clip(grid * 255 + 0.5, 0, 255).cast("uint8").numpy()
     im = Image.fromarray(ndarr)

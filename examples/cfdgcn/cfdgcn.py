@@ -13,27 +13,27 @@
 # limitations under the License.
 
 import os
-import pickle
 from typing import Dict
 from typing import List
-from typing import Tuple
 
-import paddle
 import hydra
-import numpy as np
-from matplotlib import pyplot as plt
+import paddle
+import pgl
+import su2paddle
 from omegaconf import DictConfig
+from paddle.nn import functional as F
 
 import ppsci
 from ppsci.utils import logger
-import su2paddle
+
 
 def train_mse_func(
     output_dict: Dict[str, "paddle.Tensor"],
     label_dict: Dict[str, "pgl.Graph"],
     *args,
 ) -> paddle.Tensor:
-    return F.mse_loss(output_dict["pred"], label_dict["label"].y)
+    y = paddle.stack([g.y for g in label_dict["label"]])
+    return F.mse_loss(output_dict["pred"], y)
 
 
 def eval_rmse_func(
@@ -42,11 +42,10 @@ def eval_rmse_func(
     *args,
 ) -> Dict[str, paddle.Tensor]:
     mse_losses = [
-        F.mse_loss(pred, label.y)
+        F.mse_loss(pred, paddle.stack([g.y for g in label]))
         for (pred, label) in zip(output_dict["pred"], label_dict["label"])
     ]
     return {"RMSE": (sum(mse_losses) / len(mse_losses)) ** 0.5}
-
 
 
 def train(cfg: DictConfig):
@@ -55,9 +54,6 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", os.path.join(cfg.output_dir, "train.log"), "info")
 
-
-    su2paddle.activate_su2_mpi(remove_temp_files=True)
-    
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
@@ -86,12 +82,18 @@ def train(cfg: DictConfig):
 
     # wrap constraints together
     constraint = {sup_constraint.name: sup_constraint}
-    # print(sup_constraint.dataset._preprocess)
-    # print(sup_constraint.dataset.marker_dict['airfoil'])
+
+    process_sim = sup_constraint.dataset._preprocess
+    fine_marker_dict = sup_constraint.dataset.marker_dict
+    # out_channels=sup_constraint.dataset[0][0][cfg.MODEL.input_keys[0]].y.shape[-1]
 
     # set airfoil model
-    model = ppsci.arch.CFDGCN(**cfg.MODEL, process_sim=sup_constraint.dataset._preprocess,fine_marker_dict=sup_constraint.dataset.marker_dict,
-    su2_module = su2paddle.SU2Module)
+    model = ppsci.arch.CFDGCN(
+        **cfg.MODEL,
+        process_sim=process_sim,
+        fine_marker_dict=fine_marker_dict,
+        su2_module=su2paddle.SU2Module,
+    )
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
@@ -136,17 +138,21 @@ def train(cfg: DictConfig):
         validator=validator,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
+
     # train model
     solver.train()
-    
+
+
+# def evaluate(cfg: DictConfig):
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="cfdgcn.yaml")
 def main(cfg: DictConfig):
+    su2paddle.activate_su2_mpi(remove_temp_files=True)
     if cfg.mode == "train":
         train(cfg)
-    elif cfg.mode == "eval":
-        evaluate(cfg)
+    # elif cfg.mode == "eval":
+    #     evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
