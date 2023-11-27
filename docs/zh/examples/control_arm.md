@@ -19,7 +19,7 @@
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
-    python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_z_axis_pretrained.pdparams
+    python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
     ```
 
 ## 1. 背景简介
@@ -31,7 +31,7 @@
 汽车控制臂，也称为悬挂臂或悬挂控制臂，是连接车轮和车辆底盘的重要零件。控制臂作为汽车悬架系统的导向和传力元件，将作用在车轮上的各种力传递给车身，同时保证车轮按一定轨迹运动。控制臂分别通过球铰或者衬套把车轮和车身弹性地连接在一起
 ，控制臂（包括与之相连的衬套及球头）应有足够的刚度、强度和使用寿命。
 
-本问题主要研究如下汽车悬挂控制臂结构上的受力分析情况以及验证在不给定附加数据的情况下进行参数逆推的可能性，并使用深度学习方法根据线弹性等方程进行求解，结构如下所示，左侧单一圆环内表面受力，右侧两圆环内表面固定，共研究了受力方向为：Z 轴正方向、x 轴负方向两种情况，下面以 z 轴正方向受力为例进行说明。
+本问题主要研究如下汽车悬挂控制臂结构上的受力分析情况以及验证在不给定附加数据的情况下进行参数逆推的可能性，并使用深度学习方法根据线弹性等方程进行求解，结构如下所示，左侧单一圆环内表面受力，右侧两圆环内表面固定，共研究了受力方向为：x 轴负方向、z 轴正方向两种情况，下面以 x 轴正方向受力为例进行说明。
 
 <figure markdown>
   ![control_arm](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/stl.png){ loading=lazy }
@@ -189,7 +189,7 @@ examples/control_arm/conf/forward_analysis.yaml:78:78
 
 ##### 3.1.6.2 边界约束
 
-结构左侧圆环内表面受力，其上的每个点受到均匀分布的载荷，参照 [2 问题定义](#2)，大小存放在参数 $T$ 中。实际上 z 正方向的载荷，大小为 $0.0025$，其余方向应力为 0，有如下边界条件约束：
+结构左侧圆环内表面受力，其上的每个点受到均匀分布的载荷，参照 [2 问题定义](#2)，大小存放在参数 $T$ 中。实际上为 x 负方向的载荷，大小为 $0.0025$，其余方向应力为 0，有如下边界条件约束：
 
 ``` py linenums="63"
 --8<--
@@ -239,7 +239,7 @@ examples/control_arm/forward_analysis.py:175:176
 --8<--
 ```
 
-另外本案例中提供了并行训练的代码，具体细节请参考 [使用指南 2.1.1 数据并行](../user_guide.md)。
+另外本案例中提供了并行训练的代码，注意打开数据并行后，应该将学习率应该增大为 `原始学习率*并行卡数`，以保证训练效果。具体细节请参考 [使用指南 2.1.1 数据并行](../user_guide.md)。
 
 ``` yaml linenums="84"
 --8<--
@@ -291,20 +291,20 @@ examples/control_arm/forward_analysis.py
 
 ## 5. 结果展示
 
-下面展示了当力的方向为Z正方向时 3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果。
+下面展示了当力的方向为 x 正方向时 3 个方向的应变 $u, v, w$ 以及 6 个应力 $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ 的模型预测结果。
 
 <figure markdown>
-  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/uvw.png){ loading=lazy }
+  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/uvw_x.png){ loading=lazy }
   <figcaption>左侧为预测的结构应变 u；中间为预测的结构应变 v；右侧为预测的结构应变 w</figcaption>
 </figure>
 
 <figure markdown>
-  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/sigmas1.png){ loading=lazy }
+  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/sigmas1_x.png){ loading=lazy }
   <figcaption>左侧为预测的结构应力 sigma_xx；中间为预测的结构应力 sigma_xy；右侧为预测的结构应力 sigma_xz</figcaption>
 </figure>
 
 <figure markdown>
-  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/sigmas2.png){ loading=lazy }
+  ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/sigmas2_x.png){ loading=lazy }
   <figcaption>左侧为预测的结构应力 sigma_yy；中间为预测的结构应力 sigma_yz；右侧为预测的结构应力 sigma_zz</figcaption>
 </figure>
 

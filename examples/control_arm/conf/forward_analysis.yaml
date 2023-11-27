@@ -28,8 +28,8 @@ log_freq: 100
 # set working condition
 NU: 0.3
 E: 1
-T: [0, 0, 0.0025]   # +Z axis
-# T: [-0.0025, 0, 0]  # -X axis
+# T: [0, 0, 0.0025]   # +Z axis
+T: [-0.0025, 0, 0]  # -X axis
 
 # set geometry file path
 GEOM_PATH: ./datasets/control_arm.stl
@@ -67,7 +67,7 @@ TRAIN:
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
-    learning_rate: 4.0e-5
+    learning_rate: 1.0e-4
     gamma: 0.95
     decay_steps: 15000
     by_epoch: false
@@ -78,7 +78,7 @@ TRAIN:
     arm_interior: 2048
     visualizer_vtu: 100000
   weight:
-    arm_right: {"u": 100, "v": 100, "w": 100}
+    arm_right: {"u": 1, "v": 1, "w": 1}
   pretrained_model_path: null
   checkpoint_path: null
   enable_parallel: false # whether to enable parallel training
