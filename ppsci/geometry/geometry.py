@@ -58,7 +58,7 @@ class Geometry:
         raise NotImplementedError(f"{self}.boundary_normal is not implemented")
 
     def uniform_points(self, n: int, boundary=True):
-        """Compute the equispaced points in the geometry."""
+        """Compute the equi-spaced points in the geometry."""
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
         )
@@ -189,7 +189,7 @@ class Geometry:
         """Compute the random points in the geometry."""
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         logger.warning(
             f"{self}.uniform_boundary_points not implemented. "
             f"Use random_boundary_points instead."

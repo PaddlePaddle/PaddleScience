@@ -18,12 +18,15 @@ import hydra
 import numpy as np
 import paddle
 import paddle.nn.functional as F
+import plotting as plot_func
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
+from ppsci.utils import save_load
 
 
 def pde_loss_func(output_dict, *args):
@@ -400,9 +403,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.FunctionalMetric(sol_l2_rel_func)},
         name="uv_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -424,7 +425,114 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    print("Not supported.")
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # initialize boundaries
+    t_lb = paddle.to_tensor(cfg.T_LB)
+    t_ub = paddle.to_tensor(np.pi / cfg.T_UB)
+    x_lb = paddle.to_tensor(cfg.X_LB)
+    x_ub = paddle.to_tensor(cfg.X_UB)
+
+    # initialize models
+    model_idn_u = ppsci.arch.MLP(**cfg.MODEL.idn_u_net)
+    model_idn_v = ppsci.arch.MLP(**cfg.MODEL.idn_v_net)
+    model_pde_f = ppsci.arch.MLP(**cfg.MODEL.pde_f_net)
+    model_pde_g = ppsci.arch.MLP(**cfg.MODEL.pde_g_net)
+
+    # initialize transform
+    def transform_uv(_in):
+        t, x = _in["t"], _in["x"]
+        t = 2.0 * (t - t_lb) * paddle.pow((t_ub - t_lb), -1) - 1.0
+        x = 2.0 * (x - x_lb) * paddle.pow((x_ub - x_lb), -1) - 1.0
+        input_trans = {"t": t, "x": x}
+        return input_trans
+
+    def transform_fg(_in):
+        in_idn = {"t": _in["t"], "x": _in["x"]}
+        x = _in["x"]
+        u = model_idn_u(in_idn)["u_idn"]
+        v = model_idn_v(in_idn)["v_idn"]
+
+        du_x = jacobian(u, x)
+        du_xx = hessian(u, x)
+
+        dv_x = jacobian(v, x)
+        dv_xx = hessian(v, x)
+
+        input_trans = {
+            "u": u,
+            "v": v,
+            "du_x": du_x,
+            "dv_x": dv_x,
+            "du_xx": du_xx,
+            "dv_xx": dv_xx,
+        }
+        return input_trans
+
+    # register transform
+    model_idn_u.register_input_transform(transform_uv)
+    model_idn_v.register_input_transform(transform_uv)
+    model_pde_f.register_input_transform(transform_fg)
+    model_pde_g.register_input_transform(transform_fg)
+
+    # initialize model list
+    model_list = ppsci.arch.ModelList(
+        (model_idn_u, model_idn_v, model_pde_f, model_pde_g)
+    )
+    # stage 3: solution net
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "uv_sol", "u_sol", "v_sol"),
+        alias_dict={
+            "t": "t_ori",
+            "x": "x_ori",
+            "uv_sol": "Exact_uv_ori",
+            "u_sol": "u_star",
+            "v_sol": "v_star",
+        },
+    )
+
+    t_sol, x_sol = np.meshgrid(
+        np.squeeze(dataset_val["t"]), np.squeeze(dataset_val["x"])
+    )
+    t_sol_flatten = paddle.to_tensor(
+        t_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    x_sol_flatten = paddle.to_tensor(
+        x_sol.flatten()[:, None], dtype=paddle.get_default_dtype(), stop_gradient=False
+    )
+    pred = model_list({"t": t_sol_flatten, "x": x_sol_flatten})
+    u_sol_pred = pred["u_idn"].numpy()
+    v_sol_pred = pred["v_idn"].numpy()
+    uv_sol_pred = np.sqrt(u_sol_pred**2 + v_sol_pred**2)
+
+    # eval
+    uv_sol_star = np.sqrt(dataset_val["u_sol"] ** 2 + dataset_val["v_sol"] ** 2)
+    error_uv = np.linalg.norm(uv_sol_star - uv_sol_pred, 2) / np.linalg.norm(
+        uv_sol_star, 2
+    )
+    logger.info(f"l2_error_uv: {error_uv}")
+
+    # plotting
+    plot_points = paddle.concat([t_sol_flatten, x_sol_flatten], axis=-1).numpy()
+    plot_func.draw_and_save(
+        figname="schrodinger_uv_sol",
+        data_exact=dataset_val["uv_sol"],
+        data_learned=uv_sol_pred,
+        boundary=[cfg.T_LB, cfg.T_UB, cfg.X_LB, cfg.X_UB],
+        griddata_points=plot_points,
+        griddata_xi=(t_sol, x_sol),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="schrodinger.yaml")

@@ -59,7 +59,7 @@ class Compose(vision.Compose):
 
 def build_transforms(cfg):
     if not cfg:
-        return vision.Compose([])
+        return Compose([])
     cfg = copy.deepcopy(cfg)
 
     transform_list = []

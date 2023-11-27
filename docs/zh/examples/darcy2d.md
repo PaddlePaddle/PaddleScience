@@ -14,6 +14,11 @@
     python darcy2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/darcy2d/darcy2d_pretrained.pdparams
     ```
 
+| 预训练模型  | 指标 |
+|:--| :--|
+| [darcy2d_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/darcy2d/darcy2d_pretrained.pdparams) | loss(Residual): 0.36500<br>MSE.poisson(Residual): 0.00006 |
+
+
 ## 1. 背景简介
 
 Darcy Flow是一个基于达西定律的工具，用于计算液体的流动。在地下水模拟、水文学、水文地质学和石油工程等领域中，Darcy Flow被广泛应用。

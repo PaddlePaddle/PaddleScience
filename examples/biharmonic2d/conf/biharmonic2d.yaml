@@ -1,0 +1,74 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_biharmonic2d/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 2023
+output_dir: ${hydra:run.dir}
+log_freq: 200
+
+# set working condition
+E: 201880.0e+6  # Pa = N/m2
+NU: 0.25
+Q_0: 980     # Pa = N/m2
+LENGTH: 2        # m
+WIDTH: 3         # m
+HEIGHT: 0.01        # m
+
+# model settings
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["u",]
+  num_layers: 5
+  hidden_size: 20
+  activation: "tanh"
+  weight_norm: true
+
+# training settings
+TRAIN:
+  epochs: 1000
+  iters_per_epoch: 1
+  optimizer:
+    adam:
+      learning_rate: 1.0e-3
+    lbfgs:
+      learning_rate: 1.0
+      max_iter: 50000
+      tolerance_grad: 1.0e-8
+      tolerance_change: 0
+  batch_size:
+    bc: 125
+    interior: 8000
+  weight:
+    bc: 100
+    interior: 1
+  save_freq: 100
+  eval_during_train: false
+  eval_freq: 100
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+  batch_size:
+    sup_validator: 128

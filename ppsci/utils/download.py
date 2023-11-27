@@ -26,6 +26,7 @@ import requests
 import tqdm
 
 from ppsci.utils import logger
+from ppsci.utils import misc
 
 __all__ = ["get_weights_path_from_url"]
 
@@ -90,19 +91,16 @@ def get_path_from_url(url, root_dir, md5sum=None, check_exist=True, decompress=T
     rank_id_curr_node = int(os.environ.get("PADDLE_RANK_IN_NODE", 0))
 
     if osp.exists(fullpath) and check_exist and _md5check(fullpath, md5sum):
-        logger.message(f"Found {fullpath}")
+        logger.message(f"Found {fullpath} already in {WEIGHTS_HOME}, skip downloading.")
     else:
-        if rank_id_curr_node == 0:
-            fullpath = _download(url, root_dir, md5sum)
-        else:
-            while not os.path.exists(fullpath):
-                time.sleep(1)
+        with misc.RankZeroOnly(rank_id_curr_node) as is_master:
+            if is_master:
+                fullpath = _download(url, root_dir, md5sum)
 
-    if rank_id_curr_node == 0:
-        if decompress and (
-            tarfile.is_tarfile(fullpath) or zipfile.is_zipfile(fullpath)
-        ):
-            fullpath = _decompress(fullpath)
+    if decompress and (tarfile.is_tarfile(fullpath) or zipfile.is_zipfile(fullpath)):
+        with misc.RankZeroOnly(rank_id_curr_node) as is_master:
+            if is_master:
+                fullpath = _decompress(fullpath)
 
     return fullpath
 

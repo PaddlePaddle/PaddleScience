@@ -33,7 +33,11 @@ if TYPE_CHECKING:
     from ppsci import equation
 
 
-__all__ = ["load_checkpoint", "save_checkpoint", "load_pretrain"]
+__all__ = [
+    "load_checkpoint",
+    "save_checkpoint",
+    "load_pretrain",
+]
 
 
 def _load_pretrain_from_path(
@@ -42,7 +46,7 @@ def _load_pretrain_from_path(
     """Load pretrained model from given path.
 
     Args:
-        path (str): Pretrained model path.
+        path (str): File path of pretrained model, i.e. `/path/to/model.pdparams`.
         model (nn.Layer): Model with parameters.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
@@ -53,15 +57,24 @@ def _load_pretrain_from_path(
 
     param_state_dict = paddle.load(f"{path}.pdparams")
     model.set_state_dict(param_state_dict)
+    logger.message(f"Finish loading pretrained model from: {path}.pdparams")
     if equation is not None:
         if not os.path.exists(f"{path}.pdeqn"):
-            logger.warning(f"{path}.pdeqn not found.")
+            num_learnable_params = sum(
+                [len(eq.learnable_parameters) for eq in equation.values()]
+            )
+            if num_learnable_params > 0:
+                logger.warning(
+                    f"There are a total of {num_learnable_params} learnable parameters"
+                    f" in the equation, but {path}.pdeqn not found."
+                )
         else:
             equation_dict = paddle.load(f"{path}.pdeqn")
             for name, _equation in equation.items():
                 _equation.set_state_dict(equation_dict[name])
-
-    logger.message(f"Finish loading pretrained model from {path}")
+            logger.message(
+                f"Finish loading pretrained equation parameters from: {path}.pdeqn"
+            )
 
 
 def load_pretrain(
@@ -71,7 +84,8 @@ def load_pretrain(
 
     Args:
         model (nn.Layer): Model with parameters.
-        path (str): Pretrained model url.
+        path (str): File path or url of pretrained model, i.e. `/path/to/model.pdparams`
+            or `http://xxx.com/model.pdparams`.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
     if path.startswith("http"):

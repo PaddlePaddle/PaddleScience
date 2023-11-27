@@ -20,6 +20,10 @@
     python bubble.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bubble/bubble_pretrained.pdparams
     ```
 
+| 预训练模型  | 指标 |
+|:--| :--|
+| [bubble_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/bubble/bubble_pretrained.pdparams) | loss(bubble_mse): 0.00558<br>MSE.u(bubble_mse): 0.00090<br>MSE.v(bubble_mse): 0.00322<br>MSE.p(bubble_mse): 0.00066<br>MSE.phil(bubble_mse): 0.00079 |
+
 ## 1. 背景简介
 
 ### 1.1 气泡流
@@ -299,7 +303,7 @@ examples/bubble/bubble.py:189:206
 
 ``` py linenums="212"
 --8<--
-examples/bubble/bubble.py:212:237
+examples/bubble/bubble.py:212:238
 --8<--
 ```
 

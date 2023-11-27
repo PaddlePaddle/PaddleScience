@@ -3,9 +3,20 @@
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
+
     ``` sh
     python ldc2d_steady_Re10.py
     ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [ldc2d_steady_Re10_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams) | loss(Residual): 365.36164<br>MSE.momentum_x(Residual): 0.01435<br>MSE.continuity(Residual): 0.04072<br>MSE.momentum_y(Residual): 0.02471 |
 
 ## 1. 背景简介
 

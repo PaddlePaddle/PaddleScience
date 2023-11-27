@@ -100,19 +100,19 @@ class LinearElasticity(base.PDE):
         # compute lambda and mu
         if lambda_ is None:
             if isinstance(nu, str):
-                nu = self.create_function(nu)(invars)
+                nu = self.create_function(nu, invars)
             if isinstance(E, str):
-                E = self.create_function(E)(invars)
+                E = self.create_function(E, invars)
             lambda_ = nu * E / ((1 + nu) * (1 - 2 * nu))
             mu = E / (2 * (1 + nu))
         else:
             if isinstance(lambda_, str):
-                lambda_ = self.create_function(lambda_)(invars)
+                lambda_ = self.create_function(lambda_, invars)
             if isinstance(mu, str):
-                mu = self.create_function(mu)(invars)
+                mu = self.create_function(mu, invars)
 
         if isinstance(rho, str):
-            rho = self.create_function(rho)(invars)
+            rho = self.create_function(rho, invars)
 
         self.E = E
         self.nu = nu

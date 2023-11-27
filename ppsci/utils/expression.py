@@ -31,6 +31,10 @@ if TYPE_CHECKING:
 
 from ppsci.autodiff import clear
 
+__all__ = [
+    "ExpressionSolver",
+]
+
 
 class ExpressionSolver(nn.Layer):
     """Expression computing helper, which compute named result according to corresponding

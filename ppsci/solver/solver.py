@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import contextlib
 import itertools
+import os
 import sys
+from os import path as osp
 from typing import Callable
 from typing import Dict
 from typing import Mapping
@@ -65,7 +67,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
-        wandb_config (Optional[Dict[str, str]]): Config dict of wandb. Defaults to None.
+        wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
@@ -75,7 +77,7 @@ class Solver:
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
-        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluate. Defaults to False.
+        compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
@@ -185,27 +187,6 @@ class Solver:
         # fix seed for reproducibility
         self.seed = seed
 
-        # set VisualDL tool
-        self.vdl_writer = None
-        if use_vdl:
-            self.vdl_writer = vdl.LogWriter(f"{output_dir}/vdl")
-        # set WandB tool
-        self.wandb_writer = None
-        if use_wandb:
-            try:
-                import wandb
-            except ModuleNotFoundError:
-                raise ModuleNotFoundError(
-                    "Please install 'wandb' with `pip install wandb` first."
-                )
-            if dist.get_rank() == 0:
-                wandb.init(**wandb_config)
-                self.wandb_writer = wandb
-                if dist.get_world_size() > 1:
-                    dist.barrier()
-            else:
-                dist.barrier()
-
         # set running device
         if device != "cpu" and paddle.device.get_device() == "cpu":
             logger.warning(f"Set device({device}) to 'cpu' for only cpu available.")
@@ -229,7 +210,7 @@ class Solver:
         self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
-        # whether calculate metrics after each batch during evaluate
+        # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
         self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
             for metric in itertools.chain(
@@ -241,8 +222,21 @@ class Solver:
                         f"{compute_metric_by_batch} when compute_metric_by_batch="
                         f"{compute_metric_by_batch}."
                     )
-        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during computation
+        # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
         self.eval_with_no_grad = eval_with_no_grad
+
+        self.rank = dist.get_rank()
+        self.world_size = dist.get_world_size()
+        # initialize distributed environment
+        if self.world_size > 1:
+            # TODO(sensen): support different kind of DistributedStrategy
+            fleet.init(is_collective=True)
+            logger.warning(
+                f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
+                "scale up the learning rate and reduce the 'epochs' or "
+                "'iters_per_epoch' according to the 'world_size' both linearly if you "
+                "are training model."
+            )
 
         # load pretrained model, usually used for transfer learning
         if pretrained_model_path is not None:
@@ -255,6 +249,11 @@ class Solver:
         }
         # load model checkpoint, usually used for resume training
         if checkpoint_path is not None:
+            if pretrained_model_path is not None:
+                logger.warning(
+                    "Detected 'pretrained_model_path' is given, weights in which might be"
+                    "overridden by weights loaded from given 'checkpoint_path'."
+                )
             loaded_metric = save_load.load_checkpoint(
                 checkpoint_path, self.model, self.optimizer, self.scaler, self.equation
             )
@@ -275,42 +274,66 @@ class Solver:
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
-                logger.warning("Set update_freq to to 1 when using L-BFGS optimizer.")
+                logger.warning("Set 'update_freq' to to 1 when using L-BFGS optimizer.")
         else:
             self.train_epoch_func = ppsci.solver.train.train_epoch_func
 
         # wrap model and optimizer to parallel object
-        self.rank = dist.get_rank()
-        self.world_size = dist.get_world_size()
         if self.world_size > 1:
-            # TODO(sensen): support different kind of DistributedStrategy
-            fleet.init(is_collective=True)
+            if isinstance(self.model, paddle.DataParallel):
+                raise ValueError(
+                    "Given model is already wrapped by paddle.DataParallel."
+                    "Please do not wrap your model with DataParallel "
+                    "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
+                )
             self.model = fleet.distributed_model(self.model)
-            self.model.input_keys = self.model._layers.input_keys
-            self.model.output_keys = self.model._layers.output_keys
+            if hasattr(self.model, "input_keys"):
+                self.model.input_keys = self.model._layers.input_keys
+            if hasattr(self.model, "output_keys"):
+                self.model.output_keys = self.model._layers.output_keys
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
-            logger.warning(
-                f"Detected world_size({self.world_size}) > 1, it is recommended to "
-                "scale up the learning rate and reduce the epochs or "
-                "iters_per_epoch according to the world_size both linearly."
-            )
+
+        # set VisualDL tool
+        self.vdl_writer = None
+        if use_vdl:
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+
+        # set WandB tool
+        self.wandb_writer = None
+        if use_wandb:
+            try:
+                import wandb
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'wandb' with `pip install wandb` first."
+                )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.wandb_writer = wandb.init(**wandb_config)
 
         self.global_step = 0
 
         # log paddlepaddle's version
-        paddle_version = (
-            paddle.__version__
-            if version.Version(paddle.__version__) != version.Version("0.0.0")
-            else f"develop({paddle.version.commit[:7]})"
-        )
+        if version.Version(paddle.__version__) != version.Version("0.0.0"):
+            paddle_version = paddle.__version__
+            logger.warning(
+                f"Detected paddlepaddle version is '{paddle_version}', "
+                "currently it is recommended to use develop version until the "
+                "release of version 2.6."
+            )
+        else:
+            paddle_version = f"develop({paddle.version.commit[:7]})"
+
         logger.info(f"Using paddlepaddle {paddle_version} on device {self.device}")
 
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass, defaults to False
         jit.enable_to_static(to_static)
-        logger.info(f"Set to_static={to_static} for forward computation.")
+        logger.info(f"Set to_static={to_static} for computational optimization.")
 
         # use loss aggregator, use summation if None
         self.loss_aggregator = loss_aggregator
@@ -335,7 +358,7 @@ class Solver:
                             expr,
                             self.model,
                             extra_parameters,
-                            # os.path.join(self.output_dir, container.name, name),  # HACK: Activate it for DEBUG.
+                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
                         )
 
         if self.constraint:
@@ -346,6 +369,9 @@ class Solver:
 
         if self.visualizer:
             convert_expr(self.visualizer)
+
+        # set up benchmark flag, will print memory stat if enabled
+        self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
     def train(self):
         """Training."""
@@ -421,10 +447,6 @@ class Solver:
                 self.equation,
             )
 
-        # close VisualDL
-        if self.vdl_writer is not None:
-            self.vdl_writer.close()
-
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
@@ -459,7 +481,7 @@ class Solver:
         self.visu_func = ppsci.solver.visu.visualize_func
 
         self.visu_func(self, epoch_id)
-        logger.info(f"[Visualize][Epoch {epoch_id}] Finished visualization")
+        logger.info(f"[Visualize][Epoch {epoch_id}] Finish visualization")
 
     @misc.run_on_eval_mode
     def predict(
@@ -492,12 +514,22 @@ class Solver:
         if num_pad > 0:
             for k, v in input_dict.items():
                 repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
-                input_dict[k] = paddle.concat(
-                    (
-                        v,
-                        paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
-                    ),
-                )
+                if isinstance(v, np.ndarray):
+                    input_dict[k] = np.concatenate(
+                        (
+                            v,
+                            np.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                elif isinstance(v, paddle.Tensor):
+                    input_dict[k] = paddle.concat(
+                        (
+                            v,
+                            paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                else:
+                    raise ValueError(f"Unsupported data type {type(v)}.")
 
         num_samples_pad = num_samples + num_pad
         local_num_samples_pad = num_samples_pad // self.world_size
@@ -507,6 +539,7 @@ class Solver:
             else input_dict
         )
         local_batch_num = (local_num_samples_pad + (batch_size - 1)) // batch_size
+
         pred_dict = misc.Prettydefaultdict(list)
         with self.no_grad_context_manager(no_grad), self.no_sync_context_manager(
             self.world_size > 1, self.model
@@ -534,7 +567,9 @@ class Solver:
 
                 # collect batch data
                 for key, batch_output in batch_output_dict.items():
-                    pred_dict[key].append(batch_output.detach())
+                    pred_dict[key].append(
+                        batch_output.detach() if no_grad else batch_output
+                    )
 
             # concatenate local predictions
             pred_dict = {key: paddle.concat(value) for key, value in pred_dict.items()}
@@ -544,9 +579,8 @@ class Solver:
                 pred_dict = {
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
-
-                # rearrange predictions as the same order of input_dict according to inverse
-                # permutation, then discard predictions of padding data at the end
+                # rearrange predictions as the same order of input_dict according
+                # to inverse permutation
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(
                     [perm[rank :: self.world_size] for rank in range(self.world_size)],
@@ -555,10 +589,15 @@ class Solver:
                 perm_inv = np.empty_like(perm)
                 perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
                 perm_inv = paddle.to_tensor(perm_inv)
-                pred_dict = {
-                    key: value[perm_inv][:num_samples]
-                    for key, value in pred_dict.items()
-                }
+                pred_dict = {key: value[perm_inv] for key, value in pred_dict.items()}
+                # then discard predictions of padding data at the end if num_pad > 0
+                if num_pad > 0:
+                    pred_dict = {
+                        key: value[:num_samples] for key, value in pred_dict.items()
+                    }
+                    # NOTE: Discard padding data in input_dict for consistency
+                    for k in input_dict:
+                        input_dict[k] = input_dict[k][:num_samples]
 
         # convert to numpy ndarray if specified
         if return_numpy:

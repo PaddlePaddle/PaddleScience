@@ -23,6 +23,7 @@ from contextlib import ContextDecorator
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import Union
@@ -38,6 +39,7 @@ __all__ = [
     "AverageMeter",
     "PrettyOrderedDict",
     "Prettydefaultdict",
+    "RankZeroOnly",
     "Timer",
     "all_gather",
     "concat_dict_list",
@@ -117,6 +119,52 @@ class Prettydefaultdict(collections.defaultdict):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
+class RankZeroOnly:
+    """
+    A context manager that ensures the code inside it is only executed by the process
+    with rank zero. All rank will be synchronized by `dist.barrier` in
+    distributed environment.
+
+    NOTE: Always used for time consuming code blocks, such as initialization of log
+    writer, saving result to disk, etc.
+
+    Args:
+        rank (Optional[int]): The rank of the current process. If not provided,
+            it will be obtained from `dist.get_rank()`.
+
+    Examples:
+        >>> import paddle.distributed as dist
+        >>> with RankZeroOnly(dist.get_rank()) as is_master:
+        ...     if is_master:
+        ...         # code here that should only be executed by the master process
+    """
+
+    def __init__(self, rank: Optional[int] = None):
+        """
+        Enter the context and check if the current process is the master.
+
+        Args:
+            rank (Optional[int]): The rank of the current process. If not provided,
+                it will be obtained from `dist.get_rank()`.
+        """
+        super().__init__()
+        self.rank = rank if (rank is not None) else dist.get_rank()
+        self.is_master = self.rank == 0
+
+    def __enter__(self) -> bool:
+        """
+        Enter the context and check if the current process is the master.
+
+        Returns:
+            bool: True if the current process is the master (rank zero), False otherwise.
+        """
+        return self.is_master
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if dist.get_world_size() > 1:
+            dist.barrier()
+
+
 class Timer(ContextDecorator):
     """Count time cost for code block within context.
 
@@ -164,7 +212,7 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
     Args:
         array (np.ndarray): Array to be split.
-        keys (Tuple[str, ...]):Keys used in split.
+        keys (Tuple[str, ...]): Keys used in split.
 
     Returns:
         Dict[str, np.ndarray]: Split dict.
@@ -189,10 +237,19 @@ def all_gather(
         axis (int, optional): Axis which concatenated along. Defaults to 0.
 
     Returns:
-        Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors
+        Union[paddle.Tensor, List[paddle.Tensor]]: Gathered Tensors.
     """
     result: List[paddle.Tensor] = []
-    paddle.distributed.all_gather(result, tensor)
+
+    # NOTE: Put tensor to CUDAPlace from CUDAPinnedPlace to use communication.
+    if tensor.place.is_cuda_pinned_place():
+        tensor = tensor.cuda()
+
+    # TODO(HydrogenSulfate): As non-contiguous(strided) tensor is not supported in
+    # dist.all_gather, manually convert given Tensor to contiguous below. Strided tensor
+    # will be supported in future.
+    dist.all_gather(result, tensor.contiguous())
+
     if concat:
         return paddle.concat(result, axis)
     return result
@@ -416,11 +473,10 @@ def plot_curve(
 
     # plot
     plt.figure()
-    for i in range(data_arr.shape[1]):
-        if use_semilogy:
-            plt.semilogy(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
-        else:
-            plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr[:, i])
+    if use_semilogy:
+        plt.yscale("log")
+        plt.xscale("log")
+    plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
         loc="lower left",

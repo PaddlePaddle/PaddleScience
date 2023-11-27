@@ -23,8 +23,8 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-DATASET_PATH: ./datasets/DeepHPMs/burgers_sine.mat
-DATASET_PATH_SOL: ./datasets/DeepHPMs/burgers.mat
+DATASET_PATH: ./datasets/burgers_sine.mat
+DATASET_PATH_SOL: ./datasets/burgers_sine.mat
 
 # set working condition
 T_LB: 0.0
@@ -55,7 +55,7 @@ MODEL:
 
 # training settings
 TRAIN:
-  epochs: 50000
+  epochs: 50000 # set 1 for LBFGS
   iters_per_epoch: 1
   max_iter: 50000  # for LBFGS
   learning_rate: 1.0e-3

@@ -15,14 +15,18 @@
 from os import path as osp
 
 import hydra
+import numpy as np
 import paddle
 import paddle.nn.functional as F
+import plotting as plot_func
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
 from ppsci.utils import logger
+from ppsci.utils import reader
+from ppsci.utils import save_load
 
 
 def pde_loss_func(output_dict, *args):
@@ -97,8 +101,8 @@ def train(cfg: DictConfig):
     optimizer_pde = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_pde)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn, ))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde, ))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
 
     # stage 1: training identification net
     # manually build constraint(s)
@@ -348,9 +352,7 @@ def train(cfg: DictConfig):
         {"l2": ppsci.metric.L2Rel()},
         name="w_L2_sup",
     )
-    validator_sol = {
-        sup_validator_sol.name: sup_validator_sol,
-    }
+    validator_sol = {sup_validator_sol.name: sup_validator_sol}
 
     # update solver
     solver = ppsci.solver.Solver(
@@ -372,7 +374,107 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    print("Not supported.")
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    # initialize boundaries
+    # t, x, y
+    lb = paddle.to_tensor(list(cfg.LB))
+    ub = paddle.to_tensor(list(cfg.UB))
+
+    # initialize models
+    model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)
+    model_pde = ppsci.arch.MLP(**cfg.MODEL.pde_net)
+
+    # initialize transform
+    def transform_w(_in):
+        t, x, y = _in["t"], _in["x"], _in["y"]
+        X = paddle.concat([t, x, y], axis=1)
+        H = 2.0 * (X - lb) * paddle.pow((ub - lb), -1) - 1.0
+        t, x, y = paddle.split(H, 3, axis=1)
+        input_trans = {"t": t, "x": x, "y": y}
+        return input_trans
+
+    def transform_f(_in):
+        in_idn = {"t": _in["t"], "x": _in["x"], "y": _in["y"]}
+        x, y = _in["x"], _in["y"]
+        w = model_idn(in_idn)["w_idn"]
+        dw_x = jacobian(w, x)
+        dw_y = jacobian(w, y)
+
+        dw_xx = hessian(w, x)
+        dw_yy = hessian(w, y)
+        dw_xy = jacobian(dw_x, y)
+
+        input_trans = {
+            "u": _in["u"],
+            "v": _in["v"],
+            "w": w,
+            "dw_x": dw_x,
+            "dw_y": dw_y,
+            "dw_xx": dw_xx,
+            "dw_xy": dw_xy,
+            "dw_yy": dw_yy,
+        }
+        return input_trans
+
+    # register transform
+    model_idn.register_input_transform(transform_w)
+    model_pde.register_input_transform(transform_f)
+
+    # initialize model list
+    model_list = ppsci.arch.ModelList((model_idn, model_pde))
+
+    # stage 3: solution net
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load pretrained model
+    save_load.load_pretrain(model_list, cfg.EVAL.pretrained_model_path)
+
+    # load dataset
+    dataset_val = reader.load_mat_file(
+        cfg.DATASET_PATH_SOL,
+        keys=("t", "x", "y", "w_sol", "grid_data"),
+        alias_dict={
+            "t": "t_star",
+            "x": "x_star",
+            "y": "y_star",
+            "w_sol": "w_star",
+            "grid_data": "X_star",
+        },
+    )
+    input_dict = {
+        "t": paddle.to_tensor(
+            dataset_val["t"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
+        "x": paddle.to_tensor(
+            dataset_val["x"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
+        "y": paddle.to_tensor(
+            dataset_val["y"], dtype=paddle.get_default_dtype(), stop_gradient=False
+        ),
+    }
+
+    w_sol_pred = model_idn(input_dict)
+
+    # eval
+    l2_error = np.linalg.norm(
+        dataset_val["w_sol"] - w_sol_pred["w_idn"], 2
+    ) / np.linalg.norm(
+        dataset_val["w_sol"], 2
+    )  # stage 1&3 use the same net in this example
+    logger.info(f"l2_error: {l2_error}")
+
+    # plotting
+    plot_func.draw_and_save_ns(
+        figname="navier_stokes_sol",
+        data_exact=dataset_val["w_sol"].reshape([-1, 151]),
+        data_learned=w_sol_pred["w_idn"].reshape([-1, 151]).numpy(),
+        grid_data=dataset_val["grid_data"].reshape([-1, 2]),
+        save_path=cfg.output_dir,
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="navier_stokes.yaml")

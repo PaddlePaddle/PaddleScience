@@ -138,7 +138,7 @@ class NPZDataset(io.Dataset):
 
         if self.transforms is not None:
             input_item, label_item, weight_item = self.transforms(
-                (input_item, label_item, weight_item)
+                input_item, label_item, weight_item
             )
 
         return (input_item, label_item, weight_item)
@@ -261,7 +261,13 @@ class IterableNPZDataset(io.IterableDataset):
         return self._len
 
     def __iter__(self):
-        yield self.input, self.label, self.weight
+        if callable(self.transforms):
+            input_, label_, weight_ = self.transforms(
+                self.input, self.label, self.weight
+            )
+            yield input_, label_, weight_
+        else:
+            yield self.input, self.label, self.weight
 
     def __len__(self):
         return 1
