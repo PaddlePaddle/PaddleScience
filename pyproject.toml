@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-version = "1.0.0"
+version = "1.2.0"
 description = "A library for scientific machine learning"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -59,7 +59,7 @@ dependencies = [
 Homepage = "https://github.com/PaddlePaddle/PaddleScience"
 "Bug Tracker" = "https://github.com/PaddlePaddle/PaddleScience/issues"
 Changelog = "https://github.com/PaddlePaddle/PaddleScience/releases"
-Documentation = "https://paddlescience-docs.readthedocs.io/zh/latest/"
+Documentation = "https://paddlescience-docs.readthedocs.io/zh/release-1.2/"
 
 [tool.setuptools.packages.find]
 where = ["."]

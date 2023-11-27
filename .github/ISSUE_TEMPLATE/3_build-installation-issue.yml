@@ -6,9 +6,9 @@ body:
   - type: markdown
     attributes:
       value: >
-        #### 安装请参考 [安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)，若未能解决你的问题，你可以在这里提 issue。
+        #### 安装请参考 [安装使用](https://paddlescience-docs.readthedocs.io/zh/release-1.2/zh/install_setup/)，若未能解决你的问题，你可以在这里提 issue。
 
-        #### Before submitting a Build/Installation Issue, please make sure you have visited the [install_setup](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/).
+        #### Before submitting a Build/Installation Issue, please make sure you have visited the [install_setup](https://paddlescience-docs.readthedocs.io/zh/release-1.2/zh/install_setup/).
 
   - type: textarea
     id: error
