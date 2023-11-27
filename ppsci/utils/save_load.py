@@ -186,9 +186,13 @@ def save_checkpoint(
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
     if equation is not None:
-        paddle.save(
-            {key: eq.state_dict() for key, eq in equation.items()},
-            f"{ckpt_path}.pdeqn",
+        num_learnable_params = sum(
+            [len(eq.learnable_parameters) for eq in equation.values()]
         )
+        if num_learnable_params > 0:
+            paddle.save(
+                {key: eq.state_dict() for key, eq in equation.items()},
+                f"{ckpt_path}.pdeqn",
+            )
 
     logger.message(f"Finish saving checkpoint to {ckpt_path}")
