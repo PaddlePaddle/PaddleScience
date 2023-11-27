@@ -101,7 +101,7 @@ tar -xvf aneurysm_dataset.tar
 
 ???+ warning "注意"
 
-    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
+    **使用 `Mesh` 类之前，必须先按照[安装使用](https://paddlescience-docs.readthedocs.io/zh/release-1.2/zh/install_setup/#143-pip)文档，安装好 open3d、pysdf、PyMesh 3 个几何依赖包。**
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 

@@ -1,14 +1,14 @@
 name: 📚 文档 Documentation Issue
-description: 反馈一个官网文档错误。 Report an issue related to https://paddlescience-docs.readthedocs.io/zh/latest/.
+description: 反馈一个官网文档错误。 Report an issue related to https://paddlescience-docs.readthedocs.io/zh/release-1.2/.
 labels: [type/docs, status/new-issue]
 
 body:
   - type: markdown
     attributes:
       value: >
-        #### 请确认反馈的问题来自 PaddleScience 官网文档：https://paddlescience-docs.readthedocs.io/zh/latest/ 。
+        #### 请确认反馈的问题来自 PaddleScience 官网文档：https://paddlescience-docs.readthedocs.io/zh/release-1.2/ 。
 
-        #### Before submitting a Documentation Issue, Please make sure that issue is related to https://paddlescience-docs.readthedocs.io/zh/latest/.
+        #### Before submitting a Documentation Issue, Please make sure that issue is related to https://paddlescience-docs.readthedocs.io/zh/release-1.2/.
 
   - type: textarea
     id: link
