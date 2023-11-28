@@ -6,7 +6,6 @@ mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox
 mkdocs-include-markdown-plugin
 mkdocs-material
-mkdocs-material
 mkdocs-material-extensions
 mkdocs-video
 mkdocstrings

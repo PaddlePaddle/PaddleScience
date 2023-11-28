@@ -169,7 +169,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 1. 加载 `*.pdparams` 文件内的参数到模型中
 
-    ``` py
+    ``` py hl_lines="9 10"
     import ppsci
     import numpy as np
 
@@ -186,7 +186,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 2. 准备好用于预测的输入数据，并以字典 `dict` 的方式传递给 `solver.predict`。
 
-    ``` py
+    ``` py hl_lines="12 13 14 15 16"
     N = 100 # 假设要预测100个样本的结果
     x = np.random.randn(N, 1) # 准备 字段
     y = np.random.randn(N, 1)
@@ -224,7 +224,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 因此我们只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
 
-``` py hl_lines="9"
+``` py hl_lines="7"
 import ppsci
 
 ...
@@ -241,19 +241,35 @@ solver = ppsci.solver.Solver(
 
 ### 1.4 迁移学习
 
-迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，只需在 `model` 实例化完毕之后，手动为其载入预训练模型权重，即可进行迁移学习。
+迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重；也可以在 `Solver` 实例化时指定 `pretrained_model_path` 自动载入预训练模型权重，两种方式都可以进行迁移学习。
 
-``` py hl_lines="9"
-import ppsci
-import ppsci.utils
-from ppsci.utils import save_load
+=== "手动载入预训练模型"
 
-...
-...
+    ``` py hl_lines="8"
+    import ppsci
+    from ppsci.utils import save_load
 
-model = ...
-save_load.load_pretrain(model, "/path/to/pretrain")
-```
+    ...
+    ...
+
+    model = ...
+    save_load.load_pretrain(model, "/path/to/pretrain")
+    ```
+
+=== "指定 `pretrained_model_path` 自动载入预训练模型"
+
+    ``` py hl_lines="9"
+    import ppsci
+
+    ...
+    ...
+
+    model = ...
+    solver = ppsci.solver.Solver(
+        ...,
+        pretrained_model_path="/path/to/pretrain",
+    )
+    ```
 
 !!! info "迁移学习建议"
 
@@ -278,7 +294,42 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.6 使用 WandB 记录实验
+### 1.6 使用 VisualDL 记录实验
+
+[VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+
+PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+
+1. 安装 VisualDL
+
+    ``` sh
+    pip install -U visualdl
+    ```
+
+2. 在案例代码的 `Solver` 实例化时指定 `use_visualdl=True`，然后再启动案例训练
+
+    ``` py hl_lines="3"
+    solver = ppsci.solver.Solver(
+        ...,
+        use_visualdl=True,
+    )
+    ```
+
+3. 可视化记录数据
+
+    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 的目录中。`vdl` 所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+
+    ``` log hl_lines="3"
+    Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
+    device: 0, cuDNN Version: 8.4.
+    ppsci INFO: VisualDL tool enabled for logging, you can view it by running: 'visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080'.
+    ```
+
+    在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+
+    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+
+### 1.7 使用 WandB 记录实验
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 
@@ -331,7 +382,7 @@ PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
-1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中黄色高亮行所示。
+1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
     ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="22"
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
@@ -379,7 +430,7 @@ TODO -->
 
 接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
 
-实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中黄色高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
+实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
 
 ``` py hl_lines="5 6"
 # initialize solver
@@ -395,7 +446,7 @@ solver = ppsci.solver.Solver(
 
 接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
 
-实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中黄色高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
+实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
 
 ``` py hl_lines="5"
 # initialize solver
