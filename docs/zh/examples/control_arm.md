@@ -4,37 +4,47 @@
 
 === "模型训练命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
-    ```
-    === "正问题：受力分析"
-      ``` sh
-      python forward_analysis.py
-      ```
-    === "逆问题：参数逆推分析"
-      ``` sh
-      python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
-      ```
+    === "正问题：受力分析求解"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python forward_analysis.py
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
+        ```
 
 === "模型评估命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
-    ```
-    === "正问题：受力分析"
-      ``` sh
-      python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
-      ```
-    === "逆问题：参数逆推分析"
-      ``` sh
-      python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
-      ```
+    === "正问题：受力分析求解"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
+        ```
+
+    === "逆问题：参数逆推求解"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
+        python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
+        ```
 
 | 预训练模型  | 指标 |
 |:--| :--|

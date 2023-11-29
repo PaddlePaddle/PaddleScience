@@ -125,14 +125,18 @@ class Arch(nn.Layer):
         self._output_transform = transform
 
     def freeze(self):
-        """Freeze all parameters"""
+        """Freeze all parameters."""
         for param in self.named_parameters():
             param.stop_gradient = True
+
+        self.eval()
 
     def unfreeze(self):
         """Unfreeze all parameters."""
         for param in self.named_parameters():
             param.stop_gradient = False
+
+        self.train()
 
     def __str__(self):
         num_fc = 0
