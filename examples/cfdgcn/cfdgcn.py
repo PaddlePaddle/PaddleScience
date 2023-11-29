@@ -20,6 +20,7 @@ import hydra
 import paddle
 import pgl
 import su2paddle
+import utils
 from omegaconf import DictConfig
 from paddle.nn import functional as F
 
@@ -62,6 +63,7 @@ def train(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.TRAIN_DATA_DIR,
             "mesh_graph_path": cfg.TRAIN_MESH_GRAPH_PATH,
+            "edges_tran": True,
         },
         "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
@@ -79,15 +81,12 @@ def train(cfg: DictConfig):
         loss=ppsci.loss.FunctionalLoss(train_mse_func),
         name="Sup",
     )
-
     # wrap constraints together
     constraint = {sup_constraint.name: sup_constraint}
+    process_sim = sup_constraint.data_loader.dataset._preprocess
+    fine_marker_dict = sup_constraint.data_loader.dataset.marker_dict
 
-    process_sim = sup_constraint.dataset._preprocess
-    fine_marker_dict = sup_constraint.dataset.marker_dict
-    # out_channels=sup_constraint.dataset[0][0][cfg.MODEL.input_keys[0]].y.shape[-1]
-
-    # set airfoil model
+    # set model
     model = ppsci.arch.CFDGCN(
         **cfg.MODEL,
         process_sim=process_sim,
@@ -106,6 +105,7 @@ def train(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.EVAL_DATA_DIR,
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
+            "edges_tran": True,
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
@@ -137,13 +137,118 @@ def train(cfg: DictConfig):
         eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
 
     # train model
     solver.train()
 
+    # visualize prediction
+    with solver.no_grad_context_manager(True):
+        for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
+            truefield = paddle.stack([g.y for g in label["label"]])
+            prefield = model(input_)
+            utils.log_images(
+                input_["input"][0].pos,
+                prefield["pred"][0],
+                truefield[0],
+                rmse_validator.data_loader.dataset.elems_list,
+                index,
+                "airfoil",
+            )
 
-# def evaluate(cfg: DictConfig):
+
+def evaluate(cfg: DictConfig):
+    # set dataloader config
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "MeshAirfoilDataset",
+            "input_keys": ("input",),
+            "label_keys": ("label",),
+            "data_dir": cfg.TRAIN_DATA_DIR,
+            "mesh_graph_path": cfg.TRAIN_MESH_GRAPH_PATH,
+            "edges_tran": True,
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": True,
+        },
+        "num_workers": 1,
+    }
+
+    # set constraint
+    sup_constraint = ppsci.constraint.SupervisedConstraint(
+        train_dataloader_cfg,
+        output_expr={"pred": lambda out: out["pred"]},
+        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        name="Sup",
+    )
+
+    process_sim = sup_constraint.data_loader.dataset._preprocess
+    fine_marker_dict = sup_constraint.data_loader.dataset.marker_dict
+
+    # set airfoil model
+    model = ppsci.arch.CFDGCN(
+        **cfg.MODEL,
+        process_sim=process_sim,
+        fine_marker_dict=fine_marker_dict,
+        su2_module=su2paddle.SU2Module,
+    )
+
+    # set validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "MeshAirfoilDataset",
+            "input_keys": ("input",),
+            "label_keys": ("label",),
+            "data_dir": cfg.EVAL_DATA_DIR,
+            "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
+            "edges_tran": True,
+        },
+        "batch_size": cfg.EVAL.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+    }
+    rmse_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        loss=ppsci.loss.FunctionalLoss(train_mse_func),
+        output_expr={"pred": lambda out: out["pred"].unsqueeze(0)},
+        metric={"RMSE": ppsci.metric.FunctionalMetric(eval_rmse_func)},
+        name="RMSE_validator",
+    )
+    validator = {rmse_validator.name: rmse_validator}
+
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=cfg.output_dir,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
+        validator=validator,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+    )
+
+    # evaluate model
+    solver.eval()
+
+    # visualize prediction
+    with solver.no_grad_context_manager(True):
+        for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
+            truefield = paddle.stack([g.y for g in label["label"]])
+            prefield = model(input_)
+            utils.log_images(
+                input_["input"][0].pos,
+                prefield["pred"][0],
+                truefield[0],
+                rmse_validator.data_loader.dataset.elems_list,
+                index,
+                "airfoil",
+            )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="cfdgcn.yaml")
@@ -151,8 +256,8 @@ def main(cfg: DictConfig):
     su2paddle.activate_su2_mpi(remove_temp_files=True)
     if cfg.mode == "train":
         train(cfg)
-    # elif cfg.mode == "eval":
-    #     evaluate(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 

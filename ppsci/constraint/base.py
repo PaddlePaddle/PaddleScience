@@ -43,7 +43,6 @@ class Constraint:
         loss: "loss.Loss",
         name: str,
     ):
-        self.dataset = dataset
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)
         self.data_iter = iter(self.data_loader)
         self.loss = loss

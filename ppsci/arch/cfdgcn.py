@@ -50,7 +50,9 @@ def _knn_interpolate(
     return output
 
 
-def is_cw(points: paddle.Tensor, triangles: paddle.Tensor, ret_val=False):
+def is_cw(
+    points: paddle.Tensor, triangles: paddle.Tensor, ret_val=False
+) -> Union[bool, paddle.Tensor]:
     tri_pts = points[triangles]
     a = tri_pts[:, 0] - tri_pts[:, 1]
     b = tri_pts[:, 1] - tri_pts[:, 2]
@@ -62,11 +64,13 @@ def is_cw(points: paddle.Tensor, triangles: paddle.Tensor, ret_val=False):
         return cross
 
 
-def left_orthogonal(v: paddle.Tensor):
+def left_orthogonal(v: paddle.Tensor) -> paddle.Tensor:
     return paddle.stack([-v[..., 1], v[..., 0]], axis=-1)
 
 
-def signed_dist_graph(nodes: paddle.Tensor, marker_inds, with_sign=False):
+def signed_dist_graph(
+    nodes: paddle.Tensor, marker_inds, with_sign=False
+) -> paddle.Tensor:
     # assumes shape is convex
     # approximate signed distance by distance to closest point on surface
     signed_dists = paddle.zeros([nodes.shape[0]], dtype=paddle.float32)
@@ -100,7 +104,7 @@ def signed_dist_graph(nodes: paddle.Tensor, marker_inds, with_sign=False):
     return signed_dists
 
 
-def quad2tri(elems: np.array):
+def quad2tri(elems: np.array) -> Tuple[List[int], List[int]]:
     new_elems = []
     new_edges = []
     for e in elems:
@@ -161,56 +165,6 @@ def write_graph_mesh(
             for m in marker_elems:
                 f.write(f'{SU2_SHAPE_IDS["line"]} {seq2str(m)}\n')
         f.write("\n")
-
-
-# class MeshGCN(nn.Layer):
-#     def __init__(
-#         self,
-#         in_channels,
-#         hidden_channel,
-#         out_channel,
-#         num_layers=6,
-#         fine_marker_dict=None,
-#     ):
-#         super().__init__()
-#         self.fine_marker_dict = paddle.unique(
-#             paddle.to_tensor(fine_marker_dict["airfoil"])
-#         )
-#         self.sdf = None
-#         in_channels += 1  # account for sdf
-
-#         channels = [in_channels]
-#         channels += [hidden_channel] * (num_layers - 1)
-#         channels += [out_channel]
-
-#         self.convs = nn.LayerList()
-#         for i in range(num_layers):
-#             self.convs.append(pgl.nn.GCNConv(channels[i], channels[i + 1]))
-
-#         # self.convs.append(GATConv(channels[0], channels[1], num_heads=4))
-#         # for i in range(1, num_layers - 1):
-#         #     self.convs.append(GATConv(channels[i] * 4, channels[i + 1], num_heads=4))
-#         # self.convs.append(GATConv(channels[num_layers - 1]*4, channels[num_layers], num_heads=1))
-
-#     def forward(self, graphs):
-#         pred_fields = []
-#         for graph in graphs:
-#             x = graph.node_feat["feature"]
-
-#             if self.sdf is None:
-#                 with paddle.no_grad():
-#                     self.sdf = signed_dist_graph(
-#                         x[:, :2], self.fine_marker_dict
-#                     ).unsqueeze(1)
-#             x = paddle.concat([x, self.sdf], axis=-1)
-
-#             for i, conv in enumerate(self.convs[:-1]):
-#                 x = conv(graph, x)
-#                 x = F.relu(x)
-
-#             pred_field = self.convs[-1](graph, x)
-#             pred_fields.append(pred_field)
-#         return pred_fields
 
 
 class CFDGCN(nn.Layer):
@@ -276,7 +230,7 @@ class CFDGCN(nn.Layer):
         self.marker_inds = paddle.to_tensor(sum(self.marker_dict.values(), [])).unique()
 
         if is_cw(self.nodes, paddle.to_tensor(self.elems[0])).nonzero().shape[0] != 0:
-            raise ("Mesh has flipped elems")
+            raise ("Mesh has flipped elems.")
 
         self.process_sim = process_sim
         self.su2 = su2_module(config_file, mesh_file=self.mesh_file)
@@ -304,8 +258,6 @@ class CFDGCN(nn.Layer):
                 in_channels = hidden_channel
             self.pre_convs.append(pgl.nn.GCNConv(in_channels, hidden_channel))
 
-        self.sim_info = {}  # store output of coarse simulation for logging / debugging
-
     def forward(self, x: Dict[str, np.array]) -> Dict[str, paddle.Tensor]:
         graphs = x[self.input_keys[0]]
         batch_size = len(graphs)
@@ -313,10 +265,8 @@ class CFDGCN(nn.Layer):
         aoa_list = []
         mach_or_reynolds_list = []
         fine_x_list = []
-        x_list = []
         for graph in graphs:
-            x = paddle.to_tensor(graph.x)
-            x_list.append(x)
+            x = graph.x
             if self.sdf is None:
                 with paddle.no_grad():
                     self.sdf = signed_dist_graph(
@@ -325,7 +275,7 @@ class CFDGCN(nn.Layer):
             fine_x = paddle.concat([x, self.sdf], axis=1)
 
             for i, conv in enumerate(self.pre_convs):
-                fine_x = F.relu(conv(graph.tensor(), fine_x))
+                fine_x = F.relu(conv(graph, fine_x))
             fine_x_list.append(fine_x)
 
             nodes = self.get_nodes()  # [353,2]
@@ -360,7 +310,7 @@ class CFDGCN(nn.Layer):
                 "float32"
             )  # features [353,3]
             nodes = self.get_nodes()  # [353,2]
-            x = x_list[idx]  # [6684,5] the two-first columns are the node locations
+            x = graph.x  # [6684,5] the two-first columns are the node locations
             fine_y = _knn_interpolate(
                 features=coarse_y, coarse_nodes=nodes[:, :2], fine_nodes=x[:, :2]
             )
@@ -373,7 +323,7 @@ class CFDGCN(nn.Layer):
         pred_fields = paddle.stack(pred_fields)
         return {self.output_keys[0]: pred_fields}
 
-    def get_nodes(self):
+    def get_nodes(self) -> paddle.Tensor:
         return self.nodes
 
     @staticmethod
@@ -382,5 +332,5 @@ class CFDGCN(nn.Layer):
         elems: paddle.Tensor,
         marker_dict: Dict[str, Sequence[Sequence[int]]],
         filename: str = "mesh.su2",
-    ):
+    ) -> None:
         write_graph_mesh(filename, x[:, :2], elems, marker_dict)
