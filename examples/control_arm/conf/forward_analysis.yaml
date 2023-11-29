@@ -62,8 +62,9 @@ TRAIN:
   epochs: 2000
   iters_per_epoch: 1000
   save_freq: 100
-  eval_during_train: false
   eval_freq: 100
+  eval_during_train: false
+  eval_with_no_grad: false
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
@@ -81,8 +82,8 @@ TRAIN:
     arm_right: {"u": 1, "v": 1, "w": 1}
   pretrained_model_path: null
   checkpoint_path: null
-  enable_parallel: false # whether to enable parallel training
 
 # evaluation settings
 EVAL:
+  eval_with_no_grad: true
   pretrained_model_path: null

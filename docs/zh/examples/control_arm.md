@@ -9,11 +9,15 @@
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
-    # 正问题：受力分析
-    python forward_analysis.py
-    # 逆问题：参数逆推分析
-    python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
     ```
+    === "正问题：受力分析"
+      ``` sh
+      python forward_analysis.py
+      ```
+    === "逆问题：参数逆推分析"
+      ``` sh
+      python inverse_parameter.py TRAIN.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
+      ```
 
 === "模型评估命令"
 
@@ -22,11 +26,19 @@
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/control_arm/control_arm.stl --output ./datasets/control_arm.stl
-    # 正问题：受力分析
-    python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
-    # 逆问题：参数逆推分析
-    python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
     ```
+    === "正问题：受力分析"
+      ``` sh
+      python forward_analysis.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/forward_x_axis_pretrained.pdparams
+      ```
+    === "逆问题：参数逆推分析"
+      ``` sh
+      python inverse_parameter.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams
+      ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [inverse_x_axis_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams) | loss(geo_eval): 0.02505<br>MAE.lambda_(geo_eval): 0.01580<br>MAE.mu(geo_eval): 0.01984 |
 
 ## 1. 背景简介
 
@@ -69,9 +81,9 @@ examples/control_arm/conf/forward_analysis.yaml:28:32
 --8<--
 ```
 
-``` py linenums="29"
+``` py linenums="32"
 --8<--
-examples/control_arm/forward_analysis.py:29:31
+examples/control_arm/forward_analysis.py:32:34
 --8<--
 ```
 
@@ -97,9 +109,9 @@ $$
 
 上式中 $f$ 即为应变模型 `disp_net`，$g$ 为应力模型 `stress_net`，因为两者共享输入，因此在 PaddleScience 分别定义这两个网络模型后，再使用 `ppsci.arch.ModelList` 进行封装，用 PaddleScience 代码表示如下：
 
-``` py linenums="17"
+``` py linenums="20"
 --8<--
-examples/control_arm/forward_analysis.py:17:21
+examples/control_arm/forward_analysis.py:20:24
 --8<--
 ```
 
@@ -107,9 +119,9 @@ examples/control_arm/forward_analysis.py:17:21
 
 线弹性方程使用 PaddleScience 内置的 `LinearElasticity` 即可。
 
-``` py linenums="33"
+``` py linenums="36"
 --8<--
-examples/control_arm/forward_analysis.py:33:38
+examples/control_arm/forward_analysis.py:36:41
 --8<--
 ```
 
@@ -125,9 +137,9 @@ examples/control_arm/forward_analysis.py:33:38
 
 然后通过 PaddleScience 内置的 STL 几何类 `ppsci.geometry.Mesh` 即可读取、解析几何文件，得到计算域，并获取几何结构边界：
 
-``` py linenums="40"
+``` py linenums="43"
 --8<--
-examples/control_arm/forward_analysis.py:40:44
+examples/control_arm/forward_analysis.py:43:47
 --8<--
 ```
 
@@ -147,7 +159,7 @@ examples/control_arm/conf/forward_analysis.yaml:61:63
 
 ``` py linenums="23"
 --8<--
-examples/control_arm/forward_analysis.py:23:27
+examples/control_arm/forward_analysis.py:26:30
 --8<--
 ```
 
@@ -155,9 +167,9 @@ examples/control_arm/forward_analysis.py:23:27
 
 本问题共涉及到 4 个约束，分别为左侧圆环内表面受力的约束、右侧两圆环内表面固定的约束、结构表面边界条件的约束和结构内部点的约束。在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="46"
+``` py linenums="49"
 --8<--
-examples/control_arm/forward_analysis.py:46:60
+examples/control_arm/forward_analysis.py:49:59
 --8<--
 ```
 
@@ -165,9 +177,9 @@ examples/control_arm/forward_analysis.py:46:60
 
 以作用在结构内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="103"
+``` py linenums="102"
 --8<--
-examples/control_arm/forward_analysis.py:103:139
+examples/control_arm/forward_analysis.py:102:138
 --8<--
 ```
 
@@ -179,15 +191,15 @@ examples/control_arm/forward_analysis.py:103:139
 
 第四个参数是在计算域上的采样配置，此处设置 `batch_size` 为：
 
-``` yaml linenums="78"
+``` yaml linenums="79"
 --8<--
-examples/control_arm/conf/forward_analysis.yaml:78:78
+examples/control_arm/conf/forward_analysis.yaml:79:79
 --8<--
 ```
 
 第五个参数是损失函数，此处选用常用的 MSE 函数，且 `reduction` 设置为 `"sum"`，即会将参与计算的所有数据点产生的损失项求和；
 
-第六个参数是几何点筛选，由于这个约束只施加在背板区域，因此需要对 geo 上采样出的点进行筛选，此处传入一个 lambda 筛选函数即可，其接受点集构成的张量 `x, y, z`，返回布尔值张亮，表示每个点是否符合筛选条件，不符合为 `False`，符合为 `True`；
+第六个参数是几何点筛选，需要对 geo 上采样出的点进行筛选，此处传入一个 lambda 筛选函数即可，其接受点集构成的张量 `x, y, z`，返回布尔值张量，表示每个点是否符合筛选条件，不符合为 `False`，符合为 `True`，因为本案例结构来源于网络，参数不完全精确，因此增加 `1e-1` 作为可容忍的采样误差。
 
 第七个参数是每个点参与损失计算时的权重，此处我们使用 `"sdf"` 表示使用每个点到边界的最短距离（符号距离函数值）来作为权重，这种 sdf 加权的方法可以加大远离边界（难样本）点的权重，减少靠近边界的（简单样本）点的权重，有利于提升模型的精度和收敛速度。
 
@@ -195,79 +207,79 @@ examples/control_arm/conf/forward_analysis.yaml:78:78
 
 ##### 3.1.6.2 边界约束
 
-结构左侧圆环内表面受力，其上的每个点受到均匀分布的载荷，参照 [2 问题定义](#2)，大小存放在参数 $T$ 中。实际上为 x 负方向的载荷，大小为 $0.0025$，其余方向应力为 0，有如下边界条件约束：
+结构左侧圆环内表面受力，其上的每个点受到均匀分布的载荷，参照 [2. 问题定义](#2)，大小存放在参数 $T$ 中。实际上为 x 负方向的载荷，大小为 $0.0025$，其余方向应力为 0，有如下边界条件约束：
 
-``` py linenums="63"
+``` py linenums="62"
 --8<--
-examples/control_arm/forward_analysis.py:63:75
+examples/control_arm/forward_analysis.py:62:74
 --8<--
 ```
 
 结构右侧两圆环内表面固定，所以其上的点在三个方向的形变均为 0，因此有如下的边界约束条件：
 
-``` py linenums="76"
+``` py linenums="75"
 --8<--
-examples/control_arm/forward_analysis.py:76:89
+examples/control_arm/forward_analysis.py:75:88
 --8<--
 ```
 
 结构表面不受任何载荷，即三个方向的内力平衡，合力为 0，有如下边界条件约束：
 
-``` py linenums="90"
+``` py linenums="89"
 --8<--
-examples/control_arm/forward_analysis.py:90:102
+examples/control_arm/forward_analysis.py:89:101
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="145"
+``` py linenums="144"
 --8<--
-examples/control_arm/forward_analysis.py:145:151
---8<--
-```
-
-#### 3.1.7 模型训练
-
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
-
-``` py linenums="153"
---8<--
-examples/control_arm/forward_analysis.py:153:173
+examples/control_arm/forward_analysis.py:144:150
 --8<--
 ```
 
-训练后调用 `ppsci.solver.Solver.plot_loss_history` 可以将训练中的 `loss` 画出：
-
-``` py linenums="175"
---8<--
-examples/control_arm/forward_analysis.py:175:176
---8<--
-```
-
-另外本案例中提供了并行训练的代码，注意打开数据并行后，应该将学习率应该增大为 `原始学习率*并行卡数`，以保证训练效果。具体细节请参考 [使用指南 2.1.1 数据并行](../user_guide.md)。
-
-``` yaml linenums="84"
---8<--
-examples/control_arm/conf/forward_analysis.yaml:84:84
---8<--
-```
-
-``` py linenums="141"
---8<--
-examples/control_arm/forward_analysis.py:141:143
---8<--
-```
-
-#### 3.1.8 可视化器构建
+#### 3.1.7 可视化器构建
 
 在模型评估时，如果评估结果是可以可视化的数据，可以选择合适的可视化器来对输出结果进行可视化。
 
 可视化器的输入数据通过调用 PaddleScience 的 API `sample_interior` 产生，输出数据是对应的 9 个预测的物理量，通过设置 `ppsci.visualize.VisualizerVtu` ，可以将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。
 
-``` py linenums="199"
+``` py linenums="152"
 --8<--
-examples/control_arm/forward_analysis.py:199:233
+examples/control_arm/forward_analysis.py:152:184
+--8<--
+```
+
+#### 3.1.8 模型训练
+
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
+
+``` py linenums="186"
+--8<--
+examples/control_arm/forward_analysis.py:186:208
+--8<--
+```
+
+训练后调用 `ppsci.solver.Solver.plot_loss_history` 可以将训练中的 `loss` 画出：
+
+``` py linenums="210"
+--8<--
+examples/control_arm/forward_analysis.py:210:211
+--8<--
+```
+
+另外本案例中提供了并行训练的设置，注意打开数据并行后，应该将学习率应该增大为 `原始学习率*并行卡数`，以保证训练效果。具体细节请参考 [使用指南 2.1.1 数据并行](../user_guide.md)。
+
+``` py linenums="17"
+--8<--
+examples/control_arm/forward_analysis.py:17:18
+--8<--
+```
+
+``` py linenums="140"
+--8<--
+examples/control_arm/forward_analysis.py:140:142
 --8<--
 ```
 
@@ -277,9 +289,9 @@ examples/control_arm/forward_analysis.py:199:233
 
 评估和可视化过程不需要进行优化器等构建，仅需构建模型、计算域、评估器（本案例不包括）、可视化器，然后按顺序传递给 `ppsci.solver.Solver` 启动评估和可视化。
 
-``` py linenums="235"
+``` py linenums="214"
 --8<--
-examples/control_arm/forward_analysis.py:235:247
+examples/control_arm/forward_analysis.py:214:281
 --8<--
 ```
 
@@ -287,7 +299,7 @@ examples/control_arm/forward_analysis.py:235:247
 
 #### 3.2.1 模型构建
 
-进行参数逆推的前提是需要知道每一个已知的坐标点 $(x, y, z)$ ，对应变量：三个方向的应变 $(u, v, w)$ 和应力 $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$。这些变量的来源可以是真实数据，或数值模拟数据，或已经训练好的正问题模型。在本案例中，我们不使用任何数据，而是使用 [3.1 受力分析求解](#31) 章节中训练得到的模型来获取这些变量，因此仍然需要构建这部分模型，并以加载预训练模型 `disp_net` 和 `stress_net` 的方法将正问题模型加载进来。
+进行参数逆推的前提是需要知道每一个已知的坐标点 $(x, y, z)$ ，以及对应的三个方向的应变 $(u, v, w)$ 和应力 $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$。这些变量的来源可以是真实数据，或数值模拟数据，或已经训练好的正问题模型。在本案例中，我们不使用任何数据，而是使用 [3.1 受力分析求解](#31) 章节中训练得到的模型来获取这些变量，因此仍然需要构建这部分模型，并为 `disp_net` 和 `stress_net` 加载正问题求解得到的权重参数作为预训练模型，注意将这两个模型冻结，以减少反向传播时间和内存占用。
 
 参数逆推中需要求解两个未知量：线弹性方程的参数 $\lambda$ 和 $\mu$，使用两个模型来分别预测这两组物理量：
 
@@ -304,7 +316,7 @@ $$
 
 ``` py linenums="16"
 --8<--
-examples/control_arm/inverse_parameter.py:16:24
+examples/control_arm/inverse_parameter.py:16:27
 --8<--
 ```
 
@@ -312,9 +324,9 @@ examples/control_arm/inverse_parameter.py:16:24
 
 线弹性方程使用 PaddleScience 内置的 `LinearElasticity` 即可。
 
-``` py linenums="32"
+``` py linenums="35"
 --8<--
-examples/control_arm/inverse_parameter.py:32:37
+examples/control_arm/inverse_parameter.py:35:40
 --8<--
 ```
 
@@ -330,9 +342,9 @@ examples/control_arm/inverse_parameter.py:32:37
 
 然后通过 PaddleScience 内置的 STL 几何类 `ppsci.geometry.Mesh` 即可读取、解析几何文件，得到计算域，并获取几何结构边界：
 
-``` py linenums="39"
+``` py linenums="42"
 --8<--
-examples/control_arm/inverse_parameter.py:39:45
+examples/control_arm/inverse_parameter.py:42:48
 --8<--
 ```
 
@@ -348,13 +360,13 @@ examples/control_arm/conf/inverse_parameter.yaml:73:75
 
 #### 3.2.5 优化器构建
 
-由于 `disp_net` 和 `stress_net` 模型的作用仅为提供三个方向的应变 $(u, v, w)$ 和应力 $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ 的值，并不需要进行训练，因此在构建优化器时需要注意不要直接使用 [3.2.1 模型构建](#321) 中封装的 `ModelList` 作为参数，而是使用 `inverse_lambda_net` 和 `inverse_mu_net` 组成的元组作为参数。
+由于 `disp_net` 和 `stress_net` 模型的作用仅为提供三个方向的应变 $(u, v, w)$ 和应力 $(\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz})$ 的值，并不需要进行训练，因此在构建优化器时需要注意不要使用 [3.2.1 模型构建](#321) 中封装的 `ModelList` 作为参数，而是使用 `inverse_lambda_net` 和 `inverse_mu_net` 组成的元组作为参数。
 
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 ExponentialDecay 学习率调整策略。
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 `ExponentialDecay` 学习率调整策略。
 
-``` py linenums="26"
+``` py linenums="29"
 --8<--
-examples/control_arm/inverse_parameter.py:26:30
+examples/control_arm/inverse_parameter.py:29:33
 --8<--
 ```
 
@@ -362,9 +374,9 @@ examples/control_arm/inverse_parameter.py:26:30
 
 本问题共涉及到 1 个约束，为结构内部点的约束 `InteriorConstraint`。
 
-``` py linenums="47"
+``` py linenums="50"
 --8<--
-examples/control_arm/inverse_parameter.py:47:80
+examples/control_arm/inverse_parameter.py:50:83
 --8<--
 ```
 
@@ -376,33 +388,33 @@ examples/control_arm/inverse_parameter.py:47:80
 
 第四个参数是在计算域上的采样配置，此处设置 `batch_size` 为：
 
-``` yaml linenums="87"
+``` yaml linenums="88"
 --8<--
-examples/control_arm/conf/inverse_parameter.yaml:87:87
+examples/control_arm/conf/inverse_parameter.yaml:88:88
 --8<--
 ```
 
 第五个参数是损失函数，此处选用常用的 MSE 函数，且 `reduction` 设置为 `"sum"`，即会将参与计算的所有数据点产生的损失项求和；
 
-第六个参数是几何点筛选，由于这个约束只施加在背板区域，因此需要对 geo 上采样出的点进行筛选，此处传入一个 lambda 筛选函数即可，其接受点集构成的张量 `x, y, z`，返回布尔值张亮，表示每个点是否符合筛选条件，不符合为 `False`，符合为 `True`；
+第六个参数是几何点筛选，需要对 geo 上采样出的点进行筛选，此处传入一个 lambda 筛选函数即可，其接受点集构成的张量 `x, y, z`，返回布尔值张量，表示每个点是否符合筛选条件，不符合为 `False`，符合为 `True`；
 
 第七个参数是约束条件的名字，需要给每一个约束条件命名，方便后续对其索引。此处命名为 "INTERIOR" 即可。
 
 约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="81"
+``` py linenums="84"
 --8<--
-examples/control_arm/inverse_parameter.py:81:81
+examples/control_arm/inverse_parameter.py:84:84
 --8<--
 ```
 
 #### 3.2.7 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，由于我们使用正问题的预训练模型提供数据，因此已知 `label` 的值约为 $\lambda=0.5769$ 和 $\mu=0.3846$。将其包装成字典传递给 `ppsci.validate.GeometryValidator` 构造评估器并封装。
+在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，由于我们使用正问题的预训练模型提供数据，因此已知 `label` 的值约为 $\lambda=0.57692$ 和 $\mu=0.38462$。将其包装成字典传递给 `ppsci.validate.GeometryValidator` 构造评估器并封装。
 
-``` py linenums="83"
+``` py linenums="86"
 --8<--
-examples/control_arm/inverse_parameter.py:83:110
+examples/control_arm/inverse_parameter.py:86:113
 --8<--
 ```
 
@@ -412,9 +424,9 @@ examples/control_arm/inverse_parameter.py:83:110
 
 可视化器的输入数据通过调用 PaddleScience 的 API `sample_interior` 产生，输出数据是$\lambda$ 和 $\mu$预测的物理量，通过设置 `ppsci.visualize.VisualizerVtu` ，可以将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。
 
-``` py linenums="112"
+``` py linenums="115"
 --8<--
-examples/control_arm/inverse_parameter.py:112:139
+examples/control_arm/inverse_parameter.py:115:140
 --8<--
 ```
 
@@ -422,29 +434,29 @@ examples/control_arm/inverse_parameter.py:112:139
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="141"
+``` py linenums="142"
 --8<--
-examples/control_arm/inverse_parameter.py:141:164
+examples/control_arm/inverse_parameter.py:142:165
 --8<--
 ```
 
 训练后调用 `ppsci.solver.Solver.plot_loss_history` 可以将训练中的 `loss` 画出：
 
-``` py linenums="166"
+``` py linenums="167"
 --8<--
-examples/control_arm/inverse_parameter.py:166:167
+examples/control_arm/inverse_parameter.py:167:168
 --8<--
 ```
 
-#### 3.1.9 模型评估与可视化
+#### 3.2.10 模型评估与可视化
 
 训练完成或下载预训练模型后，通过本文档起始处“模型评估命令”进行模型评估和可视化。
 
 评估和可视化过程不需要进行优化器等构建，仅需构建模型、计算域、评估器（本案例不包括）、可视化器，然后按顺序传递给 `ppsci.solver.Solver` 启动评估和可视化。
 
-``` py linenums="170"
+``` py linenums="171"
 --8<--
-examples/control_arm/inverse_parameter.py:170:266
+examples/control_arm/inverse_parameter.py:171:265
 --8<--
 ```
 
@@ -487,6 +499,11 @@ examples/control_arm/inverse_parameter.py
 ### 5.2 参数逆推求解
 
 下面展示了线弹性方程参数 $\lambda, \mu$ 的模型预测结果，在结构的大部分区域预测误差在 1% 左右。
+
+| data | lambda | mu |
+| :---: | :---: | :---: |
+| outs(mean) | 0.54950 | 0.38642 |
+| label | 0.57692 | 0.38462 |
 
 <figure markdown>
   ![forward_result.jpg](https://paddle-org.bj.bcebos.com/paddlescience/docs/control_arm/lambda_mu.png){ loading=lazy }

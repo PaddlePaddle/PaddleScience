@@ -74,8 +74,9 @@ TRAIN:
   epochs: 100
   iters_per_epoch: 100
   save_freq: 1
-  eval_during_train: true
   eval_freq: 1
+  eval_during_train: true
+  eval_with_no_grad: false
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}

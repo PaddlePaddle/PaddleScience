@@ -3,6 +3,7 @@ from os import path as osp
 import hydra
 import numpy as np
 from omegaconf import DictConfig
+from paddle import distributed as dist
 
 import ppsci
 from ppsci.utils import logger
@@ -13,6 +14,8 @@ def train(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+    # set parallel
+    enable_parallel = dist.get_world_size() > 1
 
     # set model
     disp_net = ppsci.arch.MLP(**cfg.MODEL.disp_net)
@@ -24,7 +27,7 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler
     )()
-    optimizer = ppsci.optimizer.Adam(lr_scheduler)((model_list,))
+    optimizer = ppsci.optimizer.Adam(lr_scheduler)(model_list)
 
     # specify parameters
     LAMBDA_ = cfg.NU * cfg.E / ((1 + cfg.NU) * (1 - 2 * cfg.NU))
@@ -48,11 +51,7 @@ def train(cfg: DictConfig):
         "dataset": "NamedArrayDataset",
         "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
         "sampler": {
-            "name": (
-                "DistributedBatchSampler"
-                if cfg.TRAIN.enable_parallel
-                else "BatchSampler"
-            ),
+            "name": "BatchSampler",
             "drop_last": True,
             "shuffle": True,
         },
@@ -139,7 +138,7 @@ def train(cfg: DictConfig):
     )
 
     # re-assign to cfg.TRAIN.iters_per_epoch
-    if cfg.TRAIN.enable_parallel:
+    if enable_parallel:
         cfg.TRAIN.iters_per_epoch = len(arm_left_constraint.data_loader)
 
     # wrap constraints togetherg
@@ -148,6 +147,40 @@ def train(cfg: DictConfig):
         arm_right_constraint.name: arm_right_constraint,
         arm_surface_constraint.name: arm_surface_constraint,
         arm_interior_constraint.name: arm_interior_constraint,
+    }
+
+    # set visualizer(optional)
+    # add inferencer data
+    samples = geom["geo"].sample_interior(
+        cfg.TRAIN.batch_size.visualizer_vtu,
+        criteria=lambda x, y, z: (
+            (BOUNDS_X[0] < x)
+            & (x < BOUNDS_X[1])
+            & (BOUNDS_Y[0] < y)
+            & (y < BOUNDS_Y[1])
+            & (BOUNDS_Z[0] < z)
+            & (z < BOUNDS_Z[1])
+        ),
+    )
+    pred_input_dict = {
+        k: v for k, v in samples.items() if k in cfg.MODEL.disp_net.input_keys
+    }
+    visualizer = {
+        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
+            pred_input_dict,
+            {
+                "u": lambda out: out["u"],
+                "v": lambda out: out["v"],
+                "w": lambda out: out["w"],
+                "sigma_xx": lambda out: out["sigma_xx"],
+                "sigma_yy": lambda out: out["sigma_yy"],
+                "sigma_zz": lambda out: out["sigma_zz"],
+                "sigma_xy": lambda out: out["sigma_xy"],
+                "sigma_xz": lambda out: out["sigma_xz"],
+                "sigma_yz": lambda out: out["sigma_yz"],
+            },
+            prefix="vis",
+        )
     }
 
     # initialize solver
@@ -159,13 +192,15 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
         seed=cfg.seed,
         equation=equation,
         geom=geom,
+        save_freq=cfg.TRAIN.save_freq,
+        log_freq=cfg.log_freq,
+        eval_freq=cfg.TRAIN.eval_freq,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
+        visualizer=visualizer,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
 
@@ -209,11 +244,9 @@ def evaluate(cfg: DictConfig):
             & (z < BOUNDS_Z[1])
         ),
     )
-    pred_input_dict = {}
-    for key in samples:
-        if key in cfg.MODEL.disp_net.input_keys:
-            pred_input_dict[key] = samples[key]
-
+    pred_input_dict = {
+        k: v for k, v in samples.items() if k in cfg.MODEL.disp_net.input_keys
+    }
     visualizer = {
         "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             pred_input_dict,
@@ -236,9 +269,10 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model_list,
         output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
         seed=cfg.seed,
         geom=geom,
+        log_freq=cfg.log_freq,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )

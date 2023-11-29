@@ -18,6 +18,9 @@ def train(cfg: DictConfig):
     stress_net = ppsci.arch.MLP(**cfg.MODEL.stress_net)
     inverse_lambda_net = ppsci.arch.MLP(**cfg.MODEL.inverse_lambda_net)
     inverse_mu_net = ppsci.arch.MLP(**cfg.MODEL.inverse_mu_net)
+    # freeze models
+    disp_net.freeze()
+    stress_net.freeze()
     # wrap to a model_list
     model = ppsci.arch.ModelList(
         (disp_net, stress_net, inverse_lambda_net, inverse_mu_net)
@@ -100,8 +103,8 @@ def train(cfg: DictConfig):
                 "drop_last": False,
                 "shuffle": False,
             },
-            "total_size": cfg.EVAL.total_size.geom_validator,
-            "batch_size": cfg.EVAL.batch_size.geom_validator,
+            "total_size": cfg.EVAL.total_size.validator,
+            "batch_size": cfg.EVAL.batch_size.validator,
         },
         ppsci.loss.MSELoss("sum"),
         metric={"MAE": ppsci.metric.MAE()},
@@ -122,11 +125,9 @@ def train(cfg: DictConfig):
             & (z < BOUNDS_Z[1])
         ),
     )
-    pred_input_dict = {}
-    for key in samples:
-        if key in cfg.MODEL.disp_net.input_keys:
-            pred_input_dict[key] = samples[key]
-
+    pred_input_dict = {
+        k: v for k, v in samples.items() if k in cfg.MODEL.disp_net.input_keys
+    }
     visualizer = {
         "visulzie_lambda_mu": ppsci.visualize.VisualizerVtu(
             pred_input_dict,
@@ -147,16 +148,16 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
-        log_freq=cfg.log_freq,
-        eval_during_train=cfg.TRAIN.eval_during_train,
-        eval_freq=cfg.TRAIN.eval_freq,
         seed=cfg.seed,
         equation=equation,
         geom=geom,
+        save_freq=cfg.TRAIN.save_freq,
+        log_freq=cfg.log_freq,
+        eval_freq=cfg.TRAIN.eval_freq,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
         validator=validator,
         visualizer=visualizer,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
     )
 
@@ -192,8 +193,8 @@ def evaluate(cfg: DictConfig):
     BOUNDS_X, BOUNDS_Y, BOUNDS_Z = control_arm.bounds
 
     # set validator
-    LAMBDA_ = cfg.NU * cfg.E / ((1 + cfg.NU) * (1 - 2 * cfg.NU))  # 0.5769
-    MU = cfg.E / (2 * (1 + cfg.NU))  # 0.3846
+    LAMBDA_ = cfg.NU * cfg.E / ((1 + cfg.NU) * (1 - 2 * cfg.NU))  # 0.57692
+    MU = cfg.E / (2 * (1 + cfg.NU))  # 0.38462
     geom_validator = ppsci.validate.GeometryValidator(
         {
             "lambda_": lambda out: out["lambda_"],
@@ -233,11 +234,9 @@ def evaluate(cfg: DictConfig):
             & (z < BOUNDS_Z[1])
         ),
     )
-    pred_input_dict = {}
-    for key in samples:
-        if key in cfg.MODEL.disp_net.input_keys:
-            pred_input_dict[key] = samples[key]
-
+    pred_input_dict = {
+        k: v for k, v in samples.items() if k in cfg.MODEL.disp_net.input_keys
+    }
     visualizer = {
         "visulzie_lambda_mu": ppsci.visualize.VisualizerVtu(
             pred_input_dict,
@@ -253,12 +252,12 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        log_freq=cfg.log_freq,
         seed=cfg.seed,
+        log_freq=cfg.log_freq,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         validator=validator,
         visualizer=visualizer,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
-        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # evaluate after finished training
     solver.eval()
