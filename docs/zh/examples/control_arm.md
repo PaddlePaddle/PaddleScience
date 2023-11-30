@@ -48,7 +48,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [inverse_x_axis_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams) | loss(geo_eval): 0.02505<br>MAE.lambda_(geo_eval): 0.01580<br>MAE.mu(geo_eval): 0.01984 |
+| [inverse_x_axis_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/control_arm/inverse_x_axis_pretrained.pdparams) | loss(geo_eval): 0.02505<br>L2Rel.lambda_(geo_eval): 0.06025<br>L2Rel.mu(geo_eval): 0.07949 |
 
 ## 1. 背景简介
 
