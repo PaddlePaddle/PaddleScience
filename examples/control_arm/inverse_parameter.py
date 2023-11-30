@@ -107,7 +107,7 @@ def train(cfg: DictConfig):
             "batch_size": cfg.EVAL.batch_size.validator,
         },
         ppsci.loss.MSELoss("sum"),
-        metric={"MAE": ppsci.metric.MAE()},
+        metric={"L2Rel": ppsci.metric.L2Rel()},
         name="geo_eval",
     )
     validator = {geom_validator.name: geom_validator}
@@ -216,7 +216,7 @@ def evaluate(cfg: DictConfig):
             "batch_size": cfg.EVAL.batch_size.validator,
         },
         ppsci.loss.MSELoss("sum"),
-        metric={"MAE": ppsci.metric.MAE()},
+        metric={"L2Rel": ppsci.metric.L2Rel()},
         name="geo_eval",
     )
     validator = {geom_validator.name: geom_validator}
