@@ -5,6 +5,7 @@
     options:
       members:
         - Arch
+        - AMGNet
         - MLP
         - DeepONet
         - DeepPhyLSTM
@@ -18,5 +19,6 @@
         - AFNONet
         - PrecipNet
         - UNetEx
-      show_root_heading: false
+        - NowcastNet
+      show_root_heading: true
       heading_level: 3

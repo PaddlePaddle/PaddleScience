@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Dict
 from typing import Tuple
 
@@ -51,6 +52,8 @@ def _save_vtu_from_array(filename, coord, value, value_keys, num_timestamps=1):
         )
     if coord.shape[1] not in [2, 3]:
         raise ValueError(f"ndim of coord({coord.shape[1]}) should be 2 or 3.")
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     # discard extension name
     if filename.endswith(".vtu"):
@@ -149,4 +152,5 @@ def save_vtu_to_mesh(
         points=points.T, cells=[("vertex", np.arange(npoint).reshape(npoint, 1))]
     )
     mesh.point_data = {key: data_dict[key] for key in value_keys}
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     mesh.write(filename)

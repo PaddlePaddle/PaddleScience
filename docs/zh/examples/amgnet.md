@@ -127,7 +127,7 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="21"
+    ``` yaml linenums="21"
     --8<--
     examples/amgnet/conf/amgnet_airfoil.yaml:21:27
     --8<--
@@ -135,7 +135,7 @@ unzip data.zip
 
 === "cylinder"
 
-    ``` py linenums="21"
+    ``` yaml linenums="21"
     --8<--
     examples/amgnet/conf/amgnet_cylinder.yaml:21:27
     --8<--
@@ -183,7 +183,7 @@ unzip data.zip
 
 === "airfoil"
 
-    ``` py linenums="41"
+    ``` yaml linenums="41"
     --8<--
     examples/amgnet/conf/amgnet_airfoil.yaml:41:51
     --8<--
@@ -191,7 +191,7 @@ unzip data.zip
 
 === "cylinder"
 
-    ``` py linenums="41"
+    ``` yaml linenums="41"
     --8<--
     examples/amgnet/conf/amgnet_cylinder.yaml:41:51
     --8<--

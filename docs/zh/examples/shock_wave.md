@@ -2,6 +2,32 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/6755993?contributionType=1&sUid=438690&shared=1&ts=1694949960479" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    === "Ma=2.0"
+
+        ``` sh
+        python shock_wave.py
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        python shock_wave.py -cn=shock_wave_Ma0.728
+        ```
+
+=== "模型预测命令"
+
+    === "Ma=2.0"
+
+        ``` sh
+        python shock_wave.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma2_pretrained.pdparams
+        ```
+    === "Ma=0.728"
+
+        ``` sh
+        python shock_wave.py -cn=shock_wave_Ma0.728 mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/shockwave/shock_wave_Ma0728_pretrained.pdparams
+        ```
+
 ## 1. 背景简介
 
 激波是自然界以及工程应用中经常发现的现象。它们不仅广泛地存在于航空航天领域的可压缩流动中，而且也表现在理论与应用物理以及工程应用等其它领域。在超声速与高超声速流动中，激波的出现对流体流动的整体特征会产生重要影响。激波捕捉问题已在CFD领域发展了数十年，以弱解的数学理论为基础的激波捕捉方法以其简单易实现的特点发展迅速，并在复杂超声速、高超声速流动数值模拟中得到了广泛应用。
@@ -53,10 +79,6 @@ $$
 接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
 为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
-!!! note "说明"
-
-    本案例默认使用 `MA=2.0` 作为参数，如需使用其他参数，请在 `examples/shock_wave/shock_wave.py` 对 `MA` 进行修改。
-
 ### 3.1 模型构建
 
 在 ShockWave 问题中，给定时间 $t$ 和位置坐标 $(x,y)$，模型负责预测出对应的 $x$ 方向速度、 $y$ 防线速度、压力、密度四个物理量 $(u,v,p,\rho)$，因此我们在这里使用比较简单的 MLP(Multilayer Perceptron, 多层感知机) 来表示 $(t,x,y)$ 到 $(u,v,p,\rho)$ 的映射函数 $g: \mathbb{R}^3 \to \mathbb{R}^4$ ，即：
@@ -67,9 +89,9 @@ $$
 
 上式中 $g$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="253"
+``` py linenums="254"
 --8<--
-examples/shock_wave/shock_wave.py:253:254
+examples/shock_wave/shock_wave.py:254:255
 --8<--
 ```
 
@@ -81,15 +103,15 @@ examples/shock_wave/shock_wave.py:253:254
 
 本案例涉及二维欧拉方程和边界上的方程，如下所示
 
-``` py linenums="30"
+``` py linenums="31"
 --8<--
-examples/shock_wave/shock_wave.py:30:209
+examples/shock_wave/shock_wave.py:31:217
 --8<--
 ```
 
-``` py linenums="256"
+``` py linenums="257"
 --8<--
-examples/shock_wave/shock_wave.py:256:257
+examples/shock_wave/shock_wave.py:257:258
 --8<--
 ```
 
@@ -97,9 +119,9 @@ examples/shock_wave/shock_wave.py:256:257
 
 本案例的计算域为 0 ~ 0.4 单位时间，长为 1.5，宽为 2.0 的长方形区域，其内含有一个圆心坐标为 [1, 1]，半径为 0.25 的圆，代码如下所示
 
-``` py linenums="259"
+``` yaml linenums="31"
 --8<--
-examples/shock_wave/shock_wave.py:259:271
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:31:43
 --8<--
 ```
 
@@ -109,21 +131,21 @@ examples/shock_wave/shock_wave.py:259:271
 
 我们将欧拉方程施加在计算域的内部点上，并且使用拉丁超立方(Latin HyperCube Sampling, LHS)方法采样共 `N_INTERIOR` 个训练点，代码如下所示：
 
-``` py linenums="266"
+``` yaml linenums="38"
 --8<--
-examples/shock_wave/shock_wave.py:266:266
---8<--
-```
-
-``` py linenums="273"
---8<--
-examples/shock_wave/shock_wave.py:273:287
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:38:38
 --8<--
 ```
 
-``` py linenums="347"
+``` py linenums="260"
 --8<--
-examples/shock_wave/shock_wave.py:347:361
+examples/shock_wave/shock_wave.py:260:276
+--8<--
+```
+
+``` py linenums="339"
+--8<--
+examples/shock_wave/shock_wave.py:339:352
 --8<--
 ```
 
@@ -131,21 +153,21 @@ examples/shock_wave/shock_wave.py:347:361
 
 我们将边界条件施加在计算域的边界点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在边界上采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="267"
+``` yaml linenums="39"
 --8<--
-examples/shock_wave/shock_wave.py:267:267
---8<--
-```
-
-``` py linenums="289"
---8<--
-examples/shock_wave/shock_wave.py:289:322
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:39:39
 --8<--
 ```
 
-``` py linenums="374"
+``` py linenums="278"
 --8<--
-examples/shock_wave/shock_wave.py:374:398
+examples/shock_wave/shock_wave.py:278:311
+--8<--
+```
+
+``` py linenums="365"
+--8<--
+examples/shock_wave/shock_wave.py:365:389
 --8<--
 ```
 
@@ -153,23 +175,23 @@ examples/shock_wave/shock_wave.py:374:398
 
 我们将边界条件施加在计算域的初始时刻的点上，同样使用拉丁超立方(Latin HyperCube Sampling, LHS)方法在初始时刻的计算域内采样共 `N_BOUNDARY` 个训练点，代码如下所示：
 
-``` py linenums="324"
+``` py linenums="313"
 --8<--
-examples/shock_wave/shock_wave.py:324:345
+examples/shock_wave/shock_wave.py:313:337
 --8<--
 ```
 
-``` py linenums="362"
+``` py linenums="353"
 --8<--
-examples/shock_wave/shock_wave.py:362:373
+examples/shock_wave/shock_wave.py:353:364
 --8<--
 ```
 
 在以上三个约束构建完毕之后，需要将他们包装成一个字典，方便后续作为参数传递
 
-``` py linenums="399"
+``` py linenums="390"
 --8<--
-examples/shock_wave/shock_wave.py:399:404
+examples/shock_wave/shock_wave.py:390:395
 --8<--
 ```
 
@@ -177,9 +199,9 @@ examples/shock_wave/shock_wave.py:399:404
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 100 轮训练轮数。
 
-``` py linenums="410"
+``` yaml linenums="59"
 --8<--
-examples/shock_wave/shock_wave.py:410:410
+examples/shock_wave/conf/shock_wave_Ma2.0.yaml:59:59
 --8<--
 ```
 
@@ -187,9 +209,9 @@ examples/shock_wave/shock_wave.py:410:410
 
 训练过程会调用优化器来更新模型参数，此处选择 `L-BFGS` 优化器并设定 `max_iter` 为 100。
 
-``` py linenums="406"
+``` py linenums="397"
 --8<--
-examples/shock_wave/shock_wave.py:406:407
+examples/shock_wave/shock_wave.py:397:400
 --8<--
 ```
 
@@ -197,57 +219,43 @@ examples/shock_wave/shock_wave.py:406:407
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="410"
+``` py linenums="402"
 --8<--
-examples/shock_wave/shock_wave.py:410:424
+examples/shock_wave/shock_wave.py:402:418
 --8<--
 ```
 
 本案例需要根据每一轮训练的 epoch 值，计算PDE、BC方程内的权重系数 `relu`。因此在 solver 实例化完毕之后，需额外将其传递给方程本身，代码如下：
 
-``` py linenums="425"
+``` py linenums="419"
 --8<--
-examples/shock_wave/shock_wave.py:425:428
+examples/shock_wave/shock_wave.py:419:422
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="430"
+``` py linenums="424"
 --8<--
-examples/shock_wave/shock_wave.py:430:431
+examples/shock_wave/shock_wave.py:424:425
 --8<--
 ```
 
 训练完毕后，我们可视化最后一个时刻的计算域内辨率为 600x600 的激波，共 360000 个点，代码如下：
 
-``` py linenums="433"
+``` py linenums="447"
 --8<--
-examples/shock_wave/shock_wave.py:433:504
+examples/shock_wave/shock_wave.py:447:518
 --8<--
 ```
 
 ## 4. 完整代码
 
-=== "Ma=2.0"
-
-    ``` py linenums="1" title="shock_wave.py"
-    --8<--
-    examples/shock_wave/shock_wave.py
-    --8<--
-    ```
-
-=== "Ma=0.728"
-
-    ``` py linenums="1" title="shock_wave.py"
-    --8<--
-    examples/shock_wave/shock_wave.py::243
-    --8<--
-        MA=0.728
-        --8<--
-        examples/shock_wave/shock_wave.py:246:
-        --8<--
-    ```
+``` py linenums="1" title="shock_wave.py"
+--8<--
+examples/shock_wave/shock_wave.py
+--8<--
+```
 
 ## 5. 结果展示
 

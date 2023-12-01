@@ -1,0 +1,74 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_poiseuille_flow/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+
+# set working condition
+NU_MEAN: 0.001
+NU_STD: 0.9
+L: 1.0  # length of pipe
+R: 0.05  # radius of pipe
+RHO: 1  # density
+P_OUT: 0  # pressure at the outlet of pipe
+P_IN: 0.1  # pressure at the inlet of pipe
+N_x: 10
+N_y: 50
+N_p: 50
+X_IN: 0
+
+# model settings
+MODEL:
+  u_net:
+    input_keys: ["sin(x)", "cos(x)", "y", "nu"]
+    output_keys: ["u"]
+    num_layers: 3
+    hidden_size: 50
+    activation: "swish"
+  v_net:
+    input_keys: ["sin(x)", "cos(x)", "y", "nu"]
+    output_keys: ["v"]
+    num_layers: 3
+    hidden_size: 50
+    activation: "swish"
+  p_net:
+    input_keys: ["sin(x)", "cos(x)", "y", "nu"]
+    output_keys: ["p"]
+    num_layers: 3
+    hidden_size: 50
+    activation: "swish"
+
+# training settings
+TRAIN:
+  epochs: 3000
+  batch_size:
+    pde_constraint: 128
+  learning_rate: 5.0e-3
+  eval_during_train: false
+  save_freq: 10
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null

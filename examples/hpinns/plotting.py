@@ -117,7 +117,7 @@ def plot_field_holo(
     coord_lambda: np.ndarray,
     field_lambda: np.ndarray,
 ):
-    """Plot fields of of holograpy example.
+    """Plot fields of of holography example.
 
     Args:
         coord_visual (np.ndarray): The coord of epsilon and |E|**2.

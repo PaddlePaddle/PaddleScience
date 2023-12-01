@@ -37,7 +37,7 @@ class SupervisedValidator(base.Validator):
 
     Examples:
         >>> import ppsci
-        >>> valida_dataloader_cfg = {
+        >>> valid_dataloader_cfg = {
         ...     "dataset": {
         ...         "name": "MatDataset",
         ...         "file_path": "/path/to/file.mat",
@@ -52,7 +52,7 @@ class SupervisedValidator(base.Validator):
         ...     },
         ... }  # doctest: +SKIP
         >>> eta_mse_validator = ppsci.validate.SupervisedValidator(
-        ...     valida_dataloader_cfg,
+        ...     valid_dataloader_cfg,
         ...     ppsci.loss.MSELoss("mean"),
         ...     {"eta": lambda out: out["eta"]},
         ...     metric={"MSE": ppsci.metric.MSE()},

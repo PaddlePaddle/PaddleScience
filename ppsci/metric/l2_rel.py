@@ -26,7 +26,7 @@ class L2Rel(base.Metric):
     NOTE: This metric API is slightly different from `MeanL2Rel`, difference is as below:
 
     - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
-    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relative error for all samples.
 
     $$
     metric = \dfrac{\Vert \mathbf{x} - \mathbf{y} \Vert_2}{\max(\Vert \mathbf{y} \Vert_2, \epsilon)}
@@ -70,7 +70,7 @@ class MeanL2Rel(base.Metric):
 
     NOTE: This metric API is slightly different from `L2Rel`, difference is as below:
 
-    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relarive error for all samples.
+    - `MeanL2Rel` will calculate L2Rel separately for each input sample and return the average of l2 relative error for all samples.
     - `L2Rel` regards the input sample as a whole and calculates the l2 relative error of the whole;
 
     $$

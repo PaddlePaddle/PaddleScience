@@ -177,7 +177,7 @@ def train(cfg: DictConfig):
             )
 
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             num_timestamps=cfg.NTIME_ALL,
@@ -285,7 +285,7 @@ def evaluate(cfg: DictConfig):
             )
 
     visualizer = {
-        "visulzie_u_v": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             num_timestamps=cfg.NTIME_ALL,

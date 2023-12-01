@@ -3,9 +3,20 @@
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160749?contributionType=1&sUid=438690&shared=1&ts=1683961132625" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
+
     ``` sh
     python ldc2d_unsteady_Re10.py
     ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python ldc2d_unsteady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_unsteady_Re10/ldc2d_unsteady_Re10_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [ldc2d_unsteady_Re10_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_unsteady_Re10/ldc2d_unsteady_Re10_pretrained.pdparams) | loss(Residual): 155652.67530<br>MSE.momentum_x(Residual): 6.78030<br>MSE.continuity(Residual): 0.16590<br>MSE.momentum_y(Residual): 12.05981 |
 
 ## 1. 背景简介
 
@@ -286,7 +297,7 @@ examples/ldc/ldc2d_unsteady_Re10.py:116:124
 
 接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="40"
+``` yaml linenums="40"
 --8<--
 examples/ldc/conf/ldc2d_unsteady_Re10.yaml:40:43
 --8<--

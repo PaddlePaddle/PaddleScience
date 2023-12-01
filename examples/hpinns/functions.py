@@ -297,7 +297,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
 
 
 def eval_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
-    """Compute objective loss for evalution.
+    """Compute objective loss for evaluation.
 
     Args:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
@@ -330,7 +330,7 @@ def eval_metric_fun(
     """
     loss_re, loss_im = compute_real_and_imaginary_loss(output_dict)
     eps_opt = paddle.concat([loss_re, loss_im], axis=-1)
-    loss = paddle.mean(eps_opt**2)
+    metric = paddle.mean(eps_opt**2)
 
-    metric_dict = {"eval_loss": loss}
+    metric_dict = {"eval_metric": metric}
     return metric_dict

@@ -129,6 +129,13 @@ def train(cfg: DictConfig):
                 "input": input_dict_train,
                 "label": label_dict_train,
             },
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
+            "batch_size": 1,
+            "num_workers": 0,
         },
         ppsci.loss.FunctionalLoss(functions.train_loss_func3),
         {
@@ -152,6 +159,13 @@ def train(cfg: DictConfig):
                 "input": input_dict_val,
                 "label": label_dict_val,
             },
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
+            "batch_size": 1,
+            "num_workers": 0,
         },
         ppsci.loss.FunctionalLoss(functions.train_loss_func3),
         {
@@ -294,6 +308,13 @@ def evaluate(cfg: DictConfig):
                 "input": input_dict_val,
                 "label": label_dict_val,
             },
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
+            "batch_size": 1,
+            "num_workers": 0,
         },
         ppsci.loss.FunctionalLoss(functions.train_loss_func3),
         {
@@ -321,7 +342,7 @@ def evaluate(cfg: DictConfig):
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
-    # evaluate after finished training
+    # evaluate
     solver.eval()
 
 

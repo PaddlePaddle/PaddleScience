@@ -1,0 +1,67 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_hpinns/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 42
+output_dir: ${hydra:run.dir}
+DATASET_PATH: ./datasets/hpinns_holo_train.mat
+DATASET_PATH_VALID: ./datasets/hpinns_holo_valid.mat
+
+# set working condition
+TRAIN_MODE: aug_lag  # "soft", "penalty", "aug_lag"
+TRAIN_K: 9
+
+# model settings
+MODEL:
+  re_net:
+    input_keys: ['x_cos_1', 'x_sin_1', 'x_cos_2', 'x_sin_2', 'x_cos_3', 'x_sin_3', 'x_cos_4', 'x_sin_4', 'x_cos_5', 'x_sin_5', 'x_cos_6', 'x_sin_6', 'y', 'y_cos_1', 'y_sin_1']
+    output_keys: ["e_re"]
+    num_layers: 4
+    hidden_size: 48
+    activation: "tanh"
+  im_net:
+    input_keys: ${MODEL.re_net.input_keys}
+    output_keys: ["e_im"]
+    num_layers: 4
+    hidden_size: 48
+    activation: "tanh"
+  eps_net:
+    input_keys: ${MODEL.re_net.input_keys}
+    output_keys: ["eps"]
+    num_layers: 4
+    hidden_size: 48
+    activation: "tanh"
+
+# training settings
+TRAIN:
+  epochs: 20000
+  iters_per_epoch: 1
+  eval_during_train: false
+  learning_rate: 0.001
+  max_iter: 15000
+  epochs_lbfgs: 1
+  pretrained_model_path: null
+  checkpoint_path: null
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null

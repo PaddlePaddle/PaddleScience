@@ -22,11 +22,11 @@ def flat(x, start_axis=0, stop_axis=None):
 def jacobian(y, x):
     J_shape = y.shape + x.shape
     J = paddle.zeros(J_shape)
-    y_flat = flat(y)
     J_flat = flat(
         J, start_axis=0, stop_axis=len(y.shape) - 1
     )  # partialy flatten as y_flat
-    for i, y_i in enumerate(y_flat):
+    for i, y_i in enumerate(y):
+        assert y_i.size == 1, f"y_i.size shoule be 1, but got {y_i.size}"
         grad = paddle.grad(y_i, x, allow_unused=True)[
             0
         ]  # grad[i] == sum by j (dy[j] / dx[i])

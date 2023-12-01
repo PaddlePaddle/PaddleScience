@@ -111,7 +111,7 @@ class TimeXGeometry(geometry.Geometry):
         return np.hstack((x[:, :1], normal))
 
     def uniform_points(self, n, boundary=True):
-        """Uniform points on the spatio-temporal domain.
+        """Uniform points on the spatial-temporal domain.
 
         Geometry volume ~ bbox.
         Time volume ~ diam.
@@ -246,7 +246,7 @@ class TimeXGeometry(geometry.Geometry):
                 if _ntry >= 1000 and _nsuc == 0:
                     raise ValueError(
                         "Sample interior points failed, "
-                        "please check correctness of geometry and given creteria."
+                        "please check correctness of geometry and given criteria."
                     )
 
             tx = []
@@ -288,7 +288,7 @@ class TimeXGeometry(geometry.Geometry):
         return np.hstack((t, x))
 
     def uniform_boundary_points(self, n, criteria=None):
-        """Uniform boundary points on the spatio-temporal domain.
+        """Uniform boundary points on the spatial-temporal domain.
 
         Geometry surface area ~ bbox.
         Time surface area ~ diam.
@@ -329,7 +329,7 @@ class TimeXGeometry(geometry.Geometry):
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample boundary points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         nx = len(x)
@@ -390,7 +390,7 @@ class TimeXGeometry(geometry.Geometry):
                     if _ntry >= 1000 and _nsuc == 0:
                         raise ValueError(
                             "Sample boundary points failed, "
-                            "please check correctness of geometry and given creteria."
+                            "please check correctness of geometry and given criteria."
                         )
 
             t_x = []
@@ -464,7 +464,7 @@ class TimeXGeometry(geometry.Geometry):
                     if _ntry >= 1000 and _nsuc == 0:
                         raise ValueError(
                             "Sample boundary points failed, "
-                            "please check correctness of geometry and given creteria."
+                            "please check correctness of geometry and given criteria."
                         )
 
             t_x = []
@@ -573,27 +573,27 @@ class TimeXGeometry(geometry.Geometry):
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample initial interior points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
         if hasattr(self.geometry, "sdf_func"):
-            # compute sdf excluding timet t
+            # compute sdf excluding time t
             sdf = -self.geometry.sdf_func(x[..., 1:])
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
-            sdf_derivs_dict = {}
+            sdf_derives_dict = {}
             if compute_sdf_derivatives:
-                # compute sdf derivatives excluding timet t
-                sdf_derivs = -self.geometry.sdf_derivatives(x[..., 1:])
-                sdf_derivs_dict = misc.convert_to_dict(
-                    sdf_derivs, tuple(f"sdf__{key}" for key in self.geometry.dim_keys)
+                # compute sdf derivatives excluding time t
+                sdf_derives = -self.geometry.sdf_derivatives(x[..., 1:])
+                sdf_derives_dict = misc.convert_to_dict(
+                    sdf_derives, tuple(f"sdf__{key}" for key in self.geometry.dim_keys)
                 )
         else:
             sdf_dict = {}
-            sdf_derivs_dict = {}
+            sdf_derives_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
 
-        return {**x_dict, **sdf_dict, **sdf_derivs_dict}
+        return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
     def __str__(self) -> str:
         """Return the name of class"""

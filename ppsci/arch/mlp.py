@@ -118,8 +118,8 @@ class MLP(base.Arch):
                 if activation != "stan"
                 else act_mod.get_activation(activation)(_size)
             )
-            # spetial initialization for certain activation
-            # TODO: Adapt code below to a more elegent style
+            # special initialization for certain activation
+            # TODO: Adapt code below to a more elegant style
             if activation == "siren":
                 if i == 0:
                     act_mod.Siren.init_for_first_layer(self.linears[-1])

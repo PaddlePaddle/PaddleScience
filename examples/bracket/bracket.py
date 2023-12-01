@@ -312,7 +312,7 @@ def train(cfg: DictConfig):
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "u": lambda out: out["u"],
@@ -493,7 +493,7 @@ def evaluate(cfg: DictConfig):
 
     # set visualizer(optional)
     visualizer = {
-        "visulzie_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
+        "visualize_u_v_w_sigmas": ppsci.visualize.VisualizerVtu(
             input_dict,
             {
                 "u": lambda out: out["u"],
@@ -521,9 +521,9 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
-    # evaluate after finished training
+    # evaluate
     solver.eval()
-    # visualize prediction after finished training
+    # visualize prediction
     solver.visualize()
 
 
