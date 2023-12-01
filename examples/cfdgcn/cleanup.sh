@@ -10,3 +10,4 @@ rm surface_flow.dat
 
 rm surface_adjoint.csv
 rm surface_flow.csv
+rm *_write_config_temp.cfg

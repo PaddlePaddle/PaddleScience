@@ -14,14 +14,12 @@
 import math
 
 import numpy as np
-
-from .su2_function_mpi import RunCode
+from su2paddle import su2_function_mpi
 
 from mpi4py import MPI  # isort:skip
 import pysu2  # isort:skip
 
 
-# TODO Outdated, update to match the Torch version (su2_function.py)
 class SU2Numpy:
     """Class that uses the SU2 in-memory python wrapper
     to provide differentiable physics simulations.
@@ -50,11 +48,17 @@ class SU2Numpy:
             processes per item in batch.
             In this case max_procs must be larger than the size of the batch passed in.
         """
-        assert num_zones == 1, "Only supports 1 zone for now."
-        assert MPI.COMM_WORLD.Get_rank() == 0, "Not rank 0 in comm"
+        if num_zones != 1:
+            raise ValueError("Only supports 1 zone for now.")
+        if MPI.COMM_WORLD.Get_rank() != 0:
+            raise ValueError("Not rank 0 in comm")
+
         self.comm = MPI.COMM_WORLD
         self.workers = self.comm.Get_size() - 1
-        assert self.workers > 0, "Need at least 1 master and 1 worker process."
+
+        if self.workers < 1:
+            raise ValueError("Need at least 1 master and 1 worker process.")
+
         self.num_zones = num_zones
         self.dims = dims
         self.outputs_shape = None
@@ -75,10 +79,10 @@ class SU2Numpy:
 
         Args:
             inputs: The differentiable inputs for the batch of simulations.
-            Number of inputs depends on the number of DIFF_INPUTS set in the configuration file.
-            Each input is of shape BATCH_SIZE x SHAPE, where SHAPE is the shape of the given input.
-            For example, a batch of 10 scalars would have input shape 10 x 1,
-            a batch of 10 vectors of length N would have input shape 10 x N.
+                Number of inputs depends on the number of DIFF_INPUTS set in the configuration file.
+                Each input is of shape BATCH_SIZE x SHAPE, where SHAPE is the shape of the given input.
+                For example, a batch of 10 scalars would have input shape 10 x 1,
+                a batch of 10 vectors of length N would have input shape 10 x N.
         Return:
             A tuple of tensors with the batch of differentiable outputs.
             Number of outputs depends on the number of DIFF_OUTPUTS set in the configuration file.
@@ -87,24 +91,22 @@ class SU2Numpy:
             Outputs are always either scalars or vectors.
         """
         if len(inputs) != self.num_diff_inputs:
-            raise TypeError(
-                "{} inputs were provided, but the config file ({}) defines {} diff inputs.".format(
-                    len(inputs), self.forward_config, self.num_diff_inputs
-                )
+            raise ValueError(
+                f"{len(inputs)} inputs were provided, but the config file ({self.forward_config}) defines {self.num_diff_inputs} diff inputs."
             )
         if self.num_diff_inputs > 0 and inputs[0].ndim < 2:
-            raise TypeError(
+            raise ValueError(
                 "Input is expected to have first dimension for batch, "
                 "e.g. x[0, :] is first item in batch."
             )
         self.batch_size = inputs[0].shape[0] if self.num_diff_inputs > 0 else 1
         if 0 <= self.workers < self.batch_size:
-            raise TypeError(
+            raise ValueError(
                 "Batch size is larger than number of workers, not enough processes to run batch."
             )
         procs_per_example = math.ceil(self.workers / self.batch_size)
 
-        self.comm.bcast(RunCode.RUN_FORWARD, root=0)
+        self.comm.bcast(su2_function_mpi.RunCode.RUN_FORWARD, root=0)
         self.comm.bcast(
             [self.num_zones, self.dims, self.forward_config, inputs], root=0
         )
@@ -140,13 +142,13 @@ class SU2Numpy:
             # was used, then use a default grad outputs of 1.0
             grad_outputs = [np.ones(self.outputs_shape[0])]
         elif self.num_diff_outputs != len(grad_outputs):
-            raise TypeError(
+            raise ValueError(
                 "To run backward() you need to provide the gradients of a scalar loss "
                 "with respect to the outputs of the forward pass"
             )
 
         procs_per_example = math.ceil(self.workers / self.batch_size)
-        self.comm.bcast(RunCode.RUN_ADJOINT, root=0)
+        self.comm.bcast(su2_function_mpi.RunCode.RUN_ADJOINT, root=0)
         self.comm.bcast(grad_outputs, root=0)
         grads = []
         for i in range(self.batch_size):

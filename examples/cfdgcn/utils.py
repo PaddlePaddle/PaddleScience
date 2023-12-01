@@ -76,9 +76,10 @@ def make_grid(
 
     if normalize is True:
         if value_range is not None:
-            assert isinstance(
-                value_range, tuple
-            ), "value_range has to be a tuple (min, max) if specified. min and max are numbers"
+            if not isinstance(value_range, tuple):
+                raise TypeError(
+                    "value_range has to be a tuple (min, max) if specified. min and max are numbers"
+                )
 
         def norm_ip(img, low, high):
             img.clip(min=low, max=high)

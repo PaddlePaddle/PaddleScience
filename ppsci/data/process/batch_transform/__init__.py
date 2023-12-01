@@ -79,7 +79,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
         # graph.tensor()
         # graph.shape = [len(batch)]
         # return graph
-        batch = np.array([g.tensor() for g in batch])
+        # batch = np.array([g.tensor() for g in batch])
         return batch
 
     raise TypeError(

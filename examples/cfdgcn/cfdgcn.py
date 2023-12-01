@@ -63,7 +63,7 @@ def train(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.TRAIN_DATA_DIR,
             "mesh_graph_path": cfg.TRAIN_MESH_GRAPH_PATH,
-            "edges_tran": True,
+            "transpose_edges": True,
         },
         "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
@@ -105,7 +105,7 @@ def train(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.EVAL_DATA_DIR,
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
-            "edges_tran": True,
+            "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
@@ -167,7 +167,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.TRAIN_DATA_DIR,
             "mesh_graph_path": cfg.TRAIN_MESH_GRAPH_PATH,
-            "edges_tran": True,
+            "transpose_edges": True,
         },
         "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
@@ -205,7 +205,7 @@ def evaluate(cfg: DictConfig):
             "label_keys": ("label",),
             "data_dir": cfg.EVAL_DATA_DIR,
             "mesh_graph_path": cfg.EVAL_MESH_GRAPH_PATH,
-            "edges_tran": True,
+            "transpose_edges": True,
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {

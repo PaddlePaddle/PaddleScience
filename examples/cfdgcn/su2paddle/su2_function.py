@@ -15,11 +15,8 @@ import math
 from typing import Tuple
 
 import paddle
-
-from .common import pad_sequence
-from .su2_function_mpi import RunCode
-from .su2_function_mpi import non_busy_post
-from .su2_function_mpi import non_busy_wait
+from su2paddle import common
+from su2paddle import su2_function_mpi
 
 from mpi4py import MPI  # isort:skip
 import pysu2  # isort:skip
@@ -37,11 +34,10 @@ class SU2Module(paddle.nn.Layer):
         Args:
             config_file: str - The SU2 configuration file name.
             mesh_file: str - Optional parameter, if not set defaults to the mesh filename set in the config file.
-            Can be used to run a batch with different meshes for each sample.
-            Passing in mesh_file with batch_index parameter in string format (e.g., 'b{batch_index}_mesh.su2')
-            causes each element in batch to get assigned to the correct mesh file (0 indexed).
-            If running multiple processes in parallel, take care to name each mesh file uniquely to avoid conflicts
-            (e.g., unique = str(os.getpid()); mesh_file = 'b{batch_index}_' + unique + '_mesh.su2').
+                Can be used to run a batch with different meshes for each sample.
+                Passing in mesh_file with batch_index parameter in string format (e.g., 'b{batch_index}_mesh.su2') causes each element in batch to get assigned to the correct mesh file (0 indexed).
+                If running multiple processes in parallel, take care to name each mesh file uniquely to avoid conflicts
+                (e.g., unique = str(os.getpid()); mesh_file = 'b{batch_index}_' + unique + '_mesh.su2').
             dims: int - Number of dimensions for the problem (2D or 3D).
             num_zones: int - Number of zones in the simulation (only 1 supported currently).
         """
@@ -50,7 +46,7 @@ class SU2Module(paddle.nn.Layer):
             raise ValueError("Only supports 1 zone for now.")
         if MPI.COMM_WORLD.Get_rank() != 0:
             raise ValueError("Not rank 0 in comm")
-        if _global_max_ppe <= 0:
+        if not _global_max_ppe > 0:
             raise ValueError(
                 "Before running SU2Function, a (single) call to activate_su2_mpi is needed."
             )
@@ -92,14 +88,14 @@ class SU2Function(paddle.autograd.PyLayer):
 
     @staticmethod
     def forward(ctx, *inputs):
-        non_busy_post(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_post(MPI.COMM_WORLD)
         x = inputs[: -SU2Function.num_params]
         forward_config, mesh_file, num_zones, dims, set_forward_driver_hook = inputs[
             -SU2Function.num_params :
         ]
 
         if x[0].dim() < 2:
-            raise TypeError(
+            raise ValueError(
                 "Input is expected to have first dimension for batch, "
                 "e.g. x[0, :] is first item in batch."
             )
@@ -107,14 +103,12 @@ class SU2Function(paddle.autograd.PyLayer):
         max_ppe = _global_max_ppe
         workers = MPI.COMM_WORLD.Get_size() - 1
         if 0 <= workers < batch_size:
-            raise TypeError(
+            raise ValueError(
                 "Batch size is larger than number of workers, not enough processes to run batch."
             )
 
-        MPI.COMM_WORLD.bcast(RunCode.RUN_FORWARD, root=0)
+        MPI.COMM_WORLD.bcast(su2_function_mpi.RunCode.RUN_FORWARD, root=0)
         procs_per_example = min(max_ppe, math.ceil(workers / batch_size))
-
-        # print("forward tensor", x[0], x[1], x[2], x[3], flush=True)
 
         x = tuple([i.numpy() for i in x])
 
@@ -135,20 +129,19 @@ class SU2Function(paddle.autograd.PyLayer):
             )
 
         if len(x) != num_diff_inputs:
-            raise TypeError(
-                f"{len(x)} inputs were provided, but the config file "
-                f"({forward_config}) defines {num_diff_inputs} diff inputs."
+            raise ValueError(
+                f"{len(x)} inputs were provided, but the config file ({forward_config}) defines {num_diff_inputs} diff inputs."
             )
         set_forward_driver_hook(forward_driver)
         ctx.num_diff_inputs = num_diff_inputs
 
         outputs = []
-        non_busy_wait(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_wait(MPI.COMM_WORLD)
         for i in range(batch_size):
             output = MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
             outputs.append(output)
         outputs = tuple(
-            pad_sequence(
+            common.pad_sequence(
                 [paddle.to_tensor(o[i], dtype=paddle.float32) for o in outputs],
                 batch_first=True,
             )
@@ -158,22 +151,22 @@ class SU2Function(paddle.autograd.PyLayer):
 
     @staticmethod
     def backward(ctx, *grad_outputs):
-        non_busy_post(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_post(MPI.COMM_WORLD)
         max_ppe = _global_max_ppe
         workers = MPI.COMM_WORLD.Get_size() - 1
-        MPI.COMM_WORLD.bcast(RunCode.RUN_ADJOINT, root=0)
+        MPI.COMM_WORLD.bcast(su2_function_mpi.RunCode.RUN_ADJOINT, root=0)
         grad_outputs = tuple([i.numpy() for i in grad_outputs])
         MPI.COMM_WORLD.bcast(grad_outputs, root=0)
         batch_size = grad_outputs[0].shape[0]
         procs_per_example = min(max_ppe, math.ceil(workers / batch_size))
-        non_busy_wait(MPI.COMM_WORLD)
+        su2_function_mpi.non_busy_wait(MPI.COMM_WORLD)
         grads = []
         for i in range(batch_size):
             grad = MPI.COMM_WORLD.recv(source=1 + i * procs_per_example)
             grads.append(grad)
         print("grads", len(grads), flush=True)
         grads = tuple(
-            pad_sequence(
+            common.pad_sequence(
                 [paddle.to_tensor(g[i], dtype=paddle.float32) for g in grads],
                 batch_first=True,
             )

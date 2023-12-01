@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import atexit
 import os
 import shutil
 import time
@@ -26,7 +27,7 @@ from typing import Union
 import numpy as np
 import paddle
 import SU2
-import su2paddle.su2_function
+from su2paddle import su2_function
 
 from mpi4py import MPI  # isort:skip
 import pysu2  # isort:skip
@@ -70,14 +71,11 @@ def run_forward(
     forward_driver.StartSolver()
     comm.Barrier()
 
-    # are we using numpy or torch
     is_numpy = len(inputs) == 0 or type(inputs[0]) is np.ndarray
     if is_numpy:
         array_func = np.array
         cat_func = np.concatenate
     else:
-        import paddle
-
         array_func = paddle.to_tensor(inputs[0])
         cat_func = paddle.concat
 
@@ -122,14 +120,14 @@ def run_adjoint(
     inputs: Sequence[GenTensor],
     grad_outputs: Sequence[GenTensor],
 ) -> Tuple[GenTensor, ...]:
-    """Runs a simulation with the provided driver, using the inputs to set the values
-    defined in DIFF_INPUTS in the config file.
+    """Runs a simulation with the provided driver, using the inputs to set the values defined in DIFF_INPUTS in the config file.
 
     Args:
         comm: The communicator for the processes running the simulation.
         adjoint_driver: The driver for the adjoint computation, created using the same comm as passed into this function.
         inputs: The same inputs used to set the DIFF_INPUTS in the forward pass.
-         grad_outputs: Gradients of a scalar loss with respect to the forward outputs, see SU2Function's backward() method.
+        grad_outputs: Gradients of a scalar loss with respect to the forward outputs, see SU2Function's backward() method.
+
     Return:
         The gradients of the loss with respect to the inputs.
     """
@@ -142,14 +140,11 @@ def run_adjoint(
 
     adjoint_driver.StartSolver()
 
-    # are we using numpy or torch
     is_numpy = len(inputs) == 0 or type(inputs[0]) is np.ndarray
     if is_numpy:
         array_func = np.array
         cat_func = np.concatenate
     else:
-        import paddle
-
         array_func = paddle.to_tensor(inputs[0])
         cat_func = paddle.concat
 
@@ -205,7 +200,7 @@ def activate_su2_mpi(
     max_procs_per_example: int = 1,
     non_busy_wait_max_time: float = 0.1,
 ) -> None:
-    if MPI.COMM_WORLD.Get_size() <= 1:
+    if MPI.COMM_WORLD.Get_size() < 2:
         raise ValueError(
             'Need at least 1 master and 1 worker process, run with "mpirun -np ...'
         )
@@ -221,10 +216,8 @@ def activate_su2_mpi(
         non_busy_post(MPI.COMM_WORLD)
         MPI.COMM_WORLD.bcast(RunCode.STOP, root=0)
 
-    import atexit
-
     atexit.register(stop)
-    su2paddle.su2_function._global_max_ppe = max_procs_per_example
+    su2_function._global_max_ppe = max_procs_per_example
 
 
 def non_busy_wait(comm: MPI.Intracomm) -> None:
@@ -240,8 +233,7 @@ def non_busy_post(comm: MPI.Intracomm) -> None:
 
 def main(remove_temp_files: bool = True) -> None:
     """Runs a loop for the worker processes.
-    Can be signaled to run either a forward simulation or an adjoint computation
-    using RunCodes.
+    Can be signaled to run either a forward simulation or an adjoint computation using RunCodes.
     """
     local_comm = MPI.COMM_WORLD.Create_group(
         MPI.Group.Excl(MPI.COMM_WORLD.Get_group(), [0])
@@ -278,8 +270,6 @@ def main(remove_temp_files: bool = True) -> None:
                 procs_per_example,
                 inputs,
             ) = MPI.COMM_WORLD.bcast(None, root=0)
-            # print("214 inputs", inputs, True)
-            # inputs = tuple([paddle.to_tensor(i) for i in inputs])
             batch_size = inputs[0].shape[0]
             batch_index = local_rank // procs_per_example
             if procs_per_example == 1:
@@ -337,7 +327,6 @@ def main(remove_temp_files: bool = True) -> None:
             forward_driver.Postprocessing()
 
         elif run_type == RunCode.RUN_ADJOINT:
-            # print("259 inputs", inputs, True)
             # assert inputs is not None, 'Run forward simulation before running the adjoint.'
             inputs = None
             grad_outputs = MPI.COMM_WORLD.bcast(None, root=0)

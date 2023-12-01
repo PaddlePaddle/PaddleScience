@@ -1,11 +1,11 @@
 import os
-from os import PathLike
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import TypeVar
 from typing import Union
 
 import numpy as np
@@ -20,7 +20,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-UnionTensor = Union[paddle.Tensor, np.ndarray]
+GenTensor = TypeVar("GenTensor", paddle.Tensor, np.ndarray)
 
 SU2_SHAPE_IDS = {
     "line": 3,
@@ -104,7 +104,7 @@ def signed_dist_graph(
     return signed_dists
 
 
-def quad2tri(elems: np.array) -> Tuple[List[int], List[int]]:
+def quad2tri(elems: np.array) -> Tuple[List[int], Union[List[int], paddle.Tensor]]:
     new_elems = []
     new_edges = []
     for e in elems:
@@ -113,7 +113,7 @@ def quad2tri(elems: np.array) -> Tuple[List[int], List[int]]:
         else:
             new_elems.append([e[0], e[1], e[2]])
             new_elems.append([e[0], e[2], e[3]])
-            new_edges.append(paddle.to_tensor(([[e[0]], [e[2]]]), dtype=paddle.int64))
+            new_edges.append(paddle.to_tensor([[e[0]], [e[2]]], dtype=paddle.int64))
     new_edges = (
         paddle.concat(new_edges, axis=1)
         if new_edges
@@ -123,8 +123,8 @@ def quad2tri(elems: np.array) -> Tuple[List[int], List[int]]:
 
 
 def write_graph_mesh(
-    output_filename: Union[str, PathLike],
-    points: UnionTensor,
+    output_filename: str,
+    points: GenTensor,
     elems_list: Sequence[Sequence[Sequence[int]]],
     marker_dict: Dict[str, Sequence[Sequence[int]]],
     dims: int = 2,
@@ -210,7 +210,7 @@ class CFDGCN(nn.Layer):
         self.output_keys = output_keys
         meshes_temp_dir = "temp_meshes"
         os.makedirs(meshes_temp_dir, exist_ok=True)
-        self.mesh_file = meshes_temp_dir + "/" + str(os.getpid()) + "_mesh.su2"
+        self.mesh_file = os.path.join(meshes_temp_dir, f"{str(os.getpid())}_mesh.su2")
 
         if not coarse_mesh:
             raise ValueError("Need to provide a coarse mesh for CFD-GCN.")
@@ -224,18 +224,20 @@ class CFDGCN(nn.Layer):
 
         self.elems, new_edges = quad2tri(sum(self.elems, []))
         self.elems = [self.elems]
-        self.edges = paddle.to_tensor(edges)
-        # print(self.edges.dtype, new_edges.dtype)
-        self.edges = paddle.concat([self.edges, new_edges], axis=1)
-        self.marker_inds = paddle.to_tensor(sum(self.marker_dict.values(), [])).unique()
 
         if is_cw(self.nodes, paddle.to_tensor(self.elems[0])).nonzero().shape[0] != 0:
             raise ("Mesh has flipped elems.")
 
-        self.process_sim = process_sim
-        self.su2 = su2_module(config_file, mesh_file=self.mesh_file)
-        # print(f'Mesh filename: {self.mesh_file.format(batch_index="*")}', flush=True)
+        self.edges = paddle.to_tensor(edges)
+        self.edges = paddle.concat([self.edges, new_edges], axis=1)
+        self.marker_inds = paddle.to_tensor(sum(self.marker_dict.values(), [])).unique()
         self.fine_marker_dict = paddle.to_tensor(fine_marker_dict["airfoil"]).unique()
+        self.process_sim = process_sim
+
+        self.write_mesh_file(
+            self.nodes, self.elems, self.marker_dict, filename=self.mesh_file
+        )
+        self.su2 = su2_module(config_file, mesh_file=self.mesh_file)
         self.sdf = None
 
         self.num_convs = num_end_convs
@@ -279,9 +281,6 @@ class CFDGCN(nn.Layer):
             fine_x_list.append(fine_x)
 
             nodes = self.get_nodes()  # [353,2]
-            self.write_mesh_file(
-                nodes, self.elems, self.marker_dict, filename=self.mesh_file
-            )
 
             nodes_list.append(nodes)
             aoa_list.append(graph.aoa)
@@ -320,6 +319,7 @@ class CFDGCN(nn.Layer):
                 fine_y = F.relu(conv(graph, fine_y))
             fine_y = self.convs[-1](graph, fine_y)
             pred_fields.append(fine_y)
+
         pred_fields = paddle.stack(pred_fields)
         return {self.output_keys[0]: pred_fields}
 
