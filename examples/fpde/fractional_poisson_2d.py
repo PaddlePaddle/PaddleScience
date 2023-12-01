@@ -16,6 +16,7 @@
 
 import math
 from typing import Dict
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -68,22 +69,35 @@ if __name__ == "__main__":
             return paddle.abs(1 - (out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
         return np.abs(1 - (out["x"] ** 2 + out["y"] ** 2)) ** (1 + ALPHA / 2)
 
-    # set input transform
-    def fpde_transform(in_: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    # set transform for input data
+    def input_data_fpde_transform(
+        input: Dict[str, np.ndarray],
+        weight: Dict[str, np.ndarray],
+        label: Dict[str, np.ndarray],
+    ) -> Tuple[
+        Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]
+    ]:
         """Get sampling points for integral.
 
         Args:
-            in_ (Dict[str, np.ndarray]): Raw input dict.
+            input (Dict[str, paddle.Tensor]): Raw input dict.
+            weight (Dict[str, paddle.Tensor]): Raw weight dict.
+            label (Dict[str, paddle.Tensor]): Raw label dict.
 
         Returns:
-            Dict[str, np.ndarray]: Input dict contained sampling points.
+            Tuple[ Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor] ]:
+                Input dict contained sampling points, weight dict and label dict.
         """
-        points = np.concatenate((in_["x"].numpy(), in_["y"].numpy()), axis=1)
+        points = np.concatenate((input["x"].numpy(), input["y"].numpy()), axis=1)
         x = equation["fpde"].get_x(points)
-        return {
-            **in_,
-            **{k: paddle.to_tensor(v) for k, v in x.items()},
-        }
+        return (
+            {
+                **input,
+                **{k: paddle.to_tensor(v) for k, v in x.items()},
+            },
+            weight,
+            label,
+        )
 
     fpde_constraint = ppsci.constraint.InteriorConstraint(
         equation["fpde"].equations,
@@ -95,7 +109,7 @@ if __name__ == "__main__":
                 "transforms": (
                     {
                         "FunctionalTransform": {
-                            "transform_func": fpde_transform,
+                            "transform_func": input_data_fpde_transform,
                         },
                     },
                 ),

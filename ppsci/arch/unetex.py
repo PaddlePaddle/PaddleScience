@@ -193,7 +193,7 @@ class UNetEx(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, (8, 16, 32, 32), 5, Flase, False)
+        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, (8, 16, 32, 32), 5, False, False)
     """
 
     def __init__(

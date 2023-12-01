@@ -9,6 +9,7 @@ import scipy.io
 from matplotlib import gridspec
 from matplotlib import patches
 from matplotlib import tri
+from paddle import nn
 
 import ppsci
 
@@ -19,7 +20,7 @@ np.random.seed(1234)
 paddle.seed(1234)
 
 
-class XPINN(paddle.nn.Layer):
+class XPINN(nn.Layer):
     # Initialize the class
     def __init__(self, layer_list):
         super().__init__()
@@ -130,13 +131,13 @@ class XPINN(paddle.nn.Layer):
                 shape=[1, layers[l + 1]],
                 dtype="float64",
                 is_bias=True,
-                default_initializer=paddle.nn.initializer.Constant(0.0),
+                default_initializer=nn.initializer.Constant(0.0),
             )
             amplitude = self.create_parameter(
                 shape=[1],
                 dtype="float64",
                 is_bias=True,
-                default_initializer=paddle.nn.initializer.Constant(0.05),
+                default_initializer=nn.initializer.Constant(0.05),
             )
 
             self.add_parameter(name_prefix + "_w_" + str(l), weight)
@@ -153,8 +154,7 @@ class XPINN(paddle.nn.Layer):
         xavier_stddev = np.sqrt(2 / (in_dim + out_dim))
         param = paddle.empty(size, "float64")
         param = ppsci.utils.initializer.trunc_normal_(param, 0.0, xavier_stddev)
-        # TODO: Truncated normal and assign support float64
-        return lambda p_ten, _: p_ten.set_value(param)
+        return nn.initializer.Assign(param)
 
     def neural_net_tanh(self, x, weights, biases, amplitudes):
         num_layers = len(weights) + 1
@@ -479,8 +479,7 @@ if __name__ == "__main__":
     print("Error u_total: %e" % (error_u_total))
 
     ############################# Plotting ###############################
-    if not os.path.exists("./target"):
-        os.mkdir("./target")
+    os.makedirs("./target", exist_ok=True)
     fig, ax = plotting.newfig(1.0, 1.1)
     plt.plot(range(1, max_iter + 1, 20), mse_hist1, "r-", linewidth=1, label="Sub-Net1")
     plt.plot(

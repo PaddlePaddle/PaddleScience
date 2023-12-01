@@ -12,9 +12,10 @@
         - Visualizer2DPlot
         - Visualizer3D
         - VisualizerWeather
+        - VisualizerRadar
         - save_vtu_from_dict
         - save_vtu_to_mesh
         - save_plot_from_1d_dict
         - save_plot_from_3d_dict
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

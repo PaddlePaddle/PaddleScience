@@ -24,6 +24,12 @@ import paddle
 
 from ppsci.utils import logger
 
+__all__ = [
+    "run_check",
+    "run_check_mesh",
+    "dynamic_import_to_globals",
+]
+
 
 def run_check() -> None:
     """Check whether PaddleScience is installed correctly and running successfully on

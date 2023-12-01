@@ -26,7 +26,7 @@ def _partition(n_sample: int, bounds: np.ndarray) -> np.ndarray:
         bounds (np.ndarray): Lower and upper bound of each variable with shape [m, 2].
 
     Returns:
-        np.ndarray: Partion range array wieh shape [m, n, 2].
+        np.ndarray: Partition range array with shape [m, n, 2].
     """
     tmp = np.arange(n_sample, dtype=dtype)  # [0,1,...,n-1].
     coefficient_lower = np.stack([1 - tmp / n_sample, tmp / n_sample], axis=1,).astype(
@@ -46,13 +46,13 @@ def _partition(n_sample: int, bounds: np.ndarray) -> np.ndarray:
 
 
 def _representative(partition_range: np.ndarray) -> np.ndarray:
-    """Compute single representitive factor.
+    """Compute single representative factor.
 
     Args:
-        partition_range (np.ndarray): Partion range array wieh shape [m, n, 2].
+        partition_range (np.ndarray): Partition range array with shape [m, n, 2].
 
     Returns:
-        np.ndarray: Matrix of random representitive factor with shape [n, m].
+        np.ndarray: Matrix of random representative factor with shape [n, m].
     """
     nvar = partition_range.shape[0]
     nsample = partition_range.shape[1]

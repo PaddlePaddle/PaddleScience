@@ -25,7 +25,7 @@ class ModelList(base.Arch):
     """ModelList layer which wrap more than one model that shares inputs.
 
     Args:
-        model_list (Tuple[base.Arch, ...]): Model(s) nesteed in tuple.
+        model_list (Tuple[base.Arch, ...]): Model(s) nested in tuple.
 
     Examples:
         >>> import ppsci

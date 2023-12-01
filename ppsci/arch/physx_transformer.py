@@ -38,7 +38,7 @@ class MaskedAttention(nn.Layer):
 
     Args:
         embed_dim (int): The expected feature size in the input and output.
-        num_ctx (int): Contex length of block.
+        num_ctx (int): Context length of block.
         num_heads (int): The number of heads in multi-head attention.
         attn_drop (float, optional): The dropout probability used on attention
             weights to drop some attention targets. Defaults to 0.
@@ -188,7 +188,7 @@ class Block(nn.Layer):
         masked self-attention, layer norm and fully connected layer.
 
     Args:
-        num_ctx (int): Contex length of block
+        num_ctx (int): Context length of block
         embed_size (int): The number of embedding size.
         num_heads (int): The number of heads in multi-head attention.
         attn_pdrop (float): The dropout probability used on attention
@@ -244,7 +244,7 @@ class PhysformerGPT2(base.Arch):
         input_keys (Tuple[str, ...]): Input keys, such as ("embeds",).
         output_keys (Tuple[str, ...]): Output keys, such as ("pred_embeds",).
         num_layers (int): Number of transformer layers.
-        num_ctx (int): Contex length of block.
+        num_ctx (int): Context length of block.
         embed_size (int): The number of embedding size.
         num_heads (int): The number of heads in multi-head attention.
         embd_pdrop (float, optional): The dropout probability used on embedding features. Defaults to 0.0.
@@ -351,7 +351,7 @@ class PhysformerGPT2(base.Arch):
 
     def forward_tensor(self, x):
         position_embeds = self.get_position_embed(x)
-        # Combine input embedding, position embeding
+        # Combine input embedding, position embedding
         hidden_states = x + position_embeds
         hidden_states = self.drop(hidden_states)
 

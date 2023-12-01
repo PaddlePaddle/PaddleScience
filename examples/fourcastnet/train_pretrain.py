@@ -12,51 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import path as osp
+
+import hydra
 import numpy as np
 import paddle.distributed as dist
+from omegaconf import DictConfig
 
 import examples.fourcastnet.utils as fourcast_utils
 import ppsci
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
-    # set random seed for reproducibility
-    ppsci.utils.set_random_seed(1024)
-    # Initialize distributed environment
-    dist.init_parallel_env()
 
-    # set dataset path
-    TRAIN_FILE_PATH = "./datasets/era5/train"
-    VALID_FILE_PATH = "./datasets/era5/test"
-    DATA_MEAN_PATH = "./datasets/era5/stat/global_means.npy"
-    DATA_STD_PATH = "./datasets/era5/stat/global_stds.npy"
-    DATA_TIME_MEAN_PATH = "./datasets/era5/stat/time_means.npy"
-
-    # set training hyper-parameters
-    input_keys = ("input",)
-    output_keys = ("output",)
-    IMG_H, IMG_W = 720, 1440
-    EPOCHS = 150 if not args.epochs else args.epochs
-    # FourCastNet use 20 atmospheric variable，their index in the dataset is from 0 to 19.
-    # The variable name is 'u10', 'v10', 't2m', 'sp', 'msl', 't850', 'u1000', 'v1000', 'z000',
-    # 'u850', 'v850', 'z850',  'u500', 'v500', 'z500', 't500', 'z50', 'r500', 'r850', 'tcwv'.
-    # You can obtain detailed information about each variable from
-    # https://cds.climate.copernicus.eu/cdsapp#!/search?text=era5&type=dataset
-    VARS_CHANNEL = list(range(20))
-    # set output directory
-    OUTPUT_DIR = (
-        "./output/fourcastnet/pretrain" if not args.output_dir else args.output_dir
-    )
-    # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-
+def get_data_stat(cfg: DictConfig):
     data_mean, data_std = fourcast_utils.get_mean_std(
-        DATA_MEAN_PATH, DATA_STD_PATH, VARS_CHANNEL
+        cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
     )
     data_time_mean = fourcast_utils.get_time_mean(
-        DATA_TIME_MEAN_PATH, IMG_H, IMG_W, VARS_CHANNEL
+        cfg.DATA_TIME_MEAN_PATH, cfg.IMG_H, cfg.IMG_W, cfg.VARS_CHANNEL
+    )
+    data_time_mean_normalize = np.expand_dims(
+        (data_time_mean[0] - data_mean) / data_std, 0
+    )
+    return data_mean, data_std, data_time_mean_normalize
+
+
+def train(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
+    )
+    data_time_mean = fourcast_utils.get_time_mean(
+        cfg.DATA_TIME_MEAN_PATH, cfg.IMG_H, cfg.IMG_W, cfg.VARS_CHANNEL
     )
     data_time_mean_normalize = np.expand_dims(
         (data_time_mean[0] - data_mean) / data_std, 0
@@ -64,20 +55,19 @@ if __name__ == "__main__":
     # set train transforms
     transforms = [
         {"SqueezeData": {}},
-        {"CropData": {"xmin": (0, 0), "xmax": (IMG_H, IMG_W)}},
+        {"CropData": {"xmin": (0, 0), "xmax": (cfg.IMG_H, cfg.IMG_W)}},
         {"Normalize": {"mean": data_mean, "std": data_std}},
     ]
 
     # set train dataloader config
-    USE_SAMPLED_DATA = False
-    if not USE_SAMPLED_DATA:
+    if not cfg.USE_SAMPLED_DATA:
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5Dataset",
-                "file_path": TRAIN_FILE_PATH,
-                "input_keys": input_keys,
-                "label_keys": output_keys,
-                "vars_channel": VARS_CHANNEL,
+                "file_path": cfg.TRAIN_FILE_PATH,
+                "input_keys": cfg.MODEL.afno.input_keys,
+                "label_keys": cfg.MODEL.afno.output_keys,
+                "vars_channel": cfg.VARS_CHANNEL,
                 "transforms": transforms,
             },
             "sampler": {
@@ -85,7 +75,7 @@ if __name__ == "__main__":
                 "drop_last": True,
                 "shuffle": True,
             },
-            "batch_size": 1,
+            "batch_size": cfg.TRAIN.batch_size,
             "num_workers": 8,
         }
     else:
@@ -93,9 +83,9 @@ if __name__ == "__main__":
         train_dataloader_cfg = {
             "dataset": {
                 "name": "ERA5SampledDataset",
-                "file_path": TRAIN_FILE_PATH,
-                "input_keys": input_keys,
-                "label_keys": output_keys,
+                "file_path": cfg.TRAIN_FILE_PATH,
+                "input_keys": cfg.MODEL.afno.input_keys,
+                "label_keys": cfg.MODEL.afno.output_keys,
             },
             "sampler": {
                 "name": "DistributedBatchSampler",
@@ -104,7 +94,7 @@ if __name__ == "__main__":
                 "num_replicas": NUM_GPUS_PER_NODE,
                 "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
             },
-            "batch_size": 1,
+            "batch_size": cfg.TRAIN.batch_size,
             "num_workers": 8,
         }
     # set constraint
@@ -122,10 +112,10 @@ if __name__ == "__main__":
     eval_dataloader_cfg = {
         "dataset": {
             "name": "ERA5Dataset",
-            "file_path": VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
-            "vars_channel": VARS_CHANNEL,
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.MODEL.afno.output_keys,
+            "vars_channel": cfg.VARS_CHANNEL,
             "transforms": transforms,
             "training": False,
         },
@@ -134,7 +124,7 @@ if __name__ == "__main__":
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": 8,
+        "batch_size": cfg.EVAL.batch_size,
     }
 
     # set validator
@@ -144,13 +134,13 @@ if __name__ == "__main__":
         metric={
             "MAE": ppsci.metric.MAE(keep_batch=True),
             "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
-                num_lat=IMG_H,
+                num_lat=cfg.IMG_H,
                 std=data_std,
                 keep_batch=True,
                 variable_dict={"u10": 0, "v10": 1},
             ),
             "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
-                num_lat=IMG_H,
+                num_lat=cfg.IMG_H,
                 mean=data_time_mean_normalize,
                 keep_batch=True,
                 variable_dict={"u10": 0, "v10": 1},
@@ -161,45 +151,129 @@ if __name__ == "__main__":
     validator = {sup_validator.name: sup_validator}
 
     # set model
-    model = ppsci.arch.AFNONet(input_keys, output_keys)
+    model = ppsci.arch.AFNONet(**cfg.MODEL.afno)
 
     # init optimizer and lr scheduler
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        5e-4,
-        by_epoch=True,
-    )()
+    lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
+    lr_scheduler_cfg.update({"iters_per_epoch": ITERS_PER_EPOCH})
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(**lr_scheduler_cfg)()
+
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
+        cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
         eval_during_train=True,
+        seed=cfg.seed,
         validator=validator,
-        compute_metric_by_batch=True,
-        eval_with_no_grad=True,
+        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     # train model
     solver.train()
     # evaluate after finished training
     solver.eval()
 
-    # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    data_mean, data_std = fourcast_utils.get_mean_std(
+        cfg.DATA_MEAN_PATH, cfg.DATA_STD_PATH, cfg.VARS_CHANNEL
+    )
+    data_time_mean = fourcast_utils.get_time_mean(
+        cfg.DATA_TIME_MEAN_PATH, cfg.IMG_H, cfg.IMG_W, cfg.VARS_CHANNEL
+    )
+    data_time_mean_normalize = np.expand_dims(
+        (data_time_mean[0] - data_mean) / data_std, 0
+    )
+    # set train transforms
+    transforms = [
+        {"SqueezeData": {}},
+        {"CropData": {"xmin": (0, 0), "xmax": (cfg.IMG_H, cfg.IMG_W)}},
+        {"Normalize": {"mean": data_mean, "std": data_std}},
+    ]
+
+    # set eval dataloader config
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "ERA5Dataset",
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.MODEL.afno.output_keys,
+            "vars_channel": cfg.VARS_CHANNEL,
+            "transforms": transforms,
+            "training": False,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": cfg.EVAL.batch_size,
+    }
+
+    # set validator
+    sup_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.L2RelLoss(),
+        metric={
+            "MAE": ppsci.metric.MAE(keep_batch=True),
+            "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
+                num_lat=cfg.IMG_H,
+                std=data_std,
+                keep_batch=True,
+                variable_dict={"u10": 0, "v10": 1},
+            ),
+            "LatitudeWeightedACC": ppsci.metric.LatitudeWeightedACC(
+                num_lat=cfg.IMG_H,
+                mean=data_time_mean_normalize,
+                keep_batch=True,
+                variable_dict={"u10": 0, "v10": 1},
+            ),
+        },
+        name="Sup_Validator",
+    )
+    validator = {sup_validator.name: sup_validator}
+
+    # set model
+    model = ppsci.arch.AFNONet(**cfg.MODEL.afno)
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        output_dir=cfg.output_dir,
+        log_freq=cfg.log_freq,
+        seed=cfg.seed,
         validator=validator,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
-        compute_metric_by_batch=True,
-        eval_with_no_grad=True,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        compute_metric_by_batch=cfg.EVAL.compute_metric_by_batch,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
+    # evaluate
     solver.eval()
+
+
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="fourcastnet_pretrain.yaml"
+)
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

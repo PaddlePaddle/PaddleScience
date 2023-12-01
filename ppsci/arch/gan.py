@@ -365,11 +365,11 @@ class Discriminator(base.Arch):
         }
 
         Args:
-            data_list (List[paddle.Tensor]): The data to be splited. It should be a list of tensor(s), but not a paddle.Tensor.
+            data_list (List[paddle.Tensor]): The data to be split. It should be a list of tensor(s), but not a paddle.Tensor.
             keys (Tuple[str, ...]): Keys of outputs.
 
         Returns:
-            Dict[str, paddle.Tensor]: Dict with splited data.
+            Dict[str, paddle.Tensor]: Dict with split data.
         """
         if len(keys) == 1:
             return {keys[0]: data_list[0]}

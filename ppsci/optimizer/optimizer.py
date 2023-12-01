@@ -45,7 +45,7 @@ class SGD:
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
-            Gradient cliping strategy. Defaults to None.
+            Gradient clipping strategy. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -93,7 +93,7 @@ class Momentum:
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
-            Gradient cliping strategy. Defaults to None.
+            Gradient clipping strategy. Defaults to None.
         use_nesterov (bool, optional): Whether to use nesterov momentum. Defaults to False.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
 
@@ -186,7 +186,7 @@ class Adam:
         beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
         epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-08.
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]): Regularization strategy. Defaults to None.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient clipping strategy. Defaults to None.
         lazy_mode (bool, optional): Whether to enable lazy mode for moving-average. Defaults to False.
 
     Examples:
@@ -252,7 +252,7 @@ class LBFGS:
         tolerance_grad (float, optional): Termination tolerance on first order optimality.
             Defaults to 1e-07.
         tolerance_change (float, optional): termination tolerance on function
-            value/parameterchanges. Defaults to 1e-09.
+            value/parameter changes. Defaults to 1e-09.
         history_size (int, optional): Update history size. Defaults to 100.
         line_search_fn (Optional[Literal["strong_wolfe"]]): Either 'strong_wolfe' or None.
             Defaults to "strong_wolfe".
@@ -325,7 +325,7 @@ class RMSProp:
         weight_decay (Optional[Union[float, regularizer.L1Decay, regularizer.L2Decay]]):
             Regularization strategy. Defaults to None.
         grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]):
-            Gradient cliping strategy. Defaults to None.
+            Gradient clipping strategy. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -382,8 +382,8 @@ class AdamW:
         beta1 (float, optional): The exponential decay rate for the 1st moment estimates. Defaults to 0.9.
         beta2 (float, optional): The exponential decay rate for the 2nd moment estimates. Defaults to 0.999.
         epsilon (float, optional): A small float value for numerical stability. Defaults to 1e-8.
-        weight_decay (float, optional): Regularization cofficient. Defaults to 0.01.
-        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient cliping strategy. Defaults to None.
+        weight_decay (float, optional): Regularization coefficient. Defaults to 0.01.
+        grad_clip (Optional[Union[nn.ClipGradByNorm, nn.ClipGradByValue, nn.ClipGradByGlobalNorm]]): Gradient clipping strategy. Defaults to None.
         no_weight_decay_name (Optional[str]): List of names of no weight decay parameters split by white space. Defaults to None.
         one_dim_param_no_weight_decay (bool, optional): Apply no weight decay on 1-D parameter(s). Defaults to False.
 

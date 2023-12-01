@@ -69,11 +69,11 @@ class LorenzEmbedding(base.Arch):
         self.hidden_size = hidden_size
         self.embed_size = embed_size
 
-        # build observable netowrk
+        # build observable network
         self.encoder_net = self.build_encoder(input_size, hidden_size, embed_size, drop)
         # build koopman operator
         self.k_diag, self.k_ut = self.build_koopman_operator(embed_size)
-        # build recovery netowrk
+        # build recovery network
         self.decoder_net = self.build_decoder(input_size, hidden_size, embed_size)
 
         mean = [0.0, 0.0, 0.0] if mean is None else mean

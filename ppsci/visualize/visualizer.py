@@ -80,9 +80,9 @@ class VisualizerScatter3D(base.Visualizer):
 
     Examples:
         >>> import ppsci
-        >>> vis_datas = {"states": np.random.randn(16, 1)}
+        >>> vis_data = {"states": np.random.randn(16, 1)}
         >>> visualizer = ppsci.visualize.VisualizerScatter3D(
-        ...     vis_datas,
+        ...     vis_data,
         ...     {"states": lambda d: d["states"]},
         ...     num_timestamps=1,
         ...     prefix="result_states",
@@ -216,12 +216,12 @@ class Visualizer2DPlot(Visualizer2D):
 
     Examples:
         >>> import ppsci
-        >>> vis_datas = {
+        >>> vis_data = {
         ...     "target_ux": np.random.randn(128, 20, 1),
         ...     "pred_ux": np.random.randn(128, 20, 1),
         ... }
         >>> visualizer_states = ppsci.visualize.Visualizer2DPlot(
-        ...     vis_datas,
+        ...     vis_data,
         ...     {
         ...         "target_ux": lambda d: d["states"][:, :, 0],
         ...         "pred_ux": lambda d: output_transform(d)[:, :, 0],
@@ -327,12 +327,12 @@ class VisualizerWeather(base.Visualizer):
         input_dict (Dict[str, np.ndarray]): Input dict.
         output_expr (Dict[str, Callable]): Output expression.
         xticks (Tuple[float, ...]): The list of xtick locations.
-        xticklabels (Tuple[str, ...]): The xaxis' tick labels.
+        xticklabels (Tuple[str, ...]): The x-axis' tick labels.
         yticks (Tuple[float, ...]): The list of ytick locations.
-        yticklabels (Tuple[str, ...]): The yaxis' tick labels.
+        yticklabels (Tuple[str, ...]): The y-axis' tick labels.
         vmin (float): Minimum value that the colormap covers.
         vmax (float): Maximal value that the colormap covers.
-        colorbar_label (str, optional): The colorbar label. Defaults to "".
+        colorbar_label (str, optional): The color-bar label. Defaults to "".
         log_norm (bool, optional): Whether use log norm. Defaults to False.
         batch_size (int, optional): : Batch size of data when computing result in visu.py. Defaults to 1.
         num_timestamps (int, optional): Number of timestamps. Defaults to 1.
@@ -341,12 +341,12 @@ class VisualizerWeather(base.Visualizer):
     Examples:
         >>> import ppsci
         >>> import numpy as np
-        >>> vis_datas = {
+        >>> vis_data = {
         ...     "output_6h": np.random.randn(1, 720, 1440),
         ...     "target_6h": np.random.randn(1, 720, 1440),
         ... }
         >>> visualizer_weather = ppsci.visualize.VisualizerWeather(
-        ...     vis_datas,
+        ...     vis_data,
         ...     {
         ...         "output_6h": lambda d: d["output_6h"],
         ...         "target_6h": lambda d: d["target_6h"],

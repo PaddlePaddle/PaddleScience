@@ -6,4 +6,4 @@
       members:
         - lambdify
       show_root_heading: True
-      heading_level: 2
+      heading_level: 3

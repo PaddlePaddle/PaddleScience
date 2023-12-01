@@ -2,6 +2,151 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6508962" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+=== "模型训练命令"
+
+    ``` sh
+    # 案例 1
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat
+
+    # 案例 2
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    python burgers.py DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers.mat
+
+    # 案例 3
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py DATASET_PATH=./datasets/burgers.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat
+
+    # 案例 4
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_sine.mat
+
+    # 案例 5
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat --output ./datasets/KdV_cos.mat
+    python korteweg_de_vries.py DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_cos.mat
+
+    # 案例 6
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat --output ./datasets/KS.mat
+    python kuramoto_sivashinsky.py DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat
+
+    # 案例 7
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
+    python navier_stokes.py DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat
+
+    # 案例 8
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat --output ./datasets/NLS.mat
+    python schrodinger.py DATASET_PATH=./datasets/NLS.mat DATASET_PATH_SOL=./datasets/NLS.mat
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # 案例 1
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py mode=eval DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_same_pretrained.pdparams
+
+    # 案例 2
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    python burgers.py mode=eval DATASET_PATH=./datasets/burgers_sine.mat DATASET_PATH_SOL=./datasets/burgers.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_pretrained.pdparams
+
+    # 案例 3
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/burgers.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/burgers_sine.mat
+    python burgers.py mode=eval DATASET_PATH=./datasets/burgers.mat DATASET_PATH_SOL=./datasets/burgers_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_swap_pretrained.pdparams
+
+    # 案例 4
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    python korteweg_de_vries.py mode=eval DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_sine.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_same_pretrained.pdparams
+
+    # 案例 5
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_sine.mat --output ./datasets/KdV_sine.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KdV_cos.mat --output ./datasets/KdV_cos.mat
+    python korteweg_de_vries.py mode=eval DATASET_PATH=./datasets/KdV_sine.mat DATASET_PATH_SOL=./datasets/KdV_cos.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_diff_pretrained.pdparams
+
+    # 案例 6
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/KS.mat --output ./datasets/KS.mat
+    python kuramoto_sivashinsky.py mode=eval DATASET_PATH=./datasets/KS.mat DATASET_PATH_SOL=./datasets/KS.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams
+
+    # 案例 7
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/cylinder.mat --output ./datasets/cylinder.mat
+    python navier_stokes.py mode=eval DATASET_PATH=./datasets/cylinder.mat DATASET_PATH_SOL=./datasets/cylinder.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams
+
+    # 案例 8
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/NLS.mat --output ./datasets/NLS.mat
+    python schrodinger.py mode=eval DATASET_PATH=./datasets/NLS.mat DATASET_PATH_SOL=./datasets/NLS.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams
+    ```
+
+| 序号 | 案例名称 | stage1、2 数据集 | stage3(eval)数据集 | 预训练模型 | 指标 |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| 1 | burgers | burgers_sine.mat | burgers_sine.mat | [burgers_same_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_same_pretrained.pdparams) | l2 error: 0.0088 |
+| 2 | burgers | burgers_sine.mat | burgers.mat | [burgers_diff_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_pretrained.pdparams) | l2 error: 0.0379 |
+| 3 | burgers | burgers.mat | burgers_sine.mat | [burgers_diff_swap_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_diff_swap_pretrained.pdparams) | l2 error: 0.2904 |
+| 4 | korteweg_de_vries | KdV_sine.mat | KdV_sine.mat | [kdv_same_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_same_pretrained.pdparams) | l2 error: 0.0567 |
+| 5 | korteweg_de_vries | KdV_sine.mat | KdV_cos.mat | [kdv_diff_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/kdv_diff_pretrained.pdparams) | l2 error: 0.1142 |
+| 6 | kuramoto_sivashinsky | KS.mat | KS.mat | [ks_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ks_pretrained.pdparams) | l2 error: 0.1166 |
+| 7 | navier_stokes | cylinder.mat | cylinder.mat | [ns_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/ns_pretrained.pdparams) | l2 error: 0.0288 |
+| 8 | schrodinger | NLS.mat | NLS.mat | [schrodinger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/schrodinger_pretrained.pdparams) | l2 error: 0.0735 |
+
+*注：根据 [参考文献](#6), 序号 3 的效果较差。*
+
 ## 1. 背景简介
 
 求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
@@ -39,9 +184,9 @@ $$
 
 运行本问题代码前请下载 [模拟数据集1](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat) 和 [模拟数据集2](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat)， 下载后分别存放在路径：
 
-``` py linenums="55"
+``` yaml linenums="26"
 --8<--
-examples/deephpms/burgers.py:55:56
+examples/deephpms/conf/burgers.yaml:26:27
 --8<--
 ```
 
@@ -57,9 +202,9 @@ Net1 通过数据驱动的方式，使用输入的某种模拟情况 1 下的少
 
 因为训练中后一个阶段网络需要使用前一个阶段网络的前向推理值，因此本问题使用 Model List 来实现，上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
-``` py linenums="68"
+``` py linenums="103"
 --8<--
-examples/deephpms/burgers.py:68:71
+examples/deephpms/burgers.py:103:104
 --8<--
 ```
 
@@ -69,33 +214,33 @@ examples/deephpms/burgers.py:68:71
 
 对于 Net1，输入为 $(x, t)$ 本来不需要 transform，但由于训练中根据数据的定义域对输入数据进行了数值变换，因此同样需要transform，同样，Net3 也需要对输入进行数值变换的 transform
 
-``` py linenums="73"
+``` py linenums="76"
 --8<--
-examples/deephpms/burgers.py:73:79
+examples/deephpms/burgers.py:76:81
 --8<--
 ```
 
 对于 Net2，因为它的输入为 $u, u_x, u_{xx}$ 而 $u$ 为其他两个网络的输出，只要进行 Net2 的前向推理，就需要 transform，因此需要两种 transform。同时，在训练 Net3 之前，需要重新注册 transform
 
-``` py linenums="81"
+``` py linenums="83"
 --8<--
-examples/deephpms/burgers.py:81:94
+examples/deephpms/burgers.py:83:93
 --8<--
 ```
 
 然后依次注册 transform 后，将3 个 MLP 模型组成 Model List
 
-``` py linenums="96"
+``` py linenums="98"
 --8<--
-examples/deephpms/burgers.py:96:102
+examples/deephpms/burgers.py:98:104
 --8<--
 ```
 
 注意 Net3 开始训练前，重新注册 Net2 的transform
 
-``` py linenums="243"
+``` py linenums="240"
 --8<--
-examples/deephpms/burgers.py:243:244
+examples/deephpms/burgers.py:240:241
 --8<--
 ```
 
@@ -105,17 +250,17 @@ examples/deephpms/burgers.py:243:244
 
 我们需要指定问题相关的参数，如数据集路径、输出文件路径、定义域的值等
 
-``` py linenums="53"
+``` yaml linenums="26"
 --8<--
-examples/deephpms/burgers.py:53:66
+examples/deephpms/conf/burgers.yaml:26:33
 --8<--
 ```
 
 同时需要指定训练轮数和学习率等超参数
 
-``` py linenums="104"
+``` yaml linenums="57"
 --8<--
-examples/deephpms/burgers.py:104:107
+examples/deephpms/conf/burgers.yaml:57:61
 --8<--
 ```
 
@@ -123,9 +268,9 @@ examples/deephpms/burgers.py:104:107
 
 本问题提供了两种优化器，分别为 Adam 优化器和 LBFGS 优化器，训练时只选择其中一种，需要将另一种优化器注释掉。
 
-``` py linenums="109"
+``` py linenums="106"
 --8<--
-examples/deephpms/burgers.py:109:118
+examples/deephpms/burgers.py:106:115
 --8<--
 ```
 
@@ -135,9 +280,9 @@ examples/deephpms/burgers.py:109:118
 
 无监督仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据，例如
 
-``` py linenums="180"
+``` py linenums="119"
 --8<--
-examples/deephpms/burgers.py:180:188
+examples/deephpms/burgers.py:119:127
 --8<--
 ```
 
@@ -147,9 +292,9 @@ examples/deephpms/burgers.py:180:188
 
 第一阶段对 Net1 的训练是纯监督学习，此处采用监督约束 `SupervisedConstraint`
 
-``` py linenums="121"
+``` py linenums="129"
 --8<--
-examples/deephpms/burgers.py:121:138
+examples/deephpms/burgers.py:129:135
 --8<--
 ```
 
@@ -173,9 +318,9 @@ examples/deephpms/burgers.py:121:138
 
 第二阶段对 Net2 的训练是无监督学习，但仍可采用监督约束 `SupervisedConstraint`，要注意上述提到的给定“假的”标签数据
 
-``` py linenums="179"
+``` py linenums="187"
 --8<--
-examples/deephpms/burgers.py:179:199
+examples/deephpms/burgers.py:187:196
 --8<--
 ```
 
@@ -187,9 +332,9 @@ examples/deephpms/burgers.py:179:199
 
 第三阶段 Net3 的训练复杂，包含了对部分初始点的监督学习、与 PDE 有关的无监督学习以及与边界条件有关的无监督学习，这里仍采用监督约束 `SupervisedConstraint`，同样要注意给定“假的”标签数据，各参数含义同上
 
-``` py linenums="246"
+``` py linenums="272"
 --8<--
-examples/deephpms/burgers.py:246:303
+examples/deephpms/burgers.py:272:300
 --8<--
 ```
 
@@ -203,9 +348,9 @@ examples/deephpms/burgers.py:246:303
 
 评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="140"
+``` py linenums="148"
 --8<--
-examples/deephpms/burgers.py:140:158
+examples/deephpms/burgers.py:148:155
 --8<--
 ```
 
@@ -213,9 +358,9 @@ examples/deephpms/burgers.py:140:158
 
 评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38)。
 
-``` py linenums="201"
+``` py linenums="209"
 --8<--
-examples/deephpms/burgers.py:201:222
+examples/deephpms/burgers.py:209:219
 --8<--
 ```
 
@@ -223,9 +368,9 @@ examples/deephpms/burgers.py:201:222
 
 因为第三阶段评价时只需要对训练得到的点的值进行评价，而不需要对边界条件满足程度或 PDE 满足程度进行评价，因此评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="305"
+``` py linenums="313"
 --8<--
-examples/deephpms/burgers.py:305:325
+examples/deephpms/burgers.py:313:320
 --8<--
 ```
 
@@ -237,25 +382,25 @@ examples/deephpms/burgers.py:305:325
 
 与 PDE 相关的自定义 loss 函数为
 
-``` py linenums="25"
+``` py linenums="32"
 --8<--
-examples/deephpms/burgers.py:25:27
+examples/deephpms/burgers.py:32:34
 --8<--
 ```
 
 与 PDE 相关的自定义 metric 函数为
 
-``` py linenums="30"
+``` py linenums="37"
 --8<--
-examples/deephpms/burgers.py:30:35
+examples/deephpms/burgers.py:37:42
 --8<--
 ```
 
 与边界条件相关的自定义 loss 函数为
 
-``` py linenums="38"
+``` py linenums="45"
 --8<--
-examples/deephpms/burgers.py:38:49
+examples/deephpms/burgers.py:45:56
 --8<--
 ```
 
@@ -265,37 +410,49 @@ examples/deephpms/burgers.py:38:49
 
 第一阶段训练、评估
 
-``` py linenums="160"
+``` py linenums="157"
 --8<--
-examples/deephpms/burgers.py:160:176
+examples/deephpms/burgers.py:157:173
 --8<--
 ```
 
 第二阶段训练、评估
 
-``` py linenums="224"
+``` py linenums="218"
 --8<--
-examples/deephpms/burgers.py:224:240
+examples/deephpms/burgers.py:221:237
 --8<--
 ```
 
 第三阶段训练、评估
 
-``` py linenums="327"
+``` py linenums="322"
 --8<--
-examples/deephpms/burgers.py:327:343
+examples/deephpms/burgers.py:322:338
 --8<--
 ```
 
 ### 3.10 可视化
 
-本问题训练结束后，使用第三阶段网络 Net3 对模拟情况 2 的数据进行推理，结果为 $u|_{(x,t)}$ 值，可以通过 matplotlib 等库将结果画出。代码中不再包含这部分可视化代码。
+本问题训练结束后，可以在 `evalution` 中使用第三阶段网络 Net3 对模拟情况 2 的数据进行推理，结果为 $u|_{(x,t)}$ 值，同时输出 `l2 error` 的值。画图部分在 plotting.py 文件中。
+
+``` py linenums="385"
+--8<--
+examples/deephpms/burgers.py:385:427
+--8<--
+```
 
 ## 4. 完整代码
 
 ``` py linenums="1" title="burgers.py"
 --8<--
 examples/deephpms/burgers.py
+--8<--
+```
+
+``` py linenums="1" title="plotting.py"
+--8<--
+examples/deephpms/plotting.py
 --8<--
 ```
 
@@ -309,18 +466,18 @@ examples/deephpms/burgers.py
 
 <figure markdown>
   ![burgers_diff_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_diff_lbfgs.png){ loading=lazy }
-  <figcaption> 真实 u 值和推理 u 值对比</figcaption>
+  <figcaption> 真实 u 值和预测 u 值对比</figcaption>
 </figure>
 
 模拟数据集 1、2 都是初始条件为 sin 方程时的数据集 burgers_sine.mat 时：
 
 <figure markdown>
   ![burgers_same_lbfgs](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepHPMs/burgers_same_lbfgs.png){ loading=lazy }
-  <figcaption> 真实 u 值和推理 u 值对比</figcaption>
+  <figcaption> 真实 u 值和预测 u 值对比</figcaption>
 </figure>
 
 ## 6. 参考文献
 
-参考文献： [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
+- [Deep Hidden Physics Models: Deep Learning of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1801.06637)
 
-参考代码： [DeepHPMs](https://github.com/maziarraissi/DeepHPMs)
+- [参考代码](https://github.com/maziarraissi/DeepHPMs)

@@ -1,4 +1,10 @@
 # PIRBN
+=== "模型训练和评估命令"
+
+    ``` sh
+    cd PaddleScience/jointContribution/PIRBN
+    python main.py
+    ```
 
 ## 1. 背景简介
 
@@ -31,7 +37,7 @@ $$
 \end{aligned}
 $$
 
-其中μ是一个控制PDE解的频率特征的常数。
+其中$\mu$是一个控制PDE解的频率特征的常数。
 
 ## 3. 问题求解
 

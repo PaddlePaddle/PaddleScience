@@ -68,7 +68,7 @@ class Arch(nn.Layer):
         Args:
             data_dict (Dict[str, paddle.Tensor]): Dict contains tensor.
             keys (Tuple[str, ...]): Keys tensor fetched from.
-            axis (int, optional): Axis concate at. Defaults to -1.
+            axis (int, optional): Axis concatenate at. Defaults to -1.
 
         Returns:
             Tuple[paddle.Tensor, ...]: Concatenated tensor.
@@ -123,6 +123,20 @@ class Arch(nn.Layer):
                 and raw output) and return a single tensor dict(transformed output).
         """
         self._output_transform = transform
+
+    def freeze(self):
+        """Freeze all parameters."""
+        for param in self.parameters():
+            param.stop_gradient = True
+
+        self.eval()
+
+    def unfreeze(self):
+        """Unfreeze all parameters."""
+        for param in self.parameters():
+            param.stop_gradient = False
+
+        self.train()
 
     def __str__(self):
         num_fc = 0

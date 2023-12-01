@@ -12,5 +12,5 @@
         - bessel_i0e
         - bessel_i1
         - bessel_i1e
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

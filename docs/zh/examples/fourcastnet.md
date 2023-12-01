@@ -2,6 +2,38 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6213922?contributionType=1&sUid=455441&shared=1&ts=1684585396793" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+开始训练、评估前，请先下载[数据集](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F)。
+
+=== "模型训练命令"
+
+    ``` sh
+    # 风速预训练模型
+    python train_pretrain.py
+    # 风速微调模型
+    python train_finetune.py
+    # 降水模型训练
+    python train_precip.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # 风速预训练模型评估
+    python train_pretrain.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/pretrain.pdparams
+    # 风速微调模型评估
+    python train_finetune.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams
+    # 降水量模型评估
+    python train_precip.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams WIND_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams
+    ```
+
+| 模型 | 变量名称 | ACC/RMSE(6h) | ACC/RMSE(30h) | ACC/RMSE(60h) | ACC/RMSE(120h) | ACC/RMSE(192h) |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [风速模型](https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/finetune.pdparams) | U10 | 0.991/0.567 | 0.963/1.130 | 0.891/1.930 | 0.645/3.438 | 0.371/4.915 |
+
+| 模型 | 变量名称 | ACC/RMSE(6h) | ACC/RMSE(12h) | ACC/RMSE(24h) | ACC/RMSE(36h) |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| [降水量模型](https://paddle-org.bj.bcebos.com/paddlescience/models/fourcastnet/precip.pdparams) | TP | 0.808/1.390 | 0.760/1.540 | 0.668/1.690 | 0.590/1.920 |
+
 ## 1. 背景简介
 
 在天气预报任务中，有基于物理信息驱动和数据驱动两种方法实现天气预报。基于物理信息驱动的方法，往往依赖物理方程，通过建模大气变量之间的物理关系实现天气预报。例如在 IFS 模型中，使用了分布在 50 多个垂直高度上共 150 多个大气变量实现天气的预测。基于数据驱动的方法不依赖物理方程，但是需要大量的训练数据，一般将神经网络看作一个黑盒结构，训练网络学习输入数据与输出数据之间的函数关系，实现给定输入条件下对于输出数据的预测。FourCastNet是一种基于数据驱动方法的气象预报算法，它使用自适应傅里叶神经算子（AFNO）进行训练和预测。该算法专注于预测两大气象变量：距离地球表面10米处的风速和6小时总降水量，以对极端天气、自然灾害等进行预警。相比于 IFS 模型，它仅仅使用了 5 个垂直高度上共 20 个大气变量，具有大气变量输入个数少，推理理速度快的特点。
@@ -99,9 +131,9 @@ FourCastNet论文中训练了风速模型和降水量模型，接下来将介绍
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="30" title="examples/fourcastnet/train_pretrain.py"
+``` yaml linenums="28" title="examples/fourcastnet/conf/fourcastnet_pretrain.yaml"
 --8<--
-examples/fourcastnet/train_pretrain.py:30:51
+examples/fourcastnet/conf/fourcastnet_pretrain.yaml:28:46
 --8<--
 ```
 
@@ -109,9 +141,9 @@ examples/fourcastnet/train_pretrain.py:30:51
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，首先介绍数据预处理部分，代码如下：
 
-``` py linenums="55" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="46" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:55:69
+examples/fourcastnet/train_pretrain.py:46:60
 --8<--
 ```
 
@@ -132,9 +164,9 @@ examples/fourcastnet/train_pretrain.py:55:69
 
 这种方式下，数据加载的代码如下：
 
-``` py linenums="74" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="64" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:74:90
+examples/fourcastnet/train_pretrain.py:64:80
 --8<--
 ```
 
@@ -149,9 +181,9 @@ examples/fourcastnet/train_pretrain.py:74:90
 
 这种方式下，数据加载的代码如下：
 
-``` py linenums="92" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="82" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:92:109
+examples/fourcastnet/train_pretrain.py:82:99
 --8<--
 ```
 
@@ -161,9 +193,9 @@ examples/fourcastnet/train_pretrain.py:92:109
 
 定义监督约束的代码如下：
 
-``` py linenums="110" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="100" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:110:116
+examples/fourcastnet/train_pretrain.py:100:106
 --8<--
 ```
 
@@ -177,9 +209,17 @@ examples/fourcastnet/train_pretrain.py:110:116
 
 在该案例中，风速模型基于 AFNONet 网络模型，用 PaddleScience 代码表示如下：
 
-``` py linenums="163" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="153" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:163:164
+examples/fourcastnet/train_pretrain.py:153:154
+--8<--
+```
+
+网络模型的参数通过配置文件进行设置如下：
+
+``` yaml linenums="48" title="examples/fourcastnet/conf/fourcastnet_pretrain.yaml"
+--8<--
+examples/fourcastnet/conf/fourcastnet_pretrain.yaml:48:52
 --8<--
 ```
 
@@ -187,11 +227,11 @@ examples/fourcastnet/train_pretrain.py:163:164
 
 #### 3.2.3 学习率与优化器构建
 
-本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 2.5e-4。优化器使用 `Adam`，用 PaddleScience 代码表示如下：
+本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 5e-4。优化器使用 `Adam`，用 PaddleScience 代码表示如下：
 
-``` py linenums="166" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="156" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:166:173
+examples/fourcastnet/train_pretrain.py:156:161
 --8<--
 ```
 
@@ -199,9 +239,9 @@ examples/fourcastnet/train_pretrain.py:166:173
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="121" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="111" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:121:161
+examples/fourcastnet/train_pretrain.py:111:151
 --8<--
 ```
 
@@ -211,9 +251,9 @@ examples/fourcastnet/train_pretrain.py:121:161
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="175" title="examples/fourcastnet/train_pretrain.py"
+``` py linenums="163" title="examples/fourcastnet/train_pretrain.py"
 --8<--
-examples/fourcastnet/train_pretrain.py:175:
+examples/fourcastnet/train_pretrain.py:163:181
 --8<--
 ```
 
@@ -221,25 +261,33 @@ examples/fourcastnet/train_pretrain.py:175:
 
 上文介绍了如何对风速模型进行预训练，在本节中将介绍如何利用预训练的模型进行微调。因为风速模型预训练的步骤与微调的步骤基本相似，因此本节在两者的重复部分不再介绍，而仅仅介绍模型微调特有的部分。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="64" title="examples/fourcastnet/train_finetune.py"
+``` yaml linenums="28" title="examples/fourcastnet/conf/fourcastnet_finetune.yaml"
 --8<--
-examples/fourcastnet/train_finetune.py:64:88
---8<--
-```
-
-微调模型的程序新增了 `NUM_TIMESTAMPS` 参数，用于控制模型微调训练时迭代的时间步的个数。这个参数首先会在数据加载的设置中用到，用于设置数据集产生的真值的时间步大小，代码如下：
-
-``` py linenums="108" title="examples/fourcastnet/train_finetune.py"
---8<--
-examples/fourcastnet/train_finetune.py:108:126
+examples/fourcastnet/conf/fourcastnet_finetune.yaml:28:48
 --8<--
 ```
 
-另外，与预训练不同的是，微调的模型构建需要设置 `num_timestamps` 参数，用于控制模型输出的预测结果的时间步大小，代码如下：
+微调模型的程序新增了 `num_timestamps` 参数，用于控制模型微调训练时迭代的时间步的个数。这个参数首先会在数据加载的设置中用到，用于设置数据集产生的真值的时间步大小，代码如下：
 
-``` py linenums="184" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="84" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:184:185
+examples/fourcastnet/train_finetune.py:84:102
+--8<--
+```
+
+`num_timestamps` 参数通过配置文件进行设置，如下：
+
+``` yaml linenums="66" title="examples/fourcastnet/conf/fourcastnet_finetune.yaml"
+--8<--
+examples/fourcastnet/conf/fourcastnet_finetune.yaml:66:66
+--8<--
+```
+
+另外，与预训练不同的是，微调的模型构建也需要设置 `num_timestamps` 参数，用于控制模型输出的预测结果的时间步大小，代码如下：
+
+``` py linenums="160" title="examples/fourcastnet/train_finetune.py"
+--8<--
+examples/fourcastnet/train_finetune.py:160:164
 --8<--
 ```
 
@@ -247,21 +295,27 @@ examples/fourcastnet/train_finetune.py:184:185
 
 #### 3.3.1 测试集上评估模型
 
-根据论文中的设置，在测试集上进行模型评估时，`num_timestamps` 设置的为 32，相邻的两个测试样本的间隔为 8。
+根据论文中的设置，在测试集上进行模型评估时，`num_timestamps` 通过配置文件设置的为 32，相邻的两个测试样本的间隔为 8。
+
+``` yaml linenums="70" title="examples/fourcastnet/conf/fourcastnet_finetune.yaml"
+--8<--
+examples/fourcastnet/conf/fourcastnet_finetune.yaml:70:72
+--8<--
+```
 
 构建模型的代码为：
 
-``` py linenums="216" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="221" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:216:221
+examples/fourcastnet/train_finetune.py:221:226
 --8<--
 ```
 
 构建评估器的代码为：
 
-``` py linenums="223" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="228" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:223:240
+examples/fourcastnet/train_finetune.py:228:273
 --8<--
 ```
 
@@ -269,15 +323,15 @@ examples/fourcastnet/train_finetune.py:223:240
 
 风速模型使用自回归的方式进行推理，需要首先设置模型推理的输入数据，代码如下：
 
-``` py linenums="242" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="275" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:242:252
+examples/fourcastnet/train_finetune.py:275:285
 --8<--
 ```
 
-``` py linenums="29" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="30" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:29:54
+examples/fourcastnet/train_finetune.py:30:55
 --8<--
 ```
 
@@ -285,25 +339,25 @@ examples/fourcastnet/train_finetune.py:29:54
 
 由于模型对风速的纬向和经向分开预测，因此需要把这两个方向上的风速合成为真正的风速，代码如下：
 
-``` py linenums="254" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="287" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:254:270
+examples/fourcastnet/train_finetune.py:287:303
 --8<--
 ```
 
 最后，构建可视化器的代码如下：
 
-``` py linenums="271" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="304" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:271:287
+examples/fourcastnet/train_finetune.py:304:320
 --8<--
 ```
 
 以上构建好的模型、评估器、可视化器将会传递给 `ppsci.solver.Solver` 用于在测试集上评估性能和进行可视化。
 
-``` py linenums="289" title="examples/fourcastnet/train_finetune.py"
+``` py linenums="322" title="examples/fourcastnet/train_finetune.py"
 --8<--
-examples/fourcastnet/train_finetune.py:289:
+examples/fourcastnet/train_finetune.py:322:333
 --8<--
 ```
 
@@ -311,9 +365,9 @@ examples/fourcastnet/train_finetune.py:289:
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="66" title="examples/fourcastnet/train_precip.py"
+``` yaml linenums="28" title="examples/fourcastnet/conf/fourcastnet_precip.yaml"
 --8<--
-examples/fourcastnet/train_precip.py:66:94
+examples/fourcastnet/conf/fourcastnet_precip.yaml:28:56
 --8<--
 ```
 
@@ -321,9 +375,9 @@ examples/fourcastnet/train_precip.py:66:94
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，首先介绍数据预处理部分，代码如下：
 
-``` py linenums="98" title="examples/fourcastnet/train_precip.py"
+``` py linenums="66" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:98:115
+examples/fourcastnet/train_precip.py:66:85
 --8<--
 ```
 
@@ -336,9 +390,9 @@ examples/fourcastnet/train_precip.py:98:115
 
 数据加载的代码如下：
 
-``` py linenums="117" title="examples/fourcastnet/train_precip.py"
+``` py linenums="87" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:117:135
+examples/fourcastnet/train_precip.py:87:105
 --8<--
 ```
 
@@ -346,9 +400,9 @@ examples/fourcastnet/train_precip.py:117:135
 
 定义监督约束的代码如下：
 
-``` py linenums="136" title="examples/fourcastnet/train_precip.py"
+``` py linenums="106" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:136:142
+examples/fourcastnet/train_precip.py:106:112
 --8<--
 ```
 
@@ -362,9 +416,17 @@ examples/fourcastnet/train_precip.py:136:142
 
 在该案例中，需要首先定义风速模型的网络结构并加载训练好的参数，然后定义降水量模型，用 PaddleScience 代码表示如下：
 
-``` py linenums="187" title="examples/fourcastnet/train_precip.py"
+``` py linenums="157" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:187:190
+examples/fourcastnet/train_precip.py:157:162
+--8<--
+```
+
+定义模型的参数通过配置进行设置，如下：
+
+``` yaml linenums="58" title="examples/fourcastnet/conf/fourcastnet_precip.yaml"
+--8<--
+examples/fourcastnet/conf/fourcastnet_precip.yaml:58:65
 --8<--
 ```
 
@@ -374,9 +436,9 @@ examples/fourcastnet/train_precip.py:187:190
 
 本案例中使用的学习率方法为 `Cosine`，学习率大小设置为 2.5e-4。优化器使用 `Adam`，用 PaddleScience 代码表示如下：
 
-``` py linenums="192" title="examples/fourcastnet/train_precip.py"
+``` py linenums="164" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:192:199
+examples/fourcastnet/train_precip.py:164:168
 --8<--
 ```
 
@@ -384,9 +446,9 @@ examples/fourcastnet/train_precip.py:192:199
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="147" title="examples/fourcastnet/train_precip.py"
+``` py linenums="117" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:147:185
+examples/fourcastnet/train_precip.py:117:155
 --8<--
 ```
 
@@ -396,29 +458,29 @@ examples/fourcastnet/train_precip.py:147:185
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="202" title="examples/fourcastnet/train_precip.py"
+``` py linenums="170" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:202:218
+examples/fourcastnet/train_precip.py:170:187
 --8<--
 ```
 
 ### 4.6 测试集上评估模型
 
-根据论文中的设置，在测试集上进行模型评估时，`NUM_TIMESTAMPS` 设置为 6，相邻的两个测试样本的间隔为 8。
+根据论文中的设置，在测试集上进行模型评估时，`num_timestamps` 设置为 6，相邻的两个测试样本的间隔为 8。
 
 构建模型的代码为：
 
-``` py linenums="221" title="examples/fourcastnet/train_precip.py"
+``` py linenums="199" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:221:227
+examples/fourcastnet/train_precip.py:199:210
 --8<--
 ```
 
 构建评估器的代码为：
 
-``` py linenums="230" title="examples/fourcastnet/train_precip.py"
+``` py linenums="233" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:230:247
+examples/fourcastnet/train_precip.py:233:271
 --8<--
 ```
 
@@ -426,15 +488,15 @@ examples/fourcastnet/train_precip.py:230:247
 
 降水量模型使用自回归的方式进行推理，需要首先设置模型推理的输入数据，代码如下：
 
-``` py linenums="250" title="examples/fourcastnet/train_precip.py"
+``` py linenums="273" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:250:260
+examples/fourcastnet/train_precip.py:273:284
 --8<--
 ```
 
-``` py linenums="29" title="examples/fourcastnet/train_precip.py"
+``` py linenums="30" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:29:56
+examples/fourcastnet/train_precip.py:30:57
 --8<--
 ```
 
@@ -442,25 +504,25 @@ examples/fourcastnet/train_precip.py:29:56
 
 由于模型对降水量进行了对数处理，因此需要将模型结果重新映射回线性空间，代码如下：
 
-``` py linenums="262" title="examples/fourcastnet/train_precip.py"
+``` py linenums="286" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:262:275
+examples/fourcastnet/train_precip.py:286:299
 --8<--
 ```
 
 最后，构建可视化器的代码如下：
 
-``` py linenums="277" title="examples/fourcastnet/train_precip.py"
+``` py linenums="300" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:277:293
+examples/fourcastnet/train_precip.py:300:317
 --8<--
 ```
 
 以上构建好的模型、评估器、可视化器将会传递给 `ppsci.solver.Solver` 用于在测试集上评估性能和进行可视化。
 
-``` py linenums="297" title="examples/fourcastnet/train_precip.py"
+``` py linenums="319" title="examples/fourcastnet/train_precip.py"
 --8<--
-examples/fourcastnet/train_precip.py:297:
+examples/fourcastnet/train_precip.py:319:330
 --8<--
 ```
 

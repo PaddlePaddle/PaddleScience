@@ -17,6 +17,7 @@ import numbers
 from collections.abc import Mapping
 from collections.abc import Sequence
 from typing import Any
+from typing import Callable
 from typing import List
 
 import numpy as np
@@ -34,6 +35,9 @@ __all__ = ["build_batch_transforms", "default_collate_fn"]
 
 def default_collate_fn(batch: List[Any]) -> Any:
     """Default_collate_fn for paddle dataloader.
+
+    NOTE: This `default_collate_fn` is different from official `default_collate_fn`
+    which specially adapt case where sample is `None` and `pgl.Graph`.
 
     ref: https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/io/dataloader/collate.py#L25
 
@@ -61,7 +65,7 @@ def default_collate_fn(batch: List[Any]) -> Any:
     elif isinstance(sample, Sequence):
         sample_fields_num = len(sample)
         if not all(len(sample) == sample_fields_num for sample in iter(batch)):
-            raise RuntimeError("fileds number not same among samples in a batch")
+            raise RuntimeError("Fields number not same among samples in a batch")
         return [default_collate_fn(fields) for fields in zip(*batch)]
     elif str(type(sample)) == "<class 'pgl.graph.Graph'>":
         # use str(type()) instead of isinstance() in case of pgl is not installed.
@@ -83,12 +87,13 @@ def default_collate_fn(batch: List[Any]) -> Any:
 
 def build_batch_transforms(cfg):
     cfg = copy.deepcopy(cfg)
-    batch_transforms = transform.build_transforms(cfg)
+    batch_transforms: Callable[[List[Any]], List[Any]] = transform.build_transforms(cfg)
 
     def collate_fn_batch_transforms(batch: List[Any]):
-        # apply batch transform on uncollated data
+        # apply batch transform on separate samples
         batch = batch_transforms(batch)
-        # then do collate
+
+        # then collate separate samples into batched data
         return default_collate_fn(batch)
 
     return collate_fn_batch_transforms

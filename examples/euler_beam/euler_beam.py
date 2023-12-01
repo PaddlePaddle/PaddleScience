@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # set visualizer(optional)
     visu_points = geom["interval"].sample_interior(TOTAL_SIZE, evenly=True)
     visualizer = {
-        "visulzie_u": ppsci.visualize.VisualizerScatter1D(
+        "visualize_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
             ("x",),
             {"u": lambda d: d["u"]},
