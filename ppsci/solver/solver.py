@@ -287,7 +287,7 @@ class Solver:
                     "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
                 )
 
-            def dist_wrapper(model: nn.Layer) -> dist.DataParallel:
+            def dist_wrapper(model: nn.Layer) -> paddle.DataParallel:
                 dist_model = fleet.distributed_model(model)
                 if hasattr(model, "input_keys"):
                     dist_model.input_keys = dist_model._layers.input_keys
@@ -691,7 +691,7 @@ class Solver:
         if enable:
             if isinstance(self.model, ppsci.arch.ModelList):
                 for model in self.model.model_list:
-                    if not isinstance(self.model, paddle.DataParallel):
+                    if not isinstance(model, paddle.DataParallel):
                         raise TypeError(
                             "no_sync interface is only for model with type "
                             "paddle.DataParallel, but got type "
