@@ -690,24 +690,21 @@ class Solver:
         """
         if enable:
             if isinstance(self.model, ppsci.arch.ModelList):
-                if not all(
-                    [
-                        isinstance(model, paddle.DataParallel)
-                        for model in self.model.model_list
-                    ]
-                ):
-                    raise TypeError(
-                        "no_sync interface is only for model with type paddle.DataParallel, "
-                        f"but got type {misc.typename(ddp_model)} in self.model.model_list"
-                    )
+                for model in self.model.model_list:
+                    if not isinstance(self.model, paddle.DataParallel):
+                        raise TypeError(
+                            "no_sync interface is only for model with type "
+                            "paddle.DataParallel, but got type "
+                            f"{misc.typename(model)}"
+                        )
                 ctx_manager = contextlib.ExitStack()
                 for model in self.model.model_list:
                     ctx_manager.enter_context(model.no_sync())
             else:
                 if not isinstance(self.model, paddle.DataParallel):
                     raise TypeError(
-                        "no_sync interface is only for model with type paddle.DataParallel, "
-                        f"but got type {misc.typename(ddp_model)}"
+                        "no_sync interface is only for model with type "
+                        f"paddle.DataParallel, but got type {misc.typename(ddp_model)}"
                     )
                 ctx_manager = ddp_model.no_sync()
         else:
