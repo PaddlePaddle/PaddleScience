@@ -273,28 +273,33 @@ class IterableNPZDataset(io.IterableDataset):
         return 1
 
 
-
-
-
-class ScalerStd(object):
+class ScalerStd:
     """
     Desc: Normalization utilities with std mean
     """
 
     def __init__(self):
-        self.mean = 0.
-        self.std = 1.
+        self.mean = 0.0
+        self.std = 1.0
 
-    def fit(self, data):
+    def _fit(self, data):
         self.mean = np.mean(data)
         self.std = np.std(data)
 
-    def transform(self, data):
-        mean = paddle.to_tensor(self.mean).type_as(data).to(data.device) if paddle.is_tensor(data) else self.mean
-        std = paddle.to_tensor(self.std).type_as(data).to(data.device) if paddle.is_tensor(data) else self.std
+    def _transform(self, data):
+        mean = (
+            paddle.to_tensor(self.mean).type_as(data).to(data.device)
+            if paddle.is_tensor(data)
+            else self.mean
+        )
+        std = (
+            paddle.to_tensor(self.std).type_as(data).to(data.device)
+            if paddle.is_tensor(data)
+            else self.std
+        )
         return (data - mean) / std
 
-    def inverse_transform(self, data):
+    def _inverse_transform(self, data):
         mean = paddle.to_tensor(self.mean) if paddle.is_tensor(data) else self.mean
         std = paddle.to_tensor(self.std) if paddle.is_tensor(data) else self.std
         return (data * std) + mean
@@ -313,11 +318,11 @@ class VAECustomDataset(io.Dataset):
         num, _, _ = data.shape
         data = data.reshape(num, -1)
 
-        self.neighbors = all_data['neighbors']
-        self.areasoverlengths = all_data['areasoverlengths']
-        self.dirichletnodes = all_data['dirichletnodes']
-        self.dirichleths = all_data['dirichletheads']
-        self.Qs = np.zeros([all_data['coords'].shape[-1]])
+        self.neighbors = all_data["neighbors"]
+        self.areasoverlengths = all_data["areasoverlengths"]
+        self.dirichletnodes = all_data["dirichletnodes"]
+        self.dirichleths = all_data["dirichletheads"]
+        self.Qs = np.zeros([all_data["coords"].shape[-1]])
         self.val_data = all_data["test_data"]
 
         self.data_type = data_type
@@ -325,15 +330,15 @@ class VAECustomDataset(io.Dataset):
         self.train_len = int(num * 0.8)
         self.test_len = num - self.train_len
 
-        self.train_data = data[:self.train_len]
-        self.test_data = data[self.train_len:]
+        self.train_data = data[: self.train_len]
+        self.test_data = data[self.train_len :]
 
         self.scaler = ScalerStd()
-        self.scaler.fit(self.train_data)
+        self.scaler._fit(self.train_data)
 
-        self.train_data = self.scaler.transform(self.train_data)
-        self.test_data = self.scaler.transform(self.test_data)
-        
+        self.train_data = self.scaler._transform(self.train_data)
+        self.test_data = self.scaler._transform(self.test_data)
+
         self.input_keys = ""
         self.label_keys = ""
 
