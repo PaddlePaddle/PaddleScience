@@ -1,8 +1,8 @@
 seed: 1234
 
-output_dir: ./output
+output_dir: ./output_NSFNet2
 
-data_dir: ./cylinder_nektar_wake.mat
+data_dir: ./npy_data/cylinder_nektar_wake.mat
 
 iters_per_epoch: 1
 
@@ -13,7 +13,7 @@ MODEL:
   hidden_size: 100
   activation: "tanh"
 
-mode: train
+mode: eval
 
 ntrain: 140000
 
@@ -25,11 +25,11 @@ re: 100
 
 log_freq: 5000
 
-eval_freq: 5000
+eval_freq: 100
 
 epoch_list: [5000, 5000, 50000, 50000]
 
 lr_list: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
 
-pretrained_model_path: ./nsfnet2
+pretrained_model_path: ./output_NSFNet2/checkpoints/latest
 

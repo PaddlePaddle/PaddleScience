@@ -279,7 +279,7 @@ def train(cfg: DictConfig):
     # set equation constarint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
-            nu=1.0 / cfg.Re, rho=1.0, dim=3, time=True
+            nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
         ),
     }
 
@@ -341,7 +341,7 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
-        output_dir="/home/aistudio/",
+        checkpoint_path=OUTPUT_DIR + "/checkpoints/latest",
     )
     # train model
     solver.train()
@@ -406,7 +406,7 @@ def evaluate(cfg: DictConfig):
 
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
-            nu=1.0 / cfg.Re, rho=1.0, dim=3, time=True
+            nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
         ),
     }
     residual_validator = ppsci.validate.SupervisedValidator(
@@ -522,6 +522,7 @@ def evaluate(cfg: DictConfig):
         ax[1, 1].set_title("v_pred")
         ax[2, 0].set_title("w_exact")
         ax[2, 1].set_title("w_pred")
+        fig.savefig(OUTPUT_DIR + f"/velocity_t={i}.png")
 
 
 if __name__ == "__main__":

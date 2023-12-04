@@ -283,7 +283,7 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
-        output_dir="/home/aistudio/",
+        checkpoint_path=OUTPUT_DIR + "/checkpoints/latest",
     )
     # train model
     solver.train()
@@ -444,6 +444,7 @@ def evaluate(cfg: DictConfig):
     w = np.array(u_y) - np.array(v_x)
     w = w.reshape(1000, 1000)
     plt.contour(grid_x, grid_y, w, levels=np.arange(-4, 5, 0.25))
+    plt.savefig(f"{OUTPUT_DIR}/vorticity_t=4.png")
 
     ## relative error
     t_snap = []
@@ -454,6 +455,7 @@ def evaluate(cfg: DictConfig):
     ax[1].plot(t_snap, vs)
     ax[0].set_title("u")
     ax[1].set_title("v")
+    fig.savefig(f"{OUTPUT_DIR}/l2_error.png")
 
     ## velocity
     grid_x, grid_y = np.mgrid[0.0:8.0:1000j, -2.0:2.0:1000j]
@@ -482,6 +484,7 @@ def evaluate(cfg: DictConfig):
         ax[0, 1].set_title("u_pred")
         ax[1, 0].set_title("v_exact")
         ax[1, 1].set_title("v_pred")
+        fig.savefig(OUTPUT_DIR + f"/velocity_t={t_star[i]}.png")
 
 
 if __name__ == "__main__":
