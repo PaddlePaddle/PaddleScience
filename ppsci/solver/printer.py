@@ -74,7 +74,7 @@ def log_train_info(
         (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
-    
+
     log_str = (
         f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
         f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
