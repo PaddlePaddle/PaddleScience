@@ -23,8 +23,8 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
-DATASET_PATH: ./datasets/DeepHPMs/KdV_sine.mat
-DATASET_PATH_SOL: ./datasets/DeepHPMs/KdV_cos.mat
+DATASET_PATH: ./datasets/KdV_sine.mat
+DATASET_PATH_SOL: ./datasets/KdV_sine.mat
 
 # set working condition
 T_LB: 0.0

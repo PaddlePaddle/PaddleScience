@@ -62,7 +62,7 @@ def train(cfg: DictConfig):
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         {"G": lambda out: out["G"]},
-        metric={"MeanL2Rel": ppsci.metric.MeanL2Rel()},
+        metric={"L2Rel": ppsci.metric.L2Rel()},
         name="G_eval",
     )
     validator = {sup_validator.name: sup_validator}
@@ -174,7 +174,7 @@ def evaluate(cfg: DictConfig):
         eval_dataloader_cfg,
         ppsci.loss.MSELoss(),
         {"G": lambda out: out["G"]},
-        metric={"MeanL2Rel": ppsci.metric.MeanL2Rel()},
+        metric={"L2Rel": ppsci.metric.L2Rel()},
         name="G_eval",
     )
     validator = {sup_validator.name: sup_validator}

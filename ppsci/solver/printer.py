@@ -20,6 +20,8 @@ import datetime
 from typing import TYPE_CHECKING
 from typing import Dict
 
+from paddle import device
+
 from ppsci.utils import logger
 from ppsci.utils import misc
 
@@ -72,11 +74,21 @@ def log_train_info(
         (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
     eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
-    logger.info(
+
+    log_str = (
         f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
         f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
+    if trainer.benchmark_flag:
+        max_mem_reserved_msg = (
+            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1024 ** 2)} MB"
+        )
+        max_mem_allocated_msg = (
+            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1024 ** 2)} MB"
+        )
+        log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
+    logger.info(log_str)
 
     logger.scaler(
         {

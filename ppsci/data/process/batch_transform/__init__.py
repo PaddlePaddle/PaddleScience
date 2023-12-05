@@ -17,6 +17,7 @@ import numbers
 from collections.abc import Mapping
 from collections.abc import Sequence
 from typing import Any
+from typing import Callable
 from typing import List
 
 import numpy as np
@@ -86,12 +87,13 @@ def default_collate_fn(batch: List[Any]) -> Any:
 
 def build_batch_transforms(cfg):
     cfg = copy.deepcopy(cfg)
-    batch_transforms = transform.build_transforms(cfg)
+    batch_transforms: Callable[[List[Any]], List[Any]] = transform.build_transforms(cfg)
 
     def collate_fn_batch_transforms(batch: List[Any]):
-        # apply batch transform on separate data
+        # apply batch transform on separate samples
         batch = batch_transforms(batch)
-        # then do collate
+
+        # then collate separate samples into batched data
         return default_collate_fn(batch)
 
     return collate_fn_batch_transforms

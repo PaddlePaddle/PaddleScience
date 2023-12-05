@@ -2,23 +2,52 @@
 
 === "模型训练命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm2.py
-    ```
+    === "phylstm2"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm2.py
+        ```
+
+    === "phylstm3"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm3.py
+        ```
 
 === "模型评估命令"
 
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
-    python phylstm2.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams
-    ```
+    === "phylstm2"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm2.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams
+        ```
+
+    === "phylstm3"
+
+        ``` sh
+        # linux
+        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
+        # windows
+        # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat --output data_boucwen.mat
+        python phylstm3.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams
+        ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [phylstm2_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm2_pretrained.pdparams) | loss(sup_valid): 0.00799 |
+| [phylstm3_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phylstm/phylstm3_pretrained.pdparams) | loss(sup_valid): 0.03098 |
 
 ## 1. 背景简介
 
@@ -79,7 +108,7 @@ examples/phylstm/phylstm2.py:37:100
 
 ``` py linenums="119"
 --8<--
-examples/phylstm/phylstm2.py:119:137
+examples/phylstm/phylstm2.py:119:145
 --8<--
 ```
 
@@ -87,9 +116,9 @@ examples/phylstm/phylstm2.py:119:137
 
 设置评估数据集和损失计算函数，返回字段，代码如下所示：
 
-``` py linenums="140"
+``` py linenums="147"
 --8<--
-examples/phylstm/phylstm2.py:140:159
+examples/phylstm/phylstm2.py:147:174
 --8<--
 ```
 
@@ -107,9 +136,9 @@ examples/phylstm/conf/phylstm2.yaml:39:39
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器并设定 `learning_rate` 为 1e-3。
 
-``` py linenums="163"
+``` py linenums="177"
 --8<--
-examples/phylstm/phylstm2.py:163:163
+examples/phylstm/phylstm2.py:177:177
 --8<--
 ```
 
@@ -117,17 +146,17 @@ examples/phylstm/phylstm2.py:163:163
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="164"
+``` py linenums="178"
 --8<--
-examples/phylstm/phylstm2.py:164:178
+examples/phylstm/phylstm2.py:178:192
 --8<--
 ```
 
 最后启动训练、评估即可：
 
-``` py linenums="180"
+``` py linenums="194"
 --8<--
-examples/phylstm/phylstm2.py:180:183
+examples/phylstm/phylstm2.py:194:197
 --8<--
 ```
 
@@ -151,13 +180,9 @@ examples/phylstm/phylstm2.py:180:183
 
 ## 5. 结果展示
 
-PhyLSTM2 案例针对 epoch=100 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.00811。
+PhyLSTM2 案例针对 epoch=100 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.00799。
 
-PhyLSTM3 案例针对 epoch=200 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.02833。
-
-!!! info "说明"
-
-    本案例默认使用 $model\_type=2$ 作为参数，如需使用其他参数，请在 examples/phylstm/phylstm2.py 对 DeepPhyLSTM model_type 参数进行修改。
+PhyLSTM3 案例针对 epoch=200 和 learning\_rate=1e-3 的参数配置进行了实验，结果返回Loss为 0.03098。
 
 ## 6. 参考资料
 

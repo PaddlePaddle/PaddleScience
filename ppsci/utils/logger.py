@@ -18,6 +18,7 @@ import functools
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -27,18 +28,33 @@ import paddle.distributed as dist
 
 from ppsci.utils import misc
 
+if TYPE_CHECKING:
+    import visualdl  # isort:skip
+    import wandb  # isort:skip
+
 _logger: logging.Logger = None
 
 # INFO(20) is white(no color)
 # use custom log level `MESSAGE` for printing message in color
-MESSAGE = 25
+_MESSAGE_LEVEL = 25
 
-COLORLOG_CONFIG = {
+_COLORLOG_CONFIG = {
     "DEBUG": "green",
     "WARNING": "yellow",
     "ERROR": "red",
     "MESSAGE": "cyan",
 }
+
+__all__ = [
+    "init_logger",
+    "set_log_level",
+    "info",
+    "message",
+    "debug",
+    "warning",
+    "error",
+    "scaler",
+]
 
 
 def init_logger(
@@ -62,7 +78,7 @@ def init_logger(
             "Error" thus be silent most of the time. Defaults to logging.INFO.
     """
     # Add custom log level MESSAGE(25), between WARNING(30) and INFO(20)
-    logging.addLevelName(MESSAGE, "MESSAGE")
+    logging.addLevelName(_MESSAGE_LEVEL, "MESSAGE")
 
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper())
@@ -77,16 +93,16 @@ def init_logger(
     stream_formatter = colorlog.ColoredFormatter(
         "%(log_color)s[%(asctime)s] %(name)s %(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
-        log_colors=COLORLOG_CONFIG,
+        log_colors=_COLORLOG_CONFIG,
     )
     stream_handler = logging.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(stream_formatter)
     stream_handler._name = "stream_handler"
     _logger.addHandler(stream_handler)
 
-    # add file_handler, output to log_file(if specified)
+    # add file_handler, output to log_file(if specified), only for rank 0 device
     if log_file is not None and dist.get_rank() == 0:
-        log_file_folder = os.path.split(log_file)[0]
+        log_file_folder = os.path.dirname(log_file)
         os.makedirs(log_file_folder, exist_ok=True)
         file_formatter = logging.Formatter(
             "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
@@ -106,7 +122,18 @@ def init_logger(
 
 
 def set_log_level(log_level: int):
-    """Set logger level, only msg of level >= `log_level` will be printed.
+    """Set logger level, only message of level >= `log_level` will be printed.
+
+    Built-in log level are below:
+
+    CRITICAL = 50,
+    FATAL = 50,
+    ERROR = 40,
+    WARNING = 30,
+    WARN = 30,
+    INFO = 20,
+    DEBUG = 10,
+    NOTSET = 0.
 
     Args:
         log_level (int): Log level.
@@ -117,9 +144,9 @@ def set_log_level(log_level: int):
         _logger.setLevel(logging.ERROR)
 
 
-def ensure_logger(log_func: Callable):
+def ensure_logger(log_func: Callable) -> Callable:
     """
-    Automatically initialize `logger` by default arguments
+    A decorator which automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
     """
 
@@ -148,7 +175,7 @@ def info(msg, *args):
 @ensure_logger
 @misc.run_at_rank0
 def message(msg, *args):
-    _logger.log(MESSAGE, msg, *args)
+    _logger.log(_MESSAGE_LEVEL, msg, *args)
 
 
 @ensure_logger
@@ -170,27 +197,27 @@ def error(msg, *args):
 
 
 def scaler(
-    metric_dict: Dict[str, float], step: int, vdl_writer=None, wandb_writer=None
+    metric_dict: Dict[str, float],
+    step: int,
+    vdl_writer: Optional["visualdl.LogWriter"] = None,
+    wandb_writer: Optional["wandb.run"] = None,
 ):
-    """This function will add scaler data to visualdl or wandb for plotting curve(s).
+    """This function will add scaler data to VisualDL or WandB for plotting curve(s).
 
     Args:
         metric_dict (Dict[str, float]): Metrics dict with metric name and value.
         step (int): The step of the metric.
-        vdl_writer (None): Visualdl writer to record metrics.
-        wandb_writer (None): Wandb writer to record metrics.
+        vdl_writer (visualdl.LogWriter): VisualDL writer to record metrics. Defaults to None.
+        wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
         for name, value in metric_dict.items():
-            vdl_writer.add_scalar(name, step, value)
+            vdl_writer.add_scalar(name, value, step)
 
     if wandb_writer is not None:
-        if dist.get_rank() == 0:
-            wandb_writer.log({"step": step, **metric_dict})
-            if dist.get_world_size() > 1:
-                dist.barrier()
-        else:
-            dist.barrier()
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                wandb_writer.log({"step": step, **metric_dict})
 
 
 def advertise():

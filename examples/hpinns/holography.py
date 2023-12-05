@@ -271,7 +271,7 @@ def train(cfg: DictConfig):
 
             # train model
             solver.train()
-            # evaluate after finished training
+            # evaluate
             solver.eval()
             # append objective loss for plot
             loss_log_obj.append(func_module.loss_obj)
@@ -405,7 +405,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
 
-    # evaluate after finished training
+    # evaluate
     solver.eval()
 
 

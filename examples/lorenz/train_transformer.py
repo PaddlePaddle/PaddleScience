@@ -18,13 +18,15 @@
 
 # This file is for step2: training a transformer model, based on frozen pretrained embedding model.
 # This file is based on PaddleScience/ppsci API.
+from os import path as osp
 from typing import Dict
 
+import hydra
 import paddle
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.arch import base
-from ppsci.utils import config
 from ppsci.utils import logger
 from ppsci.utils import save_load
 
@@ -50,47 +52,26 @@ class OutputTransform(object):
         return pred_states
 
 
-if __name__ == "__main__":
+def train(cfg: DictConfig):
     # train time-series: 2048    time-steps: 256    block-size: 64  stride: 64
     # valid time-series: 64      time-steps: 1024   block-size: 256 stride: 1024
     # test  time-series: 256     time-steps: 1024
-    args = config.parse_args()
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set training hyper-parameters
-    NUM_LAYERS = 4
-    NUM_CTX = 64
-    EMBED_SIZE = 32
-    NUM_HEADS = 4
-
-    EPOCHS = 200 if not args.epochs else args.epochs
-    TRAIN_BLOCK_SIZE = 64
-    VALID_BLOCK_SIZE = 256
-    input_keys = ("embeds",)
-    output_keys = ("pred_embeds",)
-
-    VIS_DATA_NUMS = 16
-
-    TRAIN_FILE_PATH = "./datasets/lorenz_training_rk.hdf5"
-    VALID_FILE_PATH = "./datasets/lorenz_valid_rk.hdf5"
-    EMBEDDING_MODEL_PATH = "./output/lorenz_enn/checkpoints/latest"
-    OUTPUT_DIR = (
-        "./output/lorenz_transformer" if not args.output_dir else args.output_dir
-    )
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    embedding_model = build_embedding_model(EMBEDDING_MODEL_PATH)
+    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
     output_transform = OutputTransform(embedding_model)
 
     # manually build constraint(s)
     train_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
-            "input_keys": input_keys,
-            "label_keys": output_keys,
-            "file_path": TRAIN_FILE_PATH,
-            "block_size": TRAIN_BLOCK_SIZE,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "file_path": cfg.TRAIN_FILE_PATH,
+            "block_size": cfg.TRAIN_BLOCK_SIZE,
             "stride": 64,
             "embedding_model": embedding_model,
         },
@@ -99,7 +80,7 @@ if __name__ == "__main__":
             "drop_last": True,
             "shuffle": True,
         },
-        "batch_size": 16,
+        "batch_size": cfg.TRAIN.batch_size,
         "num_workers": 4,
     }
 
@@ -114,39 +95,25 @@ if __name__ == "__main__":
     ITERS_PER_EPOCH = len(constraint["Sup"].data_loader)
 
     # manually init model
-    model = ppsci.arch.PhysformerGPT2(
-        input_keys,
-        output_keys,
-        NUM_LAYERS,
-        NUM_CTX,
-        EMBED_SIZE,
-        NUM_HEADS,
-    )
+    model = ppsci.arch.PhysformerGPT2(**cfg.MODEL)
 
     # init optimizer and lr scheduler
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
     lr_scheduler = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(
-        EPOCHS,
-        ITERS_PER_EPOCH,
-        0.001,
-        T_0=14,
-        T_mult=2,
-        eta_min=1e-9,
+        iters_per_epoch=ITERS_PER_EPOCH, **cfg.TRAIN.lr_scheduler
     )()
     optimizer = ppsci.optimizer.Adam(
-        lr_scheduler,
-        weight_decay=1e-8,
-        grad_clip=clip,
+        lr_scheduler, grad_clip=clip, **cfg.TRAIN.optimizer
     )(model)
 
     # manually build validator
     eval_dataloader_cfg = {
         "dataset": {
             "name": "LorenzDataset",
-            "file_path": VALID_FILE_PATH,
-            "input_keys": input_keys,
-            "label_keys": output_keys,
-            "block_size": VALID_BLOCK_SIZE,
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.VALID_BLOCK_SIZE,
             "stride": 1024,
             "embedding_model": embedding_model,
         },
@@ -155,7 +122,7 @@ if __name__ == "__main__":
             "drop_last": False,
             "shuffle": False,
         },
-        "batch_size": 16,
+        "batch_size": cfg.EVAL.batch_size,
         "num_workers": 4,
     }
 
@@ -171,8 +138,8 @@ if __name__ == "__main__":
     states = mse_validator.data_loader.dataset.data
     embedding_data = mse_validator.data_loader.dataset.embedding_data
     vis_data = {
-        "embeds": embedding_data[:VIS_DATA_NUMS, :-1, :],
-        "states": states[:VIS_DATA_NUMS, 1:, :],
+        "embeds": embedding_data[: cfg.VIS_DATA_NUMS, :-1, :],
+        "states": states[: cfg.VIS_DATA_NUMS, 1:, :],
     }
 
     visualizer = {
@@ -190,13 +157,13 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         lr_scheduler,
-        EPOCHS,
+        cfg.TRAIN.epochs,
         ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=50,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
         validator=validator,
         visualizer=visualizer,
     )
@@ -207,15 +174,86 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
+
+def evaluate(cfg: DictConfig):
     # directly evaluate pretrained model(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
+
+    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
+    output_transform = OutputTransform(embedding_model)
+
+    # manually init model
+    model = ppsci.arch.PhysformerGPT2(**cfg.MODEL)
+
+    # manually build validator
+    eval_dataloader_cfg = {
+        "dataset": {
+            "name": "LorenzDataset",
+            "file_path": cfg.VALID_FILE_PATH,
+            "input_keys": cfg.MODEL.input_keys,
+            "label_keys": cfg.MODEL.output_keys,
+            "block_size": cfg.VALID_BLOCK_SIZE,
+            "stride": 1024,
+            "embedding_model": embedding_model,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": False,
+        },
+        "batch_size": cfg.EVAL.batch_size,
+        "num_workers": 4,
+    }
+
+    mse_validator = ppsci.validate.SupervisedValidator(
+        eval_dataloader_cfg,
+        ppsci.loss.MSELoss(),
+        metric={"MSE": ppsci.metric.MSE()},
+        name="MSE_Validator",
+    )
+    validator = {mse_validator.name: mse_validator}
+
+    # set visualizer(optional)
+    states = mse_validator.data_loader.dataset.data
+    embedding_data = mse_validator.data_loader.dataset.embedding_data
+    vis_datas = {
+        "embeds": embedding_data[: cfg.VIS_DATA_NUMS, :-1, :],
+        "states": states[: cfg.VIS_DATA_NUMS, 1:, :],
+    }
+
+    visualizer = {
+        "visulzie_states": ppsci.visualize.VisualizerScatter3D(
+            vis_datas,
+            {
+                "pred_states": lambda d: output_transform(d),
+                "states": lambda d: d["states"],
+            },
+            num_timestamps=1,
+            prefix="result_states",
+        )
+    }
+
     solver = ppsci.solver.Solver(
         model,
-        output_dir=OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     solver.eval()
     # visualize prediction for pretrained model(optional)
     solver.visualize()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="transformer.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

@@ -468,7 +468,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
             for arg in node.args:
                 add_edge(_cvt_to_key(arg), operator_str, v_color=C_FUNC)
             add_edge(operator_str, _cvt_to_key(node), u_color=C_FUNC)
-        if isinstance(node, sp.Function):
+        elif isinstance(node, sp.Function):
             for arg in node.args:
                 add_edge(_cvt_to_key(arg), str(node), v_color=C_FUNC)
             add_edge(str(node), _cvt_to_key(node), u_color=C_FUNC)
@@ -488,8 +488,8 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     graph.draw(image_path, prog="dot")
     graph.write(dot_path)
     logger.message(
-        f"Computational graph has been written to {image_path} and {dot_path}. "
-        "dot file can be visualized at https://dreampuf.github.io/GraphvizOnline/"
+        f"Computational graph has been written to: {image_path} and {dot_path}, "
+        "which can be visualized at: https://dreampuf.github.io/GraphvizOnline/"
     )
 
 

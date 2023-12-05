@@ -220,6 +220,7 @@ def train(cfg: DictConfig):
         "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
         "phil": pred_norm["phil"],
     }
+    logger.message("Now saving visual result to: visual/result.vtu, please wait...")
     ppsci.visualize.save_vtu_from_dict(
         osp.join(cfg.output_dir, "visual/result.vtu"),
         {
@@ -356,7 +357,7 @@ def evaluate(cfg: DictConfig):
     )
     solver.eval()
 
-    # visualize prediction after finished training
+    # visualize prediction
     visu_mat = geom["time_rect_visu"].sample_interior(
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
@@ -372,6 +373,7 @@ def evaluate(cfg: DictConfig):
         "v": (v_pred * (v_max - v_min) + v_min).T.reshape([-1, 1]),
         "phil": pred_norm["phil"],
     }
+    logger.message("Now saving visual result to: visual/result.vtu, please wait...")
     ppsci.visualize.save_vtu_from_dict(
         osp.join(cfg.output_dir, "visual/result.vtu"),
         {
