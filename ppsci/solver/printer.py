@@ -82,10 +82,10 @@ def log_train_info(
     )
     if trainer.benchmark_flag:
         max_mem_reserved_msg = (
-            f"max_mem_reserved: {device.cuda.max_memory_reserved()} B"
+            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1024 ** 2)} MB"
         )
         max_mem_allocated_msg = (
-            f"max_mem_allocated: {device.cuda.max_memory_allocated()} B"
+            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1024 ** 2)} MB"
         )
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     logger.info(log_str)
