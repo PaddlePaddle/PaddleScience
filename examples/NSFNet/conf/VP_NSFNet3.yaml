@@ -20,6 +20,7 @@ nb_train: 59400
 n0_train: 29791
 
 alpha: 100
+
 beta: 100
 
 re: 1
