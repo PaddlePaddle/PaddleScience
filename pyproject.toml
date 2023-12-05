@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-version = "1.0.0"
+dynamic = ["version"]
 description = "A library for scientific machine learning"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -69,3 +69,6 @@ exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "t
 line-length = 88
 ignore = ["E501", "E741"]
 extend-exclude = ["./ppsci/geometry/inflation.py", "./ppsci/autodiff/__init__.py"]
+
+[tool.setuptools_scm]
+write_to = "ppsci/_version.py"
