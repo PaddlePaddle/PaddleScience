@@ -141,6 +141,7 @@ def train(cfg: DictConfig):
         geom=geom,
         validator=validator,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
     # train model
     solver.train()
@@ -159,13 +160,16 @@ def train(cfg: DictConfig):
         linestyle="dashed",
     )
     plt.legend(frameon=False)
+
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({"x": x}), color="black", marker="o", linestyle="none")
+    # save visualization result for prediction of 'u'
     plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
     plt.clf()
 
     # visualize prediction for du/dx
     x = geom["line"].uniform_points(1000)
+    plt.figure()
 
     def du_x(x):
         return (
@@ -177,7 +181,6 @@ def train(cfg: DictConfig):
             + np.cos(8 * x)
         )
 
-    plt.figure()
     plt.plot(x, du_x(x), label="Exact", color="black")
     plt.plot(
         x,
@@ -185,19 +188,17 @@ def train(cfg: DictConfig):
             {"x": x},
             return_numpy=True,
             expr_dict={"dudx": lambda out: jacobian(out["u"], out["x"])},
-            no_grad=False,
         )["dudx"],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
     )
-
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
     plt.xlabel("x")
     plt.ylabel("u'")
-    # save visualization result
+    # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
 
 
@@ -250,10 +251,7 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        None,
-        cfg.output_dir,
-        None,
-        None,
+        output_dir=cfg.output_dir,
         geom=geom,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
@@ -273,13 +271,16 @@ def evaluate(cfg: DictConfig):
         linestyle="dashed",
     )
     plt.legend(frameon=False)
+
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({"x": x}), color="black", marker="o", linestyle="none")
+    # save visualization result for prediction of 'u'
     plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
     plt.clf()
 
     # visualize prediction for du/dx
     x = geom["line"].uniform_points(1000)
+    plt.figure()
 
     def du_x(x):
         return (
@@ -291,7 +292,6 @@ def evaluate(cfg: DictConfig):
             + np.cos(8 * x)
         )
 
-    plt.figure()
     plt.plot(x, du_x(x), label="Exact", color="black")
     plt.plot(
         x,
@@ -299,19 +299,17 @@ def evaluate(cfg: DictConfig):
             {"x": x},
             return_numpy=True,
             expr_dict={"dudx": lambda out: jacobian(out["u"], out["x"])},
-            no_grad=False,
         )["dudx"],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
     )
-
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
     plt.xlabel("x")
     plt.ylabel("u'")
-    # save visualization result
+    # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
 
 
