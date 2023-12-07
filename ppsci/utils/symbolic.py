@@ -101,7 +101,8 @@ SYMPY_TO_PADDLE = {
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
     # NOTE: sp.Add and sp.Mul is not included here for un-alignment with sympy
-    # and are implemented manually.
+    # and are implemented manually in 'OperatorNode._add_operator_func' and
+    # 'OperatorNode._mul_operator_func'
 }
 
 
@@ -231,6 +232,10 @@ class OperatorNode(Node):
         return data_dict
 
     def _derivate_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        # NOTE: Derivative of 'sdf' function will not be executed here, which is already
+        # generated in 'data_dict' during points sampling using discrete difference
+        # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
+        # such as 'sdf__x', 'sdf__y'.
         data_dict[self.key] = data_dict[self.childs[0]]
         for child, order in self.childs[1:]:
             if order & 1:
@@ -608,12 +613,14 @@ def lambdify(
                         )
                         if match_index is not None:
                             raise ValueError(
-                                f"Name of function({node}) should be unique along given"
-                                f" models, but got same output_key({node.func.name}) "
-                                f"in models[{match_index}] and models[{j}]."
+                                f"Name of function: '{node}' should be unique along given"
+                                f" models, but got same output_key: '{node.func.name}' "
+                                f"in given models[{match_index}] and models[{j}]."
                             )
                         match_index = j
-                if match_index is None:
+                # NOTE: Skip 'sdf' function, which should be already generated in
+                # given data_dict
+                if match_index is None and node.name != "sdf":
                     raise ValueError(
                         f"Node {node} can not match any model in given model(s)."
                     )
