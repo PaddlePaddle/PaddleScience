@@ -167,7 +167,7 @@ def train(cfg: DictConfig):
     )
     plt.legend(frameon=False)
     plt.xlabel(invar)
-    plt.ylabel(f"{outvar}")
+    plt.ylabel(outvar)
 
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
@@ -198,6 +198,7 @@ def train(cfg: DictConfig):
             expr_dict={
                 f"d{outvar}d{invar}": lambda out: jacobian(out[outvar], out[invar])
             },
+            no_grad=False,
         )[f"d{outvar}d{invar}"],
         label="gPINN, w = 0.01",
         color="red",
@@ -207,7 +208,7 @@ def train(cfg: DictConfig):
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
     plt.xlabel(invar)
-    plt.ylabel(f"{outvar}'")
+    plt.ylabel(outvar)
     # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, f"pred_d{outvar}d{invar}.png"))
 
@@ -285,7 +286,7 @@ def evaluate(cfg: DictConfig):
     )
     plt.legend(frameon=False)
     plt.xlabel(invar)
-    plt.ylabel(f"{outvar}")
+    plt.ylabel(outvar)
 
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
@@ -316,6 +317,7 @@ def evaluate(cfg: DictConfig):
             expr_dict={
                 f"d{outvar}d{invar}": lambda out: jacobian(out[outvar], out[invar])
             },
+            no_grad=False,
         )[f"d{outvar}d{invar}"],
         label="gPINN, w = 0.01",
         color="red",
@@ -325,7 +327,7 @@ def evaluate(cfg: DictConfig):
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
     plt.xlabel(invar)
-    plt.ylabel(f"{outvar}'")
+    plt.ylabel(outvar)
     # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, f"pred_d{outvar}d{invar}.png"))
 
