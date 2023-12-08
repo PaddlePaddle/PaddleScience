@@ -172,7 +172,7 @@ def train(cfg: DictConfig):
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
     # save visualization result for prediction of outvar
-    plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
+    plt.savefig(osp.join(cfg.output_dir, f"pred_{outvar}.png"))
     plt.clf()
 
     # visualize prediction for du/dx
@@ -195,8 +195,10 @@ def train(cfg: DictConfig):
         solver.predict(
             {invar: x},
             return_numpy=True,
-            expr_dict={"dudx": lambda out: jacobian(out[outvar], out[invar])},
-        )["dudx"],
+            expr_dict={
+                f"d{outvar}d{invar}": lambda out: jacobian(out[outvar], out[invar])
+            },
+        )[f"d{outvar}d{invar}"],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
@@ -207,7 +209,7 @@ def train(cfg: DictConfig):
     plt.xlabel(invar)
     plt.ylabel(f"{outvar}'")
     # save visualization result of prediction 'du/dx'
-    plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
+    plt.savefig(osp.join(cfg.output_dir, f"pred_d{outvar}d{invar}.png"))
 
 
 def evaluate(cfg: DictConfig):
@@ -288,7 +290,7 @@ def evaluate(cfg: DictConfig):
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
     # save visualization result for prediction of outvar
-    plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
+    plt.savefig(osp.join(cfg.output_dir, f"pred_{outvar}.png"))
     plt.clf()
 
     # visualize prediction for du/dx
@@ -311,8 +313,10 @@ def evaluate(cfg: DictConfig):
         solver.predict(
             {invar: x},
             return_numpy=True,
-            expr_dict={"dudx": lambda out: jacobian(out[outvar], out[invar])},
-        )["dudx"],
+            expr_dict={
+                f"d{outvar}d{invar}": lambda out: jacobian(out[outvar], out[invar])
+            },
+        )[f"d{outvar}d{invar}"],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
@@ -323,7 +327,7 @@ def evaluate(cfg: DictConfig):
     plt.xlabel(invar)
     plt.ylabel(f"{outvar}'")
     # save visualization result of prediction 'du/dx'
-    plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
+    plt.savefig(osp.join(cfg.output_dir, f"pred_d{outvar}d{invar}.png"))
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="poisson_1d.yaml")
