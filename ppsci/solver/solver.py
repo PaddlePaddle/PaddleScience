@@ -270,7 +270,7 @@ class Solver:
             )
 
         # choosing an appropriate training function for different optimizers
-        if isinstance(self.optimizer, optim.LBFGS):
+        if misc.typename(self.optimizer) == "LBFGS":
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
