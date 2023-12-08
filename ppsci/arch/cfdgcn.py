@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from typing import Callable
 from typing import Dict
@@ -260,56 +274,41 @@ class CFDGCN(nn.Layer):
                 in_channels = hidden_channel
             self.pre_convs.append(pgl.nn.GCNConv(in_channels, hidden_channel))
 
-    def forward(self, x: Dict[str, np.array]) -> Dict[str, paddle.Tensor]:
-        graphs = x[self.input_keys[0]]
-        batch_size = len(graphs)
-        nodes_list = []
-        aoa_list = []
-        mach_or_reynolds_list = []
+    def forward(self, x: Dict[str, "pgl.Graph"]) -> Dict[str, paddle.Tensor]:
+        graph = x[self.input_keys[0]]
+        batch_size = graph.shape[0]
+        x_list = paddle.split(graph.x, batch_size)
+
         fine_x_list = []
-        for graph in graphs:
-            x = graph.x
+        for idx in range(batch_size):
+            x = x_list[idx]
             if self.sdf is None:
                 with paddle.no_grad():
                     self.sdf = signed_dist_graph(
                         x[:, :2], self.fine_marker_dict
                     ).unsqueeze(1)
             fine_x = paddle.concat([x, self.sdf], axis=1)
-
             for i, conv in enumerate(self.pre_convs):
                 fine_x = F.relu(conv(graph, fine_x))
             fine_x_list.append(fine_x)
-
-            nodes = self.get_nodes()  # [353,2]
-
-            nodes_list.append(nodes)
-            aoa_list.append(graph.aoa)
-            mach_or_reynolds_list.append(graph.mach_or_reynolds)
-
-        # paddle stack for [batch,nodes],[batch,nodes],[batch,1],[batch,1] for su2
-        # su2 can apply each item of one batch with mpi
-        nodes_input = paddle.stack(nodes_list, axis=0)
-        aoa_input = paddle.stack(aoa_list, axis=0)
-        mach_or_reynolds_input = paddle.stack(mach_or_reynolds_list, axis=0)
+            nodes = self.get_nodes()
+        nodes_input = self.get_nodes().tile([batch_size, 1, 1])
 
         batch_y = self.su2(
             nodes_input[..., 0],
             nodes_input[..., 1],
-            aoa_input[..., None],
-            mach_or_reynolds_input[..., None],
+            graph.aoa[..., None],
+            graph.mach_or_reynolds[..., None],
         )
-        batch_y = self.process_sim(
-            batch_y, False
-        )  # [8,353] * 3, a list with three items
+        batch_y = self.process_sim(batch_y, False)
 
         pred_fields = []
         for idx in range(batch_size):
-            graph = graphs[idx]
             coarse_y = paddle.stack([y[idx].flatten() for y in batch_y], axis=1).astype(
                 "float32"
-            )  # features [353,3]
-            nodes = self.get_nodes()  # [353,2]
-            x = graph.x  # [6684,5] the two-first columns are the node locations
+            )
+            nodes = self.get_nodes()
+            x = x_list[idx]
             fine_y = _knn_interpolate(
                 features=coarse_y, coarse_nodes=nodes[:, :2], fine_nodes=x[:, :2]
             )
@@ -319,8 +318,7 @@ class CFDGCN(nn.Layer):
                 fine_y = F.relu(conv(graph, fine_y))
             fine_y = self.convs[-1](graph, fine_y)
             pred_fields.append(fine_y)
-
-        pred_fields = paddle.stack(pred_fields)
+        pred_fields = paddle.concat(pred_fields, axis=0)
         return {self.output_keys[0]: pred_fields}
 
     def get_nodes(self) -> paddle.Tensor:

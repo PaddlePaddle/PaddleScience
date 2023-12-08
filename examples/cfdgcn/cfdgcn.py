@@ -33,8 +33,7 @@ def train_mse_func(
     label_dict: Dict[str, "pgl.Graph"],
     *args,
 ) -> paddle.Tensor:
-    y = paddle.stack([g.y for g in label_dict["label"]])
-    return F.mse_loss(output_dict["pred"], y)
+    return F.mse_loss(output_dict["pred"], label_dict["label"].y)
 
 
 def eval_rmse_func(
@@ -43,7 +42,7 @@ def eval_rmse_func(
     *args,
 ) -> Dict[str, paddle.Tensor]:
     mse_losses = [
-        F.mse_loss(pred, paddle.stack([g.y for g in label]))
+        F.mse_loss(pred, label.y)
         for (pred, label) in zip(output_dict["pred"], label_dict["label"])
     ]
     return {"RMSE": (sum(mse_losses) / len(mse_losses)) ** 0.5}
@@ -146,15 +145,15 @@ def train(cfg: DictConfig):
     # visualize prediction
     with solver.no_grad_context_manager(True):
         for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
-            truefield = paddle.stack([g.y for g in label["label"]])
+            truefield = label["label"].y
             prefield = model(input_)
             utils.log_images(
-                input_["input"][0].pos,
-                prefield["pred"][0],
-                truefield[0],
+                input_["input"].pos,
+                prefield["pred"],
+                truefield,
                 rmse_validator.data_loader.dataset.elems_list,
                 index,
-                "airfoil",
+                "cylinder",
             )
 
 
@@ -239,15 +238,15 @@ def evaluate(cfg: DictConfig):
     # visualize prediction
     with solver.no_grad_context_manager(True):
         for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
-            truefield = paddle.stack([g.y for g in label["label"]])
+            truefield = label["label"].y
             prefield = model(input_)
             utils.log_images(
-                input_["input"][0].pos,
-                prefield["pred"][0],
-                truefield[0],
+                input_["input"].pos,
+                prefield["pred"],
+                truefield,
                 rmse_validator.data_loader.dataset.elems_list,
                 index,
-                "airfoil",
+                "cylinder",
             )
 
 
