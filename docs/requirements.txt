@@ -1,6 +1,6 @@
 Jinja2==3.0.3
 matplotlib
-mkdocs==1.4.2
+mkdocs
 mkdocs-autorefs
 mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox
