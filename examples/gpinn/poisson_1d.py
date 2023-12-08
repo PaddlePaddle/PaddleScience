@@ -15,6 +15,7 @@
 # Reference: https://github.com/lu-group/gpinn/blob/main/src/poisson_1d.py
 
 from os import path as osp
+from typing import Dict
 
 import hydra
 import numpy as np
@@ -29,10 +30,10 @@ from ppsci.utils import logger
 
 
 class gPINN1D(ppsci.equation.PDE):
-    def __init__(self):
+    def __init__(self, invar: str, outvar: str):
         super().__init__()
-        x = self.create_symbols("x")
-        u = self.create_function("u", (x,))
+        x = self.create_symbols(invar)
+        u = self.create_function(outvar, (x,))
 
         dy_xx = u.diff(x, 2)
         dy_xxx = u.diff(x, 3)
@@ -62,17 +63,22 @@ def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
-    def output_transform(in_, out):
-        x = in_["x"]
-        u = out["u"]
+    invar: str = cfg.MODEL.input_keys[0]
+    outvar: str = cfg.MODEL.output_keys[0]
+
+    def output_transform(
+        in_: Dict[str, paddle.Tensor], out: Dict[str, paddle.Tensor]
+    ) -> Dict[str, paddle.Tensor]:
+        x = in_[invar]
+        u = out[outvar]
         return {
-            "u": x + paddle.tanh(x) * paddle.tanh(np.pi - x) * u,
+            outvar: x + paddle.tanh(x) * paddle.tanh(np.pi - x) * u,
         }
 
     model.register_output_transform(output_transform)
 
     # set equation
-    equation = {"gPINN": gPINN1D()}
+    equation = {"gPINN": gPINN1D(invar, outvar)}
 
     # set geometry
     geom = {"line": ppsci.geometry.Interval(0, np.pi)}
@@ -103,15 +109,15 @@ def train(cfg: DictConfig):
 
     # set validator
     def u_solution(in_):
-        x = in_["x"]
+        x = in_[invar]
         sol = x + 1 / 8 * np.sin(8 * x)
         for i in range(1, 5):
             sol += 1 / i * np.sin(i * x)
         return sol
 
     l2rel_validator = ppsci.validate.GeometryValidator(
-        {"u": lambda out: out["u"]},
-        {"u": u_solution},
+        {outvar: lambda out: out[outvar]},
+        {outvar: u_solution},
         geom["line"],
         {
             "dataset": "NamedArrayDataset",
@@ -121,7 +127,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
-        metric={"L2Rel(u)": ppsci.metric.L2Rel()},
+        metric={f"L2Rel({outvar})": ppsci.metric.L2Rel()},
         name="L2Rel",
     )
     validator = {l2rel_validator.name: l2rel_validator}
@@ -148,22 +154,24 @@ def train(cfg: DictConfig):
     # evaluate after finished training
     solver.eval()
 
-    # visualize prediction for 'u'
+    # visualize prediction for outvar
     x = geom["line"].uniform_points(1000)
     plt.figure()
-    plt.plot(x, u_solution({"x": x}), label="Exact", color="black")
+    plt.plot(x, u_solution({invar: x}), label="Exact", color="black")
     plt.plot(
         x,
-        solver.predict({"x": x}, return_numpy=True)["u"],
+        solver.predict({invar: x}, return_numpy=True)[outvar],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
     )
     plt.legend(frameon=False)
+    plt.xlabel(invar)
+    plt.ylabel(f"{outvar}")
 
     x = geom["line"].uniform_points(15, boundary=False)
-    plt.plot(x, u_solution({"x": x}), color="black", marker="o", linestyle="none")
-    # save visualization result for prediction of 'u'
+    plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
+    # save visualization result for prediction of outvar
     plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
     plt.clf()
 
@@ -171,7 +179,7 @@ def train(cfg: DictConfig):
     x = geom["line"].uniform_points(1000)
     plt.figure()
 
-    def du_x(x):
+    def du_x(x: np.ndarray) -> np.ndarray:
         return (
             1
             + np.cos(x)
@@ -185,9 +193,9 @@ def train(cfg: DictConfig):
     plt.plot(
         x,
         solver.predict(
-            {"x": x},
+            {invar: x},
             return_numpy=True,
-            expr_dict={"dudx": lambda out: jacobian(out["u"], out["x"])},
+            expr_dict={"dudx": lambda out: jacobian(out[outvar], out[invar])},
         )["dudx"],
         label="gPINN, w = 0.01",
         color="red",
@@ -196,8 +204,8 @@ def train(cfg: DictConfig):
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
-    plt.xlabel("x")
-    plt.ylabel("u'")
+    plt.xlabel(invar)
+    plt.ylabel(f"{outvar}'")
     # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
 
@@ -211,11 +219,14 @@ def evaluate(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
+    invar: str = cfg.MODEL.input_keys[0]
+    outvar: str = cfg.MODEL.output_keys[0]
+
     def output_transform(in_, out):
-        x = in_["x"]
-        u = out["u"]
+        x = in_[invar]
+        u = out[outvar]
         return {
-            "u": x + paddle.tanh(x) * paddle.tanh(np.pi - x) * u,
+            outvar: x + paddle.tanh(x) * paddle.tanh(np.pi - x) * u,
         }
 
     model.register_output_transform(output_transform)
@@ -225,15 +236,15 @@ def evaluate(cfg: DictConfig):
 
     # set validator
     def u_solution(in_):
-        x = in_["x"]
+        x = in_[invar]
         sol = x + 1 / 8 * np.sin(8 * x)
         for i in range(1, 5):
             sol += 1 / i * np.sin(i * x)
         return sol
 
     l2rel_validator = ppsci.validate.GeometryValidator(
-        {"u": lambda out: out["u"]},
-        {"u": u_solution},
+        {outvar: lambda out: out[outvar]},
+        {outvar: u_solution},
         geom["line"],
         {
             "dataset": "NamedArrayDataset",
@@ -243,7 +254,7 @@ def evaluate(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
-        metric={"L2Rel(u)": ppsci.metric.L2Rel()},
+        metric={f"L2Rel({outvar})": ppsci.metric.L2Rel()},
         name="L2Rel",
     )
     validator = {l2rel_validator.name: l2rel_validator}
@@ -259,22 +270,24 @@ def evaluate(cfg: DictConfig):
     # evaluate after finished training
     solver.eval()
 
-    # visualize prediction for 'u'
+    # visualize prediction for outvar
     x = geom["line"].uniform_points(1000)
     plt.figure()
-    plt.plot(x, u_solution({"x": x}), label="Exact", color="black")
+    plt.plot(x, u_solution({invar: x}), label="Exact", color="black")
     plt.plot(
         x,
-        solver.predict({"x": x}, return_numpy=True)["u"],
+        solver.predict({invar: x}, return_numpy=True)[outvar],
         label="gPINN, w = 0.01",
         color="red",
         linestyle="dashed",
     )
     plt.legend(frameon=False)
+    plt.xlabel(invar)
+    plt.ylabel(f"{outvar}")
 
     x = geom["line"].uniform_points(15, boundary=False)
-    plt.plot(x, u_solution({"x": x}), color="black", marker="o", linestyle="none")
-    # save visualization result for prediction of 'u'
+    plt.plot(x, u_solution({invar: x}), color="black", marker="o", linestyle="none")
+    # save visualization result for prediction of outvar
     plt.savefig(osp.join(cfg.output_dir, "pred_u.png"))
     plt.clf()
 
@@ -296,9 +309,9 @@ def evaluate(cfg: DictConfig):
     plt.plot(
         x,
         solver.predict(
-            {"x": x},
+            {invar: x},
             return_numpy=True,
-            expr_dict={"dudx": lambda out: jacobian(out["u"], out["x"])},
+            expr_dict={"dudx": lambda out: jacobian(out[outvar], out[invar])},
         )["dudx"],
         label="gPINN, w = 0.01",
         color="red",
@@ -307,8 +320,8 @@ def evaluate(cfg: DictConfig):
     x = geom["line"].uniform_points(15, boundary=False)
     plt.plot(x, du_x(x), color="black", marker="o", linestyle="none")
     plt.legend(frameon=False)
-    plt.xlabel("x")
-    plt.ylabel("u'")
+    plt.xlabel(invar)
+    plt.ylabel(f"{outvar}'")
     # save visualization result of prediction 'du/dx'
     plt.savefig(osp.join(cfg.output_dir, "pred_dudx.png"))
 
