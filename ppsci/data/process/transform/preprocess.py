@@ -117,6 +117,10 @@ class Log1p:
     Examples:
         >>> import ppsci
         >>> log1p = ppsci.data.transform.Log1p(1e-5)
+        >>> input_item = {"data": np.array([1.0, 2.0, 3.0])}
+        >>> label_item = {"data": np.array([4.0, 5.0, 6.0])}
+        >>> weight_item = np.array([0.1, 0.2, 0.3])
+        >>> input_item_transformed, label_item_transformed, weight_item_transformed = log1p(input_item, label_item, weight_item)
     """
 
     def __init__(
