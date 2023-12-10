@@ -235,22 +235,27 @@ class FunctionalTransform:
         transform_func (Callable): Function of data transform.
 
     Examples:
-        >>> import ppsci
-        >>> import numpy as np
+        >>> # This is the transform_func function. It takes three dictionaries as input: data_dict, label_dict, and weight_dict.
+        >>> # The function will perform some transformations on the data in data_dict, convert all labels in label_dict to uppercase,
+        >>> # and modify the weights in weight_dict by dividing each weight by 10.
+        >>> # Finally, it returns the transformed data, labels, and weights as a tuple.
         >>> def transform_func(data_dict, label_dict, weight_dict):
-        ...     rand_ratio = np.random.rand()
         ...     for key in data_dict:
-        ...         data_dict[key] = data_dict[key] * rand_ratio
+        ...         data_dict[key] = data_dict[key] * 2
+        ...     for key in label_dict:
+        ...         label_dict[key] = label_dict[key].upper()
+        ...     for key in weight_dict:
+        ...         weight_dict[key] = weight_dict[key] / 10
         ...     return data_dict, label_dict, weight_dict
-        >>> transform_cfg = {
-        ...     "transforms": (
-        ...         {
-        ...             "FunctionalTransform": {
-        ...                 "transform_func": transform_func,
-        ...             },
-        ...         },
-        ...     ),
-        ... }
+        >>> transform = ppsci.data.transform.FunctionalTransform(transform_func)
+        >>> # Define some sample data, labels, and weights
+        >>> data = {'feature1': np.array([1, 2, 3]), 'feature2': np.array([4, 5, 6])}
+        >>> label = {'class': 'class1', 'instance': 'instance1'}
+        >>> weight = {'weight1': 0.5, 'weight2': 0.5}
+        >>> # Apply the transform function to the data, labels, and weights using the FunctionalTransform instance
+        >>> transformed_data = transform(data, label, weight)
+        >>> print(transformed_data)
+        ({'feature1': [2, 4, 6], 'feature2': [8, 10, 12]}, {'class': 'CLASS1', 'instance': 'INSTANCE1'}, {'weight1': 0.5, 'weight2': 0.5})
     """
 
     def __init__(
