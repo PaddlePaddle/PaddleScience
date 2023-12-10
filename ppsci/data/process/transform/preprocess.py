@@ -79,6 +79,12 @@ class Normalize:
     Examples:
         >>> import ppsci
         >>> normalize = ppsci.data.transform.Normalize((0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        >>> input_item = {"data": np.array([1.0, 2.0, 3.0])}
+        >>> label_item = {"data": np.array([4.0, 5.0, 6.0])}
+        >>> weight_item = np.array([0.1, 0.2, 0.3])
+        >>> normalized_item = normalize(input_item, label_item, weight_item)
+        >>> print(normalized_item)
+        ({'data': array([1., 2., 3.])}, {'data': array([4., 5., 6.])}, array([0.1, 0.2, 0.3]))
     """
 
     def __init__(
