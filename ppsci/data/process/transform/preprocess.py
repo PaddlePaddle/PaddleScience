@@ -153,9 +153,6 @@ class CropData:
         xmax (Tuple[int, ...]): Top right corner point, [x1, y1].
         apply_keys (Tuple[str, ...], optional): Which data is the crop method applied to. Defaults to ("input", "label").
 
-    Returns:
-        CropData: An instance of the CropData class.
-
     Examples:
         >>> import ppsci
         >>> import numpy as np
