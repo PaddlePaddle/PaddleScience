@@ -31,7 +31,19 @@ class Translate:
 
     Examples:
         >>> import ppsci
+        >>> import numpy as np
         >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
+        >>> input_data = np.array([[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]])
+        >>> input_dict = {"x": input_data[:,:,0], "y": input_data[:,:,1]}
+        >>> label_dict = {"x": np.array([1.0, 2.0]), "y": np.array([3.0, 4.0])}
+        >>> weight_dict = {"x": np.array([10.0, 20.0]), "y": np.array([30.0, 40.0])}
+        >>> translated_input_dict, translated_label_dict, translated_weight_dict = translate(input_dict, label_dict, weight_dict)
+        >>> print(translated_input_dict)
+        {"x": array([[2., 3.], [4., 5.]]), "y": array([[0., 1.], [2., 3.]])}
+        >>> print(translated_label_dict)
+        {"x": array([2., 3.]), "y": array([3., 4.])}
+        >>> print(translated_weight_dict)
+        {"x": array([10., 20.]), "y": array([30., 40.])}
     """
 
     def __init__(self, offset: Dict[str, float]):
@@ -46,7 +58,7 @@ class Translate:
 
 
 class Scale:
-    """Scale class.
+    """Scale class for data transformation.
 
     Args:
         scale (Dict[str, float]): Scale the input data according to the variable name
@@ -55,6 +67,10 @@ class Scale:
     Examples:
         >>> import ppsci
         >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
+        >>> input_dict = {"x": 10, "y": 20}
+        >>> label_dict = {"x": 100, "y": 200}
+        >>> weight_dict = {"x": 1000, "y": 2000}
+        >>> input_dict_scaled, label_dict_scaled, weight_dict_scaled = translate(input_dict, label_dict, weight_dict)
     """
 
     def __init__(self, scale: Dict[str, float]):
@@ -204,7 +220,12 @@ class SqueezeData:
 
     Examples:
         >>> import ppsci
+        >>> import numpy as np
         >>> squeeze_data = ppsci.data.transform.SqueezeData()
+        >>> input_data = {"input": np.random.rand(10, 224, 224)}
+        >>> label_data = {"label": np.random.rand(10, 224, 224)}
+        >>> weight_data = {"weight": np.random.rand(10, 224, 224)}
+        >>> input_data_squeezed, label_data_squeezed, weight_data_squeezed = squeeze_data(input_data, label_data, weight_data)
     """
 
     def __init__(self, apply_keys: Tuple[str, ...] = ("input", "label")):
