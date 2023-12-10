@@ -233,7 +233,7 @@ examples/pipe/poiseuille_flow.py:152:164
 
 1. 在 $x=0$ 截面速度 $u(y)$ 随 $y$ 在四种不同的动力粘性系数 ${\nu}$ 采样下的曲线和解析解的对比
 
-2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
+2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67 \times 10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
 ``` py linenums="166"
 --8<--
@@ -253,7 +253,7 @@ examples/pipe/poiseuille_flow.py
 
 <figure markdown>
   ![laplace 2d]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe_result.png){ loading=lazy }
-  <figcaption>(左)在 x=0 截面速度 u(y) 随 y 在四种不同的动力粘性系数采样下的曲线和解析解的对比 (右)当我们选取截断高斯分布的动力粘性系数 nu 采样(均值为 nu=0.001， 方差 sigma​=2.67×10e−4)，中心处速度的概率密度函数和解析解对比</figcaption>
+  <figcaption>(左)在 x=0 截面速度 u(y) 随 y 在四种不同的动力粘性系数采样下的曲线和解析解的对比 (右)当我们选取截断高斯分布的动力粘性系数 nu 采样(均值为 nu=0.001， 方差 sigma​=2.67 x 10e−4)，中心处速度的概率密度函数和解析解对比</figcaption>
 </figure>
 
 DNN代理模型的结果如左图所示，和泊肃叶流动的精确解(论文公式13)进行比较：
