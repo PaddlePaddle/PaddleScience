@@ -16,6 +16,8 @@
 PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
+import paddle
+paddle.device.set_device("gpu:3")
 import os
 from os import path as osp
 
@@ -118,7 +120,7 @@ def train(cfg: DictConfig):
 
     # initialize solver
     scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
-    optimizer = ppsci.optimizer.Adam(scheduler)(model)
+    optimizer = ppsci.optimizer.Adam(1e-4)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
@@ -127,9 +129,10 @@ def train(cfg: DictConfig):
         scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        save_freq=cfg.TRAIN.save_freq,
         validator=validator_pde,
         eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
+        device='gpu:3',
+        pretrained_model_path = '/home/tianchi.yu/hackthon5th63/hackthon5th53/examples/phycrnet/outputs_phycrnet/2023-12-10/17-47-37/checkpoints/latest',
     )
 
     # train model
@@ -204,4 +207,5 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    paddle.device.set_device("gpu:3")
     main()

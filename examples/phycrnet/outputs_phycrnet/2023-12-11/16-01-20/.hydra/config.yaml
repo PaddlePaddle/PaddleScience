@@ -1,0 +1,52 @@
+mode: train
+seed: 66
+output_dir: ${hydra:run.dir}
+DATA_PATH: /mnt/local/data/tianchi.yu/burgers_1501x2x128x128.mat
+TIME_STEPS: 1001
+DT: 0.002
+DX:
+- 1.0
+- 128
+TIME_BATCH_SIZE: 1000
+MODEL:
+  input_channels: 2
+  hidden_channels:
+  - 8
+  - 32
+  - 128
+  - 128
+  input_kernel_size:
+  - 4
+  - 4
+  - 4
+  - 3
+  input_stride:
+  - 2
+  - 2
+  - 2
+  - 1
+  input_padding:
+  - 1
+  - 1
+  - 1
+  - 1
+  num_layers:
+  - 3
+  - 1
+  upscale_factor: 8
+TRAIN:
+  epochs: 24000
+  iters_per_epoch: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    step_size: 50
+    gamma: 0.99
+    learning_rate: 0.0006
+  save_freq: 50
+  eval_with_no_grad: true
+  pretrained_model_path: null
+  checkpoint_path: null
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true

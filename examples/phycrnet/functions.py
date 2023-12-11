@@ -98,25 +98,30 @@ def tranform_output_val(input, out):
     # [101, 2, 131, 131]
     truth = np.concatenate((truth[:, :, :, -1:], truth, truth[:, :, :, 0:2]), axis=3)
     truth = np.concatenate((truth[:, :, -1:, :], truth, truth[:, :, 0:2, :]), axis=2)
-
+    truth = paddle.to_tensor(truth)
     # post-process
     ten_true = []
     ten_pred = []
-    for i in range(0, 50):
+    for i in range(0, 1001):
         u_star, u_pred, v_star, v_pred = post_process(
             output,
             truth,
-            num=20 * i,
+            num=i,
         )
 
-        ten_true.append([u_star, v_star])
-        ten_pred.append([u_pred, v_pred])
-
+        ten_true.append(paddle.stack([u_star, v_star]))
+        ten_pred.append(paddle.stack([u_pred, v_pred]))
+    ten_true=paddle.stack(ten_true)
+    ten_pred=paddle.stack(ten_pred)
     # compute the error
-    error = frobenius_norm(np.array(ten_pred) - np.array(ten_true)) / frobenius_norm(
-        np.array(ten_true)
-    )
-    return {"loss": paddle.to_tensor([error])}
+    # relative error
+    #error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true)
+    # a-RMSE
+    np.savez('solutions.npz', ten_true=ten_true,ten_pred=ten_pred)
+    error = paddle.sum((ten_pred - ten_true)**2,axis=(1,2,3))/ ten_true.shape[2]/ten_true.shape[3]
+    np.savez('error.npz',error=np.array(error))
+    error=paddle.linalg.norm(error)
+    return {"loss": error}
 
 
 def train_loss_func(result_dict, *args) -> paddle.Tensor:
@@ -271,16 +276,12 @@ def post_process(output, true, num):
     num: Number of time step
     """
     u_star = true[num, 0, 1:-1, 1:-1]
-    u_pred = output[num, 0, 1:-1, 1:-1].detach().cpu().numpy()
+    u_pred = output[num, 0, 1:-1, 1:-1].detach()
 
     v_star = true[num, 1, 1:-1, 1:-1]
-    v_pred = output[num, 1, 1:-1, 1:-1].detach().cpu().numpy()
+    v_pred = output[num, 1, 1:-1, 1:-1].detach()
 
     return u_star, u_pred, v_star, v_pred
-
-
-def frobenius_norm(tensor):
-    return np.sqrt(np.sum(tensor**2))
 
 
 class Dataset:
@@ -351,8 +352,7 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
         ten_pred.append([u_pred, v_pred])
 
     # compute the error
-    error = frobenius_norm(np.array(ten_pred) - np.array(ten_true)) / frobenius_norm(
-        np.array(ten_true)
+    error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true
     )
 
     print("The predicted error is: ", error)
