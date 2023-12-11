@@ -2,22 +2,16 @@ seed: 1234
 
 output_dir: ./output
 
-data_dir:
-  path_ini:  ./train_ini2.npy
-  path_iniv: ./train_iniv2.npy
-  path_b: ./train_xb2.npy
-  path_vb: ./train_vb2.npy
-  path_test: ./test43_l.npy
-  path_testv: ./train_vp.npy
+data_dir: ./
 
 iters_per_epoch: 150
 
 MODEL:
-  input_keys: ["x", "y","z"]
+  input_keys: ["x", "y","z","t"]
   output_keys: ["u", "v", "w","p"]
   num_layers: 10
   hidden_size: 300
-  activation: "silu"
+  activation: "tanh"
 
 mode: train
 
@@ -28,6 +22,7 @@ nb_train: 2952
 n0_train: 986
 
 alpha: 100
+
 beta: 100
 
 re: 999.35
