@@ -152,6 +152,11 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
     # set airfoil model
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 

@@ -28,7 +28,7 @@ pip install hydra-core
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title=">>> python bracket.py {++-c job++}"
+``` shell title="$ python bracket.py {++-c job++}"
 mode: train
 seed: 2023
 output_dir: ${hydra:run.dir}
@@ -95,7 +95,7 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title=">>> python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+``` shell title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
@@ -109,7 +109,7 @@ TRAIN:
 
 多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-``` shell title=">>> tree PaddleScience/examples/bracket/outputs_bracket/"
+``` shell title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
 └──2023-10-14 # (1)
     └── 04-01-52 # (2)

@@ -164,9 +164,6 @@ class InteriorConstraint(base.Constraint):
                 else:
                     raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
-        if "sdf" in input:
-            input.pop("sdf")
-
         # wrap input, label, weight into a dataset
         if isinstance(dataloader_cfg["dataset"], str):
             dataloader_cfg["dataset"] = {"name": dataloader_cfg["dataset"]}

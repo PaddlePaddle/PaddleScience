@@ -16,14 +16,16 @@
 This module is for experimental API
 """
 
-from ppsci.experimental.math import bessel_i0
-from ppsci.experimental.math import bessel_i0e
-from ppsci.experimental.math import bessel_i1
-from ppsci.experimental.math import bessel_i1e
+from ppsci.experimental.math_module import bessel_i0
+from ppsci.experimental.math_module import bessel_i0e
+from ppsci.experimental.math_module import bessel_i1
+from ppsci.experimental.math_module import bessel_i1e
+from ppsci.experimental.math_module import gaussian_integrate
 
 __all__ = [
     "bessel_i0",
     "bessel_i0e",
     "bessel_i1",
     "bessel_i1e",
+    "gaussian_integrate",
 ]
