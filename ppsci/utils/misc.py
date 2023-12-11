@@ -345,13 +345,13 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     Reference: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 
     Assume shapes of input arrays are: $(N_1,), (N_2,), (N_3,), ..., (N_M,)$,
-    then the cartesian product result will be shape of $(N_1×N_2×N_3×...×N_M, M)$.
+    then the cartesian product result will be shape of $(N_1xN_2xN_3x...xN_M, M)$.
 
     Args:
         arrays (np.ndarray): Input arrays.
 
     Returns:
-        np.ndarray: Cartesian product result of shape $(N_1×N_2×N_3×...×N_M, M)$.
+        np.ndarray: Cartesian product result of shape $(N_1xN_2xN_3x...xN_M, M)$.
 
     Examples:
         >>> t = np.array([1, 2])
