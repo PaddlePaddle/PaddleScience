@@ -1,15 +1,14 @@
-import random
-
+import hydra
 import numpy as np
-import Ofpp
 import paddle
-from dataset import FixGeoDataset
+from omegaconf import DictConfig
 from paddle.io import DataLoader
 from pyMesh import hcubeMesh
 from pyMesh import to4DTensor
 from readOF import convertOFMeshToImage_StructuredMesh
 
 import ppsci
+from ppsci.data.dataset.geo_dataset import FixGeoDataset
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -154,20 +153,6 @@ def dfdy(f, dxdxi, dxdeta, Jinv, h=0.01):
     return dfdy
 
 
-def set_random_seed(seed: int):
-    """Set numpy, random, paddle random_seed to given seed.
-
-    Args:
-        seed (int): Random seed.
-    """
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-
-
-set_random_seed(42)
-
-
 def tikzplotlib_fix_ncols(obj):
     """
     workaround for matplotlib 3.6 renamed legend's _ncol to _ncols, which breaks tikzplotlib
@@ -178,193 +163,250 @@ def tikzplotlib_fix_ncols(obj):
         tikzplotlib_fix_ncols(child)
 
 
-# initiallizer
-h = 0.01
-r = 0.5
-R = 1
-dtheta = 0
-OFBCCoord = Ofpp.parse_boundary_field("TemplateCase/30/C")
-OFLEFTC = OFBCCoord[b"left"][b"value"]
-OFRIGHTC = OFBCCoord[b"right"][b"value"]
-leftX = r * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, 276))
-leftY = r * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, 276))
-rightX = R * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, 276))
-rightY = R * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, 276))
-lowX = np.linspace(leftX[0], rightX[0], 49)
-lowY = lowX * 0 + np.sin(dtheta)
-upX = np.linspace(leftX[-1], rightX[-1], 49)
-upY = upX * 0 - np.sin(dtheta)
-ny = len(leftX)
-nx = len(lowX)
+def train(cfg: DictConfig):
+    # initiallizer
+    SEED = cfg.seed
+    ppsci.utils.misc.set_random_seed(SEED)
+    h = cfg.MODEL.h
+    r = cfg.r
+    R = cfg.R
+    dtheta = cfg.dtheta
+    ny = cfg.MODEL.ny
+    nx = cfg.MODEL.nx
+    leftX = r * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    leftY = r * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    rightX = R * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    rightY = R * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    lowX = np.linspace(leftX[0], rightX[0], nx)
+    lowY = lowX * 0 + np.sin(dtheta)
+    upX = np.linspace(leftX[-1], rightX[-1], nx)
+    upY = upX * 0 - np.sin(dtheta)
 
-myMesh = hcubeMesh(
-    leftX,
-    leftY,
-    rightX,
-    rightY,
-    lowX,
-    lowY,
-    upX,
-    upY,
-    h,
-    True,
-    True,
-    tolMesh=1e-10,
-    tolJoint=0.01,
-)
-
-batchSize = 2
-NvarInput = 1
-NvarOutput = 1
-nEpochs = 1000
-lr = 0.001
-Ns = 1
-nu = 0.01
-padSingleSide = 1
-
-model = ppsci.arch.USCNN(h, nx, ny, NvarInput, NvarOutput, padSingleSide)
-
-optimizer = ppsci.optimizer.Adam(lr)(model)
-ParaList = [1, 7]
-caseName = ["TemplateCase0", "TemplateCase6"]
-OFV_sb = []
-for name in caseName:
-    OFPic = convertOFMeshToImage_StructuredMesh(
-        nx, ny, name + "/30/C", [name + "/30/T"], [0, 1, 0, 1], 0.0, False
+    myMesh = hcubeMesh(
+        leftX,
+        leftY,
+        rightX,
+        rightY,
+        lowX,
+        lowY,
+        upX,
+        upY,
+        h,
+        True,
+        True,
+        tolMesh=1e-10,
+        tolJoint=0.01,
     )
-    OFX = OFPic[:, :, 0]
-    OFY = OFPic[:, :, 1]
-    OFV = OFPic[:, :, 2]
-    OFV_sb_Temp = np.zeros(OFV.shape)
-    for i in range(nx):
-        for j in range(ny):
-            dist = (myMesh.x[j, i] - OFX) ** 2 + (myMesh.y[j, i] - OFY) ** 2
-            idx_min = np.where(dist == dist.min())
-            OFV_sb_Temp[j, i] = OFV[idx_min]
-    OFV_sb.append(OFV_sb_Temp)
-train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
-training_data_loader = DataLoader(dataset=train_set, batch_size=batchSize)
 
-coords = []
-jinvs = []
-dxdxis = []
-dydxis = []
-dxdetas = []
-dydetas = []
-truths = []
-for iteration, batch in enumerate(training_data_loader):
-    [Para, _, _, _, _, Jinv, dxdxi, dydxi, dxdeta, dydeta, truth] = to4DTensor(batch)
-    coords.append(Para)
-    jinvs.append(Jinv)
-    dxdxis.append(dxdxi)
-    dydxis.append(dydxi)
-    dxdetas.append(dxdeta)
-    dydetas.append(dydeta)
-    truths.append(truth)
+    padSingleSide = cfg.MODEL.padSingleSide
 
-coords = np.concatenate(coords)
-jinvs = np.concatenate(jinvs)
-dxdxis = np.concatenate(dxdxis)
-dydxis = np.concatenate(dydxis)
-dxdetas = np.concatenate(dxdetas)
-dydetas = np.concatenate(dydetas)
-truths = np.concatenate(truths)
-#
-# train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
+    model = ppsci.arch.USCNN(**cfg.MODEL)
 
-sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
-    {
-        "dataset": {
-            "name": "NamedArrayDataset",
-            "input": {
-                "coords": coords,
-                "jinvs": jinvs,
-                "dxdxis": dxdxis,
-                "dydxis": dydxis,
-                "dxdetas": dxdetas,
-                "dydetas": dydetas,
+    optimizer = ppsci.optimizer.Adam(cfg.lr)(model)
+    ParaList = [1, 7]
+    caseName = cfg.casename
+    OFV_sb = []
+    for name in caseName:
+        OFPic = convertOFMeshToImage_StructuredMesh(
+            nx, ny, name + "/30/C", [name + "/30/T"], [0, 1, 0, 1], 0.0, False
+        )
+        OFX = OFPic[:, :, 0]
+        OFY = OFPic[:, :, 1]
+        OFV = OFPic[:, :, 2]
+        OFV_sb_Temp = np.zeros(OFV.shape)
+        for i in range(nx):
+            for j in range(ny):
+                dist = (myMesh.x[j, i] - OFX) ** 2 + (myMesh.y[j, i] - OFY) ** 2
+                idx_min = np.where(dist == dist.min())
+                OFV_sb_Temp[j, i] = OFV[idx_min]
+        OFV_sb.append(OFV_sb_Temp)
+    train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
+    training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+
+    coords = []
+    jinvs = []
+    dxdxis = []
+    dydxis = []
+    dxdetas = []
+    dydetas = []
+    truths = []
+    for iteration, batch in enumerate(training_data_loader):
+        [Para, _, _, _, _, Jinv, dxdxi, dydxi, dxdeta, dydeta, truth] = to4DTensor(
+            batch
+        )
+        coords.append(Para)
+        jinvs.append(Jinv)
+        dxdxis.append(dxdxi)
+        dydxis.append(dydxi)
+        dxdetas.append(dxdeta)
+        dydetas.append(dydeta)
+        truths.append(truth)
+
+    coords = np.concatenate(coords)
+    jinvs = np.concatenate(jinvs)
+    dxdxis = np.concatenate(dxdxis)
+    dydxis = np.concatenate(dydxis)
+    dxdetas = np.concatenate(dxdetas)
+    dydetas = np.concatenate(dydetas)
+    truths = np.concatenate(truths)
+    #
+    # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
+
+    sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
+        {
+            "dataset": {
+                "name": "NamedArrayDataset",
+                "input": {
+                    "coords": coords,
+                    "jinvs": jinvs,
+                    "dxdxis": dxdxis,
+                    "dydxis": dydxis,
+                    "dxdetas": dxdetas,
+                    "dydetas": dydetas,
+                },
             },
+            "batch_size": 1,
+            "iters_per_epoch": coords.shape[0],
+            "num_workers": 0,
         },
-        "batch_size": 1,
-        "iters_per_epoch": coords.shape[0],
-        "num_workers": 0,
-    },
-    ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
-    name="mRes",
-)
-
-constraint_pde = {sup_constraint_mres.name: sup_constraint_mres}
-
-OFPicInformative = convertOFMeshToImage_StructuredMesh(
-    nx, ny, "TemplateCase/30/C", ["TemplateCase/30/T"], [0, 1, 0, 1], 0.0, False
-)
-
-
-def _transform_out(
-    _input, outputV, padSingleSide=padSingleSide, k=len(training_data_loader)
-):
-    batchSize = outputV.shape[0]
-    Jinv = _input["jinvs"]
-    dxdxi = _input["dxdxis"]
-    dydxi = _input["dydxis"]
-    dxdeta = _input["dxdetas"]
-    dydeta = _input["dydetas"]
-    Para = _input["coords"]
-    for j in range(batchSize):
-        # Impose BC
-        outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-            j, 0, 1:2, padSingleSide:-padSingleSide
-        ]
-        outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-            j, 0, -2:-1, padSingleSide:-padSingleSide
-        ]
-        outputV[j, 0, :, -padSingleSide:] = 0
-        outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
-    dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
-    d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
-    dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
-    d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
-    continuity = d2vdy2 + d2vdx2
-    return {"mRes": paddle.mean(continuity**2) / k}
-
-
-model.register_output_transform(_transform_out)
-output_dir = "./output"
-solver = ppsci.solver.Solver(
-    model,
-    constraint_pde,
-    output_dir,
-    optimizer,
-    epochs=nEpochs,
-    iters_per_epoch=coords.shape[0],
-    eval_with_no_grad=True,
-)
-
-solver.train()
-
-model.register_output_transform(None)
-
-outputV = model({"coords": paddle.to_tensor(coords)})
-eV = 0
-for iteration, batch in enumerate(training_data_loader):
-    [Para, _, _, _, _, Jinv, dxdxi, dydxi, dxdeta, dydeta, truth] = to4DTensor(batch)
-    outputV = model({"coords": paddle.to_tensor(Para)})
-    batchSize = outputV.shape[0]
-    for j in range(batchSize):
-        # Impose BC
-        outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-            j, 0, 1:2, padSingleSide:-padSingleSide
-        ]
-        outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-            j, 0, -2:-1, padSingleSide:-padSingleSide
-        ]
-        outputV[j, 0, :, -padSingleSide:] = 0
-        outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
-    eV = (
-        eV
-        + paddle.sqrt(
-            paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
-        ).item()
+        ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
+        name="mRes",
     )
-print(eV / len(training_data_loader))
-solver.plot_loss_history()
+
+    constraint_pde = {sup_constraint_mres.name: sup_constraint_mres}
+
+    def _transform_out(
+        _input, outputV, padSingleSide=padSingleSide, k=len(training_data_loader)
+    ):
+        batchSize = outputV.shape[0]
+        Jinv = _input["jinvs"]
+        dxdxi = _input["dxdxis"]
+        dydxi = _input["dydxis"]
+        dxdeta = _input["dxdetas"]
+        dydeta = _input["dydetas"]
+        Para = _input["coords"]
+        for j in range(batchSize):
+            # Impose BC
+            outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
+                j, 0, 1:2, padSingleSide:-padSingleSide
+            ]
+            outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
+                j, 0, -2:-1, padSingleSide:-padSingleSide
+            ]
+            outputV[j, 0, :, -padSingleSide:] = 0
+            outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
+        dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
+        d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
+        dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
+        d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
+        continuity = d2vdy2 + d2vdx2
+        return {"mRes": paddle.mean(continuity**2) / k}
+
+    model.register_output_transform(_transform_out)
+    solver = ppsci.solver.Solver(
+        model,
+        constraint_pde,
+        cfg.output_dir,
+        optimizer,
+        epochs=cfg.epochs,
+        iters_per_epoch=coords.shape[0],
+        eval_with_no_grad=cfg.eval_with_no_grad,
+    )
+
+    solver.train()
+    solver.plot_loss_history()
+
+
+def evaluate(cfg: DictConfig):
+    SEED = cfg.seed
+    ppsci.utils.misc.set_random_seed(SEED)
+    h = cfg.MODEL.h
+    r = cfg.r
+    R = cfg.R
+    dtheta = cfg.dtheta
+    ny = cfg.MODEL.ny
+    nx = cfg.MODEL.nx
+    leftX = r * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    leftY = r * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    rightX = R * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    rightY = R * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
+    lowX = np.linspace(leftX[0], rightX[0], nx)
+    lowY = lowX * 0 + np.sin(dtheta)
+    upX = np.linspace(leftX[-1], rightX[-1], nx)
+    upY = upX * 0 - np.sin(dtheta)
+
+    myMesh = hcubeMesh(
+        leftX,
+        leftY,
+        rightX,
+        rightY,
+        lowX,
+        lowY,
+        upX,
+        upY,
+        h,
+        True,
+        True,
+        tolMesh=1e-10,
+        tolJoint=0.01,
+    )
+    padSingleSide = cfg.MODEL.padSingleSide
+
+    model = ppsci.arch.USCNN(**cfg.MODEL)
+
+    model.register_output_transform(None)
+    ParaList = [1, 7]
+    caseName = cfg.casename
+    OFV_sb = []
+    for name in caseName:
+        OFPic = convertOFMeshToImage_StructuredMesh(
+            nx, ny, name + "/30/C", [name + "/30/T"], [0, 1, 0, 1], 0.0, False
+        )
+        OFX = OFPic[:, :, 0]
+        OFY = OFPic[:, :, 1]
+        OFV = OFPic[:, :, 2]
+        OFV_sb_Temp = np.zeros(OFV.shape)
+        for i in range(nx):
+            for j in range(ny):
+                dist = (myMesh.x[j, i] - OFX) ** 2 + (myMesh.y[j, i] - OFY) ** 2
+                idx_min = np.where(dist == dist.min())
+                OFV_sb_Temp[j, i] = OFV[idx_min]
+        OFV_sb.append(OFV_sb_Temp)
+    train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
+    training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+    eV = 0
+    for iteration, batch in enumerate(training_data_loader):
+        [Para, _, _, _, _, _, _, _, _, _, truth] = to4DTensor(batch)
+        outputV = model({"coords": paddle.to_tensor(Para)})
+        batchSize = outputV.shape[0]
+        for j in range(batchSize):
+            # Impose BC
+            outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
+                j, 0, 1:2, padSingleSide:-padSingleSide
+            ]
+            outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
+                j, 0, -2:-1, padSingleSide:-padSingleSide
+            ]
+            outputV[j, 0, :, -padSingleSide:] = 0
+            outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
+        eV = (
+            eV
+            + paddle.sqrt(
+                paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
+            ).item()
+        )
+    print(eV / len(training_data_loader))
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="case2.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

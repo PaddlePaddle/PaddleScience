@@ -55,8 +55,8 @@ __all__ = [
     "UNetEx",
     "Epnn",
     "NowcastNet",
+    "USCNN",
     "build_model",
-    'USCNN'
 ]
 
 

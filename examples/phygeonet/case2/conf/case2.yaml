@@ -1,0 +1,30 @@
+# general settings
+mode: train # running mode: train/eval
+seed: 66
+output_dir: ./output_case2
+r: 0.5
+R: 1
+lr: 1e-3
+dtheta: 0
+batchsize: 2
+casename: ["TemplateCase0", "TemplateCase6"]
+# model settings
+MODEL:
+  input_keys: [ 'coords' ]
+  output_keys: [ 'outputV' ]
+  h: 0.01
+  ny: 276
+  nx: 48
+  NvarInput: 1
+  NvarOutput: 1
+  padSingleSide: 1
+
+# training settings
+
+epochs: 1000
+eval_with_no_grad: true
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
