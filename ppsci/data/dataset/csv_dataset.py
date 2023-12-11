@@ -138,10 +138,9 @@ class CSVDataset(io.Dataset):
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
 
+        # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
-            input_item, label_item, weight_item = self.transforms(
-                (input_item, label_item, weight_item)
-            )
+            input_item = self.transforms(input_item)
 
         return (input_item, label_item, weight_item)
 

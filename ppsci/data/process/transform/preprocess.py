@@ -37,12 +37,11 @@ class Translate:
     def __init__(self, offset: Dict[str, float]):
         self.offset = offset
 
-    def __call__(self, input_dict, label_dict, weight_dict):
-        input_dict_copy = {**input_dict}
+    def __call__(self, data_dict):
         for key in self.offset:
-            if key in input_dict:
-                input_dict_copy[key] += self.offset[key]
-        return input_dict_copy, label_dict, weight_dict
+            if key in data_dict:
+                data_dict[key] += self.offset[key]
+        return data_dict
 
 
 class Scale:
@@ -60,20 +59,19 @@ class Scale:
     def __init__(self, scale: Dict[str, float]):
         self.scale = scale
 
-    def __call__(self, input_dict, label_dict, weight_dict):
-        input_dict_copy = {**input_dict}
+    def __call__(self, data_dict):
         for key in self.scale:
-            if key in input_dict:
-                input_dict_copy[key] *= self.scale[key]
-        return input_dict_copy, label_dict, weight_dict
+            if key in data_dict:
+                data_dict[key] *= self.scale[key]
+        return data_dict
 
 
 class Normalize:
     """Normalize data class.
 
     Args:
-        mean (Union[np.ndarray, Tuple[float, ...]]): Mean of training dataset.
-        std (Union[np.ndarray, Tuple[float, ...]]): Standard Deviation of training dataset.
+        mean (Union[np.array, Tuple[float, ...]]): Mean of training dataset.
+        std (Union[np.array, Tuple[float, ...]]): Standard Deviation of training dataset.
         apply_keys (Tuple[str, ...], optional): Which data is the normalization method applied to. Defaults to ("input", "label").
 
     Examples:
@@ -83,8 +81,8 @@ class Normalize:
 
     def __init__(
         self,
-        mean: Union[np.ndarray, Tuple[float, ...]],
-        std: Union[np.ndarray, Tuple[float, ...]],
+        mean: Union[np.array, Tuple[float, ...]],
+        std: Union[np.array, Tuple[float, ...]],
         apply_keys: Tuple[str, ...] = ("input", "label"),
     ):
         if len(apply_keys) == 0 or len(set(apply_keys) | {"input", "label"}) > 2:
@@ -95,16 +93,15 @@ class Normalize:
         self.std = std
         self.apply_keys = apply_keys
 
-    def __call__(self, input_item, label_item, weight_item):
-        input_item_copy = {**input_item}
-        label_item_copy = {**label_item}
+    def __call__(self, data):
+        input_item, label_item, weight_item = data
         if "input" in self.apply_keys:
-            for key, value in input_item_copy.items():
-                input_item_copy[key] = (value - self.mean) / self.std
+            for key, value in input_item.items():
+                input_item[key] = (value - self.mean) / self.std
         if "label" in self.apply_keys:
-            for key, value in label_item_copy.items():
-                label_item_copy[key] = (value - self.mean) / self.std
-        return input_item_copy, label_item_copy, weight_item
+            for key, value in label_item.items():
+                label_item[key] = (value - self.mean) / self.std
+        return input_item, label_item, weight_item
 
 
 class Log1p:
@@ -131,16 +128,15 @@ class Log1p:
         self.scale = scale
         self.apply_keys = apply_keys
 
-    def __call__(self, input_item, label_item, weight_item):
-        input_item_copy = {**input_item}
-        label_item_copy = {**label_item}
+    def __call__(self, data):
+        input_item, label_item, weight_item = data
         if "input" in self.apply_keys:
-            for key, value in input_item_copy.items():
-                input_item_copy[key] = np.log1p(value / self.scale)
+            for key, value in input_item.items():
+                input_item[key] = np.log1p(value / self.scale)
         if "label" in self.apply_keys:
-            for key, value in label_item_copy.items():
-                label_item_copy[key] = np.log1p(value / self.scale)
-        return input_item_copy, label_item_copy, weight_item
+            for key, value in label_item.items():
+                label_item[key] = np.log1p(value / self.scale)
+        return input_item, label_item, weight_item
 
 
 class CropData:
@@ -170,24 +166,23 @@ class CropData:
         self.xmax = xmax
         self.apply_keys = apply_keys
 
-    def __call__(self, input_item, label_item, weight_item):
-        input_item_copy = {**input_item}
-        label_item_copy = {**label_item}
+    def __call__(self, data):
+        input_item, label_item, weight_item = data
         if "input" in self.apply_keys:
-            for key, value in input_item_copy.items():
-                input_item_copy[key] = value[
+            for key, value in input_item.items():
+                input_item[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
                 ]
         if "label" in self.apply_keys:
-            for key, value in label_item_copy.items():
-                label_item_copy[key] = value[
+            for key, value in label_item.items():
+                label_item[key] = value[
                     :, self.xmin[0] : self.xmax[0], self.xmin[1] : self.xmax[1]
                 ]
-        return input_item_copy, label_item_copy, weight_item
+        return input_item, label_item, weight_item
 
 
 class SqueezeData:
-    """Squeeze data class.
+    """Squeeze data clsss.
 
     Args:
         apply_keys (Tuple[str, ...], optional): Which data is the squeeze method applied to. Defaults to ("input", "label").
@@ -204,28 +199,27 @@ class SqueezeData:
             )
         self.apply_keys = apply_keys
 
-    def __call__(self, input_item, label_item, weight_item):
-        input_item_copy = {**input_item}
-        label_item_copy = {**label_item}
+    def __call__(self, data):
+        input_item, label_item, weight_item = data
         if "input" in self.apply_keys:
-            for key, value in input_item_copy.items():
+            for key, value in input_item.items():
                 if value.ndim == 4:
                     B, C, H, W = value.shape
-                    input_item_copy[key] = value.reshape((B * C, H, W))
+                    input_item[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
                         f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
         if "label" in self.apply_keys:
-            for key, value in label_item_copy.items():
+            for key, value in label_item.items():
                 if value.ndim == 4:
                     B, C, H, W = value.shape
-                    label_item_copy[key] = value.reshape((B * C, H, W))
+                    label_item[key] = value.reshape((B * C, H, W))
                 if value.ndim != 3:
                     raise ValueError(
                         f"Only support squeeze data to ndim=3 now, but got ndim={value.ndim}"
                     )
-        return input_item_copy, label_item_copy, weight_item
+        return input_item, label_item, weight_item
 
 
 class FunctionalTransform:
@@ -237,11 +231,11 @@ class FunctionalTransform:
     Examples:
         >>> import ppsci
         >>> import numpy as np
-        >>> def transform_func(data_dict, label_dict, weight_dict):
+        >>> def transform_func(data_dict):
         ...     rand_ratio = np.random.rand()
         ...     for key in data_dict:
         ...         data_dict[key] = data_dict[key] * rand_ratio
-        ...     return data_dict, label_dict, weight_dict
+        ...     return data_dict
         >>> transform_cfg = {
         ...     "transforms": (
         ...         {
@@ -259,11 +253,5 @@ class FunctionalTransform:
     ):
         self.transform_func = transform_func
 
-    def __call__(
-        self, *data: Tuple[Dict[str, np.ndarray], ...]
-    ) -> Tuple[Dict[str, np.ndarray], ...]:
-        data_dict, label_dict, weight_dict = data
-        data_dict_copy = {**data_dict}
-        label_dict_copy = {**label_dict}
-        weight_dict_copy = {**weight_dict} if weight_dict is not None else {}
-        return self.transform_func(data_dict_copy, label_dict_copy, weight_dict_copy)
+    def __call__(self, data_dict: Dict[str, np.ndarray]):
+        return self.transform_func(data_dict)

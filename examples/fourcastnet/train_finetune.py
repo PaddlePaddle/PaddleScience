@@ -26,7 +26,7 @@ from ppsci.utils import config
 from ppsci.utils import logger
 
 
-def get_vis_data(
+def get_vis_datas(
     file_path: str,
     date_strings: Tuple[str, ...],
     num_timestamps: int,
@@ -43,15 +43,15 @@ def get_vis_data(
         data.append(_file[ic : ic + num_timestamps + 1, vars_channel, 0:img_h])
     data = np.asarray(data)
 
-    vis_data = {"input": (data[:, 0] - data_mean) / data_std}
+    vis_datas = {"input": (data[:, 0] - data_mean) / data_std}
     for t in range(num_timestamps):
         hour = (t + 1) * 6
         data_t = data[:, t + 1]
         wind_data = []
         for i in range(data_t.shape[0]):
             wind_data.append((data_t[i][0] ** 2 + data_t[i][1] ** 2) ** 0.5)
-        vis_data[f"target_{hour}h"] = np.asarray(wind_data)
-    return vis_data
+        vis_datas[f"target_{hour}h"] = np.asarray(wind_data)
+    return vis_datas
 
 
 if __name__ == "__main__":
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         "batch_size": 1,
     }
 
-    # set metric
+    # set metirc
     metric = {
         "MAE": ppsci.metric.MAE(keep_batch=True),
         "LatitudeWeightedRMSE": ppsci.metric.LatitudeWeightedRMSE(
@@ -239,9 +239,9 @@ if __name__ == "__main__":
     )
     validator = {sup_validator.name: sup_validator}
 
-    # set visualizer data
+    # set visualizer datas
     DATE_STRINGS = ("2018-09-08 00:00:00",)
-    vis_data = get_vis_data(
+    vis_datas = get_vis_datas(
         TEST_FILE_PATH,
         DATE_STRINGS,
         NUM_TIMESTAMPS,
@@ -270,8 +270,8 @@ if __name__ == "__main__":
         vis_output_expr[f"target_{hour}h"] = lambda d, hour=hour: d[f"target_{hour}h"]
     # set visualizer
     visualizer = {
-        "visualize_wind": ppsci.visualize.VisualizerWeather(
-            vis_data,
+        "visulize_wind": ppsci.visualize.VisualizerWeather(
+            vis_datas,
             vis_output_expr,
             xticks=np.linspace(0, 1439, 13),
             xticklabels=[str(i) for i in range(360, -1, -30)],

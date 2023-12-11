@@ -19,7 +19,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import paddle
 import sympy
@@ -39,16 +38,14 @@ class PDE:
 
         self.detach_keys: Optional[Tuple[str, ...]] = None
 
-    def create_symbols(
-        self, symbol_str: str
-    ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
+    def create_symbols(self, symbol_str: str) -> Tuple[sympy.Symbol, ...]:
         """Create symbols
 
         Args:
             symbol_str (str): String contains symbols, such as "x", "x y z".
 
         Returns:
-            Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]: Created symbol(s).
+            Tuple[sympy.Symbol, ...]: Created symbol(s).
         """
         return sympy.symbols(symbol_str)
 

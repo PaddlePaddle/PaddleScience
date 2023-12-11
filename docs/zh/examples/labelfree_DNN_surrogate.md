@@ -1,17 +1,5 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
-=== "模型训练命令"
-
-    ``` sh
-    python poiseuille_flow.py
-    ```
-
-=== "模型评估命令"
-
-    ``` sh
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
-    ```
-
 ## 1. 背景简介
 
 流体动力学问题的数值模拟主要依赖于使用多项式将控制方程在空间或/和时间上离散化为有限维代数系统。由于物理的多尺度特性和对复杂几何体进行网格划分的敏感性，这样的过程对于大多数实时应用程序（例如，临床诊断和手术计划）和多查询分析（例如，优化设计和不确定性量化）。在本文中，我们提供了一种物理约束的 DL 方法，用于在不依赖任何模拟数据的情况下对流体流动进行代理建模。 具体来说，设计了一种结构化深度神经网络 (DNN) 架构来强制执行初始条件和边界条件，并将控制偏微分方程（即 Navier-Stokes 方程）纳入 DNN的损失中以驱动训练。 对与血液动力学应用相关的许多内部流动进行了数值实验，并研究了流体特性和域几何中不确定性的前向传播。结果表明，DL 代理近似与第一原理数值模拟之间的流场和前向传播不确定性非常吻合。
@@ -91,15 +79,15 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="78"
+``` py linenums="95"
 --8<--
-examples/pipe/poiseuille_flow.py:78:80
+examples/pipe/poiseuille_flow.py:95:98
 --8<--
 ```
 
-``` py linenums="105"
+``` py linenums="123"
 --8<--
-examples/pipe/poiseuille_flow.py:105:111
+examples/pipe/poiseuille_flow.py:123:129
 --8<--
 ```
 
@@ -111,9 +99,9 @@ examples/pipe/poiseuille_flow.py:105:111
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="117"
+``` py linenums="134"
 --8<--
-examples/pipe/poiseuille_flow.py:117:121
+examples/pipe/poiseuille_flow.py:134:139
 --8<--
 ```
 
@@ -123,9 +111,9 @@ examples/pipe/poiseuille_flow.py:117:121
 
 本文中本案例的计算域和参数自变量 $\nu$ 由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="52"
+``` py linenums="67"
 --8<--
-examples/pipe/poiseuille_flow.py:52:75
+examples/pipe/poiseuille_flow.py:67:94
 --8<--
 ```
 
@@ -187,9 +175,9 @@ examples/pipe/poiseuille_flow.py:52:75
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="128"
+    ``` py linenums="145"
     --8<--
-    examples/pipe/poiseuille_flow.py:128:146
+    examples/pipe/poiseuille_flow.py:145:164
     --8<--
     ```
 
@@ -209,13 +197,19 @@ examples/pipe/poiseuille_flow.py:52:75
 
 接下来我们需要指定训练轮数和学习率，使用3000轮训练轮数，学习率设为 0.005。
 
+``` py linenums="168"
+--8<--
+examples/pipe/poiseuille_flow.py:168:168
+--8<--
+```
+
 #### 2.2.6 优化器构建
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="127"
+``` py linenums="131"
 --8<--
-examples/pipe/poiseuille_flow.py:114:114
+examples/pipe/poiseuille_flow.py:131:132
 --8<--
 ```
 
@@ -223,9 +217,9 @@ examples/pipe/poiseuille_flow.py:114:114
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="152"
+``` py linenums="170"
 --8<--
-examples/pipe/poiseuille_flow.py:152:164
+examples/pipe/poiseuille_flow.py:170:183
 --8<--
 ```
 
@@ -235,9 +229,9 @@ examples/pipe/poiseuille_flow.py:152:164
 
 2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67×10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
-``` py linenums="166"
+``` py linenums="185"
 --8<--
-examples/pipe/poiseuille_flow.py:166:274
+examples/pipe/poiseuille_flow.py:185:293
 --8<--
 ```
 
@@ -350,7 +344,7 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="119"
+``` py linenums="33"
 --8<--
 examples/aneurysm/aneurysm_flow.py:119:128
 --8<--
@@ -479,12 +473,6 @@ examples/aneurysm/aneurysm_flow.py:51:117
 ``` py linenums="204"
 --8<--
 examples/aneurysm/aneurysm_flow.py:204:204
---8<--
-```
-
-``` py linenums="166"
---8<--
-examples/aneurysm/aneurysm_flow.py:166:166
 --8<--
 ```
 

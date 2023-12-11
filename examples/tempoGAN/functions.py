@@ -102,7 +102,7 @@ def split_data(data: np.ndarray, tile_ratio: int) -> np.ndarray:
     """Split a numpy image to tiles equally.
 
     Args:
-        data (np.ndarray): The image to be Split.
+        data (np.ndarray): The image to be splited.
         tile_ratio (int): How many tiles of one dim.
             Number of result tiles is tile_ratio * tile_ratio for a 2d image.
 
@@ -274,8 +274,8 @@ class GenFuncs:
         return {"input_gen": density_low_inp}
 
     def loss_func_gen(self, output_dict: Dict, *args) -> paddle.Tensor:
-        """Calculate loss of generator when use spatial discriminator.
-            The loss consists of l1 loss, l2 loss and layer loss when use spatial discriminator.
+        """Calculate loss of generator when use spatial discraminitor.
+            The loss consists of l1 loss, l2 loss and layer loss when use spatial discraminitor.
             Notice that all item of loss is optional because weight of them might be 0.
 
         Args:
@@ -326,8 +326,8 @@ class GenFuncs:
         return losses
 
     def loss_func_gen_tempo(self, output_dict: Dict, *args) -> paddle.Tensor:
-        """Calculate loss of generator when use temporal discriminator.
-            The loss is cross entropy loss when use temporal discriminator.
+        """Calculate loss of generator when use temporal discraminitor.
+            The loss is cross entropy loss when use temporal discraminitor.
 
         Args:
             output_dict (Dict): output dict of model.
@@ -443,16 +443,9 @@ class DataFuncs:
         self.density_min = density_min
         self.max_turn = max_turn
 
-    def transform(
-        self,
-        input_item: Dict[str, np.ndarray],
-        label_item: Dict[str, np.ndarray],
-        weight_item: Dict[str, np.ndarray],
-    ) -> Union[
-        Dict[str, paddle.Tensor], Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]
-    ]:
+    def transform(self, input_item: Dict[str, np.ndarray]) -> Dict[str, paddle.Tensor]:
         if self.tile_ratio == 1:
-            return input_item, label_item, weight_item
+            return input_item
         for _ in range(self.max_turn):
             rand_ratio = np.random.rand()
             density_low = self.cut_data(input_item["density_low"], rand_ratio)
@@ -462,7 +455,7 @@ class DataFuncs:
 
         input_item["density_low"] = density_low
         input_item["density_high"] = density_high
-        return input_item, label_item, weight_item
+        return input_item
 
     def cut_data(self, data: np.ndarray, rand_ratio: float) -> paddle.Tensor:
         # data: C,H,W

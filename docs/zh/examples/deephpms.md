@@ -2,29 +2,6 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6508962" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型训练命令"
-
-    ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
-    python burgers.py
-    ```
-
-=== "模型评估命令"
-
-    ``` sh
-    # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat -O ./datasets/DeepHPMs/burgers_sine.mat
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat -O ./datasets/DeepHPMs/burgers.mat
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat --output ./datasets/DeepHPMs/burgers_sine.mat
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat --output ./datasets/DeepHPMs/burgers.mat
-    python burgers.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/DeepHPMs/burgers_pretrained.pdparams
-    ```
-
 ## 1. 背景简介
 
 求解偏微分方程(PDE) 是一类基础的物理问题，在过去几十年里，以有限差分(FDM)、有限体积(FVM)、有限元(FEM)为代表的多种偏微分方程组数值解法趋于成熟。随着人工智能技术的高速发展，利用深度学习求解偏微分方程成为新的研究趋势。PINNs(Physics-informed neural networks) 是一种加入物理约束的深度学习网络，因此与纯数据驱动的神经网络学习相比，PINNs 可以用更少的数据样本学习到更具泛化能力的模型，其应用范围包括但不限于流体力学、热传导、电磁场、量子力学等领域。
@@ -62,9 +39,9 @@ $$
 
 运行本问题代码前请下载 [模拟数据集1](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers_sine.mat) 和 [模拟数据集2](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepHPMs/burgers.mat)， 下载后分别存放在路径：
 
-``` yaml linenums="26"
+``` py linenums="55"
 --8<--
-examples/deephpms/conf/burgers.yaml:26:27
+examples/deephpms/burgers.py:55:56
 --8<--
 ```
 
@@ -80,9 +57,9 @@ Net1 通过数据驱动的方式，使用输入的某种模拟情况 1 下的少
 
 因为训练中后一个阶段网络需要使用前一个阶段网络的前向推理值，因此本问题使用 Model List 来实现，上式中 $f_1,f_2,f_3$ 分别为一个 MLP 模型，三者共同构成了一个 Model List，用 PaddleScience 代码表示如下
 
-``` py linenums="99"
+``` py linenums="68"
 --8<--
-examples/deephpms/burgers.py:99:100
+examples/deephpms/burgers.py:68:71
 --8<--
 ```
 
@@ -92,25 +69,25 @@ examples/deephpms/burgers.py:99:100
 
 对于 Net1，输入为 $(x, t)$ 本来不需要 transform，但由于训练中根据数据的定义域对输入数据进行了数值变换，因此同样需要transform，同样，Net3 也需要对输入进行数值变换的 transform
 
-``` py linenums="72"
+``` py linenums="73"
 --8<--
-examples/deephpms/burgers.py:72:77
+examples/deephpms/burgers.py:73:79
 --8<--
 ```
 
 对于 Net2，因为它的输入为 $u, u_x, u_{xx}$ 而 $u$ 为其他两个网络的输出，只要进行 Net2 的前向推理，就需要 transform，因此需要两种 transform。同时，在训练 Net3 之前，需要重新注册 transform
 
-``` py linenums="88"
+``` py linenums="81"
 --8<--
-examples/deephpms/burgers.py:88:92
+examples/deephpms/burgers.py:81:94
 --8<--
 ```
 
 然后依次注册 transform 后，将3 个 MLP 模型组成 Model List
 
-``` py linenums="100"
+``` py linenums="96"
 --8<--
-examples/deephpms/burgers.py:95:100
+examples/deephpms/burgers.py:96:102
 --8<--
 ```
 
@@ -118,7 +95,7 @@ examples/deephpms/burgers.py:95:100
 
 ``` py linenums="243"
 --8<--
-examples/deephpms/burgers.py:236:237
+examples/deephpms/burgers.py:243:244
 --8<--
 ```
 
@@ -128,17 +105,17 @@ examples/deephpms/burgers.py:236:237
 
 我们需要指定问题相关的参数，如数据集路径、输出文件路径、定义域的值等
 
-``` yaml linenums="26"
+``` py linenums="53"
 --8<--
-examples/deephpms/conf/burgers.yaml:26:33
+examples/deephpms/burgers.py:53:66
 --8<--
 ```
 
 同时需要指定训练轮数和学习率等超参数
 
-``` yaml linenums="57"
+``` py linenums="104"
 --8<--
-examples/deephpms/conf/burgers.yaml:57:61
+examples/deephpms/burgers.py:104:107
 --8<--
 ```
 
@@ -146,9 +123,9 @@ examples/deephpms/conf/burgers.yaml:57:61
 
 本问题提供了两种优化器，分别为 Adam 优化器和 LBFGS 优化器，训练时只选择其中一种，需要将另一种优化器注释掉。
 
-``` py linenums="103"
+``` py linenums="109"
 --8<--
-examples/deephpms/burgers.py:103:111
+examples/deephpms/burgers.py:109:118
 --8<--
 ```
 
@@ -158,9 +135,9 @@ examples/deephpms/burgers.py:103:111
 
 无监督仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为数据集中没有标签数据，因此在数据读取时我们需要使用训练数据充当标签数据，并注意在之后不要使用这部分“假的”标签数据，例如
 
-``` py linenums="115"
+``` py linenums="180"
 --8<--
-examples/deephpms/burgers.py:115:123
+examples/deephpms/burgers.py:180:188
 --8<--
 ```
 
@@ -170,9 +147,9 @@ examples/deephpms/burgers.py:115:123
 
 第一阶段对 Net1 的训练是纯监督学习，此处采用监督约束 `SupervisedConstraint`
 
-``` py linenums="125"
+``` py linenums="121"
 --8<--
-examples/deephpms/burgers.py:125:131
+examples/deephpms/burgers.py:121:138
 --8<--
 ```
 
@@ -196,9 +173,9 @@ examples/deephpms/burgers.py:125:131
 
 第二阶段对 Net2 的训练是无监督学习，但仍可采用监督约束 `SupervisedConstraint`，要注意上述提到的给定“假的”标签数据
 
-``` py linenums="144"
+``` py linenums="179"
 --8<--
-examples/deephpms/burgers.py:144:151
+examples/deephpms/burgers.py:179:199
 --8<--
 ```
 
@@ -210,9 +187,9 @@ examples/deephpms/burgers.py:144:151
 
 第三阶段 Net3 的训练复杂，包含了对部分初始点的监督学习、与 PDE 有关的无监督学习以及与边界条件有关的无监督学习，这里仍采用监督约束 `SupervisedConstraint`，同样要注意给定“假的”标签数据，各参数含义同上
 
-``` py linenums="183"
+``` py linenums="246"
 --8<--
-examples/deephpms/burgers.py:183:192
+examples/deephpms/burgers.py:246:303
 --8<--
 ```
 
@@ -226,9 +203,9 @@ examples/deephpms/burgers.py:183:192
 
 评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="205"
+``` py linenums="140"
 --8<--
-examples/deephpms/burgers.py:205:215
+examples/deephpms/burgers.py:140:158
 --8<--
 ```
 
@@ -236,9 +213,9 @@ examples/deephpms/burgers.py:205:215
 
 评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38)。
 
-``` py linenums="268"
+``` py linenums="201"
 --8<--
-examples/deephpms/burgers.py:268:291
+examples/deephpms/burgers.py:201:222
 --8<--
 ```
 
@@ -246,9 +223,9 @@ examples/deephpms/burgers.py:268:291
 
 因为第三阶段评价时只需要对训练得到的点的值进行评价，而不需要对边界条件满足程度或 PDE 满足程度进行评价，因此评价指标 `metric` 为 `L2` 正则化函数
 
-``` py linenums="309"
+``` py linenums="305"
 --8<--
-examples/deephpms/burgers.py:309:318
+examples/deephpms/burgers.py:305:325
 --8<--
 ```
 
@@ -260,25 +237,25 @@ examples/deephpms/burgers.py:309:318
 
 与 PDE 相关的自定义 loss 函数为
 
-``` py linenums="28"
+``` py linenums="25"
 --8<--
-examples/deephpms/burgers.py:28:30
+examples/deephpms/burgers.py:25:27
 --8<--
 ```
 
 与 PDE 相关的自定义 metric 函数为
 
-``` py linenums="33"
+``` py linenums="30"
 --8<--
-examples/deephpms/burgers.py:33:38
+examples/deephpms/burgers.py:30:35
 --8<--
 ```
 
 与边界条件相关的自定义 loss 函数为
 
-``` py linenums="41"
+``` py linenums="38"
 --8<--
-examples/deephpms/burgers.py:41:52
+examples/deephpms/burgers.py:38:49
 --8<--
 ```
 
@@ -288,25 +265,25 @@ examples/deephpms/burgers.py:41:52
 
 第一阶段训练、评估
 
-``` py linenums="154"
+``` py linenums="160"
 --8<--
-examples/deephpms/burgers.py:154:169
+examples/deephpms/burgers.py:160:176
 --8<--
 ```
 
 第二阶段训练、评估
 
-``` py linenums="218"
+``` py linenums="224"
 --8<--
-examples/deephpms/burgers.py:218:233
+examples/deephpms/burgers.py:224:240
 --8<--
 ```
 
 第三阶段训练、评估
 
-``` py linenums="321"
+``` py linenums="327"
 --8<--
-examples/deephpms/burgers.py:321:336
+examples/deephpms/burgers.py:327:343
 --8<--
 ```
 

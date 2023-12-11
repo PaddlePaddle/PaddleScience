@@ -28,9 +28,6 @@ from ppsci.utils import logger
 class Arch(nn.Layer):
     """Base class for Network."""
 
-    input_keys: Tuple[str, ...]
-    output_keys: Tuple[str, ...]
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._input_transform: Callable[
@@ -68,7 +65,7 @@ class Arch(nn.Layer):
         Args:
             data_dict (Dict[str, paddle.Tensor]): Dict contains tensor.
             keys (Tuple[str, ...]): Keys tensor fetched from.
-            axis (int, optional): Axis concatenate at. Defaults to -1.
+            axis (int, optional): Axis concate at. Defaults to -1.
 
         Returns:
             Tuple[paddle.Tensor, ...]: Concatenated tensor.

@@ -202,7 +202,7 @@ if __name__ == "__main__":
         evenly=True,
     )
     visualizer = {
-        "visualize_u_v_p": ppsci.visualize.VisualizerVtu(
+        "visulzie_u_v_p": ppsci.visualize.VisualizerVtu(
             vis_points,
             {"u": lambda d: d["u"], "v": lambda d: d["v"], "p": lambda d: d["p"]},
             num_timestamps=NUM_TIMESTAMPS,

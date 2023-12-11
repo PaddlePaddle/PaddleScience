@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 from paddle import io
 
@@ -35,7 +34,7 @@ class Validator:
         dataset (io.Dataset): Dataset for validator.
         dataloader_cfg (Dict[str, Any]): Dataloader config.
         loss (loss.Loss): Loss functor.
-        metric (Optional[Dict[str, metric.Metric]]): Named metric functors in dict.
+        metric (Dict[str, metric.Metric]): Named metric functors in dict.
         name (str): Name of validator.
     """
 
@@ -44,7 +43,7 @@ class Validator:
         dataset: io.Dataset,
         dataloader_cfg: Dict[str, Any],
         loss: "loss.Loss",
-        metric: Optional[Dict[str, "metric.Metric"]],
+        metric: Dict[str, "metric.Metric"],
         name: str,
     ):
         self.data_loader = data.build_dataloader(dataset, dataloader_cfg)

@@ -97,7 +97,7 @@ class Siren(nn.Layer):
 
     @staticmethod
     def init_for_first_layer(layer: nn.Linear):
-        """Initialization only for first hidden layer.
+        """Initialzation only for first hidden layer.
         ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L630
         """
         if not isinstance(layer, nn.Linear):
@@ -112,7 +112,7 @@ class Siren(nn.Layer):
 
     @staticmethod
     def init_for_hidden_layer(layer: nn.Linear, w0: float = 30):
-        """Initialization for hidden layer except first layer.
+        """Initialzation for hidden layer except first layer.
         ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L622
         """
         if not isinstance(layer, nn.Linear):

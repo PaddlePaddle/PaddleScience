@@ -2,18 +2,6 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6184070?contributionType=1&sUid=438690&shared=1&ts=1684239806160" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型训练命令"
-
-    ``` sh
-    python darcy2d.py
-    ```
-
-=== "模型评估命令"
-
-    ``` sh
-    python darcy2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/darcy2d/darcy2d_pretrained.pdparams
-    ```
-
 ## 1. 背景简介
 
 Darcy Flow是一个基于达西定律的工具，用于计算液体的流动。在地下水模拟、水文学、水文地质学和石油工程等领域中，Darcy Flow被广泛应用。
@@ -54,9 +42,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="33"
+``` py linenums="32"
 --8<--
-examples/darcy/darcy2d.py:33:34
+examples/darcy/darcy2d.py:32:33
 --8<--
 ```
 
@@ -68,9 +56,9 @@ examples/darcy/darcy2d.py:33:34
 
 由于 2D-Poisson 使用的是 Poisson 方程的2维形式，因此可以直接使用 PaddleScience 内置的 `Poisson`，指定该类的参数 `dim` 为2。
 
-``` py linenums="36"
+``` py linenums="35"
 --8<--
-examples/darcy/darcy2d.py:36:37
+examples/darcy/darcy2d.py:35:36
 --8<--
 ```
 
@@ -79,9 +67,9 @@ examples/darcy/darcy2d.py:36:37
 本文中 2D darcy 问题作用在以 (0.0, 0.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-``` py linenums="39"
+``` py linenums="38"
 --8<--
-examples/darcy/darcy2d.py:39:40
+examples/darcy/darcy2d.py:38:39
 --8<--
 ```
 
@@ -91,9 +79,9 @@ examples/darcy/darcy2d.py:39:40
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="42"
+``` py linenums="41"
 --8<--
-examples/darcy/darcy2d.py:42:46
+examples/darcy/darcy2d.py:41:49
 --8<--
 ```
 
@@ -101,9 +89,9 @@ examples/darcy/darcy2d.py:42:46
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="48"
+``` py linenums="51"
 --8<--
-examples/darcy/darcy2d.py:48:65
+examples/darcy/darcy2d.py:51:68
 --8<--
 ```
 
@@ -125,9 +113,9 @@ examples/darcy/darcy2d.py:48:65
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-``` py linenums="67"
+``` py linenums="70"
 --8<--
-examples/darcy/darcy2d.py:67:77
+examples/darcy/darcy2d.py:70:80
 --8<--
 ```
 
@@ -143,9 +131,9 @@ lambda _in: np.sin(2.0 * np.pi * _in["x"]) * np.cos(2.0 * np.pi * _in["y"])
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="78"
+``` py linenums="81"
 --8<--
-examples/darcy/darcy2d.py:78:82
+examples/darcy/darcy2d.py:81:85
 --8<--
 ```
 
@@ -153,9 +141,9 @@ examples/darcy/darcy2d.py:78:82
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数。
 
-``` yaml linenums="39"
+``` py linenums="87"
 --8<--
-examples/darcy/conf/darcy2d.yaml:39:47
+examples/darcy/darcy2d.py:87:88
 --8<--
 ```
 
@@ -163,9 +151,9 @@ examples/darcy/conf/darcy2d.yaml:39:47
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 OneCycle 学习率调整策略。
 
-``` py linenums="84"
+``` py linenums="90"
 --8<--
-examples/darcy/darcy2d.py:84:86
+examples/darcy/darcy2d.py:90:97
 --8<--
 ```
 
@@ -173,9 +161,9 @@ examples/darcy/darcy2d.py:84:86
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="88"
+``` py linenums="99"
 --8<--
-examples/darcy/darcy2d.py:88:105
+examples/darcy/darcy2d.py:99:116
 --8<--
 ```
 
@@ -185,9 +173,9 @@ examples/darcy/darcy2d.py:88:105
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="106"
+``` py linenums="118"
 --8<--
-examples/darcy/darcy2d.py:106:147
+examples/darcy/darcy2d.py:118:156
 --8<--
 ```
 
@@ -197,9 +185,9 @@ examples/darcy/darcy2d.py:106:147
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="148"
+``` py linenums="158"
 --8<--
-examples/darcy/darcy2d.py:148:169
+examples/darcy/darcy2d.py:158:179
 --8<--
 ```
 
@@ -207,9 +195,9 @@ examples/darcy/darcy2d.py:148:169
 
 在使用 `Adam` 优化器训练完毕之后，我们可以将优化器更换成二阶优化器 `L-BFGS` 继续训练少量轮数（此处我们使用 `Adam` 优化轮数的 10% 即可），从而进一步提高模型精度。
 
-``` py linenums="172"
+``` py linenums="181"
 --8<--
-examples/darcy/darcy2d.py:172:198
+examples/darcy/darcy2d.py:181:206
 --8<--
 
 ```

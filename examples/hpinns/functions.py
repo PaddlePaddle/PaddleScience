@@ -297,7 +297,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
 
 
 def eval_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
-    """Compute objective loss for evaluation.
+    """Compute objective loss for evalution.
 
     Args:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
