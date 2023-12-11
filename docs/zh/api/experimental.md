@@ -4,7 +4,7 @@
 
     **Experimental 模块下均为实验性 API，其签名和位置在未来可能发生变动**
 
-::: ppsci.experimental.math
+::: ppsci.experimental.math_module
     handler: python
     options:
       members:
@@ -12,5 +12,6 @@
         - bessel_i0e
         - bessel_i1
         - bessel_i1e
+        - gaussian_integrate
       show_root_heading: true
       heading_level: 3
