@@ -19,10 +19,8 @@ from typing import List
 import paddle
 from paddle import nn
 
-from ppsci.loss.mtl import base
 
-
-class Relobralo(nn.Layer, base.LossAggregator):
+class Relobralo(nn.Layer):
     """Base class of loss aggregator mainly for multitask learning.
 
     Args:
@@ -38,7 +36,13 @@ class Relobralo(nn.Layer, base.LossAggregator):
         tau: float = 1.0,
         eps: float = 1e-8,
     ) -> None:
-        super().__init__(model)
+        super().__init__()
+        self.model = model
+        self.step = 0
+        self.param_num = 0
+        for param in self.model.parameters():
+            if not param.stop_gradient:
+                self.param_num += 1
         self.num_losses: int = num_losses
         self.alpha: float = alpha
         self.beta: float = beta
@@ -66,11 +70,12 @@ class Relobralo(nn.Layer, base.LossAggregator):
 
         if self.step == 0:
             self.loss = losses_stacked.sum()
-            paddle.assign(losses_stacked.detach(), self.losses_init)
+            with paddle.no_grad():
+                paddle.assign(losses_stacked.detach(), self.losses_init)
         else:
             with paddle.no_grad():
                 # 1. update lambda_hist
-                rho = paddle.bernoulli(paddle.tensor(self.beta))
+                rho = paddle.bernoulli(paddle.to_tensor(self.beta))
                 lmbda_hist = rho * self.lmbda + (1 - rho) * self._compute_bal(
                     losses_stacked, self.losses_init
                 )
@@ -83,11 +88,12 @@ class Relobralo(nn.Layer, base.LossAggregator):
                     self.lmbda,
                 )
 
-                # 3. compute reweighted total loss with lambda
-                self.loss = losses_stacked * self.lmbda
+            # 3. compute reweighted total loss with lambda
+            self.loss = (losses_stacked * self.lmbda).sum()
 
         # update losses_prev at the end of each step
-        paddle.assign(losses_stacked.detach(), self.losses_prev)
+        with paddle.no_grad():
+            paddle.assign(losses_stacked.detach(), self.losses_prev)
         return self
 
     def backward(self) -> None:
