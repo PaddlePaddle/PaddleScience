@@ -296,6 +296,7 @@ def train(cfg: DictConfig):
         name="EQ",
     )
 
+    # wrap constraint
     constraint = {
         pde_constraint.name: pde_constraint,
         sup_constraint_b.name: sup_constraint_b,
