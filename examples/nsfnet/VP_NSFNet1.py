@@ -23,7 +23,7 @@ def main(cfg: DictConfig):
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
-def generate_data(N_TRAIN, NB_TRAIN, lam, seed):
+def generate_data(N_TRAIN, lam, seed):
     x = np.linspace(-0.5, 1.0, 101)
     y = np.linspace(-0.5, 1.5, 101)
 
@@ -100,7 +100,7 @@ def train(cfg: DictConfig):
         u_star,
         v_star,
         p_star,
-    ) = generate_data(N_TRAIN, NB_TRAIN, lam, SEED)
+    ) = generate_data(N_TRAIN, lam, SEED)
 
     train_dataloader_cfg = {
         "dataset": {

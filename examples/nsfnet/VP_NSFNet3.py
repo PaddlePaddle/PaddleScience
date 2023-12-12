@@ -51,7 +51,7 @@ def analytic_solution_generate(x, y, z, t):
     return u, v, w, p
 
 
-def generate_data(N_TRAIN, NB_TRAIN, N0_TRAIN):
+def generate_data(N_TRAIN):
     # generate boundary data
     x1 = np.linspace(-1, 1, 31)
     y1 = np.linspace(-1, 1, 31)
@@ -211,7 +211,7 @@ def train(cfg: DictConfig):
         v_star,
         w_star,
         p_star,
-    ) = generate_data(N_TRAIN, NB_TRAIN, N0_TRAIN)
+    ) = generate_data(N_TRAIN)
 
     # set dataloader config
     train_dataloader_cfg_b = {
