@@ -23,8 +23,9 @@
     handler: python
     options:
       members:
+        - AGDA
         - LossAggregator
         - PCGrad
-        - AGDA
+        - Relobralo
       show_root_heading: true
       heading_level: 3

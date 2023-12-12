@@ -21,15 +21,37 @@ from paddle import nn
 
 
 class Relobralo(nn.Layer):
-    """Base class of loss aggregator mainly for multitask learning.
+    r"""
+    **Re**lative **Lo**ss **B**alancing with **Ra**ndom **Lo**okback
+
+    [Multi-Objective Loss Balancing for Physics-Informed Deep Learning](https://arxiv.org/abs/2110.09813)
 
     Args:
-        model (nn.Layer): Training model.
+        num_losses (int): Number of losses.
+        alpha (float, optional): Ability for remembering past in paper. Defaults to 0.95.
+        beta (float, optional): Parameter for generating $\rho$ from bernoulli distribution,
+            and $E[\rho](=\beta)$ should be close to 1. Defaults to 0.99.
+        tau (float, optional): Temperature factor. Equivalent to softmax when $\tau$=1.0,
+            equivalent to argmax when $\tau$=0. Defaults to 1.0.
+        eps (float, optional): $\epsilon$ to avoid divided by 0 in losses. Defaults to 1e-8.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.loss import mtl
+        >>> model = paddle.nn.Linear(3, 4)
+        >>> loss_aggregator = mtl.Relobralo(2)
+        >>> for i in range(5):
+        ...     x1 = paddle.randn([8, 3])
+        ...     x2 = paddle.randn([8, 3])
+        ...     y1 = model(x1)
+        ...     y2 = model(x2)
+        ...     loss1 = paddle.sum(y1)
+        ...     loss2 = paddle.sum((y2 - 2) ** 2)
+        ...     loss_aggregator([loss1, loss2]).backward()
     """
 
     def __init__(
         self,
-        model: nn.Layer,
         num_losses: int,
         alpha: float = 0.95,
         beta: float = 0.99,
@@ -37,12 +59,7 @@ class Relobralo(nn.Layer):
         eps: float = 1e-8,
     ) -> None:
         super().__init__()
-        self.model = model
         self.step = 0
-        self.param_num = 0
-        for param in self.model.parameters():
-            if not param.stop_gradient:
-                self.param_num += 1
         self.num_losses: int = num_losses
         self.alpha: float = alpha
         self.beta: float = beta
