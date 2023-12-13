@@ -96,6 +96,7 @@ class MeshAirfoilDataset(io.Dataset):
         label_keys (Tuple[str, ...]): Name of label data.
         data_dir (str): Directory of MeshAirfoil data.
         mesh_graph_path (str): Path of mesh graph.
+        transpose_edges (bool, optional): Whether transpose the edges array from (2, num_edges) to (num_edges, 2) for convenient of slicing.
     """
 
     use_pgl: bool = True
@@ -106,6 +107,7 @@ class MeshAirfoilDataset(io.Dataset):
         label_keys: Tuple[str, ...],
         data_dir: str,
         mesh_graph_path: str,
+        transpose_edges: bool = False,
     ):
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -119,6 +121,8 @@ class MeshAirfoilDataset(io.Dataset):
 
         self.nodes = self.mesh_graph[0]
         self.edges = self.mesh_graph[1]
+        if transpose_edges:
+            self.edges = self.edges.transpose([1, 0])
         self.elems_list = self.mesh_graph[2]
         self.marker_dict = self.mesh_graph[3]
         self.node_markers = np.full([self.nodes.shape[0], 1], fill_value=-1)
