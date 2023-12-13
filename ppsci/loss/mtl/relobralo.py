@@ -39,7 +39,7 @@ class Relobralo(nn.Layer):
         >>> import paddle
         >>> from ppsci.loss import mtl
         >>> model = paddle.nn.Linear(3, 4)
-        >>> loss_aggregator = mtl.Relobralo(2)
+        >>> loss_aggregator = mtl.Relobralo(num_losses=2)
         >>> for i in range(5):
         ...     x1 = paddle.randn([8, 3])
         ...     x2 = paddle.randn([8, 3])
