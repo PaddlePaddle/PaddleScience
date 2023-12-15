@@ -25,31 +25,34 @@ class HeatExchanger(base.PDE):
 
     $$
     \begin{aligned}
-    & L\left(\frac{q_m c_p}{v}\right)_{\mathrm{c}} \frac{\partial T_{\mathrm{c}}}{\partial \tau}
-    -L\left(q_m c_p\right)_{\mathrm{c}} \frac{\partial T_{\mathrm{c}}}{\partial x}
-    =\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{c}}\left(T_{\mathrm{w}}-T_{\mathrm{c}}\right) \\
-    & L\left(\frac{q_m c_p}{v}\right)_{\mathrm{h}} \frac{\partial T_{\mathrm{h}}}{\partial \tau}
-    +L\left(q_m c_p\right)_{\mathrm{h}} \frac{\partial T_{\mathrm{h}}}{\partial x}
-    =\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{h}}\left(T_{\mathrm{w}}-T_{\mathrm{h}}\right) \\
-    & \left(M c_p\right)_{\mathrm{w}} \frac{\partial T_{\mathrm{w}}}{\partial \tau}
-    =\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{h}}\left(T_{\mathrm{h}}-T_{\mathrm{w}}\right)
-    +\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{c}}\left(T_{\mathrm{c}}-T_{\mathrm{w}}\right)
+    & L\left(\frac{q_m c_p}{v}\right)_{\mathrm{c}} \frac{\partial T_{\mathrm{c}}}{\partial \tau}-L\left(q_m c_p\right)_{\mathrm{c}} \frac{\partial T_{\mathrm{c}}}{\partial x}=\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{c}}\left(T_{\mathrm{w}}-T_{\mathrm{c}}\right), \\
+    & L\left(\frac{q_m c_p}{v}\right)_{\mathrm{h}} \frac{\partial T_{\mathrm{h}}}{\partial \tau}+L\left(q_m c_p\right)_{\mathrm{h}} \frac{\partial T_{\mathrm{h}}}{\partial x}=\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{h}}\left(T_{\mathrm{w}}-T_{\mathrm{h}}\right), \\
+    & \left(M c_p\right)_{\mathrm{w}} \frac{\partial T_{\mathrm{w}}}{\partial \tau}=\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{h}}\left(T_{\mathrm{h}}-T_{\mathrm{w}}\right)+\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{c}}\left(T_{\mathrm{c}}-T_{\mathrm{w}}\right).
     \end{aligned}
     $$
-    where $T$ is temperature, $q_m$ is mass flow rate, $c_p$ represents specific heat capacity,
-    $v$ denotes flow velocity, $L$ stands for flow length, $\eta_{\mathrm{o}}$ signifies fin surface efficiency,
-    $\alpha$ stands for heat transfer coefficient, $A$ indicates heat transfer area,
-    and $M$ represents the mass of the heat transfer structure.
-    The variables $\tau$ and $x$ correspond to time and flow direction, respectively.
-    Subscripts $\mathrm{h}$, $\mathrm{c}$, and $\mathrm{w}$ denote the hot fluid side, cold fluid side, and heat transfer wall, respectively.
+
+    where:
+
+    - $T$ is temperature,
+    - $q_m$ is mass flow rate,
+    - $c_p$ represents specific heat capacity,
+    - $v$ denotes flow velocity,
+    - $L$ stands for flow length,
+    - $\eta_{\mathrm{o}}$ signifies fin surface efficiency,
+    - $\alpha$ stands for heat transfer coefficient,
+    - $A$ indicates heat transfer area,
+    - $M$ represents the mass of the heat transfer structure,
+    - $\tau$ correspond to time,
+    - $x$ correspond flow direction,
+    - Subscripts $\mathrm{h}$, $\mathrm{c}$, and $\mathrm{w}$ denote the hot fluid side, cold fluid side, and heat transfer wall, respectively.
 
     Args:
-        alpha_h: (eta_o*alpha*A)_h/(L*c_ph),
-        alpha_c: (eta_o*alpha*A)_c/(L*c_pc),
-        v_h: v_h,
-        v_c: v_c,
-        w_h: (eta_o*alpha*A)_h/(M*c_pw),
-        w_c: (eta_o*alpha*A)_c/(M*c_pw),
+        alpha_h: $\frac{(\eta_o\alpha A)_h}{L(c_p)_h}$
+        alpha_c: $\frac{(\eta_o\alpha A)_c}{L(c_p)_c}$
+        v_h: $v_h$
+        v_c: $v_c$
+        w_h: $\frac{\eta_o\alpha A)_h}{M(c_p)_w}$
+        w_c: $\frac{\eta_o\alpha A)_c}{M(c_p)_w}$
 
     Examples:
         >>> import ppsci
