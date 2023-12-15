@@ -485,6 +485,7 @@ def get_bipartite_graph_spatial_features(
 
         relative_position = (
             get_bipartite_relative_position_in_receiver_local_coordinates(
+                senders_node_phi=senders_node_phi,
                 senders_node_theta=senders_node_theta,
                 receivers_node_phi=receivers_node_phi,
                 receivers_node_theta=receivers_node_theta,

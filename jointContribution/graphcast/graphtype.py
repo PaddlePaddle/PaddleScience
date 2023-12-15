@@ -642,24 +642,3 @@ def convert_np_to_tensor(graph: GraphGridMesh):
         graph.mesh2grid_edge_feat, dtype=paddle.get_default_dtype()
     )
     return graph
-
-
-if __name__ == "__main__":
-    import json
-    import os
-    import pickle
-
-    import args
-
-    with open("config/GraphCast_small.json", "r") as f:
-        config = args.TrainingArguments(**json.load(f))
-    graph = GraphGridMesh(config=config)
-
-    graph_template_path = os.path.join(
-        "data",
-        "template_graph",
-        f"{config.type}.pkl",
-    )
-    with open(graph_template_path, "wb") as f:
-        pickle.dump(graph, f)
-    print(graph)

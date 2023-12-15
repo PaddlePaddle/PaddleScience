@@ -452,11 +452,3 @@ class ERA5Data(paddle.io.Dataset):
 
     def denormalize(self, inputs_data):
         return inputs_data * self.stacked_targets_stddev + self.stacked_targets_mean
-
-
-if __name__ == "__main__":
-    import json
-
-    with open("config/GraphCast_small.json", "r") as f:
-        config = args.TrainingArguments(**json.load(f))
-    era5dataset = ERA5Data(config=config, data_type="train")
