@@ -332,15 +332,25 @@ def gaussian_integrate(
     return result if (not neg) else -result
 
 
-def fractional_diff(func: Callable, alpha, a, t, h, dtype="float64") -> paddle.Tensor:
-    """Compute fractional derivative of given function at point t with fractional order
+def fractional_diff(
+    func: Callable, alpha: float, a: float, t: float, h: float, dtype="float64"
+) -> paddle.Tensor:
+    r"""Compute fractional derivative of given function at point t with fractional order
     alpha using [Caputo derivative of fractional](https://en.wikipedia.org/wiki/Fractional_calculus#Caputo_fractional_derivative).
+
+    $$
+    D_t^\alpha f(t)=\frac{1}{\Gamma(n-\alpha)} \int_0^t \frac{f^{(n)}(s)}{(t-s)^{\alpha+1-n}} d s .
+    $$
+
+    $$
+    s.t. 0 \lt \alpha \lt 1 .
+    $$
 
     Args:
         func (Callable): Function to compute the fractional derivative of.
+        alpha (float): Fractional order.
         t (float): Point to compute the fractional derivative at.
         a (float): Start point of the fractional integral.
-        alpha (float): Fractional order.
         h (float): Step size for finite difference.
         dtype (str, optional): Data dtype during computation. Defaults to "float64".
 
@@ -358,6 +368,11 @@ def fractional_diff(func: Callable, alpha, a, t, h, dtype="float64") -> paddle.T
         >>> np.testing.assert_allclose(float(res), 1.503547, 1e-6)
     """
 
+    if not (0 < alpha < 1):
+        raise NotImplementedError(
+            f"Given alpha should be in range (0, 1), but got {alpha}"
+        )
+
     def _finite_derivative(
         func: Callable, x: paddle.Tensor, dx: float
     ) -> paddle.Tensor:
@@ -374,10 +389,10 @@ def fractional_diff(func: Callable, alpha, a, t, h, dtype="float64") -> paddle.T
         return (func(x + dx) - func(x - dx)) / (2 * dx)
 
     def int_func(s):
-        return _finite_derivative(func, s, dx=h) / (t - s) ** alpha
+        return _finite_derivative(func, s, dx=h) / (t - s) ** (alpha)
 
     result = (
-        1.0 / paddle.exp(paddle.lgamma(paddle.to_tensor(1 - alpha)))
+        1.0 / paddle.exp(paddle.lgamma(paddle.to_tensor(1.0 - alpha, dtype=dtype)))
     ) * gaussian_integrate(
         int_func, dim=1, N=2**10 + 1, integration_domains=[[a, t]], dtype=dtype
     )
