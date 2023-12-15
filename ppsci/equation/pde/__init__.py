@@ -27,11 +27,11 @@ __all__ = [
     "PDE",
     "DETACH_FUNC_NAME",
     "Biharmonic",
+    "HeatExchanger",
     "Laplace",
     "LinearElasticity",
     "NavierStokes",
     "NormalDotVec",
     "Poisson",
     "Vibration",
-    "HeatExchanger",
 ]

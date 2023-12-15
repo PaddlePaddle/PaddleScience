@@ -52,7 +52,7 @@ def train(cfg: DictConfig):
     w_c = alpha_c / (M * cp_w)
 
     # set model
-    model = ppsci.arch.DeepONets(**cfg.MODEL)
+    model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
 
     # pde/bc constraint use t1~tn, initial constraint use t0
     NPOINT, NTIME = cfg.NPOINT, cfg.NTIME
@@ -68,7 +68,7 @@ def train(cfg: DictConfig):
     }
 
     # Generate train data and eval data
-    visu_mat = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
+    visu_input = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
     data_h = np.random.rand(NQM).reshape([-1, 1]) * 2
     data_c = np.random.rand(NQM).reshape([-1, 1]) * 2
     data_h = data_h.astype("float32")
@@ -76,7 +76,7 @@ def train(cfg: DictConfig):
     test_h = np.random.rand(1).reshape([-1, 1]).astype("float32")
     test_c = np.random.rand(1).reshape([-1, 1]).astype("float32")
     # rearrange train data and eval data
-    points = visu_mat.copy()
+    points = visu_input.copy()
     points["t"] = np.repeat(points["t"], NQM, axis=0)
     points["x"] = np.repeat(points["x"], NQM, axis=0)
     points["qm_h"] = np.tile(data_h, (NPOINT * NTIME, 1))
@@ -84,12 +84,12 @@ def train(cfg: DictConfig):
     points["x"] = np.repeat(points["x"], NQM, axis=0)
     points["qm_h"] = np.repeat(points["qm_h"], NQM, axis=0)
     points["qm_c"] = np.tile(data_c, (NPOINT * NTIME * NQM, 1))
-    visu_mat["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
-    visu_mat["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
+    visu_input["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
+    visu_input["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
 
-    left_indices = visu_mat["x"] == 0
-    right_indices = visu_mat["x"] == DL
-    interior_indices = (visu_mat["x"] != 0) & (visu_mat["x"] != DL)
+    left_indices = visu_input["x"] == 0
+    right_indices = visu_input["x"] == DL
+    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != DL)
     left_indices = np.where(left_indices)
     right_indices = np.where(right_indices)
     interior_indices = np.where(interior_indices)
@@ -130,22 +130,22 @@ def train(cfg: DictConfig):
     }
     # Classification eval data
     test_left_data = {
-        "x": visu_mat["x"][left_indices[0]],
-        "t": visu_mat["t"][left_indices[0]],
-        "qm_h": visu_mat["qm_h"][left_indices[0]],
-        "qm_c": visu_mat["qm_c"][left_indices[0]],
+        "x": visu_input["x"][left_indices[0]],
+        "t": visu_input["t"][left_indices[0]],
+        "qm_h": visu_input["qm_h"][left_indices[0]],
+        "qm_c": visu_input["qm_c"][left_indices[0]],
     }
     test_right_data = {
-        "x": visu_mat["x"][right_indices[0]],
-        "t": visu_mat["t"][right_indices[0]],
-        "qm_h": visu_mat["qm_h"][right_indices[0]],
-        "qm_c": visu_mat["qm_c"][right_indices[0]],
+        "x": visu_input["x"][right_indices[0]],
+        "t": visu_input["t"][right_indices[0]],
+        "qm_h": visu_input["qm_h"][right_indices[0]],
+        "qm_c": visu_input["qm_c"][right_indices[0]],
     }
     test_interior_data = {
-        "x": visu_mat["x"],
-        "t": visu_mat["t"],
-        "qm_h": visu_mat["qm_h"],
-        "qm_c": visu_mat["qm_c"],
+        "x": visu_input["x"],
+        "t": visu_input["t"],
+        "qm_h": visu_input["qm_h"],
+        "qm_c": visu_input["qm_c"],
     }
 
     # set equation
@@ -177,8 +177,9 @@ def train(cfg: DictConfig):
                 "input": left_data,
                 "label": BC_label,
                 "weight": {
-                    "T_h": cfg.TRAIN.weight
-                    * np.ones([left_data["x"].shape[0], 1], dtype="float32")
+                    "T_h": np.full_like(
+                        left_data["x"], cfg.TRAIN.weight.left_sup_constraint.T_h
+                    )
                 },
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -201,8 +202,9 @@ def train(cfg: DictConfig):
                 "input": right_data,
                 "label": BC_label,
                 "weight": {
-                    "T_h": cfg.TRAIN.weight
-                    * np.ones([right_data["x"].shape[0], 1], dtype="float32")
+                    "T_h": np.full_like(
+                        right_data["x"], cfg.TRAIN.weight.right_sup_constraint.T_h
+                    )
                 },
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -225,12 +227,18 @@ def train(cfg: DictConfig):
                 "input": interior_data,
                 "label": interior_label,
                 "weight": {
-                    "heat_boundary": 1
-                    * np.ones([interior_data["x"].shape[0], 1], dtype="float32"),
-                    "cold_boundary": 1
-                    * np.ones([interior_data["x"].shape[0], 1], dtype="float32"),
-                    "wall": cfg.TRAIN.weight
-                    * np.ones([interior_data["x"].shape[0], 1], dtype="float32"),
+                    "heat_boundary": np.full_like(
+                        interior_data["x"],
+                        cfg.TRAIN.weight.interior_sup_constraint.heat_boundary,
+                    ),
+                    "cold_boundary": np.full_like(
+                        interior_data["x"],
+                        cfg.TRAIN.weight.interior_sup_constraint.cold_boundary,
+                    ),
+                    "wall": np.full_like(
+                        interior_data["x"],
+                        cfg.TRAIN.weight.interior_sup_constraint.wall,
+                    ),
                 },
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -251,12 +259,15 @@ def train(cfg: DictConfig):
                 "input": initial_data,
                 "label": initial_label,
                 "weight": {
-                    "T_h": 1
-                    * np.ones([initial_data["x"].shape[0], 1], dtype="float32"),
-                    "T_c": 1
-                    * np.ones([initial_data["x"].shape[0], 1], dtype="float32"),
-                    "T_w": cfg.TRAIN.weight
-                    * np.ones([initial_data["x"].shape[0], 1], dtype="float32"),
+                    "T_h": np.full_like(
+                        initial_data["x"], cfg.TRAIN.weight.initial_sup_constraint.T_h
+                    ),
+                    "T_c": np.full_like(
+                        initial_data["x"], cfg.TRAIN.weight.initial_sup_constraint.T_c
+                    ),
+                    "T_w": np.full_like(
+                        initial_data["x"], cfg.TRAIN.weight.initial_sup_constraint.T_w
+                    ),
                 },
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -283,7 +294,7 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)((model,))
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set validator
     test_BC_label = {
@@ -388,16 +399,16 @@ def train(cfg: DictConfig):
     solver.plot_loss_history()
 
     # visualize prediction after finished training
-    visu_mat["qm_c"] = visu_mat["qm_c"] * 0 + cfg.qm_h
-    visu_mat["qm_h"] = visu_mat["qm_c"] * 0 + cfg.qm_c
-    pred = solver.predict(visu_mat)
-    x = visu_mat["x"][:NPOINT]
+    visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
+    visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
+    pred = solver.predict(visu_input)
+    x = visu_input["x"][:NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = pred["T_h"][:101].numpy() * 0 + T_hin
+    y = np.full_like(pred["T_h"][:NPOINT].numpy(), T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_h"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -406,10 +417,10 @@ def train(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = pred["T_c"][:101].numpy() * 0 + T_cin
+    y = np.full_like(pred["T_c"][:NPOINT].numpy(), T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_c"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -418,10 +429,10 @@ def train(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = pred["T_w"][:101].numpy() * 0 + T_win
+    y = np.full_like(pred["T_w"][:NPOINT].numpy(), T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_w"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -430,11 +441,11 @@ def train(cfg: DictConfig):
     plt.savefig("T_w.png")
     # plot the heat exchanger efficiency as a function of time.
     plt.figure()
-    qm_min = np.min((visu_mat["qm_h"][0], visu_mat["qm_c"][0]))
+    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
-        visu_mat["qm_h"][0]
-        * (pred["T_h"][::101] - pred["T_h"][100::101])
-        / (qm_min * (pred["T_h"][::101] - pred["T_c"][100::101]))
+        visu_input["qm_h"][0]
+        * (pred["T_h"][::NPOINT] - pred["T_h"][NPOINT - 1 :: NPOINT])
+        / (qm_min * (pred["T_h"][::NPOINT] - pred["T_c"][NPOINT - 1 :: NPOINT]))
     ).numpy()
     x = list(range(1, NTIME + 1))
     plt.plot(x, eta)
@@ -472,7 +483,7 @@ def evaluate(cfg: DictConfig):
     w_c = alpha_c / (M * cp_w)
 
     # set model
-    model = ppsci.arch.DeepONets(**cfg.MODEL)
+    model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
 
     # pde/bc constraint use t1~tn, initial constraint use t0
     NPOINT, NTIME = cfg.NPOINT, cfg.NTIME
@@ -487,38 +498,38 @@ def evaluate(cfg: DictConfig):
     }
 
     # Generate eval data
-    visu_mat = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
+    visu_input = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
     test_h = np.random.rand(1).reshape([-1, 1]).astype("float32")
     test_c = np.random.rand(1).reshape([-1, 1]).astype("float32")
     # rearrange train data and eval data
-    visu_mat["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
-    visu_mat["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
+    visu_input["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
+    visu_input["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
 
-    left_indices = visu_mat["x"] == 0
-    right_indices = visu_mat["x"] == DL
-    interior_indices = (visu_mat["x"] != 0) & (visu_mat["x"] != DL)
+    left_indices = visu_input["x"] == 0
+    right_indices = visu_input["x"] == DL
+    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != DL)
     left_indices = np.where(left_indices)
     right_indices = np.where(right_indices)
     interior_indices = np.where(interior_indices)
 
     # Classification eval data
     test_left_data = {
-        "x": visu_mat["x"][left_indices[0]],
-        "t": visu_mat["t"][left_indices[0]],
-        "qm_h": visu_mat["qm_h"][left_indices[0]],
-        "qm_c": visu_mat["qm_c"][left_indices[0]],
+        "x": visu_input["x"][left_indices[0]],
+        "t": visu_input["t"][left_indices[0]],
+        "qm_h": visu_input["qm_h"][left_indices[0]],
+        "qm_c": visu_input["qm_c"][left_indices[0]],
     }
     test_right_data = {
-        "x": visu_mat["x"][right_indices[0]],
-        "t": visu_mat["t"][right_indices[0]],
-        "qm_h": visu_mat["qm_h"][right_indices[0]],
-        "qm_c": visu_mat["qm_c"][right_indices[0]],
+        "x": visu_input["x"][right_indices[0]],
+        "t": visu_input["t"][right_indices[0]],
+        "qm_h": visu_input["qm_h"][right_indices[0]],
+        "qm_c": visu_input["qm_c"][right_indices[0]],
     }
     test_interior_data = {
-        "x": visu_mat["x"],
-        "t": visu_mat["t"],
-        "qm_h": visu_mat["qm_h"],
-        "qm_c": visu_mat["qm_c"],
+        "x": visu_input["x"],
+        "t": visu_input["t"],
+        "qm_h": visu_input["qm_h"],
+        "qm_c": visu_input["qm_c"],
     }
 
     # set equation
@@ -620,16 +631,16 @@ def evaluate(cfg: DictConfig):
     solver.eval()
 
     # visualize prediction after finished training
-    visu_mat["qm_c"] = visu_mat["qm_c"] * 0 + cfg.qm_h
-    visu_mat["qm_h"] = visu_mat["qm_c"] * 0 + cfg.qm_c
-    pred = solver.predict(visu_mat)
-    x = visu_mat["x"][:NPOINT]
+    visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
+    visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
+    pred = solver.predict(visu_input)
+    x = visu_input["x"][:NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = pred["T_h"][:101].numpy() * 0 + T_hin
+    y = np.full_like(pred["T_h"][:NPOINT].numpy(), T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_h"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -638,10 +649,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = pred["T_c"][:101].numpy() * 0 + T_cin
+    y = np.full_like(pred["T_c"][:NPOINT].numpy(), T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_c"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -650,10 +661,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = pred["T_w"][:101].numpy() * 0 + T_win
+    y = np.full_like(pred["T_w"][:NPOINT].numpy(), T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][101 * i * 2 : 101 * (i * 2 + 1)].numpy()
+        y = pred["T_w"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -662,11 +673,11 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_w.png")
     # plot the heat exchanger efficiency as a function of time.
     plt.figure()
-    qm_min = np.min((visu_mat["qm_h"][0], visu_mat["qm_c"][0]))
+    qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
-        visu_mat["qm_h"][0]
-        * (pred["T_h"][::101] - pred["T_h"][100::101])
-        / (qm_min * (pred["T_h"][::101] - pred["T_c"][100::101]))
+        visu_input["qm_h"][0]
+        * (pred["T_h"][::NPOINT] - pred["T_h"][NPOINT - 1 :: NPOINT])
+        / (qm_min * (pred["T_h"][::NPOINT] - pred["T_c"][NPOINT - 1 :: NPOINT]))
     ).numpy()
     x = list(range(1, NTIME + 1))
     plt.plot(x, eta)

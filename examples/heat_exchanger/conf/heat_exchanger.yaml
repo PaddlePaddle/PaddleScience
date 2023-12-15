@@ -69,9 +69,21 @@ TRAIN:
   eval_freq: 1000
   learning_rate: 0.001
   batch_size: 1000
-  weight: 20
   pretrained_model_path: null
   checkpoint_path: null
+  weight:
+    left_sup_constraint:
+      T_h: 20
+    right_sup_constraint:
+      T_h: 20
+    interior_sup_constraint:
+      heat_boundary: 1
+      cold_boundary: 1
+      wall: 20
+    initial_sup_constraint:
+      T_h: 1
+      T_c: 1
+      T_w: 20
 
 # evaluation settings
 EVAL:

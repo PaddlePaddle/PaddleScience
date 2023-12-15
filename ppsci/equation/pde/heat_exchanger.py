@@ -36,25 +36,24 @@ class HeatExchanger(base.PDE):
     +\left(\eta_{\mathrm{o}} \alpha A\right)_{\mathrm{c}}\left(T_{\mathrm{c}}-T_{\mathrm{w}}\right)
     \end{aligned}
     $$
-    where \[T\] is temperature, \[q_m\] is mass flow rate, \[c_p\] represents specific heat capacity,
-    \[v\] denotes flow velocity, \[L\] stands for flow length, \(\eta_{\mathrm{o}}\) signifies fin surface efficiency,
-    \(\alpha\) stands for heat transfer coefficient, \[A\] indicates heat transfer area,
-    and \[M\] represents the mass of the heat transfer structure.
-    The variables \(\tau\) and \(x\) correspond to time and flow direction, respectively.
-    Subscripts \(\mathrm{h}\), \(\mathrm{c}\), and \(\mathrm{w}\) denote the hot fluid side, cold fluid side, and heat transfer wall, respectively.
+    where $T$ is temperature, $q_m$ is mass flow rate, $c_p$ represents specific heat capacity,
+    $v$ denotes flow velocity, $L$ stands for flow length, $\eta_{\mathrm{o}}$ signifies fin surface efficiency,
+    $\alpha$ stands for heat transfer coefficient, $A$ indicates heat transfer area,
+    and $M$ represents the mass of the heat transfer structure.
+    The variables $\tau$ and $x$ correspond to time and flow direction, respectively.
+    Subscripts $\mathrm{h}$, $\mathrm{c}$, and $\mathrm{w}$ denote the hot fluid side, cold fluid side, and heat transfer wall, respectively.
 
     Args:
-        alpha_h: (eta_o*alpha*A)_h/(L*c_ph)
-        alpha_c: (eta_o*alpha*A)_c/(L*c_pc)
-        v_h: v_h
-        v_c: v_c
-        w_h: (eta_o*alpha*A)_h/(M*c_pw)
-        w_c: (eta_o*alpha*A)_c/(M*c_pw)
+        alpha_h: (eta_o*alpha*A)_h/(L*c_ph),
+        alpha_c: (eta_o*alpha*A)_c/(L*c_pc),
+        v_h: v_h,
+        v_c: v_c,
+        w_h: (eta_o*alpha*A)_h/(M*c_pw),
+        w_c: (eta_o*alpha*A)_c/(M*c_pw),
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.HeatExchanger(1.0,1.0,1.0,1.0,1.0,1.0)
-
     """
 
     def __init__(
