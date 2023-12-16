@@ -1,15 +1,9 @@
 import generate_data
 import hydra
-import numpy as np
 import paddle
 from omegaconf import DictConfig
-from paddle.io import DataLoader
-from pyMesh import hcubeMesh
-from pyMesh import to4DTensor
-from readOF import convertOFMeshToImage_StructuredMesh
 
 import ppsci
-from ppsci.data.dataset.geo_dataset import FixGeoDataset
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -254,86 +248,44 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    h = cfg.MODEL.h
-    r = cfg.r
-    R = cfg.R
-    dtheta = cfg.dtheta
-    ny = cfg.MODEL.ny
-    nx = cfg.MODEL.nx
-    leftX = r * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    leftY = r * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    rightX = R * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    rightY = R * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    lowX = np.linspace(leftX[0], rightX[0], nx)
-    lowY = lowX * 0 + np.sin(dtheta)
-    upX = np.linspace(leftX[-1], rightX[-1], nx)
-    upY = upX * 0 - np.sin(dtheta)
 
-    myMesh = hcubeMesh(
-        leftX,
-        leftY,
-        rightX,
-        rightY,
-        lowX,
-        lowY,
-        upX,
-        upY,
-        h,
-        True,
-        True,
-        tolMesh=1e-10,
-        tolJoint=0.01,
-    )
     padSingleSide = cfg.MODEL.padSingleSide
 
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
     model.register_output_transform(None)
-    ParaList = [1, 7]
-    caseName = cfg.casename
-    OFV_sb = []
-    for name in caseName:
-        OFPic = convertOFMeshToImage_StructuredMesh(
-            nx, ny, name + "/30/C", [name + "/30/T"], [0, 1, 0, 1], 0.0, False
-        )
-        OFX = OFPic[:, :, 0]
-        OFY = OFPic[:, :, 1]
-        OFV = OFPic[:, :, 2]
-        OFV_sb_Temp = np.zeros(OFV.shape)
-        for i in range(nx):
-            for j in range(ny):
-                dist = (myMesh.x[j, i] - OFX) ** 2 + (myMesh.y[j, i] - OFY) ** 2
-                idx_min = np.where(dist == dist.min())
-                OFV_sb_Temp[j, i] = OFV[idx_min]
-        OFV_sb.append(OFV_sb_Temp)
-    train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
-    training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+    (
+        Para,
+        _,
+        _,
+        _,
+        _,
+        _,
+        truth,
+        len_data,
+    ) = generate_data.generate_data(cfg)
+
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
-    eV = 0
-    for iteration, batch in enumerate(training_data_loader):
-        [Para, _, _, _, _, _, _, _, _, _, truth] = to4DTensor(batch)
-        outputV = solver.predict({"coords": paddle.to_tensor(Para)})
-        batchSize = outputV.shape[0]
-        for j in range(batchSize):
-            # Impose BC
-            outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-                j, 0, 1:2, padSingleSide:-padSingleSide
-            ]
-            outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-                j, 0, -2:-1, padSingleSide:-padSingleSide
-            ]
-            outputV[j, 0, :, -padSingleSide:] = 0
-            outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
-        eV = (
-            eV
-            + paddle.sqrt(
-                paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
-            ).item()
-        )
-    print(eV / len(training_data_loader))
+
+    outputV = solver.predict({"coords": paddle.to_tensor(Para)})
+    batchSize = outputV.shape[0]
+    for j in range(batchSize):
+        # Impose BC
+        outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
+            j, 0, 1:2, padSingleSide:-padSingleSide
+        ]
+        outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
+            j, 0, -2:-1, padSingleSide:-padSingleSide
+        ]
+        outputV[j, 0, :, -padSingleSide:] = 0
+        outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
+    eV = paddle.sqrt(
+        paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
+    ).item()
+    print(eV / len_data)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="case2.yaml")
