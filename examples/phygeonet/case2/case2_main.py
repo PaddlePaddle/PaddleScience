@@ -1,3 +1,4 @@
+import generate_data
 import hydra
 import numpy as np
 import paddle
@@ -167,88 +168,23 @@ def train(cfg: DictConfig):
     # initiallizer
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    h = cfg.MODEL.h
-    r = cfg.r
-    R = cfg.R
-    dtheta = cfg.dtheta
-    ny = cfg.MODEL.ny
-    nx = cfg.MODEL.nx
-    leftX = r * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    leftY = r * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    rightX = R * np.cos(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    rightY = R * np.sin(np.linspace(dtheta, 2 * np.pi - dtheta, ny))
-    lowX = np.linspace(leftX[0], rightX[0], nx)
-    lowY = lowX * 0 + np.sin(dtheta)
-    upX = np.linspace(leftX[-1], rightX[-1], nx)
-    upY = upX * 0 - np.sin(dtheta)
-
-    myMesh = hcubeMesh(
-        leftX,
-        leftY,
-        rightX,
-        rightY,
-        lowX,
-        lowY,
-        upX,
-        upY,
-        h,
-        True,
-        True,
-        tolMesh=1e-10,
-        tolJoint=0.01,
-    )
 
     padSingleSide = cfg.MODEL.padSingleSide
 
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
-    optimizer = ppsci.optimizer.Adam(cfg.lr)(model)
-    ParaList = [1, 7]
-    caseName = cfg.casename
-    OFV_sb = []
-    for name in caseName:
-        OFPic = convertOFMeshToImage_StructuredMesh(
-            nx, ny, name + "/30/C", [name + "/30/T"], [0, 1, 0, 1], 0.0, False
-        )
-        OFX = OFPic[:, :, 0]
-        OFY = OFPic[:, :, 1]
-        OFV = OFPic[:, :, 2]
-        OFV_sb_Temp = np.zeros(OFV.shape)
-        for i in range(nx):
-            for j in range(ny):
-                dist = (myMesh.x[j, i] - OFX) ** 2 + (myMesh.y[j, i] - OFY) ** 2
-                idx_min = np.where(dist == dist.min())
-                OFV_sb_Temp[j, i] = OFV[idx_min]
-        OFV_sb.append(OFV_sb_Temp)
-    train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
-    training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
 
-    coords = []
-    jinvs = []
-    dxdxis = []
-    dydxis = []
-    dxdetas = []
-    dydetas = []
-    truths = []
-    for iteration, batch in enumerate(training_data_loader):
-        [Para, _, _, _, _, Jinv, dxdxi, dydxi, dxdeta, dydeta, truth] = to4DTensor(
-            batch
-        )
-        coords.append(Para)
-        jinvs.append(Jinv)
-        dxdxis.append(dxdxi)
-        dydxis.append(dydxi)
-        dxdetas.append(dxdeta)
-        dydetas.append(dydeta)
-        truths.append(truth)
-
-    coords = np.concatenate(coords)
-    jinvs = np.concatenate(jinvs)
-    dxdxis = np.concatenate(dxdxis)
-    dydxis = np.concatenate(dydxis)
-    dxdetas = np.concatenate(dxdetas)
-    dydetas = np.concatenate(dydetas)
-    truths = np.concatenate(truths)
+    (
+        coords,
+        jinvs,
+        dxdxis,
+        dydxis,
+        dxdetas,
+        dydetas,
+        truths,
+        len_data,
+    ) = generate_data.generate_data()
     #
     # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
 
@@ -275,9 +211,7 @@ def train(cfg: DictConfig):
 
     constraint_pde = {sup_constraint_mres.name: sup_constraint_mres}
 
-    def _transform_out(
-        _input, outputV, padSingleSide=padSingleSide, k=len(training_data_loader)
-    ):
+    def _transform_out(_input, outputV, padSingleSide=padSingleSide, k=len_data):
         batchSize = outputV.shape[0]
         Jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
@@ -308,9 +242,9 @@ def train(cfg: DictConfig):
         constraint_pde,
         cfg.output_dir,
         optimizer,
-        epochs=cfg.epochs,
+        epochs=cfg.TRAIN.epochs,
         iters_per_epoch=coords.shape[0],
-        eval_with_no_grad=cfg.eval_with_no_grad,
+        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
     )
 
     solver.train()
@@ -374,10 +308,14 @@ def evaluate(cfg: DictConfig):
         OFV_sb.append(OFV_sb_Temp)
     train_set = FixGeoDataset(ParaList, myMesh, OFV_sb)
     training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
+    )
     eV = 0
     for iteration, batch in enumerate(training_data_loader):
         [Para, _, _, _, _, _, _, _, _, _, truth] = to4DTensor(batch)
-        outputV = model({"coords": paddle.to_tensor(Para)})
+        outputV = solver.predict({"coords": paddle.to_tensor(Para)})
         batchSize = outputV.shape[0]
         for j in range(batchSize):
             # Impose BC

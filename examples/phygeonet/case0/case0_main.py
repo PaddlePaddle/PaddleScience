@@ -201,7 +201,7 @@ def train(cfg: DictConfig):
         tolMesh=1e-10,
         tolJoint=1,
     )
-    batchSize = cfg.batchsize
+    batchSize = cfg.TRAIN.batchsize
     NvarInput = cfg.MODEL.NvarInput
     NvarOutput = cfg.MODEL.NvarOutput
     padSingleSide = cfg.MODEL.padSingleSide
@@ -217,7 +217,7 @@ def train(cfg: DictConfig):
     )
     # model.set_state_dict(paddle.load('torch_init.pdparams'))
 
-    optimizer = ppsci.optimizer.Adam(cfg.lr)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
     MeshList = []
     MeshList.append(myMesh)
     train_set = VaryGeoDataset(MeshList)
@@ -298,9 +298,9 @@ def train(cfg: DictConfig):
         constraint_pde,
         output_dir,
         optimizer,
-        epochs=cfg.epochs,
+        epochs=cfg.TRAIN.epochs,
         iters_per_epoch=coords.shape[0],
-        eval_with_no_grad=cfg.eval_with_no_grad,
+        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
     )
 
     solver.train()
@@ -356,13 +356,17 @@ def evaluate(cfg: DictConfig):
     MeshList.append(myMesh)
     train_set = VaryGeoDataset(MeshList)
     training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
+    )
     coords = []
     for iteration, batch in enumerate(training_data_loader):
         [_, coord, _, _, _, _, _, _, _, _] = to4DTensor(batch)
         coords.append(coord)
 
     coords = np.concatenate(coords)
-    outputV = model({"coords": paddle.to_tensor(coords)})
+    outputV = solver.predict({"coords": paddle.to_tensor(coords)})
     outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = 0
     outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = 1
     outputV[0, 0, padSingleSide:-padSingleSide, -padSingleSide:] = 1

@@ -1,12 +1,32 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_phygeonet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-output_dir: ./output_case2
+output_dir: ${hydra:run.dir}
 r: 0.5
 R: 1
-lr: 1e-3
 dtheta: 0
-batchsize: 2
+
 casename: ["TemplateCase0", "TemplateCase6"]
 # model settings
 MODEL:
@@ -20,9 +40,11 @@ MODEL:
   padSingleSide: 1
 
 # training settings
-
-epochs: 1000
-eval_with_no_grad: true
+TRAIN:
+  epochs: 1000
+  eval_with_no_grad: true
+  lr: 1e-3
+  batchsize: 2
 
 # evaluation settings
 EVAL:
