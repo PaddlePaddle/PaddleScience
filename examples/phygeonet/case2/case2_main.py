@@ -184,7 +184,7 @@ def train(cfg: DictConfig):
         dydetas,
         truths,
         len_data,
-    ) = generate_data.generate_data()
+    ) = generate_data.generate_data(cfg)
     #
     # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
 

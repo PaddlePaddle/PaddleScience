@@ -1,3 +1,4 @@
+import generate_data
 import hydra
 import numpy as np
 import Ofpp
@@ -171,37 +172,17 @@ def train(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     h = cfg.MODEL.h
-    OFBCCoord = Ofpp.parse_boundary_field(cfg.boundary_dir)
-    OFLOWC = OFBCCoord[b"low"][b"value"]
-    OFUPC = OFBCCoord[b"up"][b"value"]
-    OFLEFTC = OFBCCoord[b"left"][b"value"]
-    OFRIGHTC = OFBCCoord[b"right"][b"value"]
-    leftX = OFLEFTC[:, 0]
-    leftY = OFLEFTC[:, 1]
-    lowX = OFLOWC[:, 0]
-    lowY = OFLOWC[:, 1]
-    rightX = OFRIGHTC[:, 0]
-    rightY = OFRIGHTC[:, 1]
-    upX = OFUPC[:, 0]
-    upY = OFUPC[:, 1]
-    ny = len(leftX)
-    nx = len(lowX)
-    myMesh = hcubeMesh(
-        leftX,
-        leftY,
-        rightX,
-        rightY,
-        lowX,
-        lowY,
-        upX,
-        upY,
-        h,
-        True,
-        True,
-        tolMesh=1e-10,
-        tolJoint=1,
-    )
-    batchSize = cfg.TRAIN.batchsize
+    (
+        coords,
+        jinvs,
+        dxdxis,
+        dydxis,
+        dxdetas,
+        dydetas,
+        nx,
+        ny,
+    ) = generate_data.generate_data(cfg)
+
     NvarInput = cfg.MODEL.NvarInput
     NvarOutput = cfg.MODEL.NvarOutput
     padSingleSide = cfg.MODEL.padSingleSide
@@ -218,31 +199,7 @@ def train(cfg: DictConfig):
     # model.set_state_dict(paddle.load('torch_init.pdparams'))
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
-    MeshList = []
-    MeshList.append(myMesh)
-    train_set = VaryGeoDataset(MeshList)
-    training_data_loader = DataLoader(dataset=train_set, batch_size=batchSize)
-    coords = []
-    jinvs = []
-    dxdxis = []
-    dydxis = []
-    dxdetas = []
-    dydetas = []
-    for iteration, batch in enumerate(training_data_loader):
-        [_, coord, _, _, _, Jinv, dxdxi, dydxi, dxdeta, dydeta] = to4DTensor(batch)
-        coords.append(coord)
-        jinvs.append(Jinv)
-        dxdxis.append(dxdxi)
-        dydxis.append(dydxi)
-        dxdetas.append(dxdeta)
-        dydetas.append(dydeta)
 
-    coords = np.concatenate(coords)
-    jinvs = np.concatenate(jinvs)
-    dxdxis = np.concatenate(dxdxis)
-    dydxis = np.concatenate(dydxis)
-    dxdetas = np.concatenate(dxdetas)
-    dydetas = np.concatenate(dydetas)
     #
     # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
 
