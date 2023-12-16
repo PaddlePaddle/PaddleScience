@@ -1,17 +1,12 @@
 import generate_data
 import hydra
 import numpy as np
-import Ofpp
 import paddle
 from omegaconf import DictConfig
-from paddle.io import DataLoader
-from pyMesh import hcubeMesh
-from pyMesh import to4DTensor
 from readOF import convertOFMeshToImage_StructuredMesh
 from sklearn.metrics import mean_squared_error as calMSE
 
 import ppsci
-from ppsci.data.dataset.geo_dataset import VaryGeoDataset
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -171,7 +166,6 @@ def train(cfg: DictConfig):
     # initiallizer
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    h = cfg.MODEL.h
     (
         coords,
         jinvs,
@@ -189,7 +183,7 @@ def train(cfg: DictConfig):
     model = ppsci.arch.USCNN(
         cfg.MODEL.input_keys,
         cfg.MODEL.output_keys,
-        h,
+        cfg.MODEL.h,
         nx,
         ny,
         NvarInput,
@@ -266,63 +260,34 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-
-    h = cfg.MODEL.h
-    OFBCCoord = Ofpp.parse_boundary_field(cfg.boundary_dir)
-    OFLOWC = OFBCCoord[b"low"][b"value"]
-    OFUPC = OFBCCoord[b"up"][b"value"]
-    OFLEFTC = OFBCCoord[b"left"][b"value"]
-    OFRIGHTC = OFBCCoord[b"right"][b"value"]
-    leftX = OFLEFTC[:, 0]
-    leftY = OFLEFTC[:, 1]
-    lowX = OFLOWC[:, 0]
-    lowY = OFLOWC[:, 1]
-    rightX = OFRIGHTC[:, 0]
-    rightY = OFRIGHTC[:, 1]
-    upX = OFUPC[:, 0]
-    upY = OFUPC[:, 1]
-    ny = len(leftX)
-    nx = len(lowX)
-    myMesh = hcubeMesh(
-        leftX,
-        leftY,
-        rightX,
-        rightY,
-        lowX,
-        lowY,
-        upX,
-        upY,
-        h,
-        True,
-        True,
-        tolMesh=1e-10,
-        tolJoint=1,
-    )
+    SEED = cfg.seed
+    ppsci.utils.misc.set_random_seed(SEED)
+    (
+        coords,
+        _,
+        _,
+        _,
+        _,
+        _,
+        nx,
+        ny,
+    ) = generate_data.generate_data(cfg)
     OFPic = convertOFMeshToImage_StructuredMesh(
         nx, ny, "TemplateCase/30/C", ["TemplateCase/30/T"], [0, 1, 0, 1], 0.0, False
     )
 
+    ## generate targets
     OFV = OFPic[:, :, 2]
     OFV_sb = paddle.to_tensor(OFV)
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+
+    ## create model
     padSingleSide = 1
     model = ppsci.arch.USCNN(**cfg.MODEL)
     model.register_output_transform(None)
-    MeshList = []
-    MeshList.append(myMesh)
-    train_set = VaryGeoDataset(MeshList)
-    training_data_loader = DataLoader(dataset=train_set, batch_size=cfg.batchsize)
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
-    coords = []
-    for iteration, batch in enumerate(training_data_loader):
-        [_, coord, _, _, _, _, _, _, _, _] = to4DTensor(batch)
-        coords.append(coord)
-
-    coords = np.concatenate(coords)
     outputV = solver.predict({"coords": paddle.to_tensor(coords)})
     outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = 0
     outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = 1
