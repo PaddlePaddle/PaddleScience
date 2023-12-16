@@ -35,7 +35,7 @@ class L1Loss(base.Loss):
     \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
-    when `reduction` set to be "mean"
+    when `reduction` is set to "mean"
 
     $$
     L = MEAN \left( \Vert \mathbf{x} - \mathbf{y} \Vert_1 \right)
