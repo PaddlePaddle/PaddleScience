@@ -41,7 +41,7 @@ class L1Loss(base.Loss):
     L = MEAN \left( \Vert \mathbf{x} - \mathbf{y} \Vert_1 \right)
     $$
 
-    when `reduction` set to be "sum"
+    when `reduction` is set to "sum"
 
     $$
     L = SUM \left( \Vert \mathbf{x} - \mathbf{y} \Vert_1 \right)
@@ -54,11 +54,11 @@ class L1Loss(base.Loss):
     Examples:
         >>> import paddle
         >>> from ppsci.loss import L1Loss
-        >>> output_dict = {'y1': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
-        ...                'y2': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
-        >>> label_dict = {'y1': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
-        ...               'y2': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
-        >>> weight = {'y1': 0.8, 'y2': 0.2}
+        >>> output_dict = {"u": paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                "v": paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {"u": paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               "v": paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {"u": 0.8, "v": 0.2}
         >>> loss = L1Loss(weight=weight)
         >>> result = loss(output_dict, label_dict)
         >>> print(result)
