@@ -102,6 +102,7 @@ not require precipitation inputs).
 * test_datasets()：测试训练数据制作流程。（可跳过运行）
 * eval()：根据转换后模型参数、图模板、数据进行推理预测。
 * visualize()：结果绘图展示。
+* compare()：对比jax输出结果和paddle复现结果。
 
 
 
@@ -256,6 +257,40 @@ def visualize(target, pred, variable_name, level, robust=True):
         fig_title += f" at {level} hPa"
 
     vis.plot_data(data, fig_title, plot_size, robust, cols=1)
+
+def compare(paddle_pred):
+    with open("config/GraphCast_small.json", "r") as f:
+        config = args.TrainingArguments(**json.load(f))
+    dataset = datasets.ERA5Data(config=config, data_type="train")
+    graph = graphtype.convert_np_to_tensor(dataset.input_data[0])
+
+    jax_graphcast_small_pred_path = "data/jax_graphcast_small_output.npy"
+    jax_graphcast_small_pred = np.load(jax_graphcast_small_pred_path).reshape(
+        181 * 360, 1, 83
+    )
+    jax_graphcast_small_pred = graph.grid_node_outputs_to_prediction(
+        jax_graphcast_small_pred, dataset.targets_template
+    )
+
+    paddle_graphcast_small_pred = paddle_pred
+
+    for var_name in list(paddle_graphcast_small_pred):
+        diff_var = np.average(
+            jax_graphcast_small_pred[var_name].data
+            - paddle_graphcast_small_pred[var_name].data
+        )
+        print(var_name, f"diff is {diff_var}")
+
+    jax_graphcast_small_pred_np = datasets.dataset_to_stacked(
+        jax_graphcast_small_pred
+    )
+    paddle_graphcast_small_pred_np = datasets.dataset_to_stacked(
+        paddle_graphcast_small_pred
+    )
+    diff_all = np.average(
+        jax_graphcast_small_pred_np.data - paddle_graphcast_small_pred_np.data
+    )
+    print(f"All diff is {diff_all}")
 
 ```
 
