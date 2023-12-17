@@ -91,6 +91,8 @@ not require precipitation inputs).
 !unzip -q data/data252766/params.zip -d data/
 !unzip -q data/data252766/stats.zip -d data/
 !unzip -q data/data252766/template_graph.zip -d data/
+!cp data/data252766/graphcast-jax2paddle.csv data/
+!cp data/data252766/jax_graphcast_small_output.npy data/
 ```
 
 ### 4.3 功能运行
@@ -267,6 +269,11 @@ target, pred = eval()  # step.4
 
 ```python
 visualize(target, pred, "2m_temperature", level=50) # 此处可修改变量及level(参考args)
+```
+
+```python
+# 计算graphcast的jax输出结果和paddle复现结果差值
+compare(pred)
 ```
 
 ## 5.模型信息
