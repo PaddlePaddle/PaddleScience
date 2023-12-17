@@ -35,13 +35,41 @@ class L1Loss(base.Loss):
     \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
+    when `reduction` is set to "mean"
+
+    $$
+    L = MEAN \left( \Vert \mathbf{x} - \mathbf{y} \Vert_1 \right)
+    $$
+
+    when `reduction` is set to "sum"
+
+    $$
+    L = SUM \left( \Vert \mathbf{x} - \mathbf{y} \Vert_1 \right)
+    $$
+
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.L1Loss()
+        >>> import paddle
+        >>> from ppsci.loss import L1Loss
+        >>> output_dict = {"u": paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                "v": paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {"u": paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               "v": paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {"u": 0.8, "v": 0.2}
+        >>> loss = L1Loss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               3.35999990)
+
+        >>> loss = L1Loss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               6.71999979)
     """
 
     def __init__(
