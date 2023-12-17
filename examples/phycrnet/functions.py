@@ -27,6 +27,7 @@ dx = None
 num_time_batch = None
 uv = None
 
+
 # transform
 def transform_in(input):
     shape = input["initial_state_shape"][0]
@@ -80,7 +81,7 @@ def transform_out(input, out, model):
     return {"loss": batch_loss}
 
 
-def tranform_output_val(input, out):
+def tranform_output_val(input, out, name='results.npz'):
     output = out["outputs"]
     input = input["input"]
 
@@ -111,17 +112,25 @@ def tranform_output_val(input, out):
 
         ten_true.append(paddle.stack([u_star, v_star]))
         ten_pred.append(paddle.stack([u_pred, v_pred]))
-    ten_true=paddle.stack(ten_true)
-    ten_pred=paddle.stack(ten_pred)
+    ten_true = paddle.stack(ten_true)
+    ten_pred = paddle.stack(ten_pred)
     # compute the error
     # relative error
-    #error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true)
+    # error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true)
     # a-RMSE
-    np.savez('solutions.npz', ten_true=ten_true,ten_pred=ten_pred)
-    error = paddle.sum((ten_pred - ten_true)**2,axis=(1,2,3))/ ten_true.shape[2]/ten_true.shape[3]
-    np.savez('error.npz',error=np.array(error))
+    error = paddle.sum((ten_pred - ten_true) ** 2, axis=(1, 2, 3)) / ten_true.shape[2] / ten_true.shape[3]
+    N = error.shape[0]
+    M = 0
+    for i in range(N):
+        M = M + np.eye(N, k=-i)
+    M = M.T / np.arange(N)
+    M[:, 0] = 0
+    M[0, :] = 0
+    M = paddle.to_tensor(M)
+    aRMSE = paddle.sqrt(M.T @ error)
+    np.savez(name, error=np.array(error), ten_true=ten_true, ten_pred=ten_pred, aRMSE=np.array(aRMSE))
     error=paddle.linalg.norm(error)
-    return {"loss": error}
+    return {"loss": paddle.to_tensor([error])}
 
 
 def train_loss_func(result_dict, *args) -> paddle.Tensor:
@@ -163,10 +172,10 @@ class GaussianRF(object):
             )
 
             self.sqrt_eig = (
-                size
-                * math.sqrt(2.0)
-                * sigma
-                * ((4 * (math.pi**2) * (k**2) + tau**2) ** (-alpha / 2.0))
+                    size
+                    * math.sqrt(2.0)
+                    * sigma
+                    * ((4 * (math.pi ** 2) * (k ** 2) + tau ** 2) ** (-alpha / 2.0))
             )
             self.sqrt_eig[0] = 0.0
 
@@ -186,13 +195,13 @@ class GaussianRF(object):
             k_y = wavenumers
 
             self.sqrt_eig = (
-                (size**2)
-                * math.sqrt(2.0)
-                * sigma
-                * (
-                    (4 * (math.pi**2) * (k_x**2 + k_y**2) + tau**2)
-                    ** (-alpha / 2.0)
-                )
+                    (size ** 2)
+                    * math.sqrt(2.0)
+                    * sigma
+                    * (
+                            (4 * (math.pi ** 2) * (k_x ** 2 + k_y ** 2) + tau ** 2)
+                            ** (-alpha / 2.0)
+                    )
             )
             self.sqrt_eig[0, 0] = 0.0
 
@@ -217,13 +226,13 @@ class GaussianRF(object):
             k_z = wavenumers.transpose(perm=perm)
 
             self.sqrt_eig = (
-                (size**3)
-                * math.sqrt(2.0)
-                * sigma
-                * (
-                    (4 * (math.pi**2) * (k_x**2 + k_y**2 + k_z**2) + tau**2)
-                    ** (-alpha / 2.0)
-                )
+                    (size ** 3)
+                    * math.sqrt(2.0)
+                    * sigma
+                    * (
+                            (4 * (math.pi ** 2) * (k_x ** 2 + k_y ** 2 + k_z ** 2) + tau ** 2)
+                            ** (-alpha / 2.0)
+                    )
             )
             self.sqrt_eig[0, 0, 0] = 0.0
 
@@ -303,7 +312,6 @@ class Dataset:
         }
         label_dict_val = {"dummy_loss": []}
         for i in range(epochs):
-            # paddle not support rank >=7, so reshape and then recover in input_transform
             shape = self.initial_state.shape
             input_dict_train["initial_state"].append(self.initial_state.reshape((-1,)))
             input_dict_train["initial_state_shape"].append(paddle.to_tensor(shape))
@@ -353,7 +361,7 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
 
     # compute the error
     error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true
-    )
+                                                                         )
 
     print("The predicted error is: ", error)
 

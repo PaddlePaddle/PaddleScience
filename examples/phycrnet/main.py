@@ -17,6 +17,7 @@ PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
 import paddle
+
 paddle.device.set_device("gpu:3")
 import os
 from os import path as osp
@@ -76,10 +77,8 @@ def train(cfg: DictConfig):
         label_dict_val,
     ) = functions.Dataset(
         paddle.to_tensor(initial_state),
-        paddle.to_tensor(uv[0:1, ...], dtype=paddle.get_default_dtype()),
-    ).get(
-        10
-    )
+        paddle.to_tensor(uv[0:1,], dtype=paddle.get_default_dtype()),
+    ).get()
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
         {
@@ -120,7 +119,7 @@ def train(cfg: DictConfig):
 
     # initialize solver
     scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
-    optimizer = ppsci.optimizer.Adam(1e-4)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
@@ -131,8 +130,8 @@ def train(cfg: DictConfig):
         cfg.TRAIN.iters_per_epoch,
         validator=validator_pde,
         eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
-        device='gpu:3',
-        pretrained_model_path = '/home/tianchi.yu/hackthon5th63/hackthon5th53/examples/phycrnet/outputs_phycrnet/2023-12-10/17-47-37/checkpoints/latest',
+        device=cfg.device,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
     )
 
     # train model
