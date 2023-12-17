@@ -38,6 +38,7 @@ def train(cfg: DictConfig):
 
     functions.dt = cfg.DT
     functions.dx = dx
+    functions.time_steps = cfg.TIME_STEPS
     functions.num_time_batch = num_time_batch
     model = ppsci.arch.PhyCRNet(
         dt=cfg.DT, step=steps, effective_step=effective_step, **cfg.MODEL
