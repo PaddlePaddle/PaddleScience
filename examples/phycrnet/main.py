@@ -1,24 +1,7 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
-import paddle
-
-paddle.device.set_device("gpu:3")
 import os
 from os import path as osp
 
@@ -70,6 +53,8 @@ def train(cfg: DictConfig):
     data = scio.loadmat(cfg.DATA_PATH)
     uv = data["uv"]  # [t,c,h,w]
     functions.uv = uv
+
+    # generate input data
     (
         input_dict_train,
         label_dict_train,
@@ -77,7 +62,12 @@ def train(cfg: DictConfig):
         label_dict_val,
     ) = functions.Dataset(
         paddle.to_tensor(initial_state),
-        paddle.to_tensor(uv[0:1,], dtype=paddle.get_default_dtype()),
+        paddle.to_tensor(
+            uv[
+                0:1,
+            ],
+            dtype=paddle.get_default_dtype(),
+        ),
     ).get()
 
     sup_constraint_pde = ppsci.constraint.SupervisedConstraint(
