@@ -111,6 +111,7 @@ def train(cfg: DictConfig):
     scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
 
     # temporary, better than scheduler
+    # generally you can use optimizer = ppsci.optimizer.Adam(scheduler)(model)
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
     solver = ppsci.solver.Solver(
         model,
