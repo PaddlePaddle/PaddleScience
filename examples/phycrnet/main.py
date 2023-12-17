@@ -185,7 +185,9 @@ def evaluate(cfg: DictConfig):
     functions.output_graph(model, input_dict_val, cfg.output_dir, cfg.TIME_STEPS)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="phycrnet.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="burgers_equations.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
