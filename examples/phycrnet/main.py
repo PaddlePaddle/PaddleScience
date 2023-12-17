@@ -112,7 +112,7 @@ def train(cfg: DictConfig):
 
     # temporary, better than scheduler, to align the code, use:
     # optimizer = ppsci.optimizer.Adam(scheduler)(model)
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr_scheduler.learning_rate)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
