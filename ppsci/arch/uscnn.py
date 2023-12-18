@@ -8,6 +8,34 @@ from ppsci.arch import base
 
 
 class USCNN(base.Arch):
+    """Physics-informed convolutional neural networks.
+
+    Args:
+       input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+       output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
+       h float: the spatial step
+       nx int:
+       ny int:
+       nVarIn int:
+       nVarOut int:
+       padSingleSide int:
+       k int:
+       s int:
+       p int:
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.PhyCRNet(
+                input_channels=2,
+                hidden_channels=[8, 32, 128, 128],
+                input_kernel_size=[4, 4, 4, 3],
+                input_stride=[2, 2, 2, 1],
+                input_padding=[1, 1, 1, 1],
+                dt=0.002,
+                num_layers=[3, 1],
+                upscale_factor=8
+            )
+    """
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -18,31 +46,22 @@ class USCNN(base.Arch):
         nVarIn: int = 1,
         nVarOut: int = 1,
         padSingleSide: int = 1,
-        initWay=None,
         k=5,
         s=1,
         p=2,
     ):
         super().__init__()
-        """
-        Extract basic information
-
-        input_keys: coords
-
-        output_keys: outputV
-        """
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.initWay = initWay
         self.nVarIn = nVarIn
         self.nVarOut = nVarOut
         self.k = k
-        self.s = 1
-        self.p = 2
+        self.s = s
+        self.p = p
         self.deltaX = h
         self.nx = nx
         self.ny = ny
-
+        self.padSingleSide = padSingleSide
         """
         Define net
         """
@@ -54,7 +73,6 @@ class USCNN(base.Arch):
         self.conv4 = nn.Conv2D(16, self.nVarOut, kernel_size=k, stride=s, padding=p)
         self.pixel_shuffle = nn.PixelShuffle(1)
         self.apply(self.__init_weights)
-        self.padSingleSide = padSingleSide
         self.udfpad = nn.Pad2D(
             [padSingleSide, padSingleSide, padSingleSide, padSingleSide], value=0
         )
@@ -67,7 +85,7 @@ class USCNN(base.Arch):
                 ppsci.utils.initializer.uniform_(m.bias, -bound, bound)
 
     def forward(self, x):
-        ## train
+        # train
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.US(y)
         y = self.relu(self.conv1(y))
