@@ -115,7 +115,7 @@ def gaussian_integrate(
     """Integrate given function using gaussian quadrature.
 
     Args:
-        fn (Callable): Function to be integrated.
+        fn (Callable[[Any], paddle.Tensor]): Function to be integrated.
         dim (int): Dimensionality of the integrand.
         N (int): Number of dicretization points.
         integration_domains (List[List[float]]): Intergration domains.
@@ -146,12 +146,12 @@ def gaussian_integrate(
         else:
             return paddle.meshgrid(*args, **kwargs)
 
-    def _roots(N):
+    def _roots(N: int) -> np.ndarray:
         return np.polynomial.legendre.leggauss(N)[0]
 
     def _calculate_grid(
         N: int,
-        integration_domains,
+        integration_domains: paddle.Tensor,
     ) -> Tuple[paddle.Tensor, paddle.Tensor, int]:
         """Calculate grid points, widths and N per dim
 
@@ -160,9 +160,8 @@ def gaussian_integrate(
             integration_domain (paddle.Tensor): Integration domain.
 
         Returns:
-            paddle.Tensor: Grid points.
-            paddle.Tensor: Grid widths.
-            int: Number of grid slices per dimension.
+            Tuple[paddle.Tensor, paddle.Tensor, int]: Grid points, grid widths and
+                Number of grid slices per dimension.
         """
         # Create grid and assemble evaluation points
         grid_1d = []
@@ -268,13 +267,13 @@ def gaussian_integrate(
         """Apply the "composite rule" to calculate a result from the evaluated integrand.
 
         Args:
-            function_values (paddle.Tensor): Output of the integrand
-            dim (int): Dimensionality
-            n_per_dim (int): Number of grid slices per dimension
-            hs (paddle.Tensor): Distances between grid slices for each dimension
+            function_values (paddle.Tensor): Output of the integrand.
+            dim (int): Dimensionality.
+            n_per_dim (int): Number of grid slices per dimension.
+            hs (paddle.Tensor): Distances between grid slices for each dimension.
 
         Returns:
-            paddle.Tensor: Quadrature result
+            paddle.Tensor: Quadrature result.
         """
         # Reshape the output to be [integrand_dim,N,N,...] points instead of [integrand_dim,dim*N] points
         integrand_shape = function_values.shape[1:]
