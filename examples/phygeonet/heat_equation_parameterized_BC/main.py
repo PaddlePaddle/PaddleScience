@@ -180,7 +180,6 @@ def train(cfg: DictConfig):
         len_data,
     ) = generate_data.generate_data(cfg)
     #
-    # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
 
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {

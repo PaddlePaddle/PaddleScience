@@ -190,12 +190,8 @@ def train(cfg: DictConfig):
         NvarOutput,
         padSingleSide,
     )
-    # model.set_state_dict(paddle.load('torch_init.pdparams'))
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
-
-    #
-    # train = ([coords,jinvs,dxdxis,dydxis,dxdetas,dydetas])
 
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {
