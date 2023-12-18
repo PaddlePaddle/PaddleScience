@@ -23,13 +23,7 @@
 
 ## 2. 问题定义
 
-在此，我们考虑一组多维(n)、非线性、耦合的参数设置下的偏微分方程(PDE)系统的通用形式：
-
-$$
-\mathbf{u}_t+\mathcal{F}\left[\mathbf{u}, \mathbf{u}^2, \cdots, \nabla_{\mathbf{x}} \mathbf{u}, \nabla_{\mathbf{x}}^2 \mathbf{u}, \nabla_{\mathbf{x}} \mathbf{u} \cdot \mathbf{u}, \cdots ; \boldsymbol{\lambda}\right]=\mathbf{0}
-$$
-
-我们的目标是开发基于深度神经网络（DNN）的方法，用于解决给定式中的时空PDE系统的正向分析问题。
+在本模型中，我们考虑的是含有时间和空间的PDE模型，此类模型在推理过程中会存在时间上的误差累积的问题，因此，本文作者通过设计循环卷积神经网络试图减轻每一步时间迭代的误差累积。
 
 ## 3. 问题求解
 
