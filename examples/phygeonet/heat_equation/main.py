@@ -2,7 +2,6 @@ import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from sklearn.metrics import mean_squared_error as calMSE
 
 import ppsci
 
@@ -277,10 +276,9 @@ def evaluate(cfg: DictConfig):
     outputV[0, 0, 0, 0] = 0.5 * (outputV[0, 0, 0, 1] + outputV[0, 0, 1, 0])
     outputV[0, 0, 0, -1] = 0.5 * (outputV[0, 0, 0, -2] + outputV[0, 0, 1, -1])
     CNNVNumpy = outputV[0, 0, :, :]
-    ev = np.sqrt(
-        calMSE(OFV_sb.numpy(), CNNVNumpy.numpy())
-        / calMSE(OFV_sb.numpy(), OFV_sb.numpy() * 0)
-    )
+    ev = paddle.sqrt(
+        paddle.mean((OFV_sb - CNNVNumpy) ** 2) / paddle.mean(OFV_sb**2)
+    ).item()
     print(ev)
 
 
