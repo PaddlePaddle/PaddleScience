@@ -30,73 +30,48 @@ def train(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # Set dimensionless calculation parameters
-    DL = cfg.DL  # lenth of the domain
-    cp_c = cfg.cp_c  # specific heat capacity of cold boundary
-    cp_h = cfg.cp_h  # specific heat capacity of hot boundary
-    cp_w = cfg.cp_w  # specific heat capacity of wall
-    v_h = cfg.v_h  # flow rate of hot boundary
-    v_c = cfg.v_c  # flow rate of cold boundary
-    alpha_h = (
-        cfg.alpha_h
-    )  # surface efficiency*heat transfer coefficient*heat transfer area of hot boundary
-    alpha_c = (
-        cfg.alpha_c
-    )  # surface efficiency*heat transfer coefficient*heat transfer area of cold boundary
-    L = cfg.L  # flow length
-    M = cfg.M  # heat transfer structural quality
-    T_hin = cfg.T_hin  # initial temperature of hot boundary
-    T_cin = cfg.T_cin  # initial temperature of cold boundary
-    T_win = cfg.T_win  # initial temperature of wall
-    w_h = alpha_h / (M * cp_w)
-    w_c = alpha_c / (M * cp_w)
-
     # set model
     model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
 
-    # pde/bc constraint use t1~tn, initial constraint use t0
-    NPOINT, NTIME = cfg.NPOINT, cfg.NTIME
-    NQM = cfg.NQM  # Number of branch network samples
-
     # set time-geometry
-    timestamps = np.linspace(0.0, 2, NTIME + 1, endpoint=True)
+    timestamps = np.linspace(0.0, 2, cfg.NTIME + 1, endpoint=True)
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(0.0, 1, timestamps=timestamps),
-            ppsci.geometry.Interval(0, DL),
+            ppsci.geometry.Interval(0, cfg.DL),
         )
     }
 
     # Generate train data and eval data
-    visu_input = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
-    data_h = np.random.rand(NQM).reshape([-1, 1]) * 2
-    data_c = np.random.rand(NQM).reshape([-1, 1]) * 2
+    visu_input = geom["time_rect"].sample_interior(cfg.NPOINT * cfg.NTIME, evenly=True)
+    data_h = np.random.rand(cfg.NQM).reshape([-1, 1]) * 2
+    data_c = np.random.rand(cfg.NQM).reshape([-1, 1]) * 2
     data_h = data_h.astype("float32")
     data_c = data_c.astype("float32")
     test_h = np.random.rand(1).reshape([-1, 1]).astype("float32")
     test_c = np.random.rand(1).reshape([-1, 1]).astype("float32")
     # rearrange train data and eval data
     points = visu_input.copy()
-    points["t"] = np.repeat(points["t"], NQM, axis=0)
-    points["x"] = np.repeat(points["x"], NQM, axis=0)
-    points["qm_h"] = np.tile(data_h, (NPOINT * NTIME, 1))
-    points["t"] = np.repeat(points["t"], NQM, axis=0)
-    points["x"] = np.repeat(points["x"], NQM, axis=0)
-    points["qm_h"] = np.repeat(points["qm_h"], NQM, axis=0)
-    points["qm_c"] = np.tile(data_c, (NPOINT * NTIME * NQM, 1))
-    visu_input["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
-    visu_input["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
+    points["t"] = np.repeat(points["t"], cfg.NQM, axis=0)
+    points["x"] = np.repeat(points["x"], cfg.NQM, axis=0)
+    points["qm_h"] = np.tile(data_h, (cfg.NPOINT * cfg.NTIME, 1))
+    points["t"] = np.repeat(points["t"], cfg.NQM, axis=0)
+    points["x"] = np.repeat(points["x"], cfg.NQM, axis=0)
+    points["qm_h"] = np.repeat(points["qm_h"], cfg.NQM, axis=0)
+    points["qm_c"] = np.tile(data_c, (cfg.NPOINT * cfg.NTIME * cfg.NQM, 1))
+    visu_input["qm_h"] = np.tile(test_h, (cfg.NPOINT * cfg.NTIME, 1))
+    visu_input["qm_c"] = np.tile(test_c, (cfg.NPOINT * cfg.NTIME, 1))
 
     left_indices = visu_input["x"] == 0
-    right_indices = visu_input["x"] == DL
-    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != DL)
+    right_indices = visu_input["x"] == cfg.DL
+    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != cfg.DL)
     left_indices = np.where(left_indices)
     right_indices = np.where(right_indices)
     interior_indices = np.where(interior_indices)
 
     left_indices1 = points["x"] == 0
-    right_indices1 = points["x"] == DL
-    interior_indices1 = (points["x"] != 0) & (points["x"] != DL)
+    right_indices1 = points["x"] == cfg.DL
+    interior_indices1 = (points["x"] != 0) & (points["x"] != cfg.DL)
     initial_indices1 = points["t"] == points["t"][0]
     left_indices1 = np.where(left_indices1)
     right_indices1 = np.where(right_indices1)
@@ -151,12 +126,17 @@ def train(cfg: DictConfig):
     # set equation
     equation = {
         "heat_exchanger": ppsci.equation.HeatExchanger(
-            alpha_h / (L * cp_h), alpha_c / (L * cp_c), v_h, v_c, w_h, w_c
+            cfg.alpha_h / (cfg.L * cfg.cp_h),
+            cfg.alpha_c / (cfg.L * cfg.cp_c),
+            cfg.v_h,
+            cfg.v_c,
+            cfg.alpha_h / (cfg.M * cfg.cp_w),
+            cfg.alpha_c / (cfg.M * cfg.cp_w),
         )
     }
 
     # set constraint
-    BC_label = {
+    bc_label = {
         "T_h": np.zeros([left_data["x"].shape[0], 1], dtype="float32"),
     }
     interior_label = {
@@ -175,7 +155,7 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": left_data,
-                "label": BC_label,
+                "label": bc_label,
                 "weight": {
                     "T_h": np.full_like(
                         left_data["x"], cfg.TRAIN.weight.left_sup_constraint.T_h
@@ -190,9 +170,7 @@ def train(cfg: DictConfig):
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={
-            "T_h": lambda out: out["T_h"] - T_hin,
-        },
+        output_expr={"T_h": lambda out: out["T_h"] - cfg.T_hin},
         name="left_sup",
     )
     right_sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -200,7 +178,7 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": right_data,
-                "label": BC_label,
+                "label": bc_label,
                 "weight": {
                     "T_h": np.full_like(
                         right_data["x"], cfg.TRAIN.weight.right_sup_constraint.T_h
@@ -215,9 +193,7 @@ def train(cfg: DictConfig):
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={
-            "T_h": lambda out: out["T_c"] - T_cin,
-        },
+        output_expr={"T_h": lambda out: out["T_c"] - cfg.T_cin},
         name="right_sup",
     )
     interior_sup_constraint = ppsci.constraint.SupervisedConstraint(
@@ -279,9 +255,9 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "T_h": lambda out: out["T_h"] - T_hin,
-            "T_c": lambda out: out["T_c"] - T_cin,
-            "T_w": lambda out: out["T_w"] - T_win,
+            "T_h": lambda out: out["T_h"] - cfg.T_hin,
+            "T_c": lambda out: out["T_c"] - cfg.T_cin,
+            "T_w": lambda out: out["T_w"] - cfg.T_win,
         },
         name="initial_sup",
     )
@@ -297,7 +273,7 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set validator
-    test_BC_label = {
+    test_bc_label = {
         "T_h": np.zeros([test_left_data["x"].shape[0], 1], dtype="float32"),
     }
     test_interior_label = {
@@ -314,9 +290,9 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": test_left_data,
-                "label": test_BC_label,
+                "label": test_bc_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -324,9 +300,7 @@ def train(cfg: DictConfig):
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={
-            "T_h": lambda out: out["T_h"] - T_hin,
-        },
+        output_expr={"T_h": lambda out: out["T_h"] - cfg.T_hin},
         metric={"MSE": ppsci.metric.MSE()},
         name="left_mse",
     )
@@ -335,9 +309,9 @@ def train(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": test_right_data,
-                "label": test_BC_label,
+                "label": test_bc_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -345,9 +319,7 @@ def train(cfg: DictConfig):
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={
-            "T_h": lambda out: out["T_c"] - T_cin,
-        },
+        output_expr={"T_h": lambda out: out["T_c"] - cfg.T_cin},
         metric={"MSE": ppsci.metric.MSE()},
         name="right_mse",
     )
@@ -358,7 +330,7 @@ def train(cfg: DictConfig):
                 "input": test_interior_data,
                 "label": test_interior_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -402,13 +374,13 @@ def train(cfg: DictConfig):
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
     pred = solver.predict(visu_input)
-    x = visu_input["x"][:NPOINT]
+    x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = np.full_like(pred["T_h"][:NPOINT].numpy(), T_hin)
+    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label=f"t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -417,10 +389,10 @@ def train(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = np.full_like(pred["T_c"][:NPOINT].numpy(), T_cin)
+    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -429,10 +401,10 @@ def train(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = np.full_like(pred["T_w"][:NPOINT].numpy(), T_win)
+    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -444,10 +416,13 @@ def train(cfg: DictConfig):
     qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
         visu_input["qm_h"][0]
-        * (pred["T_h"][::NPOINT] - pred["T_h"][NPOINT - 1 :: NPOINT])
-        / (qm_min * (pred["T_h"][::NPOINT] - pred["T_c"][NPOINT - 1 :: NPOINT]))
+        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
+        / (
+            qm_min
+            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
+        )
     ).numpy()
-    x = list(range(1, NTIME + 1))
+    x = list(range(1, cfg.NTIME + 1))
     plt.plot(x, eta)
     plt.xlabel("time")
     plt.ylabel(r"$\eta$")
@@ -461,53 +436,29 @@ def evaluate(cfg: DictConfig):
     # initialize logger
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
-    # Set dimensionless calculation parameters
-    DL = cfg.DL  # lenth of the domain
-    cp_c = cfg.cp_c  # specific heat capacity of cold boundary
-    cp_h = cfg.cp_h  # specific heat capacity of hot boundary
-    cp_w = cfg.cp_w  # specific heat capacity of wall
-    v_h = cfg.v_h  # flow rate of hot boundary
-    v_c = cfg.v_c  # flow rate of cold boundary
-    alpha_h = (
-        cfg.alpha_h
-    )  # surface efficiency*heat transfer coefficient*heat transfer area of hot boundary
-    alpha_c = (
-        cfg.alpha_c
-    )  # surface efficiency*heat transfer coefficient*heat transfer area of cold boundary
-    L = cfg.L  # flow length
-    M = cfg.M  # heat transfer structural quality
-    T_hin = cfg.T_hin  # initial temperature of hot boundary
-    T_cin = cfg.T_cin  # initial temperature of cold boundary
-    T_win = cfg.T_win  # initial temperature of wall
-    w_h = alpha_h / (M * cp_w)
-    w_c = alpha_c / (M * cp_w)
-
     # set model
     model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
 
-    # pde/bc constraint use t1~tn, initial constraint use t0
-    NPOINT, NTIME = cfg.NPOINT, cfg.NTIME
-
     # set time-geometry
-    timestamps = np.linspace(0.0, 2, NTIME + 1, endpoint=True)
+    timestamps = np.linspace(0.0, 2, cfg.NTIME + 1, endpoint=True)
     geom = {
         "time_rect": ppsci.geometry.TimeXGeometry(
             ppsci.geometry.TimeDomain(0.0, 1, timestamps=timestamps),
-            ppsci.geometry.Interval(0, DL),
+            ppsci.geometry.Interval(0, cfg.DL),
         )
     }
 
     # Generate eval data
-    visu_input = geom["time_rect"].sample_interior(NPOINT * NTIME, evenly=True)
+    visu_input = geom["time_rect"].sample_interior(cfg.NPOINT * cfg.NTIME, evenly=True)
     test_h = np.random.rand(1).reshape([-1, 1]).astype("float32")
     test_c = np.random.rand(1).reshape([-1, 1]).astype("float32")
     # rearrange train data and eval data
-    visu_input["qm_h"] = np.tile(test_h, (NPOINT * NTIME, 1))
-    visu_input["qm_c"] = np.tile(test_c, (NPOINT * NTIME, 1))
+    visu_input["qm_h"] = np.tile(test_h, (cfg.NPOINT * cfg.NTIME, 1))
+    visu_input["qm_c"] = np.tile(test_c, (cfg.NPOINT * cfg.NTIME, 1))
 
     left_indices = visu_input["x"] == 0
-    right_indices = visu_input["x"] == DL
-    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != DL)
+    right_indices = visu_input["x"] == cfg.DL
+    interior_indices = (visu_input["x"] != 0) & (visu_input["x"] != cfg.DL)
     left_indices = np.where(left_indices)
     right_indices = np.where(right_indices)
     interior_indices = np.where(interior_indices)
@@ -535,12 +486,17 @@ def evaluate(cfg: DictConfig):
     # set equation
     equation = {
         "heat_exchanger": ppsci.equation.HeatExchanger(
-            alpha_h / (L * cp_h), alpha_c / (L * cp_c), v_h, v_c, w_h, w_c
+            cfg.alpha_h / (cfg.L * cfg.cp_h),
+            cfg.alpha_c / (cfg.L * cfg.cp_c),
+            cfg.v_h,
+            cfg.v_c,
+            cfg.alpha_h / (cfg.M * cfg.cp_w),
+            cfg.alpha_c / (cfg.M * cfg.cp_w),
         )
     }
 
     # set validator
-    test_BC_label = {
+    test_bc_label = {
         "T_h": np.zeros([test_left_data["x"].shape[0], 1], dtype="float32"),
     }
     test_interior_label = {
@@ -557,9 +513,9 @@ def evaluate(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": test_left_data,
-                "label": test_BC_label,
+                "label": test_bc_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -568,7 +524,7 @@ def evaluate(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "T_h": lambda out: out["T_h"] - T_hin,
+            "T_h": lambda out: out["T_h"] - cfg.T_hin,
         },
         metric={"MSE": ppsci.metric.MSE()},
         name="left_mse",
@@ -578,9 +534,9 @@ def evaluate(cfg: DictConfig):
             "dataset": {
                 "name": "NamedArrayDataset",
                 "input": test_right_data,
-                "label": test_BC_label,
+                "label": test_bc_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -589,7 +545,7 @@ def evaluate(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "T_h": lambda out: out["T_c"] - T_cin,
+            "T_h": lambda out: out["T_c"] - cfg.T_cin,
         },
         metric={"MSE": ppsci.metric.MSE()},
         name="right_mse",
@@ -601,7 +557,7 @@ def evaluate(cfg: DictConfig):
                 "input": test_interior_data,
                 "label": test_interior_label,
             },
-            "batch_size": NTIME,
+            "batch_size": cfg.NTIME,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -634,13 +590,13 @@ def evaluate(cfg: DictConfig):
     visu_input["qm_c"] = np.full_like(visu_input["qm_c"], cfg.qm_h)
     visu_input["qm_h"] = np.full_like(visu_input["qm_c"], cfg.qm_c)
     pred = solver.predict(visu_input)
-    x = visu_input["x"][:NPOINT]
+    x = visu_input["x"][: cfg.NPOINT]
     # plot temperature of heat boundary
     plt.figure()
-    y = np.full_like(pred["T_h"][:NPOINT].numpy(), T_hin)
+    y = np.full_like(pred["T_h"][: cfg.NPOINT].numpy(), cfg.T_hin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_h"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_h"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_h$")
@@ -649,10 +605,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_h.png")
     # plot temperature of cold boundary
     plt.figure()
-    y = np.full_like(pred["T_c"][:NPOINT].numpy(), T_cin)
+    y = np.full_like(pred["T_c"][: cfg.NPOINT].numpy(), cfg.T_cin)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_c"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_c"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_c$")
@@ -661,10 +617,10 @@ def evaluate(cfg: DictConfig):
     plt.savefig("T_c.png")
     # plot temperature of wall
     plt.figure()
-    y = np.full_like(pred["T_w"][:NPOINT].numpy(), T_win)
+    y = np.full_like(pred["T_w"][: cfg.NPOINT].numpy(), cfg.T_win)
     plt.plot(x, y, label="t = 0.0 s")
     for i in range(10):
-        y = pred["T_w"][NPOINT * i * 2 : NPOINT * (i * 2 + 1)].numpy()
+        y = pred["T_w"][cfg.NPOINT * i * 2 : cfg.NPOINT * (i * 2 + 1)].numpy()
         plt.plot(x, y, label="t = {(i+1)*0.1:,.1f} s")
     plt.xlabel("A")
     plt.ylabel(r"$T_w$")
@@ -676,10 +632,13 @@ def evaluate(cfg: DictConfig):
     qm_min = np.min((visu_input["qm_h"][0], visu_input["qm_c"][0]))
     eta = (
         visu_input["qm_h"][0]
-        * (pred["T_h"][::NPOINT] - pred["T_h"][NPOINT - 1 :: NPOINT])
-        / (qm_min * (pred["T_h"][::NPOINT] - pred["T_c"][NPOINT - 1 :: NPOINT]))
+        * (pred["T_h"][:: cfg.NPOINT] - pred["T_h"][cfg.NPOINT - 1 :: cfg.NPOINT])
+        / (
+            qm_min
+            * (pred["T_h"][:: cfg.NPOINT] - pred["T_c"][cfg.NPOINT - 1 :: cfg.NPOINT])
+        )
     ).numpy()
-    x = list(range(1, NTIME + 1))
+    x = list(range(1, cfg.NTIME + 1))
     plt.plot(x, eta)
     plt.xlabel("time")
     plt.ylabel(r"$\eta$")

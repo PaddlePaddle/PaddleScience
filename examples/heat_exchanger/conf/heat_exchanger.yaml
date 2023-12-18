@@ -43,7 +43,6 @@ NTIME: 20 # number of time steps
 NPOINT: 101 # number of points in the domain
 NQM: 60 # Number of branch network samples
 
-
 # model settings
 MODEL:
   heat_input_keys: ['qm_h']
@@ -69,8 +68,6 @@ TRAIN:
   eval_freq: 1000
   learning_rate: 0.001
   batch_size: 1000
-  pretrained_model_path: null
-  checkpoint_path: null
   weight:
     left_sup_constraint:
       T_h: 20
@@ -88,7 +85,6 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
-  eval_with_no_grad: true
 
 # visualization settings
 qm_h: 1

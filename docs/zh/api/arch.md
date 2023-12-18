@@ -20,6 +20,6 @@
         - PrecipNet
         - UNetEx
         - NowcastNet
-        - PI_DeepONets
+        - HEDeepONets
       show_root_heading: true
       heading_level: 3
