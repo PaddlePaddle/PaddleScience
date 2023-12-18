@@ -67,6 +67,7 @@ class USCNN(base.Arch):
                 ppsci.utils.initializer.uniform_(m.bias, -bound, bound)
 
     def forward(self, x):
+        ## train
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.US(y)
         y = self.relu(self.conv1(y))
@@ -74,7 +75,6 @@ class USCNN(base.Arch):
         y = self.relu(self.conv3(y))
         y = self.pixel_shuffle(self.conv4(y))
 
-        ## train
         y = self.udfpad(y)
         y = y[:, 0, :, :].reshape([y.shape[0], 1, y.shape[2], y.shape[3]])
         y = self.split_to_dict(y, self.output_keys)
