@@ -27,6 +27,7 @@ output_dir: ${hydra:run.dir}
 boundary_dir: TemplateCase/30/C
 dtheta: 0
 
+len_data: 1
 # model settings
 MODEL:
   input_keys: [ 'coords' ]

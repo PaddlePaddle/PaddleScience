@@ -176,7 +176,7 @@ def train(cfg: DictConfig):
     dydxis = data["dydxis"]
     dxdetas = data["dxdetas"]
     dydetas = data["dydetas"]
-    len_data = coords.shape[1]
+    len_data = cfg.len_data
 
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {
