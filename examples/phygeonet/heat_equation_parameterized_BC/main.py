@@ -202,6 +202,7 @@ def train(cfg: DictConfig):
     constraint_pde = {sup_constraint_mres.name: sup_constraint_mres}
 
     def _transform_out(_input, outputV, padSingleSide=padSingleSide, k=len_data):
+        outputV = outputV["outputV"]
         batchSize = outputV.shape[0]
         Jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
@@ -251,15 +252,16 @@ def evaluate(cfg: DictConfig):
 
     model.register_output_transform(None)
     data = np.load(cfg.date_dir)
-    coords = data["coords"]
-    truth = data["truths"]
-    len_data = coords.shape[1]
+    coords = paddle.to_tensor(data["coords"])
+    truth = paddle.to_tensor(data["truths"])
+    len_data = cfg.len_data
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
 
-    outputV = solver.predict({"coords": paddle.to_tensor(coords)})
+    outputV = solver.predict({"coords": coords})
+    outputV = outputV["outputV"]
     batchSize = outputV.shape[0]
     for j in range(batchSize):
         # Impose BC
@@ -277,7 +279,7 @@ def evaluate(cfg: DictConfig):
     print(eV / len_data)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="case2.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="conf.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

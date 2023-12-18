@@ -269,6 +269,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
     outputV = solver.predict({"coords": paddle.to_tensor(coords)})
+    outputV = outputV["outputV"]
     outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = 0
     outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = 1
     outputV[0, 0, padSingleSide:-padSingleSide, -padSingleSide:] = 1
@@ -282,7 +283,7 @@ def evaluate(cfg: DictConfig):
     print(ev)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="case2.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="conf.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)

@@ -22,12 +22,12 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-date_dir: ./heat_equation_bc.npz
+date_dir: heat_equation_bc.npz
 output_dir: ${hydra:run.dir}
 r: 0.5
 R: 1
 dtheta: 0
-
+len_data: 2
 casename: ["TemplateCase0", "TemplateCase6"]
 # model settings
 MODEL:
@@ -35,19 +35,19 @@ MODEL:
   output_keys: [ 'outputV' ]
   h: 0.01
   ny: 276
-  nx: 48
+  nx: 49
   nVarIn: 1
   nVarOut: 1
   padSingleSide: 1
 
 # training settings
 TRAIN:
-  epochs: 1000
+  epochs: 2000
   eval_with_no_grad: true
   lr: 1e-3
   batchsize: 2
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: null
+  pretrained_model_path: ./checkpoints/latest
   eval_with_no_grad: true
