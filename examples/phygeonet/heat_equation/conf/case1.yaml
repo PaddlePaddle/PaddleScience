@@ -22,6 +22,7 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
+date_dir: ./heat_equation.npz
 output_dir: ${hydra:run.dir}
 boundary_dir: TemplateCase/30/C
 dtheta: 0

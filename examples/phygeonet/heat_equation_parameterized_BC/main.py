@@ -1,5 +1,5 @@
-import generate_data
 import hydra
+import numpy as np
 import paddle
 from omegaconf import DictConfig
 
@@ -169,17 +169,14 @@ def train(cfg: DictConfig):
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
 
-    (
-        coords,
-        jinvs,
-        dxdxis,
-        dydxis,
-        dxdetas,
-        dydetas,
-        truths,
-        len_data,
-    ) = generate_data.generate_data(cfg)
-    #
+    data = np.load(cfg.date_dir)
+    coords = data["coords"]
+    jinvs = data["jinvs"]
+    dxdxis = data["dxdxis"]
+    dydxis = data["dydxis"]
+    dxdetas = data["dxdetas"]
+    dydetas = data["dydetas"]
+    len_data = coords.shape[1]
 
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {
@@ -253,23 +250,16 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
     model.register_output_transform(None)
-    (
-        Para,
-        _,
-        _,
-        _,
-        _,
-        _,
-        truth,
-        len_data,
-    ) = generate_data.generate_data(cfg)
-
+    data = np.load(cfg.date_dir)
+    coords = data["coords"]
+    truth = data["truths"]
+    len_data = coords.shape[1]
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
 
-    outputV = solver.predict({"coords": paddle.to_tensor(Para)})
+    outputV = solver.predict({"coords": paddle.to_tensor(coords)})
     batchSize = outputV.shape[0]
     for j in range(batchSize):
         # Impose BC
@@ -280,7 +270,7 @@ def evaluate(cfg: DictConfig):
             j, 0, -2:-1, padSingleSide:-padSingleSide
         ]
         outputV[j, 0, :, -padSingleSide:] = 0
-        outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
+        outputV[j, 0, :, 0:padSingleSide] = coords[j, 0, 0, 0]
     eV = paddle.sqrt(
         paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
     ).item()

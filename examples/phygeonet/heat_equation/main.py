@@ -1,9 +1,7 @@
-import generate_data
 import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
-from readOF import convertOFMeshToImage_StructuredMesh
 from sklearn.metrics import mean_squared_error as calMSE
 
 import ppsci
@@ -166,16 +164,15 @@ def train(cfg: DictConfig):
     # initiallizer
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    (
-        coords,
-        jinvs,
-        dxdxis,
-        dydxis,
-        dxdetas,
-        dydetas,
-        nx,
-        ny,
-    ) = generate_data.generate_data(cfg)
+    data = np.load(cfg.date_dir)
+    coords = data["coords"]
+    jinvs = data["jinvs"]
+    dxdxis = data["dxdxis"]
+    dydxis = data["dydxis"]
+    dxdetas = data["dxdetas"]
+    dydetas = data["dydetas"]
+    nx = cfg.MODEL.nx
+    ny = cfg.MODEL.ny
 
     NvarInput = cfg.MODEL.NvarInput
     NvarOutput = cfg.MODEL.NvarOutput
@@ -258,23 +255,11 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    (
-        coords,
-        _,
-        _,
-        _,
-        _,
-        _,
-        nx,
-        ny,
-    ) = generate_data.generate_data(cfg)
-    OFPic = convertOFMeshToImage_StructuredMesh(
-        nx, ny, "TemplateCase/30/C", ["TemplateCase/30/T"], [0, 1, 0, 1], 0.0, False
-    )
 
-    ## generate targets
-    OFV = OFPic[:, :, 2]
-    OFV_sb = paddle.to_tensor(OFV)
+    data = np.load(cfg.date_dir)
+    coords = data["coords"]
+
+    OFV_sb = paddle.to_tensor(data["OFV_sb"])
 
     ## create model
     padSingleSide = 1

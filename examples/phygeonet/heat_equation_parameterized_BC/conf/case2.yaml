@@ -22,6 +22,7 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
+date_dir: ./heat_equation_bc.npz
 output_dir: ${hydra:run.dir}
 r: 0.5
 R: 1
@@ -35,8 +36,8 @@ MODEL:
   h: 0.01
   ny: 276
   nx: 48
-  NvarInput: 1
-  NvarOutput: 1
+  nVarIn: 1
+  nVarOut: 1
   padSingleSide: 1
 
 # training settings
