@@ -24,15 +24,15 @@ class USCNN(base.Arch):
        p int:
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.PhyCRNet(
-                input_channels=2,
-                hidden_channels=[8, 32, 128, 128],
-                input_kernel_size=[4, 4, 4, 3],
-                input_stride=[2, 2, 2, 1],
-                input_padding=[1, 1, 1, 1],
-                dt=0.002,
-                num_layers=[3, 1],
-                upscale_factor=8
+        >>> model = ppsci.arch.USCNN(
+              input_keys= [ 'coords' ]
+              output_keys= [ 'outputV' ]
+              h= 0.01
+              ny= 19
+              nx= 84
+              NvarInput= 2
+              NvarOutput= 1
+              padSingleSide= 1
             )
     """
 
@@ -62,9 +62,6 @@ class USCNN(base.Arch):
         self.nx = nx
         self.ny = ny
         self.padSingleSide = padSingleSide
-        """
-        Define net
-        """
         self.relu = nn.ReLU()
         self.US = nn.Upsample(size=[self.ny - 2, self.nx - 2], mode="bicubic")
         self.conv1 = nn.Conv2D(self.nVarIn, 16, kernel_size=k, stride=s, padding=p)
