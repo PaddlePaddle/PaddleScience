@@ -16,8 +16,8 @@ class USCNN(base.Arch):
        h float: the spatial step
        nx int:
        ny int:
-       nVarIn int:
-       nVarOut int:
+       nVarIn int: input channel
+       nVarOut int: output channel
        padSingleSide int:
        k int:
        s int:
@@ -46,9 +46,9 @@ class USCNN(base.Arch):
         nVarIn: int = 1,
         nVarOut: int = 1,
         padSingleSide: int = 1,
-        k=5,
-        s=1,
-        p=2,
+        k: int = 5,
+        s: int = 1,
+        p: int = 2,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -74,7 +74,7 @@ class USCNN(base.Arch):
             [padSingleSide, padSingleSide, padSingleSide, padSingleSide], value=0
         )
 
-    def __init_weights(self, m):
+    def init_weights(self, m):
         if isinstance(m, nn.Conv2D):
             bound = 1 / np.sqrt(np.prod(m.weight.shape[1:]))
             ppsci.utils.initializer.uniform_(m.weight, -bound, bound)
