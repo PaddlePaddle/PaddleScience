@@ -1,4 +1,5 @@
 from typing import Tuple
+from typing import Union
 
 import numpy as np
 from paddle import nn
@@ -40,6 +41,7 @@ class USCNN(base.Arch):
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
+        hidden_size: Union[int, Tuple[int, ...]],
         h: float,
         nx: int,
         ny: int,
@@ -64,10 +66,18 @@ class USCNN(base.Arch):
         self.padSingleSide = padSingleSide
         self.relu = nn.ReLU()
         self.US = nn.Upsample(size=[self.ny - 2, self.nx - 2], mode="bicubic")
-        self.conv1 = nn.Conv2D(self.nVarIn, 16, kernel_size=k, stride=s, padding=p)
-        self.conv2 = nn.Conv2D(16, 32, kernel_size=k, stride=s, padding=p)
-        self.conv3 = nn.Conv2D(32, 16, kernel_size=k, stride=s, padding=p)
-        self.conv4 = nn.Conv2D(16, self.nVarOut, kernel_size=k, stride=s, padding=p)
+        self.conv1 = nn.Conv2D(
+            self.nVarIn, hidden_size[0], kernel_size=k, stride=s, padding=p
+        )
+        self.conv2 = nn.Conv2D(
+            hidden_size[0], hidden_size[1], kernel_size=k, stride=s, padding=p
+        )
+        self.conv3 = nn.Conv2D(
+            hidden_size[1], hidden_size[2], kernel_size=k, stride=s, padding=p
+        )
+        self.conv4 = nn.Conv2D(
+            hidden_size[2], self.nVarOut, kernel_size=k, stride=s, padding=p
+        )
         self.pixel_shuffle = nn.PixelShuffle(1)
         self.apply(self.__init_weights)
         self.udfpad = nn.Pad2D(

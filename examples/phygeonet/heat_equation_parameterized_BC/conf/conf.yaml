@@ -33,6 +33,7 @@ casename: ["TemplateCase0", "TemplateCase6"]
 MODEL:
   input_keys: [ 'coords' ]
   output_keys: [ 'outputV' ]
+  hidden_size: [16, 32, 16]
   h: 0.01
   ny: 276
   nx: 49
