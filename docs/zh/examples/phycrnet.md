@@ -83,6 +83,7 @@ examples/phycrnet/main.py:112:116
 $$
 \epsilon_\tau=\sqrt{\frac{1}{N_\tau} \sum_{k=1}^{N_\tau} \frac{\left\|\mathbf{u}^*\left(\mathbf{x}, t_k\right)-\mathbf{u}^\theta\left(\mathbf{x}, t_k\right)\right\|_2^2}{m n}}
 $$
+
 这一步需要通过设置外界函数来进行，因此在训练过程中，我们使用`function.transform_out`来进行训练
 ``` py linenums="47"
 --8<--
