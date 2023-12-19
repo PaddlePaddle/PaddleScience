@@ -223,7 +223,7 @@ def train(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-    padSingleSide = cfg.MODEL.padSingleSide
+    pad_singleside = cfg.MODEL.pad_singleside
 
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
@@ -261,7 +261,7 @@ def train(cfg: DictConfig):
 
     sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
 
-    def _transform_out(_input, outputV, padSingleSide=padSingleSide, k=len_data):
+    def _transform_out(_input, outputV, pad_singleside=pad_singleside, k=len_data):
         outputV = outputV["outputV"]
         batchSize = outputV.shape[0]
         Jinv = _input["jinvs"]
@@ -272,14 +272,14 @@ def train(cfg: DictConfig):
         Para = _input["coords"]
         for j in range(batchSize):
             # Impose BC
-            outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-                j, 0, 1:2, padSingleSide:-padSingleSide
+            outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = outputV[
+                j, 0, 1:2, pad_singleside:-pad_singleside
             ]
-            outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-                j, 0, -2:-1, padSingleSide:-padSingleSide
+            outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = outputV[
+                j, 0, -2:-1, pad_singleside:-pad_singleside
             ]
-            outputV[j, 0, :, -padSingleSide:] = 0
-            outputV[j, 0, :, 0:padSingleSide] = Para[j, 0, 0, 0]
+            outputV[j, 0, :, -pad_singleside:] = 0
+            outputV[j, 0, :, 0:pad_singleside] = Para[j, 0, 0, 0]
         dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
         d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
         dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
@@ -293,7 +293,7 @@ def train(cfg: DictConfig):
         sup_constraint,
         cfg.output_dir,
         optimizer,
-        epochs=cfg.TRAIN.epochs,
+        epochs=cfg.epochs,
         iters_per_epoch=coords.shape[0],
     )
 
@@ -305,61 +305,47 @@ def evaluate(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
 
-    padSingleSide = cfg.MODEL.padSingleSide
+    pad_singleside = cfg.MODEL.pad_singleside
 
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
     model.register_output_transform(None)
-    data = np.load(cfg.date_dir)
-    coords = paddle.to_tensor(data["coords"])
+    data = np.load(cfg.test_data_dir)
+    paras = paddle.to_tensor(data["paras"])
     truths = paddle.to_tensor(data["truths"])
-    b_coord = paddle.to_tensor(data["b_coord"])
+    coords = paddle.to_tensor(data["coords"])
     len_data = cfg.len_data
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
 
-    outputV = solver.predict({"coords": coords})
+    outputV = solver.predict({"coords": paras})
     outputV = outputV["outputV"]
     batchSize = outputV.shape[0]
     for j in range(batchSize):
         # Impose BC
-        outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-            j, 0, 1:2, padSingleSide:-padSingleSide
+        outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = outputV[
+            j, 0, 1:2, pad_singleside:-pad_singleside
         ]
-        outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-            j, 0, -2:-1, padSingleSide:-padSingleSide
+        outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = outputV[
+            j, 0, -2:-1, pad_singleside:-pad_singleside
         ]
-        outputV[j, 0, :, -padSingleSide:] = 0
-        outputV[j, 0, :, 0:padSingleSide] = coords[j, 0, 0, 0]
+        outputV[j, 0, :, -pad_singleside:] = 0
+        outputV[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
     eV = paddle.sqrt(
         paddle.mean((truths - outputV) ** 2) / paddle.mean(truths**2)
     ).item()
     print(eV / len_data)
+    outputVs = outputV.numpy()
     ParaList = [1, 2, 3, 4, 5, 6, 7]
     for i in range(len(ParaList)):
-        Para = coords[i]
-        truth = truths[i]
-        coord = b_coord[i]
-        Para = Para.reshape(1, 1, Para.shape[0], Para.shape[1])
+        truth = truths[i].numpy()
+        coord = coords[i].numpy()
+        outputV = outputVs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
         print("i=", str(i))
-        output = model(Para)
-        outputV = output["outputV"]
-        # Impose BC
-        outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
-            0, 0, 1:2, padSingleSide:-padSingleSide
-        ]  # up outlet bc zero gradient
-        outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
-            0, 0, -2:-1, padSingleSide:-padSingleSide
-        ]  # down inlet bc
-        outputV[0, 0, :, -padSingleSide:] = 0  # right wall bc
-        outputV[0, 0, :, 0:padSingleSide] = Para[0, 0, 0, 0]  # left  wall bc
-
-        # Calculate PDE Residual
-
         fig1 = plt.figure()
         xylabelsize = 20
         xytickssize = 20
@@ -367,9 +353,9 @@ def evaluate(cfg: DictConfig):
         ax = plt.subplot(1, 2, 1)
         _, cbar = visualize2D(
             ax,
-            coord[0, 0, :, :].cpu().detach().numpy(),
-            coord[0, 1, :, :].cpu().detach().numpy(),
-            outputV[0, 0, :, :].cpu().detach().numpy(),
+            coord[0, 0, :, :],
+            coord[0, 1, :, :],
+            outputV[0, :, :],
             "horizontal",
             [0, max(ParaList)],
         )
@@ -387,9 +373,9 @@ def evaluate(cfg: DictConfig):
         ax = plt.subplot(1, 2, 2)
         _, cbar = visualize2D(
             ax,
-            coord[0, 0, :, :].cpu().detach().numpy(),
-            coord[0, 1, :, :].cpu().detach().numpy(),
-            truth[0, 0, :, :].cpu().detach().numpy(),
+            coord[0, 0, :, :],
+            coord[0, 1, :, :],
+            truth[0, 0, :, :],
             "horizontal",
             [0, max(ParaList)],
         )
@@ -407,7 +393,6 @@ def evaluate(cfg: DictConfig):
         fig1.tight_layout(pad=1)
         fig1.savefig("Para" + str(i) + "T.pdf", bbox_inches="tight")
         fig1.savefig("Para" + str(i) + "T.png", bbox_inches="tight")
-        # plt.show()
         plt.close(fig1)
 
 
