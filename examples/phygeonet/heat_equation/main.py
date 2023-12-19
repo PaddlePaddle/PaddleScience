@@ -224,7 +224,7 @@ def train(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-    data = np.load(cfg.date_dir)
+    data = np.load(cfg.data_dir)
     coords = data["coords"]
     jinvs = data["jinvs"]
     dxdxis = data["dxdxis"]
@@ -302,7 +302,7 @@ def evaluate(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
 
-    data = np.load(cfg.date_dir)
+    data = np.load(cfg.data_dir)
     coords = data["coords"]
 
     OFV_sb = paddle.to_tensor(data["OFV_sb"])

@@ -22,7 +22,7 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-date_dir: ./data/heat_equation.npz
+data_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
 dtheta: 0
 epochs: 500
