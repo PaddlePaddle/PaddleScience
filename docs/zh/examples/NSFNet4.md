@@ -61,16 +61,16 @@ examples/NSFNet/VP_NSFNet4.py:48:95
 由于我们边界点和初值点具有解析解，因此我们使用监督约束
 ``` py linenums="147"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:147:165
+examples/NSFNet/VP_NSFNet4.py:147:158
 --8<--
 ```
 
 其中alpha和beta为该损失函数的权重，在本代码中与论文中描述一致，都取为100
 
 使用内部点构造纳韦斯托克方程的残差约束
-``` py linenums="167"
+``` py linenums="160"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:167:178
+examples/NSFNet/VP_NSFNet4.py:160:178
 --8<--
 ```
 ### 3.5 评估器构建
@@ -119,8 +119,6 @@ examples/NSFNet/VP_NSFNet4.py
 
 ## 6. 结果说明
 我们使用PINN对不可压纳韦斯托克方程进行数值求解。在PINN中，随机选取的时间和空间的坐标被当作输入值，所对应的速度场以及压强场被当作输出值，使用初值、边界条件当作监督约束以及纳韦斯托克方程本身的当作无监督约束条件加入损失函数进行训练。我们使用高精度JHTDB数据集进行训练。通过损失函数的下降可以证明神经网络在求解纳韦斯托克方程中的收敛性，表明PINN拥有对不可压强迫各项同性湍流的求解能力。而通过实验结果表明，PINN可以很好的逼近对应的高精度不可压强迫各项同性湍流数据集，并且，我们发现增加边界约束以及初值约束的权重可以使得神经网络拥有更好的逼近效果。相比之下，在误差允许范围内，使用PINN求解该纳韦斯托克方程比原本使用DNS方法的推理速度更快。
-
-注：本文建议与53的参考文档合并。
 ## 7. 参考资料
 [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
 
