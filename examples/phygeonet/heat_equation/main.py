@@ -231,22 +231,9 @@ def train(cfg: DictConfig):
     dydxis = data["dydxis"]
     dxdetas = data["dxdetas"]
     dydetas = data["dydetas"]
-    nx = cfg.MODEL.nx
-    ny = cfg.MODEL.ny
 
-    NvarInput = cfg.MODEL.NvarInput
-    NvarOutput = cfg.MODEL.NvarOutput
-    padSingleSide = cfg.MODEL.padSingleSide
-    model = ppsci.arch.USCNN(
-        cfg.MODEL.input_keys,
-        cfg.MODEL.output_keys,
-        cfg.MODEL.h,
-        nx,
-        ny,
-        NvarInput,
-        NvarOutput,
-        padSingleSide,
-    )
+    pad_singleside = cfg.MODEL.pad_singleside
+    model = ppsci.arch.USCNN(**cfg.MODEL)
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
 
@@ -273,7 +260,7 @@ def train(cfg: DictConfig):
 
     sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
 
-    def _transform_out(_input, _output, padSingleSide=padSingleSide):
+    def _transform_out(_input, _output, pad_singleside=pad_singleside):
         outputV = _output["outputV"]
         batchSize = outputV.shape[0]
         Jinv = _input["jinvs"]
@@ -282,10 +269,10 @@ def train(cfg: DictConfig):
         dxdeta = _input["dxdetas"]
         dydeta = _input["dydetas"]
         for j in range(batchSize):
-            outputV[j, 0, -padSingleSide:, padSingleSide:-padSingleSide] = 0
-            outputV[j, 0, :padSingleSide, padSingleSide:-padSingleSide] = 1
-            outputV[j, 0, padSingleSide:-padSingleSide, -padSingleSide:] = 1
-            outputV[j, 0, padSingleSide:-padSingleSide, 0:padSingleSide] = 1
+            outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
+            outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
+            outputV[j, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
+            outputV[j, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
             outputV[j, 0, 0, 0] = 0.5 * (outputV[j, 0, 0, 1] + outputV[j, 0, 1, 0])
             outputV[j, 0, 0, -1] = 0.5 * (outputV[j, 0, 0, -2] + outputV[j, 0, 1, -1])
         dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
@@ -302,7 +289,7 @@ def train(cfg: DictConfig):
         sup_constraint,
         output_dir,
         optimizer,
-        epochs=cfg.TRAIN.epochs,
+        epochs=cfg.epochs,
         iters_per_epoch=coords.shape[0],
     )
 
@@ -321,7 +308,7 @@ def evaluate(cfg: DictConfig):
     OFV_sb = paddle.to_tensor(data["OFV_sb"])
 
     ## create model
-    padSingleSide = 1
+    pad_singleside = 1
     model = ppsci.arch.USCNN(**cfg.MODEL)
     model.register_output_transform(None)
     solver = ppsci.solver.Solver(
@@ -330,10 +317,10 @@ def evaluate(cfg: DictConfig):
     )
     outputV = solver.predict({"coords": paddle.to_tensor(coords)})
     outputV = outputV["outputV"]
-    outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = 0
-    outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = 1
-    outputV[0, 0, padSingleSide:-padSingleSide, -padSingleSide:] = 1
-    outputV[0, 0, padSingleSide:-padSingleSide, 0:padSingleSide] = 1
+    outputV[0, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
+    outputV[0, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
+    outputV[0, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
+    outputV[0, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
     outputV[0, 0, 0, 0] = 0.5 * (outputV[0, 0, 0, 1] + outputV[0, 0, 1, 0])
     outputV[0, 0, 0, -1] = 0.5 * (outputV[0, 0, 0, -2] + outputV[0, 0, 1, -1])
     CNNVNumpy = outputV[0, 0, :, :]
@@ -341,14 +328,15 @@ def evaluate(cfg: DictConfig):
         paddle.mean((OFV_sb - CNNVNumpy) ** 2) / paddle.mean(OFV_sb**2)
     ).item()
     print(ev)
-
+    outputV = outputV.numpy()
+    OFV_sb = OFV_sb.numpy()
     fig1 = plt.figure()
     ax = plt.subplot(1, 2, 1)
     visualize2D(
         ax,
-        coords[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
-        coords[0, 1, 1:-1, 1:-1].cpu().detach().numpy(),
-        outputV[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
+        coords[0, 0, 1:-1, 1:-1],
+        coords[0, 1, 1:-1, 1:-1],
+        outputV[0, 0, 1:-1, 1:-1],
         "horizontal",
         [0, 1],
     )
@@ -358,8 +346,8 @@ def evaluate(cfg: DictConfig):
     ax = plt.subplot(1, 2, 2)
     visualize2D(
         ax,
-        coords[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
-        coords[0, 1, 1:-1, 1:-1].cpu().detach().numpy(),
+        coords[0, 0, 1:-1, 1:-1],
+        coords[0, 1, 1:-1, 1:-1],
         OFV_sb[1:-1, 1:-1],
         "horizontal",
         [0, 1],

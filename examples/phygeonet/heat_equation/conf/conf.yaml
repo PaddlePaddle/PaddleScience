@@ -35,8 +35,8 @@ MODEL:
   h: 0.01
   ny: 19
   nx: 84
-  nvar_input: 2
-  nvar_output: 1
+  nvar_in: 2
+  nvar_out: 1
   pad_singleside: 1
 
 # training settings
@@ -46,5 +46,5 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: null
+  pretrained_model_path: outputs_phygeonet/latest
   eval_with_no_grad: true
