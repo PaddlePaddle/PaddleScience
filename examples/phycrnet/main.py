@@ -124,7 +124,6 @@ def train(cfg: DictConfig):
         cfg.TRAIN.iters_per_epoch,
         validator=validator_pde,
         eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
-        device=cfg.device,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
     )
 
