@@ -1,9 +1,12 @@
+from os import path as osp
+
 import hydra
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 
 import ppsci
+from ppsci.utils import logger
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -162,7 +165,7 @@ def train(cfg: DictConfig):
     # initiallizer
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
     padSingleSide = cfg.MODEL.padSingleSide
 
     model = ppsci.arch.USCNN(**cfg.MODEL)
@@ -199,7 +202,7 @@ def train(cfg: DictConfig):
         name="mRes",
     )
 
-    constraint_pde = {sup_constraint_mres.name: sup_constraint_mres}
+    sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
 
     def _transform_out(_input, outputV, padSingleSide=padSingleSide, k=len_data):
         outputV = outputV["outputV"]
@@ -230,12 +233,11 @@ def train(cfg: DictConfig):
     model.register_output_transform(_transform_out)
     solver = ppsci.solver.Solver(
         model,
-        constraint_pde,
+        sup_constraint,
         cfg.output_dir,
         optimizer,
         epochs=cfg.TRAIN.epochs,
         iters_per_epoch=coords.shape[0],
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
     )
 
     solver.train()

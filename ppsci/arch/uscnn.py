@@ -17,9 +17,9 @@ class USCNN(base.Arch):
        h float: the spatial step
        nx int:
        ny int:
-       nVarIn int: input channel
-       nVarOut int: output channel
-       padSingleSide int:
+       nvar_in int: input channel
+       nvar_out int: output channel
+       pad_singleside int: pad for hard boundary constraint
        k int:
        s int:
        p int:
@@ -31,9 +31,9 @@ class USCNN(base.Arch):
               h= 0.01
               ny= 19
               nx= 84
-              NvarInput= 2
-              NvarOutput= 1
-              padSingleSide= 1
+              Nvar_input= 2
+              Nvar_output= 1
+              pad_singleside= 1
             )
     """
 
@@ -45,9 +45,9 @@ class USCNN(base.Arch):
         h: float,
         nx: int,
         ny: int,
-        nVarIn: int = 1,
-        nVarOut: int = 1,
-        padSingleSide: int = 1,
+        nvar_in: int = 1,
+        nvar_out: int = 1,
+        pad_singleside: int = 1,
         k: int = 5,
         s: int = 1,
         p: int = 2,
@@ -55,19 +55,19 @@ class USCNN(base.Arch):
         super().__init__()
         self.input_keys = input_keys
         self.output_keys = output_keys
-        self.nVarIn = nVarIn
-        self.nVarOut = nVarOut
+        self.nvar_in = nvar_in
+        self.nvar_out = nvar_out
         self.k = k
         self.s = s
         self.p = p
         self.deltaX = h
         self.nx = nx
         self.ny = ny
-        self.padSingleSide = padSingleSide
+        self.pad_singleside = pad_singleside
         self.relu = nn.ReLU()
         self.US = nn.Upsample(size=[self.ny - 2, self.nx - 2], mode="bicubic")
         self.conv1 = nn.Conv2D(
-            self.nVarIn, hidden_size[0], kernel_size=k, stride=s, padding=p
+            self.nvar_in, hidden_size[0], kernel_size=k, stride=s, padding=p
         )
         self.conv2 = nn.Conv2D(
             hidden_size[0], hidden_size[1], kernel_size=k, stride=s, padding=p
@@ -76,12 +76,12 @@ class USCNN(base.Arch):
             hidden_size[1], hidden_size[2], kernel_size=k, stride=s, padding=p
         )
         self.conv4 = nn.Conv2D(
-            hidden_size[2], self.nVarOut, kernel_size=k, stride=s, padding=p
+            hidden_size[2], self.nvar_out, kernel_size=k, stride=s, padding=p
         )
         self.pixel_shuffle = nn.PixelShuffle(1)
-        self.apply(self.__init_weights)
+        self.apply(self.init_weights)
         self.udfpad = nn.Pad2D(
-            [padSingleSide, padSingleSide, padSingleSide, padSingleSide], value=0
+            [pad_singleside, pad_singleside, pad_singleside, pad_singleside], value=0
         )
 
     def init_weights(self, m):
@@ -92,7 +92,6 @@ class USCNN(base.Arch):
                 ppsci.utils.initializer.uniform_(m.bias, -bound, bound)
 
     def forward(self, x):
-        # train
         y = self.concat_to_tensor(x, self.input_keys, axis=-1)
         y = self.US(y)
         y = self.relu(self.conv1(y))

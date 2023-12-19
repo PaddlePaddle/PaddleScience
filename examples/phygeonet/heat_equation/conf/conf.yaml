@@ -22,11 +22,10 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-date_dir: ./heat_equation.npz
+date_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
-boundary_dir: TemplateCase/30/C
 dtheta: 0
-
+epochs: 500
 len_data: 1
 # model settings
 MODEL:
@@ -36,14 +35,12 @@ MODEL:
   h: 0.01
   ny: 19
   nx: 84
-  NvarInput: 2
-  NvarOutput: 1
-  padSingleSide: 1
+  nvar_input: 2
+  nvar_output: 1
+  pad_singleside: 1
 
 # training settings
 TRAIN:
-  epochs: 1000
-  eval_with_no_grad: true
   lr: 1e-3
   batchsize: 1
 

@@ -22,13 +22,13 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-date_dir: heat_equation_bc.npz
+date_dir: ./data/heat_equation_bc.npz
 output_dir: ${hydra:run.dir}
 r: 0.5
 R: 1
 dtheta: 0
 len_data: 2
-casename: ["TemplateCase0", "TemplateCase6"]
+epochs: 2000
 # model settings
 MODEL:
   input_keys: [ 'coords' ]
@@ -37,14 +37,12 @@ MODEL:
   h: 0.01
   ny: 276
   nx: 49
-  nVarIn: 1
-  nVarOut: 1
-  padSingleSide: 1
+  nvar_in: 1
+  nvar_out: 1
+  pad_singleside: 1
 
 # training settings
 TRAIN:
-  epochs: 2000
-  eval_with_no_grad: true
   lr: 1e-3
   batchsize: 2
 
