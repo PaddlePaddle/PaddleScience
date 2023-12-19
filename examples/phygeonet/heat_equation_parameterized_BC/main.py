@@ -1,12 +1,69 @@
 from os import path as osp
 
 import hydra
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
+
+
+def setAxisLabel(ax, type):
+    if type == "p":
+        ax.set_xlabel(r"$x$")
+        ax.set_ylabel(r"$y$")
+    elif type == "r":
+        ax.set_xlabel(r"$\xi$")
+        ax.set_ylabel(r"$\eta$")
+    else:
+        raise ValueError("The axis type only can be reference or physical")
+
+
+def gen_e2vcg(x):
+    nelemx = x.shape[1] - 1
+    nelemy = x.shape[0] - 1
+    nelem = nelemx * nelemy
+    nnx = x.shape[1]
+    e2vcg = np.zeros([4, nelem])
+    for j in range(nelemy):
+        for i in range(nelemx):
+            e2vcg[:, j * nelemx + i] = np.asarray(
+                [j * nnx + i, j * nnx + i + 1, (j + 1) * nnx + i, (j + 1) * nnx + i + 1]
+            )
+    return e2vcg.astype("int")
+
+
+def visualize2D(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
+    xdg0 = np.vstack([x.flatten(order="C"), y.flatten(order="C")])
+    udg0 = u.flatten(order="C")
+    idx = np.asarray([0, 1, 3, 2])
+    nelemx = x.shape[1] - 1
+    nelemy = x.shape[0] - 1
+    nelem = nelemx * nelemy
+    e2vcg0 = gen_e2vcg(x)
+    udg_ref = udg0[e2vcg0]
+    cmap = matplotlib.cm.coolwarm
+    polygon_list = []
+    for i in range(nelem):
+        polygon_ = Polygon(xdg0[:, e2vcg0[idx, i]].T)
+        polygon_list.append(polygon_)
+    polygon_ensemble = PatchCollection(polygon_list, cmap=cmap, alpha=1)
+    polygon_ensemble.set_edgecolor("face")
+    polygon_ensemble.set_array(np.mean(udg_ref, axis=0))
+    if colorlimit is None:
+        pass
+    else:
+        polygon_ensemble.set_clim(colorlimit)
+    ax.add_collection(polygon_ensemble)
+    ax.set_xlim(np.min(xdg0[0, :]), np.max(xdg0[0, :]))
+    ax.set_ylim(np.min(xdg0[1, :]), np.max(xdg0[1, :]))
+    cbar = plt.colorbar(polygon_ensemble, orientation=colorbarPosition)
+    return ax, cbar
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -255,7 +312,8 @@ def evaluate(cfg: DictConfig):
     model.register_output_transform(None)
     data = np.load(cfg.date_dir)
     coords = paddle.to_tensor(data["coords"])
-    truth = paddle.to_tensor(data["truths"])
+    truths = paddle.to_tensor(data["truths"])
+    b_coord = paddle.to_tensor(data["b_coord"])
     len_data = cfg.len_data
     solver = ppsci.solver.Solver(
         model,
@@ -276,9 +334,81 @@ def evaluate(cfg: DictConfig):
         outputV[j, 0, :, -padSingleSide:] = 0
         outputV[j, 0, :, 0:padSingleSide] = coords[j, 0, 0, 0]
     eV = paddle.sqrt(
-        paddle.mean((truth - outputV) ** 2) / paddle.mean(truth**2)
+        paddle.mean((truths - outputV) ** 2) / paddle.mean(truths**2)
     ).item()
     print(eV / len_data)
+    ParaList = [1, 2, 3, 4, 5, 6, 7]
+    for i in range(len(ParaList)):
+        Para = coords[i]
+        truth = truths[i]
+        coord = b_coord[i]
+        Para = Para.reshape(1, 1, Para.shape[0], Para.shape[1])
+        truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
+        coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
+        print("i=", str(i))
+        output = model(Para)
+        outputV = output["outputV"]
+        # Impose BC
+        outputV[0, 0, -padSingleSide:, padSingleSide:-padSingleSide] = outputV[
+            0, 0, 1:2, padSingleSide:-padSingleSide
+        ]  # up outlet bc zero gradient
+        outputV[0, 0, :padSingleSide, padSingleSide:-padSingleSide] = outputV[
+            0, 0, -2:-1, padSingleSide:-padSingleSide
+        ]  # down inlet bc
+        outputV[0, 0, :, -padSingleSide:] = 0  # right wall bc
+        outputV[0, 0, :, 0:padSingleSide] = Para[0, 0, 0, 0]  # left  wall bc
+
+        # Calculate PDE Residual
+
+        fig1 = plt.figure()
+        xylabelsize = 20
+        xytickssize = 20
+        titlesize = 20
+        ax = plt.subplot(1, 2, 1)
+        _, cbar = visualize2D(
+            ax,
+            coord[0, 0, :, :].cpu().detach().numpy(),
+            coord[0, 1, :, :].cpu().detach().numpy(),
+            outputV[0, 0, :, :].cpu().detach().numpy(),
+            "horizontal",
+            [0, max(ParaList)],
+        )
+        ax.set_aspect("equal")
+        setAxisLabel(ax, "p")
+        ax.set_title("PhyGeoNet " + r"$T$", fontsize=titlesize)
+        ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
+        ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
+        ax.set_xticks([-1, 0, 1])
+        ax.set_yticks([-1, 0, 1])
+        ax.tick_params(axis="x", labelsize=xytickssize)
+        ax.tick_params(axis="y", labelsize=xytickssize)
+        cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
+        cbar.ax.tick_params(labelsize=xytickssize)
+        ax = plt.subplot(1, 2, 2)
+        _, cbar = visualize2D(
+            ax,
+            coord[0, 0, :, :].cpu().detach().numpy(),
+            coord[0, 1, :, :].cpu().detach().numpy(),
+            truth[0, 0, :, :].cpu().detach().numpy(),
+            "horizontal",
+            [0, max(ParaList)],
+        )
+        ax.set_aspect("equal")
+        setAxisLabel(ax, "p")
+        ax.set_title("FV " + r"$T$", fontsize=titlesize)
+        ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
+        ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
+        ax.set_xticks([-1, 0, 1])
+        ax.set_yticks([-1, 0, 1])
+        ax.tick_params(axis="x", labelsize=xytickssize)
+        ax.tick_params(axis="y", labelsize=xytickssize)
+        cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
+        cbar.ax.tick_params(labelsize=xytickssize)
+        fig1.tight_layout(pad=1)
+        fig1.savefig("Para" + str(i) + "T.pdf", bbox_inches="tight")
+        fig1.savefig("Para" + str(i) + "T.png", bbox_inches="tight")
+        # plt.show()
+        plt.close(fig1)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="conf.yaml")

@@ -1,12 +1,69 @@
 from os import path as osp
 
 import hydra
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import logger
+
+
+def setAxisLabel(ax, type):
+    if type == "p":
+        ax.set_xlabel(r"$x$")
+        ax.set_ylabel(r"$y$")
+    elif type == "r":
+        ax.set_xlabel(r"$\xi$")
+        ax.set_ylabel(r"$\eta$")
+    else:
+        raise ValueError("The axis type only can be reference or physical")
+
+
+def gen_e2vcg(x):
+    nelemx = x.shape[1] - 1
+    nelemy = x.shape[0] - 1
+    nelem = nelemx * nelemy
+    nnx = x.shape[1]
+    e2vcg = np.zeros([4, nelem])
+    for j in range(nelemy):
+        for i in range(nelemx):
+            e2vcg[:, j * nelemx + i] = np.asarray(
+                [j * nnx + i, j * nnx + i + 1, (j + 1) * nnx + i, (j + 1) * nnx + i + 1]
+            )
+    return e2vcg.astype("int")
+
+
+def visualize2D(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
+    xdg0 = np.vstack([x.flatten(order="C"), y.flatten(order="C")])
+    udg0 = u.flatten(order="C")
+    idx = np.asarray([0, 1, 3, 2])
+    nelemx = x.shape[1] - 1
+    nelemy = x.shape[0] - 1
+    nelem = nelemx * nelemy
+    e2vcg0 = gen_e2vcg(x)
+    udg_ref = udg0[e2vcg0]
+    cmap = matplotlib.cm.coolwarm
+    polygon_list = []
+    for i in range(nelem):
+        polygon_ = Polygon(xdg0[:, e2vcg0[idx, i]].T)
+        polygon_list.append(polygon_)
+    polygon_ensemble = PatchCollection(polygon_list, cmap=cmap, alpha=1)
+    polygon_ensemble.set_edgecolor("face")
+    polygon_ensemble.set_array(np.mean(udg_ref, axis=0))
+    if colorlimit is None:
+        pass
+    else:
+        polygon_ensemble.set_clim(colorlimit)
+    ax.add_collection(polygon_ensemble)
+    ax.set_xlim(np.min(xdg0[0, :]), np.max(xdg0[0, :]))
+    ax.set_ylim(np.min(xdg0[1, :]), np.max(xdg0[1, :]))
+    cbar = plt.colorbar(polygon_ensemble, orientation=colorbarPosition)
+    return ax, cbar
 
 
 def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
@@ -284,6 +341,35 @@ def evaluate(cfg: DictConfig):
         paddle.mean((OFV_sb - CNNVNumpy) ** 2) / paddle.mean(OFV_sb**2)
     ).item()
     print(ev)
+
+    fig1 = plt.figure()
+    ax = plt.subplot(1, 2, 1)
+    visualize2D(
+        ax,
+        coords[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
+        coords[0, 1, 1:-1, 1:-1].cpu().detach().numpy(),
+        outputV[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
+        "horizontal",
+        [0, 1],
+    )
+    setAxisLabel(ax, "p")
+    ax.set_title("CNN " + r"$T$")
+    ax.set_aspect("equal")
+    ax = plt.subplot(1, 2, 2)
+    visualize2D(
+        ax,
+        coords[0, 0, 1:-1, 1:-1].cpu().detach().numpy(),
+        coords[0, 1, 1:-1, 1:-1].cpu().detach().numpy(),
+        OFV_sb[1:-1, 1:-1],
+        "horizontal",
+        [0, 1],
+    )
+    setAxisLabel(ax, "p")
+    ax.set_aspect("equal")
+    ax.set_title("FV " + r"$T$")
+    fig1.tight_layout(pad=1)
+    fig1.savefig("T.pdf", bbox_inches="tight")
+    plt.close(fig1)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="conf.yaml")
