@@ -201,5 +201,4 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
-    paddle.device.set_device("gpu:3")
     main()
