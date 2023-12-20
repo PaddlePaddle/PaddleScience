@@ -68,9 +68,9 @@ examples/topopt/functions.py:68:101
 --8<--
 ```
 
-``` py linenums="37"
+``` py linenums="40"
 --8<--
-examples/topopt/topopt.py:37:46
+examples/topopt/topopt.py:40:48
 --8<--
 ```
 
@@ -79,9 +79,9 @@ examples/topopt/topopt.py:37:46
 经过 SIMP 的 $N_{0}$ 次初始迭代步骤得到的图像 $I$ 可以看作是模糊了的最终结构。由于最终的优化解给出的图像 $I^*$ 并不包含中间过程的信息，因此 $I^*$ 可以被解释为图像 $I$ 的掩码。于是 $I \rightarrow I^*$ 这一优化过程可以看作是二分类的图像分割或者前景-背景分割过程，因此构建 Unet 模型进行预测，具体网络结构如图所示：
 ![Unet](https://ai-studio-static-online.cdn.bcebos.com/7a0e54df9c9d48e5841423546e851f620e73ea917f9e4258aefc47c498bba85e)
 
-``` py linenums="87"
+``` py linenums="90"
 --8<--
-examples/topopt/topopt.py:87:89
+examples/topopt/topopt.py:90:91
 --8<--
 ```
 
@@ -98,9 +98,9 @@ examples/topopt/conf/topopt.yaml:49:54
 --8<--
 ```
 
-``` py linenums="33"
+``` py linenums="36"
 --8<--
-examples/topopt/topopt.py:33:36
+examples/topopt/topopt.py:36:38
 --8<--
 ```
 
@@ -120,9 +120,9 @@ examples/topopt/functions.py:102:133
 
 在本案例中，我们采用监督学习方式进行训练，所以使用监督约束 `SupervisedConstraint`，代码如下：
 
-``` py linenums="47"
+``` py linenums="50"
 --8<--
-examples/topopt/topopt.py:47:73
+examples/topopt/topopt.py:50:75
 --8<--
 ```
 
@@ -152,9 +152,9 @@ examples/topopt/functions.py:23:67
 --8<--
 ```
 
-``` py linenums="77"
+``` py linenums="80"
 --8<--
-examples/topopt/topopt.py:77:79
+examples/topopt/topopt.py:80:81
 --8<--
 ```
 
@@ -162,9 +162,9 @@ examples/topopt/topopt.py:77:79
 
 训练过程会调用优化器来更新模型参数，此处选择 `Adam` 优化器。
 
-``` py linenums="90"
+``` py linenums="93"
 --8<--
-examples/topopt/topopt.py:90:94
+examples/topopt/topopt.py:93:96
 --8<--
 ```
 
@@ -191,9 +191,9 @@ $$
 
 loss 构建代码如下：
 
-``` py linenums="260"
+``` py linenums="263"
 --8<--
-examples/topopt/topopt.py:260:273
+examples/topopt/topopt.py:263:274
 --8<--
 ```
 
@@ -211,9 +211,9 @@ $$
 其中 $n_{0} = w_{00} + w_{01}$ ， $n_{1} = w_{10} + w_{11}$ ，$w_{tp}$ 表示实际是 $t$ 类且被预测为 $p$ 类的像素点的数量
 metric 构建代码如下：
 
-``` py linenums="274"
+``` py linenums="277"
 --8<--
-examples/topopt/topopt.py:274:316
+examples/topopt/topopt.py:277:317
 --8<--
 ```
 
@@ -230,9 +230,9 @@ examples/topopt/conf/topopt.yaml:29:31
 
 训练代码如下：
 
-``` py linenums="74"
+``` py linenums="77"
 --8<--
-examples/topopt/topopt.py:74:110
+examples/topopt/topopt.py:77:111
 --8<--
 ```
 
@@ -245,9 +245,9 @@ examples/topopt/topopt.py:74:110
 #### 3.10.1 评估器构建
 为应用 PaddleScience API，此处在每一次评估时构建一个评估器 SupervisedValidator 进行评估：
 
-``` py linenums="215"
+``` py linenums="218"
 --8<--
-examples/topopt/topopt.py:215:242
+examples/topopt/topopt.py:218:245
 --8<--
 ```
 
@@ -258,9 +258,9 @@ examples/topopt/topopt.py:215:242
 
 使用 `ppsci.utils.misc.plot_curve()` 方法直接绘制 Binary Accuracy 和 IoU 的结果：
 
-``` py linenums="182"
+``` py linenums="185"
 --8<--
-examples/topopt/topopt.py:182:192
+examples/topopt/topopt.py:185:193
 --8<--
 ```
 
