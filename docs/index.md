@@ -47,7 +47,7 @@
 | 飞行器设计 | [MeshGraphNets](https://aistudio.baidu.com/projectdetail/5322713) | 数据驱动 | GNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/184320) | [Paper](https://arxiv.org/abs/2010.03409)|
 | 飞行器设计 | [火箭发动机真空羽流](https://aistudio.baidu.com/projectdetail/4486133) | 数据驱动 | CNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/167250) | - |
 | 飞行器设计 | [Deep-Flow-Prediction](https://aistudio.baidu.com/projectdetail/5671596) | 数据驱动 | TurbNetG | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/197778) | [Paper](https://arxiv.org/abs/1810.08217) |
-| 飞行器设计 | [机翼设计](./zh/examples/amgnet.md) | 数据驱动 | AMGNet | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip) | [Paper](https://arxiv.org/abs/1810.08217) |
+| 通用流场模拟 | [气动外形设计](./zh/examples/amgnet.md) | 数据驱动 | AMGNet | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip) | [Paper](https://arxiv.org/abs/1810.08217) |
 | 流固耦合 | [涡激振动](./zh/examples/viv.md) | 机理驱动 | MLP | 半监督学习 | [Data](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fsi/VIV_Training_Neta100.mat) | [Paper](https://arxiv.org/abs/2206.03864)|
 | 多相流 | [气液两相流](./zh/examples/bubble.md) | 机理驱动 | BubbleNet | 半监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat) | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 多相流 | [twophasePINN](https://aistudio.baidu.com/projectdetail/5379212) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1016/j.mlwa.2021.100029)|
@@ -96,7 +96,11 @@
     pip install paddlesci
     ```
 
-- **完整安装流程**：[安装与使用](./zh/install_setup.md)
+**完整安装流程**：[安装与使用](./zh/install_setup.md)
+
+--8<--
+./README.md:update
+--8<--
 
 --8<--
 ./README.md:feature
@@ -149,6 +153,7 @@
     <a href="https://github.com/Gxinhu"><img class="avatar" src="https://avatars.githubusercontent.com/Gxinhu" alt="avatar" /></a>
     <a href="https://github.com/XYM-1"><img class="avatar" src="https://avatars.githubusercontent.com/XYM-1" alt="avatar" /></a>
     <a href="https://github.com/xusuyong"><img class="avatar" src="https://avatars.githubusercontent.com/xusuyong" alt="avatar" /></a>
+    <a href="https://github.com/DrownFish19"><img class="avatar" src="https://avatars.githubusercontent.com/DrownFish19" alt="avatar" /></a>
     <a href="https://github.com/NKNaN"><img class="avatar" src="https://avatars.githubusercontent.com/NKNaN" alt="avatar" /></a>
     <a href="https://github.com/ruoyunbai"><img class="avatar" src="https://avatars.githubusercontent.com/ruoyunbai" alt="avatar" /></a>
     <a href="https://github.com/sanbuphy"><img class="avatar" src="https://avatars.githubusercontent.com/sanbuphy" alt="avatar" /></a>
