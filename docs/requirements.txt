@@ -10,6 +10,7 @@ mkdocs-material-extensions
 mkdocs-video
 mkdocstrings
 mkdocstrings-python
+numpy<=1.23.1
 pyyaml
 scipy
 sympy
