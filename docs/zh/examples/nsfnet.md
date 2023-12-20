@@ -189,11 +189,11 @@ Cylinder wake 在T=0 时刻预测的相对误差, 如表格所示，Cylinder flo
 | u                 | / | 0.403%           | 0.138%  |
 | v                 | / | 1.5%             |  0.488% |
 
-速度场
+速度场，如图所示，为NSF2 2D Cylinder Flow案例，第一行的两张图片为圆柱尾部绕流区域，第一行的图片所示，为在x方向上的流速u的分布，左侧为CFD软件参考值，右侧为神经网络预测值，蓝色为较小值，绿色为较大值，分布区域为x=[1,8], y=[-2, 2], 第二行的图片所示，为在y方向上的流速v的分布，左侧为CFD软件参考值，右侧为神经网络预测值，蓝色为较小值，绿色为较大值，分布区域为x=[1,8], y=[-2, 2]。
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/Cylinder%20wake.gif)
 
-涡流场（t=4.0）
+涡流场（t=4.0），如图所示，为NSF2 2D Cylinder Flow案例，我们根据x，y方向的流速u，v，通过涡量计算公式，计算得到如图所示涡量图，涡结构连续性好，和论文一致，计算分布区域为x=[1,7], y=[-1, 1]。
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/NSFNet2_vorticity.png)
 ### NSFNet3(Beltrami flow)
@@ -213,7 +213,7 @@ Beltrami flow 在T=1时刻的预测相对误差，如表格所示，Beltrami flo
 | v                 | 0.366%            | 0.199%  |
 | w                 | 0.587%            | 0.217%  |
 
-Beltrami flow速度场在
+Beltrami flow速度场，
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/Beltrami%20flow.gif)
 
 ## 6. 结果说明
