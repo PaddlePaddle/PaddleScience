@@ -174,11 +174,13 @@ examples/nsfnet/VP_NSFNet3.py
 ## 5. 结果展示
 
 ### NSFNet1(Kovasznay flow)
+
 | velocity | paper  | code | PaddleScience  |
 |:--|:--|:--|:--|
 | u                 | 0.084% | 0.062%             | 0.055%  |
 | v                 | 0.425% | 0.431%             | 0.399%  |
 
+如表格所示，Kovasznay flow在x, y方向的速度u，v的L2误差为0.055%和0.399%，均优于论文和参考代码
 ### NSFNet2(Cylinder wake)
 Cylinder wake 在T=0 时刻预测的相对误差
 
