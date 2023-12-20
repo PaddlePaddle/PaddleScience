@@ -213,6 +213,7 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [Gxinhu](https://github.com/Gxinhu)，
     [XYM](https://github.com/XYM)，
     [xusuyong](https://github.com/xusuyong)，
+    [DrownFish19](https://github.com/DrownFish19)，
     [NKNaN](https://github.com/NKNaN)，
     [ruoyunbai](https://github.com/ruoyunbai)，
     [sanbuphy](https://github.com/sanbuphy)，
