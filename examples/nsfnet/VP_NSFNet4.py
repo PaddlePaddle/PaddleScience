@@ -9,7 +9,7 @@ import ppsci
 from ppsci.utils import logger
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet3.yaml")
+@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
@@ -222,7 +222,6 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
-        checkpoint_path=OUTPUT_DIR + "/checkpoints/latest",
     )
     # train model
     solver.train()
