@@ -6,7 +6,6 @@
 
     ``` sh
     # linux
-    python Burgers_2d_solver_HighOrder.py
     python main.py
     ```
 
@@ -14,8 +13,7 @@
 
     ``` sh
     # linux
-    python Burgers_2d_solver_HighOrder.py
-    python main.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_pretrained.pdparams
+    python main.py mode=eval
     ```
 
 ## 1. 背景简介
@@ -40,7 +38,7 @@ examples/phycrnet/main.py:43:45
 ```
 
 ### 3.2 数据载入
-我们使用RK4或者谱方法生成的数据（初值为使用正态分布生成），需要从.mat文件中将其读入，并将其整合：
+我们使用RK4或者谱方法生成的数据（初值为使用正态分布生成），需要从.mat文件中将其读入，数据集链接[AIStudio](https://aistudio.baidu.com/datasetdetail/250561)：
 ``` py linenums="54"
 --8<--
 examples/phycrnet/main.py:54:72
