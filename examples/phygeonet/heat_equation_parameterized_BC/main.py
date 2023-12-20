@@ -271,7 +271,6 @@ def train(cfg: DictConfig):
         dydeta = _input["dydetas"]
         Para = _input["coords"]
         for j in range(batchSize):
-            # Impose BC
             outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = outputV[
                 j, 0, 1:2, pad_singleside:-pad_singleside
             ]
