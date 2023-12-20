@@ -29,4 +29,4 @@ log_freq: 5000
 
 eval_freq: 5000
 
-pretrained_model_path: ./output_NSFNet3/checkpoints/latest
+pretrained_model_path: null
