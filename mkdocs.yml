@@ -84,7 +84,9 @@ nav:
         - ppsci.data.batch_transform: zh/api/data/process/batch_transform.md
       - ppsci.equation: zh/api/equation.md
       - ppsci.geometry: zh/api/geometry.md
-      - ppsci.loss: zh/api/loss.md
+      - ppsci.loss:
+        - ppsci.loss.loss: zh/api/loss/loss.md
+        - ppsci.loss.mtl: zh/api/loss/mtl.md
       - ppsci.metric: zh/api/metric.md
       - ppsci.optimizer:
         - ppsci.optimizer.optimizer: zh/api/optimizer.md
