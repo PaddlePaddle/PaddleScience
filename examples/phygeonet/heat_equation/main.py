@@ -299,6 +299,7 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
 
