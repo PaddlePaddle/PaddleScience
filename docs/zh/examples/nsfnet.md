@@ -180,9 +180,9 @@ examples/nsfnet/VP_NSFNet3.py
 | u                 | 0.084% | 0.062%             | 0.055%  |
 | v                 | 0.425% | 0.431%             | 0.399%  |
 
-如表格所示，Kovasznay flow在x, y方向的速度u，v的L2误差为0.055%和0.399%，均优于论文和参考代码
+如表格所示，Kovasznay flow在x, y方向的速度u, v的L2误差为0.055%和0.399%，均优于论文和参考代码。
 ### NSFNet2(Cylinder wake)
-Cylinder wake 在T=0 时刻预测的相对误差
+Cylinder wake 在T=0 时刻预测的相对误差, 如表格所示，Cylinder flow在x, y方向的速度u, v的L2误差为0.138%和0.488%，优于论文数据。
 
 | velocity | paper  | code | PaddleScience  |
 |:--|:--|:--|:--|
@@ -197,7 +197,7 @@ Cylinder wake 在T=0 时刻预测的相对误差
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/NSFNet2_vorticity.png)
 ### NSFNet3(Beltrami flow)
-测试数据集相对误差
+测试数据集相对误差，如表格所示，Beltrami flow在x, y, z方向的速度u, v, w的L2误差为0.059%, 0.082%和0.0732%，优于代码数据。
 
 | velocity |  code | PaddleScience  |
 |:--|:--|:--|
@@ -205,9 +205,9 @@ Cylinder wake 在T=0 时刻预测的相对误差
 | v                 |  0.0689%        | 0.082%  |
 | w                 |   0.109%        | 0.0732%  |
 
-Beltrami flow 在T=1时刻的预测相对误差
+Beltrami flow 在T=1时刻的预测相对误差，如表格所示，Beltrami flow在x, y, z方向的速度u, v, w的L2误差为0.115%, 0.199%和0.217%，优于论文数据。
 
-| velocity | code   | PaddleScience  |
+| velocity | paper   | PaddleScience  |
 |:--|:--|:--|
 | u                 | 0.426%            | 0.115%  |
 | v                 | 0.366%            | 0.199%  |
