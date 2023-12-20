@@ -48,12 +48,6 @@ def train(cfg: DictConfig):
         x, y = out["x"], out["y"]
         return np.cos(x) * np.cosh(y)
 
-    # set train dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     NPOINT_TOTAL = cfg.NPOINT_INTERIOR + cfg.NPOINT_BC
 
     # set constraint
@@ -61,7 +55,7 @@ def train(cfg: DictConfig):
         equation["laplace"].equations,
         {"laplace": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_TOTAL},
+        {"batch_size": NPOINT_TOTAL},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -70,7 +64,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": u_solution_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_BC},
+        {"batch_size": cfg.NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
         name="BC",
     )

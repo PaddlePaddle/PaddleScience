@@ -36,6 +36,9 @@ from ppsci.data.process import transform
 from ppsci.utils import logger
 
 if TYPE_CHECKING:
+    from typing import Any
+    from typing import Dict
+
     from paddle import io
 
 __all__ = [
@@ -60,11 +63,11 @@ __all__ = [
 ]
 
 
-def build_dataset(cfg) -> "io.Dataset":
+def build_dataset(cfg: "Dict[str, Any]") -> "io.Dataset":
     """Build dataset
 
     Args:
-        cfg (List[AttrDict]): dataset config list.
+        cfg (Dict[str, Any]): Dataset config.
 
     Returns:
         Dict[str, io.Dataset]: dataset.

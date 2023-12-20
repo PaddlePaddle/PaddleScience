@@ -99,6 +99,11 @@ class IntegralConstraint(base.Constraint):
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = {"name": "IterableNamedArrayDataset"}
+        if "iters_per_epoch" not in dataloader_cfg:
+            dataloader_cfg["iters_per_epoch"] = 1
+
         # prepare input
         input_list: List[Dict[str, np.ndarray]] = []
         for _ in range(

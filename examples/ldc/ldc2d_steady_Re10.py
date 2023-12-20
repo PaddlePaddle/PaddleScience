@@ -36,12 +36,6 @@ def train(cfg: DictConfig):
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((-0.05, -0.05), (0.05, 0.05))}
 
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     NPOINT_PDE = 99**2
     NPOINT_TOP = 101
     NPOINT_BOTTOM = 101
@@ -53,7 +47,7 @@ def train(cfg: DictConfig):
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+        {"batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         weight_dict=cfg.TRAIN.weight.pde,
@@ -63,7 +57,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 1, "v": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_TOP},
+        {"batch_size": NPOINT_TOP},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(y, 0.05),
         name="BC_top",
@@ -72,7 +66,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_BOTTOM},
+        {"batch_size": NPOINT_BOTTOM},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(y, -0.05),
         name="BC_bottom",
@@ -81,7 +75,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_LEFT},
+        {"batch_size": NPOINT_LEFT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(x, -0.05),
         name="BC_left",
@@ -90,7 +84,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT},
+        {"batch_size": NPOINT_RIGHT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda x, y: np.isclose(x, 0.05),
         name="BC_right",
@@ -118,10 +112,8 @@ def train(cfg: DictConfig):
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
         geom["rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -195,10 +187,8 @@ def evaluate(cfg: DictConfig):
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
         geom["rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,

@@ -39,12 +39,6 @@ def train(cfg: DictConfig):
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((0.0, 0.0), (1.0, 1.0))}
 
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     # set constraint
     def poisson_ref_compute_func(_in):
         return (
@@ -58,7 +52,7 @@ def train(cfg: DictConfig):
         equation["Poisson"].equations,
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_PDE},
+        {"batch_size": cfg.NPOINT_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="EQ",
@@ -71,7 +65,7 @@ def train(cfg: DictConfig):
             * np.cos(2.0 * np.pi * _in["y"])
         },
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_BC},
+        {"batch_size": cfg.NPOINT_BC},
         ppsci.loss.MSELoss("sum"),
         name="BC",
     )
@@ -91,10 +85,8 @@ def train(cfg: DictConfig):
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -157,7 +149,6 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
     )
@@ -186,7 +177,6 @@ def train(cfg: DictConfig):
         eval_during_train=cfg.TRAIN.lbfgs.eval_during_train,
         eval_freq=cfg.TRAIN.lbfgs.eval_freq,
         equation=equation,
-        geom=geom,
         validator=validator,
         visualizer=visualizer,
     )
@@ -228,10 +218,8 @@ def evaluate(cfg: DictConfig):
         {"poisson": poisson_ref_compute_func},
         geom["rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,

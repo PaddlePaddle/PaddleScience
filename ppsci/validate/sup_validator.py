@@ -70,6 +70,11 @@ class SupervisedValidator(base.Validator):
     ):
         self.output_expr = output_expr
 
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = {"name": "NamedArrayDataset"}
+        if "sampler" not in dataloader_cfg:
+            dataloader_cfg["sampler"] = {"name": "BatchSampler"}
+
         # build dataset
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 

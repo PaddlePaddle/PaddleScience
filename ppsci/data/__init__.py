@@ -67,9 +67,9 @@ def build_dataloader(_dataset, cfg):
     cfg = copy.deepcopy(cfg)
 
     # build sampler
-    sampler_cfg = cfg.pop("sampler", None)
-    if sampler_cfg is not None:
-        sampler_cls = sampler_cfg.pop("name")
+    batch_sampler_cfg = cfg.pop("sampler", None)
+    if batch_sampler_cfg is not None:
+        sampler_cls = batch_sampler_cfg.pop("name")
 
         if sampler_cls == "BatchSampler":
             if world_size > 1:
@@ -79,8 +79,8 @@ def build_dataloader(_dataset, cfg):
                     f"'BatchSampler' when world_size({world_size}) > 1."
                 )
 
-        sampler_cfg["batch_size"] = cfg["batch_size"]
-        sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+        batch_sampler_cfg["batch_size"] = cfg["batch_size"]
+        batch_sampler = getattr(io, sampler_cls)(_dataset, **batch_sampler_cfg)
     else:
         if cfg["batch_size"] != 1:
             raise ValueError(
@@ -89,7 +89,7 @@ def build_dataloader(_dataset, cfg):
         logger.warning(
             "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
         )
-        sampler = None
+        batch_sampler = None
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
@@ -122,8 +122,8 @@ def build_dataloader(_dataset, cfg):
         dataloader_ = pgl_data.Dataloader(
             dataset=_dataset,
             batch_size=cfg["batch_size"],
-            drop_last=sampler_cfg.get("drop_last", False),
-            shuffle=sampler_cfg.get("shuffle", False),
+            drop_last=batch_sampler_cfg.get("drop_last", False),
+            shuffle=batch_sampler_cfg.get("shuffle", False),
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             collate_fn=collate_fn,
         )
@@ -131,7 +131,7 @@ def build_dataloader(_dataset, cfg):
         dataloader_ = io.DataLoader(
             dataset=_dataset,
             places=device.get_device(),
-            batch_sampler=sampler,
+            batch_sampler=batch_sampler,
             collate_fn=collate_fn,
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
@@ -140,8 +140,8 @@ def build_dataloader(_dataset, cfg):
 
     if len(dataloader_) == 0:
         raise ValueError(
-            f"batch_size({sampler_cfg['batch_size']}) should not bigger than number of "
-            f"samples({len(_dataset)}) when drop_last is {sampler_cfg.get('drop_last', False)}."
+            f"batch_size({batch_sampler_cfg['batch_size']}) should not bigger than number of "
+            f"samples({len(_dataset)}) when drop_last is {batch_sampler_cfg.get('drop_last', False)}."
         )
 
     return dataloader_

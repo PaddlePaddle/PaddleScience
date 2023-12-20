@@ -98,6 +98,11 @@ class BoundaryConstraint(base.Constraint):
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = {"name": "IterableNamedArrayDataset"}
+        if "iters_per_epoch" not in dataloader_cfg:
+            dataloader_cfg["iters_per_epoch"] = 1
+
         # prepare input
         input = geom.sample_boundary(
             dataloader_cfg["batch_size"] * dataloader_cfg["iters_per_epoch"],
