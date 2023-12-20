@@ -213,7 +213,8 @@ Beltrami flow 在T=1时刻的预测相对误差，如表格所示，Beltrami flo
 | v                 | 0.366%            | 0.199%  |
 | w                 | 0.587%            | 0.217%  |
 
-Beltrami flow速度场，如图所示，左侧为解析解参考值，右侧为神经网络预测值，蓝色为较小值，绿色为较大值，分布区域为x=[-1,1], y=[-1, 1],
+Beltrami flow速度场，如图所示，左侧为解析解参考值，右侧为神经网络预测值，蓝色为较小值，绿色为较大值，分布区域为x=[-1,1], y=[-1, 1],第一行为在x方向上的流速u的分布，第二行为在y方向上的流速v的分布，第三行为在z方向上流速w的分布。
+
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/Beltrami%20flow.gif)
 
 ## 6. 结果说明
