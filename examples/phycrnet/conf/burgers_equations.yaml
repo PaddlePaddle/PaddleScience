@@ -23,7 +23,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 66
 output_dir: ${hydra:run.dir}
-DATA_PATH: /mnt/local/data/tianchi.yu/burgers_1501x2x128x128.mat
+DATA_PATH: ./data/burgers_1501x2x128x128.mat
 
 # set working condition
 TIME_STEPS: 1001

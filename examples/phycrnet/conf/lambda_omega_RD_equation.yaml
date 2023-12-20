@@ -24,7 +24,7 @@ device: 'gpu:3'
 mode: train # running mode: train/eval
 seed: 66
 output_dir: ${hydra:run.dir}
-DATA_PATH: /mnt/local/data/tianchi.yu/reaction_diffusion.mat
+DATA_PATH: ./data/reaction_diffusion.mat
 
 # set working condition
 TIME_STEPS: 201

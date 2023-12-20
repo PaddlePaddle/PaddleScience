@@ -273,11 +273,9 @@ def compute_loss(output, loss_func):
     """calculate the physics loss"""
 
     # Padding x axis due to periodic boundary condition
-    # shape: [t, c, h, w]
     output = paddle.concat((output[:, :, :, -2:], output, output[:, :, :, 0:3]), axis=3)
 
     # Padding y axis due to periodic boundary condition
-    # shape: [t, c, h, w]
     output = paddle.concat((output[:, :, -2:, :], output, output[:, :, 0:3, :]), axis=2)
 
     # get physics loss
@@ -345,7 +343,6 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
     output = output_dataset["outputs"]
     input = input_dataset["input"][0]
 
-    # shape: [t, c, h, w]
     output = paddle.concat(tuple(output), axis=0)
     output = paddle.concat((input.cuda(), output), axis=0)
 
@@ -353,10 +350,8 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
     output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)
     output = paddle.concat((output[:, :, -1:, :], output, output[:, :, 0:2, :]), axis=2)
 
-    # [t, c, h, w]
     truth = uv[0:1001, :, :, :]
 
-    # [101, 2, 131, 131]
     truth = np.concatenate((truth[:, :, :, -1:], truth, truth[:, :, :, 0:2]), axis=3)
     truth = np.concatenate((truth[:, :, -1:, :], truth, truth[:, :, 0:2, :]), axis=2)
 
@@ -389,10 +384,3 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
     plt.legend()
     plt.savefig(fig_save_path + "x=32,y=32.png")
     plt.close("all")
-
-    # # plot train loss
-    # plt.figure()
-    # plt.plot(train_loss, label="train loss")
-    # plt.yscale("log")
-    # plt.legend()
-    # plt.savefig(fig_save_path + "train loss.png", dpi=300)

@@ -173,7 +173,7 @@ def evaluate(cfg: DictConfig):
     model.register_input_transform(functions.transform_in)
     model.register_output_transform(_transform_out)
 
-    # use Burgers_2d_solver_HighOrder.py to generate data
+    # use the generated data
     data = scio.loadmat(cfg.DATA_PATH)
     uv = data["uv"]  # [t,c,h,w]
     functions.uv = uv
