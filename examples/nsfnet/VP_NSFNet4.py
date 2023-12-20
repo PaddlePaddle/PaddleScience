@@ -9,6 +9,26 @@ import ppsci
 from ppsci.utils import logger
 
 
+class Transform:
+    def __init__(self, lowb, upb) -> None:
+        self.lowb = lowb
+        self.upb = upb
+
+    def input_trans(self, input_dict):
+        lowb = self.lowb
+        upb = self.upb
+        for _, v in input_dict.items():
+            v = 2.0 * (v - lowb) / (upb - lowb) - 1.0
+        return input_dict
+
+
+# normalization
+def dimensionless(lowb, upb, xb_train, yb_train, zb_train, tb_train):
+    Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
+    Xb = 2.0 * (Xb - lowb) / (upb - lowb) - 1.0
+    return Xb[:, 0:1], Xb[:, 1:2], Xb[:, 2:3], Xb[:, 3:4]
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
@@ -94,6 +114,12 @@ def train(cfg: DictConfig):
     w_star = test_v[:, 2:3].astype("float32")
     p_star = test_v[:, 3:4].astype("float32")
 
+    # normalization
+    Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
+    lowb = Xb.min(0)
+    upb = Xb.max(0)
+    trans = Transform(lowb, upb)
+    model.register_input_transform(trans.input_trans)
     # set dataloader config
     train_dataloader_cfg_b = {
         "dataset": {
@@ -261,7 +287,7 @@ def evaluate(cfg: DictConfig):
 
     # wrap validator
 
-    checkpoint_path = os.path.join(cfg.output_dir, "latest.pdparams")
+    checkpoint_path = os.path.join(cfg.pretrained_model_path, "latest.pdparams")
     layer_state_dict = paddle.load(checkpoint_path)
     model.set_state_dict(layer_state_dict)
 
