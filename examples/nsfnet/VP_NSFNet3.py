@@ -342,7 +342,6 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
-        checkpoint_path=OUTPUT_DIR + "/checkpoints/latest",
     )
     # train model
     solver.train()
