@@ -11,7 +11,7 @@ MODEL:
   hidden_size: 100
   activation: "tanh"
 
-mode: eval
+mode: train
 
 ntrain: 70000
 
