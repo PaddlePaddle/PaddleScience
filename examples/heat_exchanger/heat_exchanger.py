@@ -31,7 +31,7 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set model
-    model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
+    model = ppsci.arch.HEDeepONets(**cfg.MODEL)
 
     # set time-geometry
     timestamps = np.linspace(0.0, 2, cfg.NTIME + 1, endpoint=True)
@@ -437,7 +437,7 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set model
-    model = ppsci.arch.PI_DeepONets(**cfg.MODEL)
+    model = ppsci.arch.HEDeepONets(**cfg.MODEL)
 
     # set time-geometry
     timestamps = np.linspace(0.0, 2, cfg.NTIME + 1, endpoint=True)
