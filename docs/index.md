@@ -96,7 +96,11 @@
     pip install paddlesci
     ```
 
-- **完整安装流程**：[安装与使用](./zh/install_setup.md)
+**完整安装流程**：[安装与使用](./zh/install_setup.md)
+
+--8<--
+./README.md:update
+--8<--
 
 --8<--
 ./README.md:feature

@@ -1,4 +1,4 @@
-# Loss(损失函数) 模块
+# Loss.loss(损失函数) 模块
 
 ::: ppsci.loss
     handler: python
@@ -16,16 +16,5 @@
         - PeriodicL1Loss
         - PeriodicL2Loss
         - PeriodicMSELoss
-      show_root_heading: true
-      heading_level: 3
-
-::: ppsci.loss.mtl
-    handler: python
-    options:
-      members:
-        - AGDA
-        - LossAggregator
-        - PCGrad
-        - Relobralo
       show_root_heading: true
       heading_level: 3

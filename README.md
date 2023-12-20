@@ -89,6 +89,8 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
 
+- 添加多目标优化算法 [Relobralo](http://127.0.0.1:8006/PaddlePaddle/PaddleScience/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 。
+- 添加气泡流求解案例([Bubble](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bubble/))、机翼优化案例([DeepCFD](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deepcfd/))、热传导仿真案例([HeatPINN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn/))、非线性短临预报模型([Nowcasting(仅推理)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet))、拓扑优化案例([TopOpt](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt))、矩形平板线弹性方程求解案例([Biharmonic2D](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d))。
 - 添加二维血管案例([LabelFree-DNN-Surrogate](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate/#4))、空气激波案例([ShockWave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/shock_wave/))、去噪网络模型([DUCNN](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/DU_CNN))、风电预测模型([Deep Spatial Temporal](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/Deep-Spatio-Temporal))、域分解模型([XPINNs](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/XPINNs))、积分方程求解案例([Volterra Equation](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide/))、分数阶方程求解案例([Fractional Poisson 2D](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py))。
 - 针对串联方程和复杂方程场景，`Equation` 模块支持基于 [sympy](https://docs.sympy.org/dev/tutorials/intro-tutorial/intro.html) 的符号计算，并支持和 python 函数混合使用([#507](https://github.com/PaddlePaddle/PaddleScience/pull/507)、[#505](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
 - `Geometry` 模块和 `InteriorConstraint`、`InitialConstraint` 支持计算 SDF 微分功能([#539](https://github.com/PaddlePaddle/PaddleScience/pull/539))。
@@ -103,7 +105,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 - 支持物理机理驱动、数据驱动、数理融合三种问题求解方式。涵盖流体、结构、气象等领域 20+ 案例。
 - 支持结果可视化输出与日志结构化保存。
 - 完善的 type hints，用户使用和代码贡献全流程文档，经典案例 AI studio 快速体验，降低使用门槛，提高开发效率。
-- 支持基于 sympy 符号计算库的方程表示。
+- 支持基于 sympy 符号计算库的方程表示与联立方程组计算。
 - 更多特性正在开发中...
 <!-- --8<-- [end:feature] -->
 
@@ -226,7 +228,7 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
 ![cooperation](./docs/images/overview/cooperation.png)
 
 <!-- --8<-- [start:license] -->
-## 📜证书
+## 📜开源协议
 
 [Apache License 2.0](https://github.com/PaddlePaddle/PaddleScience/blob/develop/LICENSE)
 <!-- --8<-- [end:license] -->
