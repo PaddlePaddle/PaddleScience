@@ -356,7 +356,7 @@ def evaluate(cfg: DictConfig):
     ax.set_aspect("equal")
     ax.set_title("FV " + r"$T$")
     fig1.tight_layout(pad=1)
-    fig1.savefig("T.pdf", bbox_inches="tight")
+    fig1.savefig("T.png", bbox_inches="tight")
     plt.close(fig1)
 
 

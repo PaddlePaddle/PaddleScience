@@ -391,7 +391,6 @@ def evaluate(cfg: DictConfig):
         cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
         cbar.ax.tick_params(labelsize=xytickssize)
         fig1.tight_layout(pad=1)
-        fig1.savefig("Para" + str(i) + "T.pdf", bbox_inches="tight")
         fig1.savefig("Para" + str(i) + "T.png", bbox_inches="tight")
         plt.close(fig1)
 
