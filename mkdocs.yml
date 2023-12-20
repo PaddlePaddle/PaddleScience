@@ -61,6 +61,7 @@ nav:
           - ShockWave: zh/examples/shock_wave.md
           - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
+          - NSFNet: zh/examples/nsfnet.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
