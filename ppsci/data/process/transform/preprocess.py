@@ -146,6 +146,8 @@ class Log1p:
 class CropData:
     """Crop data class.
 
+    This class is used to crop data based on a specified bounding box.
+
     Args:
         xmin (Tuple[int, ...]): Bottom left corner point, [x0, y0].
         xmax (Tuple[int, ...]): Top right corner point, [x1, y1].
@@ -153,7 +155,16 @@ class CropData:
 
     Examples:
         >>> import ppsci
-        >>> crop_data = ppsci.data.transform.CropData((0, 0), (720, 1440))
+        >>> import numpy as np
+        >>> crop_data = ppsci.data.transform.CropData((0, 0), (256, 512))
+        >>> input_item = {"input": np.zeros((3, 720, 1440))}
+        >>> label_item = {"label": np.zeros((3, 720, 1440))}
+        >>> weight_item = {"weight": np.ones((3, 720, 1440))}
+        >>> input_item, label_item, weight_item = crop_data(input_item, label_item, weight_item)
+        >>> print(input_item["input"].shape)
+        (3, 256, 512)
+        >>> print(label_item["label"].shape)
+        (3, 256, 512)
     """
 
     def __init__(
