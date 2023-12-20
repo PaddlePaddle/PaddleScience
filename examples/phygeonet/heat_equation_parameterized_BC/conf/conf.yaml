@@ -20,7 +20,7 @@ hydra:
     subdir: ./
 
 # general settings
-mode: eval # running mode: train/eval
+mode: train # running mode: train/eval
 seed: 66
 data_dir: ./data/heat_equation_bc.npz
 test_data_dir: ./data/heat_equation_bc_test.npz
@@ -49,5 +49,5 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: outputs_phygeonet/2023-12-19/22-59-16/checkpoints/latest
+  pretrained_model_path: null
   eval_with_no_grad: true

@@ -31,8 +31,8 @@ class USCNN(base.Arch):
               h= 0.01
               ny= 19
               nx= 84
-              Nvar_input= 2
-              Nvar_output= 1
+              nvar_inp= 2
+              nvar_out= 1
               pad_singleside= 1
             )
     """

@@ -46,5 +46,5 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: outputs_phygeonet/latest
+  pretrained_model_path: null
   eval_with_no_grad: true
