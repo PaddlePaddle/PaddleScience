@@ -163,6 +163,7 @@ class ERA5SampledDataset(io.Dataset):
         weight_dict (Optional[Dict[str, float]]): Weight dictionary. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
+
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.ERA5SampledDataset(
@@ -170,6 +171,11 @@ class ERA5SampledDataset(io.Dataset):
         ...     "input_keys": ("input",),
         ...     "label_keys": ("output",),
         ... )  # doctest: +SKIP
+        >>> # get the length of the dataset
+        >>> dataset_size = len(dataset)
+        >>> # get the first sample of the data
+        >>> first_sample = dataset[0]
+        >>> print("First sample:", first_sample)
     """
 
     def __init__(
