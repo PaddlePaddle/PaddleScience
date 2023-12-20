@@ -19,8 +19,6 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
-from typing_extensions import Literal
-
 from ppsci.loss import base
 
 
@@ -35,21 +33,8 @@ class FunctionalLoss(base.Loss):
     \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
     $$
 
-    when `reduction` is set to "mean"
-
-    $$
-    L = MEAN \left[ f(x, y) \right]
-    $$
-
-    when `reduction` is set to "sum"
-
-    $$
-    L = SUM \left[ f(x, y) \right]
-    $$
-
     Args:
         loss_expr (Callable): expression of loss calculation.
-        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
@@ -79,14 +64,9 @@ class FunctionalLoss(base.Loss):
     def __init__(
         self,
         loss_expr: Callable,
-        reduction: Literal["mean", "sum"] = "mean",
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
-        if reduction not in ["mean", "sum"]:
-            raise ValueError(
-                f"reduction should be 'mean' or 'sum', but got {reduction}"
-            )
-        super().__init__(reduction, weight)
+        super().__init__(None, weight)
         self.loss_expr = loss_expr
 
     def forward(self, output_dict, label_dict=None, weight_dict=None):
