@@ -1,4 +1,6 @@
 # PhyCRNet
+<a href="https://aistudio.baidu.com/projectdetail/7296776" class="md-button md-button--primary" style>AI Studio快速体验</a>
+
 
 === "模型训练命令"
 
