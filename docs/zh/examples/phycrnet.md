@@ -124,7 +124,7 @@ examples/phycrnet/main.py
 
 本文通过对Burgers' Equation进行训练，所得结果如下，根据精度和扩展能力的对比我们可以得出，我们的模型在训练集（t=1.0,2.0）以及拓展集（t=3.0,4.0）上均有良好的表现效果。
 
-！[image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/PhyCRNet_Burgers.jpeg)
+![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/PhyCRNet_Burgers.jpeg)
 ## 6. 结论
 本论文通过提出一个新的神经网络PhyCRNet,通过将传统有限差分的思路嵌入物理信息神经网络中，针对性地解决原神经网络缺少对长时间数据的推理能力、误差累积以及缺少泛化能力的问题。与此同时，本文通过类似于有限差分的边界处理方式，将原本边界条件的软限制转为硬限制，大大提高了神经网络的准确性。
 
