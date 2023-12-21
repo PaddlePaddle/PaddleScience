@@ -26,7 +26,7 @@ class FunctionalLoss(base.Loss):
     r"""Functional loss class, which allows to use custom loss computing function from given loss_expr for complex computation cases.
 
     $$
-    L = f(x, y)
+    L = f(\mathbf{x}, \mathbf{y})
     $$
 
     $$
