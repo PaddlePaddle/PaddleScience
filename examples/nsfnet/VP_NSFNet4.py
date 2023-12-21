@@ -15,6 +15,7 @@
 import os
 
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
@@ -290,13 +291,18 @@ def evaluate(cfg: DictConfig):
     t_star = paddle.to_tensor(
         np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1).astype("float32")
     )
-    x_star = paddle.to_tensor(np.tile(test_x[:, 0:1], (5, 1)).astype("float32"))
-    y_star = paddle.to_tensor(np.tile(test_x[:, 1:2], (5, 1)).astype("float32"))
-    z_star = paddle.to_tensor(np.tile(test_x[:, 2:3], (5, 1)).astype("float32"))
+    x_star = paddle.to_tensor(
+        np.tile(test_x[:, 0:1], (5, 1)).astype("float32").reshape(-1, 1)
+    )
+    y_star = paddle.to_tensor(
+        np.tile(test_x[:, 1:2], (5, 1)).astype("float32").reshape(-1, 1)
+    )
+    z_star = paddle.to_tensor(
+        np.tile(test_x[:, 2:3], (5, 1)).astype("float32").reshape(-1, 1)
+    )
     u_star = paddle.to_tensor(test_v[:, 0:1].astype("float32"))
     v_star = paddle.to_tensor(test_v[:, 1:2].astype("float32"))
     w_star = paddle.to_tensor(test_v[:, 2:3].astype("float32"))
-    p_star = paddle.to_tensor(test_v[:, 3:4].astype("float32"))
 
     # wrap validator
     checkpoint_path = os.path.join(cfg.pretrained_model_path, "latest.pdparams")
@@ -304,50 +310,34 @@ def evaluate(cfg: DictConfig):
     model.set_state_dict(layer_state_dict)
 
     # print the relative error
-    us = []
-    vs = []
-    ws = []
-    for i in t:
-        solution = model(
-            {
-                "x": x_star,
-                "y": y_star,
-                "z": z_star,
-                "t": t_star[3000 * i : 3000 * (i + 1)],
-            }
-        )
-        u_pred = solution["u"]
-        v_pred = solution["v"]
-        w_pred = solution["w"]
-        p_pred = solution["p"]
-        p_pred = p_pred - p_pred.mean() + p_star.mean()
-        error_u = np.linalg.norm(u_star - u_pred, 2) / np.linalg.norm(u_star, 2)
-        error_v = np.linalg.norm(v_star - v_pred, 2) / np.linalg.norm(v_star, 2)
-        error_w = np.linalg.norm(w_star - w_pred, 2) / np.linalg.norm(w_star, 2)
-        error_p = np.linalg.norm(p_star - p_pred, 2) / np.linalg.norm(p_star, 2)
-        us.append(error_u)
-        vs.append(error_v)
-        ws.append(error_w)
-        print(
-            "t={:.2f},relative error of u: {:.3e}".format(
-                t_star[3000 * i].item(), error_u
-            )
-        )
-        print(
-            "t={:.2f},relative error of v: {:.3e}".format(
-                t_star[3000 * i].item(), error_v
-            )
-        )
-        print(
-            "t={:.2f},relative error of w: {:.3e}".format(
-                t_star[3000 * i].item(), error_w
-            )
-        )
-        print(
-            "t={:.2f},relative error of p: {:.3e}".format(
-                t_star[3000 * i].item(), error_p
-            )
-        )
+    solution = model(
+        {
+            "x": x_star,
+            "y": y_star,
+            "z": z_star,
+            "t": t_star,
+        }
+    )
+    u_pred = solution["u"]
+    v_pred = solution["v"]
+    w_pred = solution["w"]
+    u_star = u_star.reshape((5, -1))
+    v_star = v_star.reshape((5, -1))
+    w_star = w_star.reshape((5, -1))
+    u_error = paddle.linalg.norm(u_pred - u_star, axis=1) / np.linalg.norm(
+        u_star, axis=1
+    )
+    v_error = paddle.linalg.norm(v_pred - v_star, axis=1) / np.linalg.norm(
+        v_star, axis=1
+    )
+    w_error = paddle.linalg.norm(w_pred - w_star, axis=1) / np.linalg.norm(
+        w_star, axis=1
+    )
+    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
+    plt.plot(t, np.array(u_error))
+    plt.plot(t, np.array(v_error))
+    plt.plot(t, np.array(w_error))
+    plt.savefig("error.jpg")
 
 
 if __name__ == "__main__":
