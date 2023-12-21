@@ -337,6 +337,10 @@ def evaluate(cfg: DictConfig):
     plt.plot(t, np.array(u_error))
     plt.plot(t, np.array(v_error))
     plt.plot(t, np.array(w_error))
+    plt.legend(["u_error", "v_error", "w_error"])
+    plt.xlabel("t")
+    plt.ylabel("relative error")
+    plt.title("relative error for test dataset")
     plt.savefig("error.jpg")
 
     grid_x, grid_y = np.mgrid[
