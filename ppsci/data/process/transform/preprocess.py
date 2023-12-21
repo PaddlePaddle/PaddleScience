@@ -71,6 +71,12 @@ class Scale:
         >>> label_dict = {"x": 100, "y": 200}
         >>> weight_dict = {"x": 1000, "y": 2000}
         >>> input_dict_scaled, label_dict_scaled, weight_dict_scaled = translate(input_dict, label_dict, weight_dict)
+        >>> print(input_dict_scaled)
+        {'x': 15.0, 'y': 40.0}
+        >>> print(label_dict_scaled)
+        {'x': 100, 'y': 200}
+        >>> print(weight_dict_scaled)
+        {'x': 1000, 'y': 2000}
     """
 
     def __init__(self, scale: Dict[str, float]):
