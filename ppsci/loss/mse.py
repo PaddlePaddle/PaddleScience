@@ -44,8 +44,25 @@ class MSELoss(base.Loss):
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.MSELoss("mean")
+        >>> import paddle
+        >>> from ppsci.loss import MSELoss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = MSELoss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               4.47400045)
+
+        >>> loss = MSELoss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               17.89600182)
     """
 
     def __init__(
@@ -108,8 +125,27 @@ class MSELossWithL2Decay(MSELoss):
         ValueError: reduction should be 'mean' or 'sum'.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.MSELossWithL2Decay("mean", {"k_matrix": 2.0})
+        >>> import paddle
+        >>> from ppsci.loss import MSELossWithL2Decay
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> regularization_dict = {'u': 2.0}
+        >>> loss = MSELossWithL2Decay(regularization_dict=regularization_dict, weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               12.39400005)
+
+        >>> regularization_dict = {'v': 1.0}
+        >>> loss = MSELossWithL2Decay(reduction="sum", regularization_dict=regularization_dict, weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               21.85600090)
     """
 
     def __init__(
@@ -152,6 +188,27 @@ class PeriodicMSELoss(base.Loss):
     Args:
         reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.loss import PeriodicMSELoss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = PeriodicMSELoss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.59999967)
+
+        >>> loss = PeriodicMSELoss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               5.19999933)
     """
 
     def __init__(
