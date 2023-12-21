@@ -339,6 +339,44 @@ def evaluate(cfg: DictConfig):
     plt.plot(t, np.array(w_error))
     plt.savefig("error.jpg")
 
+    grid_x, grid_y = np.mgrid[
+        x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
+    ]
+    x_plot = paddle.to_tensor(grid_x.reshape(-1, 1).astype("float32"))
+    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
+    z_plot = paddle.to_tensor(paddle.zeros(y_plot.shape).astype("float32"))
+    t_plot = paddle.to_tensor((t[-1]) * np.ones(x_star.shape).astype("float32"))
+    sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
+    fig, ax = plt.subplots(1, 4, figsize=(24, 3))
+    ax[0].contour(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
+    ax[0].set_title("u prediction")
+    ax[1].contour(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
+    ax[1].set_title("v prediction")
+    ax[2].contour(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
+    ax[2].set_title("w prediction")
+    ax[3].contour(grid_x, grid_y, sol["p"].reshape(grid_x.shape))
+    ax[3].set_title("p prediction")
+    plt.savefig("z=0 plane")
+
+    grid_y, grid_z = np.mgrid[
+        y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
+    ]
+    z_plot = paddle.to_tensor(grid_z.reshape(-1, 1).astype("float32"))
+    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
+    x_plot = paddle.to_tensor(paddle.zeros(y_plot.shape).astype("float32"))
+    t_plot = paddle.to_tensor((t[-1]) * np.ones(x_star.shape).astype("float32"))
+    sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
+    fig, ax = plt.subplots(1, 4, figsize=(24, 3))
+    ax[0].contour(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
+    ax[0].set_title("u prediction")
+    ax[1].contour(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
+    ax[1].set_title("v prediction")
+    ax[2].contour(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
+    ax[2].set_title("w prediction")
+    ax[3].contour(grid_x, grid_y, sol["p"].reshape(grid_x.shape))
+    ax[3].set_title("p prediction")
+    plt.savefig("x=0 plane")
+
 
 if __name__ == "__main__":
     main()
