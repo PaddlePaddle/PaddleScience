@@ -149,6 +149,12 @@ class Log1p:
         >>> label_item = {"data": np.array([4.0, 5.0, 6.0])}
         >>> weight_item = np.array([0.1, 0.2, 0.3])
         >>> input_item_transformed, label_item_transformed, weight_item_transformed = log1p(input_item, label_item, weight_item)
+        >>> print(input_item_transformed)
+        {'data': array([11.51293546, 12.20607765, 12.61154109])}
+        >>> print(label_item_transformed)
+        {'data': array([12.89922233, 13.12236538, 13.3046866 ])}
+        >>> print(weight_item_transformed)
+        [0.1 0.2 0.3]
     """
 
     def __init__(
