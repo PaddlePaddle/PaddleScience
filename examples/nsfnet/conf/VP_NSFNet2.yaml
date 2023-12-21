@@ -2,7 +2,7 @@ seed: 1234
 
 output_dir: ./output_NSFNet2
 
-data_dir: ./npy_data/cylinder_nektar_wake.mat
+data_dir: ./data/cylinder_nektar_wake.mat
 
 iters_per_epoch: 1
 
