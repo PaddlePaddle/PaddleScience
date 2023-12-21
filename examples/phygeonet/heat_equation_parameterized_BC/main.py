@@ -229,7 +229,7 @@ def train(cfg: DictConfig):
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
 
-    data = np.load(cfg.date_dir)
+    data = np.load(cfg.data_dir)
     coords = data["coords"]
     jinvs = data["jinvs"]
     dxdxis = data["dxdxis"]

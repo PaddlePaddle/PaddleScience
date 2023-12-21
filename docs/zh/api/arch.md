@@ -19,6 +19,7 @@
         - AFNONet
         - PrecipNet
         - UNetEx
+        - PhyGeoNet
         - NowcastNet
       show_root_heading: true
       heading_level: 3
