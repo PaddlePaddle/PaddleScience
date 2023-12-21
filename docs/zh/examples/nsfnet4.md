@@ -8,9 +8,11 @@
     # VP_NSFNet2
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    unzip ./data/NSF4_data.zip
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/cylinder_nektar_wake.mat
-    python VP_NSFNet4.py DATASET_PATH=https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # unzip ./data/NSF4_data.zip
+    python VP_NSFNet4.py DATASET_PATH=./data/
 
     ```
 
