@@ -1,3 +1,17 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 
 import hydra
@@ -42,27 +56,19 @@ def main(cfg: DictConfig):
 def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-
     # set random seed for reproducibility
-    SEED = cfg.seed
+    SEED = 1234
     ppsci.utils.misc.set_random_seed(SEED)
     ITERS_PER_EPOCH = cfg.iters_per_epoch
+    Re = cfg.re
+    N_TRAIN = cfg.ntrain
+    NB_TRAIN = cfg.nb_train
+    N0_TRAIN = cfg.n0_train
+    alpha = cfg.alpha
+    beta = cfg.beta
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
-
-    # set the number of residual samples
-    N_TRAIN = cfg.ntrain
-
-    # set the number of boundary samples
-    NB_TRAIN = cfg.nb_train
-
-    # set the number of initial samples
-    N0_TRAIN = cfg.n0_train
-
-    # set weight
-    ALPHA = cfg.alpha
-    BETA = cfg.beta
 
     # Load Data
     data_path = cfg.data_dir
@@ -100,7 +106,7 @@ def train(cfg: DictConfig):
 
     total_times1 = np.array(list(range(17))) * 0.0065
     t_train1 = total_times1.repeat(100000)
-    t_train = t_train1.reshape(-1, 1).astype("float32")
+    t_train = t_train1.reshape(-1, 1).astype("float64")
     # Test Data
     test_x = np.load(data_path + "test43_l.npy")
     test_v = np.load(data_path + "test43_vp.npy")
@@ -114,12 +120,13 @@ def train(cfg: DictConfig):
     w_star = test_v[:, 2:3].astype("float32")
     p_star = test_v[:, 3:4].astype("float32")
 
-    # normalization
+    # dimensionless
     Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
-    lowb = Xb.min(0)
+    lowb = Xb.min(0)  # minimal number in each column
     upb = Xb.max(0)
     trans = Transform(lowb, upb)
     model.register_input_transform(trans.input_trans)
+
     # set dataloader config
     train_dataloader_cfg_b = {
         "dataset": {
@@ -165,28 +172,28 @@ def train(cfg: DictConfig):
             "shuffle": False,
         },
     }
+
     geom = ppsci.geometry.PointCloud(
         {"x": x_train, "y": y_train, "z": z_train, "t": t_train}, ("x", "y", "z", "t")
     )
-
-    # supervised constraint s.t ||u-u_b||
+    ## supervised constraint s.t ||u-u_b||
     sup_constraint_b = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_b,
-        ppsci.loss.MSELoss("mean", ALPHA),
+        ppsci.loss.MSELoss("mean", alpha),
         name="Sup_b",
     )
 
-    # supervised constraint s.t ||u-u_0||
+    ## supervised constraint s.t ||u-u_0||
     sup_constraint_0 = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_0,
-        ppsci.loss.MSELoss("mean", BETA),
+        ppsci.loss.MSELoss("mean", beta),
         name="Sup_0",
     )
 
     # set equation constarint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
-            nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
+            nu=1.0 / Re, rho=1.0, dim=3, time=True
         ),
     }
 
@@ -195,9 +202,14 @@ def train(cfg: DictConfig):
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0, "momentum_z": 0},
         geom,
         {
-            "dataset": {"name": "IterableNamedArrayDataset"},
+            "dataset": {"name": "NamedArrayDataset"},
             "batch_size": N_TRAIN,
             "iters_per_epoch": ITERS_PER_EPOCH,
+            "sampler": {
+                "name": "BatchSampler",
+                "drop_last": False,
+                "shuffle": False,
+            },
         },
         ppsci.loss.MSELoss("mean"),
         name="EQ",
@@ -208,7 +220,7 @@ def train(cfg: DictConfig):
         sup_constraint_b.name: sup_constraint_b,
         sup_constraint_0.name: sup_constraint_0,
     }
-
+    # constraint={pde_constraint.name:pde_constraint}
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
@@ -216,7 +228,7 @@ def train(cfg: DictConfig):
         name="Residual",
     )
 
-    # wrap validator
+    # Wrap validator
     validator = {residual_validator.name: residual_validator}
 
     # set optimizer
@@ -236,11 +248,12 @@ def train(cfg: DictConfig):
         model=model,
         constraint=constraint,
         optimizer=optimizer,
-        epochs=EPOCHS,
+        epochs=250,
         lr_scheduler=lr_scheduler,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
         log_freq=cfg.log_freq,
+        save_freq=100,
         eval_freq=cfg.eval_freq,
         seed=SEED,
         equation=equation,
@@ -248,12 +261,14 @@ def train(cfg: DictConfig):
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
+        output_dir=OUTPUT_DIR,
     )
     # train model
     solver.train()
 
     # evaluate after finished training
     solver.eval()
+
     solver.plot_loss_history()
 
 
@@ -267,8 +282,6 @@ def evaluate(cfg: DictConfig):
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
-
-    # set the number of residual samples
 
     # Test Data
     test_x = np.load(data_path + "test43_l.npy")
@@ -286,7 +299,6 @@ def evaluate(cfg: DictConfig):
     p_star = paddle.to_tensor(test_v[:, 3:4].astype("float32"))
 
     # wrap validator
-
     checkpoint_path = os.path.join(cfg.pretrained_model_path, "latest.pdparams")
     layer_state_dict = paddle.load(checkpoint_path)
     model.set_state_dict(layer_state_dict)
