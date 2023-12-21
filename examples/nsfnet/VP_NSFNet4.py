@@ -318,9 +318,9 @@ def evaluate(cfg: DictConfig):
             "t": t_star,
         }
     )
-    u_pred = solution["u"]
-    v_pred = solution["v"]
-    w_pred = solution["w"]
+    u_pred = solution["u"].reshape((5, -1))
+    v_pred = solution["v"].reshape((5, -1))
+    w_pred = solution["w"].reshape((5, -1))
     u_star = u_star.reshape((5, -1))
     v_star = v_star.reshape((5, -1))
     w_star = w_star.reshape((5, -1))
