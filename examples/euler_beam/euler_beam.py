@@ -128,6 +128,9 @@ def train(cfg: DictConfig):
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         to_static=cfg.to_static,
     )
     # train model
@@ -200,6 +203,8 @@ def evaluate(cfg: DictConfig):
         geom=geom,
         validator=validator,
         visualizer=visualizer,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         to_static=cfg.to_static,
     )
     # evaluate after finished training

@@ -41,15 +41,13 @@ MODEL:
 TRAIN:
   epochs: 10000
   iters_per_epoch: 1
-  save_freq: 20
+  save_freq: 1000
   eval_during_train: true
   eval_freq: 1000
-  learning_rate: 1e-3
+  learning_rate: 1.0e-3
   batch_size:
-    pde: 16
+    pde: 100
     bc: 4
-  weight:
-    bc_back: {"u": 10, "v": 10, "w": 10}
   pretrained_model_path: null
   checkpoint_path: null
 
@@ -58,5 +56,3 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
   total_size: 100
-  batch_size:
-    sup_validator: 128
