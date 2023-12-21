@@ -69,18 +69,18 @@ def build_dataloader(_dataset, cfg):
     # build sampler
     sampler_cfg = cfg.pop("sampler", None)
     if sampler_cfg is not None:
-        sampler_cls = sampler_cfg.pop("name")
+        batch_sampler_cls = sampler_cfg.pop("name")
 
-        if sampler_cls == "BatchSampler":
+        if batch_sampler_cls == "BatchSampler":
             if world_size > 1:
-                sampler_cls = "DistributedBatchSampler"
+                batch_sampler_cls = "DistributedBatchSampler"
                 logger.warning(
                     f"Automatically use 'DistributedBatchSampler' instead of "
                     f"'BatchSampler' when world_size({world_size}) > 1."
                 )
 
         sampler_cfg["batch_size"] = cfg["batch_size"]
-        sampler = getattr(io, sampler_cls)(_dataset, **sampler_cfg)
+        batch_sampler = getattr(io, batch_sampler_cls)(_dataset, **sampler_cfg)
     else:
         if cfg["batch_size"] != 1:
             raise ValueError(
@@ -89,7 +89,7 @@ def build_dataloader(_dataset, cfg):
         logger.warning(
             "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
         )
-        sampler = None
+        batch_sampler = None
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
@@ -128,10 +128,22 @@ def build_dataloader(_dataset, cfg):
             collate_fn=collate_fn,
         )
     else:
+        if cfg.get("auto_collation", False):
+            if cfg.get("num_workers", _DEFAULT_NUM_WORKERS) < 1:
+                raise ValueError(
+                    "num_workers should be greater than 1 when 'auto_collation' is True."
+                )
+            # NOTE: wrap batch_sampler again into BatchSampler for auto collation, which can
+            # speed up the process of batch samples indexing from dataset. See details at:
+            # https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
+            batch_sampler = io.BatchSampler(sampler=batch_sampler, batch_size=1)
+            collate_fn = lambda batch: batch[0]  # noqa: E731
+            logger.info("Use auto collation to speed up batch sampling.")
+
         dataloader_ = io.DataLoader(
             dataset=_dataset,
             places=device.get_device(),
-            batch_sampler=sampler,
+            batch_sampler=batch_sampler,
             collate_fn=collate_fn,
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
