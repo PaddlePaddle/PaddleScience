@@ -354,7 +354,9 @@ def evaluate(cfg: DictConfig):
     ]
     x_plot = paddle.to_tensor(grid_x.reshape(-1, 1).astype("float32"))
     y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
-    z_plot = paddle.to_tensor(paddle.zeros(y_plot.shape).astype("float32"))
+    z_plot = paddle.to_tensor(
+        z_star.min() * paddle.ones(y_plot.shape).astype("float32")
+    )
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape).astype("float32"))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
@@ -372,7 +374,13 @@ def evaluate(cfg: DictConfig):
     ax[3].set_title("p prediction")
     norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-    ax13 = fig.add_axes([0.15, 0.07, 0.20, 0.02])
+    ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.325, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.525, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     plt.savefig("z=0 plane")
 
@@ -381,25 +389,33 @@ def evaluate(cfg: DictConfig):
     ]
     z_plot = paddle.to_tensor(grid_z.reshape(-1, 1).astype("float32"))
     y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
-    x_plot = paddle.to_tensor(paddle.zeros(y_plot.shape).astype("float32"))
+    x_plot = paddle.to_tensor(
+        x_star.min() * paddle.ones(y_plot.shape).astype("float32")
+    )
     t_plot = paddle.to_tensor((t[-1]) * np.ones(y_plot.shape).astype("float32"))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
     cmap = plt.cm.get_cmap("jet")
 
     ax[0].contourf(
-        grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap
+        grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap
     )  # , levels=np.arange(sol["u"].min(), sol["u"].max(), 0.25))
     ax[0].set_title("u prediction")
-    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape), cmap=cmap)
+    ax[1].contourf(grid_y, grid_z, sol["v"].reshape(grid_x.shape), cmap=cmap)
     ax[1].set_title("v prediction")
-    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape), cmap=cmap)
+    ax[2].contourf(grid_y, grid_z, sol["w"].reshape(grid_x.shape), cmap=cmap)
     ax[2].set_title("w prediction")
-    ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape), cmap=cmap)
+    ax[3].contourf(grid_y, grid_z, sol["p"].reshape(grid_x.shape), cmap=cmap)
     ax[3].set_title("p prediction")
     norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-    ax13 = fig.add_axes([0.15, 0.07, 0.20, 0.02])
+    ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.325, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.525, 0.0, 0.175, 0.02])
+    plt.colorbar(im, cax=ax13, orientation="horizontal")
+    ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     plt.savefig("x=0 plane")
 
