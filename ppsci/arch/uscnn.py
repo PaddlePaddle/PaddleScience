@@ -12,29 +12,30 @@ class USCNN(base.Arch):
     """Physics-informed convolutional neural networks.
 
     Args:
-       input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
-       output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
-       h float: the spatial step
-       nx int: the number of grids along x-axis
-       ny int: the number of grids along y-axis
-       nvar_in int: input channel
-       nvar_out int: output channel
-       pad_singleside int: pad for hard boundary constraint
-       k int: kernel_size
-       s int: stride
-       p int: padding
-    Examples:
-        >>> import ppsci
-        >>> model = ppsci.arch.USCNN(
-              input_keys= [ 'coords' ]
-              output_keys= [ 'outputV' ]
-              h= 0.01
-              ny= 19
-              nx= 84
-              nvar_inp= 2
-              nvar_out= 1
-              pad_singleside= 1
-            )
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
+        output_keys (Tuple[str, ...]):Name of output keys, such as ("u", "v", "w").
+        hidden_size (Union[int, Tuple[int, ...]]): the hidden channel for convolutional layers
+        h (float): the spatial step
+        nx (int):  the number of grids along x-axis
+        ny (int): the number of grids along y-axis
+        nvar_in (int, optional):  input channel. Defaults to 1.
+        nvar_out (int, optional): output channel. Defaults to 1.
+        pad_singleside (int, optional): pad for hard boundary constraint. Defaults to 1.
+        k (int, optional): kernel_size. Defaults to 5.
+        s (int, optional): stride. Defaults to 1.
+        p (int, optional): padding. Defaults to 2.
+        Examples:
+            >>> import ppsci
+            >>> model = ppsci.arch.USCNN(
+                  input_keys= [ 'coords' ]
+                  output_keys= [ 'outputV' ]
+                  h= 0.01
+                  ny= 19
+                  nx= 84
+                  nvar_inp= 2
+                  nvar_out= 1
+                  pad_singleside= 1
+                )
     """
 
     def __init__(

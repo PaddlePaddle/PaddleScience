@@ -37,7 +37,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --output ./data/heat_equation.npz
 
-    python main.py    mode=eval  data_dir=./data/heat_equation.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
+    python main.py mode=eval data_dir=./data/heat_equation.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
 
     # heat_equation_bc
     # linux
@@ -48,7 +48,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --output ./data/heat_equation.npz
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --output ./data/heat_equation.npz
 
-    python main.py    mode=eval  test_data_dir=./data/heat_equation_bc_test.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams
+    python main.py mode=eval test_data_dir=./data/heat_equation_bc_test.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams
 
     ```
 
@@ -74,7 +74,6 @@ examples/phygeonet/heat_equation/main.py:236:236
 --8<--
 ```
 ### 3.2 数据读取
-我们从数据集中读取数据，公开数据集在[AIstudio](https://aistudio.baidu.com/datasetdetail/253292)
 ``` py linenums="227"
 --8<--
 examples/phygeonet/heat_equation/main.py:227:233
