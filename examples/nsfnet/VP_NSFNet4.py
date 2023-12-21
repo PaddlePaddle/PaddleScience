@@ -25,15 +25,20 @@ from ppsci.utils import logger
 
 
 class Transform:
-    def __init__(self, lowb, upb) -> None:
+    def __init__(
+        self,
+        lowb=np.array([[12.47, -1.0, 4.61, 0.0]]),
+        upb=np.array([1.266e01, -3.100e-03, 4.820e00, 1.040e-01]),
+    ) -> None:
         self.lowb = lowb
         self.upb = upb
 
     def input_trans(self, input_dict):
         lowb = self.lowb
         upb = self.upb
-        for _, v in input_dict.items():
+        for key, v in input_dict.items():
             v = 2.0 * (v - lowb) / (upb - lowb) - 1.0
+            input_dict[key] = v
         return input_dict
 
 
@@ -352,13 +357,13 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape).astype("float32"))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(24, 3))
-    ax[0].contour(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
+    ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
     ax[0].set_title("u prediction")
-    ax[1].contour(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
+    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
     ax[1].set_title("v prediction")
-    ax[2].contour(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
+    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
     ax[2].set_title("w prediction")
-    ax[3].contour(grid_x, grid_y, sol["p"].reshape(grid_x.shape))
+    ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape))
     ax[3].set_title("p prediction")
     plt.savefig("z=0 plane")
 
@@ -371,11 +376,11 @@ def evaluate(cfg: DictConfig):
     t_plot = paddle.to_tensor((t[-1]) * np.ones(y_plot.shape).astype("float32"))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(24, 3))
-    ax[0].contour(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
+    ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape))
     ax[0].set_title("u prediction")
-    ax[1].contour(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
+    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape))
     ax[1].set_title("v prediction")
-    ax[2].contour(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
+    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape))
     ax[2].set_title("w prediction")
     ax[3].contour(grid_x, grid_y, sol["p"].reshape(grid_x.shape))
     ax[3].set_title("p prediction")
