@@ -25,7 +25,7 @@ seed: 66
 data_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
 dtheta: 0
-epochs: 500
+epochs: 1500
 len_data: 1
 # model settings
 MODEL:
