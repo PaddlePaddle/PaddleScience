@@ -346,7 +346,7 @@ def evaluate(cfg: DictConfig):
         outputV = outputVs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
-        logger.info("i=", str(i))
+        logger.info(f"i={i}")
         fig1 = plt.figure()
         xylabelsize = 20
         xytickssize = 20
