@@ -15,14 +15,14 @@ class USCNN(base.Arch):
        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
        output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
        h float: the spatial step
-       nx int:
-       ny int:
+       nx int: the number of grids along x-axis
+       ny int: the number of grids along y-axis
        nvar_in int: input channel
        nvar_out int: output channel
        pad_singleside int: pad for hard boundary constraint
-       k int:
-       s int:
-       p int:
+       k int: kernel_size
+       s int: stride
+       p int: padding
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.USCNN(
