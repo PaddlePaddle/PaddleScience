@@ -44,8 +44,25 @@ class MAELoss(base.Loss):
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.MAELoss("mean")
+        >>> import paddle
+        >>> from ppsci.loss import MAELoss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = MAELoss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.67999995)
+
+        >>> loss = MAELoss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               6.71999979)
     """
 
     def __init__(
