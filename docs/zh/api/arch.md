@@ -18,6 +18,7 @@
         - ModelList
         - AFNONet
         - PrecipNet
+        - PhyCRNet
         - UNetEx
         - NowcastNet
       show_root_heading: true

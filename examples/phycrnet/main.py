@@ -181,7 +181,7 @@ def evaluate(cfg: DictConfig):
         paddle.to_tensor(initial_state),
         paddle.to_tensor(uv[0:1, ...], dtype=paddle.get_default_dtype()),
     ).get(10)
-    checkpoint_path = os.path.join(cfg.output_dir, "phycrnet.pdparams")
+    checkpoint_path = os.path.join(cfg.EVAL.pretrained_model_path, "phycrnet.pdparams")
     layer_state_dict = paddle.load(checkpoint_path)
     model.set_state_dict(layer_state_dict)
     model.register_output_transform(None)
