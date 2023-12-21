@@ -12,8 +12,8 @@ class USCNN(base.Arch):
     """Physics-informed convolutional neural networks.
 
     Args:
-        input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
-        output_keys (Tuple[str, ...]):Name of output keys, such as ("u", "v", "w").
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("coords").
+        output_keys (Tuple[str, ...]):Name of output keys, such as ("outputV").
         hidden_size (Union[int, Tuple[int, ...]]): the hidden channel for convolutional layers
         h (float): the spatial step
         nx (int):  the number of grids along x-axis
