@@ -128,17 +128,26 @@ def build_dataloader(_dataset, cfg):
             collate_fn=collate_fn,
         )
     else:
-        if cfg.get("auto_collation", False):
+        if cfg.get("auto_collation", True) is False:
             if cfg.get("num_workers", _DEFAULT_NUM_WORKERS) < 1:
                 raise ValueError(
-                    "num_workers should be greater than 1 when 'auto_collation' is True."
+                    "num_workers should be greater than 1 when 'auto_collation' is False."
                 )
-            # NOTE: wrap batch_sampler again into BatchSampler for auto collation, which can
-            # speed up the process of batch samples indexing from dataset. See details at:
-            # https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
+            # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
+            # which can speed up the process of batch samples indexing from dataset. See
+            # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
             batch_sampler = io.BatchSampler(sampler=batch_sampler, batch_size=1)
+            if collate_fn is not None:
+                logger.warning(
+                    "Detected collate_fn is not None, which will be ignored when "
+                    "'auto_collation' is False"
+                )
+            # 2. disable auto collation by given identity collate_fn which return the first
+            # (also the only) batch data in batch list, or there will be a redundant
+            # axis at the first dimension returned by dataloader. is step is necessary
+            # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
             collate_fn = lambda batch: batch[0]  # noqa: E731
-            logger.info("Use auto collation to speed up batch sampling.")
+            logger.info("Auto collation is disabled to speed up batch sampling")
 
         dataloader_ = io.DataLoader(
             dataset=_dataset,
