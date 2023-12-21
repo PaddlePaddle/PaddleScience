@@ -12,7 +12,7 @@ MODEL:
   num_layers: 10
   hidden_size: 300
   activation: "tanh"
-  weight norm: True
+  weight_norm: True
 
 mode: train
 
