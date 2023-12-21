@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.he_deeponets import HEDeepONets
+
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
@@ -56,6 +58,7 @@ __all__ = [
     "UNetEx",
     "Epnn",
     "NowcastNet",
+    "HEDeepONets",
     "USCNN",
     "build_model",
     "CFDGCN",

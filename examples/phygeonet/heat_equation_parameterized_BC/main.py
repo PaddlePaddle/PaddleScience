@@ -320,6 +320,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
 
+    paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])
     outputV = solver.predict({"coords": paras})
     outputV = outputV["outputV"]
     batchSize = outputV.shape[0]
@@ -336,7 +337,7 @@ def evaluate(cfg: DictConfig):
     eV = paddle.sqrt(
         paddle.mean((truths - outputV) ** 2) / paddle.mean(truths**2)
     ).item()
-    print(eV / len_data)
+    logger.info(eV / len_data)
     outputVs = outputV.numpy()
     ParaList = [1, 2, 3, 4, 5, 6, 7]
     for i in range(len(ParaList)):
@@ -345,7 +346,7 @@ def evaluate(cfg: DictConfig):
         outputV = outputVs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
-        print("i=", str(i))
+        logger.info("i=", str(i))
         fig1 = plt.figure()
         xylabelsize = 20
         xytickssize = 20

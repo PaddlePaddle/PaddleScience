@@ -8,12 +8,11 @@
     # heat_equation
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
 
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --output ./data/heat_equation.npz
 
-    python main.py DATASET_PATH=./data/heat_equation.npz
+    python main.py data_dir=./data/heat_equation.npz
 
     # heat_equation_bc
     # linux
@@ -24,7 +23,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --output ./data/heat_equation.npz
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --output ./data/heat_equation.npz
 
-    python main.py DATASET_PATH=./data/heat_equation_bc.npz  EVAL.pretrained_model_path=heat_equation: https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
+    python main.py data_dir=./data/heat_equation_bc.npz
 
     ```
 === "模型评估命令"
@@ -34,12 +33,11 @@
     # heat_equation
     # linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz -P ./data/
 
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --output ./data/heat_equation.npz
 
-    python main.py    mode=eval  DATASET_PATH=./data/heat_equation.npz  EVAL.pretrained_model_path=heat_equation: https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
+    python main.py    mode=eval  data_dir=./data/heat_equation.npz  EVAL.pretrained_model_path=heat_equation: https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
 
     # heat_equation_bc
     # linux
@@ -50,7 +48,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --output ./data/heat_equation.npz
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --output ./data/heat_equation.npz
 
-    python main.py    mode=eval  DATASET_PATH=./data/heat_equation_bc_test.npz  EVAL.pretrained_model_path=heat_equation: https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
+    python main.py    mode=eval  test_data_dir=./data/heat_equation_bc_test.npz  EVAL.pretrained_model_path=heat_equation: https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams
 
     ```
 

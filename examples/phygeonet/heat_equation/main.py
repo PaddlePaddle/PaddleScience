@@ -328,7 +328,7 @@ def evaluate(cfg: DictConfig):
     ev = paddle.sqrt(
         paddle.mean((OFV_sb - CNNVNumpy) ** 2) / paddle.mean(OFV_sb**2)
     ).item()
-    print(ev)
+    logger.info(ev)
     outputV = outputV.numpy()
     OFV_sb = OFV_sb.numpy()
     fig1 = plt.figure()
