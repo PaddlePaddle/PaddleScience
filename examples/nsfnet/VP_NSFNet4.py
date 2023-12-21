@@ -305,7 +305,7 @@ def evaluate(cfg: DictConfig):
     w_star = paddle.to_tensor(test_v[:, 2:3].astype("float32"))
 
     # wrap validator
-    checkpoint_path = os.path.join(cfg.pretrained_model_path, "latest.pdparams")
+    checkpoint_path = os.path.join(cfg.EVAL.pretrained_model_path, "latest.pdparams")
     layer_state_dict = paddle.load(checkpoint_path)
     model.set_state_dict(layer_state_dict)
 
