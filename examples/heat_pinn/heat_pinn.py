@@ -40,12 +40,6 @@ def train(cfg: DictConfig):
     # set geometry
     geom = {"rect": ppsci.geometry.Rectangle((-1.0, -1.0), (1.0, 1.0))}
 
-    # set train dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     # set constraint
     NPOINT_PDE = 99**2
     NPOINT_TOP = 25
@@ -56,7 +50,7 @@ def train(cfg: DictConfig):
         equation["heat"].equations,
         {"laplace": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+        {"batch_size": NPOINT_PDE},
         ppsci.loss.MSELoss("mean"),
         evenly=True,
         name="EQ",
@@ -65,7 +59,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_TOP},
+        {"batch_size": NPOINT_TOP},
         ppsci.loss.MSELoss("mean"),
         weight_dict={"u": cfg.TRAIN.weight.bc_top},
         criteria=lambda x, y: np.isclose(y, 1),
@@ -75,7 +69,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": 50 / 75},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_BOTTOM},
+        {"batch_size": NPOINT_BOTTOM},
         ppsci.loss.MSELoss("mean"),
         weight_dict={"u": cfg.TRAIN.weight.bc_bottom},
         criteria=lambda x, y: np.isclose(y, -1),
@@ -85,7 +79,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": 1},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_LEFT},
+        {"batch_size": NPOINT_LEFT},
         ppsci.loss.MSELoss("mean"),
         weight_dict={"u": cfg.TRAIN.weight.bc_left},
         criteria=lambda x, y: np.isclose(x, -1),
@@ -95,7 +89,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"]},
         {"u": 0},
         geom["rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT},
+        {"batch_size": NPOINT_RIGHT},
         ppsci.loss.MSELoss("mean"),
         weight_dict={"u": cfg.TRAIN.weight.bc_right},
         criteria=lambda x, y: np.isclose(x, 1),

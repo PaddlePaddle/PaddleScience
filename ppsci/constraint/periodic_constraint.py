@@ -84,6 +84,11 @@ class PeriodicConstraint(base.Constraint):
         if isinstance(criteria, str):
             criteria = eval(criteria)
 
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = {"name": "IterableNamedArrayDataset"}
+        if "iters_per_epoch" not in dataloader_cfg:
+            dataloader_cfg["iters_per_epoch"] = 1
+
         if dataloader_cfg["batch_size"] % 2 > 0:
             raise ValueError(
                 f"batch_size({dataloader_cfg['sampler']['batch_size']}) "

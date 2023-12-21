@@ -43,12 +43,6 @@ def train(cfg: DictConfig):
         )
     }
 
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     # pde/bc constraint use t1~tn, initial constraint use t0
     NPOINT_PDE, NTIME_PDE = 99**2, cfg.NTIME_ALL - 1
     NPOINT_TOP, NTIME_TOP = 101, cfg.NTIME_ALL - 1
@@ -62,7 +56,7 @@ def train(cfg: DictConfig):
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_PDE * NTIME_PDE},
+        {"batch_size": NPOINT_PDE * NTIME_PDE},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         weight_dict=cfg.TRAIN.weight.pde,  # (1)
@@ -72,7 +66,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 1, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_TOP * NTIME_TOP},
+        {"batch_size": NPOINT_TOP * NTIME_TOP},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, 0.05),
         name="BC_top",
@@ -81,7 +75,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_DOWN * NTIME_DOWN},
+        {"batch_size": NPOINT_DOWN * NTIME_DOWN},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(y, -0.05),
         name="BC_down",
@@ -90,7 +84,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_LEFT * NTIME_LEFT},
+        {"batch_size": NPOINT_LEFT * NTIME_LEFT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, -0.05),
         name="BC_left",
@@ -99,7 +93,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_RIGHT * NTIME_RIGHT},
+        {"batch_size": NPOINT_RIGHT * NTIME_RIGHT},
         ppsci.loss.MSELoss("sum"),
         criteria=lambda t, x, y: np.isclose(x, 0.05),
         name="BC_right",
@@ -108,7 +102,7 @@ def train(cfg: DictConfig):
         {"u": lambda out: out["u"], "v": lambda out: out["v"]},
         {"u": 0, "v": 0},
         geom["time_rect"],
-        {**train_dataloader_cfg, "batch_size": NPOINT_IC * NTIME_IC},
+        {"batch_size": NPOINT_IC * NTIME_IC},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="IC",
@@ -139,10 +133,8 @@ def train(cfg: DictConfig):
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
         geom["time_rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,
@@ -247,10 +239,8 @@ def evaluate(cfg: DictConfig):
         {"momentum_x": 0, "continuity": 0, "momentum_y": 0},
         geom["time_rect"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": NPOINT_EVAL,
             "batch_size": cfg.EVAL.batch_size.residual_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("sum"),
         evenly=True,

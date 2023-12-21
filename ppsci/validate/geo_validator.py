@@ -88,6 +88,11 @@ class GeometryValidator(base.Validator):
         self.input_keys = geom.dim_keys
         self.output_keys = tuple(label_dict.keys())
 
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = "NamedArrayDataset"
+        if "sampler" not in dataloader_cfg:
+            dataloader_cfg["sampler"] = {"name": "BatchSampler"}
+
         nx = dataloader_cfg["total_size"]
         self.num_timestamps = 1
         # TODO(sensen): simplify code below

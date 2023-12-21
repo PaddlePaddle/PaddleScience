@@ -60,6 +60,11 @@ class SupervisedConstraint(base.Constraint):
         output_expr: Optional[Dict[str, Callable]] = None,
         name: str = "Sup",
     ):
+        if "dataset" not in dataloader_cfg:
+            dataloader_cfg["dataset"] = {"name": "IterableNamedArrayDataset"}
+        if "iters_per_epoch" not in dataloader_cfg:
+            dataloader_cfg["iters_per_epoch"] = 1
+
         # build dataset
         _dataset = dataset.build_dataset(dataloader_cfg["dataset"])
 

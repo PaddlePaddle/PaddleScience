@@ -221,7 +221,7 @@ pde = ppsci.constraint.InteriorConstraint(
     equation["NavierStokes"].equations,
     {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
     geom["rect"],
-    {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+    {"batch_size": NPOINT_PDE},
     ppsci.loss.MSELoss("sum"),
     evenly=True,
     weight_dict=cfg.TRAIN.weight.pde, # (1)

@@ -83,18 +83,12 @@ def train(cfg: DictConfig):
     # set geometry
     geom = {"line": ppsci.geometry.Interval(0, np.pi)}
 
-    # set dataloader config
-    train_dataloader_cfg = {
-        "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
-    }
-
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["gPINN"].equations,
         {"res1": 0, "res2": 0},
         geom["line"],
-        {**train_dataloader_cfg, "batch_size": cfg.NPOINT_PDE},
+        {"batch_size": cfg.NPOINT_PDE},
         ppsci.loss.MSELoss("mean", weight={"res2": 0.01}),
         evenly=True,
         name="EQ",
@@ -120,10 +114,8 @@ def train(cfg: DictConfig):
         {outvar: u_solution},
         geom["line"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE_EVAL,
             "batch_size": cfg.EVAL.batch_size.l2rel_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
@@ -250,10 +242,8 @@ def evaluate(cfg: DictConfig):
         {outvar: u_solution},
         geom["line"],
         {
-            "dataset": "NamedArrayDataset",
             "total_size": cfg.NPOINT_PDE,
             "batch_size": cfg.EVAL.batch_size.l2rel_validator,
-            "sampler": {"name": "BatchSampler"},
         },
         ppsci.loss.MSELoss("mean"),
         evenly=True,
