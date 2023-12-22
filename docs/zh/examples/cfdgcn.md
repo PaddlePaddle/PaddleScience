@@ -38,7 +38,7 @@
 * mesh数据下载
 
 ```shell
-wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
 tar -xf meshes.tar
 ```
 
