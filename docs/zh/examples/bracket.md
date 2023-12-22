@@ -6,7 +6,7 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
     # unzip it
@@ -18,7 +18,7 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
     # unzip it
@@ -110,7 +110,7 @@ examples/bracket/bracket.py:40:45
 
 ``` sh
 # linux
-wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar
 
 # windows
 # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar --output bracket_dataset.tar
