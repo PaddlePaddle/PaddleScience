@@ -87,7 +87,7 @@ class L1Loss(base.Loss):
         losses = 0.0
         for key in label_dict:
             loss = F.l1_loss(output_dict[key], label_dict[key], "none")
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
             if "area" in output_dict:
@@ -181,7 +181,7 @@ class PeriodicL1Loss(base.Loss):
             loss = F.l1_loss(
                 output_dict[key][:n_output], output_dict[key][n_output:], "none"
             )
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
             if "area" in output_dict:
                 loss *= output_dict["area"]
