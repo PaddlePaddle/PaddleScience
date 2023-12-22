@@ -4,7 +4,7 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat --output bubble.mat
     python bubble.py
@@ -14,7 +14,7 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat --output bubble.mat
     python bubble.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/bubble/bubble_pretrained.pdparams
