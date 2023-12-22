@@ -35,7 +35,7 @@
 在某些复杂的应用场景中，如机翼优化和流体与结构相互作用方面，需要使用千万级甚至上亿的网格对问题进行建模（如下图所示，下图展示了 F-18 战斗机的全机内外流一体结构化网格模型），导致 CFD 的计算量非常巨大。因此，目前亟需发展出一种相比于传统 CFD 方法更高效，且可以保持计算精度的方法。
 
 <figure markdown>
-  ![result_states0](http://www.cannews.com.cn/files/Resource/attachement/2017/0511/1494489582596.jpg){ loading=lazy}
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepCFD/f-18.jpg){ loading=lazy}
   <figcaption>F-18 战斗机的全机内外流一体结构化网格模型</figcaption>
 </figure>
 
