@@ -54,8 +54,8 @@
 
 | 模型 | mRes | ev |
 | :-- | :-- | :-- |
-| heat_equation  | 0.815 |0.095|
-| heat_equation_parameterized_bc  | 992 |0.31|
+| [heat_equation](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
+| [heat_equation_parameterized_bc](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams)  | 992 |0.31|
 
 ## 1. 背景简介
  最近几年，深度学习在很多领域取得了非凡的成就，尤其是计算机视觉和自然语言处理方面，而受启发于深度学习的快速发展，基于深度学习强大的函数逼近能力，神经网络在科学计算领域也取得了成功，现阶段的研究主要分为两大类，一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Ritz Net，另一类是通过数据驱动的深度神经网络算子，其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用，比如天气预测，量子化学，生物工程，以及计算流体等领域。
