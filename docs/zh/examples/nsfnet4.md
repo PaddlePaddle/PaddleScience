@@ -132,10 +132,10 @@ examples/NSFNet/VP_NSFNet4.py
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/error.jpg)
 
 如图所示，在x=12.47的y-z平面的轮廓图，第一个为速度u的轮廓图，第二个为速度v的轮廓图，第三个为速度w的轮廓图，第四个为速度p的轮廓图。可以看出，速度u的轮廓图相对于v,w,p来说较为光滑。
-![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/x=0%20plane.png)
+![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/x%3D0%20plane.png)
 
 如图所示，在z=4.61的x-y平面的轮廓图，第一个为速度u的轮廓图，第二个为速度v的轮廓图，第三个为速度w的轮廓图，第四个为速度p的轮廓图。可以看出，速度u的轮廓图相对于v,w,p来说较为光滑。
-![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/z=0%20plane.png)
+![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/z%3D0%20plane.png)
 
 综上所述，虽然u，v，w三个速度方向都是需要神经网络进行训练，但是对于JHTDB数据集来说，u方向数据较为光滑，更容易被神经网络所学习。因此在后续研究中，可以尝试对三个不同方向的分量分而治之，加大复杂分量方向的训练强度，减少简单分量方向的训练强度。
 ## 6. 结果说明
