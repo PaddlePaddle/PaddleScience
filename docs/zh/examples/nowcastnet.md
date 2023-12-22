@@ -8,7 +8,7 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/nowcastnet/mrms.tar --output mrms.tar
     mkdir ./datasets
