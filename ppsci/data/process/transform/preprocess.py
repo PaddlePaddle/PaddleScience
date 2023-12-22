@@ -31,7 +31,19 @@ class Translate:
 
     Examples:
         >>> import ppsci
+        >>> import numpy as np
         >>> translate = ppsci.data.transform.Translate({"x": 1.0, "y": -1.0})
+        >>> input_data = np.array([[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]])
+        >>> input_dict = {"x": input_data[:,:,0], "y": input_data[:,:,1]}
+        >>> label_dict = {"x": np.array([1.0, 2.0]), "y": np.array([3.0, 4.0])}
+        >>> weight_dict = {"x": np.array([10.0, 20.0]), "y": np.array([30.0, 40.0])}
+        >>> translated_input_dict, translated_label_dict, translated_weight_dict = translate(input_dict, label_dict, weight_dict)
+        >>> print(translated_input_dict)
+        {"x": array([[2., 3.], [4., 5.]]), "y": array([[0., 1.], [2., 3.]])}
+        >>> print(translated_label_dict)
+        {"x": array([2., 3.]), "y": array([3., 4.])}
+        >>> print(translated_weight_dict)
+        {"x": array([10., 20.]), "y": array([30., 40.])}
     """
 
     def __init__(self, offset: Dict[str, float]):
@@ -46,7 +58,7 @@ class Translate:
 
 
 class Scale:
-    """Scale class.
+    """Scale class for data transformation.
 
     Args:
         scale (Dict[str, float]): Scale the input data according to the variable name
@@ -55,6 +67,16 @@ class Scale:
     Examples:
         >>> import ppsci
         >>> translate = ppsci.data.transform.Scale({"x": 1.5, "y": 2.0})
+        >>> input_dict = {"x": 10, "y": 20}
+        >>> label_dict = {"x": 100, "y": 200}
+        >>> weight_dict = {"x": 1000, "y": 2000}
+        >>> input_dict_scaled, label_dict_scaled, weight_dict_scaled = translate(input_dict, label_dict, weight_dict)
+        >>> print(input_dict_scaled)
+        {'x': 15.0, 'y': 40.0}
+        >>> print(label_dict_scaled)
+        {'x': 100, 'y': 200}
+        >>> print(weight_dict_scaled)
+        {'x': 1000, 'y': 2000}
     """
 
     def __init__(self, scale: Dict[str, float]):
@@ -81,6 +103,12 @@ class Normalize:
     Examples:
         >>> import ppsci
         >>> normalize = ppsci.data.transform.Normalize((0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        >>> input_item = {"data": np.array([1.0, 2.0, 3.0])}
+        >>> label_item = {"data": np.array([4.0, 5.0, 6.0])}
+        >>> weight_item = np.array([0.1, 0.2, 0.3])
+        >>> normalized_item = normalize(input_item, label_item, weight_item)
+        >>> print(normalized_item)
+        ({'data': array([1., 2., 3.])}, {'data': array([4., 5., 6.])}, array([0.1, 0.2, 0.3]))
     """
 
     def __init__(
@@ -119,6 +147,16 @@ class Log1p:
     Examples:
         >>> import ppsci
         >>> log1p = ppsci.data.transform.Log1p(1e-5)
+        >>> input_item = {"data": np.array([1.0, 2.0, 3.0])}
+        >>> label_item = {"data": np.array([4.0, 5.0, 6.0])}
+        >>> weight_item = np.array([0.1, 0.2, 0.3])
+        >>> input_item_transformed, label_item_transformed, weight_item_transformed = log1p(input_item, label_item, weight_item)
+        >>> print(input_item_transformed)
+        {'data': array([11.51293546, 12.20607765, 12.61154109])}
+        >>> print(label_item_transformed)
+        {'data': array([12.89922233, 13.12236538, 13.3046866 ])}
+        >>> print(weight_item_transformed)
+        [0.1 0.2 0.3]
     """
 
     def __init__(
@@ -207,7 +245,12 @@ class SqueezeData:
 
     Examples:
         >>> import ppsci
+        >>> import numpy as np
         >>> squeeze_data = ppsci.data.transform.SqueezeData()
+        >>> input_data = {"input": np.random.rand(10, 224, 224)}
+        >>> label_data = {"label": np.random.rand(10, 224, 224)}
+        >>> weight_data = {"weight": np.random.rand(10, 224, 224)}
+        >>> input_data_squeezed, label_data_squeezed, weight_data_squeezed = squeeze_data(input_data, label_data, weight_data)
     """
 
     def __init__(self, apply_keys: Tuple[str, ...] = ("input", "label")):
@@ -246,22 +289,27 @@ class FunctionalTransform:
         transform_func (Callable): Function of data transform.
 
     Examples:
-        >>> import ppsci
-        >>> import numpy as np
+        >>> # This is the transform_func function. It takes three dictionaries as input: data_dict, label_dict, and weight_dict.
+        >>> # The function will perform some transformations on the data in data_dict, convert all labels in label_dict to uppercase,
+        >>> # and modify the weights in weight_dict by dividing each weight by 10.
+        >>> # Finally, it returns the transformed data, labels, and weights as a tuple.
         >>> def transform_func(data_dict, label_dict, weight_dict):
-        ...     rand_ratio = np.random.rand()
         ...     for key in data_dict:
-        ...         data_dict[key] = data_dict[key] * rand_ratio
+        ...         data_dict[key] = data_dict[key] * 2
+        ...     for key in label_dict:
+        ...         label_dict[key] = label_dict[key].upper()
+        ...     for key in weight_dict:
+        ...         weight_dict[key] = weight_dict[key] / 10
         ...     return data_dict, label_dict, weight_dict
-        >>> transform_cfg = {
-        ...     "transforms": (
-        ...         {
-        ...             "FunctionalTransform": {
-        ...                 "transform_func": transform_func,
-        ...             },
-        ...         },
-        ...     ),
-        ... }
+        >>> transform = ppsci.data.transform.FunctionalTransform(transform_func)
+        >>> # Define some sample data, labels, and weights
+        >>> data = {'feature1': np.array([1, 2, 3]), 'feature2': np.array([4, 5, 6])}
+        >>> label = {'class': 'class1', 'instance': 'instance1'}
+        >>> weight = {'weight1': 0.5, 'weight2': 0.5}
+        >>> # Apply the transform function to the data, labels, and weights using the FunctionalTransform instance
+        >>> transformed_data = transform(data, label, weight)
+        >>> print(transformed_data)
+        ({'feature1': [2, 4, 6], 'feature2': [8, 10, 12]}, {'class': 'CLASS1', 'instance': 'INSTANCE1'}, {'weight1': 0.5, 'weight2': 0.5})
     """
 
     def __init__(
