@@ -72,11 +72,14 @@ Equation 模块负责定义各种常见方程的计算函数，如 `NavierStokes
 
 Geometry 模块负责定义各种常见的几何形状，如 `Interval` 线段几何、`Rectangle` 矩形几何、`Sphere` 球面几何。
 
-### 2.7 [Loss](./api/loss.md)
+### 2.7 [Loss](./api/loss/loss.md)
 
-Loss 模块负责定义各种损失函数，在模型前向与方程计算完毕后，将结果与参考值计算损失值，供后续的梯度优化算法使用；
+Loss 模块包含 [`ppsci.loss.loss`](./api/loss/loss.md) 与 [`ppsci.loss.mtl`](./api/loss/mtl.md) 两个子模块，如下所示。
 
-同时该模块也提供了常见的多任务学习优化功能，包括 PCGrad、AGDA，进一步提升多个 loss 共同优化（如 PINN 方法）的精度。
+| 子模块名称 | 子模块功能 |
+| :-- | :-- |
+| [ppsci.loss.loss](./api/loss/loss.md)| 损失函数相关 |
+| [ppsci.loss.mtl](./api/loss/mtl.md)| 多目标优化相关 |
 
 ### 2.8 Optimizer
 
@@ -110,7 +113,7 @@ Utils 模块内部存放了一些适用于多种场景下的工具类、函数�
 
 ### 2.11 [Validate](./api/validate.md)
 
-Validator 模块负责定义各种评估器，用于模型训练完一个 epoch 后自动在指定数据上进行评估（可选，默认不开启训练时评估）并得到评估指标。
+Validator 模块负责定义各种评估器，用于在指定数据上进行评估（可选，默认不开启训练时评估），并得到评估指标。
 
 ### 2.12 [Visualize](./api/visualize.md)
 

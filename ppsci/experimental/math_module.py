@@ -18,11 +18,11 @@ import functools
 from typing import Any
 from typing import Callable
 from typing import List
-from typing import Literal
 from typing import Tuple
 
 import numpy as np
 import paddle
+from typing_extensions import Literal
 
 
 def bessel_i0(x: paddle.Tensor) -> paddle.Tensor:

@@ -144,8 +144,9 @@ class IntegralConstraint(base.Constraint):
 
         # prepare weight
         # shape of each weight is [batch_size, ndim]
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)

@@ -7,6 +7,7 @@
         - PDE
         - FractionalPoisson
         - Biharmonic
+        - HeatExchanger
         - Laplace
         - LinearElasticity
         - NavierStokes

@@ -28,7 +28,10 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
+    # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # 4 training cases parameters
     LEARNING_RATE = cfg.TRAIN.learning_rate / (1 + cfg.TRAIN.epochs // 15)
@@ -110,10 +113,10 @@ def train(cfg: DictConfig):
 
 # evaluate 4 models
 def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
-
-    # initialize logger for evaluation
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "results.log"), "info")
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # fixed iteration stop times for evaluation
     iterations_stop_times = range(5, 85, 5)
