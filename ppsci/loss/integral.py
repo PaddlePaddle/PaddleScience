@@ -85,7 +85,7 @@ class IntegralLoss(base.Loss):
                 label_dict[key],
                 "none",
             )
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
             if self.reduction == "sum":

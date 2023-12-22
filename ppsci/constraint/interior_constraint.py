@@ -135,8 +135,9 @@ class InteriorConstraint(base.Constraint):
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # prepare weight
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, str):
                     if value == "sdf":
