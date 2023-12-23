@@ -263,6 +263,7 @@ def evaluate(cfg: DictConfig):
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
+    ppsci.utils.load_pretrain(model, cfg.pretrained_model_path)
 
     # set the number of residual samples
     N_TRAIN = cfg.ntrain
@@ -322,7 +323,6 @@ def evaluate(cfg: DictConfig):
         equation=equation,
         geom=geom,
         validator=validator,
-        pretrained_model_path=cfg.pretrained_model_path,  ### the path of the model
     )
 
     # eval model
