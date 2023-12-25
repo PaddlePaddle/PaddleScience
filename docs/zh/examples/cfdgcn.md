@@ -2,24 +2,30 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7127446" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-
 === "模型训练命令"
 
     ``` sh
     # only linux
-    wget -nc -P ./datasets/ https://bj.bcebos.com/v1/ai-studio-online/ba71af9a00fb4aa5ac0d34cca67d9c39332ca4ebb0b2462cb3a8503de2dfc367?responseContentDisposition=attachment%3B%20filename%3Ddata.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
     unzip data.zip
-    wget -nc -P ./datasets/ https://bj.bcebos.com/v1/ai-studio-online/netdisk/fdec42eb993c4c9cb5fa21c641a9e5e88f9bb7b1c5e54154afd50d6198552752?responseContentDisposition=attachment%3B%20filename%3DSU2Bin.tgz
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
     tar -zxvf SU2Bin.tgz
 
     # set BATCH_SIZE = number of cpu cores
-    export BATCH_SIZE = 4
+    export BATCH_SIZE=4
 
     # prediction experiments
-    mpirun -np $((BATCH_SIZE+1))  python cfdgcn.py TRAIN.batch_size=$((BATCH_SIZE)) > /dev/null
+    mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
+      TRAIN.batch_size=$((BATCH_SIZE)) > /dev/null
 
     # generalization experiments
-    mpirun -np $((BATCH_SIZE+1))  python cfdgcn.py TRAIN.batch_size=$((BATCH_SIZE)) TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2"> /dev/null
+    mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
+      TRAIN.batch_size=$((BATCH_SIZE)) \
+      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \  
+      TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine. su2" \
+      EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" \
+      EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" \
+      > /dev/null
     ```
 
 ## 1. 背景简介
@@ -32,7 +38,7 @@
 
 作者提出了一种基于图神经网络的 CFD 计算模型，称为 CFD-GCN (Computational fluid dynamics - Graph convolution network)，该模型是一种混合的图神经网络，它将传统的图卷积网络与粗分辨率的 CFD 模拟器相结合，不仅可以大幅度加速 CFD 预测，还可以很好地泛化到新的场景，与此同时，模型的预测效果远远优于单独的粗分辨率 CFD 的模拟效果。
 
-下图为该方法的网络结构图，网络有两个主要部件：GCN 图神经网络以及 SU2 流体模拟器。网络在两个不同的图上运行，两个图分别是细网格的图和粗网格的图。网络首先在粗网格上运行 CFD 模拟，同时使用 GCN 处理细网格的图。然后，它对模拟结果进行上采样，并将结果与 GCN 的中间输出连接起来。最后，将额外的 GCN 层应用于这些连接特征，最终预测所需的输出值。
+下图为该方法的网络结构图，网络有两个主要部件：GCN 图神经网络以及 SU2 流体模拟器。网络在两个不同的图上运行，两个图分别是细网格的图和粗网格的图。网络首先在粗网格上运行 CFD 模拟，同时使用 GCN 处理细网格的图。然后，对模拟结果进行上采样，并将结果与 GCN 的中间输出连接起来。最后，模型将额外的 GCN 层应用于这些连接特征，预测所需的输出值。
 
 ![CFDGCN_overview](https://ai-studio-static-online.cdn.bcebos.com/d3c10c571f68481888cbe212b5019fce9806ef52f8bc4eeeb4c2349c6072fd4a)
 
@@ -45,7 +51,7 @@
 
     本案例运行前需通过 `pip install pgl==2.2.6 mpi4py` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [Mpi4py](https://github.com/pyamg/pyamg) MPI python接口库。
 
-    由于新版本的 Paddle 依赖的 python 版本较高，`pgl` 与 `mpi4py` 的安装可能会出现问题，建议使用[AI Studio快速体验](https://aistudio.baidu.com/projectdetail/7127446)，项目中已经配置好相关环境。
+    由于新版本的 Paddle 依赖的 python 版本较高，`pgl` 与 `mpi4py` 的安装可能会出现问题，建议使用[AI Studio快速体验](https://aistudio.baidu.com/projectdetail/7127446)，项目中已经配置好运行环境。
 
 
 ### 3.1 数据集下载
@@ -55,24 +61,25 @@
 执行以下命令，下载并解压数据集。
 
 ``` shell
-wget -nc -P ./datasets/ https://bj.bcebos.com/v1/ai-studio-online/ba71af9a00fb4aa5ac0d34cca67d9c39332ca4ebb0b2462cb3a8503de2dfc367?responseContentDisposition=attachment%3B%20filename%3Ddata.zip
-unzip data.zip
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip data.zip
 ```
 
 ### 3.2 SU2 预编译库安装
 SU2 流体模拟器以预编译库的形式嵌入在网络中，我们需要下载并设置环境变量。
-执行以下命令，下载并解压数据集。
+
+执行以下命令，下载并解压预编译库。
 ```
-wget -nc -P ./datasets/ https://bj.bcebos.com/v1/ai-studio-online/netdisk/fdec42eb993c4c9cb5fa21c641a9e5e88f9bb7b1c5e54154afd50d6198552752?responseContentDisposition=attachment%3B%20filename%3DSU2Bin.tgz
-tar -zxvf SU2Bin.tgz
+wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz -zxvf SU2Bin.tgz
 ```
-数据集下载完成后，设置 SU2 的环境变量。
+
+预编译库下载完成后，设置 SU2 的环境变量。
 ```
-export SU2_RUN=<your path of su2 directory>
-export SU2_HOME=<your path of su2 directory>
+export SU2_RUN=/absolute_path/to/SU2Bin/
+export SU2_HOME=/absolute_path/to/SU2Bin/
 export PATH=$PATH:$SU2_RUN
 export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 ```
+
 ### 3.3 模型构建
 
 在本问题中，我们使用神经网络 `CFDGCN` 作为模型，其接收图结构数据，输出预测结果。
@@ -114,7 +121,6 @@ examples/cfdgcn/cfdgcn.py:58:84
 --8<--
 ```
 
-
 ### 3.5 超参数设定
 
 设置训练轮数等参数，如下所示。
@@ -136,7 +142,7 @@ examples/cfdgcn/cfdgcn.py:96:97
 
 ### 3.7 评估器构建
 
-在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](#33) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](#34) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
 
 ``` py linenums="100"
 --8<--
@@ -145,7 +151,6 @@ examples/cfdgcn/cfdgcn.py:100:123
 ```
 
 评估指标为预测结果和真实结果的 RMSE 值，因此需自定义指标计算函数，如下所示。
-
 
 ``` py linenums="39"
 --8<--
