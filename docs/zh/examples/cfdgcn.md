@@ -8,6 +8,8 @@
     # only linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
     unzip data.zip
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+    tar -xvf meshes.tar
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
     tar -zxvf SU2Bin.tgz
 
@@ -60,7 +62,10 @@
 执行以下命令，下载并解压数据集。
 
 ``` shell
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip data.zip
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
+unzip data.zip
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+tar -xvf meshes.tar
 ```
 
 ### 3.2 SU2 预编译库安装
@@ -70,7 +75,8 @@ SU2 流体模拟器以预编译库的形式嵌入在网络中，我们需要下�
 执行以下命令，下载并解压预编译库。
 
 ``` shell
-wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz -zxvf SU2Bin.tgz
+wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
+tar -zxvf SU2Bin.tgz
 ```
 
 预编译库下载完成后，设置 SU2 的环境变量。
