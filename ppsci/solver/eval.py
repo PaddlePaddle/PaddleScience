@@ -26,8 +26,6 @@ from paddle import io
 from ppsci.solver import printer
 from ppsci.utils import misc
 
-# from ppsci.utils import profiler
-
 if TYPE_CHECKING:
     from pgl.utils import data as pgl_data
 
@@ -85,13 +83,13 @@ def _eval_by_dataset(
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
-            # profile code
-            # profiler.add_profiler_step(solver.cfg["profiler_options"])
+            reader_cost = time.perf_counter() - reader_tic
+
+            # NOTE: eliminate first 5 step for warmup
             if iter_id == 5:
-                # 5 step for warmup
                 for key in solver.eval_time_info:
                     solver.eval_time_info[key].reset()
-            reader_cost = time.perf_counter() - reader_tic
+
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False
@@ -206,13 +204,13 @@ def _eval_by_batch(
         batch_tic = time.perf_counter()
         for iter_id, batch in enumerate(_validator.data_loader, start=1):
             input_dict, label_dict, weight_dict = batch
-            # profile code
-            # profiler.add_profiler_step(solver.cfg["profiler_options"])
+            reader_cost = time.perf_counter() - reader_tic
+
+            # NOTE: eliminate first 5 step for warmup
             if iter_id == 5:
-                # 5 step for warmup
                 for key in solver.eval_time_info:
                     solver.eval_time_info[key].reset()
-            reader_cost = time.perf_counter() - reader_tic
+
             batch_size = next(iter(input_dict.values())).shape[0]
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):

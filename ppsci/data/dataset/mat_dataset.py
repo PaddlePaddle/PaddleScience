@@ -111,9 +111,11 @@ class MatDataset(io.Dataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
@@ -231,9 +233,11 @@ class IterableMatDataset(io.IterableDataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
