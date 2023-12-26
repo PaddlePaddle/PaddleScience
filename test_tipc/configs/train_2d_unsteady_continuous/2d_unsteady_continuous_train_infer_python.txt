@@ -1,6 +1,8 @@
 ===========================train_params===========================
-model_name:cylinder2d_unsteady_Re100
-python:python3.10
+model_item:cylinder2d_unsteady_Re100
+bs_item:1
+run_mode:DP
+device_num:N1C1
 gpu_list:0
 Global.use_gpu:null
 null:null
