@@ -53,7 +53,6 @@
 
     由于新版本的 Paddle 依赖的 python 版本较高，`pgl` 与 `mpi4py` 的安装可能会出现问题，建议使用[AI Studio快速体验](https://aistudio.baidu.com/projectdetail/7127446)，项目中已经配置好运行环境。
 
-
 ### 3.1 数据集下载
 
 该案例使用的机翼数据集 Airfoil来自 de Avila Belbute-Peres 等人，其中翼型数据集采用 NACA0012 翼型，包括 train, test 以及对应的网格数据 mesh_fine；圆柱数据集是原作者利用软件计算的 CFD 算例。
@@ -65,15 +64,18 @@ wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
 ```
 
 ### 3.2 SU2 预编译库安装
+
 SU2 流体模拟器以预编译库的形式嵌入在网络中，我们需要下载并设置环境变量。
 
 执行以下命令，下载并解压预编译库。
-```
+
+``` shell
 wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz -zxvf SU2Bin.tgz
 ```
 
 预编译库下载完成后，设置 SU2 的环境变量。
-```
+
+``` shell
 export SU2_RUN=/absolute_path/to/SU2Bin/
 export SU2_HOME=/absolute_path/to/SU2Bin/
 export PATH=$PATH:$SU2_RUN
@@ -91,7 +93,6 @@ examples/cfdgcn/cfdgcn.py:77:82
 ```
 
 为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("input", )`，输出变量名是 `("pred", )`，这些命名与后续代码保持一致。
-
 
 ### 3.4 约束构建
 
@@ -124,6 +125,7 @@ examples/cfdgcn/cfdgcn.py:58:84
 ### 3.5 超参数设定
 
 设置训练轮数等参数，如下所示。
+
 ``` yaml linenums="50"
 --8<--
 examples/cfdgcn/conf/cfdgcn.yaml:50:56
@@ -179,7 +181,9 @@ examples/cfdgcn/cfdgcn.py:126:140
 examples/cfdgcn/cfdgcn.py:145:157
 --8<--
 ```
+
 ## 4. 完整代码
+
 ``` py linenums="1" title="cfdgcn.py"
 --8<--
 examples/cfdgcn/cfdgcn.py
