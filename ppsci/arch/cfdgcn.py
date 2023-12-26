@@ -278,8 +278,8 @@ class CFDGCN(nn.Layer):
         graph = x[self.input_keys[0]]
         batch_size = graph.shape[0]
         x_list = paddle.split(graph.x, batch_size)
-
         fine_x_list = []
+
         for idx in range(batch_size):
             x = x_list[idx]
             if self.sdf is None:
@@ -288,10 +288,9 @@ class CFDGCN(nn.Layer):
                         x[:, :2], self.fine_marker_dict
                     ).unsqueeze(1)
             fine_x = paddle.concat([x, self.sdf], axis=1)
-            for i, conv in enumerate(self.pre_convs):
+            for conv in self.pre_convs:
                 fine_x = F.relu(conv(graph, fine_x))
             fine_x_list.append(fine_x)
-            nodes = self.get_nodes()
         nodes_input = self.get_nodes().tile([batch_size, 1, 1])
 
         batch_y = self.su2(
@@ -314,7 +313,7 @@ class CFDGCN(nn.Layer):
             )
             fine_y = paddle.concat([fine_y, fine_x_list[idx]], axis=1)
 
-            for i, conv in enumerate(self.convs[:-1]):
+            for conv in self.convs[:-1]:
                 fine_y = F.relu(conv(graph, fine_y))
             fine_y = self.convs[-1](graph, fine_y)
             pred_fields.append(fine_y)
