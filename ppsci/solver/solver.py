@@ -520,6 +520,21 @@ class Solver:
 
         Returns:
             Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> paddle.seed(42)  # doctest: +SKIP
+            >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
+            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand((2, 1)),
+            ...               'y': paddle.rand((2, 1))}
+            >>> solver.predict(input_dict) # doctest: +SKIP
+            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[-0.17509711],
+                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[0.27433380],
+                    [0.42387512]])}
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
