@@ -1,6 +1,6 @@
-# Utils.reader(文件保存函数) 模块
+# Utils.writer(文件保存函数) 模块
 
-::: ppsci.utils.reader
+::: ppsci.utils.writer
     handler: python
     options:
       members:
