@@ -30,12 +30,10 @@ def test_save_csv_file():
         },
     )
     data_dict = {
-        keys[0]: np.random.rand(10, 1),
+        keys[0]: np.random.randint(0, 255, (10, 1)),
         keys[1]: np.random.rand(10, 1),
         keys[2]: np.random.rand(10, 1),
     }
-    for k, v in data_dict.items():
-        print(f"{k} {v.tolist()}")
     file_path = "test_writer.csv"
     writer.save_csv_file(
         file_path,
