@@ -129,10 +129,6 @@ def build_dataloader(_dataset, cfg):
         )
     else:
         if cfg.get("auto_collation", True) is False:
-            if cfg.get("num_workers", _DEFAULT_NUM_WORKERS) < 1:
-                raise ValueError(
-                    "num_workers should be greater than 1 when 'auto_collation' is False."
-                )
             # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
             # which can speed up the process of batch samples indexing from dataset. See
             # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
@@ -144,7 +140,7 @@ def build_dataloader(_dataset, cfg):
                 )
             # 2. disable auto collation by given identity collate_fn which return the first
             # (also the only) batch data in batch list, or there will be a redundant
-            # axis at the first dimension returned by dataloader. is step is necessary
+            # axis at the first dimension returned by dataloader. It is step is necessary
             # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
             collate_fn = lambda batch: batch[0]  # noqa: E731
             logger.info("Auto collation is disabled to speed up batch sampling")
@@ -157,6 +153,9 @@ def build_dataloader(_dataset, cfg):
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
+            # TODO: Do not enable persistent_workers' below for
+            # 'IndexError: pop from empty list ...' will be raised in certain cases
+            # persistent_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS) > 0,
         )
 
     if len(dataloader_) == 0:
