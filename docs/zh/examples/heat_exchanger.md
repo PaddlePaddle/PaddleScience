@@ -14,7 +14,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [heat_pinn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams) | MSE.heat_boundary(interior_mse): 0.52005<br>MSE.cold_boundary(interior_mse): 0.16590<br>MSE.wall(interior_mse): 0.01203 |
+| [heat_exchanger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams) | MSE.heat_boundary(interior_mse): 0.52005<br>MSE.cold_boundary(interior_mse): 0.16590<br>MSE.wall(interior_mse): 0.01203 |
 
 ## 1. 背景简介
 
