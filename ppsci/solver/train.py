@@ -130,7 +130,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
@@ -234,7 +234,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()

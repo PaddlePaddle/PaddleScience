@@ -169,7 +169,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize training log recorder for loss, time cost, metric, etc.
+        # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -177,7 +177,7 @@ class Solver:
         }
         self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
-        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        # initialize evaluation log(evaluation loss, metric, etc.) recorder.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -391,15 +391,10 @@ class Solver:
     def train(self):
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        start_epoch = self.best_metric["epoch"] + 1
 
-        for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
+        for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
-            # log training summation at end of a epoch
-            metric_msg = ", ".join(
-                [self.train_output_info[key].avg_info for key in self.train_output_info]
-            )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")
@@ -463,6 +458,7 @@ class Solver:
                 self.output_dir,
                 "latest",
                 self.equation,
+                print_log=(epoch_id == start_epoch),
             )
 
     @misc.run_on_eval_mode

@@ -157,6 +157,7 @@ def save_checkpoint(
     output_dir: Optional[str] = None,
     prefix: str = "model",
     equation: Optional[Dict[str, equation.PDE]] = None,
+    print_log: bool = True,
 ):
     """Save checkpoint, including model params, optimizer params, metric information.
 
@@ -168,6 +169,9 @@ def save_checkpoint(
         output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
+        print_log (bool, optional): Whether print saving log information, mainly for
+            keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
+            Defaults to True.
     """
     if paddle.distributed.get_rank() != 0:
         return
@@ -195,4 +199,11 @@ def save_checkpoint(
                 f"{ckpt_path}.pdeqn",
             )
 
-    logger.message(f"Finish saving checkpoint to {ckpt_path}")
+    if print_log:
+        log_str = f"Finish saving checkpoint to: {ckpt_path}"
+        if prefix == "latest":
+            log_str += (
+                "(latest checkpoint will be saved every epoch as expected, "
+                "but this log will be printed only once for tidy logging)"
+            )
+        logger.message(log_str)
