@@ -1,4 +1,4 @@
-# Heat Exchanger
+# Heat_Exchanger
 
 === "模型训练命令"
 
@@ -94,11 +94,11 @@ PI-DeepONet模型，将 DeepONet 和 PINN 方法相结合，是一种结合了�
 
 对于换热器问题，PI-DeepONet 模型可以表示为如图所示的模型结构：
 
-如图所示，我们一共使用了 2 个分支网络和一个主干网络，分支网络分别输入热边的质量流量和冷边的质量流量，主干网络输入一维坐标点坐标和时间信息。每个分支网和主干网均输出 $q$ 维特征向量，通过Hadamard（逐元素）乘积组合所有这些输出特征，然后将所得向量相加为预测温度场的标量输出。
-
 <figure markdown>
   ![PI-DeepONet.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/HEDeepONet/PI-DeepONet.png){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
+
+如图所示，我们一共使用了 2 个分支网络和一个主干网络，分支网络分别输入热边的质量流量和冷边的质量流量，主干网络输入一维坐标点坐标和时间信息。每个分支网和主干网均输出 $q$ 维特征向量，通过Hadamard（逐元素）乘积组合所有这些输出特征，然后将所得向量相加为预测温度场的标量输出。
 
 ## 3. 问题求解
 
@@ -123,7 +123,7 @@ t_0 &= f_3(t,x).
 \end{aligned}
 $$
 
-上式中 $f_3$ 为 MLP 模型，$(t_0)$ 为主支网络的输出函数，$3q$ 为输出函数的维数。我们可以将两个分支网络和主干网络的输出函数 $(b_1，b_2, t_0)$ 分成3组，然后对每一组的输出函数分别进行Hadamard（逐元素）乘积再相加得到标量温度场，即：
+上式中 $f_3$ 为 MLP 模型，$(t_0)$ 为主支网络的输出函数，$3q$ 为输出函数的维数。我们可以将两个分支网络和主干网络的输出函数 $(b_1,b_2, t_0)$ 分成3组，然后对每一组的输出函数分别进行Hadamard（逐元素）乘积再相加得到标量温度场，即：
 
 $$
 \begin{aligned}
@@ -133,7 +133,7 @@ T_w &= \sum_{i=2q+1}^{3q} b_1^ib_2^i t_0^i.
 \end{aligned}
 $$
 
-用 PaddleScience 代码表示如下
+我们定义 PaddleScience 内置的 HEDeepONets 模型类，并调用，PaddleScience 代码表示如下
 
 ``` py linenums="33"
 --8<--
@@ -143,7 +143,7 @@ examples/heat_exchanger/heat_exchanger.py:33:34
 
 这样我们就实例化出了一个拥有 3 个 MLP 模型的 HEDeepONets 模型，每个分支网络包含 9 层隐藏神经元，每层神经元数为 256，主干网络包含 6 层隐藏神经元，每层神经元数为 128，使用 "swish" 作为激活函数，并包含三个输出函数 $T_h,T_c,T_w$ 的神经网络模型 `model`。
 
-### 3.3 计算域构建
+### 3.2 计算域构建
 
 对本文中换热器问题构造训练区域，即以 [0, 1] 的一维区域，且时间域为 21 个时刻 [0,1,2,...,21]，该区域可以直接使用 PaddleScience 内置的空间几何 `Interval` 和时间域 `TimeDomain`，组合成时间-空间的 `TimeXGeometry` 计算域。代码如下
 
@@ -161,7 +161,7 @@ examples/heat_exchanger/heat_exchanger.py:36:43
 
     如输入数据只来自一维时间域，则可以直接使用 `ppsci.geometry.TimeDomain(...)` 构建时间域对象。
 
-### 3.4 输入数据构建
+### 3.3 输入数据构建
 
 - 通过 `TimeXGeometry` 计算域来构建输入的时间和空间均匀数据，
 - 通过 `np.random.rand` 来生成 (0,2) 之间的随机数，这些随机数用于构建热边和冷边的质量流量的训练和测试数据。
@@ -172,6 +172,7 @@ examples/heat_exchanger/heat_exchanger.py:36:43
 --8<--
 examples/heat_exchanger/heat_exchanger.py:45:63
 --8<--
+```
 
 然后对训练数据按照空间坐标和时间进行分类，将训练数据和测试数据分类成左边界数据、内部数据、右边界数据以及初值数据。代码如下
 
@@ -181,7 +182,7 @@ examples/heat_exchanger/heat_exchanger.py:65:124
 --8<--
 ```
 
-### 3.5 方程构建
+### 3.4 方程构建
 
 换热器热仿真问题由 [2.1 问题描述](#21) 中描述的方程组成，这里我们定义 PaddleScience 内置的 `HeatEquation` 方程类来构建该方程。指定该类的参数均为1，代码如下
 
@@ -191,7 +192,7 @@ examples/heat_exchanger/heat_exchanger.py:126:136
 --8<--
 ```
 
-### 3.6 约束构建
+### 3.5 约束构建
 
 换热器热仿真问题由 [2.1 问题描述](#21) 中描述的方程组成，我们设置以下边界条件：
 
@@ -202,7 +203,7 @@ T_c(t,1) &= 1.
 \end{aligned}
 $$
 
-同时，我们设置初始条件：
+同时，我们设置初值条件：
 
 $$
 \begin{aligned}
@@ -241,7 +242,7 @@ examples/heat_exchanger/heat_exchanger.py:264:270
 --8<--
 ```
 
-### 3.7 优化器构建
+### 3.6 优化器构建
 
 接下来我们需要指定学习率，学习率设为 0.001，训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
@@ -251,7 +252,7 @@ examples/heat_exchanger/heat_exchanger.py:272:273
 --8<--
 ```
 
-### 3.8 评估器构建
+### 3.7 评估器构建
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，我们使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
@@ -261,9 +262,9 @@ examples/heat_exchanger/heat_exchanger.py:275:349
 --8<--
 ```
 
-配置与 [3.6 约束构建](#36) 的设置类似。
+配置与 [3.5 约束构建](#35) 的设置类似。
 
-### 3.9 模型训练
+### 3.8 模型训练
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
@@ -273,7 +274,7 @@ examples/heat_exchanger/heat_exchanger.py:351:371
 --8<--
 ```
 
-### 3.10 结果可视化
+### 3.9 结果可视化
 
 最后在给定的可视化区域上进行预测并可视化，设冷边和热边的质量流量均为1，可视化数据是区域内的一维点集，每个时刻 $t$ 对应的坐标是 $x^i$，对应值是 $(T_h^{i}, T_c^i, T_w^i)$，在此我们画出 $T_h,T_c,T_w$ 随时间的变化图像。同时根据换热器效率的公式计算出换热器效率 $\eta$ ，画出换热器效率 $\eta$ 随时间的变化图像，代码如下：
 
@@ -293,7 +294,7 @@ examples/heat_exchanger/heat_exchanger.py
 
 ## 5. 结果展示
 
-如图所示为热边温度、冷边温度、壁面温度以及换热器效率 $T_h, T_c, T_w,\eta$ 随时间的变化图像。
+如图所示为不同时刻热边温度、冷边温度、壁面温度 $T_h, T_c, T_w$ 随传热面积 $A$ 的变化图像以及换热器效率 $\eta$ 随时间的变化图像。
 
 ???+ info "说明"
 

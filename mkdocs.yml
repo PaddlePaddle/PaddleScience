@@ -67,7 +67,7 @@ nav:
           - EPNN: zh/examples/epnn.md
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
-        - 传热：
+        - 传热:
           - Heat_PINN: zh/examples/heat_pinn.md
           - Heat_Exchanger: zh/examples/heat_exchanger.md
       - 材料科学(AI for Material):
