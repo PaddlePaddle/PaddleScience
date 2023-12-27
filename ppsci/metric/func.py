@@ -27,17 +27,23 @@ class FunctionalMetric(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
-        >>> import ppsci
         >>> import paddle
+        >>> from ppsci.metric import FunctionalMetric
         >>> def metric_expr(output_dict, *args):
         ...     rel_l2 = 0
         ...     for key in output_dict:
         ...         length = int(len(output_dict[key])/2)
-        ...         out_dict = {key: output_dict[key][:length]}
-        ...         label_dict = {key: output_dict[key][length:]}
+        ...         out_dict = output_dict[key][:length]
+        ...         label_dict = output_dict[key][length:]
         ...         rel_l2 += paddle.norm(out_dict - label_dict) / paddle.norm(label_dict)
-        ...     return {"l2": rel_l2}
-        >>> metric_dict = ppsci.metric.FunctionalMetric(metric_expr)
+        ...     return {"rel_l2": rel_l2}
+        >>> metric_dict = FunctionalMetric(metric_expr)
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3], [-0.2, 1.5], [-0.1, -0.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3], [-1.8, 1.0], [-0.2, 2.5]])}
+        >>> result = metric_dict(output_dict)
+        >>> print(result)
+        {'rel_l2': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.59985542)}
     """
 
     def __init__(
