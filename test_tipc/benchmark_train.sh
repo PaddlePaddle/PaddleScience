@@ -64,7 +64,6 @@ function _train(){
     cd ${workdir}
     train_cmd="python3.10 cylinder2d_unsteady_Re100.py TRAIN.epochs=200"
     echo "train_cmd: ${train_cmd}"
-    echo "log_file:  ${train_log_file}"
     timeout 15m ${train_cmd} > ${train_log_file} 2>&1
     if [ $? -ne 0 ];then
         echo -e "${model_name}, FAIL"
@@ -77,9 +76,10 @@ function _train(){
 _set_params $@
 export frame_version=`python -c "import paddle;print(paddle.__version__)"`
 export frame_commit=`python -c "import paddle;print(paddle.__git_commit__)"`
-echo "---------Paddle version is ${frame_version}"
-echo "---------Paddle commit is ${frame_commit}"
-echo "---------PaddleScience commit is ${model_branch}"
+export model_branch=`git rev-parse HEAD`
+echo "---------Paddle version = ${frame_version}"
+echo "---------Paddle commit = ${frame_commit}"
+echo "---------PaddleScience commit = ${model_branch}"
 
 job_bt=`date '+%Y%m%d%H%M%S'`
 _train

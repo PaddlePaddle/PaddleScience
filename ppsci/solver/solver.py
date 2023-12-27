@@ -18,7 +18,6 @@ import contextlib
 import itertools
 import os
 import sys
-import time
 from os import path as osp
 from typing import Callable
 from typing import Dict
@@ -170,7 +169,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize training log recorder for loss, time cost, metric, etc.
+        # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -178,7 +177,7 @@ class Solver:
         }
         self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
-        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        # initialize evaluation log(evaluation loss, metric, etc.) recorder.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -331,7 +330,6 @@ class Solver:
                     self.wandb_writer = wandb.init(**wandb_config)
 
         self.global_step = 0
-        self.total_batch_size = 0
 
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
@@ -393,17 +391,10 @@ class Solver:
     def train(self):
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
-        epoch_time_list = []
-        epoch_time = time.perf_counter()
+        start_epoch = self.best_metric["epoch"] + 1
 
-        for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
+        for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
-            # log training summation at end of a epoch
-            metric_msg = ", ".join(
-                [self.train_output_info[key].avg_info for key in self.train_output_info]
-            )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")
@@ -468,20 +459,6 @@ class Solver:
                 "latest",
                 self.equation,
             )
-            epoch_time_list.append(time.perf_counter() - epoch_time)
-            epoch_time = time.perf_counter()
-        skip_step_1 = 2
-        skip_step_2 = max(int(self.epochs * 0.05), 5)
-        del epoch_time_list[:skip_step_1]
-        del epoch_time_list[:skip_step_2]
-        del epoch_time_list[-skip_step_2:]
-        bs = self.total_batch_size * len(epoch_time_list) * self.iters_per_epoch
-        ips = bs / sum(epoch_time_list)
-        print("time = ", sum(epoch_time_list))
-        print("average_ips  = ", ips)
-        print("total_batch_size  = ", self.total_batch_size)
-        print("len(epoch_time_list)  = ", len(epoch_time_list))
-        print("iters_per_epoch  = ", self.iters_per_epoch)
 
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
