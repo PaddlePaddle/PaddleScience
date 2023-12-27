@@ -67,6 +67,8 @@ def log_train_info(
     )
 
     ips_msg = f"ips: {batch_size / trainer.train_time_info['batch_cost'].avg:.2f}"
+    if trainer.benchmark_flag:
+        ips_msg += " samples/s"
 
     eta_sec = (
         (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
@@ -82,10 +84,10 @@ def log_train_info(
     )
     if trainer.benchmark_flag:
         max_mem_reserved_msg = (
-            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1024 ** 2)} MB"
+            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1 << 20)} MB"
         )
         max_mem_allocated_msg = (
-            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1024 ** 2)} MB"
+            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1 << 20)} MB"
         )
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     logger.info(log_str)
