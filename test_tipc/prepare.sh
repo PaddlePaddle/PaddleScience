@@ -18,8 +18,6 @@ lines=(${dataline})
 download_dataset=$(func_parser_value "${lines[63]}")
 export pip=$(func_parser_value "${lines[64]}")
 workdir=$(func_parser_value "${lines[65]}")
-echo workdir: ${workdir}
-exit
 ${pip} install --upgrade pip
 ${pip} install pybind11
 ${pip} install -r requirements.txt
