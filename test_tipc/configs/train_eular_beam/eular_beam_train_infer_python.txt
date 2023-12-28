@@ -1,5 +1,8 @@
 ===========================train_params===========================
-model_name:euler_beam
+model_item:euler_beam
+bs_item:1
+run_mode:DP
+device_num:N1C1
 python:python3.10
 gpu_list:0
 Global.use_gpu:null
@@ -48,7 +51,6 @@ inference:tools/infer/predict_det.py
 --image_dir:null
 null:null
 --benchmark:True
-null:null
 ===========================train_benchmark_params==========================
 batch_size:1
 fp_items:fp32

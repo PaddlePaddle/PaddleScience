@@ -3,16 +3,11 @@ export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
 export TEST_DIR="${PDSC_DIR}"
 source ${TEST_DIR}/test_tipc/common_func.sh
 
+# Read txt in ./test_tipc/configs/
 PREPARE_PARAM_FILE=$1
 dataline=`cat $PREPARE_PARAM_FILE`
 lines=(${dataline})
 workdir=$(func_parser_value "${lines[65]}")
-model_item=$(func_parser_value "${lines[1]}")
-bs_item=$(func_parser_value "${lines[2]}")
-base_batch_size=$(func_parser_value "${lines[57]}")
-fp_item=$(func_parser_value "${lines[58]}")
-run_mode=$(func_parser_value "${lines[3]}")
-device_num=$(func_parser_value "${lines[4]}")
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Test training benchmark for a model.
@@ -20,6 +15,7 @@ function _set_params(){
     model_item=$(func_parser_value "${lines[1]}")           # (必选) 模型 item |fastscnn|segformer_b0| ocrnet_hrnetw48
     base_batch_size=$(func_parser_value "${lines[57]}")     # (必选) 如果是静态图单进程，则表示每张卡上的BS，需在训练时*卡数
     fp_item=$(func_parser_value "${lines[58]}")             # (必选) fp32|fp16
+    epochs=$(func_parser_value "${lines[59]}")              # (必选) Epochs
     run_mode=$(func_parser_value "${lines[3]}")             # (必选) MP模型并行|DP数据并行|PP流水线并行|混合并行DP1-MP1-PP1|DP1-MP4-PP1
     device_num=$(func_parser_value "${lines[4]}")           # (必选) 使用的卡数量，N1C1|N1C8|N4C32 （4机32卡）
 
@@ -62,7 +58,7 @@ function _analysis_log(){
 function _train(){
     echo "current CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}, model_name=${model_name}, device_num=${device_num}, is profiling=${profiling}"
     cd ${workdir}
-    train_cmd="python3.10 cylinder2d_unsteady_Re100.py TRAIN.epochs=200"
+    train_cmd="python3.10 ${model_item}.py TRAIN.epochs=${epochs}"
     echo "train_cmd: ${train_cmd}"
     timeout 15m ${train_cmd} > ${train_log_file} 2>&1
     if [ $? -ne 0 ];then

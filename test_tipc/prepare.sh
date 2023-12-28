@@ -24,5 +24,5 @@ ${pip} install -r requirements.txt
 
 if [ ${download_dataset} ] ; then
     cd ${PDSC_DIR}/${workdir}
-    ${python} ${PDSC_DIR}${download_dataset}
+    python3.10 ${PDSC_DIR}${download_dataset}
 fi

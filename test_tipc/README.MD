@@ -13,7 +13,8 @@ TIPC功能测试的主程序为benchmark_train.sh，可以测试基于Python的�
 
 | 算法名称 | 模型名称 | 精度 | 单机单卡 ips | 单机多卡 ips | 多机多卡 ips | 模型压缩（单机多卡） ips |
 |  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |  :----   |
-|  PINNs  | train_2d_unsteady_continuous.py | FP16 <br> FP32  | - <br> 1264165.641 | - <br> - | - <br> - | - <br> - |
+|  PINNs  | cylinder2d_unsteady_Re100.py | FP16 <br> FP32  | - <br> 1264165.641 | - <br> - | - <br> - | - <br> - |
+|  PINNs  | euler_beam.py                | FP16 <br> FP32  | - <br> 3667.54854  | - <br> - | - <br> - | - <br> - |
 
 ## 3. 测试流程(以2d非定常圆柱绕流为例子)
 
@@ -57,7 +58,7 @@ export BENCHMARK_ROOT=$PWD/tools
 cd ..
 ```
 
-在PaddleScience主目录下运行
+在PaddleScience主目录下运行(以cylinder2d_unsteady_Re100.py为例)
 
 ``` sh
 export script_path=./test_tipc/configs/train_2d_unsteady_continuous/2d_unsteady_continuous_train_infer_python.txt
