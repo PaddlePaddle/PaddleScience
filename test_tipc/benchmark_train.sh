@@ -1,263 +1,84 @@
-#!/bin/bash
-
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#!/usr/bin/env bash
 export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
 export TEST_DIR="${PDSC_DIR}"
-export TIPC_TEST="ON" # open tipc log in solver.py
-export PYTHONPATH=${PDSC_DIR}
 source ${TEST_DIR}/test_tipc/common_func.sh
 
-function func_parser_params(){
-    strs=$1
-    IFS="="
-    array=(${strs})
-    tmp=${array[1]}
-    echo ${tmp}
-}
-
-function func_sed_params(){
-    filename=$1
-    line=$2
-    param_value=$3
-    params=`sed -n "${line}p" $filename`
-    IFS=":"
-    array=(${params})
-    key=${array[0]}
-    value=${array[1]}
-    if [[ $value =~ 'benchmark_train' ]];then
-        IFS='='
-        _val=(${value})
-        param_value="${_val[0]}=${param_value}"
-    fi
-    new_params="${key}:${param_value}"
-    IFS=";"
-    cmd="sed -i '${line}s/.*/${new_params}/' '${filename}'"
-    eval $cmd
-}
-
-function set_gpu_id(){
-    string=$1
-    _str=${string:1:6}
-    IFS="C"
-    arr=(${_str})
-    M=${arr[0]}
-    P=${arr[1]}
-    gn=`expr $P - 1`
-    gpu_num=`expr $gn / $M`
-    seq=`seq -s "," 0 $gpu_num`
-    echo $seq
-}
-
-function get_repo_name(){
-    IFS=";"
-    cur_dir=$(pwd)
-    IFS="/"
-    arr=(${cur_dir})
-    echo ${arr[-1]}
-}
-
-FILENAME=${PDSC_DIR}"/"$1
-echo -e "\n* [FILENAME] is now set : \n" ${FILENAME} "\n"
-# copy FILENAME as new
-new_filename="${TEST_DIR}/test_tipc/benchmark_train.txt"
-cmd=`yes|cp $FILENAME $new_filename`
-FILENAME=$new_filename
-# MODE must be one of ['benchmark_train']
-MODE=$2
-
-PARAMS=$3
-IFS=$'\n'
-dataline=`cat $FILENAME`
-IFS=$'\n'
+# Read txt in ./test_tipc/configs/
+PREPARE_PARAM_FILE=$1
+dataline=`cat $PREPARE_PARAM_FILE`
 lines=(${dataline})
-model_name=$(func_parser_value "${lines[1]}")
-workdir=$(func_parser_value "${lines[60]}")
-python=$(func_parser_value "${lines[2]}")
-line_num=`grep -n "train_benchmark_params" $FILENAME  | cut -d ":" -f 1`
-batch_size=$(func_parser_value "${lines[line_num]}")
-line_num=`expr $line_num + 1`
-fp_items=$(func_parser_value "${lines[line_num]}")
-line_num=`expr $line_num + 1`
-epoch=$(func_parser_value "${lines[line_num]}")
-pip=$(func_parser_value "${lines[59]}")
-line_num=`expr $line_num + 1`
-profile_option_key=$(func_parser_key "${lines[line_num]}")
-profile_option_params=$(func_parser_value "${lines[line_num]}")
-profile_option="${profile_option_key}:${profile_option_params}"
+workdir=$(func_parser_value "${lines[65]}")
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-line_num=`expr $line_num + 1`
-flags_value=$(func_parser_value "${lines[line_num]}")
+# Test training benchmark for a model.
+function _set_params(){
+    model_item=$(func_parser_value "${lines[1]}")           # (必选) 模型 item |fastscnn|segformer_b0| ocrnet_hrnetw48
+    base_batch_size=$(func_parser_value "${lines[57]}")     # (必选) 如果是静态图单进程，则表示每张卡上的BS，需在训练时*卡数
+    fp_item=$(func_parser_value "${lines[58]}")             # (必选) fp32|fp16
+    epochs=$(func_parser_value "${lines[59]}")              # (必选) Epochs
+    run_mode=$(func_parser_value "${lines[3]}")             # (必选) MP模型并行|DP数据并行|PP流水线并行|混合并行DP1-MP1-PP1|DP1-MP4-PP1
+    device_num=$(func_parser_value "${lines[4]}")           # (必选) 使用的卡数量，N1C1|N1C8|N4C32 （4机32卡）
 
-export model_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-export model_commit=$(git log|head -n1|awk '{print $2}')
-export str_tmp=$(echo `${pip} list|grep paddlepaddle-gpu|awk -F ' ' '{print $2}'`)
-export frame_version=${str_tmp%%.post*}
-export frame_commit=$(echo `${python} -c "import paddle;print(paddle.version.commit)"`)
+    backend="paddle"
+    model_repo="PaddleScience"      # (必选) 模型套件的名字
+    speed_unit="samples/sec"        # (必选)速度指标单位
+    skip_steps=0                    # (必选)解析日志，跳过模型前几个性能不稳定的step
+    keyword="ips:"                  # (必选)解析日志，筛选出性能数据所在行的关键字
+    convergence_key="loss:"         # (可选)解析日志，筛选出收敛数据所在行的关键字 如：convergence_key="loss:"
 
-IFS=";"
-flags_list=(${flags_value})
-for _flag in ${flags_list[*]}; do
-    cmd="export ${_flag}"
+#   以下为通用执行命令，无特殊可不用修改
+    model_name=${model_item}_bs${base_batch_size}_${fp_item}_${run_mode}  # (必填) 且格式不要改动,与竞品名称对齐
+    device=${CUDA_VISIBLE_DEVICES//,/ }
+    arr=(${device})
+    num_gpu_devices=${#arr[*]}
+    run_log_path=${TRAIN_LOG_DIR:-$(pwd)}  # （必填） TRAIN_LOG_DIR  benchmark框架设置该参数为全局变量
+    speed_log_path=${LOG_PATH_INDEX_DIR:-$(pwd)}
+
+    train_log_file=${run_log_path}/${model_repo}_${model_name}_${device_num}_log
+    speed_log_file=${speed_log_path}/${model_repo}_${model_name}_${device_num}_speed
+    echo run_log_path: ${run_log_path}
+}
+
+function _analysis_log(){
+    echo "train_log_file: ${train_log_file}"
+    echo "speed_log_file: ${speed_log_file}"
+    cmd="python "${BENCHMARK_ROOT}"/scripts/analysis.py --filename ${train_log_file} \
+        --speed_log_file ${speed_log_file} \
+        --model_name ${model_name} \
+        --base_batch_size ${base_batch_size} \
+        --run_mode ${run_mode} \
+        --fp_item ${fp_item} \
+        --keyword ${keyword} \
+        --skip_steps ${skip_steps} \
+        --device_num ${device_num} "
+    echo ${cmd}
     eval $cmd
-done
+}
 
-
-repo_name=$(get_repo_name )
-SAVE_LOG=${BENCHMARK_LOG_DIR:-$(pwd)}
-mkdir -p "${SAVE_LOG}/benchmark_log/"
-status_log="${SAVE_LOG}/benchmark_log/results.log"
-echo ${BENCHMARK_LOG_DIR}
-
-line_python=3
-line_gpuid=4
-line_precision=6
-line_epoch=7
-line_batchsize=9
-line_profile=13
-line_eval_py=24
-line_export_py=30
-
-func_sed_params "$FILENAME" "${line_eval_py}" "null"
-func_sed_params "$FILENAME" "${line_export_py}" "null"
-func_sed_params "$FILENAME" "${line_python}"  "$python"
-
-cd ${PDSC_DIR}/${workdir}
-
-if  [ ! -n "$PARAMS" ] ;then
-    # PARAMS input is not a word.
-    IFS="|"
-    batch_size_list=(${batch_size})
-    fp_items_list=(${fp_items})
-    device_num_list=(N1C1)
-    run_mode="DP"
-else
-    # parser params from input: modeltype_bs${bs_item}_${fp_item}_${run_mode}_${device_num}
-    IFS="_"
-    params_list=(${PARAMS})
-    model_type=${params_list[0]}
-    batch_size=${params_list[1]}
-    batch_size=`echo  ${batch_size} | tr -cd "[0-9]" `
-    precision=${params_list[2]}
-    run_mode=${params_list[3]}
-    device_num=${params_list[4]}
-    IFS=";"
-
-    if [ ${precision} = "null" ];then
-        precision="fp32"
+function _train(){
+    echo "current CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}, model_name=${model_name}, device_num=${device_num}, is profiling=${profiling}"
+    cd ${workdir}
+    train_cmd="python3.10 ${model_item}.py TRAIN.epochs=${epochs}"
+    echo "train_cmd: ${train_cmd}"
+    timeout 15m ${train_cmd} > ${train_log_file} 2>&1
+    if [ $? -ne 0 ];then
+        echo -e "${model_name}, FAIL"
+    else
+        echo -e "${model_name}, SUCCESS"
     fi
+    cd $(pwd)
+}
 
-    fp_items_list=($precision)
-    batch_size_list=($batch_size)
-    device_num_list=($device_num)
-fi
-IFS="|"
-for batch_size in ${batch_size_list[*]}; do
-    for precision in ${fp_items_list[*]}; do
-        for device_num in ${device_num_list[*]}; do
-            # sed batchsize and precision
-            func_sed_params "$FILENAME" "${line_precision}" "$precision"
-            func_sed_params "$FILENAME" "${line_batchsize}" "$MODE=$batch_size"
-            func_sed_params "$FILENAME" "${line_epoch}" "$MODE=$epoch"
-            gpu_id=$(set_gpu_id $device_num)
+_set_params $@
+export frame_version=`python -c "import paddle;print(paddle.__version__)"`
+export frame_commit=`python -c "import paddle;print(paddle.__git_commit__)"`
+export model_branch=`git rev-parse HEAD`
+echo "---------Paddle version = ${frame_version}"
+echo "---------Paddle commit = ${frame_commit}"
+echo "---------PaddleScience commit = ${model_branch}"
 
-            if [ ${#gpu_id} -le 1 ];then
-                # run_process_type="SingleP"
-                log_path="$SAVE_LOG/profiling_log"
-                mkdir -p $log_path
-                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_profiling"
-                func_sed_params "$FILENAME" "${line_gpuid}" "0"  # sed used gpu_id
-                # set profile_option params
-                tmp=`sed -i "${line_profile}s/.*/${profile_option}/" "${FILENAME}"`
-
-                # run test_train_inference_python.sh
-                cmd="bash ${TEST_DIR}/test_tipc/test_train_inference_python.sh ${FILENAME} benchmark_train > ${log_path}/${log_name} 2>&1 "
-                echo $cmd
-                eval $cmd
-                eval "cat ${log_path}/${log_name}"
-
-                # without profile
-                log_path="$SAVE_LOG/train_log"
-                speed_log_path="$SAVE_LOG/index"
-                mkdir -p $log_path
-                mkdir -p $speed_log_path
-                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_log"
-                speed_log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_mode}_${device_num}_speed"
-                func_sed_params "$FILENAME" "${line_profile}" "null"  # sed profile_id as null
-                cmd="bash ${TEST_DIR}/test_tipc/test_train_inference_python.sh ${FILENAME} benchmark_train > ${log_path}/${log_name} 2>&1 "
-                echo $cmd
-                job_bt=`date '+%Y%m%d%H%M%S'`
-                eval $cmd
-                job_et=`date '+%Y%m%d%H%M%S'`
-                export model_run_time=$((${job_et}-${job_bt}))
-                eval "cat ${log_path}/${log_name}"
-                # parser log
-                _model_name="${model_name}_bs${batch_size}_${precision}_${run_mode}"
-                cmd="${python} ${BENCHMARK_ROOT}/scripts/analysis.py --filename ${log_path}/${log_name} \
-                        --speed_log_file '${speed_log_path}/${speed_log_name}' \
-                        --model_name ${_model_name} \
-                        --base_batch_size ${batch_size} \
-                        --run_mode ${run_mode} \
-                        --fp_item ${precision} \
-                        --keyword ips: \
-                        --skip_steps 2 \
-                        --device_num ${device_num} \
-                        --speed_unit samples/s \
-                        --convergence_key loss: "
-                echo $cmd
-                eval $cmd
-                last_status=${PIPESTATUS[0]}
-                status_check $last_status "${cmd}" "${status_log}"
-            else
-                IFS=";"
-                unset_env=`unset CUDA_VISIBLE_DEVICES`
-                run_process_type="MultiP"
-                log_path="$SAVE_LOG/train_log"
-                speed_log_path="$SAVE_LOG/index"
-                mkdir -p $log_path
-                mkdir -p $speed_log_path
-                log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}_${device_num}_log"
-                speed_log_name="${repo_name}_${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}_${device_num}_speed"
-                func_sed_params "$FILENAME" "${line_gpuid}" "$gpu_id"  # sed used gpu_id
-                func_sed_params "$FILENAME" "${line_profile}" "null"  # sed --profile_option as null
-                cmd="bash test_tipc/test_train_inference_python.sh ${FILENAME} benchmark_train > ${log_path}/${log_name} 2>&1 "
-                echo $cmd
-                job_bt=`date '+%Y%m%d%H%M%S'`
-                eval $cmd
-                job_et=`date '+%Y%m%d%H%M%S'`
-                export model_run_time=$((${job_et}-${job_bt}))
-                eval "cat ${log_path}/${log_name}"
-                # parser log
-                _model_name="${model_name}_bs${batch_size}_${precision}_${run_process_type}_${run_mode}"
-
-                cmd="${python} ${BENCHMARK_ROOT}/scripts/analysis.py --filename ${log_path}/${log_name} \
-                        --speed_log_file '${speed_log_path}/${speed_log_name}' \
-                        --model_name ${_model_name} \
-                        --base_batch_size ${batch_size} \
-                        --run_mode ${run_mode} \
-                        --run_process_type ${run_process_type} \
-                        --fp_item ${precision} \
-                        --keyword ips: \
-                        --skip_steps 2 \
-                        --device_num ${device_num} \
-                        --speed_unit images/s \
-                        --convergence_key loss: "
-                echo $cmd
-                eval $cmd
-                last_status=${PIPESTATUS[0]}
-                status_check $last_status "${cmd}" "${status_log}"
-            fi
-        done
-    done
-done
+job_bt=`date '+%Y%m%d%H%M%S'`
+_train
+job_et=`date '+%Y%m%d%H%M%S'`
+export model_run_time=$((${job_et}-${job_bt}))
+_analysis_log
