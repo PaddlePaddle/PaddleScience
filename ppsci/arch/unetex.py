@@ -199,13 +199,17 @@ class UNetEx(base.Arch):
         ...     in_channel=3,
         ...     out_channel=3,
         ...     kernel_size=5,
-        ...     filters=(8, 16, 32, 32),
+        ...     filters=(4, 4, 4, 4),
         ...     layers=3,
         ...     weight_norm=False,
         ...     batch_norm=False,
         ...     activation=None,
         ...     final_activation=None,
         ... )
+        >>> input_dict = {'input': paddle.rand([4, 3, 4, 4])}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict['output'].shape)
+        [4, 3, 4, 4]
     """
 
     def __init__(
