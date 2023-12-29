@@ -208,6 +208,7 @@ class UNetEx(base.Arch):
         ... )
         >>> input_dict = {'input': paddle.rand([4, 3, 4, 4])}
         >>> output_dict = model(input_dict)
+        >>> print(output_dict['output']) # doctest: +SKIP
         >>> print(output_dict['output'].shape)
         [4, 3, 4, 4]
     """
