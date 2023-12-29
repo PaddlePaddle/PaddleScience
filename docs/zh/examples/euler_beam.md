@@ -1,6 +1,5 @@
 # Euler Beam
 
-
 === "模型训练命令"
 
     ``` sh
@@ -16,8 +15,6 @@
 | 预训练模型  | 指标 |
 |:--| :--|
 | [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00584<br>L2Rel.u(L2Rel_Metric): 1.20062 |
-
-
 
 ## 1. 问题定义
 
@@ -68,6 +65,7 @@ examples/euler_beam/euler_beam.py:36:37
 ```
 
 其中，用于初始化模型的参数通过配置文件进行配置：
+
 ``` yaml linenums="34"
 --8<--
 examples/euler_beam/conf/euler_beam.yaml:34:38
