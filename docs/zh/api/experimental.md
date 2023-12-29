@@ -14,5 +14,6 @@
         - bessel_i1e
         - fractional_diff
         - gaussian_integrate
+        - trapezoid_integrate
       show_root_heading: true
       heading_level: 3
