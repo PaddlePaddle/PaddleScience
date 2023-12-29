@@ -97,6 +97,16 @@ class MeshAirfoilDataset(io.Dataset):
         data_dir (str): Directory of MeshAirfoil data.
         mesh_graph_path (str): Path of mesh graph.
         transpose_edges (bool, optional): Whether transpose the edges array from (2, num_edges) to (num_edges, 2) for convenient of slicing.
+
+    Examples:
+        >>> import ppsci
+        >>> dataset = ppsci.data.dataset.MeshAirfoilDataset(
+        ...     "input_keys": ("input",),
+        ...     "label_keys": ("output",),
+        ...     "data_dir": "/path/to/MeshAirfoilDataset",
+        ...     "mesh_graph_path": "/path/to/file.su2",
+        ...     "transpose_edges": False,
+        ... )  # doctest: +SKIP
     """
 
     use_pgl: bool = True
