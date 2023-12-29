@@ -88,7 +88,8 @@ def save_csv_file(
         if isinstance(data, paddle.Tensor):
             data = data.numpy()  # [num_of_samples, ]
 
-        data = data.flatten()
+        if isinstance(data, np.ndarray):
+            data = data.flatten()
         data_fields.append(data)
 
         header.append(key)
@@ -111,20 +112,26 @@ def save_tecplot_file(
     filename: str,
     data_dict: Dict[str, Union[np.ndarray, "paddle.Tensor"]],
     keys: Tuple[str, ...],
+    num_x: int,
+    num_y: int,
     alias_dict: Optional[Dict[str, str]] = None,
     delimiter: str = " ",
     encoding: str = "utf-8",
     num_timestamps: int = 1,
 ):
-    """Write numpy data to tecplot file.
+    """Write numpy or tensor data to tecplot file.
 
     Args:
         filename (str): Tecplot file path.
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Numpy or Tensor data in dict.
         keys (Tuple[str, ...]): Target keys to be dumped.
+        num_x (int): The number of discrete points of the grid in the X-axis. Assuming
+            the discrete grid size is 20 x 30, then num_x=20.
+        num_y (int): The number of discrete points of the grid in the Y-axis. Assuming
+            the discrete grid size is 20 x 30, then num_y=30.
         alias_dict (Optional[Dict[str, str]], optional): Alias dict for keys,
             i.e. {dump_key: dict_key}. Defaults to None.
-        delimiter (str, optional): Delemiter for splitting different data field. Defaults to ",".
+        delimiter (str, optional): Delemiter for splitting different data field. Defaults to " ".
         encoding (str, optional): Encoding. Defaults to "utf-8".
         num_timestamps (int, optional): Number of timestamp over coord and value. Defaults to 1.
 
@@ -132,37 +139,35 @@ def save_tecplot_file(
         >>> import numpy as np
         >>> from ppsci.utils import save_tecplot_file
         >>> data_dict = {
-        ...     "x": np.array([[1.0], [2.0], [10.0], [20.0], [100.0], [200.0]]), # [6, 1]
-        ...     "y": np.array([[-1.0], [-2.0], [-10.0], [-20.0], [-100.0], [-200.0]]) # [6, 1]
+        ...     "x": np.array([[-1.0], [-1.0], [-1.0], [-1.0], [-1.0], [-1.0]]), # [6, 1]
+        ...     "y": np.array([[1.0], [2.0], [3.0], [1.0], [2.0], [3.0]]), # [6, 1]
+        ...     "value": np.array([[3], [33], [333], [3333], [33333], [333333]]), # [6, 1]
         ... }
         >>> save_tecplot_file(
-        ...    "./test.tec",
+        ...    "./test.dat",
         ...    data_dict,
         ...    ("X", "Y"),
+        ...    num_x=1,
+        ...    num_y=3,
         ...    alias_dict={"X": "x", "Y": "y"},
-        ...    num_timestamps=3,
+        ...    num_timestamps=2,
         ... )
-
-        >>> # == test_t-0.tec ==
-        >>> # title="./test_t-0.tec"
+        >>> # == test_t-0.dat ==
+        >>> # title = "./test_t-0.dat"
         >>> # variables = "X", "Y"
-        >>> # Zone I = 2, J = 1, F = POINT
+        >>> # Zone I = 3, J = 1, F = POINT
         >>> # -1.0 1.0
-        >>> # -2.0 2.0
+        >>> # -1.0 2.0
+        >>> # -1.0 3.0
 
-        >>> # == test_t-1.tec ==
-        >>> # title="./test_t-1.tec"
-        >>> # variables = "X", "Y"
-        >>> # Zone I = 2, J = 1, F = POINT
-        >>> # -10.0 10.0
-        >>> # -20.0 20.0
 
-        >>> # == test_t-2.tec ==
-        >>> # title="./test_t-2.tec"
+        >>> # == test_t-1.dat ==
+        >>> # title = "./test_t-1.dat"
         >>> # variables = "X", "Y"
-        >>> # Zone I = 2, J = 1, F = POINT
-        >>> # -100.0 100.0
-        >>> # -200.0 200.0
+        >>> # Zone I = 3, J = 1, F = POINT
+        >>> # -1.0 1.0
+        >>> # -1.0 2.0
+        >>> # -1.0 3.0
     """
     ntxy = len(next(iter(data_dict.values())))
     if ntxy % num_timestamps != 0:
@@ -172,25 +177,31 @@ def save_tecplot_file(
         )
     nxy = ntxy // num_timestamps
 
+    nx, ny = num_x, num_y
+    assert nx * ny == nxy, f"nx({nx}) * ny({ny}) != nxy({nxy})"
+
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    if filename.endswith(".tec"):
+    if filename.endswith(".dat"):
         filename = filename[:-4]
 
     for t in range(num_timestamps):
         # write 1 tecplot file for each timestep
         if num_timestamps > 1:
-            dump_filename = f"{filename}_t-{t}.tec"
+            dump_filename = f"{filename}_t-{t}.dat"
         else:
-            dump_filename = f"{filename}.tec"
+            dump_filename = f"{filename}.dat"
 
+        fetch_keys = [(alias_dict[key] if alias_dict else key) for key in keys]
         with open(dump_filename, "w", encoding=encoding) as f:
             # write meta information of tec
-            f.write(f'title="{dump_filename}"\n')
-            fetch_keys = {(alias_dict[key] if alias_dict else key) for key in keys}
+            f.write(f'title = "{dump_filename}"\n')
             header = ", ".join([f'"{key}"' for key in keys])
             f.write(f"variables = {header}\n")
-            f.write(f"Zone I = {nxy}, J = 1, F = POINT\n")
+
+            # NOTE: Tecplot is column-major, so we need to specify I = ny, J = nx,
+            # which is in contrast to our habits.
+            f.write(f"Zone I = {ny}, J = {nx}, F = POINT\n")
 
             # write points data into file
             data_cur_time_step = [
@@ -200,4 +211,9 @@ def save_tecplot_file(
             for items in zip(*data_cur_time_step):
                 f.write(delimiter.join([str(float(x)) for x in items]) + "\n")
 
-        logger.message(f"csv file has been dumped to {dump_filename}")
+    if num_timestamps > 1:
+        logger.message(
+            f"tecplot files are saved to: {filename}_t-0.dat ~ {filename}_t-{num_timestamps - 1}.dat"
+        )
+    else:
+        logger.message(f"tecplot file is saved to: {filename}.dat")
