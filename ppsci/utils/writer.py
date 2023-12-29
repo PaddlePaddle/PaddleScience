@@ -44,7 +44,7 @@ def save_csv_file(
 
     Args:
         filename (str): Dump file path.
-        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Numpy data in dict.
+        data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Numpy or tensor data in dict.
         keys (Tuple[str, ...]): Keys for data_dict to be fetched.
         alias_dict (Optional[Dict[str, str]], optional): Alias dict for keys,
             i.e. {dump_key: dict_key}. Defaults to None.
