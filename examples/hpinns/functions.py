@@ -100,8 +100,8 @@ def init_lambda(output_dict: Dict[str, paddle.Tensor], bound: int):
     """
     global lambda_re, lambda_im, loss_weight
     x, y = output_dict["x"], output_dict["y"]
-    lambda_re = np.zeros((len(x[bound:]), 1))
-    lambda_im = np.zeros((len(y[bound:]), 1))
+    lambda_re = np.zeros((len(x[bound:]), 1), paddle.get_default_dtype())
+    lambda_im = np.zeros((len(y[bound:]), 1), paddle.get_default_dtype())
     # loss_weight: [PDE loss 1, PDE loss 2, Lagrangian loss 1, Lagrangian loss 2, objective loss]
     if train_mode == "aug_lag":
         loss_weight = [0.5 * mu] * 2 + [1.0, 1.0] + [1.0]

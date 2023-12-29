@@ -66,26 +66,28 @@ def log_train_info(
         [trainer.train_time_info[key].mean for key in trainer.train_time_info]
     )
 
-    ips_msg = (
-        f"ips: {batch_size / trainer.train_time_info['batch_cost'].avg:.5f} samples/s"
-    )
+    ips_msg = f"ips: {batch_size / trainer.train_time_info['batch_cost'].avg:.2f}"
+    if trainer.benchmark_flag:
+        ips_msg += " samples/s"
 
     eta_sec = (
         (trainer.epochs - epoch_id + 1) * trainer.iters_per_epoch - iter_id
     ) * trainer.train_time_info["batch_cost"].avg
-    eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
+    eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec)))}"
 
+    epoch_width = len(str(trainer.epochs))
+    iters_width = len(str(trainer.iters_per_epoch))
     log_str = (
-        f"[Train][Epoch {epoch_id}/{trainer.epochs}]"
-        f"[Iter: {iter_id}/{trainer.iters_per_epoch}] {lr_msg}, "
+        f"[Train][Epoch {epoch_id:>{epoch_width}}/{trainer.epochs}]"
+        f"[Iter {iter_id:>{iters_width}}/{trainer.iters_per_epoch}] {lr_msg}, "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
     if trainer.benchmark_flag:
         max_mem_reserved_msg = (
-            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1024 ** 2)} MB"
+            f"max_mem_reserved: {device.cuda.max_memory_reserved() // (1 << 20)} MB"
         )
         max_mem_allocated_msg = (
-            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1024 ** 2)} MB"
+            f"max_mem_allocated: {device.cuda.max_memory_allocated() // (1 << 20)} MB"
         )
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     logger.info(log_str)
@@ -122,14 +124,16 @@ def log_eval_info(
         [trainer.eval_time_info[key].mean for key in trainer.eval_time_info]
     )
 
-    ips_msg = (
-        f"ips: {batch_size / trainer.eval_time_info['batch_cost'].avg:.5f}" f"samples/s"
-    )
+    ips_msg = f"ips: {batch_size / trainer.eval_time_info['batch_cost'].avg:.2f}"
 
     eta_sec = (iters_per_epoch - iter_id) * trainer.eval_time_info["batch_cost"].avg
-    eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec))):s}"
+    eta_msg = f"eta: {str(datetime.timedelta(seconds=int(eta_sec)))}"
+
+    epoch_width = len(str(trainer.epochs))
+    iters_width = len(str(iters_per_epoch))
     logger.info(
-        f"[Eval][Epoch {epoch_id}][Iter: {iter_id}/{iters_per_epoch}] "
+        f"[Eval][Epoch {epoch_id:>{epoch_width}}/{trainer.epochs}]"
+        f"[Iter {iter_id:>{iters_width}}/{iters_per_epoch}] "
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 

@@ -159,7 +159,7 @@ class Mesh(geometry.Geometry):
         import pymesh
 
         sdf, _, _, _ = pymesh.signed_distance_to_mesh(self.py_mesh, points)
-        sdf = sdf[..., np.newaxis]
+        sdf = sdf[..., np.newaxis].astype(paddle.get_default_dtype())
         return sdf
 
     def is_inside(self, x):
@@ -478,7 +478,9 @@ class Mesh(geometry.Geometry):
 
         all_points = np.concatenate(all_points, axis=0)
         cuboid_volume = np.prod([b[1] - b[0] for b in self.bounds])
-        all_areas = np.full((n, 1), cuboid_volume * (_nvalid / _nsample) / n)
+        all_areas = np.full(
+            (n, 1), cuboid_volume * (_nvalid / _nsample) / n, paddle.get_default_dtype()
+        )
         return all_points, all_areas
 
     def sample_interior(

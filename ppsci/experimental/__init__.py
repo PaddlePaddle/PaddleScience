@@ -20,6 +20,7 @@ from ppsci.experimental.math_module import bessel_i0
 from ppsci.experimental.math_module import bessel_i0e
 from ppsci.experimental.math_module import bessel_i1
 from ppsci.experimental.math_module import bessel_i1e
+from ppsci.experimental.math_module import fractional_diff
 from ppsci.experimental.math_module import gaussian_integrate
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "bessel_i0e",
     "bessel_i1",
     "bessel_i1e",
+    "fractional_diff",
     "gaussian_integrate",
 ]

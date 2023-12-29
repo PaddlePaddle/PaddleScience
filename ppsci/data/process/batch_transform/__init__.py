@@ -77,8 +77,10 @@ def default_collate_fn(batch: List[Any]) -> Any:
 
         graph.edge_attr = np.concatenate([g.edge_attr for g in batch])
         graph.pos = np.concatenate([g.pos for g in batch])
-        graph.aoa = np.concatenate([g.aoa for g in batch])
-        graph.mach_or_reynolds = np.concatenate([g.mach_or_reynolds for g in batch])
+        if hasattr(sample, "aoa"):
+            graph.aoa = np.concatenate([g.aoa for g in batch])
+        if hasattr(sample, "mach_or_reynolds"):
+            graph.mach_or_reynolds = np.concatenate([g.mach_or_reynolds for g in batch])
         graph.tensor()
         graph.shape = [len(batch)]
         return graph

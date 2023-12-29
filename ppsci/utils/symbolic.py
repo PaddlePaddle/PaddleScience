@@ -256,8 +256,8 @@ class OperatorNode(Node):
         )
         for i in range(2, len(self.childs)):
             data_dict[self.key] = paddle.minimum(
-                data_dict[data_dict[self.key]],
-                data_dict[data_dict[self.childs[i]]],
+                data_dict[self.key],
+                data_dict[self.childs[i]],
             )
         return data_dict
 
@@ -267,8 +267,8 @@ class OperatorNode(Node):
         )
         for i in range(2, len(self.childs)):
             data_dict[self.key] = paddle.maximum(
-                data_dict[data_dict[self.key]],
-                data_dict[data_dict[self.childs[i]]],
+                data_dict[self.key],
+                data_dict[self.childs[i]],
             )
         return data_dict
 

@@ -83,6 +83,10 @@ class Relobralo(nn.Layer):
 
     def __call__(self, losses: List[paddle.Tensor], step: int = 0) -> "Relobralo":
         self.step = step
+        assert len(losses) == self.num_losses, (
+            f"Length of given losses({len(losses)}) should be equal to "
+            f"num_losses({self.num_losses})."
+        )
         losses_stacked = paddle.stack(losses)  # [num_losses, ]
 
         if self.step == 0:
