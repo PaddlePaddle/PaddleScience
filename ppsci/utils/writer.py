@@ -40,7 +40,7 @@ def save_csv_file(
     delimiter: str = ",",
     encoding: str = "utf-8",
 ):
-    """Write numpy data to csv file.
+    """Write numpy or tensor data into csv file.
 
     Args:
         filename (str): Dump file path.
@@ -75,7 +75,6 @@ def save_csv_file(
         >>> # 2,5.25
         >>> # 3,6.337
     """
-
     if alias_dict is None:
         alias_dict = {}
 
@@ -83,7 +82,7 @@ def save_csv_file(
     data_fields = []
     header = []
     for key in keys:
-        fetch_key = alias_dict[key] if key in alias_dict else key
+        fetch_key = alias_dict.get(key, key)
         data = data_dict[fetch_key]
         if isinstance(data, paddle.Tensor):
             data = data.numpy()  # [num_of_samples, ]
@@ -119,7 +118,7 @@ def save_tecplot_file(
     encoding: str = "utf-8",
     num_timestamps: int = 1,
 ):
-    """Write numpy or tensor data to tecplot file.
+    """Write numpy or tensor data into tecplot file(s).
 
     Args:
         filename (str): Tecplot file path.
@@ -146,7 +145,7 @@ def save_tecplot_file(
         >>> save_tecplot_file(
         ...    "./test.dat",
         ...    data_dict,
-        ...    ("X", "Y"),
+        ...    ("X", "Y", "value"),
         ...    num_x=1,
         ...    num_y=3,
         ...    alias_dict={"X": "x", "Y": "y"},
@@ -156,19 +155,22 @@ def save_tecplot_file(
         >>> # title = "./test_t-0.dat"
         >>> # variables = "X", "Y"
         >>> # Zone I = 3, J = 1, F = POINT
-        >>> # -1.0 1.0
-        >>> # -1.0 2.0
-        >>> # -1.0 3.0
+        >>> # -1.0 1.0 3.0
+        >>> # -1.0 2.0 33.0
+        >>> # -1.0 3.0 333.0
 
 
         >>> # == test_t-1.dat ==
         >>> # title = "./test_t-1.dat"
         >>> # variables = "X", "Y"
         >>> # Zone I = 3, J = 1, F = POINT
-        >>> # -1.0 1.0
-        >>> # -1.0 2.0
-        >>> # -1.0 3.0
+        >>> # -1.0 1.0 3333.0
+        >>> # -1.0 2.0 33333.0
+        >>> # -1.0 3.0 333333.0
     """
+    if alias_dict is None:
+        alias_dict = {}
+
     ntxy = len(next(iter(data_dict.values())))
     if ntxy % num_timestamps != 0:
         raise ValueError(
@@ -192,7 +194,7 @@ def save_tecplot_file(
         else:
             dump_filename = f"{filename}.dat"
 
-        fetch_keys = [(alias_dict[key] if alias_dict else key) for key in keys]
+        fetch_keys = [alias_dict.get(key, key) for key in keys]
         with open(dump_filename, "w", encoding=encoding) as f:
             # write meta information of tec
             f.write(f'title = "{dump_filename}"\n')
