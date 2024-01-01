@@ -8,7 +8,7 @@ from omegaconf import DictConfig
 from utils import dfdx
 from utils import dfdy
 from utils import setAxisLabel
-from utils import visualize2D
+from utils import visualize
 
 import ppsci
 from ppsci.utils import logger
@@ -19,11 +19,11 @@ def train(cfg: DictConfig):
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-    pad_singleside = cfg.MODEL.pad_singleside
 
+    pad_singleside = cfg.MODEL.pad_singleside
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     data = np.load(cfg.data_dir)
     coords = data["coords"]
@@ -34,6 +34,7 @@ def train(cfg: DictConfig):
     dydetas = data["dydetas"]
     len_data = cfg.len_data
 
+    iters_per_epoch = coords.shape[0]
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -47,37 +48,36 @@ def train(cfg: DictConfig):
                     "dydetas": dydetas,
                 },
             },
-            "batch_size": 1,
-            "iters_per_epoch": coords.shape[0],
+            "batch_size": cfg.TRAIN.batch_size,
+            "iters_per_epoch": iters_per_epoch,
             "num_workers": 0,
         },
         ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
         name="mRes",
     )
-
     sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
 
-    def _transform_out(_input, outputV, pad_singleside=pad_singleside, k=len_data):
-        outputV = outputV["outputV"]
-        batchSize = outputV.shape[0]
+    def _transform_out(_input, output_v, pad_singleside=pad_singleside, k=len_data):
+        output_v = output_v["outputV"]
+        batch_size = output_v.shape[0]
         Jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
         dydxi = _input["dydxis"]
         dxdeta = _input["dxdetas"]
         dydeta = _input["dydetas"]
         Para = _input["coords"]
-        for j in range(batchSize):
-            outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = outputV[
+        for j in range(batch_size):
+            output_v[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = output_v[
                 j, 0, 1:2, pad_singleside:-pad_singleside
             ]
-            outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = outputV[
+            output_v[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = output_v[
                 j, 0, -2:-1, pad_singleside:-pad_singleside
             ]
-            outputV[j, 0, :, -pad_singleside:] = 0
-            outputV[j, 0, :, 0:pad_singleside] = Para[j, 0, 0, 0]
-        dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
+            output_v[j, 0, :, -pad_singleside:] = 0
+            output_v[j, 0, :, 0:pad_singleside] = Para[j, 0, 0, 0]
+        dvdx = dfdx(output_v, dydeta, dydxi, Jinv)
         d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
-        dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
+        dvdy = dfdy(output_v, dxdxi, dxdeta, Jinv)
         d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
         continuity = d2vdy2 + d2vdx2
         return {"mRes": paddle.mean(continuity**2) / k}
@@ -89,7 +89,8 @@ def train(cfg: DictConfig):
         cfg.output_dir,
         optimizer,
         epochs=cfg.epochs,
-        iters_per_epoch=coords.shape[0],
+        iters_per_epoch=iters_per_epoch,
+        seed=SEED,
     )
 
     solver.train()
@@ -102,10 +103,8 @@ def evaluate(cfg: DictConfig):
     ppsci.utils.misc.set_random_seed(SEED)
 
     pad_singleside = cfg.MODEL.pad_singleside
-
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
-    model.register_output_transform(None)
     data = np.load(cfg.test_data_dir)
     paras = paddle.to_tensor(data["paras"])
     truths = paddle.to_tensor(data["truths"])
@@ -117,29 +116,29 @@ def evaluate(cfg: DictConfig):
     )
 
     paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])
-    outputV = solver.predict({"coords": paras})
-    outputV = outputV["outputV"]
-    batchSize = outputV.shape[0]
+    output_v = solver.predict({"coords": paras})
+    output_v = output_v["outputV"]
+    batchSize = output_v.shape[0]
     for j in range(batchSize):
         # Impose BC
-        outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = outputV[
+        output_v[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = output_v[
             j, 0, 1:2, pad_singleside:-pad_singleside
         ]
-        outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = outputV[
+        output_v[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = output_v[
             j, 0, -2:-1, pad_singleside:-pad_singleside
         ]
-        outputV[j, 0, :, -pad_singleside:] = 0
-        outputV[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
+        output_v[j, 0, :, -pad_singleside:] = 0
+        output_v[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
     eV = paddle.sqrt(
-        paddle.mean((truths - outputV) ** 2) / paddle.mean(truths**2)
+        paddle.mean((truths - output_v) ** 2) / paddle.mean(truths**2)
     ).item()
     logger.info(eV / len_data)
-    outputVs = outputV.numpy()
+    output_vs = output_v.numpy()
     ParaList = [1, 2, 3, 4, 5, 6, 7]
     for i in range(len(ParaList)):
         truth = truths[i].numpy()
         coord = coords[i].numpy()
-        outputV = outputVs[i]
+        output_v = output_vs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
         logger.info(f"i={i}")
@@ -148,11 +147,11 @@ def evaluate(cfg: DictConfig):
         xytickssize = 20
         titlesize = 20
         ax = plt.subplot(1, 2, 1)
-        _, cbar = visualize2D(
+        _, cbar = visualize(
             ax,
             coord[0, 0, :, :],
             coord[0, 1, :, :],
-            outputV[0, :, :],
+            output_v[0, :, :],
             "horizontal",
             [0, max(ParaList)],
         )
@@ -168,7 +167,7 @@ def evaluate(cfg: DictConfig):
         cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
         cbar.ax.tick_params(labelsize=xytickssize)
         ax = plt.subplot(1, 2, 2)
-        _, cbar = visualize2D(
+        _, cbar = visualize(
             ax,
             coord[0, 0, :, :],
             coord[0, 1, :, :],
