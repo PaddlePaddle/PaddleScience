@@ -41,7 +41,7 @@ MODEL:
 
 # training settings
 TRAIN:
-  lr: 1e-3
+  learning_rate: 1e-3
   batchsize: 1
 
 # evaluation settings
