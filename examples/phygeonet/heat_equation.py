@@ -8,7 +8,7 @@ from omegaconf import DictConfig
 from utils import dfdx
 from utils import dfdy
 from utils import setAxisLabel
-from utils import visualize2D
+from utils import visualize
 
 import ppsci
 from ppsci.utils import logger
@@ -32,6 +32,7 @@ def train(cfg: DictConfig):
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
+    iters_per_epoch = coords.shape[0]
     sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -46,33 +47,30 @@ def train(cfg: DictConfig):
                 },
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "iters_per_epoch": coords.shape[0],
+            "iters_per_epoch": iters_per_epoch,
             "num_workers": 0,
         },
         ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
         name="mRes",
     )
-
     sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
 
     def _transform_out(_input, _output, pad_singleside=pad_singleside):
-        outputV = _output["outputV"]
-        batchSize = outputV.shape[0]
+        output_v = _output["outputV"]
         Jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
         dydxi = _input["dydxis"]
         dxdeta = _input["dxdetas"]
         dydeta = _input["dydetas"]
-        for j in range(batchSize):
-            outputV[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
-            outputV[j, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
-            outputV[j, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
-            outputV[j, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
-            outputV[j, 0, 0, 0] = 0.5 * (outputV[j, 0, 0, 1] + outputV[j, 0, 1, 0])
-            outputV[j, 0, 0, -1] = 0.5 * (outputV[j, 0, 0, -2] + outputV[j, 0, 1, -1])
-        dvdx = dfdx(outputV, dydeta, dydxi, Jinv)
+        output_v[:, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
+        output_v[:, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
+        output_v[:, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
+        output_v[:, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
+        output_v[:, 0, 0, 0] = 0.5 * (output_v[:, 0, 0, 1] + output_v[:, 0, 1, 0])
+        output_v[:, 0, 0, -1] = 0.5 * (output_v[:, 0, 0, -2] + output_v[:, 0, 1, -1])
+        dvdx = dfdx(output_v, dydeta, dydxi, Jinv)
         d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
-        dvdy = dfdy(outputV, dxdxi, dxdeta, Jinv)
+        dvdy = dfdy(output_v, dxdxi, dxdeta, Jinv)
         d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
         continuity = d2vdy2 + d2vdx2
         return {"mRes": paddle.mean(continuity**2)}
@@ -85,11 +83,10 @@ def train(cfg: DictConfig):
         output_dir,
         optimizer,
         epochs=cfg.epochs,
-        iters_per_epoch=coords.shape[0],
+        iters_per_epoch=iters_per_epoch,
+        seed=SEED,
     )
-
     solver.train()
-
     solver.plot_loss_history()
 
 
@@ -110,28 +107,30 @@ def evaluate(cfg: DictConfig):
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
-    outputV = solver.predict({"coords": paddle.to_tensor(coords)})
-    outputV = outputV["outputV"]
-    outputV[0, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
-    outputV[0, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
-    outputV[0, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
-    outputV[0, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
-    outputV[0, 0, 0, 0] = 0.5 * (outputV[0, 0, 0, 1] + outputV[0, 0, 1, 0])
-    outputV[0, 0, 0, -1] = 0.5 * (outputV[0, 0, 0, -2] + outputV[0, 0, 1, -1])
-    CNNVNumpy = outputV[0, 0, :, :]
+    output_v = solver.predict({"coords": paddle.to_tensor(coords)})
+    output_v = output_v["outputV"]
+
+    output_v[0, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
+    output_v[0, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
+    output_v[0, 0, pad_singleside:-pad_singleside, -pad_singleside:] = 1
+    output_v[0, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
+    output_v[0, 0, 0, 0] = 0.5 * (output_v[0, 0, 0, 1] + output_v[0, 0, 1, 0])
+    output_v[0, 0, 0, -1] = 0.5 * (output_v[0, 0, 0, -2] + output_v[0, 0, 1, -1])
+
     ev = paddle.sqrt(
-        paddle.mean((OFV_sb - CNNVNumpy) ** 2) / paddle.mean(OFV_sb**2)
+        paddle.mean((OFV_sb - output_v[0, 0]) ** 2) / paddle.mean(OFV_sb**2)
     ).item()
-    logger.info(ev)
-    outputV = outputV.numpy()
+    logger.info(f"ev: {ev}")
+
+    output_v = output_v.numpy()
     OFV_sb = OFV_sb.numpy()
-    fig1 = plt.figure()
+    fig = plt.figure()
     ax = plt.subplot(1, 2, 1)
-    visualize2D(
+    visualize(
         ax,
         coords[0, 0, 1:-1, 1:-1],
         coords[0, 1, 1:-1, 1:-1],
-        outputV[0, 0, 1:-1, 1:-1],
+        output_v[0, 0, 1:-1, 1:-1],
         "horizontal",
         [0, 1],
     )
@@ -139,7 +138,7 @@ def evaluate(cfg: DictConfig):
     ax.set_title("CNN " + r"$T$")
     ax.set_aspect("equal")
     ax = plt.subplot(1, 2, 2)
-    visualize2D(
+    visualize(
         ax,
         coords[0, 0, 1:-1, 1:-1],
         coords[0, 1, 1:-1, 1:-1],
@@ -150,9 +149,9 @@ def evaluate(cfg: DictConfig):
     setAxisLabel(ax, "p")
     ax.set_aspect("equal")
     ax.set_title("FV " + r"$T$")
-    fig1.tight_layout(pad=1)
-    fig1.savefig("T.png", bbox_inches="tight")
-    plt.close(fig1)
+    fig.tight_layout(pad=1)
+    fig.savefig(f"{cfg.output_dir}/result.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="heat_equation.yaml")

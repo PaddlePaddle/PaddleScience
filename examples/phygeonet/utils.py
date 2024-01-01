@@ -174,7 +174,7 @@ def gen_e2vcg(x):
     return e2vcg.astype("int")
 
 
-def visualize2D(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
+def visualize(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
     xdg0 = np.vstack([x.flatten(order="C"), y.flatten(order="C")])
     udg0 = u.flatten(order="C")
     idx = np.asarray([0, 1, 3, 2])

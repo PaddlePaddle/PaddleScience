@@ -42,7 +42,7 @@ MODEL:
 # training settings
 TRAIN:
   learning_rate: 1e-3
-  batchsize: 1
+  batch_size: 1
 
 # evaluation settings
 EVAL:
