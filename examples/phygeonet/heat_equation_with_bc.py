@@ -396,7 +396,9 @@ def evaluate(cfg: DictConfig):
         plt.close(fig1)
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="conf.yaml")
+@hydra.main(
+    version_base=None, config_path="./conf", config_name="heat_equation_with_bc.yaml"
+)
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
