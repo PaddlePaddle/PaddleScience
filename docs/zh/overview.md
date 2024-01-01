@@ -108,6 +108,7 @@ Utils 模块内部存放了一些适用于多种场景下的工具类、函数�
 | [ppsci.utils.logger](./api/utils/logger.md)| 日志打印模块 |
 | [ppsci.utils.misc](./api/utils/misc.md)| 存放通用函数 |
 | [ppsci.utils.reader](./api/utils/reader.md)| 文件读取模块 |
+| [ppsci.utils.writer](./api/utils/writer.md)| 文件写入模块 |
 | [ppsci.utils.save_load](./api/utils/save_load.md)| 模型参数保存与加载 |
 | [ppsci.utils.symbolic](./api/utils/symbolic.md)| sympy 符号计算功能相关 |
 
