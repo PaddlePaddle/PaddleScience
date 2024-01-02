@@ -39,12 +39,12 @@ nav:
       - 数学(AI for Math):
         - DeepHPMs: zh/examples/deephpms.md
         - DeepONet: zh/examples/deeponet.md
+        - Euler_Beam: zh/examples/euler_beam.md
         - Laplace2D: zh/examples/laplace2d.md
         - Lorenz_transform_physx: zh/examples/lorenz.md
         - PIRBN: zh/examples/pirbn.md
         - Rossler_transform_physx: zh/examples/rossler.md
         - Volterra_IDE: zh/examples/volterra_ide.md
-        - Euler_Beam: zh/examples/euler_beam.md
       - 技术科学(AI for Technology):
         - 流体:
           - AMGNet: zh/examples/amgnet.md
@@ -103,6 +103,7 @@ nav:
         - ppsci.utils.logger: zh/api/utils/logger.md
         - ppsci.utils.misc: zh/api/utils/misc.md
         - ppsci.utils.reader: zh/api/utils/reader.md
+        - ppsci.utils.writer: zh/api/utils/writer.md
         - ppsci.utils.save_load: zh/api/utils/save_load.md
         - ppsci.utils.symbolic: zh/api/utils/symbolic.md
       - ppsci.validate: zh/api/validate.md

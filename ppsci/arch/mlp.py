@@ -66,8 +66,21 @@ class MLP(base.Arch):
         output_dim (Optional[int]): Number of output's dimension. Defaults to None.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
-        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v"), 5, 128)
+        >>> model = ppsci.arch.MLP(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     num_layers=5,
+        ...     hidden_size=128
+        ... )
+        >>> input_dict = {"x": paddle.rand([64, 64, 1]),
+        ...               "y": paddle.rand([64, 64, 1])}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [64, 64, 1]
+        >>> print(output_dict["v"].shape)
+        [64, 64, 1]
     """
 
     def __init__(
