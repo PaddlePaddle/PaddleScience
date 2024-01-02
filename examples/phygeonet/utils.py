@@ -6,7 +6,23 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 
 
-def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
+def dfdx(
+    f: paddle.Tensor,
+    dydeta: paddle.Tensor,
+    dydxi: paddle.Tensor,
+    jinv: paddle.Tensor,
+    h: int = 0.01,
+):
+    """Calculate the derivative of the given function f in the x direction
+    using the form of discrete difference.
+
+    Args:
+        f (paddle.Tensor): The matrix that needs to calculate differentiation.
+        dydeta (paddle.Tensor): The dydeta data.
+        dydxi (paddle.Tensor): The dydxi data.
+        jinv (paddle.Tensor): Jacobian matrix.
+        h (int, optional): Differential interval. Defaults to 0.01.
+    """
     dfdxi_internal = (
         (
             -f[:, :, :, 4:]
@@ -73,11 +89,27 @@ def dfdx(f, dydeta, dydxi, Jinv, h=0.01):
     dfdeta = paddle.concat(
         (dfdeta_low[:, :, 0:2, :], dfdeta_internal, dfdeta_up[:, :, -2:, :]), 2
     )
-    dfdx = Jinv * (dfdxi * dydeta - dfdeta * dydxi)
+    dfdx = jinv * (dfdxi * dydeta - dfdeta * dydxi)
     return dfdx
 
 
-def dfdy(f, dxdxi, dxdeta, Jinv, h=0.01):
+def dfdy(
+    f: paddle.Tensor,
+    dxdxi: paddle.Tensor,
+    dxdeta: paddle.Tensor,
+    jinv: paddle.Tensor,
+    h: int = 0.01,
+):
+    """Calculate the derivative of the given function f in the y direction
+    using the form of discrete difference.
+
+    Args:
+        f (paddle.Tensor): The matrix that needs to calculate differentiation.
+        dxdxi (paddle.Tensor): The dxdxi data.
+        dxdeta (paddle.Tensor): The dxdeta data.
+        jinv (paddle.Tensor): Jacobian matrix.
+        h (int, optional): Differential interval. Defaults to 0.01.
+    """
     dfdxi_internal = (
         (
             -f[:, :, :, 4:]
@@ -145,11 +177,11 @@ def dfdy(f, dxdxi, dxdeta, Jinv, h=0.01):
     dfdeta = paddle.concat(
         (dfdeta_low[:, :, 0:2, :], dfdeta_internal, dfdeta_up[:, :, -2:, :]), 2
     )
-    dfdy = Jinv * (dfdeta * dxdxi - dfdxi * dxdeta)
+    dfdy = jinv * (dfdeta * dxdxi - dfdxi * dxdeta)
     return dfdy
 
 
-def setAxisLabel(ax, type):
+def set_axis_label(ax, type):
     if type == "p":
         ax.set_xlabel(r"$x$")
         ax.set_ylabel(r"$y$")
@@ -160,7 +192,12 @@ def setAxisLabel(ax, type):
         raise ValueError("The axis type only can be reference or physical")
 
 
-def gen_e2vcg(x):
+def gen_e2vcg(x: np.ndarray):
+    """Generate adjacent coordinate indices for each point based on the shape of x.
+
+    Args:
+        x (np.ndarray): Input coordinate array.
+    """
     nelemx = x.shape[1] - 1
     nelemy = x.shape[0] - 1
     nelem = nelemx * nelemy
@@ -171,7 +208,7 @@ def gen_e2vcg(x):
             e2vcg[:, j * nelemx + i] = np.asarray(
                 [j * nnx + i, j * nnx + i + 1, (j + 1) * nnx + i, (j + 1) * nnx + i + 1]
             )
-    return e2vcg.astype("int")
+    return e2vcg.astype("int64")
 
 
 def visualize(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
@@ -200,13 +237,3 @@ def visualize(ax, x, y, u, colorbarPosition="vertical", colorlimit=None):
     ax.set_ylim(np.min(xdg0[1, :]), np.max(xdg0[1, :]))
     cbar = plt.colorbar(polygon_ensemble, orientation=colorbarPosition)
     return ax, cbar
-
-
-def tikzplotlib_fix_ncols(obj):
-    """
-    workaround for matplotlib 3.6 renamed legend's _ncol to _ncols, which breaks tikzplotlib
-    """
-    if hasattr(obj, "_ncols"):
-        obj._ncol = obj._ncols
-    for child in obj.get_children():
-        tikzplotlib_fix_ncols(child)

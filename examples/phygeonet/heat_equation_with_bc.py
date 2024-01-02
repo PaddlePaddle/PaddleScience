@@ -1,14 +1,12 @@
 from os import path as osp
+from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+import utils
 from omegaconf import DictConfig
-from utils import dfdx
-from utils import dfdy
-from utils import setAxisLabel
-from utils import visualize
 
 import ppsci
 from ppsci.utils import logger
@@ -16,11 +14,9 @@ from ppsci.utils import logger
 
 def train(cfg: DictConfig):
     # initiallizer
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
-    pad_singleside = cfg.MODEL.pad_singleside
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
@@ -32,10 +28,9 @@ def train(cfg: DictConfig):
     dydxis = data["dydxis"]
     dxdetas = data["dxdetas"]
     dydetas = data["dydetas"]
-    len_data = cfg.len_data
 
     iters_per_epoch = coords.shape[0]
-    sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
+    sup_constraint_res = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
@@ -52,15 +47,26 @@ def train(cfg: DictConfig):
             "iters_per_epoch": iters_per_epoch,
             "num_workers": 0,
         },
-        ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
-        name="mRes",
+        ppsci.loss.FunctionalLoss(lambda out, label, weight: out["residual"]),
+        name="residual",
     )
-    sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
+    sup_constraint = {sup_constraint_res.name: sup_constraint_res}
 
-    def _transform_out(_input, output_v, pad_singleside=pad_singleside, k=len_data):
-        output_v = output_v["outputV"]
+    def _transform_out(
+        _input: Dict[str, paddle.Tensor],
+        _output: Dict[str, paddle.Tensor],
+        pad_singleside: int = cfg.MODEL.pad_singleside,
+    ):
+        """Calculation residual.
+
+        Args:
+            _input (Dict[str, paddle.Tensor]): The input of the model.
+            _output (Dict[str, paddle.Tensor]): The output of the model.
+            pad_singleside (int, optional): Pad size. Defaults to cfg.MODEL.pad_singleside.
+        """
+        output_v = _output["output_v"]
         batch_size = output_v.shape[0]
-        Jinv = _input["jinvs"]
+        jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
         dydxi = _input["dydxis"]
         dxdeta = _input["dxdetas"]
@@ -75,12 +81,12 @@ def train(cfg: DictConfig):
             ]
             output_v[j, 0, :, -pad_singleside:] = 0
             output_v[j, 0, :, 0:pad_singleside] = Para[j, 0, 0, 0]
-        dvdx = dfdx(output_v, dydeta, dydxi, Jinv)
-        d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
-        dvdy = dfdy(output_v, dxdxi, dxdeta, Jinv)
-        d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
+        dvdx = utils.dfdx(output_v, dydeta, dydxi, jinv)
+        d2vdx2 = utils.dfdx(dvdx, dydeta, dydxi, jinv)
+        dvdy = utils.dfdy(output_v, dxdxi, dxdeta, jinv)
+        d2vdy2 = utils.dfdy(dvdy, dxdxi, dxdeta, jinv)
         continuity = d2vdy2 + d2vdx2
-        return {"mRes": paddle.mean(continuity**2) / k}
+        return {"residual": paddle.mean(continuity**2)}
 
     model.register_output_transform(_transform_out)
     solver = ppsci.solver.Solver(
@@ -90,7 +96,7 @@ def train(cfg: DictConfig):
         optimizer,
         epochs=cfg.epochs,
         iters_per_epoch=iters_per_epoch,
-        seed=SEED,
+        seed=cfg.seed,
     )
 
     solver.train()
@@ -99,8 +105,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     pad_singleside = cfg.MODEL.pad_singleside
     model = ppsci.arch.USCNN(**cfg.MODEL)
@@ -109,17 +114,16 @@ def evaluate(cfg: DictConfig):
     paras = paddle.to_tensor(data["paras"])
     truths = paddle.to_tensor(data["truths"])
     coords = paddle.to_tensor(data["coords"])
-    len_data = cfg.len_data
     solver = ppsci.solver.Solver(
         model,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
 
     paras = paras.reshape([paras.shape[0], 1, paras.shape[1], paras.shape[2]])
-    output_v = solver.predict({"coords": paras})
-    output_v = output_v["outputV"]
-    batchSize = output_v.shape[0]
-    for j in range(batchSize):
+    output = solver.predict({"coords": paras})
+    output_v = output["output_v"]
+    num_sample = output_v.shape[0]
+    for j in range(num_sample):
         # Impose BC
         output_v[j, 0, -pad_singleside:, pad_singleside:-pad_singleside] = output_v[
             j, 0, 1:2, pad_singleside:-pad_singleside
@@ -129,34 +133,34 @@ def evaluate(cfg: DictConfig):
         ]
         output_v[j, 0, :, -pad_singleside:] = 0
         output_v[j, 0, :, 0:pad_singleside] = paras[j, 0, 0, 0]
-    eV = paddle.sqrt(
+
+    error = paddle.sqrt(
         paddle.mean((truths - output_v) ** 2) / paddle.mean(truths**2)
     ).item()
-    logger.info(eV / len_data)
+    logger.info(f"The average error: {error / num_sample}")
     output_vs = output_v.numpy()
-    ParaList = [1, 2, 3, 4, 5, 6, 7]
-    for i in range(len(ParaList)):
+    PARALIST = [1, 2, 3, 4, 5, 6, 7]
+    for i in range(len(PARALIST)):
         truth = truths[i].numpy()
         coord = coords[i].numpy()
         output_v = output_vs[i]
         truth = truth.reshape(1, 1, truth.shape[0], truth.shape[1])
         coord = coord.reshape(1, 2, coord.shape[2], coord.shape[3])
-        logger.info(f"i={i}")
         fig1 = plt.figure()
         xylabelsize = 20
         xytickssize = 20
         titlesize = 20
         ax = plt.subplot(1, 2, 1)
-        _, cbar = visualize(
+        _, cbar = utils.visualize(
             ax,
             coord[0, 0, :, :],
             coord[0, 1, :, :],
             output_v[0, :, :],
             "horizontal",
-            [0, max(ParaList)],
+            [0, max(PARALIST)],
         )
         ax.set_aspect("equal")
-        setAxisLabel(ax, "p")
+        utils.set_axis_label(ax, "p")
         ax.set_title("PhyGeoNet " + r"$T$", fontsize=titlesize)
         ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
         ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
@@ -167,16 +171,16 @@ def evaluate(cfg: DictConfig):
         cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
         cbar.ax.tick_params(labelsize=xytickssize)
         ax = plt.subplot(1, 2, 2)
-        _, cbar = visualize(
+        _, cbar = utils.visualize(
             ax,
             coord[0, 0, :, :],
             coord[0, 1, :, :],
             truth[0, 0, :, :],
             "horizontal",
-            [0, max(ParaList)],
+            [0, max(PARALIST)],
         )
         ax.set_aspect("equal")
-        setAxisLabel(ax, "p")
+        utils.set_axis_label(ax, "p")
         ax.set_title("FV " + r"$T$", fontsize=titlesize)
         ax.set_xlabel(xlabel=r"$x$", fontsize=xylabelsize)
         ax.set_ylabel(ylabel=r"$y$", fontsize=xylabelsize)
@@ -187,7 +191,7 @@ def evaluate(cfg: DictConfig):
         cbar.set_ticks([0, 1, 2, 3, 4, 5, 6, 7])
         cbar.ax.tick_params(labelsize=xytickssize)
         fig1.tight_layout(pad=1)
-        fig1.savefig(f"{cfg.output_dir}/Para{i}T.png", bbox_inches="tight")
+        fig1.savefig(osp.join(cfg.output_dir, f"Para{i}T.png"), bbox_inches="tight")
         plt.close(fig1)
 
 

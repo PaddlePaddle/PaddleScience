@@ -29,12 +29,11 @@ output_dir: ${hydra:run.dir}
 r: 0.5
 R: 1
 dtheta: 0
-len_data: 2
 epochs: 2000
 # model settings
 MODEL:
   input_keys: [ 'coords' ]
-  output_keys: [ 'outputV' ]
+  output_keys: [ 'output_v' ]
   hidden_size: [16, 32, 16]
   h: 0.01
   ny: 276

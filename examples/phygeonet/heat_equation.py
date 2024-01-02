@@ -1,14 +1,12 @@
 from os import path as osp
+from typing import Dict
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+import utils
 from omegaconf import DictConfig
-from utils import dfdx
-from utils import dfdy
-from utils import setAxisLabel
-from utils import visualize
 
 import ppsci
 from ppsci.utils import logger
@@ -16,8 +14,7 @@ from ppsci.utils import logger
 
 def train(cfg: DictConfig):
     # initiallizer
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
     data = np.load(cfg.data_dir)
     coords = data["coords"]
@@ -27,13 +24,12 @@ def train(cfg: DictConfig):
     dxdetas = data["dxdetas"]
     dydetas = data["dydetas"]
 
-    pad_singleside = cfg.MODEL.pad_singleside
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     iters_per_epoch = coords.shape[0]
-    sup_constraint_mres = ppsci.constraint.SupervisedConstraint(
+    sup_constraint_res = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
                 "name": "NamedArrayDataset",
@@ -50,14 +46,25 @@ def train(cfg: DictConfig):
             "iters_per_epoch": iters_per_epoch,
             "num_workers": 0,
         },
-        ppsci.loss.FunctionalLoss(lambda out, label, weught: out["mRes"]),
-        name="mRes",
+        ppsci.loss.FunctionalLoss(lambda out, label, weight: out["residual"]),
+        name="residual",
     )
-    sup_constraint = {sup_constraint_mres.name: sup_constraint_mres}
+    sup_constraint = {sup_constraint_res.name: sup_constraint_res}
 
-    def _transform_out(_input, _output, pad_singleside=pad_singleside):
-        output_v = _output["outputV"]
-        Jinv = _input["jinvs"]
+    def _transform_out(
+        _input: Dict[str, paddle.Tensor],
+        _output: Dict[str, paddle.Tensor],
+        pad_singleside: int = cfg.MODEL.pad_singleside,
+    ):
+        """Calculation residual.
+
+        Args:
+            _input (Dict[str, paddle.Tensor]): The input of the model.
+            _output (Dict[str, paddle.Tensor]): The output of the model.
+            pad_singleside (int, optional): Pad size. Defaults to cfg.MODEL.pad_singleside.
+        """
+        output_v = _output["output_v"]
+        jinv = _input["jinvs"]
         dxdxi = _input["dxdxis"]
         dydxi = _input["dydxis"]
         dxdeta = _input["dxdetas"]
@@ -68,23 +75,22 @@ def train(cfg: DictConfig):
         output_v[:, 0, pad_singleside:-pad_singleside, 0:pad_singleside] = 1
         output_v[:, 0, 0, 0] = 0.5 * (output_v[:, 0, 0, 1] + output_v[:, 0, 1, 0])
         output_v[:, 0, 0, -1] = 0.5 * (output_v[:, 0, 0, -2] + output_v[:, 0, 1, -1])
-        dvdx = dfdx(output_v, dydeta, dydxi, Jinv)
-        d2vdx2 = dfdx(dvdx, dydeta, dydxi, Jinv)
-        dvdy = dfdy(output_v, dxdxi, dxdeta, Jinv)
-        d2vdy2 = dfdy(dvdy, dxdxi, dxdeta, Jinv)
+        dvdx = utils.dfdx(output_v, dydeta, dydxi, jinv)
+        d2vdx2 = utils.dfdx(dvdx, dydeta, dydxi, jinv)
+        dvdy = utils.dfdy(output_v, dxdxi, dxdeta, jinv)
+        d2vdy2 = utils.dfdy(dvdy, dxdxi, dxdeta, jinv)
         continuity = d2vdy2 + d2vdx2
-        return {"mRes": paddle.mean(continuity**2)}
+        return {"residual": paddle.mean(continuity**2)}
 
     model.register_output_transform(_transform_out)
-    output_dir = cfg.output_dir
     solver = ppsci.solver.Solver(
         model,
         sup_constraint,
-        output_dir,
+        cfg.output_dir,
         optimizer,
         epochs=cfg.epochs,
         iters_per_epoch=iters_per_epoch,
-        seed=SEED,
+        seed=cfg.seed,
     )
     solver.train()
     solver.plot_loss_history()
@@ -92,13 +98,12 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     data = np.load(cfg.data_dir)
     coords = data["coords"]
 
-    OFV_sb = paddle.to_tensor(data["OFV_sb"])
+    ofv_sb = paddle.to_tensor(data["OFV_sb"])
 
     ## create model
     pad_singleside = cfg.MODEL.pad_singleside
@@ -108,7 +113,7 @@ def evaluate(cfg: DictConfig):
         pretrained_model_path=cfg.EVAL.pretrained_model_path,  ### the path of the model
     )
     output_v = solver.predict({"coords": paddle.to_tensor(coords)})
-    output_v = output_v["outputV"]
+    output_v = output_v["output_v"]
 
     output_v[0, 0, -pad_singleside:, pad_singleside:-pad_singleside] = 0
     output_v[0, 0, :pad_singleside, pad_singleside:-pad_singleside] = 1
@@ -118,15 +123,15 @@ def evaluate(cfg: DictConfig):
     output_v[0, 0, 0, -1] = 0.5 * (output_v[0, 0, 0, -2] + output_v[0, 0, 1, -1])
 
     ev = paddle.sqrt(
-        paddle.mean((OFV_sb - output_v[0, 0]) ** 2) / paddle.mean(OFV_sb**2)
+        paddle.mean((ofv_sb - output_v[0, 0]) ** 2) / paddle.mean(ofv_sb**2)
     ).item()
     logger.info(f"ev: {ev}")
 
     output_v = output_v.numpy()
-    OFV_sb = OFV_sb.numpy()
+    ofv_sb = ofv_sb.numpy()
     fig = plt.figure()
     ax = plt.subplot(1, 2, 1)
-    visualize(
+    utils.visualize(
         ax,
         coords[0, 0, 1:-1, 1:-1],
         coords[0, 1, 1:-1, 1:-1],
@@ -134,19 +139,19 @@ def evaluate(cfg: DictConfig):
         "horizontal",
         [0, 1],
     )
-    setAxisLabel(ax, "p")
+    utils.set_axis_label(ax, "p")
     ax.set_title("CNN " + r"$T$")
     ax.set_aspect("equal")
     ax = plt.subplot(1, 2, 2)
-    visualize(
+    utils.visualize(
         ax,
         coords[0, 0, 1:-1, 1:-1],
         coords[0, 1, 1:-1, 1:-1],
-        OFV_sb[1:-1, 1:-1],
+        ofv_sb[1:-1, 1:-1],
         "horizontal",
         [0, 1],
     )
-    setAxisLabel(ax, "p")
+    utils.set_axis_label(ax, "p")
     ax.set_aspect("equal")
     ax.set_title("FV " + r"$T$")
     fig.tight_layout(pad=1)
