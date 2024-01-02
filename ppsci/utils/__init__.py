@@ -35,6 +35,7 @@ from ppsci.utils.save_load import load_pretrain
 from ppsci.utils.save_load import save_checkpoint
 from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
+from ppsci.utils.writer import save_tecplot_file
 
 __all__ = [
     "AttrDict",
@@ -52,6 +53,7 @@ __all__ = [
     "load_vtk_file",
     "load_vtk_with_time_file",
     "save_csv_file",
+    "save_tecplot_file",
     "dynamic_import_to_globals",
     "run_check",
     "run_check_mesh",
