@@ -17,6 +17,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+import paddle
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
 from ppsci.solver import printer
@@ -123,6 +124,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
+        if solver.benchmark_flag:
+            paddle.device.synchronize()
         batch_cost += time.perf_counter() - batch_tic
 
         # update and log training information
@@ -130,7 +133,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
@@ -234,7 +237,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()

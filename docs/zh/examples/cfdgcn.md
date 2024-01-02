@@ -1,336 +1,231 @@
 # Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction
 
-<a href="https://aistudio.baidu.com/projectdetail/5216848?channel=0&channelType=0&sUid=438690&shared=1&ts=1699275733220" class="md-button md-button--primary" style>AI Studio快速体验</a>
+<a href="https://aistudio.baidu.com/projectdetail/7127446" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 简介
+=== "模型训练命令"
 
-本项目基于paddle框架复现，论文主要点如下：
+    ``` sh
+    # only linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
+    unzip data.zip
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+    tar -xvf meshes.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
+    tar -zxvf SU2Bin.tgz
 
-* 作者构建了针对非均匀网格的GCN网络结构。
-* 作者在模型中嵌入了可微分的CFD求解器。
+    # set BATCH_SIZE = number of cpu cores
+    export BATCH_SIZE=4
 
-关键技术要点：
+    # prediction experiments
+    mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
+      TRAIN.batch_size=$((BATCH_SIZE)) > /dev/null
 
-* 转换torch_geometric为paddle的pgl图计算库，并实现Dataloader等方法的重新实现，可作为转换样例参考；
-* 实现torch_geometric中的knn_interpolate方法。通过paddle api实现，无需再使用torch_geometric组件完成计算；
-* 实现SU2项目和paddle的结合使用，通过MPI加速，加快计算速度，减少训练时间。
+    # generalization experiments
+    mpirun -np $((BATCH_SIZE+1)) python cfdgcn.py \
+      TRAIN.batch_size=$((BATCH_SIZE)) \
+      TRAIN_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_train" \  
+      TRAIN_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine. su2" \
+      EVAL_DATA_DIR="./data/NACA0012_machsplit_noshock/outputs_test" \
+      EVAL_MESH_GRAPH_PATH="./data/NACA0012_machsplit_noshock/mesh_fine.su2" \
+      > /dev/null
+    ```
 
-实验结果要点：
+## 1. 背景简介
 
-* 成功复现CFDGCN网络，并能够完成模型训练与预测；
-* 模型精度均优于论文中报告结果。
+近年来，深度学习在计算机视觉和自然语言处理方面的成功应用，促使人们探索人工智能在科学计算领域的应用，尤其是在计算流体力学(CFD)领域的应用。
 
-论文信息：
+流体是非常复杂的物理系统，流体的行为由 Navier-Stokes 方程控制。基于网格的有限体积或有限元模拟方法是 CFD 中广泛使用的数值方法。计算流体动力学研究的物理问题往往非常复杂，通常需要大量的计算资源才能求出问题的解，因此需要在求解精度和计算成本之间进行权衡。为了进行数值模拟，计算域通常被网格离散化，由于网格具有良好的几何和物理问题表示能力，同时和图结构相契合，所以这篇文章的作者使用图神经网络，通过训练 CFD 仿真数据，构建了一种数据驱动模型来进行流场预测。
 
-* Filipe de Avila Belbute-Peres, Thomas D. Economon, and J. Zico Kolter. 2020. Combining differentiable PDE solvers and graph neural networks for fluid flow prediction. In Proceedings of the 37th International Conference on Machine Learning (ICML'20). JMLR.org, Article 224, 2402–2411.
+## 2. 问题定义
 
-### 1.1 模型结构
+作者提出了一种基于图神经网络的 CFD 计算模型，称为 CFD-GCN (Computational fluid dynamics - Graph convolution network)，该模型是一种混合的图神经网络，它将传统的图卷积网络与粗分辨率的 CFD 模拟器相结合，不仅可以大幅度加速 CFD 预测，还可以很好地泛化到新的场景，与此同时，模型的预测效果远远优于单独的粗分辨率 CFD 的模拟效果。
 
-![](https://ai-studio-static-online.cdn.bcebos.com/d3c10c571f68481888cbe212b5019fce9806ef52f8bc4eeeb4c2349c6072fd4a)
+下图为该方法的网络结构图，网络有两个主要部件：GCN 图神经网络以及 SU2 流体模拟器。网络在两个不同的图上运行，两个图分别是细网格的图和粗网格的图。网络首先在粗网格上运行 CFD 模拟，同时使用 GCN 处理细网格的图。然后，对模拟结果进行上采样，并将结果与 GCN 的中间输出连接起来。最后，模型将额外的 GCN 层应用于这些连接特征，预测所需的输出值。
 
-## 2. 数据集
+![CFDGCN_overview](https://ai-studio-static-online.cdn.bcebos.com/d3c10c571f68481888cbe212b5019fce9806ef52f8bc4eeeb4c2349c6072fd4a)
 
-### 2.1 数据下载使用
+## 3. 问题求解
 
-数据集为作者提供，可通过[此处链接](https://github.com/locuslab/cfd-gcn)进行下载。
+接下来开始讲解如何将问题一步一步地转化为 PaddleScience 代码，用深度学习的方法求解该问题。
+为了快速理解 PaddleScience，接下来仅对模型构建、方程构建、计算域构建等关键步骤进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
-* 数据集aistudio地址: https://aistudio.baidu.com/aistudio/datasetdetail/184778
-* mesh数据下载
+!!! info "注意事项"
 
-```shell
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
-tar -xf meshes.tar
+    本案例运行前需通过 `pip install pgl==2.2.6 mpi4py` 命令，安装 [**P**addle **G**raph **L**earning](https://github.com/PaddlePaddle/PGL) 图学习工具和 [Mpi4py](https://github.com/pyamg/pyamg) MPI python接口库。
+
+    由于新版本的 Paddle 依赖的 python 版本较高，`pgl` 与 `mpi4py` 的安装可能会出现问题，建议使用[AI Studio快速体验](https://aistudio.baidu.com/projectdetail/7127446)，项目中已经配置好运行环境。
+
+### 3.1 数据集下载
+
+该案例使用的机翼数据集 Airfoil来自 de Avila Belbute-Peres 等人，其中翼型数据集采用 NACA0012 翼型，包括 train, test 以及对应的网格数据 mesh_fine；圆柱数据集是原作者利用软件计算的 CFD 算例。
+
+执行以下命令，下载并解压数据集。
+
+``` shell
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
+unzip data.zip
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+tar -xvf meshes.tar
 ```
 
-## 3. 环境依赖
+### 3.2 SU2 预编译库安装
 
-本项目实现了GCN模型和CFDGCN模型两种模型。
+SU2 流体模拟器以预编译库的形式嵌入在网络中，我们需要下载并设置环境变量。
 
-* GCN模型：仅需要GPU计算资源即可完整运行（轻微修改代码，后续会说明）；
-* CFDGCN模型：通过MPI调用SU2进行加速计算，需同时使用CPU和GPU资源。
+执行以下命令，下载并解压预编译库。
 
-### 3.1 硬件
-
-* 模型：gpu memory >= 6GB
-
-### 3.2 框架
-
-* paddle == 2.4.1
-* pgl == 2.2.4
-* matplotlib
-* h5py
-* scipy
-* scikit-learn
-* mpi4py (使用pip安装)
-
-### 3.3 本地安装
-
-```bash
-conda create -n paddle_env python=3.8
-conda install paddlepaddle-gpu==2.4.1 cudatoolkit=11.6 -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/ -c conda-forge
-conda install scipy h5py matplotlib scikit-learn
-pip install mpi4py
+``` shell
+wget -nc -P https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
+tar -zxvf SU2Bin.tgz
 ```
 
-## 4. 快速开始
+预编译库下载完成后，设置 SU2 的环境变量。
 
-### 4.1 GCN模型运行
-
-在main.py中注释
-
-```python
-# import su2paddle.su2_function_mpi as su2_function_mpi (line12)
-
-# su2_function_mpi.activate_su2_mpi(remove_temp_files=True) (line368)
-```
-
-在models.py中注释
-
-```python
-# import su2paddle (line7)
-```
-
-### 4.2 AIStudio上运行
-
-1. 从data中找到SU2Bin.tgz, 解压到本环境目录下，/home/aistudio/SU2Bin
-
-2. 从CFDGCN文件夹解压数据data.tzg，目录结构见5.代码结构与详细说明。
-
-3. 本项目推荐使用命令行进行运行。本项目代码同[PaddlePaddle/PaddleScience](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution)中相同代码，可任选一处运行。
-
-    * GCN模型推荐在aistudio中运行，仅需要GPU资源。
-
-    * CFDGCN模型推荐在本地进行运行或者选择 v100 32g版本环境（可使用4个cpu core）
-
-```bash
-# 此处运行命令无需修改代码即可运行
-
-export BATCH_SIZE=16 # batchsize大小和mpi调用cpu core数量相关，如需在aistudio运行，请调小
-
-export SU2_RUN="/home/aistudio/SU2Bin"
-export SU2_HOME="/home/aistudio/SU2Bin"
+``` shell
+export SU2_RUN=/absolute_path/to/SU2Bin/
+export SU2_HOME=/absolute_path/to/SU2Bin/
 export PATH=$PATH:$SU2_RUN
 export PYTHONPATH=$PYTHONPATH:$SU2_RUN
-
-# Prediction experiments
-# for CFDGCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_interp > /dev/null
-#for GCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate/ -e gcn_interp
-
-# Generalization experiments
-# for CFDGCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_gen > /dev/null
-# for GCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
 ```
 
-### 4.3 本地运行
+### 3.3 模型构建
 
-* 下载数据集文件和预编译SU2Bin文件, 此部分参考aistudio部分
-* 从github下载本项目代码，[PaddlePaddle/PaddleScience](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution)
-* 运行
+在本问题中，我们使用神经网络 `CFDGCN` 作为模型，其接收图结构数据，输出预测结果。
 
-```bash
-cd CFDGCN-paddle # or cd 3D
-export BATCH_SIZE=16 # batchsize大小和mpi调用cpu core数量相关，如需在aistudio运行，请调小
-
-export SU2_RUN="/home/aistudio/SU2Bin"
-export SU2_HOME="/home/aistudio/SU2Bin"
-export PATH=$PATH:$SU2_RUN
-export PYTHONPATH=$PYTHONPATH:$SU2_RUN
-
-# Prediction experiments
-# for CFDGCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_interp > /dev/null
-# for GCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_interpolate/ -e gcn_interp
-
-# Generalization experiments
-# for CFDGCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --su2-config coarse.cfg --model cfd_gcn --hidden-size 512 --num-layers 6 --num-end-convs 3 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock --coarse-mesh meshes/mesh_NACA0012_xcoarse.su2 -e cfd_gcn_gen > /dev/null
-# for GCN
-mpirun -np $((BATCH_SIZE+1)) --oversubscribe python main.py --batch-size $BATCH_SIZE --gpus 1 -dw 1 --model gcn --hidden-size 512 --num-layers 6 --optim adam -lr 5e-4 --data-dir data/NACA0012_machsplit_noshock/ -e gcn_gen
+``` py linenums="77"
+--8<--
+examples/cfdgcn/cfdgcn.py:77:82
+--8<--
 ```
 
-## 5. 项目结构与实现细节
+为了在计算时，准确快速地访问具体变量的值，我们在这里指定网络模型的输入变量名是 `("input", )`，输出变量名是 `("pred", )`，这些命名与后续代码保持一致。
 
-```txt
-├── coarse.cfg # SU2配置文件
-├── common.py # paddle未实现api补充
-├── data # 数据集
-│   ├── generate_data
-│   ├── NACA0012_interpolate
-│   ├── NACA0012_machsplit_noshock
-│   ├── NACA0012_noshock
-│   ├── NACA0012_noshock_strong
-│   ├── NACA4412_interpolate
-│   ├── NACA4412_machsplit_noshock
-│   ├── RAE2822_interpolate
-│   └── RAE2822_machsplit_noshock
-├── data.py # dataset和dataloader
-├── fine.cfg # SU2配置文件
-├── main.py # 训练文件
-├── meshes # 基础mesh数据，su2格式
-│   ├── mesh_NACA0012_coarse.su2
-│   ├── mesh_NACA0012_fine.su2
-│   ├── mesh_NACA0012_xcoarse.su2
-│   ├── mesh_NACA4412_fine.su2
-│   ├── mesh_NACA4412_lessfine.su2
-│   ├── mesh_NACA4412_xcoarse.su2
-│   ├── mesh_RAE2822_fine.su2
-│   └── mesh_RAE2822_xcoarse.su2
-├── mesh_utils.py # mesh数据处理
-├── models.py # 模型文件
-├── run.sh
-└── su2paddle # su2与paddle相关联文件
-    ├── __init__.py
-    ├── __pycache__
-    ├── su2_function_mpi.py
-    ├── su2_function.py
-    └── su2_numpy.py
+### 3.4 约束构建
+
+在本案例中，我们使用监督数据集对模型进行训练，因此需要构建监督约束。
+
+在定义约束之前，我们需要指定数据集的路径等相关配置，将这些信息存放到对应的 YAML 文件中，如下所示。
+
+``` yaml linenums="28"
+--8<--
+examples/cfdgcn/conf/cfdgcn.yaml:28:34
+--8<--
 ```
 
-### 5.1 使用pgl替换torch_geometric
+接着定义训练损失函数的计算过程，如下所示。
 
-#### 5.1.1 Dataset与Dataloader修改
-
-```python
-# 此处来自pgl官方代码说明（Dataset和Dataloader使用）
-from pgl.utils.data import Dataset
-from pgl.utils.data.dataloader import Dataloader
-class MyDataset(Dataset):
-    def __init__(self):
-        self.data = list(range(0, 40))
-    def __getitem__(self, idx):
-        return self.data[idx]
-    def __len__(self):
-        return len(self.data)
-
-def collate_fn(batch_examples):
-    inputs = np.array(batch_examples, dtype="int64")
-    return inputs
-
-dataset = MyDataset()
-loader = Dataloader(dataset,
-                    batch_size=3,
-                    drop_last=False,
-                    shuffle=True,
-                    num_workers=4,
-                    collate_fn=collate_fn) # collate_fn：当loader拿到所有batch smaples后的处理操作
-for batch_data in loader:
-    print(batch_data)
+``` py linenums="31"
+--8<--
+examples/cfdgcn/cfdgcn.py:31:36
+--8<--
 ```
 
-缺点：此部分文档没有说明图数据的调用与处理方式，并且图数据构建后不存在.batch属性，与torch_geometric用法不一致，导致复现困难。
+最后构建监督约束，如下所示。
 
-此处给出torch_geometric对GCN实现的说明：
-
-1. 构建大图数据，即多图合一。
-2. 通过batch属性确定大图数据的其中一个图，进行GCN计算
-3. 将每个batch数据计算后数据合并输出
-
-因为pgl的dataloader返回的batch_data为[g1, g2, g3, ...]的list，由此我们不再需要batch属性进行图数据标识，只需要将单个图输入后得到输出即可，本模型中使用for循环进行处理，如下：
-
-```python
-for graph in graphs:
-    x = graph.node_feat["feature"]
-    ......
-    for i, conv in enumerate(self.convs[:-1]):
-        x = conv(graph, x)
-        x = F.relu(x)
+``` py linenums="58"
+--8<--
+examples/cfdgcn/cfdgcn.py:58:84
+--8<--
 ```
 
-, 最后的x即为输出结果。
+### 3.5 超参数设定
 
-#### 5.1.2 knn_interpolate方法实现
+设置训练轮数等参数，如下所示。
 
-计算方法如下（计算方式与torch_geometric相同）：
-
-$\mathbf{f}(y) = \frac{\sum_{i=1}^k w(x_i) \mathbf{f}(x_i)}{\sum_{i=1}^k w(x_i)} \textrm{, where } w(x_i) = \frac{1}{d(\mathbf{p}(y), \mathbf{p}(x_i))^2}$
-
-```python
-#param features: [353，3]
-#param coarse_nodes: [353, 2]
-#param fine_nodes: [6684, 2]
-
-coarse_nodes_input = paddle.repeat_interleave(coarse_nodes.unsqueeze(0), fine_nodes.shape[0], 0)  # [6684,352,2]
-fine_nodes_input = paddle.repeat_interleave(fine_nodes.unsqueeze(1), coarse_nodes.shape[0], 1)  # [6684,352,2]
-
-dist_w = 1.0 / (paddle.norm(x=coarse_nodes_input - fine_nodes_input, p=2, axis=-1) + 1e-9)  # [6684,352]
-knn_value, knn_index = paddle.topk(dist_w, k=3, largest=True)  # [6684,3],[6684,3]
-
-weight = knn_value.unsqueeze(-2)
-features_input = features[knn_index]
-
-output = paddle.bmm(weight, features_input).squeeze(-2) / paddle.sum(knn_value, axis=-1, keepdim=True)
+``` yaml linenums="50"
+--8<--
+examples/cfdgcn/conf/cfdgcn.yaml:50:56
+--8<--
 ```
 
-### 5.2 SU2项目和paddle的结合使用
+### 3.6 优化器构建
 
-SU2模型为预编译模型，具体编译过程参考：https://github.com/locuslab/cfd-gcn/Dockerfile
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并使用固定的 `5e-4` 作为学习率。
 
-本项目提供预编译可使用版本，目录为/home/aistudio/SU2Bin，CFDGCN/su2paddle为SU2预编译版本与paddle连接文件，其中构建了MPI多线程计算方式，将batch_data的每个item分布式计算，加快计算速度。
-
-使用方式如下：
-模型引用：
-
-```python
-os.environ['SU2_RUN'] = '/home/aistudio/SU2Bin'
-sys.path.append('/home/aistudio/SU2Bin')
+``` py linenums="96"
+--8<--
+examples/cfdgcn/cfdgcn.py:96:97
+--8<--
 ```
 
-模型构建：
+### 3.7 评估器构建
 
-```python
-self.su2 = SU2Module(config_file, mesh_file=self.mesh_file) # 参考CFDGCN/model.py line 97
+在训练过程中通常会按一定轮数间隔，用验证集(测试集)评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器，构建过程与 [约束构建](#34) 类似，只需把数据目录改为测试集的目录，并在配置文件中设置 `EVAL.batch_size=1` 即可。
+
+``` py linenums="100"
+--8<--
+examples/cfdgcn/cfdgcn.py:100:123
+--8<--
 ```
 
-模型调用：
+评估指标为预测结果和真实结果的 RMSE 值，因此需自定义指标计算函数，如下所示。
 
-```python
-batch_y = self.su2(nodes_input[..., 0], nodes_input[..., 1],
-                   aoa_input[..., None], mach_or_reynolds_input[..., None])
-
-# nodes_input[..., 0] =>[batch_size, node_number] 起始点
-# nodes_input[..., 1] =>[batch_size, node_number] 终止点
-# aoa_input[..., None] =>[batch_size, 1]
-# mach_or_reynolds_input[..., None] =>[batch_size, 1]
-
-# batch_y =>list [batch_size, node_number] * 3
+``` py linenums="39"
+--8<--
+examples/cfdgcn/cfdgcn.py:39:48
+--8<--
 ```
 
-## 6. 复现结果
+评估指标为预测结果和真实结果的 RMSE 值，因此需自定义指标计算函数，如下所示。
 
-### 6.1 RMSE对比
+### 3.8 模型训练
 
-| 模型/指标        | INTERPOLATION (RMSE) | GENERALIZATION (RMSE) |
-|----------------|----------------------|-----------------------|
-| CFD-GCN （原论文） | 1.8 * 10^-2          | 5.4 * 10^-2           |
-| CFD-GCN （复现）   | 1.7 * 10^-2          | 5.3 * 10^-2           |
-| GCN （原论文）     | 1.4 * 10^-2          | 9.5 * 10^-2           |
-| GCN （复现）       | 1.1 * 10^-2          | 9.4 * 10^-2           |
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-### 6.2 可视化展示
+``` py linenums="120"
+--8<--
+examples/cfdgcn/cfdgcn.py:126:140
+--8<--
+```
 
-Pred:
-![](https://ai-studio-static-online.cdn.bcebos.com/1c9624e5d9714c4488510d74b361b44b67087f37f7074e8dbf290772ca2f5437)
+### 3.8 结果可视化
 
-True:
-![](https://ai-studio-static-online.cdn.bcebos.com/a0cc2fa767434f9e843c158d725d6a9c6e1be0d92dde4a2395848f73658c827a)
+训练完毕之后程序会对测试集中的数据进行预测，并以图片的形式对结果进行可视化，如下所示。
 
-## 7. 模型信息
+``` py linenums="145"
+--8<--
+examples/cfdgcn/cfdgcn.py:145:157
+--8<--
+```
 
-| 信息                      | 说明                                                                  |
-|---------------------------|-----------------------------------------------------------------------|
-| 发布者                    | 朱卫国 (DrownFish19)                                                  |
-| 发布时间                  | 2023.01                                                               |
-| 框架版本                  | paddle 2.4.1                                                          |
-| 支持硬件                  | GPU、CPU                                                               |
-| 预训练模型训练时间 (V100) | GCN (1-2h) CFDGCN(3-6h)                                               |
-| aistudio                  | [notebook](https://aistudio.baidu.com/aistudio/projectdetail/5216848) |
+## 4. 完整代码
 
-## 8. 参考资料
+``` py linenums="1" title="cfdgcn.py"
+--8<--
+examples/cfdgcn/cfdgcn.py
+--8<--
+```
+
+## 5. 结果展示
+
+下方展示了模型对计算域中每个点的压力$p(x,y)$、x(水平)方向流速$u(x,y)$、y(垂直)方向流速$v(x,y)$的预测结果与参考结果。
+
+=== "预测实验"
+
+    <figure markdown>
+        ![Airfoil_0_vec_x](https://ai-studio-static-online.cdn.bcebos.com/e8670d7f82124b5cbab784a6c182f19ed4d892ee95c54127879a37021dbc518d){ loading=lazy }
+        <figcaption>左：预测 x 方向流速 p，右：实际 x 方向流速</figcaption>
+        ![Airfoil_0_p](https://ai-studio-static-online.cdn.bcebos.com/4cbf4b4b35a54d629e9d19dbfe250a215f1c72cf25454769be81b4f9c2132577){ loading=lazy }
+        <figcaption>左：预测压力 p，右：实际压力 p</figcaption>
+        ![Airfoil_0_vec_y](https://ai-studio-static-online.cdn.bcebos.com/41241506b6824de39a65a9ff2071b2b2aa425407d9d445b98cc6e0b35e0f6fcd){ loading=lazy }
+        <figcaption>左：预测y方向流速 p，右：实际 y 方向流速</figcaption>
+    </figure>
+
+=== "泛化实验"
+
+    <figure markdown>
+        ![Airfoil_0_vec_x](https://ai-studio-static-online.cdn.bcebos.com/b2f0755b34904c31a16136a2124c275f9e98734a824c4b38a87ade94e6f3f4d6){ loading=lazy }
+        <figcaption>左：预测 x 方向流速 p，右：实际 x 方向流速</figcaption>
+        ![Airfoil_0_p](https://ai-studio-static-online.cdn.bcebos.com/830e8908abe74380b6b438f4cf51cd4a2c16e96d330e4afc884ec6502e00a387){ loading=lazy }
+        <figcaption>左：预测压力 p，右：实际压力 p</figcaption>
+        ![Airfoil_0_vec_y](https://ai-studio-static-online.cdn.bcebos.com/e7b585aaf4cd48eea6f48c907437e75fd7811a8bbc08441d858f8bf982ab1607){ loading=lazy }
+        <figcaption>左：预测y方向流速 p，右：实际 y 方向流速</figcaption>
+    </figure>
+
+可以看到模型预测结果与真实结果基本一致，模型泛化效果良好。
+
+## 6. 参考文献
 
 * [Combining Differentiable PDE Solvers and Graph Neural Networks for Fluid Flow Prediction](https://arxiv.org/abs/2007.04439)
 * [locuslab/cfd-gcnCFDGCN](https://github.com/locuslab/cfd-gcn)
+* [CFDGCN - AIStudio](https://aistudio.baidu.com/projectdetail/5216848)

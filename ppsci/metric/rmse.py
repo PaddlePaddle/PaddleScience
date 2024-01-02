@@ -41,8 +41,18 @@ class RMSE(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.RMSE()
+        >>> import paddle
+        >>> from ppsci.metric import RMSE
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> loss = RMSE()
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.31462741), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.96953595)}
     """
 
     def __init__(self, keep_batch: bool = False):
