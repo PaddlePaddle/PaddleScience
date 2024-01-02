@@ -92,7 +92,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
 
         for i, key in enumerate(value_keys):
             _value_t: np.ndarray = value[st:ed, i]
-            a[i][t].scatter(
+            a[i][t].plot(
                 coord_t,
                 _value_t,
                 color=cnames[i],
