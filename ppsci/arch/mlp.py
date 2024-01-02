@@ -79,10 +79,8 @@ class MLP(base.Arch):
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
         [64, 64, 1]
-        >>> print(output_dict["u"]) # doctest: +SKIP
         >>> print(output_dict["v"].shape)
         [64, 64, 1]
-        >>> print(output_dict["v"]) # doctest: +SKIP
     """
 
     def __init__(

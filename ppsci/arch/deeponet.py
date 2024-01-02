@@ -66,7 +66,6 @@ class DeepONet(base.Arch):
         >>> output_dict = model(input_dict)
         >>> print(output_dict["G"].shape)
         [200, 1]
-        >>> print(output_dict["G"]) # doctest: +SKIP
     """
 
     def __init__(
