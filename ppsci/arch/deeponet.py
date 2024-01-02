@@ -51,6 +51,7 @@ class DeepONet(base.Arch):
         use_bias (bool, optional): Whether to add bias on predicted G(u)(y). Defaults to True.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
         >>> model = ppsci.arch.DeepONet(
         ...     "u", "y", "G",
@@ -60,6 +61,11 @@ class DeepONet(base.Arch):
         ...     branch_activation="relu", trunk_activation="relu",
         ...     use_bias=True,
         ... )
+        >>> input_dict = {"u": paddle.rand([200, 100]),
+        ...               "y": paddle.rand([200, 1])}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["G"].shape)
+        [200, 1]
     """
 
     def __init__(
