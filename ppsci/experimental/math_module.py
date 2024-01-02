@@ -456,9 +456,9 @@ def trapezoid_integrate(
         Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
             [4. , 16.])
     """
-    if mode not in ["sum", "cumsum"]:
-        raise ValueError(f"type should be 'sum' or 'cumsum', but got {mode}")
     if mode == "sum":
         return paddle.trapezoid(y, x, dx, axis)
     elif mode == "cumsum":
         return paddle.cumulative_trapezoid(y, x, dx, axis)
+    else:
+        raise ValueError(f'mode should be "sum" or "cumsum", but got {mode}')
