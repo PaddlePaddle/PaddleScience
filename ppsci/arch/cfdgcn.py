@@ -201,6 +201,23 @@ class CFDGCN(nn.Layer):
         hidden_channel (int, optional): Number of channels of hidden layer. Defaults to 512.
         out_channel (int, optional): Number of channels of output. Defaults to 3.
         su2_module (Optional[Callable]): SU2Module Object. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> import su2paddle # doctest: +SKIP
+        >>> model = ppsci.arch.CFDGCN(
+        ...     input_keys=("input"),
+        ...     output_keys=("pred"),
+        ...     config_file="/path/to/file.cfg",
+        ...     coarse_mesh="/path/to/file.su2",
+        ...     process_sim=None,
+        ...     freeze_mesh=False,
+        ...     num_convs=6,
+        ...     num_end_convs=3,
+        ...     hidden_channel=512,
+        ...     out_channel=3,
+        ...     su2_module=su2paddle.SU2Module,
+        ... ) # doctest: +SKIP
     """
 
     def __init__(

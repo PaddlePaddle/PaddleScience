@@ -61,6 +61,7 @@ nav:
           - ShockWave: zh/examples/shock_wave.md
           - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
+          - PhyGeoNet: zh/examples/phygeonet.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -102,6 +103,7 @@ nav:
         - ppsci.utils.logger: zh/api/utils/logger.md
         - ppsci.utils.misc: zh/api/utils/misc.md
         - ppsci.utils.reader: zh/api/utils/reader.md
+        - ppsci.utils.writer: zh/api/utils/writer.md
         - ppsci.utils.save_load: zh/api/utils/save_load.md
         - ppsci.utils.symbolic: zh/api/utils/symbolic.md
       - ppsci.validate: zh/api/validate.md

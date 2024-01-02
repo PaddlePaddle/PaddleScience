@@ -33,6 +33,7 @@ from ppsci.arch.afno import PrecipNet  # isort:skip
 from ppsci.arch.unetex import UNetEx  # isort:skip
 from ppsci.arch.epnn import Epnn  # isort:skip
 from ppsci.arch.nowcastnet import NowcastNet  # isort:skip
+from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
 from ppsci.utils import logger  # isort:skip
@@ -56,6 +57,7 @@ __all__ = [
     "UNetEx",
     "Epnn",
     "NowcastNet",
+    "USCNN",
     "HEDeepONets",
     "build_model",
     "CFDGCN",
