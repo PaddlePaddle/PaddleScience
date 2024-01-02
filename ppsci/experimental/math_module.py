@@ -396,3 +396,69 @@ def fractional_diff(
         int_func, dim=1, N=2**10 + 1, integration_domains=[[a, t]], dtype=dtype
     )
     return result
+
+
+def trapezoid_integrate(
+    y: paddle.Tensor,
+    x: paddle.Tensor = None,
+    dx: float = None,
+    axis: int = -1,
+    mode: Literal["sum", "cumsum"] = "sum",
+) -> paddle.Tensor:
+    """
+    Integrate along the given axis using the composite trapezoidal rule. Use the sum method.
+
+    Args:
+        y (paddle.Tensor): Input to be integrated.
+        x (paddle.Tensor, optional): The sample points corresponding to the input samples. its shape should be,
+        (1) input.shape; (2) the input.shape[axis] if axis is not default. Defaults to None.
+        dx (float, optional): The sample points are assumed to be evenly spaced and it is the spacing between sample points.
+        If 'x' and 'dx' are both default, 'dx' is set to 1 by default. Defaults to None.
+        axis (int, optional): The axis along which to integrate. Defaults to -1.
+        mode (Literal["sum", "cumsum"], optional): Which type cumulative sum function used. Defaults to "sum".
+
+    Returns:
+        paddle.Tensor: Integral result. If dim of input is N, return is N-1 dim.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> y = paddle.to_tensor([[0, 1, 2], [3, 4, 5]], dtype="float32")
+        >>> res = ppsci.experimental.trapezoid_integrate(y)
+        >>> print(res)
+        Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [2., 8.])
+        >>> res = ppsci.experimental.trapezoid_integrate(y, mode="cumsum")
+        >>> print(res)
+        Tensor(shape=[2, 2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [[0.50000000, 2.        ],
+            [3.50000000, 8.        ]])
+        >>> res = ppsci.experimental.trapezoid_integrate(
+            y, x=paddle.to_tensor([[0, 1, 2], [3, 4, 5]], dtype="float32")
+        )
+        >>> print(res)
+        Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [2., 8.])
+        >>> res = ppsci.experimental.trapezoid_integrate(
+            y, x=paddle.to_tensor([0, 1], dtype="float32"), axis=0
+        )
+        >>> print(res)
+        Tensor(shape=[3], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [1.50000000, 2.50000000, 3.50000000])
+        >>> res = ppsci.experimental.trapezoid_integrate(
+            y, x=paddle.to_tensor([0, 1, 2], dtype="float32"), axis=1
+        )
+        >>> print(res)
+        Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [2., 8.])
+        >>> res = ppsci.experimental.trapezoid_integrate(y, dx=2)
+        >>> print(res)
+        Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+            [4. , 16.])
+    """
+    if mode == "sum":
+        return paddle.trapezoid(y, x, dx, axis)
+    elif mode == "cumsum":
+        return paddle.cumulative_trapezoid(y, x, dx, axis)
+    else:
+        raise ValueError(f'mode should be "sum" or "cumsum", but got {mode}')
