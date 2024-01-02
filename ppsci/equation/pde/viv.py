@@ -44,13 +44,11 @@ class Vibration(base.PDE):
         self.k1 = paddle.create_parameter(
             shape=[],
             dtype=paddle.get_default_dtype(),
-            name="k1",
             default_initializer=initializer.Constant(k1),
         )
         self.k2 = paddle.create_parameter(
             shape=[],
             dtype=paddle.get_default_dtype(),
-            name="k2",
             default_initializer=initializer.Constant(k2),
         )
         self.learnable_parameters.append(self.k1)
