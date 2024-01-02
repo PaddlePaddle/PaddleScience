@@ -612,6 +612,7 @@ class Polygon(geometry.Geometry):
                 the shape is [N, 2]
         Returns:
             np.ndarray: SDF values of input points without squared, the shape is [N, 1].
+
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
         the object(interior points) is negative, the outside is positive, and the edge
