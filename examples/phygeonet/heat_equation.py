@@ -1,4 +1,3 @@
-from os import path as osp
 from typing import Dict
 
 import hydra
@@ -13,9 +12,6 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # initiallizer
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
     data = np.load(cfg.data_dir)
     coords = data["coords"]
     jinvs = data["jinvs"]
@@ -90,16 +86,12 @@ def train(cfg: DictConfig):
         optimizer,
         epochs=cfg.epochs,
         iters_per_epoch=iters_per_epoch,
-        seed=cfg.seed,
     )
     solver.train()
     solver.plot_loss_history()
 
 
 def evaluate(cfg: DictConfig):
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     data = np.load(cfg.data_dir)
     coords = data["coords"]
 

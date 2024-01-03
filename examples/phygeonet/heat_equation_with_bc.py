@@ -13,12 +13,7 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # initiallizer
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     model = ppsci.arch.USCNN(**cfg.MODEL)
-
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     data = np.load(cfg.data_dir)
@@ -96,7 +91,6 @@ def train(cfg: DictConfig):
         optimizer,
         epochs=cfg.epochs,
         iters_per_epoch=iters_per_epoch,
-        seed=cfg.seed,
     )
 
     solver.train()
@@ -104,9 +98,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     pad_singleside = cfg.MODEL.pad_singleside
     model = ppsci.arch.USCNN(**cfg.MODEL)
 
