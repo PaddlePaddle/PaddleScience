@@ -69,6 +69,8 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 受力分析 | [2D 弹塑性结构](https://paddlescience-docs.readthedocs.io/zh/examples/epnn.md) | 机理驱动 | EPNN | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat) | [Paper](https://arxiv.org/abs/2204.12088) |
 | 受力分析和逆问题 | [3D 汽车控制臂变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/control_arm.md) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt.md) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
+| 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heat_exchanger.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
+| 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heat_pinn.md) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
 
 <br>
 <p align="center"><b>材料科学(AI for Material)</b></p>
