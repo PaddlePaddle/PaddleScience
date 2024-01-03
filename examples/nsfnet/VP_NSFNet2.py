@@ -246,6 +246,11 @@ def train(cfg: DictConfig):
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
+        output_expr={
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"] - d["p"].min() + p_star.min(),
+        },
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
     )
@@ -384,6 +389,11 @@ def evaluate(cfg: DictConfig):
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
+        output_expr={
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"] - d["p"].min() + p_star.min(),
+        },
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
     )
@@ -430,7 +440,7 @@ def evaluate(cfg: DictConfig):
 
     # plot
     ## vorticity
-    grid_x, grid_y = np.mgrid[0.0:8.0:1000j, -2.0:2.0:1000j]
+    grid_x, grid_y = np.mgrid[1.0:8.0:1000j, -2.0:2.0:1000j]
     x_star = paddle.to_tensor(grid_x.reshape(-1, 1).astype("float32"))
     y_star = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
     t_star = paddle.to_tensor((4.0) * np.ones(x_star.shape).astype("float32"))
@@ -440,9 +450,12 @@ def evaluate(cfg: DictConfig):
     sol = model.forward({"x": x_star, "y": y_star, "t": t_star})
     u_y = paddle.grad(sol["u"], y_star)
     v_x = paddle.grad(sol["v"], x_star)
-    w = np.array(u_y) - np.array(v_x)
+    w = np.array(v_x) - np.array(u_y)
     w = w.reshape(1000, 1000)
-    plt.contour(grid_x, grid_y, w, levels=np.arange(-4, 5, 0.25))
+    l1 = np.arange(-4, 0, 0.25)
+    l2 = np.arange(0.25, 4, 0.25)
+    fig = plt.figure(figsize=(16, 8), dpi=80)
+    plt.contour(grid_x, grid_y, w, levels=np.concatenate([l1, l2]), cmap="jet")
     plt.savefig(f"{OUTPUT_DIR}/vorticity_t=4.png")
 
     ## relative error

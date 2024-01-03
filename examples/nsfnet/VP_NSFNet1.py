@@ -310,6 +310,11 @@ def evaluate(cfg: DictConfig):
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
+        output_expr={
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"] - d["p"].min() + p_star.min(),
+        },
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
     )
