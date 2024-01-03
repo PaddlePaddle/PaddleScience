@@ -14,8 +14,10 @@ hydra:
           - mode
           - output_dir
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
-
     # output directory for multirun
     dir: ${hydra.run.dir}
     subdir: ./
@@ -23,30 +25,27 @@ hydra:
 # general settings
 mode: train # running mode: train/eval
 seed: 66
-data_dir: ./data/heat_equation_bc.npz
-test_data_dir: ./data/heat_equation_bc_test.npz
+data_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
-r: 0.5
-R: 1
 dtheta: 0
-len_data: 2
-epochs: 2000
+epochs: 1500
+
 # model settings
 MODEL:
   input_keys: [ 'coords' ]
-  output_keys: [ 'outputV' ]
+  output_keys: [ 'output_v' ]
   hidden_size: [16, 32, 16]
   h: 0.01
-  ny: 276
-  nx: 49
-  nvar_in: 1
+  ny: 19
+  nx: 84
+  nvar_in: 2
   nvar_out: 1
   pad_singleside: 1
 
 # training settings
 TRAIN:
-  lr: 1e-3
-  batchsize: 2
+  learning_rate: 1e-3
+  batch_size: 1
 
 # evaluation settings
 EVAL:
