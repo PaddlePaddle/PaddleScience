@@ -110,11 +110,33 @@ class AverageMeter:
 
 
 class PrettyOrderedDict(collections.OrderedDict):
+    """
+    The ordered dict which can be prettily printed.
+
+    Examples:
+        >>> import ppsci
+        >>> dic = ppsci.utils.misc.PrettyOrderedDict()
+        >>> dic.update({'a':1, 'b':2, 'c':3})
+        >>> print(dic)
+        ('a', 1)('b', 2)('c', 3)
+    """
+
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
 
 
 class Prettydefaultdict(collections.defaultdict):
+    """
+    The default dict which can be prettily printed.
+
+    Examples:
+        >>> import ppsci
+        >>> dic = ppsci.utils.misc.Prettydefaultdict()
+        >>> dic.update({'a':1, 'b':2, 'c':3})
+        >>> print(dic)
+        ('a', 1)('b', 2)('c', 3)
+    """
+
     def __str__(self):
         return "".join([str((k, v)) for k, v in self.items()])
 
@@ -216,6 +238,23 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
 
     Returns:
         Dict[str, np.ndarray]: Split dict.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> arr = np.array([[1., 2., 3.], [4., 5., 6.]])
+        >>> result = ppsci.utils.misc.convert_to_dict(arr, ("x", "y", "z"))
+        >>> print(arr.shape)
+        (2, 3)
+        >>> for k, v in result.items():
+        ...    print(k)
+        ...    print(v.shape)
+        x
+        (2, 1)
+        y
+        (2, 1)
+        z
+        (2, 1)
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -264,6 +303,17 @@ def convert_to_array(dict_: Dict[str, np.ndarray], keys: Tuple[str, ...]) -> np.
 
     Returns:
         np.ndarray: Concatenated array.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic = {"x": np.array([[1., 2.], [3., 4.]]),
+        ...        "y": np.array([[5., 6.], [7., 8.]]),
+        ...        "z": np.array([[9., 10.], [11., 12.]])}
+        >>> result = ppsci.utils.misc.convert_to_array(dic, ("x", "z"))
+        >>> print(result)
+        [[ 1.  2.  9. 10.]
+         [ 3.  4. 11. 12.]]
     """
     return np.concatenate([dict_[key] for key in keys], axis=-1)
 
@@ -278,6 +328,21 @@ def concat_dict_list(
 
     Returns:
         Dict[str, np.ndarray]: A dict with concatenated arrays for each key.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> result = ppsci.utils.misc.concat_dict_list((dic1, dic2))
+        >>> print(result)
+        {'x': array([[1., 2.],
+               [3., 4.],
+               [1., 2.],
+               [3., 4.]]), 'y': array([[5., 6.],
+               [7., 8.],
+               [5., 6.],
+               [7., 8.]])}
     """
     ret = {}
     for key in dict_list[0].keys():
@@ -295,6 +360,21 @@ def stack_dict_list(
 
     Returns:
         Dict[str, np.ndarray]: A dict with stacked arrays for each key.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
+        >>> result = ppsci.utils.misc.stack_dict_list((dic1, dic2))
+        >>> print(result)
+        {'x': array([[[1., 2.],
+                [3., 4.]],
+               [[1., 2.],
+                [3., 4.]]]), 'y': array([[[5., 6.],
+                [7., 8.]],
+               [[5., 6.],
+                [7., 8.]]])}
     """
     ret = {}
     for key in dict_list[0].keys():
@@ -326,6 +406,20 @@ def combine_array_with_time(x: np.ndarray, t: Tuple[int, ...]) -> np.ndarray:
 
     Returns:
         np.ndarray: Combined data with shape of (N×T, D+1).
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+        >>> data_point = np.arange(10).reshape((2, 5))
+        >>> time = (1, 2, 3)
+        >>> result = ppsci.utils.misc.combine_array_with_time(data_point, time)
+        >>> print(result)
+        [[1. 0. 1. 2. 3. 4.]
+         [1. 5. 6. 7. 8. 9.]
+         [2. 0. 1. 2. 3. 4.]
+         [2. 5. 6. 7. 8. 9.]
+         [3. 0. 1. 2. 3. 4.]
+         [3. 5. 6. 7. 8. 9.]]
     """
     nx = len(x)
     tx = []
