@@ -89,3 +89,4 @@ EVAL:
 # visualization settings
 qm_h: 1
 qm_c: 1
+eta_true: 0.5
