@@ -40,8 +40,18 @@ class L2Rel(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.L2Rel()
+        >>> import paddle
+        >>> from ppsci.metric import L2Rel
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> loss = L2Rel()
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.42658269), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               9.69535923)}
     """
 
     # NOTE: Avoid divide by zero in result
@@ -85,8 +95,24 @@ class MeanL2Rel(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.MeanL2Rel()
+        >>> import paddle
+        >>> from ppsci.metric import MeanL2Rel
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> loss = MeanL2Rel()
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.35970235), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               9.24504089)}
+        >>> loss = MeanL2Rel(keep_batch=True)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               [1.11803389, 1.60137081]), 'v': Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               [6.32455540 , 12.16552544])}
     """
 
     # NOTE: Avoid divide by zero in result

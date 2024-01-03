@@ -107,7 +107,10 @@ def train(cfg: DictConfig):
         "visualize_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
             ("x",),
-            {"u": lambda d: d["u"]},
+            {
+                "u_label": lambda d: u_solution_func(d),
+                "u_pred": lambda d: d["u"],
+            },
             num_timestamps=1,
             prefix="result_u",
         )
@@ -186,7 +189,10 @@ def evaluate(cfg: DictConfig):
         "visualize_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
             ("x",),
-            {"u": lambda d: d["u"]},
+            {
+                "u_label": lambda d: u_solution_func(d),
+                "u_pred": lambda d: d["u"],
+            },
             num_timestamps=1,
             prefix="result_u",
         )
@@ -203,7 +209,7 @@ def evaluate(cfg: DictConfig):
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
         to_static=cfg.to_static,
     )

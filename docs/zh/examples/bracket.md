@@ -45,9 +45,9 @@
 
 上述连接件包括一个垂直于 x 轴的背板和与之连接的垂直于 z 轴的带孔平板。其中背板处于固定状态，带孔平板的最右侧表面（红色区域）受到 z 轴负方向，单位面积大小为 $4 \times 10^4 Pa$ 的应力；除此之外，其他参数包括弹性模量 $E=10^{11} Pa$，泊松比 $\nu=0.3$。通过设置特征长度 $L=1m$，特征位移 $U=0.0001m$，无量纲剪切模量 $0.01\mu$，目标求解该金属件表面每个点的 $u$、$v$、$w$、$\sigma_{xx}$、$\sigma_{yy}$、$\sigma_{zz}$、$\sigma_{xy}$、$\sigma_{xz}$、$\sigma_{yz}$ 共 9 个物理量。常量定义代码如下：
 
-``` py linenums="29"
+``` py linenums="21"
 --8<--
-examples/bracket/bracket.py:29:38
+examples/bracket/bracket.py:21:30
 --8<--
 ```
 
@@ -71,9 +71,9 @@ $$
 
 上式中 $f$ 即为应变模型 `disp_net`，$g$ 为应力模型 `stress_net`，用 PaddleScience 代码表示如下：
 
-``` py linenums="23"
+``` py linenums="15"
 --8<--
-examples/bracket/bracket.py:23:27
+examples/bracket/bracket.py:15:19
 --8<--
 ```
 
@@ -96,9 +96,9 @@ $$
 \end{cases}
 $$
 
-``` py linenums="40"
+``` py linenums="32"
 --8<--
-examples/bracket/bracket.py:40:45
+examples/bracket/bracket.py:32:37
 --8<--
 ```
 
@@ -127,9 +127,9 @@ tar -xvf bracket_dataset.tar
 
 然后通过 PaddleScience 内置的 STL 几何类 `Mesh` 来读取、解析这些几何文件，并且通过布尔运算，组合出各个计算域，代码如下：
 
-``` py linenums="47"
+``` py linenums="39"
 --8<--
-examples/bracket/bracket.py:47:59
+examples/bracket/bracket.py:39:51
 --8<--
 ```
 
@@ -137,9 +137,9 @@ examples/bracket/bracket.py:47:59
 
 本案例共涉及到 5 个约束，在具体约束构建之前，可以先构建数据读取配置，以便后续构建多个约束时复用该配置。
 
-``` py linenums="61"
+``` py linenums="53"
 --8<--
-examples/bracket/bracket.py:61:71
+examples/bracket/bracket.py:53:63
 --8<--
 ```
 
@@ -147,9 +147,9 @@ examples/bracket/bracket.py:61:71
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="114"
+``` py linenums="106"
 --8<--
-examples/bracket/bracket.py:114:150
+examples/bracket/bracket.py:106:142
 --8<--
 ```
 
@@ -171,9 +171,9 @@ examples/bracket/bracket.py:114:150
 
 另一个作用在带孔平板上的约束条件则与之类似，代码如下：
 
-``` py linenums="151"
+``` py linenums="143"
 --8<--
-examples/bracket/bracket.py:151:187
+examples/bracket/bracket.py:143:179
 --8<--
 ```
 
@@ -181,33 +181,33 @@ examples/bracket/bracket.py:151:187
 
 对于背板后表面，由于被固定，所以其上的点在三个方向的形变均为 0，因此有如下的边界约束条件：
 
-``` py linenums="84"
+``` py linenums="76"
 --8<--
-examples/bracket/bracket.py:84:93
+examples/bracket/bracket.py:76:85
 --8<--
 ```
 
 对于带孔平板右侧长方形载荷面，其上的每个点只受 z 正方向的载荷，大小为 $T$，其余方向应力为 0，有如下边界条件约束：
 
-``` py linenums="94"
+``` py linenums="86"
 --8<--
-examples/bracket/bracket.py:94:102
+examples/bracket/bracket.py:86:94
 --8<--
 ```
 
 对于除背板后面、带孔平板右侧长方形载荷面外的表面，不受任何载荷，即三个方向的内力平衡，合力为 0，有如下边界条件约束：
 
-``` py linenums="103"
+``` py linenums="95"
 --8<--
-examples/bracket/bracket.py:103:113
+examples/bracket/bracket.py:95:105
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="188"
+``` py linenums="180"
 --8<--
-examples/bracket/bracket.py:188:195
+examples/bracket/bracket.py:180:187
 --8<--
 ```
 
@@ -215,9 +215,9 @@ examples/bracket/bracket.py:188:195
 
 接下来需要在配置文件中指定训练轮数，此处按实验经验，使用 2000 轮训练轮数，每轮进行 1000 步优化。
 
-``` yaml linenums="71"
+``` yaml linenums="74"
 --8<--
-examples/bracket/conf/bracket.yaml:71:74
+examples/bracket/conf/bracket.yaml:74:77
 --8<--
 ```
 
@@ -225,9 +225,9 @@ examples/bracket/conf/bracket.yaml:71:74
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并配合使用机器学习中常用的 ExponentialDecay 学习率调整策略。
 
-``` py linenums="197"
+``` py linenums="189"
 --8<--
-examples/bracket/bracket.py:197:201
+examples/bracket/bracket.py:189:193
 --8<--
 ```
 
@@ -235,17 +235,17 @@ examples/bracket/bracket.py:197:201
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，而验证集的数据来自外部 txt 文件，因此首先使用 `ppsci.utils.reader` 模块从 txt 文件中读取验证点集：
 
-``` py linenums="203"
+``` py linenums="195"
 --8<--
-examples/bracket/bracket.py:203:264
+examples/bracket/bracket.py:195:256
 --8<--
 ```
 
 然后将其转换为字典并进行无量纲化和归一化，再将其包装成字典和 `eval_dataloader_cfg`（验证集dataloader配置，构造方式与 `train_dataloader_cfg` 类似）一起传递给 `ppsci.validate.SupervisedValidator` 构造评估器。
 
-``` py linenums="266"
+``` py linenums="258"
 --8<--
-examples/bracket/bracket.py:266:311
+examples/bracket/bracket.py:258:303
 --8<--
 ```
 
@@ -255,9 +255,9 @@ examples/bracket/bracket.py:266:311
 
 本文中的输入数据是评估器构建中准备好的输入字典 `input_dict`，输出数据是对应的 9 个预测的物理量，因此只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="313"
+``` py linenums="305"
 --8<--
-examples/bracket/bracket.py:313:330
+examples/bracket/bracket.py:305:322
 --8<--
 ```
 
@@ -265,9 +265,9 @@ examples/bracket/bracket.py:313:330
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="332"
+``` py linenums="324"
 --8<--
-examples/bracket/bracket.py:332:359
+examples/bracket/bracket.py:324:351
 --8<--
 ```
 

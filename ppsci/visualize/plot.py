@@ -92,7 +92,7 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
 
         for i, key in enumerate(value_keys):
             _value_t: np.ndarray = value[st:ed, i]
-            a[i][t].scatter(
+            a[i][t].plot(
                 coord_t,
                 _value_t,
                 color=cnames[i],
@@ -111,10 +111,10 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.message(f"1D result is saved to {filename}.png")
+        logger.message(f"1D result is saved to: {filename}.png")
     else:
         logger.message(
-            f"1D result is saved to {filename}_0.png"
+            f"1D result is saved to: {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
 
@@ -353,10 +353,10 @@ def _save_plot_from_3d_array(
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.message(f"3D result is saved to {filename}.png")
+        logger.message(f"3D result is saved to: {filename}.png")
     else:
         logger.message(
-            f"3D result is saved to {filename}_0.png"
+            f"3D result is saved to: {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
 
