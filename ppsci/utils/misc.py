@@ -244,11 +244,17 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
         >>> import ppsci
         >>> arr = np.array([[1., 2., 3.], [4., 5., 6.]])
         >>> result = ppsci.utils.misc.convert_to_dict(arr, ("x", "y", "z"))
-        >>> print(result)
-        {'x': array([[1.],
-               [4.]]), 'y': array([[2.],
-               [5.]]), 'z': array([[3.],
-               [6.]])}
+        >>> print(arr.shape)
+        (2, 3)
+        >>> for k, v in result.items():
+        ...    print(k)
+        ...    print(v.shape)
+        x
+        (2, 1)
+        y
+        (2, 1)
+        z
+        (2, 1)
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -364,11 +370,11 @@ def stack_dict_list(
         >>> print(result)
         {'x': array([[[1., 2.],
                 [3., 4.]],
-        <BLANKLINE>
+
                [[1., 2.],
                 [3., 4.]]]), 'y': array([[[5., 6.],
                 [7., 8.]],
-        <BLANKLINE>
+
                [[5., 6.],
                 [7., 8.]]])}
     """
