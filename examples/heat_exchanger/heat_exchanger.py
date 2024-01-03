@@ -428,6 +428,10 @@ def train(cfg: DictConfig):
     plt.ylabel(r"$\eta$")
     plt.grid()
     plt.savefig("eta.png")
+    error = np.square(eta[-1] - cfg.eta_true)
+    logger.info(
+        f"The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency is {error}"
+    )
 
 
 def evaluate(cfg: DictConfig):
@@ -644,6 +648,10 @@ def evaluate(cfg: DictConfig):
     plt.ylabel(r"$\eta$")
     plt.grid()
     plt.savefig("eta.png")
+    error = np.square(eta[-1] - cfg.eta_true)
+    logger.info(
+        f"The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency is {error}"
+    )
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="heat_exchanger.yaml")
