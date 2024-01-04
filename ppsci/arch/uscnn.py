@@ -24,18 +24,19 @@ class USCNN(base.Arch):
         k (int, optional): kernel_size. Defaults to 5.
         s (int, optional): stride. Defaults to 1.
         p (int, optional): padding. Defaults to 2.
-        Examples:
-            >>> import ppsci
-            >>> model = ppsci.arch.USCNN(
-                  input_keys= [ 'coords' ]
-                  output_keys= [ 'outputV' ]
-                  h= 0.01
-                  ny= 19
-                  nx= 84
-                  nvar_inp= 2
-                  nvar_out= 1
-                  pad_singleside= 1
-                )
+
+    Examples:
+        >>> import ppsci
+        >>> model = ppsci.arch.USCNN(
+        ...     input_keys= [ 'coords' ]
+        ...     output_keys= [ 'outputV' ]
+        ...     h= 0.01
+        ...     ny= 19
+        ...     nx= 84
+        ...     nvar_inp= 2
+        ...     nvar_out= 1
+        ...     pad_singleside= 1
+        ... )
     """
 
     def __init__(
