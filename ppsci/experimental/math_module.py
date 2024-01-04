@@ -410,10 +410,10 @@ def trapezoid_integrate(
 
     Args:
         y (paddle.Tensor): Input to be integrated.
-        x (paddle.Tensor, optional): The sample points corresponding to the input samples. its shape should be,
-        (1) input.shape; (2) the input.shape[axis] if axis is not default. Defaults to None.
-        dx (float, optional): The sample points are assumed to be evenly spaced and it is the spacing between sample points.
-        If 'x' and 'dx' are both default, 'dx' is set to 1 by default. Defaults to None.
+        x (paddle.Tensor, optional): The sample points corresponding to the input samples. its shape should be
+            (1) input.shape; (2) the input.shape[axis] if axis is not default. Defaults to None.
+            dx (float, optional): The sample points are assumed to be evenly spaced and it is the spacing between sample points.
+            If 'x' and 'dx' are both default, 'dx' is set to 1 by default. Defaults to None.
         axis (int, optional): The axis along which to integrate. Defaults to -1.
         mode (Literal["sum", "cumsum"], optional): Which type cumulative sum function used. Defaults to "sum".
 
