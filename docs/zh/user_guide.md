@@ -459,14 +459,15 @@ solver = ppsci.solver.Solver(
 
 ### 2.4 多任务学习
 
-在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重和产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 PCGrad 方法进行举例，使用方式如下：
+在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 
 1. 实例化一个多任务学习方法的对象
 
     ``` py hl_lines="3"
     from ppsci.loss import mtl
     model = ...
-    loss_aggregator = mtl.PCGrad(model)
+    num_losses = 2 # number of losses to be optimized
+    loss_aggregator = mtl.Relobralo(num_losses)
     ```
 
 2. 将该对象作为 `Solver` 的实例化参数之一传入
