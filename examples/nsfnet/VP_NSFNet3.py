@@ -306,6 +306,11 @@ def train(cfg: DictConfig):
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
+        output_expr={
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"] - d["p"].min() + p_star.min(),
+        },
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
     )
@@ -413,6 +418,11 @@ def evaluate(cfg: DictConfig):
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
+        output_expr={
+            "u": lambda d: d["u"],
+            "v": lambda d: d["v"],
+            "p": lambda d: d["p"] - d["p"].min() + p_star.min(),
+        },
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
     )
@@ -467,7 +477,7 @@ def evaluate(cfg: DictConfig):
     grid_x = grid_x.reshape(-1, 1)
     grid_y = grid_y.reshape(-1, 1)
     grid_z = np.zeros(grid_x.shape)
-    T = np.linspace(0, 1, 20)
+    T = np.linspace(0, 1, 101)
     for i in T:
         t_star = i * np.ones(x_star.shape)
         u_star, v_star, w_star, p_star = analytic_solution_generate(
@@ -522,7 +532,8 @@ def evaluate(cfg: DictConfig):
         ax[1, 1].set_title("v_pred")
         ax[2, 0].set_title("w_exact")
         ax[2, 1].set_title("w_pred")
-        fig.savefig(OUTPUT_DIR + f"/velocity_t={i}.png")
+        time = "%.3f" % i
+        fig.savefig(OUTPUT_DIR + f"/velocity_t={str(time)}.png")
 
 
 if __name__ == "__main__":
