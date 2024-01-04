@@ -31,6 +31,7 @@ import paddle
 import paddle.distributed as dist
 import sympy as sp
 import visualdl as vdl
+from omegaconf import DictConfig
 from packaging import version
 from paddle import amp
 from paddle import jit
@@ -41,6 +42,7 @@ from typing_extensions import Literal
 
 import ppsci
 from ppsci.loss import mtl
+from ppsci.utils import config
 from ppsci.utils import expression
 from ppsci.utils import logger
 from ppsci.utils import misc
@@ -56,31 +58,53 @@ class Solver:
         output_dir (Optional[str]): Output directory. Defaults to "./output/".
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
+            Deprecated for it is equivalent to 'optimizer._learning_rate'.
         epochs (int, optional): Training epoch(s). Defaults to 5.
+            Deprecated for recommended defined as 'cfg.TRAIN.epochs' in config yaml..
         iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
+            Deprecated for recommended defined as 'cfg.TRAIN.iters_per_epoch' in config yaml.
         update_freq (int, optional): Update frequency of parameters. Defaults to 1.
+            Deprecated for recommended defined as 'cfg.TRAIN.update_freq' in config yaml.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
+            Deprecated for recommended defined as 'cfg.TRAIN.save_freq' in config yaml.
         log_freq (int, optional): Logging frequency. Defaults to 10.
+            Deprecated for recommended defined as 'cfg.log_freq' in config yaml.
         eval_during_train (bool, optional): Whether evaluate model during training. Defaults to False.
+            Deprecated for recommended defined as 'cfg.TRAIN.eval_during_train' in config yaml.
         start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
+            Deprecated for recommended defined as 'cfg.TRAIN.start_eval_epoch' in config yaml.
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
+            Deprecated for recommended defined as 'cfg.TRAIN.eval_freq' in config yaml.
         seed (int, optional): Random seed. Defaults to 42.
+            Deprecated for recommended defined as 'cfg.seed' in config yaml.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
+            Deprecated for recommended defined as 'cfg.use_vdl' in config yaml.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
+            Deprecated for recommended defined as 'cfg.use_wandb' in config yaml.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
+            Deprecated for recommended defined as 'cfg.wandb_config' in config yaml.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
+            Deprecated for recommended defined as 'cfg.device' in config yaml.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
+            Deprecated for it is of no use.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
+            Deprecated for recommended defined as 'cfg.use_amp' in config yaml.
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+            Deprecated for recommended defined as 'cfg.amp_level' in config yaml.
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
+            Deprecated for recommended defined as 'cfg.TRAIN.pretrained_model_path' or 'cfg.EVAL.pretrained_model_path' in config yaml.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
+            Deprecated for recommended defined as 'cfg.TRAIN.checkpoint_path' in config yaml.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
+            Deprecated for recommended defined as 'cfg.EVAL.compute_metric_by_batch' in config yaml.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
+            Deprecated for recommended defined as 'cfg.EVAL.eval_with_no_grad' in config yaml.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
+            Deprecated for recommended defined as 'cfg.to_static' in config yaml.
         loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
 
     Examples:
@@ -141,7 +165,12 @@ class Solver:
         eval_with_no_grad: bool = False,
         to_static: bool = False,
         loss_aggregator: Optional[mtl.LossAggregator] = None,
+        cfg: Optional[DictConfig] = None,
     ):
+        # initialize settings from dict config if given
+        if cfg is not None:
+            self._initialize_from_cfg(cfg)
+
         # set model
         self.model = model
         # set constraint
@@ -152,7 +181,12 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        self.lr_scheduler = lr_scheduler
+        self.lr_scheduler = (
+            # TODO: remove arg 'lr_scheduler' for redundant to opt._learning_rate
+            optimizer._learning_rate
+            if isinstance(optimizer, optim.lr.LRScheduler)
+            else None
+        )
 
         # set training hyper-parameter
         self.epochs = epochs
@@ -195,9 +229,6 @@ class Solver:
 
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
-
-        # set geometry for generating data
-        self.geom = {} if geom is None else geom
 
         # set validator
         self.validator = validator
@@ -757,3 +788,39 @@ class Solver:
             smooth_step=smooth_step,
             use_semilogy=use_semilogy,
         )
+
+    def _initialize_from_cfg(self, cfg: DictConfig):
+        # check given cfg using pre-defined pydantic schema in 'SolverConfig', error(s) will be raised
+        # if any checking failed at this step
+        cfg_pydantic = config.SolverConfig(**dict(cfg))
+
+        # complete missing items with default values pre-defined in pydantic schema in
+        # 'SolverConfig'
+        full_cfg = DictConfig(cfg_pydantic.model_dump())
+
+        # assign cfg items to solver's attributes after checking passed
+        self.output_dir = full_cfg.output_dir
+        self.epochs = full_cfg.TRAIN.epochs
+        self.iters_per_epoch = full_cfg.TRAIN.iters_per_epoch
+        self.update_freq = full_cfg.TRAIN.update_freq
+        self.save_freq = full_cfg.TRAIN.save_freq
+        self.log_freq = full_cfg.log_freq
+        self.eval_during_train = full_cfg.TRAIN.eval_during_train
+        self.start_eval_epoch = full_cfg.TRAIN.start_eval_epoch
+        self.eval_freq = full_cfg.TRAIN.eval_freq
+        self.seed = full_cfg.seed
+        self.use_vdl = full_cfg.use_vdl
+        self.use_wandb = full_cfg.use_wandb
+        self.wandb_config = full_cfg.wandb_config
+        self.device = full_cfg.device
+        self.use_amp = full_cfg.use_amp
+        self.amp_level = full_cfg.amp_level.upper()
+        self.pretrained_model_path = (
+            full_cfg.TRAIN.pretrained_model_path
+            if full_cfg.mode == "train"
+            else full_cfg.EVAL.pretrained_model_path
+        )
+        self.checkpoint_path = full_cfg.TRAIN.checkpoint_path
+        self.compute_metric_by_batch = full_cfg.EVAL.compute_metric_by_batch
+        self.eval_with_no_grad = full_cfg.EVAL.eval_with_no_grad
+        self.to_static = full_cfg.to_static
