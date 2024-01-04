@@ -48,7 +48,7 @@
 执行以下命令以 pip 的方式安装 PaddleScience。
 
 ``` shell
-pip install paddlesci
+pip install paddlesci==1.2.1
 ```
 
 #### 1.4.3 额外依赖安装[可选]
