@@ -63,7 +63,6 @@ nav:
           - tempoGAN: zh/examples/tempoGAN.md
           - NSFNets: zh/examples/nsfnet.md
           - PhyGeoNet: zh/examples/phygeonet.md
-
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md

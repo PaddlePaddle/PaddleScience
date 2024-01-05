@@ -24,6 +24,3 @@ log_freq: 5000
 eval_freq: 5000
 
 pretrained_model_path: null
-
-
-
