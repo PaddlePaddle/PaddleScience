@@ -100,6 +100,12 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 - 添加 **M**ulti**T**ask**L**earning(`ppsci.loss.mtl`) 多任务学习模块，针对多任务优化(如 PINN 方法)进一步提升性能，使用方式：[多任务学习指南](https://paddlescience-docs.readthedocs.io/zh/latest/zh/user_guide/#24)([#493](https://github.com/PaddlePaddle/PaddleScience/pull/505)、[#492](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
 <!-- --8<-- [end:update] -->
 
+<!-- --8<-- [start:radiation] -->
+## 🎈其他领域支持
+
+除 PaddleScience 套件外，我们基于 Paddle 框架还初步支持了分子动力学套件 DeepMD-kit 中的部分案例的训练、测试、推理、LAMMPS 联合推理，详见：[**DeepMD-kit(paddle2 brach)**](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend)。
+<!-- --8<-- [end:radiation] -->
+
 <!-- --8<-- [start:feature] -->
 ## ✨特性
 
@@ -162,7 +168,7 @@ python -c "import paddle; paddle.utils.run_check()"
     # write your code here...
     ```
 
-如需读取复杂几何文件，并进行解析、采样等操作，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
+如需基于复杂几何文件（`*.stl`, `*.mesh`, `*.obj`）文件进行训练、测试等流程，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
 
 ## ⚡️快速开始
 

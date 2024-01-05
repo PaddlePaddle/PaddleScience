@@ -105,6 +105,10 @@
 --8<--
 
 --8<--
+./README.md:radiation
+--8<--
+
+--8<--
 ./README.md:feature
 --8<--
 
