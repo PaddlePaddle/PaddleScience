@@ -1,15 +1,32 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
-=== "模型训练命令"
 
+=== "模型评估命令"
+    案例一：Pipe Flow
+    ``` sh
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    ```
+
+    案例二：Aneurysm Flow
+    ``` sh
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    unzip LabelFree-DNN-Surrogate_data.zip
+
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
+    ```
+
+=== "模型训练命令"
+    案例一：Pipe Flow
     ``` sh
     python poiseuille_flow.py
     ```
 
-=== "模型评估命令"
-
+    案例二：Aneurysm Flow
     ``` sh
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    unzip LabelFree-DNN-Surrogate_data.zip
+
+    python aneurysm_flow.py
     ```
 
 ## 1. 背景简介
@@ -264,7 +281,7 @@ $$
 
 公式和图片中的 $y$ 表示展向坐标，$\delta p$，从图片中我们可以观察到DNN预测的，4种不同粘度采样下的速度曲线（红色虚线），几乎完美符合解析解的速度曲线（蓝色实线），其中，4个case的雷诺数（$Re$）分别为283，121，33，3。实际上，只要雷诺数适中，DNN能精确预测任意给定动力学粘性系数的管道流。
 
-右图展示了中心线(x方向管道中心)速度，在给定动力学粘性系数（高斯分布）下的不确定性。动力学粘性系数的高斯分布，平均值为$1e^{-3}$，方差为$2.67e^{-4}$，这样保证了动力学粘性系数是一个正随机变量。此外，这个高斯分布的区间为$0,+\infty)$，概率密度函数为：
+右图展示了中心线(x方向管道中心)速度，在给定动力学粘性系数（高斯分布）下的不确定性。动力学粘性系数的高斯分布，平均值为$1e^{-3}$，方差为$2.67e^{-4}$，这样保证了动力学粘性系数是一个正随机变量。此外，这个高斯分布的区间为$(0,+\infty)$，概率密度函数为：
 
 $$
 f(\nu ; \bar{\nu}, \sigma_{\nu}) = \dfrac{\dfrac{1}{\sigma_{\nu}} N(\dfrac{(\nu - \bar{\nu})}{\sigma_{\nu}})}{1 - \phi(-\dfrac{\bar{\nu}}{\sigma_{\nu}})}
@@ -350,9 +367,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="119"
+``` py linenums="125"
 --8<--
-examples/aneurysm/aneurysm_flow.py:119:128
+examples/aneurysm/aneurysm_flow.py:125:139
 --8<--
 ```
 
@@ -362,15 +379,15 @@ examples/aneurysm/aneurysm_flow.py:119:128
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
 
-``` py linenums="119"
+``` py linenums="114"
 --8<--
-examples/aneurysm/aneurysm_flow.py:119:121
+examples/aneurysm/aneurysm_flow.py:114:118
 --8<--
 ```
 
-``` py linenums="126"
+``` py linenums="121"
 --8<--
-examples/aneurysm/aneurysm_flow.py:126:128
+examples/aneurysm/aneurysm_flow.py:121:123
 --8<--
 ```
 
@@ -378,9 +395,9 @@ examples/aneurysm/aneurysm_flow.py:126:128
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="179"
+``` py linenums="173"
 --8<--
-examples/aneurysm/aneurysm_flow.py:179:179
+examples/aneurysm/aneurysm_flow.py:173:173
 --8<--
 ```
 
@@ -390,9 +407,9 @@ examples/aneurysm/aneurysm_flow.py:179:179
 
 本文中本案例的计算域和参数自变量$scale$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="51"
+``` py linenums="47"
 --8<--
-examples/aneurysm/aneurysm_flow.py:51:117
+examples/aneurysm/aneurysm_flow.py:47:113
 --8<--
 ```
 
@@ -454,9 +471,9 @@ examples/aneurysm/aneurysm_flow.py:51:117
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="183"
+    ``` py linenums="177"
     --8<--
-    examples/aneurysm/aneurysm_flow.py:183:202
+    examples/aneurysm/aneurysm_flow.py:177:197
     --8<--
     ```
 
@@ -476,15 +493,9 @@ examples/aneurysm/aneurysm_flow.py:51:117
 
 接下来我们需要指定训练轮数和学习率，使用400轮训练轮数，学习率设为 0.005。
 
-``` py linenums="204"
+``` py linenums="30"
 --8<--
-examples/aneurysm/aneurysm_flow.py:204:204
---8<--
-```
-
-``` py linenums="166"
---8<--
-examples/aneurysm/aneurysm_flow.py:166:166
+examples/aneurysm/config/aneurysm_flow.yaml:30:38
 --8<--
 ```
 
@@ -492,19 +503,19 @@ examples/aneurysm/aneurysm_flow.py:166:166
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="168"
+``` py linenums="162"
 --8<--
-examples/aneurysm/aneurysm_flow.py:168:177
+examples/aneurysm/aneurysm_flow.py:162:171
 --8<--
 ```
 
 #### 3.2.7 模型训练、评估与可视化(需要下载数据)
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后推理。
 
-``` py linenums="206"
+``` py linenums="218"
 --8<--
-examples/aneurysm/aneurysm_flow.py:206:218
+examples/aneurysm/aneurysm_flow.py:218:218
 --8<--
 ```
 
@@ -516,7 +527,7 @@ examples/aneurysm/aneurysm_flow.py:206:218
 
 3. 验证误差
 
-本问题的CFD参考数据保存在 npz 文件，按照下方命令，下载并解压到 `aneurysm_flow/` 文件夹下。
+本问题的CFD参考数据保存在 npz 文件，按照下方命令，下载并解压到案例所在文件夹下。
 
 ``` sh
 # linux
@@ -530,12 +541,6 @@ unzip data.zip
 ```
 
 解压完毕之后，`aneurysm_flow/data/` 文件夹下即存放了评估可视化所需的CFD参考数据。
-
-``` py linenums="220"
---8<--
-examples/aneurysm/aneurysm_flow.py:220:371
---8<--
-```
 
 ### 3.3 完整代码
 
