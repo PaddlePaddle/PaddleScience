@@ -5,63 +5,50 @@
 --8<--
 
 <style>
-  .container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .card {
-    font-family: 'Noto Serif SC', sans-serif;
-    border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    color: white;
-    font-weight: bold;
-    height: 100px;
-    padding: 20px;
-    width: 170px;
-    text-align: center;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease;
-  }
-  .card:hover {
-    transform: translateY(-5px);
-  }
-  .card-pdsci {
-    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
-  }
-  .card-deepxde {
-    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
-  }
-  .card-deepmd {
-    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
-  }
-  .card-modulus {
-    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
-  }
-  .footer {
-    text-align: center;
-    margin-top: 30px;
-    color: #666;
-  }
-  .text-large {
-    font-size: 14px;
-  }
-  .text-decoration {
-    text-decoration: underline; /* 带下划线的文本 */
-  }
+    .container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .card {
+        font-family: 'Noto Serif SC', sans-serif;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: black;
+        font-weight: bold;
+        height: 100px;
+        padding: 20px;
+        width: 170px;
+        text-align: center;
+        transition: border-color 0.1s; /* 边框颜色变化的过渡效果 */
+        border: 2px solid transparent; /* 默认透明边框，用于悬浮时边框的平滑过渡 */
+        /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); */
+    }
+    .card:hover {
+        border-color: #7793FF; /* 鼠标悬浮时的深蓝色边框 */
+    }
+    .card-deepxde {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-deepmd {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-modulus {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #666;
+    }
+    .text-large {
+        font-size: 14px;
+    }
+    .text-decoration {
+        text-decoration: underline;
+    }
 </style>
-
-<div class="container">
-  <div class="card card-pdsci">PaddleScience</div>
-  <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde"><div class="card card-deepxde">DeepXDE<br><span class="text-large">全量支持</span></br></div></a>
-  <div class="card card-deepmd">Modulus<br><span class="text-large">适配中</span></br></div>
-  <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend"><div class="card card-modulus">DeepMD<br><span class="text-large">适配中</span></br></div></a>
-</div>
-
-<div class="footer text-decoration">
-  PaddlePaddle backend support
-</div>
 
 --8<--
 ./README.md:description
@@ -164,12 +151,31 @@
 --8<--
 
 --8<--
-./README.md:radiation
---8<--
-
---8<--
 ./README.md:feature
 --8<--
+
+## 🎈其他领域支持
+
+除 PaddleScience 套件外，Paddle 框架还支持了 DeepXDE 的所有案例，分子动力学套件 DeepMD-kit 部分案例和功能，以及正在适配中的 Modulus 。
+
+<div class="container">
+    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
+        <div class="card card-deepxde">
+            DeepXDE
+            <br><span class="text-large">全量支持</span></br>
+        </div>
+    </a>
+    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
+        <div class="card card-modulus">
+            DeepMD
+            <br><span class="text-large">适配中</span></br>
+        </div>
+    </a>
+    <div class="card card-deepmd">
+        Modulus
+        <br><span class="text-large">适配中</span></br>
+    </div>
+</div>
 
 --8<--
 ./README.md:support
