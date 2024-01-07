@@ -4,6 +4,65 @@
 ./README.md:status
 --8<--
 
+<style>
+  .container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .card {
+    font-family: 'Noto Serif SC', sans-serif;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: white;
+    font-weight: bold;
+    height: 100px;
+    padding: 20px;
+    width: 170px;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  .card-pdsci {
+    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
+  }
+  .card-deepxde {
+    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
+  }
+  .card-deepmd {
+    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
+  }
+  .card-modulus {
+    background-image: linear-gradient(to right, #a1c4fd, #c2e9fb);
+  }
+  .footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #666;
+  }
+  .text-large {
+    font-size: 14px;
+  }
+  .text-decoration {
+    text-decoration: underline; /* 带下划线的文本 */
+  }
+</style>
+
+<div class="container">
+  <div class="card card-pdsci">PaddleScience</div>
+  <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde"><div class="card card-deepxde">DeepXDE<br><span class="text-large">全量支持</span></br></div></a>
+  <div class="card card-deepmd">Modulus<br><span class="text-large">适配中</span></br></div>
+  <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend"><div class="card card-modulus">DeepMD<br><span class="text-large">适配中</span></br></div></a>
+</div>
+
+<div class="footer text-decoration">
+  PaddlePaddle backend support
+</div>
+
 --8<--
 ./README.md:description
 --8<--
