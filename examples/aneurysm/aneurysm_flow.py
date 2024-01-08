@@ -46,16 +46,13 @@ def train(cfg: DictConfig):
     X_OUT = X_IN + L
     R_INLET = 0.05
     mu = 0.5 * (X_OUT - X_IN)
-
     x_initial = np.linspace(X_IN, X_OUT, 100, dtype=paddle.get_default_dtype()).reshape(
         100, 1
     )
     x_20_copy = np.tile(x_initial, (20, 1))  # duplicate 20 times of x for dataloader
-
     SIGMA = 0.1
     SCALE_START = -0.02
     SCALE_END = 0
-
     scale_initial = np.linspace(
         SCALE_START, SCALE_END, 50, endpoint=True, dtype=paddle.get_default_dtype()
     ).reshape(50, 1)
@@ -100,7 +97,6 @@ def train(cfg: DictConfig):
     plt.scatter(x[idx], y[idx])
     plt.axis("equal")
     plt.savefig(osp.join(PLOT_DIR, "one_scale_sample"), bbox_inches="tight")
-
     interior_geom = ppsci.geometry.PointCloud(
         interior={"x": x, "y": y, "scale": scale},
         coord_keys=("x", "y", "scale"),
@@ -153,7 +149,6 @@ def train(cfg: DictConfig):
     model_2.register_output_transform(transform.output_transform_v)
     model_3.register_output_transform(transform.output_transform_p)
     model = ppsci.arch.ModelList((model_1, model_2, model_3))
-
     optimizer_1 = ppsci.optimizer.Adam(
         cfg.TRAIN.learning_rate,
         beta1=cfg.TRAIN.beta1,
@@ -172,7 +167,6 @@ def train(cfg: DictConfig):
         beta2=cfg.TRAIN.beta2,
         epsilon=cfg.TRAIN.epsilon,
     )(model_3)
-
     optimizer = ppsci.optimizer.OptimizerList((optimizer_1, optimizer_2, optimizer_3))
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
@@ -212,7 +206,6 @@ def train(cfg: DictConfig):
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
         checkpoint_path=cfg.TRAIN.checkpoint_path,
     )
-
     solver.train()
 
 
@@ -231,7 +224,6 @@ def evaluate(cfg: DictConfig):
     X_OUT = X_IN + L
     R_INLET = 0.05
     mu = 0.5 * (X_OUT - X_IN)
-
     SIGMA = 0.1
 
     def init_func(m):
@@ -345,7 +337,6 @@ def evaluate(cfg: DictConfig):
         error_v.append(
             np.linalg.norm(u_vec[:, 1] - u_cfd[:, 1]) / (D_P * len(u_vec[:, 0]))
         )
-        # error_p = np.linalg.norm(p - p_cfd) / (D_P * D_P)
 
         # Stream-wise velocity component u
         plt.figure()
@@ -407,7 +398,6 @@ def evaluate(cfg: DictConfig):
         v_cl = output_dict_wss["v"]
         v_cl_total = np.sqrt(u_cl**2 + v_cl**2)
         tau_c = NU * v_cl_total / D_H
-
         plt.figure()
         plt.plot(
             x_initial,
