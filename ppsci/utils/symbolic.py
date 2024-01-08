@@ -182,13 +182,22 @@ class OperatorNode(Node):
 
     Args:
         expr (SYMPY_BUILTIN_FUNC): Sympy expression.
+        create_graph (bool, optional): Whether to create the gradient graphs of
+            the computing process. When it is True, higher order derivatives are
+            supported to compute; when it is False, the gradient graphs of the
+            computing process would be discarded. Defaults to True.
+        retain_graph (Optional[bool]): Whether to retain the forward graph which
+            is used to calculate the gradient. When it is True, the graph would
+            be retained, in which way users can calculate backward twice for the
+            same graph. When it is False, the graph would be freed. Defaults to None,
+            which means it is equal to `create_graph`.
     """
 
     def __init__(
         self,
         expr: SYMPY_BUILTIN_FUNC,
         create_graph: bool = True,
-        retain_graph: bool = None,
+        retain_graph: Optional[bool] = None,
     ):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
@@ -537,11 +546,11 @@ def lambdify(
         create_graph (bool, optional): Whether to create the gradient graphs of
             the computing process. When it is True, higher order derivatives are
             supported to compute; when it is False, the gradient graphs of the
-            computing process would be discarded. Default False.
+            computing process would be discarded. Defaults to True.
         retain_graph (Optional[bool]): Whether to retain the forward graph which
             is used to calculate the gradient. When it is True, the graph would
             be retained, in which way users can calculate backward twice for the
-            same graph. When it is False, the graph would be freed. Default None,
+            same graph. When it is False, the graph would be freed. Defaults to None,
             which means it is equal to `create_graph`.
 
     Returns:
