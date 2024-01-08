@@ -182,9 +182,23 @@ class OperatorNode(Node):
 
     Args:
         expr (SYMPY_BUILTIN_FUNC): Sympy expression.
+        create_graph (bool, optional): Whether to create the gradient graphs of
+            the computing process. When it is True, higher order derivatives are
+            supported to compute; when it is False, the gradient graphs of the
+            computing process would be discarded. Defaults to True.
+        retain_graph (Optional[bool]): Whether to retain the forward graph which
+            is used to calculate the gradient. When it is True, the graph would
+            be retained, in which way users can calculate backward twice for the
+            same graph. When it is False, the graph would be freed. Defaults to None,
+            which means it is equal to `create_graph`.
     """
 
-    def __init__(self, expr: SYMPY_BUILTIN_FUNC):
+    def __init__(
+        self,
+        expr: SYMPY_BUILTIN_FUNC,
+        create_graph: bool = True,
+        retain_graph: Optional[bool] = None,
+    ):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
@@ -192,6 +206,8 @@ class OperatorNode(Node):
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
                 (_cvt_to_key(arg), int(order)) for (arg, order) in self.expr.args[1:]
             ]
+            self.create_graph = create_graph
+            self.retain_graph = retain_graph
         else:
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
 
@@ -239,10 +255,20 @@ class OperatorNode(Node):
         data_dict[self.key] = data_dict[self.childs[0]]
         for child, order in self.childs[1:]:
             if order & 1:
-                data_dict[self.key] = jacobian(data_dict[self.key], data_dict[child])
+                data_dict[self.key] = jacobian(
+                    data_dict[self.key],
+                    data_dict[child],
+                    create_graph=self.create_graph,
+                    retain_graph=self.retain_graph,
+                )
                 order -= 1
             for _ in range(0, order, 2):
-                data_dict[self.key] = hessian(data_dict[self.key], data_dict[child])
+                data_dict[self.key] = hessian(
+                    data_dict[self.key],
+                    data_dict[child],
+                    create_graph=self.create_graph,
+                    retain_graph=self.retain_graph,
+                )
                 order -= 2
         return data_dict
 
@@ -364,7 +390,7 @@ class ComposedNode(nn.Layer):
         super().__init__()
         self.callable_nodes = callable_nodes
 
-    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
+    def forward(self, data_dict: DATA_DICT) -> paddle.Tensor:
         # call all callable_nodes in order
         for func in self.callable_nodes:
             data_dict = func(data_dict)
@@ -503,6 +529,8 @@ def lambdify(
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
     graph_filename: Optional[str] = None,
+    create_graph: bool = True,
+    retain_graph: Optional[bool] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
@@ -515,6 +543,15 @@ def lambdify(
         graph_filename (Optional[str]): Save computational graph to `graph_filename.png`
             for given `expr`, if `graph_filename` is not None and a valid string,
             such as 'momentum_x'. Defaults to None.
+        create_graph (bool, optional): Whether to create the gradient graphs of
+            the computing process. When it is True, higher order derivatives are
+            supported to compute; when it is False, the gradient graphs of the
+            computing process would be discarded. Defaults to True.
+        retain_graph (Optional[bool]): Whether to retain the forward graph which
+            is used to calculate the gradient. When it is True, the graph would
+            be retained, in which way users can calculate backward twice for the
+            same graph. When it is False, the graph would be freed. Defaults to None,
+            which means it is equal to `create_graph`.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data
@@ -597,7 +634,7 @@ def lambdify(
         if isinstance(
             node, tuple(SYMPY_TO_PADDLE.keys()) + (sp.Add, sp.Mul, sp.Derivative)
         ):
-            callable_nodes.append(OperatorNode(node))
+            callable_nodes.append(OperatorNode(node, create_graph, retain_graph))
         elif isinstance(node, sp.Function):
             if node.name == equation.DETACH_FUNC_NAME:
                 callable_nodes.append(DetachNode(node))

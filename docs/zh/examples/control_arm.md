@@ -470,7 +470,6 @@ examples/control_arm/inverse_parameter.py:171:265
 --8<--
 ```
 
-
 ## 4. 完整代码
 
 ``` py linenums="1" title="forward_analysis.py"
