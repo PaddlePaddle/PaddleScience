@@ -14,7 +14,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [heat_exchanger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams) | MSE.heat_boundary(interior_mse): 0.52005<br>MSE.cold_boundary(interior_mse): 0.16590<br>MSE.wall(interior_mse): 0.01203 |
+| [heat_exchanger_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/HEDeepONet/HEDeepONet_pretrained.pdparams) | The L2 norm error between the actual heat exchanger efficiency and the predicted heat exchanger efficiency: 0.02087<br>MSE.heat_boundary(interior_mse): 0.52005<br>MSE.cold_boundary(interior_mse): 0.16590<br>MSE.wall(interior_mse): 0.01203 |
 
 ## 1. 背景简介
 

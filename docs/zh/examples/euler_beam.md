@@ -14,7 +14,7 @@
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00584<br>L2Rel.u(L2Rel_Metric): 1.20062 |
+| [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00000<br>L2Rel.u(L2Rel_Metric): 0.00080 |
 
 ## 1. 问题定义
 
