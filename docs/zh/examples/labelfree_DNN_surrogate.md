@@ -373,9 +373,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="127"
+``` py linenums="117"
 --8<--
-examples/aneurysm/aneurysm_flow.py:127:161
+examples/aneurysm/aneurysm_flow.py:117:151
 --8<--
 ```
 
@@ -385,9 +385,9 @@ examples/aneurysm/aneurysm_flow.py:127:161
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
 
-``` py linenums="116"
+``` py linenums="106"
 --8<--
-examples/aneurysm/aneurysm_flow.py:116:125
+examples/aneurysm/aneurysm_flow.py:106:115
 --8<--
 ```
 
@@ -395,17 +395,17 @@ examples/aneurysm/aneurysm_flow.py:116:125
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="184"
+``` py linenums="172"
 --8<--
-examples/aneurysm/aneurysm_flow.py:184:184
+examples/aneurysm/aneurysm_flow.py:172:172
 --8<--
 ```
 
 在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001$, 流体密度 $\rho = 1.0$。
 
-``` py linenums="43"
+``` py linenums="37"
 --8<--
-examples/aneurysm/aneurysm_flow.py:43:47
+examples/aneurysm/aneurysm_flow.py:37:41
 --8<--
 ```
 
@@ -413,9 +413,9 @@ examples/aneurysm/aneurysm_flow.py:43:47
 
 本文中本案例的计算域和参数自变量$scale$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="49"
+``` py linenums="43"
 --8<--
-examples/aneurysm/aneurysm_flow.py:49:114
+examples/aneurysm/aneurysm_flow.py:43:104
 --8<--
 ```
 
@@ -477,9 +477,9 @@ examples/aneurysm/aneurysm_flow.py:49:114
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="188"
+    ``` py linenums="174"
     --8<--
-    examples/aneurysm/aneurysm_flow.py:188:206
+    examples/aneurysm/aneurysm_flow.py:174:193
     --8<--
     ```
 
@@ -509,9 +509,9 @@ examples/aneurysm/conf/aneurysm_flow.yaml:33:42
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="162"
+``` py linenums="152"
 --8<--
-examples/aneurysm/aneurysm_flow.py:162:182
+examples/aneurysm/aneurysm_flow.py:152:170
 --8<--
 ```
 
@@ -519,9 +519,9 @@ examples/aneurysm/aneurysm_flow.py:162:182
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后推理。
 
-``` py linenums="228"
+``` py linenums="212"
 --8<--
-examples/aneurysm/aneurysm_flow.py:228:228
+examples/aneurysm/aneurysm_flow.py:212:212
 --8<--
 ```
 
