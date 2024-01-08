@@ -1,15 +1,13 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
 === "模型评估命令"
-    案例一：Pipe Flow
 
+    案例一：Pipe Flow
     ``` sh
     python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=<https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams>
-
     ```
 
     案例二：Aneurysm Flow
-
     ``` sh
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
@@ -18,15 +16,13 @@
     ```
 
 === "模型训练命令"
-    案例一：Pipe Flow
 
+    案例一：Pipe Flow
     ``` sh
     python poiseuille_flow.py
-
     ```
 
     案例二：Aneurysm Flow
-
     ``` sh
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
