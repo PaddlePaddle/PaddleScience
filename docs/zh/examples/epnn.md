@@ -74,6 +74,7 @@ examples/epnn/epnn.py:36:41
 examples/epnn/functions.py:306:321
 --8<--
 ```
+
 这里使用 Data 读取文件构造数据类，然后使用 get_shuffled_data 混淆数据，然后计算需要获取的混淆数据数量 itrain，最后使用 get 获取每组 itrain 数量的 10 组数据。
 
 ### 3.3 约束构建
