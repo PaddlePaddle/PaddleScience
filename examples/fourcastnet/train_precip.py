@@ -164,7 +164,7 @@ def train(cfg: DictConfig):
     # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
     lr_scheduler_cfg.update({"iters_per_epoch": ITERS_PER_EPOCH})
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(**lr_scheduler_cfg)()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(**lr_scheduler_cfg)
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # initialize solver

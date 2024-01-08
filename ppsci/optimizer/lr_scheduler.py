@@ -15,9 +15,11 @@
 from __future__ import annotations
 
 import abc
+import functools
 import math
 from typing import List
 from typing import Tuple
+from typing import Type
 from typing import Union
 
 from paddle.optimizer import lr
@@ -34,6 +36,26 @@ __all__ = [
     "CosineWarmRestarts",
     "OneCycleLR",
 ]
+
+
+def class_wrapper(cls_: Type[LRBase]):
+    """
+    This wrapper is designed to avoid redundant __call__ method when initializing a
+    scheduler in ppsci.optimizer.lr_scheduler module.
+
+    For example:
+
+    before: lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
+    after: lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)
+
+    Redundant pair of bracket "()" is removed by this wrapper.
+    """
+
+    @functools.wraps(cls_)
+    def wrapped_class(*args, **kwargs):
+        return cls_(*args, **kwargs)()
+
+    return wrapped_class
 
 
 class LRBase:
@@ -117,6 +139,7 @@ class LRBase:
         return warmup_lr
 
 
+@class_wrapper
 class Constant(lr.LRScheduler):
     """Constant learning rate Class implementation.
 
@@ -135,6 +158,7 @@ class Constant(lr.LRScheduler):
         return self.learning_rate
 
 
+@class_wrapper
 class Linear(LRBase):
     """Linear learning rate decay.
 
@@ -151,7 +175,7 @@ class Linear(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
+        >>> lr = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
     """
 
     def __init__(
@@ -205,6 +229,7 @@ class Linear(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class ExponentialDecay(LRBase):
     """ExponentialDecay learning rate decay.
 
@@ -219,7 +244,7 @@ class ExponentialDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)()
+        >>> lr = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
     """
 
     def __init__(
@@ -263,6 +288,7 @@ class ExponentialDecay(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class Cosine(LRBase):
     r"""Cosine learning rate decay.
 
@@ -281,7 +307,7 @@ class Cosine(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)()
+        >>> lr = ppsci.optimizer.lr_scheduler.Cosine(10, 2, 1e-3)
     """
 
     def __init__(
@@ -328,6 +354,7 @@ class Cosine(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class Step(LRBase):
     """Step learning rate decay.
 
@@ -346,7 +373,7 @@ class Step(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)()
+        >>> lr = ppsci.optimizer.lr_scheduler.Step(10, 1, 1e-3, 2, 0.95)
     """
 
     def __init__(
@@ -390,6 +417,7 @@ class Step(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class Piecewise(LRBase):
     """Piecewise learning rate decay
 
@@ -410,7 +438,7 @@ class Piecewise(LRBase):
         >>> import ppsci
         >>> lr = ppsci.optimizer.lr_scheduler.Piecewise(
         ...     10, 1, [2, 4], (1e-3, 1e-4, 1e-5)
-        ... )()
+        ... )
     """
 
     def __init__(
@@ -452,6 +480,7 @@ class Piecewise(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class MultiStepDecay(LRBase):
     """MultiStepDecay learning rate decay
 
@@ -470,7 +499,7 @@ class MultiStepDecay(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))()
+        >>> lr = ppsci.optimizer.lr_scheduler.MultiStepDecay(10, 1, 1e-3, (4, 5))
     """
 
     def __init__(
@@ -514,6 +543,7 @@ class MultiStepDecay(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class CosineAnnealingWarmRestarts(lr.LRScheduler):
     """The implementation of cosine annealing schedule with warm restarts.
 
@@ -587,6 +617,7 @@ class CosineAnnealingWarmRestarts(lr.LRScheduler):
         self.last_lr = self.get_lr()
 
 
+@class_wrapper
 class CosineWarmRestarts(LRBase):
     """Set the learning rate using a cosine annealing schedule with warm restarts.
 
@@ -604,7 +635,7 @@ class CosineWarmRestarts(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)()
+        >>> lr = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(20, 1, 1e-3, 14, 2)
     """
 
     def __init__(
@@ -652,6 +683,7 @@ class CosineWarmRestarts(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class OneCycleLR(LRBase):
     """Sets the learning rate according to the one cycle learning rate scheduler.
     The scheduler adjusts the learning rate from an initial learning rate to the maximum learning rate and then
@@ -679,7 +711,7 @@ class OneCycleLR(LRBase):
 
     Examples:
         >>> import ppsci
-        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(100, 1, 1e-3)()
+        >>> lr = ppsci.optimizer.lr_scheduler.OneCycleLR(100, 1, 1e-3)
     """
 
     def __init__(
@@ -735,6 +767,7 @@ class OneCycleLR(LRBase):
         return learning_rate
 
 
+@class_wrapper
 class SchedulerList:
     """SchedulerList which wrap more than one scheduler.
     Args:
@@ -742,8 +775,8 @@ class SchedulerList:
         by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
     Examples:
         >>> import ppsci
-        >>> sch1 = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
-        >>> sch2 = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)()
+        >>> sch1 = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)
+        >>> sch2 = ppsci.optimizer.lr_scheduler.ExponentialDecay(10, 2, 1e-3, 0.95, 3)
         >>> sch = ppsci.optimizer.lr_scheduler.SchedulerList((sch1, sch2))
     """
 

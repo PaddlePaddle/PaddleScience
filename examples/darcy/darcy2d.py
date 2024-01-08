@@ -82,7 +82,7 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(**cfg.TRAIN.lr_scheduler)()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.OneCycleLR(**cfg.TRAIN.lr_scheduler)
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator

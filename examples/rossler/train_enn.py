@@ -104,7 +104,7 @@ def train(cfg: DictConfig):
         iters_per_epoch=ITERS_PER_EPOCH,
         decay_steps=ITERS_PER_EPOCH,
         **cfg.TRAIN.lr_scheduler,
-    )()
+    )
     optimizer = ppsci.optimizer.Adam(
         lr_scheduler, grad_clip=clip, **cfg.TRAIN.optimizer
     )(model)

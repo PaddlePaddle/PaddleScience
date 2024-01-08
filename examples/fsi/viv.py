@@ -54,7 +54,7 @@ def train(cfg: DictConfig):
     constraint = {sup_constraint.name: sup_constraint}
 
     # set optimizer
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)
     optimizer = ppsci.optimizer.Adam(lr_scheduler)((model,) + tuple(equation.values()))
 
     # set validator

@@ -159,7 +159,7 @@ def train(cfg: DictConfig):
     # set optimizer
     lr_scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler
-    )()
+    )
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     # set validator

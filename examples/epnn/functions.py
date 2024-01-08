@@ -398,14 +398,14 @@ def get_optimizer_list(model_list, cfg):
     for i, model in enumerate(model_list):
         scheduler = ppsci.optimizer.lr_scheduler.ExponentialDecay(
             **cfg.TRAIN.lr_scheduler, learning_rate=lr_list[i]
-        )()
+        )
         optimizer_list.append(
             ppsci.optimizer.Adam(learning_rate=scheduler, weight_decay=0.0)(model)
         )
 
     scheduler_ratio = ppsci.optimizer.lr_scheduler.ExponentialDecay(
         **cfg.TRAIN.lr_scheduler, learning_rate=0.001
-    )()
+    )
     optimizer_list.append(
         paddle.optimizer.Adam(
             parameters=[gkratio], learning_rate=scheduler_ratio, weight_decay=0.0

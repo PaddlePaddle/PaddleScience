@@ -267,7 +267,7 @@ def train(cfg: DictConfig):
     lr_list = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(
         EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list
-    )()
+    )
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")

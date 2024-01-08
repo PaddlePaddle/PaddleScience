@@ -127,7 +127,7 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **cfg.TRAIN.lr_scheduler,
         warmup_epoch=int(0.05 * cfg.TRAIN.epochs),
-    )()
+    )
 
     # set optimizer
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)

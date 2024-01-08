@@ -101,7 +101,7 @@ def train(cfg: DictConfig):
     clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=0.1)
     lr_scheduler = ppsci.optimizer.lr_scheduler.CosineWarmRestarts(
         iters_per_epoch=ITERS_PER_EPOCH, **cfg.TRAIN.lr_scheduler
-    )()
+    )
     optimizer = ppsci.optimizer.Adam(
         lr_scheduler, grad_clip=clip, **cfg.TRAIN.optimizer
     )(model)

@@ -186,7 +186,7 @@ def train(cfg: DictConfig):
 
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(
         EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list
-    )()
+    )
 
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
 
