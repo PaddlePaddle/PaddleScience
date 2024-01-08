@@ -1,33 +1,42 @@
 # LabelFree-DNN-Surrogate (Aneurysm flow & Pipe flow)
 
-
 === "模型评估命令"
     案例一：Pipe Flow
+
     ``` sh
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=<https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams>
+
     ```
 
     案例二：Aneurysm Flow
+
     ``` sh
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
+    python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
     ```
 
 === "模型训练命令"
     案例一：Pipe Flow
+
     ``` sh
     python poiseuille_flow.py
+
     ```
 
     案例二：Aneurysm Flow
+
     ``` sh
     wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
     python aneurysm_flow.py
     ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+|[aneurysm_flow.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams)| L-2 error u : 2.548e-4 <br> L-2 error v : 7.169e-5 |
 
 ## 1. 背景简介
 
@@ -62,7 +71,7 @@ $$
 对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
 
 <figure markdown>
-  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
+  ![pipe](https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
   <figcaption>流场示意图</figcaption>
 </figure>
 
@@ -367,9 +376,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="125"
+``` py linenums="127"
 --8<--
-examples/aneurysm/aneurysm_flow.py:125:139
+examples/aneurysm/aneurysm_flow.py:127:161
 --8<--
 ```
 
@@ -379,15 +388,9 @@ examples/aneurysm/aneurysm_flow.py:125:139
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
 
-``` py linenums="114"
+``` py linenums="116"
 --8<--
-examples/aneurysm/aneurysm_flow.py:114:118
---8<--
-```
-
-``` py linenums="121"
---8<--
-examples/aneurysm/aneurysm_flow.py:121:123
+examples/aneurysm/aneurysm_flow.py:116:125
 --8<--
 ```
 
@@ -395,21 +398,27 @@ examples/aneurysm/aneurysm_flow.py:121:123
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="173"
+``` py linenums="184"
 --8<--
-examples/aneurysm/aneurysm_flow.py:173:173
+examples/aneurysm/aneurysm_flow.py:184:184
 --8<--
 ```
 
 在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001$, 流体密度 $\rho = 1.0$。
 
+``` py linenums="43"
+--8<--
+examples/aneurysm/aneurysm_flow.py:43:47
+--8<--
+```
+
 #### 3.2.3 计算域构建
 
 本文中本案例的计算域和参数自变量$scale$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="47"
+``` py linenums="49"
 --8<--
-examples/aneurysm/aneurysm_flow.py:47:113
+examples/aneurysm/aneurysm_flow.py:49:114
 --8<--
 ```
 
@@ -471,9 +480,9 @@ examples/aneurysm/aneurysm_flow.py:47:113
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="177"
+    ``` py linenums="188"
     --8<--
-    examples/aneurysm/aneurysm_flow.py:177:197
+    examples/aneurysm/aneurysm_flow.py:188:206
     --8<--
     ```
 
@@ -493,9 +502,9 @@ examples/aneurysm/aneurysm_flow.py:47:113
 
 接下来我们需要指定训练轮数和学习率，使用400轮训练轮数，学习率设为 0.005。
 
-``` py linenums="30"
+``` yaml linenums="33"
 --8<--
-examples/aneurysm/config/aneurysm_flow.yaml:30:38
+examples/aneurysm/conf/aneurysm_flow.yaml:33:42
 --8<--
 ```
 
@@ -505,7 +514,7 @@ examples/aneurysm/config/aneurysm_flow.yaml:30:38
 
 ``` py linenums="162"
 --8<--
-examples/aneurysm/aneurysm_flow.py:162:171
+examples/aneurysm/aneurysm_flow.py:162:182
 --8<--
 ```
 
@@ -513,34 +522,11 @@ examples/aneurysm/aneurysm_flow.py:162:171
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后推理。
 
-``` py linenums="218"
+``` py linenums="228"
 --8<--
-examples/aneurysm/aneurysm_flow.py:218:218
+examples/aneurysm/aneurysm_flow.py:228:228
 --8<--
 ```
-
-另一方面，此案例的可视化和定量评估主要依赖于：
-
-1. 在不同狭窄系数 $scale$ 下的流向速度和展向速度结果，与CFD结果的对比
-
-2. 在不同狭窄系数 $scale$ 下的中心线壁面剪切应力曲线，与CFD结果的对比
-
-3. 验证误差
-
-本问题的CFD参考数据保存在 npz 文件，按照下方命令，下载并解压到案例所在文件夹下。
-
-``` sh
-# linux
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip
-
-# windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip --output data.zip
-
-# unzip it
-unzip data.zip
-```
-
-解压完毕之后，`aneurysm_flow/data/` 文件夹下即存放了评估可视化所需的CFD参考数据。
 
 ### 3.3 完整代码
 

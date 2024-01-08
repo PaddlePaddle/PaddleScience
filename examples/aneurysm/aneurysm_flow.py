@@ -34,12 +34,6 @@ paddle.framework.core.set_prim_eager_enabled(True)
 
 
 def train(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
     P_IN = 0.1  # pressure at the inlet of pipe
@@ -78,7 +72,7 @@ def train(cfg: DictConfig):
     )
 
     # Visualize stenosis(scale == 0.2)
-    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
+    PLOT_DIR = osp.join(cfg.output_dir, "visu")
     os.makedirs(PLOT_DIR, exist_ok=True)
     y_up = (R_INLET - r_func) * np.ones_like(x)
     y_down = (-R_INLET + r_func) * np.ones_like(x)
@@ -183,8 +177,6 @@ def train(cfg: DictConfig):
 
     equation = {"NavierStokes": ppsci.equation.NavierStokes(NU, RHO, 2, False)}
 
-    BATCH_SIZE = cfg.TRAIN.batch_size
-
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["NavierStokes"].equations,
         {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
@@ -192,8 +184,8 @@ def train(cfg: DictConfig):
         dataloader_cfg={
             "dataset": "NamedArrayDataset",
             "num_workers": 1,
-            "batch_size": BATCH_SIZE,
-            "iters_per_epoch": int(x.shape[0] / BATCH_SIZE),
+            "batch_size": cfg.TRAIN.batch_size,
+            "iters_per_epoch": int(x.shape[0] / cfg.TRAIN.batch_size),
             "sampler": {
                 "name": "BatchSampler",
                 "shuffle": True,
@@ -204,18 +196,17 @@ def train(cfg: DictConfig):
         evenly=True,
         name="EQ",
     )
-
     constraint = {pde_constraint.name: pde_constraint}
 
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
         log_freq=cfg.log_freq,
         epochs=cfg.TRAIN.epochs,
-        iters_per_epoch=int(x.shape[0] / BATCH_SIZE),
+        iters_per_epoch=int(x.shape[0] / cfg.TRAIN.batch_size),
         save_freq=cfg.save_freq,
         equation=equation,
         pretrained_model_path=cfg.TRAIN.pretrained_model_path,
@@ -226,9 +217,8 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    OUTPUT_DIR = cfg.EVAL.output_dir
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    PLOT_DIR = osp.join(OUTPUT_DIR, "visu")
+    os.makedirs(cfg.EVAL.output_dir, exist_ok=True)
+    PLOT_DIR = osp.join(cfg.EVAL.output_dir, "visu")
 
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
@@ -294,7 +284,7 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=OUTPUT_DIR,
+        output_dir=cfg.EVAL.output_dir,
         log_freq=cfg.log_freq,
         seed=cfg.seed,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
