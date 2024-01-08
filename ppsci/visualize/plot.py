@@ -92,17 +92,18 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
 
         for i, key in enumerate(value_keys):
             _value_t: np.ndarray = value[st:ed, i]
-            a[i][t].plot(
+            a[i][t].scatter(
                 coord_t,
                 _value_t,
                 color=cnames[i],
                 label=key,
+                s=2,
             )
             if num_timestamps > 1:
                 a[i][t].set_title(f"{key}(t={t})")
             else:
                 a[i][t].set_title(f"{key}")
-            a[i][t].grid()
+            a[i][t].grid(color="#c2ccd0", linestyle="--", linewidth=0.5)
             a[i][t].legend()
 
         if num_timestamps == 1:
