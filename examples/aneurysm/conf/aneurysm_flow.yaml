@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_aneurysm_flow/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchaned
@@ -44,5 +44,4 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
-  output_dir: "output_aneurysm_flow"
   eval_with_no_grad: true

@@ -210,8 +210,8 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    os.makedirs(cfg.EVAL.output_dir, exist_ok=True)
-    PLOT_DIR = osp.join(cfg.EVAL.output_dir, "visu")
+    PLOT_DIR = osp.join(cfg.output_dir, "visu")
+    os.makedirs(PLOT_DIR, exist_ok=True)
 
     # Physic properties
     P_OUT = 0  # pressure at the outlet of pipe
@@ -276,7 +276,7 @@ def evaluate(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.EVAL.output_dir,
+        output_dir=cfg.output_dir,
         log_freq=cfg.log_freq,
         seed=cfg.seed,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
