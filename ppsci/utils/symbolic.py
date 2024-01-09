@@ -345,18 +345,19 @@ class FusedDerivativeNode(nn.Layer):
         super().__init__()
         self.keys = [_cvt_to_key(derive_expr) for derive_expr in derive_exprs]
         self.expr = derive_exprs
+        self.create_graph = create_graph
+        self.retain_graph = retain_graph
+
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
         derive_expr_0 = derive_exprs[0]
         y = _numerator_of_derivative(derive_expr_0)
-
         self.childs = [
             _cvt_to_key(y),
         ]
         for expr in derive_exprs:
             self.childs.append((_cvt_to_key(expr.args[-1][0]), 1))
-        self.create_graph = create_graph
-        self.retain_graph = retain_graph
+
         self._apply_func = self._parallel_derivate_operator_func
 
     def forward(self, data_dict: DATA_DICT):
@@ -698,11 +699,16 @@ def lambdify(
     if not isinstance(models, (tuple, list)):
         models = (models,)
 
-    def expr_to_nodes_seq(single_expr: sp.Basic) -> List[Node]:
+    def _expr_to_nodes_seq(
+        single_expr: sp.Basic, graph_filename_: Optional[str] = None
+    ) -> List[Node]:
         """Convert sympy expression to a sequence of nodes in topologic order.
 
         Args:
             single_expr (sp.Basic): Single sympy expression, such as "a+b*c".
+            graph_filename_ (Optional[str]): Save computational graph to
+            `/path/to/graph_filename.png` for given `expr`, if `graph_filename` is not
+            None and a valid string, such as 'momentum_x'. Defaults to None.
 
         Returns:
             List[Node]: Sequence of callable nodes.
@@ -728,7 +734,7 @@ def lambdify(
             if (not node.is_Symbol) or (_cvt_to_key(node) in _parameter_names)
         ]
 
-        # remove duplicates with topological order kept
+        # remove duplicated node(s) with topological order kept
         sympy_nodes = list(dict.fromkeys(sympy_nodes))
 
         # convert sympy node to callable node
@@ -782,16 +788,21 @@ def lambdify(
                     f"The node {node} is not supported in lambdify."
                 )
 
-        # NOTE: Visualize computational graph using 'pygraphviz'
-        if isinstance(graph_filename, str):
-            _visualize_graph(sympy_nodes, graph_filename)
+        # NOTE: visualize computational graph using 'pygraphviz'
+        if isinstance(graph_filename_, str):
+            _visualize_graph(sympy_nodes, graph_filename_)
 
         return callable_nodes
 
     if isinstance(expr, sp.Basic):
-        callable_nodes_group = [expr_to_nodes_seq(expr)]
+        callable_nodes_group = [
+            _expr_to_nodes_seq(expr, os.path.join(graph_filename, "expr"))
+        ]
     else:
-        callable_nodes_group = [expr_to_nodes_seq(expr_i) for expr_i in expr]
+        callable_nodes_group = [
+            _expr_to_nodes_seq(expr_i, os.path.join(graph_filename, f"expr_{i}"))
+            for i, expr_i in enumerate(expr)
+        ]
 
     # Fused derivatives nodes that with same function to be differentiated
     while fuse_derivative:
@@ -800,7 +811,7 @@ def lambdify(
         # use 4-nested for-loop to find all potential mergable node list
         for i in range(len(callable_nodes_group)):
             for j in range(len(callable_nodes_group[i])):
-                # skip node that not of Derivative
+                # skip node that not of derivative
                 if not isinstance(
                     callable_nodes_group[i][j], OperatorNode
                 ) or not isinstance(callable_nodes_group[i][j].expr, sp.Derivative):
