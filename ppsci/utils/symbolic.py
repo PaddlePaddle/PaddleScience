@@ -37,6 +37,7 @@ from ppsci import arch
 from ppsci import equation
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
+from ppsci.utils import logger
 
 __all__ = [
     "lambdify",
@@ -597,8 +598,6 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
                 add_edge(_cvt_to_key(arg[0]), str(node), v_color=C_FUNC)
 
     # export graph to image
-    from ppsci.utils import logger
-
     graph.layout()
     image_path = f"{graph_filename}.png"
     dot_path = f"{graph_filename}.dot"
@@ -691,7 +690,6 @@ def lambdify(
         >>> paddle.allclose(z_tensor_manually, z_tensor_sympy).item()
         True
     """
-
     if not extra_parameters:
         extra_parameters = ()
 
@@ -798,15 +796,20 @@ def lambdify(
     # Fused derivatives nodes that with same function to be differentiated
     while fuse_derivative:
         candidate_derivative_nodes_pos = []
-        for i in range(len(callable_nodes_group)):  # enumerate nodes seq
-            for j in range(len(callable_nodes_group[i])):  # enumerate one node
+
+        # use 4-nested for-loop to find all potential mergable node list
+        for i in range(len(callable_nodes_group)):
+            for j in range(len(callable_nodes_group[i])):
+                # skip node that not of Derivative
                 if not isinstance(
                     callable_nodes_group[i][j], OperatorNode
                 ) or not isinstance(callable_nodes_group[i][j].expr, sp.Derivative):
                     continue
                 candidate_derivative_nodes_pos = [[i, j]]
+
                 for ii in range(len(callable_nodes_group)):
                     for jj in range(len(callable_nodes_group[ii])):
+                        # skip node that not of Derivative
                         if not isinstance(
                             callable_nodes_group[ii][jj], OperatorNode
                         ) or not isinstance(
@@ -814,21 +817,27 @@ def lambdify(
                         ):
                             continue
 
-                        # judge if callable_nodes_group[i][j] has common differential numerator with callable_nodes_group[ii][jj]
+                        # skip same node
                         if i == ii and j == jj:
                             continue
+
+                        # judge if callable_nodes_group[i][j] has common differential
+                        # numerator with callable_nodes_group[ii][jj]
                         if (
                             callable_nodes_group[i][j].expr
                             == callable_nodes_group[ii][jj].expr
                         ):
                             continue
+
+                        # has common differential indeed
                         if (
+                            callable_nodes_group[i][j].expr
+                            != callable_nodes_group[ii][jj].expr
+                        ) and (
                             _numerator_of_derivative(callable_nodes_group[i][j].expr)
                             == _numerator_of_derivative(
                                 callable_nodes_group[ii][jj].expr
                             )
-                            and callable_nodes_group[i][j].expr
-                            != callable_nodes_group[ii][jj].expr
                         ):
                             candidate_derivative_nodes_pos.append([ii, jj])
 
@@ -837,6 +846,7 @@ def lambdify(
             if len(candidate_derivative_nodes_pos) > 1:
                 break
 
+        # merge all candidate nodes into one node
         if len(candidate_derivative_nodes_pos) > 1:
             group_idx, node_idx = candidate_derivative_nodes_pos[0]
             callable_nodes_group[group_idx][node_idx] = FusedDerivativeNode(
@@ -848,7 +858,7 @@ def lambdify(
                 retain_graph,
             )
             del_map = defaultdict(list)
-            # Remove merged node(except 1st one) from callable_nodes_group
+            # remove merged node(except 1st one)
             for gi, ni in candidate_derivative_nodes_pos[1:]:
                 del_map[gi].append(ni)
             for gi in del_map:
@@ -856,9 +866,9 @@ def lambdify(
             for gi in del_map:
                 for ni in del_map[gi]:
                     callable_nodes_group[gi].pop(ni)
-            print(
-                f"Fused {len(candidate_derivative_nodes_pos)} derivatives nodes into one node:"
-                f"{callable_nodes_group[group_idx][node_idx]}"
+            logger.debug(
+                f"Fused {len(candidate_derivative_nodes_pos)} derivatives nodes into"
+                f" one node: {callable_nodes_group[group_idx][node_idx]}"
             )
         else:
             break

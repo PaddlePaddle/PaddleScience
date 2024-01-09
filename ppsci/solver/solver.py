@@ -377,7 +377,7 @@ class Solver:
                         exprs,
                         self.model,
                         extra_parameters=extra_parameters,
-                        fuse=True,
+                        fuse_derivative=True,
                     )
                     ind = 0
                     for name in container.output_expr:
