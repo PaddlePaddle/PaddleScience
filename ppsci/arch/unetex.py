@@ -174,9 +174,9 @@ def create_decoder(
 
 
 class UNetEx(base.Arch):
-    """U-Net
+    """U-Net Extension for CFD.
 
-    [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
+    Reference: [Ribeiro M D, Rehman A, Ahmed S, et al. DeepCFD: Efficient steady-state laminar flow approximation with deep convolutional neural networks[J]. arXiv preprint arXiv:2004.08826, 2020.](https://arxiv.org/abs/2004.08826)
 
     Args:
         input_key (str): Name of function data for input.
@@ -193,7 +193,24 @@ class UNetEx(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.ppsci.arch.UNetEx("input", "output", 3, 3, (8, 16, 32, 32), 5, False, False)
+        >>> model = ppsci.arch.UNetEx(
+        ...     input_key="input",
+        ...     output_key="output",
+        ...     in_channel=3,
+        ...     out_channel=3,
+        ...     kernel_size=5,
+        ...     filters=(4, 4, 4, 4),
+        ...     layers=3,
+        ...     weight_norm=False,
+        ...     batch_norm=False,
+        ...     activation=None,
+        ...     final_activation=None,
+        ... )
+        >>> input_dict = {'input': paddle.rand([4, 3, 4, 4])}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict['output']) # doctest: +SKIP
+        >>> print(output_dict['output'].shape)
+        [4, 3, 4, 4]
     """
 
     def __init__(

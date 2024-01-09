@@ -11,9 +11,10 @@ TIPC功能测试的主程序为benchmark_train.sh，可以测试基于Python的�
 
 ## 2. 测试结论汇总
 
-| 算法名称 | 模型名称 | 单机单卡 | 单机多卡 | 多机多卡 | 模型压缩（单机多卡） |
-|  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |
-|  PINNs  | train_2d_unsteady_continuous.py | 正常训练 <br> FP32 | - <br> - | - <br> - | - <br> - |
+| 算法名称 | 模型名称 | 精度 | 单机单卡 ips | 单机多卡 ips | 多机多卡 ips | 模型压缩（单机多卡） ips |
+|  :----  |   :----  |    :----  |  :----   |  :----   |  :----   |  :----   |
+|  PINNs  | cylinder2d_unsteady_Re100.py | FP16 <br> FP32  | - <br> 1264165.641 | - <br> - | - <br> - | - <br> - |
+|  PINNs  | euler_beam.py                | FP16 <br> FP32  | - <br> 3667.54854  | - <br> - | - <br> - | - <br> - |
 
 ## 3. 测试流程(以2d非定常圆柱绕流为例子)
 
@@ -57,7 +58,7 @@ export BENCHMARK_ROOT=$PWD/tools
 cd ..
 ```
 
-在PaddleScience主目录下运行
+在PaddleScience主目录下运行(以cylinder2d_unsteady_Re100.py为例)
 
 ``` sh
 export script_path=./test_tipc/configs/train_2d_unsteady_continuous/2d_unsteady_continuous_train_infer_python.txt
@@ -77,5 +78,5 @@ Run successfully with command
 如果运行成功会生成index文件夹，该目录下面生成json文件[PaddleScience_cylinder2d_unsteady_train_newapi_bs1_fp32_DP_N1C1_speed]，其中可以找到对应的ips数值
 
 ``` log
-{"model_branch": "tipc_fix", "model_commit": "51558e06db7b58d5683a0fccc67d77f4340719d4", "model_name": "cylinder2d_unsteady_train_newapi_bs1_fp32_DP", "batch_size": 1, "fp_item": "fp32", "run_mode": "DP", "convergence_value": "207.94940185546875", "convergence_key": "loss:", "ips": 775299.78, "speed_unit": "samples/s", "device_num": "N1C1", "model_run_time": "15", "frame_commit": "5c19bfc8015b79f861aae9be6c98371de7ccef19", "frame_version": "0.0.0"}
+{"model_branch": "8ffce843ff16046c0303c5dc0cc558fbf8ce2b9d", "model_commit": null, "model_name": "cylinder2d_unsteady_Re100_bs1_fp32_DP", "batch_size": 1, "fp_item": "fp32", "run_mode": "DP", "convergence_value": 0, "convergence_key": "", "ips": 1264165.641, "speed_unit": "images/s", "device_num": "N1C1", "model_run_time": "114", "frame_commit": "e7716f10b2d500857581fce896d96023dd2d9693", "frame_version": "0.0.0"}
 ```

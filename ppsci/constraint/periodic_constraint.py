@@ -137,8 +137,9 @@ class PeriodicConstraint(base.Constraint):
             )
 
         # # prepare weight, keep weight the same shape as input_periodic
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)

@@ -101,7 +101,8 @@ SYMPY_TO_PADDLE = {
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
     # NOTE: sp.Add and sp.Mul is not included here for un-alignment with sympy
-    # and are implemented manually.
+    # and are implemented manually in 'OperatorNode._add_operator_func' and
+    # 'OperatorNode._mul_operator_func'
 }
 
 
@@ -181,9 +182,23 @@ class OperatorNode(Node):
 
     Args:
         expr (SYMPY_BUILTIN_FUNC): Sympy expression.
+        create_graph (bool, optional): Whether to create the gradient graphs of
+            the computing process. When it is True, higher order derivatives are
+            supported to compute; when it is False, the gradient graphs of the
+            computing process would be discarded. Defaults to True.
+        retain_graph (Optional[bool]): Whether to retain the forward graph which
+            is used to calculate the gradient. When it is True, the graph would
+            be retained, in which way users can calculate backward twice for the
+            same graph. When it is False, the graph would be freed. Defaults to None,
+            which means it is equal to `create_graph`.
     """
 
-    def __init__(self, expr: SYMPY_BUILTIN_FUNC):
+    def __init__(
+        self,
+        expr: SYMPY_BUILTIN_FUNC,
+        create_graph: bool = True,
+        retain_graph: Optional[bool] = None,
+    ):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
@@ -191,6 +206,8 @@ class OperatorNode(Node):
             self.childs = [_cvt_to_key(self.expr.args[0])] + [
                 (_cvt_to_key(arg), int(order)) for (arg, order) in self.expr.args[1:]
             ]
+            self.create_graph = create_graph
+            self.retain_graph = retain_graph
         else:
             self.childs = [_cvt_to_key(arg) for arg in self.expr.args]
 
@@ -231,13 +248,27 @@ class OperatorNode(Node):
         return data_dict
 
     def _derivate_operator_func(self, data_dict: DATA_DICT) -> DATA_DICT:
+        # NOTE: Derivative of 'sdf' function will not be executed here, which is already
+        # generated in 'data_dict' during points sampling using discrete difference
+        # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
+        # such as 'sdf__x', 'sdf__y'.
         data_dict[self.key] = data_dict[self.childs[0]]
         for child, order in self.childs[1:]:
             if order & 1:
-                data_dict[self.key] = jacobian(data_dict[self.key], data_dict[child])
+                data_dict[self.key] = jacobian(
+                    data_dict[self.key],
+                    data_dict[child],
+                    create_graph=self.create_graph,
+                    retain_graph=self.retain_graph,
+                )
                 order -= 1
             for _ in range(0, order, 2):
-                data_dict[self.key] = hessian(data_dict[self.key], data_dict[child])
+                data_dict[self.key] = hessian(
+                    data_dict[self.key],
+                    data_dict[child],
+                    create_graph=self.create_graph,
+                    retain_graph=self.retain_graph,
+                )
                 order -= 2
         return data_dict
 
@@ -251,8 +282,8 @@ class OperatorNode(Node):
         )
         for i in range(2, len(self.childs)):
             data_dict[self.key] = paddle.minimum(
-                data_dict[data_dict[self.key]],
-                data_dict[data_dict[self.childs[i]]],
+                data_dict[self.key],
+                data_dict[self.childs[i]],
             )
         return data_dict
 
@@ -262,8 +293,8 @@ class OperatorNode(Node):
         )
         for i in range(2, len(self.childs)):
             data_dict[self.key] = paddle.maximum(
-                data_dict[data_dict[self.key]],
-                data_dict[data_dict[self.childs[i]]],
+                data_dict[self.key],
+                data_dict[self.childs[i]],
             )
         return data_dict
 
@@ -359,7 +390,7 @@ class ComposedNode(nn.Layer):
         super().__init__()
         self.callable_nodes = callable_nodes
 
-    def forward(self, data_dict: DATA_DICT) -> DATA_DICT:
+    def forward(self, data_dict: DATA_DICT) -> paddle.Tensor:
         # call all callable_nodes in order
         for func in self.callable_nodes:
             data_dict = func(data_dict)
@@ -498,6 +529,8 @@ def lambdify(
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
     extra_parameters: Optional[Sequence[paddle.Tensor]] = None,
     graph_filename: Optional[str] = None,
+    create_graph: bool = True,
+    retain_graph: Optional[bool] = None,
 ) -> ComposedNode:
     """Convert sympy expression to callable function.
 
@@ -510,6 +543,15 @@ def lambdify(
         graph_filename (Optional[str]): Save computational graph to `graph_filename.png`
             for given `expr`, if `graph_filename` is not None and a valid string,
             such as 'momentum_x'. Defaults to None.
+        create_graph (bool, optional): Whether to create the gradient graphs of
+            the computing process. When it is True, higher order derivatives are
+            supported to compute; when it is False, the gradient graphs of the
+            computing process would be discarded. Defaults to True.
+        retain_graph (Optional[bool]): Whether to retain the forward graph which
+            is used to calculate the gradient. When it is True, the graph would
+            be retained, in which way users can calculate backward twice for the
+            same graph. When it is False, the graph would be freed. Defaults to None,
+            which means it is equal to `create_graph`.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data
@@ -592,7 +634,7 @@ def lambdify(
         if isinstance(
             node, tuple(SYMPY_TO_PADDLE.keys()) + (sp.Add, sp.Mul, sp.Derivative)
         ):
-            callable_nodes.append(OperatorNode(node))
+            callable_nodes.append(OperatorNode(node, create_graph, retain_graph))
         elif isinstance(node, sp.Function):
             if node.name == equation.DETACH_FUNC_NAME:
                 callable_nodes.append(DetachNode(node))
@@ -608,12 +650,14 @@ def lambdify(
                         )
                         if match_index is not None:
                             raise ValueError(
-                                f"Name of function({node}) should be unique along given"
-                                f" models, but got same output_key({node.func.name}) "
-                                f"in models[{match_index}] and models[{j}]."
+                                f"Name of function: '{node}' should be unique along given"
+                                f" models, but got same output_key: '{node.func.name}' "
+                                f"in given models[{match_index}] and models[{j}]."
                             )
                         match_index = j
-                if match_index is None:
+                # NOTE: Skip 'sdf' function, which should be already generated in
+                # given data_dict
+                if match_index is None and node.name != "sdf":
                     raise ValueError(
                         f"Node {node} can not match any model in given model(s)."
                     )

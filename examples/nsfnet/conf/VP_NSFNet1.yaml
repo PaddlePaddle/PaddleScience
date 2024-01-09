@@ -1,0 +1,26 @@
+seed: 1234
+
+output_dir: ./output
+
+iters_per_epoch: 1
+
+MODEL:
+  input_keys: ["x", "y"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 4
+  hidden_size: 50
+  activation: "tanh"
+
+mode: train
+
+ntrain: 2601
+
+nb_train: 400
+
+re: 40
+
+log_freq: 5000
+
+eval_freq: 5000
+
+pretrained_model_path: null

@@ -169,7 +169,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize training log recorder for loss, time cost, metric, etc.
+        # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -177,7 +177,7 @@ class Solver:
         }
         self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
-        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        # initialize evaluation log(evaluation loss, metric, etc.) recorder.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -270,7 +270,7 @@ class Solver:
             )
 
         # choosing an appropriate training function for different optimizers
-        if isinstance(self.optimizer, optim.LBFGS):
+        if misc.typename(self.optimizer) == "LBFGS":
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
@@ -286,11 +286,22 @@ class Solver:
                     "Please do not wrap your model with DataParallel "
                     "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
                 )
-            self.model = fleet.distributed_model(self.model)
-            if hasattr(self.model, "input_keys"):
-                self.model.input_keys = self.model._layers.input_keys
-            if hasattr(self.model, "output_keys"):
-                self.model.output_keys = self.model._layers.output_keys
+
+            def dist_wrapper(model: nn.Layer) -> paddle.DataParallel:
+                dist_model = fleet.distributed_model(model)
+                if hasattr(model, "input_keys"):
+                    dist_model.input_keys = dist_model._layers.input_keys
+                if hasattr(model, "output_keys"):
+                    dist_model.output_keys = dist_model._layers.output_keys
+                return dist_model
+
+            if isinstance(self.model, ppsci.arch.ModelList):
+                for i in range(len(self.model.model_list)):
+                    # NOTE: Convert each model in model_list to DataParallel
+                    self.model.model_list[i] = dist_wrapper(self.model.model_list[i])
+            else:
+                self.model = dist_wrapper(self.model)
+
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
 
@@ -380,15 +391,10 @@ class Solver:
     def train(self):
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        start_epoch = self.best_metric["epoch"] + 1
 
-        for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
+        for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
-            # log training summation at end of a epoch
-            metric_msg = ", ".join(
-                [self.train_output_info[key].avg_info for key in self.train_output_info]
-            )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")
@@ -452,6 +458,7 @@ class Solver:
                 self.output_dir,
                 "latest",
                 self.equation,
+                print_log=(epoch_id == start_epoch),
             )
 
     @misc.run_on_eval_mode
@@ -513,6 +520,21 @@ class Solver:
 
         Returns:
             Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> paddle.seed(42)  # doctest: +SKIP
+            >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
+            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand((2, 1)),
+            ...               'y': paddle.rand((2, 1))}
+            >>> solver.predict(input_dict) # doctest: +SKIP
+            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[-0.17509711],
+                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[0.27433380],
+                    [0.42387512]])}
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -678,12 +700,24 @@ class Solver:
             contextlib.AbstractContextManager: Smart no_sync context manager.
         """
         if enable:
-            if not isinstance(ddp_model, paddle.DataParallel):
-                raise TypeError(
-                    "no_sync interface is only for model with type paddle.DataParallel, "
-                    f"but got type {misc.typename(ddp_model)}"
-                )
-            ctx_manager = ddp_model.no_sync()
+            if isinstance(self.model, ppsci.arch.ModelList):
+                for model in self.model.model_list:
+                    if not isinstance(model, paddle.DataParallel):
+                        raise TypeError(
+                            "no_sync interface is only for model with type "
+                            "paddle.DataParallel, but got type "
+                            f"{misc.typename(model)}"
+                        )
+                ctx_manager = contextlib.ExitStack()
+                for model in self.model.model_list:
+                    ctx_manager.enter_context(model.no_sync())
+            else:
+                if not isinstance(self.model, paddle.DataParallel):
+                    raise TypeError(
+                        "no_sync interface is only for model with type "
+                        f"paddle.DataParallel, but got type {misc.typename(ddp_model)}"
+                    )
+                ctx_manager = ddp_model.no_sync()
         else:
             ctx_manager = (
                 contextlib.nullcontext()

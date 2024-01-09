@@ -28,7 +28,7 @@ pip install hydra-core
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title=">>> python bracket.py {++-c job++}"
+``` shell title="$ python bracket.py {++-c job++}"
 mode: train
 seed: 2023
 output_dir: ${hydra:run.dir}
@@ -95,7 +95,7 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title=">>> python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+``` shell title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
@@ -109,7 +109,7 @@ TRAIN:
 
 多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-``` shell title=">>> tree PaddleScience/examples/bracket/outputs_bracket/"
+``` shell title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
 └──2023-10-14 # (1)
     └── 04-01-52 # (2)
@@ -459,14 +459,15 @@ solver = ppsci.solver.Solver(
 
 ### 2.4 多任务学习
 
-在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重和产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 PCGrad 方法进行举例，使用方式如下：
+在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 
 1. 实例化一个多任务学习方法的对象
 
     ``` py hl_lines="3"
     from ppsci.loss import mtl
     model = ...
-    loss_aggregator = mtl.PCGrad(model)
+    num_losses = 2 # number of losses to be optimized
+    loss_aggregator = mtl.Relobralo(num_losses)
     ```
 
 2. 将该对象作为 `Solver` 的实例化参数之一传入

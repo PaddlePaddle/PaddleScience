@@ -8,7 +8,7 @@
 
         ``` sh
         # linux
-        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
         # unzip it
@@ -19,7 +19,7 @@
 
         ``` sh
         # linux
-        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
         # unzip it
@@ -33,18 +33,18 @@
 
         ``` sh
         # linux
-        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
         # unzip it
         unzip data.zip
-        python amgnet_airfoil.py mode=eval EVAL.pretained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
+        python amgnet_airfoil.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/amgnet/amgnet_airfoil_pretrained.pdparams
         ```
     === "amgnet_cylinder"
 
         ``` sh
         # linux
-        wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+        wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
         # windows
         # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip --output data.zip
         # unzip it
@@ -88,12 +88,12 @@
 
 ### 3.1 数据集下载
 
-该案例使用的机翼数据集 Airfoi l来自 de Avila Belbute-Peres 等人，其中翼型数据集采用 NACA0012 翼型，包括 train, test 以及对应的网格数据 mesh_fine；圆柱数据集是原作者利用软件计算的 CFD 算例。
+该案例使用的机翼数据集 Airfoil 来自 de Avila Belbute-Peres 等人，其中翼型数据集采用 NACA0012 翼型，包括 train, test 以及对应的网格数据 mesh_fine；圆柱数据集是原作者利用软件计算的 CFD 算例。
 
 执行以下命令，下载并解压数据集。
 
 ``` shell
-wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
 unzip data.zip
 ```
 
