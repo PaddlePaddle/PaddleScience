@@ -338,31 +338,25 @@ class FusedDerivativeNode(nn.Layer):
 
     def __init__(
         self,
-        derive_exprs: Tuple[sp.Function, ...],
+        f_x_tuples: List[Tuple[Union[sp.Function, sp.Derivative], sp.Symbol]],
         create_graph: bool = True,
         retain_graph: Optional[bool] = None,
     ):
         super().__init__()
-        self.keys = [_cvt_to_key(derive_expr) for derive_expr in derive_exprs]
-        self.expr = derive_exprs
+        self.expr: List[sp.Derivative] = [f.diff(x) for f, x in f_x_tuples]
+        self.key: List[str] = [_cvt_to_key(expr) for expr in self.expr]
         self.create_graph = create_graph
         self.retain_graph = retain_graph
 
         # preprocess children's key instead of processing at run-time in forward
         # which can reduce considerable overhead of time for calling "_cvt_to_key"
-        derive_expr_0 = derive_exprs[0]
-        y = _numerator_of_derivative(derive_expr_0)
-        self.childs = [
-            _cvt_to_key(y),
-        ]
-        for expr in derive_exprs:
-            self.childs.append((_cvt_to_key(expr.args[-1][0]), 1))
-
+        self.y_key: str = _cvt_to_key(f_x_tuples[0][0])
+        self.childs: List[str] = [_cvt_to_key(x) for _, x in f_x_tuples]
         self._apply_func = self._parallel_derivate_operator_func
 
     def forward(self, data_dict: DATA_DICT):
         # use cache
-        if all([key in data_dict for key in self.keys]):
+        if all([key in data_dict for key in self.key]):
             return data_dict
 
         return self._apply_func(data_dict)
@@ -372,15 +366,15 @@ class FusedDerivativeNode(nn.Layer):
         # generated in 'data_dict' during points sampling using discrete difference
         # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
         # such as 'sdf__x', 'sdf__y'.
-        y_data = data_dict[self.childs[0]]
-        xs_data = [data_dict[x_name] for (x_name, _) in self.childs[1:]]
+        y_data = data_dict[self.y_key]
+        xs_data = [data_dict[x_key] for x_key in self.childs]
         y_wrt_xs_grad: List[paddle.Tensor] = jacobian(
             y_data,
             xs_data,
             create_graph=self.create_graph,
             retain_graph=self.retain_graph,
         )
-        for i, key in enumerate(self.keys):
+        for i, key in enumerate(self.key):
             data_dict[key] = y_wrt_xs_grad[i]
         return data_dict
 
@@ -611,6 +605,49 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     )
 
 
+def build_and_walk_on_derivetive_tree(
+    derivative_exprs: List[sp.Derivative],
+) -> List[List[Tuple[Union[sp.Function, sp.Derivative], sp.Symbol]]]:
+    class DerivativeTrie:
+        def __init__(self, expr: sp.Basic):
+            self.next: Dict["sp.Symbol", "DerivativeTrie"] = {}
+            self.expr: sp.Basic = expr
+
+    trie_root = DerivativeTrie(derivative_exprs[0].args[0])
+
+    # build derivative trie
+    for derivative_expr in derivative_exprs:
+        cur_node = trie_root
+        for (child, order) in derivative_expr.args[1:]:
+            for _ in range(order):
+                if child not in cur_node.next:
+                    cur_node.next[child] = DerivativeTrie(cur_node.expr.diff(child))
+                cur_node = cur_node.next[child]
+
+    # walk on derivative trie and filter derivative brothers which size >= 2
+    def dfs_trie(
+        node: DerivativeTrie, brothers_group: List[List[sp.Derivative]]
+    ) -> None:
+        if len(node.next):
+            brothers_group.append([(node.expr, x) for x in node.next])
+        for child in node.next:
+            dfs_trie(node.next[child], brothers_group)
+
+    brothers_group: List[List[sp.Derivative]] = []
+    # parse all (func, wrt_x) tuples and batch them into list of f_x_tuples as below
+    """
+    [
+        [(u, x), (u, y), (u, z)],
+        [(v, x), (v, z)],
+        [(dvdx, y), (dvdx, z)],
+        ...
+    ]
+    """
+    dfs_trie(trie_root, brothers_group)
+
+    return brothers_group
+
+
 def lambdify(
     expr: Union[sp.Basic, List[sp.Basic]],
     models: Optional[Union[arch.Arch, Tuple[arch.Arch, ...]]] = None,
@@ -618,7 +655,7 @@ def lambdify(
     graph_filename: Optional[str] = None,
     create_graph: bool = True,
     retain_graph: Optional[bool] = None,
-    fuse_derivative: bool = True,
+    fuse_derivative: bool = False,
 ) -> Union[ComposedNode, List[ComposedNode]]:
     """Convert sympy expression to callable function.
 
@@ -646,7 +683,7 @@ def lambdify(
             for example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
             It will compute grad(u, x) + grad(u, y) if fuse_derivative=False,
             else will compute sum(grad(u, [x, y])) if fuse_derivative=True as is more
-            efficient in backward-graph. Defaults to True.
+            efficient in backward-graph. Defaults to False.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data
@@ -789,19 +826,16 @@ def lambdify(
                 )
 
         # NOTE: visualize computational graph using 'pygraphviz'
-        if isinstance(graph_filename_, str):
-            _visualize_graph(sympy_nodes, graph_filename_)
+        if isinstance(graph_filename, str):
+            _visualize_graph(sympy_nodes, os.path.join(graph_filename, graph_filename_))
 
         return callable_nodes
 
     if isinstance(expr, sp.Basic):
-        callable_nodes_group = [
-            _expr_to_nodes_seq(expr, os.path.join(graph_filename, "expr"))
-        ]
+        callable_nodes_group = [_expr_to_nodes_seq(expr, "expr")]
     else:
         callable_nodes_group = [
-            _expr_to_nodes_seq(expr_i, os.path.join(graph_filename, f"expr_{i}"))
-            for i, expr_i in enumerate(expr)
+            _expr_to_nodes_seq(expr_i, f"expr_{i}") for i, expr_i in enumerate(expr)
         ]
 
     # Fused derivatives nodes that with same function to be differentiated
@@ -816,8 +850,11 @@ def lambdify(
                     callable_nodes_group[i][j], OperatorNode
                 ) or not isinstance(callable_nodes_group[i][j].expr, sp.Derivative):
                     continue
-                candidate_derivative_nodes_pos = [[i, j]]
+                # skip sdf function for it is already computed in data_dict
+                if callable_nodes_group[i][j].expr.args[0].name == "sdf":
+                    continue
 
+                candidate_derivative_nodes_pos = [[i, j]]
                 for ii in range(len(callable_nodes_group)):
                     for jj in range(len(callable_nodes_group[ii])):
                         # skip node that not of Derivative
@@ -832,23 +869,10 @@ def lambdify(
                         if i == ii and j == jj:
                             continue
 
-                        # judge if callable_nodes_group[i][j] has common differential
-                        # numerator with callable_nodes_group[ii][jj]
+                        # has same function item
                         if (
-                            callable_nodes_group[i][j].expr
-                            == callable_nodes_group[ii][jj].expr
-                        ):
-                            continue
-
-                        # has common differential indeed
-                        if (
-                            callable_nodes_group[i][j].expr
-                            != callable_nodes_group[ii][jj].expr
-                        ) and (
-                            _numerator_of_derivative(callable_nodes_group[i][j].expr)
-                            == _numerator_of_derivative(
-                                callable_nodes_group[ii][jj].expr
-                            )
+                            callable_nodes_group[i][j].expr.args[0]
+                            == callable_nodes_group[ii][jj].expr.args[0]
                         ):
                             candidate_derivative_nodes_pos.append([ii, jj])
 
@@ -857,17 +881,35 @@ def lambdify(
             if len(candidate_derivative_nodes_pos) > 1:
                 break
 
-        # merge all candidate nodes into one node
+        # merge all candidate nodes into one or more FusedDerivativeNode node
         if len(candidate_derivative_nodes_pos) > 1:
-            group_idx, node_idx = candidate_derivative_nodes_pos[0]
-            callable_nodes_group[group_idx][node_idx] = FusedDerivativeNode(
-                tuple(
+            gi0, ni0 = candidate_derivative_nodes_pos[0]
+            derivatives_group = build_and_walk_on_derivetive_tree(
+                [
                     callable_nodes_group[gi][ni].expr
                     for gi, ni in candidate_derivative_nodes_pos
-                ),
-                create_graph,
-                retain_graph,
+                ]
             )
+            fused_nodes = []
+            for derivatives_list in derivatives_group:
+                if len(derivatives_list) > 1:
+                    fused_nodes.append(
+                        FusedDerivativeNode(
+                            derivatives_list,
+                            create_graph,
+                            retain_graph,
+                        )
+                    )
+                else:
+                    f_, x_ = derivatives_list[0]
+                    fused_nodes.append(
+                        OperatorNode(
+                            f_.diff(x_),
+                            create_graph,
+                            retain_graph,
+                        )
+                    )
+            callable_nodes_group[gi0][ni0] = fused_nodes
             del_map = defaultdict(list)
             # remove merged node(except 1st one)
             for gi, ni in candidate_derivative_nodes_pos[1:]:
@@ -877,9 +919,17 @@ def lambdify(
             for gi in del_map:
                 for ni in del_map[gi]:
                     callable_nodes_group[gi].pop(ni)
+
+            # unpack fused_nodes
+            callable_nodes_group[gi0] = (
+                callable_nodes_group[gi0][:ni0]
+                + callable_nodes_group[gi0][ni0]
+                + callable_nodes_group[gi0][ni0 + 1 :]
+            )
+
             logger.debug(
                 f"Fused {len(candidate_derivative_nodes_pos)} derivatives nodes into"
-                f" one node: {callable_nodes_group[group_idx][node_idx]}"
+                f" one node: {callable_nodes_group[gi0][ni0]}([{gi0}][{ni0}])"
             )
         else:
             break
