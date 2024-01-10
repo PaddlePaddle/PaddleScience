@@ -915,17 +915,22 @@ def lambdify(
                     for gi, ni in candidate_derivative_nodes_pos
                 ]
             )
+            assert isinstance(
+                fused_seq_node, list
+            ), "'fused_seq_node' should be list of 'FusedDerivativeNode'"
             gi0, ni0 = candidate_derivative_nodes_pos[0]
-            logger.info(
+            logger.debug(
                 f"Fused {len(candidate_derivative_nodes_pos)} derivatives nodes: {[callable_nodes_group[ii][jj].expr for ii, jj in candidate_derivative_nodes_pos]} into"
-                f" one node: {callable_nodes_group[gi0][ni0]}([{gi0}][{ni0}])"
+                f" node sequence: {fused_seq_node} at position: ([{gi0}][{ni0}])"
             )
             callable_nodes_group[gi0][ni0] = fused_seq_node
 
-            # remove merged node(except 1st one)
+            # remove merged node(except [gi0, ni0])
             for gi, ni in candidate_derivative_nodes_pos[1:]:
-                callable_nodes_group[gi][ni] = None
-
+                # keep the last node to avoid empty callable node sequence
+                # this will not effect performance for cache strategy in Node.forward
+                if ni != len(callable_nodes_group[gi]) - 1:
+                    callable_nodes_group[gi][ni] = None
         else:
             break
 
@@ -939,6 +944,12 @@ def lambdify(
                 ):
                     for fuse_node in callable_nodes_group[i][j]:
                         tmp.append(fuse_node)
+                elif isinstance(callable_nodes_group[i][j], FusedDerivativeNode):
+                    tmp.append(callable_nodes_group[i][j])
+                else:
+                    assert (
+                        callable_nodes_group[i][j] is None
+                    ), f"Unexpected element: {callable_nodes_group[i][j]}"
             callable_nodes_group[i] = tmp
 
     # Compose callable nodes into one callable object
