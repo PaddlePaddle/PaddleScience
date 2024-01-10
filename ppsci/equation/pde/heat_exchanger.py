@@ -50,8 +50,8 @@ class HeatExchanger(base.PDE):
         alpha_c: $\frac{(\eta_o\alpha A)_c}{L(c_p)_c}$
         v_h: $v_h$
         v_c: $v_c$
-        w_h: $\frac{\eta_o\alpha A)_h}{M(c_p)_w}$
-        w_c: $\frac{\eta_o\alpha A)_c}{M(c_p)_w}$
+        w_h: $\frac{(\eta_o\alpha A)_h}{M(c_p)_w}$
+        w_c: $\frac{(\eta_o\alpha A)_c}{M(c_p)_w}$
 
     Examples:
         >>> import ppsci
@@ -68,11 +68,11 @@ class HeatExchanger(base.PDE):
         w_c: Union[float, str],
     ):
         super().__init__()
-        x, t, qm_h, qm_c, qm_w = self.create_symbols("x t qm_h qm_c qm_w")
+        x, t, qm_h, qm_c = self.create_symbols("x t qm_h qm_c")
 
         T_h = self.create_function("T_h", (x, t, qm_h))
         T_c = self.create_function("T_c", (x, t, qm_c))
-        T_w = self.create_function("T_w", (x, t, qm_w))
+        T_w = self.create_function("T_w", (x, t))
 
         T_h_x = T_h.diff(x)
         T_h_t = T_h.diff(t)
