@@ -935,12 +935,15 @@ def lambdify(
             # replace first mergable node with fused node sequence(packed in list)
             # then mask the rest merged node to None(except [gid0, nid0])
             for i, (gid, nid) in enumerate(candidate_pos):
+                # keep the end node of each group to avoid generating empty callable
+                # node sequence, this will not effect performance since cache strategy
+                # in Node.forward
                 if i == 0:
-                    callable_nodes_group[gid0][nid0] = fused_node_seq
+                    if nid0 == len(callable_nodes_group[gid0]) - 1:
+                        callable_nodes_group[gid0].insert(nid0, fused_node_seq)
+                    else:
+                        callable_nodes_group[gid0] = fused_node_seq
                 else:
-                    # keep the end node of each group to avoid generating empty callable
-                    # node sequence, this will not effect performance since cache strategy
-                    # in Node.forward
                     if nid != len(callable_nodes_group[gid]) - 1:
                         callable_nodes_group[gid][nid] = None
 

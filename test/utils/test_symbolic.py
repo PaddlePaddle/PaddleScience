@@ -88,5 +88,84 @@ def test_multi_model_and_sdf():
     assert np.allclose(out_var_tensor.numpy(), out_var_reference.numpy())
 
 
+def test_complicated_symbolic():
+    x_ten = paddle.randn([32, 1])
+    x_ten.stop_gradient = False
+    y_ten = paddle.randn([32, 1])
+    y_ten.stop_gradient = False
+    z_ten = paddle.randn([32, 1])
+    z_ten.stop_gradient = False
+
+    input_data = {
+        "x": x_ten,
+        "y": y_ten,
+        "z": z_ten,
+    }
+    x_sp, y_sp, z_sp = ppsci.equation.PDE.create_symbols("x y z")
+    f = sp.Function("f")(x_sp, y_sp, z_sp)
+    # g = sp.Function("g")(x_sp, y_sp, z_sp)
+    model_f = ppsci.arch.MLP((x_sp.name, y_sp.name, z_sp.name), (f.name,), 3, 6)
+    # model_g = ppsci.arch.MLP((x_sp.name, y_sp.name, z_sp.name), (f.name,), 3, 6)
+
+    def lson(k):
+        return k << 1 | 1
+
+    def rson(k):
+        return (k << 1) + 2
+
+    def far(k):
+        return (k - 1) >> 1
+
+    depth = 3
+    num_nodes = (1 << depth) - 1
+
+    def is_valid_binary_tree(state: int) -> bool:
+        # check if all sons has father
+        for k in range(1, num_nodes):
+            if (state & (1 << k)) != 0 and 0 == (state & (1 << far(k))):
+                # son has no father
+                return False
+
+        return True
+
+    for state in range(1, num_nodes):
+        if not is_valid_binary_tree(state):
+            continue
+        eqs = []
+        for k in range(num_nodes):
+            if state & (1 << k):
+                if not ((state & (1 << lson(k))) and (state & (1 << rson(k)))):
+                    # no lson and norson, it is leaf
+                    leaf = k
+                    path = []
+                    while leaf:
+                        path.append(leaf)
+                        leaf = far(leaf)
+                    path = reversed(path)
+                    eqs.append(path)
+        targets = [f for _ in range(len(eqs))]
+        for i, path in enumerate(eqs):
+            for x in path:
+                targets[i] = targets[i].diff(x_sp if (x & 1) else y_sp)
+
+        eqs_fuse = ppsci.lambdify(
+            targets,
+            model_f,
+            fuse_derivative=True,
+        )
+        eqs_expected = ppsci.lambdify(
+            targets,
+            model_f,
+            fuse_derivative=True,
+        )
+
+        for i, var in enumerate(targets):
+            output_fuse = eqs_fuse[i](input_data)
+            output_expected = eqs_expected[i](input_data)
+            assert np.allclose(output_fuse.numpy(), output_expected.numpy())
+        ppsci.autodiff.clear()
+
+
 if __name__ == "__main__":
+    # test_complicated_symbolic()
     pytest.main()
