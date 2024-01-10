@@ -200,7 +200,7 @@ class OperatorNode(Node):
 
     def __init__(
         self,
-        expr: sp.Basic,
+        expr: SYMPY_BUILTIN_FUNC,
     ):
         super().__init__(expr)
         # preprocess children's key instead of processing at run-time in forward
@@ -278,7 +278,7 @@ class DerivativeNode(Node):
     """Class for operator node in converted expression tree.
 
     Args:
-        expr (SYMPY_BUILTIN_FUNC): Sympy expression.
+        expr (sp.Derivative): Sympy derivative expression.
         create_graph (bool, optional): Whether to create the gradient graphs of
             the computing process. When it is True, higher order derivatives are
             supported to compute; when it is False, the gradient graphs of the
@@ -292,7 +292,7 @@ class DerivativeNode(Node):
 
     def __init__(
         self,
-        expr: sp.Basic,
+        expr: sp.Derivative,
         create_graph: bool = True,
         retain_graph: Optional[bool] = None,
     ):
@@ -340,10 +340,12 @@ class DerivativeNode(Node):
 
 
 class FusedDerivativeNode(nn.Layer):
-    """Class for operator node in converted expression tree.
+    """Class for fused DerivativeNode.
 
     Args:
-        expr (SYMPY_BUILTIN_FUNC): Sympy expression.
+        f_x_tuples (List[Tuple[Union[sp.Function, sp.Derivative], sp.Symbol]]):
+            indicate all derivatives of a function in list of tuples. e.g.
+            [(func1, var1), (func1, var2), (func1, var3), ...].
         create_graph (bool, optional): Whether to create the gradient graphs of
             the computing process. When it is True, higher order derivatives are
             supported to compute; when it is False, the gradient graphs of the
@@ -385,8 +387,8 @@ class FusedDerivativeNode(nn.Layer):
         # generated in 'data_dict' during points sampling using discrete difference
         # method(see also: ppsci/geometry/geometry.py: Geometry.sdf_derivatives),
         # such as 'sdf__x', 'sdf__y'.
-        y_data = data_dict[self.y_key]
-        xs_data = [data_dict[x_key] for x_key in self.childs]
+        y_data: paddle.Tensor = data_dict[self.y_key]
+        xs_data: List[paddle.Tensor] = [data_dict[x_key] for x_key in self.childs]
         y_wrt_xs_grad: List[paddle.Tensor] = jacobian(
             y_data,
             xs_data,
@@ -631,15 +633,28 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     )
 
 
-def derivetive_tree(
+def _fuse_derivative_nodes(
     derivative_exprs: List[sp.Derivative],
 ) -> List[FusedDerivativeNode]:
+    """Merge derivative nodes and return in list of FusedDerivativeNode after merger.
+
+    Args:
+        derivative_exprs (List[sp.Derivative]): Derivatives sympy expression of same
+            function, e.g. [Derivative(u(x,y), x), Derivative(u(x,y), y)]
+
+    Returns:
+        List[FusedDerivativeNode]: List of FusedDerivativeNode converting from mergable
+            derivatives.
+    """
+
     class DerivativeTrie:
+        """Trie for unrolling derivative."""
+
         def __init__(self, expr: sp.Basic):
             self.expr: sp.Basic = expr
             self.next: Dict["sp.Symbol", "DerivativeTrie"] = {}
 
-    # build derivative trie
+    # unroll derivative expressions into a trie structure
     trie_root = DerivativeTrie(derivative_exprs[0].args[0])
     for derivative_expr in derivative_exprs:
         cur_node = trie_root
@@ -649,24 +664,23 @@ def derivetive_tree(
                     cur_node.next[child] = DerivativeTrie(cur_node.expr.diff(child))
                 cur_node = cur_node.next[child]
 
-    # walk on derivative trie
     def dfs_trie(
-        node: DerivativeTrie, derivative_nodes_seq: List[FusedDerivativeNode]
+        node: DerivativeTrie, fused_derivative_nodes: List[FusedDerivativeNode]
     ) -> None:
-        node.vis = True
         if node.next:
-            derivative_nodes_seq.append(
+            fused_derivative_nodes.append(
                 FusedDerivativeNode(
                     [(node.expr, name) for name in node.next],
                 )
             )
         for child in node.next:
-            dfs_trie(node.next[child], derivative_nodes_seq)
+            dfs_trie(node.next[child], fused_derivative_nodes)
 
-    derivative_nodes_seq: List[FusedDerivativeNode] = []
-    dfs_trie(trie_root, derivative_nodes_seq)
+    # walk on derivative trie in pre-order and log fusable nodes
+    fused_derivative_nodes: List[FusedDerivativeNode] = []
+    dfs_trie(trie_root, fused_derivative_nodes)
 
-    return derivative_nodes_seq
+    return fused_derivative_nodes
 
 
 def lambdify(
@@ -704,7 +718,8 @@ def lambdify(
             for example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
             It will compute grad(u, x) + grad(u, y) if fuse_derivative=False,
             else will compute sum(grad(u, [x, y])) if fuse_derivative=True as is more
-            efficient in backward-graph. Defaults to False.
+            efficient in backward-graph. Defaults to False, as it is experimental so not
+            enabled by default if used independently.
 
     Returns:
         ComposedNode: Callable object for computing expr with necessary input(s) data
@@ -757,7 +772,7 @@ def lambdify(
     if not isinstance(models, (tuple, list)):
         models = (models,)
 
-    def _expr_to_nodes_seq(
+    def _expr_to_callable_nodes(
         single_expr: sp.Basic, graph_filename_: Optional[str] = None
     ) -> List[Node]:
         """Convert sympy expression to a sequence of nodes in topologic order.
@@ -858,37 +873,32 @@ def lambdify(
         return callable_nodes
 
     if isinstance(expr, sp.Basic):
-        callable_nodes_group = [_expr_to_nodes_seq(expr, "expr")]
+        callable_nodes_group = [_expr_to_callable_nodes(expr, "expr")]
     else:
         callable_nodes_group = [
-            _expr_to_nodes_seq(expr_i, f"expr_{i}") for i, expr_i in enumerate(expr)
+            _expr_to_callable_nodes(expr_i, f"expr_{i}")
+            for i, expr_i in enumerate(expr)
         ]
 
-    # Fused derivatives nodes that with same function to be differentiated
+    # [Optional] Fused derivatives nodes that with same function to be differentiated
     while fuse_derivative:
-        candidate_derivative_nodes_pos = []
+        candidate_pos: List[Tuple[int, int]] = []  # [(group_id, node_id), ...]
 
-        # use 4-nested for-loop to find all potential mergable node list
+        # use 4-nested for-loop to find all potential mergable derivative nodes
         for i in range(len(callable_nodes_group)):
             for j in range(len(callable_nodes_group[i])):
-                # skip node that not of derivative
-                if not isinstance(
-                    callable_nodes_group[i][j], DerivativeNode
-                ) or not isinstance(callable_nodes_group[i][j].expr, sp.Derivative):
+                # skip non-derivative node
+                if not isinstance(callable_nodes_group[i][j], DerivativeNode):
                     continue
-                # skip sdf function for it is already computed in data_dict
+                # skip sdf function since it is always already given in data_dict
                 if callable_nodes_group[i][j].expr.args[0].name == "sdf":
                     continue
 
-                candidate_derivative_nodes_pos = [[i, j]]
+                candidate_pos = [[i, j]]
                 for ii in range(len(callable_nodes_group)):
                     for jj in range(len(callable_nodes_group[ii])):
-                        # skip node that not of Derivative
-                        if not isinstance(
-                            callable_nodes_group[ii][jj], DerivativeNode
-                        ) or not isinstance(
-                            callable_nodes_group[ii][jj].expr, sp.Derivative
-                        ):
+                        # skip non-derivative node
+                        if not isinstance(callable_nodes_group[ii][jj], DerivativeNode):
                             continue
 
                         # skip same node
@@ -900,57 +910,60 @@ def lambdify(
                             callable_nodes_group[i][j].expr.args[0]
                             == callable_nodes_group[ii][jj].expr.args[0]
                         ):
-                            candidate_derivative_nodes_pos.append([ii, jj])
+                            candidate_pos.append([ii, jj])
 
-                if len(candidate_derivative_nodes_pos) > 1:
+                if len(candidate_pos) > 1:
                     break
-            if len(candidate_derivative_nodes_pos) > 1:
+            if len(candidate_pos) > 1:
                 break
 
         # merge all candidate nodes into one or more FusedDerivativeNode node
-        if len(candidate_derivative_nodes_pos) > 1:
-            fused_seq_node = derivetive_tree(
-                [
-                    callable_nodes_group[gi][ni].expr
-                    for gi, ni in candidate_derivative_nodes_pos
-                ]
+        if len(candidate_pos) > 1:
+            fused_node_seq = _fuse_derivative_nodes(
+                [callable_nodes_group[gid][nid].expr for gid, nid in candidate_pos]
             )
             assert isinstance(
-                fused_seq_node, list
-            ), "'fused_seq_node' should be list of 'FusedDerivativeNode'"
-            gi0, ni0 = candidate_derivative_nodes_pos[0]
+                fused_node_seq, list
+            ), "'fused_node_seq' should be list of 'FusedDerivativeNode'"
+            gid0, nid0 = candidate_pos[0]
             logger.debug(
-                f"Fused {len(candidate_derivative_nodes_pos)} derivatives nodes: {[callable_nodes_group[ii][jj].expr for ii, jj in candidate_derivative_nodes_pos]} into"
-                f" node sequence: {fused_seq_node} at position: ([{gi0}][{ni0}])"
+                f"Fused {len(candidate_pos)} derivatives nodes: "
+                f"{[callable_nodes_group[i][j].expr for i, j in candidate_pos]} into"
+                f" fuse node sequence: {fused_node_seq} at position: ([{gid0}][{nid0}])"
             )
-            callable_nodes_group[gi0][ni0] = fused_seq_node
 
-            # remove merged node(except [gi0, ni0])
-            for gi, ni in candidate_derivative_nodes_pos[1:]:
-                # keep the last node to avoid empty callable node sequence
-                # this will not effect performance for cache strategy in Node.forward
-                if ni != len(callable_nodes_group[gi]) - 1:
-                    callable_nodes_group[gi][ni] = None
-        else:
-            break
-
-        for i in range(len(callable_nodes_group)):
-            tmp = []
-            for j in range(len(callable_nodes_group[i])):
-                if isinstance(callable_nodes_group[i][j], Node):
-                    tmp.append(callable_nodes_group[i][j])
-                elif isinstance(callable_nodes_group[i][j], list) and isinstance(
-                    callable_nodes_group[i][j][0], FusedDerivativeNode
-                ):
-                    for fuse_node in callable_nodes_group[i][j]:
-                        tmp.append(fuse_node)
-                elif isinstance(callable_nodes_group[i][j], FusedDerivativeNode):
-                    tmp.append(callable_nodes_group[i][j])
+            # replace first mergable node with fused node sequence(packed in list)
+            # then mask the rest merged node to None(except [gid0, nid0])
+            for i, (gid, nid) in enumerate(candidate_pos):
+                if i == 0:
+                    callable_nodes_group[gid0][nid0] = fused_node_seq
                 else:
-                    assert (
-                        callable_nodes_group[i][j] is None
-                    ), f"Unexpected element: {callable_nodes_group[i][j]}"
-            callable_nodes_group[i] = tmp
+                    # keep the end node of each group to avoid generating empty callable
+                    # node sequence, this will not effect performance since cache strategy
+                    # in Node.forward
+                    if nid != len(callable_nodes_group[gid]) - 1:
+                        callable_nodes_group[gid][nid] = None
+
+            # re-organize callable_nodes_group, remove None element and unpack list
+            for i in range(len(callable_nodes_group)):
+                tmp = []
+                for j in range(len(callable_nodes_group[i])):
+                    if isinstance(
+                        callable_nodes_group[i][j], (Node, FusedDerivativeNode)
+                    ):
+                        tmp.append(callable_nodes_group[i][j])
+                    elif isinstance(callable_nodes_group[i][j], list) and isinstance(
+                        callable_nodes_group[i][j][0], FusedDerivativeNode
+                    ):
+                        tmp.extend(callable_nodes_group[i][j])
+                    else:
+                        assert (
+                            callable_nodes_group[i][j] is None
+                        ), f"Unexpected element: {callable_nodes_group[i][j]}"
+                callable_nodes_group[i] = tmp
+        else:
+            # exit while loop if no more fused
+            break
 
     # Compose callable nodes into one callable object
     if isinstance(expr, sp.Basic):
