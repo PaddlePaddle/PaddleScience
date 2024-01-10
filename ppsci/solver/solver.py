@@ -378,6 +378,7 @@ class Solver:
                         self.model,
                         extra_parameters=extra_parameters,
                         fuse_derivative=True,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
                     )
                     ind = 0
                     for name in container.output_expr:
