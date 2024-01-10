@@ -387,7 +387,6 @@ class Solver:
 
         if self.constraint:
             convert_expr(self.constraint)
-        # exit()
 
         if self.validator:
             convert_expr(self.validator)
