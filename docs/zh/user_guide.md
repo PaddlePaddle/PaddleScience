@@ -80,6 +80,20 @@ TRAIN:
 
     这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
 
+!!! warning
+
+    以命令行方式指定参数时，若参数中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序，假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
+
+    ``` sh
+    # 正确的参数指定方式如下
+    python example.py PATH={++\'++}/workspace/lr=0.1,s=[3]/best_model.pdparams{++\'++}
+
+    # 错误的参数指定方式如下
+    # python example.py PATH=/workspace/lr=0.1,s=[3]/best_model.pdparams
+    # python example.py PATH='/workspace/lr=0.1,s=[3]/best_model.pdparams'
+    # python example.py PATH="/workspace/lr=0.1,s=[3]/best_model.pdparams"
+    ```
+
 #### 1.1.3 自动化运行实验
 
 如 [1.1.2 命令行方式配置参数](#112) 所述，可以通过在程序执行命令的末尾加上合适的参数来控制多组实验的运行配置，接下来以自动化执行四组实验为例，介绍如何利用 hydra 的 [multirun](https://hydra.cc/docs/1.0/tutorials/basic/running_your_app/multi-run/#internaldocs-banner) 功能，实现该目的。
@@ -165,7 +179,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 ### 1.2 模型推理预测
 
-若需使用训练完毕保存或下载得到的模型文件 `*.pdprams` 直接进行推理（预测），可以参考以下代码示例。
+若需使用训练完毕保存或下载得到的模型文件 `*.pdparams` 直接进行推理（预测），可以参考以下代码示例。
 
 1. 加载 `*.pdparams` 文件内的参数到模型中
 

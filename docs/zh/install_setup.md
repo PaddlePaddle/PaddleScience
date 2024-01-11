@@ -45,13 +45,30 @@
 
 #### 1.4.2 pip 安装
 
-执行以下命令以 pip 的方式安装 PaddleScience。
+执行以下命令以 pip 的方式安装最新版本的 PaddleScience。
 
 ``` shell
-pip install paddlesci
+pip install -U paddlesci
 ```
 
-#### 1.4.3 额外依赖安装[可选]
+#### 1.4.3 设置 PYTHONPATH 方式
+
+如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，将 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+
+``` sh
+# 保证当前路径在 PaddleScience 目录下
+cd PaddleScience
+
+# Windows 系统设置 PYTHONPATH 方式如下
+set PYTHONPATH=%cd%
+
+# Linux 系统设置 PYTHONPATH 方式如下
+export PYTHONPATH=$PYTHONPATH:$PWD
+```
+
+上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端关闭后，需要重新执行上述设置命令才能继续运行程序，较为繁琐。
+
+#### 1.4.4 额外依赖安装[可选]
 
 如需使用 `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh` 等复杂几何文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
 pybind11、pysdf、PyMesh 四个依赖库。
