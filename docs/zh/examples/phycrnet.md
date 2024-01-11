@@ -1,31 +1,33 @@
 # PhyCRNet
-<a href="https://aistudio.baidu.com/projectdetail/7296776" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
+<a href="https://aistudio.baidu.com/projectdetail/7296776" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
 === "模型训练命令"
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/phycrnet/burgers_1501x2x128x128.mat -P ./data/
-    # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/phycrnet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
 
-    python main.py DATASET_PATH=./data/burgers_1501x2x128x128.mat
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+
+    python main.py DATA_PATH=./data/burgers_1501x2x128x128.mat
     ```
 
 === "模型评估命令"
 
     ``` sh
     # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/phycrnet/burgers_1501x2x128x128.mat -P ./data/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat -P ./data/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/phycrnet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyCRNet/burgers_1501x2x128x128.mat --output ./data/burgers_1501x2x128x128.mat
 
-    python main.py    mode=eval  DATASET_PATH=./data/burgers_1501x2x128x128.mat  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams
+    python main.py mode=eval DATA_PATH=./data/burgers_1501x2x128x128.mat EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams
     ```
 | 预训练模型  | 指标 |
 |:--| :--|
 | [tempogan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams) | a-RMSE: 3.20e-3 |
+
 ## 1. 背景简介
 
 复杂时空系统通常可以通过偏微分方程（PDE）来建模，它们在许多领域都十分常见，如应用数学、物理学、生物学、化学和工程学。求解PDE系统一直是科学计算领域的一个关键组成部分。
@@ -44,18 +46,43 @@
 ## 2. 问题定义
 
 在本模型中，我们考虑的是含有时间和空间的PDE模型，此类模型在推理过程中会存在时间上的误差累积的问题，因此，本文通过设计循环卷积神经网络试图减轻每一步时间迭代的误差累积。而我们所求解的问题为以高斯分布随机得到的值为初值的二维Burgers' Equation：
+
 $$u_t+u\cdot \nabla u -\nu u =0$$
 
 二维Burgers' Equation 刻画了复杂的非线性的反应扩散相互作用的问题，因此，经常被用来当作benchmark来比较各种科学计算算法。
+
 ## 3. 问题求解
 
 ### 3.1 模型构建
+在这一部分中，我们介绍 PhyCRNet 的架构，包括编码器-解码器模块、残差连接、自回归（AR）过程和基于过滤的微分。网络架构如图所示。编码器(黄色Encoder，包含3个卷积层)，用于从输入状态变量 $u(t=i)，i = 0,1,2,..,T-1$ 学习低维潜在特征，其中 $T$ 表示总时间步。我们应用 ReLU 作为卷积层的激活函数。然后，我们将ConvLSTM层的输出(Encoder得到的低分辨率)，潜在特征的时间传播器(绿色部分)，其中，输出的LSTM的记忆单元 $C_i$ 和LSTM的隐藏变量单元 $h_i$ 会作为下一个时间步的输入。这样做的好处是对低维变量的基本动态进行建模,能够准确地捕获时间依赖性，同时有助于减轻记忆负担。 使用 LSTM 的另一个优势来自输出状态的双曲正切函数，它可以保持平滑的梯度曲线，并将值控制在 -1 和 1 之间。在建立低分辨率LSTM卷积循环方案后，我们基于上采样操作Decoder(蓝色部分)直接将低分辨率潜在空间重建为高分辨率量。特别注明，应用了子像素卷积层（即像素shuffle），因为与反卷积相比，它具有更好的效率和重建精度，且伪像更少。 最后，我们添加另一个卷积层，用于将有界潜变量空间输出，缩放回原始的物理空间。该Decoder后面没有激活函数。 此外，值得一提的是，鉴于输入变量数量有限及其对超分辨率的缺陷，我们在 PhyCRNet 中没有考虑 batch normalization。 作为替代，我们使用 batch normalization 来训练网络，以实现训练加速和更好的收敛性。受到动力学中，Forward Eular Scheme 的启发，我们在输入状态变量 $u_i$ 和输出变量 $u_{i+1}$ 之间附加全局残差连接。
 
-在 PhyCRNet 问题中，建立网络：
+接下来，剩下的挑战是，如何进行物理嵌入，来融合N-S方程带来的精度提升。我们应用无梯度卷积滤波器，来表示离散数值微分，以近似感兴趣的导数项。 例如，我们在本文中考虑的基于 Finite Difference 有限差分的滤波器是2阶和4阶中心差分格式，来计算时间和空间导数。
+
+时间差分:
+
+$$K_t = [-1,0,1] \times \frac{1}{2 \delta t},$$
+
+空间差分:
+
+$$K_s = \begin{bmatrix}
+   0  & 0  & -1  & 0  & 0  \\
+   0  & 0  & 16  & 0  & 0  \\
+   -1 & 16 & -60 & 16 & -1 \\
+   0  & 0  & 16  & 0  & 0  \\
+   0  & 0  & -1  & 0  & 0  \\
+\end{bmatrix} \times \frac{1}{12 (\delta x)^2},$$
+
+其中 $\delta t$ 和 $\delta x$ 表示时间步长和空间步长，此外需要注意无法直接计算边界上的导数，丢失边界差异信息的风险可以通过接下来引入的指定填充机制（例如，周期性填充）来减轻。
 
 ``` py linenums="43"
 --8<--
 examples/phycrnet/main.py:43:45
+--8<--
+```
+
+``` yaml linenums="34"
+--8<--
+examples/phycrnet/conf/burgers_equations.yaml:34:42
 --8<--
 ```
 
@@ -86,7 +113,6 @@ examples/phycrnet/main.py:74:90
 examples/phycrnet/main.py:92:109
 --8<--
 ```
-
 
 ### 3.6 优化器构建
 
@@ -148,8 +174,8 @@ examples/phycrnet/main.py
 
 ![image](https://paddle-org.bj.bcebos.com/paddlescience/docs/NSFNet/PhyCRNet_Burgers.jpeg)
 
-
 ## 6. 结果说明
+
 求解偏微分方程是在科学计算中的一个基本问题，而神经网络求解偏微分方程在求解逆问题以及数据同化问题等在传统方法上具有挑战性的问题上具有显著效果，但是，现有神经网络求解方法受限制于可扩展性，误差传导以及泛化能力等问题。因此，本论文通过提出一个新的神经网络PhyCRNet,通过将传统有限差分的思路嵌入物理信息神经网络中，针对性地解决原神经网络缺少对长时间数据的推理能力、误差累积以及缺少泛化能力的问题。与此同时，本文通过类似于有限差分的边界处理方式，将原本边界条件的软限制转为硬限制，大大提高了神经网络的准确性。新提出的网络可以有效解决上述提到的数据同化问题以及逆问题。
 
 ## 7. 参考资料

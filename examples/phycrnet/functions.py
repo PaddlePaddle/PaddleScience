@@ -365,7 +365,9 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
         ten_pred.append([u_pred, v_pred])
 
     # compute the error
-    error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true)
+    error = paddle.linalg.norm(
+        np.array(ten_pred) - np.array(ten_true)
+    ) / paddle.linalg.norm(ten_true)
 
     print("The predicted error is: ", error)
 
