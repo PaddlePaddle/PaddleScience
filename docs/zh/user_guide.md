@@ -82,7 +82,7 @@ TRAIN:
 
 !!! warning
 
-    以命令行方式指定参数时，若参数中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序，假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
+    以命令行方式设置参数时，若参数值中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数值包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序，假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
 
     ``` sh
     # 正确的参数指定方式如下
