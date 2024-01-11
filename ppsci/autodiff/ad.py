@@ -134,12 +134,17 @@ class Jacobians:
                 self.Js[key] = _Jacobian(ys, xs)
             return self.Js[key](i, j, retain_graph, create_graph)
         else:
-            grads = paddle.grad(
+            xs_require: List["paddle.Tensor"] = [
+                xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js
+            ]
+            grads_require = paddle.grad(
                 ys,
-                xs,
+                xs_require,
                 create_graph=create_graph,
                 retain_graph=retain_graph,
             )
+
+            idx = 0
             Js_list = []
             for k, xs_ in enumerate(xs):
                 key = (ys, xs_)
@@ -148,7 +153,8 @@ class Jacobians:
                     f"{xs_.shape}"
                 )
                 if key not in self.Js:
-                    self.Js[key] = _Jacobian(ys, xs_, {0: grads[k]})
+                    self.Js[key] = _Jacobian(ys, xs_, {0: grads_require[idx]})
+                    idx += 1
                 Js_list.append(self.Js[key](i, j, retain_graph, create_graph))
             return Js_list
 

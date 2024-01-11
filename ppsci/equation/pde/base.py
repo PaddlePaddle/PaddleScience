@@ -39,8 +39,9 @@ class PDE:
 
         self.detach_keys: Optional[Tuple[str, ...]] = None
 
+    @staticmethod
     def create_symbols(
-        self, symbol_str: str
+        symbol_str: str,
     ) -> Union[sympy.Symbol, Tuple[sympy.Symbol, ...]]:
         """Create symbols
 
