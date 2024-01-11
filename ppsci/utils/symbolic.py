@@ -305,6 +305,7 @@ class DerivativeNode(Node):
         self.create_graph = create_graph
         self.retain_graph = retain_graph
         self._apply_func = self._derivate_operator_func
+        self.merged = False
 
     def forward(self, data_dict: DATA_DICT):
         # use cache
@@ -893,6 +894,9 @@ def lambdify(
                 # skip sdf function since it is always already given in data_dict
                 if callable_nodes_group[i][j].expr.args[0].name == "sdf":
                     continue
+                # skip merged node
+                if callable_nodes_group[i][j].merged:
+                    continue
 
                 candidate_pos = [[i, j]]
                 for ii in range(len(callable_nodes_group)):
@@ -903,6 +907,9 @@ def lambdify(
 
                         # skip same node
                         if i == ii and j == jj:
+                            continue
+                        # skip merged node
+                        if callable_nodes_group[ii][jj].merged:
                             continue
 
                         # has same function item
@@ -932,17 +939,24 @@ def lambdify(
                 f" fuse node sequence: {fused_node_seq} at position: ([{gid0}][{nid0}])"
             )
 
+            # mark merged node
+            for i, (gid, nid) in enumerate(candidate_pos):
+                assert isinstance(callable_nodes_group[gid][nid], DerivativeNode)
+                callable_nodes_group[gid][nid].merged = True
+
             # replace first mergable node with fused node sequence(packed in list)
             # then mask the rest merged node to None(except [gid0, nid0])
-            for i, (gid, nid) in enumerate(candidate_pos):
-                if i == 0:
-                    callable_nodes_group[gid0][nid0] = fused_node_seq
-                else:
-                    # keep the end node of each group to avoid generating empty callable
-                    # node sequence, this will not effect performance since cache strategy
-                    # in Node.forward
-                    if nid != len(callable_nodes_group[gid]) - 1:
-                        callable_nodes_group[gid][nid] = None
+            for i, (gid, nid) in enumerate(candidate_pos[1:]):
+                # keep the end node of each group to avoid generating empty callable
+                # node sequence, this will not effect performance since cache strategy
+                # in Node.forward
+                if nid != len(callable_nodes_group[gid]) - 1:
+                    callable_nodes_group[gid][nid] = None
+
+            if nid0 == len(callable_nodes_group[gid0]) - 1:
+                callable_nodes_group[gid0].insert(nid0, fused_node_seq)
+            else:
+                callable_nodes_group[gid0][nid0] = fused_node_seq
 
             # re-organize callable_nodes_group, remove None element and unpack list
             for i in range(len(callable_nodes_group)):
