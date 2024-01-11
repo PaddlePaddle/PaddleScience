@@ -107,47 +107,27 @@ def test_complicated_symbolic():
     model_f = ppsci.arch.MLP((x_sp.name, y_sp.name, z_sp.name), (f.name,), 3, 6)
     # model_g = ppsci.arch.MLP((x_sp.name, y_sp.name, z_sp.name), (f.name,), 3, 6)
 
-    def lson(k):
-        return k << 1 | 1
+    for test_id in range(100):
 
-    def rson(k):
-        return (k << 1) + 2
+        def random_derivative(state):
+            ret = f
+            for k in range(4):
+                if state & (1 << k):
+                    ret = ret.diff(x_sp)
+                else:
+                    ret = ret.diff(y_sp)
+            return ret
 
-    def far(k):
-        return (k - 1) >> 1
-
-    depth = 3
-    num_nodes = (1 << depth) - 1
-
-    def is_valid_binary_tree(state: int) -> bool:
-        # check if all sons has father
-        for k in range(1, num_nodes):
-            if (state & (1 << k)) != 0 and 0 == (state & (1 << far(k))):
-                # son has no father
-                return False
-
-        return True
-
-    for state in range(1, num_nodes):
-        if not is_valid_binary_tree(state):
-            continue
-        eqs = []
-        for k in range(num_nodes):
-            if state & (1 << k):
-                if not ((state & (1 << lson(k))) and (state & (1 << rson(k)))):
-                    # no lson and norson, it is leaf
-                    leaf = k
-                    path = []
-                    while leaf:
-                        path.append(leaf)
-                        leaf = far(leaf)
-                    path = reversed(path)
-                    eqs.append(path)
-        targets = [f for _ in range(len(eqs))]
-        for i, path in enumerate(eqs):
-            for x in path:
-                targets[i] = targets[i].diff(x_sp if (x & 1) else y_sp)
-
+        state1 = np.random.randint(0, 1 << 4)
+        state2 = np.random.randint(0, 1 << 4)
+        state3 = np.random.randint(0, 1 << 4)
+        state4 = np.random.randint(0, 1 << 4)
+        targets = [
+            random_derivative(state1),
+            random_derivative(state2),
+            random_derivative(state3),
+            random_derivative(state4),
+        ]
         eqs_fuse = ppsci.lambdify(
             targets,
             model_f,
@@ -159,7 +139,7 @@ def test_complicated_symbolic():
             fuse_derivative=True,
         )
 
-        for i, var in enumerate(targets):
+        for i in range(len(targets)):
             output_fuse = eqs_fuse[i](input_data)
             output_expected = eqs_expected[i](input_data)
             assert np.allclose(output_fuse.numpy(), output_expected.numpy())
@@ -167,5 +147,4 @@ def test_complicated_symbolic():
 
 
 if __name__ == "__main__":
-    # test_complicated_symbolic()
     pytest.main()
