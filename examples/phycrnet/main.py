@@ -183,7 +183,7 @@ def evaluate(cfg: DictConfig):
     ).get(10)
     ppsci.utils.load_pretrain(model, cfg.EVAL.pretrained_model_path)
     model.register_output_transform(None)
-    functions.output_graph(model, input_dict_val, cfg.output_dir, cfg.TIME_STEPS)
+    functions.output_graph(model, input_dict_val, cfg.output_dir)
 
 
 @hydra.main(

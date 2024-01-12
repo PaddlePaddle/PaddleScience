@@ -115,8 +115,6 @@ def tranform_output_val(input, out, name="results.npz"):
     ten_true = paddle.stack(ten_true)
     ten_pred = paddle.stack(ten_pred)
     # compute the error
-    # relative error
-    # error = paddle.linalg.norm(ten_pred - ten_true) / paddle.linalg.norm(ten_true)
     # a-RMSE
     error = (
         paddle.sum((ten_pred - ten_true) ** 2, axis=(1, 2, 3))
@@ -338,7 +336,7 @@ class Dataset:
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
 
 
-def output_graph(model, input_dataset, fig_save_path, time_steps):
+def output_graph(model, input_dataset, fig_save_path):
     output_dataset = model(input_dataset)
     output = output_dataset["outputs"]
     input = input_dataset["input"][0]
@@ -364,25 +362,50 @@ def output_graph(model, input_dataset, fig_save_path, time_steps):
         ten_true.append([u_star, v_star])
         ten_pred.append([u_pred, v_pred])
 
+    ten_true = paddle.stack(ten_true)
+    ten_pred = paddle.stack(ten_pred)
     # compute the error
-    error = paddle.linalg.norm(
-        np.array(ten_pred) - np.array(ten_true)
-    ) / paddle.linalg.norm(ten_true)
+    # a-RMSE
+    error = (
+        paddle.sum((ten_pred - ten_true) ** 2, axis=(1, 2, 3))
+        / ten_true.shape[2]
+        / ten_true.shape[3]
+    )
+    N = error.shape[0]
+    M = 0
+    for i in range(N):
+        M = M + np.eye(N, k=-i)
+    M = M.T / np.arange(N)
+    M[:, 0] = 0
+    M[0, :] = 0
+    M = paddle.to_tensor(M)
+    aRMSE = paddle.sqrt(M.T @ error)
+    t = np.linspace(0, 4, N)
+    plt.plot(t, aRMSE)
+    plt.yscale("log")
+    plt.ylim((0, 1e-2))
+    plt.xlim((0, 4))
+    plt.savefig(fig_save_path + "error.jpg")
 
-    print("The predicted error is: ", error)
-
-    u_pred = output[:-1, 0, :, :].detach().cpu().numpy()
-    u_pred = np.swapaxes(u_pred, 1, 2)  # [h,w] = [y,x]
-    u_true = truth[:, 0, :, :]
-
-    t_true = np.linspace(0, 2, 1001)
-    t_pred = np.linspace(0, 2, time_steps)
-
-    plt.plot(t_pred, u_pred[:, 32, 32], label="x=32, y=32, CRL")
-    plt.plot(t_true, u_true[:, 32, 32], "--", label="x=32, y=32, Ref.")
-    plt.xlabel("t")
-    plt.ylabel("u")
-    plt.xlim(0, 2)
-    plt.legend()
-    plt.savefig(fig_save_path + "x=32,y=32.png")
-    plt.close("all")
+    fig, ax = plt.subplots(3, 4, figsize=(18, 12))
+    ax[0, 0].contourf(ten_true[25, 0])
+    ax[0, 0].set_title("t=1")
+    ax[0, 0].set_ylabel("truth")
+    ax[1, 0].contourf(ten_pred[25, 0])
+    ax[1, 0].set_ylabel("pred")
+    ax[2, 0].contourf(ten_true[25, 0] - ten_pred[25, 0])
+    ax[2, 0].set_ylabel("error")
+    ax[0, 1].contourf(ten_true[50, 0])
+    ax[0, 1].set_title("t=2")
+    ax[1, 1].contourf(ten_pred[50, 0])
+    ax[2, 1].contourf(ten_true[50, 0] - ten_pred[50, 0])
+    ax[0, 2].contourf(ten_true[75, 0])
+    ax[0, 2].set_title("t=3")
+    ax[1, 2].contourf(ten_pred[75, 0])
+    ax[2, 2].contourf(ten_true[75, 0] - ten_pred[75, 0])
+    ax[0, 3].contourf(ten_true[99, 0])
+    ax[0, 3].set_title("t=4")
+    ax[1, 3].contourf(ten_pred[99, 0])
+    ax[2, 3].contourf(ten_true[99, 0] - ten_pred[99, 0])
+    plt.savefig(fig_save_path + "Burgers.jpg")
+    plt.close()
