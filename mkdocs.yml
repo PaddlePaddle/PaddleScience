@@ -59,7 +59,6 @@ nav:
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
           - NSFNets: zh/examples/nsfnet.md
-          - PhyGeoNet: zh/examples/phygeonet.md
           - ShockWave: zh/examples/shock_wave.md
           - tempoGAN: zh/examples/tempoGAN.md
           - ViV: zh/examples/viv.md
@@ -73,6 +72,7 @@ nav:
         - 传热:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
           - Heat_PINN: zh/examples/heat_pinn.md
+          - PhyGeoNet: zh/examples/phygeonet.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
