@@ -432,7 +432,7 @@ class Solver:
                     f"[best metric: {self.best_metric['metric']}]"
                 )
                 for metric_dict in metric_dict_group.values():
-                    logger.scaler(
+                    logger.scalar(
                         {f"eval/{k}": v for k, v in metric_dict.items()},
                         epoch_id,
                         self.vdl_writer,
@@ -653,13 +653,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.
