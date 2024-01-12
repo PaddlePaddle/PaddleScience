@@ -367,14 +367,24 @@ class Solver:
             ]
         ) -> None:
             for container in container_dict.values():
-                for name, expr in container.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        container.output_expr[name] = ppsci.lambdify(
-                            expr,
-                            self.model,
-                            extra_parameters,
-                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
-                        )
+                exprs = [
+                    expr
+                    for expr in container.output_expr.values()
+                    if isinstance(expr, sp.Basic)
+                ]
+                if len(exprs) > 0:
+                    funcs = ppsci.lambdify(
+                        exprs,
+                        self.model,
+                        extra_parameters=extra_parameters,
+                        fuse_derivative=True,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
+                    )
+                    ind = 0
+                    for name in container.output_expr:
+                        if isinstance(container.output_expr[name], sp.Basic):
+                            container.output_expr[name] = funcs[ind]
+                            ind += 1
 
         if self.constraint:
             convert_expr(self.constraint)
@@ -422,7 +432,7 @@ class Solver:
                     f"[best metric: {self.best_metric['metric']}]"
                 )
                 for metric_dict in metric_dict_group.values():
-                    logger.scaler(
+                    logger.scalar(
                         {f"eval/{k}": v for k, v in metric_dict.items()},
                         epoch_id,
                         self.vdl_writer,
@@ -643,13 +653,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.

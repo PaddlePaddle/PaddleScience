@@ -3,13 +3,15 @@
 === "模型训练命令"
 
     案例一：Pipe Flow
+
     ``` sh
     python poiseuille_flow.py
     ```
 
     案例二：Aneurysm Flow
+
     ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
     python aneurysm_flow.py
@@ -18,13 +20,15 @@
 === "模型评估命令"
 
     案例一：Pipe Flow
+
     ``` sh
     python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
     ```
 
     案例二：Aneurysm Flow
+
     ``` sh
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
     unzip LabelFree-DNN-Surrogate_data.zip
 
     python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
@@ -114,15 +118,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="78"
+``` py linenums="71"
 --8<--
-examples/pipe/poiseuille_flow.py:78:80
---8<--
-```
-
-``` py linenums="105"
---8<--
-examples/pipe/poiseuille_flow.py:105:111
+examples/pipe/poiseuille_flow.py:71:105
 --8<--
 ```
 
@@ -134,9 +132,9 @@ examples/pipe/poiseuille_flow.py:105:111
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="117"
+``` py linenums="110"
 --8<--
-examples/pipe/poiseuille_flow.py:117:121
+examples/pipe/poiseuille_flow.py:110:115
 --8<--
 ```
 
@@ -146,9 +144,9 @@ examples/pipe/poiseuille_flow.py:117:121
 
 本文中本案例的计算域和参数自变量 $\nu$ 由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="52"
+``` py linenums="45"
 --8<--
-examples/pipe/poiseuille_flow.py:52:75
+examples/pipe/poiseuille_flow.py:45:69
 --8<--
 ```
 
@@ -210,9 +208,9 @@ examples/pipe/poiseuille_flow.py:52:75
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="128"
+    ``` py linenums="122"
     --8<--
-    examples/pipe/poiseuille_flow.py:128:146
+    examples/pipe/poiseuille_flow.py:122:142
     --8<--
     ```
 
@@ -236,9 +234,9 @@ examples/pipe/poiseuille_flow.py:52:75
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="127"
+``` py linenums="107"
 --8<--
-examples/pipe/poiseuille_flow.py:114:114
+examples/pipe/poiseuille_flow.py:107:108
 --8<--
 ```
 
@@ -246,9 +244,9 @@ examples/pipe/poiseuille_flow.py:114:114
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="152"
+``` py linenums="144"
 --8<--
-examples/pipe/poiseuille_flow.py:152:164
+examples/pipe/poiseuille_flow.py:144:156
 --8<--
 ```
 
@@ -258,9 +256,9 @@ examples/pipe/poiseuille_flow.py:152:164
 
 2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67 \times 10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
-``` py linenums="166"
+``` py linenums="159"
 --8<--
-examples/pipe/poiseuille_flow.py:166:274
+examples/pipe/poiseuille_flow.py:159:261
 --8<--
 ```
 
@@ -301,7 +299,7 @@ $$
 
 本文主要研究了两种类型的典型血管流（具有标准化的血管几何形状），狭窄流和动脉瘤流。
 狭窄血流是指流过血管的血流，其中血管壁变窄和再扩张。 血管的这种局部限制与许多心血管疾病有关，例如动脉硬化、中风和心脏病发作 。
-动脉瘤内的血管血流，即由于血管壁薄弱导致的动脉扩张，称为动脉瘤血流。 动脉瘤破裂可能导致危及生命的情况，例如，由于脑动脉瘤破裂引起的蛛网膜下腔出血 (SAH），而血液动力学的研究可以提高诊断和对动脉瘤进展和破裂的基本了解 。
+动脉瘤内的血管血流，即由于血管壁薄弱导致的动脉扩张，称为动脉瘤血流。 动脉瘤破裂可能导致危及生命的情况，例如，由于脑动脉瘤破裂引起的蛛网膜下腔出血 (SAH)，而血液动力学的研究可以提高诊断和对动脉瘤进展和破裂的基本了解 。
 
 虽然现实的血管几何形状通常是不规则和复杂的，包括曲率、分叉和连接点，但这里研究理想化的狭窄和动脉瘤模型以进行概念验证。 即，狭窄血管和动脉瘤血管都被理想化为具有不同横截面半径的轴对称管，其由以下函数参数化，
 
