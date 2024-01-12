@@ -8,7 +8,7 @@
     # only linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
     unzip data.zip
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
     tar -xvf meshes.tar
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
     tar -zxvf SU2Bin.tgz
@@ -64,7 +64,7 @@
 ``` sh
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
 unzip data.zip
-wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
 tar -xvf meshes.tar
 ```
 
@@ -172,13 +172,13 @@ examples/cfdgcn/cfdgcn.py:39:48
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="120"
+``` py linenums="125"
 --8<--
-examples/cfdgcn/cfdgcn.py:126:140
+examples/cfdgcn/cfdgcn.py:125:140
 --8<--
 ```
 
-### 3.8 结果可视化
+### 3.9 结果可视化
 
 训练完毕之后程序会对测试集中的数据进行预测，并以图片的形式对结果进行可视化，如下所示。
 

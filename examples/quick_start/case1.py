@@ -49,7 +49,7 @@ constraint = {
 # set training hyper-parameters
 EPOCHS = 10
 # set optimizer
-optimizer = ppsci.optimizer.Adam(1e-3)(model)
+optimizer = ppsci.optimizer.Adam(2e-3)(model)
 
 # set visualizer
 visual_input_dict = {
@@ -77,6 +77,13 @@ solver = ppsci.solver.Solver(
 )
 # train model
 solver.train()
+
+# compute l2-relative error of trained model
+pred_u = solver.predict(visual_input_dict, return_numpy=True)["u"]
+l2_rel = np.linalg.norm(pred_u - visual_input_dict["u_ref"]) / np.linalg.norm(
+    visual_input_dict["u_ref"]
+)
+logger.info(f"l2_rel = {l2_rel:.5f}")
 
 # visualize prediction after finished training
 solver.visualize()

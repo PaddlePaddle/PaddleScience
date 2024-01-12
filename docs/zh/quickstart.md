@@ -84,11 +84,19 @@ examples/quick_start/case1.py:67:79
 --8<--
 ```
 
-训练完毕后再用刚才取的 1000 个点进行可视化
+训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差
 
 ``` py linenums="81"
 --8<--
-examples/quick_start/case1.py:81:82
+examples/quick_start/case1.py:81:86
+--8<--
+```
+
+再对这 1000 个点的预测结果进行可视化
+
+``` py linenums="88"
+--8<--
+examples/quick_start/case1.py:88:89
 --8<--
 ```
 
@@ -97,19 +105,32 @@ examples/quick_start/case1.py:81:82
 ``` log
 ...
 ...
-ppsci INFO: [Train][Epoch 10/10][Iter  30/100] lr: 0.00100, loss: 0.00067, EQ: 0.00067, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17735.31, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  40/100] lr: 0.00100, loss: 0.00067, EQ: 0.00067, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17772.56, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  50/100] lr: 0.00100, loss: 0.00069, EQ: 0.00069, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17800.86, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  60/100] lr: 0.00100, loss: 0.00067, EQ: 0.00067, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17845.03, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  70/100] lr: 0.00100, loss: 0.00065, EQ: 0.00065, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17887.62, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  80/100] lr: 0.00100, loss: 0.00065, EQ: 0.00065, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17895.72, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter  90/100] lr: 0.00100, loss: 0.00068, EQ: 0.00068, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17900.97, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter 100/100] lr: 0.00100, loss: 0.00087, EQ: 0.00087, batch_cost: 0.00178s, reader_cost: 0.00011s, ips: 17950.15, eta: 0:00:00
-ppsci MESSAGE: 1D result is saved to: ./output_quick_start_case1/visual/epoch_0/u=sin(x).png
-ppsci INFO: [Visualize][Epoch 0] Finish visualization
+ppsci INFO: [Train][Epoch  9/10][Iter  80/100] lr: 0.00200, loss: 0.00663, EQ: 0.00663, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17756.64, eta: 0:00:00
+ppsci INFO: [Train][Epoch  9/10][Iter  90/100] lr: 0.00200, loss: 0.00598, EQ: 0.00598, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17793.97, eta: 0:00:00
+ppsci INFO: [Train][Epoch  9/10][Iter 100/100] lr: 0.00200, loss: 0.00547, EQ: 0.00547, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17864.08, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  10/100] lr: 0.00200, loss: 0.00079, EQ: 0.00079, batch_cost: 0.00182s, reader_cost: 0.00012s, ips: 17547.05, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  20/100] lr: 0.00200, loss: 0.00075, EQ: 0.00075, batch_cost: 0.00183s, reader_cost: 0.00011s, ips: 17482.92, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  30/100] lr: 0.00200, loss: 0.00077, EQ: 0.00077, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17539.51, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  40/100] lr: 0.00200, loss: 0.00074, EQ: 0.00074, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17587.51, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  50/100] lr: 0.00200, loss: 0.00071, EQ: 0.00071, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17563.59, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  60/100] lr: 0.00200, loss: 0.00070, EQ: 0.00070, batch_cost: 0.00182s, reader_cost: 0.00011s, ips: 17604.60, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  70/100] lr: 0.00200, loss: 0.00074, EQ: 0.00074, batch_cost: 0.00181s, reader_cost: 0.00011s, ips: 17699.28, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  80/100] lr: 0.00200, loss: 0.00077, EQ: 0.00077, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17764.92, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  90/100] lr: 0.00200, loss: 0.00075, EQ: 0.00075, batch_cost: 0.00180s, reader_cost: 0.00011s, ips: 17795.87, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter 100/100] lr: 0.00200, loss: 0.00071, EQ: 0.00071, batch_cost: 0.00179s, reader_cost: 0.00011s, ips: 17872.00, eta: 0:00:00
 ```
 
-预测结果如下所示
+训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差
+
+``` py linenums="81"
+--8<--
+examples/quick_start/case1.py:81:86
+--8<--
+```
+
+可以看到利用标准解监督训练模型，在标准解附近仍有很好的预测能力，L2-相对误差为 0.02677。
+
+预测结果可视化如下所示
 
 ![u=sin(x) prediction](../images/quickstart/u_pred_case1.png)
 
@@ -206,15 +227,31 @@ examples/quick_start/case2.py:91:102
 ``` log
 ...
 ...
-ppsci INFO: [Train][Epoch 10/10][Iter: 70/100] lr: 0.00100, loss: 0.00035, EQ: 0.00035, batch_cost: 0.01183s, reader_cost: 0.00017s, ips: 2705.18 samples/s, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter: 80/100] lr: 0.00100, loss: 0.00035, EQ: 0.00035, batch_cost: 0.01133s, reader_cost: 0.00017s, ips: 2823.74 samples/s, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter: 90/100] lr: 0.00100, loss: 0.00036, EQ: 0.00036, batch_cost: 0.01141s, reader_cost: 0.00017s, ips: 2803.77 samples/s, eta: 0:00:00
-ppsci INFO: [Train][Epoch 10/10][Iter: 100/100] lr: 0.00100, loss: 0.00036, EQ: 0.00036, batch_cost: 0.01106s, reader_cost: 0.00016s, ips: 2892.93 samples/s, eta: 0:00:00
-ppsci INFO: 1D result is saved to ./output_quick_start_case2/visual/epoch_0/u=sin(x)+2.png
-ppsci INFO: [Visualize][Epoch 0] Finished visualization.
+ppsci INFO: [Train][Epoch  9/10][Iter  90/100] lr: 0.00200, loss: 0.00176, EQ: 0.00087, BC: 0.00088, batch_cost: 0.00346s, reader_cost: 0.00024s, ips: 9527.80, eta: 0:00:00
+ppsci INFO: [Train][Epoch  9/10][Iter 100/100] lr: 0.00200, loss: 0.00170, EQ: 0.00087, BC: 0.00083, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9452.07, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  10/100] lr: 0.00200, loss: 0.00107, EQ: 0.00072, BC: 0.00035, batch_cost: 0.00350s, reader_cost: 0.00025s, ips: 9424.75, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  20/100] lr: 0.00200, loss: 0.00116, EQ: 0.00083, BC: 0.00033, batch_cost: 0.00350s, reader_cost: 0.00025s, ips: 9441.33, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  30/100] lr: 0.00200, loss: 0.00103, EQ: 0.00079, BC: 0.00024, batch_cost: 0.00355s, reader_cost: 0.00025s, ips: 9291.90, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  40/100] lr: 0.00200, loss: 0.00108, EQ: 0.00078, BC: 0.00030, batch_cost: 0.00353s, reader_cost: 0.00025s, ips: 9348.09, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  50/100] lr: 0.00200, loss: 0.00163, EQ: 0.00082, BC: 0.00082, batch_cost: 0.00350s, reader_cost: 0.00024s, ips: 9416.24, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  60/100] lr: 0.00200, loss: 0.00160, EQ: 0.00083, BC: 0.00077, batch_cost: 0.00353s, reader_cost: 0.00024s, ips: 9345.73, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  70/100] lr: 0.00200, loss: 0.00150, EQ: 0.00082, BC: 0.00068, batch_cost: 0.00351s, reader_cost: 0.00024s, ips: 9393.89, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  80/100] lr: 0.00200, loss: 0.00146, EQ: 0.00081, BC: 0.00064, batch_cost: 0.00350s, reader_cost: 0.00024s, ips: 9424.81, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter  90/100] lr: 0.00200, loss: 0.00138, EQ: 0.00081, BC: 0.00058, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9444.12, eta: 0:00:00
+ppsci INFO: [Train][Epoch 10/10][Iter 100/100] lr: 0.00200, loss: 0.00133, EQ: 0.00079, BC: 0.00054, batch_cost: 0.00349s, reader_cost: 0.00024s, ips: 9461.54, eta: 0:00:00
 ```
 
-预测结果如下所示
+训练完毕后再用刚才取的 1000 个点与标准解计算 L2-相对误差
+
+``` py linenums="104"
+--8<--
+examples/quick_start/case2.py:104:109
+--8<--
+```
+
+可以看到利用微分方程训练的模型，在标准解附近仍有很好的预测能力，L2-相对误差为 0.00564。
+
+预测结果可视化如下所示
 
 ![u=sin(x)+2 prediction](../images/quickstart/u_pred_case2.png)
 
