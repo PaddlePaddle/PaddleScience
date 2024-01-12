@@ -47,7 +47,7 @@
 
 执行以下命令以 pip 的方式安装 PaddleScience。
 
-``` shell
+``` sh
 pip install paddlesci
 ```
 
@@ -139,7 +139,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check()"
     ```
 
@@ -148,7 +148,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 - [可选]如果已按照 [1.4.3 额外依赖安装](#143) 正确安装了 4 个额外依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check_mesh()"
     ```
 
@@ -158,7 +158,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 运行内置的案例（以 **ldc2d_unsteady_Re10.py** 为例）
 
-    ``` shell
+    ``` sh
     cd examples/ldc/
     python ./ldc2d_unsteady_Re10.py
     ```
@@ -175,7 +175,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
     编写完毕后运行你的代码
 
-    ``` shell
+    ``` sh
     cd examples/demo
     python ./demo.py
     ```

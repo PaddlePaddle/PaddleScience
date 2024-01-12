@@ -10,13 +10,13 @@ PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) �
 
 在使用 hydra 配置运行参数前，请先执行以下命令检查是否已安装 `hydra`。
 
-``` shell
+``` sh
 pip show hydra-core
 ```
 
 如未安装，则需执行以下命令安装 `hydra`。
 
-``` shell
+``` sh
 pip install hydra-core
 ```
 
@@ -28,7 +28,7 @@ pip install hydra-core
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title="$ python bracket.py {++-c job++}"
+``` sh title="$ python bracket.py {++-c job++}"
 mode: train
 seed: 2023
 output_dir: ${hydra:run.dir}
@@ -74,7 +74,7 @@ TRAIN:
 - 将上述配置文件中的 `learning_rate: 0.001` 改为 `learning_rate: 0.002`，然后再运行程序。这种方式虽然简单，但在实验较多时容易造成实验混乱，因此不推荐使用。
 - 通过命令行参数的方式进行修改，如下所示。
 
-    ``` shell
+    ``` sh
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
@@ -95,7 +95,7 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
@@ -109,7 +109,7 @@ TRAIN:
 
 多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-``` shell title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
+``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
 └──2023-10-14 # (1)
     └── 04-01-52 # (2)

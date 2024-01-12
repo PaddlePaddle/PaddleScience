@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 PaddleScience 内置了一些常见的模型，如 `MLP` 模型，如果您想使用这些内置的模型，可以直接调用 [`ppsci.arch.*`](./api/arch.md) 下的 API，并填入模型实例化所需的参数，即可快速构建模型。
 
-``` py  title="examples/demo/demo.py"
+``` py title="examples/demo/demo.py"
 # create a MLP model
 model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 ```
@@ -638,7 +638,7 @@ solver.visualize()
 
 文档撰写过程中需进行即时渲染，预览文档内容以检查撰写的内容是否有误。因此需要按照如下命令，安装 mkdocs 相关依赖包。
 
-``` shell
+``` sh
 pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
@@ -650,7 +650,7 @@ PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-
 
 在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
 
-``` shell
+``` sh
 mkdocs serve
 
 # ====== 终端打印信息如下 ======
@@ -667,7 +667,7 @@ mkdocs serve
 
     若默认端口号 8000 被占用，则可以手动指定服务部署的地址和端口，示例如下。
 
-    ``` shell
+    ``` sh
     # 指定 127.0.0.1 为地址，8687 为端口号
     mkdocs serve -a 127.0.0.1:8687
     ```

@@ -55,7 +55,7 @@ optimizer = ppsci.optimizer.Adam(1e-3)(model)
 visual_input_dict = {
     "x": np.linspace(l_limit, r_limit, 1000, dtype="float32").reshape(1000, 1)
 }
-visual_input_dict["u_ref"] = np.sin(visual_input_dict["x"]) + 2.0
+visual_input_dict["u_ref"] = np.sin(visual_input_dict["x"])
 visualizer = {
     "visualize_u": ppsci.visualize.VisualizerScatter1D(
         visual_input_dict,
