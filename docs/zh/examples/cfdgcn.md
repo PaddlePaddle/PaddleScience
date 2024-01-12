@@ -8,7 +8,7 @@
     # only linux
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
     unzip data.zip
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
     tar -xvf meshes.tar
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/SU2Bin.tgz
     tar -zxvf SU2Bin.tgz
@@ -64,7 +64,7 @@
 ``` shell
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/data.zip
 unzip data.zip
-wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar
 tar -xvf meshes.tar
 ```
 
@@ -178,7 +178,7 @@ examples/cfdgcn/cfdgcn.py:126:140
 --8<--
 ```
 
-### 3.8 结果可视化
+### 3.9 结果可视化
 
 训练完毕之后程序会对测试集中的数据进行预测，并以图片的形式对结果进行可视化，如下所示。
 
