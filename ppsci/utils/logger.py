@@ -53,7 +53,7 @@ __all__ = [
     "debug",
     "warning",
     "error",
-    "scaler",
+    "scalar",
 ]
 
 
@@ -196,13 +196,13 @@ def error(msg, *args):
     _logger.error(msg, *args)
 
 
-def scaler(
+def scalar(
     metric_dict: Dict[str, float],
     step: int,
     vdl_writer: Optional["visualdl.LogWriter"] = None,
     wandb_writer: Optional["wandb.run"] = None,
 ):
-    """This function will add scaler data to VisualDL or WandB for plotting curve(s).
+    """This function will add scalar data to VisualDL or WandB for plotting curve(s).
 
     Args:
         metric_dict (Dict[str, float]): Metrics dict with metric name and value.

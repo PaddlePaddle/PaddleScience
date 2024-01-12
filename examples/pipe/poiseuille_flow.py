@@ -28,7 +28,6 @@ from omegaconf import DictConfig
 
 import ppsci
 from ppsci.utils import checker
-from ppsci.utils import logger
 
 if not checker.dynamic_import_to_globals("seaborn"):
     raise ModuleNotFoundError("Please install seaborn through pip first.")
@@ -37,11 +36,6 @@ import seaborn as sns
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     X_OUT = cfg.X_IN + cfg.L
     Y_START = -cfg.R
     Y_END = Y_START + 2 * cfg.R
@@ -144,7 +138,6 @@ def train(cfg: DictConfig):
         evenly=True,
         name="EQ",
     )
-
     # wrap constraints together
     constraint = {pde_constraint.name: pde_constraint}
 
@@ -160,7 +153,6 @@ def train(cfg: DictConfig):
         save_freq=cfg.TRAIN.save_freq,
         equation=equation,
     )
-
     solver.train()
 
 
@@ -234,11 +226,6 @@ def evaluate(cfg: DictConfig):
     model_v.register_output_transform(transform.output_trans_v)
     model_p.register_output_transform(transform.output_trans_p)
     model = ppsci.arch.ModelList((model_u, model_v, model_p))
-
-    # set euqation
-    equation = {
-        "NavierStokes": ppsci.equation.NavierStokes(nu="nu", rho=RHO, dim=2, time=False)
-    }
 
     # Validator vel
     input_dict = {
@@ -349,18 +336,17 @@ def evaluate(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        equation=equation,
         validator=validator,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
         eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
     solver.eval()
 
-    output_dict = solver.predict(input_dict)
-    u_pred = output_dict["u"].numpy().reshape(N_y, N_x, N_p)
+    output_dict = solver.predict(input_dict, return_numpy=True)
+    u_pred = output_dict["u"].reshape(N_y, N_x, N_p)
     fontsize = 16
     idx_X = int(round(N_x / 2))  # pipe velocity section at L/2
-    nu_index = [3, 6, 9, 12, 14, 20, 49]  # pick 4 nu samples
+    nu_index = [3, 6, 9, 12, 14, 20, 49]  # pick 7 nu samples
     ytext = [0.55, 0.5, 0.4, 0.28, 0.1, 0.05, 0.001]  # text y position
 
     # Plot
@@ -409,8 +395,8 @@ def evaluate(cfg: DictConfig):
         "y": data_2d_xy_test[:, 1:2],
         "nu": data_2d_xy_test[:, 2:3],
     }
-    output_dict_test = solver.predict(input_dict_test)
-    u_max_pred = output_dict_test["u"].numpy()
+    output_dict_test = solver.predict(input_dict_test, return_numpy=True)
+    u_max_pred = output_dict_test["u"]
 
     # Analytical result, y = 0
     u_max_a = (R**2) * dP / (2 * L * data_1d_nu_distribution * RHO)

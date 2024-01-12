@@ -92,7 +92,7 @@ def log_train_info(
         log_str += f", {max_mem_reserved_msg}, {max_mem_allocated_msg}"
     logger.info(log_str)
 
-    logger.scaler(
+    logger.scalar(
         {
             "train/lr": trainer.optimizer.get_lr(),
             **{
@@ -137,7 +137,7 @@ def log_eval_info(
         f"{metric_msg}, {time_msg}, {ips_msg}, {eta_msg}"
     )
 
-    logger.scaler(
+    logger.scalar(
         {
             f"eval/{key}": trainer.eval_output_info[key].avg
             for key in trainer.eval_output_info
