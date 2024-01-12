@@ -398,14 +398,24 @@ class Solver:
             ]
         ) -> None:
             for container in container_dict.values():
-                for name, expr in container.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        container.output_expr[name] = ppsci.lambdify(
-                            expr,
-                            self.model,
-                            extra_parameters,
-                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
-                        )
+                exprs = [
+                    expr
+                    for expr in container.output_expr.values()
+                    if isinstance(expr, sp.Basic)
+                ]
+                if len(exprs) > 0:
+                    funcs = ppsci.lambdify(
+                        exprs,
+                        self.model,
+                        extra_parameters=extra_parameters,
+                        fuse_derivative=True,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
+                    )
+                    ind = 0
+                    for name in container.output_expr:
+                        if isinstance(container.output_expr[name], sp.Basic):
+                            container.output_expr[name] = funcs[ind]
+                            ind += 1
 
         if self.constraint:
             convert_expr(self.constraint)

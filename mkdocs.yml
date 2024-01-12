@@ -61,7 +61,7 @@ nav:
           - ShockWave: zh/examples/shock_wave.md
           - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
-          - PhyGeoNet: zh/examples/phygeonet.md
+          - NSFNets: zh/examples/nsfnet.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -72,6 +72,7 @@ nav:
         - 传热:
           - Heat_PINN: zh/examples/heat_pinn.md
           - Heat_Exchanger: zh/examples/heat_exchanger.md
+          - PhyGeoNet: zh/examples/phygeonet.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):

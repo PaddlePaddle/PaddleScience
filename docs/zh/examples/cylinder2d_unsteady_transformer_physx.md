@@ -122,7 +122,7 @@ $$
 
 ## 3. 问题求解
 
-接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](../lorenz/#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](lorenz.md#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
 ### 3.1 数据集介绍
 
@@ -137,7 +137,7 @@ $$Re \sim(100, 750)$$
 |训练集 |27         |400       |[cylinder_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5)|
 |验证集 |6          |400       |[cylinder_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5)|
 
-数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+数据集官网为：<https://zenodo.org/record/5148524#.ZDe77-xByrc>
 
 ### 3.2 Embedding 模型
 
