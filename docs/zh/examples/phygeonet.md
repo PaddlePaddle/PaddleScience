@@ -55,8 +55,8 @@
 
 | 模型 | mRes | ev |
 | :-- | :-- | :-- |
-| [heat_equation](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
-| [heat_equation_parameterized_bc](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams)  | 992 |0.31|
+| [heat_equation_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
+| [heat_equation_bc_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams)  | 992 |0.31|
 
 ## 1. 背景简介
 
