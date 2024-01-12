@@ -11,6 +11,6 @@
         - debug
         - warning
         - error
-        - scaler
+        - scalar
       show_root_heading: True
       heading_level: 3
