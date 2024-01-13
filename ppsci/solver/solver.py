@@ -49,6 +49,13 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 
+def depprecate_warn(name: str):
+    logger.warning(
+        f"The argument '{name}' is deprecated in Solver(...), and will be removed in"
+        " the future."
+    )
+
+
 class Solver:
     """Class for solver.
 
@@ -58,59 +65,59 @@ class Solver:
         output_dir (Optional[str]): Output directory. Defaults to "./output/".
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
-            Deprecated for it is equivalent to 'optimizer._learning_rate'.
+            Deprecated for it will be fetched from 'optimizer._learning_rate' if available.
         epochs (int, optional): Training epoch(s). Defaults to 5.
-            Deprecated for recommended defined as 'cfg.TRAIN.epochs' in config yaml..
+            Deprecated and it is recommended defined as 'cfg.TRAIN.epochs' in config yaml..
         iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
-            Deprecated for recommended defined as 'cfg.TRAIN.iters_per_epoch' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.iters_per_epoch' in config yaml.
         update_freq (int, optional): Update frequency of parameters. Defaults to 1.
-            Deprecated for recommended defined as 'cfg.TRAIN.update_freq' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.update_freq' in config yaml.
         save_freq (int, optional): Saving frequency for checkpoint. Defaults to 0.
-            Deprecated for recommended defined as 'cfg.TRAIN.save_freq' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.save_freq' in config yaml.
         log_freq (int, optional): Logging frequency. Defaults to 10.
-            Deprecated for recommended defined as 'cfg.log_freq' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.log_freq' in config yaml.
         eval_during_train (bool, optional): Whether evaluate model during training. Defaults to False.
-            Deprecated for recommended defined as 'cfg.TRAIN.eval_during_train' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.eval_during_train' in config yaml.
         start_eval_epoch (int, optional): Epoch number evaluation applied begin after. Defaults to 1.
-            Deprecated for recommended defined as 'cfg.TRAIN.start_eval_epoch' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.start_eval_epoch' in config yaml.
         eval_freq (int, optional): Evaluation frequency. Defaults to 1.
-            Deprecated for recommended defined as 'cfg.TRAIN.eval_freq' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.eval_freq' in config yaml.
         seed (int, optional): Random seed. Defaults to 42.
-            Deprecated for recommended defined as 'cfg.seed' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.seed' in config yaml.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
-            Deprecated for recommended defined as 'cfg.use_vdl' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.use_vdl' in config yaml.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
-            Deprecated for recommended defined as 'cfg.use_wandb' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.use_wandb' in config yaml.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
-            Deprecated for recommended defined as 'cfg.wandb_config' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.wandb_config' in config yaml.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
-            Deprecated for recommended defined as 'cfg.device' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.device' in config yaml.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
             Deprecated for it is of no use.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
-            Deprecated for recommended defined as 'cfg.use_amp' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.use_amp' in config yaml.
         amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
-            Deprecated for recommended defined as 'cfg.amp_level' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.amp_level' in config yaml.
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
-            Deprecated for recommended defined as 'cfg.TRAIN.pretrained_model_path' or 'cfg.EVAL.pretrained_model_path' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.pretrained_model_path' or 'cfg.EVAL.pretrained_model_path' in config yaml.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
-            Deprecated for recommended defined as 'cfg.TRAIN.checkpoint_path' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.TRAIN.checkpoint_path' in config yaml.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
-            Deprecated for recommended defined as 'cfg.EVAL.compute_metric_by_batch' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.EVAL.compute_metric_by_batch' in config yaml.
         eval_with_no_grad (bool, optional): Whether set `stop_gradient=True` for every Tensor if no differentiation
             involved during computation, generally for save GPU memory and accelerate computing. Defaults to False.
-            Deprecated for recommended defined as 'cfg.EVAL.eval_with_no_grad' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.EVAL.eval_with_no_grad' in config yaml.
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
-            Deprecated for recommended defined as 'cfg.to_static' in config yaml.
+            Deprecated and it is recommended defined as 'cfg.to_static' in config yaml.
         loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
 
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> opt = ppsci.optimizer.AdamW(1e-3)(model)
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -181,10 +188,12 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
+        if lr_scheduler is not None:
+            depprecate_warn("lr_scheduler")
         self.lr_scheduler = (
             # TODO: remove arg 'lr_scheduler' for redundant to opt._learning_rate
             optimizer._learning_rate
-            if isinstance(optimizer, optim.lr.LRScheduler)
+            if isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
             else None
         )
 
@@ -227,6 +236,8 @@ class Solver:
             device = "cpu"
         self.device = paddle.set_device(device)
 
+        if geom is not None:
+            depprecate_warn("geom")
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
 
