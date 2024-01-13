@@ -49,13 +49,6 @@ from ppsci.utils import misc
 from ppsci.utils import save_load
 
 
-def depprecate_warn(name: str):
-    logger.warning(
-        f"The argument '{name}' is deprecated in Solver(...), and will be removed in"
-        " the future."
-    )
-
-
 class Solver:
     """Class for solver.
 
@@ -94,12 +87,12 @@ class Solver:
             Deprecated and it is recommended defined as 'cfg.device' in config yaml.
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
         geom (Optional[Dict[str, ppsci.geometry.Geometry]]): Geometry dict. Defaults to None.
-            Deprecated for it is of no use.
+            Deprecated for it is no longer in use.
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
             Deprecated and it is recommended defined as 'cfg.use_amp' in config yaml.
-        amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O0".
             Deprecated and it is recommended defined as 'cfg.amp_level' in config yaml.
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
             Deprecated and it is recommended defined as 'cfg.TRAIN.pretrained_model_path' or 'cfg.EVAL.pretrained_model_path' in config yaml.
@@ -113,6 +106,9 @@ class Solver:
         to_static (bool, optional): Whether enable to_static for forward pass. Defaults to False.
             Deprecated and it is recommended defined as 'cfg.to_static' in config yaml.
         loss_aggregator (Optional[mtl.LossAggregator]): Loss aggregator, such as a multi-task learning loss aggregator. Defaults to None.
+        cfg (Optional[DictConfig], optional): Configuration dict and it is recommended
+            to write the parameter configuration in a config yaml and pass it through
+            'cfg', instead of passing it directly to the Solver itself. Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -165,7 +161,7 @@ class Solver:
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
         visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: Literal["O1", "O2", "O0"] = "O0",
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O0",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
@@ -188,8 +184,6 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        if lr_scheduler is not None:
-            depprecate_warn("lr_scheduler")
         self.lr_scheduler = (
             # TODO: remove arg 'lr_scheduler' for redundant to opt._learning_rate
             optimizer._learning_rate
@@ -236,8 +230,6 @@ class Solver:
             device = "cpu"
         self.device = paddle.set_device(device)
 
-        if geom is not None:
-            depprecate_warn("geom")
         # set equations for physics-driven or data-physics hybrid driven task, such as PINN
         self.equation = equation
 
@@ -695,7 +687,7 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
@@ -820,7 +812,24 @@ class Solver:
         full_cfg = DictConfig(cfg_pydantic.model_dump())
 
         # assign cfg items to solver's attributes after checking passed
+
+        # 1. generic hyper-parameters
         self.output_dir = full_cfg.output_dir
+        self.seed = full_cfg.seed
+        self.use_vdl = full_cfg.use_vdl
+        self.use_wandb = full_cfg.use_wandb
+        self.wandb_config = full_cfg.wandb_config
+        self.device = full_cfg.device
+        self.use_amp = full_cfg.use_amp
+        self.amp_level = full_cfg.amp_level.upper()
+        self.to_static = full_cfg.to_static
+        self.pretrained_model_path = (
+            full_cfg.TRAIN.pretrained_model_path
+            if full_cfg.mode == "train"
+            else full_cfg.EVAL.pretrained_model_path
+        )
+
+        # 2. training-related hyper-parameters
         self.epochs = full_cfg.TRAIN.epochs
         self.iters_per_epoch = full_cfg.TRAIN.iters_per_epoch
         self.update_freq = full_cfg.TRAIN.update_freq
@@ -829,19 +838,8 @@ class Solver:
         self.eval_during_train = full_cfg.TRAIN.eval_during_train
         self.start_eval_epoch = full_cfg.TRAIN.start_eval_epoch
         self.eval_freq = full_cfg.TRAIN.eval_freq
-        self.seed = full_cfg.seed
-        self.use_vdl = full_cfg.use_vdl
-        self.use_wandb = full_cfg.use_wandb
-        self.wandb_config = full_cfg.wandb_config
-        self.device = full_cfg.device
-        self.use_amp = full_cfg.use_amp
-        self.amp_level = full_cfg.amp_level.upper()
-        self.pretrained_model_path = (
-            full_cfg.TRAIN.pretrained_model_path
-            if full_cfg.mode == "train"
-            else full_cfg.EVAL.pretrained_model_path
-        )
         self.checkpoint_path = full_cfg.TRAIN.checkpoint_path
+
+        # 3. evaluation-related hyper-parameters
         self.compute_metric_by_batch = full_cfg.EVAL.compute_metric_by_batch
         self.eval_with_no_grad = full_cfg.EVAL.eval_with_no_grad
-        self.to_static = full_cfg.to_static
