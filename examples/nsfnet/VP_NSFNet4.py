@@ -24,28 +24,17 @@ from ppsci.utils import logger
 
 
 class Transform:
-    def __init__(
-        self,
-        lowb=np.array([[12.47, -1.0, 4.61, 0.0]]),
-        upb=np.array([1.266e01, -3.100e-03, 4.820e00, 1.040e-01]),
-    ) -> None:
-        self.lowb = lowb
-        self.upb = upb
+    def __init__(self, lowb, upb) -> None:
+        self.lowb = {"x": lowb[0], "y": lowb[1], "z": lowb[2], "t": lowb[3]}
+        self.upb = {"x": upb[0], "y": upb[1], "z": upb[2], "t": upb[3]}
 
     def input_trans(self, input_dict):
         lowb = self.lowb
         upb = self.upb
         for key, v in input_dict.items():
-            v = 2.0 * (v - lowb) / (upb - lowb) - 1.0
+            v = 2.0 * (v - lowb[key]) / (upb[key] - lowb[key]) - 1.0
             input_dict[key] = v
         return input_dict
-
-
-# normalization
-def dimensionless(lowb, upb, xb_train, yb_train, zb_train, tb_train):
-    Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
-    Xb = 2.0 * (Xb - lowb) / (upb - lowb) - 1.0
-    return Xb[:, 0:1], Xb[:, 1:2], Xb[:, 2:3], Xb[:, 3:4]
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
@@ -129,7 +118,7 @@ def train(cfg: DictConfig):
     Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
     lowb = Xb.min(0)  # minimal number in each column
     upb = Xb.max(0)
-    trans = Transform(lowb, upb)
+    trans = Transform(paddle.to_tensor(lowb), paddle.to_tensor(upb))
     model.register_input_transform(trans.input_trans)
 
     # set dataloader config
@@ -253,7 +242,7 @@ def train(cfg: DictConfig):
         model=model,
         constraint=constraint,
         optimizer=optimizer,
-        epochs=250,
+        epochs=EPOCHS,
         lr_scheduler=lr_scheduler,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
