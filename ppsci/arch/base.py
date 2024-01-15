@@ -146,11 +146,11 @@ class Arch(nn.Layer):
             ...     x = in_["x"]
             ...     # transform input
             ...     x_ = 2.0 * x
-            ...     input_trans = {"x": x_}
+            ...     input_trans = {"2x": x_}
             ...     return input_trans
             >>> # `MLP` inherits from `Arch`
             >>> model = ppsci.arch.MLP(
-            ...     input_keys=("x",),
+            ...     input_keys=("2x",),
             ...     output_keys=("y",),
             ...     num_layers=5,
             ...     hidden_size=32)
