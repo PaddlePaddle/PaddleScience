@@ -92,7 +92,7 @@ class DeepPhyLSTM(base.Arch):
                 nn.Linear(hidden_size, output_size),
             )
         else:
-            raise ValueError(f"model_type should be 2 or 3, but got {model_type})")
+            raise ValueError(f"model_type should be 2 or 3, but got {model_type}")
 
     def forward(self, x):
         if self._input_transform is not None:
