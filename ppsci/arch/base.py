@@ -72,6 +72,25 @@ class Arch(nn.Layer):
 
         Returns:
             Tuple[paddle.Tensor, ...]: Concatenated tensor.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> model = ppsci.arch.Arch()
+            >>> # fetch one tensor
+            >>> out = model.concat_to_tensor({'x':paddle.to_tensor(123)}, ('x',))
+            >>> print(out)
+            Tensor(shape=[], dtype=int64, place=Place(gpu:0), stop_gradient=True,
+                   123)
+            >>> # fetch more tensors
+            >>> out = model.concat_to_tensor(
+            ...     {'x1':paddle.to_tensor([123]), 'x2':paddle.to_tensor([234])},
+            ...     ('x1', 'x2'),
+            ...     axis=0)
+            >>> print(out)
+            Tensor(shape=[2], dtype=int64, place=Place(gpu:0), stop_gradient=True,
+                   [123, 234])
+
         """
         if len(keys) == 1:
             return data_dict[keys[0]]
@@ -90,6 +109,23 @@ class Arch(nn.Layer):
 
         Returns:
             Dict[str, paddle.Tensor]: Dict contains tensor.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> model = ppsci.arch.Arch()
+            >>> # split one tensor
+            >>> out = model.split_to_dict(paddle.to_tensor(123), ('x',))
+            >>> print(out)
+            {'x': Tensor(shape=[], dtype=int64, place=Place(gpu:0), stop_gradient=True,
+                   123)}
+            >>> # split more tensors
+            >>> out = model.split_to_dict(paddle.to_tensor([123, 234]), ('x1', 'x2'), axis=0)
+            >>> print(out)
+            {'x1': Tensor(shape=[1], dtype=int64, place=Place(gpu:0), stop_gradient=True,
+                   [123]), 'x2': Tensor(shape=[1], dtype=int64, place=Place(gpu:0), stop_gradient=True,
+                   [234])}
+
         """
         if len(keys) == 1:
             return {keys[0]: data_tensor}
@@ -105,6 +141,17 @@ class Arch(nn.Layer):
         Args:
             transform (Callable[[Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
                 Input transform of network, receive a single tensor dict and return a single tensor dict.
+
+        Examples:
+            >>> import ppsci
+            >>> def transform_fn(in_):
+            ...     x = in_["x"]
+            ...     x = 2.0 * x
+            ...     input_trans = {"x": x}
+            ...     return input_trans
+            >>> model = ppsci.arch.Arch()
+            >>> model.register_input_transform(transform_fn)
+
         """
         self._input_transform = transform
 
@@ -121,18 +168,46 @@ class Arch(nn.Layer):
             transform (Callable[[Dict[str, paddle.Tensor], Dict[str, paddle.Tensor]], Dict[str, paddle.Tensor]]):
                 Output transform of network, receive two single tensor dict(raw input
                 and raw output) and return a single tensor dict(transformed output).
+
+        Examples:
+            >>> import ppsci
+            >>> def transform_fn(in_, out):
+            ...     x = in_["x"]
+            ...     y = out["y"]
+            ...     u = 2.0 * x * y
+            ...     output_trans = {"u": u}
+            ...     return output_trans
+            >>> model = ppsci.arch.Arch()
+            >>> model.register_output_transform(transform_fn)
+
         """
         self._output_transform = transform
 
     def freeze(self):
-        """Freeze all parameters."""
+        """Freeze all parameters.
+
+        Examples:
+            >>> import ppsci
+            >>> model = ppsci.arch.Arch()
+            >>> # freeze all parameters and make model `eval`
+            >>> model.freeze()
+
+        """
         for param in self.parameters():
             param.stop_gradient = True
 
         self.eval()
 
     def unfreeze(self):
-        """Unfreeze all parameters."""
+        """Unfreeze all parameters.
+
+        Examples:
+            >>> import ppsci
+            >>> model = ppsci.arch.Arch()
+            >>> # unfreeze all parameters and make model `train`
+            >>> model.unfreeze()
+
+        """
         for param in self.parameters():
             param.stop_gradient = False
 
