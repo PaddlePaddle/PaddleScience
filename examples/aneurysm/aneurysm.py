@@ -4,23 +4,15 @@ STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/dat
 pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
 """
 
-from os import path as osp
-
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 from ppsci.utils import reader
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -259,11 +251,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -351,11 +338,6 @@ def evaluate(cfg: DictConfig):
 
 
 def export(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -363,7 +345,6 @@ def export(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        seed=cfg.seed,
         pretrained_model_path=cfg.EVAL.pretrained_model_path,
     )
     # evaluate
