@@ -74,7 +74,7 @@ $$u_x\frac{\partial u_y}{\partial x} + u_y\frac{\partial u_y}{\partial y} = - \f
 
 运行本问题代码前请按照下方命令下载 [dataX](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl) 和 [dataY](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl)：
 
-``` shell
+``` sh
 wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
 wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
 ```
