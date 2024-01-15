@@ -10,13 +10,13 @@ PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) �
 
 在使用 hydra 配置运行参数前，请先执行以下命令检查是否已安装 `hydra`。
 
-``` shell
+``` sh
 pip show hydra-core
 ```
 
 如未安装，则需执行以下命令安装 `hydra`。
 
-``` shell
+``` sh
 pip install hydra-core
 ```
 
@@ -28,7 +28,7 @@ pip install hydra-core
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title="$ python bracket.py {++-c job++}"
+``` sh title="$ python bracket.py {++-c job++}"
 mode: train
 seed: 2023
 output_dir: ${hydra:run.dir}
@@ -74,15 +74,15 @@ TRAIN:
 - 将上述配置文件中的 `learning_rate: 0.001` 改为 `learning_rate: 0.002`，然后再运行程序。这种方式虽然简单，但在实验较多时容易造成实验混乱，因此不推荐使用。
 - 通过命令行参数的方式进行修改，如下所示。
 
-    ``` shell
+    ``` sh
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
     这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
 
-!!! warning
+!!! tip "设置含转义字符的参数值"
 
-    以命令行方式设置参数时，若参数值中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数值包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序，假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
+    以命令行方式设置参数时，若参数值中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数值包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序。假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
 
     ``` sh
     # 正确的参数指定方式如下
@@ -109,7 +109,7 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
@@ -123,7 +123,7 @@ TRAIN:
 
 多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-``` shell title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
+``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
 └──2023-10-14 # (1)
     └── 04-01-52 # (2)

@@ -92,7 +92,7 @@ def run_check() -> None:
         validator = {residual_validator.name: residual_validator}
 
         EPOCHS = 2
-        optimizer = ppsci.optimizer.Adam(0.001)((model,))
+        optimizer = ppsci.optimizer.Adam(0.001)(model)
         solver = ppsci.solver.Solver(
             model,
             constraint,
@@ -225,7 +225,7 @@ def run_check_mesh() -> None:
         validator = {residual_validator.name: residual_validator}
 
         EPOCHS = 2
-        optimizer = ppsci.optimizer.Adam(0.001)((model,))
+        optimizer = ppsci.optimizer.Adam(0.001)(model)
         solver = ppsci.solver.Solver(
             model,
             constraint,

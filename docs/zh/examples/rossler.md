@@ -83,7 +83,7 @@ examples/rossler/conf/enn.yaml:22:34
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="57" title="examples/rossler/train_enn.py"
+``` py linenums="55" title="examples/rossler/train_enn.py"
 --8<--
 examples/rossler/train_enn.py:55:74
 --8<--
@@ -129,9 +129,9 @@ examples/rossler/train_enn.py:76:86
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="89" title="examples/rossler/train_enn.py"
+``` py linenums="92" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:93:99
+examples/rossler/train_enn.py:92:99
 --8<--
 ```
 
@@ -189,9 +189,9 @@ examples/rossler/conf/transformer.yaml:23:34
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="67" title="examples/rossler/train_transformer.py"
+``` py linenums="64" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:65:82
+examples/rossler/train_transformer.py:64:82
 --8<--
 ```
 
