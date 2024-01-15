@@ -79,17 +79,15 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # fetch one tensor
             >>> out = model.concat_to_tensor({'x':paddle.to_tensor(123)}, ('x',))
-            >>> print(out)
-            Tensor(shape=[], dtype=int64, place=Place(gpu:0), stop_gradient=True,
-                   123)
+            >>> print(out.dtype, out.shape)
+            paddle.int64 []
             >>> # fetch more tensors
             >>> out = model.concat_to_tensor(
-            ...     {'x1':paddle.to_tensor([123]), 'x2':paddle.to_tensor([234])},
+            ...     {'x1':paddle.to_tensor([[1, 2], [2, 3]]), 'x2':paddle.to_tensor([[3, 4], [4, 5]])},
             ...     ('x1', 'x2'),
             ...     axis=0)
-            >>> print(out)
-            Tensor(shape=[2], dtype=int64, place=Place(gpu:0), stop_gradient=True,
-                   [123, 234])
+            >>> print(out.dtype, out.shape)
+            paddle.int64 [4, 2]
 
         """
         if len(keys) == 1:
@@ -116,15 +114,15 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # split one tensor
             >>> out = model.split_to_dict(paddle.to_tensor(123), ('x',))
-            >>> print(out)
-            {'x': Tensor(shape=[], dtype=int64, place=Place(gpu:0), stop_gradient=True,
-                   123)}
+            >>> for k, v in out.items():
+            ...     print(f"{k} {v.dtype} {v.shape}")
+            x paddle.int64 []
             >>> # split more tensors
-            >>> out = model.split_to_dict(paddle.to_tensor([123, 234]), ('x1', 'x2'), axis=0)
-            >>> print(out)
-            {'x1': Tensor(shape=[1], dtype=int64, place=Place(gpu:0), stop_gradient=True,
-                   [123]), 'x2': Tensor(shape=[1], dtype=int64, place=Place(gpu:0), stop_gradient=True,
-                   [234])}
+            >>> out = model.split_to_dict(paddle.to_tensor([[1, 2], [2, 3]]), ('x1', 'x2'), axis=0)
+            >>> for k, v in out.items():
+            ...     print(f"{k} {v.dtype} {v.shape}")
+            x1 paddle.int64 [1, 2]
+            x2 paddle.int64 [1, 2]
 
         """
         if len(keys) == 1:
@@ -144,13 +142,23 @@ class Arch(nn.Layer):
 
         Examples:
             >>> import ppsci
-            >>> def transform_fn(in_):
+            >>> def transform_in(in_):
             ...     x = in_["x"]
-            ...     x = 2.0 * x
-            ...     input_trans = {"x": x}
+            ...     # transform input
+            ...     x_ = 2.0 * x
+            ...     input_trans = {"x": x_}
             ...     return input_trans
-            >>> model = ppsci.arch.Arch()
-            >>> model.register_input_transform(transform_fn)
+            >>> # `MLP` inherits from `Arch`
+            >>> model = ppsci.arch.MLP(
+            ...     input_keys=("x",),
+            ...     output_keys=("y",),
+            ...     num_layers=5,
+            ...     hidden_size=32)
+            >>> model.register_input_transform(transform_in)
+            >>> out = model({"x":paddle.rand([64, 64, 1])})
+            >>> for k, v in out.items():
+            ...     print(f"{k} {v.dtype} {v.shape}")
+            y paddle.float32 [64, 64, 1]
 
         """
         self._input_transform = transform
@@ -171,14 +179,23 @@ class Arch(nn.Layer):
 
         Examples:
             >>> import ppsci
-            >>> def transform_fn(in_, out):
+            >>> def transform_out(in_, out):
             ...     x = in_["x"]
             ...     y = out["y"]
             ...     u = 2.0 * x * y
             ...     output_trans = {"u": u}
             ...     return output_trans
-            >>> model = ppsci.arch.Arch()
-            >>> model.register_output_transform(transform_fn)
+            >>> # `MLP` inherits from `Arch`
+            >>> model = ppsci.arch.MLP(
+            ...     input_keys=("x",),
+            ...     output_keys=("y",),
+            ...     num_layers=5,
+            ...     hidden_size=32)
+            >>> model.register_output_transform(transform_out)
+            >>> out = model({"x":paddle.rand([64, 64, 1])})
+            >>> for k, v in out.items():
+            ...     print(f"{k} {v.dtype} {v.shape}")
+            u paddle.float32 [64, 64, 1]
 
         """
         self._output_transform = transform
@@ -191,6 +208,8 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # freeze all parameters and make model `eval`
             >>> model.freeze()
+            >>> for p in model.parameters():
+            ...     assert p.stop_gradient
 
         """
         for param in self.parameters():
@@ -206,6 +225,8 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # unfreeze all parameters and make model `train`
             >>> model.unfreeze()
+            >>> for p in model.parameters():
+            ...     assert not p.stop_gradient
 
         """
         for param in self.parameters():
