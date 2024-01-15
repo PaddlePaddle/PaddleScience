@@ -208,6 +208,7 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # freeze all parameters and make model `eval`
             >>> model.freeze()
+            >>> assert not model.training
             >>> for p in model.parameters():
             ...     assert p.stop_gradient
 
@@ -225,6 +226,7 @@ class Arch(nn.Layer):
             >>> model = ppsci.arch.Arch()
             >>> # unfreeze all parameters and make model `train`
             >>> model.unfreeze()
+            >>> assert model.training
             >>> for p in model.parameters():
             ...     assert not p.stop_gradient
 
