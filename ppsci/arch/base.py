@@ -78,16 +78,16 @@ class Arch(nn.Layer):
             >>> import ppsci
             >>> model = ppsci.arch.Arch()
             >>> # fetch one tensor
-            >>> out = model.concat_to_tensor({'x':paddle.to_tensor(123)}, ('x',))
+            >>> out = model.concat_to_tensor({'x':paddle.rand([64, 64, 1])}, ('x',))
             >>> print(out.dtype, out.shape)
-            paddle.int64 []
+            paddle.float32 [64, 64, 1]
             >>> # fetch more tensors
             >>> out = model.concat_to_tensor(
-            ...     {'x1':paddle.to_tensor([[1, 2], [2, 3]]), 'x2':paddle.to_tensor([[3, 4], [4, 5]])},
+            ...     {'x1':paddle.rand([64, 64, 1]), 'x2':paddle.rand([64, 64, 1])},
             ...     ('x1', 'x2'),
-            ...     axis=0)
+            ...     axis=2)
             >>> print(out.dtype, out.shape)
-            paddle.int64 [4, 2]
+            paddle.float32 [64, 64, 2]
 
         """
         if len(keys) == 1:
@@ -113,16 +113,16 @@ class Arch(nn.Layer):
             >>> import ppsci
             >>> model = ppsci.arch.Arch()
             >>> # split one tensor
-            >>> out = model.split_to_dict(paddle.to_tensor(123), ('x',))
+            >>> out = model.split_to_dict(paddle.rand([64, 64, 1]), ('x',))
             >>> for k, v in out.items():
             ...     print(f"{k} {v.dtype} {v.shape}")
-            x paddle.int64 []
+            x paddle.float32 [64, 64, 1]
             >>> # split more tensors
-            >>> out = model.split_to_dict(paddle.to_tensor([[1, 2], [2, 3]]), ('x1', 'x2'), axis=0)
+            >>> out = model.split_to_dict(paddle.rand([64, 64, 2]), ('x1', 'x2'), axis=2)
             >>> for k, v in out.items():
             ...     print(f"{k} {v.dtype} {v.shape}")
-            x1 paddle.int64 [1, 2]
-            x2 paddle.int64 [1, 2]
+            x1 paddle.float32 [64, 64, 1]
+            x2 paddle.float32 [64, 64, 1]
 
         """
         if len(keys) == 1:
