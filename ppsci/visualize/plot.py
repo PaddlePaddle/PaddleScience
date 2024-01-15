@@ -97,12 +97,13 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
                 _value_t,
                 color=cnames[i],
                 label=key,
+                s=2,
             )
             if num_timestamps > 1:
                 a[i][t].set_title(f"{key}(t={t})")
             else:
                 a[i][t].set_title(f"{key}")
-            a[i][t].grid()
+            a[i][t].grid(color="#c2ccd0", linestyle="--", linewidth=0.5)
             a[i][t].legend()
 
         if num_timestamps == 1:
@@ -111,10 +112,10 @@ def _save_plot_from_1d_array(filename, coord, value, value_keys, num_timestamps=
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.message(f"1D result is saved to {filename}.png")
+        logger.message(f"1D result is saved to: {filename}.png")
     else:
         logger.message(
-            f"1D result is saved to {filename}_0.png"
+            f"1D result is saved to: {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
 
@@ -353,10 +354,10 @@ def _save_plot_from_3d_array(
             fig.savefig(f"{filename}_{t}", dpi=300)
 
     if num_timestamps == 1:
-        logger.message(f"3D result is saved to {filename}.png")
+        logger.message(f"3D result is saved to: {filename}.png")
     else:
         logger.message(
-            f"3D result is saved to {filename}_0.png"
+            f"3D result is saved to: {filename}_0.png"
             f" ~ {filename}_{num_timestamps - 1}.png"
         )
 

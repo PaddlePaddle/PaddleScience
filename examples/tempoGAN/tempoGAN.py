@@ -46,8 +46,13 @@ def train(cfg: DictConfig):
     data_funcs = func_module.DataFuncs(cfg.TILE_RATIO)
 
     # load dataset
+    logger.message(
+        "Attention! Start loading datasets, this will take tens of seconds to several minutes, please wait patiently."
+    )
     dataset_train = hdf5storage.loadmat(cfg.DATASET_PATH)
+    logger.message("Finish loading training dataset.")
     dataset_valid = hdf5storage.loadmat(cfg.DATASET_PATH_VALID)
+    logger.message("Finish loading validation dataset.")
 
     # define Generator model
     model_gen = ppsci.arch.Generator(**cfg.MODEL.gen_net)
@@ -74,12 +79,12 @@ def train(cfg: DictConfig):
     lr_scheduler_gen = ppsci.optimizer.lr_scheduler.Step(
         step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler
     )()
-    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
+    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)(model_gen)
     if cfg.USE_SPATIALDISC:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
             step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler
         )()
-        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
+        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)(model_disc)
     if cfg.USE_TEMPODISC:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
             step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler

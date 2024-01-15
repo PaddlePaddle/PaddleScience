@@ -96,12 +96,14 @@ EVAL:
   batch_size:
     sup_validator: 4096
 
+# export settings
 EXPORT:
   export_path: ./aneurysm
 
+# inference settings
 INFERENCE:
-  pdmodel_path: ./aneurysm.pdmodel
-  pdpiparams_path: ./aneurysm.pdiparams
+  pdmodel_path: ${EXPORT.export_path}.pdmodel
+  pdpiparams_path: ${EXPORT.export_path}.pdiparams
   device: gpu
   engine: native
   precision: fp32

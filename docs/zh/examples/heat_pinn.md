@@ -1,5 +1,21 @@
 # Heat_PINN
 
+=== "模型训练命令"
+
+    ``` sh
+    python heat_pinn.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python heat_pinn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/heat_pinn/heat_pinn_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [heat_pinn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/heat_pinn/heat_pinn_pretrained.pdparams) | norm MSE loss between the FDM and PINN is 1.30174e-03 |
+
 ## 1. 背景简介
 
 热传导是自然界中的常见现象，广泛应用于工程、科学和技术领域。热传导问题在多个领域中都具有广泛的应用和重要性，对于提高能源效率、改进材料性能、促进科学研究和推动技术创新都起着至关重要的作用。因此了解和模拟传热过程对于设计和优化热传导设备、材料和系统至关重要。2D 定常热传导方程描述了稳态热传导过程，传统的求解方法涉及使用数值方法如有限元法或有限差分法，这些方法通常需要离散化领域并求解大规模矩阵系统。近年来，基于物理信息的神经网络（Physics-informed neural networks, PINN）逐渐成为求解偏微分方程的新方法。PINN 结合了神经网络的灵活性和对物理约束的建模能力，能够直接在连续领域中解决偏微分方程问题。
@@ -45,9 +61,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-```py linenums="48"
+``` py linenums="34"
 --8<--
-examples/Heat_PINN/heat_pinn.py:48:49
+examples/heat_pinn/heat_pinn.py:34:35
 --8<--
 ```
 
@@ -59,9 +75,9 @@ examples/Heat_PINN/heat_pinn.py:48:49
 
 由于二维热传导方程使用的是 Laplace 方程的 2 维形式，因此可以直接使用 PaddleScience 内置的 `Laplace`，指定该类的参数 `dim` 为 2。
 
-```py linenums="51"
+``` py linenums="37"
 --8<--
-examples/Heat_PINN/heat_pinn.py:51:52
+examples/heat_pinn/heat_pinn.py:37:38
 --8<--
 ```
 
@@ -70,9 +86,9 @@ examples/Heat_PINN/heat_pinn.py:51:52
 本文中二维热传导问题作用在以 (-1.0, -1.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-```py linenums="54"
+``` py linenums="40"
 --8<--
-examples/Heat_PINN/heat_pinn.py:54:55
+examples/heat_pinn/heat_pinn.py:40:41
 --8<--
 ```
 
@@ -82,9 +98,9 @@ examples/Heat_PINN/heat_pinn.py:54:55
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-```py linenums="57"
+``` py linenums="49"
 --8<--
-examples/Heat_PINN/heat_pinn.py:57:67
+examples/heat_pinn/heat_pinn.py:49:54
 --8<--
 ```
 
@@ -92,9 +108,9 @@ examples/Heat_PINN/heat_pinn.py:57:67
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-```py linenums="69"
+``` py linenums="55"
 --8<--
-examples/Heat_PINN/heat_pinn.py:69:81
+examples/heat_pinn/heat_pinn.py:55:63
 --8<--
 ```
 
@@ -118,9 +134,9 @@ examples/Heat_PINN/heat_pinn.py:69:81
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-```py linenums="83"
+``` py linenums="64"
 --8<--
-examples/Heat_PINN/heat_pinn.py:83:130
+examples/heat_pinn/heat_pinn.py:64:103
 --8<--
 ```
 
@@ -132,19 +148,25 @@ examples/Heat_PINN/heat_pinn.py:83:130
 
 在微分方程约束和边界约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-```py linenums="132"
+``` py linenums="104"
 --8<--
-examples/Heat_PINN/heat_pinn.py:132:139
+examples/heat_pinn/heat_pinn.py:104:111
 --8<--
 ```
 
 ### 3.5 优化器构建
 
-训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器
+训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，并设置学习率为 0.0005。
 
-```py linenums="141"
+``` yaml linenums="36"
 --8<--
-examples/Heat_PINN/heat_pinn.py:141:142
+examples/heat_pinn/conf/heat_pinn.yaml:36:41
+--8<--
+```
+
+``` py linenums="113"
+--8<--
+examples/heat_pinn/heat_pinn.py:113:114
 --8<--
 ```
 
@@ -152,28 +174,28 @@ examples/Heat_PINN/heat_pinn.py:141:142
 
 完成上述设置之后，只需要将所有上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-```py linenums="144"
+``` py linenums="116"
 --8<--
-examples/Heat_PINN/heat_pinn.py:144:156
+examples/heat_pinn/heat_pinn.py:116:133
 --8<--
 ```
 
-### 3.6 模型评估
+### 3.7 模型评估、可视化
 
 模型训练完成之后就需要进行与正式 FDM 方法计算出来的结果进行对比，这里我们使用了 `geom["rect"].sample_interior` 采样出测试所需要的坐标数据。
 然后，再将采样出来的坐标数据输入到模型中，得到模型的预测结果，最后将预测结果与 FDM 结果进行对比，得到模型的误差。
 
-```py linenums="158"
+``` py linenums="135"
 --8<--
-examples/Heat_PINN/heat_pinn.py:158:164
+examples/heat_pinn/heat_pinn.py:135:209
 --8<--
 ```
 
 ## 4. 完整代码
 
-```py linenums="1" title="heat_pinn.py"
+``` py linenums="1" title="heat_pinn.py"
 --8<--
-examples/Heat_PINN/heat_pinn.py
+examples/heat_pinn/heat_pinn.py
 --8<--
 ```
 
@@ -181,19 +203,19 @@ examples/Heat_PINN/heat_pinn.py
 
 <figure markdown>
   ![T_comparison](https://paddle-org.bj.bcebos.com/paddlescience/docs/Heat_PINN/pinn_fdm_comparison.png.PNG){ loading=lazy }
-  <figcaption>上：PINN计算结果，下：FDM计算结果
+  <figcaption>上：PINN 计算结果，下：FDM 计算结果
 </figure>
 
 上图展示了使用 PINN 和 FDM 方法分别计算出的温度分布图，从中可以看出它们之间的结果非常接近。此外，PINN 和 FDM 两者之间的均方误差（MSE Loss）仅为 0.0013。综合考虑图形和数值结果，可以得出结论，PINN 能够有效地解决本案例的传热问题。
 
 <figure markdown>
   ![profile](https://paddle-org.bj.bcebos.com/paddlescience/docs/Heat_PINN/profiles.PNG){ loading=lazy }
-  <figcaption>上：PINN与FDM 在 x 方向 T 结果对比，下：PINN与FDM在 y 方向 T 结果对比
+  <figcaption>上：PINN 与FDM 在 x 方向 T 结果对比，下：PINN 与 FDM 在 y 方向 T 结果对比
 </figure>
 
 上图分别为温度 $T$ 的横截线图（ $y=\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\}$ ）和纵截线图（ $x=\{-0.75,-0.50,-0.25,0.00,0.25,0.50,0.75\}$ ），可以看到 PINN 与 FDM 方法的计算结果基本一致。
 
-## 6.参考资料
+## 6. 参考资料
 
 - [Physics Informed Deep Learning (Part I): Data-driven Solutions of Nonlinear Partial Differential Equations](https://arxiv.org/abs/1711.10561)
 - [Heat-PINN](https://github.com/314arhaam/heat-pinn)

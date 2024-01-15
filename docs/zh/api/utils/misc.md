@@ -7,6 +7,7 @@
         - AverageMeter
         - PrettyOrderedDict
         - Prettydefaultdict
+        - RankZeroOnly
         - Timer
         - all_gather
         - concat_dict_list
@@ -20,4 +21,4 @@
         - run_at_rank0
         - plot_curve
       show_root_heading: True
-      heading_level: 2
+      heading_level: 3

@@ -4,8 +4,8 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
@@ -16,13 +16,17 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat -P ./datasets/
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat --output datasets/dstate-16-plas.dat
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat --output datasets/dstress-16-plas.dat
     python epnn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/epnn/epnn_pretrained.pdparams
     ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [epnn_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/epnn/epnn_pretrained.pdparams) | error(total): 3.96903<br> error(error_elasto): 0.65328<br> error(error_plastic): 3.04176<br> error(error_stress): 0.27399 |
 
 ## 1. 背景简介
 
@@ -47,9 +51,9 @@ $$
 
 在 EPNN 问题中，建立网络，用 PaddleScience 代码表示如下
 
-``` py linenums="370"
+``` py linenums="371"
 --8<--
-examples/epnn/functions.py:370:390
+examples/epnn/functions.py:371:391
 --8<--
 ```
 
@@ -65,11 +69,12 @@ examples/epnn/epnn.py:36:41
 --8<--
 ```
 
-``` py linenums="305"
+``` py linenums="306"
 --8<--
-examples/epnn/functions.py:305:320
+examples/epnn/functions.py:306:321
 --8<--
 ```
+
 这里使用 Data 读取文件构造数据类，然后使用 get_shuffled_data 混淆数据，然后计算需要获取的混淆数据数量 itrain，最后使用 get 获取每组 itrain 数量的 10 组数据。
 
 ### 3.3 约束构建
@@ -124,15 +129,15 @@ examples/epnn/conf/epnn.yaml:40:41
 
 ``` py linenums="395"
 --8<--
-examples/epnn/functions.py:395:403
+examples/epnn/functions.py:395:404
 --8<--
 ```
 
 然后对增加的 gkratio 参数，需要再设置优化器。
 
-``` py linenums="405"
+``` py linenums="406"
 --8<--
-examples/epnn/functions.py:405:412
+examples/epnn/functions.py:406:413
 --8<--
 ```
 
@@ -152,9 +157,9 @@ examples/epnn/functions.py:395:413
 
 相关的自定义 loss 函数使用 `MAELoss` 计算，代码为
 
-``` py linenums="113"
+``` py linenums="114"
 --8<--
-examples/epnn/functions.py:113:125
+examples/epnn/functions.py:114:126
 --8<--
 ```
 
@@ -199,12 +204,12 @@ EPNN 案例针对 epoch=10000 的参数配置进行了实验，结果返回 Loss
 下图分别为不同 epoch 的 Loss, Training error, Cross validation error 图形：
 
 <figure markdown>
-  ![loss_trend](epnn_images/loss_trend.png){ loading=lazy }
+  ![loss_trend](https://paddle-org.bj.bcebos.com/paddlescience/docs/EPNN/loss_trend.png){ loading=lazy }
   <figcaption> 训练 loss 图形 </figcaption>
 </figure>
 
 ## 6. 参考资料
 
-- [A physics-informed deep neural network for surrogate
-modeling in classical elasto-plasticity](https://arxiv.org/abs/2204.12088)
-- <https://github.com/meghbali/ANNElastoplasticity>
+- [A physics-informed deep neural network for surrogate modeling in classical elasto-plasticity](https://arxiv.org/abs/2204.12088)
+
+- [参考代码](https://github.com/meghbali/ANNElastoplasticity)

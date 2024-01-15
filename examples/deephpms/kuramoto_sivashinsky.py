@@ -74,7 +74,7 @@ def train(cfg: DictConfig):
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)
     x_lb = paddle.to_tensor(cfg.X_LB)
-    x_ub = paddle.to_tensor(cfg.T_UB)  # (cfg.T_UB * np.pi) for KS_chaotic.mat
+    x_ub = paddle.to_tensor(cfg.T_UB)
 
     # initialize models
     model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)
@@ -121,8 +121,8 @@ def train(cfg: DictConfig):
     optimizer_pde = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_pde)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(model_idn)
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(model_pde)
 
     # stage 1: training identification net
     # manually build constraint(s)
@@ -357,7 +357,7 @@ def evaluate(cfg: DictConfig):
     t_lb = paddle.to_tensor(cfg.T_LB)
     t_ub = paddle.to_tensor(cfg.T_UB)
     x_lb = paddle.to_tensor(cfg.X_LB)
-    x_ub = paddle.to_tensor(cfg.T_UB)  # (cfg.T_UB * np.pi) for KS_chaotic.mat
+    x_ub = paddle.to_tensor(cfg.T_UB)
 
     # initialize models
     model_idn = ppsci.arch.MLP(**cfg.MODEL.idn_net)

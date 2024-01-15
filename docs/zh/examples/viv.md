@@ -8,6 +8,18 @@
     python viv.py
     ```
 
+=== "模型评估命令"
+
+    ``` sh
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
+    python viv.py mode=eval EVAL.pretrained_model_path=./viv_pretrained
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [viv_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdparams)<br>[viv_pretrained.pdeqn](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdeqn) | 'eta': 1.1416150300647132e-06<br>'f': 4.635014192899689e-06 |
+
 ## 1. 背景简介
 
 涡激振动（Vortex-Induced Vibration，VIV）是一种流固耦合振动现象，主要发生在流体绕过柱体或管体时。在海洋工程和风工程中，这种振动现象具有重要应用。
@@ -47,9 +59,9 @@ $$
 
 上式中 $g$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="31"
+``` py linenums="22"
 --8<--
-examples/fsi/viv.py:31:32
+examples/fsi/viv.py:22:23
 --8<--
 ```
 
@@ -62,9 +74,9 @@ examples/fsi/viv.py:31:32
 
 由于 VIV 使用的是 VIV 方程，因此可以直接使用 PaddleScience 内置的 `VIV`。
 
-``` py linenums="34"
+``` py linenums="25"
 --8<--
-examples/fsi/viv.py:34:35
+examples/fsi/viv.py:25:26
 --8<--
 ```
 
@@ -82,9 +94,9 @@ examples/fsi/viv.py:34:35
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置。
 
-``` py linenums="37"
+``` py linenums="28"
 --8<--
-examples/fsi/viv.py:37:52
+examples/fsi/viv.py:28:44
 --8<--
 ```
 
@@ -92,9 +104,9 @@ examples/fsi/viv.py:37:52
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="54"
+``` py linenums="46"
 --8<--
-examples/fsi/viv.py:54:60
+examples/fsi/viv.py:46:52
 --8<--
 ```
 
@@ -108,19 +120,19 @@ examples/fsi/viv.py:54:60
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="61"
+``` py linenums="53"
 --8<--
-examples/fsi/viv.py:61:64
+examples/fsi/viv.py:53:54
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔1000个epochs评估一次模型精度。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 10000 轮训练轮数，并每隔 10000 个epochs评估一次模型精度。
 
-``` yaml linenums="38"
+``` yaml linenums="41"
 --8<--
-examples/fsi/conf/viv.yaml:38:51
+examples/fsi/conf/viv.yaml:41:56
 --8<--
 ```
 
@@ -128,9 +140,9 @@ examples/fsi/conf/viv.yaml:38:51
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
 
-``` py linenums="66"
+``` py linenums="56"
 --8<--
-examples/fsi/viv.py:66:68
+examples/fsi/viv.py:56:58
 --8<--
 ```
 
@@ -142,9 +154,9 @@ examples/fsi/viv.py:66:68
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="70"
+``` py linenums="60"
 --8<--
-examples/fsi/viv.py:70:92
+examples/fsi/viv.py:60:82
 --8<--
 ```
 
@@ -158,9 +170,9 @@ examples/fsi/viv.py:70:92
 
 本文需要可视化的数据是 $t-\eta$ 和 $t-f$ 两组关系图，假设每个时刻 $t$ 的坐标是 $t_i$，则对应网络输出为 $\eta_i$，升力为 $f_i$，因此我们只需要将评估过程中产生的所有 $(t_i, \eta_i, f_i)$ 保存成图片即可。代码如下：
 
-``` py linenums="94"
+``` py linenums="84"
 --8<--
-examples/fsi/viv.py:94:113
+examples/fsi/viv.py:84:103
 --8<--
 ```
 
@@ -168,9 +180,9 @@ examples/fsi/viv.py:94:113
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="115"
+``` py linenums="105"
 --8<--
-examples/fsi/viv.py:115:136
+examples/fsi/viv.py:105:123
 --8<--
 ```
 

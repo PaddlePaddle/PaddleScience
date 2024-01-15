@@ -19,6 +19,8 @@
         - AFNONet
         - PrecipNet
         - UNetEx
+        - USCNN
         - NowcastNet
-      show_root_heading: false
+        - HEDeepONets
+      show_root_heading: true
       heading_level: 3

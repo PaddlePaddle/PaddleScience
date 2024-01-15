@@ -33,25 +33,47 @@
 
 ### 1.4 安装 PaddleScience
 
-从 [1.4.1 git 源码安装](#141-git) 和 [1.4.2 pip 安装](#142-pip) 任选一种安装方式即可。
+#### 1.4.1 安装基础功能
 
-#### 1.4.1 git 源码安装[**推荐**]
+从以下三种安装方式中**任选一种**。
 
-执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
+=== "git 源码安装[**推荐**]"
 
---8<--
-./README.md:git_install
---8<--
+    执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
 
-#### 1.4.2 pip 安装
+    --8<--
+    ./README.md:git_install
+    --8<--
 
-执行以下命令以 pip 的方式安装 PaddleScience。
+=== "pip 安装"
 
-``` shell
-pip install paddlesci
-```
+    执行以下命令以 pip 的方式安装最新版本的 PaddleScience。
 
-#### 1.4.3 额外依赖安装[可选]
+    ``` shell
+    pip install -U paddlesci
+    ```
+
+=== "设置 PYTHONPATH"
+
+    如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+
+    === "Linux"
+
+        ``` sh
+        cd PaddleScience/
+        export PYTHONPATH=$PYTHONPATH:$PWD
+        ```
+
+    === "Windows"
+
+        ``` sh
+        cd PaddleScience/
+        set PYTHONPATH=%cd%
+        ```
+
+    上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
+
+#### 1.4.2 安装额外功能[可选]
 
 如需使用 `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh` 等复杂几何文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
 pybind11、pysdf、PyMesh 四个依赖库。
@@ -82,13 +104,13 @@ pybind11、pysdf、PyMesh 四个依赖库。
     如未安装，可按照下列命令下载、解压 cmake 包，并添加到 `PATH` 变量中即可完成安装。
 
     ``` sh
-    wget https://cmake.org/files/v3.23/cmake-3.23.0-linux-x86_64.tar.gz
+    wget -nc https://cmake.org/files/v3.23/cmake-3.23.0-linux-x86_64.tar.gz
     tar -zxvf cmake-3.23.0-linux-x86_64.tar.gz
     rm -f cmake-3.23.0-linux-x86_64.tar.gz
     PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
 
     # cmake --version
-    # cmake version 3.24.0
+    # cmake version 3.23.0
 
     # CMake suite maintained and supported by Kitware (kitware.com/cmake).
     ```
@@ -139,16 +161,16 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check()"
     ```
 
     如果出现 `PaddleScience is installed successfully.✨ 🍰 ✨`，则说明安装验证成功。
 
-- [可选]如果已按照 [1.4.3 额外依赖安装](#143) 正确安装了 4 个额外依赖库，则可以执行以下代码，
+- [可选]如果已按照 [1.4.2 安装额外依赖](#142) 正确安装了 4 个额外依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check_mesh()"
     ```
 
@@ -158,7 +180,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 运行内置的案例（以 **ldc2d_unsteady_Re10.py** 为例）
 
-    ``` shell
+    ``` sh
     cd examples/ldc/
     python ./ldc2d_unsteady_Re10.py
     ```
@@ -175,7 +197,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
     编写完毕后运行你的代码
 
-    ``` shell
+    ``` sh
     cd examples/demo
     python ./demo.py
     ```

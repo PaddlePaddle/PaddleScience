@@ -6,11 +6,11 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output lorenz_training_rk.hdf5
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output lorenz_valid_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
     python train_enn.py
     python train_transformer.py
     ```
@@ -19,14 +19,18 @@
 
     ``` sh
     # linux
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5
-    wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 -P ./datasets/
     # windows
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output lorenz_training_rk.hdf5
-    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output lorenz_valid_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
     python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
-    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams
+    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
     ```
+
+| 模型 | MSE |
+| :-- | :-- |
+| [lorenz_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams) | 0.054 |
 
 ## 1. 背景简介
 
@@ -78,7 +82,7 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 |训练集 |2048       |256       |[lorenz_training_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5)|
 |验证集 |64         |1024      |[lorenz_valid_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5)|
 
-数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+数据集官网为：<https://zenodo.org/record/5148524#.ZDe77-xByrc>
 
 ### 3.3 Embedding 模型
 
@@ -192,7 +196,7 @@ examples/lorenz/train_enn.py:142:156
 
 ``` yaml linenums="36" title="examples/lorenz/conf/transformer.yaml"
 --8<--
-examples/lorenz/conf/transformer.yaml:36:42
+examples/lorenz/conf/transformer.yaml:36:43
 --8<--
 ```
 
