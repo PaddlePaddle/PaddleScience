@@ -75,4 +75,3 @@ version_file = "ppsci/_version.py"
 tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
 fallback_version = "0.0.0"
 version_scheme = "post-release"
-

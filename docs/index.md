@@ -140,7 +140,7 @@
 
 === "方式2: pip安装"
 
-    ``` shell
+    ``` sh
     pip install paddlesci
     ```
 
