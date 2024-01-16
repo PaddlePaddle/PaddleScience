@@ -29,7 +29,7 @@ LARGE_DATASET_PATH: datasets/mrms/large_figure
 # set working condition
 CASE_TYPE: normal  # normal/large
 NUM_SAVE_SAMPLES: 10
-CPU_WORKER: 0
+CPU_WORKER: 1
 
 # model settings
 MODEL:

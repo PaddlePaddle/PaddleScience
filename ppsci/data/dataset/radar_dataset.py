@@ -19,7 +19,13 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-import cv2
+try:
+    import cv2
+except ModuleNotFoundError:
+    pass
+
+import importlib
+
 import numpy as np
 import paddle
 from paddle import io
@@ -62,6 +68,12 @@ class RadarDataset(io.Dataset):
         data_type: str = paddle.get_default_dtype(),
         weight_dict: Optional[Dict[str, float]] = None,
     ):
+        super().__init__()
+        if importlib.util.find_spec("cv2") is None:
+            raise ModuleNotFoundError(
+                "To use RadarDataset, please install 'opencv-python' via: `pip install "
+                "opencv-python` first."
+            )
         self.input_keys = input_keys
         self.label_keys = label_keys
         self.img_width = image_width

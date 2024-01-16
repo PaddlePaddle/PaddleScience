@@ -1,17 +1,17 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "paddlesci"
-version = "1.0.0"
+dynamic = ["version"]
 description = "A library for scientific machine learning"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
     { name = "PaddlePaddle" },
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 keywords = [
     "Machine learning",
     "Deep learning",
@@ -33,26 +33,25 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 dependencies = [
-    "numpy>=1.20.0,<=1.23.1",
-    "sympy",
+    "colorlog",
+    "h5py",
+    "hydra-core",
+    "imageio",
     "matplotlib",
-    "vtk",
+    "meshio==5.3.4",
+    "numpy>=1.20.0,<=1.23.1",
     "pyevtk",
-    "wget",
-    "scipy",
-    "visualdl",
     "pyvista==0.37.0",
     "pyyaml",
     "scikit-optimize",
-    "h5py",
-    "meshio==5.3.4",
-    "tqdm",
-    "imageio",
-    "typing-extensions",
+    "scipy",
     "seaborn",
-    "colorlog",
-    "hydra-core",
-    "opencv-python",
+    "sympy",
+    "tqdm",
+    "typing-extensions",
+    "visualdl",
+    "vtk",
+    "wget",
 ]
 
 [project.urls]
@@ -69,3 +68,9 @@ exclude = ["docs*", "examples*", "jointContribution*", "test_tipc*", "test*", "t
 line-length = 88
 ignore = ["E501", "E741"]
 extend-exclude = ["./ppsci/geometry/inflation.py", "./ppsci/autodiff/__init__.py"]
+
+[tool.setuptools_scm]
+version_file = "ppsci/_version.py"
+tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
+fallback_version = "0.0.0"
+version_scheme = "post-release"

@@ -103,7 +103,8 @@ def train(cfg: DictConfig):
             "drop_last": True,
             "shuffle": True,
         },
-        "num_workers": 1,
+        "num_workers": 0,
+        "auto_collation": False,
     }
 
     # set constraint

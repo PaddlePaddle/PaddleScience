@@ -79,12 +79,12 @@ def train(cfg: DictConfig):
     lr_scheduler_gen = ppsci.optimizer.lr_scheduler.Step(
         step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler
     )()
-    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)((model_gen,))
+    optimizer_gen = ppsci.optimizer.Adam(lr_scheduler_gen)(model_gen)
     if cfg.USE_SPATIALDISC:
         lr_scheduler_disc = ppsci.optimizer.lr_scheduler.Step(
             step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler
         )()
-        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)((model_disc,))
+        optimizer_disc = ppsci.optimizer.Adam(lr_scheduler_disc)(model_disc)
     if cfg.USE_TEMPODISC:
         lr_scheduler_disc_tempo = ppsci.optimizer.lr_scheduler.Step(
             step_size=cfg.TRAIN.epochs // 2, **cfg.TRAIN.lr_scheduler

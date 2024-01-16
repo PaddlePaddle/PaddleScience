@@ -46,7 +46,7 @@ def _load_pretrain_from_path(
     """Load pretrained model from given path.
 
     Args:
-        path (str): Pretrained model path.
+        path (str): File path of pretrained model, i.e. `/path/to/model.pdparams`.
         model (nn.Layer): Model with parameters.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
@@ -84,7 +84,8 @@ def load_pretrain(
 
     Args:
         model (nn.Layer): Model with parameters.
-        path (str): Pretrained model url.
+        path (str): File path or url of pretrained model, i.e. `/path/to/model.pdparams`
+            or `http://xxx.com/model.pdparams`.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
     """
     if path.startswith("http"):
@@ -156,6 +157,7 @@ def save_checkpoint(
     output_dir: Optional[str] = None,
     prefix: str = "model",
     equation: Optional[Dict[str, equation.PDE]] = None,
+    print_log: bool = True,
 ):
     """Save checkpoint, including model params, optimizer params, metric information.
 
@@ -167,6 +169,9 @@ def save_checkpoint(
         output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
+        print_log (bool, optional): Whether print saving log information, mainly for
+            keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
+            Defaults to True.
     """
     if paddle.distributed.get_rank() != 0:
         return
@@ -185,9 +190,20 @@ def save_checkpoint(
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
     if equation is not None:
-        paddle.save(
-            {key: eq.state_dict() for key, eq in equation.items()},
-            f"{ckpt_path}.pdeqn",
+        num_learnable_params = sum(
+            [len(eq.learnable_parameters) for eq in equation.values()]
         )
+        if num_learnable_params > 0:
+            paddle.save(
+                {key: eq.state_dict() for key, eq in equation.items()},
+                f"{ckpt_path}.pdeqn",
+            )
 
-    logger.message(f"Finish saving checkpoint to {ckpt_path}")
+    if print_log:
+        log_str = f"Finish saving checkpoint to: {ckpt_path}"
+        if prefix == "latest":
+            log_str += (
+                "(latest checkpoint will be saved every epoch as expected, "
+                "but this log will be printed only once for tidy logging)"
+            )
+        logger.message(log_str)

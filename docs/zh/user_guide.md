@@ -10,13 +10,13 @@ PaddleScience 推荐使用 [YAML](https://pyyaml.org/wiki/PyYAMLDocumentation) �
 
 在使用 hydra 配置运行参数前，请先执行以下命令检查是否已安装 `hydra`。
 
-``` shell
+``` sh
 pip show hydra-core
 ```
 
 如未安装，则需执行以下命令安装 `hydra`。
 
-``` shell
+``` sh
 pip install hydra-core
 ```
 
@@ -28,7 +28,7 @@ pip install hydra-core
 
 以 bracket 案例为例，其正常运行命令为：`python bracket.py`。若在其运行命令末尾加上  `-c job`，则可以打印出从运行配置文件 `conf/bracket.yaml` 中解析出的配置参数，如下所示。
 
-``` shell title=">>> python bracket.py {++-c job++}"
+``` sh title="$ python bracket.py {++-c job++}"
 mode: train
 seed: 2023
 output_dir: ${hydra:run.dir}
@@ -74,11 +74,25 @@ TRAIN:
 - 将上述配置文件中的 `learning_rate: 0.001` 改为 `learning_rate: 0.002`，然后再运行程序。这种方式虽然简单，但在实验较多时容易造成实验混乱，因此不推荐使用。
 - 通过命令行参数的方式进行修改，如下所示。
 
-    ``` shell
+    ``` sh
     python bracket.py {++TRAIN.lr_scheduler.learning_rate=0.002++}
     ```
 
     这种方式通过命令行参数临时重载运行配置，而不会对 `bracket.yaml` 文件本身进行修改，能灵活地控制运行时的配置，保证不同实验之间互不干扰。
+
+!!! tip "设置含转义字符的参数值"
+
+    以命令行方式设置参数时，若参数值中含有属于 [**omegaconf escaping characters**](https://omegaconf.readthedocs.io/en/2.3_branch/grammar.html#escaping-in-unquoted-strings) 的转义字符(`\\`, `[`, `]`, `{`, `}`, `(`, `)`, `:`, `=`, `\`)，则推荐使用 `{++\'++}` 将参数值包围起来，保证内部的字符不被转义，否则可能在 hydra 解析参数时引起报错，或以不正确的方式运行程序。假设我们在运行时需要指定 `PATH` 为 `/workspace/lr=0.1,s=[3]/best_model.pdparams`，该路径含有转义字符 `[`, `]` 和 `=`，因此则可以按照如下方式撰写参数。
+
+    ``` sh
+    # 正确的参数指定方式如下
+    python example.py PATH={++\'++}/workspace/lr=0.1,s=[3]/best_model.pdparams{++\'++}
+
+    # 错误的参数指定方式如下
+    # python example.py PATH=/workspace/lr=0.1,s=[3]/best_model.pdparams
+    # python example.py PATH='/workspace/lr=0.1,s=[3]/best_model.pdparams'
+    # python example.py PATH="/workspace/lr=0.1,s=[3]/best_model.pdparams"
+    ```
 
 #### 1.1.3 自动化运行实验
 
@@ -95,7 +109,7 @@ TRAIN:
 
 执行如下命令即可按顺序自动运行这 4 组实验。
 
-``` shell title=">>> python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
+``` sh title="$ python bracket.py {++-m seed=42,1024 TRAIN.epochs=10,20++}"
 [HYDRA] Launching 4 jobs locally
 [HYDRA]        #0 : seed=42 TRAIN.epochs=10
 ....
@@ -109,7 +123,7 @@ TRAIN:
 
 多组实验各自的参数文件、日志文件则保存在以不同参数组合为名称的子文件夹中，如下所示。
 
-``` shell title=">>> tree PaddleScience/examples/bracket/outputs_bracket/"
+``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
 └──2023-10-14 # (1)
     └── 04-01-52 # (2)
@@ -165,11 +179,11 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 ### 1.2 模型推理预测
 
-若需使用训练完毕保存或下载得到的模型文件 `*.pdprams` 直接进行推理（预测），可以参考以下代码示例。
+若需使用训练完毕保存或下载得到的模型文件 `*.pdparams` 直接进行推理（预测），可以参考以下代码示例。
 
 1. 加载 `*.pdparams` 文件内的参数到模型中
 
-    ``` py
+    ``` py hl_lines="9 10"
     import ppsci
     import numpy as np
 
@@ -186,7 +200,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 2. 准备好用于预测的输入数据，并以字典 `dict` 的方式传递给 `solver.predict`。
 
-    ``` py
+    ``` py hl_lines="12 13 14 15 16"
     N = 100 # 假设要预测100个样本的结果
     x = np.random.randn(N, 1) # 准备 字段
     y = np.random.randn(N, 1)
@@ -224,7 +238,7 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 因此我们只需要在 `Solver` 时指定 `checkpoint_path` 参数为 `latest.*` 的所在路径，即可自动载入上述的几个文件，并从 `latest` 中记录的 epoch 开始继续训练。
 
-``` py hl_lines="9"
+``` py hl_lines="7"
 import ppsci
 
 ...
@@ -241,19 +255,35 @@ solver = ppsci.solver.Solver(
 
 ### 1.4 迁移学习
 
-迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，只需在 `model` 实例化完毕之后，手动为其载入预训练模型权重，即可进行迁移学习。
+迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重；也可以在 `Solver` 实例化时指定 `pretrained_model_path` 自动载入预训练模型权重，两种方式都可以进行迁移学习。
 
-``` py hl_lines="9"
-import ppsci
-import ppsci.utils
-from ppsci.utils import save_load
+=== "手动载入预训练模型"
 
-...
-...
+    ``` py hl_lines="8"
+    import ppsci
+    from ppsci.utils import save_load
 
-model = ...
-save_load.load_pretrain(model, "/path/to/pretrain")
-```
+    ...
+    ...
+
+    model = ...
+    save_load.load_pretrain(model, "/path/to/pretrain")
+    ```
+
+=== "指定 `pretrained_model_path` 自动载入预训练模型"
+
+    ``` py hl_lines="9"
+    import ppsci
+
+    ...
+    ...
+
+    model = ...
+    solver = ppsci.solver.Solver(
+        ...,
+        pretrained_model_path="/path/to/pretrain",
+    )
+    ```
 
 !!! info "迁移学习建议"
 
@@ -278,7 +308,42 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.6 使用 WandB 记录实验
+### 1.6 使用 VisualDL 记录实验
+
+[VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+
+PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+
+1. 安装 VisualDL
+
+    ``` sh
+    pip install -U visualdl
+    ```
+
+2. 在案例代码的 `Solver` 实例化时指定 `use_visualdl=True`，然后再启动案例训练
+
+    ``` py hl_lines="3"
+    solver = ppsci.solver.Solver(
+        ...,
+        use_visualdl=True,
+    )
+    ```
+
+3. 可视化记录数据
+
+    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 的目录中。`vdl` 所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+
+    ``` log hl_lines="3"
+    Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
+    device: 0, cuDNN Version: 8.4.
+    ppsci INFO: VisualDL tool enabled for logging, you can view it by running: 'visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080'.
+    ```
+
+    在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+
+    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
+
+### 1.7 使用 WandB 记录实验
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 
@@ -331,7 +396,7 @@ PaddleScience 支持使用 WandB 记录基本的实验数据，包括 train/eval
 
 接下来以 `examples/pipe/poiseuille_flow.py` 为例，介绍如何正确使用 PaddleScience 的数据并行功能。分布式训练细节可以参考：[Paddle-使用指南-分布式训练-快速开始-数据并行](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/06_distributed_training/cluster_quick_start_collective_cn.html)。
 
-1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中黄色高亮行所示。
+1. 在 constraint 实例化完毕后，将 `ITERS_PER_EPOCH` 重新赋值为经过自动多卡数据切分后的 `dataloader` 的长度（一般情况下其长度等于单卡 dataloader 的长度除以卡数，向上取整），如代码中高亮行所示。
 
     ``` py linenums="146" title="examples/pipe/poiseuille_flow.py" hl_lines="22"
     ITERS_PER_EPOCH = int((N_x * N_y * N_p) / BATCH_SIZE)
@@ -379,7 +444,7 @@ TODO -->
 
 接下来介绍如何正确使用 PaddleScience 的自动混合精度功能。自动混合精度的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#amp)。
 
-实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中黄色高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
+实例化 `Solver` 时加上 2 个参数: `use_amp=True`, `amp_level="O1"`(或`amp_level="O2"`)。如代码中高亮行所示，通过指定 `use_amp=True`，开启自动混合精度功能，接着再设置 `amp_level="O1"`，指定混合精度所用的模式，`O1` 为自动混合精度，`O2` 为更激进的纯 fp16 训练模式，一般推荐使用 `O1`。
 
 ``` py hl_lines="5 6"
 # initialize solver
@@ -395,7 +460,7 @@ solver = ppsci.solver.Solver(
 
 接下来介绍如何正确使用 PaddleScience 的梯度累加功能。梯度累加的原理可以参考：[Paddle-使用指南-性能调优-自动混合精度训练（AMP）-动态图下使用梯度累加](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/performance_improving/amp_cn.html#dongtaituxiashiyongtiduleijia)。
 
-实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中黄色高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
+实例化 `Solver` 时指定 `update_freq` 参数为大于 1 的正整数即可。如代码中高亮行所示，`update_freq` 可以设置为 2 或者更大的整数，推荐使用 2、4、8，此时对于训练任务来说，全局 `batch size` 等价于 `update_freq * batch size`。梯度累加方法在大多数场景中能够让间接地扩大每个 batch 内的样本数量，从而让每个 batch 分布更接近真实数据分布，提升训练任务的性能。
 
 ``` py hl_lines="5"
 # initialize solver
@@ -408,14 +473,15 @@ solver = ppsci.solver.Solver(
 
 ### 2.4 多任务学习
 
-在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重和产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 PCGrad 方法进行举例，使用方式如下：
+在机理驱动、数理融合场景中，往往会同时优化多个损失项，如控制方程残差损失、（初）边值条件损失等。在训练过程中这些损失项对参数的梯度方向可能会互相冲突，阻碍训练精度收敛，而这正是多任务学习方法能解决的问题。因此 PaddleScience 在多任务学习模块中引入了几种常见的算法，其主要通过对不同任务的权重或产生的梯度进行调整，从而缓解该问题，最终提升模型收敛精度。下面以 [`Relobralo`](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 算法进行举例，使用方式如下：
 
 1. 实例化一个多任务学习方法的对象
 
     ``` py hl_lines="3"
     from ppsci.loss import mtl
     model = ...
-    loss_aggregator = mtl.PCGrad(model)
+    num_losses = 2 # number of losses to be optimized
+    loss_aggregator = mtl.Relobralo(num_losses)
     ```
 
 2. 将该对象作为 `Solver` 的实例化参数之一传入

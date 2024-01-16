@@ -169,7 +169,7 @@ class Solver:
         self.start_eval_epoch = start_eval_epoch
         self.eval_freq = eval_freq
 
-        # initialize training log recorder for loss, time cost, metric, etc.
+        # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
         self.train_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -177,7 +177,7 @@ class Solver:
         }
         self.train_loss_info: Dict[str, misc.AverageMeter] = {}
 
-        # initialize evaluation log recorder for loss, time cost, metric, etc.
+        # initialize evaluation log(evaluation loss, metric, etc.) recorder.
         self.eval_output_info: Dict[str, misc.AverageMeter] = {}
         self.eval_time_info = {
             "batch_cost": misc.AverageMeter("batch_cost", ".5f", postfix="s"),
@@ -234,7 +234,8 @@ class Solver:
             logger.warning(
                 f"Detected 'world_size'({self.world_size}) > 1, it is recommended to "
                 "scale up the learning rate and reduce the 'epochs' or "
-                "'iters_per_epoch' according to the 'world_size' both linearly."
+                "'iters_per_epoch' according to the 'world_size' both linearly if you "
+                "are training model."
             )
 
         # load pretrained model, usually used for transfer learning
@@ -269,7 +270,7 @@ class Solver:
             )
 
         # choosing an appropriate training function for different optimizers
-        if isinstance(self.optimizer, optim.LBFGS):
+        if misc.typename(self.optimizer) == "LBFGS":
             self.train_epoch_func = ppsci.solver.train.train_LBFGS_epoch_func
             if self.update_freq != 1:
                 self.update_freq = 1
@@ -285,9 +286,22 @@ class Solver:
                     "Please do not wrap your model with DataParallel "
                     "before 'Solver.__init__' and keep it's type as 'nn.Layer'."
                 )
-            self.model = fleet.distributed_model(self.model)
-            self.model.input_keys = self.model._layers.input_keys
-            self.model.output_keys = self.model._layers.output_keys
+
+            def dist_wrapper(model: nn.Layer) -> paddle.DataParallel:
+                dist_model = fleet.distributed_model(model)
+                if hasattr(model, "input_keys"):
+                    dist_model.input_keys = dist_model._layers.input_keys
+                if hasattr(model, "output_keys"):
+                    dist_model.output_keys = dist_model._layers.output_keys
+                return dist_model
+
+            if isinstance(self.model, ppsci.arch.ModelList):
+                for i in range(len(self.model.model_list)):
+                    # NOTE: Convert each model in model_list to DataParallel
+                    self.model.model_list[i] = dist_wrapper(self.model.model_list[i])
+            else:
+                self.model = dist_wrapper(self.model)
+
             if self.optimizer is not None:
                 self.optimizer = fleet.distributed_optimizer(self.optimizer)
 
@@ -297,6 +311,10 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
+            logger.info(
+                "VisualDL tool is enabled for logging, you can view it by "
+                f"running: 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+            )
 
         # set WandB tool
         self.wandb_writer = None
@@ -316,11 +334,11 @@ class Solver:
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
             paddle_version = paddle.__version__
-            logger.warning(
-                f"Detected paddlepaddle version is '{paddle_version}', "
-                "currently it is recommended to use develop version until the "
-                "release of version 2.6."
-            )
+            if version.Version(paddle.__version__) < version.Version("2.6.0"):
+                logger.warning(
+                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    "currently it is recommended to use release 2.6 or develop version."
+                )
         else:
             paddle_version = f"develop({paddle.version.commit[:7]})"
 
@@ -349,14 +367,24 @@ class Solver:
             ]
         ) -> None:
             for container in container_dict.values():
-                for name, expr in container.output_expr.items():
-                    if isinstance(expr, sp.Basic):
-                        container.output_expr[name] = ppsci.lambdify(
-                            expr,
-                            self.model,
-                            extra_parameters,
-                            # osp.join(self.output_dir, "symbolic_graph_visual", container.name, name), # HACK: Activate it for DEBUG.
-                        )
+                exprs = [
+                    expr
+                    for expr in container.output_expr.values()
+                    if isinstance(expr, sp.Basic)
+                ]
+                if len(exprs) > 0:
+                    funcs = ppsci.lambdify(
+                        exprs,
+                        self.model,
+                        extra_parameters=extra_parameters,
+                        fuse_derivative=True,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
+                    )
+                    ind = 0
+                    for name in container.output_expr:
+                        if isinstance(container.output_expr[name], sp.Basic):
+                            container.output_expr[name] = funcs[ind]
+                            ind += 1
 
         if self.constraint:
             convert_expr(self.constraint)
@@ -373,15 +401,10 @@ class Solver:
     def train(self):
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
+        start_epoch = self.best_metric["epoch"] + 1
 
-        for epoch_id in range(self.best_metric["epoch"] + 1, self.epochs + 1):
+        for epoch_id in range(start_epoch, self.epochs + 1):
             self.train_epoch_func(self, epoch_id, self.log_freq)
-
-            # log training summation at end of a epoch
-            metric_msg = ", ".join(
-                [self.train_output_info[key].avg_info for key in self.train_output_info]
-            )
-            logger.info(f"[Train][Epoch {epoch_id}/{self.epochs}][Avg] {metric_msg}")
             self.train_output_info.clear()
 
             cur_metric = float("inf")
@@ -409,8 +432,11 @@ class Solver:
                     f"[best metric: {self.best_metric['metric']}]"
                 )
                 for metric_dict in metric_dict_group.values():
-                    logger.scaler(
-                        metric_dict, epoch_id, self.vdl_writer, self.wandb_writer
+                    logger.scalar(
+                        {f"eval/{k}": v for k, v in metric_dict.items()},
+                        epoch_id,
+                        self.vdl_writer,
+                        self.wandb_writer,
                     )
 
                 # visualize after evaluation
@@ -442,6 +468,7 @@ class Solver:
                 self.output_dir,
                 "latest",
                 self.equation,
+                print_log=(epoch_id == start_epoch),
             )
 
     @misc.run_on_eval_mode
@@ -503,6 +530,21 @@ class Solver:
 
         Returns:
             Dict[str, Union[paddle.Tensor, np.ndarray]]: Prediction in dict.
+
+        Examples:
+            >>> import paddle
+            >>> import ppsci
+            >>> paddle.seed(42)  # doctest: +SKIP
+            >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
+            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand((2, 1)),
+            ...               'y': paddle.rand((2, 1))}
+            >>> solver.predict(input_dict) # doctest: +SKIP
+            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[-0.17509711],
+                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+                   [[0.27433380],
+                    [0.42387512]])}
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -511,12 +553,22 @@ class Solver:
         if num_pad > 0:
             for k, v in input_dict.items():
                 repeat_times = (num_pad, *(1 for _ in range(v.ndim - 1)))
-                input_dict[k] = paddle.concat(
-                    (
-                        v,
-                        paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
-                    ),
-                )
+                if isinstance(v, np.ndarray):
+                    input_dict[k] = np.concatenate(
+                        (
+                            v,
+                            np.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                elif isinstance(v, paddle.Tensor):
+                    input_dict[k] = paddle.concat(
+                        (
+                            v,
+                            paddle.tile(v[num_samples - 1 : num_samples], repeat_times),
+                        ),
+                    )
+                else:
+                    raise ValueError(f"Unsupported data type {type(v)}.")
 
         num_samples_pad = num_samples + num_pad
         local_num_samples_pad = num_samples_pad // self.world_size
@@ -566,9 +618,8 @@ class Solver:
                 pred_dict = {
                     key: misc.all_gather(value) for key, value in pred_dict.items()
                 }
-
-                # rearrange predictions as the same order of input_dict according to inverse
-                # permutation, then discard predictions of padding data at the end
+                # rearrange predictions as the same order of input_dict according
+                # to inverse permutation
                 perm = np.arange(num_samples_pad, dtype="int64")
                 perm = np.concatenate(
                     [perm[rank :: self.world_size] for rank in range(self.world_size)],
@@ -577,10 +628,15 @@ class Solver:
                 perm_inv = np.empty_like(perm)
                 perm_inv[perm] = np.arange(num_samples_pad, dtype="int64")
                 perm_inv = paddle.to_tensor(perm_inv)
-                pred_dict = {
-                    key: value[perm_inv][:num_samples]
-                    for key, value in pred_dict.items()
-                }
+                pred_dict = {key: value[perm_inv] for key, value in pred_dict.items()}
+                # then discard predictions of padding data at the end if num_pad > 0
+                if num_pad > 0:
+                    pred_dict = {
+                        key: value[:num_samples] for key, value in pred_dict.items()
+                    }
+                    # NOTE: Discard padding data in input_dict for consistency
+                    for k in input_dict:
+                        input_dict[k] = input_dict[k][:num_samples]
 
         # convert to numpy ndarray if specified
         if return_numpy:
@@ -597,13 +653,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.
@@ -654,12 +710,24 @@ class Solver:
             contextlib.AbstractContextManager: Smart no_sync context manager.
         """
         if enable:
-            if not isinstance(ddp_model, paddle.DataParallel):
-                raise TypeError(
-                    "no_sync interface is only for model with type paddle.DataParallel, "
-                    f"but got type {misc.typename(ddp_model)}"
-                )
-            ctx_manager = ddp_model.no_sync()
+            if isinstance(self.model, ppsci.arch.ModelList):
+                for model in self.model.model_list:
+                    if not isinstance(model, paddle.DataParallel):
+                        raise TypeError(
+                            "no_sync interface is only for model with type "
+                            "paddle.DataParallel, but got type "
+                            f"{misc.typename(model)}"
+                        )
+                ctx_manager = contextlib.ExitStack()
+                for model in self.model.model_list:
+                    ctx_manager.enter_context(model.no_sync())
+            else:
+                if not isinstance(self.model, paddle.DataParallel):
+                    raise TypeError(
+                        "no_sync interface is only for model with type "
+                        f"paddle.DataParallel, but got type {misc.typename(ddp_model)}"
+                    )
+                ctx_manager = ddp_model.no_sync()
         else:
             ctx_manager = (
                 contextlib.nullcontext()

@@ -136,6 +136,7 @@ def train(cfg: DictConfig):
     solver.train()
 
     # visualize prediction
+    logger.message("Now visualizing prediction, please wait...")
     with solver.no_grad_context_manager(True):
         for index, (input_, label, _) in enumerate(rmse_validator.data_loader):
             truefield = label["label"].y
@@ -151,6 +152,11 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
     # set airfoil model
     model = ppsci.arch.AMGNet(**cfg.MODEL)
 

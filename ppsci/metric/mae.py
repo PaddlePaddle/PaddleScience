@@ -35,8 +35,24 @@ class MAE(base.Metric):
         keep_batch (bool, optional): Whether keep batch axis. Defaults to False.
 
     Examples:
-        >>> import ppsci
-        >>> metric = ppsci.metric.MAE()
+        >>> import paddle
+        >>> from ppsci.metric import MAE
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...               'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> loss = MAE()
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.87500000), 'v': Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               0.89999998)}
+        >>> loss = MAE(keep_batch=True)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        {'u': Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               [1.20000005, 2.54999995]), 'v': Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               [0.59999996, 1.20000005])}
     """
 
     def __init__(self, keep_batch: bool = False):
