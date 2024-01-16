@@ -348,7 +348,7 @@ def output_graph(model, input_dataset, fig_save_path):
     output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)
     output = paddle.concat((output[:, :, -1:, :], output, output[:, :, 0:2, :]), axis=2)
 
-    truth = uv[0:1001, :, :, :]
+    truth = uv[0:2001, :, :, :]
 
     truth = np.concatenate((truth[:, :, :, -1:], truth, truth[:, :, :, 0:2]), axis=3)
     truth = np.concatenate((truth[:, :, -1:, :], truth, truth[:, :, 0:2, :]), axis=2)
@@ -356,7 +356,7 @@ def output_graph(model, input_dataset, fig_save_path):
     # post-process
     ten_true = []
     ten_pred = []
-    for i in range(0, 50):
+    for i in range(0, 100):
         u_star, u_pred, v_star, v_pred = post_process(output, truth, num=20 * i)
 
         ten_true.append([u_star, v_star])
