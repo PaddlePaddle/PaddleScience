@@ -60,3 +60,5 @@ TRAIN:
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
+  TIME_BATCH_SIZE: 2000
+  TIME_STEPS: 2001

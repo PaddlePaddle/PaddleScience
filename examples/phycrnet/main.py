@@ -156,9 +156,9 @@ def evaluate(cfg: DictConfig):
     time_steps = cfg.TIME_STEPS
     dx = cfg.DX[0] / cfg.DX[1]
 
-    steps = cfg.TIME_BATCH_SIZE + 1
+    steps = cfg.EVAL.TIME_BATCH_SIZE + 1
     effective_step = list(range(0, steps))
-    num_time_batch = int(time_steps / cfg.TIME_BATCH_SIZE)
+    num_time_batch = int(time_steps / cfg.EVAL.TIME_BATCH_SIZE)
 
     functions.dt = cfg.DT
     functions.dx = dx
