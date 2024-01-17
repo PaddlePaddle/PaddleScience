@@ -723,8 +723,8 @@ def lambdify(
             enabled by default if used independently.
 
     Returns:
-        ComposedNode: Callable object for computing expr with necessary input(s) data
-            in dict given.
+        Union[ComposedNode, List[ComposedNode]]: Callable object(s) for computing expr
+            with necessary input(s) data in dict given.
 
     Examples:
         >>> import paddle
