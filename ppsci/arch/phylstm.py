@@ -68,7 +68,6 @@ class DeepPhyLSTM(base.Arch):
         lift_pred_c paddle.float32 [64, 16, 1]
         g_t_pred_c paddle.float32 [64, 16, 1]
         g_dot_pred_c paddle.float32 [64, 16, 1]
-
     """
 
     def __init__(self, input_size, output_size, hidden_size=100, model_type=2):
