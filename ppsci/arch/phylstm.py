@@ -29,7 +29,45 @@ class DeepPhyLSTM(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.DeepPhyLSTM(1, 1, 100)
+        >>> # model_type is `2`
+        >>> model = ppsci.arch.DeepPhyLSTM(
+        ...     input_size=16,
+        ...     output_size=1,
+        ...     hidden_size=100,
+        ...     model_type=2)
+        >>> out = model(
+        ...     {"ag":paddle.rand([64, 16, 16]),
+        ...     "ag_c":paddle.rand([64, 16, 16]),
+        ...     "phi":paddle.rand([64, 16, 16])})
+        >>> for k, v in out.items():
+        ...     print(f"{k} {v.dtype} {v.shape}")
+        eta_pred paddle.float32 [64, 16, 1]
+        eta_dot_pred paddle.float32 [64, 16, 1]
+        g_pred paddle.float32 [64, 16, 1]
+        eta_t_pred_c paddle.float32 [64, 16, 1]
+        eta_dot_pred_c paddle.float32 [64, 16, 1]
+        lift_pred_c paddle.float32 [64, 16, 1]
+        >>> # model_type is `3`
+        >>> model = ppsci.arch.DeepPhyLSTM(
+        ...     input_size=16,
+        ...     output_size=1,
+        ...     hidden_size=100,
+        ...     model_type=3)
+        >>> out = model(
+        ...     {"ag":paddle.rand([64, 16, 1]),
+        ...     "ag_c":paddle.rand([64, 16, 1]),
+        ...     "phi":paddle.rand([64, 16, 16])})
+        >>> for k, v in out.items():
+        ...     print(f"{k} {v.dtype} {v.shape}")
+        eta_pred paddle.float32 [64, 16, 1]
+        eta_dot_pred paddle.float32 [64, 16, 1]
+        g_pred paddle.float32 [64, 16, 1]
+        eta_t_pred_c paddle.float32 [64, 16, 1]
+        eta_dot_pred_c paddle.float32 [64, 16, 1]
+        lift_pred_c paddle.float32 [64, 16, 1]
+        g_t_pred_c paddle.float32 [64, 16, 1]
+        g_dot_pred_c paddle.float32 [64, 16, 1]
+
     """
 
     def __init__(self, input_size, output_size, hidden_size=100, model_type=2):
