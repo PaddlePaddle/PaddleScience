@@ -49,7 +49,7 @@ interior_constraint = ppsci.constraint.InteriorConstraint(
 )
 bc_constraint = ppsci.constraint.BoundaryConstraint(
     {"u": lambda d: d["u"]},
-    {"u": lambda d: sin_compute_func(d) + 2},
+    {"u": lambda d: sin_compute_func(d) + 2},  # (1)
     x_domain,
     dataloader_cfg={
         "dataset": "NamedArrayDataset",
