@@ -28,6 +28,7 @@ class DeepPhyLSTM(base.Arch):
         model_type (int, optional): The model type, value is 2 or 3, 2 indicates having two sub-models, 3 indicates having three submodels. Defaults to 2.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
         >>> # model_type is `2`
         >>> model = ppsci.arch.DeepPhyLSTM(
@@ -38,7 +39,7 @@ class DeepPhyLSTM(base.Arch):
         >>> out = model(
         ...     {"ag":paddle.rand([64, 16, 16]),
         ...     "ag_c":paddle.rand([64, 16, 16]),
-        ...     "phi":paddle.rand([64, 16, 16])})
+        ...     "phi":paddle.rand([1, 16, 16])})
         >>> for k, v in out.items():
         ...     print(f"{k} {v.dtype} {v.shape}")
         eta_pred paddle.float32 [64, 16, 1]
@@ -56,7 +57,7 @@ class DeepPhyLSTM(base.Arch):
         >>> out = model(
         ...     {"ag":paddle.rand([64, 16, 1]),
         ...     "ag_c":paddle.rand([64, 16, 1]),
-        ...     "phi":paddle.rand([64, 16, 16])})
+        ...     "phi":paddle.rand([1, 16, 16])})
         >>> for k, v in out.items():
         ...     print(f"{k} {v.dtype} {v.shape}")
         eta_pred paddle.float32 [64, 16, 1]
