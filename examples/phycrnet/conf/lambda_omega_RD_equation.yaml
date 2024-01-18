@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_phycrnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: lambda_omega/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged
@@ -31,7 +31,7 @@ TIME_STEPS: 201
 DT: 0.025
 DX: [20.0, 512]
 TIME_BATCH_SIZE: 200
-
+num_convlstm: 1
 # model settings
 MODEL:
   input_channels: 2

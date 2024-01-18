@@ -2,7 +2,6 @@
 PhyCRNet for solving spatiotemporal PDEs
 Reference: https://github.com/isds-neu/PhyCRNet/
 """
-import os
 from os import path as osp
 
 import functions
@@ -22,10 +21,10 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set initial states for convlstm
-    num_convlstm = 1
+    NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))
     initial_state = []
-    for _ in range(num_convlstm):
+    for _ in range(NUM_CONVLSTM):
         initial_state.append((h0, c0))
 
     # grid parameters
@@ -111,9 +110,7 @@ def train(cfg: DictConfig):
     # initialize solver
     scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
 
-    # temporary, better than scheduler, to align the code, use:
-    # optimizer = ppsci.optimizer.Adam(scheduler)(model)
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.lr_scheduler.learning_rate)(model)
+    optimizer = ppsci.optimizer.Adam(scheduler)(model)
     solver = ppsci.solver.Solver(
         model,
         constraint_pde,
@@ -133,11 +130,6 @@ def train(cfg: DictConfig):
     model.register_output_transform(functions.tranform_output_val)
     solver.eval()
 
-    # save the model
-    checkpoint_path = os.path.join(cfg.output_dir, "phycrnet.pdparams")
-    layer_state_dict = model.state_dict()
-    paddle.save(layer_state_dict, checkpoint_path)
-
 
 def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
@@ -146,10 +138,10 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
 
     # set initial states for convlstm
-    num_convlstm = 1
+    NUM_CONVLSTM = cfg.num_convlstm
     (h0, c0) = (paddle.randn((1, 128, 16, 16)), paddle.randn((1, 128, 16, 16)))
     initial_state = []
-    for _ in range(num_convlstm):
+    for _ in range(NUM_CONVLSTM):
         initial_state.append((h0, c0))
 
     # grid parameters

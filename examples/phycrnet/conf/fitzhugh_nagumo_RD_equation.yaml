@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_phycrnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: fitzhugh/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged
@@ -24,7 +24,7 @@ mode: train # running mode: train/eval
 seed: 66
 output_dir: ${hydra:run.dir}
 DATA_PATH: ./data/FN_1001x2x128x128.mat
-
+num_convlstm: 1
 # set working condition
 TIME_STEPS: 751
 DT: 0.006

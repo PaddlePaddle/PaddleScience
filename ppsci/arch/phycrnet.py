@@ -8,7 +8,7 @@ from paddle.nn import utils
 from ppsci.arch import base
 
 # define the high-order finite difference kernels
-lapl_op = [
+LALP_OP = [
     [
         [
             [0, 0, -1 / 12, 0, 0],
@@ -20,7 +20,7 @@ lapl_op = [
     ]
 ]
 
-partial_y = [
+PARTIAL_Y = [
     [
         [
             [0, 0, 0, 0, 0],
@@ -32,7 +32,7 @@ partial_y = [
     ]
 ]
 
-partial_x = [
+PARTIAL_X = [
     [
         [
             [0, 0, 1 / 12, 0, 0],
@@ -44,8 +44,9 @@ partial_x = [
     ]
 ]
 
+
 # specific parameters for burgers equation
-def initialize_weights(module):
+def _initialize_weights(module):
     if isinstance(module, nn.Conv2D):
         c = 1.0  # 0.5
         initializer = nn.initializer.Uniform(
@@ -75,15 +76,15 @@ class PhyCRNet(base.Arch):
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.PhyCRNet(
-                input_channels=2,
-                hidden_channels=[8, 32, 128, 128],
-                input_kernel_size=[4, 4, 4, 3],
-                input_stride=[2, 2, 2, 1],
-                input_padding=[1, 1, 1, 1],
-                dt=0.002,
-                num_layers=[3, 1],
-                upscale_factor=8
-            )
+        ...        input_channels=2,
+        ...        hidden_channels=[8, 32, 128, 128],
+        ...        input_kernel_size=[4, 4, 4, 3],
+        ...        input_stride=[2, 2, 2, 1],
+        ...        input_padding=[1, 1, 1, 1],
+        ...        dt=0.002,
+        ...        num_layers=[3, 1],
+        ...        upscale_factor=8
+        ...        )
     """
 
     def __init__(
@@ -118,32 +119,32 @@ class PhyCRNet(base.Arch):
         self.num_convlstm = num_layers[1]
 
         # encoder - downsampling
-        for i in range(self.num_encoder):
-            name = "encoder{}".format(i)
-            cell = encoder_block(
-                input_channels=self.input_channels[i],
-                hidden_channels=self.hidden_channels[i],
-                input_kernel_size=self.input_kernel_size[i],
-                input_stride=self.input_stride[i],
-                input_padding=self.input_padding[i],
-            )
-
-            setattr(self, name, cell)
-            self._all_layers.append(cell)
+        self.encoder = paddle.nn.LayerList(
+            [
+                encoder_block(
+                    input_channels=self.input_channels[i],
+                    hidden_channels=self.hidden_channels[i],
+                    input_kernel_size=self.input_kernel_size[i],
+                    input_stride=self.input_stride[i],
+                    input_padding=self.input_padding[i],
+                )
+                for i in range(self.num_encoder)
+            ]
+        )
 
         # ConvLSTM
-        for i in range(self.num_encoder, self.num_encoder + self.num_convlstm):
-            name = "convlstm{}".format(i)
-            cell = ConvLSTMCell(
-                input_channels=self.input_channels[i],
-                hidden_channels=self.hidden_channels[i],
-                input_kernel_size=self.input_kernel_size[i],
-                input_stride=self.input_stride[i],
-                input_padding=self.input_padding[i],
-            )
-
-            setattr(self, name, cell)
-            self._all_layers.append(cell)
+        self.ConvLSTM = paddle.nn.LayerList(
+            [
+                ConvLSTMCell(
+                    input_channels=self.input_channels[i],
+                    hidden_channels=self.hidden_channels[i],
+                    input_kernel_size=self.input_kernel_size[i],
+                    input_stride=self.input_stride[i],
+                    input_padding=self.input_padding[i],
+                )
+                for i in range(self.num_encoder, self.num_encoder + self.num_convlstm)
+            ]
+        )
 
         # output layer
         self.output_layer = nn.Conv2D(
@@ -154,7 +155,7 @@ class PhyCRNet(base.Arch):
         self.pixelshuffle = nn.PixelShuffle(self.upscale_factor)
 
         # initialize weights
-        self.apply(initialize_weights)
+        self.apply(_initialize_weights)
         initializer_0 = paddle.nn.initializer.Constant(0.0)
         initializer_0(self.output_layer.bias)
         self.enable_transform = True
@@ -175,22 +176,20 @@ class PhyCRNet(base.Arch):
             xt = x
 
             # encoder
-            for i in range(self.num_encoder):
-                name = "encoder{}".format(i)
-                x = getattr(self, name)(x)
+            for encoder in self.encoder:
+                x = encoder(x)
 
             # convlstm
-            for i in range(self.num_encoder, self.num_encoder + self.num_convlstm):
-                name = "convlstm{}".format(i)
+            for i, LSTM in enumerate(self.ConvLSTM):
                 if step == 0:
-                    (h, c) = getattr(self, name).init_hidden_tensor(
+                    (h, c) = LSTM.init_hidden_tensor(
                         prev_state=self.initial_state[i - self.num_encoder]
                     )
                     internal_state.append((h, c))
 
                 # one-step forward
                 (h, c) = internal_state[i - self.num_encoder]
-                x, new_c = getattr(self, name)(x, h, c)
+                x, new_c = LSTM(x, h, c)
                 internal_state[i - self.num_encoder] = (x, new_c)
 
             # output
@@ -464,15 +463,15 @@ class loss_generator(nn.Layer):
 
         # spatial derivative operator
         self.laplace = Conv2DDerivative(
-            der_filter=lapl_op, resol=(dx**2), kernel_size=5, name="laplace_operator"
+            der_filter=LALP_OP, resol=(dx**2), kernel_size=5, name="laplace_operator"
         )
 
         self.dx = Conv2DDerivative(
-            der_filter=partial_x, resol=(dx * 1), kernel_size=5, name="dx_operator"
+            der_filter=PARTIAL_X, resol=(dx * 1), kernel_size=5, name="dx_operator"
         )
 
         self.dy = Conv2DDerivative(
-            der_filter=partial_y, resol=(dx * 1), kernel_size=5, name="dy_operator"
+            der_filter=PARTIAL_Y, resol=(dx * 1), kernel_size=5, name="dy_operator"
         )
 
         # temporal derivative operator
@@ -517,6 +516,7 @@ class loss_generator(nn.Layer):
         assert laplace_u.shape == u.shape
         assert laplace_v.shape == v.shape
 
+        # Reynolds number
         R = 200.0
 
         # 2D burgers eqn
