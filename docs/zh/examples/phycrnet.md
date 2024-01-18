@@ -26,7 +26,7 @@
     ```
 | 预训练模型  | 指标 |
 |:--| :--|
-| [tempogan_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams) | a-RMSE: 3.20e-3 |
+| [phycrnet_burgers_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/phycrnet/phycrnet_burgers.pdparams) | a-RMSE: 3.20e-3 |
 
 ## 1. 背景简介
 
@@ -145,9 +145,9 @@ examples/phycrnet/main.py:47:51
 --8<--
 ```
 而在评估过程中，我们使用`function.tranform_output_val`来进行评估，并生成累计均方根误差。
-``` py linenums="134"
+``` py linenums="142"
 --8<--
-examples/phycrnet/main.py:134:134
+examples/phycrnet/main.py:142:142
 --8<--
 ```
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。

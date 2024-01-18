@@ -25,7 +25,7 @@ mode: train # running mode: train/eval
 seed: 66
 output_dir: ${hydra:run.dir}
 DATA_PATH: ./data/reaction_diffusion.mat
-
+case_name: lambda_omega
 # set working condition
 TIME_STEPS: 201
 DT: 0.025

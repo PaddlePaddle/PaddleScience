@@ -24,6 +24,7 @@ mode: train # running mode: train/eval
 seed: 66
 output_dir: ${hydra:run.dir}
 DATA_PATH: ./data/burgers_2001x2x128x128.mat
+case_name: 2D Burgers' equation
 num_convlstm: 1
 # set working condition
 TIME_STEPS: 1001

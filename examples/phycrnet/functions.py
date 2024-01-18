@@ -336,38 +336,36 @@ class Dataset:
         return input_dict_train, label_dict_train, input_dict_val, label_dict_val
 
 
-def output_graph(model, input_dataset, fig_save_path):
+def output_graph(model, input_dataset, fig_save_path, case_name):
     output_dataset = model(input_dataset)
     output = output_dataset["outputs"]
     input = input_dataset["input"][0]
-
     output = paddle.concat(tuple(output), axis=0)
     output = paddle.concat((input.cuda(), output), axis=0)
 
     # Padding x and y axis due to periodic boundary condition
     output = paddle.concat((output[:, :, :, -1:], output, output[:, :, :, 0:2]), axis=3)
     output = paddle.concat((output[:, :, -1:, :], output, output[:, :, 0:2, :]), axis=2)
-
     truth = uv[0:2001, :, :, :]
-
     truth = np.concatenate((truth[:, :, :, -1:], truth, truth[:, :, :, 0:2]), axis=3)
     truth = np.concatenate((truth[:, :, -1:, :], truth, truth[:, :, 0:2, :]), axis=2)
 
     # post-process
     ten_true = []
     ten_pred = []
+
     for i in range(0, 100):
         u_star, u_pred, v_star, v_pred = post_process(output, truth, num=20 * i)
-
         ten_true.append([u_star, v_star])
         ten_pred.append([u_pred, v_pred])
 
-    ten_true = paddle.stack(ten_true)
-    ten_pred = paddle.stack(ten_pred)
+    ten_true = np.stack(ten_true)
+    ten_pred = np.stack(ten_pred)
+
     # compute the error
     # a-RMSE
     error = (
-        paddle.sum((ten_pred - ten_true) ** 2, axis=(1, 2, 3))
+        np.sum((ten_pred - ten_true) ** 2, axis=(1, 2, 3))
         / ten_true.shape[2]
         / ten_true.shape[3]
     )
@@ -378,16 +376,26 @@ def output_graph(model, input_dataset, fig_save_path):
     M = M.T / np.arange(N)
     M[:, 0] = 0
     M[0, :] = 0
+
     M = paddle.to_tensor(M)
     aRMSE = paddle.sqrt(M.T @ error)
     t = np.linspace(0, 4, N)
-    plt.plot(t, aRMSE)
+    plt.plot(t, aRMSE, color="r")
     plt.yscale("log")
-    plt.ylim((0, 1e-2))
+    plt.xlabel("t")
+    plt.ylabel("a-RMSE")
+    plt.ylim((1e-4, 10))
     plt.xlim((0, 4))
-    plt.savefig(fig_save_path + "error.jpg")
+    plt.legend(
+        [
+            "PhyCRNet",
+        ],
+        loc="upper left",
+    )
+    plt.title(case_name)
+    plt.savefig(fig_save_path + "/error.jpg")
 
-    fig, ax = plt.subplots(3, 4, figsize=(18, 12))
+    _, ax = plt.subplots(3, 4, figsize=(18, 12))
     ax[0, 0].contourf(ten_true[25, 0])
     ax[0, 0].set_title("t=1")
     ax[0, 0].set_ylabel("truth")
@@ -407,5 +415,6 @@ def output_graph(model, input_dataset, fig_save_path):
     ax[0, 3].set_title("t=4")
     ax[1, 3].contourf(ten_pred[99, 0])
     ax[2, 3].contourf(ten_true[99, 0] - ten_pred[99, 0])
-    plt.savefig(fig_save_path + "Burgers.jpg")
+    plt.title(case_name)
+    plt.savefig(fig_save_path + "/Burgers.jpg")
     plt.close()
