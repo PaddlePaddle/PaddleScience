@@ -133,7 +133,7 @@ def train(cfg: DictConfig):
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
-            "shuffle": False,
+            "shuffle": True,
         },
     }
 
@@ -148,7 +148,7 @@ def train(cfg: DictConfig):
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
-            "shuffle": False,
+            "shuffle": True,
         },
     }
 
@@ -163,7 +163,7 @@ def train(cfg: DictConfig):
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
-            "shuffle": False,
+            "shuffle": True,
         },
     }
 
@@ -202,7 +202,7 @@ def train(cfg: DictConfig):
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
-                "shuffle": False,
+                "shuffle": True,
             },
         },
         ppsci.loss.MSELoss("mean"),
@@ -246,9 +246,9 @@ def train(cfg: DictConfig):
         lr_scheduler=lr_scheduler,
         iters_per_epoch=ITERS_PER_EPOCH,
         eval_during_train=True,
-        log_freq=cfg.log_freq,
-        save_freq=100,
-        eval_freq=cfg.eval_freq,
+        log_freq=cfg.train.log_freq,
+        save_freq=cfg.train.save_freq,
+        eval_freq=cfg.train.eval_freq,
         seed=SEED,
         equation=equation,
         geom=geom,
