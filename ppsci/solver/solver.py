@@ -143,7 +143,7 @@ class Solver:
         output_dir: Optional[str] = "./output/",
         optimizer: Optional[optim.Optimizer] = None,
         lr_scheduler: Optional[optim.lr.LRScheduler] = None,
-        epochs: int = 5,
+        epochs: Optional[int] = 0,
         iters_per_epoch: int = 20,
         update_freq: int = 1,
         save_freq: int = 0,
@@ -199,7 +199,10 @@ class Solver:
             # TODO: remove arg for we don't need it anymore, this can be get from
             # optimizer._learning_rate
             optimizer._learning_rate
-            if isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
+            if (
+                isinstance(optimizer, optim.Optimizer)
+                and isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
+            )
             else None
         )
 
@@ -711,7 +714,7 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
