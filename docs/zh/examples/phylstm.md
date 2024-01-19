@@ -90,7 +90,7 @@ DeepPhyLSTM 参数 input_size 是输入大小，output_size 是输出大小，hi
 
 运行本问题代码前请按照下方命令下载 [data_boucwen.mat](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat)
 
-``` shell
+``` sh
 wget -nc -P ./ https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat
 ```
 

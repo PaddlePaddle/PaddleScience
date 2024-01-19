@@ -10,6 +10,11 @@
 2. 执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可。
 3. 在 docker 环境中，执行 `ldconfig`
 
+!!! warning "python 3.7 退场说明"
+
+    本 docker 自带的 python3.7 已不再被 paddle 支持，因此建议进入 docker 后自行按照步骤 1.2，使用 Anaconda 重新安装 python3.9。
+    带有 python3.9 的 docker 镜像会在后续提供。
+
 ### 1.2 python 环境安装[可选]
 
 如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
@@ -161,7 +166,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 执行以下代码，验证安装的 PaddleScience 基础功能是否正常。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check()"
     ```
 
@@ -170,7 +175,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 - [可选]如果已按照 [1.4.2 安装额外依赖](#142) 正确安装了 4 个额外依赖库，则可以执行以下代码，
     验证 PaddleScience 的 `ppsci.geometry.Mesh` 模块是否能正常运行。
 
-    ``` shell
+    ``` sh
     python -c "import ppsci; ppsci.run_check_mesh()"
     ```
 
@@ -180,7 +185,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
 - 运行内置的案例（以 **ldc2d_unsteady_Re10.py** 为例）
 
-    ``` shell
+    ``` sh
     cd examples/ldc/
     python ./ldc2d_unsteady_Re10.py
     ```
@@ -197,7 +202,7 @@ pybind11、pysdf、PyMesh 四个依赖库。
 
     编写完毕后运行你的代码
 
-    ``` shell
+    ``` sh
     cd examples/demo
     python ./demo.py
     ```

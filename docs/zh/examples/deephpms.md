@@ -417,7 +417,7 @@ examples/deephpms/burgers.py:157:173
 
 第二阶段训练、评估
 
-``` py linenums="218"
+``` py linenums="221"
 --8<--
 examples/deephpms/burgers.py:221:237
 --8<--
