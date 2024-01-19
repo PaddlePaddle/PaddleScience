@@ -523,6 +523,15 @@ def run_at_rank0(func: Callable) -> Callable:
     Returns:
         Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> @misc.run_at_rank0
+        ... def func():
+        ...     print(f"now_rank is {paddle.distributed.get_rank()}")
+        >>> func()
+        now_rank is 0
     """
 
     @functools.wraps(func)
