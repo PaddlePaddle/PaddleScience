@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 PaddleScience 内置了一些常见的模型，如 `MLP` 模型，如果您想使用这些内置的模型，可以直接调用 [`ppsci.arch.*`](./api/arch.md) 下的 API，并填入模型实例化所需的参数，即可快速构建模型。
 
-``` py  title="examples/demo/demo.py"
+``` py title="examples/demo/demo.py"
 # create a MLP model
 model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
 ```
@@ -638,7 +638,7 @@ solver.visualize()
 
 文档撰写过程中需进行即时渲染，预览文档内容以检查撰写的内容是否有误。因此需要按照如下命令，安装 mkdocs 相关依赖包。
 
-``` shell
+``` sh
 pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
@@ -646,13 +646,19 @@ pip install -r docs/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 PaddleScience 文档基于 [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/)、[PyMdown](https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/) 等插件进行编写，其在 Markdown 语法基础上支持了多种扩展性功能，能极大地提升文档的美观程度和阅读体验。建议参考超链接内的文档内容，选择合适的功能辅助文档撰写。
 
-### 3.3 预览文档
+### 3.3 使用 markdownlint 格式化文档[可选]
+
+如果您使用的开发环境为 VSCode，则推荐安装 [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint) 扩展。安装完毕后在编写完的文档内：点击右键-->格式化文档即可。
+
+### 3.4 预览文档
 
 在 `PaddleScience/` 目录下执行以下命令，等待构建完成后，点击显示的链接进入本地网页预览文档内容。
 
-``` shell
+``` sh
 mkdocs serve
+```
 
+``` log
 # ====== 终端打印信息如下 ======
 # INFO     -  Building documentation...
 # INFO     -  Cleaning site directory
@@ -667,7 +673,7 @@ mkdocs serve
 
     若默认端口号 8000 被占用，则可以手动指定服务部署的地址和端口，示例如下。
 
-    ``` shell
+    ``` sh
     # 指定 127.0.0.1 为地址，8687 为端口号
     mkdocs serve -a 127.0.0.1:8687
     ```

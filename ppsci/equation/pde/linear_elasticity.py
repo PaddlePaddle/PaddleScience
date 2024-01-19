@@ -32,9 +32,12 @@ class LinearElasticity(base.PDE):
         stress\_disp_{xx} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial u}{\partial x} - \sigma_{xx} \\
         stress\_disp_{yy} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial v}{\partial y} - \sigma_{yy} \\
         stress\_disp_{zz} = \lambda(\dfrac{\partial u}{\partial x} + \dfrac{\partial v}{\partial y} + \dfrac{\partial w}{\partial z}) + 2\mu \dfrac{\partial w}{\partial z} - \sigma_{zz} \\
-        traction_{x} = n_x \sigma_{xx} + n_y \sigma_{xy} + n_z \sigma_{xz} \\
-        traction_{y} = n_y \sigma_{yx} + n_y \sigma_{yy} + n_z \sigma_{yz} \\
-        traction_{z} = n_z \sigma_{zx} + n_y \sigma_{zy} + n_z \sigma_{zz} \\
+        stress\_disp_{xy} = \mu(\dfrac{\partial u}{\partial y} + \dfrac{\partial v}{\partial x}) - \sigma_{xy} \\
+        stress\_disp_{xz} = \mu(\dfrac{\partial u}{\partial z} + \dfrac{\partial w}{\partial x}) - \sigma_{xz} \\
+        stress\_disp_{yz} = \mu(\dfrac{\partial v}{\partial z} + \dfrac{\partial w}{\partial y}) - \sigma_{yz} \\
+        equilibrium_{x} = \rho \dfrac{\partial^2 u}{\partial t^2} - (\dfrac{\partial \sigma_{xx}}{\partial x} + \dfrac{\partial \sigma_{xy}}{\partial y} + \dfrac{\partial \sigma_{xz}}{\partial z}) \\
+        equilibrium_{y} = \rho \dfrac{\partial^2 u}{\partial t^2} - (\dfrac{\partial \sigma_{xy}}{\partial x} + \dfrac{\partial \sigma_{yy}}{\partial y} + \dfrac{\partial \sigma_{yz}}{\partial z}) \\
+        equilibrium_{z} = \rho \dfrac{\partial^2 u}{\partial t^2} - (\dfrac{\partial \sigma_{xz}}{\partial x} + \dfrac{\partial \sigma_{yz}}{\partial y} + \dfrac{\partial \sigma_{zz}}{\partial z}) \\
     \end{cases}
     $$
 

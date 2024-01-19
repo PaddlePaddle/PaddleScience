@@ -56,7 +56,7 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 
 ## 3. 问题求解
 
-接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](../lorenz/#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](lorenz.md#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
 ### 3.1 数据集介绍
 
@@ -67,7 +67,7 @@ $$\omega = 1.0, \alpha = 0.165, \beta = 0.2, \gamma = 10$$
 |训练集 |256        |1025      |[rossler_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5)|
 |验证集 |32         |1025      |[rossler_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5)|
 
-数据集官网为：https://zenodo.org/record/5148524#.ZDe77-xByrc
+数据集官网为：<https://zenodo.org/record/5148524#.ZDe77-xByrc>
 
 ### 3.2 Embedding 模型
 
@@ -83,7 +83,7 @@ examples/rossler/conf/enn.yaml:22:34
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="57" title="examples/rossler/train_enn.py"
+``` py linenums="55" title="examples/rossler/train_enn.py"
 --8<--
 examples/rossler/train_enn.py:55:74
 --8<--
@@ -129,9 +129,9 @@ examples/rossler/train_enn.py:76:86
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="89" title="examples/rossler/train_enn.py"
+``` py linenums="92" title="examples/rossler/train_enn.py"
 --8<--
-examples/rossler/train_enn.py:93:99
+examples/rossler/train_enn.py:92:99
 --8<--
 ```
 
@@ -189,9 +189,9 @@ examples/rossler/conf/transformer.yaml:23:34
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="67" title="examples/rossler/train_transformer.py"
+``` py linenums="64" title="examples/rossler/train_transformer.py"
 --8<--
-examples/rossler/train_transformer.py:65:82
+examples/rossler/train_transformer.py:64:82
 --8<--
 ```
 

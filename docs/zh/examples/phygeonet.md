@@ -13,7 +13,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --output ./data/heat_equation.npz
 
-    python main.py data_dir=./data/heat_equation.npz
+    python heat_equation.py
 
     # heat_equation_bc
     # linux
@@ -24,7 +24,7 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --output ./data/heat_equation.npz
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --output ./data/heat_equation.npz
 
-    python main.py data_dir=./data/heat_equation_bc.npz
+    python heat_equation_with_bc.py
 
     ```
 === "模型评估命令"
@@ -38,7 +38,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation.npz --output ./data/heat_equation.npz
 
-    python main.py mode=eval data_dir=./data/heat_equation.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
+    python heat_equation.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams
 
     # heat_equation_bc
     # linux
@@ -49,19 +49,18 @@
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc.npz --output ./data/heat_equation.npz
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyGeoNet/heat_equation_bc_test.npz --output ./data/heat_equation.npz
 
-    python main.py mode=eval test_data_dir=./data/heat_equation_bc_test.npz  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams
+    python heat_equation_with_bc.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams
 
     ```
 
 | 模型 | mRes | ev |
 | :-- | :-- | :-- |
-| [heat_equation](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
-| [heat_equation_parameterized_bc](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams)  | 992 |0.31|
+| [heat_equation_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_pretrain.pdparams)  | 0.815 |0.095|
+| [heat_equation_bc_pretrain.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/PhyGeoNet/heat_equation_bc_pretrain.pdparams)  | 992 |0.31|
 
 ## 1. 背景简介
 
- 最近几年，深度学习在很多领域取得了非凡的成就，尤其是计算机视觉和自然语言处理方面，而受启发于深度学习的快速发展，基于深度学习强大的函数逼近能力，神经网络在科学计算领域也取得了成功，现阶段的研究主要分为两大类，一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Ritz Net，另一类是通过数据驱动的深度神经网络算子，其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用，比如天气预测，量子化学，生物工程，以及计算流体等领域。
-而在所有不同类型的深度学习网络中，卷积神经网络获得了越来越多的关注，这是因为卷积神经网络中的卷积具有参数共享的性质，可以学习大尺度的时空域。但是卷积神经网络的缺陷是只能处理规则均匀的数据。
+最近几年，深度学习在很多领域取得了非凡的成就，尤其是计算机视觉和自然语言处理方面，受启发于深度学习的快速发展，基于深度学习强大的函数逼近能力，神经网络在科学计算领域也取得了成功，现阶段的研究主要分为两大类，一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Ritz Net，另一类是通过数据驱动的深度神经网络算子，其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用，比如天气预测，量子化学，生物工程，以及计算流体等领域。由于卷积神经网络具有参数共享的性质，可以学习大尺度的时空域，因此获得了越来越多的关注。
 
 ## 2. 问题定义
 
@@ -71,89 +70,99 @@
 
 ## 3. 问题求解
 
-为节约篇幅，问题求解以heat equation为例。
+为节约篇幅，接下来将以 `heat equation` 为例讲解如何使用 PaddleScience 进行实现。
 
 ### 3.1 模型构建
 
-本文使用提出的USCNN模型进行训练。
+本案例使用提出的 USCNN 模型进行训练，该模型的构建入方式如下所示。
 
-``` py linenums="236"
+``` py linenums="23"
 --8<--
-examples/phygeonet/heat_equation/main.py:236:236
+examples/phygeonet/heat_equation.py:23:23
+--8<--
+```
+
+其中，构建模型所需的参数可以从对应的配置文件中获取。
+
+``` yaml linenums="34"
+--8<--
+examples/phygeonet/conf/heat_equation.yaml:34:43
 --8<--
 ```
 
 ### 3.2 数据读取
 
-``` py linenums="227"
+本案例使用的数据集存储在 `.npz` 文件中，使用如下的代码进行读取。
+
+``` py linenums="15"
 --8<--
-examples/phygeonet/heat_equation/main.py:227:233
+examples/phygeonet/heat_equation.py:15:21
 --8<--
 ```
 
 ### 3.3 输出转化函数构建
 
-本文为强制边界约束，使用相对应的输出转化函数
+本文为强制边界约束，在训练时使用相对应的输出转化函数对模型的输出结果计算微分。
 
-``` py linenums="263"
+``` py linenums="50"
 --8<--
-examples/phygeonet/heat_equation/main.py:263:283
+examples/phygeonet/heat_equation.py:50:79
 --8<--
 ```
 
 ### 3.4 约束构建
 
-构建相对应约束条件，由于边界约束为强制约束，约束条件主要为残差约束
+构建相对应约束条件，由于边界约束为强制约束，约束条件主要为残差约束。
 
-``` py linenums="240"
+``` py linenums="28"
 --8<--
-examples/phygeonet/heat_equation/main.py:240:261
---8<--
-```
-
-### 3.5 评估器构建
-
-由于评估器使用不同的输出转化函数，因此本文不构建评估器，转而调用 evaluate() 函数
-
-``` py linenums="301"
---8<--
-examples/phygeonet/heat_equation/main.py:301:360
+examples/phygeonet/heat_equation.py:28:48
 --8<--
 ```
 
-### 3.6 优化器构建
+### 3.5 优化器构建
 
-与论文中描述相同，我们使用恒定学习率构造Adam优化器。
+与论文中描述相同，我们使用恒定学习率 0.001 构造 Adam 优化器。
 
-``` py linenums="238"
+``` py linenums="25"
 --8<--
-examples/phygeonet/heat_equation/main.py:238:238
+examples/phygeonet/heat_equation.py:25:25
 --8<--
 ```
 
-### 3.7 模型训练
+### 3.6 模型训练
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="287"
+``` py linenums="82"
 --8<--
-examples/phygeonet/heat_equation/main.py:287:294
+examples/phygeonet/heat_equation.py:82:89
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="296"
+``` py linenums="90"
 --8<--
-examples/phygeonet/heat_equation/main.py:296:296
+examples/phygeonet/heat_equation.py:90:90
+--8<--
+```
+
+### 3.7 模型评估
+
+在模型训练完成之后，可以使用 evaluate() 函数对训练好的模型进行评估，并可视化。
+
+``` py linenums="94"
+--8<--
+examples/phygeonet/heat_equation.py:94:151
 --8<--
 ```
 
 ## 4. 完整代码
 
-``` py linenums="1" title="heat_equation/main.py"
+``` py linenums="1" title="heat_equation.py"
 --8<--
-examples/phygeonet/heat_equation/main.py
+examples/phygeonet/heat_equation.py
 --8<--
 ```
 

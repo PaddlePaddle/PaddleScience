@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import Union
 
-from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 
@@ -51,8 +50,8 @@ class HeatExchanger(base.PDE):
         alpha_c: $\frac{(\eta_o\alpha A)_c}{L(c_p)_c}$
         v_h: $v_h$
         v_c: $v_c$
-        w_h: $\frac{\eta_o\alpha A)_h}{M(c_p)_w}$
-        w_c: $\frac{\eta_o\alpha A)_c}{M(c_p)_w}$
+        w_h: $\frac{(\eta_o\alpha A)_h}{M(c_p)_w}$
+        w_c: $\frac{(\eta_o\alpha A)_c}{M(c_p)_w}$
 
     Examples:
         >>> import ppsci
@@ -69,37 +68,25 @@ class HeatExchanger(base.PDE):
         w_c: Union[float, str],
     ):
         super().__init__()
+        x, t, qm_h, qm_c = self.create_symbols("x t qm_h qm_c")
 
-        def heat_boundary_fun(out):
-            x, t, qm_h = out["x"], out["t"], out["qm_h"]
-            T_h, T_w = out["T_h"], out["T_w"]
-            T_h_x = jacobian(T_h, x)
-            T_h_t = jacobian(T_h, t)
+        T_h = self.create_function("T_h", (x, t, qm_h))
+        T_c = self.create_function("T_c", (x, t, qm_c))
+        T_w = self.create_function("T_w", (x, t))
 
-            beta_h = (alpha_h * v_h) / qm_h
-            heat_boundary = T_h_t + v_h * T_h_x - beta_h * (T_w - T_h)
-            return heat_boundary
+        T_h_x = T_h.diff(x)
+        T_h_t = T_h.diff(t)
+        T_c_x = T_c.diff(x)
+        T_c_t = T_c.diff(t)
+        T_w_t = T_w.diff(t)
 
-        self.add_equation("heat_boundary", heat_boundary_fun)
+        beta_h = (alpha_h * v_h) / qm_h
+        beta_c = (alpha_c * v_c) / qm_c
 
-        def cold_boundary_fun(out):
-            x, t, qm_c = out["x"], out["t"], out["qm_c"]
-            T_c, T_w = out["T_c"], out["T_w"]
-            T_c_x = jacobian(T_c, x)
-            T_c_t = jacobian(T_c, t)
+        heat_boundary = T_h_t + v_h * T_h_x - beta_h * (T_w - T_h)
+        cold_boundary = T_c_t - v_c * T_c_x - beta_c * (T_w - T_c)
+        wall = T_w_t - w_h * (T_h - T_w) - w_c * (T_c - T_w)
 
-            beta_c = (alpha_c * v_c) / qm_c
-            cold_boundary = T_c_t - v_c * T_c_x - beta_c * (T_w - T_c)
-            return cold_boundary
-
-        self.add_equation("cold_boundary", cold_boundary_fun)
-
-        def wall_fun(out):
-            t = out["t"]
-            T_c, T_h, T_w = out["T_c"], out["T_h"], out["T_w"]
-            T_w_t = jacobian(T_w, t)
-
-            wall = T_w_t - w_h * (T_h - T_w) - w_c * (T_c - T_w)
-            return wall
-
-        self.add_equation("wall", wall_fun)
+        self.add_equation("heat_boundary", heat_boundary)
+        self.add_equation("cold_boundary", cold_boundary)
+        self.add_equation("wall", wall)

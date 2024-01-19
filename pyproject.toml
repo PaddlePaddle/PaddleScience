@@ -11,7 +11,7 @@ license = {text = "Apache-2.0"}
 authors = [
     { name = "PaddlePaddle" },
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 keywords = [
     "Machine learning",
     "Deep learning",
@@ -70,4 +70,7 @@ ignore = ["E501", "E741"]
 extend-exclude = ["./ppsci/geometry/inflation.py", "./ppsci/autodiff/__init__.py"]
 
 [tool.setuptools_scm]
-write_to = "ppsci/_version.py"
+version_file = "ppsci/_version.py"
+tag_regex = "v(\\d+\\.\\d+\\.\\d+)"
+fallback_version = "0.0.0"
+version_scheme = "post-release"
