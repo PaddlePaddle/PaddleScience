@@ -18,6 +18,7 @@
         - ModelList
         - AFNONet
         - PrecipNet
+        - PhyCRNet
         - UNetEx
         - USCNN
         - NowcastNet
