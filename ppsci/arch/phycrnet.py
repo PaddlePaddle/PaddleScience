@@ -77,15 +77,15 @@ class PhyCRNet(base.Arch):
 
     Args:
         input_channels (int): The input channels.
-        hidden_channels (Tuple[int]): The hidden channels.
-        input_kernel_size (Tuple[int]):  The input kernel size.
-        input_stride (Tuple[int]): The input stride.
-        input_padding (Tuple[int]): The input padding.
+        hidden_channels (Tuple[int, ...]): The hidden channels.
+        input_kernel_size (Tuple[int, ...]):  The input kernel size(s).
+        input_stride (Tuple[int, ...]): The input stride(s).
+        input_padding (Tuple[int, ...]): The input padding(s).
         dt (float): The dt parameter.
-        num_layers (Tuple[int]): The number of layers.
+        num_layers (Tuple[int, ...]): The number of layers.
         upscale_factor (int): The upscale factor.
-        step (int, optional): The step. Defaults to 1.
-        effective_step (Tuple[int], optional): The effective step. Defaults to (1).
+        step (int, optional): The step(s). Defaults to 1.
+        effective_step (Tuple[int, ...], optional): The effective step. Defaults to (1, ).
 
     Examples:
         >>> import ppsci
@@ -104,15 +104,15 @@ class PhyCRNet(base.Arch):
     def __init__(
         self,
         input_channels: int,
-        hidden_channels: Tuple[int],
-        input_kernel_size: Tuple[int],
-        input_stride: Tuple[int],
-        input_padding: Tuple[int],
+        hidden_channels: Tuple[int, ...],
+        input_kernel_size: Tuple[int, ...],
+        input_stride: Tuple[int, ...],
+        input_padding: Tuple[int, ...],
         dt: float,
-        num_layers: Tuple[int],
+        num_layers: Tuple[int, ...],
         upscale_factor: int,
         step: int = 1,
-        effective_step: Tuple[int] = (1),
+        effective_step: Tuple[int, ...] = (1,),
     ):
         super(PhyCRNet, self).__init__()
 
