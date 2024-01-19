@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.phycrnet import PhyCRNet
+
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
@@ -56,6 +58,7 @@ __all__ = [
     "PrecipNet",
     "UNetEx",
     "Epnn",
+    "PhyCRNet",
     "NowcastNet",
     "USCNN",
     "HEDeepONets",

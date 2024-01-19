@@ -54,9 +54,9 @@
 
     执行以下命令以 pip 的方式安装最新版本的 PaddleScience。
 
-    ``` shell
-    pip install -U paddlesci
-    ```
+    --8<--
+    ./README.md:pip_install
+    --8<--
 
 === "设置 PYTHONPATH"
 
