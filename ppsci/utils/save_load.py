@@ -95,8 +95,7 @@ def load_pretrain(
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
         >>> save_load.load_pretrain(
         ...     model=model,
-        ...     path="path/to/pretrain_model"
-        ... ) # doctest: +SKIP
+        ...     path="path/to/pretrain_model") # doctest: +SKIP
 
     """
     if path.startswith("http"):
