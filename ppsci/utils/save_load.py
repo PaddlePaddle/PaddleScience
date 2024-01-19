@@ -94,8 +94,8 @@ def load_pretrain(
         >>> from ppsci.utils import save_load
         >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
         >>> save_load.load_pretrain(
-        ...     model = model,
-        ...     path = "path/to/pretrain_model"
+        ...     model=model,
+        ...     path="path/to/pretrain_model"
         ... ) # doctest: +SKIP
 
     """
