@@ -25,7 +25,7 @@ from ppsci.utils import logger
 from ppsci.utils import misc
 
 RUNTIME_EXIT_CODE = 1  # for other errors
-VALIDATIONERROR_EXIT_CODE = 2  # for invalid argument detected in config file
+VALIDATION_ERROR_EXIT_CODE = 2  # for invalid argument detected in config file
 
 
 class InitCallback(Callback):
@@ -68,7 +68,7 @@ class InitCallback(Callback):
             full_cfg = DictConfig(_model_pydantic.model_dump())
         except ValidationError as e:
             print(e)
-            sys.exit(VALIDATIONERROR_EXIT_CODE)
+            sys.exit(VALIDATION_ERROR_EXIT_CODE)
         except Exception as e:
             print(e)
             sys.exit(RUNTIME_EXIT_CODE)
