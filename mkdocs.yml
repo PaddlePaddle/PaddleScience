@@ -58,10 +58,11 @@ nav:
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
-          - ShockWave: zh/examples/shock_wave.md
-          - ViV: zh/examples/viv.md
-          - tempoGAN: zh/examples/tempoGAN.md
           - NSFNets: zh/examples/nsfnet.md
+          - PhyCRNet: zh/examples/phycrnet.md
+          - ShockWave: zh/examples/shock_wave.md
+          - tempoGAN: zh/examples/tempoGAN.md
+          - ViV: zh/examples/viv.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -70,8 +71,8 @@ nav:
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
         - 传热:
-          - Heat_PINN: zh/examples/heat_pinn.md
           - Heat_Exchanger: zh/examples/heat_exchanger.md
+          - Heat_PINN: zh/examples/heat_pinn.md
           - PhyGeoNet: zh/examples/phygeonet.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md

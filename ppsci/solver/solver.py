@@ -368,11 +368,11 @@ class Solver:
         # log paddlepaddle's version
         if version.Version(paddle.__version__) != version.Version("0.0.0"):
             paddle_version = paddle.__version__
-            logger.warning(
-                f"Detected paddlepaddle version is '{paddle_version}', "
-                "currently it is recommended to use develop version until the "
-                "release of version 2.6."
-            )
+            if version.Version(paddle.__version__) < version.Version("2.6.0"):
+                logger.warning(
+                    f"Detected paddlepaddle version is '{paddle_version}', "
+                    "currently it is recommended to use release 2.6 or develop version."
+                )
         else:
             paddle_version = f"develop({paddle.version.commit[:7]})"
 
@@ -432,7 +432,7 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
-    def train(self):
+    def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
@@ -466,7 +466,7 @@ class Solver:
                     f"[best metric: {self.best_metric['metric']}]"
                 )
                 for metric_dict in metric_dict_group.values():
-                    logger.scaler(
+                    logger.scalar(
                         {f"eval/{k}": v for k, v in metric_dict.items()},
                         epoch_id,
                         self.vdl_writer,
@@ -504,6 +504,18 @@ class Solver:
                 self.equation,
                 print_log=(epoch_id == start_epoch),
             )
+
+    def finetune(self, pretrained_model_path: str) -> None:
+        """Finetune model based on given pretrained model.
+
+        Args:
+            pretrained_model_path (str): Pretrained model path.
+        """
+        # load pretrained model
+        save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+
+        # call train program
+        self.train()
 
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
@@ -687,13 +699,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
+        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.
