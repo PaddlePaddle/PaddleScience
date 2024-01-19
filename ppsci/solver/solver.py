@@ -440,7 +440,7 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
-    def train(self):
+    def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
@@ -512,6 +512,18 @@ class Solver:
                 self.equation,
                 print_log=(epoch_id == start_epoch),
             )
+
+    def finetune(self, pretrained_model_path: str) -> None:
+        """Finetune model based on given pretrained model.
+
+        Args:
+            pretrained_model_path (str): Pretrained model path.
+        """
+        # load pretrained model
+        save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+
+        # call train program
+        self.train()
 
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
