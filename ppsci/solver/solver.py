@@ -59,7 +59,7 @@ class Solver:
         optimizer (Optional[optimizer.Optimizer]): Optimizer object. Defaults to None.
         lr_scheduler (Optional[optimizer.lr.LRScheduler]): Learning rate scheduler. Defaults to None.
             Deprecated now for it will be fetched from 'optimizer._learning_rate' if available.
-        epochs (int, optional): Training epoch(s). Defaults to 5.
+        epochs (int, optional): Training epoch(s). Defaults to 0.
             Deprecated now and it is recommended defined as 'cfg.TRAIN.epochs' in config yaml..
         iters_per_epoch (int, optional): Number of iterations within an epoch. Defaults to 20.
             Deprecated now and it is recommended defined as `cfg.TRAIN.iters_per_epoch` in config yaml.
@@ -132,7 +132,6 @@ class Solver:
         ...     {"EQ": pde_constraint},
         ...     "./output",
         ...     opt,
-        ...     None,
         ... )  # doctest: +SKIP
     """
 
@@ -179,7 +178,8 @@ class Solver:
         # set constraint
         self.constraint = constraint
         # set output directory
-        self.output_dir = output_dir
+        if cfg is None:
+            self.output_dir = output_dir
 
         # set optimizer
         self.optimizer = optimizer
@@ -206,20 +206,21 @@ class Solver:
             else None
         )
 
-        # set training hyper-parameter
-        self.epochs = epochs
-        self.iters_per_epoch = iters_per_epoch
-        # set update_freq for gradient accumulation
-        self.update_freq = update_freq
-        # set checkpoint saving frequency
-        self.save_freq = save_freq
-        # set logging frequency
-        self.log_freq = log_freq
+        if cfg is None:
+            # set training hyper-parameter
+            self.epochs = epochs
+            self.iters_per_epoch = iters_per_epoch
+            # set update_freq for gradient accumulation
+            self.update_freq = update_freq
+            # set checkpoint saving frequency
+            self.save_freq = save_freq
+            # set logging frequency
+            self.log_freq = log_freq
 
-        # set evaluation hyper-parameter
-        self.eval_during_train = eval_during_train
-        self.start_eval_epoch = start_eval_epoch
-        self.eval_freq = eval_freq
+            # set evaluation hyper-parameter
+            self.eval_during_train = eval_during_train
+            self.start_eval_epoch = start_eval_epoch
+            self.eval_freq = eval_freq
 
         # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}
@@ -237,7 +238,8 @@ class Solver:
         }
 
         # fix seed for reproducibility
-        self.seed = seed
+        if cfg is None:
+            self.seed = seed
 
         # set running device
         if device != "cpu" and paddle.device.get_device() == "cpu":
@@ -255,12 +257,14 @@ class Solver:
         self.visualizer = visualizer
 
         # set automatic mixed precision(AMP) configuration
-        self.use_amp = use_amp
-        self.amp_level = amp_level
+        if cfg is None:
+            self.use_amp = use_amp
+            self.amp_level = amp_level
         self.scaler = amp.GradScaler(True) if self.use_amp else None
 
         # whether calculate metrics by each batch during evaluation, mainly for memory efficiency
-        self.compute_metric_by_batch = compute_metric_by_batch
+        if cfg is None:
+            self.compute_metric_by_batch = compute_metric_by_batch
         if validator is not None:
             for metric in itertools.chain(
                 *[_v.metric.values() for _v in self.validator.values()]
@@ -272,7 +276,8 @@ class Solver:
                         f"{compute_metric_by_batch}."
                     )
         # whether set `stop_gradient=True` for every Tensor if no differentiation involved during evaluation
-        self.eval_with_no_grad = eval_with_no_grad
+        if cfg is None:
+            self.eval_with_no_grad = eval_with_no_grad
 
         self.rank = dist.get_rank()
         self.world_size = dist.get_world_size()
@@ -288,6 +293,8 @@ class Solver:
             )
 
         # load pretrained model, usually used for transfer learning
+        if cfg is not None:
+            pretrained_model_path = self.pretrained_model_path
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
@@ -297,6 +304,8 @@ class Solver:
             "epoch": 0,
         }
         # load model checkpoint, usually used for resume training
+        if cfg is not None:
+            checkpoint_path = self.checkpoint_path
         if checkpoint_path is not None:
             if pretrained_model_path is not None:
                 logger.warning(
@@ -356,6 +365,8 @@ class Solver:
 
         # set VisualDL tool
         self.vdl_writer = None
+        if cfg is not None:
+            use_vdl = self.use_vdl
         if use_vdl:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
@@ -367,6 +378,9 @@ class Solver:
 
         # set WandB tool
         self.wandb_writer = None
+        if cfg is not None:
+            use_wandb = self.use_wandb
+            wandb_config = self.wandb_config
         if use_wandb:
             try:
                 import wandb
@@ -396,6 +410,8 @@ class Solver:
         self.forward_helper = expression.ExpressionSolver()
 
         # whether enable static for forward pass, defaults to False
+        if cfg is not None:
+            to_static = self.to_static
         jit.enable_to_static(to_static)
         logger.info(f"Set to_static={to_static} for computational optimization.")
 
@@ -830,12 +846,12 @@ class Solver:
         )
 
     def _initialize_from_cfg(self, cfg: DictConfig):
-        # check given cfg using pre-defined pydantic schema in 'SolverConfig', error(s) will be raised
-        # if any checking failed at this step
+        # check given cfg using pre-defined pydantic schema in 'SolverConfig', error(s)
+        # will be raised if any checking failed at this step
         cfg_pydantic = config.SolverConfig(**dict(cfg))
 
         # complete missing items with default values pre-defined in pydantic schema in
-        # 'SolverConfig'
+        # 'ppsci.utils.config.SolverConfig'
         full_cfg = DictConfig(cfg_pydantic.model_dump())
 
         # assign cfg items to solver's attributes after checking passed

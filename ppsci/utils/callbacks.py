@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib.util
+import inspect
 import sys
 from os import path as osp
 from typing import Any
 
 from hydra.experimental.callback import Callback
 from omegaconf import DictConfig
-from pydantic import ValidationError
 
 from ppsci.utils import config as config_module
 from ppsci.utils import logger
@@ -61,6 +62,18 @@ class InitCallback(Callback):
     def on_job_start(self, config: DictConfig, **kwargs: Any) -> None:
         # check given cfg using pre-defined pydantic schema in 'SolverConfig', error(s) will be raised
         # if any checking failed at this step
+        if importlib.util.find_spec("pydantic") is not None:
+            from pydantic import ValidationError
+        else:
+            logger.error(
+                f"ModuleNotFoundError at {__file__}:{inspect.currentframe().f_lineno}\n"
+                "Please install pydantic with `pip install pydantic` when set callbacks"
+                " in your config yaml."
+            )
+            sys.exit(RUNTIME_EXIT_CODE)
+
+        # check given cfg using pre-defined pydantic schema in 'SolverConfig',
+        # error(s) will be printed and exit program if any checking failed at this step
         try:
             _model_pydantic = config_module.SolverConfig(**dict(config))
             # complete missing items with default values pre-defined in pydantic schema in
