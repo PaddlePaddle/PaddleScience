@@ -131,6 +131,18 @@ def save_plot_from_1d_dict(
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> filename = "path/to/file"
+        >>> data_dict = {
+        ...     "x": np.array([[1], [2], [3],[4]]),
+        ...     "u": np.array([[4], [5], [6],[4]]),
+        ... }
+        >>> coord_keys = ("x",)
+        >>> value_keys = ("u",)
+        >>> ppsci.visualize.save_plot_from_1d_dict(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
     """
     space_ndim = len(coord_keys) - int("t" in coord_keys)
     if space_ndim not in [1, 2, 3]:
@@ -375,6 +387,22 @@ def save_plot_from_3d_dict(
         data_dict (Dict[str, Union[np.ndarray, paddle.Tensor]]): Data in dict.
         visu_keys (Tuple[str, ...]): Keys for visualizing data. such as ("u", "v").
         num_timestamps (int, optional): Number of timestamp in data_dict. Defaults to 1.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ppsci
+
+        >>> data_dict = {
+        ...     "u": np.array([[[10], [20], [30], [40], [50]]]),
+        ...     "v": np.array([[[5], [15], [25], [35], [45]]]),
+        ... }
+
+        >>> ppsci.visualize.save_plot_from_3d_dict(
+        ...     "path/to/file",
+        ...     data_dict,
+        ...     ("u", "v"),
+        ...     1,
+        ... ) # doctest: +SKIP
     """
 
     visu_data = [data_dict[k] for k in visu_keys]
