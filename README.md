@@ -134,7 +134,7 @@ python -c "import paddle; paddle.utils.run_check()"
 
     **从以下三种安装方式中，任选一种均可安装。**
 
-    - git 源码安装[推荐]
+    - git 源码安装[**推荐**]
 
         执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
         <!-- --8<-- [start:git_install] -->
@@ -165,15 +165,14 @@ python -c "import paddle; paddle.utils.run_check()"
     - 设置 PYTHONPATH
 
         如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
-        <!-- --8<-- [start:python_path_install] -->
+
         ``` shell
-        cd PaddleScience/
-
+        cd PaddleScience
         export PYTHONPATH=$PYTHONPATH:$PWD # for linux
-
         set PYTHONPATH=%cd% # for windows
+        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
         ```
-        <!-- --8<-- [end:python_path_install] -->
+
         注：上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
 
 2. 验证安装
@@ -240,8 +239,12 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [AndPuQing](https://github.com/AndPuQing)，
     [lknt](https://github.com/lknt)，
-    [yangguohao](https://github.com/yangguohao)，
     [mrcangye](https://github.com/mrcangye)，
+    [yangguohao](https://github.com/yangguohao)，
+    [ooooo-create](https://github.com/ooooo-create)，
+    [megemini](https://github.com/megemini)，
+    [DUCH714](https://github.com/DUCH714)，
+    [zlynna](https://github.com/zlynna)，
     [jjyaoao](https://github.com/jjyaoao)，
     [jiamingkong](https://github.com/jiamingkong)，
     [Liyulingyue](https://github.com/Liyulingyue)，
