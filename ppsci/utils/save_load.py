@@ -96,7 +96,6 @@ def load_pretrain(
         >>> save_load.load_pretrain(
         ...     model=model,
         ...     path="path/to/pretrain_model") # doctest: +SKIP
-
     """
     if path.startswith("http"):
         path = download.get_weights_path_from_url(path)
