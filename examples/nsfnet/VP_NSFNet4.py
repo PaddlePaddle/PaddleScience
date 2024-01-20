@@ -296,6 +296,7 @@ def evaluate(cfg: DictConfig):
     u_star = paddle.to_tensor(test_v[:, 0:1].astype("float32"))
     v_star = paddle.to_tensor(test_v[:, 1:2].astype("float32"))
     w_star = paddle.to_tensor(test_v[:, 2:3].astype("float32"))
+    p_star = paddle.to_tensor(test_v[:, 3:4].astype("float32"))
 
     # wrap validator
     ppsci.utils.load_pretrain(model, cfg.EVAL.pretrained_model_path)
@@ -312,9 +313,15 @@ def evaluate(cfg: DictConfig):
     u_pred = solution["u"].reshape((5, -1))
     v_pred = solution["v"].reshape((5, -1))
     w_pred = solution["w"].reshape((5, -1))
+    p_pred = solution["p"].reshape((5, -1))
     u_star = u_star.reshape((5, -1))
     v_star = v_star.reshape((5, -1))
     w_star = w_star.reshape((5, -1))
+    p_star = p_star.reshape((5, -1))
+
+    # NS equation can figure out pressure drop, need background pressure p_star.mean()
+    p_pred = p_pred - p_pred.mean() + p_star.mean()
+
     u_error = paddle.linalg.norm(u_pred - u_star, axis=1) / np.linalg.norm(
         u_star, axis=1
     )
@@ -324,15 +331,20 @@ def evaluate(cfg: DictConfig):
     w_error = paddle.linalg.norm(w_pred - w_star, axis=1) / np.linalg.norm(
         w_star, axis=1
     )
+    p_error = paddle.linalg.norm(p_pred - p_star, axis=1) / np.linalg.norm(
+        w_star, axis=1
+    )
     t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
     plt.plot(t, np.array(u_error))
     plt.plot(t, np.array(v_error))
     plt.plot(t, np.array(w_error))
-    plt.legend(["u_error", "v_error", "w_error"])
+    plt.plot(t, np.array(p_error))
+    plt.legend(["u_error", "v_error", "w_error", "p_error"])
     plt.xlabel("t")
-    plt.ylabel("relative error")
-    plt.title("relative error for test dataset")
-    plt.savefig("error.jpg")
+    plt.ylabel("Relative l2 Error")
+    plt.title("Relative l2 Error, on test dataset")
+    plt.savefig(cfg.output_dir + "/error.jpg")
+    print("L2 error picture is saved at ")
 
     grid_x, grid_y = np.mgrid[
         x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
@@ -367,7 +379,7 @@ def evaluate(cfg: DictConfig):
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
-    plt.savefig("z=0 plane")
+    plt.savefig(cfg.output_dir + "/z=0 plane")
 
     grid_y, grid_z = np.mgrid[
         y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
@@ -402,7 +414,7 @@ def evaluate(cfg: DictConfig):
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
-    plt.savefig("x=0 plane")
+    plt.savefig(cfg.output_dir + "/x=0 plane")
 
 
 if __name__ == "__main__":
