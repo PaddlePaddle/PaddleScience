@@ -23,49 +23,7 @@ import ppsci
 from ppsci.utils import logger
 
 
-class Transform:
-    def __init__(self, lowb, upb) -> None:
-        self.lowb = {"x": lowb[0], "y": lowb[1], "z": lowb[2], "t": lowb[3]}
-        self.upb = {"x": upb[0], "y": upb[1], "z": upb[2], "t": upb[3]}
-
-    def input_trans(self, input_dict):
-        lowb = self.lowb
-        upb = self.upb
-        for key, v in input_dict.items():
-            v = 2.0 * (v - lowb[key]) / (upb[key] - lowb[key]) - 1.0
-            input_dict[key] = v
-        return input_dict
-
-
-@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
-def main(cfg: DictConfig):
-    if cfg.mode == "train":
-        train(cfg)
-    elif cfg.mode == "eval":
-        evaluate(cfg)
-    else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
-
-
-def train(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    # set random seed for reproducibility
-    SEED = 1234
-    ppsci.utils.misc.set_random_seed(SEED)
-    ITERS_PER_EPOCH = cfg.iters_per_epoch
-    Re = cfg.re
-    N_TRAIN = cfg.ntrain
-    NB_TRAIN = cfg.nb_train
-    N0_TRAIN = cfg.n0_train
-    alpha = cfg.alpha
-    beta = cfg.beta
-
-    # set model
-    model = ppsci.arch.MLP(**cfg.MODEL)
-
-    # Load Data
-    data_path = cfg.data_dir
+def generate_data(data_path):
     train_ini1 = np.load(data_path + "train_ini2.npy")
     train_iniv1 = np.load(data_path + "train_iniv2.npy")
     train_xb1 = np.load(data_path + "train_xb2.npy")
@@ -113,6 +71,105 @@ def train(cfg: DictConfig):
     v_star = test_v[:, 1:2].astype("float32")
     w_star = test_v[:, 2:3].astype("float32")
     p_star = test_v[:, 3:4].astype("float32")
+
+    return (
+        x_train,
+        y_train,
+        z_train,
+        t_train,
+        x0_train,
+        y0_train,
+        z0_train,
+        t0_train,
+        u0_train,
+        v0_train,
+        w0_train,
+        xb_train,
+        yb_train,
+        zb_train,
+        tb_train,
+        ub_train,
+        vb_train,
+        wb_train,
+        x_star,
+        y_star,
+        z_star,
+        t_star,
+        u_star,
+        v_star,
+        w_star,
+        p_star,
+    )
+
+
+class Transform:
+    def __init__(self, lowb, upb) -> None:
+        self.lowb = {"x": lowb[0], "y": lowb[1], "z": lowb[2], "t": lowb[3]}
+        self.upb = {"x": upb[0], "y": upb[1], "z": upb[2], "t": upb[3]}
+
+    def input_trans(self, input_dict):
+        for key, v in input_dict.items():
+            v = 2.0 * (v - self.lowb[key]) / (self.upb[key] - self.lowb[key]) - 1.0
+            input_dict[key] = v
+        return input_dict
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+def train(cfg: DictConfig):
+    OUTPUT_DIR = cfg.output_dir
+    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    # set random seed for reproducibility
+    SEED = 1234
+    ppsci.utils.misc.set_random_seed(SEED)
+    ITERS_PER_EPOCH = cfg.iters_per_epoch
+    Re = cfg.re
+    N_TRAIN = cfg.ntrain
+    NB_TRAIN = cfg.nb_train
+    N0_TRAIN = cfg.n0_train
+    ALPHA = cfg.alpha
+    BETA = cfg.beta
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # Load Data
+    (
+        x_train,
+        y_train,
+        z_train,
+        t_train,
+        x0_train,
+        y0_train,
+        z0_train,
+        t0_train,
+        u0_train,
+        v0_train,
+        w0_train,
+        xb_train,
+        yb_train,
+        zb_train,
+        tb_train,
+        ub_train,
+        vb_train,
+        wb_train,
+        x_star,
+        y_star,
+        z_star,
+        t_star,
+        u_star,
+        v_star,
+        w_star,
+        p_star,
+    ) = generate_data(cfg.data_dir)
 
     # dimensionless
     Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
@@ -173,14 +230,14 @@ def train(cfg: DictConfig):
     ## supervised constraint s.t ||u-u_b||
     sup_constraint_b = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_b,
-        ppsci.loss.MSELoss("mean", alpha),
+        ppsci.loss.MSELoss("mean", ALPHA),
         name="Sup_b",
     )
 
     ## supervised constraint s.t ||u-u_0||
     sup_constraint_0 = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_0,
-        ppsci.loss.MSELoss("mean", beta),
+        ppsci.loss.MSELoss("mean", BETA),
         name="Sup_0",
     )
 
