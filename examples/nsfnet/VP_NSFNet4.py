@@ -266,12 +266,13 @@ def train(cfg: DictConfig):
         name="EQ",
     )
 
+    # Wrap constraints
     constraint = {
         pde_constraint.name: pde_constraint,
         sup_constraint_b.name: sup_constraint_b,
         sup_constraint_0.name: sup_constraint_0,
     }
-    # constraint={pde_constraint.name:pde_constraint}
+
     residual_validator = ppsci.validate.SupervisedValidator(
         valida_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
