@@ -76,7 +76,7 @@
 #### 1.4.2 安装额外功能[可选]
 
 如需使用 `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh` 等复杂几何文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
-pybind11、pysdf、PyMesh 四个依赖库。
+pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动**中已安装上述依赖库)。
 
 否则无法使用 `ppsci.geometry.Mesh` 等基于复杂几何文件的 API，因此也无法运行如 [Aneurysm](./examples/aneurysm.md) 等依赖 `ppsci.geometry.Mesh` API 的复杂案例。
 
