@@ -62,7 +62,7 @@ class Arch(nn.Layer):
 
     @staticmethod
     def concat_to_tensor(
-        self, data_dict: Dict[str, paddle.Tensor], keys: Tuple[str, ...], axis=-1
+        data_dict: Dict[str, paddle.Tensor], keys: Tuple[str, ...], axis=-1
     ) -> Tuple[paddle.Tensor, ...]:
         """Concatenate tensors from dict in the order of given keys.
 
@@ -98,7 +98,7 @@ class Arch(nn.Layer):
 
     @staticmethod
     def split_to_dict(
-        self, data_tensor: paddle.Tensor, keys: Tuple[str, ...], axis=-1
+        data_tensor: paddle.Tensor, keys: Tuple[str, ...], axis=-1
     ) -> Dict[str, paddle.Tensor]:
         """Split tensor and wrap into a dict by given keys.
 

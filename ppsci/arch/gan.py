@@ -352,8 +352,9 @@ class Discriminator(base.Arch):
 
         return y
 
+    @staticmethod
     def split_to_dict(
-        self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
+        data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
 
