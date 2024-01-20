@@ -81,45 +81,45 @@ examples/NSFNet/VP_NSFNet4.py:174:179
 由于我们边界点和初值点具有解析解，因此我们使用监督约束，其中alpha和beta为该损失函数的权重，在本代码中与论文中描述一致，都取为100。
 ``` py linenums="231"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:231:242
+examples/NSFNet/VP_NSFNet4.py:231:249
 --8<--
 ```
 使用内部点构造纳韦斯托克方程的残差约束
-``` py linenums="160"
+``` py linenums="251"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:160:178
+examples/NSFNet/VP_NSFNet4.py:251:267
 --8<--
 ```
 ### 3.5 评估器构建
 使用在数据生成时生成的测试点构造的测试集用于模型评估：
-``` py linenums="186"
+``` py linenums="276"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:186:194
+examples/NSFNet/VP_NSFNet4.py:276:281
 --8<--
 ```
 
 ### 3.6 优化器构建
 与论文中描述相同，我们使用分段学习率构造Adam优化器，其中可以通过调节_epoch_list_来调节训练轮数。
-``` py linenums="196"
+``` py linenums="286"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:196:206
+examples/NSFNet/VP_NSFNet4.py:286:296
 --8<--
 ```
 
 ### 3.7 模型训练与评估
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="209"
+``` py linenums="299"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:209:226
+examples/NSFNet/VP_NSFNet4.py:299:317
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="228"
+``` py linenums="319"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:228:228
+examples/NSFNet/VP_NSFNet4.py:319:319
 --8<--
 ```
 
