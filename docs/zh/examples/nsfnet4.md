@@ -2,20 +2,6 @@
 
 <a href="https://aistudio.baidu.com/projectdetail/7305374" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-=== "模型训练命令"
-
-    ``` sh
-    # VP_NSFNet4
-    # linux
-    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
-    unzip ./data/NSF4_data.zip
-    # windows
-    curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
-    unzip ./data/NSF4_data.zip
-    python VP_NSFNet4.py data_dir=./data/
-
-    ```
-
 === "模型评估命令"
 
     ``` sh
@@ -24,12 +10,26 @@
     wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
     unzip ./data/NSF4_data.zip
     # windows
-    curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
-    unzip ./data/NSF4_data.zip
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # unzip ./data/NSF4_data.zip
     python VP_NSFNet4.py    mode=eval  data_dir=./data/  EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/nsfnet/nsfnet4.pdparams
     ```
+    
+=== "模型训练命令"
+
+    ``` sh
+    # VP_NSFNet4
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip -P ./data/
+    unzip ./data/NSF4_data.zip
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/NSFNet/NSF4_data.zip --output ./data/NSF4_data.zip
+    # unzip ./data/NSF4_data.zip
+    python VP_NSFNet4.py data_dir=./data/
+
+    ```
 ## 1. 背景简介
- 最近几年，深度学习在很多领域取得了非凡的成就，尤其是计算机视觉和自然语言处理方面，而受启发于深度学习的快速发展，基于深度学习强大的函数逼近能力，神经网络在科学计算领域也取得了成功，现阶段的研究主要分为两大类，一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Retz Net，另一类是通过数据驱动的深度神经网络算子，其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用，比如天气预测，量子化学，生物工程，以及计算流体等领域。而为充分探索PINN对流体方程的求解能力，本次复现[论文](https://arxiv.org/abs/2003.06496)作者先后使用具有解析解或数值解的二维、三维纳韦斯托克方程以及使用DNS方法进行高进度求解的数据集进行训练。论文实验表明PINN对不可压纳韦斯托克方程具有优秀的数值求解能力，本项目主要目标是使用PaddleScience复现论文所实现的高精度求解纳韦斯托克方程的代码。
+ 最近几年,深度学习在很多领域取得了非凡的成就,尤其是计算机视觉和自然语言处理方面,而受启发于深度学习的快速发展,基于深度学习强大的函数逼近能力,神经网络在科学计算领域也取得了成功,现阶段的研究主要分为两大类,一类是将物理信息以及物理限制加入损失函数来对神经网络进行训练, 其代表有 PINN 以及 Deep Ritz Net,另一类是通过数据驱动的深度神经网络算子,其代表有 FNO 以及 DeepONet。这些方法都在科学实践中获得了广泛应用,比如天气预测,量子化学,生物工程,以及计算流体等领域。而为充分探索PINN对流体方程的求解能力,本次复现[论文](https://arxiv.org/abs/2003.06496)作者设计了NSFNets，并且先后使用具有解析解或数值解的二维、三维纳韦斯托克方程以及使用DNS方法进行高精度求解的数据集作为参考, 进行正问题求解训练。论文实验表明PINN对不可压纳韦斯托克方程具有优秀的数值求解能力, 本项目主要目标是使用PaddleScience复现论文所实现的高精度求解纳韦斯托克方程的代码。
 ## 2. 问题定义
 本问题所使用的为最经典的PINN模型，对此不再赘述。
 
@@ -51,35 +51,39 @@ $$\frac{\partial \mathbf{u}}{\partial n} =0 \quad \text { on } \Gamma_N.$$
 ## 3. 问题求解
 ### 3.1 模型构建
 本文使用PINN经典的MLP模型进行训练。
-``` py linenums="32"
+``` py linenums="142"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:32:32
+examples/NSFNet/VP_NSFNet4.py:142:142
 --8<--
 ```
 ### 3.2 超参数设定
 指定残差点、边界点、初值点的个数，以及可以指定边界损失函数和初值损失函数的权重
-``` py linenums="34"
+``` py linenums="135"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:34:45
+examples/NSFNet/VP_NSFNet4.py:135:139
 --8<--
 ```
 ### 3.3 数据生成
 先后取边界点、初值点、以及用于计算残差的内部点（具体取法见[论文](https://arxiv.org/abs/2003.06496)节3.3）以及生成测试点。
-``` py linenums="48"
+``` py linenums="145"
 --8<--
-examples/NSFNet/VP_NSFNet4.py:48:95
---8<--
-```
-### 3.4 约束构建
-由于我们边界点和初值点具有解析解，因此我们使用监督约束
-``` py linenums="147"
---8<--
-examples/NSFNet/VP_NSFNet4.py:147:158
+examples/NSFNet/VP_NSFNet4.py:145:172
 --8<--
 ```
-
-其中alpha和beta为该损失函数的权重，在本代码中与论文中描述一致，都取为100
-
+### 3.4 归一化处理
+为将所取较小长方体区域改为正方体区域，我们将归一化函数嵌入网络训练前。
+``` py linenums="174"
+--8<--
+examples/NSFNet/VP_NSFNet4.py:174:179
+--8<--
+```
+### 3.5 约束构建
+由于我们边界点和初值点具有解析解，因此我们使用监督约束，其中alpha和beta为该损失函数的权重，在本代码中与论文中描述一致，都取为100。
+``` py linenums="231"
+--8<--
+examples/NSFNet/VP_NSFNet4.py:231:242
+--8<--
+```
 使用内部点构造纳韦斯托克方程的残差约束
 ``` py linenums="160"
 --8<--
