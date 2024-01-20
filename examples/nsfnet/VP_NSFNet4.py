@@ -128,7 +128,7 @@ def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
     # set random seed for reproducibility
-    SEED = 1234
+    SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     ITERS_PER_EPOCH = cfg.iters_per_epoch
     Re = cfg.re
