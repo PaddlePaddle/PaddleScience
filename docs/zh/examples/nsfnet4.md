@@ -99,7 +99,7 @@ examples/nsfnet/VP_NSFNet4.py:276:281
 ```
 
 ### 3.6 优化器构建
-与论文中描述相同, 我们使用分段学习率构造Adam优化器, 其中可以通过调节_epoch_list_来调节训练轮数。
+与论文中描述相同, 我们使用分段学习率构造Adam优化器, 其中可以通过调节epoch_list来调节训练轮数。
 ``` py linenums="286"
 --8<--
 examples/nsfnet/VP_NSFNet4.py:286:296
@@ -145,6 +145,6 @@ examples/nsfnet/VP_NSFNet4.py
 ## 6. 结果说明
 我们使用PINN对不可压纳韦斯托克方程进行数值求解。在PINN中, 随机选取的时间和空间的坐标被当作输入值, 所对应的速度场以及压强场被当作输出值, 使用初值、边界条件当作监督约束以及纳韦斯托克方程本身的当作无监督约束条件加入损失函数进行训练。我们使用高精度JHTDB数据集进行训练。通过损失函数的下降可以证明神经网络在求解纳韦斯托克方程中的收敛性, 表明PINN拥有对不可压强迫各项同性湍流的求解能力。而通过实验结果表明, PINN可以很好的逼近对应的高精度不可压强迫各项同性湍流数据集, 并且, 我们发现增加边界约束以及初值约束的权重可以使得神经网络拥有更好的逼近效果。相比之下, 在误差允许范围内, 使用PINN求解该纳韦斯托克方程比原本使用DNS方法的推理速度更快。
 ## 7. 参考资料
-[NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
+- [NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations](https://arxiv.org/abs/2003.06496)
 
-[Github NSFnets](https://github.com/Alexzihaohu/NSFnets/tree/master)
+- [Github NSFnets](https://github.com/Alexzihaohu/NSFnets/tree/master)
