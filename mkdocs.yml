@@ -59,6 +59,7 @@ nav:
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
           - NSFNets: zh/examples/nsfnet.md
+          - PhyCRNet: zh/examples/phycrnet.md
           - ShockWave: zh/examples/shock_wave.md
           - tempoGAN: zh/examples/tempoGAN.md
           - ViV: zh/examples/viv.md

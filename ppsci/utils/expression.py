@@ -185,7 +185,7 @@ class ExpressionSolver(nn.Layer):
             for name, expr in expr_dict.items():
                 output_dict[name] = expr(data_dict)
 
-            # clear differentiation cache
-            clear()
+        # clear differentiation cache
+        clear()
 
         return output_dict
