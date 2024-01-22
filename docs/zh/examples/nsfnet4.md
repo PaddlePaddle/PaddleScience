@@ -63,14 +63,14 @@ examples/nsfnet/VP_NSFNet4.py:137:137
 examples/nsfnet/VP_NSFNet4.py:139:167
 --8<--
 ```
-### 3.4 归一化处理
+### 3.3 归一化处理
 为将所取较小长方体区域改为正方体区域, 我们将归一化函数嵌入网络训练前。
-``` py linenums="174"
+``` py linenums="169"
 --8<--
 examples/nsfnet/VP_NSFNet4.py:169:174
 --8<--
 ```
-### 3.5 约束构建
+### 3.4 约束构建
 由于我们边界点和初值点具有解析解, 因此我们使用监督约束, 其中alpha和beta为该损失函数的权重, 在本代码中与论文中描述一致, 都取为100。
 ``` py linenums="226"
 --8<--
