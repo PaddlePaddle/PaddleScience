@@ -133,8 +133,7 @@ class Transform:
 
 
 def train(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", osp.join(OUTPUT_DIR, "/train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
     # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
@@ -299,7 +298,7 @@ def train(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model=model,
         constraint=constraint,
-        output_dir=OUTPUT_DIR,
+        output_dir=cfg.output_dir,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         epochs=EPOCHS,
@@ -325,9 +324,7 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    data_path = cfg.data_dir  # set random seed for reproducibility
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
 
@@ -335,10 +332,10 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # test Data
-    test_x = np.load(osp.join(data_path, "test43_l.npy")).astype(
+    test_x = np.load(osp.join(cfg.data_dir, "test43_l.npy")).astype(
         paddle.get_default_dtype()
     )
-    test_v = np.load(osp.join(data_path, "test43_vp.npy")).astype(
+    test_v = np.load(osp.join(cfg.data_dir, "test43_vp.npy")).astype(
         paddle.get_default_dtype()
     )
     t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065]).astype(
