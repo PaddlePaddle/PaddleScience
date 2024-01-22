@@ -21,24 +21,24 @@ hydra:
 
 # general settings
 mode: train # running mode: train/eval
-seed: 42
+seed: 1
 output_dir: ${hydra:run.dir}
 TRAIN_FILE_PATH: data.npz
 VALID_FILE_PATH: data.npz
 
 # model settings
 MODEL:
-  input_keys: [ "p",]
-  output_keys: ["mu", "log_sigma", "p_hat"]
+  input_keys: ["p_train",]
+  output_keys: ["mu", "log_sigma", "decoder_z"]
   input_dim: 10000
   latent_dim: 100
   hidden_dim: 100
 
 # training settings
 TRAIN:
-  epochs: 200
-  iters_per_epoch: 1
-  eval_during_train: true
+  epochs: 2
+  iters_per_epoch: 625
+  eval_during_train: False
   save_freq: 200
   eval_freq: 200
   learning_rate: 0.0001
@@ -47,5 +47,5 @@ TRAIN:
 # evaluation settings
 EVAL:
   pretrained_model_path: null
-  eval_with_no_grad: False
+  eval_with_no_grad: True
   batch_size: 128

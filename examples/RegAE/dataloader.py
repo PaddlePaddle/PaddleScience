@@ -1,16 +1,15 @@
 """
-输入数据类型 10^5 * 100 * 100
+输入数据形状 10^5 * 100 * 100
 
 1.按照8：2划分训练数据集和测试数据集
 2.通过训练数据进行标准正则化
 """
 import numpy as np
 import paddle
-from paddle.io import DataLoader
-from paddle.io import Dataset
+from paddle import io
 
 
-class ScalerStd(object):
+class ZScoreNormalize:
     """
     Desc: Normalization utilities with std mean
     """
@@ -25,24 +24,32 @@ class ScalerStd(object):
 
     def transform(self, data):
         mean = (
-            paddle.to_tensor(self.mean).type_as(data).to(data.device)
+            paddle.to_tensor(self.mean, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.mean
         )
         std = (
-            paddle.to_tensor(self.std).type_as(data).to(data.device)
+            paddle.to_tensor(self.std, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.std
         )
         return (data - mean) / std
 
     def inverse_transform(self, data):
-        mean = paddle.to_tensor(self.mean) if paddle.is_tensor(data) else self.mean
-        std = paddle.to_tensor(self.std) if paddle.is_tensor(data) else self.std
+        mean = (
+            paddle.to_tensor(self.mean, dtype=data.dtype)
+            if paddle.is_tensor(data)
+            else self.mean
+        )
+        std = (
+            paddle.to_tensor(self.std, dtype=data.dtype)
+            if paddle.is_tensor(data)
+            else self.std
+        )
         return (data * std) + mean
 
 
-class ScalerMinMax(object):
+class MinMaxNormalize:
     """
     Desc: Normalization utilities with min max
     """
@@ -57,12 +64,12 @@ class ScalerMinMax(object):
 
     def transform(self, data):
         _min = (
-            paddle.to_tensor(self.min).type_as(data).to(data.device)
+            paddle.to_tensor(self.min, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.min
         )
         _max = (
-            paddle.to_tensor(self.max).type_as(data).to(data.device)
+            paddle.to_tensor(self.max, dtype=data.dtype)
             if paddle.is_tensor(data)
             else self.max
         )
@@ -70,13 +77,21 @@ class ScalerMinMax(object):
         return 2.0 * data - 1.0
 
     def inverse_transform(self, data, axis=None):
-        _min = paddle.to_tensor(self.min) if paddle.is_tensor(data) else self.min
-        _max = paddle.to_tensor(self.max) if paddle.is_tensor(data) else self.max
+        _min = (
+            paddle.to_tensor(self.min, dtype=data.dtype)
+            if paddle.is_tensor(data)
+            else self.min
+        )
+        _max = (
+            paddle.to_tensor(self.max, dtype=data.dtype)
+            if paddle.is_tensor(data)
+            else self.max
+        )
         data = (data + 1.0) / 2.0
         return 1.0 * data * (_max - _min) + _min
 
 
-class CustomDataset(Dataset):
+class CustomDataset(io.Dataset):
     def __init__(self, file_path, data_type="train"):
         """
 
@@ -104,11 +119,11 @@ class CustomDataset(Dataset):
         self.train_data = data[: self.train_len]
         self.test_data = data[self.train_len :]
 
-        self.scaler = ScalerStd()
-        self.scaler.fit(self.train_data)
+        self.normalizer = ZScoreNormalize()
+        self.normalizer.fit(self.train_data)
 
-        self.train_data = self.scaler.transform(self.train_data)
-        self.test_data = self.scaler.transform(self.test_data)
+        self.train_data = self.normalizer.transform(self.train_data)
+        self.test_data = self.normalizer.transform(self.test_data)
 
     def __getitem__(self, idx):
         if self.data_type == "train":
@@ -126,10 +141,10 @@ class CustomDataset(Dataset):
 if __name__ == "__main__":
     train_data = CustomDataset(file_path="data/gaussian_train.npz", data_type="train")
     test_data = CustomDataset(file_path="data/gaussian_train.npz", data_type="test")
-    train_loader = DataLoader(
+    train_loader = io.DataLoader(
         train_data, batch_size=128, shuffle=True, drop_last=True, num_workers=0
     )
-    test_loader = DataLoader(
+    test_loader = io.DataLoader(
         test_data, batch_size=128, shuffle=True, drop_last=True, num_workers=0
     )
 
@@ -139,4 +154,4 @@ if __name__ == "__main__":
         if i == 2:
             break
 
-    np.savez("data.npz", p_train=train_data.train_data, p_test=train_data.test_data)
+    # np.savez("data.npz", p_train=train_data.train_data, p_test=train_data.test_data)

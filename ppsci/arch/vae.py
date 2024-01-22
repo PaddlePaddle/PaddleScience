@@ -22,15 +22,44 @@ import paddle.nn as nn
 from ppsci.arch import base
 
 
-# copy from AISTUDIO
 class AutoEncoder(base.Arch):
+    """
+    AutoEncoder is a class that represents an autoencoder neural network model.
+
+    Args:
+        input_keys (Tuple[str, ...]): A tuple of input keys.
+        output_keys (Tuple[str, ...]): A tuple of output keys.
+        input_dim (int): The dimension of the input data.
+        latent_dim (int): The dimension of the latent space.
+        hidden_dim (int): The dimension of the hidden layer.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> model = ppsci.arch.AutoEncoder(
+        ...    input_keys=("input1",),
+        ...    output_keys=("mu", "log_sigma", "decoder_z",),
+        ...    input_dim=100,
+        ...    latent_dim=50,
+        ...    hidden_dim=200
+        ... )
+        >>> input_dict = {"input1": paddle.rand([200, 100]),}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["mu"].shape)
+        [200, 50]
+        >>> print(output_dict["log_sigma"].shape)
+        [200, 50]
+        >>> print(output_dict["decoder_z"].shape)
+        [200, 100]
+    """
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
-        input_dim,
-        latent_dim,
-        hidden_dim,
+        input_dim: int,
+        latent_dim: int,
+        hidden_dim: int,
     ):
         super(AutoEncoder, self).__init__()
         self.input_keys = input_keys

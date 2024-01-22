@@ -17,20 +17,12 @@ from __future__ import annotations
 from os import path as osp
 
 import hydra
+import paddle
 from omegaconf import DictConfig
-from paddle import nn
+from paddle.nn import functional as F
 
 import ppsci
-from ppsci.loss import KLLoss
 from ppsci.utils import logger
-
-criterion = nn.MSELoss()
-kl_loss = KLLoss()
-
-
-def loss_expr(output_dict, label_dict, weight_dict=None):
-
-    return kl_loss(output_dict) + criterion(output_dict["p_hat"], label_dict["p_hat"])
 
 
 def train(cfg: DictConfig):
@@ -45,24 +37,30 @@ def train(cfg: DictConfig):
     # set dataloader config
     train_dataloader_cfg = {
         "dataset": {
-            "name": "IterableNPZDataset",
+            "name": "NPZDataset",
             "file_path": cfg.TRAIN_FILE_PATH,
-            "input_keys": ("p",),
-            "label_keys": ("p_hat",),
-            "alias_dict": {"p": "p_train", "p_hat": "p_train"},
+            "input_keys": ("p_train",),
+            "label_keys": ("p_train",),
         },
         "batch_size": cfg.TRAIN.batch_size,
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": True,
+            "drop_last": True,
+            "shuffle": False,
         },
     }
+
+    def loss_expr(output_dict, label_dict, weight_dict=None):
+        mu, log_sigma = output_dict["mu"], output_dict["log_sigma"]
+
+        base = paddle.exp(2.0 * log_sigma) + paddle.pow(mu, 2) - 1.0 - 2.0 * log_sigma
+        KLLoss = 0.5 * paddle.sum(base) / mu.shape[0]
+
+        return F.mse_loss(output_dict["decoder_z"], label_dict["p_train"]) + KLLoss
 
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
-        output_expr={"p_hat": lambda out: out["p_hat"]},
         loss=ppsci.loss.FunctionalLoss(loss_expr),
         name="Sup",
     )
@@ -75,23 +73,21 @@ def train(cfg: DictConfig):
     # set validator
     eval_dataloader_cfg = {
         "dataset": {
-            "name": "IterableNPZDataset",
+            "name": "NPZDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": ("p",),
-            "label_keys": ("p_hat",),
-            "alias_dict": {"p": "p_train", "p_hat": "p_train"},
+            "input_keys": ("p_train",),
+            "label_keys": ("p_train",),
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
+            "drop_last": True,
             "shuffle": False,
         },
     }
     sup_validator = ppsci.validate.SupervisedValidator(
         eval_dataloader_cfg,
-        loss=ppsci.loss.MSELoss(),
-        output_expr={"p_hat": lambda out: out["p_hat"]},
+        loss=ppsci.loss.FunctionalLoss(loss_expr),
         metric={"L2Rel": ppsci.metric.L2Rel()},
     )
     validator = {sup_validator.name: sup_validator}
@@ -121,7 +117,7 @@ def evaluate(cfg: DictConfig):
     # set random seed for reproducibility
     ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
     model = ppsci.arch.AutoEncoder(**cfg.MODEL)
@@ -129,16 +125,15 @@ def evaluate(cfg: DictConfig):
     # set validator
     eval_dataloader_cfg = {
         "dataset": {
-            "name": "IterableNPZDataset",
+            "name": "NPZDataset",
             "file_path": cfg.VALID_FILE_PATH,
-            "input_keys": ("p",),
-            "label_keys": ("p_hat",),
-            "alias_dict": {"p": "p_train", "p_hat": "p_train"},
+            "input_keys": ("p_train",),
+            "label_keys": ("p_train",),
         },
         "batch_size": cfg.EVAL.batch_size,
         "sampler": {
             "name": "BatchSampler",
-            "drop_last": False,
+            "drop_last": True,
             "shuffle": False,
         },
     }

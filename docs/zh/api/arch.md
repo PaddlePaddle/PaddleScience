@@ -22,5 +22,6 @@
         - USCNN
         - NowcastNet
         - HEDeepONets
+        - AutoEncoder
       show_root_heading: true
       heading_level: 3
