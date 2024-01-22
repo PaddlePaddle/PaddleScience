@@ -46,7 +46,7 @@ def generate_data(data_dir):
     x0_train = train_ini1[:, 0:1]
     y0_train = train_ini1[:, 1:2]
     z0_train = train_ini1[:, 2:3]
-    t0_train = np.zeros(train_ini1[:, 0:1].shape, np.float32)
+    t0_train = np.zeros_like(train_ini1[:, 0:1]).astype(paddle.get_default_dtype())
     u0_train = train_iniv1[:, 0:1]
     v0_train = train_iniv1[:, 1:2]
     w0_train = train_iniv1[:, 2:3]
@@ -133,9 +133,6 @@ class Transform:
 
 
 def train(cfg: DictConfig):
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -184,7 +181,7 @@ def train(cfg: DictConfig):
             "label": {"u": ub_train, "v": vb_train, "w": wb_train},
         },
         "batch_size": cfg.nb_train,
-        "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
+        "iters_per_epoch": cfg.TRAIN.lr_scheduler.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -199,7 +196,7 @@ def train(cfg: DictConfig):
             "label": {"u": u0_train, "v": v0_train, "w": w0_train},
         },
         "batch_size": cfg.n0_train,
-        "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
+        "iters_per_epoch": cfg.TRAIN.lr_scheduler.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -207,7 +204,7 @@ def train(cfg: DictConfig):
         },
     }
 
-    valida_dataloader_cfg = {
+    valid_dataloader_cfg = {
         "dataset": {
             "name": "NamedArrayDataset",
             "input": {"x": x_star, "y": y_star, "z": z_star, "t": t_star},
@@ -253,7 +250,7 @@ def train(cfg: DictConfig):
         {
             "dataset": {"name": "NamedArrayDataset"},
             "batch_size": cfg.ntrain,
-            "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
+            "iters_per_epoch": cfg.TRAIN.lr_scheduler.iters_per_epoch,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -272,7 +269,7 @@ def train(cfg: DictConfig):
     }
 
     residual_validator = ppsci.validate.SupervisedValidator(
-        valida_dataloader_cfg,
+        valid_dataloader_cfg,
         ppsci.loss.L2RelLoss(),
         metric={"L2R": ppsci.metric.L2Rel()},
         name="Residual",
@@ -282,10 +279,7 @@ def train(cfg: DictConfig):
     validator = {residual_validator.name: residual_validator}
 
     # set optimizer
-    new_epoch_list = []
-    for i, _ in enumerate(cfg.epoch_list):
-        new_epoch_list.append(sum(cfg.epoch_list[: i + 1]))
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(**cfg.train.lr_scheduler)()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(**cfg.TRAIN.lr_scheduler)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -295,17 +289,16 @@ def train(cfg: DictConfig):
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         epochs=cfg.epochs,
-        iters_per_epoch=cfg.train.lr_scheduler.iters_per_epoch,
-        log_freq=cfg.train.log_freq,
-        save_freq=cfg.train.save_freq,
-        eval_freq=cfg.train.eval_freq,
+        iters_per_epoch=cfg.TRAIN.lr_scheduler.iters_per_epoch,
+        log_freq=cfg.TRAIN.log_freq,
+        save_freq=cfg.TRAIN.save_freq,
+        eval_freq=cfg.TRAIN.eval_freq,
         eval_during_train=True,
         seed=cfg.seed,
         equation=equation,
         geom=geom,
         validator=validator,
-        visualizer=None,
-        eval_with_no_grad=False,
+        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
     )
     # train model
     solver.train()
@@ -317,9 +310,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -387,7 +377,7 @@ def evaluate(cfg: DictConfig):
     plt.xlabel("t")
     plt.ylabel("Relative l2 Error")
     plt.title("Relative l2 Error, on test dataset")
-    plt.savefig(cfg.output_dir + "/error.jpg")
+    plt.savefig(osp.join(cfg.output_dir, "error.jpg"))
     logger.info("L2 error picture is saved")
 
     grid_x, grid_y = np.mgrid[
@@ -421,7 +411,7 @@ def evaluate(cfg: DictConfig):
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
-    plt.savefig(cfg.output_dir + "/z=0 plane")
+    plt.savefig(osp.join(cfg.output_dir, "/z=0 plane"))
 
     grid_y, grid_z = np.mgrid[
         y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
