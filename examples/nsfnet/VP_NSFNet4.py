@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os.path as osp
+
 import hydra
 import matplotlib
 import matplotlib.pyplot as plt
@@ -23,54 +25,70 @@ import ppsci
 from ppsci.utils import logger
 
 
-def generate_data(data_path):
-    train_ini1 = np.load(data_path + "train_ini2.npy")
-    train_iniv1 = np.load(data_path + "train_iniv2.npy")
-    train_xb1 = np.load(data_path + "train_xb2.npy")
-    train_vb1 = np.load(data_path + "train_vb2.npy")
+def generate_data(data_dir):
+    train_ini1 = np.load(osp.join(data_dir, "train_ini2.npy")).astype(
+        paddle.get_default_dtype()
+    )
+    train_iniv1 = np.load(osp.join(data_dir, "train_iniv2.npy")).astype(
+        paddle.get_default_dtype()
+    )
+    train_xb1 = np.load(osp.join(data_dir, "train_xb2.npy")).astype(
+        paddle.get_default_dtype()
+    )
+    train_vb1 = np.load(osp.join(data_dir, "train_vb2.npy")).astype(
+        paddle.get_default_dtype()
+    )
 
-    xnode = np.linspace(12.47, 12.66, 191)
-    ynode = np.linspace(-1, -0.0031, 998)
-    znode = np.linspace(4.61, 4.82, 211)
+    xnode = np.linspace(12.47, 12.66, 191).astype(paddle.get_default_dtype())
+    ynode = np.linspace(-1, -0.0031, 998).astype(paddle.get_default_dtype())
+    znode = np.linspace(4.61, 4.82, 211).astype(paddle.get_default_dtype())
 
-    x0_train = train_ini1[:, 0:1].astype("float32")
-    y0_train = train_ini1[:, 1:2].astype("float32")
-    z0_train = train_ini1[:, 2:3].astype("float32")
+    x0_train = train_ini1[:, 0:1]
+    y0_train = train_ini1[:, 1:2]
+    z0_train = train_ini1[:, 2:3]
     t0_train = np.zeros(train_ini1[:, 0:1].shape, np.float32)
-    u0_train = train_iniv1[:, 0:1].astype("float32")
-    v0_train = train_iniv1[:, 1:2].astype("float32")
-    w0_train = train_iniv1[:, 2:3].astype("float32")
+    u0_train = train_iniv1[:, 0:1]
+    v0_train = train_iniv1[:, 1:2]
+    w0_train = train_iniv1[:, 2:3]
 
-    xb_train = train_xb1[:, 0:1].astype("float32")
-    yb_train = train_xb1[:, 1:2].astype("float32")
-    zb_train = train_xb1[:, 2:3].astype("float32")
-    tb_train = train_xb1[:, 3:4].astype("float32")
-    ub_train = train_vb1[:, 0:1].astype("float32")
-    vb_train = train_vb1[:, 1:2].astype("float32")
-    wb_train = train_vb1[:, 2:3].astype("float32")
+    xb_train = train_xb1[:, 0:1]
+    yb_train = train_xb1[:, 1:2]
+    zb_train = train_xb1[:, 2:3]
+    tb_train = train_xb1[:, 3:4]
+    ub_train = train_vb1[:, 0:1]
+    vb_train = train_vb1[:, 1:2]
+    wb_train = train_vb1[:, 2:3]
 
     x_train1 = xnode.reshape(-1, 1)[np.random.choice(191, 100000, replace=True), :]
     y_train1 = ynode.reshape(-1, 1)[np.random.choice(998, 100000, replace=True), :]
     z_train1 = znode.reshape(-1, 1)[np.random.choice(211, 100000, replace=True), :]
-    x_train = np.tile(x_train1, (17, 1)).astype("float32")
-    y_train = np.tile(y_train1, (17, 1)).astype("float32")
-    z_train = np.tile(z_train1, (17, 1)).astype("float32")
+    x_train = np.tile(x_train1, (17, 1))
+    y_train = np.tile(y_train1, (17, 1))
+    z_train = np.tile(z_train1, (17, 1))
 
-    total_times1 = np.array(list(range(17))) * 0.0065
+    total_times1 = (np.array(list(range(17))) * 0.0065).astype(
+        paddle.get_default_dtype()
+    )
     t_train1 = total_times1.repeat(100000)
-    t_train = t_train1.reshape(-1, 1).astype("float64")
+    t_train = t_train1.reshape(-1, 1)
     # test data
-    test_x = np.load(data_path + "test43_l.npy")
-    test_v = np.load(data_path + "test43_vp.npy")
-    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
-    t_star = np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1).astype("float32")
-    x_star = np.tile(test_x[:, 0:1], (5, 1)).astype("float32")
-    y_star = np.tile(test_x[:, 1:2], (5, 1)).astype("float32")
-    z_star = np.tile(test_x[:, 2:3], (5, 1)).astype("float32")
-    u_star = test_v[:, 0:1].astype("float32")
-    v_star = test_v[:, 1:2].astype("float32")
-    w_star = test_v[:, 2:3].astype("float32")
-    p_star = test_v[:, 3:4].astype("float32")
+    test_x = np.load(osp.join(data_dir, "test43_l.npy")).astype(
+        paddle.get_default_dtype()
+    )
+    test_v = np.load(osp.join(data_dir, "test43_vp.npy")).astype(
+        paddle.get_default_dtype()
+    )
+    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065]).astype(
+        paddle.get_default_dtype()
+    )
+    t_star = np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1)
+    x_star = np.tile(test_x[:, 0:1], (5, 1))
+    y_star = np.tile(test_x[:, 1:2], (5, 1))
+    z_star = np.tile(test_x[:, 2:3], (5, 1))
+    u_star = test_v[:, 0:1]
+    v_star = test_v[:, 1:2]
+    w_star = test_v[:, 2:3]
+    p_star = test_v[:, 3:4]
 
     return (
         x_train,
@@ -114,30 +132,13 @@ class Transform:
         return input_dict
 
 
-@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
-def main(cfg: DictConfig):
-    if cfg.mode == "train":
-        train(cfg)
-    elif cfg.mode == "eval":
-        evaluate(cfg)
-    else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
-
-
 def train(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(OUTPUT_DIR, "/train.log"), "info")
     # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
     ITERS_PER_EPOCH = cfg.iters_per_epoch
-    Re = cfg.re
-    N_TRAIN = cfg.ntrain
-    NB_TRAIN = cfg.nb_train
-    N0_TRAIN = cfg.n0_train
-    ALPHA = cfg.alpha
-    BETA = cfg.beta
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -185,7 +186,7 @@ def train(cfg: DictConfig):
             "input": {"x": xb_train, "y": yb_train, "z": zb_train, "t": tb_train},
             "label": {"u": ub_train, "v": vb_train, "w": wb_train},
         },
-        "batch_size": NB_TRAIN,
+        "batch_size": cfg.nb_train,
         "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
@@ -194,13 +195,13 @@ def train(cfg: DictConfig):
         },
     }
 
-    train_dataloader_cfg_0 = {
+    train_dataloader_cfg_ic = {
         "dataset": {
             "name": "NamedArrayDataset",
             "input": {"x": x0_train, "y": y0_train, "z": z0_train, "t": t0_train},
             "label": {"u": u0_train, "v": v0_train, "w": w0_train},
         },
-        "batch_size": N0_TRAIN,
+        "batch_size": cfg.n0_train,
         "iters_per_epoch": ITERS_PER_EPOCH,
         "sampler": {
             "name": "BatchSampler",
@@ -230,21 +231,21 @@ def train(cfg: DictConfig):
     # supervised constraint s.t ||u-u_b||
     sup_constraint_b = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_b,
-        ppsci.loss.MSELoss("mean", ALPHA),
+        ppsci.loss.MSELoss("mean", cfg.alpha),
         name="Sup_b",
     )
 
     # supervised constraint s.t ||u-u_0||
     sup_constraint_0 = ppsci.constraint.SupervisedConstraint(
-        train_dataloader_cfg_0,
-        ppsci.loss.MSELoss("mean", BETA),
-        name="Sup_0",
+        train_dataloader_cfg_ic,
+        ppsci.loss.MSELoss("mean", cfg.beta),
+        name="Sup_ic",
     )
 
     # set equation constarint s.t. ||F(u)||
     equation = {
         "NavierStokes": ppsci.equation.NavierStokes(
-            nu=1.0 / Re, rho=1.0, dim=3, time=True
+            nu=1.0 / cfg.re, rho=1.0, dim=3, time=True
         ),
     }
 
@@ -254,7 +255,7 @@ def train(cfg: DictConfig):
         geom,
         {
             "dataset": {"name": "NamedArrayDataset"},
-            "batch_size": N_TRAIN,
+            "batch_size": cfg.ntrain,
             "iters_per_epoch": ITERS_PER_EPOCH,
             "sampler": {
                 "name": "BatchSampler",
@@ -294,26 +295,25 @@ def train(cfg: DictConfig):
         EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
     # initialize solver
     solver = ppsci.solver.Solver(
         model=model,
         constraint=constraint,
+        output_dir=OUTPUT_DIR,
         optimizer=optimizer,
-        epochs=EPOCHS,
         lr_scheduler=lr_scheduler,
+        epochs=EPOCHS,
         iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
         log_freq=cfg.train.log_freq,
         save_freq=cfg.train.save_freq,
         eval_freq=cfg.train.eval_freq,
+        eval_during_train=True,
         seed=SEED,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=None,
         eval_with_no_grad=False,
-        output_dir=OUTPUT_DIR,
     )
     # train model
     solver.train()
@@ -327,8 +327,7 @@ def train(cfg: DictConfig):
 def evaluate(cfg: DictConfig):
     OUTPUT_DIR = cfg.output_dir
     logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
-    data_path = cfg.data_dir
-    # set random seed for reproducibility
+    data_path = cfg.data_dir  # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
 
@@ -336,25 +335,23 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.MLP(**cfg.MODEL)
 
     # test Data
-    test_x = np.load(data_path + "test43_l.npy")
-    test_v = np.load(data_path + "test43_vp.npy")
-    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
-    t_star = paddle.to_tensor(
-        np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1).astype("float32")
+    test_x = np.load(osp.join(data_path, "test43_l.npy")).astype(
+        paddle.get_default_dtype()
     )
-    x_star = paddle.to_tensor(
-        np.tile(test_x[:, 0:1], (5, 1)).astype("float32").reshape(-1, 1)
+    test_v = np.load(osp.join(data_path, "test43_vp.npy")).astype(
+        paddle.get_default_dtype()
     )
-    y_star = paddle.to_tensor(
-        np.tile(test_x[:, 1:2], (5, 1)).astype("float32").reshape(-1, 1)
+    t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065]).astype(
+        paddle.get_default_dtype()
     )
-    z_star = paddle.to_tensor(
-        np.tile(test_x[:, 2:3], (5, 1)).astype("float32").reshape(-1, 1)
-    )
-    u_star = paddle.to_tensor(test_v[:, 0:1].astype("float32"))
-    v_star = paddle.to_tensor(test_v[:, 1:2].astype("float32"))
-    w_star = paddle.to_tensor(test_v[:, 2:3].astype("float32"))
-    p_star = paddle.to_tensor(test_v[:, 3:4].astype("float32"))
+    t_star = paddle.to_tensor(np.tile(t.reshape(5, 1), (1, 3000)).reshape(-1, 1))
+    x_star = paddle.to_tensor(np.tile(test_x[:, 0:1], (5, 1)).reshape(-1, 1))
+    y_star = paddle.to_tensor(np.tile(test_x[:, 1:2], (5, 1)).reshape(-1, 1))
+    z_star = paddle.to_tensor(np.tile(test_x[:, 2:3], (5, 1)).reshape(-1, 1))
+    u_star = paddle.to_tensor(test_v[:, 0:1])
+    v_star = paddle.to_tensor(test_v[:, 1:2])
+    w_star = paddle.to_tensor(test_v[:, 2:3])
+    p_star = paddle.to_tensor(test_v[:, 3:4])
 
     # wrap validator
     ppsci.utils.load_pretrain(model, cfg.EVAL.pretrained_model_path)
@@ -402,17 +399,15 @@ def evaluate(cfg: DictConfig):
     plt.ylabel("Relative l2 Error")
     plt.title("Relative l2 Error, on test dataset")
     plt.savefig(cfg.output_dir + "/error.jpg")
-    print("L2 error picture is saved at ")
+    logger.info("L2 error picture is saved")
 
     grid_x, grid_y = np.mgrid[
         x_star.min() : x_star.max() : 100j, y_star.min() : y_star.max() : 100j
-    ]
-    x_plot = paddle.to_tensor(grid_x.reshape(-1, 1).astype("float32"))
-    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
-    z_plot = paddle.to_tensor(
-        z_star.min() * paddle.ones(y_plot.shape).astype("float32")
-    )
-    t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape).astype("float32"))
+    ].astype(paddle.get_default_dtype())
+    x_plot = paddle.to_tensor(grid_x.reshape(-1, 1))
+    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1))
+    z_plot = paddle.to_tensor(z_star.min() * paddle.ones(y_plot.shape))
+    t_plot = paddle.to_tensor((t[-1]) * np.ones(x_plot.shape))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
     cmap = plt.cm.get_cmap("jet")
@@ -441,13 +436,11 @@ def evaluate(cfg: DictConfig):
 
     grid_y, grid_z = np.mgrid[
         y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
-    ]
-    z_plot = paddle.to_tensor(grid_z.reshape(-1, 1).astype("float32"))
-    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1).astype("float32"))
-    x_plot = paddle.to_tensor(
-        x_star.min() * paddle.ones(y_plot.shape).astype("float32")
-    )
-    t_plot = paddle.to_tensor((t[-1]) * np.ones(y_plot.shape).astype("float32"))
+    ].astype(paddle.get_default_dtype())
+    z_plot = paddle.to_tensor(grid_z.reshape(-1, 1))
+    y_plot = paddle.to_tensor(grid_y.reshape(-1, 1))
+    x_plot = paddle.to_tensor(x_star.min() * paddle.ones(y_plot.shape))
+    t_plot = paddle.to_tensor((t[-1]) * np.ones(y_plot.shape))
     sol = model({"x": x_plot, "y": y_plot, "z": z_plot, "t": t_plot})
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
     cmap = plt.cm.get_cmap("jet")
@@ -473,6 +466,16 @@ def evaluate(cfg: DictConfig):
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     plt.savefig(cfg.output_dir + "/x=0 plane")
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
 
 if __name__ == "__main__":
