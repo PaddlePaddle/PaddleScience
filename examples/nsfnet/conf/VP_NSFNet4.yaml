@@ -55,12 +55,18 @@ train:
 
   eval_freq: 5000
 
-  save_freq,: 5000
+  save_freq: 5000
+
+  lr_scheduler:
+    epochs: 5500
+
+    epoch_list: [250, 4500, 5000, 5500]
+
+    iters_per_epoch: 150
+
+    lr_list: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
 
 EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
 
-epoch_list: [250, 4250, 500, 500]
-
-lr_list: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]

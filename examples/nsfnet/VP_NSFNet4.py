@@ -184,7 +184,7 @@ def train(cfg: DictConfig):
             "label": {"u": ub_train, "v": vb_train, "w": wb_train},
         },
         "batch_size": cfg.nb_train,
-        "iters_per_epoch": cfg.iters_per_epoch,
+        "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -199,7 +199,7 @@ def train(cfg: DictConfig):
             "label": {"u": u0_train, "v": v0_train, "w": w0_train},
         },
         "batch_size": cfg.n0_train,
-        "iters_per_epoch": cfg.iters_per_epoch,
+        "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -253,7 +253,7 @@ def train(cfg: DictConfig):
         {
             "dataset": {"name": "NamedArrayDataset"},
             "batch_size": cfg.ntrain,
-            "iters_per_epoch": cfg.iters_per_epoch,
+            "iters_per_epoch": cfg.train.lr_scheduler.iters_per_epoch,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -285,9 +285,7 @@ def train(cfg: DictConfig):
     new_epoch_list = []
     for i, _ in enumerate(cfg.epoch_list):
         new_epoch_list.append(sum(cfg.epoch_list[: i + 1]))
-    lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(
-        new_epoch_list[-1], cfg.iters_per_epoch, new_epoch_list, cfg.lr_list
-    )()
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(**cfg.train.lr_scheduler)()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -296,8 +294,8 @@ def train(cfg: DictConfig):
         output_dir=cfg.output_dir,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
-        epochs=new_epoch_list[-1],
-        iters_per_epoch=cfg.iters_per_epoch,
+        epochs=cfg.epochs,
+        iters_per_epoch=cfg.train.lr_scheduler.iters_per_epoch,
         log_freq=cfg.train.log_freq,
         save_freq=cfg.train.save_freq,
         eval_freq=cfg.train.eval_freq,
