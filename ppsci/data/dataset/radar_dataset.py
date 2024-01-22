@@ -57,6 +57,9 @@ class RadarDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         input_keys: Tuple[str, ...],
@@ -105,7 +108,7 @@ class RadarDataset(io.Dataset):
                 )
             self.case_list.append(case)
 
-    def load(self, index):
+    def _load(self, index):
         data = []
         for img_path in self.case_list[index]:
             img = cv2.imread(img_path, 2)
@@ -115,7 +118,7 @@ class RadarDataset(io.Dataset):
         return data
 
     def __getitem__(self, index):
-        data = self.load(index)[-self.length :].copy()
+        data = self._load(index)[-self.length :].copy()
         mask = np.ones_like(data)
         mask[data < 0] = 0
         data[data < 0] = 0

@@ -209,7 +209,7 @@ def train(cfg: DictConfig):
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
 
-    pred_norm = solver.predict(visu_mat, no_grad=False, return_numpy=True)
+    pred_norm = solver.predict(visu_mat, None, 4096, no_grad=False, return_numpy=True)
     # inverse normalization
     p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
     u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T
@@ -362,7 +362,9 @@ def evaluate(cfg: DictConfig):
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
 
-    pred_norm = solver.predict(visu_mat, None, 4096, no_grad=False, return_numpy=True)
+    pred_norm = solver.predict(
+        visu_mat, None, 4096 * 2, no_grad=False, return_numpy=True
+    )
     # inverse normalization
     p_pred = pred_norm["p"].reshape([NTIME_PDE, NPOINT_PDE]).T
     u_pred = pred_norm["u"].reshape([NTIME_PDE, NPOINT_PDE]).T

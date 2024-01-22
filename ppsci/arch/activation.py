@@ -75,6 +75,12 @@ class Sin(nn.Layer):
 
 
 class Silu(nn.Layer):
+    """
+    FIXME: This activation function is a workaround for the potential occurrence of NaNs
+    during the computation of the native SiLU function via using x*sigmoid(x) instead of
+    silu(x)
+    """
+
     def __init__(self):
         super().__init__()
 

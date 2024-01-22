@@ -529,9 +529,8 @@ class AFNONet(base.Arch):
 
         return x
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
@@ -653,9 +652,8 @@ class PrecipNet(base.Arch):
         x = self.act(x)
         return x
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
