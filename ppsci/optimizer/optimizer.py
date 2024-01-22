@@ -485,9 +485,9 @@ class OptimizerList:
     Examples:
         >>> import ppsci
         >>> model1 = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt1 = ppsci.optimizer.Adam(1e-3)((model1,))
+        >>> opt1 = ppsci.optimizer.Adam(1e-3)(model1)
         >>> model2 = ppsci.arch.MLP(("y",), ("v",), 5, 20)
-        >>> opt2 = ppsci.optimizer.Adam(1e-3)((model2,))
+        >>> opt2 = ppsci.optimizer.Adam(1e-3)(model2)
         >>> opt = ppsci.optimizer.OptimizerList((opt1, opt2))
     """
 

@@ -29,8 +29,7 @@ class PCGrad(LossAggregator):
 
     [Gradient Surgery for Multi-Task Learning](https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html)
 
-    Code reference: [https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py](\
-        https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py)
+    Code reference: [https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py](https://github.com/tianheyu927/PCGrad/blob/master/PCGrad_tf.py)
 
     Args:
         model (nn.Layer): Training model.

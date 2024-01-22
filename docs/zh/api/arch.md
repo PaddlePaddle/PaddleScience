@@ -18,7 +18,10 @@
         - ModelList
         - AFNONet
         - PrecipNet
+        - PhyCRNet
         - UNetEx
+        - USCNN
         - NowcastNet
+        - HEDeepONets
       show_root_heading: true
       heading_level: 3

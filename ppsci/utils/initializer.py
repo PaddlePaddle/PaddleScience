@@ -437,6 +437,12 @@ def linear_init_(module: nn.Layer) -> None:
 
     Args:
         module (nn.Layer): Linear Layer to be initialized.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> layer = paddle.nn.Linear(128, 256)
+        >>> ppsci.utils.initializer.linear_init_(layer)
     """
     kaiming_uniform_(module.weight, a=math.sqrt(5))
     if module.bias is not None:
@@ -450,6 +456,12 @@ def conv_init_(module: nn.Layer) -> None:
 
     Args:
         module (nn.Layer): Convolution Layer to be initialized.
+
+    Examples:
+        >>> import paddle
+        >>> import ppsci
+        >>> layer = paddle.nn.Conv2D(4, 16, 2)
+        >>> ppsci.utils.initializer.conv_init_(layer)
     """
     kaiming_uniform_(module.weight, a=math.sqrt(5))
     if module.bias is not None:

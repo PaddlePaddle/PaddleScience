@@ -12,49 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import path as osp
+
+import hydra
 import paddle
+from omegaconf import DictConfig
 
 import ppsci
 from ppsci.autodiff import hessian
 from ppsci.autodiff import jacobian
-from ppsci.utils import config
 from ppsci.utils import logger
 
-if __name__ == "__main__":
-    args = config.parse_args()
+
+def train(cfg: DictConfig):
     # enable computation for fourth-order differentiation of matmul
     paddle.framework.core.set_prim_eager_enabled(True)
     paddle.framework.core._set_prim_all_enabled(True)
     # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(42)
-    # set training hyper-parameters
-    ITERS_PER_EPOCH = 1
-    EPOCHS = 10000 if not args.epochs else args.epochs
-    # set output directory
-    OUTPUT_DIR = "./output/euler_beam" if not args.output_dir else args.output_dir
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # initialize logger
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/train.log", "info")
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(("x",), ("u",), 3, 20)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set geometry
     geom = {"interval": ppsci.geometry.Interval(0, 1)}
 
     # set equation(s)
-    equation = {"biharmonic": ppsci.equation.Biharmonic(dim=1, q=-1.0, D=1.0)}
+    equation = {"biharmonic": ppsci.equation.Biharmonic(dim=1, q=cfg.q, D=cfg.D)}
 
     # set dataloader config
     dataloader_cfg = {
         "dataset": "IterableNamedArrayDataset",
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.TRAIN.iters_per_epoch,
     }
     # set constraint
     pde_constraint = ppsci.constraint.InteriorConstraint(
         equation["biharmonic"].equations,
         {"biharmonic": 0},
         geom["interval"],
-        {**dataloader_cfg, "batch_size": 100},
+        {**dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.pde},
         ppsci.loss.MSELoss(),
         random="Hammersley",
         name="EQ",
@@ -68,7 +66,7 @@ if __name__ == "__main__":
         },
         {"u0": 0, "u__x": 0, "u__x__x": 0, "u__x__x__x": 0},
         geom["interval"],
-        {**dataloader_cfg, "batch_size": 4},
+        {**dataloader_cfg, "batch_size": cfg.TRAIN.batch_size.bc},
         ppsci.loss.MSELoss("sum"),
         evenly=True,
         name="BC",
@@ -80,11 +78,9 @@ if __name__ == "__main__":
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(learning_rate=0.001)(model)
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set validator
-    TOTAL_SIZE = 100
-
     def u_solution_func(out):
         """compute ground truth for u as label data"""
         x = out["x"]
@@ -96,7 +92,7 @@ if __name__ == "__main__":
         geom["interval"],
         {
             "dataset": "IterableNamedArrayDataset",
-            "total_size": TOTAL_SIZE,
+            "total_size": cfg.EVAL.total_size,
         },
         ppsci.loss.MSELoss(),
         evenly=True,
@@ -106,12 +102,15 @@ if __name__ == "__main__":
     validator = {l2_rel_metric.name: l2_rel_metric}
 
     # set visualizer(optional)
-    visu_points = geom["interval"].sample_interior(TOTAL_SIZE, evenly=True)
+    visu_points = geom["interval"].sample_interior(cfg.EVAL.total_size, evenly=True)
     visualizer = {
         "visualize_u": ppsci.visualize.VisualizerScatter1D(
             visu_points,
             ("x",),
-            {"u": lambda d: d["u"]},
+            {
+                "u_label": lambda d: u_solution_func(d),
+                "u_pred": lambda d: d["u"],
+            },
             num_timestamps=1,
             prefix="result_u",
         )
@@ -121,17 +120,21 @@ if __name__ == "__main__":
     solver = ppsci.solver.Solver(
         model,
         constraint,
-        OUTPUT_DIR,
+        cfg.output_dir,
         optimizer,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
-        eval_during_train=True,
-        eval_freq=1000,
+        epochs=cfg.TRAIN.epochs,
+        iters_per_epoch=cfg.TRAIN.iters_per_epoch,
+        eval_during_train=cfg.TRAIN.eval_during_train,
+        eval_freq=cfg.TRAIN.eval_freq,
+        seed=cfg.seed,
         equation=equation,
         geom=geom,
         validator=validator,
         visualizer=visualizer,
-        to_static=args.to_static,
+        pretrained_model_path=cfg.TRAIN.pretrained_model_path,
+        checkpoint_path=cfg.TRAIN.checkpoint_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        to_static=cfg.to_static,
     )
     # train model
     solver.train()
@@ -140,17 +143,91 @@ if __name__ == "__main__":
     # visualize prediction after finished training
     solver.visualize()
 
-    # directly evaluate model from pretrained_model_path(optional)
-    logger.init_logger("ppsci", f"{OUTPUT_DIR}/eval.log", "info")
+
+def evaluate(cfg: DictConfig):
+    # enable computation for fourth-order differentiation of matmul
+    paddle.framework.core.set_prim_eager_enabled(True)
+    paddle.framework.core._set_prim_all_enabled(True)
+    # set random seed for reproducibility
+    ppsci.utils.misc.set_random_seed(cfg.seed)
+    # initialize logger
+    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
+
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # set geometry
+    geom = {"interval": ppsci.geometry.Interval(0, 1)}
+
+    # set equation(s)
+    equation = {"biharmonic": ppsci.equation.Biharmonic(dim=1, q=cfg.q, D=cfg.D)}
+
+    # set validator
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x = out["x"]
+        return -(x**4) / 24 + x**3 / 6 - x**2 / 4
+
+    l2_rel_metric = ppsci.validate.GeometryValidator(
+        {"u": lambda out: out["u"]},
+        {"u": u_solution_func},
+        geom["interval"],
+        {
+            "dataset": "IterableNamedArrayDataset",
+            "total_size": cfg.EVAL.total_size,
+        },
+        ppsci.loss.MSELoss(),
+        evenly=True,
+        metric={"L2Rel": ppsci.metric.L2Rel()},
+        name="L2Rel_Metric",
+    )
+    validator = {l2_rel_metric.name: l2_rel_metric}
+
+    # set visualizer(optional)
+    visu_points = geom["interval"].sample_interior(cfg.EVAL.total_size, evenly=True)
+    visualizer = {
+        "visualize_u": ppsci.visualize.VisualizerScatter1D(
+            visu_points,
+            ("x",),
+            {
+                "u_label": lambda d: u_solution_func(d),
+                "u_pred": lambda d: d["u"],
+            },
+            num_timestamps=1,
+            prefix="result_u",
+        )
+    }
+
+    # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        constraint,
-        OUTPUT_DIR,
+        None,
+        cfg.output_dir,
+        None,
+        seed=cfg.seed,
         equation=equation,
+        geom=geom,
         validator=validator,
         visualizer=visualizer,
-        pretrained_model_path=f"{OUTPUT_DIR}/checkpoints/latest",
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
+        to_static=cfg.to_static,
     )
+    # evaluate after finished training
     solver.eval()
-    # visualize prediction from pretrained_model_path(optional)
+    # visualize prediction after finished training
     solver.visualize()
+
+
+@hydra.main(version_base=None, config_path="./conf", config_name="euler_beam.yaml")
+def main(cfg: DictConfig):
+    if cfg.mode == "train":
+        train(cfg)
+    elif cfg.mode == "eval":
+        evaluate(cfg)
+    else:
+        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+
+
+if __name__ == "__main__":
+    main()

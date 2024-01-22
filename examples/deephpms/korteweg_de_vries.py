@@ -117,9 +117,9 @@ def train(cfg: DictConfig):
     optimizer_sol = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model_sol)
 
     # LBFGS
-    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_idn,))
-    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_pde,))
-    # optimizer_sol = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)((model_sol,))
+    # optimizer_idn = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(model_idn)
+    # optimizer_pde = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(model_pde)
+    # optimizer_sol = ppsci.optimizer.LBFGS(max_iter=cfg.TRAIN.max_iter)(model_sol)
 
     # stage 1: training identification net
     # manually build constraint(s)

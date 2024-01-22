@@ -17,12 +17,11 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+import paddle
 from paddle.distributed.fleet.utils import hybrid_parallel_util as hpu
 
 from ppsci.solver import printer
 from ppsci.utils import misc
-
-# from ppsci.utils import profiler
 
 if TYPE_CHECKING:
     from ppsci import solver
@@ -39,30 +38,29 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
     batch_tic = time.perf_counter()
 
     for iter_id in range(1, solver.iters_per_epoch + 1):
-        total_loss = 0
-        loss_dict = misc.Prettydefaultdict(float)
-        loss_dict["loss"] = 0.0
+        total_loss = 0.0
         total_batch_size = 0
-        reader_cost = 0
-        batch_cost = 0
+        reader_cost = 0.0
+        batch_cost = 0.0
         reader_tic = time.perf_counter()
 
         input_dicts = []
         label_dicts = []
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
+            # fetch data from data loader
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
                 _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
-            # profile code below
-            # profiler.add_profiler_step(solver.cfg["profiler_options"])
+            reader_cost += time.perf_counter() - reader_tic
+
+            # NOTE: eliminate first 5 step for warmup
             if iter_id == 5:
-                # 5 step for warmup
                 for key in solver.train_time_info:
                     solver.train_time_info[key].reset()
-            reader_cost += time.perf_counter() - reader_tic
+
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False
@@ -74,8 +72,10 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
 
+        loss_dict = misc.Prettydefaultdict(float)
+        loss_dict["loss"] = 0.0
+        # forward for every constraint, including model and equation expression
         with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
-            # forward for every constraint, including model and equation expression
             with solver.autocast_context_manager(solver.use_amp, solver.amp_level):
                 constraint_losses = solver.forward_helper.train_forward(
                     tuple(
@@ -124,6 +124,8 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
+        if solver.benchmark_flag:
+            paddle.device.synchronize()
         batch_cost += time.perf_counter() - batch_tic
 
         # update and log training information
@@ -131,7 +133,7 @@ def train_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int):
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()
@@ -235,7 +237,7 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         solver.train_time_info["reader_cost"].update(reader_cost)
         solver.train_time_info["batch_cost"].update(batch_cost)
         printer.update_train_loss(solver, loss_dict, total_batch_size)
-        if iter_id == 1 or iter_id % log_freq == 0:
+        if solver.global_step % log_freq == 0 or solver.global_step == 1:
             printer.log_train_info(solver, total_batch_size, epoch_id, iter_id)
 
         batch_tic = time.perf_counter()

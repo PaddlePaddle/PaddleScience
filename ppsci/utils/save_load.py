@@ -80,13 +80,22 @@ def _load_pretrain_from_path(
 def load_pretrain(
     model: nn.Layer, path: str, equation: Optional[Dict[str, equation.PDE]] = None
 ):
-    """Load pretrained model from given path or url.
+    """
+    Load pretrained model from given path or url.
 
     Args:
         model (nn.Layer): Model with parameters.
         path (str): File path or url of pretrained model, i.e. `/path/to/model.pdparams`
             or `http://xxx.com/model.pdparams`.
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> from ppsci.utils import save_load
+        >>> model = ppsci.arch.MLP(("x", "y"), ("u", "v", "p"), 9, 50, "tanh")
+        >>> save_load.load_pretrain(
+        ...     model=model,
+        ...     path="path/to/pretrain_model") # doctest: +SKIP
     """
     if path.startswith("http"):
         path = download.get_weights_path_from_url(path)
@@ -157,8 +166,10 @@ def save_checkpoint(
     output_dir: Optional[str] = None,
     prefix: str = "model",
     equation: Optional[Dict[str, equation.PDE]] = None,
+    print_log: bool = True,
 ):
-    """Save checkpoint, including model params, optimizer params, metric information.
+    """
+    Save checkpoint, including model params, optimizer params, metric information.
 
     Args:
         model (nn.Layer): Model with parameters.
@@ -168,6 +179,17 @@ def save_checkpoint(
         output_dir (Optional[str]): Directory for checkpoint storage.
         prefix (str, optional): Prefix for storage. Defaults to "model".
         equation (Optional[Dict[str, equation.PDE]]): Equations. Defaults to None.
+        print_log (bool, optional): Whether print saving log information, mainly for
+            keeping log tidy without duplicate 'Finish saving checkpoint ...' log strings.
+            Defaults to True.
+
+    Examples:
+        >>> import ppsci
+        >>> import paddle
+        >>> from ppsci.utils import save_load
+        >>> model = ppsci.arch.MLP(("x", "y", "z"), ("u", "v", "w"), 5, 64, "tanh")
+        >>> optimizer = ppsci.optimizer.Adam(0.001)(model)
+        >>> save_load.save_checkpoint(model, optimizer, {"RMSE": 0.1}, output_dir="path/to/output/dir") # doctest: +SKIP
     """
     if paddle.distributed.get_rank() != 0:
         return
@@ -186,9 +208,20 @@ def save_checkpoint(
     if grad_scaler is not None:
         paddle.save(grad_scaler.state_dict(), f"{ckpt_path}.pdscaler")
     if equation is not None:
-        paddle.save(
-            {key: eq.state_dict() for key, eq in equation.items()},
-            f"{ckpt_path}.pdeqn",
+        num_learnable_params = sum(
+            [len(eq.learnable_parameters) for eq in equation.values()]
         )
+        if num_learnable_params > 0:
+            paddle.save(
+                {key: eq.state_dict() for key, eq in equation.items()},
+                f"{ckpt_path}.pdeqn",
+            )
 
-    logger.message(f"Finish saving checkpoint to {ckpt_path}")
+    if print_log:
+        log_str = f"Finish saving checkpoint to: {ckpt_path}"
+        if prefix == "latest":
+            log_str += (
+                "(latest checkpoint will be saved every epoch as expected, "
+                "but this log will be printed only once for tidy logging)"
+            )
+        logger.message(log_str)

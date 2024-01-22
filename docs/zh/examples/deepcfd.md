@@ -35,7 +35,7 @@
 在某些复杂的应用场景中，如机翼优化和流体与结构相互作用方面，需要使用千万级甚至上亿的网格对问题进行建模（如下图所示，下图展示了 F-18 战斗机的全机内外流一体结构化网格模型），导致 CFD 的计算量非常巨大。因此，目前亟需发展出一种相比于传统 CFD 方法更高效，且可以保持计算精度的方法。
 
 <figure markdown>
-  ![result_states0](http://www.cannews.com.cn/files/Resource/attachement/2017/0511/1494489582596.jpg){ loading=lazy}
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/DeepCFD/f-18.jpg){ loading=lazy}
   <figcaption>F-18 战斗机的全机内外流一体结构化网格模型</figcaption>
 </figure>
 
@@ -74,9 +74,9 @@ $$u_x\frac{\partial u_y}{\partial x} + u_y\frac{\partial u_y}{\partial y} = - \f
 
 运行本问题代码前请按照下方命令下载 [dataX](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl) 和 [dataY](https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl)：
 
-``` shell
-wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
-wget -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
+``` sh
+wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataX.pkl
+wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepCFD/dataY.pkl
 ```
 
 dataX 和 dataY 都具有相同的维度（Ns，Nc，Nx，Ny），其中第一轴是样本数（Ns），第二轴是通道数（Nc），第三和第四轴分别是 x 和 y 中的元素数量（Nx 和 Ny）。在输入数据 dataX 中，第一通道是计算域中障碍物的SDF（Signed distance function），第二通道是流动区域的标签，第三通道是计算域边界的 SDF。在输出数据 dataY 中，第一个通道是水平速度分量（Ux），第二个通道是垂直速度分量（Uy），第三个通道是流体压强（p）。
