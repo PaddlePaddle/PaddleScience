@@ -59,7 +59,7 @@ def generate_data(data_path):
     total_times1 = np.array(list(range(17))) * 0.0065
     t_train1 = total_times1.repeat(100000)
     t_train = t_train1.reshape(-1, 1).astype("float64")
-    # Test Data
+    # test data
     test_x = np.load(data_path + "test43_l.npy")
     test_v = np.load(data_path + "test43_vp.npy")
     t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
@@ -141,7 +141,7 @@ def train(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
-    # Load Data
+    # load data
     (
         x_train,
         y_train,
@@ -171,7 +171,7 @@ def train(cfg: DictConfig):
         p_star,
     ) = generate_data(cfg.data_dir)
 
-    # dimensionless
+    # normalization
     Xb = np.concatenate([xb_train, yb_train, zb_train, tb_train], 1)
     lowb = Xb.min(0)  # minimal number in each column
     upb = Xb.max(0)
@@ -227,14 +227,14 @@ def train(cfg: DictConfig):
     geom = ppsci.geometry.PointCloud(
         {"x": x_train, "y": y_train, "z": z_train, "t": t_train}, ("x", "y", "z", "t")
     )
-    ## supervised constraint s.t ||u-u_b||
+    # supervised constraint s.t ||u-u_b||
     sup_constraint_b = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_b,
         ppsci.loss.MSELoss("mean", ALPHA),
         name="Sup_b",
     )
 
-    ## supervised constraint s.t ||u-u_0||
+    # supervised constraint s.t ||u-u_0||
     sup_constraint_0 = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg_0,
         ppsci.loss.MSELoss("mean", BETA),
@@ -266,7 +266,7 @@ def train(cfg: DictConfig):
         name="EQ",
     )
 
-    # Wrap constraints
+    # wrap constraints
     constraint = {
         pde_constraint.name: pde_constraint,
         sup_constraint_b.name: sup_constraint_b,
@@ -280,7 +280,7 @@ def train(cfg: DictConfig):
         name="Residual",
     )
 
-    # Wrap validator
+    # wrap validator
     validator = {residual_validator.name: residual_validator}
 
     # set optimizer
@@ -335,7 +335,7 @@ def evaluate(cfg: DictConfig):
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
-    # Test Data
+    # test Data
     test_x = np.load(data_path + "test43_l.npy")
     test_v = np.load(data_path + "test43_vp.npy")
     t = np.array([0.0065, 4 * 0.0065, 7 * 0.0065, 10 * 0.0065, 13 * 0.0065])
@@ -425,7 +425,9 @@ def evaluate(cfg: DictConfig):
     ax[2].set_title("w prediction")
     ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[3].set_title("p prediction")
-    norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
+    norm = matplotlib.colors.Normalize(
+        vmin=sol["u"].min(), vmax=sol["u"].max()
+    )  # set maximum and minimum
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
@@ -458,7 +460,9 @@ def evaluate(cfg: DictConfig):
     ax[2].set_title("w prediction")
     ax[3].contourf(grid_y, grid_z, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[3].set_title("p prediction")
-    norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
+    norm = matplotlib.colors.Normalize(
+        vmin=sol["u"].min(), vmax=sol["u"].max()
+    )  # set maximum and minimum
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     ax13 = fig.add_axes([0.125, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
