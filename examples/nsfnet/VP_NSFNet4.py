@@ -135,8 +135,7 @@ class Transform:
 def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
     # set random seed for reproducibility
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -305,7 +304,7 @@ def train(cfg: DictConfig):
         save_freq=cfg.train.save_freq,
         eval_freq=cfg.train.eval_freq,
         eval_during_train=True,
-        seed=SEED,
+        seed=cfg.seed,
         equation=equation,
         geom=geom,
         validator=validator,
@@ -323,8 +322,7 @@ def train(cfg: DictConfig):
 
 def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "/train.log"), "info")
-    SEED = cfg.seed
-    ppsci.utils.misc.set_random_seed(SEED)
+    ppsci.utils.misc.set_random_seed(cfg.seed)
 
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
