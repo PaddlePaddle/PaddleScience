@@ -51,75 +51,68 @@ $$\frac{\partial \mathbf{u}}{\partial n} =0 \quad \text { on } \Gamma_N.$$
 ## 3. 问题求解
 ### 3.1 模型构建
 本文使用PINN经典的MLP模型进行训练。
-``` py linenums="142"
+``` py linenums="137"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:142:142
---8<--
-```
-### 3.2 超参数设定
-指定残差点、边界点、初值点的个数, 以及可以指定边界损失函数和初值损失函数的权重
-``` py linenums="135"
---8<--
-examples/nsfnet/VP_NSFNet4.py:135:139
+examples/nsfnet/VP_NSFNet4.py:137:137
 --8<--
 ```
-### 3.3 数据生成
+### 3.2 数据生成
 先后取边界点、初值点、以及用于计算残差的内部点（具体取法见[论文](https://arxiv.org/abs/2003.06496)节3.3）以及生成测试点。
-``` py linenums="145"
+``` py linenums="139"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:145:172
+examples/nsfnet/VP_NSFNet4.py:139:167
 --8<--
 ```
 ### 3.4 归一化处理
 为将所取较小长方体区域改为正方体区域, 我们将归一化函数嵌入网络训练前。
 ``` py linenums="174"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:174:179
+examples/nsfnet/VP_NSFNet4.py:169:174
 --8<--
 ```
 ### 3.5 约束构建
 由于我们边界点和初值点具有解析解, 因此我们使用监督约束, 其中alpha和beta为该损失函数的权重, 在本代码中与论文中描述一致, 都取为100。
-``` py linenums="231"
+``` py linenums="226"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:231:249
+examples/nsfnet/VP_NSFNet4.py:226:237
 --8<--
 ```
 使用内部点构造纳韦斯托克方程的残差约束
-``` py linenums="251"
+``` py linenums="239"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:251:267
+examples/nsfnet/VP_NSFNet4.py:239:262
 --8<--
 ```
 ### 3.5 评估器构建
 使用在数据生成时生成的测试点构造的测试集用于模型评估：
-``` py linenums="276"
+``` py linenums="271"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:276:281
+examples/nsfnet/VP_NSFNet4.py:271:276
 --8<--
 ```
 
 ### 3.6 优化器构建
 与论文中描述相同, 我们使用分段学习率构造Adam优化器, 其中可以通过调节epoch_list来调节训练轮数。
-``` py linenums="286"
+``` py linenums="281"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:286:296
+examples/nsfnet/VP_NSFNet4.py:281:283
 --8<--
 ```
 
 ### 3.7 模型训练与评估
 完成上述设置之后, 只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`。
 
-``` py linenums="299"
+``` py linenums="284"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:299:317
+examples/nsfnet/VP_NSFNet4.py:284:302
 --8<--
 ```
 
 最后启动训练即可：
 
-``` py linenums="319"
+``` py linenums="303"
 --8<--
-examples/nsfnet/VP_NSFNet4.py:319:319
+examples/nsfnet/VP_NSFNet4.py:303:304
 --8<--
 ```
 
