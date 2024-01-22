@@ -62,9 +62,8 @@ class NowcastNet(base.Arch):
         sample_tensor = paddle.zeros(shape=[1, 1, self.image_height, self.image_width])
         self.grid = make_grid(sample_tensor)
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):

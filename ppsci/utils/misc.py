@@ -582,13 +582,16 @@ def plot_curve(
     plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
-        loc="lower left",
+        loc="upper left",
+        bbox_to_anchor=(1, 1),
     )
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
+    plt.tight_layout()
 
-    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
+    plt.close()
