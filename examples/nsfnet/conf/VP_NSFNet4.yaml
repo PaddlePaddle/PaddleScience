@@ -20,7 +20,6 @@ hydra:
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
-
 seed: 1234
 output_dir: ${hydra:run.dir}
 data_dir: ./data/
