@@ -137,7 +137,6 @@ def train(cfg: DictConfig):
     # set random seed for reproducibility
     SEED = cfg.seed
     ppsci.utils.misc.set_random_seed(SEED)
-    ITERS_PER_EPOCH = cfg.iters_per_epoch
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -186,7 +185,7 @@ def train(cfg: DictConfig):
             "label": {"u": ub_train, "v": vb_train, "w": wb_train},
         },
         "batch_size": cfg.nb_train,
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -201,7 +200,7 @@ def train(cfg: DictConfig):
             "label": {"u": u0_train, "v": v0_train, "w": w0_train},
         },
         "batch_size": cfg.n0_train,
-        "iters_per_epoch": ITERS_PER_EPOCH,
+        "iters_per_epoch": cfg.iters_per_epoch,
         "sampler": {
             "name": "BatchSampler",
             "drop_last": False,
@@ -255,7 +254,7 @@ def train(cfg: DictConfig):
         {
             "dataset": {"name": "NamedArrayDataset"},
             "batch_size": cfg.ntrain,
-            "iters_per_epoch": ITERS_PER_EPOCH,
+            "iters_per_epoch": cfg.iters_per_epoch,
             "sampler": {
                 "name": "BatchSampler",
                 "drop_last": False,
@@ -288,10 +287,9 @@ def train(cfg: DictConfig):
     new_epoch_list = []
     for i, _ in enumerate(epoch_list):
         new_epoch_list.append(sum(epoch_list[: i + 1]))
-    EPOCHS = new_epoch_list[-1]
     lr_list = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(
-        EPOCHS, ITERS_PER_EPOCH, new_epoch_list, lr_list
+        new_epoch_list[-1], cfg.iters_per_epoch, new_epoch_list, lr_list
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     # initialize solver
@@ -301,8 +299,8 @@ def train(cfg: DictConfig):
         output_dir=cfg.output_dir,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
-        epochs=EPOCHS,
-        iters_per_epoch=ITERS_PER_EPOCH,
+        epochs=new_epoch_list[-1],
+        iters_per_epoch=cfg.iters_per_epoch,
         log_freq=cfg.train.log_freq,
         save_freq=cfg.train.save_freq,
         eval_freq=cfg.train.eval_freq,
