@@ -23,7 +23,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 2023
 output_dir: ${hydra:run.dir}
-log_freq: 200
+log_freq: 20
 
 # set working condition
 E: 201880.0e+6  # Pa = N/m2

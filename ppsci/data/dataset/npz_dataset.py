@@ -54,6 +54,9 @@ class NPZDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         file_path: str,
@@ -171,6 +174,9 @@ class IterableNPZDataset(io.IterableDataset):
         ...     ("u",),
         ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     def __init__(
         self,

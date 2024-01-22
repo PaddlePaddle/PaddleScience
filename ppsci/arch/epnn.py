@@ -66,10 +66,13 @@ class Epnn(base.Arch):
     Examples:
         >>> import ppsci
         >>> ann_node_sizes_state = [1]
-        >>> model = ppsci.arch.Epnn(("x",), ("y",), node_sizes=node_sizes_state,
-                                    activations=("leaky_relu"),
-                                    drop_p=0.0
-                                    )
+        >>> model = ppsci.arch.Epnn(
+        ...     ("x",),
+        ...     ("y",),
+        ...     node_sizes=ann_node_sizes_state,
+        ...     activations=("leaky_relu"),
+        ...     drop_p=0.0,
+        ... )
     """
 
     def __init__(
