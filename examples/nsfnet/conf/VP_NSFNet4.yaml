@@ -61,3 +61,6 @@ EVAL:
   pretrained_model_path: null
   eval_with_no_grad: true
 
+epoch_list: [250, 4250, 500, 500]
+
+lr_list: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
