@@ -411,7 +411,7 @@ def evaluate(cfg: DictConfig):
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
-    plt.savefig(osp.join(cfg.output_dir, "/z=0 plane"))
+    plt.savefig(osp.join(cfg.output_dir, "z=0 plane"))
 
     grid_y, grid_z = np.mgrid[
         y_star.min() : y_star.max() : 100j, z_star.min() : z_star.max() : 100j
@@ -444,7 +444,7 @@ def evaluate(cfg: DictConfig):
     plt.colorbar(im, cax=ax13, orientation="horizontal")
     ax13 = fig.add_axes([0.725, 0.0, 0.175, 0.02])
     plt.colorbar(im, cax=ax13, orientation="horizontal")
-    plt.savefig(cfg.output_dir + "/x=0 plane")
+    plt.savefig(osp.join(cfg.output_dir, "x=0 plane"))
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="VP_NSFNet4.yaml")
