@@ -282,13 +282,11 @@ def train(cfg: DictConfig):
     validator = {residual_validator.name: residual_validator}
 
     # set optimizer
-    epoch_list = [250, 4250, 500, 500]
     new_epoch_list = []
-    for i, _ in enumerate(epoch_list):
-        new_epoch_list.append(sum(epoch_list[: i + 1]))
-    lr_list = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+    for i, _ in enumerate(cfg.epoch_list):
+        new_epoch_list.append(sum(cfg.epoch_list[: i + 1]))
     lr_scheduler = ppsci.optimizer.lr_scheduler.Piecewise(
-        new_epoch_list[-1], cfg.iters_per_epoch, new_epoch_list, lr_list
+        new_epoch_list[-1], cfg.iters_per_epoch, new_epoch_list, cfg.lr_list
     )()
     optimizer = ppsci.optimizer.Adam(lr_scheduler)(model)
     # initialize solver
