@@ -417,15 +417,13 @@ def evaluate(cfg: DictConfig):
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
     cmap = plt.cm.get_cmap("jet")
 
-    ax[0].contourf(
-        grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap
-    )  # , levels=np.arange(sol["u"].min(), sol["u"].max(), 0.25))
+    ax[0].contourf(grid_x, grid_y, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
-    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape), cmap=cmap)
+    ax[1].contourf(grid_x, grid_y, sol["v"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[1].set_title("v prediction")
-    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape), cmap=cmap)
+    ax[2].contourf(grid_x, grid_y, sol["w"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[2].set_title("w prediction")
-    ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape), cmap=cmap)
+    ax[3].contourf(grid_x, grid_y, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[3].set_title("p prediction")
     norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -452,15 +450,13 @@ def evaluate(cfg: DictConfig):
     fig, ax = plt.subplots(1, 4, figsize=(16, 4))
     cmap = plt.cm.get_cmap("jet")
 
-    ax[0].contourf(
-        grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap
-    )  # , levels=np.arange(sol["u"].min(), sol["u"].max(), 0.25))
+    ax[0].contourf(grid_y, grid_z, sol["u"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[0].set_title("u prediction")
-    ax[1].contourf(grid_y, grid_z, sol["v"].reshape(grid_x.shape), cmap=cmap)
+    ax[1].contourf(grid_y, grid_z, sol["v"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[1].set_title("v prediction")
-    ax[2].contourf(grid_y, grid_z, sol["w"].reshape(grid_x.shape), cmap=cmap)
+    ax[2].contourf(grid_y, grid_z, sol["w"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[2].set_title("w prediction")
-    ax[3].contourf(grid_y, grid_z, sol["p"].reshape(grid_x.shape), cmap=cmap)
+    ax[3].contourf(grid_y, grid_z, sol["p"].reshape(grid_x.shape), levels=50, cmap=cmap)
     ax[3].set_title("p prediction")
     norm = matplotlib.colors.Normalize(vmin=sol["u"].min(), vmax=sol["u"].max())  # 设置最值
     im = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
