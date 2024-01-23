@@ -38,6 +38,7 @@ from ppsci.arch.nowcastnet import NowcastNet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
+from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -62,6 +63,7 @@ __all__ = [
     "NowcastNet",
     "USCNN",
     "HEDeepONets",
+    "AutoEncoder",
     "build_model",
     "CFDGCN",
 ]
