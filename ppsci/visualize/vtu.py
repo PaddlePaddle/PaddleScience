@@ -156,12 +156,27 @@ def save_vtu_to_mesh(
         data_dict (Dict[str, np.ndarray]): Data in dict.
         coord_keys (Tuple[str, ...]): Tuple of coord key. such as ("x", "y").
         value_keys (Tuple[str, ...]): Tuple of value key. such as ("u", "v").
+
+    Examples:
+        >>> import ppsci
+        >>> import numpy as np
+        >>> filename = "path/to/file.vtu"
+        >>> data_dict = {
+        ...     "x": np.array([[1], [2], [3],[4]]),
+        ...     "y": np.array([[2], [3], [4],[4]]),
+        ...     "z": np.array([[3], [4], [5],[4]]),
+        ...     "u": np.array([[4], [5], [6],[4]]),
+        ...     "v": np.array([[5], [6], [7],[4]]),
+        ... }
+        >>> coord_keys = ("x","y","z")
+        >>> value_keys = ("u","v")
+        >>> ppsci.visualize.save_vtu_to_mesh(filename, data_dict, coord_keys, value_keys) # doctest: +SKIP
     """
     npoint = len(next(iter(data_dict.values())))
     coord_ndim = len(coord_keys)
 
     # get the list variable transposed
-    points = np.stack((data_dict[key] for key in coord_keys)).reshape(
+    points = np.stack(tuple(data_dict[key] for key in coord_keys)).reshape(
         coord_ndim, npoint
     )
     mesh = meshio.Mesh(
