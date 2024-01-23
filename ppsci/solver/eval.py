@@ -128,7 +128,11 @@ def _eval_by_dataset(
             solver.eval_time_info["batch_cost"].update(batch_cost)
             batch_size = next(iter(input_dict.values())).shape[0]
             printer.update_eval_loss(solver, loss_dict, batch_size)
-            if iter_id == 1 or iter_id % log_freq == 0:
+            if (
+                iter_id == 1
+                or iter_id % log_freq == 0
+                or iter_id == len(_validator.data_loader)
+            ):
                 printer.log_eval_info(
                     solver,
                     batch_size,
@@ -247,7 +251,11 @@ def _eval_by_batch(
             solver.eval_time_info["reader_cost"].update(reader_cost)
             solver.eval_time_info["batch_cost"].update(batch_cost)
             printer.update_eval_loss(solver, loss_dict, batch_size)
-            if iter_id == 1 or iter_id % log_freq == 0:
+            if (
+                iter_id == 1
+                or iter_id % log_freq == 0
+                or iter_id == len(_validator.data_loader)
+            ):
                 printer.log_eval_info(
                     solver,
                     batch_size,
