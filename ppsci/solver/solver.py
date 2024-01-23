@@ -74,7 +74,7 @@ class Solver:
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
-        amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O1".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
@@ -86,7 +86,7 @@ class Solver:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> opt = ppsci.optimizer.AdamW(1e-3)(model)
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -134,7 +134,7 @@ class Solver:
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
         visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: Literal["O1", "O2", "O0"] = "O0",
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
@@ -152,7 +152,20 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        self.lr_scheduler = lr_scheduler
+        if lr_scheduler is not None:
+            logger.warning(
+                "The argument: 'lr_scheduler' now automatically retrieves from "
+                "'optimizer._learning_rate' when 'optimizer' is given, so it is "
+                "recommended to remove it from the Solver's initialization arguments."
+            )
+        self.lr_scheduler = (
+            optimizer._learning_rate
+            if (
+                isinstance(optimizer, optim.Optimizer)
+                and isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
+            )
+            else None
+        )
 
         # set training hyper-parameter
         self.epochs = epochs
