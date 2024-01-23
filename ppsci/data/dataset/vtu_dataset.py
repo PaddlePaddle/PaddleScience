@@ -39,6 +39,9 @@ class VtuDataset(io.Dataset):
             transform(s).
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         file_path: str,

@@ -367,7 +367,8 @@ class PhysformerGPT2(base.Arch):
         outputs = self.generate(input_embeds)
         return (outputs[:, 1:],)
 
-    def split_to_dict(self, data_tensors, keys):
+    @staticmethod
+    def split_to_dict(data_tensors, keys):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
