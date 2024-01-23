@@ -166,6 +166,14 @@ class Solver:
             )
             else None
         )
+        if isinstance(self.optimizer, ppsci.optimizer.OptimizerList):
+            self.lr_scheduler = ppsci.optimizer.lr_scheduler.SchedulerList(
+                tuple(
+                    opt._learning_rate
+                    for opt in self.optimizer
+                    if isinstance(opt._learning_rate, optim.lr.LRScheduler)
+                )
+            )
 
         # set training hyper-parameter
         self.epochs = epochs
