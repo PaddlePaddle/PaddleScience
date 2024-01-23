@@ -160,7 +160,7 @@ def build_dataloader(_dataset, cfg):
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
-            # TODO: Do not enable persistent_workers' below for
+            # TODO: Do not enable 'persistent_workers' below for
             # 'IndexError: pop from empty list ...' will be raised in certain cases
             # persistent_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS) > 0,
         )
