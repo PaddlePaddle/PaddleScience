@@ -92,6 +92,8 @@ class InitCallback(Callback):
         # initialze logger while creating output directory
         logger.init_logger(
             "ppsci",
-            osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log"),
+            osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
+            if full_cfg.output_dir
+            else None,
             full_cfg.log_level,
         )
