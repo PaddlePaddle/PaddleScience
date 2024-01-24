@@ -91,9 +91,7 @@ class Solver:
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
-            Deprecated now and it is recommended defined as `cfg.use_amp` in config yaml.
-        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O0".
-            Deprecated now and it is recommended defined as `cfg.amp_level` in config yaml.
+        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O1".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
             Deprecated now and it is recommended defined as `cfg.TRAIN.pretrained_model_path` or `cfg.EVAL.pretrained_model_path` in config yaml.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
@@ -160,7 +158,7 @@ class Solver:
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
         visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: Literal["O0", "O1", "O2", "OD"] = "O0",
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
@@ -184,20 +182,13 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        if lr_scheduler:
+        if lr_scheduler is not None:
             logger.warning(
-                "'lr_scheduler' is now deprecated, "
-                "recommend you to remove it from arguments of Solver(...)"
+                "The argument: 'lr_scheduler' now automatically retrieves from "
+                "'optimizer._learning_rate' when 'optimizer' is given, so it is "
+                "recommended to remove it from the Solver's initialization arguments."
             )
-        if geom:
-            logger.warning(
-                "'geom' is now deprecated, "
-                "recommend you to remove it from arguments of Solver(...)"
-            )
-
         self.lr_scheduler = (
-            # TODO: remove arg for we don't need it anymore, this can be get from
-            # optimizer._learning_rate
             optimizer._learning_rate
             if (
                 isinstance(optimizer, optim.Optimizer)
@@ -205,22 +196,29 @@ class Solver:
             )
             else None
         )
+        if isinstance(self.optimizer, ppsci.optimizer.OptimizerList):
+            self.lr_scheduler = ppsci.optimizer.lr_scheduler.SchedulerList(
+                tuple(
+                    opt._learning_rate
+                    for opt in self.optimizer
+                    if isinstance(opt._learning_rate, optim.lr.LRScheduler)
+                )
+            )
 
-        if cfg is None:
-            # set training hyper-parameter
-            self.epochs = epochs
-            self.iters_per_epoch = iters_per_epoch
-            # set update_freq for gradient accumulation
-            self.update_freq = update_freq
-            # set checkpoint saving frequency
-            self.save_freq = save_freq
-            # set logging frequency
-            self.log_freq = log_freq
+        # set training hyper-parameter
+        self.epochs = epochs
+        self.iters_per_epoch = iters_per_epoch
+        # set update_freq for gradient accumulation
+        self.update_freq = update_freq
+        # set checkpoint saving frequency
+        self.save_freq = save_freq
+        # set logging frequency
+        self.log_freq = log_freq
 
-            # set evaluation hyper-parameter
-            self.eval_during_train = eval_during_train
-            self.start_eval_epoch = start_eval_epoch
-            self.eval_freq = eval_freq
+        # set evaluation hyper-parameter
+        self.eval_during_train = eval_during_train
+        self.start_eval_epoch = start_eval_epoch
+        self.eval_freq = eval_freq
 
         # initialize training log(training loss, time cost, etc.) recorder during one epoch
         self.train_output_info: Dict[str, misc.AverageMeter] = {}

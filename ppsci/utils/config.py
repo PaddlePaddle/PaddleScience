@@ -219,7 +219,7 @@ if importlib.util.find_spec("pydantic") is not None:
         wandb_config: Optional[Mapping] = None
         device: Literal["cpu", "gpu", "xpu"] = "gpu"
         use_amp: bool = False
-        amp_level: Literal["O0", "O1", "O2", "0D"] = "O0"
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
         to_static: bool = False
         log_level: Literal["debug", "info", "warning", "error"] = "info"
 
@@ -244,7 +244,7 @@ if importlib.util.find_spec("pydantic") is not None:
         def log_freq_check(cls, v):
             if not isinstance(v, int):
                 raise ValueError(
-                    "'log_freq' should be a int" f", but got {misc.typename(v)}"
+                    f"'log_freq' should be a int, but got {misc.typename(v)}"
                 )
             elif v <= 0:
                 raise ValueError(
@@ -277,7 +277,7 @@ if importlib.util.find_spec("pydantic") is not None:
                 )
             if not isinstance(info.data["wandb_config"], dict):
                 raise ValueError(
-                    f"'wandb_config' should be a dict when 'use_wandb' is True, "
+                    "'wandb_config' should be a dict when 'use_wandb' is True, "
                     f"but got {misc.typename(info.data['wandb_config'])}"
                 )
             return v
