@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import copy
 
+from ppsci.arch.phycrnet import PhyCRNet
+
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
@@ -36,6 +38,7 @@ from ppsci.arch.nowcastnet import NowcastNet  # isort:skip
 from ppsci.arch.uscnn import USCNN  # isort:skip
 from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
 from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
+from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -56,9 +59,11 @@ __all__ = [
     "PrecipNet",
     "UNetEx",
     "Epnn",
+    "PhyCRNet",
     "NowcastNet",
     "USCNN",
     "HEDeepONets",
+    "AutoEncoder",
     "build_model",
     "CFDGCN",
 ]

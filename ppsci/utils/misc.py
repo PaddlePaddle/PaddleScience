@@ -523,6 +523,15 @@ def run_at_rank0(func: Callable) -> Callable:
     Returns:
         Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> @misc.run_at_rank0
+        ... def func():
+        ...     print(f"now_rank is {paddle.distributed.get_rank()}")
+        >>> func()
+        now_rank is 0
     """
 
     @functools.wraps(func)
@@ -573,13 +582,16 @@ def plot_curve(
     plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
-        loc="lower left",
+        loc="upper left",
+        bbox_to_anchor=(1, 1),
     )
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
+    plt.tight_layout()
 
-    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
+    plt.close()

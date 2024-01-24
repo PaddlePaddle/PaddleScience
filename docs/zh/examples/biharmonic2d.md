@@ -114,7 +114,7 @@ examples/biharmonic2d/biharmonic2d.py:93:95
 
 ``` py linenums="97"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:97:108
+examples/biharmonic2d/biharmonic2d.py:97:106
 --8<--
 ```
 
@@ -122,9 +122,9 @@ examples/biharmonic2d/biharmonic2d.py:97:108
 
 以作用在背板内部点的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="207"
+``` py linenums="205"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:207:216
+examples/biharmonic2d/biharmonic2d.py:205:214
 --8<--
 ```
 
@@ -158,19 +158,19 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:60:62
 
 #### 3.4.2 边界约束
 
-如 [2 问题定义](#2) 中所述，$x=0$ 处的挠度 $w$ 为 0，有如下边界条件，其他 7 个边界条件也与之类似：
+如 [2. 问题定义](#2) 中所述，$x=0$ 处的挠度 $w$ 为 0，有如下边界条件，其他 7 个边界条件也与之类似：
 
-``` py linenums="111"
+``` py linenums="108"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:111:120
+examples/biharmonic2d/biharmonic2d.py:108:118
 --8<--
 ```
 
 在方程约束、边界约束构建完毕之后，以刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="217"
+``` py linenums="215"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:217:228
+examples/biharmonic2d/biharmonic2d.py:215:226
 --8<--
 ```
 
@@ -198,9 +198,9 @@ examples/biharmonic2d/conf/biharmonic2d.yaml:46:56
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练，注意两个优化过程需要分别构建 `Solver`。
 
-``` py linenums="230"
+``` py linenums="228"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:230:269
+examples/biharmonic2d/biharmonic2d.py:228:267
 --8<--
 ```
 
@@ -208,9 +208,9 @@ examples/biharmonic2d/biharmonic2d.py:230:269
 
 训练完成后，可以在 `eval` 模式中对训练好的模型进行评估和可视化。由于案例的特殊性，不需构建评估器和可视化器，而是使用自定义代码。
 
-``` py linenums="272"
+``` py linenums="270"
 --8<--
-examples/biharmonic2d/biharmonic2d.py:272:352
+examples/biharmonic2d/biharmonic2d.py:270:350
 --8<--
 ```
 
