@@ -398,8 +398,8 @@ class Solver:
                         exprs,
                         self.model,
                         extra_parameters=extra_parameters,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual"),  # HACK: Activate it for DEBUG.
                         fuse_derivative=True,
-                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
                     )
                     ind = 0
                     for name in container.output_expr:
@@ -686,13 +686,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "O1", "O2", "OD"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.

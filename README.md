@@ -145,9 +145,6 @@ python -c "import paddle; paddle.utils.run_check()"
 
         cd PaddleScience
 
-        # windows 用户安装前请执行如下命令，否则可能因为gbk编码问题导致安装失败
-        set PYTHONUTF8=1
-
         # install paddlesci with editable mode
         pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
         ```

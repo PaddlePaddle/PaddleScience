@@ -602,7 +602,183 @@ solver = ppsci.solver.Solver(
 )
 ```
 
-### 2.12 训练
+### 2.12 编写配置文件[重要]
+
+经过上述步骤的开发，案例代码的主要部分已经完成。
+当我们想基于这份代码运行一些调优实验，从而得到更好的结果，或更好地对运行参数设置进行管理，
+则可以利用 PaddleScience 提供的配置管理系统，将实验运行参数从代码中分离出来，写到 `yaml` 格式的配置文件中，从而更好的管理、记录、调优实验。
+
+以 `bracket` 案例代码为例，在运行时我们需要在适当的位置设置方程参数、STL 文件路径、训练轮数、`batch_size`、随机种子、学习率等超参数，如下所示
+
+``` shell
+...
+# specify parameters
+LAMBDA_ = NU * E / ((1 + NU) * (1 - 2 * NU))
+MU = E / (2 * (1 + NU))
+MU_C = 0.01 * MU
+LAMBDA_ = LAMBDA_ / MU_C
+MU = MU / MU_C
+SIGMA_NORMALIZATION = CHARACTERISTIC_LENGTH / (
+    CHARACTERISTIC_DISPLACEMENT * MU_C
+)
+T = -4.0e4 * SIGMA_NORMALIZATION
+...
+...
+# set geometry
+support = ppsci.geometry.Mesh(SUPPORT_PATH)
+bracket = ppsci.geometry.Mesh(BRACKET_PATH)
+aux_lower = ppsci.geometry.Mesh(AUX_LOWER_PATH)
+aux_upper = ppsci.geometry.Mesh(AUX_UPPER_PATH)
+cylinder_hole = ppsci.geometry.Mesh(CYLINDER_HOLE_PATH)
+cylinder_lower = ppsci.geometry.Mesh(CYLINDER_LOWER_PATH)
+cylinder_upper = ppsci.geometry.Mesh(CYLINDER_UPPER_PATH)
+...
+...
+# initialize solver
+solver = ppsci.solver.Solver(
+    model,
+    constraint,
+    output_dir,
+    optimizer,
+    lr_scheduler,
+    epochs,
+    iters_per_epoch,
+    save_freq=save_freq,
+    log_freq=log_freq,
+    eval_during_train=eval_during_train,
+    eval_freq=eval_freq,
+    seed=seed,
+    equation=equation,
+    geom=geom,
+    validator=validator,
+    visualizer=visualizer,
+    checkpoint_path=checkpoint_path,
+    eval_with_no_grad=eval_with_no_grad,
+)
+...
+```
+
+这些参数在实验过程中随时可能作为变量而被手动调整，在调整过程中如何避免频繁修改源代码导致试验记录混乱、保障记录完整可追溯便是一大问题，因此 PaddleScience 提供了基于 hydra + omegaconf 的
+配置文件管理系统来解决这一问题。
+
+将已有的代码修改成配置文件控制的方式非常简单，只需要将必要的参数写到 `yaml` 文件中，然后通过 hydra 在程序运行时读取、解析该文件，通过其内容控制实验运行即可。具体包含以下几个步骤。
+
+1. 假设代码文件为 `demo.py`，则需在代码文件所在目录下新建 `conf` 文件夹，并在 `conf` 下新建与 `demo.py` 同名的 `demo.yaml` 文件。
+2. 参考 `examples/bracket/conf/bracket.yaml`，将 `demo.py` 中必要的超参数按照其语义填写到 `demo.yaml` 的各个层级的配置中，如 `mode`、`output_dir`、`seed`、方程参数、文件路径等参数为通用参数，直接填写在一级层级；而模型结构参数、训练轮数等参数则只与模型、训练相关，只需分别填写在 `MODEL`、`TRAIN` 层级下即可（`EVAL` 层级同理）。
+3. 将已有的 `train` 和 `eval` 函数修改为接受一个参数 `cfg`（`cfg` 即为读取进来的 `yaml` 文件里的内容，并以字典的形式存储），并将其内部的超参数统一改为通过 `cfg.xxx` 获取而非原先的直接设置为数字或字符串。
+4. 新建一个 `main` 函数（同样接受且只接受一个 `cfg` 参数），它负责根据 `cfg.mode` 来调用 `train` 或 `eval` 函数。最后给 `main` 函数加上装饰器 `@hydra.main(version_base=None, config_path="./conf", config_name="demo.yaml")`。
+5. 在主程序的启动入口 `if __name__ == "__main__":` 中启动 `main()` 即可。
+
+全部填写完毕后，`demo.yaml` 大致如下所示。
+
+``` yaml hl_lines="4 26-29 32-35 38-44 58-72 75-97 100-104"
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_bracket/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} # (1)
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval (2)
+seed: 2023 # (3)
+output_dir: ${hydra:run.dir} # (4)
+log_freq: 20 # (5)
+
+# set working condition (6)
+NU: 0.3
+E: 100.0e9
+CHARACTERISTIC_LENGTH: 1.0
+CHARACTERISTIC_DISPLACEMENT: 1.0e-4
+
+# set geometry file path (7)
+SUPPORT_PATH: ./stl/support.stl
+BRACKET_PATH: ./stl/bracket.stl
+AUX_LOWER_PATH: ./stl/aux_lower.stl
+AUX_UPPER_PATH: ./stl/aux_upper.stl
+CYLINDER_HOLE_PATH: ./stl/cylinder_hole.stl
+CYLINDER_LOWER_PATH: ./stl/cylinder_lower.stl
+CYLINDER_UPPER_PATH: ./stl/cylinder_upper.stl
+
+# set evaluate data path (8)
+DEFORMATION_X_PATH: ./data/deformation_x.txt
+DEFORMATION_Y_PATH: ./data/deformation_y.txt
+DEFORMATION_Z_PATH: ./data/deformation_z.txt
+NORMAL_X_PATH: ./data/normal_x.txt
+NORMAL_Y_PATH: ./data/normal_y.txt
+NORMAL_Z_PATH: ./data/normal_z.txt
+SHEAR_XY_PATH: ./data/shear_xy.txt
+SHEAR_XZ_PATH: ./data/shear_xz.txt
+SHEAR_YZ_PATH: ./data/shear_yz.txt
+
+# model settings (9)
+MODEL:
+  disp_net:
+    input_keys: ["x", "y", "z"]
+    output_keys: ["u", "v", "w"]
+    num_layers: 6
+    hidden_size: 512
+    activation: "silu"
+    weight_norm: true
+  stress_net:
+    input_keys: ["x", "y", "z"]
+    output_keys: ["sigma_xx", "sigma_yy", "sigma_zz", "sigma_xy", "sigma_xz", "sigma_yz"]
+    num_layers: 6
+    hidden_size: 512
+    activation: "silu"
+    weight_norm: true
+
+# training settings
+TRAIN: # (10)
+  epochs: 2000 # (11)
+  iters_per_epoch: 1000 # (12)
+  save_freq: 20 # (13)
+  eval_during_train: true # (14)
+  eval_freq: 20 # (15)
+  lr_scheduler: # (16)
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    learning_rate: 0.001
+    gamma: 0.95
+    decay_steps: 15000
+    by_epoch: false
+  batch_size: # (17)
+    bc_back: 1024
+    bc_front: 128
+    bc_surface: 4096
+    support_interior: 2048
+    bracket_interior: 1024
+  weight: # (18)
+    bc_back: {"u": 10, "v": 10, "w": 10}
+  pretrained_model_path: null # (19)
+  checkpoint_path: null # (20)
+
+# evaluation settings
+EVAL: # (21)
+  pretrained_model_path: null # (22)
+  eval_with_no_grad: true # (23)
+  batch_size: # (24)
+    sup_validator: XXX
+```
+
+### 2.13 训练
 
 PaddleScience 模型的训练只需调用一行代码。
 
@@ -610,7 +786,7 @@ PaddleScience 模型的训练只需调用一行代码。
 solver.train()
 ```
 
-### 2.13 评估
+### 2.14 评估
 
 PaddleScience 模型的评估只需调用一行代码。
 
@@ -618,7 +794,7 @@ PaddleScience 模型的评估只需调用一行代码。
 solver.eval()
 ```
 
-### 2.14 可视化[可选]
+### 2.15 可视化[可选]
 
 若 `Solver` 实例化时传入了 `visualizer` 参数，则 PaddleScience 模型的可视化只需调用一行代码。
 
