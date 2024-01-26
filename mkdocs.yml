@@ -149,6 +149,7 @@ theme:
   icon:
     edit: material/pencil
     view: material/eye
+    annotation: fontawesome/solid/circle-question
   palette:
     # Palette toggle for light mode
     - scheme: default

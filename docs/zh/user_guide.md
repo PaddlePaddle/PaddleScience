@@ -125,7 +125,7 @@ TRAIN:
 
 ``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
-└──2023-10-14 # (1)
+└── 2023-10-14 # (1)
     └── 04-01-52 # (2)
         ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
         │   └── multirun.yaml # multirun 配置文件 (3)

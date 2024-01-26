@@ -6,7 +6,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
 
 ## 1. 准备工作
 
-1. 将 PaddleScience fork 到**自己的仓库**
+1. 在网页上将 PaddleScience fork 到**自己的仓库**
 2. 克隆**自己仓库**里的 PaddleScience 到本地，并进入该目录
 
     ``` sh
@@ -14,7 +14,7 @@ PaddleScience 相关的论文复现、API 开发任务开始之前需提交 RFC 
     cd PaddleScience
     ```
 
-    上方 `clone` 命令中的 `USER_NAME` 字段请填入的自己的用户名。
+    上方 `clone` 命令中的 `USER_NAME` 字段请填入自己的 github 用户名。
 
 3. 安装必要的依赖包
 
@@ -604,179 +604,171 @@ solver = ppsci.solver.Solver(
 
 ### 2.12 编写配置文件[重要]
 
-经过上述步骤的开发，案例代码的主要部分已经完成。
-当我们想基于这份代码运行一些调优实验，从而得到更好的结果，或更好地对运行参数设置进行管理，
-则可以利用 PaddleScience 提供的配置管理系统，将实验运行参数从代码中分离出来，写到 `yaml` 格式的配置文件中，从而更好的管理、记录、调优实验。
+??? info "内容较长，点击展开"
 
-以 `bracket` 案例代码为例，在运行时我们需要在适当的位置设置方程参数、STL 文件路径、训练轮数、`batch_size`、随机种子、学习率等超参数，如下所示
+    经过上述步骤的开发，案例代码的主要部分已经完成。
+    当我们想基于这份代码运行一些调优实验，从而得到更好的结果，或更好地对运行参数设置进行管理，
+    则可以利用 PaddleScience 提供的配置管理系统，将实验运行参数从代码中分离出来，写到 `yaml` 格式的配置文件中，从而更好的管理、记录、调优实验。
 
-``` shell
-...
-# specify parameters
-LAMBDA_ = NU * E / ((1 + NU) * (1 - 2 * NU))
-MU = E / (2 * (1 + NU))
-MU_C = 0.01 * MU
-LAMBDA_ = LAMBDA_ / MU_C
-MU = MU / MU_C
-SIGMA_NORMALIZATION = CHARACTERISTIC_LENGTH / (
-    CHARACTERISTIC_DISPLACEMENT * MU_C
-)
-T = -4.0e4 * SIGMA_NORMALIZATION
-...
-...
-# set geometry
-support = ppsci.geometry.Mesh(SUPPORT_PATH)
-bracket = ppsci.geometry.Mesh(BRACKET_PATH)
-aux_lower = ppsci.geometry.Mesh(AUX_LOWER_PATH)
-aux_upper = ppsci.geometry.Mesh(AUX_UPPER_PATH)
-cylinder_hole = ppsci.geometry.Mesh(CYLINDER_HOLE_PATH)
-cylinder_lower = ppsci.geometry.Mesh(CYLINDER_LOWER_PATH)
-cylinder_upper = ppsci.geometry.Mesh(CYLINDER_UPPER_PATH)
-...
-...
-# initialize solver
-solver = ppsci.solver.Solver(
-    model,
-    constraint,
-    output_dir,
-    optimizer,
-    lr_scheduler,
-    epochs,
-    iters_per_epoch,
-    save_freq=save_freq,
-    log_freq=log_freq,
-    eval_during_train=eval_during_train,
-    eval_freq=eval_freq,
-    seed=seed,
-    equation=equation,
-    geom=geom,
-    validator=validator,
-    visualizer=visualizer,
-    checkpoint_path=checkpoint_path,
-    eval_with_no_grad=eval_with_no_grad,
-)
-...
-```
+    以 `viv` 案例代码为例，在运行时我们需要在适当的位置设置方程参数、STL 文件路径、训练轮数、`batch_size`、随机种子、学习率等超参数，如下所示。
 
-这些参数在实验过程中随时可能作为变量而被手动调整，在调整过程中如何避免频繁修改源代码导致试验记录混乱、保障记录完整可追溯便是一大问题，因此 PaddleScience 提供了基于 hydra + omegaconf 的
-配置文件管理系统来解决这一问题。
+    ``` py
+    ...
+    # set dataloader config
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "MatDataset",
+            "file_path": cfg.VIV_DATA_PATH,
+            "input_keys": ("t_f",),
+            "label_keys": ("eta", "f"),
+            "weight_dict": {"eta": 100},
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": False,
+            "shuffle": True,
+        },
+    }
+    ...
+    ...
+    # set optimizer
+    lr_scheduler = ppsci.optimizer.lr_scheduler.Step(**cfg.TRAIN.lr_scheduler)()
+    ...
+    ```
 
-将已有的代码修改成配置文件控制的方式非常简单，只需要将必要的参数写到 `yaml` 文件中，然后通过 hydra 在程序运行时读取、解析该文件，通过其内容控制实验运行即可。具体包含以下几个步骤。
+    这些参数在实验过程中随时可能作为变量而被手动调整，在调整过程中如何避免频繁修改源代码导致试验记录混乱、保障记录完整可追溯便是一大问题，因此 PaddleScience 提供了基于 hydra + omegaconf 的
+    配置文件管理系统来解决这一问题。
 
-1. 假设代码文件为 `demo.py`，则需在代码文件所在目录下新建 `conf` 文件夹，并在 `conf` 下新建与 `demo.py` 同名的 `demo.yaml` 文件。
-2. 参考 `examples/bracket/conf/bracket.yaml`，将 `demo.py` 中必要的超参数按照其语义填写到 `demo.yaml` 的各个层级的配置中，如 `mode`、`output_dir`、`seed`、方程参数、文件路径等参数为通用参数，直接填写在一级层级；而模型结构参数、训练轮数等参数则只与模型、训练相关，只需分别填写在 `MODEL`、`TRAIN` 层级下即可（`EVAL` 层级同理）。
-3. 将已有的 `train` 和 `eval` 函数修改为接受一个参数 `cfg`（`cfg` 即为读取进来的 `yaml` 文件里的内容，并以字典的形式存储），并将其内部的超参数统一改为通过 `cfg.xxx` 获取而非原先的直接设置为数字或字符串。
-4. 新建一个 `main` 函数（同样接受且只接受一个 `cfg` 参数），它负责根据 `cfg.mode` 来调用 `train` 或 `eval` 函数。最后给 `main` 函数加上装饰器 `@hydra.main(version_base=None, config_path="./conf", config_name="demo.yaml")`。
-5. 在主程序的启动入口 `if __name__ == "__main__":` 中启动 `main()` 即可。
+    将已有的代码修改成配置文件控制的方式非常简单，只需要将必要的参数写到 `yaml` 文件中，然后通过 hydra 在程序运行时读取、解析该文件，通过其内容控制实验运行即可，以 `bracket` 案例为例，具体包含以下几个步骤。
 
-全部填写完毕后，`demo.yaml` 大致如下所示。
+    1. 则需在代码文件 `bracket.py` 所在目录下新建 `conf` 文件夹，并在 `conf` 下新建与 `bracket.py` 同名的 `viv.yaml` 文件，如下所示。
 
-``` yaml hl_lines="4 26-29 32-35 38-44 58-72 75-97 100-104"
-hydra:
-  run:
-    # dynamic output directory according to running time and override name
-    dir: outputs_bracket/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname} # (1)
-  job:
-    name: ${mode} # name of logfile
-    chdir: false # keep current working direcotry unchaned
-    config:
-      override_dirname:
-        exclude_keys:
-          - TRAIN.checkpoint_path
-          - TRAIN.pretrained_model_path
-          - EVAL.pretrained_model_path
-          - mode
-          - output_dir
-          - log_freq
-  callbacks:
-    init_callback:
-      _target_: ppsci.utils.callbacks.InitCallback
-  sweep:
-    # output directory for multirun
-    dir: ${hydra.run.dir}
-    subdir: ./
+        ``` sh hl_lines="3-4"
+        PaddleScience/examples/fsi/
+        ├── viv.py
+        └── conf
+            └── viv.yaml
+        ```
 
-# general settings
-mode: train # running mode: train/eval (2)
-seed: 2023 # (3)
-output_dir: ${hydra:run.dir} # (4)
-log_freq: 20 # (5)
+    2. 将 `viv.py` 中必要的超参数按照其语义填写到 `viv.yaml` 的各个层级的配置中，如 `mode`、`output_dir`、`seed`、方程参数、文件路径等参数为通用参数，直接填写在一级层级；而模型结构参数、训练轮数等参数则只与模型、训练相关，只需分别填写在 `MODEL`、`TRAIN` 层级下即可（`EVAL` 层级同理）。
+    3. 将已有的 `train` 和 `evaluate` 函数修改为接受一个参数 `cfg`（`cfg` 即为读取进来的 `yaml` 文件里的内容，并以字典的形式存储），并将其内部的超参数统一改为通过 `cfg.xxx` 获取而非原先的直接设置为数字或字符串，如下所示。
 
-# set working condition (6)
-NU: 0.3
-E: 100.0e9
-CHARACTERISTIC_LENGTH: 1.0
-CHARACTERISTIC_DISPLACEMENT: 1.0e-4
+        ``` py
+        from omegaconf import DictConfig
 
-# set geometry file path (7)
-SUPPORT_PATH: ./stl/support.stl
-BRACKET_PATH: ./stl/bracket.stl
-AUX_LOWER_PATH: ./stl/aux_lower.stl
-AUX_UPPER_PATH: ./stl/aux_upper.stl
-CYLINDER_HOLE_PATH: ./stl/cylinder_hole.stl
-CYLINDER_LOWER_PATH: ./stl/cylinder_lower.stl
-CYLINDER_UPPER_PATH: ./stl/cylinder_upper.stl
+        def train(cfg: DictConfig):
+            # 训练代码...
 
-# set evaluate data path (8)
-DEFORMATION_X_PATH: ./data/deformation_x.txt
-DEFORMATION_Y_PATH: ./data/deformation_y.txt
-DEFORMATION_Z_PATH: ./data/deformation_z.txt
-NORMAL_X_PATH: ./data/normal_x.txt
-NORMAL_Y_PATH: ./data/normal_y.txt
-NORMAL_Z_PATH: ./data/normal_z.txt
-SHEAR_XY_PATH: ./data/shear_xy.txt
-SHEAR_XZ_PATH: ./data/shear_xz.txt
-SHEAR_YZ_PATH: ./data/shear_yz.txt
+        def evaluate(cfg: DictConfig):
+            # 评估代码...
+        ```
 
-# model settings (9)
-MODEL:
-  disp_net:
-    input_keys: ["x", "y", "z"]
-    output_keys: ["u", "v", "w"]
-    num_layers: 6
-    hidden_size: 512
-    activation: "silu"
-    weight_norm: true
-  stress_net:
-    input_keys: ["x", "y", "z"]
-    output_keys: ["sigma_xx", "sigma_yy", "sigma_zz", "sigma_xy", "sigma_xz", "sigma_yz"]
-    num_layers: 6
-    hidden_size: 512
-    activation: "silu"
-    weight_norm: true
+    4. 新建一个 `main` 函数（同样接受且只接受一个 `cfg` 参数），它负责根据 `cfg.mode` 来调用 `train` 或 `evaluate` 函数，并 `main` 函数加上装饰器 `@hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")`，如下所示。
 
-# training settings
-TRAIN: # (10)
-  epochs: 2000 # (11)
-  iters_per_epoch: 1000 # (12)
-  save_freq: 20 # (13)
-  eval_during_train: true # (14)
-  eval_freq: 20 # (15)
-  lr_scheduler: # (16)
-    epochs: ${TRAIN.epochs}
-    iters_per_epoch: ${TRAIN.iters_per_epoch}
-    learning_rate: 0.001
-    gamma: 0.95
-    decay_steps: 15000
-    by_epoch: false
-  batch_size: # (17)
-    bc_back: 1024
-    bc_front: 128
-    bc_surface: 4096
-    support_interior: 2048
-    bracket_interior: 1024
-  weight: # (18)
-    bc_back: {"u": 10, "v": 10, "w": 10}
-  pretrained_model_path: null # (19)
-  checkpoint_path: null # (20)
+        ``` py
+        @hydra.main(version_base=None, config_path="./conf", config_name="viv.yaml")
+        def main(cfg: DictConfig):
+            if cfg.mode == "train":
+                train(cfg)
+            elif cfg.mode == "eval":
+                evaluate(cfg)
+            else:
+                raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
-# evaluation settings
-EVAL: # (21)
-  pretrained_model_path: null # (22)
-  eval_with_no_grad: true # (23)
-  batch_size: # (24)
-    sup_validator: XXX
-```
+        ```
+
+    5. 在主程序的启动入口 `if __name__ == "__main__":` 中启动 `main()` 即可，如下所示。
+
+        ``` py
+        if __name__ == "__main__":
+            main()
+        ```
+
+    全部改造完毕后，`viv.py` 和 `viv.yaml` 如下所示。
+
+    === "examples/fsi/viv.py"
+
+        ``` py linenums="1"
+        --8<--
+        examples/fsi/viv.py
+        --8<--
+        ```
+
+    === "examples/fsi/conf/viv.yaml"
+
+        ``` yaml linenums="1" hl_lines="4 19 25 31 34 42 59"
+        hydra: # (1)
+        run:
+            # dynamic output directory according to running time and override name
+            dir: outputs_VIV/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+        job:
+            name: ${mode} # name of logfile
+            chdir: false # keep current working direcotry unchaned
+            config:
+            override_dirname:
+                exclude_keys:
+                - TRAIN.checkpoint_path
+                - TRAIN.pretrained_model_path
+                - EVAL.pretrained_model_path
+                - mode
+                - output_dir
+                - log_freq
+        callbacks:
+            init_callback:
+            _target_: ppsci.utils.callbacks.InitCallback # (2)
+        sweep:
+            # output directory for multirun
+            dir: ${hydra.run.dir}
+            subdir: ./
+
+        # general settings (3)
+        mode: train # running mode: train/eval
+        seed: 42
+        output_dir: ${hydra:run.dir}
+        log_freq: 20
+
+        # set data file path (4)
+        VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
+
+        # model settings (5)
+        MODEL:
+            input_keys: ["t_f"]
+            output_keys: ["eta"]
+            num_layers: 5
+            hidden_size: 50
+            activation: "tanh"
+
+        # training settings (6)
+        TRAIN:
+            epochs: 100000
+            iters_per_epoch: 1
+            save_freq: 10000
+            eval_during_train: true
+            eval_freq: 1000
+            batch_size: 100
+            lr_scheduler:
+                epochs: ${TRAIN.epochs}
+                iters_per_epoch: ${TRAIN.iters_per_epoch}
+                learning_rate: 0.001
+                step_size: 20000
+                gamma: 0.9
+            pretrained_model_path: null
+            checkpoint_path: null
+
+        # evaluation settings (7)
+        EVAL:
+            pretrained_model_path: null
+            batch_size: 32
+        ```
+
+        1. `hydra:` 下的配置段用于控制 hydra 运行时的一些行为，如输出目录、回调函数等，用户只需要修改 `dir:` 后的内容，即可控制输出目录，其余的字段一般不需关注。
+        2. `callbacks:` 下的配置段用于控制回调函数，如此处添加了负责程序运行前自动固定随机种子、初始化 logger 并创建输出目录的回调函数 `InitCallback`，一般不需要修改这里。
+        3. `general settings` 下的四个通用设置，包括运行模式 `mode`、随机数种子 `seed`、输出目录 `output_dir` 和日志记录频率 `log_freq`。
+        4. `set XXX file path` 下的字段，用于控制数据集的路径，如 `VIV_DATA_PATH` 等。
+        5. `MODEL` 下的字段，用于控制模型结构，如 `disp_net`、`stress_net` 等。
+        6. `TRAIN:` 下的字段，用于控制训练过程，如 `epochs`、`iters_per_epoch` 等
+        7. `EVAL:` 下的字段，用于控制评估过程，如 `pretrained_model_path`、`eval_with_no_grad` 等
 
 ### 2.13 训练
 
@@ -808,7 +800,7 @@ solver.visualize()
 
 ## 3. 编写文档
 
-除了案例代码，PaddleScience 同时存放了对应案例的详细文档，使用 Markdown + [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/) 进行编写和渲染，撰写文档步骤如下。
+除了案例代码，PaddleScience 同时存放了对应案例的详细文档，使用 Markdown + [Mkdocs](https://www.mkdocs.org/) + [Mkdocs-Material](https://squidfunk.github.io/mkdocs-material/) 进行编写和渲染，撰写文档步骤如下。
 
 ### 3.1 安装必要依赖包
 
@@ -862,7 +854,7 @@ PaddleScience 是一个开源的代码库，由多人共同参与开发，因此
 PaddleScience 使用了包括 [isort](https://github.com/PyCQA/isort#installing-isort)、[black](https://github.com/psf/black) 等自动化代码检查、格式化插件，
 让 commit 的代码遵循 python [PEP8](https://pep8.org/) 代码风格规范。
 
-因此在 commit 您的代码之前，请务必先执行以下命令安装 `pre-commit`。
+因此在 commit 您的代码之前，请务必先执行以下命令安装 `pre-commit`，否则提交的 PR 会被 code-style 检测到代码未格式化而无法合入。
 
 ``` sh
 pip install pre-commit
