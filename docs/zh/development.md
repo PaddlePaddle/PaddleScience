@@ -697,7 +697,7 @@ solver = ppsci.solver.Solver(
 
     === "examples/fsi/conf/viv.yaml"
 
-        ``` yaml linenums="1" hl_lines="4 19 25 31 34 42 59"
+        ``` yaml linenums="1" hl_lines="1 4 19 25 31 34 42 59"
         hydra: # (1)
         run:
             # dynamic output directory according to running time and override name

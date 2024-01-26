@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
+FROM registry.baidubce.com/paddlepaddle/paddle:2.6.0-gpu-cuda11.7-cudnn8.4-trt8.4
 
 RUN echo "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
 RUN echo "deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list

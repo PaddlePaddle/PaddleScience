@@ -493,10 +493,10 @@ class Solver:
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
-        """Finetune model based on given pretrained model.
+        """Finetune model based on given pretrained model path.
 
         Args:
-            pretrained_model_path (str): Pretrained model path.
+            pretrained_model_path (str): Pretrained model path or url.
         """
         # load pretrained model
         save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
