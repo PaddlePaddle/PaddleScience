@@ -10,11 +10,6 @@
 2. 执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可。
 3. 在 docker 环境中，执行 `ldconfig`
 
-!!! warning "python 3.7 退场说明"
-
-    本 docker 自带的 python3.7 已不再被 paddle 支持，因此建议进入 docker 后自行按照步骤 1.2，使用 Anaconda 重新安装 python3.9。
-    带有 python3.9 的 docker 镜像会在后续提供。
-
 ### 1.2 python 环境安装[可选]
 
 如果你还没有 python 环境或者 python 版本小于 3.9，则推荐使用 Anaconda 安装并配置 python 环境，否则可以忽略本步骤。
@@ -81,7 +76,7 @@
 #### 1.4.2 安装额外功能[可选]
 
 如需使用 `.obj`, `.ply`, `.off`, `.stl`, `.mesh`, `.node`, `.poly` and `.msh` 等复杂几何文件构建几何（计算域），以及使用加密采样等功能，则需按照下方给出的命令，安装 open3d、
-pybind11、pysdf、PyMesh 四个依赖库。
+pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动**中已安装上述依赖库)。
 
 否则无法使用 `ppsci.geometry.Mesh` 等基于复杂几何文件的 API，因此也无法运行如 [Aneurysm](./examples/aneurysm.md) 等依赖 `ppsci.geometry.Mesh` API 的复杂案例。
 

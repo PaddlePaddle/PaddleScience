@@ -41,6 +41,9 @@ class NamedArrayDataset(io.Dataset):
         >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         input: Dict[str, np.ndarray],
@@ -90,6 +93,9 @@ class IterableNamedArrayDataset(io.IterableDataset):
         >>> weight = {"u": np.random.randn(100, 1)}
         >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     def __init__(
         self,

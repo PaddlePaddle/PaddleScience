@@ -55,6 +55,9 @@ class LorenzDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -112,21 +115,21 @@ class LorenzDataset(io.Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, i):
+    def __getitem__(self, idx):
         # when embedding data is None
         if self.embedding_data is None:
-            data_item = self.data[i]
+            data_item = self.data[idx]
             input_item = {self.input_keys[0]: data_item}
             label_item = {
                 self.label_keys[0]: data_item[1:, :],
                 self.label_keys[1]: data_item,
             }
         else:
-            data_item = self.embedding_data[i]
+            data_item = self.embedding_data[idx]
             input_item = {self.input_keys[0]: data_item[:-1, :]}
             label_item = {self.label_keys[0]: data_item[1:, :]}
             if len(self.label_keys) == 2:
-                label_item[self.label_keys[1]] = self.data[i][1:, :]
+                label_item[self.label_keys[1]] = self.data[idx][1:, :]
 
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
@@ -159,6 +162,9 @@ class RosslerDataset(LorenzDataset):
         ...     "stride": 16,
         ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     def __init__(
         self,
@@ -213,6 +219,9 @@ class CylinderDataset(io.Dataset):
         ...     "stride": 16,
         ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     def __init__(
         self,

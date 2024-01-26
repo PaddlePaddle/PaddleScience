@@ -1,0 +1,51 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: output_RegAE/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working directory unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 1
+output_dir: ${hydra:run.dir}
+TRAIN_FILE_PATH: data.npz
+VALID_FILE_PATH: data.npz
+
+# model settings
+MODEL:
+  input_keys: ["p_train",]
+  output_keys: ["mu", "log_sigma", "decoder_z"]
+  input_dim: 10000
+  latent_dim: 100
+  hidden_dim: 100
+
+# training settings
+TRAIN:
+  epochs: 2
+  iters_per_epoch: 625
+  eval_during_train: False
+  save_freq: 200
+  eval_freq: 200
+  learning_rate: 0.0001
+  batch_size: 128
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: True
+  batch_size: 128

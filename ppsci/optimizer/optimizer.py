@@ -525,3 +525,6 @@ class OptimizerList:
 
     def __setitem__(self, idx, opt):
         raise NotImplementedError("Can not modify any item in OptimizerList.")
+
+    def __iter__(self):
+        yield from iter(self._opt_list)
