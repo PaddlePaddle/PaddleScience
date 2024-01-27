@@ -202,9 +202,9 @@ PaddleScience/examples/bracket/outputs_bracket/
 
     ``` py hl_lines="12 13 14 15 16"
     N = 100 # 假设要预测100个样本的结果
-    x = np.random.randn(N, 1) # 准备 字段
-    y = np.random.randn(N, 1)
-    z = np.random.randn(N, 1)
+    x = np.random.randn(N, 1) # 输入数据x
+    y = np.random.randn(N, 1) # 输入数据y
+    z = np.random.randn(N, 1) # 输入数据z
 
     input_dict = {
         "x": x,
