@@ -46,7 +46,7 @@ tar -xvf yinglong_models.tar
 
 ### 2. Run the code
 
-The following code runs the Yinglong model, and the model output will be saved in 'result.npy'.
+The following code runs the Yinglong model, and the model output will be saved in 'output/result.npy'.
 
 ``` shell
 export PYTHONPATH=$PWD
