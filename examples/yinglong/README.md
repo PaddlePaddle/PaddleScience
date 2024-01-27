@@ -49,5 +49,6 @@ tar -xvf yinglong_models.tar
 The following code runs the Yinglong model, and the model output will be saved in 'result.npy'.
 
 ``` shell
+export PYTHONPATH=$PWD
 python examples/yinglong/predict_12layers.py
 ```
