@@ -82,31 +82,31 @@ def parse_args():
     parser.add_argument(
         "--model_file",
         type=str,
-        default="../yinglong_models/yinglong_12.pdmodel",
+        default="./yinglong_models/yinglong_12.pdmodel",
         help="Model filename",
     )
     parser.add_argument(
         "--params_file",
         type=str,
-        default="../yinglong_models/yinglong_12.pdiparams",
+        default="./yinglong_models/yinglong_12.pdiparams",
         help="Parameter filename",
     )
     parser.add_argument(
         "--mean_path",
         type=str,
-        default="../hrrr_example_24vars/stat/mean_crop.npy",
+        default="./hrrr_example_24vars/stat/mean_crop.npy",
         help="Mean filename",
     )
     parser.add_argument(
         "--std_path",
         type=str,
-        default="../hrrr_example_24vars/stat/std_crop.npy",
+        default="./hrrr_example_24vars/stat/std_crop.npy",
         help="Standard deviation filename",
     )
     parser.add_argument(
         "--input_file",
         type=str,
-        default="../hrrr_example_24vars/valid/2022/01/01.h5",
+        default="./hrrr_example_24vars/valid/2022/01/01.h5",
         help="Input filename",
     )
     parser.add_argument(
@@ -115,7 +115,7 @@ def parse_args():
     parser.add_argument(
         "--nwp_file",
         type=str,
-        default="../hrrr_example_24vars/nwp_convert/2022/01/01/00.h5",
+        default="./hrrr_example_24vars/nwp_convert/2022/01/01/00.h5",
         help="NWP filename",
     )
     parser.add_argument(
