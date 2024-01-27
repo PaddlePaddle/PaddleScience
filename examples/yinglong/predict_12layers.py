@@ -1,29 +1,11 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import argparse
-from os import path as osp
 
 import h5py
 import numpy as np
-import paddle
 import paddle.inference as paddle_infer
 import pandas as pd
-from packaging import version
 
 from examples.yinglong.timefeatures import time_features
-from ppsci.utils import logger
 
 
 class YingLong:
@@ -100,31 +82,31 @@ def parse_args():
     parser.add_argument(
         "--model_file",
         type=str,
-        default="./yinglong_models/yinglong_12.pdmodel",
+        default="../yinglong_models/yinglong_12.pdmodel",
         help="Model filename",
     )
     parser.add_argument(
         "--params_file",
         type=str,
-        default="./yinglong_models/yinglong_12.pdiparams",
+        default="../yinglong_models/yinglong_12.pdiparams",
         help="Parameter filename",
     )
     parser.add_argument(
         "--mean_path",
         type=str,
-        default="./hrrr_example_24vars/stat/mean_crop.npy",
+        default="../hrrr_example_24vars/stat/mean_crop.npy",
         help="Mean filename",
     )
     parser.add_argument(
         "--std_path",
         type=str,
-        default="./hrrr_example_24vars/stat/std_crop.npy",
+        default="../hrrr_example_24vars/stat/std_crop.npy",
         help="Standard deviation filename",
     )
     parser.add_argument(
         "--input_file",
         type=str,
-        default="./hrrr_example_24vars/valid/2022/01/01.h5",
+        default="../hrrr_example_24vars/valid/2022/01/01.h5",
         help="Input filename",
     )
     parser.add_argument(
@@ -133,14 +115,14 @@ def parse_args():
     parser.add_argument(
         "--nwp_file",
         type=str,
-        default="./hrrr_example_24vars/nwp_convert/2022/01/01/00.h5",
+        default="../hrrr_example_24vars/nwp_convert/2022/01/01/00.h5",
         help="NWP filename",
     )
     parser.add_argument(
         "--num_timestamps", type=int, default=22, help="Number of timestamps"
     )
     parser.add_argument(
-        "--output_path", type=str, default="output", help="Output file path"
+        "--output", type=str, default="result.npy", help="Output filename"
     )
 
     return parser.parse_args()
@@ -148,15 +130,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    logger.init_logger("ppsci", osp.join(args.output_path, "predict.log"), "info")
-    if version.Version(paddle.__version__) != version.Version("2.5.2"):
-        logger.error(
-            f"Your Paddle version is {paddle.__version__}, but this code currently "
-            "only supports PaddlePaddle 2.5.2. The latest version of Paddle will be "
-            "supported as soon as possible."
-        )
-        exit()
-
     num_timestamps = args.num_timestamps
 
     # create predictor
@@ -179,10 +152,7 @@ def main():
 
     # run predictor
     output_data = predictor(input_data, time_stamps, nwp_data)
-
-    save_path = osp.join(args.output_path, "result.npy")
-    logger.info(f"Save output to {save_path}")
-    np.save(save_path, output_data)
+    np.save(args.output, output_data)
 
 
 if __name__ == "__main__":

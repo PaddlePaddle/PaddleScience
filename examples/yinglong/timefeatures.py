@@ -1,4 +1,3 @@
-# This code is reference from https://github.com/zhouhaoyi/Informer2020
 from typing import List
 
 import numpy as np
