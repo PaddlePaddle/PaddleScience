@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import argparse
+from os import path as osp
 
 import h5py
 import numpy as np
+import paddle
 import paddle.inference as paddle_infer
 import pandas as pd
+from packaging import version
 
 from examples.yinglong.timefeatures import time_features
+from ppsci.utils import logger
 
 
 class YingLong:
@@ -136,7 +140,7 @@ def parse_args():
         "--num_timestamps", type=int, default=22, help="Number of timestamps"
     )
     parser.add_argument(
-        "--output", type=str, default="result.npy", help="Output filename"
+        "--output_path", type=str, default="output", help="Output file path"
     )
 
     return parser.parse_args()
@@ -144,6 +148,15 @@ def parse_args():
 
 def main():
     args = parse_args()
+    logger.init_logger("ppsci", osp.join(args.output_path, "predict.log"), "info")
+    if version.Version(paddle.__version__) != version.Version("2.5.2"):
+        logger.error(
+            f"Your Paddle version is {paddle.__version__}, but this code currently "
+            "only supports PaddlePaddle 2.5.2. The latest version of Paddle will be "
+            "supported as soon as possible."
+        )
+        exit()
+
     num_timestamps = args.num_timestamps
 
     # create predictor
@@ -166,7 +179,10 @@ def main():
 
     # run predictor
     output_data = predictor(input_data, time_stamps, nwp_data)
-    np.save(args.output, output_data)
+
+    save_path = osp.join(args.output_path, "result.npy")
+    logger.info(f"Save output to {save_path}")
+    np.save(save_path, output_data)
 
 
 if __name__ == "__main__":
