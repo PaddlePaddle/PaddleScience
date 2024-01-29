@@ -4,9 +4,9 @@ YingLong, a high-resolution, short-term regional weather forecasting, artificial
 
 This code is the implementation of YingLong. We select the southeastern region of the United States, which is around the range of 110-130E, 15-35N, with 440 × 408 grid points in Lambert projection.
 
-<center>
+<div align=center>
     <img src="./doc/fig_arch1.jpg" width="70%" height="auto" >
-</center>
+</div>
 
 ## Installation
 
@@ -59,6 +59,6 @@ python examples/yinglong/predict_12layers.py
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022,
 
-<center>
+<div align=center>
     <img src="./doc/result.gif" width="70%" height="auto" >
-</center>
+</div>
