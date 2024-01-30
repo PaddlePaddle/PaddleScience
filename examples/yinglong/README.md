@@ -44,6 +44,8 @@ git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
 cd PaddleScience
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_24vars.tar
 tar -xvf hrrr_example_24vars.tar
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_69vars.tar
+tar -xvf hrrr_example_69vars.tar
 wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/yinglong_models.tar
 tar -xvf yinglong_models.tar
 ```
@@ -54,7 +56,10 @@ The following code runs the Yinglong model, and the model output will be saved i
 
 ``` shell
 export PYTHONPATH=$PWD
+# YingLong-12 Layers
 python examples/yinglong/predict_12layers.py
+# YingLong-24 Layers
+python examples/yinglong/predict_24layers.py
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022,
