@@ -59,7 +59,7 @@ export PYTHONPATH=$PWD
 # YingLong-12 Layers
 python examples/yinglong/predict_12layers.py
 # YingLong-24 Layers
-python examples/yinglong/predict_24layers.py
+# python examples/yinglong/predict_24layers.py
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022,
