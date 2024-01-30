@@ -1,0 +1,54 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_nsfnet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchaned
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+seed: 1234
+output_dir: ${hydra:run.dir}
+data_dir: ./data/
+MODEL:
+  input_keys: ["x", "y","z","t"]
+  output_keys: ["u", "v", "w","p"]
+  num_layers: 10
+  hidden_size: 300
+  activation: "tanh"
+  weight_norm: True
+mode: train
+ntrain: 11333
+nb_train: 2952
+n0_train: 986
+alpha: 100
+beta: 100
+re: 999.35
+epochs: 15250
+TRAIN:
+  log_freq: 5000
+  eval_freq: 5000
+  save_freq: 5000
+  eval_with_no_grad: true
+  lr_scheduler:
+    epochs: 15250
+    decay_epochs: [250, 4500, 5000, 5500]
+    iters_per_epoch: 150
+    values: [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true
+
