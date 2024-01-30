@@ -17,83 +17,11 @@ from os import path as osp
 
 import h5py
 import numpy as np
-import paddle
-import paddle.inference as paddle_infer
 import pandas as pd
-from packaging import version
 
-from examples.yinglong.timefeatures import time_features
+from examples.yinglong.plot import save_plot_weather_from_dict
+from examples.yinglong.predictor import YingLong
 from ppsci.utils import logger
-from ppsci.visualize import save_plot_weather_from_dict
-
-
-class YingLong:
-    def __init__(
-        self, model_file: str, params_file: str, mean_path: str, std_path: str
-    ):
-        self.model_file = model_file
-        self.params_file = params_file
-
-        config = paddle_infer.Config(model_file, params_file)
-        config.switch_ir_optim(False)
-        config.enable_use_gpu(100, 0)
-        config.enable_memory_optim()
-
-        self.predictor = paddle_infer.create_predictor(config)
-
-        # get input names and data handles
-        self.input_names = self.predictor.get_input_names()
-        self.input_data_handle = self.predictor.get_input_handle(self.input_names[0])
-        self.time_stamps_handle = self.predictor.get_input_handle(self.input_names[1])
-        self.nwp_data_handle = self.predictor.get_input_handle(self.input_names[2])
-
-        # get output names and data handles
-        self.output_names = self.predictor.get_output_names()
-        self.output_handle = self.predictor.get_output_handle(self.output_names[0])
-
-        # load mean and std data
-        self.mean = np.load(mean_path).reshape(-1, 1, 1).astype(np.float32)
-        self.std = np.load(std_path).reshape(-1, 1, 1).astype(np.float32)
-
-    def _preprocess_data(self, input_data, time_stamps, nwp_data):
-        # normalize data
-        input_data = (input_data - self.mean) / self.std
-        nwp_data = (nwp_data - self.mean) / self.std
-
-        # process time stamps
-        for i in range(len(time_stamps)):
-            time_stamps[i] = pd.DataFrame({"date": time_stamps[i]})
-            time_stamps[i] = time_features(time_stamps[i], timeenc=1, freq="h").astype(
-                np.float32
-            )
-        time_stamps = np.asarray(time_stamps)
-        return input_data, time_stamps, nwp_data
-
-    def _postprocess_data(self, data):
-        # denormalize data
-        data = data * self.std + self.mean
-        return data
-
-    def __call__(self, input_data, time_stamp, nwp_data):
-        # preprocess data
-        input_data, time_stamps, nwp_data = self._preprocess_data(
-            input_data, time_stamp, nwp_data
-        )
-
-        # set input data
-        self.input_data_handle.copy_from_cpu(input_data)
-        self.time_stamps_handle.copy_from_cpu(time_stamps)
-        self.nwp_data_handle.copy_from_cpu(nwp_data)
-
-        # run predictor
-        self.predictor.run()
-
-        # get predict data
-        pred_data = self.output_handle.copy_to_cpu()
-
-        # postprocess data
-        pred_data = self._postprocess_data(pred_data)
-        return pred_data
 
 
 def parse_args():
@@ -141,7 +69,7 @@ def parse_args():
         "--num_timestamps", type=int, default=22, help="Number of timestamps"
     )
     parser.add_argument(
-        "--output_path", type=str, default="output", help="Output file path"
+        "--output_path", type=str, default="output_24layers", help="Output file path"
     )
 
     return parser.parse_args()
@@ -150,13 +78,6 @@ def parse_args():
 def main():
     args = parse_args()
     logger.init_logger("ppsci", osp.join(args.output_path, "predict.log"), "info")
-    if version.Version(paddle.__version__) != version.Version("2.5.2"):
-        logger.error(
-            f"Your Paddle version is {paddle.__version__}, but this code currently "
-            "only supports PaddlePaddle 2.5.2. The latest version of Paddle will be "
-            "supported as soon as possible."
-        )
-        exit()
 
     num_timestamps = args.num_timestamps
 
@@ -166,18 +87,23 @@ def main():
     )
 
     # load data
-    # HRRR Crop use 24 atmospheric variable，their index in the dataset is from 0 to 23.
-    # The variable name is 'z50', 'z500', 'z850', 'z1000', 't50', 't500', 't850', 'z1000',
-    # 's50', 's500', 's850', 's1000', 'u50', 'u500', 'u850', 'u1000', 'v50', 'v500',
-    # 'v850', 'v1000', 'mslp', 'u10', 'v10', 't2m'.
+    # HRRR Crop use 69 atmospheric variable，their index in the dataset is from 0 to 68.
+    # The variable name is "z50", "z100",  "z150", "z200", "z250", "z300", "z400", "z500",
+    # "z600", "z700",  "z850", "z925", "z1000", "t50", "t100", "t150", "t200", "t250",
+    # "t300", "t400", "t500", "t600", "t700", "t850", "t925", "t1000", "s50", "s100",
+    # "s150", "s200",  "s250", "s300", "s400", "s500", "s600", "s700", "s850", "s925",
+    # "s1000", "u50", "u100", "u150", "u200", "u250", "u300", "u400", "u500", "u600",
+    # "u700", "u850", "u925", "u1000", "v50", "v100", "v150", "v200", "v250", "v300",
+    # "v400", "v500", "v600", "v700", "v850", "v925", "v1000",  "mslp", "u10", "v10",
+    # "t2m",
     input_file = h5py.File(args.input_file, "r")["fields"]
     nwp_file = h5py.File(args.nwp_file, "r")["fields"]
 
-    # input_data.shape: (1, num_vars, 440, 408), num_vars = 24 for 12 layers
+    # input_data.shape: (1, 69, 440, 408)
     input_data = input_file[0:1]
-    # nwp_data.shape: # (num_timestamps, num_vars, 440, 408)
+    # nwp_data.shape: # (num_timestamps, 69, 440, 408)
     nwp_data = nwp_file[0:num_timestamps]
-    # ground_truth.shape: (num_timestamps, num_vars, 440, 408)
+    # ground_truth.shape: (num_timestamps, 69, 440, 408)
     ground_truth = input_file[1 : num_timestamps + 1]
 
     # create time stamps
@@ -189,7 +115,7 @@ def main():
 
     # run predictor
     pred_data = predictor(input_data, time_stamps, nwp_data)
-    pred_data = pred_data.squeeze(axis=1)  # (num_timestamps, num_vars, 440, 408)
+    pred_data = pred_data.squeeze(axis=1)  # (num_timestamps, 69, 440, 408)
 
     # save predict data
     save_path = osp.join(args.output_path, "result.npy")
@@ -205,12 +131,12 @@ def main():
     data_dict = {}
     visu_keys = []
     for i in range(num_timestamps):
-        visu_key = f"Init time: {args.init_time}h, YingLong pred: {i+1}h"
-        visu_keys.append(visu_key)
-        data_dict[visu_key] = pred_wind[i]
-        visu_key = f"Init time: {args.init_time}h, Ground truth: {i+1}h"
+        visu_key = f"Init time: {args.init_time}h\n Ground truth: {i+1}h"
         visu_keys.append(visu_key)
         data_dict[visu_key] = ground_truth_wind[i]
+        visu_key = f"Init time: {args.init_time}h\n YingLong-24 Layers: {i+1}h"
+        visu_keys.append(visu_key)
+        data_dict[visu_key] = pred_wind[i]
 
     save_plot_weather_from_dict(
         foldername=args.output_path,
