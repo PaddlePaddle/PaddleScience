@@ -17,7 +17,9 @@ from os import path as osp
 
 import h5py
 import numpy as np
+import paddle
 import pandas as pd
+from packaging import version
 
 from examples.yinglong.plot import save_plot_weather_from_dict
 from examples.yinglong.predictor import YingLong
@@ -78,9 +80,20 @@ def parse_args():
 def main():
     args = parse_args()
     logger.init_logger("ppsci", osp.join(args.output_path, "predict.log"), "info")
+    # log paddlepaddle's version
+    if version.Version(paddle.__version__) != version.Version("0.0.0"):
+        paddle_version = paddle.__version__
+        if version.Version(paddle.__version__) < version.Version("2.6.0"):
+            logger.warning(
+                f"Detected paddlepaddle version is '{paddle_version}', "
+                "currently it is recommended to use release 2.6 or develop version."
+            )
+    else:
+        paddle_version = f"develop({paddle.version.commit[:7]})"
+
+    logger.info(f"Using paddlepaddle {paddle_version}")
 
     num_timestamps = args.num_timestamps
-
     # create predictor
     predictor = YingLong(
         args.model_file, args.params_file, args.mean_path, args.std_path

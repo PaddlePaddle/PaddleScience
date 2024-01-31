@@ -12,12 +12,12 @@ This code is the implementation of YingLong. We select the southeastern region o
 
 ### 1. Install PaddlePaddle
 
-Please install the <font color="red"><b>2.5.2</b></font> version of PaddlePaddle according to your environment on the official website of [PaddlePaddle](https://www.paddlepaddle.org.cn/en/install/quick?docurl=/documentation/docs/en/develop/install/pip/linux-pip_en.html).
+Please install the <font color="red"><b>2.6.0</b></font>  or <font color="red"><b>develop</b></font> version of PaddlePaddle according to your environment on the official website of [PaddlePaddle](https://www.paddlepaddle.org.cn/en/install/quick?docurl=/documentation/docs/en/develop/install/pip/linux-pip_en.html).
 
 For example, if your environment is linux and CUDA 11.2, you can install PaddlePaddle by the following command.
 
 ``` shell
-python -m pip install paddlepaddle-gpu==2.5.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+python -m pip install paddlepaddle-gpu==2.6.0.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 ```
 
 After installation, run the following command to verify if PaddlePaddle has been successfully installed.
