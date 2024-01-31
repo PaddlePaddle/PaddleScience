@@ -4,16 +4,20 @@ YingLong, a high-resolution, short-term regional weather forecasting, artificial
 
 This code is the implementation of YingLong. We select the southeastern region of the United States, which is around the range of 110-130E, 15-35N, with 440 × 408 grid points in Lambert projection.
 
+<div align=center>
+    <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/fig_arch1.jpg" width="70%" height="auto" >
+</div>
+
 ## Installation
 
 ### 1. Install PaddlePaddle
 
-Please install the <font color="red"><b>2.5.2</b></font> version of PaddlePaddle according to your environment on the official website of [PaddlePaddle](https://www.paddlepaddle.org.cn/en/install/quick?docurl=/documentation/docs/en/develop/install/pip/linux-pip_en.html).
+Please install the <font color="red"><b>2.6.0</b></font>  or <font color="red"><b>develop</b></font> version of PaddlePaddle according to your environment on the official website of [PaddlePaddle](https://www.paddlepaddle.org.cn/en/install/quick?docurl=/documentation/docs/en/develop/install/pip/linux-pip_en.html).
 
 For example, if your environment is linux and CUDA 11.2, you can install PaddlePaddle by the following command.
 
 ``` shell
-python -m pip install paddlepaddle-gpu==2.5.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+python -m pip install paddlepaddle-gpu==2.6.0.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 ```
 
 After installation, run the following command to verify if PaddlePaddle has been successfully installed.
@@ -40,6 +44,8 @@ git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
 cd PaddleScience
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_24vars.tar
 tar -xvf hrrr_example_24vars.tar
+wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_69vars.tar
+tar -xvf hrrr_example_69vars.tar
 wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/yinglong_models.tar
 tar -xvf yinglong_models.tar
 ```
@@ -50,5 +56,14 @@ The following code runs the Yinglong model, and the model output will be saved i
 
 ``` shell
 export PYTHONPATH=$PWD
+# YingLong-12 Layers
 python examples/yinglong/predict_12layers.py
+# YingLong-24 Layers
+# python examples/yinglong/predict_24layers.py
 ```
+
+We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022,
+
+<div align=center>
+    <img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result.gif" width="70%" height="auto" >
+</div>
