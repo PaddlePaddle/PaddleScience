@@ -2,7 +2,9 @@
 
 PaddleScience 在代码结构上划分为 12 个模块。从一般深度学习工作流的角度来看，这 12 个模块分别负责构建输入数据、构建神经网络模型、构建损失函数、构建优化器，训练、评估、可视化等功能。从科学计算角度来看，部分模块承担了不同于 CV、NLP 任务的功能，比如用于物理机理驱动的 Equation 模块，定义方程公式和辅助高阶微分计算；用于涉及几何场景采样的 Geometry 模块，定义简单、复杂几何形状并在其内部、边界采样构造数据；Constraint 模块将不同的优化目标视为一种“约束”，使得套件能用一套训练代码统一物理机理驱动、数据驱动、数理融合三种不同的求解流程。
 
-![panorama](https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png)
+<!-- --8<-- [start:panorama] -->
+<img src="https://paddle-org.bj.bcebos.com/paddlescience/docs/overview/panorama.png" alt="panorama" width="100%" height="auto">
+<!-- --8<-- [end:panorama] -->
 
 ## 1. 整体工作流
 

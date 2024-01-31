@@ -398,8 +398,8 @@ class Solver:
                         exprs,
                         self.model,
                         extra_parameters=extra_parameters,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual"),  # HACK: Activate it for DEBUG.
                         fuse_derivative=True,
-                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
                     )
                     ind = 0
                     for name in container.output_expr:
@@ -493,10 +493,10 @@ class Solver:
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
-        """Finetune model based on given pretrained model.
+        """Finetune model based on given pretrained model path.
 
         Args:
-            pretrained_model_path (str): Pretrained model path.
+            pretrained_model_path (str): Pretrained model path or url.
         """
         # load pretrained model
         save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
@@ -567,17 +567,15 @@ class Solver:
         Examples:
             >>> import paddle
             >>> import ppsci
-            >>> paddle.seed(42)  # doctest: +SKIP
             >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
-            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
-            >>> input_dict = {'x': paddle.rand((2, 1)),
-            ...               'y': paddle.rand((2, 1))}
-            >>> solver.predict(input_dict) # doctest: +SKIP
-            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[-0.17509711],
-                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[0.27433380],
-                    [0.42387512]])}
+            >>> solver = ppsci.solver.Solver(model) # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand([32, 1]),
+            ...               'y': paddle.rand([32, 1])}
+            >>> pred = solver.predict(input_dict) # doctest: +SKIP
+            >>> for k, v in pred.items():
+            ...     print(k, v.shape)
+            u [32, 1]
+            v [32, 1]
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -686,13 +684,13 @@ class Solver:
         raise NotImplementedError("model export is not supported yet.")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "O1", "O2", "OD"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.

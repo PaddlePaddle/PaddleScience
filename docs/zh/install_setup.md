@@ -4,11 +4,14 @@
 
 ### 1.1 从 docker 镜像启动[可选]
 
-如果你对 docker 有一定了解，则可以通过我们提供的 docker 文件，直接构建出能运行 PaddleScience 的环境。按照下列步骤构建 docker 并自动进入该环境，以运行 PaddleScience。
+如果你对 docker 有一定了解，则可以通过我们提供的 Dockerfile 文件，直接构建出能运行 PaddleScience 的环境。按照下列步骤构建镜像，创建容器并进入容器，以运行 PaddleScience。
 
-1. 下载 PyMesh 预编译文件压缩包 [pymesh.tar.xz](https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz)，并放置在 `PaddleScience/docker/` 目录下
-2. 执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可。
-3. 在 docker 环境中，执行 `ldconfig`
+1. 克隆 PaddleScience 源码：`git clone https://github.com/PaddlePaddle/PaddleScience.git`
+2. 下载 PyMesh 预编译文件压缩包 [pymesh.tar.xz](https://paddle-org.bj.bcebos.com/paddlescience/docker/pymesh.tar.xz)，并放置在 `PaddleScience/docker/` 目录下
+3. 在 `PaddleScience/docker/` 目录下，执行 `bash run.sh`，等待 docker build 完毕后自动进入环境。如果出现因网络问题导致的 apt 下载报错，则重复执行 `bash run.sh` 直至 build 完成即可
+4. 在 docker 环境中，执行 `ldconfig`
+
+更多关于 Paddle Docker 的安装和使用，请参考 [Docker 安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/fromdocker.html)
 
 ### 1.2 python 环境安装[可选]
 
