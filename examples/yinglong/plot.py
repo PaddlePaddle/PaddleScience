@@ -85,7 +85,7 @@ def _save_plot_weather_from_array(
         xticklabels (Tuple[str, ...]): The x-axis' tick labels.
         yticks (Tuple[float, ...]): The list of ytick locations.
         yticklabels (Tuple[str, ...]): The y-axis' tick labels.
-        vmin (float): Minimum value that the colormap covers.
+        vmin (float): Minimal value that the colormap covers.
         vmax (float):  Maximal value that the colormap covers.
         colorbar_label (str, optional): The color-bar label. Defaults to "".
         log_norm (bool, optional): Whether use log norm. Defaults to False.
@@ -181,7 +181,7 @@ def save_plot_weather_from_dict(
         xticklabels (Tuple[str, ...]): The x-axis' tick labels.
         yticks (Tuple[float, ...]): The list of ytick locations,
         yticklabels (Tuple[str, ...]): The y-axis' tick labels.
-        vmin (float): Minimum value that the colormap covers.
+        vmin (float): Minimal value that the colormap covers.
         vmax (float): Maximal value that the colormap covers.
         colorbar_label (str, optional): The colorbar label. Defaults to "".
         log_norm (bool, optional): Whether use log norm. Defaults to False.
