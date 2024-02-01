@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     import onnxruntime
 
 
-class Predictor(object):
+class Predictor:
     """
     Initializes the inference engine with the given parameters.
 
@@ -87,8 +87,8 @@ class Predictor(object):
             self.predictor, self.config = self._create_paddle_predictor()
 
         logger.message(
-            f"Initialized inference with {self.engine} engine, {self.precision} "
-            f"precision on {self.device} device."
+            f"Inference with engine: {self.engine}, precision: {self.precision}, "
+            f"device: {self.device}."
         )
 
     def predict(self, image):
@@ -131,12 +131,17 @@ class Predictor(object):
 
                 if not osp.exists(trt_shape_path):
                     config.collect_shape_range_info(trt_shape_path)
-                    logger.info(f"Save collect dynamic shape info to {trt_shape_path}")
+                    logger.info(
+                        f"Save collected dynamic shape info to: {trt_shape_path}"
+                    )
                 try:
                     config.enable_tuned_tensorrt_dynamic_shape(trt_shape_path, True)
                 except Exception as e:
                     logger.warning(e)
-                    logger.info("Check your paddlepaddle-gpu >= 2.3.0")
+                    logger.warning(
+                        "TRT dynamic shape is disabled for your paddlepaddle < 2.3.0"
+                    )
+
         elif self.device == "npu":
             config.enable_custom_device("npu")
         elif self.device == "xpu":
