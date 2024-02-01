@@ -91,7 +91,7 @@ $$\frac{\partial \phi}{\partial t}+\mathbf{u} \cdot \nabla \phi=\gamma \nabla \c
   ![bubble.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/BubbleNet/bubble.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
-本文我们主要考虑单气泡流(图 A )，当然对于多气泡流问题同样适用。对于单气泡情况，气泡初始直径设置为 $d =  4~μmm$，微通道长度为 $15~μm$，宽度为 $5~μm$。沿轴向施加压力差 $\Delta p = 10~Pa$ 来驱动气泡流动，通道末端的压力保持为恒定压力 $p_0 = 799.932~Pa(6~mmHg)$，对应于人脑和淋巴液流动中间质液的压力。初始条件 (IC) 即设置为 $p=p_0$，室温为 $293.15~K$，如图 A 所示。该数值设置旨在模拟脑血管中的气泡传输，以研究血脑屏障。同时我们设 $\gamma=1$ 和 $\epsilon_{l s}=0.430$。
+本文我们主要考虑单气泡流(图 A )，当然对于多气泡流问题同样适用。对于单气泡情况，气泡初始直径设置为 $d =  4~μm$，微通道长度为 $15~μm$，宽度为 $5~μm$。沿轴向施加压力差 $\Delta p = 10~Pa$ 来驱动气泡流动，通道末端的压力保持为恒定压力 $p_0 = 799.932~Pa(6~mmHg)$，对应于人脑和淋巴液流动中间质液的压力。初始条件 (IC) 即设置为 $p=p_0$，室温为 $293.15~K$，如图 A 所示。该数值设置旨在模拟脑血管中的气泡传输，以研究血脑屏障。同时我们设 $\gamma=1$ 和 $\epsilon_{l s}=0.430$。
 
 本文的算法 BubbleNet 的主要内容如下：
 

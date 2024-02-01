@@ -158,7 +158,8 @@ class RankZeroOnly:
         >>> import paddle.distributed as dist
         >>> with RankZeroOnly(dist.get_rank()) as is_master:
         ...     if is_master:
-        ...         # code here that should only be executed by the master process
+        ...         # code here which should only be executed in the master process
+        ...         pass
     """
 
     def __init__(self, rank: Optional[int] = None):
@@ -247,14 +248,10 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
         >>> print(arr.shape)
         (2, 3)
         >>> for k, v in result.items():
-        ...    print(k)
-        ...    print(v.shape)
-        x
-        (2, 1)
-        y
-        (2, 1)
-        z
-        (2, 1)
+        ...    print(k, v.shape)
+        x (2, 1)
+        y (2, 1)
+        z (2, 1)
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -367,14 +364,10 @@ def stack_dict_list(
         >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
         >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
         >>> result = ppsci.utils.misc.stack_dict_list((dic1, dic2))
-        >>> print(result)
-        {'x': array([[[1., 2.],
-                [3., 4.]],
-               [[1., 2.],
-                [3., 4.]]]), 'y': array([[[5., 6.],
-                [7., 8.]],
-               [[5., 6.],
-                [7., 8.]]])}
+        >>> for k, v in result.items():
+        ...     print(k, v.shape)
+        x (2, 2, 2)
+        y (2, 2, 2)
     """
     ret = {}
     for key in dict_list[0].keys():
@@ -523,6 +516,15 @@ def run_at_rank0(func: Callable) -> Callable:
     Returns:
         Callable: Wrapped function which will only run at at rank 0,
             skipped at other rank.
+
+    Examples:
+        >>> import paddle
+        >>> from ppsci.utils import misc
+        >>> @misc.run_at_rank0
+        ... def func():
+        ...     print(f"now_rank is {paddle.distributed.get_rank()}")
+        >>> func()
+        now_rank is 0
     """
 
     @functools.wraps(func)
@@ -573,13 +575,16 @@ def plot_curve(
     plt.plot(np.arange(data_arr.shape[0]) * smooth_step, data_arr)
     plt.legend(
         list(data.keys()),
-        loc="lower left",
+        loc="upper left",
+        bbox_to_anchor=(1, 1),
     )
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.grid()
     plt.yticks(size=10)
     plt.xticks(size=10)
+    plt.tight_layout()
 
-    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"))
+    plt.savefig(os.path.join(output_dir, f"{xlabel}-{ylabel}_curve.jpg"), dpi=200)
     plt.clf()
+    plt.close()

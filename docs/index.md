@@ -54,6 +54,10 @@
 ./README.md:description
 --8<--
 
+--8<--
+./docs/zh/overview.md:panorama
+--8<--
+
 ## 📝案例列表
 
 <style>
@@ -214,8 +218,12 @@
     <a href="https://github.com/MayYouBeProsperous"><img class="avatar" src="https://avatars.githubusercontent.com/MayYouBeProsperous" alt="avatar" /></a>
     <a href="https://github.com/AndPuQing"><img class="avatar" src="https://avatars.githubusercontent.com/AndPuQing" alt="avatar" /></a>
     <a href="https://github.com/lknt"><img class="avatar" src="https://avatars.githubusercontent.com/lknt" alt="avatar" /></a>
-    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
     <a href="https://github.com/mrcangye"><img class="avatar" src="https://avatars.githubusercontent.com/mrcangye" alt="avatar" /></a>
+    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
+    <a href="https://github.com/ooooo-create"><img class="avatar" src="https://avatars.githubusercontent.com/ooooo-create" alt="avatar" /></a>
+    <a href="https://github.com/megemini"><img class="avatar" src="https://avatars.githubusercontent.com/megemini" alt="avatar" /></a>
+    <a href="https://github.com/DUCH714"><img class="avatar" src="https://avatars.githubusercontent.com/DUCH714" alt="avatar" /></a>
+    <a href="https://github.com/zlynna"><img class="avatar" src="https://avatars.githubusercontent.com/zlynna" alt="avatar" /></a>
     <a href="https://github.com/jjyaoao"><img class="avatar" src="https://avatars.githubusercontent.com/jjyaoao" alt="avatar" /></a>
     <a href="https://github.com/jiamingkong"><img class="avatar" src="https://avatars.githubusercontent.com/jiamingkong" alt="avatar" /></a>
     <a href="https://github.com/Liyulingyue"><img class="avatar" src="https://avatars.githubusercontent.com/Liyulingyue" alt="avatar" /></a>

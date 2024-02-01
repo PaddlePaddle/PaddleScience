@@ -155,36 +155,38 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         loss_dict = misc.Prettydefaultdict(float)
         loss_dict["loss"] = 0.0
         total_batch_size = 0
-        reader_cost = 0
-        batch_cost = 0
+        reader_cost = 0.0
+        batch_cost = 0.0
         reader_tic = time.perf_counter()
 
         input_dicts = []
         label_dicts = []
         weight_dicts = []
         for _, _constraint in solver.constraint.items():
+            # fetch data from data loader
             try:
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             except StopIteration:
                 _constraint.data_iter = iter(_constraint.data_loader)
                 input_dict, label_dict, weight_dict = next(_constraint.data_iter)
             reader_cost += time.perf_counter() - reader_tic
+
             for v in input_dict.values():
                 if hasattr(v, "stop_gradient"):
                     v.stop_gradient = False
 
-            # gather all constraint data into list
+            # gather each constraint's input, label, weight to a list
             input_dicts.append(input_dict)
             label_dicts.append(label_dict)
             weight_dicts.append(weight_dict)
             total_batch_size += next(iter(input_dict.values())).shape[0]
             reader_tic = time.perf_counter()
 
-        def closure():
+        def closure() -> paddle.Tensor:
             """Forward-backward closure function for LBFGS optimizer.
 
             Returns:
-                Tensor: Computed loss.
+                paddle.Tensor: Computed loss scalar.
             """
             total_loss = 0
             with solver.no_sync_context_manager(solver.world_size > 1, solver.model):
@@ -230,6 +232,8 @@ def train_LBFGS_epoch_func(solver: "solver.Solver", epoch_id: int, log_freq: int
         if solver.lr_scheduler is not None and not solver.lr_scheduler.by_epoch:
             solver.lr_scheduler.step()
 
+        if solver.benchmark_flag:
+            paddle.device.synchronize()
         batch_cost += time.perf_counter() - batch_tic
 
         # update and log training information

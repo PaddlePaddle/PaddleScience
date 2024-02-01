@@ -28,7 +28,7 @@ def train(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, True)}
@@ -194,7 +194,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
-        eval_during_train=cfg.EVAL.pretrained_model_path,
+        eval_during_train=cfg.TRAIN.eval_during_train,
         eval_freq=cfg.TRAIN.eval_freq,
         equation=equation,
         geom=geom,
@@ -216,7 +216,7 @@ def evaluate(cfg: DictConfig):
     logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
 
     # set model
-    model = ppsci.arch.MLP(**cfg.MODEL.model)
+    model = ppsci.arch.MLP(**cfg.MODEL)
 
     # set equation
     equation = {"NavierStokes": ppsci.equation.NavierStokes(cfg.NU, cfg.RHO, 2, True)}

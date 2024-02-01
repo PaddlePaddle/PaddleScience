@@ -128,7 +128,10 @@ def build_dataloader(_dataset, cfg):
             collate_fn=collate_fn,
         )
     else:
-        if cfg.get("auto_collation", True) is False:
+        if (
+            cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
+            is False
+        ):
             # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
             # which can speed up the process of batch samples indexing from dataset. See
             # details at: https://discuss.pytorch.org/t/efficiency-of-dataloader-and-collate-for-large-array-like-datasets/59569/8
@@ -140,10 +143,14 @@ def build_dataloader(_dataset, cfg):
                 )
             # 2. disable auto collation by given identity collate_fn which return the first
             # (also the only) batch data in batch list, or there will be a redundant
-            # axis at the first dimension returned by dataloader. It is step is necessary
+            # axis at the first dimension returned by dataloader. This step is necessary
             # because paddle do not support 'sampler' as instantiation argument of 'io.DataLoader'
             collate_fn = lambda batch: batch[0]  # noqa: E731
-            logger.info("Auto collation is disabled to speed up batch sampling")
+            _DEFAULT_NUM_WORKERS = 0
+            logger.info(
+                "Auto collation is disabled and set num_workers to "
+                f"{_DEFAULT_NUM_WORKERS} to speed up batch sampling."
+            )
 
         dataloader_ = io.DataLoader(
             dataset=_dataset,
@@ -153,7 +160,7 @@ def build_dataloader(_dataset, cfg):
             num_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS),
             use_shared_memory=cfg.get("use_shared_memory", False),
             worker_init_fn=init_fn,
-            # TODO: Do not enable persistent_workers' below for
+            # TODO: Do not enable 'persistent_workers' below for
             # 'IndexError: pop from empty list ...' will be raised in certain cases
             # persistent_workers=cfg.get("num_workers", _DEFAULT_NUM_WORKERS) > 0,
         )

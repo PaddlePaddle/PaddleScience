@@ -28,8 +28,46 @@ class DeepPhyLSTM(base.Arch):
         model_type (int, optional): The model type, value is 2 or 3, 2 indicates having two sub-models, 3 indicates having three submodels. Defaults to 2.
 
     Examples:
+        >>> import paddle
         >>> import ppsci
-        >>> model = ppsci.arch.DeepPhyLSTM(1, 1, 100)
+        >>> # model_type is `2`
+        >>> model = ppsci.arch.DeepPhyLSTM(
+        ...     input_size=16,
+        ...     output_size=1,
+        ...     hidden_size=100,
+        ...     model_type=2)
+        >>> out = model(
+        ...     {"ag":paddle.rand([64, 16, 16]),
+        ...     "ag_c":paddle.rand([64, 16, 16]),
+        ...     "phi":paddle.rand([1, 16, 16])})
+        >>> for k, v in out.items():
+        ...     print(f"{k} {v.dtype} {v.shape}")
+        eta_pred paddle.float32 [64, 16, 1]
+        eta_dot_pred paddle.float32 [64, 16, 1]
+        g_pred paddle.float32 [64, 16, 1]
+        eta_t_pred_c paddle.float32 [64, 16, 1]
+        eta_dot_pred_c paddle.float32 [64, 16, 1]
+        lift_pred_c paddle.float32 [64, 16, 1]
+        >>> # model_type is `3`
+        >>> model = ppsci.arch.DeepPhyLSTM(
+        ...     input_size=16,
+        ...     output_size=1,
+        ...     hidden_size=100,
+        ...     model_type=3)
+        >>> out = model(
+        ...     {"ag":paddle.rand([64, 16, 1]),
+        ...     "ag_c":paddle.rand([64, 16, 1]),
+        ...     "phi":paddle.rand([1, 16, 16])})
+        >>> for k, v in out.items():
+        ...     print(f"{k} {v.dtype} {v.shape}")
+        eta_pred paddle.float32 [64, 16, 1]
+        eta_dot_pred paddle.float32 [64, 16, 1]
+        g_pred paddle.float32 [64, 16, 1]
+        eta_t_pred_c paddle.float32 [64, 16, 1]
+        eta_dot_pred_c paddle.float32 [64, 16, 1]
+        lift_pred_c paddle.float32 [64, 16, 1]
+        g_t_pred_c paddle.float32 [64, 16, 1]
+        g_dot_pred_c paddle.float32 [64, 16, 1]
     """
 
     def __init__(self, input_size, output_size, hidden_size=100, model_type=2):
@@ -92,7 +130,7 @@ class DeepPhyLSTM(base.Arch):
                 nn.Linear(hidden_size, output_size),
             )
         else:
-            raise ValueError(f"model_type should be 2 or 3, but got {model_type})")
+            raise ValueError(f"model_type should be 2 or 3, but got {model_type}")
 
     def forward(self, x):
         if self._input_transform is not None:

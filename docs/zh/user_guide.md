@@ -125,7 +125,7 @@ TRAIN:
 
 ``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
-└──2023-10-14 # (1)
+└── 2023-10-14 # (1)
     └── 04-01-52 # (2)
         ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
         │   └── multirun.yaml # multirun 配置文件 (3)
@@ -202,9 +202,9 @@ PaddleScience/examples/bracket/outputs_bracket/
 
     ``` py hl_lines="12 13 14 15 16"
     N = 100 # 假设要预测100个样本的结果
-    x = np.random.randn(N, 1) # 准备 字段
-    y = np.random.randn(N, 1)
-    z = np.random.randn(N, 1)
+    x = np.random.randn(N, 1) # 输入数据x
+    y = np.random.randn(N, 1) # 输入数据y
+    z = np.random.randn(N, 1) # 输入数据z
 
     input_dict = {
         "x": x,
@@ -255,11 +255,11 @@ solver = ppsci.solver.Solver(
 
 ### 1.4 迁移学习
 
-迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重；也可以在 `Solver` 实例化时指定 `pretrained_model_path` 自动载入预训练模型权重，两种方式都可以进行迁移学习。
+迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重后开始微调训练；也可以调用 `Solver.finetune` 接口并指定 `pretrained_model_path` 参数，自动载入预训练模型权重并开始微调训练。
 
 === "手动载入预训练模型"
 
-    ``` py hl_lines="8"
+    ``` py hl_lines="8 12"
     import ppsci
     from ppsci.utils import save_load
 
@@ -268,12 +268,17 @@ solver = ppsci.solver.Solver(
 
     model = ...
     save_load.load_pretrain(model, "/path/to/pretrain")
+    solver = ppsci.solver.Solver(
+        ...,
+    )
+    solver.train()
     ```
 
-=== "指定 `pretrained_model_path` 自动载入预训练模型"
+=== "调用 `Solver.finetune` 接口"
 
-    ``` py hl_lines="9"
+    ``` py hl_lines="11"
     import ppsci
+
 
     ...
     ...
@@ -281,11 +286,11 @@ solver = ppsci.solver.Solver(
     model = ...
     solver = ppsci.solver.Solver(
         ...,
-        pretrained_model_path="/path/to/pretrain",
     )
+    solver.finetune(pretrained_model_path="/path/to/pretrain")
     ```
 
-!!! info "迁移学习建议"
+!!! tip "迁移学习建议"
 
     在迁移学习时，相对于完全随机初始化的参数而言，载入的预训练模型权重参数是一个较好的初始化状态，因此不需要使用太大的学习率，而可以将学习率适当调小 2~10 倍以获得更稳定的训练过程和更好的精度。
 

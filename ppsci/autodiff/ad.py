@@ -104,7 +104,7 @@ class Jacobians:
 
         Args:
             ys (paddle.Tensor): Output tensor.
-            xs (paddle.Tensor): Input tensor.
+            xs (Union[paddle.Tensor, List[paddle.Tensor]]): Input tensor(s).
             i (int, optional): i-th output variable. Defaults to 0.
             j (Optional[int]): j-th input variable. Defaults to None.
             retain_graph (Optional[bool]): Whether to retain the forward graph which
@@ -127,6 +127,8 @@ class Jacobians:
             >>> x.stop_gradient = False
             >>> y = x * x
             >>> dy_dx = ppsci.autodiff.jacobian(y, x)
+            >>> print(dy_dx.shape)
+            [4, 1]
         """
         if not isinstance(xs, (list, tuple)):
             key = (ys, xs)

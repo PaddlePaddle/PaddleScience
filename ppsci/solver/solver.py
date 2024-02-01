@@ -74,7 +74,7 @@ class Solver:
         validator (Optional[Dict[str, ppsci.validate.Validator]]): Validator dict. Defaults to None.
         visualizer (Optional[Dict[str, ppsci.visualize.Visualizer]]): Visualizer dict. Defaults to None.
         use_amp (bool, optional): Whether use AMP. Defaults to False.
-        amp_level (Literal["O1", "O2", "O0"], optional): AMP level. Defaults to "O0".
+        amp_level (Literal["O0", "O1", "O2", "OD"], optional): AMP level. Defaults to "O1".
         pretrained_model_path (Optional[str]): Pretrained model path. Defaults to None.
         checkpoint_path (Optional[str]): Checkpoint path. Defaults to None.
         compute_metric_by_batch (bool, optional): Whether calculate metrics after each batch during evaluation. Defaults to False.
@@ -86,7 +86,7 @@ class Solver:
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.MLP(("x",), ("u",), 5, 20)
-        >>> opt = ppsci.optimizer.AdamW(1e-3)((model,))
+        >>> opt = ppsci.optimizer.AdamW(1e-3)(model)
         >>> geom = ppsci.geometry.Rectangle((0, 0), (1, 1))
         >>> pde_constraint = ppsci.constraint.InteriorConstraint(
         ...     {"u": lambda out: out["u"]},
@@ -134,7 +134,7 @@ class Solver:
         validator: Optional[Dict[str, ppsci.validate.Validator]] = None,
         visualizer: Optional[Dict[str, ppsci.visualize.Visualizer]] = None,
         use_amp: bool = False,
-        amp_level: Literal["O1", "O2", "O0"] = "O0",
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1",
         pretrained_model_path: Optional[str] = None,
         checkpoint_path: Optional[str] = None,
         compute_metric_by_batch: bool = False,
@@ -152,7 +152,28 @@ class Solver:
         # set optimizer
         self.optimizer = optimizer
         # set learning rate scheduler
-        self.lr_scheduler = lr_scheduler
+        if lr_scheduler is not None:
+            logger.warning(
+                "The argument: 'lr_scheduler' now automatically retrieves from "
+                "'optimizer._learning_rate' when 'optimizer' is given, so it is "
+                "recommended to remove it from the Solver's initialization arguments."
+            )
+        self.lr_scheduler = (
+            optimizer._learning_rate
+            if (
+                isinstance(optimizer, optim.Optimizer)
+                and isinstance(optimizer._learning_rate, optim.lr.LRScheduler)
+            )
+            else None
+        )
+        if isinstance(self.optimizer, ppsci.optimizer.OptimizerList):
+            self.lr_scheduler = ppsci.optimizer.lr_scheduler.SchedulerList(
+                tuple(
+                    opt._learning_rate
+                    for opt in self.optimizer
+                    if isinstance(opt._learning_rate, optim.lr.LRScheduler)
+                )
+            )
 
         # set training hyper-parameter
         self.epochs = epochs
@@ -378,8 +399,8 @@ class Solver:
                         exprs,
                         self.model,
                         extra_parameters=extra_parameters,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual"),  # HACK: Activate it for DEBUG.
                         fuse_derivative=True,
-                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
                     )
                     ind = 0
                     for name in container.output_expr:
@@ -399,7 +420,7 @@ class Solver:
         # set up benchmark flag, will print memory stat if enabled
         self.benchmark_flag: bool = os.getenv("BENCHMARK_ROOT", None) is not None
 
-    def train(self):
+    def train(self) -> None:
         """Training."""
         self.global_step = self.best_metric["epoch"] * self.iters_per_epoch
         start_epoch = self.best_metric["epoch"] + 1
@@ -472,6 +493,18 @@ class Solver:
                 print_log=(epoch_id == start_epoch),
             )
 
+    def finetune(self, pretrained_model_path: str) -> None:
+        """Finetune model based on given pretrained model path.
+
+        Args:
+            pretrained_model_path (str): Pretrained model path or url.
+        """
+        # load pretrained model
+        save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
+
+        # call train program
+        self.train()
+
     @misc.run_on_eval_mode
     def eval(self, epoch_id: int = 0) -> Tuple[float, Dict[str, Dict[str, float]]]:
         """Evaluation.
@@ -535,17 +568,15 @@ class Solver:
         Examples:
             >>> import paddle
             >>> import ppsci
-            >>> paddle.seed(42)  # doctest: +SKIP
             >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
-            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
-            >>> input_dict = {'x': paddle.rand((2, 1)),
-            ...               'y': paddle.rand((2, 1))}
-            >>> solver.predict(input_dict) # doctest: +SKIP
-            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[-0.17509711],
-                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[0.27433380],
-                    [0.42387512]])}
+            >>> solver = ppsci.solver.Solver(model) # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand([32, 1]),
+            ...               'y': paddle.rand([32, 1])}
+            >>> pred = solver.predict(input_dict) # doctest: +SKIP
+            >>> for k, v in pred.items():
+            ...     print(k, v.shape)
+            u [32, 1]
+            v [32, 1]
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -686,13 +717,13 @@ class Solver:
         jit.enable_to_static(False)
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "O1", "O2", "OD"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.
