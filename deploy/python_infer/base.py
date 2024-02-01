@@ -99,12 +99,12 @@ class Predictor(object):
     ) -> Tuple[paddle_inference.Predictor, paddle_inference.Config]:
         if not osp.exists(self.pdmodel_path):
             raise FileNotFoundError(
-                f"Given 'pdmodel_path' {self.pdmodel_path} does not exist. "
+                f"Given 'pdmodel_path': {self.pdmodel_path} does not exist. "
                 "Please check if it is correct."
             )
         if not osp.exists(self.pdpiparams_path):
             raise FileNotFoundError(
-                f"Given 'pdpiparams_path' {self.pdpiparams_path} does not exist. "
+                f"Given 'pdpiparams_path': {self.pdpiparams_path} does not exist. "
                 "Please check if it is correct."
             )
 

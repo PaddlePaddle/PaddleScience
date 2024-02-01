@@ -27,18 +27,18 @@ from ppsci.utils import reader
 )
 def main(cfg: DictConfig):
     predictor = pinn_predictor.PINNPredictor(
-        cfg.INFERENCE.pdmodel_path,
-        cfg.INFERENCE.pdpiparams_path,
-        device=cfg.INFERENCE.device,
-        engine=cfg.INFERENCE.engine,
-        precision=cfg.INFERENCE.precision,
-        onnx_path=cfg.INFERENCE.onnx_path,
-        ir_optim=cfg.INFERENCE.ir_optim,
-        min_subgraph_size=cfg.INFERENCE.min_subgraph_size,
-        gpu_mem=cfg.INFERENCE.gpu_mem,
-        gpu_id=cfg.INFERENCE.gpu_id,
-        max_batch_size=cfg.INFERENCE.max_batch_size,
-        num_cpu_threads=cfg.INFERENCE.num_cpu_threads,
+        cfg.INFER.pdmodel_path,
+        cfg.INFER.pdpiparams_path,
+        device=cfg.INFER.device,
+        engine=cfg.INFER.engine,
+        precision=cfg.INFER.precision,
+        onnx_path=cfg.INFER.onnx_path,
+        ir_optim=cfg.INFER.ir_optim,
+        min_subgraph_size=cfg.INFER.min_subgraph_size,
+        gpu_mem=cfg.INFER.gpu_mem,
+        gpu_id=cfg.INFER.gpu_id,
+        max_batch_size=cfg.INFER.max_batch_size,
+        num_cpu_threads=cfg.INFER.num_cpu_threads,
     )
     eval_data_dict = reader.load_csv_file(
         cfg.EVAL_CSV_PATH,
@@ -54,14 +54,14 @@ def main(cfg: DictConfig):
         },
     )
     input_dict = {
-        "x": (eval_data_dict["x"] - cfg.CENTER[0]) * cfg.SCALE,
-        "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
-        "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
+        "x": (eval_data_dict["x"] - cfg.CENTER[0])[:1024] * cfg.SCALE,
+        "y": (eval_data_dict["y"] - cfg.CENTER[1])[:1024] * cfg.SCALE,
+        "z": (eval_data_dict["z"] - cfg.CENTER[2])[:1024] * cfg.SCALE,
     }
     if "area" in input_dict.keys():
         input_dict["area"] *= cfg.SCALE**cfg.DIM
 
-    output_dict = predictor.predict(input_dict, cfg.INFERENCE.batch_size)
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
 
     output_dict["u"] = output_dict.pop("save_infer_model/scale_0.tmp_1")
     output_dict["v"] = output_dict.pop("save_infer_model/scale_1.tmp_1")

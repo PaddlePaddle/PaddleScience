@@ -94,9 +94,11 @@ class PINNPredictor(base.Predictor):
         batch_num = (num_samples + (batch_size - 1)) // batch_size
         pred_dict = misc.Prettydefaultdict(list)
 
-        for batch_id in range(batch_num):
-            if batch_id % 10 == 0:
+        # inference by batch
+        for batch_id in range(1, batch_num + 1):
+            if batch_id % 20 == 0 or batch_id == batch_num:
                 logger.info(f"Predicting batch {batch_id}/{batch_num}")
+
             batch_input_dict = {}
             st = batch_id * batch_size
             ed = min(num_samples, (batch_id + 1) * batch_size)
@@ -108,19 +110,25 @@ class PINNPredictor(base.Predictor):
             # send batch input data to input handle(s)
             for name, handle in input_handles.items():
                 handle.copy_from_cpu(batch_input_dict[name])
-
+            if batch_id == batch_num:
+                print("start run")
             # run predictor
             self.predictor.run()
+            if batch_id == batch_num:
+                print("finished run")
 
             # receive batch output data from output handle(s)
             batch_output_dict = {
                 name: output_handles[name].copy_to_cpu() for name in output_handles
             }
 
-            # collect batch data
+            # collect batch output data
             for key, batch_output in batch_output_dict.items():
                 pred_dict[key].append(batch_output)
-
+        print("Finished")
+        for k in pred_dict[key]:
+            print(type(k))
+        exit()
         # concatenate local predictions
         pred_dict = {key: np.concatenate(value) for key, value in pred_dict.items()}
         return pred_dict

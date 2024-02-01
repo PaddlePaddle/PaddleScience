@@ -345,10 +345,15 @@ def export(cfg: DictConfig):
     solver = ppsci.solver.Solver(
         model,
         output_dir=cfg.output_dir,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
-    # evaluate
-    solver.export(cfg.EXPORT.export_path)
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
 
 
 @hydra.main(version_base=None, config_path="./conf", config_name="aneurysm.yaml")

@@ -11,6 +11,7 @@ hydra:
           - TRAIN.checkpoint_path
           - TRAIN.pretrained_model_path
           - EVAL.pretrained_model_path
+          - INFER.pretrained_model_path
           - mode
           - output_dir
           - log_freq
@@ -99,18 +100,16 @@ EVAL:
   batch_size:
     sup_validator: 4096
 
-# export settings
-EXPORT:
-  export_path: ./aneurysm
-
 # inference settings
-INFERENCE:
-  pdmodel_path: ${EXPORT.export_path}.pdmodel
-  pdpiparams_path: ${EXPORT.export_path}.pdiparams
+INFER:
+  pretrained_model_path: null
+  export_path: ./inference/aneurysm
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdpiparams_path: ${INFER.export_path}.pdiparams
+  onnx_path: ${INFER.export_path}.onnx
   device: gpu
   engine: native
   precision: fp32
-  onnx_path: ./aneurysm.onnx
   ir_optim: true
   min_subgraph_size: 30
   gpu_mem: 2000

@@ -21,6 +21,7 @@ import sys
 from os import path as osp
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
@@ -37,6 +38,7 @@ from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
+from paddle.static import InputSpec
 from typing_extensions import Literal
 
 import ppsci
@@ -680,38 +682,38 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self, export_path: str):
+    def export(self, input_spec: List[InputSpec], export_path: str):
         """
         Convert model to static graph model and export to files.
+
+        Args:
+            input_spec (List[InputSpec]): InputSpec describes the signature information
+                of the model input.
+            export_path (str): The path prefix to save model.
         """
         jit.enable_to_static(True)
 
         if self.pretrained_model_path is None:
             logger.warning(
                 "'pretrained_model_path' is not given, so the weights of exported "
-                "model might be random initialized."
+                "model will be random initialized."
             )
 
-        # convert model to static graph
-        from paddle.static import InputSpec
-
+        # convert model to static graph model
         static_model = jit.to_static(
             self.model,
-            input_spec=[
-                {
-                    key: InputSpec(shape=[None, 1], name=key)
-                    for key in self.model.input_keys
-                },
-            ],
+            input_spec=input_spec,
+            full_graph=True,
         )
 
         # save static graph model to disk
+        os.makedirs(osp.dirname(export_path), exist_ok=True)
         try:
             jit.save(static_model, export_path)
         except Exception as e:
             raise e
         logger.message(
-            f"Static graph model has been exported to {export_path}, including "
+            f"Inference model has been exported to: {export_path}, including "
             "*.pdmodel, *.pdiparams and *.pdiparams.info files."
         )
         jit.enable_to_static(False)

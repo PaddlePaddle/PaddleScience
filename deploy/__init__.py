@@ -13,5 +13,5 @@
 # limitations under the License.
 
 """
-ppsci.deploy module is designed for inference and deployment.
+deploy module is designed for inference and deployment.
 """
