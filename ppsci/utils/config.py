@@ -140,6 +140,21 @@ if importlib.util.find_spec("pydantic") is not None:
         batch_size: int = 256
 
         # Fine-grained validator(s) below
+        @field_validator("engine")
+        def engine_check(cls, v, info: FieldValidationInfo):
+            if v == "tensorrt" and info.data["device"] != "gpu":
+                raise ValueError(
+                    "'device' should be 'gpu' when 'engine' is 'tensorrt', "
+                    f"but got '{info.data['device']}'"
+                )
+            if v == "mkldnn" and info.data["device"] != "cpu":
+                raise ValueError(
+                    "'device' should be 'cpu' when 'engine' is 'mkldnn', "
+                    f"but got '{info.data['device']}'"
+                )
+
+            return v
+
         @field_validator("min_subgraph_size")
         def min_subgraph_size_check(cls, v):
             if v <= 0:
@@ -193,7 +208,7 @@ if importlib.util.find_spec("pydantic") is not None:
         """
 
         # Global settings config
-        mode: Literal["train", "eval", "export"] = "train"
+        mode: Literal["train", "eval", "export", "infer"] = "train"
         output_dir: Optional[str] = None
         log_freq: int = 20
         seed: int = 42

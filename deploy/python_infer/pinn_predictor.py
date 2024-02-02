@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from typing import Dict
-from typing import Optional
 from typing import Union
 
 import numpy as np
 import paddle
-from typing_extensions import Literal
+from omegaconf import DictConfig
 
 from deploy.python_infer import base
 from ppsci.utils import logger
@@ -26,35 +25,29 @@ from ppsci.utils import misc
 
 
 class PINNPredictor(base.Predictor):
+    """General predictor for PINN-based models.
+
+    Args:
+        cfg (DictConfig): Running configuration.
+    """
+
     def __init__(
         self,
-        pdmodel_path: Optional[str] = None,
-        pdpiparams_path: Optional[str] = None,
-        *,
-        device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu",
-        engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native",
-        precision: Literal["fp32", "fp16", "int8"] = "fp32",
-        onnx_path: Optional[str] = None,
-        ir_optim: bool = True,
-        min_subgraph_size: int = 15,
-        gpu_mem: int = 500,
-        gpu_id: int = 0,
-        max_batch_size: int = 10,
-        num_cpu_threads: int = 10,
+        cfg: DictConfig,
     ):
         super().__init__(
-            pdmodel_path,
-            pdpiparams_path,
-            device=device,
-            engine=engine,
-            precision=precision,
-            onnx_path=onnx_path,
-            ir_optim=ir_optim,
-            min_subgraph_size=min_subgraph_size,
-            gpu_mem=gpu_mem,
-            gpu_id=gpu_id,
-            max_batch_size=max_batch_size,
-            num_cpu_threads=num_cpu_threads,
+            cfg.INFER.pdmodel_path,
+            cfg.INFER.pdpiparams_path,
+            device=cfg.INFER.device,
+            engine=cfg.INFER.engine,
+            precision=cfg.INFER.precision,
+            onnx_path=cfg.INFER.onnx_path,
+            ir_optim=cfg.INFER.ir_optim,
+            min_subgraph_size=cfg.INFER.min_subgraph_size,
+            gpu_mem=cfg.INFER.gpu_mem,
+            gpu_id=cfg.INFER.gpu_id,
+            max_batch_size=cfg.INFER.max_batch_size,
+            num_cpu_threads=cfg.INFER.num_cpu_threads,
         )
 
     def predict(
@@ -99,23 +92,17 @@ class PINNPredictor(base.Predictor):
             if batch_id % 20 == 0 or batch_id == batch_num:
                 logger.info(f"Predicting batch {batch_id}/{batch_num}")
 
-            batch_input_dict = {}
-            st = batch_id * batch_size
-            ed = min(num_samples, (batch_id + 1) * batch_size)
-
             # prepare batch input dict
-            for key in input_dict:
-                batch_input_dict[key] = input_dict[key][st:ed]
+            st = (batch_id - 1) * batch_size
+            ed = min(num_samples, batch_id * batch_size)
+            batch_input_dict = {key: input_dict[key][st:ed] for key in input_dict}
 
             # send batch input data to input handle(s)
             for name, handle in input_handles.items():
                 handle.copy_from_cpu(batch_input_dict[name])
-            if batch_id == batch_num:
-                print("start run")
+
             # run predictor
             self.predictor.run()
-            if batch_id == batch_num:
-                print("finished run")
 
             # receive batch output data from output handle(s)
             batch_output_dict = {
@@ -125,10 +112,8 @@ class PINNPredictor(base.Predictor):
             # collect batch output data
             for key, batch_output in batch_output_dict.items():
                 pred_dict[key].append(batch_output)
-        print("Finished")
-        for k in pred_dict[key]:
-            print(type(k))
-        exit()
+
         # concatenate local predictions
         pred_dict = {key: np.concatenate(value) for key, value in pred_dict.items()}
+
         return pred_dict

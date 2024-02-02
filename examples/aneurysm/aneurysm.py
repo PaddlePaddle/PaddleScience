@@ -356,6 +356,47 @@ def export(cfg: DictConfig):
     solver.export(input_spec, cfg.INFER.export_path)
 
 
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    eval_data_dict = reader.load_csv_file(
+        cfg.EVAL_CSV_PATH,
+        ("x", "y", "z", "u", "v", "w", "p"),
+        {
+            "x": "Points:0",
+            "y": "Points:1",
+            "z": "Points:2",
+            "u": "U:0",
+            "v": "U:1",
+            "w": "U:2",
+            "p": "p",
+        },
+    )
+    input_dict = {
+        "x": (eval_data_dict["x"] - cfg.CENTER[0]) * cfg.SCALE,
+        "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
+        "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
+    }
+    if "area" in input_dict.keys():
+        input_dict["area"] *= cfg.SCALE**cfg.DIM
+
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./aneurysm_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="aneurysm.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
@@ -364,6 +405,8 @@ def main(cfg: DictConfig):
         evaluate(cfg)
     elif cfg.mode == "export":
         export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
