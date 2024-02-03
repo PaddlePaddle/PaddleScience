@@ -49,6 +49,7 @@ class PINNPredictor(base.Predictor):
             max_batch_size=cfg.INFER.max_batch_size,
             num_cpu_threads=cfg.INFER.num_cpu_threads,
         )
+        self.log_freq = cfg.log_freq
 
     def predict(
         self,
@@ -89,7 +90,7 @@ class PINNPredictor(base.Predictor):
 
         # inference by batch
         for batch_id in range(1, batch_num + 1):
-            if batch_id % 20 == 0 or batch_id == batch_num:
+            if batch_id % self.log_freq == 0 or batch_id == batch_num:
                 logger.info(f"Predicting batch {batch_id}/{batch_num}")
 
             # prepare batch input dict

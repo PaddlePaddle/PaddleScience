@@ -1,7 +1,5 @@
 """
 Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html
-STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
-pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
 """
 
 import hydra
@@ -273,8 +271,6 @@ def evaluate(cfg: DictConfig):
         "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
         "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
     }
-    if "area" in input_dict.keys():
-        input_dict["area"] *= cfg.SCALE**cfg.DIM
 
     label_dict = {
         "p": eval_data_dict["p"],
@@ -378,9 +374,6 @@ def inference(cfg: DictConfig):
         "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
         "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
     }
-    if "area" in input_dict.keys():
-        input_dict["area"] *= cfg.SCALE**cfg.DIM
-
     output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
 
     # mapping data to cfg.INFER.output_keys
