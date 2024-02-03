@@ -177,7 +177,40 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。
 
-### 1.2 模型推理预测
+### 1.2 模型导出
+
+!!! warning
+
+    目前 PaddleScience 的模型导出功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键导出。
+
+在训练完毕后，我们通常需要将模型导出为 `*.pdmodel`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
+
+``` sh
+python aneurysm.py mode=export \
+    INFER.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams"
+```
+
+!!! tip
+
+    由于支持模型导出的案例的 YAML 文件已经将 `INFER.pretrained_model_path` 的默认值设置为官方提供的预训练模型地址，因此导出官方提供的预训练模型时可以省略 `INFER.pretrained_model_path=...` 参数。
+
+根据终端输出信息，导出的模型会被保存在执行命令目录的相对路径：`./inference/aneurysm` 文件夹下，如下所示。
+
+``` log
+...
+ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.pdmodel, *.pdiparams and *.pdiparams.info files.
+```
+
+``` sh
+./inference/
+├── aneurysm.pdiparams
+├── aneurysm.pdiparams.info
+└── aneurysm.pdmodel
+```
+
+### 1.3 模型推理预测
+
+#### 1.3.1 动态图推理
 
 若需使用训练完毕保存或下载得到的模型文件 `*.pdparams` 直接进行推理（预测），可以参考以下代码示例。
 
@@ -226,7 +259,39 @@ PaddleScience/examples/bracket/outputs_bracket/
     # "w": (100, 1)
     ```
 
-### 1.3 断点继续训练
+#### 1.3.2 Inference 推理(python)
+
+> Paddle Inference 是飞桨的原生推理库，相比 [1.3.1 动态图推理](#131) 具有更快的推理速度，适合不同平台不同应用场景的快速部署，详细信息可参考: [服务器部署 — Paddle Inference](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/infer/inference/inference_cn.html)。
+
+!!! warning
+
+    目前 PaddleScience 的 Inference 推理(python) 功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键推理。
+
+首先需参考 [1.2 模型导出](#12) 章节，将 `*.pdparams` 模型导出，得到 `*.pdmodel`, `*.pdiparams` 两个文件。
+
+以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件保存在 `./inference/aneurysm` 文件夹下，则推理代码示例如下。
+
+``` sh
+# linux
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
+# windows
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# unzip it
+tar -xvf aneurysm_dataset.tar
+python aneurysm.py mode=infer
+```
+
+输出信息如下：
+
+``` log
+...
+...
+ppsci INFO: Predicting batch 2880/2894
+ppsci INFO: Predicting batch 2894/2894
+ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
+```
+
+### 1.4 断点继续训练
 
 在模型的日常训练中，可能存在机器故障或者用户手动操作而中断训练的情况，针对这种情况 PaddleScience 提供了断点继续训练的功能，即在训练时默认会保存**最近一个训练完毕的 epoch** 对应的各种参数到以下 5 个文件中：
 
@@ -253,7 +318,7 @@ solver = ppsci.solver.Solver(
 
     此处只需将路径填写到 "latest" 为止即可，不需要加上其后缀，程序会根据 "/path/to/latest"，自动补充不同文件对应的后缀名来加载 `latest.pdparams`、`latest.pdopt` 等文件。
 
-### 1.4 迁移学习
+### 1.5 迁移学习
 
 迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重后开始微调训练；也可以调用 `Solver.finetune` 接口并指定 `pretrained_model_path` 参数，自动载入预训练模型权重并开始微调训练。
 
@@ -294,7 +359,7 @@ solver = ppsci.solver.Solver(
 
     在迁移学习时，相对于完全随机初始化的参数而言，载入的预训练模型权重参数是一个较好的初始化状态，因此不需要使用太大的学习率，而可以将学习率适当调小 2~10 倍以获得更稳定的训练过程和更好的精度。
 
-### 1.5 模型评估
+### 1.6 模型评估
 
 当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
 
@@ -313,7 +378,7 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.6 使用 VisualDL 记录实验
+### 1.7 使用 VisualDL 记录实验
 
 [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
@@ -348,7 +413,7 @@ PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据�
 
     ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
 
-### 1.7 使用 WandB 记录实验
+### 1.8 使用 WandB 记录实验
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 

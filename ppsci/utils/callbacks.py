@@ -90,15 +90,10 @@ class InitCallback(Callback):
         misc.set_random_seed(full_cfg.seed)
 
         # initialze logger while creating output directory
-        print(full_cfg.mode)
-        if full_cfg.mode not in ["export", "infer"]:
-            print(f"Logger will be created for {full_cfg.mode} mode.")
-            logger.init_logger(
-                "ppsci",
-                osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
-                if full_cfg.output_dir
-                else None,
-                full_cfg.log_level,
-            )
-        else:
-            print("No logger will be created for export or infer mode.")
+        logger.init_logger(
+            "ppsci",
+            osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
+            if full_cfg.output_dir and full_cfg.mode not in ["export", "infer"]
+            else None,
+            full_cfg.log_level,
+        )
