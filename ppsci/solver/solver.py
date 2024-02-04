@@ -21,6 +21,7 @@ import sys
 from os import path as osp
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
@@ -37,6 +38,7 @@ from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
+from paddle.static import InputSpec
 from typing_extensions import Literal
 
 import ppsci
@@ -260,6 +262,7 @@ class Solver:
             )
 
         # load pretrained model, usually used for transfer learning
+        self.pretrained_model_path = pretrained_model_path
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
@@ -679,9 +682,41 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self):
-        """Export to inference model."""
-        raise NotImplementedError("model export is not supported yet.")
+    def export(self, input_spec: List[InputSpec], export_path: str):
+        """
+        Convert model to static graph model and export to files.
+
+        Args:
+            input_spec (List[InputSpec]): InputSpec describes the signature information
+                of the model input.
+            export_path (str): The path prefix to save model.
+        """
+        jit.enable_to_static(True)
+
+        if self.pretrained_model_path is None:
+            logger.warning(
+                "'pretrained_model_path' is not given, so the weights of exported "
+                "model will be random initialized."
+            )
+
+        # convert model to static graph model
+        static_model = jit.to_static(
+            self.model,
+            input_spec=input_spec,
+            full_graph=True,
+        )
+
+        # save static graph model to disk
+        os.makedirs(osp.dirname(export_path), exist_ok=True)
+        try:
+            jit.save(static_model, export_path)
+        except Exception as e:
+            raise e
+        logger.message(
+            f"Inference model has been exported to: {export_path}, including "
+            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+        )
+        jit.enable_to_static(False)
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
