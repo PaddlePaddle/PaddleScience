@@ -42,7 +42,7 @@ class Predictor:
         onnx_path (Optional[str], optional): Path to the ONNX model file. Defaults to None.
         ir_optim (bool, optional): Whether to use IR optimization. Defaults to True.
         min_subgraph_size (int, optional): Minimum subgraph size for IR optimization. Defaults to 15.
-        gpu_mem (int, optional): Maximum GPU memory(MB) to use. Defaults to 500(MB).
+        gpu_mem (int, optional): Initial size of GPU memory pool(MB). Defaults to 500(MB).
         gpu_id (int, optional): GPU ID to use. Defaults to 0.
         num_cpu_threads (int, optional): Number of CPU threads to use. Defaults to 1.
     """
