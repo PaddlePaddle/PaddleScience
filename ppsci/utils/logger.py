@@ -156,7 +156,7 @@ def ensure_logger(log_func: Callable) -> Callable:
             init_logger()
             _logger.warning(
                 "Logger has already been automatically initialized as `log_file` is "
-                "set to None by default, information will only be printed to terminal"
+                "set to None by default, information will only be printed to terminal "
                 "without writting to any file."
             )
 
