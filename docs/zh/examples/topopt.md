@@ -115,7 +115,7 @@ examples/topopt/topopt.py:36:38
 
 ``` py linenums="102"
 --8<--
-examples/topopt/functions.py:102:133
+examples/topopt/functions.py:102:135
 --8<--
 ```
 
@@ -125,7 +125,7 @@ examples/topopt/functions.py:102:133
 
 ``` py linenums="50"
 --8<--
-examples/topopt/topopt.py:50:75
+examples/topopt/topopt.py:50:76
 --8<--
 ```
 
@@ -136,7 +136,7 @@ examples/topopt/topopt.py:50:75
 3. `label`： 标签变量字典：`{"label_name": label_dataset}`；
 4. `transforms`： 数据集预处理配，其中 `"FunctionalTransform"` 为用户自定义的预处理方式。
 
-读取配置中 `"batch_size"` 字段表示训练时指定的批大小，`"sampler"` 字段表示 dataloader 的相关采样配置。
+读取配置中 `auto_collation` 字段表示允许 BatchSampler 自动排序， `batch_size` 字段表示训练时指定的批大小，`sampler` 字段表示 dataloader 的相关采样配置。
 
 第二个参数是损失函数，这里使用[自定义损失](#381)，通过 `cfg.vol_coeff` 确定损失公式中 $\beta$ 对应的值。
 
@@ -194,9 +194,9 @@ $$
 
 loss 构建代码如下：
 
-``` py linenums="263"
+``` py linenums="264"
 --8<--
-examples/topopt/topopt.py:263:274
+examples/topopt/topopt.py:264:275
 --8<--
 ```
 
@@ -215,9 +215,9 @@ $$
 其中 $n_{0} = w_{00} + w_{01}$ ， $n_{1} = w_{10} + w_{11}$ ，$w_{tp}$ 表示实际是 $t$ 类且被预测为 $p$ 类的像素点的数量
 metric 构建代码如下：
 
-``` py linenums="277"
+``` py linenums="278"
 --8<--
-examples/topopt/topopt.py:277:317
+examples/topopt/topopt.py:278:318
 --8<--
 ```
 
@@ -233,9 +233,9 @@ examples/topopt/conf/topopt.yaml:29:31
 
 训练代码如下：
 
-``` py linenums="77"
+``` py linenums="78"
 --8<--
-examples/topopt/topopt.py:77:111
+examples/topopt/topopt.py:78:111
 --8<--
 ```
 
@@ -249,7 +249,7 @@ examples/topopt/topopt.py:77:111
 
 ``` py linenums="218"
 --8<--
-examples/topopt/topopt.py:218:245
+examples/topopt/topopt.py:218:246
 --8<--
 ```
 
