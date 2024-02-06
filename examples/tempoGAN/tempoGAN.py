@@ -111,6 +111,7 @@ def train(cfg: DictConfig):
                     },
                 ),
             },
+            "auto_collation": True,
             "batch_size": cfg.TRAIN.batch_size.sup_constraint,
             "sampler": {
                 "name": "BatchSampler",
@@ -143,6 +144,7 @@ def train(cfg: DictConfig):
                         },
                     ),
                 },
+                "auto_collation": True,
                 "batch_size": int(cfg.TRAIN.batch_size.sup_constraint // 3),
                 "sampler": {
                     "name": "BatchSampler",
@@ -188,6 +190,7 @@ def train(cfg: DictConfig):
                         },
                     ),
                 },
+                "auto_collation": True,
                 "batch_size": cfg.TRAIN.batch_size.sup_constraint,
                 "sampler": {
                     "name": "BatchSampler",
@@ -229,6 +232,7 @@ def train(cfg: DictConfig):
                         },
                     ),
                 },
+                "auto_collation": True,
                 "batch_size": int(cfg.TRAIN.batch_size.sup_constraint // 3),
                 "sampler": {
                     "name": "BatchSampler",
