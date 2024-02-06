@@ -125,7 +125,7 @@ def augmentation(
     # random 90* rotation
     if np.random.random() > 0.5:
         new_perm = list(range(len(inputs.shape)))
-        new_perm[1], new_perm[2] = new_perm[2], new_perm[1]
+        new_perm[-2], new_perm[-1] = new_perm[-1], new_perm[-2]
         inputs = np.transpose(inputs, new_perm)
         labels = np.transpose(labels, new_perm)
 
