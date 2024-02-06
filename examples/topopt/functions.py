@@ -113,6 +113,8 @@ def augmentation(
     """
     inputs = input_dict["input"]
     labels = label_dict["output"]
+    assert len(inputs.shape) == 3
+    assert len(labels.shape) == 3
 
     # random horizontal flip
     if np.random.random() > 0.5:
