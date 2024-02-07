@@ -49,21 +49,19 @@ class LorenzEmbedding(base.Arch):
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.LorenzEmbedding(
-        ...     input_keys = ("x", "y"),
+        ...     input_keys=("x", "y"),
         ...     output_keys=("u", "v"),
-        ...     input_size = 3,
-        ...     hidden_size = 500,
-        ...     embed_size = 32,
-        ...     drop = 0.0,
-        ...     mean = None,
-        ...     std = None,
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
         ... )
         >>> x_shape = [8, 3, 2]
         >>> y_shape = [8, 3, 1]
-        >>> input_dict = {
-        ...     "x": paddle.rand(x_shape),
-        ...     "y": paddle.rand(y_shape)
-        ... }
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
         [8, 2, 3]
@@ -230,21 +228,19 @@ class RosslerEmbedding(LorenzEmbedding):
     Examples:
         >>> import ppsci
         >>> model = ppsci.arch.RosslerEmbedding(
-        ...     input_keys = ("x", "y"),
+        ...     input_keys=("x", "y"),
         ...     output_keys=("u", "v"),
-        ...     input_size = 3,
-        ...     hidden_size = 500,
-        ...     embed_size = 32,
-        ...     drop = 0.0,
-        ...     mean = None,
-        ...     std = None,
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
         ... )
         >>> x_shape = [8, 3, 2]
         >>> y_shape = [8, 3, 1]
-        >>> input_dict = {
-        ...     "x": paddle.rand(x_shape),
-        ...     "y": paddle.rand(y_shape)
-        ... }
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
         >>> output_dict = model(input_dict)
         >>> print(output_dict["u"].shape)
         [8, 2, 3]
