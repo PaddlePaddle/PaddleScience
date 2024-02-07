@@ -208,6 +208,16 @@ def train(cfg: DictConfig):
     visu_mat = geom["time_rect_visu"].sample_interior(
         NPOINT_PDE * NTIME_PDE, evenly=True
     )
+    # transform
+    def transform_out(in_, out):
+        psi_y = out["psi"]
+        y = in_["y"]
+        x = in_["x"]
+        u = jacobian(psi_y, y, create_graph=False)
+        v = -jacobian(psi_y, x, create_graph=False)
+        return {"u": u, "v": v}
+
+    model_psi.register_output_transform(transform_out)
 
     pred_norm = solver.predict(visu_mat, None, 4096, no_grad=False, return_numpy=True)
     # inverse normalization

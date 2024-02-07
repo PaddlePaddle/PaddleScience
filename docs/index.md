@@ -54,6 +54,10 @@
 ./README.md:description
 --8<--
 
+--8<--
+./docs/zh/overview.md:panorama
+--8<--
+
 ## 📝案例列表
 
 <style>

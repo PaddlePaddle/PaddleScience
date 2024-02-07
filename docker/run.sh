@@ -5,5 +5,5 @@ if [ -x "$(command -v nvidia-docker)" ]; then
 elif [ -x "$(command -v docker)" ]; then
     docker run --gpus all --network=host -it paddlescience
 else
-    echo "Please install docker or nvidia-docker first."
+    echo "Docker start failed, please install nvidia-docker or docker(>=19.03) first"
 fi
