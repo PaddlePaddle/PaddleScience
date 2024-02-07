@@ -46,13 +46,8 @@ class LorenzEmbedding(base.Arch):
         embed_size (int, optional): Number of embedding size. Defaults to 32.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
-    Returns:
-        None.
-
     Examples:
-
         >>> import ppsci
-        >>> from ppsci.arch.embedding_koopman import LorenzEmbedding
         >>> model = ppsci.arch.LorenzEmbedding(
         ...     input_keys = ("x", "y"),
         ...     output_keys=("u", "v"),
@@ -74,7 +69,6 @@ class LorenzEmbedding(base.Arch):
         [8, 2, 3]
         >>> print(output_dict["v"].shape)
         [8, 3, 3]
-
     """
 
     def __init__(
@@ -233,13 +227,8 @@ class RosslerEmbedding(LorenzEmbedding):
         embed_size (int, optional): Number of embedding size. Defaults to 32.
         drop (float, optional):  Probability of dropout the units. Defaults to 0.0.
 
-    Returns:
-        None.
-
     Examples:
-
         >>> import ppsci
-        >>> from ppsci.arch.embedding_koopman import RosslerEmbedding
         >>> model = ppsci.arch.RosslerEmbedding(
         ...     input_keys = ("x", "y"),
         ...     output_keys=("u", "v"),
@@ -261,7 +250,6 @@ class RosslerEmbedding(LorenzEmbedding):
         [8, 2, 3]
         >>> print(output_dict["v"].shape)
         [8, 3, 3]
-
     """
 
     def __init__(
