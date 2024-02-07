@@ -750,6 +750,7 @@ class SchedulerList:
     def __init__(self, scheduler_list: Tuple[lr.LRScheduler, ...]):
         super().__init__()
         self._sch_list = scheduler_list
+        self.by_epoch = False
 
     def step(self):
         for sch in self._sch_list:

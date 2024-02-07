@@ -89,7 +89,10 @@ def build_dataloader(_dataset, cfg):
         logger.warning(
             "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
         )
-        batch_sampler = None
+        batch_sampler = io.BatchSampler(
+            _dataset,
+            batch_size=cfg["batch_size"],
+        )
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
