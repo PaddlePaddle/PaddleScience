@@ -93,7 +93,7 @@ class InitCallback(Callback):
         logger.init_logger(
             "ppsci",
             osp.join(full_cfg.output_dir, f"{full_cfg.mode}.log")
-            if full_cfg.output_dir
+            if full_cfg.output_dir and full_cfg.mode not in ["export", "infer"]
             else None,
             full_cfg.log_level,
         )
