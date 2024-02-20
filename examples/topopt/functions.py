@@ -113,8 +113,6 @@ def augmentation(
     """
     inputs = input_dict["input"]
     labels = label_dict["output"]
-    assert len(inputs.shape) == 3
-    assert len(labels.shape) == 3
 
     # random horizontal flip
     if np.random.random() > 0.5:
@@ -127,7 +125,7 @@ def augmentation(
     # random 90* rotation
     if np.random.random() > 0.5:
         new_perm = list(range(len(inputs.shape)))
-        new_perm[-2], new_perm[-1] = new_perm[-1], new_perm[-2]
+        new_perm[1], new_perm[2] = new_perm[2], new_perm[1]
         inputs = np.transpose(inputs, new_perm)
         labels = np.transpose(labels, new_perm)
 
