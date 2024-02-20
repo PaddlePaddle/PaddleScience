@@ -62,7 +62,6 @@ def train(cfg: DictConfig):
                     },
                 ),
             },
-            "auto_collation": True,
             "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
                 "name": "BatchSampler",
@@ -77,6 +76,7 @@ def train(cfg: DictConfig):
 
     # train models for 4 cases
     for sampler_key, num in cfg.CASE_PARAM:
+
         # initialize SIMP iteration stop time sampler
         SIMP_stop_point_sampler = func_module.generate_sampler(sampler_key, num)
 
@@ -229,7 +229,6 @@ def evaluate_model(
                         },
                     ),
                 },
-                "auto_collation": True,
                 "batch_size": cfg.EVAL.batch_size,
                 "sampler": {
                     "name": "BatchSampler",

@@ -154,9 +154,9 @@ examples/tempoGAN/tempoGAN.py:78:94
 
 本问题采用无监督学习的方式，虽然不是以监督学习方式进行训练，但此处仍然可以采用监督约束 `SupervisedConstraint`，在定义约束之前，需要给监督约束指定文件路径等数据读取配置，因为 tempoGAN 属于自监督学习，数据集中没有标签数据，而是使用一部分输入数据作为 `label`，因此需要设置约束的 `output_expr`。
 
-``` py linenums="123"
+``` py linenums="122"
 --8<--
-examples/tempoGAN/tempoGAN.py:123:126
+examples/tempoGAN/tempoGAN.py:122:125
 --8<--
 ```
 
@@ -166,7 +166,7 @@ examples/tempoGAN/tempoGAN.py:123:126
 
 ``` py linenums="98"
 --8<--
-examples/tempoGAN/tempoGAN.py:98:129
+examples/tempoGAN/tempoGAN.py:98:127
 --8<--
 ```
 
@@ -177,9 +177,7 @@ examples/tempoGAN/tempoGAN.py:98:129
 3. `label`： Array 类型的标签数据；
 4. `transforms`： 所有数据 transform 方法，此处 `FunctionalTransform` 为PaddleScience 预留的自定义数据 transform 类，该类支持编写代码时自定义输入数据的 transform，具体代码请参考 [自定义 loss 和 data transform](#38)；
 
-`auto_collation` 字段表示允许 BatchSampler 自动排序；
-
-`batch_size` 字段表示 batch 的大小；
+`batch_size` 字段表示 batch的大小；
 
 `sampler` 字段表示采样方法，其中各个字段表示：
 
@@ -195,17 +193,17 @@ examples/tempoGAN/tempoGAN.py:98:129
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问，由于本问题设置了`use_spatialdisc` 和 `use_tempodisc`，导致 Generator 的部分约束不一定存在，因此先封装一定存在的约束到字典中，当其余约束存在时，在向字典中添加约束元素。
 
-``` py linenums="130"
+``` py linenums="129"
 --8<--
-examples/tempoGAN/tempoGAN.py:130:162
+examples/tempoGAN/tempoGAN.py:129:160
 --8<--
 ```
 
 #### 3.6.2 Discriminator 的约束
 
-``` py linenums="166"
+``` py linenums="164"
 --8<--
-examples/tempoGAN/tempoGAN.py:166:204
+examples/tempoGAN/tempoGAN.py:164:201
 --8<--
 ```
 
@@ -213,9 +211,9 @@ examples/tempoGAN/tempoGAN.py:166:204
 
 #### 3.6.3 Discriminator_tempo 的约束
 
-``` py linenums="208"
+``` py linenums="205"
 --8<--
-examples/tempoGAN/tempoGAN.py:208:248
+examples/tempoGAN/tempoGAN.py:205:244
 --8<--
 ```
 
@@ -281,9 +279,9 @@ examples/tempoGAN/functions.py:430:488
 
 完成上述设置之后，首先需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="251"
+``` py linenums="247"
 --8<--
-examples/tempoGAN/tempoGAN.py:251:262
+examples/tempoGAN/tempoGAN.py:247:258
 --8<--
 ```
 
@@ -295,15 +293,15 @@ examples/tempoGAN/tempoGAN.py:251:262
 
 训练中仅在特定 `Epoch` 保存特定图片的目标结果和模型输出结果，训练结束后针对最后一个 `Epoch` 的输出结果进行一次评估，以便直观评价模型优化效果。不使用 PaddleScience 中内置的评估器，也不在训练过程中进行评估:
 
-``` py linenums="291"
+``` py linenums="287"
 --8<--
-examples/tempoGAN/tempoGAN.py:291:297
+examples/tempoGAN/tempoGAN.py:287:293
 --8<--
 ```
 
-``` py linenums="311"
+``` py linenums="307"
 --8<--
-examples/tempoGAN/tempoGAN.py:311:327
+examples/tempoGAN/tempoGAN.py:307:323
 --8<--
 ```
 
@@ -313,17 +311,17 @@ examples/tempoGAN/tempoGAN.py:311:327
 
 本问题的评估指标为，将模型输出的超分结果与实际高分辨率图片做对比，使用三个指标 MSE(Mean-Square Error) 、PSNR(Peak Signal-to-Noise Ratio) 、SSIM(Structural SIMilarity) 来评价图片相似度。因此没有使用 PaddleScience 中的内置评估器，也没有 `Solver.eval()` 过程。
 
-``` py linenums="330"
+``` py linenums="326"
 --8<--
-examples/tempoGAN/tempoGAN.py:330:410
+examples/tempoGAN/tempoGAN.py:326:406
 --8<--
 ```
 
 另外，其中：
 
-``` py linenums="400"
+``` py linenums="396"
 --8<--
-examples/tempoGAN/tempoGAN.py:400:407
+examples/tempoGAN/tempoGAN.py:396:403
 --8<--
 ```
 
