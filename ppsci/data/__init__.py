@@ -134,6 +134,7 @@ def build_dataloader(_dataset, cfg):
         if (
             cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
             is False
+            and "transforms" not in cfg["dataset"]
         ):
             # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
             # which can speed up the process of batch samples indexing from dataset. See
