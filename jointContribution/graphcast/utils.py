@@ -294,7 +294,6 @@ def get_rotation_matrices_to_local_coordinates(
     rotate_latitude: bool,
     rotate_longitude: bool,
 ) -> np.ndarray:
-
     """Returns a rotation matrix to rotate to a point based on a reference vector.
 
     The rotation matrix is build such that, a vector in the
