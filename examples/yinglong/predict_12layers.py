@@ -43,9 +43,6 @@ def inference(cfg: DictConfig):
 
     num_timestamps = cfg.INFER.num_timestamps
     # create predictor
-    # predictor = YingLong(
-    #     args.model_file, args.params_file, args.mean_path, args.std_path
-    # )
     predictor = YingLongPredictor(cfg)
 
     # load data

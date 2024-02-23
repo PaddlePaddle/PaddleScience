@@ -59,9 +59,9 @@ cd PaddleScience
 export PYTHONPATH=$PWD
 cd ./examples/yinglong
 # YingLong-12 Layers
-python ./predict_12layers.py mode=infer
+python predict_12layers.py mode=infer
 # YingLong-24 Layers
-python ./predict_24layers.py mode=infer
+python predict_24layers.py mode=infer
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022. Click [here](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result.gif) to view the prediction results.
