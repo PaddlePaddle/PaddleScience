@@ -163,7 +163,7 @@ class Predictor:
 
         # enable memory optim
         config.enable_memory_optim()
-        config.disable_glog_info()
+        # config.disable_glog_info()
         # enable zero copy
         config.switch_use_feed_fetch_ops(False)
         config.switch_ir_optim(self.ir_optim)
