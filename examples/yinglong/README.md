@@ -46,8 +46,8 @@ wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_examp
 tar -xvf hrrr_example_24vars.tar
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_69vars.tar
 tar -xvf hrrr_example_69vars.tar
-wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/yinglong_models.tar
-tar -xvf yinglong_models.tar
+wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/inference.tar
+tar -xvf inference.tar
 ```
 
 ### 2. Run the code
@@ -55,11 +55,13 @@ tar -xvf yinglong_models.tar
 The following code runs the Yinglong model, and the model output will be saved in 'output/result.npy'.
 
 ``` shell
+cd PaddleScience
 export PYTHONPATH=$PWD
+cd ./examples/yinglong
 # YingLong-12 Layers
-python examples/yinglong/predict_12layers.py
+python ./predict_12layers.py mode=infer
 # YingLong-24 Layers
-# python examples/yinglong/predict_24layers.py
+python ./predict_24layers.py mode=infer
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022. Click [here](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result.gif) to view the prediction results.
