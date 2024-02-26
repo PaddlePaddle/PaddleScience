@@ -30,10 +30,13 @@ If `"PaddlePaddle is installed successfully! Let's start deep learning with Padd
 
 ### 2. Install PaddleScience
 
-Clone the code of PaddleScience from [here](https://github.com/PaddlePaddle/PaddleScience.git).
+Clone the code of PaddleScience from [here](https://github.com/PaddlePaddle/PaddleScience.git) and install requirements.
 
 ``` shell
 git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+cd PaddleScience
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+export PYTHONPATH=$PWD
 ```
 
 ## Example Usage
@@ -41,7 +44,7 @@ git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
 ### 1. Download the data and model weights
 
 ``` shell
-cd PaddleScience
+cd examples/yinglong
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_24vars.tar
 tar -xvf hrrr_example_24vars.tar
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_69vars.tar
@@ -55,9 +58,6 @@ tar -xvf inference.tar
 The following code runs the Yinglong model, and the model output will be saved in 'output/result.npy'.
 
 ``` shell
-cd PaddleScience
-export PYTHONPATH=$PWD
-cd ./examples/yinglong
 # YingLong-12 Layers
 python predict_12layers.py mode=infer
 # YingLong-24 Layers
