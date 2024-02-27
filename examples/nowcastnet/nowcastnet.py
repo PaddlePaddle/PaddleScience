@@ -82,6 +82,35 @@ def evaluate(cfg: DictConfig):
             solver.visualize(batch_id)
 
 
+def export(cfg: DictConfig):
+    if cfg.CASE_TYPE == "large":
+        model_cfg = cfg.MODEL.large
+        output_dir = osp.join(cfg.output_dir, "large")
+    elif cfg.CASE_TYPE == "normal":
+        model_cfg = cfg.MODEL.normal
+        output_dir = osp.join(cfg.output_dir, "normal")
+    else:
+        raise ValueError(
+            f"cfg.CASE_TYPE should in ['normal', 'large'], but got '{cfg.mode}'"
+        )
+    model = ppsci.arch.NowcastNet(**model_cfg)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        output_dir=output_dir,
+        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+    )
+
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="nowcastnet.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
