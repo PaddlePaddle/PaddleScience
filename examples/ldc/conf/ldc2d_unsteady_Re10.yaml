@@ -30,12 +30,11 @@ NTIME_ALL: 16
 
 # model settings
 MODEL:
-  model:
-    input_keys: ["t", "x", "y"]
-    output_keys: ["u", "v", "p"]
-    num_layers: 9
-    hidden_size: 50
-    activation: "tanh"
+  input_keys: ["t", "x", "y"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 9
+  hidden_size: 50
+  activation: "tanh"
 
 # training settings
 TRAIN:

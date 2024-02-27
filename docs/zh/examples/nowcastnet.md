@@ -52,7 +52,7 @@ examples/nowcastnet/conf/nowcastnet.yaml:35:53
 
 其中，`input_keys` 和 `output_keys` 分别代表网络模型输入、输出变量的名称。
 
-## 4 模型评估可视化
+## 4. 模型评估可视化
 
 完成上述设置之后，将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`：
 
@@ -91,3 +91,7 @@ examples/nowcastnet/nowcastnet.py
   ![result](https://paddle-org.bj.bcebos.com/paddlescience/docs/nowcastnet/gt.gif){ loading=lazy style="margin:0 auto;"}
   <figcaption>模型真值结果</figcaption>
 </figure>
+
+## 7. 参考资料
+
+- [Skilful nowcasting of extreme precipitation with NowcastNet](https://www.nature.com/articles/s41586-023-06184-4)
