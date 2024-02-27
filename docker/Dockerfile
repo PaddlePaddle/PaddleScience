@@ -42,6 +42,7 @@ RUN cd /src && \
     ls /src && \
     tar -xvf pymesh.tar.xz && \
     cd pymesh && \
+    python3 -m pip install -r python/requirements.txt && \
     python3 setup.py install --user && \
     rm -rf /src
 
