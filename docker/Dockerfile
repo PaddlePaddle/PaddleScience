@@ -42,7 +42,8 @@ RUN cd /src && \
     ls /src && \
     tar -xvf pymesh.tar.xz && \
     cd pymesh && \
-    python3 setup.py install && \
+    python3 -m pip install -r python/requirements.txt && \
+    python3 setup.py install --user && \
     rm -rf /src
 
 ENV PATH="$PATH:/usr/lib/x86_64-linux-gnu/"
