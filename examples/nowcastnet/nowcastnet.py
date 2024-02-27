@@ -85,10 +85,8 @@ def evaluate(cfg: DictConfig):
 def export(cfg: DictConfig):
     if cfg.CASE_TYPE == "large":
         model_cfg = cfg.MODEL.large
-        output_dir = osp.join(cfg.output_dir, "large")
     elif cfg.CASE_TYPE == "normal":
         model_cfg = cfg.MODEL.normal
-        output_dir = osp.join(cfg.output_dir, "normal")
     else:
         raise ValueError(
             f"cfg.CASE_TYPE should in ['normal', 'large'], but got '{cfg.mode}'"
@@ -98,8 +96,7 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=output_dir,
-        pretrained_model_path=cfg.EVAL.pretrained_model_path,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
 
     # export model
