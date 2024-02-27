@@ -56,3 +56,6 @@ MODEL:
 # evaluation settings
 EVAL:
   pretrained_model_path: checkpoints/paddle_mrms_model
+
+INFER:
+  pretrained_model_path: checkpoints/paddle_mrms_model
