@@ -107,7 +107,7 @@ pybind11、pysdf、PyMesh 四个依赖库（上述**1.1 从 docker 镜像启动*
     如未安装，可按照下列命令下载、解压 cmake 包，并添加到 `PATH` 变量中即可完成安装。
 
     ``` sh
-    wget -nc https://cmake.org/files/v3.23/cmake-3.23.0-linux-x86_64.tar.gz
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/cmake-3.23.0-linux-x86_64.tar.gz
     tar -zxvf cmake-3.23.0-linux-x86_64.tar.gz
     rm -f cmake-3.23.0-linux-x86_64.tar.gz
     PATH=$PWD/cmake-3.23.0-linux-x86_64/bin:$PATH
