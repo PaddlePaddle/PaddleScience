@@ -46,7 +46,7 @@ class VtuDataset(io.Dataset):
         >>> # get the length of the dataset
         >>> dataset_size = len(dataset) # doctest: +SKIP
         >>> # get the first sample of the data
-        >>> first_sample = dataset[0]
+        >>> first_sample = dataset[0] # doctest: +SKIP
         >>> print("First sample:", first_sample)
     """
 
