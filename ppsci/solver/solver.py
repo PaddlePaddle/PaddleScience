@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import itertools
 import os
 import sys
@@ -682,7 +683,9 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self, input_spec: List[InputSpec], export_path: str):
+    def export(
+        self, input_spec: List[InputSpec], export_path: str, with_onnx: bool = False
+    ):
         """
         Convert model to static graph model and export to files.
 
@@ -690,6 +693,8 @@ class Solver:
             input_spec (List[InputSpec]): InputSpec describes the signature information
                 of the model input.
             export_path (str): The path prefix to save model.
+            with_onnx (bool, optional): Whether to export model into onnx after
+                paddle inference models are exported.
         """
         jit.enable_to_static(True)
 
@@ -717,6 +722,25 @@ class Solver:
             "*.pdmodel, *.pdiparams and *.pdiparams.info files."
         )
         jit.enable_to_static(False)
+
+        if with_onnx:
+            if not importlib.util.find_spec("paddle2onnx"):
+                raise ModuleNotFoundError(
+                    "Please install paddle2onnx with `pip install paddle2onnx`"
+                    " before exporting onnx model."
+                )
+            import paddle2onnx
+
+            DEFAULT_OPSET_VERSION = 13
+
+            paddle2onnx.export(
+                model_file=export_path + ".pdmodel",
+                params_file=export_path + ".pdiparams",
+                save_file=export_path + ".onnx",
+                opset_version=DEFAULT_OPSET_VERSION,
+                enable_onnx_checker=True,
+            )
+            logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
