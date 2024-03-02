@@ -17,13 +17,16 @@ from os import path as osp
 import functions as func_module
 import h5py
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle import nn
+from paddle.static import InputSpec
 from topoptmodel import TopOptNN
 
 import ppsci
+from deploy.python_infer import pinn_predictor
 from ppsci.utils import logger
 
 
@@ -120,7 +123,7 @@ def evaluate(cfg: DictConfig):
 
     # fixed iteration stop times for evaluation
     iterations_stop_times = range(5, 85, 5)
-    model = TopOptNN()
+    model = TopOptNN(**cfg.MODEL)
 
     # evaluation for 4 cases
     acc_results_summary = {}
@@ -317,14 +320,120 @@ def val_metric(output_dict, label_dict, weight_dict=None):
     return {"Binary_Acc": acc, "IoU": iou}
 
 
+# export model
+def export(cfg: DictConfig):
+    # set model
+    model = TopOptNN(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        eval_with_no_grad=True,
+        pretrained_model_path=cfg.INFER.pretrained_model_path_dict[
+            cfg.EXPORT.pretrained_model_name
+        ],
+    )
+
+    # export model
+    input_spec = [{"input": InputSpec([None, 2, 40, 40], "float32", name="input")}]
+
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+# model inference
+def inference(cfg: DictConfig):
+    # read h5 data
+    h5data = h5py.File(cfg.DATA_PATH, "r")
+    data_iters = np.array(h5data["iters"])
+    data_targets = np.array(h5data["targets"])
+    idx = np.random.choice(len(data_iters), cfg.INFER.img_num, False)
+    data_iters = data_iters[idx]
+    data_targets = data_targets[idx]
+
+    sampler = func_module.generate_sampler(cfg.INFER.sampler_key, cfg.INFER.sampler_num)
+    data_iters = channel_sampling(sampler, data_iters)
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    input_dict = {"input": data_iters}
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to output_key
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip({"output"}, output_dict.keys())
+    }
+
+    save_topopt_img(
+        input_dict,
+        output_dict,
+        data_iters,
+        cfg.INFER.save_res_path,
+        cfg.INFER.res_img_figsize,
+        cfg.INFER.save_npy,
+    )
+
+
+# used for inference
+def channel_sampling(sampler, input):
+    SIMP_initial_iter_time = sampler()
+    input_channel_k = input[:, SIMP_initial_iter_time, :, :]
+    input_channel_k_minus_1 = input[:, SIMP_initial_iter_time - 1, :, :]
+    input = np.stack(
+        (input_channel_k, input_channel_k - input_channel_k_minus_1), axis=1
+    )
+    return input
+
+
+# used for inference
+def save_topopt_img(
+    input_dict, output_dict, ground_truth, res_path, figsize=None, npy=False
+):
+
+    input = input_dict["input"]
+    output = output_dict["output"]
+    for i in range(len(input)):
+        plt.figure(figsize=figsize)
+        plt.subplot(1, 4, 1)
+        plt.axis("off")
+        plt.imshow(input[i][0], cmap="gray")
+        plt.title("Input Image")
+        plt.subplot(1, 4, 2)
+        plt.axis("off")
+        plt.imshow(input[i][1], cmap="gray")
+        plt.title("Input Gradient")
+        plt.subplot(1, 4, 3)
+        plt.axis("off")
+        plt.imshow(np.round(output[i][0]), cmap="gray")
+        print(output[i])
+        plt.title("Prediction")
+        plt.subplot(1, 4, 4)
+        plt.axis("off")
+        plt.imshow(np.round(ground_truth[i][0]), cmap="gray")
+        print(ground_truth[i])
+        plt.title("Ground Truth")
+        plt.show()
+        plt.savefig(osp.join(res_path, "Prediction_" + str(i) + ".png"))
+        plt.close()
+        if npy:
+            with open(osp(res_path, "Prediction_" + str(i) + ".npy"), "wb") as f:
+                np.save(f, output[i])
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="topopt.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
