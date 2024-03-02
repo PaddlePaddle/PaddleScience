@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import importlib
 import platform
 from os import path as osp
 from typing import TYPE_CHECKING
@@ -72,6 +73,7 @@ class Predictor:
         self.engine = engine
         self._check_precision(precision)
         self.precision = precision
+        self._compatibility_check()
 
         self.onnx_path = onnx_path
         self.ir_optim = ir_optim
@@ -194,7 +196,14 @@ class Predictor:
             config.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 
         # instantiate onnx predictor
-        predictor = ort.InferenceSession(self.onnx_path, sess_options=config)
+        providers = (
+            ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if self.device != "cpu"
+            else ["CPUExecutionProvider"]
+        )
+        predictor = ort.InferenceSession(
+            self.onnx_path, sess_options=config, providers=providers
+        )
         return predictor, config
 
     def _check_device(self, device: str):
@@ -217,3 +226,22 @@ class Predictor:
                 "Inference only supports 'fp32', 'fp16' and 'int8' "
                 f"precision, but got {precision}."
             )
+
+    def _compatibility_check(self):
+        if self.engine == "onnx":
+            if not (
+                importlib.util.find_spec("onnxruntime")
+                or importlib.util.find_spec("onnxruntime-gpu")
+            ):
+                raise ModuleNotFoundError(
+                    "\nPlease install onnxruntime first when engine is 'onnx'\n"
+                    "* For CPU inference, use `pip install onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple`\n"
+                    "* For GPU inference, use `pip install onnxruntime-gpu -i https://pypi.tuna.tsinghua.edu.cn/simple`"
+                )
+            import onnxruntime as ort
+
+            if self.device == "gpu" and ort.get_device() != "GPU":
+                raise RuntimeError(
+                    "Please install onnxruntime-gpu with `pip install onnxruntime-gpu`"
+                    " when device is set to 'gpu'\n"
+                )
