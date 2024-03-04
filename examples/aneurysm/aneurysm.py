@@ -348,7 +348,7 @@ def export(cfg: DictConfig):
     input_spec = [
         {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
     ]
-    solver.export(input_spec, cfg.INFER.export_path)
+    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
 
 
 def inference(cfg: DictConfig):
