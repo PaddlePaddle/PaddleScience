@@ -14,7 +14,7 @@ hydra:
           - EVAL.pretrained_model_path_dict
           - EVAL.batch_size
           - EVAL.num_val_step
-          - EXPORT.pretrained_model_name
+          - INFER.pretrained_model_name
           - INFER.pretrained_model_path_dict
           - INFER.export_path
           - INFER.batch_size
@@ -68,7 +68,7 @@ EVAL:
 INFER:
   pretrained_model_name: null # a string, indicating which model you want to export. Support [Uniform, Poisson5, Poisson10, Poisson30].
   pretrained_model_path_dict: {'Uniform': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams', 'Poisson5': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams', 'Poisson10': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams', 'Poisson30': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams'}
-  export_path: ./inference/topopt
+  export_path: ./inference/topopt_${INFER.pretrained_model_name}
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
   device: gpu
@@ -86,5 +86,5 @@ INFER:
   sampler_num: 8 # a integer number, indicating the sampling rate of the sampling method, supported when `sampler_key` is Fixed or Poisson.
   img_num: 4
   res_img_figsize: null
-  save_res_path: ./inference/predicted
+  save_res_path: ./inference/predicted_${INFER.pretrained_model_name}
   save_npy: false

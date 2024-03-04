@@ -13,20 +13,18 @@
 # limitations under the License.
 
 from os import path as osp
+from typing import Dict
 
 import functions as func_module
 import h5py
 import hydra
-import matplotlib.pyplot as plt
 import numpy as np
 import paddle
 from omegaconf import DictConfig
 from paddle import nn
-from paddle.static import InputSpec
 from topoptmodel import TopOptNN
 
 import ppsci
-from deploy.python_infer import pinn_predictor
 from ppsci.utils import logger
 
 
@@ -330,17 +328,18 @@ def export(cfg: DictConfig):
         model,
         eval_with_no_grad=True,
         pretrained_model_path=cfg.INFER.pretrained_model_path_dict[
-            cfg.EXPORT.pretrained_model_name
+            cfg.INFER.pretrained_model_name
         ],
     )
 
     # export model
+    from paddle.static import InputSpec
+
     input_spec = [{"input": InputSpec([None, 2, 40, 40], "float32", name="input")}]
 
     solver.export(input_spec, cfg.INFER.export_path)
 
 
-# model inference
 def inference(cfg: DictConfig):
     # read h5 data
     h5data = h5py.File(cfg.DATA_PATH, "r")
@@ -352,6 +351,8 @@ def inference(cfg: DictConfig):
 
     sampler = func_module.generate_sampler(cfg.INFER.sampler_key, cfg.INFER.sampler_num)
     data_iters = channel_sampling(sampler, data_iters)
+
+    from deploy.python_infer import pinn_predictor
 
     predictor = pinn_predictor.PINNPredictor(cfg)
 
@@ -367,7 +368,7 @@ def inference(cfg: DictConfig):
     save_topopt_img(
         input_dict,
         output_dict,
-        data_iters,
+        data_targets,
         cfg.INFER.save_res_path,
         cfg.INFER.res_img_figsize,
         cfg.INFER.save_npy,
@@ -387,11 +388,21 @@ def channel_sampling(sampler, input):
 
 # used for inference
 def save_topopt_img(
-    input_dict, output_dict, ground_truth, res_path, figsize=None, npy=False
+    input_dict: Dict[str, np.ndarray],
+    output_dict: Dict[str, np.ndarray],
+    ground_truth: np.ndarray,
+    save_dir: str,
+    figsize: tuple = None,
+    save_npy: bool = False,
 ):
 
     input = input_dict["input"]
     output = output_dict["output"]
+    import os
+
+    import matplotlib.pyplot as plt
+
+    os.makedirs(save_dir, exist_ok=True)
     for i in range(len(input)):
         plt.figure(figsize=figsize)
         plt.subplot(1, 4, 1)
@@ -405,18 +416,16 @@ def save_topopt_img(
         plt.subplot(1, 4, 3)
         plt.axis("off")
         plt.imshow(np.round(output[i][0]), cmap="gray")
-        print(output[i])
         plt.title("Prediction")
         plt.subplot(1, 4, 4)
         plt.axis("off")
         plt.imshow(np.round(ground_truth[i][0]), cmap="gray")
-        print(ground_truth[i])
         plt.title("Ground Truth")
         plt.show()
-        plt.savefig(osp.join(res_path, "Prediction_" + str(i) + ".png"))
+        plt.savefig(osp.join(save_dir, f"Prediction_{i}.png"))
         plt.close()
-        if npy:
-            with open(osp(res_path, "Prediction_" + str(i) + ".npy"), "wb") as f:
+        if save_npy:
+            with open(osp(save_dir, f"Prediction_{i}.npy"), "wb") as f:
                 np.save(f, output[i])
 
 
