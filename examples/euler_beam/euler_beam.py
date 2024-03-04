@@ -254,11 +254,16 @@ def inference(cfg: DictConfig):
         for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
     }
 
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x = out["x"]
+        return -(x**4) / 24 + x**3 / 6 - x**2 / 4
+
     ppsci.visualize.save_plot_from_1d_dict(
         "./euler_beam_pred",
-        {**input_dict, **output_dict},
+        {**input_dict, **output_dict, "u_label": u_solution_func(input_dict)},
         ("x",),
-        ("u",),
+        ("u", "u_label"),
     )
 
 
