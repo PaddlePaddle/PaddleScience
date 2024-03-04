@@ -30,7 +30,7 @@ import ppsci
 from ppsci.utils import checker
 
 if not checker.dynamic_import_to_globals("seaborn"):
-    raise ModuleNotFoundError("Please install seaborn through pip first.")
+    raise ModuleNotFoundError("Please install seaborn with `pip install seaborn>=0.13.0`.")  # fmt: skip
 
 import seaborn as sns
 
