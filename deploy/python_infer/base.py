@@ -93,7 +93,7 @@ class Predictor:
             f"device: {self.device}."
         )
 
-    def predict(self, image):
+    def predict(self, input_dict):
         raise NotImplementedError
 
     def _create_paddle_predictor(
