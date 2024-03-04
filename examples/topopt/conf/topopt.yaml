@@ -14,8 +14,13 @@ hydra:
           - EVAL.pretrained_model_path_dict
           - EVAL.batch_size
           - EVAL.num_val_step
+          - INFER.pretrained_model_name
+          - INFER.pretrained_model_path_dict
+          - INFER.export_path
+          - INFER.batch_size
           - mode
           - vol_coeff
+          - log_freq
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -25,6 +30,7 @@ hydra:
 mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
+log_freq: 20
 
 # set default cases parameters
 CASE_PARAM: [[Poisson, 5], [Poisson, 10], [Poisson, 30], [Uniform, null]]
@@ -57,3 +63,28 @@ EVAL:
   pretrained_model_path_dict: null # a dict: {casename1:path1, casename2:path2, casename3:path3, casename4:path4}
   num_val_step: 10 # the number of iteration for each evaluation case
   batch_size: 16
+
+# inference settings
+INFER:
+  pretrained_model_name: null # a string, indicating which model you want to export. Support [Uniform, Poisson5, Poisson10, Poisson30].
+  pretrained_model_path_dict: {'Uniform': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams', 'Poisson5': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams', 'Poisson10': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams', 'Poisson30': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams'}
+  export_path: ./inference/topopt_${INFER.pretrained_model_name}
+  pdmodel_path: ${INFER.export_path}.pdmodel
+  pdpiparams_path: ${INFER.export_path}.pdiparams
+  device: gpu
+  engine: native
+  precision: fp32
+  onnx_path: null
+  ir_optim: true
+  min_subgraph_size: 30
+  gpu_mem: 4000
+  gpu_id: 0
+  max_batch_size: 1024
+  num_cpu_threads: 10
+  batch_size: 4
+  sampler_key: Fixed # a string, indicating the sampling method. Support [Fixed, Uniform, Poisson].
+  sampler_num: 8 # a integer number, indicating the sampling rate of the sampling method, supported when `sampler_key` is Fixed or Poisson.
+  img_num: 4
+  res_img_figsize: null
+  save_res_path: ./inference/predicted_${INFER.pretrained_model_name}
+  save_npy: false
