@@ -146,7 +146,7 @@ act_func_dict = {
     "silu": Silu(),
     "sin": Sin(),
     "cos": Cos(),
-    "swish": Swish(),
+    "swish": Swish,
     "tanh": nn.Tanh(),
     "identity": nn.Identity(),
     "siren": Siren(),
@@ -166,4 +166,9 @@ def get_activation(act_name: str) -> Callable:
     if act_name.lower() not in act_func_dict:
         raise ValueError(f"act_name({act_name}) not found in act_func_dict")
 
-    return act_func_dict[act_name.lower()]
+    act_layer = act_func_dict[act_name.lower()]
+    if isinstance(act_layer, type) and act_name != "stan":
+        # Is a activation class but not a instance of it, instantiate manually(except for 'Stan')
+        return act_layer()
+
+    return act_layer

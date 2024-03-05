@@ -12,6 +12,18 @@
     python euler_beam.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python euler_beam.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python euler_beam.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [euler_beam_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/euler_beam/euler_beam_pretrained.pdparams) | loss(L2Rel_Metric): 0.00000<br>L2Rel.u(L2Rel_Metric): 0.00080 |

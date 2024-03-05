@@ -97,7 +97,7 @@ SYMPY_TO_PADDLE = {
     sp.Max: paddle.maximum,
     sp.Min: paddle.minimum,
     sp.Abs: paddle.abs,
-    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+    sp.Heaviside: paddle.heaviside,
     sp.sign: paddle.sign,
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
@@ -214,6 +214,9 @@ class OperatorNode(Node):
         elif self.expr.func == sp.Heaviside:
             self._apply_func = self._heaviside_operator_func
             self._auxiliary_func = SYMPY_TO_PADDLE[sp.Heaviside]
+            self._auxiliary_func = functools.partial(
+                self._auxiliary_func, y=paddle.zeros([])
+            )
         elif self.expr.func == sp.Min:
             self._apply_func = self._minimum_operator_func
         elif self.expr.func == sp.Max:

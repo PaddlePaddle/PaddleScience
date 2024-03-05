@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Dict
+from typing import List
 from typing import Union
 
 import numpy as np
@@ -74,15 +75,21 @@ class PINNPredictor(base.Predictor):
                 f"max_batch_size({self.max_batch_size}), which may occur error."
             )
 
-        # prepare input handle(s)
-        input_handles = {
-            name: self.predictor.get_input_handle(name) for name in input_dict
-        }
-        # prepare output handle(s)
-        output_handles = {
-            name: self.predictor.get_output_handle(name)
-            for name in self.predictor.get_output_names()
-        }
+        if self.engine != "onnx":
+            # prepare input handle(s)
+            input_handles = {
+                name: self.predictor.get_input_handle(name) for name in input_dict
+            }
+            # prepare output handle(s)
+            output_handles = {
+                name: self.predictor.get_output_handle(name)
+                for name in self.predictor.get_output_names()
+            }
+        else:
+            # input_names = [node_arg.name for node_arg in self.predictor.get_inputs()]
+            output_names: List[str] = [
+                node_arg.name for node_arg in self.predictor.get_outputs()
+            ]
 
         num_samples = len(next(iter(input_dict.values())))
         batch_num = (num_samples + (batch_size - 1)) // batch_size
@@ -99,16 +106,25 @@ class PINNPredictor(base.Predictor):
             batch_input_dict = {key: input_dict[key][st:ed] for key in input_dict}
 
             # send batch input data to input handle(s)
-            for name, handle in input_handles.items():
-                handle.copy_from_cpu(batch_input_dict[name])
+            if self.engine != "onnx":
+                for name, handle in input_handles.items():
+                    handle.copy_from_cpu(batch_input_dict[name])
 
             # run predictor
-            self.predictor.run()
-
-            # receive batch output data from output handle(s)
-            batch_output_dict = {
-                name: output_handles[name].copy_to_cpu() for name in output_handles
-            }
+            if self.engine != "onnx":
+                self.predictor.run()
+                # receive batch output data from output handle(s)
+                batch_output_dict = {
+                    name: output_handles[name].copy_to_cpu() for name in output_handles
+                }
+            else:
+                batch_outputs = self.predictor.run(
+                    output_names=output_names,
+                    input_feed=batch_input_dict,
+                )
+                batch_output_dict = {
+                    name: output for (name, output) in zip(output_names, batch_outputs)
+                }
 
             # collect batch output data
             for key, batch_output in batch_output_dict.items():
