@@ -255,7 +255,7 @@ pip install paddle2onnx
     --8<--
     examples/aneurysm/aneurysm.py:336:350
     --8<--
-    solver.export(input_spec, cfg.INFER.export_path, with_onnx=True)
+        solver.export(input_spec, cfg.INFER.export_path, with_onnx=True)
     ```
 
     然后执行模型导出命令。
