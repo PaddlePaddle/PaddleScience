@@ -190,8 +190,7 @@ class ModifiedMLP(base.Arch):
         input_keys (Tuple[str, ...]): Name of input keys, such as ("x", "y", "z").
         output_keys (Tuple[str, ...]): Name of output keys, such as ("u", "v", "w").
         num_layers (int): Number of hidden layers.
-        hidden_size (Union[int, Tuple[int, ...]]): Number of hidden size.
-            An integer for all layers, or list of integer specify each layer's size.
+        hidden_size (int): Number of hidden size, an integer for all layers.
         activation (str, optional): Name of activation function. Defaults to "tanh".
         skip_connection (bool, optional): Whether to use skip connection. Defaults to False.
         weight_norm (bool, optional): Whether to apply weight norm on parameter(s). Defaults to False.
@@ -221,7 +220,7 @@ class ModifiedMLP(base.Arch):
         input_keys: Tuple[str, ...],
         output_keys: Tuple[str, ...],
         num_layers: int,
-        hidden_size: Union[int, Tuple[int, ...]],
+        hidden_size: int,
         activation: str = "tanh",
         skip_connection: bool = False,
         weight_norm: bool = False,
@@ -233,21 +232,13 @@ class ModifiedMLP(base.Arch):
         self.output_keys = output_keys
         self.linears = []
         self.acts = []
-        if isinstance(hidden_size, (tuple, list)):
-            if num_layers is not None:
-                raise ValueError(
-                    "num_layers should be None when hidden_size is specified"
-                )
-        elif isinstance(hidden_size, int):
+        if isinstance(hidden_size, int):
             if not isinstance(num_layers, int):
-                raise ValueError(
-                    "num_layers should be an int when hidden_size is an int"
-                )
+                raise ValueError("num_layers should be an int")
             hidden_size = [hidden_size] * num_layers
         else:
             raise ValueError(
-                f"hidden_size should be list of int or int"
-                f"but got {type(hidden_size)}"
+                f"hidden_size should be int" f"but got {type(hidden_size)}"
             )
 
         # initialize FC layer(s)
