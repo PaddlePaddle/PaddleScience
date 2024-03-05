@@ -330,7 +330,7 @@ pip install paddle2onnx
 
 #### 1.3.2 Inference 推理(python)
 
-> Paddle Inference 是飞桨的原生推理库，相比 [1.3.1 动态图推理](#131) 具有更快的推理速度，适合不同平台不同应用场景的快速部署，详细信息可参考: [Paddle Inference 文档](https://www.paddlepaddle.org.cn/inference/api_reference/cxx_api_index.html)。
+> Paddle Inference 是飞桨的原生推理库，相比 [1.3.1 动态图推理](#131) 具有更快的推理速度，适合不同平台不同应用场景的快速部署，详细信息可参考: [Paddle Inference 文档](https://paddle-inference.readthedocs.io/en/latest/index.html)。
 
 !!! warning
 
