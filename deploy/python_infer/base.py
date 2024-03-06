@@ -93,7 +93,7 @@ class Predictor:
             f"device: {self.device}."
         )
 
-    def predict(self, image):
+    def predict(self, input_dict):
         raise NotImplementedError
 
     def _create_paddle_predictor(
@@ -133,7 +133,7 @@ class Predictor:
 
                 if not osp.exists(trt_shape_path):
                     config.collect_shape_range_info(trt_shape_path)
-                    logger.info(
+                    logger.message(
                         f"Save collected dynamic shape info to: {trt_shape_path}"
                     )
                 try:

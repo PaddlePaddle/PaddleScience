@@ -194,9 +194,9 @@ python aneurysm.py mode=export \
 
 !!! tip
 
-    由于支持模型导出的案例的 YAML 文件已经将 `INFER.pretrained_model_path` 的默认值设置为官方提供的预训练模型地址，因此导出官方提供的预训练模型时可以省略 `INFER.pretrained_model_path=...` 参数。
+    由于支持模型导出的案例的 YAML 文件已经将 `INFER.pretrained_model_path` 的默认值设置为官方提供的预训练模型地址，因此导出官方提供的预训练模型时可以在命令行中省略 `INFER.pretrained_model_path=...` 参数。
 
-根据终端输出信息，导出的模型会被保存在执行命令目录的相对路径：`./inference/aneurysm` 文件夹下，如下所示。
+根据终端输出信息，导出的模型会被保存在执行导出命令所在目录的相对路径：`./inference/` 文件夹下，如下所示。
 
 ``` log
 ...
@@ -253,8 +253,9 @@ pip install paddle2onnx
 
     ``` py hl_lines="16"
     --8<--
-    examples/aneurysm/aneurysm.py:336:351
+    examples/aneurysm/aneurysm.py:336:350
     --8<--
+        solver.export(input_spec, cfg.INFER.export_path, with_onnx=True)
     ```
 
     然后执行模型导出命令。
@@ -335,7 +336,7 @@ pip install paddle2onnx
 
     目前 PaddleScience 的 Inference 推理(python) 功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键推理。
 
-首先需参考 [1.2 模型导出](#12) 章节，将 `*.pdparams` 模型导出，得到 `*.pdmodel`, `*.pdiparams` 两个文件。
+首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.pdmodel`, `*.pdiparams` 两个文件。
 
 以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件保存在 `./inference/aneurysm` 文件夹下，则推理代码示例如下。
 
@@ -359,61 +360,50 @@ ppsci INFO: Predicting batch 2894/2894
 ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
 ```
 
-???+ tip "使用不同的推理配置进行推理"
+#### 1.3.3 使用不同的推理配置
 
-    PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
+PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
 
-    |  | Native | ONNX | TensorRT | MKLDNN |
-    | :--- | :--- | :--- | :--- | :--- |
-    | CPU | ✅ | ✅| - | CPU |
-    | GPU | ✅ | ✅ | ✅ | - |
-    | XPU | TODO | TODO | TODO | - |
+|  | Native | ONNX | TensorRT | MKLDNN |
+| :--- | :--- | :--- | :--- | :--- |
+| CPU | ✅ | ✅| - | ✅ |
+| GPU | ✅ | ✅ | ✅ | - |
+| XPU | TODO | - | - | - |
 
-    推理命令示例如下：
+接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
+
+=== "使用 Paddle 原生推理"
+
+    Paddle 提供了原生推理功能，支持 CPU 和 GPU。
+
+    运行以下命令进行推理：
 
     ``` sh
+    # CPU
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=native
+
+    # GPU
     python aneurysm.py mode=infer \
         INFER.device=gpu \
-        INFER.engine=native \
-        INFER.precision=fp32 \
-        ... \
-        ... \
+        INFER.engine=native
     ```
 
-    完整的推理配置参数如下：
-
-    | 字段 | 默认值 | 说明 |
-    | :--- | :--- | :--- |
-    | INFER.device | `cpu` | 推理设备，目前支持 `cpu` 和 `gpu` |
-    | INFER.engine | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `mkldnn` |
-    | INFER.precision | `fp32` | 推理精度，目前支持 `fp32`, `fp16` |
-    | INFER.ir_optim | `True` | 是否启用 IR 优化 |
-    | INFER.min_subgraph_size | `30` | TensorRT 中最小子图 size，当子图的 size 大于该值时，才会尝试对该子图使用 TensorRT 计算 |
-    | INFER.gpu_mem | `2000` | 初始显存大小 |
-    | INFER.gpu_id | `0` | GPU 逻辑设备号 |
-    | INFER.max_batch_size | `1024` | 推理时的最大 batch_size |
-    | INFER.num_cpu_threads | `10` | MKLDNN 和 ONNX 在 CPU 推理时的线程数 |
-    | INFER.batch_size | `256` | 推理时的 batch_size |
-
-???+ tip "使用 TensorRT 推理"
+=== "使用 TensorRT 推理"
 
     TensorRT 是英伟达推出的高性能推理引擎，适用于 GPU 推理加速，PaddleScience 支持了 TensorRT 推理功能。
 
-    接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用 TensorRT 推理：
-
-    1. 根据你的软硬件环境，下载并解压对应的 TensorRT 推理库压缩包(.tar 文件)：<https://developer.nvidia.com/tensorrt#>，
-    推荐使用 TensorRT 8、7 等较新的版本。
+    1. 根据你的软硬件环境，下载并解压对应的 TensorRT 推理库压缩包(.tar 文件)：<https://developer.nvidia.com/tensorrt#>。
+    **推荐使用 TensorRT 8.x、7.x 等较新的版本**。
 
     2. 在解压完毕的文件中，找到 `libnvinfer.so` 文件所在的目录，将其加入到 `LD_LIBRARY_PATH` 环境变量中。
 
         ``` sh
-        pushd ./TensorRT-8.6.1.6
-        TRT_PATH=$PWD
-        popd
-
+        TRT_PATH=/PATH/TO/TensorRT-8.6.1.6
         find $TRT_PATH -name libnvinfer.so
 
-        # /PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/libnvinfer.so <---- use this path
+        # /PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/libnvinfer.so   <---- use this path
         export LD_LIBRARY_PATH=/PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH
         ```
 
@@ -423,9 +413,61 @@ ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
         python aneurysm.py mode=infer \
             INFER.device=gpu \
             INFER.engine=tensorrt \
-            INFER.precision=fp32 \
             INFER.min_subgraph_size=5
         ```
+
+=== "使用 ONNX 推理"
+
+    ONNX 是微软开源的深度学习推理框架，PaddleScience 支持了 ONNX 推理功能。
+
+    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.pdmodel` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
+    然后根据硬件环境，安装 CPU 或 GPU 版的 onnxruntime：
+
+    ``` sh
+    pip install onnxruntime  # CPU
+    pip install onnxruntime-gpu  # GPU
+    ```
+
+    最后运行以下命令进行推理：
+
+    ``` sh
+    # CPU
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=onnx
+
+    # GPU
+    python aneurysm.py mode=infer \
+        INFER.device=gpu \
+        INFER.engine=onnx
+    ```
+
+=== "使用 MKLDNN 推理"
+
+    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+
+    运行以下命令进行推理：
+
+    ``` sh
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=mkldnn
+    ```
+
+!!! info "完整推理配置参数"
+
+    | 参数 | 默认值 | 说明 |
+    | :--- | :--- | :--- |
+    | `INFER.device` | `cpu` | 推理设备，目前支持 `cpu` 和 `gpu` |
+    | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `mkldnn` |
+    | `INFER.precision` | `fp32` | 推理精度，目前支持 `fp32`, `fp16` |
+    | `INFER.ir_optim` | `True` | 是否启用 IR 优化 |
+    | `INFER.min_subgraph_size` | `30` | TensorRT 中最小子图 size，当子图的 size 大于该值时，才会尝试对该子图使用 TensorRT 计算 |
+    | `INFER.gpu_mem` | `2000` | 初始显存大小 |
+    | `INFER.gpu_id` | `0` | GPU 逻辑设备号 |
+    | `INFER.max_batch_size` | `1024` | 推理时的最大 batch_size |
+    | `INFER.num_cpu_threads` | `10` | MKLDNN 和 ONNX 在 CPU 推理时的线程数 |
+    | `INFER.batch_size` | `256` | 推理时的 batch_size |
 
 ### 1.4 断点继续训练
 
