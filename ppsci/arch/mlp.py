@@ -113,8 +113,7 @@ class MLP(base.Arch):
             hidden_size = [hidden_size] * num_layers
         else:
             raise ValueError(
-                f"hidden_size should be list of int or int"
-                f"but got {type(hidden_size)}"
+                f"hidden_size should be list of int or int, but got {type(hidden_size)}"
             )
 
         # initialize FC layer(s)
@@ -237,9 +236,7 @@ class ModifiedMLP(base.Arch):
                 raise ValueError("num_layers should be an int")
             hidden_size = [hidden_size] * num_layers
         else:
-            raise ValueError(
-                f"hidden_size should be int" f"but got {type(hidden_size)}"
-            )
+            raise ValueError(f"hidden_size should be int, but got {type(hidden_size)}")
 
         # initialize FC layer(s)
         cur_size = len(self.input_keys) if input_dim is None else input_dim
