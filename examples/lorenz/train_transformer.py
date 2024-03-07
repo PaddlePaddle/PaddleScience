@@ -245,12 +245,88 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.PhysformerGPT2(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 256, 32], "float32", name=key)
+            for key in model.input_keys
+        },
+    ]
+
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
+    output_transform = OutputTransform(embedding_model)
+    dataset_cfg = {
+        "name": "LorenzDataset",
+        "file_path": cfg.VALID_FILE_PATH,
+        "input_keys": cfg.MODEL.input_keys,
+        "label_keys": cfg.MODEL.output_keys,
+        "block_size": cfg.VALID_BLOCK_SIZE,
+        "stride": 1024,
+        "embedding_model": embedding_model,
+    }
+
+    dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
+
+    input_dict = {
+        "embeds": dataset.embedding_data[: cfg.VIS_DATA_NUMS, :-1, :],
+    }
+
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: paddle.to_tensor(output_dict[infer_key])
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    input_dict = {
+        "states": dataset.data[: cfg.VIS_DATA_NUMS, 1:, :],
+    }
+
+    output_dict = {
+        "pred_states": output_transform(output_dict).numpy(),
+    }
+
+    data_dict = {**input_dict, **output_dict}
+    for i in range(cfg.VIS_DATA_NUMS):
+        ppsci.visualize.save_plot_from_3d_dict(
+            f"./lorenz_transformer_pred_{i}",
+            {key: value[i] for key, value in data_dict.items()},
+            ("states", "pred_states"),
+        )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="transformer.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
         raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
 
