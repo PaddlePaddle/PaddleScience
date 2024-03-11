@@ -171,8 +171,6 @@ class Generator(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore", message="When training, we now always track global mean and variance.")
         >>> in_channel = 1
         >>> rb_channel0 = (2, 8, 8)
         >>> rb_channel1 = (128, 128, 128)
@@ -189,7 +187,7 @@ class Generator(base.Arch):
         >>> width = 64
         >>> input_data = paddle.randn([batch_size, in_channel, height, width])
         >>> input_dict = {'in': input_data}
-        >>> output_data = model(input_dict) # 不需要计算梯度，因为这只是前向传播
+        >>> output_data = model(input_dict)
         >>> print(output_data['out'].shape)
         [4, 1, 64, 64]
     """
