@@ -269,6 +269,7 @@ class PhysformerGPT2(base.Arch):
         attn_pdrop: float = 0.0,
         resid_pdrop: float = 0.0,
         initializer_range: float = 0.05,
+        embedding_model: Optional[base.Arch] = None,
     ):
         super().__init__()
         self.input_keys = input_keys
@@ -296,6 +297,7 @@ class PhysformerGPT2(base.Arch):
         self.linear = nn.Linear(embed_size, embed_size)
 
         self.apply(self._init_weights)
+        self.embedding_model = embedding_model
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -375,10 +377,17 @@ class PhysformerGPT2(base.Arch):
         if self._input_transform is not None:
             x = self._input_transform(x)
         x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        if self.embedding_model is not None:
+            x_tensor = self.embedding_model.encoder(x_tensor)
+
         if self.training:
             y = self.forward_tensor(x_tensor)
         else:
             y = self.forward_eval(x_tensor)
+
+        if self.embedding_model is not None:
+            y = (self.embedding_model.decoder(y[0]),)
+
         y = self.split_to_dict(y, self.output_keys)
         if self._output_transform is not None:
             y = self._output_transform(x, y)
