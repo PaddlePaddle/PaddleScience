@@ -346,7 +346,7 @@ class PhysformerGPT2(base.Arch):
     def generate(self, x, max_length=256):
         if max_length <= 0:
             raise ValueError(
-                "max_length({max_length}) should be a strictly positive integer."
+                f"max_length({max_length}) should be a strictly positive integer."
             )
         outputs = self._generate_time_series(x, max_length)
         return outputs
