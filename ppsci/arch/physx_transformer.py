@@ -251,6 +251,9 @@ class PhysformerGPT2(base.Arch):
         attn_pdrop (float, optional): The dropout probability used on attention weights. Defaults to 0.0.
         resid_pdrop (float, optional): The dropout probability used on block outputs. Defaults to 0.0.
         initializer_range (float, optional): Initializer range of linear layer. Defaults to 0.05.
+        embedding_model (Optional[base.Arch]): Embedding model, If this parameter is set,
+            the embedding model will map the input data to the embedding space and the
+            output data to the physical space. Defaults to None.
 
     Examples:
         >>> import ppsci
