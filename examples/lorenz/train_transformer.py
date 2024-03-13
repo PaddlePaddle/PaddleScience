@@ -247,7 +247,14 @@ def evaluate(cfg: DictConfig):
 
 def export(cfg: DictConfig):
     # set model
-    model = ppsci.arch.PhysformerGPT2(**cfg.MODEL)
+    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
+    model_cfg = {
+        **cfg.MODEL,
+        "embedding_model": embedding_model,
+        "input_keys": ["states"],
+        "output_keys": ["pred_states"],
+    }
+    model = ppsci.arch.PhysformerGPT2(**model_cfg)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -259,7 +266,7 @@ def export(cfg: DictConfig):
 
     input_spec = [
         {
-            key: InputSpec([None, 256, 32], "float32", name=key)
+            key: InputSpec([None, 255, 3], "float32", name=key)
             for key in model.input_keys
         },
     ]
@@ -272,8 +279,6 @@ def inference(cfg: DictConfig):
 
     predictor = pinn_predictor.PINNPredictor(cfg)
 
-    embedding_model = build_embedding_model(cfg.EMBEDDING_MODEL_PATH)
-    output_transform = OutputTransform(embedding_model)
     dataset_cfg = {
         "name": "LorenzDataset",
         "file_path": cfg.VALID_FILE_PATH,
@@ -281,31 +286,24 @@ def inference(cfg: DictConfig):
         "label_keys": cfg.MODEL.output_keys,
         "block_size": cfg.VALID_BLOCK_SIZE,
         "stride": 1024,
-        "embedding_model": embedding_model,
     }
 
     dataset = ppsci.data.dataset.build_dataset(dataset_cfg)
 
     input_dict = {
-        "embeds": dataset.embedding_data[: cfg.VIS_DATA_NUMS, :-1, :],
+        "states": dataset.data[: cfg.VIS_DATA_NUMS, :-1, :],
     }
-
-    output_dict = predictor.predict(
-        {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
-    )
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
 
     # mapping data to cfg.INFER.output_keys
+    output_keys = ["pred_states"]
     output_dict = {
-        store_key: paddle.to_tensor(output_dict[infer_key])
-        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(output_keys, output_dict.keys())
     }
 
     input_dict = {
         "states": dataset.data[: cfg.VIS_DATA_NUMS, 1:, :],
-    }
-
-    output_dict = {
-        "pred_states": output_transform(output_dict).numpy(),
     }
 
     data_dict = {**input_dict, **output_dict}
