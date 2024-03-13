@@ -30,10 +30,13 @@ If `"PaddlePaddle is installed successfully! Let's start deep learning with Padd
 
 ### 2. Install PaddleScience
 
-Clone the code of PaddleScience from [here](https://github.com/PaddlePaddle/PaddleScience.git).
+Clone the code of PaddleScience from [here](https://github.com/PaddlePaddle/PaddleScience.git) and install requirements.
 
 ``` shell
 git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+cd PaddleScience
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+export PYTHONPATH=$PWD
 ```
 
 ## Example Usage
@@ -41,13 +44,13 @@ git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
 ### 1. Download the data and model weights
 
 ``` shell
-cd PaddleScience
+cd examples/yinglong
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_24vars.tar
 tar -xvf hrrr_example_24vars.tar
 wget https://paddle-org.bj.bcebos.com/paddlescience/datasets/yinglong/hrrr_example_69vars.tar
 tar -xvf hrrr_example_69vars.tar
-wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/yinglong_models.tar
-tar -xvf yinglong_models.tar
+wget https://paddle-org.bj.bcebos.com/paddlescience/models/yinglong/inference.tar
+tar -xvf inference.tar
 ```
 
 ### 2. Run the code
@@ -55,11 +58,10 @@ tar -xvf yinglong_models.tar
 The following code runs the Yinglong model, and the model output will be saved in 'output/result.npy'.
 
 ``` shell
-export PYTHONPATH=$PWD
 # YingLong-12 Layers
-python examples/yinglong/predict_12layers.py
+python predict_12layers.py mode=infer
 # YingLong-24 Layers
-# python examples/yinglong/predict_24layers.py
+python predict_24layers.py mode=infer
 ```
 
 We also visualized the predicted wind speed at 10 meters above ground level, with an initial field of 0:00 on January 1, 2022. Click [here](https://paddle-org.bj.bcebos.com/paddlescience/docs/Yinglong/result.gif) to view the prediction results.

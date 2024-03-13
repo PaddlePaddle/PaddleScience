@@ -22,7 +22,7 @@
     案例一：Pipe Flow
 
     ``` sh
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/poiseuille_flow_pretrained.pdparams
     ```
 
     案例二：Aneurysm Flow
@@ -33,7 +33,6 @@
 
     python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
     ```
-
 
 | 预训练模型  | 指标 |
 |:--| :--|

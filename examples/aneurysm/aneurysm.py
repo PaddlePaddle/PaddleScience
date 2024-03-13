@@ -340,7 +340,6 @@ def export(cfg: DictConfig):
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
-        output_dir=cfg.output_dir,
         pretrained_model_path=cfg.INFER.pretrained_model_path,
     )
     # export model
@@ -349,7 +348,7 @@ def export(cfg: DictConfig):
     input_spec = [
         {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
     ]
-    solver.export(input_spec, cfg.INFER.export_path)
+    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
 
 
 def inference(cfg: DictConfig):
@@ -401,7 +400,9 @@ def main(cfg: DictConfig):
     elif cfg.mode == "infer":
         inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

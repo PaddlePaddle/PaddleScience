@@ -21,6 +21,7 @@ from ppsci.arch.phycrnet import PhyCRNet
 from ppsci.arch.base import Arch  # isort:skip
 from ppsci.arch.amgnet import AMGNet  # isort:skip
 from ppsci.arch.mlp import MLP  # isort:skip
+from ppsci.arch.mlp import ModifiedMLP  # isort:skip
 from ppsci.arch.deeponet import DeepONet  # isort:skip
 from ppsci.arch.embedding_koopman import LorenzEmbedding  # isort:skip
 from ppsci.arch.embedding_koopman import RosslerEmbedding  # isort:skip
@@ -46,6 +47,7 @@ __all__ = [
     "Arch",
     "AMGNet",
     "MLP",
+    "ModifiedMLP",
     "DeepONet",
     "DeepPhyLSTM",
     "LorenzEmbedding",
