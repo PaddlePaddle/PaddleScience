@@ -171,8 +171,6 @@ class Generator(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> import warnings
-        >>> warnings.filterwarnings("ignore", message="When training, we now always track global mean and variance.")
         >>> in_channel = 1
         >>> rb_channel0 = (2, 8, 8)
         >>> rb_channel1 = (128, 128, 128)
@@ -189,7 +187,7 @@ class Generator(base.Arch):
         >>> width = 64
         >>> input_data = paddle.randn([batch_size, in_channel, height, width])
         >>> input_dict = {'in': input_data}
-        >>> output_data = model(input_dict) # 不需要计算梯度，因为这只是前向传播
+        >>> output_data = model(input_dict)
         >>> print(output_data['out'].shape)
         [4, 1, 64, 64]
     """
@@ -288,6 +286,12 @@ class Discriminator(base.Arch):
         >>> acts = ("leaky_relu", "leaky_relu", "leaky_relu", "leaky_relu", None)
         >>> output_keys_disc = ("out_1", "out_2", "out_3", "out_4", "out_5", "out_6", "out_7", "out_8", "out_9", "out_10")
         >>> model = ppsci.arch.Discriminator(("in_1","in_2"), output_keys_disc, in_channel, out_channels, fc_channel, kernel_sizes, strides, use_bns, acts)
+        >>> batch_size = 4  # 假设批次大小为4
+        >>> height = 64  # 假设图像高度为64
+        >>> width = 64  # 假设图像宽度为64
+        >>> input_tensor = paddle.randn([batch_size, out_channels, height, width])
+        >>> output = model(input_tensor)
+        >>> print(output)
     """
 
     def __init__(
