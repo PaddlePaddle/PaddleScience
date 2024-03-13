@@ -31,7 +31,7 @@
 === "模型导出命令"
 
     ``` sh
-    python train_transformer.py mode=export
+    python train_transformer.py mode=export EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_pretrained.pdparams
     ```
 
 === "模型推理命令"
@@ -43,7 +43,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5 --output ./datasets/rossler_training.hdf5
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5 --output ./datasets/rossler_valid.hdf5
-    python train_transformer.py mode=infer EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/rossler/rossler_pretrained.pdparams
+    python train_transformer.py mode=infer
     ```
 
 | 模型 | MSE |

@@ -31,7 +31,7 @@
 === "模型导出命令"
 
     ``` sh
-    python train_enn.py mode=export
+    python train_enn.py mode=export EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
     ```
 
 === "模型推理命令"
@@ -43,7 +43,7 @@
     # windows
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
     # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
-    python train_transformer.py mode=infer EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
+    python train_transformer.py mode=infer
     ```
 
 | 模型 | MSE |
