@@ -14,6 +14,18 @@
     python laplace2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python laplace2d.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python laplace2d.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [laplace2d_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams) | loss(MSE_Metric): 0.00002<br>MSE.u(MSE_Metric): 0.00002 |

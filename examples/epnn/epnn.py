@@ -114,7 +114,7 @@ def train(cfg: DictConfig):
         save_freq=cfg.TRAIN.save_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
         validator=validator_pde,
-        eval_with_no_grad=cfg.TRAIN.eval_with_no_grad,
+        eval_with_no_grad=cfg.EVAL.eval_with_no_grad,
     )
 
     # train model
