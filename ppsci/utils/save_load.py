@@ -146,7 +146,18 @@ def load_checkpoint(
             equation_dict = paddle.load(f"{path}.pdeqn")
 
     # set state dict
-    model.set_state_dict(param_dict)
+    missing_keys, unexpected_keys = model.set_state_dict(param_dict)
+    if missing_keys:
+        logger.warning(
+            f"There are missing keys when loading checkpoint: {missing_keys}, "
+            "and corresponding parameters will be initialized by default."
+        )
+    if unexpected_keys:
+        logger.warning(
+            f"There are redundant keys: {unexpected_keys}, "
+            "and corresponding weights will be ignored."
+        )
+
     optimizer.set_state_dict(optim_dict)
     if grad_scaler is not None:
         grad_scaler.load_state_dict(scaler_dict)
