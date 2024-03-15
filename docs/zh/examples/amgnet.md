@@ -92,7 +92,7 @@
 
 执行以下命令，下载并解压数据集。
 
-``` shell
+``` sh
 wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip
 unzip data.zip
 ```

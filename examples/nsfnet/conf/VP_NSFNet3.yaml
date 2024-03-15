@@ -1,0 +1,32 @@
+seed: 1234
+
+output_dir: ./output_NSFNet3
+
+iters_per_epoch: 1
+
+MODEL:
+  input_keys: ["x", "y","z","t"]
+  output_keys: ["u", "v", "w","p"]
+  num_layers: 10
+  hidden_size: 100
+  activation: "tanh"
+
+mode: train
+
+ntrain: 70000
+
+nb_train: 59400
+
+n0_train: 29791
+
+alpha: 100
+
+beta: 100
+
+re: 1
+
+log_freq: 5000
+
+eval_freq: 5000
+
+pretrained_model_path: null

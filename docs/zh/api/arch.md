@@ -7,6 +7,7 @@
         - Arch
         - AMGNet
         - MLP
+        - ModifiedMLP
         - DeepONet
         - DeepPhyLSTM
         - LorenzEmbedding
@@ -18,9 +19,11 @@
         - ModelList
         - AFNONet
         - PrecipNet
+        - PhyCRNet
         - UNetEx
         - USCNN
         - NowcastNet
         - HEDeepONets
+        - AutoEncoder
       show_root_heading: true
       heading_level: 3

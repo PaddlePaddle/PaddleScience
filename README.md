@@ -52,7 +52,7 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 飞行器设计 | [MeshGraphNets](https://aistudio.baidu.com/projectdetail/5322713) | 数据驱动 | GNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/184320) | [Paper](https://arxiv.org/abs/2010.03409)|
 | 飞行器设计 | [火箭发动机真空羽流](https://aistudio.baidu.com/projectdetail/4486133) | 数据驱动 | CNN | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/167250) | - |
 | 飞行器设计 | [Deep-Flow-Prediction](https://aistudio.baidu.com/projectdetail/5671596) | 数据驱动 | TurbNetG | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/197778) | [Paper](https://arxiv.org/abs/1810.08217) |
-| 通用流场模拟 | [气动外形设计](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/amgnet/) | 数据驱动 | AMGNet | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip) | [Paper](https://arxiv.org/abs/1810.08217) |
+| 通用流场模拟 | [气动外形设计](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/amgnet) | 数据驱动 | AMGNet | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/AMGNet/data.zip) | [Paper](https://arxiv.org/abs/1810.08217) |
 | 流固耦合 | [涡激振动](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/viv) | 机理驱动 | MLP | 半监督学习 | [Data](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fsi/VIV_Training_Neta100.mat) | [Paper](https://arxiv.org/abs/2206.03864)|
 | 多相流 | [气液两相流](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bubble) | 机理驱动 | BubbleNet | 半监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/BubbleNet/bubble.mat) | [Paper](https://pubs.aip.org/aip/adv/article/12/3/035153/2819394/Predicting-micro-bubble-dynamics-with-semi-physics)|
 | 多相流 | [twophasePINN](https://aistudio.baidu.com/projectdetail/5379212) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://doi.org/10.1016/j.mlwa.2021.100029)|
@@ -62,22 +62,22 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 流场高分辨率重构 | [基于Voronoi嵌入辅助深度学习的稀疏传感器全局场重建](https://aistudio.baidu.com/projectdetail/5807904) | 数据驱动 | CNN | 监督学习 | [Data1](https://drive.google.com/drive/folders/1K7upSyHAIVtsyNAqe6P8TY1nS5WpxJ2c)<br>[Data2](https://drive.google.com/drive/folders/1pVW4epkeHkT2WHZB7Dym5IURcfOP4cXu)<br>[Data3](https://drive.google.com/drive/folders/1xIY_jIu-hNcRY-TTf4oYX1Xg4_fx8ZvD) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
 | 流场高分辨率重构 | 基于扩散的流体超分重构<sup>coming soon</sup> | 数理融合 | DDPM | 监督学习 | - | [Paper](https://www.sciencedirect.com/science/article/pii/S0021999123000670)|
 | 求解器耦合 | [CFD-GCN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/cfdgcn) | 数据驱动 | GCN | 监督学习 | [Data](https://aistudio.baidu.com/aistudio/datasetdetail/184778)<br>[Mesh](https://paddle-org.bj.bcebos.com/paddlescience/datasets/CFDGCN/meshes.tar) | [Paper](https://arxiv.org/abs/2007.04439)|
-| 受力分析 | [1D 欧拉梁变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/euler_beam/) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 受力分析 | [1D 欧拉梁变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/euler_beam) | 机理驱动 | MLP | 无监督学习 | - | - |
 | 受力分析 | [2D 平板变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d) | 机理驱动 | MLP | 无监督学习 | - | [Paper](https://arxiv.org/abs/2108.07243) |
 | 受力分析 | [3D 连接件变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bracket) | 机理驱动 | MLP | 无监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/bracket/bracket_dataset.tar) | [Tutorial](https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/foundational/linear_elasticity.html) |
 | 受力分析 | [结构震动模拟](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/phylstm) | 机理驱动 | PhyLSTM | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/PhyLSTM/data_boucwen.mat) | [Paper](https://arxiv.org/abs/2002.10253) |
-| 受力分析 | [2D 弹塑性结构](https://paddlescience-docs.readthedocs.io/zh/examples/epnn.md) | 机理驱动 | EPNN | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat) | [Paper](https://arxiv.org/abs/2204.12088) |
-| 受力分析和逆问题 | [3D 汽车控制臂变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/control_arm.md) | 机理驱动 | MLP | 无监督学习 | - | - |
-| 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt.md) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
-| 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heat_exchanger.md) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
-| 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh/examples/heat_pinn.md) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
+| 受力分析 | [2D 弹塑性结构](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/epnn) | 机理驱动 | EPNN | 无监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstate-16-plas.dat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/epnn/dstress-16-plas.dat) | [Paper](https://arxiv.org/abs/2204.12088) |
+| 受力分析和逆问题 | [3D 汽车控制臂变形](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/control_arm) | 机理驱动 | MLP | 无监督学习 | - | - |
+| 拓扑优化 | [2D 拓扑优化](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt) | 数据驱动 | TopOptNN | 监督学习 | [Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5) | [Paper](https://arxiv.org/pdf/1709.09578) |
+| 热仿真 | [1D 换热器热仿真](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_exchanger) | 机理驱动 | PI-DeepONet | 无监督学习 | - | - |
+| 热仿真 | [2D 热仿真](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn) | 机理驱动 | PINN | 无监督学习 | - | [Paper](https://arxiv.org/abs/1711.10561)|
 
 <br>
 <p align="center"><b>材料科学(AI for Material)</b></p>
 
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
-| 材料设计 | [散射板设计(反问题)](./zh/examples/hpinns.md) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
+| 材料设计 | [散射板设计(反问题)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/hpinns) | 数理融合 | 数据驱动 | 监督学习 | [Train Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat)<br>[Eval Data](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat) | [Paper](https://arxiv.org/pdf/2102.04626.pdf) |
 | 材料生成 | 面向对称感知的周期性材料生成<sup>coming soon</sup> | 数据驱动 | SyMat | 监督学习 | - | - |
 
 <br>
@@ -86,15 +86,16 @@ PaddleScience 是一个基于深度学习框架 PaddlePaddle 开发的科学计�
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 天气预报 | [FourCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/fourcastnet) | 数据驱动 | FourCastNet | 监督学习 | [ERA5](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
-| 天气预报 | GraphCast 气象预报<sup>coming soon</sup> | 数据驱动 | GraphCastNet* | 监督学习 | - | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
+| 天气预报 | [NowCastNet 气象预报](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet) | 数据驱动 | NowCastNet | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
+| 天气预报 | [GraphCast 气象预报](jointContribution/graphcast/README.md) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
 
 <!-- --8<-- [start:update] -->
 ## 🕘最近更新
 
 - 添加多目标优化算法 [Relobralo](https://paddlescience-docs.readthedocs.io/zh/latest/zh/api/loss/mtl/#ppsci.loss.mtl.Relobralo) 。
-- 添加气泡流求解案例([Bubble](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bubble/))、机翼优化案例([DeepCFD](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deepcfd/))、热传导仿真案例([HeatPINN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn/))、非线性短临预报模型([Nowcasting(仅推理)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet))、拓扑优化案例([TopOpt](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt))、矩形平板线弹性方程求解案例([Biharmonic2D](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d))。
-- 添加二维血管案例([LabelFree-DNN-Surrogate](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate/#4))、空气激波案例([ShockWave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/shock_wave/))、去噪网络模型([DUCNN](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/DU_CNN))、风电预测模型([Deep Spatial Temporal](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/Deep-Spatio-Temporal))、域分解模型([XPINNs](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/XPINNs))、积分方程求解案例([Volterra Equation](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide/))、分数阶方程求解案例([Fractional Poisson 2D](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py))。
+- 添加气泡流求解案例([Bubble](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/bubble))、机翼优化案例([DeepCFD](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/deepcfd/))、热传导仿真案例([HeatPINN](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/heat_pinn))、非线性短临预报模型([Nowcasting(仅推理)](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/nowcastnet))、拓扑优化案例([TopOpt](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/topopt))、矩形平板线弹性方程求解案例([Biharmonic2D](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/biharmonic2d))。
+- 添加二维血管案例([LabelFree-DNN-Surrogate](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/labelfree_DNN_surrogate/#4))、空气激波案例([ShockWave](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/shock_wave/))、去噪网络模型([DUCNN](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/DU_CNN))、风电预测模型([Deep Spatial Temporal](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/Deep-Spatio-Temporal))、域分解模型([XPINNs](https://github.com/PaddlePaddle/PaddleScience/tree/develop/jointContribution/XPINNs))、积分方程求解案例([Volterra Equation](https://paddlescience-docs.readthedocs.io/zh/latest/zh/examples/volterra_ide))、分数阶方程求解案例([Fractional Poisson 2D](https://github.com/PaddlePaddle/PaddleScience/blob/develop/examples/fpde/fractional_poisson_2d.py))。
 - 针对串联方程和复杂方程场景，`Equation` 模块支持基于 [sympy](https://docs.sympy.org/dev/tutorials/intro-tutorial/intro.html) 的符号计算，并支持和 python 函数混合使用([#507](https://github.com/PaddlePaddle/PaddleScience/pull/507)、[#505](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
 - `Geometry` 模块和 `InteriorConstraint`、`InitialConstraint` 支持计算 SDF 微分功能([#539](https://github.com/PaddlePaddle/PaddleScience/pull/539))。
 - 添加 **M**ulti**T**ask**L**earning(`ppsci.loss.mtl`) 多任务学习模块，针对多任务优化(如 PINN 方法)进一步提升性能，使用方式：[多任务学习指南](https://paddlescience-docs.readthedocs.io/zh/latest/zh/user_guide/#24)([#493](https://github.com/PaddlePaddle/PaddleScience/pull/505)、[#492](https://github.com/PaddlePaddle/PaddleScience/pull/505))。
@@ -130,23 +131,47 @@ python -c "import paddle; paddle.utils.run_check()"
 
 ### 安装 PaddleScience
 
-1. 执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
+1. 基础功能安装
 
-    <!-- --8<-- [start:git_install] -->
-    ``` shell
-    git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
-    # 若 github clone 速度比较慢，可以使用 gitee clone
-    # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
+    **从以下三种安装方式中，任选一种均可安装。**
 
-    cd PaddleScience
+    - git 源码安装[**推荐**]
 
-    # windows 用户安装前请执行如下命令，否则可能因为gbk编码问题导致安装失败
-    set PYTHONUTF8=1
+        执行以下命令，从 github 上 clone PaddleScience 源代码，并以 editable 的方式安装 PaddleScience。
+        <!-- --8<-- [start:git_install] -->
+        ``` shell
+        git clone -b develop https://github.com/PaddlePaddle/PaddleScience.git
+        # 若 github clone 速度比较慢，可以使用 gitee clone
+        # git clone -b develop https://gitee.com/paddlepaddle/PaddleScience.git
 
-    # install paddlesci with editable mode
-    pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
-    ```
-    <!-- --8<-- [end:git_install] -->
+        cd PaddleScience
+
+        # install paddlesci with editable mode
+        pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+        ```
+        <!-- --8<-- [end:git_install] -->
+
+    - pip 安装
+
+        执行以下命令以 pip 的方式安装最新版本的 PaddleScience。
+        <!-- --8<-- [start:pip_install] -->
+        ``` shell
+        pip install -U paddlesci
+        ```
+        <!-- --8<-- [end:pip_install] -->
+
+    - 设置 PYTHONPATH
+
+        如果在您的环境中，上述两种方式都无法正常安装，则可以选择本方式，在终端内将环境变量 `PYTHONPATH` 临时设置为 `PaddleScience` 的**绝对路径**，如下所示。
+
+        ``` shell
+        cd PaddleScience
+        export PYTHONPATH=$PYTHONPATH:$PWD # for linux
+        set PYTHONPATH=%cd% # for windows
+        pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple # manually install requirements
+        ```
+
+        注：上述方式的优点是步骤简单无需安装，缺点是当环境变量生效的终端被关闭后，需要重新执行上述命令设置 `PYTHONPATH` 才能再次使用 PaddleScience，较为繁琐。
 
 2. 验证安装
 
@@ -162,11 +187,15 @@ python -c "import paddle; paddle.utils.run_check()"
     # write your code here...
     ```
 
-如需读取复杂几何文件，并进行解析、采样等操作，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
+如需基于复杂几何文件（`*.stl`, `*.mesh`, `*.obj`）文件进行训练、测试等流程，请参考完整安装流程：[**安装与使用**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/install_setup/)
 
 ## ⚡️快速开始
 
 请参考 [**快速开始**](https://paddlescience-docs.readthedocs.io/zh/latest/zh/quickstart/)
+
+## 🎈其他领域支持
+
+除 PaddleScience 套件外，Paddle 框架还支持了 [DeepXDE](https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde) 的所有案例，分子动力学套件 [DeepMD-kit](https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend) 部分案例和功能，以及正在适配中的 Modulus。
 
 <!-- --8<-- [start:support] -->
 ## 💬支持与建议
@@ -208,8 +237,12 @@ PaddleScience 作为一个开源项目，欢迎来各行各业的伙伴携手共
     [MayYouBeProsperous](https://github.com/MayYouBeProsperous)，
     [AndPuQing](https://github.com/AndPuQing)，
     [lknt](https://github.com/lknt)，
-    [yangguohao](https://github.com/yangguohao)，
     [mrcangye](https://github.com/mrcangye)，
+    [yangguohao](https://github.com/yangguohao)，
+    [ooooo-create](https://github.com/ooooo-create)，
+    [megemini](https://github.com/megemini)，
+    [DUCH714](https://github.com/DUCH714)，
+    [zlynna](https://github.com/zlynna)，
     [jjyaoao](https://github.com/jjyaoao)，
     [jiamingkong](https://github.com/jiamingkong)，
     [Liyulingyue](https://github.com/Liyulingyue)，

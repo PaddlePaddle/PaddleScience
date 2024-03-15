@@ -22,6 +22,58 @@
     python topopt.py mode=eval 'EVAL.pretrained_model_path_dict={'Uniform': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams', 'Poisson5': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson5_pretrained.pdparams', 'Poisson10': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson10_pretrained.pdparams', 'Poisson30': 'https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/poisson30_pretrained.pdparams'}'
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Uniform
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson5
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson10
+    ```
+
+    ``` sh
+    python topopt.py mode=export INFER.pretrained_model_name=Poisson30
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Uniform INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson5 INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson10 INFER.img_num=3
+    ```
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/topopt/top_dataset.h5 --output ./datasets/top_dataset.h5
+    python topopt.py mode=infer INFER.pretrained_model_name=Poisson30 INFER.img_num=3
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [topopt_uniform_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/topopt/uniform_pretrained.pdparams) | loss(sup_validator): [0.14336, 0.10211, 0.07927, 0.06433, 0.04970, 0.04612, 0.04201, 0.03566, 0.03623, 0.03314, 0.02929, 0.02857, 0.02498, 0.02517, 0.02523, 0.02618]<br>metric.Binary_Acc(sup_validator): [0.9410, 0.9673, 0.9718, 0.9727, 0.9818, 0.9824, 0.9826, 0.9845, 0.9856, 0.9892, 0.9892, 0.9907, 0.9890, 0.9916, 0.9914, 0.9922]<br>metric.IoU(sup_validator): [0.8887, 0.9367, 0.9452, 0.9468, 0.9644, 0.9655, 0.9659, 0.9695, 0.9717, 0.9787, 0.9787, 0.9816, 0.9784, 0.9835, 0.9831, 0.9845] |
@@ -32,7 +84,6 @@
 ## 1. 背景简介
 
 拓扑优化 (Topolgy Optimization) 是一种数学方法，针对给定的一组负载、边界条件和约束，在给定的设计区域内，以最大化系统性能为目标优化材料的分布。这个问题很有挑战性因为它要求解决方案是二元的，即应该说明设计区域的每个部分是否存在材料或不存在。这种优化的一个常见例子是在给定总重量和边界条件下最小化物体的弹性应变能。随着20世纪汽车和航空航天工业的发展，拓扑优化已经将应用扩展到很多其他学科：如流体、声学、电磁学、光学及其组合。SIMP (Simplied Isotropic Material with Penalization) 是目前广泛传播的一种简单而高效的拓扑优化求解方法。它通过对材料密度的中间值进行惩罚，提高了二元解的收敛性。
-
 
 ## 2. 问题定义
 
@@ -55,7 +106,7 @@ $$
 
 ### 3.1 数据集准备
 
-下载的数据集为整理过的合成数据，整理后的格式为 `"iters": shape = (10000, 100, 40, 40)`，`"target": shape = (10000, 1, 40, 40)`  
+下载的数据集为整理过的合成数据，整理后的格式为 `"iters": shape = (10000, 100, 40, 40)`，`"target": shape = (10000, 1, 40, 40)`
 
 - 10000 - 随机生成问题的个数
 
@@ -65,7 +116,7 @@ $$
 
 - 40 - 图像宽度
 
-数据集地址请存储于 `./datasets/top_dataset.h5`  
+数据集地址请存储于 `./datasets/top_dataset.h5`
 
 生成训练集：原始代码利用所有的10000问题生成训练数据。
 
@@ -94,7 +145,6 @@ examples/topopt/topopt.py:90:91
 
 详细的模型代码在 `examples/topopt/topoptmodel.py` 中。
 
-
 ### 3.3 参数设定
 
 根据论文以及原始代码给出以下训练参数：
@@ -111,7 +161,6 @@ examples/topopt/topopt.py:36:38
 --8<--
 ```
 
-
 ### 3.4 data transform
 
 根据论文以及原始代码给出以下自定义的 data transform 代码，包括随机水平或垂直翻转和随机90度旋转，对 input 和 label 同时 transform：
@@ -121,7 +170,6 @@ examples/topopt/topopt.py:36:38
 examples/topopt/functions.py:102:133
 --8<--
 ```
-
 
 ### 3.5 约束构建
 
@@ -147,7 +195,6 @@ examples/topopt/topopt.py:50:75
 第三个参数是约束条件的名字，方便后续对其索引。此次命名为 `"sup_constraint"`。
 
 在约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
-
 
 ### 3.6 采样器构建
 
@@ -178,23 +225,24 @@ examples/topopt/topopt.py:93:96
 ### 3.8 loss和metric构建
 
 #### 3.8.1 loss构建
+
 损失函数为 confidence loss + beta * volume fraction constraints:
 
 $$
 \mathcal{L} = \mathcal{L}_{\text{conf}}(X_{\text{true}}, X_{\text{pred}}) + \beta * \mathcal{L}_{\text{vol}}(X_{\text{true}}, X_{\text{pred}})
-$$  
+$$
 
-confidence loss 是 binary cross-entropy:  
+confidence loss 是 binary cross-entropy:
 
 $$
 \mathcal{L}_{\text{conf}}(X_{\text{true}}, X_{\text{pred}}) = -\frac{1}{NM}\sum_{i=1}^{N}\sum_{j=1}^{M}\left[X_{\text{true}}^{ij}\log(X_{\text{pred}}^{ij}) +  (1 - X_{\text{true}}^{ij})\log(1 - X_{\text{pred}}^{ij})\right]
-$$  
+$$
 
-volume fraction constraints:  
+volume fraction constraints:
 
 $$
 \mathcal{L}_{\text{vol}}(X_{\text{true}}, X_{\text{pred}}) = (\bar{X}_{\text{pred}} - \bar{X}_{\text{true}})^2
-$$  
+$$
 
 loss 构建代码如下：
 
@@ -205,7 +253,8 @@ examples/topopt/topopt.py:263:274
 ```
 
 #### 3.8.2 metric构建
-本案例原始代码选择 Binary Accuracy 和 IoU 进行评估:  
+
+本案例原始代码选择 Binary Accuracy 和 IoU 进行评估:
 
 $$
 \text{Bin. Acc.} = \frac{w_{00}+w_{11}}{n_{0}+n_{1}}
@@ -223,7 +272,6 @@ metric 构建代码如下：
 examples/topopt/topopt.py:277:317
 --8<--
 ```
-
 
 ### 3.9 模型训练
 
@@ -243,13 +291,12 @@ examples/topopt/topopt.py:77:111
 --8<--
 ```
 
-
 ### 3.10 评估模型
 
 对四个训练好的模型，分别使用不同的通道采样器 (原始数据的第二维对应表示的是 SIMP 算法的 100 步输出结果，统一取原始数据第二维的第 5，10，15，20，...，80 通道以及对应的梯度信息作为新的输入构建评估数据集) 进行评估，每次评估时只取 `cfg.EVAL.num_val_step` 个 bacth 的数据，计算它们的平均 Binary Accuracy 和 IoU 指标；同时评估结果需要与输入数据本身的阈值判定结果 (0.5作为阈值) 作比较。具体代码请参考[完整代码](#4)
 
-
 #### 3.10.1 评估器构建
+
 为应用 PaddleScience API，此处在每一次评估时构建一个评估器 SupervisedValidator 进行评估：
 
 ``` py linenums="218"
@@ -260,7 +307,6 @@ examples/topopt/topopt.py:218:245
 
 评估器配置与 [约束构建](#35) 的设置类似，读取配置中 `"num_workers"：0` 表示单线程读取；评价指标 `"metric"` 为自定义评估指标，包含 Binary Accuracy 和 IoU。
 
-
 ### 3.11 评估结果可视化
 
 使用 `ppsci.utils.misc.plot_curve()` 方法直接绘制 Binary Accuracy 和 IoU 的结果：
@@ -270,7 +316,6 @@ examples/topopt/topopt.py:218:245
 examples/topopt/topopt.py:185:193
 --8<--
 ```
-
 
 ## 4. 完整代码
 
@@ -292,7 +337,6 @@ examples/topopt/topoptmodel.py
 --8<--
 ```
 
-
 ## 5. 结果展示
 
 下图展示了4个模型分别在16组不同的评估数据集上的表现，包括 Binary Accuracy 以及 IoU 这两种指标。其中横坐标代表不同的评估数据集，例如：横坐标 $i$ 表示由原始数据第二维的第 $5\cdot(i+1)$ 个通道及其对应梯度信息构建的评估数据集；纵坐标为评估指标。`thresholding` 对应的指标可以理解为 benchmark。
@@ -306,7 +350,6 @@ examples/topopt/topoptmodel.py
   ![iou](https://ai-studio-static-online.cdn.bcebos.com/807ea645100447818d0bafc39e9d489eef26b7a0195d4bd59da4e68445d304cb){ loading=lazy }
   <figcaption>IoU结果</figcaption>
 </figure>
-
 
 用表格表示上图指标为：
 
@@ -324,7 +367,8 @@ examples/topopt/topoptmodel.py
 | Poisson30 | 0.8617 | 0.9221 | 0.9488 | 0.9670 | 0.9662 | 0.9769 | 0.9773 | 0.9786 | 0.9803 | 0.9833 | 0.9850 | 0.9853 | 0.9855 | 0.9860 | 0.9875 | 0.9873 |
 | Uniform | 0.8887 | 0.9367 | 0.9452 | 0.9468 | 0.9644 | 0.9655 | 0.9659 | 0.9695 | 0.9717 | 0.9787 | 0.9787 | 0.9816 | 0.9784 | 0.9835 | 0.9831 | 0.9845 |
 
-## 参考文献
+## 6. 参考文献
+
 - [Sosnovik I, & Oseledets I. Neural networks for topology optimization](https://arxiv.org/pdf/1709.09578)
 
 - [参考代码](https://github.com/ISosnovik/nn4topopt/blob/master/)

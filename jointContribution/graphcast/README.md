@@ -1,17 +1,20 @@
 # 飞桨黑客马拉松第五期 科学计算 GraphCast: Learning skillful medium-range global weather forecasting
 
 ## 1.简介
+
 本项目基于paddle框架复现。
 
 论文主要内容：
 GraphCast这种方法是天气预报领域的一项重大进展，它利用机器学习的能力来提高预测的准确性和效率。GraphCast通过图神经网络（GNNs）建模复杂的天气动态，并在欧洲中期天气预报中心（ECMWF）的ERA5再分析数据集上进行训练。它在全球范围内以0.25°的高分辨率快速预测数百种天气变量，并在多项目标上超越了ECMWF的高分辨率预测系统（HRES）。这项研究表明，GraphCast不仅能提高标准天气预测的效率，还在预测严重天气事件方面显示出潜力，可能对依赖天气的决策过程产生重大影响。
 
 本项目关键技术：
+
 * 通过结合mesh和grid的节点和边特征，大大提升了图神经网络的预测性能；
 * 通过精细化的训练数据预处理，提升了模型对特征学习的能力；
 * 通过大量的训练数据（1979-2017年，40T左右）,减缓了图神经网络（16层）的过拟合问题。（个人认为这点对图神经网络的研究有启发性作用。）
 
 实验结果要点：
+
 * 完整复现数据处理过程和模型结构，推理过程误差在1e-5以下。
 * 简单明确的网络结构和易于理解的数据处理流程便于后续研究工作推进。
 
@@ -19,15 +22,13 @@ GraphCast这种方法是天气预报领域的一项重大进展，它利用机�
 Lam R, Sanchez-Gonzalez A, Willson M, et al. Learning skillful medium-range global weather forecasting[J]. Science, 2023: eadi2336.
 
 参考Github地址：
-https://github.com/deepmind/graphcast
+<https://github.com/deepmind/graphcast>
 
 项目aistudio地址：
-https://aistudio.baidu.com/projectdetail/7266127
+<https://aistudio.baidu.com/projectdetail/7266127>
 
 模型结构：
 ![](https://ai-studio-static-online.cdn.bcebos.com/a1bee2bc4a7548e69a2d37324c89b868f84da4ebf79b4542be4b18a815be7418)
-
-
 
 ## 2. 模型
 
@@ -35,15 +36,14 @@ https://aistudio.baidu.com/projectdetail/7266127
 * `GraphCast_small`，GraphCast的较小、低分辨率版本（1度分辨率，13个压力层和较小的网格），在1979年至2015年的ERA5数据上训练，适用于在内存和计算约束较低的情况下运行模型，
 * `GraphCast_operational`，高分辨率模型（0.25度分辨率，1313个压力层), 该模型是在1979年至2017年的ERA5数据上进行预训练，并在2016年至2021年的HRES数据上进行微调的压力层级预测模型。该模型可以从HRES数据初始化（不需要降水输入）。
 
-
 原作者描述如下：
 
->*  `GraphCast`, the high-resolution model used in the GraphCast paper (0.25 degree
+>* `GraphCast`, the high-resolution model used in the GraphCast paper (0.25 degree
 resolution, 37 pressure levels), trained on ERA5 data from 1979 to 2017,
->*  `GraphCast_small`, a smaller, low-resolution version of GraphCast (1 degree
+>* `GraphCast_small`, a smaller, low-resolution version of GraphCast (1 degree
 resolution, 13 pressure levels, and a smaller mesh), trained on ERA5 data from
 1979 to 2015, useful to run a model with lower memory and compute constraints,
->*  `GraphCast_operational`, a high-resolution model (0.25 degree resolution, 13
+>* `GraphCast_operational`, a high-resolution model (0.25 degree resolution, 13
 pressure levels) pre-trained on ERA5 data from 1979 to 2017 and fine-tuned on
 HRES data from 2016 to 2021. This model can be initialized from HRES data (does
 not require precipitation inputs).
@@ -61,7 +61,6 @@ not require precipitation inputs).
 * GraphCast_small:data/dataset/source-era5_date-2022-01-01_res-1.0_levels-13_steps-01.nc
 * GraphCast_operational:data/dataset/source-hres_date-2022-01-01_res-0.25_levels-13_steps-01.nc
 
-
 ## 4. 快速运行
 
 本节提供环境依赖、数据准备、功能运行说明。
@@ -76,15 +75,13 @@ not require precipitation inputs).
 
 本项目在aistudio中仅缺少xarray和trimesh，运行下方指令进行安装。
 
-
 ```python
 !pip install xarray trimesh
 ```
 
-
 ### 4.2 数据准备
-本项目已经完整准备数据并绑定至项目，在运行前仅需解压即可。
 
+本项目已经完整准备数据并绑定至项目，在运行前仅需解压即可。
 
 ```python
 !unzip -q data/data252766/dataset.zip -d data/
@@ -96,15 +93,15 @@ not require precipitation inputs).
 ```
 
 ### 4.3 功能运行
+
 主要功能如下：
+
 * convert_parameters() ： 转换原始jax模型参数至paddle模型参数。（已经转换并保存，可以跳过运行）
 * make_graph_template()：制作并保存图结构模板，可减少大规模数据训练时数据制作时间。（已经制作并保存，可以跳过运行）
 * test_datasets()：测试训练数据制作流程。（可跳过运行）
 * eval()：根据转换后模型参数、图模板、数据进行推理预测。
 * visualize()：结果绘图展示。
 * compare()：对比jax输出结果和paddle复现结果。
-
-
 
 ```python
 import json
@@ -293,7 +290,6 @@ def compare(paddle_pred):
     print(f"All diff is {diff_all}")
 
 ```
-
 
 ```python
 # convert_parameters()  # step.1 pre-finished

@@ -4,8 +4,58 @@
 ./README.md:status
 --8<--
 
+<style>
+    .container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .card {
+        font-family: 'Noto Serif SC', sans-serif;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: black;
+        font-weight: bold;
+        height: 100px;
+        padding: 20px;
+        width: 170px;
+        text-align: center;
+        transition: border-color 0.1s; /* 边框颜色变化的过渡效果 */
+        border: 2px solid transparent; /* 默认透明边框，用于悬浮时边框的平滑过渡 */
+        /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); */
+    }
+    .card:hover {
+        border-color: #7793FF; /* 鼠标悬浮时的深蓝色边框 */
+    }
+    .card-deepxde {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-deepmd {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .card-modulus {
+        background-color: #A6CAFE; /* 浅蓝色背景 */
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #666;
+    }
+    .text-large {
+        font-size: 14px;
+    }
+    .text-decoration {
+        text-decoration: underline;
+    }
+</style>
+
 --8<--
 ./README.md:description
+--8<--
+
+--8<--
+./docs/zh/overview.md:panorama
 --8<--
 
 ## 📝案例列表
@@ -81,7 +131,8 @@
 | 问题类型 | 案例名称 | 优化算法 | 模型类型 | 训练方式 | 数据集 | 参考资料 |
 |-----|---------|-----|---------|----|---------|---------|
 | 天气预报 | [FourCastNet 气象预报](./zh/examples/fourcastnet.md) | 数据驱动 | FourCastNet | 监督学习 | [ERA5](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://arxiv.org/pdf/2202.11214.pdf) |
-| 天气预报 | GraphCast 气象预报<sup>coming soon</sup> | 数据驱动 | GraphCastNet* | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
+| 天气预报 | [NowCastNet 气象预报](./zh/examples/nowcastnet.md) | 数据驱动 | NowCastNet | 监督学习 | [MRMS](https://app.globus.org/file-manager?origin_id=945b3c9e-0f8c-11ed-8daf-9f359c660fbd&origin_path=%2F~%2Fdata%2F) | [Paper](https://www.nature.com/articles/s41586-023-06184-4) |
+| 天气预报 | [GraphCast 气象预报](https://github.com/PaddlePaddle/PaddleScience/blob/develop/jointContribution/graphcast/README.md) | 数据驱动 | GraphCastNet | 监督学习 | - | [Paper](https://arxiv.org/abs/2212.12794) |
 | 大气污染物 | [UNet 污染物扩散](https://aistudio.baidu.com/projectdetail/5663515?channel=0&channelType=0&sUid=438690&shared=1&ts=1698221963752) | 数据驱动 | UNet | 监督学习 | [Data](https://aistudio.baidu.com/datasetdetail/198102) | - |
 
 ## 🚀快速安装
@@ -94,7 +145,7 @@
 
 === "方式2: pip安装"
 
-    ``` shell
+    ``` sh
     pip install paddlesci
     ```
 
@@ -107,6 +158,29 @@
 --8<--
 ./README.md:feature
 --8<--
+
+## 🎈其他领域支持
+
+除 PaddleScience 套件外，Paddle 框架还支持了 DeepXDE 的所有案例，分子动力学套件 DeepMD-kit 部分案例和功能，以及正在适配中的 Modulus 。
+
+<div class="container">
+    <a href="https://github.com/lululxvi/deepxde/tree/master?tab=readme-ov-file#deepxde">
+        <div class="card card-deepxde">
+            DeepXDE
+            <br><span class="text-large">全量支持</span></br>
+        </div>
+    </a>
+    <a href="https://github.com/deepmodeling/deepmd-kit/tree/paddle2?tab=readme-ov-file#deepmd-kitpaddlepaddle-backend">
+        <div class="card card-modulus">
+            DeepMD
+            <br><span class="text-large">适配中</span></br>
+        </div>
+    </a>
+    <div class="card card-deepmd">
+        Modulus
+        <br><span class="text-large">适配中</span></br>
+    </div>
+</div>
 
 --8<--
 ./README.md:support
@@ -145,8 +219,12 @@
     <a href="https://github.com/MayYouBeProsperous"><img class="avatar" src="https://avatars.githubusercontent.com/MayYouBeProsperous" alt="avatar" /></a>
     <a href="https://github.com/AndPuQing"><img class="avatar" src="https://avatars.githubusercontent.com/AndPuQing" alt="avatar" /></a>
     <a href="https://github.com/lknt"><img class="avatar" src="https://avatars.githubusercontent.com/lknt" alt="avatar" /></a>
-    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
     <a href="https://github.com/mrcangye"><img class="avatar" src="https://avatars.githubusercontent.com/mrcangye" alt="avatar" /></a>
+    <a href="https://github.com/yangguohao"><img class="avatar" src="https://avatars.githubusercontent.com/yangguohao" alt="avatar" /></a>
+    <a href="https://github.com/ooooo-create"><img class="avatar" src="https://avatars.githubusercontent.com/ooooo-create" alt="avatar" /></a>
+    <a href="https://github.com/megemini"><img class="avatar" src="https://avatars.githubusercontent.com/megemini" alt="avatar" /></a>
+    <a href="https://github.com/DUCH714"><img class="avatar" src="https://avatars.githubusercontent.com/DUCH714" alt="avatar" /></a>
+    <a href="https://github.com/zlynna"><img class="avatar" src="https://avatars.githubusercontent.com/zlynna" alt="avatar" /></a>
     <a href="https://github.com/jjyaoao"><img class="avatar" src="https://avatars.githubusercontent.com/jjyaoao" alt="avatar" /></a>
     <a href="https://github.com/jiamingkong"><img class="avatar" src="https://avatars.githubusercontent.com/jiamingkong" alt="avatar" /></a>
     <a href="https://github.com/Liyulingyue"><img class="avatar" src="https://avatars.githubusercontent.com/Liyulingyue" alt="avatar" /></a>

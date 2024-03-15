@@ -157,7 +157,6 @@ DeepHPMs 着眼于 PDE 公式未知的情况，通过深度学习网络，从实
 
 本问题对 Burgers, Korteweg- de Vries (KdV), Kuramoto-Sivashinsky, nonlinear Schro ̈dinger 和 Navier- Stokes equations 多种 PDE 方程进行了研究，本文档主要针对 Burgers 方程进行说明。
 
-
 ## 2. 问题定义
 
 伯格斯方程(Burgers equation) 是一个模拟冲击波的传播和反射的非线性偏微分方程，该方程认为输出的解 $u$ 与输入的位置、时间参数 $(x, t)$ 之间的关系为：
@@ -418,7 +417,7 @@ examples/deephpms/burgers.py:157:173
 
 第二阶段训练、评估
 
-``` py linenums="218"
+``` py linenums="221"
 --8<--
 examples/deephpms/burgers.py:221:237
 --8<--

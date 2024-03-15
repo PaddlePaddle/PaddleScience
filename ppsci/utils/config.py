@@ -16,14 +16,244 @@ from __future__ import annotations
 
 import argparse
 import copy
+import importlib.util
 import os
+from typing import Mapping
+from typing import Optional
 
 import yaml
 from paddle import static
+from typing_extensions import Literal
 
 from ppsci.utils import logger
+from ppsci.utils import misc
 
 __all__ = ["get_config", "replace_shape_with_inputspec_", "AttrDict"]
+
+if importlib.util.find_spec("pydantic") is not None:
+    from pydantic import BaseModel
+    from pydantic import field_validator
+    from pydantic_core.core_schema import FieldValidationInfo
+
+    __all__.append("SolverConfig")
+
+    class TrainConfig(BaseModel):
+        """
+        Schema of training config for pydantic validation.
+        """
+
+        epochs: int = 0
+        iters_per_epoch: int = 20
+        update_freq: int = 1
+        save_freq: int = 0
+        eval_during_train: bool = False
+        start_eval_epoch: int = 1
+        eval_freq: int = 1
+        checkpoint_path: Optional[str] = None
+        pretrained_model_path: Optional[str] = None
+
+        # Fine-grained validator(s) below
+        @field_validator("epochs")
+        def epochs_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'epochs' should be a positive integer when is type of int, "
+                    f"but got {v}"
+                )
+            return v
+
+        @field_validator("iters_per_epoch")
+        def iters_per_epoch_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'iters_per_epoch' should be a positive integer when is type of int"
+                    f", but got {v}"
+                )
+            return v
+
+        @field_validator("update_freq")
+        def update_freq_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'update_freq' should be a positive integer when is type of int"
+                    f", but got {v}"
+                )
+            return v
+
+        @field_validator("save_freq")
+        def save_freq_check(cls, v):
+            if v < 0:
+                raise ValueError(
+                    "'save_freq' should be a non-negtive integer when is type of int"
+                    f", but got {v}"
+                )
+            return v
+
+        @field_validator("start_eval_epoch")
+        def start_eval_epoch_check(cls, v, info: FieldValidationInfo):
+            if info.data["eval_during_train"]:
+                if v <= 0:
+                    raise ValueError(
+                        f"'start_eval_epoch' should be a positive integer when "
+                        f"'eval_during_train' is True, but got {v}"
+                    )
+            return v
+
+        @field_validator("eval_freq")
+        def eval_freq_check(cls, v, info: FieldValidationInfo):
+            if info.data["eval_during_train"]:
+                if v <= 0:
+                    raise ValueError(
+                        f"'eval_freq' should be a positive integer when "
+                        f"'eval_during_train' is True, but got {v}"
+                    )
+            return v
+
+    class EvalConfig(BaseModel):
+        """
+        Schema of evaluation config for pydantic validation.
+        """
+
+        pretrained_model_path: Optional[str] = None
+        eval_with_no_grad: bool = False
+        compute_metric_by_batch: bool = False
+
+    class InferConfig(BaseModel):
+        """
+        Schema of inference config for pydantic validation.
+        """
+
+        pretrained_model_path: Optional[str] = None
+        export_path: str
+        pdmodel_path: Optional[str] = None
+        pdpiparams_path: Optional[str] = None
+        onnx_path: Optional[str] = None
+        device: Literal["gpu", "cpu", "npu", "xpu"] = "cpu"
+        engine: Literal["native", "tensorrt", "onnx", "mkldnn"] = "native"
+        precision: Literal["fp32", "fp16", "int8"] = "fp32"
+        ir_optim: bool = True
+        min_subgraph_size: int = 30
+        gpu_mem: int = 2000
+        gpu_id: int = 0
+        max_batch_size: int = 1024
+        num_cpu_threads: int = 10
+        batch_size: int = 256
+
+        # Fine-grained validator(s) below
+        @field_validator("engine")
+        def engine_check(cls, v, info: FieldValidationInfo):
+            if v == "tensorrt" and info.data["device"] != "gpu":
+                raise ValueError(
+                    "'device' should be 'gpu' when 'engine' is 'tensorrt', "
+                    f"but got '{info.data['device']}'"
+                )
+            if v == "mkldnn" and info.data["device"] != "cpu":
+                raise ValueError(
+                    "'device' should be 'cpu' when 'engine' is 'mkldnn', "
+                    f"but got '{info.data['device']}'"
+                )
+
+            return v
+
+        @field_validator("min_subgraph_size")
+        def min_subgraph_size_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'min_subgraph_size' should be greater than 0, " f"but got {v}"
+                )
+            return v
+
+        @field_validator("gpu_mem")
+        def gpu_mem_check(cls, v):
+            if v <= 0:
+                raise ValueError("'gpu_mem' should be greater than 0, " f"but got {v}")
+            return v
+
+        @field_validator("gpu_id")
+        def gpu_id_check(cls, v):
+            if v < 0:
+                raise ValueError(
+                    "'gpu_id' should be greater than or equal to 0, " f"but got {v}"
+                )
+            return v
+
+        @field_validator("max_batch_size")
+        def max_batch_size_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'max_batch_size' should be greater than 0, " f"but got {v}"
+                )
+            return v
+
+        @field_validator("num_cpu_threads")
+        def num_cpu_threads_check(cls, v):
+            if v < 0:
+                raise ValueError(
+                    "'num_cpu_threads' should be greater than or equal to 0, "
+                    f"but got {v}"
+                )
+            return v
+
+        @field_validator("batch_size")
+        def batch_size_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'batch_size' should be greater than 0, " f"but got {v}"
+                )
+            return v
+
+    class SolverConfig(BaseModel):
+        """
+        Schema of global config for pydantic validation.
+        """
+
+        # Global settings config
+        mode: Literal["train", "eval", "export", "infer"] = "train"
+        output_dir: Optional[str] = None
+        log_freq: int = 20
+        seed: int = 42
+        use_vdl: bool = False
+        use_wandb: bool = False
+        wandb_config: Optional[Mapping] = None
+        device: Literal["cpu", "gpu", "xpu"] = "gpu"
+        use_amp: bool = False
+        amp_level: Literal["O0", "O1", "O2", "OD"] = "O1"
+        to_static: bool = False
+        log_level: Literal["debug", "info", "warning", "error"] = "info"
+
+        # Training related config
+        TRAIN: Optional[TrainConfig] = None
+
+        # Evaluation related config
+        EVAL: Optional[EvalConfig] = None
+
+        # Inference related config
+        INFER: Optional[InferConfig] = None
+
+        # Fine-grained validator(s) below
+        @field_validator("log_freq")
+        def log_freq_check(cls, v):
+            if v <= 0:
+                raise ValueError(
+                    "'log_freq' should be a non-negtive integer when is type of int"
+                    f", but got {v}"
+                )
+            return v
+
+        @field_validator("seed")
+        def seed_check(cls, v):
+            if v < 0:
+                raise ValueError(f"'seed' should be a non-negtive integer, but got {v}")
+            return v
+
+        @field_validator("use_wandb")
+        def use_wandb_check(cls, v, info: FieldValidationInfo):
+            if not isinstance(info.data["wandb_config"], dict):
+                raise ValueError(
+                    "'wandb_config' should be a dict when 'use_wandb' is True, "
+                    f"but got {misc.typename(info.data['wandb_config'])}"
+                )
+            return v
 
 
 class AttrDict(dict):

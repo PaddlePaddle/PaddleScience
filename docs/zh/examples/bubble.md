@@ -91,7 +91,7 @@ $$\frac{\partial \phi}{\partial t}+\mathbf{u} \cdot \nabla \phi=\gamma \nabla \c
   ![bubble.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/BubbleNet/bubble.jpeg){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
-本文我们主要考虑单气泡流(图 A )，当然对于多气泡流问题同样适用。对于单气泡情况，气泡初始直径设置为 $d =  4~μmm$，微通道长度为 $15~μm$，宽度为 $5~μm$。沿轴向施加压力差 $\Delta p = 10~Pa$ 来驱动气泡流动，通道末端的压力保持为恒定压力 $p_0 = 799.932~Pa(6~mmHg)$，对应于人脑和淋巴液流动中间质液的压力。初始条件 (IC) 即设置为 $p=p_0$，室温为 $293.15~K$，如图 A 所示。该数值设置旨在模拟脑血管中的气泡传输，以研究血脑屏障。同时我们设 $\gamma=1$ 和 $\epsilon_{l s}=0.430$。
+本文我们主要考虑单气泡流(图 A )，当然对于多气泡流问题同样适用。对于单气泡情况，气泡初始直径设置为 $d =  4~μm$，微通道长度为 $15~μm$，宽度为 $5~μm$。沿轴向施加压力差 $\Delta p = 10~Pa$ 来驱动气泡流动，通道末端的压力保持为恒定压力 $p_0 = 799.932~Pa(6~mmHg)$，对应于人脑和淋巴液流动中间质液的压力。初始条件 (IC) 即设置为 $p=p_0$，室温为 $293.15~K$，如图 A 所示。该数值设置旨在模拟脑血管中的气泡传输，以研究血脑屏障。同时我们设 $\gamma=1$ 和 $\epsilon_{l s}=0.430$。
 
 本文的算法 BubbleNet 的主要内容如下：
 
@@ -301,9 +301,9 @@ examples/bubble/bubble.py:189:206
 
 最后在给定的可视化区域上进行预测并可视化，可视化数据是区域内的二维点集，每个时刻 $t$ 的坐标是 $(x^t_i, y^t_i)$，对应值是 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$，在此我们对预测得到的 $(u^t_i, v^t_i, p^t_i,\phi^t_i)$ 进行反归一化，我们将反归一化后的数据按时刻保存成 126 个 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="212"
+``` py linenums="222"
 --8<--
-examples/bubble/bubble.py:212:238
+examples/bubble/bubble.py:222:248
 --8<--
 ```
 

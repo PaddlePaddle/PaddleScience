@@ -219,14 +219,68 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set geometry
+    geom = {"interval": ppsci.geometry.Interval(0, 1)}
+    input_dict = geom["interval"].sample_interior(cfg.INFER.total_size, evenly=True)
+
+    output_dict = predictor.predict({"x": input_dict["x"]}, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    def u_solution_func(out):
+        """compute ground truth for u as label data"""
+        x = out["x"]
+        return -(x**4) / 24 + x**3 / 6 - x**2 / 4
+
+    ppsci.visualize.save_plot_from_1d_dict(
+        "./euler_beam_pred",
+        {**input_dict, **output_dict, "u_label": u_solution_func(input_dict)},
+        ("x",),
+        ("u", "u_label"),
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="euler_beam.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

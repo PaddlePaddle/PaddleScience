@@ -2,15 +2,41 @@
 
 === "模型训练命令"
 
+    案例一：Pipe Flow
+
     ``` sh
     python poiseuille_flow.py
     ```
 
-=== "模型评估命令"
+    案例二：Aneurysm Flow
 
     ``` sh
-    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/poiseuille_flow/poiseuille_flow_pretrained.pdparams
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    unzip LabelFree-DNN-Surrogate_data.zip
+
+    python aneurysm_flow.py
     ```
+
+=== "模型评估命令"
+
+    案例一：Pipe Flow
+
+    ``` sh
+    python poiseuille_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/poiseuille_flow_pretrained.pdparams
+    ```
+
+    案例二：Aneurysm Flow
+
+    ``` sh
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/LabelFree-DNN-Surrogate/LabelFree-DNN-Surrogate_data.zip
+    unzip LabelFree-DNN-Surrogate_data.zip
+
+    python aneurysm_flow.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+|[aneurysm_flow.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/LabelFree-DNN-Surrogate/aneurysm_flow.pdparams)| L-2 error u : 2.548e-4 <br> L-2 error v : 7.169e-5 |
 
 ## 1. 背景简介
 
@@ -45,7 +71,7 @@ $$
 对于流体域边界和流体域内部圆周边界，则需施加 Dirichlet 边界条件：
 
 <figure markdown>
-  ![pipe]( https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
+  ![pipe](https://paddle-org.bj.bcebos.com/paddlescience/docs/labelfree_DNN_surrogate/pipe.png){ loading=lazy }
   <figcaption>流场示意图</figcaption>
 </figure>
 
@@ -91,15 +117,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和丰富输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="78"
+``` py linenums="71"
 --8<--
-examples/pipe/poiseuille_flow.py:78:80
---8<--
-```
-
-``` py linenums="105"
---8<--
-examples/pipe/poiseuille_flow.py:105:111
+examples/pipe/poiseuille_flow.py:71:105
 --8<--
 ```
 
@@ -111,9 +131,9 @@ examples/pipe/poiseuille_flow.py:105:111
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="117"
+``` py linenums="110"
 --8<--
-examples/pipe/poiseuille_flow.py:117:121
+examples/pipe/poiseuille_flow.py:110:115
 --8<--
 ```
 
@@ -123,9 +143,9 @@ examples/pipe/poiseuille_flow.py:117:121
 
 本文中本案例的计算域和参数自变量 $\nu$ 由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="52"
+``` py linenums="45"
 --8<--
-examples/pipe/poiseuille_flow.py:52:75
+examples/pipe/poiseuille_flow.py:45:69
 --8<--
 ```
 
@@ -187,9 +207,9 @@ examples/pipe/poiseuille_flow.py:52:75
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="128"
+    ``` py linenums="122"
     --8<--
-    examples/pipe/poiseuille_flow.py:128:146
+    examples/pipe/poiseuille_flow.py:122:142
     --8<--
     ```
 
@@ -213,9 +233,9 @@ examples/pipe/poiseuille_flow.py:52:75
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="127"
+``` py linenums="107"
 --8<--
-examples/pipe/poiseuille_flow.py:114:114
+examples/pipe/poiseuille_flow.py:107:108
 --8<--
 ```
 
@@ -223,9 +243,9 @@ examples/pipe/poiseuille_flow.py:114:114
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
 
-``` py linenums="152"
+``` py linenums="144"
 --8<--
-examples/pipe/poiseuille_flow.py:152:164
+examples/pipe/poiseuille_flow.py:144:156
 --8<--
 ```
 
@@ -235,9 +255,9 @@ examples/pipe/poiseuille_flow.py:152:164
 
 2. 当我们选取截断高斯分布的动力粘性系数 ${\nu}$ 采样(均值为 $\hat{\nu} = 10^{−3}$， 方差 $\sigma_{\nu}​=2.67 \times 10^{−4}$)，中心处速度的概率密度函数和解析解对比
 
-``` py linenums="166"
+``` py linenums="159"
 --8<--
-examples/pipe/poiseuille_flow.py:166:274
+examples/pipe/poiseuille_flow.py:159:261
 --8<--
 ```
 
@@ -264,7 +284,7 @@ $$
 
 公式和图片中的 $y$ 表示展向坐标，$\delta p$，从图片中我们可以观察到DNN预测的，4种不同粘度采样下的速度曲线（红色虚线），几乎完美符合解析解的速度曲线（蓝色实线），其中，4个case的雷诺数（$Re$）分别为283，121，33，3。实际上，只要雷诺数适中，DNN能精确预测任意给定动力学粘性系数的管道流。
 
-右图展示了中心线(x方向管道中心)速度，在给定动力学粘性系数（高斯分布）下的不确定性。动力学粘性系数的高斯分布，平均值为$1e^{-3}$，方差为$2.67e^{-4}$，这样保证了动力学粘性系数是一个正随机变量。此外，这个高斯分布的区间为$0,+\infty)$，概率密度函数为：
+右图展示了中心线(x方向管道中心)速度，在给定动力学粘性系数（高斯分布）下的不确定性。动力学粘性系数的高斯分布，平均值为$1e^{-3}$，方差为$2.67e^{-4}$，这样保证了动力学粘性系数是一个正随机变量。此外，这个高斯分布的区间为$(0,+\infty)$，概率密度函数为：
 
 $$
 f(\nu ; \bar{\nu}, \sigma_{\nu}) = \dfrac{\dfrac{1}{\sigma_{\nu}} N(\dfrac{(\nu - \bar{\nu})}{\sigma_{\nu}})}{1 - \phi(-\dfrac{\bar{\nu}}{\sigma_{\nu}})}
@@ -278,7 +298,7 @@ $$
 
 本文主要研究了两种类型的典型血管流（具有标准化的血管几何形状），狭窄流和动脉瘤流。
 狭窄血流是指流过血管的血流，其中血管壁变窄和再扩张。 血管的这种局部限制与许多心血管疾病有关，例如动脉硬化、中风和心脏病发作 。
-动脉瘤内的血管血流，即由于血管壁薄弱导致的动脉扩张，称为动脉瘤血流。 动脉瘤破裂可能导致危及生命的情况，例如，由于脑动脉瘤破裂引起的蛛网膜下腔出血 (SAH），而血液动力学的研究可以提高诊断和对动脉瘤进展和破裂的基本了解 。
+动脉瘤内的血管血流，即由于血管壁薄弱导致的动脉扩张，称为动脉瘤血流。 动脉瘤破裂可能导致危及生命的情况，例如，由于脑动脉瘤破裂引起的蛛网膜下腔出血 (SAH)，而血液动力学的研究可以提高诊断和对动脉瘤进展和破裂的基本了解 。
 
 虽然现实的血管几何形状通常是不规则和复杂的，包括曲率、分叉和连接点，但这里研究理想化的狭窄和动脉瘤模型以进行概念验证。 即，狭窄血管和动脉瘤血管都被理想化为具有不同横截面半径的轴对称管，其由以下函数参数化，
 
@@ -350,9 +370,9 @@ $$
 
 上式中 $f_1, f_2, f_3$ 即为 MLP 模型本身，$transform_{input}, transform_{output}$, 表示施加额外的结构化自定义层，用于施加约束和链接输入，用 PaddleScience 代码表示如下:
 
-``` py linenums="119"
+``` py linenums="117"
 --8<--
-examples/aneurysm/aneurysm_flow.py:119:128
+examples/aneurysm/aneurysm_flow.py:117:151
 --8<--
 ```
 
@@ -362,15 +382,9 @@ examples/aneurysm/aneurysm_flow.py:119:128
 
 此外，使用`kaiming normal`方法对权重和偏置初始化。
 
-``` py linenums="119"
+``` py linenums="106"
 --8<--
-examples/aneurysm/aneurysm_flow.py:119:121
---8<--
-```
-
-``` py linenums="126"
---8<--
-examples/aneurysm/aneurysm_flow.py:126:128
+examples/aneurysm/aneurysm_flow.py:106:115
 --8<--
 ```
 
@@ -378,21 +392,27 @@ examples/aneurysm/aneurysm_flow.py:126:128
 
 由于本案例使用的是 Navier-Stokes 方程的2维稳态形式，因此可以直接使用 PaddleScience 内置的 `NavierStokes`。
 
-``` py linenums="179"
+``` py linenums="172"
 --8<--
-examples/aneurysm/aneurysm_flow.py:179:179
+examples/aneurysm/aneurysm_flow.py:172:172
 --8<--
 ```
 
 在实例化 `NavierStokes` 类时需指定必要的参数：动力粘度 $\nu = 0.001$, 流体密度 $\rho = 1.0$。
 
+``` py linenums="37"
+--8<--
+examples/aneurysm/aneurysm_flow.py:37:41
+--8<--
+```
+
 #### 3.2.3 计算域构建
 
 本文中本案例的计算域和参数自变量$scale$由`numpy`随机数生成的点云构成，因此可以直接使用 PaddleScience 内置的点云几何 `PointCloud` 组合成空间的 `Geometry` 计算域。
 
-``` py linenums="51"
+``` py linenums="43"
 --8<--
-examples/aneurysm/aneurysm_flow.py:51:117
+examples/aneurysm/aneurysm_flow.py:43:104
 --8<--
 ```
 
@@ -454,9 +474,9 @@ examples/aneurysm/aneurysm_flow.py:51:117
 
     以作用在流体域内部点上的 `InteriorConstraint` 为例，代码如下：
 
-    ``` py linenums="183"
+    ``` py linenums="174"
     --8<--
-    examples/aneurysm/aneurysm_flow.py:183:202
+    examples/aneurysm/aneurysm_flow.py:174:193
     --8<--
     ```
 
@@ -476,15 +496,9 @@ examples/aneurysm/aneurysm_flow.py:51:117
 
 接下来我们需要指定训练轮数和学习率，使用400轮训练轮数，学习率设为 0.005。
 
-``` py linenums="204"
+``` yaml linenums="33"
 --8<--
-examples/aneurysm/aneurysm_flow.py:204:204
---8<--
-```
-
-``` py linenums="166"
---8<--
-examples/aneurysm/aneurysm_flow.py:166:166
+examples/aneurysm/conf/aneurysm_flow.yaml:33:42
 --8<--
 ```
 
@@ -492,48 +506,19 @@ examples/aneurysm/aneurysm_flow.py:166:166
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="168"
+``` py linenums="152"
 --8<--
-examples/aneurysm/aneurysm_flow.py:168:177
+examples/aneurysm/aneurysm_flow.py:152:170
 --8<--
 ```
 
 #### 3.2.7 模型训练、评估与可视化(需要下载数据)
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后推理。
 
-``` py linenums="206"
+``` py linenums="212"
 --8<--
-examples/aneurysm/aneurysm_flow.py:206:218
---8<--
-```
-
-另一方面，此案例的可视化和定量评估主要依赖于：
-
-1. 在不同狭窄系数 $scale$ 下的流向速度和展向速度结果，与CFD结果的对比
-
-2. 在不同狭窄系数 $scale$ 下的中心线壁面剪切应力曲线，与CFD结果的对比
-
-3. 验证误差
-
-本问题的CFD参考数据保存在 npz 文件，按照下方命令，下载并解压到 `aneurysm_flow/` 文件夹下。
-
-``` sh
-# linux
-wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip
-
-# windows
-# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm_flow/data.zip --output data.zip
-
-# unzip it
-unzip data.zip
-```
-
-解压完毕之后，`aneurysm_flow/data/` 文件夹下即存放了评估可视化所需的CFD参考数据。
-
-``` py linenums="220"
---8<--
-examples/aneurysm/aneurysm_flow.py:220:371
+examples/aneurysm/aneurysm_flow.py:212:212
 --8<--
 ```
 

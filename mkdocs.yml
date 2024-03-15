@@ -34,6 +34,7 @@ nav:
       - 功能介绍: zh/overview.md
       - 安装使用: zh/install_setup.md
       - 快速开始: zh/quickstart.md
+      - 学习资料: zh/tutorials.md
   - 经典案例:
     - " ":
       - 数学(AI for Math):
@@ -58,10 +59,12 @@ nav:
           - LDC2D_steady: zh/examples/ldc2d_steady.md
           - LDC2D_unsteady: zh/examples/ldc2d_unsteady.md
           - Labelfree_DNN_surrogate: zh/examples/labelfree_DNN_surrogate.md
+          - NSFNets: zh/examples/nsfnet.md
+          - PhyCRNet: zh/examples/phycrnet.md
           - ShockWave: zh/examples/shock_wave.md
-          - ViV: zh/examples/viv.md
           - tempoGAN: zh/examples/tempoGAN.md
-          - PhyGeoNet: zh/examples/phygeonet.md
+          - NSFNet4: zh/examples/nsfnet4.md
+          - ViV: zh/examples/viv.md
         - 结构:
           - Biharmonic2D: zh/examples/biharmonic2d.md
           - Bracket: zh/examples/bracket.md
@@ -70,8 +73,9 @@ nav:
           - Phy-LSTM: zh/examples/phylstm.md
           - TopOpt: zh/examples/topopt.md
         - 传热:
-          - Heat_PINN: zh/examples/heat_pinn.md
           - Heat_Exchanger: zh/examples/heat_exchanger.md
+          - Heat_PINN: zh/examples/heat_pinn.md
+          - PhyGeoNet: zh/examples/phygeonet.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
@@ -146,6 +150,7 @@ theme:
   icon:
     edit: material/pencil
     view: material/eye
+    annotation: fontawesome/solid/circle-question
   palette:
     # Palette toggle for light mode
     - scheme: default

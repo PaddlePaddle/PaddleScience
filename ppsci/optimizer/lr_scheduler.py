@@ -739,7 +739,7 @@ class SchedulerList:
     """SchedulerList which wrap more than one scheduler.
     Args:
         scheduler_list (Tuple[lr.LRScheduler, ...]): Schedulers listed in a tuple.
-        by_epoch (bool, optional): Learning rate decays by epoch when by_epoch is True, else by iter. Defaults to False.
+
     Examples:
         >>> import ppsci
         >>> sch1 = ppsci.optimizer.lr_scheduler.Linear(10, 2, 0.001)()
@@ -747,12 +747,10 @@ class SchedulerList:
         >>> sch = ppsci.optimizer.lr_scheduler.SchedulerList((sch1, sch2))
     """
 
-    def __init__(
-        self, scheduler_list: Tuple[lr.LRScheduler, ...], by_epoch: bool = False
-    ):
+    def __init__(self, scheduler_list: Tuple[lr.LRScheduler, ...]):
         super().__init__()
         self._sch_list = scheduler_list
-        self.by_epoch = by_epoch
+        self.by_epoch = False
 
     def step(self):
         for sch in self._sch_list:

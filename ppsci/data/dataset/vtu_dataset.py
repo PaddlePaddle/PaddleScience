@@ -37,7 +37,21 @@ class VtuDataset(io.Dataset):
         labels (Optional[Dict[str, float]]): Temporary variable for [load_vtk_with_time_file].
         transforms (vision.Compose, optional): Compose object contains sample wise.
             transform(s).
+
+    Examples:
+        >>> from ppsci.dataset import VtuDataset
+
+        >>> dataset = VtuDataset(file_path='example.vtu') # doctest: +SKIP
+
+        >>> # get the length of the dataset
+        >>> dataset_size = len(dataset) # doctest: +SKIP
+        >>> # get the first sample of the data
+        >>> first_sample = dataset[0] # doctest: +SKIP
+        >>> print("First sample:", first_sample)
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
 
     def __init__(
         self,

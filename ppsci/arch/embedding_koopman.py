@@ -48,7 +48,25 @@ class LorenzEmbedding(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.LorenzEmbedding(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
+        ... )
+        >>> x_shape = [8, 3, 2]
+        >>> y_shape = [8, 3, 1]
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [8, 2, 3]
+        >>> print(output_dict["v"].shape)
+        [8, 3, 3]
     """
 
     def __init__(
@@ -177,9 +195,8 @@ class LorenzEmbedding(base.Arch):
 
         return (pred_data[:, :-1, :], recover_data, k_matrix)
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
@@ -210,7 +227,25 @@ class RosslerEmbedding(LorenzEmbedding):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.RosslerEmbedding(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
+        ... )
+        >>> x_shape = [8, 3, 2]
+        >>> y_shape = [8, 3, 1]
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [8, 2, 3]
+        >>> print(output_dict["v"].shape)
+        [8, 3, 3]
     """
 
     def __init__(
@@ -482,9 +517,8 @@ class CylinderEmbedding(base.Arch):
 
         return (pred_data[:, :-1], recover_data, k_matrix)
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):

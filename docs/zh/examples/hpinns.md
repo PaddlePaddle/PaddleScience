@@ -82,7 +82,7 @@ $$
 
 运行本问题代码前请按照下方命令下载 [训练数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat) 和 [验证数据集](https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat)：
 
-``` shell
+``` sh
 wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_train.mat
 wget -nc -P ./datasets/ https://paddle-org.bj.bcebos.com/paddlescience/datasets/hPINNs/hpinns_holo_valid.mat
 ```
@@ -221,7 +221,7 @@ examples/hpinns/holography.py:66:127
 4. `label_keys`： 标签变量名；
 5. `alias_dict`： 变量别名。
 
-第二个参数是损失函数，此处的 `FunctionalLoss` 为 PaddleScience 预留的自定义 loss 函数类，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法，本问题中由于存在多个 loss 项，因此需要定义多个 loss 计算函数，这也是需要构建多个约束的原因。自定义 loss 函数代码请参考 [自定义 loss 和 metric ](#38)。
+第二个参数是损失函数，此处的 `FunctionalLoss` 为 PaddleScience 预留的自定义 loss 函数类，该类支持编写代码时自定义 loss 的计算方法，而不是使用诸如 `MSE` 等现有方法，本问题中由于存在多个 loss 项，因此需要定义多个 loss 计算函数，这也是需要构建多个约束的原因。自定义 loss 函数代码请参考 [自定义 loss 和 metric](#38)。
 
 第三个参数是方程表达式，用于描述如何计算约束目标，此处填入 `output_expr`，计算后的值将会按照指定名称存入输出列表中，从而保证 loss 计算时可以使用这些值。
 
@@ -245,7 +245,7 @@ examples/hpinns/holography.py:133:181
 --8<--
 ```
 
-评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric ](#38)。
+评价指标 `metric` 为 `FunctionalMetric`，这是 PaddleScience 预留的自定义 metric 函数类，该类支持编写代码时自定义 metric 的计算方法，而不是使用诸如 `MSE`、 `L2` 等现有方法。自定义 metric 函数代码请参考下一部分 [自定义 loss 和 metric](#38)。
 
 其余配置与 [约束构建](#36) 的设置类似。
 

@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs_phygeonet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: lambda_omega/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged
@@ -20,29 +20,42 @@ hydra:
     subdir: ./
 
 # general settings
+device: 'gpu:3'
 mode: train # running mode: train/eval
 seed: 66
-data_dir: ./data/heat_equation.npz
 output_dir: ${hydra:run.dir}
-dtheta: 0
-epochs: 1500
-len_data: 1
+DATA_PATH: ./data/reaction_diffusion.mat
+case_name: lambda_omega
+# set working condition
+TIME_STEPS: 201
+DT: 0.025
+DX: [20.0, 512]
+TIME_BATCH_SIZE: 200
+num_convlstm: 1
 # model settings
 MODEL:
-  input_keys: [ 'coords' ]
-  output_keys: [ 'outputV' ]
-  hidden_size: [16, 32, 16]
-  h: 0.01
-  ny: 19
-  nx: 84
-  nvar_in: 2
-  nvar_out: 1
-  pad_singleside: 1
+  input_channels: 2
+  hidden_channels: [8, 32, 128, 128]
+  input_kernel_size: [4, 4, 4, 3]
+  input_stride: [2, 2, 2, 1]
+  input_padding: [1, 1, 1, 1]
+  num_layers: [3, 1]
+  upscale_factor: 8
 
 # training settings
 TRAIN:
-  lr: 1e-3
-  batchsize: 1
+  epochs: 24000
+  iters_per_epoch: 1
+  lr_scheduler:
+    epochs: ${TRAIN.epochs}
+    iters_per_epoch: ${TRAIN.iters_per_epoch}
+    step_size: 100
+    gamma: 0.99
+    learning_rate: 5.0e-4
+  save_freq: 50
+  eval_with_no_grad: true
+  pretrained_model_path: null
+  checkpoint_path: null
 
 # evaluation settings
 EVAL:

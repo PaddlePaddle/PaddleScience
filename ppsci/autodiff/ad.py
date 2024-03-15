@@ -19,7 +19,9 @@ This module is adapted from [https://github.com/lululxvi/deepxde](https://github
 from __future__ import annotations
 
 from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Union
 
 import paddle
 
@@ -36,14 +38,19 @@ class _Jacobian:
         xs (paddle.Tensor): Input Tensor of shape [batch_size, dim_x].
     """
 
-    def __init__(self, ys: "paddle.Tensor", xs: "paddle.Tensor"):
+    def __init__(
+        self,
+        ys: "paddle.Tensor",
+        xs: "paddle.Tensor",
+        J: Optional[Dict[int, paddle.Tensor]] = None,
+    ):
         self.ys = ys
         self.xs = xs
 
         self.dim_y = ys.shape[1]
         self.dim_x = xs.shape[1]
 
-        self.J: Dict[str, paddle.Tensor] = {}
+        self.J: Dict[int, paddle.Tensor] = {} if J is None else J
 
     def __call__(
         self,
@@ -87,17 +94,17 @@ class Jacobians:
     def __call__(
         self,
         ys: "paddle.Tensor",
-        xs: "paddle.Tensor",
+        xs: Union["paddle.Tensor", List["paddle.Tensor"]],
         i: int = 0,
         j: Optional[int] = None,
         retain_graph: Optional[bool] = None,
         create_graph: bool = True,
-    ) -> "paddle.Tensor":
+    ) -> Union["paddle.Tensor", List["paddle.Tensor"]]:
         """Compute jacobians for given ys and xs.
 
         Args:
             ys (paddle.Tensor): Output tensor.
-            xs (paddle.Tensor): Input tensor.
+            xs (Union[paddle.Tensor, List[paddle.Tensor]]): Input tensor(s).
             i (int, optional): i-th output variable. Defaults to 0.
             j (Optional[int]): j-th input variable. Defaults to None.
             retain_graph (Optional[bool]): Whether to retain the forward graph which
@@ -120,11 +127,38 @@ class Jacobians:
             >>> x.stop_gradient = False
             >>> y = x * x
             >>> dy_dx = ppsci.autodiff.jacobian(y, x)
+            >>> print(dy_dx.shape)
+            [4, 1]
         """
-        key = (ys, xs)
-        if key not in self.Js:
-            self.Js[key] = _Jacobian(ys, xs)
-        return self.Js[key](i, j, retain_graph, create_graph)
+        if not isinstance(xs, (list, tuple)):
+            key = (ys, xs)
+            if key not in self.Js:
+                self.Js[key] = _Jacobian(ys, xs)
+            return self.Js[key](i, j, retain_graph, create_graph)
+        else:
+            xs_require: List["paddle.Tensor"] = [
+                xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js
+            ]
+            grads_require = paddle.grad(
+                ys,
+                xs_require,
+                create_graph=create_graph,
+                retain_graph=retain_graph,
+            )
+
+            idx = 0
+            Js_list = []
+            for k, xs_ in enumerate(xs):
+                key = (ys, xs_)
+                assert xs_.shape[-1] == 1, (
+                    f"The last dim of each xs should be 1, but xs[{k}] has shape "
+                    f"{xs_.shape}"
+                )
+                if key not in self.Js:
+                    self.Js[key] = _Jacobian(ys, xs_, {0: grads_require[idx]})
+                    idx += 1
+                Js_list.append(self.Js[key](i, j, retain_graph, create_graph))
+            return Js_list
 
     def _clear(self):
         """Clear cached Jacobians."""
