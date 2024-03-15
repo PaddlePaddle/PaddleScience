@@ -20,13 +20,11 @@
     python volterra_ide.py mode=export
     ```
 
-
 === "模型推理命令"
 
     ``` sh
     python volterra_ide.py mode=infer
     ```
-
 
 | 预训练模型  | 指标 |
 |:--| :--|
