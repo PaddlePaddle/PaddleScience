@@ -14,6 +14,18 @@
     python volterra_ide.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams
     ```
 
+=== "模型导出命令"
+
+    ``` sh
+    python volterra_ide.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python volterra_ide.py mode=infer
+    ```
+
 | 预训练模型  | 指标 |
 |:--| :--|
 | [volterra_ide_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/volterra_ide/volterra_ide_pretrained.pdparams) | loss(L2Rel_Validator): 0.00023 <br> L2Rel.u(L2Rel_Validator): 0.00023 |
