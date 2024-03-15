@@ -134,3 +134,83 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     def __len__(self):
         return 1
+
+
+class DeepONetArrayDataset(io.Dataset):
+    """DeepONetArrayDataset for data loading of multi-branch DeepONet model.
+
+    Args:
+        input (Dict[str, np.ndarray]): Input dict.
+        label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
+        index (tuple[str, ...]): Key of input dict.
+        type (str): One of key of input dict.
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
+
+    Examples:
+        >>> import ppsci
+        >>> input = {"x": np.random.randn(100, 1)}
+        >>> label = {"u": np.random.randn(100, 1)}
+        >>> index = ('x', 'u', 'bc', 'bc_data')
+        >>> type = 'u'
+        >>> weight = {"u": np.random.randn(100, 1)}
+        >>> dataset = ppsci.data.dataset.DeepONetArrayDataset(input, label, index, type, weight)
+    """
+
+    def __init__(
+        self,
+        input: Dict[str, np.ndarray],
+        label: Dict[str, np.ndarray],
+        index: tuple[str, ...],
+        type: str,
+        weight: Optional[Dict[str, float]] = None,
+        transforms: Optional[vision.Compose] = None,
+    ):
+        super().__init__()
+        self.input = input
+        self.label = label
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(label.keys())
+        self.index = index
+        self.type = type
+        self.weight = {} if weight is None else weight
+        self.transforms = transforms
+
+    def __getitem__(self, idx):
+        quotient = idx
+        index_ir = dict()
+        for i in self.index:
+            index_ir[i] = 0
+
+        for i in index_ir:
+            num = len(self.input[i])
+            index_ir[i] = quotient % num
+            quotient = quotient // num
+
+        input_item = {}
+        for i in self.input:
+            if i == "y":
+                input_item[i] = self.input[i][index_ir["x"]]
+            elif i == "u_one":
+                input_item[i] = self.input[i][
+                    len(self.input[self.type]) * index_ir["x"] + index_ir[self.type]
+                ]
+            else:
+                input_item[i] = self.input[i][index_ir[i]]
+
+        label_item = {key: value for key, value in self.label.items()}
+        weight_item = {key: value for key, value in self.weight.items()}
+
+        if self.transforms is not None:
+            input_item, label_item, weight_item = self.transforms(
+                (input_item, label_item, weight_item)
+            )
+
+        return (input_item, label_item, weight_item)
+
+    def __len__(self):
+        _len = 1
+        for i in self.index:
+            _len *= len(self.input[i])
+        return _len
