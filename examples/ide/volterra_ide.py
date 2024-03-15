@@ -254,14 +254,80 @@ def evaluate(cfg: DictConfig):
     plt.savefig(osp.join(cfg.output_dir, "./Volterra_IDE.png"), dpi=200)
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {
+            key: InputSpec([None, 1], "float32", name=key)
+            for key in cfg.MODEL.input_keys
+        },
+    ]
+    solver.export(input_spec, cfg.INFER.export_path)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+
+    # set geometry
+    geom = {"timedomain": ppsci.geometry.TimeDomain(*cfg.BOUNDS)}
+
+    input_data = geom["timedomain"].uniform_points(cfg.EVAL.npoint_eval)
+    input_dict = {"x": input_data}
+
+    output_dict = predictor.predict(
+        {key: input_dict[key] for key in cfg.MODEL.input_keys}, cfg.INFER.batch_size
+    )
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    def u_solution_func(in_) -> np.ndarray:
+        if isinstance(in_["x"], paddle.Tensor):
+            return paddle.exp(-in_["x"]) * paddle.cosh(in_["x"])
+        return np.exp(-in_["x"]) * np.cosh(in_["x"])
+
+    label_data = u_solution_func({"x": input_data})
+    output_data = output_dict["u"]
+
+    # save result
+    plt.plot(input_data, label_data, "-", label=r"$u(t)$")
+    plt.plot(input_data, output_data, "o", label=r"$\hat{u}(t)$", markersize=4.0)
+    plt.legend()
+    plt.xlabel(r"$t$")
+    plt.ylabel(r"$u$")
+    plt.title(r"$u-t$")
+    plt.savefig("./Volterra_IDE_pred.png", dpi=200)
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="volterra_ide.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":
