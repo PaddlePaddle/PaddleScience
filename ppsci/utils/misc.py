@@ -210,6 +210,11 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()  # doctest: +SKIP
 
+        >>> timer = misc.Timer("cost_of_func", auto_print=False)
+        >>> timer.start()
+        >>> func()
+        >>> timer.end()
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
     """
 
     interval: float  # Time cost for code within Timer context
@@ -220,10 +225,31 @@ class Timer(ContextDecorator):
         self.auto_print = auto_print
 
     def __enter__(self):
+        paddle.device.synchronize()
         self.start_time = time.perf_counter()
         return self
 
     def __exit__(self, type, value, traceback):
+        paddle.device.synchronize()
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+    def start(self, name: str = "Timer"):
+        """Push a new timer context.
+
+        Args:
+            name (str, optional): Name of code block to be clocked. Defaults to "Timer".
+        """
+        paddle.device.synchronize()
+        self.start_time = time.perf_counter()
+
+    def end(self):
+        """
+        End current timer context and print time cost.
+        """
+        paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
