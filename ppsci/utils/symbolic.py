@@ -101,7 +101,7 @@ SYMPY_TO_PADDLE = {
     sp.sign: paddle.sign,
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
-    # NOTE: sp.Add and sp.Mul is not included here for un-alignment with sympy
+    # NOTE: sp.Add and sp.Mul is not included here for un-alignment with paddle
     # and are implemented manually in 'OperatorNode._add_operator_func' and
     # 'OperatorNode._mul_operator_func'
 }
@@ -711,7 +711,7 @@ def lambdify(
             such as 'momentum_x'. Defaults to None.
         create_graph (bool, optional): Whether to create the gradient graphs of
             the computing process. When it is True, higher order derivatives are
-            supported to compute; when it is False, the gradient graphs of the
+            supported to compute. When it is False, the gradient graphs of the
             computing process would be discarded. Defaults to True.
         retain_graph (Optional[bool]): Whether to retain the forward graph which
             is used to calculate the gradient. When it is True, the graph would
@@ -719,7 +719,7 @@ def lambdify(
             same graph. When it is False, the graph would be freed. Defaults to None,
             which means it is equal to `create_graph`.
         fuse_derivative (bool, optional): Whether to fuse the derivative nodes.
-            for example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
+            For example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
             It will compute grad(u, x) + grad(u, y) if fuse_derivative=False,
             else will compute sum(grad(u, [x, y])) if fuse_derivative=True as is more
             efficient in backward-graph. Defaults to False, as it is experimental so not
