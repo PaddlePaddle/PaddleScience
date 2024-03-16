@@ -6,6 +6,7 @@
       members:
         - IterableNamedArrayDataset
         - NamedArrayDataset
+        - DeepONetArrayDataset
         - CSVDataset
         - IterableCSVDataset
         - ERA5Dataset

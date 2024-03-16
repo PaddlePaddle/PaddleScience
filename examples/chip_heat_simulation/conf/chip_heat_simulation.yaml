@@ -43,7 +43,7 @@ MODEL:
   branch_input_keys: ['u']
   BCtype_input_keys: ['bc']
   BC_input_keys: ['bc_data']
-  trunk_input_keys: ["x","y"]
+  trunk_input_keys: ["x", "y"]
   output_keys: ["T"]
   num_loc: 324 #18*18
   bctype_loc: 1

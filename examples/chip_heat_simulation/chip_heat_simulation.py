@@ -27,14 +27,33 @@ from ppsci.autodiff import jacobian
 from ppsci.utils import logger
 
 
-# main dependencies
 def fftind(size):
+    """
+    Returns the momentum indices for the 2D Fast Fourier Transform (FFT).
+
+    Args:
+        size (int): Size of the 2D array.
+
+    Returns:
+        numpy.ndarray: Array of momentum indices for the 2D FFT.
+    """
     k_ind = np.mgrid[:size, :size] - int((size + 1) / 2)
     k_ind = scipy.fftpack.fftshift(k_ind)
     return k_ind
 
 
-def gaussian_random_field(alpha=3.0, size=128, flag_normalize=True):
+def GRF(alpha=3.0, size=128, flag_normalize=True):
+    """
+    Generates a Gaussian random field(GRF) with a power law amplitude spectrum.
+
+    Args:
+        alpha (float, optional): Power law exponent. Defaults to 3.0.
+        size (int, optional): Size of the output field. Defaults to 128.
+        flag_normalize (bool, optional): Flag indicating whether to normalize the field. Defaults to True.
+
+    Returns:
+        numpy.ndarray: Generated Gaussian random field.
+    """
     # Defines momentum indices
     k_idx = fftind(size)
     # Defines the amplitude as a power law 1/|k|^(alpha/2)
@@ -51,14 +70,10 @@ def gaussian_random_field(alpha=3.0, size=128, flag_normalize=True):
     if flag_normalize:
         gfield = gfield - np.mean(gfield)
         gfield = gfield / np.std(gfield)
-    return gfield
+    return gfield.reshape([1, -1])
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
     # set model
     model = ppsci.arch.ChipDeepONets(**cfg.MODEL)
     # set geometry
@@ -67,123 +82,81 @@ def train(cfg: DictConfig):
     points = geom["rect"].sample_interior(NPOINT, evenly=True)
 
     # generate training data and validation data
-    data_u = np.ones((cfg.NL - 2) * (cfg.NW - 2)).reshape([1, -1])
-    data_BC = np.ones(NPOINT).reshape([1, -1])
-    data_u = np.vstack((data_u, np.zeros((cfg.NL - 2) * (cfg.NW - 2)).reshape([1, -1])))
-    data_BC = np.vstack((data_BC, np.zeros(NPOINT).reshape([1, -1])))
+    data_u = np.ones([1, (cfg.NL - 2) * (cfg.NW - 2)])
+    data_BC = np.ones([1, NPOINT])
+    data_u = np.vstack((data_u, np.zeros([1, (cfg.NL - 2) * (cfg.NW - 2)])))
+    data_BC = np.vstack((data_BC, np.zeros([1, NPOINT])))
     for i in range(cfg.NU - 2):
-        data_u = np.vstack(
-            (
-                data_u,
-                gaussian_random_field(alpha=cfg.GRF.alpha, size=cfg.NL - 2).reshape(
-                    [1, -1]
-                ),
-            )
-        )
+        data_u = np.vstack((data_u, GRF(alpha=cfg.GRF.alpha, size=cfg.NL - 2)))
     for i in range(cfg.NBC - 2):
-        data_BC = np.vstack(
-            (
-                data_BC,
-                gaussian_random_field(alpha=cfg.GRF.alpha, size=cfg.NL).reshape(
-                    [1, -1]
-                ),
-            )
-        )
+        data_BC = np.vstack((data_BC, GRF(alpha=cfg.GRF.alpha, size=cfg.NL)))
     data_u = data_u.astype("float32")
     data_BC = data_BC.astype("float32")
-    test_u = (
-        gaussian_random_field(alpha=4, size=cfg.NL)
-        .reshape([1, -1])
-        .astype("float32")[0]
-    )
+    test_u = GRF(alpha=4, size=cfg.NL).astype("float32")[0]
 
-    indices = (
-        (points["x"] == 0)
-        | (points["x"] == cfg.DW)
-        | (points["y"] == 0)
-        | (points["y"] == cfg.DL)
+    boundary_indices = np.where(
+        (
+            (points["x"] == 0)
+            | (points["x"] == cfg.DW)
+            | (points["y"] == 0)
+            | (points["y"] == cfg.DL)
+        )
     )
-    interior_indices = (
-        (points["x"] != 0)
-        & (points["x"] != cfg.DW)
-        & (points["y"] != 0)
-        & (points["y"] != cfg.DL)
+    interior_indices = np.where(
+        (
+            (points["x"] != 0)
+            & (points["x"] != cfg.DW)
+            & (points["y"] != 0)
+            & (points["y"] != cfg.DL)
+        )
     )
-    interior_indices = np.where(interior_indices)
-    indices = np.where(indices)
 
     points["u"] = np.tile(test_u[interior_indices[0]], (NPOINT, 1))
     points["u_one"] = test_u.T.reshape([-1, 1])
-    points["bc_data"] = np.tile(test_u[indices[0]], (NPOINT, 1))
-    points["bc"] = np.repeat(np.array([[0]], dtype="float32"), NPOINT, axis=0)
+    points["bc_data"] = np.tile(test_u[boundary_indices[0]], (NPOINT, 1))
+    points["bc"] = np.zeros((NPOINT, 1), dtype="float32")
 
-    top_indices = points["x"] == cfg.DW
-    down_indices = points["x"] == 0
-    left_indices = (points["y"] == 0) & (points["x"] != 0) & (points["x"] != cfg.DW)
-    right_indices = (
-        (points["y"] == cfg.DL) & (points["x"] != 0) & (points["x"] != cfg.DW)
+    top_indices = np.where(points["x"] == cfg.DW)
+    down_indices = np.where(points["x"] == 0)
+    left_indices = np.where(
+        (points["y"] == 0) & (points["x"] != 0) & (points["x"] != cfg.DW)
     )
-    interior_indices = (
-        (points["x"] != 0)
-        & (points["x"] != cfg.DW)
-        & (points["y"] != 0)
-        & (points["y"] != cfg.DL)
+    right_indices = np.where(
+        ((points["y"] == cfg.DL) & (points["x"] != 0) & (points["x"] != cfg.DW))
     )
-    top_indices = np.where(top_indices)
-    down_indices = np.where(down_indices)
-    left_indices = np.where(left_indices)
-    right_indices = np.where(right_indices)
-    interior_indices = np.where(interior_indices)
 
-    # classification validation data
-    test_top_data = {
-        "x": points["x"][top_indices[0]],
-        "y": points["y"][top_indices[0]],
-        "u": points["u"][top_indices[0]],
-        "u_one": points["u_one"][top_indices[0]],
-        "bc": points["bc"][top_indices[0]],
-        "bc_data": points["bc_data"][top_indices[0]],
-    }
-    test_down_data = {
-        "x": points["x"][down_indices[0]],
-        "y": points["y"][down_indices[0]],
-        "u": points["u"][down_indices[0]],
-        "u_one": points["u_one"][down_indices[0]],
-        "bc": points["bc"][down_indices[0]],
-        "bc_data": points["bc_data"][down_indices[0]],
-    }
-    test_left_data = {
-        "x": points["x"][left_indices[0]],
-        "y": points["y"][left_indices[0]],
-        "u": points["u"][left_indices[0]],
-        "u_one": points["u_one"][left_indices[0]],
-        "bc": points["bc"][left_indices[0]],
-        "bc_data": points["bc_data"][left_indices[0]],
-    }
-    test_right_data = {
-        "x": points["x"][right_indices[0]],
-        "y": points["y"][right_indices[0]],
-        "u": points["u"][right_indices[0]],
-        "u_one": points["u_one"][right_indices[0]],
-        "bc": points["bc"][right_indices[0]],
-        "bc_data": points["bc_data"][right_indices[0]],
-    }
-    test_data = {
-        "x": points["x"][interior_indices[0]],
-        "y": points["y"][interior_indices[0]],
-        "u": points["u"][interior_indices[0]],
-        "u_one": points["u_one"][interior_indices[0]],
-        "bc": points["bc"][interior_indices[0]],
-        "bc_data": points["bc_data"][interior_indices[0]],
-    }
-    # classification train data
+    # generate validation data
+    (
+        test_top_data,
+        test_down_data,
+        test_left_data,
+        test_right_data,
+        test_interior_data,
+    ) = [
+        {
+            "x": points["x"][indices_[0]],
+            "y": points["y"][indices_[0]],
+            "u": points["u"][indices_[0]],
+            "u_one": points["u_one"][indices_[0]],
+            "bc": points["bc"][indices_[0]],
+            "bc_data": points["bc_data"][indices_[0]],
+        }
+        for indices_ in (
+            top_indices,
+            down_indices,
+            left_indices,
+            right_indices,
+            interior_indices,
+        )
+    ]
+    # generate train data
     top_data = {
         "x": test_top_data["x"],
         "y": test_top_data["y"],
         "u": data_u,
         "u_one": data_BC[:, top_indices[0]].T.reshape([-1, 1]),
         "bc": np.array([[0], [1], [2], [3]], dtype="float32"),
-        "bc_data": data_BC[:, indices[0]],
+        "bc_data": data_BC[:, boundary_indices[0]],
     }
     down_data = {
         "x": test_down_data["x"],
@@ -191,7 +164,7 @@ def train(cfg: DictConfig):
         "u": data_u,
         "u_one": data_BC[:, down_indices[0]].T.reshape([-1, 1]),
         "bc": np.array([[0], [1], [2], [3]], dtype="float32"),
-        "bc_data": data_BC[:, indices[0]],
+        "bc_data": data_BC[:, boundary_indices[0]],
     }
     left_data = {
         "x": test_left_data["x"],
@@ -199,7 +172,7 @@ def train(cfg: DictConfig):
         "u": data_u,
         "u_one": data_BC[:, left_indices[0]].T.reshape([-1, 1]),
         "bc": np.array([[0], [1], [2], [3]], dtype="float32"),
-        "bc_data": data_BC[:, indices[0]],
+        "bc_data": data_BC[:, boundary_indices[0]],
     }
     right_data = {
         "x": test_right_data["x"],
@@ -207,21 +180,21 @@ def train(cfg: DictConfig):
         "u": data_u,
         "u_one": data_BC[:, right_indices[0]].T.reshape([-1, 1]),
         "bc": np.array([[0], [1], [2], [3]], dtype="float32"),
-        "bc_data": data_BC[:, indices[0]],
+        "bc_data": data_BC[:, boundary_indices[0]],
     }
     interior_data = {
-        "x": test_data["x"],
-        "y": test_data["y"],
+        "x": test_interior_data["x"],
+        "y": test_interior_data["y"],
         "u": data_u,
         "u_one": data_u.T.reshape([-1, 1]),
         "bc": np.array([[0], [1], [2], [3]], dtype="float32"),
-        "bc_data": data_BC[:, indices[0]],
+        "bc_data": data_BC[:, boundary_indices[0]],
     }
 
     # set constraint
     index = ("x", "u", "bc", "bc_data")
-    label = {"neumann": np.array([0], dtype="float32")}
-    weight = {"neumann": np.array([cfg.TRAIN.weight], dtype="float32")}
+    label = {"chip": np.array([0], dtype="float32")}
+    weight = {"chip": np.array([cfg.TRAIN.weight], dtype="float32")}
     top_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
@@ -229,7 +202,7 @@ def train(cfg: DictConfig):
                 "input": top_data,
                 "label": label,
                 "index": index,
-                "type": "bc_data",
+                "data_type": "bc_data",
                 "weight": weight,
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -241,7 +214,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "neumann": lambda out: paddle.where(
+            "chip": lambda out: paddle.where(
                 out["bc"] == 1,
                 jacobian(out["T"], out["x"]) - out["u_one"],
                 paddle.where(
@@ -269,7 +242,7 @@ def train(cfg: DictConfig):
                 "input": down_data,
                 "label": label,
                 "index": index,
-                "type": "bc_data",
+                "data_type": "bc_data",
                 "weight": weight,
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -281,7 +254,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "neumann": lambda out: paddle.where(
+            "chip": lambda out: paddle.where(
                 out["bc"] == 1,
                 jacobian(out["T"], out["x"]) - out["u_one"],
                 paddle.where(
@@ -309,7 +282,7 @@ def train(cfg: DictConfig):
                 "input": left_data,
                 "label": label,
                 "index": index,
-                "type": "bc_data",
+                "data_type": "bc_data",
                 "weight": weight,
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -321,7 +294,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "neumann": lambda out: paddle.where(
+            "chip": lambda out: paddle.where(
                 out["bc"] == 1,
                 jacobian(out["T"], out["y"]) - out["u_one"],
                 paddle.where(
@@ -349,7 +322,7 @@ def train(cfg: DictConfig):
                 "input": right_data,
                 "label": label,
                 "index": index,
-                "type": "bc_data",
+                "data_type": "bc_data",
                 "weight": weight,
             },
             "batch_size": cfg.TRAIN.batch_size,
@@ -361,7 +334,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "neumann": lambda out: paddle.where(
+            "chip": lambda out: paddle.where(
                 out["bc"] == 1,
                 jacobian(out["T"], out["y"]) - out["u_one"],
                 paddle.where(
@@ -389,7 +362,7 @@ def train(cfg: DictConfig):
                 "input": interior_data,
                 "label": label,
                 "index": index,
-                "type": "u",
+                "data_type": "u",
             },
             "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
@@ -400,7 +373,7 @@ def train(cfg: DictConfig):
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
-            "neumann": lambda out: hessian(out["T"], out["x"])
+            "chip": lambda out: hessian(out["T"], out["x"])
             + hessian(out["T"], out["y"])
             + 100 * out["u_one"]
         },
@@ -419,10 +392,12 @@ def train(cfg: DictConfig):
     optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)((model,))
 
     # set validator
-    top_down_label = {"neumann": np.zeros([cfg.NL, 1], dtype="float32")}
-    left_right_label = {"neumann": np.zeros([(cfg.NL - 2), 1], dtype="float32")}
+    top_down_label = {"chip": np.zeros([cfg.NL, 1], dtype="float32")}
+    left_right_label = {"chip": np.zeros([(cfg.NL - 2), 1], dtype="float32")}
     interior_label = {
-        "thermal_condution": np.zeros([test_data["x"].shape[0], 1], dtype="float32")
+        "thermal_condution": np.zeros(
+            [test_interior_data["x"].shape[0], 1], dtype="float32"
+        )
     }
     top_validator = ppsci.validate.SupervisedValidator(
         {
@@ -431,18 +406,16 @@ def train(cfg: DictConfig):
                 "input": test_top_data,
                 "label": top_down_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight * np.ones([cfg.NL, 1], dtype="float32")
+                    "chip": np.full([cfg.NL, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": cfg.NL,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="top_mse",
     )
@@ -453,18 +426,16 @@ def train(cfg: DictConfig):
                 "input": test_down_data,
                 "label": top_down_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight * np.ones([cfg.NL, 1], dtype="float32")
+                    "chip": np.full([cfg.NL, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": cfg.NL,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="down_mse",
     )
@@ -475,19 +446,16 @@ def train(cfg: DictConfig):
                 "input": test_left_data,
                 "label": left_right_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight
-                    * np.ones([(cfg.NL - 2), 1], dtype="float32")
+                    "chip": np.full([cfg.NL - 2, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": (cfg.NL - 2),
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="left_mse",
     )
@@ -498,19 +466,16 @@ def train(cfg: DictConfig):
                 "input": test_right_data,
                 "label": left_right_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight
-                    * np.ones([(cfg.NL - 2), 1], dtype="float32")
+                    "chip": np.full([cfg.NL - 2, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": (cfg.NL - 2),
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="right_mse",
     )
@@ -518,14 +483,12 @@ def train(cfg: DictConfig):
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": test_data,
+                "input": test_interior_data,
                 "label": interior_label,
             },
             "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
@@ -588,11 +551,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, f"{cfg.mode}.log"), "info")
-
     # set model
     model = ppsci.arch.ChipDeepONets(**cfg.MODEL)
     # set geometry
@@ -601,96 +559,71 @@ def evaluate(cfg: DictConfig):
     points = geom["rect"].sample_interior(NPOINT, evenly=True)
 
     # generate validation data
-    test_u = (
-        gaussian_random_field(alpha=4, size=cfg.NL)
-        .reshape([1, -1])
-        .astype("float32")[0]
-    )
+    test_u = GRF(alpha=4, size=cfg.NL).astype("float32")[0]
 
-    indices = (
-        (points["x"] == 0)
-        | (points["x"] == cfg.DW)
-        | (points["y"] == 0)
-        | (points["y"] == cfg.DL)
+    boundary_indices = np.where(
+        (
+            (points["x"] == 0)
+            | (points["x"] == cfg.DW)
+            | (points["y"] == 0)
+            | (points["y"] == cfg.DL)
+        )
     )
-    interior_indices = (
-        (points["x"] != 0)
-        & (points["x"] != cfg.DW)
-        & (points["y"] != 0)
-        & (points["y"] != cfg.DL)
+    interior_indices = np.where(
+        (
+            (points["x"] != 0)
+            & (points["x"] != cfg.DW)
+            & (points["y"] != 0)
+            & (points["y"] != cfg.DL)
+        )
     )
-    interior_indices = np.where(interior_indices)
-    indices = np.where(indices)
 
     points["u"] = np.tile(test_u[interior_indices[0]], (NPOINT, 1))
     points["u_one"] = test_u.T.reshape([-1, 1])
-    points["bc_data"] = np.tile(test_u[indices[0]], (NPOINT, 1))
-    points["bc"] = np.repeat(np.array([[0]], dtype="float32"), NPOINT, axis=0)
+    points["bc_data"] = np.tile(test_u[boundary_indices[0]], (NPOINT, 1))
+    points["bc"] = np.zeros((NPOINT, 1), dtype="float32")
 
-    top_indices = points["x"] == cfg.DW
-    down_indices = points["x"] == 0
-    left_indices = (points["y"] == 0) & (points["x"] != 0) & (points["x"] != cfg.DW)
-    right_indices = (
-        (points["y"] == cfg.DL) & (points["x"] != 0) & (points["x"] != cfg.DW)
+    top_indices = np.where(points["x"] == cfg.DW)
+    down_indices = np.where(points["x"] == 0)
+    left_indices = np.where(
+        (points["y"] == 0) & (points["x"] != 0) & (points["x"] != cfg.DW)
     )
-    interior_indices = (
-        (points["x"] != 0)
-        & (points["x"] != cfg.DW)
-        & (points["y"] != 0)
-        & (points["y"] != cfg.DL)
+    right_indices = np.where(
+        ((points["y"] == cfg.DL) & (points["x"] != 0) & (points["x"] != cfg.DW))
     )
-    top_indices = np.where(top_indices)
-    down_indices = np.where(down_indices)
-    left_indices = np.where(left_indices)
-    right_indices = np.where(right_indices)
-    interior_indices = np.where(interior_indices)
-    # classification validation data
-    test_top_data = {
-        "x": points["x"][top_indices[0]],
-        "y": points["y"][top_indices[0]],
-        "u": points["u"][top_indices[0]],
-        "u_one": points["u_one"][top_indices[0]],
-        "bc": points["bc"][top_indices[0]],
-        "bc_data": points["bc_data"][top_indices[0]],
-    }
-    test_down_data = {
-        "x": points["x"][down_indices[0]],
-        "y": points["y"][down_indices[0]],
-        "u": points["u"][down_indices[0]],
-        "u_one": points["u_one"][down_indices[0]],
-        "bc": points["bc"][down_indices[0]],
-        "bc_data": points["bc_data"][down_indices[0]],
-    }
-    test_left_data = {
-        "x": points["x"][left_indices[0]],
-        "y": points["y"][left_indices[0]],
-        "u": points["u"][left_indices[0]],
-        "u_one": points["u_one"][left_indices[0]],
-        "bc": points["bc"][left_indices[0]],
-        "bc_data": points["bc_data"][left_indices[0]],
-    }
-    test_right_data = {
-        "x": points["x"][right_indices[0]],
-        "y": points["y"][right_indices[0]],
-        "u": points["u"][right_indices[0]],
-        "u_one": points["u_one"][right_indices[0]],
-        "bc": points["bc"][right_indices[0]],
-        "bc_data": points["bc_data"][right_indices[0]],
-    }
-    test_data = {
-        "x": points["x"][interior_indices[0]],
-        "y": points["y"][interior_indices[0]],
-        "u": points["u"][interior_indices[0]],
-        "u_one": points["u_one"][interior_indices[0]],
-        "bc": points["bc"][interior_indices[0]],
-        "bc_data": points["bc_data"][interior_indices[0]],
-    }
+
+    # generate validation data
+    (
+        test_top_data,
+        test_down_data,
+        test_left_data,
+        test_right_data,
+        test_interior_data,
+    ) = [
+        {
+            "x": points["x"][indices_[0]],
+            "y": points["y"][indices_[0]],
+            "u": points["u"][indices_[0]],
+            "u_one": points["u_one"][indices_[0]],
+            "bc": points["bc"][indices_[0]],
+            "bc_data": points["bc_data"][indices_[0]],
+        }
+        for indices_ in (
+            top_indices,
+            down_indices,
+            left_indices,
+            right_indices,
+            interior_indices,
+        )
+    ]
 
     # set validator
-    top_down_label = {"neumann": np.zeros([cfg.NL, 1], dtype="float32")}
-    left_right_label = {"neumann": np.zeros([(cfg.NL - 2), 1], dtype="float32")}
+    top_down_label = {"chip": np.zeros([cfg.NL, 1], dtype="float32")}
+    left_right_label = {"chip": np.zeros([(cfg.NL - 2), 1], dtype="float32")}
     interior_label = {
-        "thermal_condution": np.zeros([test_data["x"].shape[0], 1], dtype="float32")
+        "thermal_condution": np.zeros(
+            [test_interior_data["x"].shape[0], 1], dtype="float32"
+        )
     }
     top_validator = ppsci.validate.SupervisedValidator(
         {
@@ -699,18 +632,16 @@ def evaluate(cfg: DictConfig):
                 "input": test_top_data,
                 "label": top_down_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight * np.ones([cfg.NL, 1], dtype="float32")
+                    "chip": np.full([cfg.NL, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": cfg.NL,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="top_mse",
     )
@@ -721,18 +652,16 @@ def evaluate(cfg: DictConfig):
                 "input": test_down_data,
                 "label": top_down_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight * np.ones([cfg.NL, 1], dtype="float32")
+                    "chip": np.full([cfg.NL, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": cfg.NL,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="down_mse",
     )
@@ -743,19 +672,16 @@ def evaluate(cfg: DictConfig):
                 "input": test_left_data,
                 "label": left_right_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight
-                    * np.ones([(cfg.NL - 2), 1], dtype="float32")
+                    "chip": np.full([cfg.NL - 2, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": (cfg.NL - 2),
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="left_mse",
     )
@@ -766,19 +692,16 @@ def evaluate(cfg: DictConfig):
                 "input": test_right_data,
                 "label": left_right_label,
                 "weight": {
-                    "neumann": cfg.TRAIN.weight
-                    * np.ones([(cfg.NL - 2), 1], dtype="float32")
+                    "chip": np.full([cfg.NL - 2, 1], cfg.TRAIN.weight, dtype="float32")
                 },
             },
             "batch_size": (cfg.NL - 2),
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
-        output_expr={"neumann": lambda out: out["T"] - out["u_one"]},
+        output_expr={"chip": lambda out: out["T"] - out["u_one"]},
         metric={"MSE": ppsci.metric.MSE()},
         name="right_mse",
     )
@@ -786,14 +709,12 @@ def evaluate(cfg: DictConfig):
         {
             "dataset": {
                 "name": "NamedArrayDataset",
-                "input": test_data,
+                "input": test_interior_data,
                 "label": interior_label,
             },
             "batch_size": cfg.TRAIN.batch_size,
             "sampler": {
                 "name": "BatchSampler",
-                "drop_last": False,
-                "shuffle": False,
             },
         },
         ppsci.loss.MSELoss("mean"),
@@ -826,9 +747,7 @@ def evaluate(cfg: DictConfig):
     pred_points = geom["rect"].sample_interior(NPOINT, evenly=True)
     pred_points["u"] = points["u"]
     pred_points["bc_data"] = points["bc_data"]
-    pred_points["bc"] = np.repeat(
-        np.array([[cfg.EVAL.bc_type]], dtype="float32"), NPOINT, axis=0
-    )
+    pred_points["bc"] = np.full((NPOINT, 1), cfg.EVAL.bc_type, dtype="float32")
     pred = solver.predict(pred_points)
     logger.message("Now saving visual result to: visual/result.vtu, please wait...")
     ppsci.visualize.save_vtu_from_dict(

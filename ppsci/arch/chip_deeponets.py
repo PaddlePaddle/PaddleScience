@@ -26,7 +26,7 @@ from ppsci.arch import mlp
 
 
 class ChipDeepONets(base.Arch):
-    """Physical information deep operator networks.
+    """Multi-branch physics-informed deep operator neural network. The network consists of three branch networks: random heat source, boundary function, and boundary type, as well as a trunk network.
 
     Args:
         branch_input_keys (Tuple[str, ...]): Name of input data for internal heat source on branch nets.
@@ -172,7 +172,7 @@ class ChipDeepONets(base.Arch):
             output_dim=num_features,
         )
         self.trunk_act = act_mod.get_activation(trunk_activation)
-        self.BC_act = act_mod.get_activation(BC_activation)
+        self.bc_act = act_mod.get_activation(BC_activation)
         self.branch_act = act_mod.get_activation(branch_activation)
 
         self.use_bias = use_bias

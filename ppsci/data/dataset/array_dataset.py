@@ -149,7 +149,7 @@ class DeepONetArrayDataset(io.Dataset):
         input (Dict[str, np.ndarray]): Input dict.
         label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
         index (tuple[str, ...]): Key of input dict.
-        type (str): One of key of input dict.
+        data_type (str): One of key of input dict.
         weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
@@ -159,9 +159,9 @@ class DeepONetArrayDataset(io.Dataset):
         >>> input = {"x": np.random.randn(100, 1)}
         >>> label = {"u": np.random.randn(100, 1)}
         >>> index = ('x', 'u', 'bc', 'bc_data')
-        >>> type = 'u'
+        >>> data_type = 'u'
         >>> weight = {"u": np.random.randn(100, 1)}
-        >>> dataset = ppsci.data.dataset.DeepONetArrayDataset(input, label, index, type, weight)
+        >>> dataset = ppsci.data.dataset.DeepONetArrayDataset(input, label, index, data_type, weight)
     """
 
     def __init__(
@@ -169,7 +169,7 @@ class DeepONetArrayDataset(io.Dataset):
         input: Dict[str, np.ndarray],
         label: Dict[str, np.ndarray],
         index: tuple[str, ...],
-        type: str,
+        data_type: str,
         weight: Optional[Dict[str, float]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
@@ -179,7 +179,7 @@ class DeepONetArrayDataset(io.Dataset):
         self.input_keys = tuple(input.keys())
         self.label_keys = tuple(label.keys())
         self.index = index
-        self.type = type
+        self.data_type = data_type
         self.weight = {} if weight is None else weight
         self.transforms = transforms
 
@@ -195,15 +195,16 @@ class DeepONetArrayDataset(io.Dataset):
             quotient = quotient // num
 
         input_item = {}
-        for i in self.input:
-            if i == "y":
-                input_item[i] = self.input[i][index_ir["x"]]
-            elif i == "u_one":
-                input_item[i] = self.input[i][
-                    len(self.input[self.type]) * index_ir["x"] + index_ir[self.type]
+        for key in self.input:
+            if key == "y":
+                input_item[key] = self.input[key][index_ir["x"]]
+            elif key == "u_one":
+                input_item[key] = self.input[key][
+                    len(self.input[self.data_type]) * index_ir["x"]
+                    + index_ir[self.data_type]
                 ]
             else:
-                input_item[i] = self.input[i][index_ir[i]]
+                input_item[key] = self.input[key][index_ir[key]]
 
         label_item = {key: value for key, value in self.label.items()}
         weight_item = {key: value for key, value in self.weight.items()}
