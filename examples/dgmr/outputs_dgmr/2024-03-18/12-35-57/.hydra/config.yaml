@@ -1,0 +1,31 @@
+mode: eval
+seed: 42
+output_dir: ${hydra:run.dir}
+DATASET:
+  split: validation
+  NUM_INPUT_FRAMES: 4
+  NUM_TARGET_FRAMES: 18
+  dataset_path: /workspace/workspace/skillful_nowcasting/openclimatefix/nimrod-uk-1km
+  number: 10
+DATALOADER:
+  batch_size: 1
+  shuffle: false
+  num_workers: 1
+  drop_last: true
+MODEL:
+  forecast_steps: 18
+  input_channels: 1
+  output_shape: 256
+  gen_lr: 5.0e-05
+  disc_lr: 0.0002
+  visualize: false
+  conv_type: standard
+  num_samples: 6
+  grid_lambda: 20.0
+  beta1: 0.0
+  beta2: 0.999
+  latent_channels: 768
+  context_channels: 384
+  generation_steps: 6
+EVAL:
+  pretrained_model_path: /workspace/workspace/skillful_nowcasting/openclimatefix/paddle/paddle_model.pdparams
