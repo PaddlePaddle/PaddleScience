@@ -25,6 +25,15 @@ from ppsci.arch.physx_transformer import PhysformerGPT2  # isort:skip
 from ppsci.arch.model_list import ModelList  # isort:skip
 from ppsci.arch.afno import AFNONet  # isort:skip
 from ppsci.arch.afno import PrecipNet  # isort:skip
+from ppsci.arch.unetex import UNetEx  # isort:skip
+from ppsci.arch.epnn import Epnn  # isort:skip
+from ppsci.arch.nowcastnet import NowcastNet  # isort:skip
+from ppsci.arch.uscnn import USCNN  # isort:skip
+from ppsci.arch.he_deeponets import HEDeepONets  # isort:skip
+from ppsci.arch.chip_deeponets import ChipDeepONets  # isort:skip
+from ppsci.arch.cfdgcn import CFDGCN  # isort:skip
+from ppsci.arch.dgmr import DGMR  # isort:skip
+from ppsci.arch.vae import AutoEncoder  # isort:skip
 from ppsci.utils import logger  # isort:skip
 
 
@@ -40,7 +49,17 @@ __all__ = [
     "ModelList",
     "AFNONet",
     "PrecipNet",
+    "UNetEx",
+    "Epnn",
+    "PhyCRNet",
+    "NowcastNet",
+    "USCNN",
+    "HEDeepONets",
+    "ChipDeepONets",
+    "DGMR",
+    "AutoEncoder",
     "build_model",
+    "CFDGCN",
 ]
 
 

@@ -15,5 +15,13 @@
         - ModelList
         - AFNONet
         - PrecipNet
-      show_root_heading: false
+        - PhyCRNet
+        - UNetEx
+        - USCNN
+        - NowcastNet
+        - HEDeepONets
+        - DGMR
+        - ChipDeepONets
+        - AutoEncoder
+      show_root_heading: true
       heading_level: 3

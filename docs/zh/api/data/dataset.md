@@ -16,4 +16,9 @@
         - LorenzDataset
         - RosslerDataset
         - VtuDataset
-      show_root_heading: false
+        - MeshAirfoilDataset
+        - MeshCylinderDataset
+        - RadarDataset
+        - build_dataset
+        - DGMRDataset
+      show_root_heading: true
