@@ -529,7 +529,7 @@ def train(cfg: DictConfig):
     # visualize prediction after finished training
     pred_points = geom["rect"].sample_interior(NPOINT, evenly=True)
     pred_points["u"] = points["u"]
-    pred_points["bc_data"] = points["bc_data"]
+    pred_points["bc_data"] = np.zeros_like(points["bc_data"])
     pred_points["bc"] = np.repeat(
         np.array([[cfg.EVAL.bc_type]], dtype="float32"), NPOINT, axis=0
     )
@@ -746,7 +746,7 @@ def evaluate(cfg: DictConfig):
     # visualize prediction result
     pred_points = geom["rect"].sample_interior(NPOINT, evenly=True)
     pred_points["u"] = points["u"]
-    pred_points["bc_data"] = points["bc_data"]
+    pred_points["bc_data"] = np.zeros_like(points["bc_data"])
     pred_points["bc"] = np.full((NPOINT, 1), cfg.EVAL.bc_type, dtype="float32")
     pred = solver.predict(pred_points)
     logger.message("Now saving visual result to: visual/result.vtu, please wait...")
