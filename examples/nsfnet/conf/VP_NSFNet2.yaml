@@ -1,0 +1,30 @@
+seed: 1234
+
+output_dir: ./output_NSFNet2
+
+data_dir: ./data/cylinder_nektar_wake.mat
+
+iters_per_epoch: 1
+
+MODEL:
+  input_keys: ["x", "y","t"]
+  output_keys: ["u", "v", "p"]
+  num_layers: 10
+  hidden_size: 100
+  activation: "tanh"
+
+mode: train
+
+ntrain: 140000
+
+nb_train: 21300
+
+n0_train: 5000
+
+re: 100
+
+log_freq: 5000
+
+eval_freq: 100
+
+pretrained_model_path: null

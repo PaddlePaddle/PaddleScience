@@ -2,7 +2,39 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6178818?sUid=455441&shared=1&ts=1684397945680" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --output ./datasets/cylinder_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --output ./datasets/cylinder_valid.hdf5
+    python train_enn.py
+    python train_transformer.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5 --output ./datasets/cylinder_training.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5 --output ./datasets/cylinder_valid.hdf5
+    python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
+    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_pretrained.pdparams
+    ```
+
+| 模型 | MSE |
+| :-- | :-- |
+| [cylinder_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/cylinder/cylinder_transformer_pretrained.pdparams) | 1.093 |
+
+## 1. 背景简介
+
+圆柱绕流问题可以应用于很多领域。例如，在工业设计中，它可以被用来模拟和优化流体在各种设备中的流动，如风力发电机、汽车和飞机的流体动力学性能等。在环保领域，圆柱绕流问题也有应用，如预测和控制河流的洪水、研究污染物的扩散等。此外，在工程实践中，如流体动力学、流体静力学、热交换、空气动力学等领域，圆柱绕流问题也具有实际意义。
 
 2D Flow Around a Cylinder，中文名称可译作“2维圆柱绕流”，是指二维圆柱低速定常绕流的流型只与 $Re$ 数有关。在 $Re \le 1$ 时，流场中的惯性力与粘性力相比居次要地位，圆柱上下游的流线前后对称，阻力系数近似与 $Re$ 成反比(阻力系数为 10~60)，此 $Re$ 数范围的绕流称为斯托克斯区；随着 $Re$ 的增大，圆柱上下游的流线逐渐失去对称性。
 
@@ -90,7 +122,7 @@ $$
 
 ## 3. 问题求解
 
-接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](../lorenz/#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
+接下来开始讲解如何基于 PaddleScience 代码，用深度学习的方法求解该问题。本案例基于论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957) 方法进行求解，关于该方法的理论部分请参考[此文档](lorenz.md#31)或[原论文](https://arxiv.org/abs/2010.03957)。接下来首先会对使用的数据集进行介绍，然后对该方法两个训练步骤（Embedding 模型训练、Transformer 模型训练）的监督约束构建、模型构建等进行阐述，而其余细节请参考 [API文档](../api/arch.md)。
 
 ### 3.1 数据集介绍
 
@@ -100,21 +132,20 @@ $$Re \sim(100, 750)$$
 
 数据集的划分如下：
 
-|数据集 |流场仿真的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |27         |400       |
-|验证集 |6          |400       |
-|测试集 |7          |400       |
+|数据集 |流场仿真的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |27         |400       |[cylinder_training.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5)|
+|验证集 |6          |400       |[cylinder_valid.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5)|
 
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+数据集官网为：<https://zenodo.org/record/5148524#.ZDe77-xByrc>
 
 ### 3.2 Embedding 模型
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="50" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="58" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:50:65
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:58:59
 --8<--
 ```
 
@@ -122,9 +153,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:50:65
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="70" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="61" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:70:87
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:61:80
 --8<--
 ```
 
@@ -143,9 +174,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:70:87
 
 定义监督约束的代码如下：
 
-``` py linenums="89" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="82" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:89:97
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:82:94
 --8<--
 ```
 
@@ -162,23 +193,23 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:89:97
 在该案例中，Embedding 模型使用了卷积神经网络实现 Embedding 模型，如下图所示。
 
 <figure markdown>
-  ![cylinder-embedding](../../images/cylinder2d_unsteady_transformer_physx/cylinder_embedding.png){ loading=lazy }
+  ![cylinder-embedding](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/cylinder_embedding.png){ loading=lazy }
   <figcaption>Embedding 网络模型</figcaption>
 </figure>
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="102" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="104" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:102:108
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:104:109
 --8<--
 ```
 
 其中，`CylinderEmbedding` 的前两个参数在前文中已有描述，这里不再赘述，网络模型的第三、四个参数是训练数据集的均值和方差，用于归一化输入数据。计算均值、方差的的代码表示如下：
 
-``` py linenums="29" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="32" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:29:46
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:32:49
 --8<--
 ```
 
@@ -186,9 +217,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:29:46
 
 本案例中使用的学习率方法为 `ExponentialDecay`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="110" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="111" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:110:124
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:111:120
 --8<--
 ```
 
@@ -196,9 +227,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:110:124
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="126" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="124" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:126:153
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:124:151
 --8<--
 ```
 
@@ -208,9 +239,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:126:153
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="156" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
+``` py linenums="153" title="examples/cylinder/2d_unsteady/transformer_physx/train_enn.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:156:
+examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:153:169
 --8<--
 ```
 
@@ -218,9 +249,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_enn.py:156:
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="57" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` yaml linenums="23" title="examples/cylinder/2d_unsteady/transformer_physx/conf/transformer.yaml"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:57:79
+examples/cylinder/2d_unsteady/transformer_physx/conf/transformer.yaml:23:34
 --8<--
 ```
 
@@ -228,9 +259,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:57:79
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="87" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="68" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:87:104
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:68:85
 --8<--
 ```
 
@@ -238,9 +269,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:87:104
 
 定义监督约束的代码如下：
 
-``` py linenums="106" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="87" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:106:111
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:87:92
 --8<--
 ```
 
@@ -249,15 +280,15 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:106:111
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
-  ![cylinder_transformer](../../images/cylinder2d_unsteady_transformer_physx/cylinder_transformer.png){ loading=lazy }
+  ![cylinder_transformer](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/cylinder_transformer.png){ loading=lazy }
   <figcaption>Transformer 网络模型</figcaption>
 </figure>
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="116" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="98" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:116:124
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:98:98
 --8<--
 ```
 
@@ -267,9 +298,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:116:124
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="126" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="100" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:126:140
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:100:107
 --8<--
 ```
 
@@ -277,9 +308,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:126:140
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="142" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="110" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:142:168
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:110:135
 --8<--
 ```
 
@@ -289,15 +320,15 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:142:168
 
 在本文中首先定义了对 Transformer 模型输出数据变换到物理状态空间的代码：
 
-``` py linenums="33" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="35" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:33:53
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:35:56
 --8<--
 ```
 
-``` py linenums="83" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="64" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:83:84
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:64:65
 --8<--
 ```
 
@@ -305,9 +336,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:83:84
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="170" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="146" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:170:197
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:146:164
 --8<--
 ```
 
@@ -317,9 +348,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:170:197
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="199" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
+``` py linenums="166" title="examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py"
 --8<--
-examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:199:
+examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py:166:184
 --8<--
 ```
 
@@ -339,7 +370,9 @@ examples/cylinder/2d_unsteady/transformer_physx/train_transformer.py
 
 ## 5. 结果展示
 
+针对本案例中的问题，模型的预测结果和传统数值微分的结果如下所示，其中 ux、uy 分别代表 x、y方向上的速度，p 代表压力。
+
 <figure markdown>
-  ![result_states0](../../images/cylinder2d_unsteady_transformer_physx/result_states0.png){ loading=lazy }
-  <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/cylinder2d_unsteady_transformer_physx/result_states0.png){ loading=lazy }
+  <figcaption>模型预测结果（"pred"）与传统数值微分结果（"target"）</figcaption>
 </figure>

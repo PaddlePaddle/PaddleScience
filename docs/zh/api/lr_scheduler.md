@@ -1,4 +1,4 @@
-# Lr_scheduler(学习率) 模块
+# Optimizer.lr_scheduler(学习率) 模块
 
 ::: ppsci.optimizer.lr_scheduler
     handler: python
@@ -12,5 +12,5 @@
         - ExponentialDecay
         - CosineWarmRestarts
         - OneCycleLR
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

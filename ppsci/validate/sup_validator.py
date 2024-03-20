@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -35,7 +37,7 @@ class SupervisedValidator(base.Validator):
 
     Examples:
         >>> import ppsci
-        >>> valida_dataloader_cfg = {
+        >>> valid_dataloader_cfg = {
         ...     "dataset": {
         ...         "name": "MatDataset",
         ...         "file_path": "/path/to/file.mat",
@@ -50,7 +52,7 @@ class SupervisedValidator(base.Validator):
         ...     },
         ... }  # doctest: +SKIP
         >>> eta_mse_validator = ppsci.validate.SupervisedValidator(
-        ...     valida_dataloader_cfg,
+        ...     valid_dataloader_cfg,
         ...     ppsci.loss.MSELoss("mean"),
         ...     {"eta": lambda out: out["eta"]},
         ...     metric={"MSE": ppsci.metric.MSE()},
@@ -73,7 +75,9 @@ class SupervisedValidator(base.Validator):
 
         self.input_keys = _dataset.input_keys
         self.output_keys = (
-            list(output_expr.keys()) if output_expr is not None else _dataset.label_keys
+            tuple(output_expr.keys())
+            if output_expr is not None
+            else _dataset.label_keys
         )
 
         if self.output_expr is None:

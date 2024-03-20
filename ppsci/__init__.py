@@ -25,7 +25,20 @@ from ppsci import utils  # isort:skip
 from ppsci import visualize  # isort:skip
 from ppsci import validate  # isort:skip
 from ppsci import solver  # isort:skip
-from jointContribution import math  # isort:skip
+from ppsci import experimental  # isort:skip
+
+from ppsci.utils.checker import run_check  # isort:skip
+from ppsci.utils.checker import run_check_mesh  # isort:skip
+from ppsci.utils import lambdify  # isort:skip
+
+
+try:
+    # import auto-generated version information from '._version' file, using
+    # setuptools_scm via 'pip install'. Details of versioning rule can be referd to:
+    # https://peps.python.org/pep-0440/#public-version-identifiers
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown version"
 
 __all__ = [
     "arch",
@@ -41,5 +54,8 @@ __all__ = [
     "visualize",
     "validate",
     "solver",
-    "math",
+    "experimental",
+    "run_check",
+    "run_check_mesh",
+    "lambdify",
 ]

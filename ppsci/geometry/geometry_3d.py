@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 import itertools
 from typing import Tuple
 
@@ -138,7 +140,7 @@ class Cuboid(geometry_nd.Hypercube):
                 the shape is [N, 3]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -184,7 +186,7 @@ class Sphere(geometry_nd.Hypersphere):
                 the shape is [N, 3]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside

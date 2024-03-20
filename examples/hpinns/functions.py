@@ -38,7 +38,6 @@ mu = 2
 lambda_re: np.ndarray = None
 lambda_im: np.ndarray = None
 loss_weight: List[float] = None
-input_dict: Dict[str, paddle.Tensor] = None
 train_mode: str = None
 
 # define log variables for plotting
@@ -48,13 +47,11 @@ lambda_log = []  # record all lambdas
 
 
 # transform
-def transform_in(_in):
-    global input_dict
-    input_dict = _in
+def transform_in(input):
     # Periodic BC in x
     P = BOX[1][0] - BOX[0][0] + 2 * DPML
     w = 2 * np.pi / P
-    x, y = input_dict["x"], input_dict["y"]
+    x, y = input["x"], input["y"]
     input_transformed = {}
     for t in range(1, 7):
         input_transformed[f"x_cos_{t}"] = paddle.cos(t * w * x)
@@ -66,27 +63,27 @@ def transform_in(_in):
     return input_transformed
 
 
-def transform_out_all(var):
-    y = input_dict["y"]
+def transform_out_all(input, var):
+    y = input["y"]
     # Zero Dirichlet BC
     a, b = BOX[0][1] - DPML, BOX[1][1] + DPML
     t = (1 - paddle.exp(a - y)) * (1 - paddle.exp(y - b))
     return t * var
 
 
-def transform_out_real_part(out):
+def transform_out_real_part(input, out):
     re = out["e_re"]
-    trans_out = transform_out_all(re)
+    trans_out = transform_out_all(input, re)
     return {"e_real": trans_out}
 
 
-def transform_out_imaginary_part(out):
+def transform_out_imaginary_part(input, out):
     im = out["e_im"]
-    trans_out = transform_out_all(im)
+    trans_out = transform_out_all(input, im)
     return {"e_imaginary": trans_out}
 
 
-def transform_out_epsilon(out):
+def transform_out_epsilon(input, out):
     eps = out["eps"]
     # 1 <= eps <= 12
     eps = F.sigmoid(eps) * 11 + 1
@@ -103,8 +100,8 @@ def init_lambda(output_dict: Dict[str, paddle.Tensor], bound: int):
     """
     global lambda_re, lambda_im, loss_weight
     x, y = output_dict["x"], output_dict["y"]
-    lambda_re = np.zeros((len(x[bound:]), 1))
-    lambda_im = np.zeros((len(y[bound:]), 1))
+    lambda_re = np.zeros((len(x[bound:]), 1), paddle.get_default_dtype())
+    lambda_im = np.zeros((len(y[bound:]), 1), paddle.get_default_dtype())
     # loss_weight: [PDE loss 1, PDE loss 2, Lagrangian loss 1, Lagrangian loss 2, objective loss]
     if train_mode == "aug_lag":
         loss_weight = [0.5 * mu] * 2 + [1.0, 1.0] + [1.0]
@@ -247,7 +244,7 @@ def pde_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
         paddle.Tensor: PDE loss (and lagrangian loss if using Augmented Lagrangian method).
     """
     global loss_log
-    bound = output_dict["bound"]
+    bound = int(output_dict["bound"])
     loss_re, loss_im = compute_real_and_imaginary_loss(output_dict)
     loss_re = loss_re[bound:]
     loss_im = loss_im[bound:]
@@ -282,7 +279,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
     """
     global loss_log, loss_obj
     x, y = output_dict["x"], output_dict["y"]
-    bound = output_dict["bound"]
+    bound = int(output_dict["bound"])
     e_re = output_dict["e_real"]
     e_im = output_dict["e_imaginary"]
 
@@ -300,7 +297,7 @@ def obj_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
 
 
 def eval_loss_fun(output_dict: Dict[str, paddle.Tensor], *args) -> paddle.Tensor:
-    """Compute objective loss for evalution.
+    """Compute objective loss for evaluation.
 
     Args:
         output_dict (Dict[str, paddle.Tensor]): Dict of outputs contains tensor.
@@ -333,7 +330,7 @@ def eval_metric_fun(
     """
     loss_re, loss_im = compute_real_and_imaginary_loss(output_dict)
     eps_opt = paddle.concat([loss_re, loss_im], axis=-1)
-    loss = paddle.mean(eps_opt**2)
+    metric = paddle.mean(eps_opt**2)
 
-    metric_dict = {"eval_loss": loss}
+    metric_dict = {"eval_metric": metric}
     return metric_dict

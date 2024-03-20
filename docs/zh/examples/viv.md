@@ -2,11 +2,37 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6160556?contributionType=1&sUid=438690&shared=1&ts=1683961088129" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
+
+    ``` sh
+    python viv.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdeqn
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/models/viv/viv_pretrained.pdparams
+    python viv.py mode=eval EVAL.pretrained_model_path=./viv_pretrained
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [viv_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdparams)<br>[viv_pretrained.pdeqn](https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/viv_pretrained.pdeqn) | 'eta': 1.1416150300647132e-06<br>'f': 4.635014192899689e-06 |
+
+## 1. 背景简介
+
+涡激振动（Vortex-Induced Vibration，VIV）是一种流固耦合振动现象，主要发生在流体绕过柱体或管体时。在海洋工程和风工程中，这种振动现象具有重要应用。
+
+在海洋工程中，涡激振动问题主要涉及海洋平台（如桩基、立管等）的涡激振动响应分析。这些平台在海流中运行，会受到涡激振动的影响。这种振动可能会导致平台结构的疲劳损伤，因此在进行海洋平台设计时，需要考虑这一问题。
+
+在风工程中，涡激振动问题主要涉及风力发电机的涡激振动响应分析。风力发电机叶片在运行过程中受到气流的涡激振动，这种振动可能会导致叶片的疲劳损伤。为了确保风力发电机的安全运行，需要对这一问题进行深入的研究。
+
+总之，涡激振动问题的应用主要涉及海洋工程和风工程领域，对于这些领域的发展具有重要意义。
 
 当涡流脱落频率接近结构的固有频率时，圆柱会发生涡激振动，VIV系统相当于一个弹簧-阻尼系统：
 
-![VIV_1D_SpringDamper](../../images/viv/VIV_1D_SpringDamper.png)
+![VIV_1D_SpringDamper](https://paddle-org.bj.bcebos.com/paddlescience/docs/ViV/VIV_1D_SpringDamper.png)
 
 ## 2. 问题定义
 
@@ -33,9 +59,9 @@ $$
 
 上式中 $g$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="28"
+``` py linenums="22"
 --8<--
-examples/fsi/viv.py:28:29
+examples/fsi/viv.py:22:23
 --8<--
 ```
 
@@ -48,9 +74,9 @@ examples/fsi/viv.py:28:29
 
 由于 VIV 使用的是 VIV 方程，因此可以直接使用 PaddleScience 内置的 `VIV`。
 
-``` py linenums="31"
+``` py linenums="25"
 --8<--
-examples/fsi/viv.py:31:32
+examples/fsi/viv.py:25:26
 --8<--
 ```
 
@@ -68,9 +94,9 @@ examples/fsi/viv.py:31:32
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置。
 
-``` py linenums="34"
+``` py linenums="28"
 --8<--
-examples/fsi/viv.py:34:50
+examples/fsi/viv.py:28:44
 --8<--
 ```
 
@@ -78,9 +104,9 @@ examples/fsi/viv.py:34:50
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="51"
+``` py linenums="46"
 --8<--
-examples/fsi/viv.py:51:57
+examples/fsi/viv.py:46:52
 --8<--
 ```
 
@@ -94,19 +120,19 @@ examples/fsi/viv.py:51:57
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="58"
+``` py linenums="53"
 --8<--
-examples/fsi/viv.py:58:61
+examples/fsi/viv.py:53:54
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔1000个epochs评估一次模型精度。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 10000 轮训练轮数，并每隔 10000 个epochs评估一次模型精度。
 
-``` py linenums="63"
+``` yaml linenums="41"
 --8<--
-examples/fsi/viv.py:63:65
+examples/fsi/conf/viv.yaml:41:56
 --8<--
 ```
 
@@ -114,9 +140,9 @@ examples/fsi/viv.py:63:65
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器和 `Step` 间隔衰减学习率。
 
-``` py linenums="67"
+``` py linenums="56"
 --8<--
-examples/fsi/viv.py:67:71
+examples/fsi/viv.py:56:58
 --8<--
 ```
 
@@ -128,9 +154,9 @@ examples/fsi/viv.py:67:71
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="73"
+``` py linenums="60"
 --8<--
-examples/fsi/viv.py:73:95
+examples/fsi/viv.py:60:82
 --8<--
 ```
 
@@ -144,9 +170,9 @@ examples/fsi/viv.py:73:95
 
 本文需要可视化的数据是 $t-\eta$ 和 $t-f$ 两组关系图，假设每个时刻 $t$ 的坐标是 $t_i$，则对应网络输出为 $\eta_i$，升力为 $f_i$，因此我们只需要将评估过程中产生的所有 $(t_i, \eta_i, f_i)$ 保存成图片即可。代码如下：
 
-``` py linenums="97"
+``` py linenums="84"
 --8<--
-examples/fsi/viv.py:97:116
+examples/fsi/viv.py:84:103
 --8<--
 ```
 
@@ -154,9 +180,9 @@ examples/fsi/viv.py:97:116
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="118"
+``` py linenums="105"
 --8<--
-examples/fsi/viv.py:118:
+examples/fsi/viv.py:105:123
 --8<--
 ```
 
@@ -170,7 +196,11 @@ examples/fsi/viv.py
 
 ## 5. 结果展示
 
+模型预测结果如下所示，横轴为时间自变量$t$，$\eta_{gt}$为参考振幅，$\eta$为模型预测振幅，$f_{gt}$为参考升力，$f$为模型预测升力。
+
 <figure markdown>
-  ![Viv_result](../../images/viv/eta_f_pred.png){ loading=lazy }
-  <figcaption> 振幅 eta 与升力 f 的预测结果和参考结果</figcaption>
+  ![Viv_result](https://paddle-org.bj.bcebos.com/paddlescience/docs/ViV/eta_f_pred.png){ loading=lazy }
+  <figcaption> 振幅 eta 与升力 f 随时间t变化的预测结果和参考结果</figcaption>
 </figure>
+
+可以看到模型对在$[0,10]$时间范围内，对振幅和升力的预测结果与参考结果基本一致。

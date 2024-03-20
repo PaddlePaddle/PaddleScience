@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -52,6 +54,9 @@ class CSVDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         file_path: str,
@@ -109,9 +114,11 @@ class CSVDataset(io.Dataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
@@ -136,9 +143,10 @@ class CSVDataset(io.Dataset):
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
 
-        # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
-            input_item = self.transforms(input_item)
+            input_item, label_item, weight_item = self.transforms(
+                input_item, label_item, weight_item
+            )
 
         return (input_item, label_item, weight_item)
 
@@ -171,6 +179,9 @@ class IterableCSVDataset(io.IterableDataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -228,9 +239,11 @@ class IterableCSVDataset(io.IterableDataset):
         }
 
         # prepare weights
-        self.weight = {
-            key: np.ones_like(next(iter(self.label.values()))) for key in self.label
-        }
+        self.weight = (
+            {key: np.ones_like(next(iter(self.label.values()))) for key in self.label}
+            if weight_dict is not None
+            else {}
+        )
         if weight_dict is not None:
             for key, value in weight_dict.items():
                 if isinstance(value, (int, float)):
@@ -262,7 +275,13 @@ class IterableCSVDataset(io.IterableDataset):
         return self._len
 
     def __iter__(self):
-        yield self.input, self.label, self.weight
+        if callable(self.transforms):
+            input_, label_, weight_ = self.transforms(
+                self.input, self.label, self.weight
+            )
+            yield input_, label_, weight_
+        else:
+            yield self.input, self.label, self.weight
 
     def __len__(self):
         return 1

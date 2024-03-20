@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
@@ -21,7 +23,6 @@ from typing import Union
 
 import numpy as np
 import sympy
-from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
@@ -84,17 +85,15 @@ class BoundaryConstraint(base.Constraint):
         weight_dict: Optional[Dict[str, Union[float, Callable]]] = None,
         name: str = "BC",
     ):
-        self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
-            if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
-
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
+        self.output_expr = {
+            k: v for k, v in output_expr.items() if k in self.output_keys
+        }
         # "area" will be kept in "output_dict" for computation.
         if isinstance(geom, geometry.Mesh):
-            self.output_keys += ["area"]
+            self.output_keys += ("area",)
 
         if isinstance(criteria, str):
             criteria = eval(criteria)
@@ -132,12 +131,10 @@ class BoundaryConstraint(base.Constraint):
                 raise NotImplementedError(f"type of {type(value)} is invalid yet.")
 
         # prepare weight
-        weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
+        weight = None
         if weight_dict is not None:
+            weight = {key: np.ones_like(next(iter(label.values()))) for key in label}
             for key, value in weight_dict.items():
-                if isinstance(value, str):
-                    value = sp_parser.parse_expr(value)
-
                 if isinstance(value, (int, float)):
                     weight[key] = np.full_like(next(iter(label.values())), value)
                 elif isinstance(value, sympy.Basic):

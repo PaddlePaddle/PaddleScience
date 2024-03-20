@@ -1,7 +1,7 @@
 # Set directories
 export PDSC_DIR=$(cd "$( dirname ${BASH_SOURCE[0]})"; cd ..; pwd)
 export TEST_DIR="${PDSC_DIR}"
-export TIPC_TEST="ON" # open tipc log in solver.py 
+export TIPC_TEST="ON" # open tipc log in solver.py
 export PYTHONPATH=${PDSC_DIR}
 
 BENCHMARK_ROOT="${TEST_DIR}/test_tipc/tools"
@@ -15,15 +15,14 @@ source ${TEST_DIR}/test_tipc/common_func.sh
 PREPARE_PARAM_FILE=$1
 dataline=`cat $PREPARE_PARAM_FILE`
 lines=(${dataline})
-download_dataset=$(func_parser_value "${lines[61]}")
-python=$(func_parser_value "${lines[2]}")
-export pip=$(func_parser_value "${lines[62]}")
-workdir=$(func_parser_value "${lines[63]}")
+download_dataset=$(func_parser_value "${lines[63]}")
+export pip=$(func_parser_value "${lines[64]}")
+workdir=$(func_parser_value "${lines[65]}")
 ${pip} install --upgrade pip
 ${pip} install pybind11
 ${pip} install -r requirements.txt
 
 if [ ${download_dataset} ] ; then
     cd ${PDSC_DIR}/${workdir}
-    ${python} ${PDSC_DIR}${download_dataset}
+    python3.10 ${PDSC_DIR}${download_dataset}
 fi

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -180,6 +182,14 @@ class Generator(base.Arch):
         >>> use_bns_tuple = ((True, True, True), ) * 3 + ((False, False, False), )
         >>> acts_tuple = (("relu", None, None), ) * 4
         >>> model = ppsci.arch.Generator(("in",), ("out",), in_channel, out_channels_tuple, kernel_sizes_tuple, strides_tuple, use_bns_tuple, acts_tuple)
+        >>> batch_size = 4
+        >>> height = 64
+        >>> width = 64
+        >>> input_data = paddle.randn([batch_size, in_channel, height, width])
+        >>> input_dict = {'in': input_data}
+        >>> output_data = model(input_dict)
+        >>> print(output_data['out'].shape)
+        [4, 1, 64, 64]
     """
 
     def __init__(
@@ -241,7 +251,7 @@ class Generator(base.Arch):
         y = self.split_to_dict(y, self.output_keys, axis=-1)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y
 
 
@@ -346,27 +356,29 @@ class Discriminator(base.Arch):
         y = self.split_to_dict(y_list, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
 
         return y
 
+    @staticmethod
     def split_to_dict(
-        self, data_list: List[paddle.Tensor], keys: Tuple[str, ...]
+        data_list: List[paddle.Tensor], keys: Tuple[str, ...]
     ) -> Dict[str, paddle.Tensor]:
         """Overwrite of split_to_dict() method belongs to Class base.Arch.
-            Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
-            That is because input in "tempoGAN" example is not in a regular format, but a format like:
-            {
-                "input1": paddle.concat([in1, in2], axis=1),
-                "input2": paddle.concat([in1, in3], axis=1),
-            }
+
+        Reason for overwriting is there is no concat_to_tensor() method called in "tempoGAN" example.
+        That is because input in "tempoGAN" example is not in a regular format, but a format like:
+        {
+            "input1": paddle.concat([in1, in2], axis=1),
+            "input2": paddle.concat([in1, in3], axis=1),
+        }
 
         Args:
-            data_list (List[paddle.Tensor]): The data to be splited. It should be a list of tensor(s), but not a paddle.Tensor.
+            data_list (List[paddle.Tensor]): The data to be split. It should be a list of tensor(s), but not a paddle.Tensor.
             keys (Tuple[str, ...]): Keys of outputs.
 
         Returns:
-            Dict[str, paddle.Tensor]: Dict with splited data.
+            Dict[str, paddle.Tensor]: Dict with split data.
         """
         if len(keys) == 1:
             return {keys[0]: data_list[0]}

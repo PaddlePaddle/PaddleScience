@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -117,7 +119,7 @@ class PointCloud(geometry.Geometry):
         return self
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         raise NotImplementedError(
             "PointCloud do not have 'uniform_boundary_points' method"
         )
@@ -145,7 +147,7 @@ class PointCloud(geometry.Geometry):
         ]
 
     def uniform_points(self, n: int, boundary=True):
-        """Compute the equispaced points in the geometry."""
+        """Compute the equi-spaced points in the geometry."""
         return self.interior[:n]
 
     def union(self, other):

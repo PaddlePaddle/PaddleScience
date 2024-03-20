@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 
@@ -29,21 +32,35 @@ class VtuDataset(io.Dataset):
         file_path (str): *.vtu file path.
         input_keys (Optional[Tuple[str, ...]]): Tuple of input keys. Defaults to None.
         label_keys (Optional[Tuple[str, ...]]): Tuple of label keys. Defaults to None.
-        time_step (int): Time step with unit second.
+        time_step (Optional[int]): Time step with unit second. Defaults to None.
         time_index (Optional[Tuple[int, ...]]): Time index tuple in increasing order.
-        labels : Temporary variable for [load_vtk_with_time_file].
+        labels (Optional[Dict[str, float]]): Temporary variable for [load_vtk_with_time_file].
         transforms (vision.Compose, optional): Compose object contains sample wise.
             transform(s).
+
+    Examples:
+        >>> from ppsci.dataset import VtuDataset
+
+        >>> dataset = VtuDataset(file_path='example.vtu') # doctest: +SKIP
+
+        >>> # get the length of the dataset
+        >>> dataset_size = len(dataset) # doctest: +SKIP
+        >>> # get the first sample of the data
+        >>> first_sample = dataset[0] # doctest: +SKIP
+        >>> print("First sample:", first_sample)
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
 
     def __init__(
         self,
         file_path: str,
         input_keys: Optional[Tuple[str, ...]] = None,
         label_keys: Optional[Tuple[str, ...]] = None,
-        time_step: int = None,
+        time_step: Optional[int] = None,
         time_index: Optional[Tuple[int, ...]] = None,
-        labels=None,
+        labels: Optional[Dict[str, float]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()

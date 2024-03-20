@@ -16,6 +16,9 @@
 Code below is heavily based on [transformer-physx](https://github.com/zabaras/transformer-physx)
 """
 
+from __future__ import annotations
+
+import os
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -52,6 +55,9 @@ class LorenzDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -64,6 +70,13 @@ class LorenzDataset(io.Dataset):
         embedding_model: Optional[base.Arch] = None,
     ):
         super().__init__()
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5."
+            )
+
         self.file_path = file_path
         self.input_keys = input_keys
         self.label_keys = label_keys
@@ -102,25 +115,26 @@ class LorenzDataset(io.Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, i):
+    def __getitem__(self, idx):
         # when embedding data is None
         if self.embedding_data is None:
-            data_item = self.data[i]
+            data_item = self.data[idx]
             input_item = {self.input_keys[0]: data_item}
             label_item = {
                 self.label_keys[0]: data_item[1:, :],
                 self.label_keys[1]: data_item,
             }
         else:
-            data_item = self.embedding_data[i]
+            data_item = self.embedding_data[idx]
             input_item = {self.input_keys[0]: data_item[:-1, :]}
             label_item = {self.label_keys[0]: data_item[1:, :]}
             if len(self.label_keys) == 2:
-                label_item[self.label_keys[1]] = self.data[i][1:, :]
+                label_item[self.label_keys[1]] = self.data[idx][1:, :]
 
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value, paddle.get_default_dtype())
+            for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)
 
@@ -149,6 +163,9 @@ class RosslerDataset(LorenzDataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -160,6 +177,12 @@ class RosslerDataset(LorenzDataset):
         weight_dict: Optional[Dict[str, float]] = None,
         embedding_model: Optional[base.Arch] = None,
     ):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_training.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/rossler_valid.hdf5."
+            )
         super().__init__(
             file_path,
             input_keys,
@@ -197,6 +220,9 @@ class CylinderDataset(io.Dataset):
         ... )  # doctest: +SKIP
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         file_path: str,
@@ -209,6 +235,12 @@ class CylinderDataset(io.Dataset):
         embedding_model: Optional[base.Arch] = None,
         embedding_batch_size: int = 64,
     ):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(
+                f"file_path({file_path}) not exists. Please download dataset first. "
+                "Training: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_training.hdf5. "
+                "Valid: https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/cylinder_valid.hdf5."
+            )
         super().__init__()
         self.file_path = file_path
         self.input_keys = input_keys
@@ -285,6 +317,7 @@ class CylinderDataset(io.Dataset):
                 label_item[self.label_keys[1]] = data_item[1:, :]
         weight_shape = [1] * len(data_item.shape)
         weight_item = {
-            key: np.full(weight_shape, value) for key, value in self.weight_dict.items()
+            key: np.full(weight_shape, value, paddle.get_default_dtype())
+            for key, value in self.weight_dict.items()
         }
         return (input_item, label_item, weight_item)

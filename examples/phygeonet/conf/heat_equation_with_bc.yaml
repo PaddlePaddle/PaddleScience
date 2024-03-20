@@ -1,0 +1,55 @@
+hydra:
+  run:
+    # dynamic output directory according to running time and override name
+    dir: outputs_phygeonet/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+  job:
+    name: ${mode} # name of logfile
+    chdir: false # keep current working direcotry unchanged
+    config:
+      override_dirname:
+        exclude_keys:
+          - TRAIN.checkpoint_path
+          - TRAIN.pretrained_model_path
+          - EVAL.pretrained_model_path
+          - mode
+          - output_dir
+          - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
+  sweep:
+    # output directory for multirun
+    dir: ${hydra.run.dir}
+    subdir: ./
+
+# general settings
+mode: train # running mode: train/eval
+seed: 66
+data_dir: ./data/heat_equation_bc.npz
+test_data_dir: ./data/heat_equation_bc_test.npz
+output_dir: ${hydra:run.dir}
+r: 0.5
+R: 1
+dtheta: 0
+epochs: 2000
+# model settings
+MODEL:
+  input_keys: [ 'coords' ]
+  output_keys: [ 'output_v' ]
+  hidden_size: [16, 32, 16]
+  h: 0.01
+  ny: 276
+  nx: 49
+  nvar_in: 1
+  nvar_out: 1
+  pad_singleside: 1
+
+# training settings
+TRAIN:
+  learning_rate: 1e-3
+  batch_size: 1
+
+# evaluation settings
+EVAL:
+  pretrained_model_path: null
+  eval_with_no_grad: true

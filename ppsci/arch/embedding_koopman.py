@@ -16,6 +16,8 @@
 Code below is heavily based on [transformer-physx](https://github.com/zabaras/transformer-physx)
 """
 
+from __future__ import annotations
+
 from typing import Optional
 from typing import Tuple
 
@@ -46,7 +48,25 @@ class LorenzEmbedding(base.Arch):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.LorenzEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.LorenzEmbedding(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
+        ... )
+        >>> x_shape = [8, 3, 2]
+        >>> y_shape = [8, 3, 1]
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [8, 2, 3]
+        >>> print(output_dict["v"].shape)
+        [8, 3, 3]
     """
 
     def __init__(
@@ -67,11 +87,11 @@ class LorenzEmbedding(base.Arch):
         self.hidden_size = hidden_size
         self.embed_size = embed_size
 
-        # build observable netowrk
+        # build observable network
         self.encoder_net = self.build_encoder(input_size, hidden_size, embed_size, drop)
         # build koopman operator
         self.k_diag, self.k_ut = self.build_koopman_operator(embed_size)
-        # build recovery netowrk
+        # build recovery network
         self.decoder_net = self.build_decoder(input_size, hidden_size, embed_size)
 
         mean = [0.0, 0.0, 0.0] if mean is None else mean
@@ -175,21 +195,20 @@ class LorenzEmbedding(base.Arch):
 
         return (pred_data[:, :-1, :], recover_data, k_matrix)
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        x = self.concat_to_tensor(x, self.input_keys, axis=-1)
-        y = self.forward_tensor(x)
+        x_tensor = self.concat_to_tensor(x, self.input_keys, axis=-1)
+        y = self.forward_tensor(x_tensor)
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y
 
 
@@ -208,7 +227,25 @@ class RosslerEmbedding(LorenzEmbedding):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.RosslerEmbedding(("x", "y"), ("u", "v"))
+        >>> model = ppsci.arch.RosslerEmbedding(
+        ...     input_keys=("x", "y"),
+        ...     output_keys=("u", "v"),
+        ...     input_size=3,
+        ...     hidden_size=500,
+        ...     embed_size=32,
+        ...     drop=0.0,
+        ...     mean=None,
+        ...     std=None,
+        ... )
+        >>> x_shape = [8, 3, 2]
+        >>> y_shape = [8, 3, 1]
+        >>> input_dict = {"x": paddle.rand(x_shape),
+        ...               "y": paddle.rand(y_shape)}
+        >>> output_dict = model(input_dict)
+        >>> print(output_dict["u"].shape)
+        [8, 2, 3]
+        >>> print(output_dict["v"].shape)
+        [8, 3, 3]
     """
 
     def __init__(
@@ -480,9 +517,8 @@ class CylinderEmbedding(base.Arch):
 
         return (pred_data[:, :-1], recover_data, k_matrix)
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
@@ -494,5 +530,5 @@ class CylinderEmbedding(base.Arch):
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y

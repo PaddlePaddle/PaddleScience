@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 from typing import Tuple
 
 import numpy as np
@@ -86,7 +88,7 @@ class Disk(geometry.Geometry):
                 the shape is [N, 2]
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -209,7 +211,7 @@ class Rectangle(geometry_nd.Hypercube):
                 the shape of the array is [N, 2].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -225,7 +227,7 @@ class Rectangle(geometry_nd.Hypercube):
         dist_to_boundary = (
             np.abs(points - center) - np.array([self.xmax - self.xmin]) / 2
         )
-        return -(
+        return (
             np.linalg.norm(np.maximum(dist_to_boundary, 0), axis=1)
             + np.minimum(np.max(dist_to_boundary, axis=1), 0)
         ).reshape(-1, 1)
@@ -410,7 +412,7 @@ class Triangle(geometry.Geometry):
                 the shape of the array is [N, 2].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
 
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
@@ -455,7 +457,7 @@ class Polygon(geometry.Geometry):
 
     Args:
         vertices (Tuple[Tuple[float, float], ...]): The order of vertices can be in a
-            clockwise or counterclockwisedirection. The vertices will be re-ordered in
+            clockwise or counter-clockwise direction. The vertices will be re-ordered in
             counterclockwise (right hand rule).
 
     Examples:
@@ -609,7 +611,8 @@ class Polygon(geometry.Geometry):
             points (np.ndarray): The coordinate points used to calculate the SDF value,
                 the shape is [N, 2]
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
+
         NOTE: This function usually returns ndarray with negative values, because
         according to the definition of SDF, the SDF value of the coordinate point inside
         the object(interior points) is negative, the outside is positive, and the edge

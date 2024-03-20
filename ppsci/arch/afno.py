@@ -15,6 +15,7 @@
 """
 Code below is heavily based on [FourCastNet](https://github.com/NVlabs/FourCastNet)
 """
+from __future__ import annotations
 
 from functools import partial
 from typing import Optional
@@ -528,19 +529,18 @@ class AFNONet(base.Arch):
 
         return x
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        x = self.concat_to_tensor(x, self.input_keys)
+        x_tensor = self.concat_to_tensor(x, self.input_keys)
 
         y = []
-        input = x
+        input = x_tensor
         for _ in range(self.num_timestamps):
             out = self.forward_tensor(input)
             y.append(out)
@@ -548,7 +548,7 @@ class AFNONet(base.Arch):
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y
 
 
@@ -652,18 +652,17 @@ class PrecipNet(base.Arch):
         x = self.act(x)
         return x
 
-    def split_to_dict(
-        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
-    ):
+    @staticmethod
+    def split_to_dict(data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]):
         return {key: data_tensors[i] for i, key in enumerate(keys)}
 
     def forward(self, x):
         if self._input_transform is not None:
             x = self._input_transform(x)
 
-        x = self.concat_to_tensor(x, self.input_keys)
+        x_tensor = self.concat_to_tensor(x, self.input_keys)
 
-        input_wind = x
+        input_wind = x_tensor
         y = []
         for _ in range(self.num_timestamps):
             with paddle.no_grad():
@@ -674,5 +673,5 @@ class PrecipNet(base.Arch):
         y = self.split_to_dict(y, self.output_keys)
 
         if self._output_transform is not None:
-            y = self._output_transform(y)
+            y = self._output_transform(x, y)
         return y

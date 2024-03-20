@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import paddle
+import sympy as sp
 from paddle.nn import initializer
 
-from ppsci.autodiff import hessian
-from ppsci.autodiff import jacobian
 from ppsci.equation.pde import base
 
 
@@ -53,15 +54,9 @@ class Vibration(base.PDE):
         self.learnable_parameters.append(self.k1)
         self.learnable_parameters.append(self.k2)
 
-        def f_compute_func(out):
-            eta, t = out["eta"], out["t_f"]
-            eta__t = jacobian(eta, t)
-            eta__t__t = hessian(eta, t)
-            f = (
-                self.rho * eta__t__t
-                + paddle.exp(self.k1) * eta__t
-                + paddle.exp(self.k2) * eta
-            )
-            return f
-
-        self.add_equation("f", f_compute_func)
+        t_f = self.create_symbols("t_f")
+        eta = self.create_function("eta", (t_f,))
+        k1 = self.create_symbols(self.k1.name)
+        k2 = self.create_symbols(self.k2.name)
+        f = self.rho * eta.diff(t_f, 2) + sp.exp(k1) * eta.diff(t_f) + sp.exp(k2) * eta
+        self.add_equation("f", f)

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -42,8 +44,26 @@ class IntegralLoss(base.Loss):
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
-        >>> loss = ppsci.loss.IntegralLoss("mean")
+        >>> import paddle
+        >>> from ppsci.loss import IntegralLoss
+
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 2.2, 0.9], [1.1, 0.8, -1.3]]),
+        ...                'v': paddle.to_tensor([[0.5, 2.2, 0.9], [1.1, 0.8, -1.3]]),
+        ...                'area': paddle.to_tensor([[0.01, 0.02, 0.03], [0.01, 0.02, 0.03]])}
+        >>> label_dict = {'u': paddle.to_tensor([-1.8, 0.0]),
+        ...               'v': paddle.to_tensor([0.1, 0.1])}
+        >>> weight = {'u': 0.8, 'v': 0.2}
+        >>> loss = IntegralLoss(weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               1.40911996)
+
+        >>> loss = IntegralLoss(reduction="sum", weight=weight)
+        >>> result = loss(output_dict, label_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               2.81823993)
     """
 
     def __init__(
@@ -65,7 +85,7 @@ class IntegralLoss(base.Loss):
                 label_dict[key],
                 "none",
             )
-            if weight_dict:
+            if weight_dict and key in weight_dict:
                 loss *= weight_dict[key]
 
             if self.reduction == "sum":

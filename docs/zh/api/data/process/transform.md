@@ -1,13 +1,15 @@
-# Transform(预处理) 模块
+# Data.transform(预处理) 模块
 
 ::: ppsci.data.process.transform
     handler: python
     options:
       members:
-        - Translate
-        - Scale
-        - Normalize
-        - Log1p
         - CropData
+        - FunctionalTransform
+        - Log1p
+        - Normalize
+        - Scale
         - SqueezeData
-      show_root_heading: false
+        - Translate
+        - build_transforms
+      show_root_heading: true

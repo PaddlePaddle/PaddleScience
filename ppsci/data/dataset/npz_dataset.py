@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -51,6 +53,9 @@ class NPZDataset(io.Dataset):
         ...     ("u",),
         ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
 
     def __init__(
         self,
@@ -134,9 +139,10 @@ class NPZDataset(io.Dataset):
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
 
-        # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
-            input_item = self.transforms(input_item)
+            input_item, label_item, weight_item = self.transforms(
+                input_item, label_item, weight_item
+            )
 
         return (input_item, label_item, weight_item)
 
@@ -168,6 +174,9 @@ class IterableNPZDataset(io.IterableDataset):
         ...     ("u",),
         ... )  # doctest: +SKIP
     """
+
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
 
     def __init__(
         self,
@@ -258,7 +267,13 @@ class IterableNPZDataset(io.IterableDataset):
         return self._len
 
     def __iter__(self):
-        yield self.input, self.label, self.weight
+        if callable(self.transforms):
+            input_, label_, weight_ = self.transforms(
+                self.input, self.label, self.weight
+            )
+            yield input_, label_, weight_
+        else:
+            yield self.input, self.label, self.weight
 
     def __len__(self):
         return 1

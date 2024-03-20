@@ -15,6 +15,7 @@
 """
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
+from __future__ import annotations
 
 import itertools
 from typing import Tuple
@@ -75,10 +76,6 @@ class Hypercube(geometry.Geometry):
         # For vertices, the normal is averaged for all directions
         idx = np.count_nonzero(_n, axis=-1) > 1
         if np.any(idx):
-            print(
-                f"Warning: {self.__class__.__name__} boundary_normal called on vertices. "
-                "You may use PDE(..., exclusions=...) to exclude the vertices."
-            )
             l = np.linalg.norm(_n[idx], axis=-1, keepdims=True)
             _n[idx] /= l
         return _n

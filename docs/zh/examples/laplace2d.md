@@ -2,9 +2,39 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6169897?sUid=455441&shared=1&ts=1684122038217" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
 
-2D-Laplace，在本文中代表拉普拉斯方程的2维形式。拉普拉斯方程因为由法国数学家拉普拉斯首先提出而得名。求解拉普拉斯方程是电磁学、天文学和流体力学等领域经常遇到的一类重要的数学问题，因为这种方程以势函数的形式描写了电场、引力场和流场等物理对象（一般统称为“保守场”或“有势场”）的性质。
+    ``` sh
+    python laplace2d.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python laplace2d.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python laplace2d.py mode=export
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    python laplace2d.py mode=infer
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [laplace2d_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/laplace2d/laplace2d_pretrained.pdparams) | loss(MSE_Metric): 0.00002<br>MSE.u(MSE_Metric): 0.00002 |
+
+## 1. 背景简介
+
+拉普拉斯方程由法国数学家拉普拉斯首先提出而得名，该方程在许多领域都有重要应用，例如电磁学、天文学和流体力学等。在实际应用中，拉普拉斯方程的求解往往是一个复杂的数学问题。对于一些具有特定边界条件和初始条件的实际问题，可以通过特定的数值方法（如有限元方法、有限差分方法等）来求解拉普拉斯方程。对于一些复杂的问题，可能需要采用更高级的数值方法或者借助高性能计算机进行计算。
+
+本案例通过深度学习的方式对拉普拉斯方程的2维形式进行求解。
 
 ## 2. 问题定义
 
@@ -30,9 +60,9 @@ $$
 
 上式中 $f$ 即为 MLP 模型本身，用 PaddleScience 代码表示如下
 
-``` py linenums="35"
+``` py linenums="32"
 --8<--
-examples/laplace/laplace2d.py:35:36
+examples/laplace/laplace2d.py:32:33
 --8<--
 ```
 
@@ -44,9 +74,9 @@ examples/laplace/laplace2d.py:35:36
 
 由于 2D-Laplace 使用的是 Laplace 方程的2维形式，因此可以直接使用 PaddleScience 内置的 `Laplace`，指定该类的参数 `dim` 为2。
 
-``` py linenums="38"
+``` py linenums="35"
 --8<--
-examples/laplace/laplace2d.py:38:39
+examples/laplace/laplace2d.py:35:36
 --8<--
 ```
 
@@ -55,9 +85,9 @@ examples/laplace/laplace2d.py:38:39
 本文中 2D Laplace 问题作用在以 (0.0, 0.0),  (1.0, 1.0) 为对角线的二维矩形区域，
 因此可以直接使用 PaddleScience 内置的空间几何 `Rectangle` 作为计算域。
 
-``` py linenums="41"
+``` py linenums="38"
 --8<--
-examples/laplace/laplace2d.py:41:42
+examples/laplace/laplace2d.py:38:43
 --8<--
 ```
 
@@ -67,9 +97,9 @@ examples/laplace/laplace2d.py:41:42
 
 在定义约束之前，需要给每一种约束指定采样点个数，表示每一种约束在其对应计算域内采样数据的数量，以及通用的采样配置。
 
-``` py linenums="56"
+``` yaml linenums="26"
 --8<--
-examples/laplace/laplace2d.py:56:58
+examples/laplace/conf/laplace2d.yaml:26:27
 --8<--
 ```
 
@@ -77,9 +107,9 @@ examples/laplace/laplace2d.py:56:58
 
 以作用在内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="61"
+``` py linenums="60"
 --8<--
-examples/laplace/laplace2d.py:61:69
+examples/laplace/laplace2d.py:60:68
 --8<--
 ```
 
@@ -101,9 +131,9 @@ examples/laplace/laplace2d.py:61:69
 
 同理，我们还需要构建矩形的四个边界的约束。但与构建 `InteriorConstraint` 约束不同的是，由于作用区域是边界，因此我们使用 `BoundaryConstraint` 类，代码如下：
 
-``` py linenums="70"
+``` py linenums="69"
 --8<--
-examples/laplace/laplace2d.py:70:77
+examples/laplace/laplace2d.py:69:76
 --8<--
 ```
 
@@ -111,9 +141,9 @@ examples/laplace/laplace2d.py:70:77
 
 第二个参数是指我们约束对象的真值如何获得，这里我们直接通过其解析解进行计算，定义解析解的代码如下：
 
-``` py linenums="44"
+``` py linenums="45"
 --8<--
-examples/laplace/laplace2d.py:44:48
+examples/laplace/laplace2d.py:45:49
 --8<--
 ```
 
@@ -121,11 +151,11 @@ examples/laplace/laplace2d.py:44:48
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。
+接下来我们需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数，评估间隔为两百轮。
 
-``` py linenums="26"
+``` yaml linenums="41"
 --8<--
-examples/laplace/laplace2d.py:26:29
+examples/laplace/conf/laplace2d.yaml:41:46
 --8<--
 ```
 
@@ -133,9 +163,9 @@ examples/laplace/laplace2d.py:26:29
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="84"
+``` py linenums="83"
 --8<--
-examples/laplace/laplace2d.py:84:85
+examples/laplace/laplace2d.py:83:84
 --8<--
 ```
 
@@ -143,9 +173,9 @@ examples/laplace/laplace2d.py:84:85
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="87"
+``` py linenums="86"
 --8<--
-examples/laplace/laplace2d.py:87:102
+examples/laplace/laplace2d.py:86:100
 --8<--
 ```
 
@@ -155,9 +185,9 @@ examples/laplace/laplace2d.py:87:102
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="104"
+``` py linenums="103"
 --8<--
-examples/laplace/laplace2d.py:104:113
+examples/laplace/laplace2d.py:103:112
 --8<--
 ```
 
@@ -165,9 +195,9 @@ examples/laplace/laplace2d.py:104:113
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="115"
+``` py linenums="114"
 --8<--
-examples/laplace/laplace2d.py:115:
+examples/laplace/laplace2d.py:114:134
 --8<--
 ```
 
@@ -181,7 +211,9 @@ examples/laplace/laplace2d.py
 
 ## 5. 结果展示
 
+使用训练得到的模型对上述计算域中均匀取的共 `NPOINT_TOTAL` 个点 $(x_i,y_i)$ 进行预测，预测结果如下所示。图像中每个点 $(x_i,y_i)$ 的值代表对应坐标上模型对 2D-Laplace 问题预测的解 $u(x_i,y_i)$。
+
 <figure markdown>
-  ![laplace 2d](../../images/laplace2d/laplace2d.png){ loading=lazy }
+  ![laplace 2d](https://paddle-org.bj.bcebos.com/paddlescience/docs/laplace2d/laplace2d.png){ loading=lazy }
   <figcaption>模型预测结果</figcaption>
 </figure>

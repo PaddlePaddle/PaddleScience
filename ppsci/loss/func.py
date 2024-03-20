@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Union
-
-from typing_extensions import Literal
 
 from ppsci.loss import base
 
@@ -25,36 +25,48 @@ from ppsci.loss import base
 class FunctionalLoss(base.Loss):
     r"""Functional loss class, which allows to use custom loss computing function from given loss_expr for complex computation cases.
 
+    $$
+    L = f(\mathbf{x}, \mathbf{y})
+    $$
+
+    $$
+    \mathbf{x}, \mathbf{y} \in \mathcal{R}^{N}
+    $$
+
     Args:
         loss_expr (Callable): expression of loss calculation.
-        reduction (Literal["mean", "sum"], optional): Reduction method. Defaults to "mean".
         weight (Optional[Union[float, Dict[str, float]]]): Weight for loss. Defaults to None.
 
     Examples:
-        >>> import ppsci
+        >>> import paddle
+        >>> from ppsci.loss import FunctionalLoss
         >>> import paddle.nn.functional as F
-        >>> def loss_expr(output_dict, *args):
+        >>> def mse_sum_loss(output_dict, label_dict, weight_dict=None):
         ...     losses = 0
-        ...     for key in output_dict:
-        ...         length = int(len(output_dict[key])/2)
-        ...         out_dict = {key: output_dict[key][:length]}
-        ...         label_dict = {key: output_dict[key][length:]}
-        ...         losses += F.mse_loss(out_dict, label_dict, "sum")
+        ...     for key in output_dict.keys():
+        ...         loss = F.mse_loss(output_dict[key], label_dict[key], "sum")
+        ...         if weight_dict:
+        ...             loss *=  weight_dict[key]
+        ...         losses += loss
         ...     return losses
-        >>> loss = ppsci.loss.FunctionalLoss(loss_expr)
+        >>> loss = FunctionalLoss(mse_sum_loss)
+        >>> output_dict = {'u': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]]),
+        ...             'v': paddle.to_tensor([[0.5, 0.9], [1.1, -1.3]])}
+        >>> label_dict = {'u': paddle.to_tensor([[-1.8, 1.0], [-0.2, 2.5]]),
+        ...             'v': paddle.to_tensor([[0.1, 0.1], [0.1, 0.1]])}
+        >>> weight_dict = {'u': 0.8, 'v': 0.2}
+        >>> result = loss(output_dict, label_dict, weight_dict)
+        >>> print(result)
+        Tensor(shape=[], dtype=float32, place=Place(gpu:0), stop_gradient=True,
+               17.89600182)
     """
 
     def __init__(
         self,
         loss_expr: Callable,
-        reduction: Literal["mean", "sum"] = "mean",
         weight: Optional[Union[float, Dict[str, float]]] = None,
     ):
-        if reduction not in ["mean", "sum"]:
-            raise ValueError(
-                f"reduction should be 'mean' or 'sum', but got {reduction}"
-            )
-        super().__init__(reduction, weight)
+        super().__init__(None, weight)
         self.loss_expr = loss_expr
 
     def forward(self, output_dict, label_dict=None, weight_dict=None):

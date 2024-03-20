@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ppsci.autodiff import hessian
+from __future__ import annotations
+
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+import sympy
+
 from ppsci.equation.pde import base
 
 
 class Biharmonic(base.PDE):
-    r"""Class for biharmonic equation.
+    r"""Class for biharmonic equation with supporting special load.
 
     $$
     \nabla^4 \varphi = \dfrac{q}{D}
@@ -25,27 +32,41 @@ class Biharmonic(base.PDE):
 
     Args:
         dim (int): Dimension of equation.
-        q (float): Load.
-        D (float): Rigidity.
+        q (Union[float, str, sympy.Basic]): Load.
+        D (Union[float, str]): Rigidity.
+        detach_keys (Optional[Tuple[str, ...]]): Keys used for detach during computing.
+            Defaults to None.
 
     Examples:
         >>> import ppsci
         >>> pde = ppsci.equation.Biharmonic(2, -1.0, 1.0)
     """
 
-    def __init__(self, dim: int, q: float, D: float):
+    def __init__(
+        self,
+        dim: int,
+        q: Union[float, str, sympy.Basic],
+        D: Union[float, str],
+        detach_keys: Optional[Tuple[str, ...]] = None,
+    ):
         super().__init__()
+        self.detach_keys = detach_keys
+
+        invars = self.create_symbols("x y z")[:dim]
+        u = self.create_function("u", invars)
+
+        if isinstance(q, str):
+            q = self.create_function("q", invars)
+        if isinstance(D, str):
+            D = self.create_function("D", invars)
+
         self.dim = dim
         self.q = q
         self.D = D
 
-        def biharmonic_compute_func(out):
-            u = out["u"]
-            biharmonic = -self.q / self.D
-            invars = ("x", "y", "z")[: self.dim]
-            for invar_i in invars:
-                for invar_j in invars:
-                    biharmonic += hessian(hessian(u, out[invar_i]), out[invar_j])
-            return biharmonic
+        biharmonic = -self.q / self.D
+        for invar_i in invars:
+            for invar_j in invars:
+                biharmonic += u.diff(invar_i, 2).diff(invar_j, 2)
 
-        self.add_equation("biharmonic", biharmonic_compute_func)
+        self.add_equation("biharmonic", biharmonic)

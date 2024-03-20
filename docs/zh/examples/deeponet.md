@@ -2,9 +2,49 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6566389?sUid=438690&shared=1&ts=1690775701017" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
+    python deeponet.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_train.npz
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/DeepONet/antiderivative_unaligned_test.npz
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_train.npz --output antiderivative_unaligned_train.npz
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/deeponet/antiderivative_unaligned_test.npz --output antiderivative_unaligned_test.npz
+    python deeponet.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [deeponet_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/deeponet/deeponet_pretrained.pdparams) | loss(G_eval): 0.00003<br>L2Rel.G(G_eval): 0.01799 |
+
+## 1. 背景简介
 
 根据机器学习领域的万能近似定理，一个神经网络模型不仅可以拟合输入数据到输出数据的函数映射关系，也可以扩展到对函数与函数之间的映射关系进行拟合，称之为“算子”学习。
+
+因此 DeepONet 在各个领域的应用都有相当的潜力。以下是一些可能的应用领域：
+
+1. **流体动力学模拟**：DeepONet可以用于对流体动力学方程进行数值求解，例如Navier-Stokes方程。这使得DeepONet在诸如空气动力学、流体机械、气候模拟等领域具有直接应用。
+2. **图像处理和计算机视觉**：DeepONet可以学习图像中的特征，并用于分类、分割、检测等任务。例如，它可以用于医学图像分析，包括疾病检测和预后预测。
+3. **信号处理**：DeepONet可以用于各种信号处理任务，如降噪、压缩、恢复等。在通信、雷达、声纳等领域，DeepONet有潜在的应用。
+4. **控制系统**：DeepONet可以用于控制系统的设计和优化。例如，它可以学习系统的动态行为，并用于预测和控制系统的未来行为。
+5. **金融**：DeepONet可以用于金融预测和分析，如股票价格预测、风险评估、信贷风险分析等。
+6. **人机交互**：DeepONet可以用于语音识别、自然语言处理、手势识别等任务，使得人机交互更加智能化和自然。
+7. **环境科学**：DeepONet可以用于气候模型预测、生态系统的模拟、环境污染检测等任务。
+
+需要注意的是，虽然 DeepONet 在许多领域都有潜在的应用，但每个领域都有其独特的问题和挑战。在将 DeepONet 应用到特定领域时，需要对该领域的问题有深入的理解，并可能需要针对该领域进行模型的调整和优化。
 
 ## 2. 问题定义
 
@@ -65,7 +105,7 @@ $$
 
 ``` py linenums="27"
 --8<--
-examples/operator_learning/deeponet.py:27:43
+examples/operator_learning/deeponet.py:27:27
 --8<--
 ```
 
@@ -77,9 +117,9 @@ examples/operator_learning/deeponet.py:27:43
 
 在定义约束之前，需要给监督约束指定文件路径等数据读取配置，包括文件路径、输入数据字段名、标签数据字段名、数据转换前后的别名字典。
 
-``` py linenums="45"
+``` py linenums="30"
 --8<--
-examples/operator_learning/deeponet.py:45:55
+examples/operator_learning/deeponet.py:30:38
 --8<--
 ```
 
@@ -87,9 +127,9 @@ examples/operator_learning/deeponet.py:45:55
 
 由于我们以监督学习方式进行训练，此处采用监督约束 `SupervisedConstraint`：
 
-``` py linenums="57"
+``` py linenums="40"
 --8<--
-examples/operator_learning/deeponet.py:57:61
+examples/operator_learning/deeponet.py:40:44
 --8<--
 ```
 
@@ -101,19 +141,19 @@ examples/operator_learning/deeponet.py:57:61
 
 在监督约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="62"
+``` py linenums="45"
 --8<--
-examples/operator_learning/deeponet.py:62:63
+examples/operator_learning/deeponet.py:45:46
 --8<--
 ```
 
 ### 3.4 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用十万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
+接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用一万轮训练轮数，并每隔 500 个 epochs 评估一次模型精度。
 
-``` py linenums="65"
+``` yaml linenums="49"
 --8<--
-examples/operator_learning/deeponet.py:65:66
+examples/operator_learning/conf/deeponet.yaml:49:55
 --8<--
 ```
 
@@ -121,9 +161,9 @@ examples/operator_learning/deeponet.py:65:66
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器，学习率设置为 `0.001`。
 
-``` py linenums="68"
+``` py linenums="48"
 --8<--
-examples/operator_learning/deeponet.py:68:69
+examples/operator_learning/deeponet.py:48:49
 --8<--
 ```
 
@@ -131,9 +171,9 @@ examples/operator_learning/deeponet.py:68:69
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.SupervisedValidator` 构建评估器。
 
-``` py linenums="71"
+``` py linenums="51"
 --8<--
-examples/operator_learning/deeponet.py:71:88
+examples/operator_learning/deeponet.py:51:60
 --8<--
 ```
 
@@ -143,11 +183,11 @@ examples/operator_learning/deeponet.py:71:88
 
 ### 3.7 模型训练、评估
 
-完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
+完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="90"
+``` py linenums="71"
 --8<--
-examples/operator_learning/deeponet.py:90:123
+examples/operator_learning/deeponet.py:71:90
 --8<--
 ```
 
@@ -155,9 +195,9 @@ examples/operator_learning/deeponet.py:90:123
 
 在模型训练完毕之后，我们可以手动构造 $u$、$y$ 并在适当范围内进行离散化，得到对应输入数据，继而预测出 $G(u)(y)$，并和 $G(u)$ 的标准解共同绘制图像，进行对比。（此处我们构造了 9 组 $u-G(u)$ 函数对）进行测试
 
-``` py linenums="125"
+``` py linenums="92"
 --8<--
-examples/operator_learning/deeponet.py:125:
+examples/operator_learning/deeponet.py:92:151
 --8<--
 ```
 

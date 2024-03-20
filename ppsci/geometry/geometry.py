@@ -15,6 +15,7 @@
 """
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
+from __future__ import annotations
 
 import abc
 from typing import Tuple
@@ -57,13 +58,20 @@ class Geometry:
         raise NotImplementedError(f"{self}.boundary_normal is not implemented")
 
     def uniform_points(self, n: int, boundary=True):
-        """Compute the equispaced points in the geometry."""
+        """Compute the equi-spaced points in the geometry."""
         logger.warning(
             f"{self}.uniform_points not implemented. " f"Use random_points instead."
         )
         return self.random_points(n)
 
-    def sample_interior(self, n, random="pseudo", criteria=None, evenly=False):
+    def sample_interior(
+        self,
+        n,
+        random="pseudo",
+        criteria=None,
+        evenly=False,
+        compute_sdf_derivatives: bool = False,
+    ):
         """Sample random points in the geometry and return those meet criteria."""
         x = np.empty(shape=(n, self.ndim), dtype=paddle.get_default_dtype())
         _size, _ntry, _nsuc = 0, 0, 0
@@ -92,17 +100,25 @@ class Geometry:
             if _ntry >= 1000 and _nsuc == 0:
                 raise ValueError(
                     "Sample interior points failed, "
-                    "please check correctness of geometry and given creteria."
+                    "please check correctness of geometry and given criteria."
                 )
 
         # if sdf_func added, return x_dict and sdf_dict, else, only return the x_dict
         if hasattr(self, "sdf_func"):
             sdf = -self.sdf_func(x)
             sdf_dict = misc.convert_to_dict(sdf, ("sdf",))
+            sdf_derives_dict = {}
+            if compute_sdf_derivatives:
+                sdf_derives = -self.sdf_derivatives(x)
+                sdf_derives_dict = misc.convert_to_dict(
+                    sdf_derives, tuple(f"sdf__{key}" for key in self.dim_keys)
+                )
         else:
             sdf_dict = {}
+            sdf_derives_dict = {}
         x_dict = misc.convert_to_dict(x, self.dim_keys)
-        return {**x_dict, **sdf_dict}
+
+        return {**x_dict, **sdf_dict, **sdf_derives_dict}
 
     def sample_boundary(self, n, random="pseudo", criteria=None, evenly=False):
         """Compute the random points in the geometry and return those meet criteria."""
@@ -173,7 +189,7 @@ class Geometry:
         """Compute the random points in the geometry."""
 
     def uniform_boundary_points(self, n: int):
-        """Compute the equispaced points on the boundary."""
+        """Compute the equi-spaced points on the boundary."""
         logger.warning(
             f"{self}.uniform_boundary_points not implemented. "
             f"Use random_boundary_points instead."
@@ -187,6 +203,33 @@ class Geometry:
     def periodic_point(self, x: np.ndarray, component: int):
         """Compute the periodic image of x."""
         raise NotImplementedError(f"{self}.periodic_point to be implemented")
+
+    def sdf_derivatives(self, x: np.ndarray, epsilon: float = 1e-4) -> np.ndarray:
+        """Compute derivatives of SDF function.
+
+        Args:
+            x (np.ndarray): Points for computing SDF derivatives using central
+                difference. The shape is [N, D], D is the number of dimension of
+                geometry.
+            epsilon (float): Derivative step. Defaults to 1e-4.
+
+        Returns:
+            np.ndarray: Derivatives of corresponding SDF function.
+                The shape is [N, D]. D is the number of dimension of geometry.
+        """
+        if not hasattr(self, "sdf_func"):
+            raise NotImplementedError(
+                f"{misc.typename(self)}.sdf_func should be implemented "
+                "when using 'sdf_derivatives'."
+            )
+        # Only compute sdf derivatives for those already implement `sdf_func` method.
+        sdf_derives = np.empty_like(x)
+        for i in range(self.ndim):
+            h = np.zeros_like(x)
+            h[:, i] += epsilon / 2
+            derives_at_i = (self.sdf_func(x + h) - self.sdf_func(x - h)) / epsilon
+            sdf_derives[:, i : i + 1] = derives_at_i
+        return sdf_derives
 
     def union(self, other):
         """CSG Union."""

@@ -5,7 +5,9 @@
     options:
       members:
         - PDE
+        - FractionalPoisson
         - Biharmonic
+        - HeatExchanger
         - Laplace
         - LinearElasticity
         - NavierStokes
@@ -13,5 +15,5 @@
         - Poisson
         - Vibration
         - Volterra
-      show_root_heading: false
+      show_root_heading: true
       heading_level: 3

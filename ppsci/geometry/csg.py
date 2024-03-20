@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 import numpy as np
 import paddle
 
@@ -126,7 +128,7 @@ class CSGUnion(geometry.Geometry):
             value, the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)
@@ -220,7 +222,7 @@ class CSGDifference(geometry.Geometry):
             value, the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)
@@ -328,7 +330,7 @@ class CSGIntersection(geometry.Geometry):
             value the shape is [N, D].
 
         Returns:
-            np.ndarray: Unsquared SDF values of input points, the shape is [N, 1].
+            np.ndarray: SDF values of input points without squared, the shape is [N, 1].
         """
         sdf1 = self.geom1.sdf_func(points)
         sdf2 = self.geom2.sdf_func(points)

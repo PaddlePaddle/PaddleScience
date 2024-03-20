@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -21,7 +23,6 @@ from typing import Union
 import numpy as np
 import paddle
 import sympy
-from sympy.parsing import sympy_parser as sp_parser
 from typing_extensions import Literal
 
 from ppsci import geometry
@@ -83,13 +84,9 @@ class GeometryValidator(base.Validator):
         name: Optional[str] = None,
     ):
         self.output_expr = output_expr
-        for label_name, expr in self.output_expr.items():
-            if isinstance(expr, str):
-                self.output_expr[label_name] = sp_parser.parse_expr(expr)
-
         self.label_dict = label_dict
         self.input_keys = geom.dim_keys
-        self.output_keys = list(label_dict.keys())
+        self.output_keys = tuple(label_dict.keys())
 
         nx = dataloader_cfg["total_size"]
         self.num_timestamps = 1

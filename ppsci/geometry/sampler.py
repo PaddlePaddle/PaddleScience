@@ -16,6 +16,8 @@
 Code below is heavily based on [https://github.com/lululxvi/deepxde](https://github.com/lululxvi/deepxde)
 """
 
+from __future__ import annotations
+
 import numpy as np
 import paddle
 import skopt
@@ -25,7 +27,7 @@ from typing_extensions import Literal
 def sample(
     n_samples: int, ndim: int, method: Literal["pseudo", "LHS"] = "pseudo"
 ) -> np.ndarray:
-    """Generate pseudorandom or quasirandom samples in [0, 1]^ndim.
+    """Generate pseudorandom or quasi-random samples in [0, 1]^ndim.
 
     Args:
         n_samples (int): The number of samples.

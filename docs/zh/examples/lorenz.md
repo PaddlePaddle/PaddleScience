@@ -2,9 +2,57 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6206798?contributionType=1&sUid=455441&shared=1&ts=1684477535039" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
 
-Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹混沌系统”，最早由美国气象学家爱德华·洛伦兹（Edward N.Lorenz）在1963年的一篇文章中提出。著名的“蝴蝶效应”，即“一只南美洲亚马逊河流域热带雨林中的蝴蝶，偶尔扇动几下翅膀，可以在两周以后引起美国得克萨斯州的一场龙卷风”，也是最早起源于这篇文章。洛伦兹系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
+    python train_enn.py
+    python train_transformer.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
+    python train_enn.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
+    python train_transformer.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
+    ```
+
+=== "模型导出命令"
+
+    ``` sh
+    python train_transformer.py mode=export EMBEDDING_MODEL_PATH=https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_pretrained.pdparams
+    ```
+
+=== "模型推理命令"
+
+    ``` sh
+    # linux
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 -P ./datasets/
+    wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 -P ./datasets/
+    # windows
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5 --output ./datasets/lorenz_training_rk.hdf5
+    # curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5 --output ./datasets/lorenz_valid_rk.hdf5
+    python train_transformer.py mode=infer
+    ```
+
+| 模型 | MSE |
+| :-- | :-- |
+| [lorenz_transformer_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/lorenz/lorenz_transformer_pretrained.pdparams) | 0.054 |
+
+## 1. 背景简介
+
+Lorenz System，中文名称可译作“洛伦兹系统”，又称“洛伦兹混沌系统”，最早由美国气象学家爱德华·洛伦兹（Edward N.Lorenz）在1963年的一篇文章中提出。著名的“蝴蝶效应”，即“一只南美洲亚马逊河流域热带雨林中的蝴蝶，偶尔扇动几下翅膀，可以在两周以后引起美国得克萨斯州的一场龙卷风”，也是最早起源于这篇文章。洛伦兹系统的特点是在一定参数条件下展现出复杂、不确定的动态行为，包括对初始条件的敏感性和长期行为的不可预测性。这种混沌行为在自然界和许多实际应用领域中都存在，例如气候变化、股票市场波动等。洛伦兹系统对数值扰动极为敏感，是评估机器学习（深度学习）模型准确性的良好基准。
 
 ## 2. 问题定义
 
@@ -35,7 +83,7 @@ Transformer 结构在 NLP、CV 领域中取得了巨大的成功，但是其在�
 如下图所示，该方法主要包含两个网络模型：Embedding 模型和 Transformer 模型。其中，Embedding 模型的 Encoder 模块负责将物理状态变量进行编码映射为编码向量，Decoder 模块则负责将编码向量映射为物理状态变量；Transformer 模型作用于编码空间，其输入是 Embedding 模型 Encoder 模块的输出，利用当前时刻的编码向量预测下一时刻的编码向量，预测得到的编码向量可以被 Embedding 模型的 Decoder 模块解码，得到对应的物理状态变量。在模型训练时，首先训练 Embedding 模型，然后将 Embedding 模型的参数冻结训练 Transformer 模型。关于该方法的细节请参考论文 [Transformers for Modeling Physical Systems](https://arxiv.org/abs/2010.03957)。
 
 <figure markdown>
-  ![trphysx-arch](../../images/lorenz/trphysx-arch.png){ loading=lazy }
+  ![trphysx-arch](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/trphysx-arch.png){ loading=lazy }
   <figcaption>左：Embedding 网络结构，右：Transformer 网络结构</figcaption>
 </figure>
 
@@ -47,21 +95,20 @@ $$x_{0} \sim(-20, 20), y_{0} \sim(-20, 20), z_{0} \sim(10, 40)$$
 
 数据集的划分如下：
 
-|数据集 |时间序列的数量|时间步的数量|
-|:----:|:---------:|:--------:|
-|训练集 |2048       |256       |
-|验证集 |64         |1024      |
-|测试集 |256        |1024      |
+|数据集 |时间序列的数量|时间步的数量|下载地址|
+|:----:|:---------:|:--------:|:--------:|
+|训练集 |2048       |256       |[lorenz_training_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_training_rk.hdf5)|
+|验证集 |64         |1024      |[lorenz_valid_rk.hdf5](https://paddle-org.bj.bcebos.com/paddlescience/datasets/transformer_physx/lorenz_valid_rk.hdf5)|
 
-该数据集可以从[此处](https://zenodo.org/record/5148524#.ZDe77-xByrc)下载。
+数据集官网为：<https://zenodo.org/record/5148524#.ZDe77-xByrc>
 
 ### 3.3 Embedding 模型
 
 首先展示代码中定义的各个参数变量，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="40" title="examples/lorenz/train_enn.py"
+``` yaml linenums="26" title="examples/conf/enn.yaml"
 --8<--
-examples/lorenz/train_enn.py:40:55
+examples/lorenz/conf/enn.yaml:26:34
 --8<--
 ```
 
@@ -69,9 +116,9 @@ examples/lorenz/train_enn.py:40:55
 
 本案例基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="60" title="examples/lorenz/train_enn.py"
+``` py linenums="51" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:60:77
+examples/lorenz/train_enn.py:51:70
 --8<--
 ```
 
@@ -90,9 +137,9 @@ examples/lorenz/train_enn.py:60:77
 
 定义监督约束的代码如下：
 
-``` py linenums="79" title="examples/lorenz/train_enn.py"
+``` py linenums="72" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:79:87
+examples/lorenz/train_enn.py:72:85
 --8<--
 ```
 
@@ -109,23 +156,23 @@ examples/lorenz/train_enn.py:79:87
 在该案例中，Embedding 模型的输入输出都是物理空间中点的位置坐标 $(x, y, z)$ ，使用了全连接层实现 Embedding 模型，如下图所示。
 
 <figure markdown>
-  ![lorenz_embedding](../../images/lorenz/lorenz_embedding.png){ loading=lazy }
+  ![lorenz_embedding](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/lorenz_embedding.png){ loading=lazy }
   <figcaption>Embedding 网络模型</figcaption>
 </figure>
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="93" title="examples/lorenz/train_enn.py"
+``` py linenums="91" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:93:96
+examples/lorenz/train_enn.py:91:97
 --8<--
 ```
 
 其中，`LorenzEmbedding` 的前两个参数在前文中已有描述，这里不再赘述，网络模型的第三、四个参数是训练数据集的均值和方差，用于归一化输入数据。计算均值、方差的的代码表示如下：
 
-``` py linenums="29" title="examples/lorenz/train_enn.py"
+``` py linenums="32" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:29:36
+examples/lorenz/train_enn.py:32:39
 --8<--
 ```
 
@@ -135,7 +182,7 @@ examples/lorenz/train_enn.py:29:36
 
 ``` py linenums="99" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:99:112
+examples/lorenz/train_enn.py:99:108
 --8<--
 ```
 
@@ -143,9 +190,9 @@ examples/lorenz/train_enn.py:99:112
 
 本案例训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。代码如下：
 
-``` py linenums="115" title="examples/lorenz/train_enn.py"
+``` py linenums="112" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:115:141
+examples/lorenz/train_enn.py:112:139
 --8<--
 ```
 
@@ -155,9 +202,9 @@ examples/lorenz/train_enn.py:115:141
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="144" title="examples/lorenz/train_enn.py"
+``` py linenums="142" title="examples/lorenz/train_enn.py"
 --8<--
-examples/lorenz/train_enn.py:144:
+examples/lorenz/train_enn.py:142:156
 --8<--
 ```
 
@@ -165,9 +212,9 @@ examples/lorenz/train_enn.py:144:
 
 上文介绍了如何构建 Embedding 模型的训练、评估，在本节中将介绍如何使用训练好的 Embedding 模型训练 Transformer 模型。因为训练 Transformer 模型的步骤与训练 Embedding 模型的步骤基本相似，因此本节在两者的重复部分的各个参数不再详细介绍。首先将代码中定义的各个参数变量展示如下，每个参数的具体含义会在下面使用到时进行解释。
 
-``` py linenums="57" title="examples/lorenz/train_transformer.py"
+``` yaml linenums="36" title="examples/lorenz/conf/transformer.yaml"
 --8<--
-examples/lorenz/train_transformer.py:57:79
+examples/lorenz/conf/transformer.yaml:36:43
 --8<--
 ```
 
@@ -175,9 +222,9 @@ examples/lorenz/train_transformer.py:57:79
 
 Transformer 模型同样基于数据驱动的方法求解问题，因此需要使用 PaddleScience 内置的 `SupervisedConstraint` 构建监督约束。在定义约束之前，需要首先指定监督约束中用于数据加载的各个参数，代码如下：
 
-``` py linenums="87" title="examples/lorenz/train_transformer.py"
+``` py linenums="68" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:87:104
+examples/lorenz/train_transformer.py:68:85
 --8<--
 ```
 
@@ -185,9 +232,9 @@ examples/lorenz/train_transformer.py:87:104
 
 定义监督约束的代码如下：
 
-``` py linenums="106" title="examples/lorenz/train_transformer.py"
+``` py linenums="87" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:106:111
+examples/lorenz/train_transformer.py:87:92
 --8<--
 ```
 
@@ -196,15 +243,15 @@ examples/lorenz/train_transformer.py:106:111
 在该案例中，Transformer 模型的输入输出都是编码空间中的向量，使用的 Transformer 结构如下：
 
 <figure markdown>
-  ![lorenz_transformer](../../images/lorenz/lorenz_transformer.png){ loading=lazy }
+  ![lorenz_transformer](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/lorenz_transformer.png){ loading=lazy }
   <figcaption>Transformer 网络模型</figcaption>
 </figure>
 
 用 PaddleScience 代码表示如下：
 
-``` py linenums="116" title="examples/lorenz/train_transformer.py"
+``` py linenums="98" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:116:124
+examples/lorenz/train_transformer.py:98:98
 --8<--
 ```
 
@@ -214,9 +261,9 @@ examples/lorenz/train_transformer.py:116:124
 
 本案例中使用的学习率方法为 `CosineWarmRestarts`，学习率大小设置为0.001。优化器使用 `Adam`，梯度裁剪使用了 Paddle 内置的 `ClipGradByGlobalNorm` 方法。用 PaddleScience 代码表示如下：
 
-``` py linenums="126" title="examples/lorenz/train_transformer.py"
+``` py linenums="101" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:126:140
+examples/lorenz/train_transformer.py:101:107
 --8<--
 ```
 
@@ -224,9 +271,9 @@ examples/lorenz/train_transformer.py:126:140
 
 训练过程中会按照一定的训练轮数间隔，使用验证集评估当前模型的训练情况，需要使用 `SupervisedValidator` 构建评估器。用 PaddleScience 代码表示如下：
 
-``` py linenums="142" title="examples/lorenz/train_transformer.py"
+``` py linenums="110" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:142:168
+examples/lorenz/train_transformer.py:110:135
 --8<--
 ```
 
@@ -236,15 +283,15 @@ examples/lorenz/train_transformer.py:142:168
 
 在本文中首先定义了对 Transformer 模型输出数据变换到物理状态空间的代码：
 
-``` py linenums="32" title="examples/lorenz/train_transformer.py"
+``` py linenums="34" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:32:50
+examples/lorenz/train_transformer.py:34:52
 --8<--
 ```
 
-``` py linenums="83" title="examples/lorenz/train_transformer.py"
+``` py linenums="64" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:83:84
+examples/lorenz/train_transformer.py:64:65
 --8<--
 ```
 
@@ -252,21 +299,21 @@ examples/lorenz/train_transformer.py:83:84
 
 在定义好了以上代码之后，就可以实现可视化器代码的构建了：
 
-``` py linenums="170" title="examples/lorenz/train_transformer.py"
+``` py linenums="138" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:170:188
+examples/lorenz/train_transformer.py:138:155
 --8<--
 ```
 
 首先使用上文中的 `mse_validator` 中的数据集进行可视化，另外还引入了 `vis_data_nums` 变量用于控制需要可视化样本的数量。最后通过 `VisualizerScatter3D` 构建可视化器。
 
-#### 3.4.5 模型训练、评估与可视化
+#### 3.4.6 模型训练、评估与可视化
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估。
 
-``` py linenums="190" title="examples/lorenz/train_transformer.py"
+``` py linenums="157" title="examples/lorenz/train_transformer.py"
 --8<--
-examples/lorenz/train_transformer.py:190:
+examples/lorenz/train_transformer.py:157:175
 --8<--
 ```
 
@@ -286,12 +333,14 @@ examples/lorenz/train_transformer.py
 
 ## 5. 结果展示
 
+下图中展示了两个不同初始条件下的模型预测结果和传统数值微分的预测结果。
+
 <figure markdown>
-  ![result_states0](../../images/lorenz/result_states0.png){ loading=lazy }
+  ![result_states0](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/result_states0.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>
 
 <figure markdown>
-  ![result_states1](../../images/lorenz/result_states1.png){ loading=lazy }
+  ![result_states1](https://paddle-org.bj.bcebos.com/paddlescience/docs/lorenz/result_states1.png){ loading=lazy }
   <figcaption>模型预测结果（"pred_states"）与传统数值微分结果（"states"）</figcaption>
 </figure>

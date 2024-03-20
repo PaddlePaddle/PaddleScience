@@ -2,11 +2,33 @@
 
 <a href="https://aistudio.baidu.com/aistudio/projectdetail/6137973" class="md-button md-button--primary" style>AI Studio快速体验</a>
 
-## 1. 问题简介
+=== "模型训练命令"
 
-Lid Driven Cavity Flow，中文名称可译作“顶盖驱动方腔流”，一般指顶部平板以恒定速度驱动规则区域内封闭的不可压流体（例如水）的流动。在方腔流中可以观察到几乎所有可能发生在不可压流体中的流动现象，是一种典型的流体案例。
+    ``` sh
+    python ldc2d_steady_Re10.py
+    ```
+
+=== "模型评估命令"
+
+    ``` sh
+    python ldc2d_steady_Re10.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams
+    ```
+
+| 预训练模型  | 指标 |
+|:--| :--|
+| [ldc2d_steady_Re10_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ldc2d_steady_Re10/ldc2d_steady_Re10_pretrained.pdparams) | loss(Residual): 365.36164<br>MSE.momentum_x(Residual): 0.01435<br>MSE.continuity(Residual): 0.04072<br>MSE.momentum_y(Residual): 0.02471 |
+
+## 1. 背景简介
+
+顶盖方腔驱动流LDC问题在许多领域中都有应用。例如，这个问题可以用于计算流体力学（CFD）领域中验证计算方法的有效性。虽然这个问题的边界条件相对简单，但是其流动特性却非常复杂。在顶盖驱动流LDC中，顶壁朝x方向以U=1的速度移动，而其他三个壁则被定义为无滑移边界条件，即速度为零。
+
+此外，顶盖方腔驱动流LDC问题也被用于研究和预测空气动力学中的流动现象。例如，在汽车工业中，通过模拟和分析车体内部的空气流动，可以帮助优化车辆的设计和性能。
+
+总的来说，顶盖方腔驱动流LDC问题在计算流体力学、空气动力学以及相关领域中都有广泛的应用，对于研究和预测流动现象、优化产品设计等方面都起到了重要的作用。
 
 ## 2. 问题定义
+
+本案例中我们对于一个长宽均为 1 的方腔内部作为计算域，并应用以下公式进行顶盖驱动方腔流研究**稳态**流场问题：
 
 质量守恒：
 
@@ -185,7 +207,7 @@ examples/ldc/ldc2d_steady_Re10.py:36:37
 
 ``` py linenums="39"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:39:50
+examples/ldc/ldc2d_steady_Re10.py:39:49
 --8<--
 ```
 
@@ -193,22 +215,18 @@ examples/ldc/ldc2d_steady_Re10.py:39:50
 
 以作用在矩形内部点上的 `InteriorConstraint` 为例，代码如下：
 
-``` py linenums="63"
+``` py linenums="51"
 # set constraint
-pde_constraint = ppsci.constraint.InteriorConstraint(
-      equation["NavierStokes"].equations,
-      {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
-      geom["rect"],
-      {**train_dataloader_cfg, "batch_size": npoint_pde},
-      ppsci.loss.MSELoss("sum"),
-      evenly=True,
-      weight_dict={
-          "continuity": 0.0001, # (1)
-          "momentum_x": 0.0001,
-          "momentum_y": 0.0001,
-      },
-      name="EQ",
-  )
+pde = ppsci.constraint.InteriorConstraint(
+    equation["NavierStokes"].equations,
+    {"continuity": 0, "momentum_x": 0, "momentum_y": 0},
+    geom["rect"],
+    {**train_dataloader_cfg, "batch_size": NPOINT_PDE},
+    ppsci.loss.MSELoss("sum"),
+    evenly=True,
+    weight_dict=cfg.TRAIN.weight.pde, # (1)
+    name="EQ",
+)
 ```
 
 1. 本案例中PDE约束损失的数量级远大于边界约束损失，因此需要给PDE约束权重设置一个较小的值，有利于模型收敛
@@ -239,27 +257,27 @@ pde_constraint = ppsci.constraint.InteriorConstraint(
 
 由于 `BoundaryConstraint` 默认会在所有边界上进行采样，而我们需要对四个边界分别施加约束，因此需通过设置 `criteria` 参数，进一步细化出四个边界，如上边界就是符合 $y = 0.05$ 的边界点集
 
-``` py linenums="67"
+``` py linenums="62"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:67:102
+examples/ldc/ldc2d_steady_Re10.py:62:97
 --8<--
 ```
 
 在微分方程约束、边界约束、初值约束构建完毕之后，以我们刚才的命名为关键字，封装到一个字典中，方便后续访问。
 
-``` py linenums="103"
+``` py linenums="98"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:103:110
+examples/ldc/ldc2d_steady_Re10.py:98:105
 --8<--
 ```
 
 ### 3.5 超参数设定
 
-接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
+接下来需要在配置文件中指定训练轮数，此处我们按实验经验，使用两万轮训练轮数和带有 warmup 的 Cosine 余弦衰减学习率。
 
-``` py linenums="112"
+``` yaml linenums="39"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:112:119
+examples/ldc/conf/ldc2d_steady_Re10.yaml:39:42
 --8<--
 ```
 
@@ -267,9 +285,9 @@ examples/ldc/ldc2d_steady_Re10.py:112:119
 
 训练过程会调用优化器来更新模型参数，此处选择较为常用的 `Adam` 优化器。
 
-``` py linenums="121"
+``` py linenums="107"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:121:122
+examples/ldc/ldc2d_steady_Re10.py:107:112
 --8<--
 ```
 
@@ -277,9 +295,9 @@ examples/ldc/ldc2d_steady_Re10.py:121:122
 
 在训练过程中通常会按一定轮数间隔，用验证集（测试集）评估当前模型的训练情况，因此使用 `ppsci.validate.GeometryValidator` 构建评估器。
 
-``` py linenums="124"
+``` py linenums="114"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:124:141
+examples/ldc/ldc2d_steady_Re10.py:114:131
 --8<--
 ```
 
@@ -301,9 +319,9 @@ examples/ldc/ldc2d_steady_Re10.py:124:141
 
 本文中的输出数据是一个区域内的二维点集，因此我们只需要将评估的输出数据保存成 **vtu格式** 文件，最后用可视化软件打开查看即可。代码如下：
 
-``` py linenums="143"
+``` py linenums="133"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:143:153
+examples/ldc/ldc2d_steady_Re10.py:133:143
 --8<--
 ```
 
@@ -311,9 +329,9 @@ examples/ldc/ldc2d_steady_Re10.py:143:153
 
 完成上述设置之后，只需要将上述实例化的对象按顺序传递给 `ppsci.solver.Solver`，然后启动训练、评估、可视化。
 
-``` py linenums="155"
+``` py linenums="145"
 --8<--
-examples/ldc/ldc2d_steady_Re10.py:155:
+examples/ldc/ldc2d_steady_Re10.py:145:167
 --8<--
 ```
 
@@ -327,21 +345,25 @@ examples/ldc/ldc2d_steady_Re10.py
 
 ## 5. 结果展示
 
+下方展示了模型对于边长为 1 的正方形计算域的内部点进行预测的结果、OpeFOAM求解结果，包括每个点的水平(x)方向流速$u(x,y)$、垂直(y)方向流速$v(x,y)$、压力$p(x,y)$。
+
 ???+ info "说明"
 
-    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一定差别。
+    本案例只作为demo展示，尚未进行充分调优，下方部分展示结果可能与 OpenFOAM 存在一些差别。
 
 <figure markdown>
-  ![u_pred_openfoam](../../images/ldc2d_steady/u_pred_openfoam.png){ loading=lazy }
+  ![u_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/p_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 u ，右：OpenFOAM结果 u </figcaption>
 </figure>
 
 <figure markdown>
-  ![v_pred_openfoam](../../images/ldc2d_steady/v_pred_openfoam.png){ loading=lazy }
+  ![v_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/v_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 v ，右：OpenFOAM结果 v </figcaption>
 </figure>
 
 <figure markdown>
-  ![p_pred_openfoam](../../images/ldc2d_steady/p_pred_openfoam.png){ loading=lazy }
+  ![p_pred_openfoam](https://paddle-org.bj.bcebos.com/paddlescience/docs/LDC2D_steady/p_pred_openfoam.png){ loading=lazy }
   <figcaption>左：模型预测结果 p ，右：OpenFOAM结果 p </figcaption>
 </figure>
+
+可以看到模型预测结果与OpenFOAM的预测结果大致相同。

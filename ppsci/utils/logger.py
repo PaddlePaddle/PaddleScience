@@ -12,165 +12,211 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import functools
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import Dict
+from typing import Optional
 
+import colorlog
 import paddle.distributed as dist
 
-_logger = None
+from ppsci.utils import misc
+
+if TYPE_CHECKING:
+    import visualdl  # isort:skip
+    import wandb  # isort:skip
+
+_logger: logging.Logger = None
+
+# INFO(20) is white(no color)
+# use custom log level `MESSAGE` for printing message in color
+_MESSAGE_LEVEL = 25
+
+_COLORLOG_CONFIG = {
+    "DEBUG": "green",
+    "WARNING": "yellow",
+    "ERROR": "red",
+    "MESSAGE": "cyan",
+}
+
+__all__ = [
+    "init_logger",
+    "set_log_level",
+    "info",
+    "message",
+    "debug",
+    "warning",
+    "error",
+    "scalar",
+]
 
 
-def init_logger(name="ppsci", log_file=None, log_level=logging.INFO):
+def init_logger(
+    name: str = "ppsci",
+    log_file: Optional[str] = None,
+    log_level: int = logging.INFO,
+) -> None:
     """Initialize and get a logger by name.
-    If the logger has not been initialized, this method will initialize the
-    logger by adding one or two handlers, otherwise the initialized logger will
-    be directly returned. During initialization, a StreamHandler will always be
-    added. If `log_file` is specified a FileHandler will also be added.
+
+    If the logger has not been initialized, this method will initialize the logger by
+    adding one or two handlers, otherwise the initialized logger will be directly
+    returned. During initialization, a StreamHandler will always be added. If `log_file`
+    is specified a FileHandler will also be added.
 
     Args:
-        name (str): Logger name.
-        log_file (str | None): The log filename. If specified, a FileHandler
-            will be added to the logger.
-        log_level (int): The logger level. Note that only the process of
+        name (str, optional): Logger name. Defaults to "ppsci".
+        log_file (Optional[str]): The log filename. If specified, a FileHandler
+            will be added to the logger. Defaults to None.
+        log_level (int, optional): The logger level. Note that only the process of
             rank 0 is affected, and other processes will set the level to
-            "Error" thus be silent most of the time.
-    Returns:
-        logging.Logger: The expected logger.
+            "Error" thus be silent most of the time. Defaults to logging.INFO.
     """
+    # Add custom log level MESSAGE(25), between WARNING(30) and INFO(20)
+    logging.addLevelName(_MESSAGE_LEVEL, "MESSAGE")
+
     if isinstance(log_level, str):
         log_level = getattr(logging, log_level.upper())
 
     global _logger
 
-    # solve mutiple init issue when using paddlescience.py and engin.engin
-    init_flag = False
-    if _logger is None:
-        _logger = logging.getLogger(name)
-        init_flag = True
+    # get a clean logger
+    _logger = logging.getLogger(name)
+    _logger.handlers.clear()
 
-    formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%Y/%m/%d %H:%M:%S"
+    # add stream_handler, output to stdout such as terminal
+    stream_formatter = colorlog.ColoredFormatter(
+        "%(log_color)s[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+        log_colors=_COLORLOG_CONFIG,
     )
-
     stream_handler = logging.StreamHandler(stream=sys.stdout)
-    stream_handler.setFormatter(formatter)
+    stream_handler.setFormatter(stream_formatter)
     stream_handler._name = "stream_handler"
+    _logger.addHandler(stream_handler)
 
-    # add stream_handler when _logger dose not contain stream_handler
-    for i, h in enumerate(_logger.handlers):
-        if h.get_name() == stream_handler.get_name():
-            break
-        if i == len(_logger.handlers) - 1:
-            _logger.addHandler(stream_handler)
-    if init_flag:
-        _logger.addHandler(stream_handler)
-
+    # add file_handler, output to log_file(if specified), only for rank 0 device
     if log_file is not None and dist.get_rank() == 0:
-        log_file_folder = os.path.split(log_file)[0]
+        log_file_folder = os.path.dirname(log_file)
         os.makedirs(log_file_folder, exist_ok=True)
-        file_handler = logging.FileHandler(log_file, "a")
-        file_handler.setFormatter(formatter)
+        file_formatter = logging.Formatter(
+            "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+            datefmt="%Y/%m/%d %H:%M:%S",
+        )
+        file_handler = logging.FileHandler(log_file, "a")  # append mode
+        file_handler.setFormatter(file_formatter)
         file_handler._name = "file_handler"
-
-        # add file_handler when _logger dose not contain same file_handler
-        for i, h in enumerate(_logger.handlers):
-            if (
-                h.get_name() == file_handler.get_name()
-                and h.baseFilename == file_handler.baseFilename
-            ):
-                break
-            if i == len(_logger.handlers) - 1:
-                _logger.addHandler(file_handler)
+        _logger.addHandler(file_handler)
 
     if dist.get_rank() == 0:
         _logger.setLevel(log_level)
     else:
         _logger.setLevel(logging.ERROR)
+
     _logger.propagate = False
 
 
-def set_log_level(log_level):
-    """Set log level."""
+def set_log_level(log_level: int):
+    """Set logger level, only message of level >= `log_level` will be printed.
+
+    Built-in log level are below:
+
+    CRITICAL = 50,
+    FATAL = 50,
+    ERROR = 40,
+    WARNING = 30,
+    WARN = 30,
+    INFO = 20,
+    DEBUG = 10,
+    NOTSET = 0.
+
+    Args:
+        log_level (int): Log level.
+    """
     if dist.get_rank() == 0:
         _logger.setLevel(log_level)
     else:
         _logger.setLevel(logging.ERROR)
 
 
-def log_at_trainer0(log_func):
+def ensure_logger(log_func: Callable) -> Callable:
     """
-    Logs will print multi-times when calling Fleet API.
-    Only display single log and ignore the others.
-    """
-
-    @functools.wraps(log_func)
-    def wrapped_log_func(fmt, *args):
-        if dist.get_rank() == 0:
-            log_func(fmt, *args)
-
-    return wrapped_log_func
-
-
-def ensure_logger(log_func):
-    """
-    Automatically initialize `logger` by default arguments
+    A decorator which automatically initialize `logger` by default arguments
     when init_logger() is not called manually.
     """
 
     @functools.wraps(log_func)
-    def wrapped_log_func(fmt, *args):
+    def wrapped_log_func(msg, *args):
         if _logger is None:
             init_logger()
-            _logger.info(
-                "Before you call functions within the logger, the logger has already "
-                "been automatically initialized. Since `log_file` is not specified by "
-                "default, information will not be written to any file except being "
-                "output to the terminal."
+            _logger.warning(
+                "Logger has already been automatically initialized as `log_file` is "
+                "set to None by default, information will only be printed to terminal "
+                "without writting to any file."
             )
 
-        log_func(fmt, *args)
+        log_func(msg, *args)
 
     return wrapped_log_func
 
 
 @ensure_logger
-@log_at_trainer0
-def info(fmt, *args):
-    _logger.info(fmt, *args)
+@misc.run_at_rank0
+def info(msg, *args):
+    _logger.info(msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
-def debug(fmt, *args):
-    _logger.debug(fmt, *args)
+@misc.run_at_rank0
+def message(msg, *args):
+    _logger.log(_MESSAGE_LEVEL, msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
-def warning(fmt, *args):
-    _logger.warning(fmt, *args)
+@misc.run_at_rank0
+def debug(msg, *args):
+    _logger.debug(msg, *args)
 
 
 @ensure_logger
-@log_at_trainer0
-def error(fmt, *args):
-    _logger.error(fmt, *args)
+@misc.run_at_rank0
+def warning(msg, *args):
+    _logger.warning(msg, *args)
 
 
-def scaler(name: str, value: float, step: int, vdl_writer=None, wandb_writer=None):
-    """
-    This function will draw a scalar curve generated by the visualdl.
-    Usage: Install visualdl: pip3 install visualdl==2.0.0b4
-           and then:
-           visualdl --logdir ./scalar --host 0.0.0.0 --port 8830
-           to preview loss corve in real time.
+@ensure_logger
+@misc.run_at_rank0
+def error(msg, *args):
+    _logger.error(msg, *args)
+
+
+def scalar(
+    metric_dict: Dict[str, float],
+    step: int,
+    vdl_writer: Optional["visualdl.LogWriter"] = None,
+    wandb_writer: Optional["wandb.run"] = None,
+):
+    """This function will add scalar data to VisualDL or WandB for plotting curve(s).
+
+    Args:
+        metric_dict (Dict[str, float]): Metrics dict with metric name and value.
+        step (int): The step of the metric.
+        vdl_writer (visualdl.LogWriter): VisualDL writer to record metrics. Defaults to None.
+        wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
-        vdl_writer.add_scalar(tag=name, step=step, value=value)
+        for name, value in metric_dict.items():
+            vdl_writer.add_scalar(name, value, step)
+
     if wandb_writer is not None:
-        wandb_writer.log({"step": step, name: value})
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                wandb_writer.log({"step": step, **metric_dict})
 
 
 def advertise():
@@ -188,7 +234,7 @@ def advertise():
 
     """
     _copyright = "PaddleScience is powered by PaddlePaddle !"
-    ad = "For more info please go to the following website."
+    ad = "Please refer to the following website for more info."
     website = "https://github.com/PaddlePaddle/PaddleScience"
     AD_LEN = 6 + len(max([_copyright, ad, website], key=len))
 

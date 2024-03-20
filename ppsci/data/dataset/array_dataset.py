@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 from typing import Optional
 
@@ -26,10 +28,10 @@ class NamedArrayDataset(io.Dataset):
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
-        weight (Optional[Dict[str, np.ndarray]], optional): Weight dict.
-        transforms (Optional[vision.Compose], optional): Compose object contains sample wise
-            transform(s).
+        label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
+        transforms (Optional[vision.Compose]): Compose object contains sample wise
+            transform(s). Defaults to None.
 
     Examples:
         >>> import ppsci
@@ -39,18 +41,21 @@ class NamedArrayDataset(io.Dataset):
         >>> dataset = ppsci.data.dataset.NamedArrayDataset(input, output, weight)
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = True
+
     def __init__(
         self,
         input: Dict[str, np.ndarray],
-        label: Dict[str, np.ndarray],
+        label: Optional[Dict[str, np.ndarray]] = None,
         weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = input
-        self.label = label
+        self.label = {} if label is None else label
         self.input_keys = tuple(input.keys())
-        self.label_keys = tuple(label.keys())
+        self.label_keys = tuple(self.label.keys())
         self.weight = {} if weight is None else weight
         self.transforms = transforms
         self._len = len(next(iter(input.values())))
@@ -60,9 +65,10 @@ class NamedArrayDataset(io.Dataset):
         label_item = {key: value[idx] for key, value in self.label.items()}
         weight_item = {key: value[idx] for key, value in self.weight.items()}
 
-        # TODO(sensen): Transforms may be applied on label and weight.
         if self.transforms is not None:
-            input_item = self.transforms(input_item)
+            input_item, label_item, weight_item = self.transforms(
+                input_item, label_item, weight_item
+            )
 
         return (input_item, label_item, weight_item)
 
@@ -75,8 +81,8 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
-        label (Dict[str, np.ndarray]): Label dict.
-        weight (Dict[str, np.ndarray]): Weight dict.
+        label (Optional[Dict[str, np.ndarray]]): Label dict. Defaults to None.
+        weight (Optional[Dict[str, np.ndarray]]): Weight dict. Defaults to None.
         transforms (Optional[vision.Compose]): Compose object contains sample wise
             transform(s). Defaults to None.
 
@@ -88,17 +94,33 @@ class IterableNamedArrayDataset(io.IterableDataset):
         >>> dataset = ppsci.data.dataset.IterableNamedArrayDataset(input, label, weight)
     """
 
+    # Whether support batch indexing for speeding up fetching process.
+    batch_index: bool = False
+
     def __init__(
         self,
         input: Dict[str, np.ndarray],
-        label: Dict[str, np.ndarray],
-        weight: Dict[str, np.ndarray],
+        label: Optional[Dict[str, np.ndarray]] = None,
+        weight: Optional[Dict[str, np.ndarray]] = None,
         transforms: Optional[vision.Compose] = None,
     ):
         super().__init__()
         self.input = {key: paddle.to_tensor(value) for key, value in input.items()}
-        self.label = {key: paddle.to_tensor(value) for key, value in label.items()}
-        self.weight = {key: paddle.to_tensor(value) for key, value in weight.items()}
+        self.label = (
+            {key: paddle.to_tensor(value) for key, value in label.items()}
+            if label is not None
+            else {}
+        )
+        self.input_keys = tuple(input.keys())
+        self.label_keys = tuple(self.label.keys())
+        self.weight = (
+            {
+                key: paddle.to_tensor(value, paddle.get_default_dtype())
+                for key, value in weight.items()
+            }
+            if weight is not None
+            else None
+        )
         self._len = len(next(iter(self.input.values())))
         self.transforms = transforms
 
@@ -109,7 +131,10 @@ class IterableNamedArrayDataset(io.IterableDataset):
 
     def __iter__(self):
         if callable(self.transforms):
-            yield self.transforms(self.input), self.label, self.weight
+            input_, label_, weight_ = self.transforms(
+                self.input, self.label, self.weight
+            )
+            yield input_, label_, weight_
         else:
             yield self.input, self.label, self.weight
 

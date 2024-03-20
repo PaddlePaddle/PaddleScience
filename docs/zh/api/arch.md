@@ -4,8 +4,12 @@
     handler: python
     options:
       members:
+        - Arch
+        - AMGNet
         - MLP
+        - ModifiedMLP
         - DeepONet
+        - DeepPhyLSTM
         - LorenzEmbedding
         - RosslerEmbedding
         - CylinderEmbedding

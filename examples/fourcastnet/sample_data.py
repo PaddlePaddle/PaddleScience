@@ -119,9 +119,9 @@ def sample_data_epoch(epoch: int):
     pool.close()
     pool.join()
     if result.successful():
-        logger.info("successful")
+        logger.message("successful")
         shutil.move(TMP_SAVE_PATH, save_path)
-        logger.info(f"move {TMP_SAVE_PATH} to {save_path}")
+        logger.message(f"move {TMP_SAVE_PATH} to {save_path}")
 
 
 def main():

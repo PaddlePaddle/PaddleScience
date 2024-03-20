@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable
 
 import numpy as np
@@ -73,6 +75,12 @@ class Sin(nn.Layer):
 
 
 class Silu(nn.Layer):
+    """
+    FIXME: This activation function is a workaround for the potential occurrence of NaNs
+    during the computation of the native SiLU function via using x*sigmoid(x) instead of
+    silu(x)
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -87,6 +95,7 @@ class Siren(nn.Layer):
     """
 
     def __init__(self, w0: float = 30):
+        super().__init__()
         self.w0 = w0
 
     def forward(self, x):
@@ -94,7 +103,7 @@ class Siren(nn.Layer):
 
     @staticmethod
     def init_for_first_layer(layer: nn.Linear):
-        """Initialzation only for first hidden layer.
+        """Initialization only for first hidden layer.
         ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L630
         """
         if not isinstance(layer, nn.Linear):
@@ -108,8 +117,8 @@ class Siren(nn.Layer):
             initializer.zeros_(layer.bias)
 
     @staticmethod
-    def init_for_hidden_layer(layer: nn.Linear, w0: float):
-        """Initialzation for hidden layer except first layer.
+    def init_for_hidden_layer(layer: nn.Linear, w0: float = 30):
+        """Initialization for hidden layer except first layer.
         ref: https://github.com/vsitzmann/siren/blob/master/modules.py#L622
         """
         if not isinstance(layer, nn.Linear):
@@ -120,7 +129,9 @@ class Siren(nn.Layer):
         in_features = layer.weight.shape[0]
         with paddle.no_grad():
             initializer.uniform_(
-                -np.sqrt(6 / in_features) / w0, np.sqrt(6 / in_features) / w0
+                layer.weight,
+                -np.sqrt(6 / in_features) / w0,
+                np.sqrt(6 / in_features) / w0,
             )
             initializer.zeros_(layer.bias)
 
@@ -135,7 +146,7 @@ act_func_dict = {
     "silu": Silu(),
     "sin": Sin(),
     "cos": Cos(),
-    "swish": Swish(),
+    "swish": Swish,
     "tanh": nn.Tanh(),
     "identity": nn.Identity(),
     "siren": Siren(),
@@ -155,4 +166,9 @@ def get_activation(act_name: str) -> Callable:
     if act_name.lower() not in act_func_dict:
         raise ValueError(f"act_name({act_name}) not found in act_func_dict")
 
-    return act_func_dict[act_name.lower()]
+    act_layer = act_func_dict[act_name.lower()]
+    if isinstance(act_layer, type) and act_name != "stan":
+        # Is a activation class but not a instance of it, instantiate manually(except for 'Stan')
+        return act_layer()
+
+    return act_layer
