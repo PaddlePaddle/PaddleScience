@@ -584,7 +584,7 @@ PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数�
 
 3. 可视化记录数据
 
-    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下。具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
     ``` log hl_lines="3" hl_lines="2"
     ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
@@ -597,7 +597,7 @@ PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数�
 
     在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
-    ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
+    ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
 
 #### 1.7.2 VisualDL
 
@@ -622,7 +622,7 @@ PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据�
 
 3. 可视化记录数据
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
     ``` log hl_lines="4"
     Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
