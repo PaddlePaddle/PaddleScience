@@ -72,6 +72,22 @@ class Mesh(geometry.Geometry):
 
         Returns:
             Mesh: Instantiated ppsci.geometry.Mesh object.
+            
+        Examples:
+            >>> import ppsci
+            >>> import pymesh
+            >>> import numpy as np
+            >>> box = pymesh.generate_box_mesh(np.array([0, 0, 0]), np.array([1, 1, 1]))
+            >>> mesh = ppsci.geometry.Mesh.from_pymesh(box)
+            >>> print(mesh.vertices)
+            [[0. 0. 0.]
+             [1. 0. 0.]
+             [1. 1. 0.]
+             [0. 1. 0.]
+             [0. 0. 1.]
+             [1. 0. 1.]
+             [1. 1. 1.]
+             [0. 1. 1.]]
         """
         # check if pymesh is installed when using Mesh Class
         if not checker.dynamic_import_to_globals(["pymesh"]):
