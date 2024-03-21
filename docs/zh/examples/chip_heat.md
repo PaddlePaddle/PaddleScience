@@ -9,12 +9,12 @@
 === "模型评估命令"
 
     ``` sh
-    python chip_heat.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ChipDeepONet/ChipDeepONet_pretrained.pdparams
+    python chip_heat.py mode=eval EVAL.pretrained_model_path=https://paddle-org.bj.bcebos.com/paddlescience/models/ChipHeat/chip_heat_pretrained.pdparams
     ```
 
 | 预训练模型  | 指标 |
 |:--| :--|
-| [chip_heat_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ChipDeepONet/ChipDeepONet_pretrained.pdparams) | MSE.chip(down_mse): 0.02563<br>MSE.chip(left_mse): 0.04665<br>MSE.chip(right_mse): 0.05179<br>MSE.chip(top_mse): 0.04533 |
+| [chip_heat_pretrained.pdparams](https://paddle-org.bj.bcebos.com/paddlescience/models/ChipHeat/ChipHeat_pretrained.pdparams) | MSE.chip(down_mse): 0.04177<br>MSE.chip(left_mse): 0.01783<br>MSE.chip(right_mse): 0.03767<br>MSE.chip(top_mse): 0.05034 |
 
 ## 1. 背景简介
 
@@ -48,7 +48,7 @@ $$
 $$
 
 <figure markdown>
-  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipDeepONet/domain_chip.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![domain_chip.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/domain_chip.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
   <figcaption> 内部具有随机热源分布的 2D 芯片模拟区域，边界上可以为任意的边界条件。</figcaption>
 </figure>
 
@@ -94,7 +94,7 @@ PI-DeepONet模型，将 DeepONet 和 PINN 方法相结合，是一种结合了�
 对于芯片热仿真问题，PI-DeepONet 模型可以表示为如图所示的模型结构：
 
 <figure markdown>
-  ![pi_deeponet.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipDeepONet/pi_deeponet.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![pi_deeponet.pdf](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/pi_deeponet.pdf){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 如图所示，我们一共使用了 3 个分支网络和一个主干网络，分支网络分别输入边界类型指标、随机热源分布 $S(x, y)$ 和边界函数 $Q(x, y)$，主干网络输入二维坐标点坐标信息。每个分支网和主干网均输出 $q$ 维特征向量，通过 Hadamard（逐元素）乘积组合所有这些输出特征，然后将所得向量相加为预测温度场的标量输出。
@@ -129,7 +129,7 @@ $$
 T = \sum_{i=1}^q b_1^ib_2^ib_3^it_0^i.
 $$
 
-我们定义 PaddleScience 内置的 ChipDeepONets 模型类，并调用，PaddleScience 代码表示如下
+我们定义 PaddleScience 内置的 ChipHeats 模型类，并调用，PaddleScience 代码表示如下
 
 ``` py linenums="77"
 --8<--
@@ -137,7 +137,7 @@ examples/chip_heat/chip_heat.py:77:78
 --8<--
 ```
 
-这样我们就实例化出了一个拥有 4 个 MLP 模型的 ChipDeepONets 模型，每个分支网络包含 9 层隐藏神经元，每层神经元数为 256，主干网络包含 6 层隐藏神经元，每层神经元数为 128，使用 "Swish" 作为激活函数，并包含一个输出函数 $T$ 的神经网络模型 `model`。更多相关内容请参考文献[ A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network](https://doi.org/10.1063/5.0194245)。
+这样我们就实例化出了一个拥有 4 个 MLP 模型的 ChipHeats 模型，每个分支网络包含 9 层隐藏神经元，每层神经元数为 256，主干网络包含 6 层隐藏神经元，每层神经元数为 128，使用 "Swish" 作为激活函数，并包含一个输出函数 $T$ 的神经网络模型 `model`。更多相关内容请参考文献[ A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network](https://doi.org/10.1063/5.0194245)。
 
 ### 3.2 计算域构建
 
@@ -275,7 +275,7 @@ examples/chip_heat/chip_heat.py
 通过高斯随机场生成三组随机热源分布 $S(x)$，如图中第一行所示。接下来我们可以设置第一类 PDE 中的任意边界条件，在此我们给出了五类边界条件，如图中第一列控制方程中边界方程所示，在测试过程中，我们设 $k = 100,~h = 100,~T_{amb} = 1,~\epsilon\sigma= 5.6 \times 10^{-7}$。 在不同随机热源 $S(x)$ 分布和不同边界条件下，我们通过 PI-DeepONet 模型测试的温度场分布如图所示。从图中可知，尽管随机热源分布 $S(x)$ 和边界条件在测试样本之间存在着显着差异，但 PI-DeepONet 模型均可以正确预测由热传导方程控制的内部和边界上的二维扩散性质解。
 
 <figure markdown>
-  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipDeepONet/chip.png){ loading=lazy style="height:80%;width:80%" align="center" }
+  ![chip.png](https://paddle-org.bj.bcebos.com/paddlescience/docs/ChipHeat/chip.png){ loading=lazy style="height:80%;width:80%" align="center" }
 </figure>
 
 ## 6. 参考资料
