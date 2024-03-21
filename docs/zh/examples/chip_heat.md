@@ -62,7 +62,7 @@ $$
 T = q_d.
 $$
 
-- Neumann边界条件: 表面上的温度通量是固定为 $q_n$，当$q_n =0$时，表明表面完全绝缘，称为绝热边界条件。
+- Neumann边界条件: 表面上的温度通量是固定为 $q_n$，当 $q_n =0$ 时，表明表面完全绝缘，称为绝热边界条件。
 
 $$
 -k \dfrac{\partial T}{\partial n} = q_n.
@@ -105,7 +105,7 @@ PI-DeepONet模型，将 DeepONet 和 PINN 方法相结合，是一种结合了�
 
 ### 3.1 模型构建
 
-在芯片热仿真问题中，每一个已知的坐标点 $(x, y)$ 和每一组边界类型 $bt$、随机热源分布 $S(x, y)$ 以及边界函数 $Q(x, y)$ 都对应一组芯片的温度分布 $T$ 一个待求解的未知量。我们在这里使用 3 个分支网络和一个主干网络，4 个网络均为 MLP(Multilayer Perceptron, 多层感知机) 。 3 个分支网络分别表示 $(bt, S, Q)$ 到输出函数 $(b_1, b_2, b_3)$ 的映射函数 $f_1，f_2, f_3: \mathbb{R}^3 \to \mathbb{R}^{q}$，即：
+在芯片热仿真问题中，每一个已知的坐标点 $(x, y)$ 和每一组边界类型 $bt$、随机热源分布 $S(x, y)$ 以及边界函数 $Q(x, y)$ 都对应一组芯片的温度分布 $T$，一个待求解的未知量。我们在这里使用 3 个分支网络和一个主干网络，4 个网络均为 MLP(Multilayer Perceptron, 多层感知机) 。 3 个分支网络分别表示 $(bt, S, Q)$ 到输出函数 $(b_1, b_2, b_3)$ 的映射函数 $f_1,f_2,f_3: \mathbb{R}^3 \to \mathbb{R}^{q}$，即：
 
 $$
 \begin{aligned}
@@ -115,7 +115,7 @@ b_3 &= f_3(Q).
 \end{aligned}
 $$
 
-上式中 $f_1, f_2, f_3$ 均为 MLP 模型，$(b_1，b_2, b_3)$ 分别为三个分支网络的输出函数，$q$ 为输出函数的维数。主干网络表示 $(x, y)$ 到输出函数 $t_0$ 的映射函数 $f_4: \mathbb{R} \to \mathbb{R}^{q}$，即：
+上式中 $f_1, f_2, f_3$ 均为 MLP 模型，$(b_1,b_2,b_3)$ 分别为三个分支网络的输出函数，$q$ 为输出函数的维数。主干网络表示 $(x, y)$ 到输出函数 $t_0$ 的映射函数 $f_4: \mathbb{R} \to \mathbb{R}^{q}$，即：
 
 $$
 \begin{aligned}
@@ -137,11 +137,11 @@ examples/chip_heat/chip_heat.py:77:78
 --8<--
 ```
 
-这样我们就实例化出了一个拥有 4 个 MLP 模型的 ChipDeepONets 模型，每个分支网络包含 9 层隐藏神经元，每层神经元数为 256，主干网络包含 6 层隐藏神经元，每层神经元数为 128，使用 "Swish" 作为激活函数，并包含一个输出函数 $T$ 的神经网络模型 `model`。更多相关内容请参考文献[A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network](https://doi.org/10.1063/5.0194245)。
+这样我们就实例化出了一个拥有 4 个 MLP 模型的 ChipDeepONets 模型，每个分支网络包含 9 层隐藏神经元，每层神经元数为 256，主干网络包含 6 层隐藏神经元，每层神经元数为 128，使用 "Swish" 作为激活函数，并包含一个输出函数 $T$ 的神经网络模型 `model`。更多相关内容请参考文献[ A fast general thermal simulation model based on MultiBranch Physics-Informed deep operator neural network](https://doi.org/10.1063/5.0194245)。
 
 ### 3.2 计算域构建
 
-对本文中芯片热仿真问题构造训练区域，即以 $[0, 1]\time[0, 1]$ 的二维区域，该区域可以直接使用 PaddleScience 内置的空间几何 `Rectangle`来构造计算域。代码如下
+对本文中芯片热仿真问题构造训练区域，即以 $[0, 1]\times[0, 1]$ 的二维区域，该区域可以直接使用 PaddleScience 内置的空间几何 `Rectangle`来构造计算域。代码如下
 
 ``` py linenums="79"
 --8<--
@@ -185,7 +185,7 @@ examples/chip_heat/chip_heat.py:97:192
 
 ### 3.4 约束构建
 
-在构建约束之前，需要先介绍一下`DeepONetArrayDataset`，它继承自 `Dataset` 类，可以迭代的读取由不同 `numpy.ndarray` 组成的数组数据集。由于所用的模型分支网数目较多，所用的数据量较大。若先对数据进行组合，将导致输入数据占用的内存很大，因此采用 `DeepONetArrayDataset` 迭代读取数据。
+在构建约束之前，需要先介绍一下`ChipHeatDataset`，它继承自 `Dataset` 类，可以迭代的读取由不同 `numpy.ndarray` 组成的数组数据集。由于所用的模型分支网数目较多，所用的数据量较大。若先对数据进行组合，将导致输入数据占用的内存很大，因此采用 `ChipHeatDataset` 迭代读取数据。
 
 芯片热仿真问题由 [2.1 问题描述](#21) 中描述的方程组成，此时我们对左边、右边、上边、下边以及内部数据分别设置五个约束条件，接下来使用 PaddleScience 内置的 `SupervisedConstraint` 构建上述四种约束条件，代码如下
 
@@ -197,7 +197,7 @@ examples/chip_heat/chip_heat.py:194:381
 
 `SupervisedConstraint` 的第一个参数是监督约束的读取配置，其中 `“dataset”` 字段表示使用的训练数据集信息，各个字段分别表示：
 
-1. `name`： 数据集类型，此处 `DeepONetArrayDataset` 表示分 batch 顺序迭代的读取数据；
+1. `name`： 数据集类型，此处 `ChipHeatDataset` 表示分 batch 顺序迭代的读取数据；
 2. `input`： 输入变量名；
 3. `label`： 标签变量名；
 4. `index`： 输入数据集的索引；
@@ -240,7 +240,7 @@ examples/chip_heat/chip_heat.py:394:495
 --8<--
 ```
 
-配置与 [3.4 约束构建](#34) 的设置类似。需要注意的是，由于评估所用的数据量不是很多，因此我们不需要使用`DeepONetArrayDataset` 迭代的读取数据，在这里使用`NamedArrayDataset` 读取数据。
+配置与 [3.4 约束构建](#34) 的设置类似。需要注意的是，由于评估所用的数据量不是很多，因此我们不需要使用`ChipHeatDataset` 迭代的读取数据，在这里使用`NamedArrayDataset` 读取数据。
 
 ### 3.7 模型训练
 
