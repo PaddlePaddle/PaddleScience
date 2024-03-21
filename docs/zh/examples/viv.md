@@ -130,9 +130,9 @@ examples/fsi/viv.py:53:54
 
 接下来我们需要指定训练轮数和学习率，此处我们按实验经验，使用 10000 轮训练轮数，并每隔 10000 个epochs评估一次模型精度。
 
-``` yaml linenums="41"
+``` yaml linenums="42"
 --8<--
-examples/fsi/conf/viv.yaml:41:56
+examples/fsi/conf/viv.yaml:42:57
 --8<--
 ```
 

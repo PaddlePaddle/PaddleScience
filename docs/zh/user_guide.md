@@ -274,7 +274,7 @@ pip install paddle2onnx
     [Paddle2ONNX] Start to parsing Paddle model...
     [Paddle2ONNX] Use opset_version = 13 for ONNX export.
     [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
-    [2024/03/02 05:47:51] ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
+    ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
     ```
 
 ### 1.3 模型推理预测
@@ -410,6 +410,9 @@ PaddleScience 提供了多种推理配置组合，可通过命令行进行组合
     3. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
 
         ``` sh
+        # 运行前需设置指定GPU，否则可能无法启动 TensorRT
+        export CUDA_VISIBLE_DEVICES=0
+
         python aneurysm.py mode=infer \
             INFER.device=gpu \
             INFER.engine=tensorrt \
@@ -556,7 +559,47 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.7 使用 VisualDL 记录实验
+### 1.7 实验过程可视化
+
+#### 1.7.1 TensorBoardX
+
+[TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+
+PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+
+1. 安装 Tensorboard 和 TensorBoardX
+
+    ``` sh
+    pip install tensorboard tensorboardX
+    ```
+
+2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
+
+    ``` py hl_lines="3"
+    solver = ppsci.solver.Solver(
+        ...,
+        use_tbd=True,
+    )
+    ```
+
+3. 可视化记录数据
+
+    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+
+    ``` log hl_lines="3" hl_lines="2"
+    ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
+    tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
+    ```
+
+    !!! tip
+
+        也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
+
+    在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+
+    ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
+
+#### 1.7.2 VisualDL
 
 [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
@@ -568,30 +611,31 @@ PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据�
     pip install -U visualdl
     ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_visualdl=True`，然后再启动案例训练
+2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
 
     ``` py hl_lines="3"
     solver = ppsci.solver.Solver(
         ...,
-        use_visualdl=True,
+        use_vdl=True,
     )
     ```
 
 3. 可视化记录数据
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 的目录中。`vdl` 所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="3"
+    ``` log hl_lines="4"
     Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
     device: 0, cuDNN Version: 8.4.
-    ppsci INFO: VisualDL tool enabled for logging, you can view it by running: 'visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080'.
+    ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
+    visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
     ```
 
     在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
     ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
 
-### 1.8 使用 WandB 记录实验
+#### 1.7.3 WandB
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 
