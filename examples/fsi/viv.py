@@ -40,7 +40,7 @@ def train(cfg: DictConfig):
             "drop_last": False,
             "shuffle": True,
         },
-        "num_workers": 0,  # NOTE: Keep this 0 or else it will slow down the speed of dataloader 10x.
+        # "num_workers": 0,
     }
 
     # set constraint
@@ -111,6 +111,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
+        use_tbd=cfg.use_tbd,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,

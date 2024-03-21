@@ -15,12 +15,14 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import itertools
 import os
 import sys
 from os import path as osp
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
@@ -37,6 +39,7 @@ from paddle import jit
 from paddle import nn
 from paddle import optimizer as optim
 from paddle.distributed import fleet
+from paddle.static import InputSpec
 from typing_extensions import Literal
 
 import ppsci
@@ -67,6 +70,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
+        use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
@@ -127,6 +131,7 @@ class Solver:
         seed: int = 42,
         use_vdl: bool = False,
         use_wandb: bool = False,
+        use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
@@ -260,6 +265,7 @@ class Solver:
             )
 
         # load pretrained model, usually used for transfer learning
+        self.pretrained_model_path = pretrained_model_path
         if pretrained_model_path is not None:
             save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
 
@@ -333,8 +339,8 @@ class Solver:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
             logger.info(
-                "VisualDL tool is enabled for logging, you can view it by "
-                f"running: 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+                "VisualDL is enabled for logging, you can view it by "
+                f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
             )
 
         # set WandB tool
@@ -349,6 +355,25 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.wandb_writer = wandb.init(**wandb_config)
+
+        # set TensorBoardX tool
+        self.tbd_writer = None
+        if use_tbd:
+            try:
+                import tensorboardX
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'tensorboardX' with `pip install tensorboardX` first."
+                )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.tbd_writer = tensorboardX.SummaryWriter(
+                        osp.join(output_dir, "tensorboard")
+                    )
+            logger.message(
+                "TensorboardX is enabled for logging, you can view it by "
+                f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
+            )
 
         self.global_step = 0
 
@@ -398,8 +423,8 @@ class Solver:
                         exprs,
                         self.model,
                         extra_parameters=extra_parameters,
+                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual"),  # HACK: Activate it for DEBUG.
                         fuse_derivative=True,
-                        # graph_filename=osp.join(self.output_dir, "symbolic_graph_visual")  # HACK: Activate it for DEBUG.
                     )
                     ind = 0
                     for name in container.output_expr:
@@ -458,6 +483,7 @@ class Solver:
                         epoch_id,
                         self.vdl_writer,
                         self.wandb_writer,
+                        self.tbd_writer,
                     )
 
                 # visualize after evaluation
@@ -493,10 +519,10 @@ class Solver:
             )
 
     def finetune(self, pretrained_model_path: str) -> None:
-        """Finetune model based on given pretrained model.
+        """Finetune model based on given pretrained model path.
 
         Args:
-            pretrained_model_path (str): Pretrained model path.
+            pretrained_model_path (str): Pretrained model path or url.
         """
         # load pretrained model
         save_load.load_pretrain(self.model, pretrained_model_path, self.equation)
@@ -567,17 +593,15 @@ class Solver:
         Examples:
             >>> import paddle
             >>> import ppsci
-            >>> paddle.seed(42)  # doctest: +SKIP
             >>> model = ppsci.arch.MLP(('x', 'y'), ('u', 'v'), num_layers=None, hidden_size=[32, 8])
-            >>> solver = ppsci.solver.Solver(model)  # doctest: +SKIP
-            >>> input_dict = {'x': paddle.rand((2, 1)),
-            ...               'y': paddle.rand((2, 1))}
-            >>> solver.predict(input_dict) # doctest: +SKIP
-            {'u': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[-0.17509711],
-                    [-0.03884222]]), 'v': Tensor(shape=[2, 1], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-                   [[0.27433380],
-                    [0.42387512]])}
+            >>> solver = ppsci.solver.Solver(model) # doctest: +SKIP
+            >>> input_dict = {'x': paddle.rand([32, 1]),
+            ...               'y': paddle.rand([32, 1])}
+            >>> pred = solver.predict(input_dict) # doctest: +SKIP
+            >>> for k, v in pred.items():
+            ...     print(k, v.shape)
+            u [32, 1]
+            v [32, 1]
         """
         num_samples = len(next(iter(input_dict.values())))
         num_pad = (self.world_size - num_samples % self.world_size) % self.world_size
@@ -681,18 +705,73 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self):
-        """Export to inference model."""
-        raise NotImplementedError("model export is not supported yet.")
+    def export(
+        self, input_spec: List[InputSpec], export_path: str, with_onnx: bool = False
+    ):
+        """
+        Convert model to static graph model and export to files.
+
+        Args:
+            input_spec (List[InputSpec]): InputSpec describes the signature information
+                of the model input.
+            export_path (str): The path prefix to save model.
+            with_onnx (bool, optional): Whether to export model into onnx after
+                paddle inference models are exported.
+        """
+        jit.enable_to_static(True)
+
+        if self.pretrained_model_path is None:
+            logger.warning(
+                "'pretrained_model_path' is not given, so the weights of exported "
+                "model will be random initialized."
+            )
+
+        # convert model to static graph model
+        static_model = jit.to_static(
+            self.model,
+            input_spec=input_spec,
+            full_graph=True,
+        )
+
+        # save static graph model to disk
+        os.makedirs(osp.dirname(export_path), exist_ok=True)
+        try:
+            jit.save(static_model, export_path)
+        except Exception as e:
+            raise e
+        logger.message(
+            f"Inference model has been exported to: {export_path}, including "
+            "*.pdmodel, *.pdiparams and *.pdiparams.info files."
+        )
+        jit.enable_to_static(False)
+
+        if with_onnx:
+            if not importlib.util.find_spec("paddle2onnx"):
+                raise ModuleNotFoundError(
+                    "Please install paddle2onnx with `pip install paddle2onnx`"
+                    " before exporting onnx model."
+                )
+            import paddle2onnx
+
+            DEFAULT_OPSET_VERSION = 13
+
+            paddle2onnx.export(
+                model_file=export_path + ".pdmodel",
+                params_file=export_path + ".pdiparams",
+                save_file=export_path + ".onnx",
+                opset_version=DEFAULT_OPSET_VERSION,
+                enable_onnx_checker=True,
+            )
+            logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
     def autocast_context_manager(
-        self, enable: bool, level: Literal["O0", "OD", "O1", "O2"] = "O1"
+        self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
     ) -> contextlib.AbstractContextManager:
         """Smart autocast context manager for Auto Mix Precision.
 
         Args:
             enable (bool): Enable autocast.
-            level (Literal["O0", "OD", "O1", "O2"]): Autocast level.
+            level (Literal["O0", "O1", "O2", "OD"]): Autocast level.
 
         Returns:
             contextlib.AbstractContextManager: Smart autocast context manager.

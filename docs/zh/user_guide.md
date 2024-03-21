@@ -125,7 +125,7 @@ TRAIN:
 
 ``` sh title="$ tree PaddleScience/examples/bracket/outputs_bracket/"
 PaddleScience/examples/bracket/outputs_bracket/
-└──2023-10-14 # (1)
+└── 2023-10-14 # (1)
     └── 04-01-52 # (2)
         ├── TRAIN.epochs=10,20,seed=42,1024 # multirun 总配置保存目录
         │   └── multirun.yaml # multirun 配置文件 (3)
@@ -177,7 +177,109 @@ PaddleScience/examples/bracket/outputs_bracket/
 
 考虑到用户的阅读和学习成本，本章节只介绍了常用的实验方法，更多进阶用法请参考 [hydra官方教程](https://hydra.cc/docs/tutorials/basic/your_first_app/simple_cli/)。
 
-### 1.2 模型推理预测
+### 1.2 模型导出
+
+#### 1.2.1 Paddle 推理模型导出
+
+!!! warning
+
+    目前 PaddleScience 的模型导出功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键导出。
+
+在训练完毕后，我们通常需要将模型导出为 `*.pdmodel`, `*.pdiparams`, `*.pdiparams.info` 三个文件，以便后续推理部署使用。以 [Aneurysm](./examples/aneurysm.md) 案例为例，导出模型的通用命令如下。
+
+``` sh
+python aneurysm.py mode=export \
+    INFER.pretrained_model_path="https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams"
+```
+
+!!! tip
+
+    由于支持模型导出的案例的 YAML 文件已经将 `INFER.pretrained_model_path` 的默认值设置为官方提供的预训练模型地址，因此导出官方提供的预训练模型时可以在命令行中省略 `INFER.pretrained_model_path=...` 参数。
+
+根据终端输出信息，导出的模型会被保存在执行导出命令所在目录的相对路径：`./inference/` 文件夹下，如下所示。
+
+``` log
+...
+ppsci MESSAGE: Inference model has been exported to: ./inference/aneurysm, including *.pdmodel, *.pdiparams and *.pdiparams.info files.
+```
+
+``` sh
+./inference/
+├── aneurysm.pdiparams
+├── aneurysm.pdiparams.info
+└── aneurysm.pdmodel
+```
+
+#### 1.2.2 ONNX 推理模型导出
+
+在导出 ONNX 推理模型前，需要完成 [1.2.1 Paddle 推理模型导出](#121-paddle) 的步骤，得到`inference/aneurysm.pdiparams`和`inference/aneurysm.pdmodel`。
+
+然后安装 paddle2onnx。
+
+``` sh
+pip install paddle2onnx
+```
+
+接下来仍然以 aneurysm 案例为例，介绍命令行直接导出和 PaddleScience 导出两种方式。
+
+=== "命令行导出"
+
+    ``` sh
+    paddle2onnx \
+        --model_dir=./inference/ \
+        --model_filename=aneurysm.pdmodel \
+        --params_filename=aneurysm.pdiparams \
+        --save_file=./inference/aneurysm.onnx \
+        --opset_version=13 \
+        --enable_onnx_checker=True
+    ```
+
+    若导出成功，输出信息如下所示
+
+    ``` log
+    [Paddle2ONNX] Start to parse PaddlePaddle model...
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
+    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model...
+    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
+    2024-03-02 05:45:12 [INFO]      ===============Make PaddlePaddle Better!================
+    2024-03-02 05:45:12 [INFO]      A little survey: https://iwenjuan.baidu.com/?code=r8hu2s
+    ```
+
+=== "PaddleScience 导出"
+
+    在 aneurysm.py 中的`export`函数中，将`with_onnx`参数改为`True`，
+
+    ``` py hl_lines="16"
+    --8<--
+    examples/aneurysm/aneurysm.py:336:350
+    --8<--
+        solver.export(input_spec, cfg.INFER.export_path, with_onnx=True)
+    ```
+
+    然后执行模型导出命令。
+
+    ``` sh
+    python aneurysm.py mode=export
+    ```
+
+    若导出成功，输出信息如下所示。
+
+    ``` log
+    ...
+    [Paddle2ONNX] Start to parse PaddlePaddle model...
+    [Paddle2ONNX] Model file path: ./inference/aneurysm.pdmodel
+    [Paddle2ONNX] Paramters file path: ./inference/aneurysm.pdiparams
+    [Paddle2ONNX] Start to parsing Paddle model...
+    [Paddle2ONNX] Use opset_version = 13 for ONNX export.
+    [Paddle2ONNX] PaddlePaddle model is exported as ONNX format now.
+    ppsci MESSAGE: ONNX model has been exported to: ./inference/aneurysm.onnx
+    ```
+
+### 1.3 模型推理预测
+
+#### 1.3.1 动态图推理
 
 若需使用训练完毕保存或下载得到的模型文件 `*.pdparams` 直接进行推理（预测），可以参考以下代码示例。
 
@@ -202,9 +304,9 @@ PaddleScience/examples/bracket/outputs_bracket/
 
     ``` py hl_lines="12 13 14 15 16"
     N = 100 # 假设要预测100个样本的结果
-    x = np.random.randn(N, 1) # 准备 字段
-    y = np.random.randn(N, 1)
-    z = np.random.randn(N, 1)
+    x = np.random.randn(N, 1) # 输入数据x
+    y = np.random.randn(N, 1) # 输入数据y
+    z = np.random.randn(N, 1) # 输入数据z
 
     input_dict = {
         "x": x,
@@ -226,7 +328,151 @@ PaddleScience/examples/bracket/outputs_bracket/
     # "w": (100, 1)
     ```
 
-### 1.3 断点继续训练
+#### 1.3.2 Inference 推理(python)
+
+> Paddle Inference 是飞桨的原生推理库，相比 [1.3.1 动态图推理](#131) 具有更快的推理速度，适合不同平台不同应用场景的快速部署，详细信息可参考: [Paddle Inference 文档](https://paddle-inference.readthedocs.io/en/latest/index.html)。
+
+!!! warning
+
+    目前 PaddleScience 的 Inference 推理(python) 功能处于实验阶段，正在开发和适配中，目前仅支持 [Aneurysm](./examples/aneurysm.md) 等案例的一键推理。
+
+首先需参考 [1.2 模型导出](#12) 章节，从 `*.pdparams` 文件导出 `*.pdmodel`, `*.pdiparams` 两个文件。
+
+以 [Aneurysm](./examples/aneurysm.md) 案例为例，假设导出后的模型文件保存在 `./inference/aneurysm` 文件夹下，则推理代码示例如下。
+
+``` sh
+# linux
+wget -nc https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
+# windows
+# curl https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar --output aneurysm_dataset.tar
+# unzip it
+tar -xvf aneurysm_dataset.tar
+python aneurysm.py mode=infer
+```
+
+输出信息如下：
+
+``` log
+...
+...
+ppsci INFO: Predicting batch 2880/2894
+ppsci INFO: Predicting batch 2894/2894
+ppsci MESSAGE: Visualization result is saved to: ./aneurysm_pred.vtu
+```
+
+#### 1.3.3 使用不同的推理配置
+
+PaddleScience 提供了多种推理配置组合，可通过命令行进行组合，目前支持的推理配置如下：
+
+|  | Native | ONNX | TensorRT | MKLDNN |
+| :--- | :--- | :--- | :--- | :--- |
+| CPU | ✅ | ✅| - | ✅ |
+| GPU | ✅ | ✅ | ✅ | - |
+| XPU | TODO | - | - | - |
+
+接下来以 aneurysm 案例和 Linux x86_64 + TensorRT 8.6 GA + CUDA 11.6 软硬件环境为例，介绍如何使用不同的推理配置。
+
+=== "使用 Paddle 原生推理"
+
+    Paddle 提供了原生推理功能，支持 CPU 和 GPU。
+
+    运行以下命令进行推理：
+
+    ``` sh
+    # CPU
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=native
+
+    # GPU
+    python aneurysm.py mode=infer \
+        INFER.device=gpu \
+        INFER.engine=native
+    ```
+
+=== "使用 TensorRT 推理"
+
+    TensorRT 是英伟达推出的高性能推理引擎，适用于 GPU 推理加速，PaddleScience 支持了 TensorRT 推理功能。
+
+    1. 根据你的软硬件环境，下载并解压对应的 TensorRT 推理库压缩包(.tar 文件)：<https://developer.nvidia.com/tensorrt#>。
+    **推荐使用 TensorRT 8.x、7.x 等较新的版本**。
+
+    2. 在解压完毕的文件中，找到 `libnvinfer.so` 文件所在的目录，将其加入到 `LD_LIBRARY_PATH` 环境变量中。
+
+        ``` sh
+        TRT_PATH=/PATH/TO/TensorRT-8.6.1.6
+        find $TRT_PATH -name libnvinfer.so
+
+        # /PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/libnvinfer.so   <---- use this path
+        export LD_LIBRARY_PATH=/PATH/TO/TensorRT-8.6.1.6/targets/x86_64-linux-gnu/lib/:$LD_LIBRARY_PATH
+        ```
+
+    3. 运行 `aneurysm.py` 的推理功能，同时指定推理引擎为 TensorRT。
+
+        ``` sh
+        # 运行前需设置指定GPU，否则可能无法启动 TensorRT
+        export CUDA_VISIBLE_DEVICES=0
+
+        python aneurysm.py mode=infer \
+            INFER.device=gpu \
+            INFER.engine=tensorrt \
+            INFER.min_subgraph_size=5
+        ```
+
+=== "使用 ONNX 推理"
+
+    ONNX 是微软开源的深度学习推理框架，PaddleScience 支持了 ONNX 推理功能。
+
+    首先按照 [1.2.2 ONNX 推理模型导出](#122-onnx) 章节将 `*.pdmodel` 和 `*.pdiparams` 转换为 `*.onnx` 文件，
+    然后根据硬件环境，安装 CPU 或 GPU 版的 onnxruntime：
+
+    ``` sh
+    pip install onnxruntime  # CPU
+    pip install onnxruntime-gpu  # GPU
+    ```
+
+    最后运行以下命令进行推理：
+
+    ``` sh
+    # CPU
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=onnx
+
+    # GPU
+    python aneurysm.py mode=infer \
+        INFER.device=gpu \
+        INFER.engine=onnx
+    ```
+
+=== "使用 MKLDNN 推理"
+
+    MDLDNN 是英伟达推出的高性能推理引擎，适用于 CPU 推理加速，PaddleScience 支持了 MKLDNN 推理功能。
+
+    运行以下命令进行推理：
+
+    ``` sh
+    python aneurysm.py mode=infer \
+        INFER.device=cpu \
+        INFER.engine=mkldnn
+    ```
+
+!!! info "完整推理配置参数"
+
+    | 参数 | 默认值 | 说明 |
+    | :--- | :--- | :--- |
+    | `INFER.device` | `cpu` | 推理设备，目前支持 `cpu` 和 `gpu` |
+    | `INFER.engine` | `native` | 推理引擎，目前支持 `native`, `tensorrt`, `onnx` 和 `mkldnn` |
+    | `INFER.precision` | `fp32` | 推理精度，目前支持 `fp32`, `fp16` |
+    | `INFER.ir_optim` | `True` | 是否启用 IR 优化 |
+    | `INFER.min_subgraph_size` | `30` | TensorRT 中最小子图 size，当子图的 size 大于该值时，才会尝试对该子图使用 TensorRT 计算 |
+    | `INFER.gpu_mem` | `2000` | 初始显存大小 |
+    | `INFER.gpu_id` | `0` | GPU 逻辑设备号 |
+    | `INFER.max_batch_size` | `1024` | 推理时的最大 batch_size |
+    | `INFER.num_cpu_threads` | `10` | MKLDNN 和 ONNX 在 CPU 推理时的线程数 |
+    | `INFER.batch_size` | `256` | 推理时的 batch_size |
+
+### 1.4 断点继续训练
 
 在模型的日常训练中，可能存在机器故障或者用户手动操作而中断训练的情况，针对这种情况 PaddleScience 提供了断点继续训练的功能，即在训练时默认会保存**最近一个训练完毕的 epoch** 对应的各种参数到以下 5 个文件中：
 
@@ -253,7 +499,7 @@ solver = ppsci.solver.Solver(
 
     此处只需将路径填写到 "latest" 为止即可，不需要加上其后缀，程序会根据 "/path/to/latest"，自动补充不同文件对应的后缀名来加载 `latest.pdparams`、`latest.pdopt` 等文件。
 
-### 1.4 迁移学习
+### 1.5 迁移学习
 
 迁移学习是一种广泛使用、低成本提高模型精度的训练方式。在 PaddleScience 中，可以通过在 `model` 实例化完毕之后，手动为其载入预训练模型权重后开始微调训练；也可以调用 `Solver.finetune` 接口并指定 `pretrained_model_path` 参数，自动载入预训练模型权重并开始微调训练。
 
@@ -294,7 +540,7 @@ solver = ppsci.solver.Solver(
 
     在迁移学习时，相对于完全随机初始化的参数而言，载入的预训练模型权重参数是一个较好的初始化状态，因此不需要使用太大的学习率，而可以将学习率适当调小 2~10 倍以获得更稳定的训练过程和更好的精度。
 
-### 1.5 模型评估
+### 1.6 模型评估
 
 当模型训练完毕之后，如果想手动对某一个模型权重文件，评估其在数据集上的精度，则在 `Solver` 实例化时指定参数 `pretrained_model_path` 为该权重文件的路径，然后调用 `Solver.eval()` 即可。
 
@@ -313,7 +559,47 @@ solver = ppsci.solver.Solver(
 solver.eval()
 ```
 
-### 1.6 使用 VisualDL 记录实验
+### 1.7 实验过程可视化
+
+#### 1.7.1 TensorBoardX
+
+[TensorBoardX](https://github.com/lanpa/tensorboardX) 是基于 TensorBoard 编写可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
+
+PaddleScience 支持使用 TensorBoardX 记录训练过程中的基础实验数据，包括 train/eval loss，eval metric，learning rate 等基本信息，可按如下步骤使用该功能。
+
+1. 安装 Tensorboard 和 TensorBoardX
+
+    ``` sh
+    pip install tensorboard tensorboardX
+    ```
+
+2. 在案例代码的 `Solver` 实例化时指定 `use_tbd=True`，然后再启动案例训练
+
+    ``` py hl_lines="3"
+    solver = ppsci.solver.Solver(
+        ...,
+        use_tbd=True,
+    )
+    ```
+
+3. 可视化记录数据
+
+    根据上述步骤，在训练时 TensorBoardX 会自动记录数据并保存到 `${solver.output_dir}/tensorboard` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+
+    ``` log hl_lines="3" hl_lines="2"
+    ppsci MESSAGE: TensorboardX tool is enabled for logging, you can view it by running:
+    tensorboard --logdir outputs_VIV/2024-01-01/08-00-00/tensorboard
+    ```
+
+    !!! tip
+
+        也可以输入 `tensorboard --logdir ./outputs_VIV`，一次性在网页上展示 `outputs_VIV` 目录下所有训练记录，便于对比。
+
+    在终端里输入上述可视化命令，并用浏览器进入 TensorBoardX 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
+
+    ![tensorboardx_preview](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/tensorboardx_preview.JPG)
+
+#### 1.7.2 VisualDL
 
 [VisualDL](https://www.paddlepaddle.org.cn/paddle/visualdl) 是飞桨推出的可视化分析工具，以丰富的图表呈现训练参数变化趋势、数据样本、模型结构、PR曲线、ROC曲线、高维数据分布等。帮助用户清晰直观地理解深度学习模型训练过程及模型结构，进而实现高效的模型调优。
 
@@ -325,30 +611,31 @@ PaddleScience 支持使用 VisualDL 记录训练过程中的基础实验数据�
     pip install -U visualdl
     ```
 
-2. 在案例代码的 `Solver` 实例化时指定 `use_visualdl=True`，然后再启动案例训练
+2. 在案例代码的 `Solver` 实例化时指定 `use_vdl=True`，然后再启动案例训练
 
     ``` py hl_lines="3"
     solver = ppsci.solver.Solver(
         ...,
-        use_visualdl=True,
+        use_vdl=True,
     )
     ```
 
 3. 可视化记录数据
 
-    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 的目录中。`vdl` 所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
+    根据上述步骤，在训练时 VisualDL 会自动记录数据并保存到 `${solver.output_dir}/vdl` 目录下，具体所在路径在实例化 `Solver` 时，会自动打印在终端中，如下所示。
 
-    ``` log hl_lines="3"
+    ``` log hl_lines="4"
     Please NOTE: device: 0, GPU Compute Capability: 7.0, Driver API Version: 11.8, Runtime API Version: 11.6
     device: 0, cuDNN Version: 8.4.
-    ppsci INFO: VisualDL tool enabled for logging, you can view it by running: 'visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080'.
+    ppsci INFO: VisualDL tool enabled for logging, you can view it by running:
+    visualdl --logdir outputs_darcy2d/2023-10-08/10-00-00/TRAIN.epochs=400/vdl --port 8080
     ```
 
     在终端里输入上述可视化命令，并用浏览器进入 VisualDL 给出的可视化地址，即可在浏览器内查看记录的数据，如下图所示。
 
     ![visualdl_record](https://paddle-org.bj.bcebos.com/paddlescience/docs/user_guide/VisualDL_preview.png)
 
-### 1.7 使用 WandB 记录实验
+#### 1.7.3 WandB
 
 [WandB](https://wandb.ai/) 是一个第三方实验记录工具，能在记录实验数据的同时将数据上传到其用户的私人账户上，防止实验记录丢失。
 

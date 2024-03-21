@@ -104,7 +104,7 @@ def save_csv_file(
 
         writer.writerows(data_fields)
 
-    logger.message(f"csv file has been dumped to {filename}")
+    logger.message(f"csv file has been dumped to: {filename}")
 
 
 def save_tecplot_file(

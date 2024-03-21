@@ -158,7 +158,8 @@ class RankZeroOnly:
         >>> import paddle.distributed as dist
         >>> with RankZeroOnly(dist.get_rank()) as is_master:
         ...     if is_master:
-        ...         # code here that should only be executed by the master process
+        ...         # code here which should only be executed in the master process
+        ...         pass
     """
 
     def __init__(self, rank: Optional[int] = None):
@@ -209,6 +210,11 @@ class Timer(ContextDecorator):
         ...     w = sum(range(0, 10))
         >>> func()  # doctest: +SKIP
 
+        >>> timer = misc.Timer("cost_of_func", auto_print=False)
+        >>> timer.start()
+        >>> func()
+        >>> timer.end()
+        >>> print(f"time cost of 'cost_of_func' is {timer.interval:.2f}")
     """
 
     interval: float  # Time cost for code within Timer context
@@ -219,10 +225,31 @@ class Timer(ContextDecorator):
         self.auto_print = auto_print
 
     def __enter__(self):
+        paddle.device.synchronize()
         self.start_time = time.perf_counter()
         return self
 
     def __exit__(self, type, value, traceback):
+        paddle.device.synchronize()
+        self.end_time = time.perf_counter()
+        self.interval = self.end_time - self.start_time
+        if self.auto_print:
+            logger.message(f"{self.name}.time_cost = {self.interval:.2f} s")
+
+    def start(self, name: str = "Timer"):
+        """Push a new timer context.
+
+        Args:
+            name (str, optional): Name of code block to be clocked. Defaults to "Timer".
+        """
+        paddle.device.synchronize()
+        self.start_time = time.perf_counter()
+
+    def end(self):
+        """
+        End current timer context and print time cost.
+        """
+        paddle.device.synchronize()
         self.end_time = time.perf_counter()
         self.interval = self.end_time - self.start_time
         if self.auto_print:
@@ -247,14 +274,10 @@ def convert_to_dict(array: np.ndarray, keys: Tuple[str, ...]) -> Dict[str, np.nd
         >>> print(arr.shape)
         (2, 3)
         >>> for k, v in result.items():
-        ...    print(k)
-        ...    print(v.shape)
-        x
-        (2, 1)
-        y
-        (2, 1)
-        z
-        (2, 1)
+        ...    print(k, v.shape)
+        x (2, 1)
+        y (2, 1)
+        z (2, 1)
     """
     if array.shape[-1] != len(keys):
         raise ValueError(
@@ -367,14 +390,10 @@ def stack_dict_list(
         >>> dic1 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
         >>> dic2 = {"x": np.array([[1., 2.], [3., 4.]]), "y": np.array([[5., 6.], [7., 8.]])}
         >>> result = ppsci.utils.misc.stack_dict_list((dic1, dic2))
-        >>> print(result)
-        {'x': array([[[1., 2.],
-                [3., 4.]],
-               [[1., 2.],
-                [3., 4.]]]), 'y': array([[[5., 6.],
-                [7., 8.]],
-               [[5., 6.],
-                [7., 8.]]])}
+        >>> for k, v in result.items():
+        ...     print(k, v.shape)
+        x (2, 2, 2)
+        y (2, 2, 2)
     """
     ret = {}
     for key in dict_list[0].keys():

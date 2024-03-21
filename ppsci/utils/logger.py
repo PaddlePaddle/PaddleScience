@@ -31,6 +31,7 @@ from ppsci.utils import misc
 if TYPE_CHECKING:
     import visualdl  # isort:skip
     import wandb  # isort:skip
+    import tensorboardX as tbd
 
 _logger: logging.Logger = None
 
@@ -155,10 +156,9 @@ def ensure_logger(log_func: Callable) -> Callable:
         if _logger is None:
             init_logger()
             _logger.warning(
-                "Before you call functions within the logger, the logger has already "
-                "been automatically initialized. Since `log_file` is not specified by "
-                "default, information will not be written to any file except being "
-                "output to the terminal."
+                "Logger has already been automatically initialized as `log_file` is "
+                "set to None by default, information will only be printed to terminal "
+                "without writting to any file."
             )
 
         log_func(msg, *args)
@@ -201,6 +201,7 @@ def scalar(
     step: int,
     vdl_writer: Optional["visualdl.LogWriter"] = None,
     wandb_writer: Optional["wandb.run"] = None,
+    tbd_writer: Optional["tbd.SummaryWriter"] = None,
 ):
     """This function will add scalar data to VisualDL or WandB for plotting curve(s).
 
@@ -211,13 +212,21 @@ def scalar(
         wandb_writer (wandb.run): Run object of WandB to record metrics. Defaults to None.
     """
     if vdl_writer is not None:
-        for name, value in metric_dict.items():
-            vdl_writer.add_scalar(name, value, step)
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                for name, value in metric_dict.items():
+                    vdl_writer.add_scalar(name, value, step)
 
     if wandb_writer is not None:
         with misc.RankZeroOnly() as is_master:
             if is_master:
                 wandb_writer.log({"step": step, **metric_dict})
+
+    if tbd_writer is not None:
+        with misc.RankZeroOnly() as is_master:
+            if is_master:
+                for name, value in metric_dict.items():
+                    tbd_writer.add_scalar(name, value, global_step=step)
 
 
 def advertise():

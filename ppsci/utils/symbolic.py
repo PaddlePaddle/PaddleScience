@@ -97,27 +97,14 @@ SYMPY_TO_PADDLE = {
     sp.Max: paddle.maximum,
     sp.Min: paddle.minimum,
     sp.Abs: paddle.abs,
-    sp.Heaviside: functools.partial(paddle.heaviside, y=paddle.zeros([])),
+    sp.Heaviside: paddle.heaviside,
     sp.sign: paddle.sign,
     sp.ceiling: paddle.ceil,
     sp.floor: paddle.floor,
-    # NOTE: sp.Add and sp.Mul is not included here for un-alignment with sympy
+    # NOTE: sp.Add and sp.Mul is not included here for un-alignment with paddle
     # and are implemented manually in 'OperatorNode._add_operator_func' and
     # 'OperatorNode._mul_operator_func'
 }
-
-
-def _numerator_of_derivative(expr: sp.Basic) -> sp.Basic:
-    if not isinstance(expr, sp.Derivative):
-        raise TypeError(
-            f"expr({expr}) should be of type sp.Derivative, but got {type(expr)}"
-        )
-    if len(expr.args) <= 2:
-        if expr.args[1][1] == 1:
-            return expr.args[0]
-        return sp.Derivative(expr.args[0], (expr.args[1][0], expr.args[1][1] - 1))
-    else:
-        return sp.Derivative(*expr.args[:-1])
 
 
 def _cvt_to_key(expr: sp.Basic) -> str:
@@ -214,6 +201,9 @@ class OperatorNode(Node):
         elif self.expr.func == sp.Heaviside:
             self._apply_func = self._heaviside_operator_func
             self._auxiliary_func = SYMPY_TO_PADDLE[sp.Heaviside]
+            self._auxiliary_func = functools.partial(
+                self._auxiliary_func, y=paddle.zeros([])
+            )
         elif self.expr.func == sp.Min:
             self._apply_func = self._minimum_operator_func
         elif self.expr.func == sp.Max:
@@ -582,7 +572,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     }
     naming_counter = {k: 0 for k in SYMPY_BUILTIN_NAME}
 
-    def get_operator_name(node):
+    def get_operator_name(node: sp.Function):
         ret = f"{SYMPY_BUILTIN_NAME[node.func]}_{naming_counter[node.func]}"
         naming_counter[node.func] += 1
         return ret
@@ -598,8 +588,8 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
         Args:
             u (str): Name of begin node u.
             v (str): Name of end node v.
-            u_color (str, optional): _description_. Defaults to C_DATA.
-            v_color (str, optional): _description_. Defaults to C_DATA.
+            u_color (str, optional): Color of node u. Defaults to '#feb64d'.
+            v_color (str, optional): Color of node v. Defaults to '#feb64d'.
         """
         graph.add_node(u, style="filled", shape="ellipse", color=u_color)
         graph.add_node(v, style="filled", shape="ellipse", color=v_color)
@@ -708,7 +698,7 @@ def lambdify(
             such as 'momentum_x'. Defaults to None.
         create_graph (bool, optional): Whether to create the gradient graphs of
             the computing process. When it is True, higher order derivatives are
-            supported to compute; when it is False, the gradient graphs of the
+            supported to compute. When it is False, the gradient graphs of the
             computing process would be discarded. Defaults to True.
         retain_graph (Optional[bool]): Whether to retain the forward graph which
             is used to calculate the gradient. When it is True, the graph would
@@ -716,7 +706,7 @@ def lambdify(
             same graph. When it is False, the graph would be freed. Defaults to None,
             which means it is equal to `create_graph`.
         fuse_derivative (bool, optional): Whether to fuse the derivative nodes.
-            for example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
+            For example, if `expr` is 'Derivative(u, x) + Derivative(u, y)'
             It will compute grad(u, x) + grad(u, y) if fuse_derivative=False,
             else will compute sum(grad(u, [x, y])) if fuse_derivative=True as is more
             efficient in backward-graph. Defaults to False, as it is experimental so not

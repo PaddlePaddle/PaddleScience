@@ -1,26 +1,16 @@
 """
 Reference: https://docs.nvidia.com/deeplearning/modulus/modulus-v2209/user_guide/intermediate/adding_stl_files.html
-STL data files download link: https://paddle-org.bj.bcebos.com/paddlescience/datasets/aneurysm/aneurysm_dataset.tar
-pretrained model download link: https://paddle-org.bj.bcebos.com/paddlescience/models/aneurysm/aneurysm_pretrained.pdparams
 """
-
-from os import path as osp
 
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 
 import ppsci
-from ppsci.utils import logger
 from ppsci.utils import reader
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -259,11 +249,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
-
     # set model
     model = ppsci.arch.MLP(**cfg.MODEL)
 
@@ -286,8 +271,6 @@ def evaluate(cfg: DictConfig):
         "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
         "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
     }
-    if "area" in input_dict.keys():
-        input_dict["area"] *= cfg.SCALE**cfg.DIM
 
     label_dict = {
         "p": eval_data_dict["p"],
@@ -350,14 +333,76 @@ def evaluate(cfg: DictConfig):
     solver.visualize()
 
 
+def export(cfg: DictConfig):
+    # set model
+    model = ppsci.arch.MLP(**cfg.MODEL)
+
+    # initialize solver
+    solver = ppsci.solver.Solver(
+        model,
+        pretrained_model_path=cfg.INFER.pretrained_model_path,
+    )
+    # export model
+    from paddle.static import InputSpec
+
+    input_spec = [
+        {key: InputSpec([None, 1], "float32", name=key) for key in model.input_keys},
+    ]
+    solver.export(input_spec, cfg.INFER.export_path, with_onnx=False)
+
+
+def inference(cfg: DictConfig):
+    from deploy.python_infer import pinn_predictor
+
+    predictor = pinn_predictor.PINNPredictor(cfg)
+    eval_data_dict = reader.load_csv_file(
+        cfg.EVAL_CSV_PATH,
+        ("x", "y", "z", "u", "v", "w", "p"),
+        {
+            "x": "Points:0",
+            "y": "Points:1",
+            "z": "Points:2",
+            "u": "U:0",
+            "v": "U:1",
+            "w": "U:2",
+            "p": "p",
+        },
+    )
+    input_dict = {
+        "x": (eval_data_dict["x"] - cfg.CENTER[0]) * cfg.SCALE,
+        "y": (eval_data_dict["y"] - cfg.CENTER[1]) * cfg.SCALE,
+        "z": (eval_data_dict["z"] - cfg.CENTER[2]) * cfg.SCALE,
+    }
+    output_dict = predictor.predict(input_dict, cfg.INFER.batch_size)
+
+    # mapping data to cfg.INFER.output_keys
+    output_dict = {
+        store_key: output_dict[infer_key]
+        for store_key, infer_key in zip(cfg.MODEL.output_keys, output_dict.keys())
+    }
+
+    ppsci.visualize.save_vtu_from_dict(
+        "./aneurysm_pred.vtu",
+        {**input_dict, **output_dict},
+        input_dict.keys(),
+        cfg.MODEL.output_keys,
+    )
+
+
 @hydra.main(version_base=None, config_path="./conf", config_name="aneurysm.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
     elif cfg.mode == "eval":
         evaluate(cfg)
+    elif cfg.mode == "export":
+        export(cfg)
+    elif cfg.mode == "infer":
+        inference(cfg)
     else:
-        raise ValueError(f"cfg.mode should in ['train', 'eval'], but got '{cfg.mode}'")
+        raise ValueError(
+            f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
+        )
 
 
 if __name__ == "__main__":

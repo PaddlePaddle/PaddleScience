@@ -41,12 +41,11 @@ TRAIN:
   iters_per_epoch: 1
   save_freq: 50
   eval_during_train: true
-  eval_with_no_grad: true
   lr_scheduler:
     epochs: ${TRAIN.epochs}
     iters_per_epoch: ${TRAIN.iters_per_epoch}
     gamma: 0.97
-    decay_steps: 1
+    decay_steps: 10000000
   pretrained_model_path: null
   checkpoint_path: null
 

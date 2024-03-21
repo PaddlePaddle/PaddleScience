@@ -508,6 +508,7 @@ def _save_plot_weather_from_array(
         log_norm,
     )
     fig.savefig(filename, dpi=300)
+    plt.close()
 
 
 def save_plot_weather_from_dict(

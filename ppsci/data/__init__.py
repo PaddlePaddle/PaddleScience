@@ -82,14 +82,22 @@ def build_dataloader(_dataset, cfg):
         sampler_cfg["batch_size"] = cfg["batch_size"]
         batch_sampler = getattr(io, batch_sampler_cls)(_dataset, **sampler_cfg)
     else:
-        if cfg["batch_size"] != 1:
-            raise ValueError(
-                f"`batch_size` should be 1 when sampler config is None, but got {cfg['batch_size']}."
+        batch_sampler_cls = "BatchSampler"
+        if world_size > 1:
+            batch_sampler_cls = "DistributedBatchSampler"
+            logger.warning(
+                f"Automatically use 'DistributedBatchSampler' instead of "
+                f"'BatchSampler' when world_size({world_size}) > 1."
             )
-        logger.warning(
-            "`batch_size` is set to 1 as neither sampler config nor batch_size is set."
+        batch_sampler = getattr(io, batch_sampler_cls)(
+            _dataset,
+            batch_size=cfg["batch_size"],
+            shuffle=False,
+            drop_last=False,
         )
-        batch_sampler = None
+        logger.message(
+            "'shuffle' and 'drop_last' are both set to False in default as sampler config is not specified."
+        )
 
     # build collate_fn if specified
     batch_transforms_cfg = cfg.pop("batch_transforms", None)
@@ -131,6 +139,7 @@ def build_dataloader(_dataset, cfg):
         if (
             cfg.get("auto_collation", not getattr(_dataset, "batch_index", False))
             is False
+            and "transforms" not in cfg["dataset"]
         ):
             # 1. wrap batch_sampler again into BatchSampler for disabling auto collation,
             # which can speed up the process of batch samples indexing from dataset. See
