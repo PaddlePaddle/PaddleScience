@@ -107,19 +107,6 @@ SYMPY_TO_PADDLE = {
 }
 
 
-def _numerator_of_derivative(expr: sp.Basic) -> sp.Basic:
-    if not isinstance(expr, sp.Derivative):
-        raise TypeError(
-            f"expr({expr}) should be of type sp.Derivative, but got {type(expr)}"
-        )
-    if len(expr.args) <= 2:
-        if expr.args[1][1] == 1:
-            return expr.args[0]
-        return sp.Derivative(expr.args[0], (expr.args[1][0], expr.args[1][1] - 1))
-    else:
-        return sp.Derivative(*expr.args[:-1])
-
-
 def _cvt_to_key(expr: sp.Basic) -> str:
     """Convert sympy expression to a string key, mainly as retrieval key in dict.
 
@@ -585,7 +572,7 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
     }
     naming_counter = {k: 0 for k in SYMPY_BUILTIN_NAME}
 
-    def get_operator_name(node):
+    def get_operator_name(node: sp.Function):
         ret = f"{SYMPY_BUILTIN_NAME[node.func]}_{naming_counter[node.func]}"
         naming_counter[node.func] += 1
         return ret
@@ -601,8 +588,8 @@ def _visualize_graph(nodes: List[sp.Basic], graph_filename: str):
         Args:
             u (str): Name of begin node u.
             v (str): Name of end node v.
-            u_color (str, optional): _description_. Defaults to C_DATA.
-            v_color (str, optional): _description_. Defaults to C_DATA.
+            u_color (str, optional): Color of node u. Defaults to '#feb64d'.
+            v_color (str, optional): Color of node v. Defaults to '#feb64d'.
         """
         graph.add_node(u, style="filled", shape="ellipse", color=u_color)
         graph.add_node(v, style="filled", shape="ellipse", color=v_color)

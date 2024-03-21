@@ -111,6 +111,7 @@ def train(cfg: DictConfig):
         lr_scheduler,
         cfg.TRAIN.epochs,
         cfg.TRAIN.iters_per_epoch,
+        use_tbd=cfg.use_tbd,
         save_freq=cfg.TRAIN.save_freq,
         log_freq=cfg.log_freq,
         eval_during_train=cfg.TRAIN.eval_during_train,
