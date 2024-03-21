@@ -62,5 +62,4 @@ MODEL:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: /workspace/workspace/skillful_nowcasting/openclimatefix/paddle/paddle_model.pdparams
-
+  pretrained_model_path: openclimatefix/paddle/paddle_model.pdparams

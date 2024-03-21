@@ -14,17 +14,18 @@
 
 from __future__ import annotations
 
-import os
-import paddle
+from typing import Tuple
+
 import numpy as np
-from numpy.random import default_rng
+import paddle
 from datasets import load_dataset
-from typing import Optional
+from numpy.random import default_rng
+
 
 class DGMRDataset(paddle.io.Dataset):
     """
-    Dataset class for DGMR (Deep Generative Model for Radar) model. 
-    This open-sourced UK dataset has been mirrored to HuggingFace Datasets https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km. 
+    Dataset class for DGMR (Deep Generative Model for Radar) model.
+    This open-sourced UK dataset has been mirrored to HuggingFace Datasets https://huggingface.co/datasets/openclimatefix/nimrod-uk-1km.
     If the reader cannot load the dataset from Hugging Face, please manually download it and modify the dataset_path to the local path for loading.
 
     Args:
@@ -35,16 +36,17 @@ class DGMRDataset(paddle.io.Dataset):
         NUM_TARGET_FRAMES (int, optional): Number of target frames. Defaults to 18.
         dataset_path (str, optional): Path to the dataset. Defaults to "openclimatefix/nimrod-uk-1km".
         number (int, optional): Number of samples in the dataset. Defaults to 1000.
-    
+
     Examples:
         >>> import ppsci
         >>> dataset = ppsci.data.dataset.DGMRDataset(("input", ), ("output", ))
     """
+
     def __init__(
-        self, 
+        self,
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
-        split: str = "validation", 
+        split: str = "validation",
         NUM_INPUT_FRAMES: int = 4,
         NUM_TARGET_FRAMES: int = 18,
         dataset_path: str = "openclimatefix/nimrod-uk-1km",
@@ -58,7 +60,7 @@ class DGMRDataset(paddle.io.Dataset):
         self.NUM_TARGET_FRAMES = NUM_TARGET_FRAMES
         self.number = number
         self.reader = load_dataset(
-           dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
+            dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
         )
         self.iter_reader = self.reader
 
@@ -71,12 +73,20 @@ class DGMRDataset(paddle.io.Dataset):
         except Exception:
             rng = default_rng(42)
             self.iter_reader = iter(
-                self.reader.shuffle(seed=rng.integers(low=0, high=100000), buffer_size=1000)
+                self.reader.shuffle(
+                    seed=rng.integers(low=0, high=100000), buffer_size=1000
+                )
             )
             row = next(self.iter_reader)
         radar_frames = row["radar_frames"]
-        input_frames = radar_frames[-self.NUM_TARGET_FRAMES - self.NUM_INPUT_FRAMES : -self.NUM_TARGET_FRAMES]
-        target_frames = radar_frames[-self.NUM_TARGET_FRAMES:]
-        input_item = {self.input_keys: np.moveaxis(input_frames, [0, 1, 2, 3], [0, 2, 3, 1])}
-        label_item = {self.label_keys: np.moveaxis(target_frames, [0, 1, 2, 3], [0, 2, 3, 1])}
+        input_frames = radar_frames[
+            -self.NUM_TARGET_FRAMES - self.NUM_INPUT_FRAMES : -self.NUM_TARGET_FRAMES
+        ]
+        target_frames = radar_frames[-self.NUM_TARGET_FRAMES :]
+        input_item = {
+            self.input_keys: np.moveaxis(input_frames, [0, 1, 2, 3], [0, 2, 3, 1])
+        }
+        label_item = {
+            self.label_keys: np.moveaxis(target_frames, [0, 1, 2, 3], [0, 2, 3, 1])
+        }
         return input_item, label_item
