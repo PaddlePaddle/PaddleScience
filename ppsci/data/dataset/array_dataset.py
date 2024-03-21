@@ -142,8 +142,8 @@ class IterableNamedArrayDataset(io.IterableDataset):
         return 1
 
 
-class DeepONetArrayDataset(io.Dataset):
-    """DeepONetArrayDataset for data loading of multi-branch DeepONet model.
+class ChipHeatDataset(io.Dataset):
+    """ChipHeatDataset for data loading of multi-branch DeepONet model.
 
     Args:
         input (Dict[str, np.ndarray]): Input dict.
@@ -161,7 +161,7 @@ class DeepONetArrayDataset(io.Dataset):
         >>> index = ('x', 'u', 'bc', 'bc_data')
         >>> data_type = 'u'
         >>> weight = {"u": np.random.randn(100, 1)}
-        >>> dataset = ppsci.data.dataset.DeepONetArrayDataset(input, label, index, data_type, weight)
+        >>> dataset = ppsci.data.dataset.ChipHeatDataset(input, label, index, data_type, weight)
     """
 
     def __init__(

@@ -24,7 +24,6 @@
         - USCNN
         - NowcastNet
         - HEDeepONets
-        - DGMR
         - ChipDeepONets
         - AutoEncoder
       show_root_heading: true

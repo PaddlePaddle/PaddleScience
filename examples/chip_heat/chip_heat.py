@@ -198,7 +198,7 @@ def train(cfg: DictConfig):
     top_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
-                "name": "DeepONetArrayDataset",
+                "name": "ChipHeatDataset",
                 "input": top_data,
                 "label": label,
                 "index": index,
@@ -238,7 +238,7 @@ def train(cfg: DictConfig):
     down_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
-                "name": "DeepONetArrayDataset",
+                "name": "ChipHeatDataset",
                 "input": down_data,
                 "label": label,
                 "index": index,
@@ -278,7 +278,7 @@ def train(cfg: DictConfig):
     left_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
-                "name": "DeepONetArrayDataset",
+                "name": "ChipHeatDataset",
                 "input": left_data,
                 "label": label,
                 "index": index,
@@ -318,7 +318,7 @@ def train(cfg: DictConfig):
     right_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
-                "name": "DeepONetArrayDataset",
+                "name": "ChipHeatDataset",
                 "input": right_data,
                 "label": label,
                 "index": index,
@@ -358,7 +358,7 @@ def train(cfg: DictConfig):
     interior_sup_constraint = ppsci.constraint.SupervisedConstraint(
         {
             "dataset": {
-                "name": "DeepONetArrayDataset",
+                "name": "ChipHeatDataset",
                 "input": interior_data,
                 "label": label,
                 "index": index,
@@ -389,7 +389,7 @@ def train(cfg: DictConfig):
     }
 
     # set optimizer
-    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)((model,))
+    optimizer = ppsci.optimizer.Adam(cfg.TRAIN.learning_rate)(model)
 
     # set validator
     top_down_label = {"chip": np.zeros([cfg.NL, 1], dtype="float32")}
@@ -410,9 +410,6 @@ def train(cfg: DictConfig):
                 },
             },
             "batch_size": cfg.NL,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -430,9 +427,6 @@ def train(cfg: DictConfig):
                 },
             },
             "batch_size": cfg.NL,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -450,9 +444,6 @@ def train(cfg: DictConfig):
                 },
             },
             "batch_size": (cfg.NL - 2),
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -470,9 +461,6 @@ def train(cfg: DictConfig):
                 },
             },
             "batch_size": (cfg.NL - 2),
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -487,9 +475,6 @@ def train(cfg: DictConfig):
                 "label": interior_label,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={
@@ -636,9 +621,6 @@ def evaluate(cfg: DictConfig):
                 },
             },
             "batch_size": cfg.NL,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -656,9 +638,6 @@ def evaluate(cfg: DictConfig):
                 },
             },
             "batch_size": cfg.NL,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -676,9 +655,6 @@ def evaluate(cfg: DictConfig):
                 },
             },
             "batch_size": (cfg.NL - 2),
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -696,9 +672,6 @@ def evaluate(cfg: DictConfig):
                 },
             },
             "batch_size": (cfg.NL - 2),
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={"chip": lambda out: out["T"] - out["u_one"]},
@@ -713,9 +686,6 @@ def evaluate(cfg: DictConfig):
                 "label": interior_label,
             },
             "batch_size": cfg.TRAIN.batch_size,
-            "sampler": {
-                "name": "BatchSampler",
-            },
         },
         ppsci.loss.MSELoss("mean"),
         output_expr={

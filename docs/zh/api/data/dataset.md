@@ -6,7 +6,7 @@
       members:
         - IterableNamedArrayDataset
         - NamedArrayDataset
-        - DeepONetArrayDataset
+        - ChipHeatDataset
         - CSVDataset
         - IterableCSVDataset
         - ERA5Dataset
@@ -23,5 +23,4 @@
         - MeshCylinderDataset
         - RadarDataset
         - build_dataset
-        - DGMRDataset
       show_root_heading: true

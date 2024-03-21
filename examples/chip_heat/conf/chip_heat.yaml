@@ -1,7 +1,7 @@
 hydra:
   run:
     # dynamic output directory according to running time and override name
-    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
+    dir: outputs_chip_heat/${now:%Y-%m-%d}/${now:%H-%M-%S}/${hydra.job.override_dirname}
   job:
     name: ${mode} # name of logfile
     chdir: false # keep current working direcotry unchanged
@@ -45,7 +45,7 @@ MODEL:
   BC_input_keys: ['bc_data']
   trunk_input_keys: ["x", "y"]
   output_keys: ["T"]
-  num_loc: 324 #18*18
+  num_loc: 324 # 18*18
   bctype_loc: 1
   BC_num_loc: 76
   num_features: 400
