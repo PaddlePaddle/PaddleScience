@@ -735,9 +735,7 @@ def evaluate(cfg: DictConfig):
     )
 
 
-@hydra.main(
-    version_base=None, config_path="./conf", config_name="chip_heat_simulation.yaml"
-)
+@hydra.main(version_base=None, config_path="./conf", config_name="chip_heat.yaml")
 def main(cfg: DictConfig):
     if cfg.mode == "train":
         train(cfg)
