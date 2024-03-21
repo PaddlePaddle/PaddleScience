@@ -27,6 +27,7 @@ mode: train # running mode: train/eval
 seed: 42
 output_dir: ${hydra:run.dir}
 log_freq: 20
+use_tbd: false
 
 VIV_DATA_PATH: "./VIV_Training_Neta100.mat"
 
