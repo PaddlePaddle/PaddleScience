@@ -1,34 +1,21 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from typing import List
-from typing import Tuple
-
-import einops
 import paddle
+import logging
+from typing import List, Tuple
+import einops
 from paddle.nn import PixelShuffle
 from paddle.nn import PixelUnshuffle
+from ppsci.arch import base
 
 paddle.seed(42)
 
-
-class DGMR(paddle.nn.Layer):
-    """Deep Generative Model of Radar.
+class DGMR(base.Arch):
+    """Deep Generative Model of Radar. 
         Nowcasting GAN is an attempt to recreate DeepMind's Skillful Nowcasting GAN from https://arxiv.org/abs/2104.00954.
         but slightly modified for multiple satellite channels
 
     Args:
+        input_keys (Tuple[str, ...]): Name of input keys, such as ("input",).
+        output_keys (Tuple[str, ...]): Name of output keys, such as ("output",).
         forecast_steps (int, optional): Number of steps to predict in the future
         input_channels (int, optional): Number of input channels per image
         gen_lr (float, optional): Learning rate for the generator
@@ -47,27 +34,30 @@ class DGMR(paddle.nn.Layer):
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.DGMR()
+        >>> model = ppsci.arch.DGMR(("input", ), ("output", ))
     """
 
     def __init__(
-        self,
-        forecast_steps: int = 18,
-        input_channels: int = 1,
-        output_shape: int = 256,
-        gen_lr: float = 5e-05,
-        disc_lr: float = 0.0002,
-        conv_type: str = "standard",
-        num_samples: int = 6,
-        grid_lambda: float = 20.0,
-        beta1: float = 0.0,
-        beta2: float = 0.999,
-        latent_channels: int = 768,
-        context_channels: int = 384,
-        generation_steps: int = 6,
-        **kwargs,
-    ):
+        self, 
+        input_keys: Tuple[str, ...],
+        output_keys: Tuple[str, ...],
+        forecast_steps: int=18, 
+        input_channels: int=1,
+        output_shape: int=256, 
+        gen_lr: float=5e-05, 
+        disc_lr: float=0.0002,
+        conv_type: str='standard', 
+        num_samples: int=6, 
+        grid_lambda: float=20.0, 
+        beta1: float=0.0, 
+        beta2: float=0.999,
+        latent_channels: int=768, 
+        context_channels: int=384,
+        generation_steps: int=6, 
+        **kwargs):
         super().__init__()
+        self.input_keys = input_keys
+        self.output_keys = output_keys
         self.gen_lr = gen_lr
         self.disc_lr = disc_lr
         self.beta1 = beta1
@@ -79,176 +69,43 @@ class DGMR(paddle.nn.Layer):
         self.input_channels = input_channels
         self.generation_steps = generation_steps
         self.conditioning_stack = ContextConditioningStack(
-            input_channels=input_channels,
-            conv_type=conv_type,
-            output_channels=self.context_channels,
+            input_channels=input_channels, 
+            conv_type=conv_type, 
+            output_channels=self.context_channels
         )
-        self.latent_stack = LatentConditioningStack(
-            shape=(8 * self.input_channels, output_shape // 32, output_shape // 32),
-            output_channels=self.latent_channels,
-        )
-        self.sampler = Sampler(
-            forecast_steps=forecast_steps,
-            latent_channels=self.latent_channels,
-            context_channels=self.context_channels,
-        )
-        self.generator = Generator(
-            self.conditioning_stack, self.latent_stack, self.sampler
-        )
+        self.latent_stack = LatentConditioningStack(shape=(8 * self.
+            input_channels, output_shape // 32, output_shape // 32),
+            output_channels=self.latent_channels)
+        self.sampler = Sampler(forecast_steps=forecast_steps,
+            latent_channels=self.latent_channels, context_channels=self.
+            context_channels)
+        self.generator = Generator(self.conditioning_stack, self.
+            latent_stack, self.sampler)
         self.discriminator = Discriminator(input_channels)
         self.global_iteration = 0
         self.automatic_optimization = False
 
+    def split_to_dict(
+        self, data_tensors: Tuple[paddle.Tensor, ...], keys: Tuple[str, ...]
+    ):
+        return {key: data_tensors[i] for i, key in enumerate(keys)}
+
     def forward(self, x):
-        x = self.generator(x)
-        return x
+        if self._input_transform is not None:
+            x = self._input_transform(x)
 
-    def training_step(self, batch, batch_idx):
-        images, future_images = batch
-        images = images.astype(dtype="float32")
-        future_images = future_images.astype(dtype="float32")
-        self.global_iteration += 1
-        g_opt, d_opt = self.optimizers()
-        ##########################
-        # Optimize Discriminator #
-        ##########################
-        # Two discriminator steps per generator step
-        for _ in range(2):
-            predictions = self(images)
-            generated_sequence = paddle.concat(x=[images, predictions], axis=1)
-            real_sequence = paddle.concat(x=[images, future_images], axis=1)
-            concatenated_inputs = paddle.concat(
-                x=[real_sequence, generated_sequence], axis=0
-            )
-            concatenated_outputs = self.discriminator(concatenated_inputs)
-            score_real, score_generated = paddle.split(
-                x=concatenated_outputs,
-                num_or_sections=[real_sequence.shape[0], generated_sequence.shape[0]],
-                axis=0,
-            )
-            score_real_spatial, score_real_temporal = paddle.split(
-                x=score_real, num_or_sections=1, axis=1
-            )
-            score_generated_spatial, score_generated_temporal = paddle.split(
-                x=score_generated, num_or_sections=1, axis=1
-            )
-            discriminator_loss = loss_hinge_disc(
-                score_generated_spatial, score_real_spatial
-            ) + loss_hinge_disc(score_generated_temporal, score_real_temporal)
-            self.manual_backward(discriminator_loss)
-            d_opt.step()
-            d_opt.clear_grad()
-        ######################
-        # Optimize Generator #
-        ######################
-        predictions = [self(images) for _ in range(self.generation_steps)]
-        grid_cell_reg = grid_cell_regularizer(
-            paddle.stack(x=predictions, axis=0), future_images
-        )
-        generated_sequence = [paddle.concat(x=[images, x], axis=1) for x in predictions]
-        real_sequence = paddle.concat(x=[images, future_images], axis=1)
-        generated_scores = []
-        for g_seq in generated_sequence:
-            concatenated_inputs = paddle.concat(x=[real_sequence, g_seq], axis=0)
-            concatenated_outputs = self.discriminator(concatenated_inputs)
-            score_real, score_generated = paddle.split(
-                x=concatenated_outputs,
-                num_or_sections=[real_sequence.shape[0], g_seq.shape[0]],
-                axis=0,
-            )
-            generated_scores.append(score_generated)
-        generator_disc_loss = loss_hinge_gen(paddle.concat(x=generated_scores, axis=0))
-        generator_loss = generator_disc_loss + self.grid_lambda * grid_cell_reg
+        x_tensor = self.concat_to_tensor(x, self.input_keys)
+        y = [self.generator(x_tensor)]
+        y = self.split_to_dict(y, self.output_keys)
 
-        self.manual_backward(generator_loss)
-        g_opt.step()
-        g_opt.clear_grad()
-
-        return discriminator_loss, generator_loss, grid_cell_reg
-
-    def validation_step(self, batch, batch_idx):
-        images, future_images = batch
-        images = images.astype(dtype="float32")
-        future_images = future_images.astype(dtype="float32")
-        ##########################
-        # Optimize Discriminator #
-        ##########################
-        # Two discriminator steps per generator step
-        for _ in range(2):
-            predictions = self(images)
-            generated_sequence = paddle.concat(x=[images, predictions], axis=1)
-            real_sequence = paddle.concat(x=[images, future_images], axis=1)
-            concatenated_inputs = paddle.concat(
-                x=[real_sequence, generated_sequence], axis=0
-            )
-            concatenated_outputs = self.discriminator(concatenated_inputs)
-            score_real, score_generated = paddle.split(
-                x=concatenated_outputs,
-                num_or_sections=[real_sequence.shape[0], generated_sequence.shape[0]],
-                axis=0,
-            )
-            score_real_spatial, score_real_temporal = paddle.split(
-                x=score_real, num_or_sections=score_real.shape[1], axis=1
-            )
-            score_generated_spatial, score_generated_temporal = paddle.split(
-                x=score_generated, num_or_sections=score_generated.shape[1], axis=1
-            )
-            discriminator_loss = loss_hinge_disc(
-                score_generated_spatial, score_real_spatial
-            ) + loss_hinge_disc(score_generated_temporal, score_real_temporal)
-        ######################
-        # Optimize Generator #
-        ######################
-        predictions = [self(images) for _ in range(self.generation_steps)]
-        grid_cell_reg = grid_cell_regularizer(
-            paddle.stack(x=predictions, axis=0), future_images
-        )
-        generated_sequence = [paddle.concat(x=[images, x], axis=1) for x in predictions]
-        real_sequence = paddle.concat(x=[images, future_images], axis=1)
-        generated_scores = []
-        for g_seq in generated_sequence:
-            concatenated_inputs = paddle.concat(x=[real_sequence, g_seq], axis=0)
-            concatenated_outputs = self.discriminator(concatenated_inputs)
-            score_real, score_generated = paddle.split(
-                x=concatenated_outputs,
-                num_or_sections=[real_sequence.shape[0], g_seq.shape[0]],
-                axis=0,
-            )
-            generated_scores.append(score_generated)
-        generator_disc_loss = loss_hinge_gen(paddle.concat(x=generated_scores, axis=0))
-        generator_loss = generator_disc_loss + self.grid_lambda * grid_cell_reg
-
-        return discriminator_loss, generator_loss, grid_cell_reg
-
-    def configure_optimizers(self):
-        b1 = self.beta1
-        b2 = self.beta2
-        opt_g = paddle.optimizer.Adam(
-            parameters=self.generator.parameters(),
-            learning_rate=self.gen_lr,
-            beta1=(b1, b2)[0],
-            beta2=(b1, b2)[1],
-            weight_decay=0.0,
-        )
-        opt_d = paddle.optimizer.Adam(
-            parameters=self.discriminator.parameters(),
-            learning_rate=self.disc_lr,
-            beta1=(b1, b2)[0],
-            beta2=(b1, b2)[1],
-            weight_decay=0.0,
-        )
-        return [opt_g, opt_d], []
-
+        if self._output_transform is not None:
+            y = self._output_transform(x, y)
+        return y
 
 class Sampler(paddle.nn.Layer):
-    def __init__(
-        self,
-        forecast_steps: int = 18,
-        latent_channels: int = 768,
-        context_channels: int = 384,
-        output_channels: int = 1,
-        **kwargs,
-    ):
+
+    def __init__(self, forecast_steps: int=18, latent_channels: int=768,
+        context_channels: int=384, output_channels: int=1, **kwargs):
         """
         Sampler from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
 
@@ -261,99 +118,62 @@ class Sampler(paddle.nn.Layer):
         """
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        self.forecast_steps = self.config["forecast_steps"]
-        latent_channels = self.config["latent_channels"]
-        context_channels = self.config["context_channels"]
-        output_channels = self.config["output_channels"]
-        self.convGRU1 = ConvGRU(
-            input_channels=latent_channels + context_channels,
-            output_channels=context_channels,
-            kernel_size=3,
-        )
-        self.gru_conv_1x1 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=context_channels,
-                out_channels=latent_channels,
-                kernel_size=(1, 1),
-            )
-        )
-        self.g1 = GBlock(
-            input_channels=latent_channels, output_channels=latent_channels
-        )
-        self.up_g1 = UpsampleGBlock(
-            input_channels=latent_channels, output_channels=latent_channels // 2
-        )
-        self.convGRU2 = ConvGRU(
-            input_channels=latent_channels // 2 + context_channels // 2,
-            output_channels=context_channels // 2,
-            kernel_size=3,
-        )
-        self.gru_conv_1x1_2 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=context_channels // 2,
-                out_channels=latent_channels // 2,
-                kernel_size=(1, 1),
-            )
-        )
-        self.g2 = GBlock(
-            input_channels=latent_channels // 2, output_channels=latent_channels // 2
-        )
-        self.up_g2 = UpsampleGBlock(
-            input_channels=latent_channels // 2, output_channels=latent_channels // 4
-        )
-        self.convGRU3 = ConvGRU(
-            input_channels=latent_channels // 4 + context_channels // 4,
-            output_channels=context_channels // 4,
-            kernel_size=3,
-        )
-        self.gru_conv_1x1_3 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=context_channels // 4,
-                out_channels=latent_channels // 4,
-                kernel_size=(1, 1),
-            )
-        )
-        self.g3 = GBlock(
-            input_channels=latent_channels // 4, output_channels=latent_channels // 4
-        )
-        self.up_g3 = UpsampleGBlock(
-            input_channels=latent_channels // 4, output_channels=latent_channels // 8
-        )
-        self.convGRU4 = ConvGRU(
-            input_channels=latent_channels // 8 + context_channels // 8,
-            output_channels=context_channels // 8,
-            kernel_size=3,
-        )
-        self.gru_conv_1x1_4 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=context_channels // 8,
-                out_channels=latent_channels // 8,
-                kernel_size=(1, 1),
-            )
-        )
-        self.g4 = GBlock(
-            input_channels=latent_channels // 8, output_channels=latent_channels // 8
-        )
-        self.up_g4 = UpsampleGBlock(
-            input_channels=latent_channels // 8, output_channels=latent_channels // 16
-        )
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        self.forecast_steps = self.config['forecast_steps']
+        latent_channels = self.config['latent_channels']
+        context_channels = self.config['context_channels']
+        output_channels = self.config['output_channels']
+        self.convGRU1 = ConvGRU(input_channels=latent_channels +
+            context_channels, output_channels=context_channels, kernel_size=3)
+        self.gru_conv_1x1 = paddle.nn.utils.spectral_norm(layer=paddle.nn.
+            Conv2D(in_channels=context_channels, out_channels=
+            latent_channels, kernel_size=(1, 1)))
+        self.g1 = GBlock(input_channels=latent_channels, output_channels=
+            latent_channels)
+        self.up_g1 = UpsampleGBlock(input_channels=latent_channels,
+            output_channels=latent_channels // 2)
+        self.convGRU2 = ConvGRU(input_channels=latent_channels // 2 + 
+            context_channels // 2, output_channels=context_channels // 2,
+            kernel_size=3)
+        self.gru_conv_1x1_2 = paddle.nn.utils.spectral_norm(layer=paddle.nn
+            .Conv2D(in_channels=context_channels // 2, out_channels=
+            latent_channels // 2, kernel_size=(1, 1)))
+        self.g2 = GBlock(input_channels=latent_channels // 2,
+            output_channels=latent_channels // 2)
+        self.up_g2 = UpsampleGBlock(input_channels=latent_channels // 2,
+            output_channels=latent_channels // 4)
+        self.convGRU3 = ConvGRU(input_channels=latent_channels // 4 + 
+            context_channels // 4, output_channels=context_channels // 4,
+            kernel_size=3)
+        self.gru_conv_1x1_3 = paddle.nn.utils.spectral_norm(layer=paddle.nn
+            .Conv2D(in_channels=context_channels // 4, out_channels=
+            latent_channels // 4, kernel_size=(1, 1)))
+        self.g3 = GBlock(input_channels=latent_channels // 4,
+            output_channels=latent_channels // 4)
+        self.up_g3 = UpsampleGBlock(input_channels=latent_channels // 4,
+            output_channels=latent_channels // 8)
+        self.convGRU4 = ConvGRU(input_channels=latent_channels // 8 + 
+            context_channels // 8, output_channels=context_channels // 8,
+            kernel_size=3)
+        self.gru_conv_1x1_4 = paddle.nn.utils.spectral_norm(layer=paddle.nn
+            .Conv2D(in_channels=context_channels // 8, out_channels=
+            latent_channels // 8, kernel_size=(1, 1)))
+        self.g4 = GBlock(input_channels=latent_channels // 8,
+            output_channels=latent_channels // 8)
+        self.up_g4 = UpsampleGBlock(input_channels=latent_channels // 8,
+            output_channels=latent_channels // 16)
         self.bn = paddle.nn.BatchNorm2D(num_features=latent_channels // 16)
         self.relu = paddle.nn.ReLU()
-        self.conv_1x1 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=latent_channels // 16,
-                out_channels=4 * output_channels,
-                kernel_size=(1, 1),
-            )
-        )
-        self.depth2space = PixelShuffle(upscale_factor=2)
+        self.conv_1x1 = paddle.nn.utils.spectral_norm(layer=paddle.nn.
+            Conv2D(in_channels=latent_channels // 16, out_channels=4 *
+            output_channels, kernel_size=(1, 1)))
+        self.depth2space = PixelShuffle(
+            upscale_factor=2)
 
-    def forward(
-        self, conditioning_states: List[paddle.Tensor], latent_dim: paddle.Tensor
-    ) -> paddle.Tensor:
+    def forward(self, conditioning_states: List[paddle.Tensor], latent_dim:
+        paddle.Tensor) ->paddle.Tensor:
         """
         Perform the sampling from Skillful Nowcasting with GANs
         Args:
@@ -365,10 +185,10 @@ class Sampler(paddle.nn.Layer):
 
         """
         init_states = conditioning_states
-        latent_dim = einops.repeat(
-            latent_dim, "b c h w -> (repeat b) c h w", repeat=init_states[0].shape[0]
-        )
+        latent_dim = einops.repeat(latent_dim,
+            'b c h w -> (repeat b) c h w', repeat=init_states[0].shape[0])
         hidden_states = [latent_dim] * self.forecast_steps
+
 
         hidden_states = self.convGRU1(hidden_states, init_states[3])
         hidden_states = [self.gru_conv_1x1(h) for h in hidden_states]
@@ -386,7 +206,8 @@ class Sampler(paddle.nn.Layer):
         hidden_states = [self.gru_conv_1x1_4(h) for h in hidden_states]
         hidden_states = [self.g4(h) for h in hidden_states]
         hidden_states = [self.up_g4(h) for h in hidden_states]
-        hidden_states = [paddle.nn.functional.relu(x=self.bn(h)) for h in hidden_states]
+        hidden_states = [paddle.nn.functional.relu(x=self.bn(h)) for h in
+            hidden_states]
         hidden_states = [self.conv_1x1(h) for h in hidden_states]
         hidden_states = [self.depth2space(h) for h in hidden_states]
         forecasts = paddle.stack(x=hidden_states, axis=1)
@@ -394,12 +215,9 @@ class Sampler(paddle.nn.Layer):
 
 
 class Generator(paddle.nn.Layer):
-    def __init__(
-        self,
-        conditioning_stack: paddle.nn.Layer,
-        latent_stack: paddle.nn.Layer,
-        sampler: paddle.nn.Layer,
-    ):
+
+    def __init__(self, conditioning_stack: paddle.nn.Layer, latent_stack:
+        paddle.nn.Layer, sampler: paddle.nn.Layer):
         """
         Wraps the three parts of the generator for simpler calling
         Args:
@@ -418,46 +236,34 @@ class Generator(paddle.nn.Layer):
         x = self.sampler(conditioning_states, latent_dim)
         return x
 
-
 class Discriminator(paddle.nn.Layer):
-    def __init__(
-        self,
-        input_channels: int = 12,
-        num_spatial_frames: int = 8,
-        conv_type: str = "standard",
-        **kwargs,
-    ):
+
+    def __init__(self, input_channels: int=12, num_spatial_frames: int=8,
+        conv_type: str='standard', **kwargs):
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        input_channels = self.config["input_channels"]
-        num_spatial_frames = self.config["num_spatial_frames"]
-        conv_type = self.config["conv_type"]
-        self.spatial_discriminator = SpatialDiscriminator(
-            input_channels=input_channels,
-            num_timesteps=num_spatial_frames,
-            conv_type=conv_type,
-        )
-        self.temporal_discriminator = TemporalDiscriminator(
-            input_channels=input_channels, conv_type=conv_type
-        )
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        input_channels = self.config['input_channels']
+        num_spatial_frames = self.config['num_spatial_frames']
+        conv_type = self.config['conv_type']
+        self.spatial_discriminator = SpatialDiscriminator(input_channels=
+            input_channels, num_timesteps=num_spatial_frames, conv_type=
+            conv_type)
+        self.temporal_discriminator = TemporalDiscriminator(input_channels=
+            input_channels, conv_type=conv_type)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         spatial_loss = self.spatial_discriminator(x)
         temporal_loss = self.temporal_discriminator(x)
         return paddle.concat(x=[spatial_loss, temporal_loss], axis=1)
 
 
 class TemporalDiscriminator(paddle.nn.Layer):
-    def __init__(
-        self,
-        input_channels: int = 12,
-        num_layers: int = 3,
-        conv_type: str = "standard",
-        **kwargs,
-    ):
+
+    def __init__(self, input_channels: int=12, num_layers: int=3, conv_type:
+        str='standard', **kwargs):
         """
         Temporal Discriminator from the Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
 
@@ -469,53 +275,37 @@ class TemporalDiscriminator(paddle.nn.Layer):
         """
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        input_channels = self.config["input_channels"]
-        num_layers = self.config["num_layers"]
-        conv_type = self.config["conv_type"]
-        self.downsample = paddle.nn.AvgPool3D(
-            kernel_size=(1, 2, 2), stride=(1, 2, 2), exclusive=False
-        )
-        self.space2depth = PixelUnshuffle(downscale_factor=2)
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        input_channels = self.config['input_channels']
+        num_layers = self.config['num_layers']
+        conv_type = self.config['conv_type']
+        self.downsample = paddle.nn.AvgPool3D(kernel_size=(1, 2, 2), stride
+            =(1, 2, 2), exclusive=False)
+        self.space2depth = PixelUnshuffle(
+            downscale_factor=2)
         internal_chn = 48
-        self.d1 = DBlock(
-            input_channels=4 * input_channels,
-            output_channels=internal_chn * input_channels,
-            conv_type="3d",
-            first_relu=False,
-        )
-        self.d2 = DBlock(
-            input_channels=internal_chn * input_channels,
-            output_channels=2 * internal_chn * input_channels,
-            conv_type="3d",
-        )
+        self.d1 = DBlock(input_channels=4 * input_channels, output_channels
+            =internal_chn * input_channels, conv_type='3d', first_relu=False)
+        self.d2 = DBlock(input_channels=internal_chn * input_channels,
+            output_channels=2 * internal_chn * input_channels, conv_type='3d')
         self.intermediate_dblocks = paddle.nn.LayerList()
         for _ in range(num_layers):
             internal_chn *= 2
-            self.intermediate_dblocks.append(
-                DBlock(
-                    input_channels=internal_chn * input_channels,
-                    output_channels=2 * internal_chn * input_channels,
-                    conv_type=conv_type,
-                )
-            )
-        self.d_last = DBlock(
-            input_channels=2 * internal_chn * input_channels,
-            output_channels=2 * internal_chn * input_channels,
-            keep_same_output=True,
-            conv_type=conv_type,
-        )
-        self.fc = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Linear(
-                in_features=2 * internal_chn * input_channels, out_features=1
-            )
-        )
+            self.intermediate_dblocks.append(DBlock(input_channels=
+                internal_chn * input_channels, output_channels=2 *
+                internal_chn * input_channels, conv_type=conv_type))
+        self.d_last = DBlock(input_channels=2 * internal_chn *
+            input_channels, output_channels=2 * internal_chn *
+            input_channels, keep_same_output=True, conv_type=conv_type)
+        self.fc = paddle.nn.utils.spectral_norm(layer=paddle.nn.Linear(
+            in_features=2 * internal_chn * input_channels, out_features=1))
         self.relu = paddle.nn.ReLU()
-        self.bn = paddle.nn.BatchNorm1D(num_features=2 * internal_chn * input_channels)
+        self.bn = paddle.nn.BatchNorm1D(num_features=2 * internal_chn *
+            input_channels)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         x = self.downsample(x)
         if len(x.shape) == 4:
             x = self.space2depth(x)
@@ -544,14 +334,9 @@ class TemporalDiscriminator(paddle.nn.Layer):
 
 
 class SpatialDiscriminator(paddle.nn.Layer):
-    def __init__(
-        self,
-        input_channels: int = 12,
-        num_timesteps: int = 8,
-        num_layers: int = 4,
-        conv_type: str = "standard",
-        **kwargs,
-    ):
+
+    def __init__(self, input_channels: int=12, num_timesteps: int=8,
+        num_layers: int=4, conv_type: str='standard', **kwargs):
         """
         Spatial discriminator from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
 
@@ -563,52 +348,41 @@ class SpatialDiscriminator(paddle.nn.Layer):
         """
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        input_channels = self.config["input_channels"]
-        num_timesteps = self.config["num_timesteps"]
-        num_layers = self.config["num_layers"]
-        conv_type = self.config["conv_type"]
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        input_channels = self.config['input_channels']
+        num_timesteps = self.config['num_timesteps']
+        num_layers = self.config['num_layers']
+        conv_type = self.config['conv_type']
         self.num_timesteps = num_timesteps
         self.mean_pool = paddle.nn.AvgPool2D(kernel_size=2, exclusive=False)
-        self.space2depth = PixelUnshuffle(downscale_factor=2)
+        self.space2depth = PixelUnshuffle(
+            downscale_factor=2)
         internal_chn = 24
-        self.d1 = DBlock(
-            input_channels=4 * input_channels,
-            output_channels=2 * internal_chn * input_channels,
-            first_relu=False,
-            conv_type=conv_type,
-        )
+        self.d1 = DBlock(input_channels=4 * input_channels, output_channels
+            =2 * internal_chn * input_channels, first_relu=False, conv_type
+            =conv_type)
         self.intermediate_dblocks = paddle.nn.LayerList()
         for _ in range(num_layers):
             internal_chn *= 2
-            self.intermediate_dblocks.append(
-                DBlock(
-                    input_channels=internal_chn * input_channels,
-                    output_channels=2 * internal_chn * input_channels,
-                    conv_type=conv_type,
-                )
-            )
-        self.d6 = DBlock(
-            input_channels=2 * internal_chn * input_channels,
+            self.intermediate_dblocks.append(DBlock(input_channels=
+                internal_chn * input_channels, output_channels=2 *
+                internal_chn * input_channels, conv_type=conv_type))
+        self.d6 = DBlock(input_channels=2 * internal_chn * input_channels,
             output_channels=2 * internal_chn * input_channels,
-            keep_same_output=True,
-            conv_type=conv_type,
-        )
-        self.fc = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Linear(
-                in_features=2 * internal_chn * input_channels, out_features=1
-            )
-        )
+            keep_same_output=True, conv_type=conv_type)
+        self.fc = paddle.nn.utils.spectral_norm(layer=paddle.nn.Linear(
+            in_features=2 * internal_chn * input_channels, out_features=1))
         self.relu = paddle.nn.ReLU()
-        self.bn = paddle.nn.BatchNorm1D(num_features=2 * internal_chn * input_channels)
+        self.bn = paddle.nn.BatchNorm1D(num_features=2 * internal_chn *
+            input_channels)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
-        idxs = paddle.randint(low=0, high=x.shape[1], shape=(self.num_timesteps,))
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
+        idxs = paddle.randint(low=0, high=x.shape[1], shape=(self.
+            num_timesteps,))
         representations = []
         for idx in idxs:
-            # for idx in range(x.shape[1]):
             rep = self.mean_pool(x[:, idx, :, :, :])
             if len(rep.shape) == 4:
                 rep = self.space2depth(rep)
@@ -643,17 +417,11 @@ class SpatialDiscriminator(paddle.nn.Layer):
         x = paddle.sum(x=x, keepdim=True, axis=1)
         return x
 
-
 class GBlock(paddle.nn.Layer):
     """Residual generator block without upsampling"""
 
-    def __init__(
-        self,
-        input_channels: int = 12,
-        output_channels: int = 12,
-        conv_type: str = "standard",
-        spectral_normalized_eps=0.0001,
-    ):
+    def __init__(self, input_channels: int=12, output_channels: int=12,
+        conv_type: str='standard', spectral_normalized_eps=0.0001):
         """
         G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
         Args:
@@ -667,32 +435,17 @@ class GBlock(paddle.nn.Layer):
         self.bn2 = paddle.nn.BatchNorm2D(num_features=input_channels)
         self.relu = paddle.nn.ReLU()
         conv2d = get_conv_layer(conv_type)
-        self.conv_1x1 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels, out_channels=output_channels, kernel_size=1
-            ),
-            eps=spectral_normalized_eps,
-        )
-        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels,
-                out_channels=input_channels,
-                kernel_size=3,
-                padding=1,
-            ),
-            eps=spectral_normalized_eps,
-        )
-        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=3,
-                padding=1,
-            ),
-            eps=spectral_normalized_eps,
-        )
+        self.conv_1x1 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=1), eps=spectral_normalized_eps)
+        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=input_channels,
+            kernel_size=3, padding=1), eps=spectral_normalized_eps)
+        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=3, padding=1), eps=spectral_normalized_eps)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         if x.shape[1] != self.output_channels:
             sc = self.conv_1x1(x)
         else:
@@ -710,13 +463,8 @@ class GBlock(paddle.nn.Layer):
 class UpsampleGBlock(paddle.nn.Layer):
     """Residual generator block with upsampling"""
 
-    def __init__(
-        self,
-        input_channels: int = 12,
-        output_channels: int = 12,
-        conv_type: str = "standard",
-        spectral_normalized_eps=0.0001,
-    ):
+    def __init__(self, input_channels: int=12, output_channels: int=12,
+        conv_type: str='standard', spectral_normalized_eps=0.0001):
         """
         G Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
         Args:
@@ -730,33 +478,18 @@ class UpsampleGBlock(paddle.nn.Layer):
         self.bn2 = paddle.nn.BatchNorm2D(num_features=input_channels)
         self.relu = paddle.nn.ReLU()
         conv2d = get_conv_layer(conv_type)
-        self.conv_1x1 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels, out_channels=output_channels, kernel_size=1
-            ),
-            eps=spectral_normalized_eps,
-        )
-        self.upsample = paddle.nn.Upsample(scale_factor=2, mode="nearest")
-        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels,
-                out_channels=input_channels,
-                kernel_size=3,
-                padding=1,
-            ),
-            eps=spectral_normalized_eps,
-        )
-        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=3,
-                padding=1,
-            ),
-            eps=spectral_normalized_eps,
-        )
+        self.conv_1x1 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=1), eps=spectral_normalized_eps)
+        self.upsample = paddle.nn.Upsample(scale_factor=2, mode='nearest')
+        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=input_channels,
+            kernel_size=3, padding=1), eps=spectral_normalized_eps)
+        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=3, padding=1), eps=spectral_normalized_eps)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         sc = self.upsample(x)
         sc = self.conv_1x1(sc)
         x2 = self.bn1(x)
@@ -771,14 +504,10 @@ class UpsampleGBlock(paddle.nn.Layer):
 
 
 class DBlock(paddle.nn.Layer):
-    def __init__(
-        self,
-        input_channels: int = 12,
-        output_channels: int = 12,
-        conv_type: str = "standard",
-        first_relu: bool = True,
-        keep_same_output: bool = False,
-    ):
+
+    def __init__(self, input_channels: int=12, output_channels: int=12,
+        conv_type: str='standard', first_relu: bool=True, keep_same_output:
+        bool=False):
         """
         D and 3D Block from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
         Args:
@@ -795,35 +524,24 @@ class DBlock(paddle.nn.Layer):
         self.keep_same_output = keep_same_output
         self.conv_type = conv_type
         conv2d = get_conv_layer(conv_type)
-        if conv_type == "3d":
-            self.pooling = paddle.nn.AvgPool3D(kernel_size=2, stride=2, exclusive=False)
+        if conv_type == '3d':
+            self.pooling = paddle.nn.AvgPool3D(kernel_size=2, stride=2,
+                exclusive=False)
         else:
-            self.pooling = paddle.nn.AvgPool2D(kernel_size=2, stride=2, exclusive=False)
-        self.conv_1x1 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels, out_channels=output_channels, kernel_size=1
-            )
-        )
-        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=3,
-                padding=1,
-            )
-        )
-        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=output_channels,
-                out_channels=output_channels,
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            )
-        )
+            self.pooling = paddle.nn.AvgPool2D(kernel_size=2, stride=2,
+                exclusive=False)
+        self.conv_1x1 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=1))
+        self.first_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=input_channels, out_channels=output_channels,
+            kernel_size=3, padding=1))
+        self.last_conv_3x3 = paddle.nn.utils.spectral_norm(layer=conv2d(
+            in_channels=output_channels, out_channels=output_channels,
+            kernel_size=3, padding=1, stride=1))
         self.relu = paddle.nn.ReLU()
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         if self.input_channels != self.output_channels:
             x1 = self.conv_1x1(x)
             if not self.keep_same_output:
@@ -844,13 +562,8 @@ class DBlock(paddle.nn.Layer):
 class LBlock(paddle.nn.Layer):
     """Residual block for the Latent Stack."""
 
-    def __init__(
-        self,
-        input_channels: int = 12,
-        output_channels: int = 12,
-        kernel_size: int = 3,
-        conv_type: str = "standard",
-    ):
+    def __init__(self, input_channels: int=12, output_channels: int=12,
+        kernel_size: int=3, conv_type: str='standard'):
         """
         L-Block for increasing the number of channels in the input
          from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
@@ -863,28 +576,16 @@ class LBlock(paddle.nn.Layer):
         self.input_channels = input_channels
         self.output_channels = output_channels
         conv2d = get_conv_layer(conv_type)
-        self.conv_1x1 = conv2d(
-            in_channels=input_channels,
-            out_channels=output_channels - input_channels,
-            kernel_size=1,
-        )
-        self.first_conv_3x3 = conv2d(
-            input_channels,
-            out_channels=output_channels,
-            kernel_size=kernel_size,
-            padding=1,
-            stride=1,
-        )
+        self.conv_1x1 = conv2d(in_channels=input_channels, out_channels=
+            output_channels - input_channels, kernel_size=1)
+        self.first_conv_3x3 = conv2d(input_channels, out_channels=
+            output_channels, kernel_size=kernel_size, padding=1, stride=1)
         self.relu = paddle.nn.ReLU()
-        self.last_conv_3x3 = conv2d(
-            in_channels=output_channels,
-            out_channels=output_channels,
-            kernel_size=kernel_size,
-            padding=1,
-            stride=1,
-        )
+        self.last_conv_3x3 = conv2d(in_channels=output_channels,
+            out_channels=output_channels, kernel_size=kernel_size, padding=
+            1, stride=1)
 
-    def forward(self, x) -> paddle.Tensor:
+    def forward(self, x) ->paddle.Tensor:
         if self.input_channels < self.output_channels:
             sc = self.conv_1x1(x)
             sc = paddle.concat(x=[x, sc], axis=1)
@@ -898,14 +599,9 @@ class LBlock(paddle.nn.Layer):
 
 
 class ContextConditioningStack(paddle.nn.Layer):
-    def __init__(
-        self,
-        input_channels: int = 1,
-        output_channels: int = 768,
-        num_context_steps: int = 4,
-        conv_type: str = "standard",
-        **kwargs,
-    ):
+
+    def __init__(self, input_channels: int=1, output_channels: int=768,
+        num_context_steps: int=4, conv_type: str='standard', **kwargs):
         """
         Conditioning Stack using the context images from Skillful Nowcasting, , see https://arxiv.org/pdf/2104.00954.pdf
 
@@ -916,72 +612,46 @@ class ContextConditioningStack(paddle.nn.Layer):
         """
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        input_channels = self.config["input_channels"]
-        output_channels = self.config["output_channels"]
-        num_context_steps = self.config["num_context_steps"]
-        conv_type = self.config["conv_type"]
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        input_channels = self.config['input_channels']
+        output_channels = self.config['output_channels']
+        num_context_steps = self.config['num_context_steps']
+        conv_type = self.config['conv_type']
         conv2d = get_conv_layer(conv_type)
-        self.space2depth = PixelUnshuffle(downscale_factor=2)
-        self.d1 = DBlock(
-            input_channels=4 * input_channels,
-            output_channels=output_channels // 4 * input_channels // num_context_steps,
-            conv_type=conv_type,
-        )
-        self.d2 = DBlock(
-            input_channels=output_channels // 4 * input_channels // num_context_steps,
-            output_channels=output_channels // 2 * input_channels // num_context_steps,
-            conv_type=conv_type,
-        )
-        self.d3 = DBlock(
-            input_channels=output_channels // 2 * input_channels // num_context_steps,
-            output_channels=output_channels * input_channels // num_context_steps,
-            conv_type=conv_type,
-        )
-        self.d4 = DBlock(
-            input_channels=output_channels * input_channels // num_context_steps,
-            output_channels=output_channels * 2 * input_channels // num_context_steps,
-            conv_type=conv_type,
-        )
-        self.conv1 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=output_channels // 4 * input_channels,
-                out_channels=output_channels // 8 * input_channels,
-                kernel_size=3,
-                padding=1,
-            )
-        )
-        self.conv2 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=output_channels // 2 * input_channels,
-                out_channels=output_channels // 4 * input_channels,
-                kernel_size=3,
-                padding=1,
-            )
-        )
-        self.conv3 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=output_channels * input_channels,
-                out_channels=output_channels // 2 * input_channels,
-                kernel_size=3,
-                padding=1,
-            )
-        )
-        self.conv4 = paddle.nn.utils.spectral_norm(
-            layer=conv2d(
-                in_channels=output_channels * 2 * input_channels,
-                out_channels=output_channels * input_channels,
-                kernel_size=3,
-                padding=1,
-            )
-        )
+        self.space2depth = PixelUnshuffle(
+            downscale_factor=2)
+        self.d1 = DBlock(input_channels=4 * input_channels, output_channels
+            =output_channels // 4 * input_channels // num_context_steps,
+            conv_type=conv_type)
+        self.d2 = DBlock(input_channels=output_channels // 4 *
+            input_channels // num_context_steps, output_channels=
+            output_channels // 2 * input_channels // num_context_steps,
+            conv_type=conv_type)
+        self.d3 = DBlock(input_channels=output_channels // 2 *
+            input_channels // num_context_steps, output_channels=
+            output_channels * input_channels // num_context_steps,
+            conv_type=conv_type)
+        self.d4 = DBlock(input_channels=output_channels * input_channels //
+            num_context_steps, output_channels=output_channels * 2 *
+            input_channels // num_context_steps, conv_type=conv_type)
+        self.conv1 = paddle.nn.utils.spectral_norm(layer=conv2d(in_channels
+            =output_channels // 4 * input_channels, out_channels=
+            output_channels // 8 * input_channels, kernel_size=3, padding=1))
+        self.conv2 = paddle.nn.utils.spectral_norm(layer=conv2d(in_channels
+            =output_channels // 2 * input_channels, out_channels=
+            output_channels // 4 * input_channels, kernel_size=3, padding=1))
+        self.conv3 = paddle.nn.utils.spectral_norm(layer=conv2d(in_channels
+            =output_channels * input_channels, out_channels=output_channels //
+            2 * input_channels, kernel_size=3, padding=1))
+        self.conv4 = paddle.nn.utils.spectral_norm(layer=conv2d(in_channels
+            =output_channels * 2 * input_channels, out_channels=
+            output_channels * input_channels, kernel_size=3, padding=1))
         self.relu = paddle.nn.ReLU()
 
-    def forward(
-        self, x: paddle.Tensor
-    ) -> Tuple[paddle.Tensor, paddle.Tensor, paddle.Tensor, paddle.Tensor]:
+    def forward(self, x: paddle.Tensor) ->Tuple[paddle.Tensor, paddle.
+        Tensor, paddle.Tensor, paddle.Tensor]:
         if len(x.shape) == 4:
             x = self.space2depth(x)
         elif len(x.shape) == 5:
@@ -1014,18 +684,14 @@ class ContextConditioningStack(paddle.nn.Layer):
         return scale_1, scale_2, scale_3, scale_4
 
     def _mixing_layer(self, inputs, conv_block):
-        stacked_inputs = einops.rearrange(inputs, "b t c h w -> b (c t) h w")
+        stacked_inputs = einops.rearrange(inputs, 'b t c h w -> b (c t) h w')
         return paddle.nn.functional.relu(x=conv_block(stacked_inputs))
 
 
 class LatentConditioningStack(paddle.nn.Layer):
-    def __init__(
-        self,
-        shape: (int, int, int) = (8, 8, 8),
-        output_channels: int = 768,
-        use_attention: bool = True,
-        **kwargs,
-    ):
+
+    def __init__(self, shape: (int, int, int)=(8, 8, 8), output_channels:
+        int=768, use_attention: bool=True, **kwargs):
         """
         Latent conditioning stack from Skillful Nowcasting, see https://arxiv.org/pdf/2104.00954.pdf
 
@@ -1036,45 +702,33 @@ class LatentConditioningStack(paddle.nn.Layer):
         """
         super().__init__()
         config = locals()
-        config.pop("__class__")
-        config.pop("self")
-        self.config = kwargs.get("config", config)
-        shape = self.config["shape"]
-        output_channels = self.config["output_channels"]
-        use_attention = self.config["use_attention"]
+        config.pop('__class__')
+        config.pop('self')
+        self.config = kwargs.get('config', config)
+        shape = self.config['shape']
+        output_channels = self.config['output_channels']
+        use_attention = self.config['use_attention']
         self.shape = shape
         self.use_attention = use_attention
-        self.distribution = paddle.distribution.Normal(
-            loc=paddle.to_tensor(data=[0.0], dtype="float32"),
-            scale=paddle.to_tensor(data=[2.0], dtype="float32"),
-        )
-        self.conv_3x3 = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=shape[0],
-                out_channels=shape[0],
-                kernel_size=(3, 3),
-                padding=1,
-            )
-        )
-        self.l_block1 = LBlock(
-            input_channels=shape[0], output_channels=output_channels // 32
-        )
-        self.l_block2 = LBlock(
-            input_channels=output_channels // 32, output_channels=output_channels // 16
-        )
-        self.l_block3 = LBlock(
-            input_channels=output_channels // 16, output_channels=output_channels // 4
-        )
+        self.distribution = paddle.distribution.Normal(loc=paddle.to_tensor
+            (data=[0.0], dtype='float32'), scale=paddle.to_tensor(data=[2.0
+            ], dtype='float32'))
+        self.conv_3x3 = paddle.nn.utils.spectral_norm(layer=paddle.nn.
+            Conv2D(in_channels=shape[0], out_channels=shape[0], kernel_size
+            =(3, 3), padding=1))
+        self.l_block1 = LBlock(input_channels=shape[0], output_channels=
+            output_channels // 32)
+        self.l_block2 = LBlock(input_channels=output_channels // 32,
+            output_channels=output_channels // 16)
+        self.l_block3 = LBlock(input_channels=output_channels // 16,
+            output_channels=output_channels // 4)
         if self.use_attention:
-            self.att_block = AttentionLayer(
-                input_channels=output_channels // 4,
-                output_channels=output_channels // 4,
-            )
-        self.l_block4 = LBlock(
-            input_channels=output_channels // 4, output_channels=output_channels
-        )
+            self.att_block = AttentionLayer(input_channels=output_channels //
+                4, output_channels=output_channels // 4)
+        self.l_block4 = LBlock(input_channels=output_channels // 4,
+            output_channels=output_channels)
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         """
 
         Args:
@@ -1084,10 +738,6 @@ class LatentConditioningStack(paddle.nn.Layer):
 
         """
         z = self.distribution.sample(self.shape)
-        # print('z',z.mean(),z.std())
-        # import numpy as np
-        # data_np = np.load('data_np.npy')
-        # z = paddle.to_tensor(data_np)
         z = paddle.transpose(x=z, perm=(3, 0, 1, 2)).astype(dtype=x.dtype)
         z = self.conv_3x3(z)
         z = self.l_block1(z)
@@ -1097,64 +747,46 @@ class LatentConditioningStack(paddle.nn.Layer):
         z = self.l_block4(z)
         return z
 
-
 def attention_einsum(q, k, v):
     """Apply the attention operator to tensors of shape [h, w, c]."""
-    k = einops.rearrange(k, "h w c -> (h w) c")
-    v = einops.rearrange(v, "h w c -> (h w) c")
-    beta = paddle.nn.functional.softmax(x=paddle.einsum("hwc, Lc->hwL", q, k), axis=-1)
-    out = paddle.einsum("hwL, Lc->hwc", beta, v)
+    k = einops.rearrange(k, 'h w c -> (h w) c')
+    v = einops.rearrange(v, 'h w c -> (h w) c')
+    beta = paddle.nn.functional.softmax(x=paddle.einsum('hwc, Lc->hwL', q,
+        k), axis=-1)
+    out = paddle.einsum('hwL, Lc->hwc', beta, v)
     return out
 
 
 class AttentionLayer(paddle.nn.Layer):
     """Attention Module"""
 
-    def __init__(
-        self, input_channels: int, output_channels: int, ratio_kq=8, ratio_v=8
-    ):
+    def __init__(self, input_channels: int, output_channels: int, ratio_kq=
+        8, ratio_v=8):
         super(AttentionLayer, self).__init__()
         self.ratio_kq = ratio_kq
         self.ratio_v = ratio_v
         self.output_channels = output_channels
         self.input_channels = input_channels
-        self.query = paddle.nn.Conv2D(
-            in_channels=input_channels,
-            out_channels=self.output_channels // self.ratio_kq,
-            kernel_size=(1, 1),
-            padding="valid",
-            bias_attr=False,
-        )
-        self.key = paddle.nn.Conv2D(
-            in_channels=input_channels,
-            out_channels=self.output_channels // self.ratio_kq,
-            kernel_size=(1, 1),
-            padding="valid",
-            bias_attr=False,
-        )
-        self.value = paddle.nn.Conv2D(
-            in_channels=input_channels,
-            out_channels=self.output_channels // self.ratio_v,
-            kernel_size=(1, 1),
-            padding="valid",
-            bias_attr=False,
-        )
-        self.last_conv = paddle.nn.Conv2D(
-            in_channels=self.output_channels // 8,
-            out_channels=self.output_channels,
-            kernel_size=(1, 1),
-            padding="valid",
-            bias_attr=False,
-        )
-        out_0 = paddle.create_parameter(
-            shape=paddle.zeros(shape=[1]).shape,
+        self.query = paddle.nn.Conv2D(in_channels=input_channels,
+            out_channels=self.output_channels // self.ratio_kq, kernel_size
+            =(1, 1), padding='valid', bias_attr=False)
+        self.key = paddle.nn.Conv2D(in_channels=input_channels,
+            out_channels=self.output_channels // self.ratio_kq, kernel_size
+            =(1, 1), padding='valid', bias_attr=False)
+        self.value = paddle.nn.Conv2D(in_channels=input_channels,
+            out_channels=self.output_channels // self.ratio_v, kernel_size=
+            (1, 1), padding='valid', bias_attr=False)
+        self.last_conv = paddle.nn.Conv2D(in_channels=self.output_channels //
+            8, out_channels=self.output_channels, kernel_size=(1, 1),
+            padding='valid', bias_attr=False)
+        out_0 = paddle.create_parameter(shape=paddle.zeros(shape=[1]).shape,
             dtype=paddle.zeros(shape=[1]).numpy().dtype,
-            default_initializer=paddle.nn.initializer.Assign(paddle.zeros(shape=[1])),
-        )
+            default_initializer=paddle.nn.initializer.Assign(paddle.zeros(
+            shape=[1])))
         out_0.stop_gradient = not True
         self.gamma = out_0
 
-    def forward(self, x: paddle.Tensor) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor) ->paddle.Tensor:
         query = self.query(x)
         key = self.key(x)
         value = self.value(x)
@@ -1167,6 +799,7 @@ class AttentionLayer(paddle.nn.Layer):
 
 
 class AddCoords(paddle.nn.Layer):
+
     def __init__(self, with_r=False):
         super().__init__()
         self.with_r = with_r
@@ -1183,8 +816,8 @@ class AddCoords(paddle.nn.Layer):
         perm_0[1] = 2
         perm_0[2] = 1
         yy_channel = x.transpose(perm=perm_0)
-        xx_channel = xx_channel.astype(dtype="float32") / (x_dim - 1)
-        yy_channel = yy_channel.astype(dtype="float32") / (y_dim - 1)
+        xx_channel = xx_channel.astype(dtype='float32') / (x_dim - 1)
+        yy_channel = yy_channel.astype(dtype='float32') / (y_dim - 1)
         xx_channel = xx_channel * 2 - 1
         yy_channel = yy_channel * 2 - 1
         x = xx_channel.repeat(batch_size, 1, 1, 1)
@@ -1197,24 +830,19 @@ class AddCoords(paddle.nn.Layer):
         perm_2[2] = 3
         perm_2[3] = 2
         yy_channel = x.transpose(perm=perm_2)
-        ret = paddle.concat(
-            x=[
-                input_tensor,
-                xx_channel.astype(dtype=input_tensor.dtype),
-                yy_channel.astype(dtype=input_tensor.dtype),
-            ],
-            axis=1,
-        )
+        ret = paddle.concat(x=[input_tensor, xx_channel.astype(dtype=
+            input_tensor.dtype), yy_channel.astype(dtype=input_tensor.dtype
+            )], axis=1)
         if self.with_r:
-            rr = paddle.sqrt(
-                x=paddle.pow(x=xx_channel.astype(dtype=input_tensor.dtype) - 0.5, y=2)
-                + paddle.pow(x=yy_channel.astype(dtype=input_tensor.dtype) - 0.5, y=2)
-            )
+            rr = paddle.sqrt(x=paddle.pow(x=xx_channel.astype(dtype=
+                input_tensor.dtype) - 0.5, y=2) + paddle.pow(x=yy_channel.
+                astype(dtype=input_tensor.dtype) - 0.5, y=2))
             ret = paddle.concat(x=[ret, rr], axis=1)
         return ret
 
 
 class CoordConv(paddle.nn.Layer):
+
     def __init__(self, in_channels, out_channels, with_r=False, **kwargs):
         super().__init__()
         self.addcoords = AddCoords(with_r=with_r)
@@ -1228,13 +856,11 @@ class CoordConv(paddle.nn.Layer):
         ret = self.conv(ret)
         return ret
 
-
 class ConvGRUCell(paddle.nn.Layer):
     """A ConvGRU implementation."""
 
-    def __init__(
-        self, input_channels: int, output_channels: int, kernel_size=3, sn_eps=0.0001
-    ):
+    def __init__(self, input_channels: int, output_channels: int,
+        kernel_size=3, sn_eps=0.0001):
         """Constructor.
 
         Args:
@@ -1244,33 +870,17 @@ class ConvGRUCell(paddle.nn.Layer):
         super().__init__()
         self._kernel_size = kernel_size
         self._sn_eps = sn_eps
-        self.read_gate_conv = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=(kernel_size, kernel_size),
-                padding=1,
-            ),
-            eps=sn_eps,
-        )
-        self.update_gate_conv = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=(kernel_size, kernel_size),
-                padding=1,
-            ),
-            eps=sn_eps,
-        )
-        self.output_conv = paddle.nn.utils.spectral_norm(
-            layer=paddle.nn.Conv2D(
-                in_channels=input_channels,
-                out_channels=output_channels,
-                kernel_size=(kernel_size, kernel_size),
-                padding=1,
-            ),
-            eps=sn_eps,
-        )
+        self.read_gate_conv = paddle.nn.utils.spectral_norm(layer=paddle.nn
+            .Conv2D(in_channels=input_channels, out_channels=
+            output_channels, kernel_size=(kernel_size, kernel_size),
+            padding=1), eps=sn_eps)
+        self.update_gate_conv = paddle.nn.utils.spectral_norm(layer=paddle.
+            nn.Conv2D(in_channels=input_channels, out_channels=
+            output_channels, kernel_size=(kernel_size, kernel_size),
+            padding=1), eps=sn_eps)
+        self.output_conv = paddle.nn.utils.spectral_norm(layer=paddle.nn.
+            Conv2D(in_channels=input_channels, out_channels=output_channels,
+            kernel_size=(kernel_size, kernel_size), padding=1), eps=sn_eps)
 
     def forward(self, x, prev_state):
         """
@@ -1296,17 +906,13 @@ class ConvGRUCell(paddle.nn.Layer):
 class ConvGRU(paddle.nn.Layer):
     """ConvGRU Cell wrapper to replace tf.static_rnn in TF implementation"""
 
-    def __init__(
-        self,
-        input_channels: int,
-        output_channels: int,
-        kernel_size: int = 3,
-        sn_eps=0.0001,
-    ):
+    def __init__(self, input_channels: int, output_channels: int,
+        kernel_size: int=3, sn_eps=0.0001):
         super().__init__()
-        self.cell = ConvGRUCell(input_channels, output_channels, kernel_size, sn_eps)
+        self.cell = ConvGRUCell(input_channels, output_channels,
+            kernel_size, sn_eps)
 
-    def forward(self, x: paddle.Tensor, hidden_state=None) -> paddle.Tensor:
+    def forward(self, x: paddle.Tensor, hidden_state=None) ->paddle.Tensor:
         outputs = []
         for step in range(len(x)):
             output, hidden_state = self.cell(x[step], hidden_state)
@@ -1315,15 +921,15 @@ class ConvGRU(paddle.nn.Layer):
         return outputs
 
 
-def get_conv_layer(conv_type: str = "standard") -> paddle.nn.Layer:
-    if conv_type == "standard":
+def get_conv_layer(conv_type: str='standard') ->paddle.nn.Layer:
+    if conv_type == 'standard':
         conv_layer = paddle.nn.Conv2D
-    elif conv_type == "coord":
+    elif conv_type == 'coord':
         conv_layer = CoordConv
-    elif conv_type == "3d":
+    elif conv_type == '3d':
         conv_layer = paddle.nn.Conv3D
     else:
-        raise ValueError(f"{conv_type} is not a recognized Conv method")
+        raise ValueError(f'{conv_type} is not a recognized Conv method')
     return conv_layer
 
 

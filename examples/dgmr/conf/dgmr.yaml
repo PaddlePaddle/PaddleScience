@@ -26,11 +26,13 @@ output_dir: ${hydra:run.dir}
 
 # dataset settings
 DATASET:
+  input_keys: 'input_frames'
+  label_keys: 'target_frames'
   split: validation # train or validation
   NUM_INPUT_FRAMES: 4
   NUM_TARGET_FRAMES: 18
   dataset_path: /workspace/workspace/skillful_nowcasting/openclimatefix/nimrod-uk-1km
-  number: 10
+  number: 1
 
 # dataLoader settings
 DATALOADER:
@@ -41,6 +43,8 @@ DATALOADER:
 
 # model settings
 MODEL:
+  input_keys: ['input_frames']
+  output_keys: ['future_images']
   forecast_steps: 18
   input_channels: 1
   output_shape: 256
@@ -59,3 +63,4 @@ MODEL:
 # evaluation settings
 EVAL:
   pretrained_model_path: /workspace/workspace/skillful_nowcasting/openclimatefix/paddle/paddle_model.pdparams
+
