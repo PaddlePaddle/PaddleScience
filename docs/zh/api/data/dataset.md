@@ -6,6 +6,7 @@
       members:
         - IterableNamedArrayDataset
         - NamedArrayDataset
+        - ChipHeatDataset
         - CSVDataset
         - IterableCSVDataset
         - ERA5Dataset

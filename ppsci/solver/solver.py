@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import itertools
 import os
 import sys
@@ -69,6 +70,7 @@ class Solver:
         seed (int, optional): Random seed. Defaults to 42.
         use_vdl (Optional[bool]): Whether use VisualDL to log scalars. Defaults to False.
         use_wandb (Optional[bool]): Whether use wandb to log data. Defaults to False.
+        use_tbd (Optional[bool]): Whether use tensorboardX to log data. Defaults to False.
         wandb_config (Optional[Dict[str, str]]): Config dict of WandB. Defaults to None.
         device (Literal["cpu", "gpu", "xpu"], optional): Runtime device. Defaults to "gpu".
         equation (Optional[Dict[str, ppsci.equation.PDE]]): Equation dict. Defaults to None.
@@ -129,6 +131,7 @@ class Solver:
         seed: int = 42,
         use_vdl: bool = False,
         use_wandb: bool = False,
+        use_tbd: bool = False,
         wandb_config: Optional[Mapping] = None,
         device: Literal["cpu", "gpu", "xpu"] = "gpu",
         equation: Optional[Dict[str, ppsci.equation.PDE]] = None,
@@ -336,8 +339,8 @@ class Solver:
                 if is_master:
                     self.vdl_writer = vdl.LogWriter(osp.join(output_dir, "vdl"))
             logger.info(
-                "VisualDL tool is enabled for logging, you can view it by "
-                f"running: 'visualdl --logdir {self.vdl_writer._logdir} --port 8080'."
+                "VisualDL is enabled for logging, you can view it by "
+                f"running:\nvisualdl --logdir {self.vdl_writer._logdir} --port 8080"
             )
 
         # set WandB tool
@@ -352,6 +355,25 @@ class Solver:
             with misc.RankZeroOnly(self.rank) as is_master:
                 if is_master:
                     self.wandb_writer = wandb.init(**wandb_config)
+
+        # set TensorBoardX tool
+        self.tbd_writer = None
+        if use_tbd:
+            try:
+                import tensorboardX
+            except ModuleNotFoundError:
+                raise ModuleNotFoundError(
+                    "Please install 'tensorboardX' with `pip install tensorboardX` first."
+                )
+            with misc.RankZeroOnly(self.rank) as is_master:
+                if is_master:
+                    self.tbd_writer = tensorboardX.SummaryWriter(
+                        osp.join(output_dir, "tensorboard")
+                    )
+            logger.message(
+                "TensorboardX is enabled for logging, you can view it by "
+                f"running:\ntensorboard --logdir {self.tbd_writer.logdir}"
+            )
 
         self.global_step = 0
 
@@ -461,6 +483,7 @@ class Solver:
                         epoch_id,
                         self.vdl_writer,
                         self.wandb_writer,
+                        self.tbd_writer,
                     )
 
                 # visualize after evaluation
@@ -682,7 +705,9 @@ class Solver:
         return pred_dict
 
     @misc.run_on_eval_mode
-    def export(self, input_spec: List[InputSpec], export_path: str):
+    def export(
+        self, input_spec: List[InputSpec], export_path: str, with_onnx: bool = False
+    ):
         """
         Convert model to static graph model and export to files.
 
@@ -690,6 +715,8 @@ class Solver:
             input_spec (List[InputSpec]): InputSpec describes the signature information
                 of the model input.
             export_path (str): The path prefix to save model.
+            with_onnx (bool, optional): Whether to export model into onnx after
+                paddle inference models are exported.
         """
         jit.enable_to_static(True)
 
@@ -717,6 +744,25 @@ class Solver:
             "*.pdmodel, *.pdiparams and *.pdiparams.info files."
         )
         jit.enable_to_static(False)
+
+        if with_onnx:
+            if not importlib.util.find_spec("paddle2onnx"):
+                raise ModuleNotFoundError(
+                    "Please install paddle2onnx with `pip install paddle2onnx`"
+                    " before exporting onnx model."
+                )
+            import paddle2onnx
+
+            DEFAULT_OPSET_VERSION = 13
+
+            paddle2onnx.export(
+                model_file=export_path + ".pdmodel",
+                params_file=export_path + ".pdiparams",
+                save_file=export_path + ".onnx",
+                opset_version=DEFAULT_OPSET_VERSION,
+                enable_onnx_checker=True,
+            )
+            logger.message(f"ONNX model has been exported to: {export_path}.onnx")
 
     def autocast_context_manager(
         self, enable: bool, level: Literal["O0", "O1", "O2", "OD"] = "O1"
