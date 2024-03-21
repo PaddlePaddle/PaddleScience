@@ -16,6 +16,7 @@ import copy
 from typing import TYPE_CHECKING
 
 from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
+from ppsci.data.dataset.array_dataset import ChipHeatDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
 __all__ = [
     "IterableNamedArrayDataset",
     "NamedArrayDataset",
+    "ChipHeatDataset",
     "CSVDataset",
     "IterableCSVDataset",
     "ERA5Dataset",

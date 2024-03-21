@@ -76,6 +76,7 @@ nav:
           - Heat_Exchanger: zh/examples/heat_exchanger.md
           - Heat_PINN: zh/examples/heat_pinn.md
           - PhyGeoNet: zh/examples/phygeonet.md
+          - Chip_heat: zh/examples/chip_heat.md
       - 材料科学(AI for Material):
         - hPINNs: zh/examples/hpinns.md
       - 地球科学(AI for Earth Science):
