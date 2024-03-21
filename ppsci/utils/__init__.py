@@ -36,6 +36,7 @@ from ppsci.utils.save_load import save_checkpoint
 from ppsci.utils.symbolic import lambdify
 from ppsci.utils.writer import save_csv_file
 from ppsci.utils.writer import save_tecplot_file
+from ppsci.utils.registry import Registry
 
 __all__ = [
     "AttrDict",
@@ -55,6 +56,7 @@ __all__ = [
     "save_csv_file",
     "save_tecplot_file",
     "dynamic_import_to_globals",
+    "Registry",
     "run_check",
     "run_check_mesh",
     "set_random_seed",
