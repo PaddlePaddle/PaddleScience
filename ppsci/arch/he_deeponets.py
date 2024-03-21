@@ -44,15 +44,15 @@ class HEDeepONets(base.Arch):
             An integer for all layers, or list of integer specify each layer's size.
         branch_skip_connection (bool, optional): Whether to use skip connection for branch net. Defaults to False.
         trunk_skip_connection (bool, optional): Whether to use skip connection for trunk net. Defaults to False.
-        branch_activation (str, optional): Name of activation function. Defaults to "tanh".
-        trunk_activation (str, optional): Name of activation function. Defaults to "tanh".
+        branch_activation (str, optional): Name of activation function for branch net. Defaults to "tanh".
+        trunk_activation (str, optional): Name of activation function for trunk net. Defaults to "tanh".
         branch_weight_norm (bool, optional): Whether to apply weight norm on parameter(s) for branch net. Defaults to False.
         trunk_weight_norm (bool, optional): Whether to apply weight norm on parameter(s) for trunk net. Defaults to False.
         use_bias (bool, optional): Whether to add bias on predicted G(u)(y). Defaults to True.
 
     Examples:
         >>> import ppsci
-        >>> model = ppsci.arch.PI_DeepONet(
+        >>> model = ppsci.arch.HEDeepONet(
         ...     ('qm_h',),
         ...     ('qm_c',),
         ...     ("x",'t'),
