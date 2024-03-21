@@ -16,6 +16,7 @@ import copy
 from typing import TYPE_CHECKING
 
 from ppsci.data.dataset.airfoil_dataset import MeshAirfoilDataset
+from ppsci.data.dataset.array_dataset import ChipHeatDataset
 from ppsci.data.dataset.array_dataset import IterableNamedArrayDataset
 from ppsci.data.dataset.array_dataset import NamedArrayDataset
 from ppsci.data.dataset.csv_dataset import CSVDataset
@@ -25,6 +26,8 @@ from ppsci.data.dataset.era5_dataset import ERA5Dataset
 from ppsci.data.dataset.era5_dataset import ERA5SampledDataset
 from ppsci.data.dataset.mat_dataset import IterableMatDataset
 from ppsci.data.dataset.mat_dataset import MatDataset
+from ppsci.data.dataset.mrms_dataset import MRMSDataset
+from ppsci.data.dataset.mrms_dataset import MRMSSampledDataset
 from ppsci.data.dataset.npz_dataset import IterableNPZDataset
 from ppsci.data.dataset.npz_dataset import NPZDataset
 from ppsci.data.dataset.radar_dataset import RadarDataset
@@ -41,12 +44,15 @@ if TYPE_CHECKING:
 __all__ = [
     "IterableNamedArrayDataset",
     "NamedArrayDataset",
+    "ChipHeatDataset",
     "CSVDataset",
     "IterableCSVDataset",
     "ERA5Dataset",
     "ERA5SampledDataset",
     "IterableMatDataset",
     "MatDataset",
+    "MRMSDataset",
+    "MRMSSampledDataset",
     "IterableNPZDataset",
     "NPZDataset",
     "CylinderDataset",

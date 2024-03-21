@@ -103,6 +103,7 @@ def log_train_info(
         step=trainer.global_step,
         vdl_writer=trainer.vdl_writer,
         wandb_writer=trainer.wandb_writer,
+        tbd_writer=trainer.tbd_writer,
     )
 
 
@@ -145,4 +146,5 @@ def log_eval_info(
         step=trainer.global_step,
         vdl_writer=trainer.vdl_writer,
         wandb_writer=trainer.wandb_writer,
+        tbd_writer=trainer.tbd_writer,
     )
