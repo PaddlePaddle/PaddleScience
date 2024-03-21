@@ -136,9 +136,7 @@ class Jacobians:
                 self.Js[key] = _Jacobian(ys, xs)
             return self.Js[key](i, j, retain_graph, create_graph)
         else:
-            xs_require = [
-                xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js
-            ]
+            xs_require = [xs[i] for i in range(len(xs)) if (ys, xs[i]) not in self.Js]
             grads_require = paddle.grad(
                 ys,
                 xs_require,
