@@ -104,7 +104,7 @@ class Solver:
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
-        ... )
+        ... )  # doctest: +SKIP
         >>> solver = ppsci.solver.Solver(
         ...     model,
         ...     {"EQ": pde_constraint},
@@ -610,8 +610,8 @@ class Solver:
             >>> input_dict = {'x': paddle.rand([32, 1]),
             ...               'y': paddle.rand([32, 1])}
             >>> pred = solver.predict(input_dict) # doctest: +SKIP
-            >>> for k, v in pred.items():
-            ...     print(k, v.shape)
+            >>> for k, v in pred.items(): # doctest: +SKIP
+            ...     print(k, v.shape) # doctest: +SKIP
             u [32, 1]
             v [32, 1]
         """

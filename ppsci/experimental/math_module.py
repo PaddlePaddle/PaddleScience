@@ -427,34 +427,34 @@ def trapezoid_integrate(
         >>> res = ppsci.experimental.trapezoid_integrate(y)
         >>> print(res)
         Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [2., 8.])
+               [2., 8.])
         >>> res = ppsci.experimental.trapezoid_integrate(y, mode="cumsum")
         >>> print(res)
         Tensor(shape=[2, 2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [[0.50000000, 2.        ],
-            [3.50000000, 8.        ]])
+               [[0.50000000, 2.        ],
+                [3.50000000, 8.        ]])
         >>> res = ppsci.experimental.trapezoid_integrate(
-            y, x=paddle.to_tensor([[0, 1, 2], [3, 4, 5]], dtype="float32")
-        )
+        ...     y, x=paddle.to_tensor([[0, 1, 2], [3, 4, 5]], dtype="float32")
+        ... )
         >>> print(res)
         Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [2., 8.])
+               [2., 8.])
         >>> res = ppsci.experimental.trapezoid_integrate(
-            y, x=paddle.to_tensor([0, 1], dtype="float32"), axis=0
-        )
+        ...     y, x=paddle.to_tensor([0, 1], dtype="float32"), axis=0
+        ... )
         >>> print(res)
         Tensor(shape=[3], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [1.50000000, 2.50000000, 3.50000000])
+               [1.50000000, 2.50000000, 3.50000000])
         >>> res = ppsci.experimental.trapezoid_integrate(
-            y, x=paddle.to_tensor([0, 1, 2], dtype="float32"), axis=1
-        )
+        ...     y, x=paddle.to_tensor([0, 1, 2], dtype="float32"), axis=1
+        ... )
         >>> print(res)
         Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [2., 8.])
+               [2., 8.])
         >>> res = ppsci.experimental.trapezoid_integrate(y, dx=2)
         >>> print(res)
         Tensor(shape=[2], dtype=float32, place=Place(gpu:0), stop_gradient=True,
-            [4. , 16.])
+               [4. , 16.])
     """
     if mode == "sum":
         return paddle.trapezoid(y, x, dx, axis)
