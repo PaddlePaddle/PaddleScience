@@ -214,7 +214,7 @@ class Mesh(geometry.Geometry):
              [1. 0. 1.]
              [1. 1. 1.]
              [0. 1. 1.]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), 0).vertices) # the center is moved to the translation vector.
+            >>> print(mesh.translate((-0.5, 0, 0.5), False).vertices) # the center is moved to the translation vector.
             [[-1.  -0.5  0. ]
              [ 0.  -0.5  0. ]
              [ 0.   0.5  0. ]
@@ -223,7 +223,7 @@ class Mesh(geometry.Geometry):
              [ 0.  -0.5  1. ]
              [ 0.   0.5  1. ]
              [-1.   0.5  1. ]]
-            >>> print(mesh.translate((-0.5, 0, 0.5), 1).vertices) # the translation vector is directly added to the geometry coordinates
+            >>> print(mesh.translate((-0.5, 0, 0.5), True).vertices) # the translation vector is directly added to the geometry coordinates
             [[-0.5  0.   0.5]
              [ 0.5  0.   0.5]
              [ 0.5  1.   0.5]
