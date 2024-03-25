@@ -14,6 +14,9 @@ hydra:
           - mode
           - output_dir
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -25,9 +28,8 @@ seed: 0
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
-USE_SAMPLED_DATA: false
 # set train and evaluate data path
-FILE_PATH: /home/aistudio/sevir_data
+FILE_PATH: ./datasets/sevir/sevir_data
 
 # SEVIR dataset:raw_seq_len: 49,interval_real_time:5, img_height = 384,img_width = 384
 # SEVIR_lr dataset:raw_seq_len: 25,interval_real_time:10, img_height = 128,img_width = 128  
@@ -137,7 +139,7 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: /home/aistudio/paddle_earthformer_sevir.pdparams
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
   compute_metric_by_batch: True
   eval_with_no_grad: true
   batch_size: 1
@@ -149,14 +151,14 @@ EVAL:
 
 
 TEST:
-  pretrained_model_path: /home/aistudio/paddle_earthformer_sevir.pdparams
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
   compute_metric_by_batch: True
   eval_with_no_grad: true
   batch_size: 1
   end_date: null
 
 INFER:
-  pretrained_model_path: /home/aistudio/paddle_earthformer_sevir.pdparams
+  pretrained_model_path: ./checkpoint/sevir/earthformer_sevir.pdparams
   export_path: ./inference/earthformer/sevir
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
@@ -171,7 +173,7 @@ INFER:
   max_batch_size: 16
   num_cpu_threads: 4
   batch_size: 1
-  data_path: /home/aistudio/sevir_data/sevir/data/vil/2019/SEVIR_VIL_STORMEVENTS_2019_0701_1231.h5
+  data_path: ./datasets/sevir/vil/2019/SEVIR_VIL_STORMEVENTS_2019_0701_1231.h5
   in_len: 13
   out_len: 12
   sevir_vis_save: ./inference/earthformer/sevir/vis

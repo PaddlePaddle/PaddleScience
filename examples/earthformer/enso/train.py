@@ -15,60 +15,30 @@ from ppsci.utils import logger
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
     # set train dataloader config
-    if not cfg.USE_SAMPLED_DATA:
-        train_dataloader_cfg = {
-            "dataset": {
-                "name": "ENSODataset",
-                "data_dir": cfg.FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.DATASET.label_keys,
-                "in_len": cfg.DATASET.in_len,
-                "out_len": cfg.DATASET.out_len,
-                "in_stride": cfg.DATASET.in_stride,
-                "out_stride": cfg.DATASET.out_stride,
-                "train_samples_gap": cfg.DATASET.train_samples_gap,
-                "eval_samples_gap": cfg.DATASET.eval_samples_gap,
-                "normalize_sst": cfg.DATASET.normalize_sst,
-            },
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": True,
-                "shuffle": True,
-            },
-            "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 8,
-        }
-    else:
-        NUM_GPUS_PER_NODE = 8
-        train_dataloader_cfg = {
-            "dataset": {
-                "name": "ENSODataset",
-                "data_dir": cfg.FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.DATASET.label_keys,
-                "in_len": cfg.DATASET.in_len,
-                "out_len": cfg.DATASET.out_len,
-                "in_stride": cfg.DATASET.in_stride,
-                "out_stride": cfg.DATASET.out_stride,
-                "train_samples_gap": cfg.DATASET.train_samples_gap,
-                "eval_samples_gap": cfg.DATASET.eval_samples_gap,
-                "normalize_sst": cfg.DATASET.normalize_sst,
-            },
-            "sampler": {
-                "name": "DistributedBatchSampler",
-                "drop_last": True,
-                "shuffle": True,
-                "num_replicas": NUM_GPUS_PER_NODE,
-                "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
-            },
-            "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 8,
-        }
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "ENSODataset",
+            "data_dir": cfg.FILE_PATH,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.DATASET.label_keys,
+            "in_len": cfg.DATASET.in_len,
+            "out_len": cfg.DATASET.out_len,
+            "in_stride": cfg.DATASET.in_stride,
+            "out_stride": cfg.DATASET.out_stride,
+            "train_samples_gap": cfg.DATASET.train_samples_gap,
+            "eval_samples_gap": cfg.DATASET.eval_samples_gap,
+            "normalize_sst": cfg.DATASET.normalize_sst,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": True,
+            "shuffle": True,
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "num_workers": 8,
+    }
+
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -95,11 +65,6 @@ def train(cfg: DictConfig):
             "normalize_sst": cfg.DATASET.normalize_sst,
             "training": "eval",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -107,13 +72,13 @@ def train(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(train_mse_func),
         metric={
-            "rmse":ppsci.metric.FunctionalMetric(eval_rmse_func,keep_batch=False),
+            "rmse": ppsci.metric.FunctionalMetric(eval_rmse_func, keep_batch=False),
         },
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
 
-    num_blocks=len(cfg.MODEL.afno["enc_depth"])
+    num_blocks = len(cfg.MODEL.afno["enc_depth"])
     if isinstance(cfg.MODEL["self_pattern"], str):
         enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
 
@@ -123,32 +88,33 @@ def train(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,            
-            enc_attn_patterns=enc_attn_patterns,
-            dec_self_attn_patterns=dec_self_attn_patterns,
-            dec_cross_attn_patterns=dec_cross_attn_patterns,)
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
     optimizer_grouped_parameters = [{
-            'params': [p for n, p in model.named_parameters() if n in decay_parameters],
-            'weight_decay': cfg.TRAIN.wd
-        }, {
-            'params': [p for n, p in model.named_parameters() if n not in decay_parameters],
-            'weight_decay': 0.0
-        }]
+        'params': [p for n, p in model.named_parameters() if n in decay_parameters],
+        'weight_decay': cfg.TRAIN.wd
+    }, {
+        'params': [p for n, p in model.named_parameters() if n not in decay_parameters],
+        'weight_decay': 0.0
+    }]
 
     # # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
     lr_scheduler_cfg.update({"iters_per_epoch": ITERS_PER_EPOCH})
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
-        eta_min =cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
+        eta_min=cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
         warmup_epoch=int(0.2 * cfg.TRAIN.epochs))()
     # optimizer = ppsci.optimizer.AdamW(lr_scheduler)(model)
     optimizer = paddle.optimizer.AdamW(lr_scheduler,
-                                parameters=optimizer_grouped_parameters,
-                                weight_decay=cfg.TRAIN.wd)
+                                       parameters=optimizer_grouped_parameters,
+                                       weight_decay=cfg.TRAIN.wd)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -172,10 +138,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
     # set eval dataloader config
     eval_dataloader_cfg = {
         "dataset": {
@@ -192,11 +154,6 @@ def evaluate(cfg: DictConfig):
             "normalize_sst": cfg.DATASET.normalize_sst,
             "training": "test",
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -204,12 +161,12 @@ def evaluate(cfg: DictConfig):
         eval_dataloader_cfg,
         loss=ppsci.loss.FunctionalLoss(train_mse_func),
         metric={
-            "rmse":ppsci.metric.FunctionalMetric(eval_rmse_func,keep_batch=False),
+            "rmse": ppsci.metric.FunctionalMetric(eval_rmse_func, keep_batch=False),
         },
         name="Sup_Validator",
     )
     validator = {sup_validator.name: sup_validator}
-    num_blocks=len(cfg.MODEL.afno["enc_depth"])
+    num_blocks = len(cfg.MODEL.afno["enc_depth"])
     if isinstance(cfg.MODEL["self_pattern"], str):
         enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
 
@@ -219,10 +176,11 @@ def evaluate(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,            
-            enc_attn_patterns=enc_attn_patterns,
-            dec_self_attn_patterns=dec_self_attn_patterns,
-            dec_cross_attn_patterns=dec_cross_attn_patterns,)
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -238,9 +196,10 @@ def evaluate(cfg: DictConfig):
     # evaluate
     solver.eval()
 
+
 def export(cfg: DictConfig):
     # set model
-    num_blocks=len(cfg.MODEL.afno["enc_depth"])
+    num_blocks = len(cfg.MODEL.afno["enc_depth"])
     if isinstance(cfg.MODEL["self_pattern"], str):
         enc_attn_patterns = [cfg.MODEL["self_pattern"]] * num_blocks
 
@@ -250,10 +209,11 @@ def export(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,            
-            enc_attn_patterns=enc_attn_patterns,
-            dec_self_attn_patterns=dec_self_attn_patterns,
-            dec_cross_attn_patterns=dec_cross_attn_patterns,)
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -268,6 +228,7 @@ def export(cfg: DictConfig):
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
+
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
     predictor = pinn_predictor.PINNPredictor(cfg)
@@ -281,18 +242,18 @@ def inference(cfg: DictConfig):
     data = fold(data)
 
     idx_sst = prepare_inputs_targets(
-                len_time=data.shape[0],
-                input_length=cfg.INFER.in_len, input_gap=cfg.INFER.in_stride,
-                pred_shift=cfg.INFER.out_len * cfg.INFER.out_stride, pred_length=cfg.INFER.out_len,
-                samples_gap=cfg.INFER.samples_gap)
-    data=data[idx_sst].astype('float32')
+        len_time=data.shape[0],
+        input_length=cfg.INFER.in_len, input_gap=cfg.INFER.in_stride,
+        pred_shift=cfg.INFER.out_len * cfg.INFER.out_stride, pred_length=cfg.INFER.out_len,
+        samples_gap=cfg.INFER.samples_gap)
+    data = data[idx_sst].astype('float32')
 
     sst_data = data[..., np.newaxis]
     idx = np.random.choice(len(data), None, False)
-    in_seq = sst_data[idx,:cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
-    in_seq = in_seq[np.newaxis,...]
-    target_seq = sst_data[idx,cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
-    target_seq = target_seq[np.newaxis,...]
+    in_seq = sst_data[idx, :cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
+    in_seq = in_seq[np.newaxis, ...]
+    target_seq = sst_data[idx, cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
+    target_seq = target_seq[np.newaxis, ...]
 
     output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)
     output_dict = {
@@ -317,6 +278,7 @@ def main(cfg: DictConfig):
         raise ValueError(
             f"cfg.mode should in ['train', 'eval', 'export', 'infer'], but got '{cfg.mode}'"
         )
+
 
 if __name__ == "__main__":
     main()

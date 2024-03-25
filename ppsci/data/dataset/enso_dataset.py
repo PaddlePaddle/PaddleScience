@@ -27,7 +27,6 @@ from paddle import io
 import xarray as xr
 from pathlib import Path
 
-
 NINO_WINDOW_T = 3  # Nino index is the sliding average over sst, window size is 3
 CMIP6_SST_MAX = 10.198975563049316
 CMIP6_SST_MIN = -16.549121856689453
@@ -151,6 +150,8 @@ def read_raw_data(ds_dir, out_dir=None):
     train_cmip.close()
     label_cmip.close()
     return cmip6sst, cmip5sst, cmip6nino, cmip5nino
+
+
 def cat_over_last_dim(data):
     r"""
     treat different models (15 from CMIP6, 17 from CMIP5) as batch_size
@@ -179,7 +180,7 @@ class ENSODataset(io.Dataset):
                  # datamodule_only
                  batch_size=1,
                  num_workers=1,
-                 training='train',):
+                 training='train', ):
         r"""
         Parameters
         ----------
@@ -219,27 +220,27 @@ class ENSODataset(io.Dataset):
         self.sst_test = [cmip5sst[..., -1:]]
         self.nino_test = [cmip5nino[..., -1:]]
 
-        self.sst,self.target_nino = self.create_data()
-    def create_data(self,):
-        if self.training=='train':
-            sst_cmip6=self.sst_train[0]
-            nino_cmip6=self.nino_train[0]
-            sst_cmip5=self.sst_train[1]
-            nino_cmip5=self.nino_train[1]
+        self.sst, self.target_nino = self.create_data()
+
+    def create_data(self, ):
+        if self.training == 'train':
+            sst_cmip6 = self.sst_train[0]
+            nino_cmip6 = self.nino_train[0]
+            sst_cmip5 = self.sst_train[1]
+            nino_cmip5 = self.nino_train[1]
             samples_gap = self.train_samples_gap
-        elif self.training=='eval':
-            sst_cmip6=None
-            nino_cmip6=None
-            sst_cmip5=self.sst_eval[0]
-            nino_cmip5=self.nino_eval[0]
+        elif self.training == 'eval':
+            sst_cmip6 = None
+            nino_cmip6 = None
+            sst_cmip5 = self.sst_eval[0]
+            nino_cmip5 = self.nino_eval[0]
             samples_gap = self.eval_samples_gap
-        elif self.training=='test':
-            sst_cmip6=None
-            nino_cmip6=None
-            sst_cmip5=self.sst_test[0]
-            nino_cmip5=self.nino_test[0]
+        elif self.training == 'test':
+            sst_cmip6 = None
+            nino_cmip6 = None
+            sst_cmip5 = self.sst_test[0]
+            nino_cmip5 = self.nino_test[0]
             samples_gap = self.eval_samples_gap
-            
 
         # cmip6 (N, *, 15)
         # cmip5 (N, *, 17)
@@ -280,7 +281,6 @@ class ENSODataset(io.Dataset):
         assert self.target_nino.shape[1] == self.out_len - NINO_WINDOW_T + 1
         return self.sst, self.target_nino
 
-
     def GetDataShape(self):
         return {'sst': self.sst.shape,
                 'nino target': self.target_nino.shape}
@@ -298,10 +298,10 @@ class ENSODataset(io.Dataset):
         if self.training == 'train':
             input_item = {self.input_keys[0]: in_seq}
             label_item = {
-                    self.label_keys[0]: target_seq,
-                }
-            
-            return input_item,label_item,weight_item
+                self.label_keys[0]: target_seq,
+            }
+
+            return input_item, label_item, weight_item
         else:
             input_item = {self.input_keys[0]: in_seq}
             label_item = {
@@ -309,9 +309,4 @@ class ENSODataset(io.Dataset):
                 self.label_keys[1]: self.target_nino[idx],
             }
 
-            return input_item,label_item,weight_item
-
-
-
-
-
+            return input_item, label_item, weight_item

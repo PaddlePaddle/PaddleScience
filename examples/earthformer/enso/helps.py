@@ -8,8 +8,7 @@ from paddle.nn import functional as F
 def compute_enso_score(
         y_pred, y_true,
         acc_weight: Optional[Union[str, np.ndarray, paddle.Tensor]] = None):
-    r"""
-
+    """
     Parameters
     ----------
     y_pred: paddle.Tensor
@@ -51,7 +50,7 @@ def compute_enso_score(
 def sst_to_nino(sst: paddle.Tensor,
                 normalize_sst: bool = True,
                 detach: bool = True):
-    r"""
+    """
 
     Parameters
     ----------
@@ -114,7 +113,7 @@ def eval_rmse_func(
     valid_loss = -valid_acc
 
     return {"valid_loss_epoch": valid_loss, "mse": mse, "mae": mae, "rmse": valid_nino_rmse,
-            "corr_nino3.4_epoch": valid_acc, "corr_nino3.4_weighted_epoch": valid_weighted_acc, }
+            "corr_nino3.4_epoch": valid_acc, "corr_nino3.4_weighted_epoch": valid_weighted_acc}
 
 
 def get_parameter_names(model, forbidden_layer_types):

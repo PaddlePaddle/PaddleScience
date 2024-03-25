@@ -14,6 +14,9 @@ hydra:
           - mode
           - output_dir
           - log_freq
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -25,9 +28,8 @@ seed: 0
 output_dir: ${hydra:run.dir}
 log_freq: 20
 
-USE_SAMPLED_DATA: false
 # set train and evaluate data path
-FILE_PATH: /home/aistudio/data/data260191/enso_round1_train_20210201
+FILE_PATH: ./datasets/enso/enso_round1_train_20210201
 
 # dataset setting
 DATASET:
@@ -124,13 +126,13 @@ TRAIN:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: /home/aistudio/best_model.pdparams
+  pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
   compute_metric_by_batch: False
   eval_with_no_grad: true
-  batch_size: 16
+  batch_size: 1
 
 INFER:
-  pretrained_model_path: /home/aistudio/best_model.pdparams
+  pretrained_model_path: ./checkpoint/enso/earthformer_enso.pdparams
   export_path: ./inference/earthformer/enso
   pdmodel_path: ${INFER.export_path}.pdmodel
   pdpiparams_path: ${INFER.export_path}.pdiparams
@@ -145,13 +147,9 @@ INFER:
   max_batch_size: 16
   num_cpu_threads: 4
   batch_size: 1
-  data_path: /home/aistudio/data/data260191/enso_round1_train_20210201/SODA_train.nc
+  data_path: ./datasets/enso/infer/SODA_train.nc
   in_len: 12
   in_stride: 1
   out_len: 14
   out_stride: 1
   samples_gap: 1
-
-
-
-

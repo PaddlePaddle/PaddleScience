@@ -14,75 +14,37 @@ from sevir_vis_seq import save_example_vis_results
 
 
 def train(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "train.log"), "info")
-
     # set train dataloader config
-    if not cfg.USE_SAMPLED_DATA:
-        train_dataloader_cfg = {
-            "dataset": {
-                "name": "SEVIRDataset",
-                "data_dir": cfg.FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.DATASET.label_keys,
-                "seq_len": cfg.DATASET.seq_len,
-                "raw_seq_len": cfg.DATASET.raw_seq_len,
-                "sample_mode": cfg.DATASET.sample_mode,
-                "stride": cfg.DATASET.stride,
-                "batch_size": cfg.DATASET.batch_size,
-                "layout": cfg.DATASET.layout,
-                "in_len": cfg.DATASET.in_len,
-                "out_len": cfg.DATASET.out_len,
-                "split_mode": cfg.DATASET.split_mode,
-                "start_date": cfg.TRAIN.start_date,
-                "end_date": cfg.TRAIN.end_date,
-                "shuffle": True,
-                "verbose": False,
-                "training": True,
-            },
-            "sampler": {
-                "name": "BatchSampler",
-                "drop_last": True,
-                "shuffle": True,
-            },
-            "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 8,
-        }
-    else:
-        NUM_GPUS_PER_NODE = 8
-        train_dataloader_cfg = {
-            "dataset": {
-                "name": "SEVIRDataset",
-                "data_dir": cfg.FILE_PATH,
-                "input_keys": cfg.MODEL.afno.input_keys,
-                "label_keys": cfg.DATASET.label_keys,
-                "seq_len": cfg.DATASET.seq_len,
-                "raw_seq_len": cfg.DATASET.raw_seq_len,
-                "sample_mode": cfg.DATASET.sample_mode,
-                "stride": cfg.DATASET.stride,
-                "batch_size": cfg.DATASET.batch_size,
-                "layout": cfg.DATASET.layout,
-                "in_len": cfg.DATASET.in_len,
-                "out_len": cfg.DATASET.out_len,
-                "split_mode": cfg.DATASET.split_mode,
-                "start_date": cfg.TRAIN.start_date,
-                "end_date": cfg.TRAIN.end_date,
-                "shuffle": True,
-                "verbose": False,
-                "training": True,
-            },
-            "sampler": {
-                "name": "DistributedBatchSampler",
-                "drop_last": True,
-                "shuffle": True,
-                "num_replicas": NUM_GPUS_PER_NODE,
-                "rank": dist.get_rank() % NUM_GPUS_PER_NODE,
-            },
-            "batch_size": cfg.TRAIN.batch_size,
-            "num_workers": 8,
-        }
+    train_dataloader_cfg = {
+        "dataset": {
+            "name": "SEVIRDataset",
+            "data_dir": cfg.FILE_PATH,
+            "input_keys": cfg.MODEL.afno.input_keys,
+            "label_keys": cfg.DATASET.label_keys,
+            "seq_len": cfg.DATASET.seq_len,
+            "raw_seq_len": cfg.DATASET.raw_seq_len,
+            "sample_mode": cfg.DATASET.sample_mode,
+            "stride": cfg.DATASET.stride,
+            "batch_size": cfg.DATASET.batch_size,
+            "layout": cfg.DATASET.layout,
+            "in_len": cfg.DATASET.in_len,
+            "out_len": cfg.DATASET.out_len,
+            "split_mode": cfg.DATASET.split_mode,
+            "start_date": cfg.TRAIN.start_date,
+            "end_date": cfg.TRAIN.end_date,
+            "shuffle": True,
+            "verbose": False,
+            "training": True,
+        },
+        "sampler": {
+            "name": "BatchSampler",
+            "drop_last": True,
+            "shuffle": True,
+        },
+        "batch_size": cfg.TRAIN.batch_size,
+        "num_workers": 8,
+    }
+
     # set constraint
     sup_constraint = ppsci.constraint.SupervisedConstraint(
         train_dataloader_cfg,
@@ -115,11 +77,6 @@ def train(cfg: DictConfig):
             "verbose": False,
             "training": False,
         },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
-        },
         "batch_size": cfg.EVAL.batch_size,
     }
 
@@ -151,10 +108,11 @@ def train(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,
-                                              enc_attn_patterns=enc_attn_patterns,
-                                              dec_self_attn_patterns=dec_self_attn_patterns,
-                                              dec_cross_attn_patterns=dec_cross_attn_patterns, )
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
@@ -199,10 +157,6 @@ def train(cfg: DictConfig):
 
 
 def evaluate(cfg: DictConfig):
-    # set random seed for reproducibility
-    ppsci.utils.misc.set_random_seed(cfg.seed)
-    # initialize logger
-    logger.init_logger("ppsci", osp.join(cfg.output_dir, "eval.log"), "info")
     # set eval dataloader config
     eval_dataloader_cfg = {
         "dataset": {
@@ -224,11 +178,6 @@ def evaluate(cfg: DictConfig):
             "shuffle": True,
             "verbose": False,
             "training": False,
-        },
-        "sampler": {
-            "name": "BatchSampler",
-            "drop_last": False,
-            "shuffle": False,
         },
         "batch_size": cfg.EVAL.batch_size,
     }
@@ -261,10 +210,11 @@ def evaluate(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,
-                                              enc_attn_patterns=enc_attn_patterns,
-                                              dec_self_attn_patterns=dec_self_attn_patterns,
-                                              dec_cross_attn_patterns=dec_cross_attn_patterns, )
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -293,10 +243,11 @@ def export(cfg: DictConfig):
     if isinstance(cfg.MODEL["cross_pattern"], str):
         dec_cross_attn_patterns = [cfg.MODEL["cross_pattern"]] * num_blocks
 
-    model = ppsci.arch.CuboidTransformerModel(**cfg.MODEL.afno,
-                                              enc_attn_patterns=enc_attn_patterns,
-                                              dec_self_attn_patterns=dec_self_attn_patterns,
-                                              dec_cross_attn_patterns=dec_cross_attn_patterns, )
+    model = ppsci.arch.CuboidTransformerModel(
+        **cfg.MODEL.afno,
+        enc_attn_patterns=enc_attn_patterns,
+        dec_self_attn_patterns=dec_self_attn_patterns,
+        dec_cross_attn_patterns=dec_cross_attn_patterns)
 
     # initialize solver
     solver = ppsci.solver.Solver(

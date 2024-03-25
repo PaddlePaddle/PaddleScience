@@ -5,7 +5,7 @@ from ppsci.data.dataset.sevir_dataset import SEVIRDataset
 import numpy as np
 
 
-def _threshold(target, pred ,T):
+def _threshold(target, pred, T):
     """
     Returns binary tensors t,p the same shape as target & pred.  t = 1 wherever
     target > t.  p =1 wherever pred > t.  p and t are set to 0 wherever EITHER
@@ -28,10 +28,11 @@ def _threshold(target, pred ,T):
     t = (target >= T).astype('float32')
     p = (pred >= T).astype('float32')
     is_nan = paddle.logical_or(paddle.isnan(target),
-                              paddle.isnan(pred))
+                               paddle.isnan(pred))
     t[is_nan] = 0
     p[is_nan] = 0
     return t, p
+
 
 class SEVIRSkillScore:
     r"""
@@ -51,7 +52,7 @@ class SEVIRSkillScore:
                  eps: float = 1e-4,
                  dist_sync_on_step: bool = False,
                  ):
-        r"""
+        """
         Parameters
         ----------
         seq_len
@@ -91,10 +92,10 @@ class SEVIRSkillScore:
         self.hits = paddle.zeros(shape=[len(self.threshold_list)])
         self.misses = paddle.zeros(shape=[len(self.threshold_list)])
         self.fas = paddle.zeros(shape=[len(self.threshold_list)])
-        
-        if mode in ("0", ):
+
+        if mode in ("0",):
             self.keep_seq_len_dim = False
-            state_shape = (len(self.threshold_list), )
+            state_shape = (len(self.threshold_list),)
         elif mode in ("1", "2"):
             self.keep_seq_len_dim = True
             assert isinstance(self.seq_len, int), "seq_len must be provided when we need to keep seq_len dim."
@@ -102,7 +103,7 @@ class SEVIRSkillScore:
 
         else:
             raise NotImplementedError(f"mode {mode} not supported!")
-    
+
     @staticmethod
     def pod(hits, misses, fas, eps):
         return hits / (hits + misses + eps)
@@ -178,7 +179,7 @@ class SEVIRSkillScore:
         ret["avg"] = {}
         for metrics in self.metrics_list:
             if self.keep_seq_len_dim:
-                score_avg = np.zeros((self.seq_len, ))
+                score_avg = np.zeros((self.seq_len,))
             else:
                 score_avg = 0
             # shape = (len(threshold_list), seq_len) if self.keep_seq_len_dim,
@@ -192,7 +193,7 @@ class SEVIRSkillScore:
                     score = scores[i].item()  # shape = (1, )
                 if self.mode in ("0", "1"):
                     ret[threshold][metrics] = score
-                elif self.mode in ("2", ):
+                elif self.mode in ("2",):
                     ret[threshold][metrics] = np.mean(score).item()
                 else:
                     raise NotImplementedError
@@ -206,78 +207,79 @@ class SEVIRSkillScore:
                 raise NotImplementedError
         return ret
 
+
 class eval_rmse_func:
-    def __init__(self,  
-                out_len=12,
-                layout='NTHWC',
-                metrics_mode ='0',
-                metrics_list=['csi', 'pod', 'sucr', 'bias'],
-                threshold_list=[16, 74, 133, 160, 181, 219],
-                *args,
-            ) -> Dict[str, paddle.Tensor]:
+    def __init__(self,
+                 out_len=12,
+                 layout='NTHWC',
+                 metrics_mode='0',
+                 metrics_list=['csi', 'pod', 'sucr', 'bias'],
+                 threshold_list=[16, 74, 133, 160, 181, 219],
+                 *args,
+                 ) -> Dict[str, paddle.Tensor]:
         super().__init__()
-        self.out_len=out_len
-        self.layout=layout
-        self.metrics_mode=metrics_mode
-        self.metrics_list=metrics_list
-        self.threshold_list=threshold_list
-    
-    def __call__(self,    
-        output_dict: Dict[str, "paddle.Tensor"],
-        label_dict: Dict[str, "paddle.Tensor"]
-        ):
+        self.out_len = out_len
+        self.layout = layout
+        self.metrics_mode = metrics_mode
+        self.metrics_list = metrics_list
+        self.threshold_list = threshold_list
+
+    def __call__(self,
+                 output_dict: Dict[str, "paddle.Tensor"],
+                 label_dict: Dict[str, "paddle.Tensor"]
+                 ):
         pred = output_dict["vil"]
         vil_target = label_dict["vil"]
-        vil_target = vil_target.reshape([-1,*vil_target.shape[2:]])
+        vil_target = vil_target.reshape([-1, *vil_target.shape[2:]])
         # mse
         mae = F.l1_loss(pred, vil_target, "none")
         mae = mae.mean(axis=tuple(range(1, mae.ndim)))
         # mse
-        mse = F.mse_loss(pred, vil_target,"none")
+        mse = F.mse_loss(pred, vil_target, "none")
         mse = mse.mean(axis=tuple(range(1, mse.ndim)))
 
         sevir_score = SEVIRSkillScore(
             layout=self.layout,
-            mode =self.metrics_mode,
+            mode=self.metrics_mode,
             seq_len=self.out_len,
             threshold_list=self.threshold_list,
             metrics_list=self.metrics_list,
         )
 
         B = pred.shape[0]
-        csi_m=paddle.zeros(shape=[B])
-        csi_219=paddle.zeros(shape=[B])
-        csi_181=paddle.zeros(shape=[B])
-        csi_160=paddle.zeros(shape=[B])
-        csi_133=paddle.zeros(shape=[B])
-        csi_74=paddle.zeros(shape=[B])
-        csi_16=paddle.zeros(shape=[B])
+        csi_m = paddle.zeros(shape=[B])
+        csi_219 = paddle.zeros(shape=[B])
+        csi_181 = paddle.zeros(shape=[B])
+        csi_160 = paddle.zeros(shape=[B])
+        csi_133 = paddle.zeros(shape=[B])
+        csi_74 = paddle.zeros(shape=[B])
+        csi_16 = paddle.zeros(shape=[B])
         csi_loss = paddle.zeros(shape=[B])
         for i in range(B):
-            sevir_valid_score = sevir_score.compute(pred[i,...].unsqueeze(0), vil_target[i,...].unsqueeze(0))
+            sevir_valid_score = sevir_score.compute(pred[i, ...].unsqueeze(0), vil_target[i, ...].unsqueeze(0))
             csi_loss[i] = - paddle.to_tensor(sevir_valid_score['avg']['csi'])
-            csi_m[i]= paddle.to_tensor(sevir_valid_score['avg']['csi'])
-            csi_219[i]= paddle.to_tensor(sevir_valid_score[219]['csi'])
-            csi_181[i]= paddle.to_tensor(sevir_valid_score[181]['csi'])
-            csi_160[i]= paddle.to_tensor(sevir_valid_score[160]['csi'])
-            csi_133[i]= paddle.to_tensor(sevir_valid_score[133]['csi'])
-            csi_74[i]= paddle.to_tensor(sevir_valid_score[74]['csi'])
-            csi_16[i]= paddle.to_tensor(sevir_valid_score[16]['csi'])
-        
-        return {"valid_loss_epoch":csi_loss,"mse":mse,"mae":mae,"csi_m":csi_m,
-                "csi_219":csi_219,"csi_181":csi_181,"csi_160":csi_160,"csi_133":csi_133,
-                "csi_74":csi_74,"csi_16":csi_16}
+            csi_m[i] = paddle.to_tensor(sevir_valid_score['avg']['csi'])
+            csi_219[i] = paddle.to_tensor(sevir_valid_score[219]['csi'])
+            csi_181[i] = paddle.to_tensor(sevir_valid_score[181]['csi'])
+            csi_160[i] = paddle.to_tensor(sevir_valid_score[160]['csi'])
+            csi_133[i] = paddle.to_tensor(sevir_valid_score[133]['csi'])
+            csi_74[i] = paddle.to_tensor(sevir_valid_score[74]['csi'])
+            csi_16[i] = paddle.to_tensor(sevir_valid_score[16]['csi'])
+
+        return {"valid_loss_epoch": csi_loss, "mse": mse, "mae": mae, "csi_m": csi_m,
+                "csi_219": csi_219, "csi_181": csi_181, "csi_160": csi_160, "csi_133": csi_133,
+                "csi_74": csi_74, "csi_16": csi_16}
 
 
 def train_mse_func(
-    output_dict: Dict[str, "paddle.Tensor"],
-    label_dict: Dict[str, "paddle.Tensor"],
-    *args,
+        output_dict: Dict[str, "paddle.Tensor"],
+        label_dict: Dict[str, "paddle.Tensor"],
+        *args,
 ) -> paddle.Tensor:
-    pred=output_dict["vil"]
+    pred = output_dict["vil"]
     vil_target = label_dict["vil"]
-    target=vil_target.reshape([-1,*vil_target.shape[2:]])
-    return F.mse_loss(pred,target)
+    target = vil_target.reshape([-1, *vil_target.shape[2:]])
+    return F.mse_loss(pred, target)
 
 
 def get_parameter_names(model, forbidden_layer_types):
