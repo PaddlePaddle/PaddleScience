@@ -21,6 +21,7 @@ import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import paddle
+import paddle.nn as nn
 from omegaconf import DictConfig
 
 import ppsci
@@ -28,12 +29,22 @@ from ppsci.utils import logger
 
 
 def visualize(
-    cfg: DictConfig,
+    output_dir: str,
     x: paddle.Tensor,
     y: paddle.Tensor,
     y_hat: paddle.Tensor,
     batch_idx: int,
 ) -> None:
+    """
+    Visualize input images, target images, and generated images.
+
+    Args:
+        output_dir: Directory to save the visualization images.
+        x: Input tensor.
+        y: Target tensor.
+        y_hat: Generated tensor.
+        batch_idx: Index of the current batch.
+    """
     images = x[0]
     future_images = y[0]
     generated_images = y_hat[0]
@@ -45,7 +56,7 @@ def visualize(
         ax.imshow(images[i].transpose([1, 2, 0]).numpy(), alpha=alpha, cmap="viridis")
         ax.axis("off")
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
-    plt.savefig(osp.join(cfg.output_dir, "Input_Image_Stack_Frame.png"))
+    plt.savefig(osp.join(output_dir, "Input_Image_Stack_Frame.png"))
     fig, axes = plt.subplots(3, 3)
     for i, ax in enumerate(axes.flat):
         alpha = future_images[i][0].numpy()
@@ -55,7 +66,7 @@ def visualize(
             future_images[i].transpose([1, 2, 0]).numpy(), alpha=alpha, cmap="viridis"
         )
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
-    plt.savefig(osp.join(cfg.output_dir, "Target_Image_Frame.png"))
+    plt.savefig(osp.join(output_dir, "Target_Image_Frame.png"))
     fig, axes = plt.subplots(3, 3)
     for i, ax in enumerate(axes.flat):
         alpha = generated_images[i][0].numpy()
@@ -68,17 +79,36 @@ def visualize(
         )
         ax.axis("off")
     plt.subplots_adjust(hspace=0.1, wspace=0.1)
-    plt.savefig(osp.join(cfg.output_dir, "Generated_Image_Frame.png"))
+    plt.savefig(osp.join(output_dir, "Generated_Image_Frame.png"))
 
 
-def validation(solver, batch, batch_idx):
+def validation(
+    cfg: DictConfig,
+    solver: ppsci.solver.Solver,
+    batch: tuple,
+    batch_idx: int,
+):
+    """
+    validation step.
+
+    Args:
+        cfg: Configuration object.
+        solver: Solver object containing the model and related components.
+        batch: Input batch consisting of images and corresponding future images.
+        batch_idx: Index of the current batch.
+
+    Returns:
+        discriminator_loss: Loss incurred by the discriminator.
+        generator_loss: Loss incurred by the generator.
+        grid_cell_reg: Regularization term to encourage smooth transitions.
+    """
     images, future_images = batch
-    images_value = list(images.values())[0]
-    future_images_value = list(future_images.values())[0]
+    images_value = images[cfg.DATASET.input_keys]
+    future_images_value = future_images[cfg.DATASET.label_keys]
     # Two discriminator steps per generator step
     for _ in range(2):
         predictions = solver.predict(images)
-        predictions_value = list(predictions.values())[0]
+        predictions_value = predictions[cfg.MODEL.output_keys]
         generated_sequence = paddle.concat(x=[images_value, predictions_value], axis=1)
         real_sequence = paddle.concat(x=[images_value, future_images_value], axis=1)
         concatenated_inputs = paddle.concat(
@@ -96,12 +126,14 @@ def validation(solver, batch, batch_idx):
         score_generated_spatial, score_generated_temporal = paddle.split(
             x=score_generated, num_or_sections=score_generated.shape[1], axis=1
         )
-        discriminator_loss = loss_hinge_disc(
+        discriminator_loss = _loss_hinge_disc(
             score_generated_spatial, score_real_spatial
-        ) + loss_hinge_disc(score_generated_temporal, score_real_temporal)
+        ) + _loss_hinge_disc(score_generated_temporal, score_real_temporal)
 
-    predictions_value = [list(solver.predict(images).values())[0] for _ in range(6)]
-    grid_cell_reg = grid_cell_regularizer(
+    predictions_value = [
+        solver.predict(images)[cfg.MODEL.output_keys] for _ in range(6)
+    ]
+    grid_cell_reg = _grid_cell_regularizer(
         paddle.stack(x=predictions_value, axis=0), future_images_value
     )
     generated_sequence = [
@@ -118,28 +150,28 @@ def validation(solver, batch, batch_idx):
             axis=0,
         )
         generated_scores.append(score_generated)
-    generator_disc_loss = loss_hinge_gen(paddle.concat(x=generated_scores, axis=0))
+    generator_disc_loss = _loss_hinge_gen(paddle.concat(x=generated_scores, axis=0))
     generator_loss = generator_disc_loss + 20 * grid_cell_reg
 
     return discriminator_loss, generator_loss, grid_cell_reg
 
 
-def loss_hinge_disc(score_generated, score_real):
+def _loss_hinge_disc(score_generated, score_real):
     """Discriminator hinge loss."""
-    l1 = paddle.nn.functional.relu(x=1.0 - score_real)
+    l1 = nn.functional.relu(x=1.0 - score_real)
     loss = paddle.mean(x=l1)
-    l2 = paddle.nn.functional.relu(x=1.0 + score_generated)
+    l2 = nn.functional.relu(x=1.0 + score_generated)
     loss += paddle.mean(x=l2)
     return loss
 
 
-def loss_hinge_gen(score_generated):
+def _loss_hinge_gen(score_generated):
     """Generator hinge loss."""
     loss = -paddle.mean(x=score_generated)
     return loss
 
 
-def grid_cell_regularizer(generated_samples, batch_targets):
+def _grid_cell_regularizer(generated_samples, batch_targets):
     """Grid cell regularizer.
 
     Args:
@@ -156,7 +188,7 @@ def grid_cell_regularizer(generated_samples, batch_targets):
 
 
 def train(cfg: DictConfig):
-    print("Not supported.")
+    raise NotImplementedError("Training of DGMR is not supported now.")
 
 
 def evaluate(cfg: DictConfig):
@@ -164,7 +196,7 @@ def evaluate(cfg: DictConfig):
     model = ppsci.arch.DGMR(**cfg.MODEL)
     # load evaluate data
     dataset = ppsci.data.dataset.DGMRDataset(**cfg.DATASET)
-    val_loader = paddle.io.DataLoader(dataset, batch_size=cfg.DATALOADER.batch_size)
+    val_loader = paddle.io.DataLoader(dataset, batch_size=1)
     # initialize solver
     solver = ppsci.solver.Solver(
         model,
@@ -178,13 +210,18 @@ def evaluate(cfg: DictConfig):
     grid_loss = []
     for batch_idx, batch in enumerate(val_loader):
         with paddle.no_grad():
-            out_dict = validation(solver, batch, batch_idx)
+            out_dict = validation(cfg, solver, batch, batch_idx)
 
             # visualize
-            images = batch[0]["input_frames"]
-            future_images = batch[1]["target_frames"]
-            generated_images = solver.predict(batch[0])["future_images"]
-            visualize(cfg, images, future_images, generated_images, batch_idx)
+            images = batch[0][cfg.DATASET.input_keys]
+            future_images = batch[1][cfg.DATASET.label_keys]
+            generated_images = solver.predict(batch[0])[cfg.MODEL.output_keys]
+            if batch_idx % 100 == 0:
+                visual_dir = osp.join(cfg.output_dir, f"epoch_{batch_idx}")
+                logger.message(f"Saving plot of image frame to {visual_dir}")
+                visualize(
+                    cfg.output_dir, images, future_images, generated_images, batch_idx
+                )
 
         d_loss.append(out_dict[0])
         g_loss.append(out_dict[1])

@@ -32,8 +32,8 @@ class DGMRDataset(paddle.io.Dataset):
         input_keys (Tuple[str, ...]): Input keys, such as ("input",).
         label_keys (Tuple[str, ...]): Output keys, such as ("output",).
         split (str, optional): The split of the dataset, "validation" or "train". Defaults to "validation".
-        NUM_INPUT_FRAMES (int, optional): Number of input frames. Defaults to 4.
-        NUM_TARGET_FRAMES (int, optional): Number of target frames. Defaults to 18.
+        num_input_frames (int, optional): Number of input frames. Defaults to 4.
+        num_target_frames (int, optional): Number of target frames. Defaults to 18.
         dataset_path (str, optional): Path to the dataset. Defaults to "openclimatefix/nimrod-uk-1km".
         number (int, optional): Number of samples in the dataset. Defaults to 1000.
 
@@ -47,8 +47,8 @@ class DGMRDataset(paddle.io.Dataset):
         input_keys: Tuple[str, ...],
         label_keys: Tuple[str, ...],
         split: str = "validation",
-        NUM_INPUT_FRAMES: int = 4,
-        NUM_TARGET_FRAMES: int = 18,
+        num_input_frames: int = 4,
+        num_target_frames: int = 18,
         dataset_path: str = "openclimatefix/nimrod-uk-1km",
         number: int = 1000,
     ):
@@ -56,8 +56,8 @@ class DGMRDataset(paddle.io.Dataset):
         paddle.seed(42)
         self.input_keys = input_keys
         self.label_keys = label_keys
-        self.NUM_INPUT_FRAMES = NUM_INPUT_FRAMES
-        self.NUM_TARGET_FRAMES = NUM_TARGET_FRAMES
+        self.num_input_frames = num_input_frames
+        self.num_target_frames = num_target_frames
         self.number = number
         self.reader = load_dataset(
             dataset_path, "sample", split=split, streaming=True, trust_remote_code=True
@@ -67,7 +67,7 @@ class DGMRDataset(paddle.io.Dataset):
     def __len__(self):
         return self.number
 
-    def __getitem__(self, item):
+    def __getitem__(self, idx):
         try:
             row = next(self.iter_reader)
         except Exception:
@@ -80,9 +80,9 @@ class DGMRDataset(paddle.io.Dataset):
             row = next(self.iter_reader)
         radar_frames = row["radar_frames"]
         input_frames = radar_frames[
-            -self.NUM_TARGET_FRAMES - self.NUM_INPUT_FRAMES : -self.NUM_TARGET_FRAMES
+            -self.num_target_frames - self.num_input_frames : -self.num_target_frames
         ]
-        target_frames = radar_frames[-self.NUM_TARGET_FRAMES :]
+        target_frames = radar_frames[-self.num_target_frames :]
         input_item = {
             self.input_keys: np.moveaxis(input_frames, [0, 1, 2, 3], [0, 2, 3, 1])
         }
