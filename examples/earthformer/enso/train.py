@@ -1,17 +1,16 @@
-from os import path as osp
-
 import hydra
 import numpy as np
 import paddle
-import paddle.distributed as dist
 import xarray as xr
+from helps import eval_rmse_func
+from helps import get_parameter_names
+from helps import train_mse_func
 from omegaconf import DictConfig
 from paddle import nn
 
 import ppsci
-from helps import get_parameter_names, train_mse_func, eval_rmse_func
-from ppsci.data.dataset.enso_dataset import fold, prepare_inputs_targets
-from ppsci.utils import logger
+from ppsci.data.dataset.enso_dataset import fold
+from ppsci.data.dataset.enso_dataset import prepare_inputs_targets
 
 
 def train(cfg: DictConfig):
@@ -92,17 +91,23 @@ def train(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
-    optimizer_grouped_parameters = [{
-        'params': [p for n, p in model.named_parameters() if n in decay_parameters],
-        'weight_decay': cfg.TRAIN.wd
-    }, {
-        'params': [p for n, p in model.named_parameters() if n not in decay_parameters],
-        'weight_decay': 0.0
-    }]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": cfg.TRAIN.wd,
+        },
+        {
+            "params": [
+                p for n, p in model.named_parameters() if n not in decay_parameters
+            ],
+            "weight_decay": 0.0,
+        },
+    ]
 
     # # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
@@ -110,11 +115,12 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
         eta_min=cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
-        warmup_epoch=int(0.2 * cfg.TRAIN.epochs))()
+        warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
+    )()
     # optimizer = ppsci.optimizer.AdamW(lr_scheduler)(model)
-    optimizer = paddle.optimizer.AdamW(lr_scheduler,
-                                       parameters=optimizer_grouped_parameters,
-                                       weight_decay=cfg.TRAIN.wd)
+    optimizer = paddle.optimizer.AdamW(
+        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -180,7 +186,8 @@ def evaluate(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -213,7 +220,8 @@ def export(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -224,16 +232,22 @@ def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     input_spec = [
-        {key: InputSpec([1, 12, 24, 48, 1], "float32", name=key) for key in model.input_keys},
+        {
+            key: InputSpec([1, 12, 24, 48, 1], "float32", name=key)
+            for key in model.input_keys
+        },
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
 
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
+
     predictor = pinn_predictor.PINNPredictor(cfg)
 
-    train_cmip = xr.open_dataset(cfg.INFER.data_path).transpose('year', 'month', 'lat', 'lon')
+    train_cmip = xr.open_dataset(cfg.INFER.data_path).transpose(
+        "year", "month", "lat", "lon"
+    )
     # select longitudes
     lon = train_cmip.lon.values
     lon = lon[np.logical_and(lon >= 95, lon <= 330)]
@@ -243,16 +257,19 @@ def inference(cfg: DictConfig):
 
     idx_sst = prepare_inputs_targets(
         len_time=data.shape[0],
-        input_length=cfg.INFER.in_len, input_gap=cfg.INFER.in_stride,
-        pred_shift=cfg.INFER.out_len * cfg.INFER.out_stride, pred_length=cfg.INFER.out_len,
-        samples_gap=cfg.INFER.samples_gap)
-    data = data[idx_sst].astype('float32')
+        input_length=cfg.INFER.in_len,
+        input_gap=cfg.INFER.in_stride,
+        pred_shift=cfg.INFER.out_len * cfg.INFER.out_stride,
+        pred_length=cfg.INFER.out_len,
+        samples_gap=cfg.INFER.samples_gap,
+    )
+    data = data[idx_sst].astype("float32")
 
     sst_data = data[..., np.newaxis]
     idx = np.random.choice(len(data), None, False)
-    in_seq = sst_data[idx, :cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
+    in_seq = sst_data[idx, : cfg.INFER.in_len, ...]  # ( in_len, lat, lon, 1)
     in_seq = in_seq[np.newaxis, ...]
-    target_seq = sst_data[idx, cfg.INFER.in_len:, ...]  # ( out_len, lat, lon, 1)
+    target_seq = sst_data[idx, cfg.INFER.in_len :, ...]  # ( out_len, lat, lon, 1)
     target_seq = target_seq[np.newaxis, ...]
 
     output_dict = predictor.predict({"sst_data": in_seq}, cfg.INFER.batch_size)
@@ -263,7 +280,9 @@ def inference(cfg: DictConfig):
 
 
 @hydra.main(
-    version_base=None, config_path="./conf", config_name="earthformer_enso_pretrain.yaml"
+    version_base=None,
+    config_path="./conf",
+    config_name="earthformer_enso_pretrain.yaml",
 )
 def main(cfg: DictConfig):
     if cfg.mode == "train":

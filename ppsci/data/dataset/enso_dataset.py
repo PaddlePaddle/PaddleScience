@@ -14,18 +14,14 @@
 
 from __future__ import annotations
 
-import os
-import pickle
-from os import path as osp
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Optional
-import numpy as np
-import paddle
-from paddle import io
-import xarray as xr
 from pathlib import Path
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
+import numpy as np
+import xarray as xr
+from paddle import io
 
 NINO_WINDOW_T = 3  # Nino index is the sliding average over sst, window size is 3
 CMIP6_SST_MAX = 10.198975563049316
@@ -48,7 +44,9 @@ def scale_back_sst(sst):
     return (SST_MAX - SST_MIN) * sst + SST_MIN
 
 
-def prepare_inputs_targets(len_time, input_gap, input_length, pred_shift, pred_length, samples_gap):
+def prepare_inputs_targets(
+    len_time, input_gap, input_length, pred_shift, pred_length, samples_gap
+):
     # input_gap=1: time gaps between two consecutive input frames
     # input_length=12: the number of input frames
     # pred_shift=26: the lead_time of the last target to be predicted
@@ -60,7 +58,9 @@ def prepare_inputs_targets(len_time, input_gap, input_length, pred_shift, pred_l
     target_ind = np.arange(0, pred_shift, pred_gap) + input_span + pred_gap - 1
     ind = np.concatenate([input_ind, target_ind]).reshape(1, input_length + pred_length)
     max_n_sample = len_time - (input_span + pred_shift - 1)
-    ind = ind + np.arange(max_n_sample)[:, np.newaxis] @ np.ones((1, input_length + pred_length), dtype=int)
+    ind = ind + np.arange(max_n_sample)[:, np.newaxis] @ np.ones(
+        (1, input_length + pred_length), dtype=int
+    )
     return ind[::samples_gap]
 
 
@@ -74,11 +74,13 @@ def fold(data, size=36, stride=12):
     times = size // stride
     remain = (data.shape[0] - 1) % times
     if remain > 0:
-        ls = list(data[::times]) + [data[-1, -(remain * stride):]]
+        ls = list(data[::times]) + [data[-1, -(remain * stride) :]]
         outdata = np.concatenate(ls, axis=0)  # (36*(151//3+1)+remain*stride, *, 15)
     else:
         outdata = np.concatenate(data[::times], axis=0)  # (36*(151/3+1), *, 15)
-    assert outdata.shape[0] == size * ((data.shape[0] - 1) // times + 1) + remain * stride
+    assert (
+        outdata.shape[0] == size * ((data.shape[0] - 1) // times + 1) + remain * stride
+    )
     return outdata
 
 
@@ -88,7 +90,9 @@ def data_transform(data, num_years_per_model):
     length = data.shape[0]
     assert length % num_years_per_model == 0
     num_models = length // num_years_per_model
-    outdata = np.stack(np.split(data, length / num_years_per_model, axis=0), axis=-1)  # (151, 36, *, 15)
+    outdata = np.stack(
+        np.split(data, length / num_years_per_model, axis=0), axis=-1
+    )  # (151, 36, *, 15)
     # cmip6sst outdata.shape = (151, 36, 24, 48, 15) = (year, month, lat, lon, model)
     # cmip5sst outdata.shape = (140, 36, 24, 48, 17)
     # cmip6nino outdata.shape = (151, 36, 15)
@@ -107,8 +111,12 @@ def data_transform(data, num_years_per_model):
 
 def read_raw_data(ds_dir, out_dir=None):
     # read and process raw cmip data from CMIP_train.nc and CMIP_label.nc
-    train_cmip = xr.open_dataset(Path(ds_dir) / 'CMIP_train.nc').transpose('year', 'month', 'lat', 'lon')
-    label_cmip = xr.open_dataset(Path(ds_dir) / 'CMIP_label.nc').transpose('year', 'month')
+    train_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_train.nc").transpose(
+        "year", "month", "lat", "lon"
+    )
+    label_cmip = xr.open_dataset(Path(ds_dir) / "CMIP_label.nc").transpose(
+        "year", "month"
+    )
     # train_cmip.sst.values.shape = (4645, 36, 24, 48)
 
     # select longitudes
@@ -116,14 +124,18 @@ def read_raw_data(ds_dir, out_dir=None):
     lon = lon[np.logical_and(lon >= 95, lon <= 330)]
     train_cmip = train_cmip.sel(lon=lon)
 
-    cmip6sst = data_transform(data=train_cmip.sst.values[:2265],
-                              num_years_per_model=151)
-    cmip5sst = data_transform(data=train_cmip.sst.values[2265:],
-                              num_years_per_model=140)
-    cmip6nino = data_transform(data=label_cmip.nino.values[:2265],
-                               num_years_per_model=151)
-    cmip5nino = data_transform(data=label_cmip.nino.values[2265:],
-                               num_years_per_model=140)
+    cmip6sst = data_transform(
+        data=train_cmip.sst.values[:2265], num_years_per_model=151
+    )
+    cmip5sst = data_transform(
+        data=train_cmip.sst.values[2265:], num_years_per_model=140
+    )
+    cmip6nino = data_transform(
+        data=label_cmip.nino.values[:2265], num_years_per_model=151
+    )
+    cmip5nino = data_transform(
+        data=label_cmip.nino.values[2265:], num_years_per_model=140
+    )
 
     # cmip6sst.shape = (1836, 24, 48, 15)
     # cmip5sst.shape = (1704, 24, 48, 17)
@@ -133,20 +145,36 @@ def read_raw_data(ds_dir, out_dir=None):
     assert len(cmip5nino.shape) == 2
     # store processed data for faster data access
     if out_dir is not None:
-        ds_cmip6 = xr.Dataset({'sst': (['month', 'lat', 'lon', 'model'], cmip6sst),
-                               'nino': (['month', 'model'], cmip6nino)},
-                              coords={'month': np.repeat(np.arange(1, 13)[None], cmip6nino.shape[0] // 12,
-                                                         axis=0).flatten(),
-                                      'lat': train_cmip.lat.values, 'lon': train_cmip.lon.values,
-                                      'model': np.arange(15) + 1})
-        ds_cmip6.to_netcdf(Path(out_dir) / 'cmip6.nc')
-        ds_cmip5 = xr.Dataset({'sst': (['month', 'lat', 'lon', 'model'], cmip5sst),
-                               'nino': (['month', 'model'], cmip5nino)},
-                              coords={'month': np.repeat(np.arange(1, 13)[None], cmip5nino.shape[0] // 12,
-                                                         axis=0).flatten(),
-                                      'lat': train_cmip.lat.values, 'lon': train_cmip.lon.values,
-                                      'model': np.arange(17) + 1})
-        ds_cmip5.to_netcdf(Path(out_dir) / 'cmip5.nc')
+        ds_cmip6 = xr.Dataset(
+            {
+                "sst": (["month", "lat", "lon", "model"], cmip6sst),
+                "nino": (["month", "model"], cmip6nino),
+            },
+            coords={
+                "month": np.repeat(
+                    np.arange(1, 13)[None], cmip6nino.shape[0] // 12, axis=0
+                ).flatten(),
+                "lat": train_cmip.lat.values,
+                "lon": train_cmip.lon.values,
+                "model": np.arange(15) + 1,
+            },
+        )
+        ds_cmip6.to_netcdf(Path(out_dir) / "cmip6.nc")
+        ds_cmip5 = xr.Dataset(
+            {
+                "sst": (["month", "lat", "lon", "model"], cmip5sst),
+                "nino": (["month", "model"], cmip5nino),
+            },
+            coords={
+                "month": np.repeat(
+                    np.arange(1, 13)[None], cmip5nino.shape[0] // 12, axis=0
+                ).flatten(),
+                "lat": train_cmip.lat.values,
+                "lon": train_cmip.lon.values,
+                "model": np.arange(17) + 1,
+            },
+        )
+        ds_cmip5.to_netcdf(Path(out_dir) / "cmip5.nc")
     train_cmip.close()
     label_cmip.close()
     return cmip6sst, cmip5sst, cmip6nino, cmip5nino
@@ -165,22 +193,24 @@ class ENSODataset(io.Dataset):
     # Whether support batch indexing for speeding up fetching process.
     batch_index: bool = False
 
-    def __init__(self,
-                 input_keys: Tuple[str, ...],
-                 label_keys: Tuple[str, ...],
-                 data_dir: str,
-                 weight_dict: Optional[Dict[str, float]] = None,
-                 in_len=12,
-                 out_len=26,
-                 in_stride=1,
-                 out_stride=1,
-                 train_samples_gap=10,
-                 eval_samples_gap=11,
-                 normalize_sst=True,
-                 # datamodule_only
-                 batch_size=1,
-                 num_workers=1,
-                 training='train', ):
+    def __init__(
+        self,
+        input_keys: Tuple[str, ...],
+        label_keys: Tuple[str, ...],
+        data_dir: str,
+        weight_dict: Optional[Dict[str, float]] = None,
+        in_len=12,
+        out_len=26,
+        in_stride=1,
+        out_stride=1,
+        train_samples_gap=10,
+        eval_samples_gap=11,
+        normalize_sst=True,
+        # datamodule_only
+        batch_size=1,
+        num_workers=1,
+        training="train",
+    ):
         r"""
         Parameters
         ----------
@@ -206,7 +236,9 @@ class ENSODataset(io.Dataset):
         self.normalize_sst = normalize_sst
         # datamodule_only
         self.batch_size = batch_size
-        assert num_workers == 1, ValueError(f"Current implementation does not support `num_workers != 1`!")
+        assert num_workers == 1, ValueError(
+            "Current implementation does not support `num_workers != 1`!"
+        )
         self.num_workers = num_workers
         self.training = training
 
@@ -222,20 +254,22 @@ class ENSODataset(io.Dataset):
 
         self.sst, self.target_nino = self.create_data()
 
-    def create_data(self, ):
-        if self.training == 'train':
+    def create_data(
+        self,
+    ):
+        if self.training == "train":
             sst_cmip6 = self.sst_train[0]
             nino_cmip6 = self.nino_train[0]
             sst_cmip5 = self.sst_train[1]
             nino_cmip5 = self.nino_train[1]
             samples_gap = self.train_samples_gap
-        elif self.training == 'eval':
+        elif self.training == "eval":
             sst_cmip6 = None
             nino_cmip6 = None
             sst_cmip5 = self.sst_eval[0]
             nino_cmip5 = self.nino_eval[0]
             samples_gap = self.eval_samples_gap
-        elif self.training == 'test':
+        elif self.training == "test":
             sst_cmip6 = None
             nino_cmip6 = None
             sst_cmip5 = self.sst_test[0]
@@ -247,55 +281,68 @@ class ENSODataset(io.Dataset):
         sst = []
         target_nino = []
 
-        nino_idx_slice = slice(self.in_len, self.in_len + self.out_len - NINO_WINDOW_T + 1)  # e.g., 12:36
+        nino_idx_slice = slice(
+            self.in_len, self.in_len + self.out_len - NINO_WINDOW_T + 1
+        )  # e.g., 12:36
         if sst_cmip6 is not None:
             assert len(sst_cmip6.shape) == 4
             assert len(nino_cmip6.shape) == 2
             idx_sst = prepare_inputs_targets(
                 len_time=sst_cmip6.shape[0],
-                input_length=self.in_len, input_gap=self.in_stride,
-                pred_shift=self.out_len * self.out_stride, pred_length=self.out_len,
-                samples_gap=samples_gap)
+                input_length=self.in_len,
+                input_gap=self.in_stride,
+                pred_shift=self.out_len * self.out_stride,
+                pred_length=self.out_len,
+                samples_gap=samples_gap,
+            )
 
             sst.append(cat_over_last_dim(sst_cmip6[idx_sst]))
-            target_nino.append(cat_over_last_dim(nino_cmip6[idx_sst[:, nino_idx_slice]]))
+            target_nino.append(
+                cat_over_last_dim(nino_cmip6[idx_sst[:, nino_idx_slice]])
+            )
         if sst_cmip5 is not None:
             assert len(sst_cmip5.shape) == 4
             assert len(nino_cmip5.shape) == 2
             idx_sst = prepare_inputs_targets(
                 len_time=sst_cmip5.shape[0],
-                input_length=self.in_len, input_gap=self.in_stride,
-                pred_shift=self.out_len * self.out_stride, pred_length=self.out_len,
-                samples_gap=samples_gap)
+                input_length=self.in_len,
+                input_gap=self.in_stride,
+                pred_shift=self.out_len * self.out_stride,
+                pred_length=self.out_len,
+                samples_gap=samples_gap,
+            )
             sst.append(cat_over_last_dim(sst_cmip5[idx_sst]))
-            target_nino.append(cat_over_last_dim(nino_cmip5[idx_sst[:, nino_idx_slice]]))
+            target_nino.append(
+                cat_over_last_dim(nino_cmip5[idx_sst[:, nino_idx_slice]])
+            )
 
         # sst data containing both the input and target
         self.sst = np.concatenate(sst, axis=0)  # (N, in_len+out_len, lat, lon)
         if self.normalize_sst:
             self.sst = scale_sst(self.sst)
         # nino data containing the target only
-        self.target_nino = np.concatenate(target_nino, axis=0)  # (N, out_len+NINO_WINDOW_T-1)
+        self.target_nino = np.concatenate(
+            target_nino, axis=0
+        )  # (N, out_len+NINO_WINDOW_T-1)
         assert self.sst.shape[0] == self.target_nino.shape[0]
         assert self.sst.shape[1] == self.in_len + self.out_len
         assert self.target_nino.shape[1] == self.out_len - NINO_WINDOW_T + 1
         return self.sst, self.target_nino
 
     def GetDataShape(self):
-        return {'sst': self.sst.shape,
-                'nino target': self.target_nino.shape}
+        return {"sst": self.sst.shape, "nino target": self.target_nino.shape}
 
     def __len__(self):
         return self.sst.shape[0]
 
     def __getitem__(self, idx):
-        sst_data = self.sst[idx].astype('float32')
+        sst_data = self.sst[idx].astype("float32")
         sst_data = sst_data[..., np.newaxis]
-        in_seq = sst_data[:self.in_len, ...]  # ( in_len, lat, lon, 1)
-        target_seq = sst_data[self.in_len:, ...]  # ( in_len, lat, lon, 1)
+        in_seq = sst_data[: self.in_len, ...]  # ( in_len, lat, lon, 1)
+        target_seq = sst_data[self.in_len :, ...]  # ( in_len, lat, lon, 1)
         weight_item = self.weight_dict
 
-        if self.training == 'train':
+        if self.training == "train":
             input_item = {self.input_keys[0]: in_seq}
             label_item = {
                 self.label_keys[0]: target_seq,

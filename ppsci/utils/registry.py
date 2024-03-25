@@ -16,58 +16,58 @@
 # under the License.
 """Create a registry."""
 
-from typing import Optional, List
 import json
 from json import JSONDecodeError
+from typing import List
 
 
 class Registry:
     """Create the registry that will map name to object. This facilitates the users to create
-    custom registry.
+        custom registry.
 
-    Parameters
-    ----------
-    name
-        The name of the registry
+        Parameters
+        ----------
+        name
+            The name of the registry
 
-    Examples
-    --------
+        Examples
+        --------
 
-    >>> from earthformer.utils.registry import Registry
-    >>> # Create a registry
-    >>> MODEL_REGISTRY = Registry('MODEL')
-    >>>
-    >>> # To register a class/function with decorator
-    >>> @MODEL_REGISTRY.register()
-...     class MyModel:
-...         pass
-    >>> @MODEL_REGISTRY.register()
-...     def my_model():
-...         return
-    >>>
-    >>> # To register a class object with decorator and provide nickname:
-    >>> @MODEL_REGISTRY.register('test_class')
-...     class MyModelWithNickName:
-...         pass
-    >>> @MODEL_REGISTRY.register('test_function')
-...     def my_model_with_nick_name():
-...         return
-    >>>
-    >>> # To register a class/function object by function call
-...     class MyModel2:
-...         pass
-    >>> MODEL_REGISTRY.register(MyModel2)
-    >>> # To register with a given name
-    >>> MODEL_REGISTRY.register('my_model2', MyModel2)
-    >>> # To list all the registered objects:
-    >>> MODEL_REGISTRY.list_keys()
+        >>> from earthformer.utils.registry import Registry
+        >>> # Create a registry
+        >>> MODEL_REGISTRY = Registry('MODEL')
+        >>>
+        >>> # To register a class/function with decorator
+        >>> @MODEL_REGISTRY.register()
+    ...     class MyModel:
+    ...         pass
+        >>> @MODEL_REGISTRY.register()
+    ...     def my_model():
+    ...         return
+        >>>
+        >>> # To register a class object with decorator and provide nickname:
+        >>> @MODEL_REGISTRY.register('test_class')
+    ...     class MyModelWithNickName:
+    ...         pass
+        >>> @MODEL_REGISTRY.register('test_function')
+    ...     def my_model_with_nick_name():
+    ...         return
+        >>>
+        >>> # To register a class/function object by function call
+    ...     class MyModel2:
+    ...         pass
+        >>> MODEL_REGISTRY.register(MyModel2)
+        >>> # To register with a given name
+        >>> MODEL_REGISTRY.register('my_model2', MyModel2)
+        >>> # To list all the registered objects:
+        >>> MODEL_REGISTRY.list_keys()
 
-['MyModel', 'my_model', 'test_class', 'test_function', 'MyModel2', 'my_model2']
+    ['MyModel', 'my_model', 'test_class', 'test_function', 'MyModel2', 'my_model2']
 
-    >>> # To get the registered object/class
-    >>> MODEL_REGISTRY.get('test_class')
+        >>> # To get the registered object/class
+        >>> MODEL_REGISTRY.get('test_class')
 
-__main__.MyModelWithNickName
+    __main__.MyModelWithNickName
 
     """
 
@@ -96,9 +96,11 @@ __main__.MyModelWithNickName
             if isinstance(args[0], str):
                 # Register an object with nick name by decorator
                 nickname = args[0]
+
                 def deco(func_or_class: object) -> object:
                     self._do_register(nickname, func_or_class)
                     return func_or_class
+
                 return deco
             else:
                 # Register an object by function call
@@ -108,17 +110,16 @@ __main__.MyModelWithNickName
             def deco(func_or_class: object) -> object:
                 self._do_register(func_or_class.__name__, func_or_class)
                 return func_or_class
+
             return deco
         else:
-            raise ValueError('Do not support the usage!')
+            raise ValueError("Do not support the usage!")
 
     def get(self, name: str) -> object:
         ret = self._obj_map.get(name)
         if ret is None:
             raise KeyError(
-                "No object named '{}' found in '{}' registry!".format(
-                    name, self._name
-                )
+                "No object named '{}' found in '{}' registry!".format(name, self._name)
             )
         return ret
 
@@ -126,8 +127,7 @@ __main__.MyModelWithNickName
         return list(self._obj_map.keys())
 
     def __repr__(self) -> str:
-        s = '{name}(keys={keys})'.format(name=self._name,
-                                         keys=self.list_keys())
+        s = "{name}(keys={keys})".format(name=self._name, keys=self.list_keys())
         return s
 
     def create(self, name: str, *args, **kwargs) -> object:
@@ -149,10 +149,11 @@ __main__.MyModelWithNickName
         try:
             return obj(*args, **kwargs)
         except Exception as exp:
-            print('Cannot create name="{}" --> {} with the provided arguments!\n'
-                  '   args={},\n'
-                  '   kwargs={},\n'
-                  .format(name, obj, args, kwargs))
+            print(
+                'Cannot create name="{}" --> {} with the provided arguments!\n'
+                "   args={},\n"
+                "   kwargs={},\n".format(name, obj, args, kwargs)
+            )
             raise exp
 
     def create_with_json(self, name: str, json_str: str):
@@ -170,13 +171,15 @@ __main__.MyModelWithNickName
         try:
             args = json.loads(json_str)
         except JSONDecodeError:
-            raise ValueError('Unable to decode the json string: json_str="{}"'
-                             .format(json_str))
+            raise ValueError(
+                'Unable to decode the json string: json_str="{}"'.format(json_str)
+            )
         if isinstance(args, (list, tuple)):
             return self.create(name, *args)
         elif isinstance(args, dict):
             return self.create(name, **args)
         else:
-            raise NotImplementedError('The format of json string is not supported! We only support '
-                                      'list/dict. json_str="{}".'
-                                      .format(json_str))
+            raise NotImplementedError(
+                "The format of json string is not supported! We only support "
+                'list/dict. json_str="{}".'.format(json_str)
+            )

@@ -1,16 +1,15 @@
-from os import path as osp
-import paddle.distributed as dist
-import hydra
-from omegaconf import DictConfig
-import ppsci
-from ppsci.utils import logger
-
-from helps import get_parameter_names, eval_rmse_func, train_mse_func
-from paddle import nn
-import paddle
 import h5py
+import hydra
 import numpy as np
+import paddle
+from helps import eval_rmse_func
+from helps import get_parameter_names
+from helps import train_mse_func
+from omegaconf import DictConfig
+from paddle import nn
 from sevir_vis_seq import save_example_vis_results
+
+import ppsci
 
 
 def train(cfg: DictConfig):
@@ -92,7 +91,8 @@ def train(cfg: DictConfig):
                     metrics_list=cfg.EVAL.metrics_list,
                     threshold_list=cfg.EVAL.threshold_list,
                 ),
-                keep_batch=True),
+                keep_batch=True,
+            ),
         },
         name="Sup_Validator",
     )
@@ -112,17 +112,23 @@ def train(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     decay_parameters = get_parameter_names(model, [nn.LayerNorm])
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
-    optimizer_grouped_parameters = [{
-        'params': [p for n, p in model.named_parameters() if n in decay_parameters],
-        'weight_decay': cfg.TRAIN.wd
-    }, {
-        'params': [p for n, p in model.named_parameters() if n not in decay_parameters],
-        'weight_decay': 0.0
-    }]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": cfg.TRAIN.wd,
+        },
+        {
+            "params": [
+                p for n, p in model.named_parameters() if n not in decay_parameters
+            ],
+            "weight_decay": 0.0,
+        },
+    ]
 
     # # init optimizer and lr scheduler
     lr_scheduler_cfg = dict(cfg.TRAIN.lr_scheduler)
@@ -130,10 +136,11 @@ def train(cfg: DictConfig):
     lr_scheduler = ppsci.optimizer.lr_scheduler.Cosine(
         **lr_scheduler_cfg,
         eta_min=cfg.TRAIN.min_lr_ratio * cfg.TRAIN.lr_scheduler.learning_rate,
-        warmup_epoch=int(0.2 * cfg.TRAIN.epochs))()
-    optimizer = paddle.optimizer.AdamW(lr_scheduler,
-                                       parameters=optimizer_grouped_parameters,
-                                       weight_decay=cfg.TRAIN.wd)
+        warmup_epoch=int(0.2 * cfg.TRAIN.epochs),
+    )()
+    optimizer = paddle.optimizer.AdamW(
+        lr_scheduler, parameters=optimizer_grouped_parameters, weight_decay=cfg.TRAIN.wd
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -194,7 +201,8 @@ def evaluate(cfg: DictConfig):
                     metrics_list=cfg.EVAL.metrics_list,
                     threshold_list=cfg.EVAL.threshold_list,
                 ),
-                keep_batch=True),
+                keep_batch=True,
+            ),
         },
         name="Sup_Validator",
     )
@@ -214,7 +222,8 @@ def evaluate(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -247,7 +256,8 @@ def export(cfg: DictConfig):
         **cfg.MODEL.afno,
         enc_attn_patterns=enc_attn_patterns,
         dec_self_attn_patterns=dec_self_attn_patterns,
-        dec_cross_attn_patterns=dec_cross_attn_patterns)
+        dec_cross_attn_patterns=dec_cross_attn_patterns,
+    )
 
     # initialize solver
     solver = ppsci.solver.Solver(
@@ -258,13 +268,17 @@ def export(cfg: DictConfig):
     from paddle.static import InputSpec
 
     input_spec = [
-        {key: InputSpec([1, 13, 384, 384, 1], "float32", name=key) for key in model.input_keys},
+        {
+            key: InputSpec([1, 13, 384, 384, 1], "float32", name=key)
+            for key in model.input_keys
+        },
     ]
     solver.export(input_spec, cfg.INFER.export_path)
 
 
 def inference(cfg: DictConfig):
     from deploy.python_infer import pinn_predictor
+
     predictor = pinn_predictor.PINNPredictor(cfg)
 
     # read h5 data
@@ -273,9 +287,9 @@ def inference(cfg: DictConfig):
 
     idx = np.random.choice(len(data_vil), None, False)
     data = data_vil[idx]
-    input_data = data[:cfg.INFER.in_len, ...]
+    input_data = data[: cfg.INFER.in_len, ...]
     input_data = input_data.reshape(1, *input_data.shape, 1).astype(np.float32)
-    target_data = data[cfg.INFER.in_len:cfg.INFER.in_len + cfg.INFER.out_len, ...]
+    target_data = data[cfg.INFER.in_len : cfg.INFER.in_len + cfg.INFER.out_len, ...]
     target_data = target_data.reshape(1, *target_data.shape, 1).astype(np.float32)
 
     output_dict = predictor.predict({"input": input_data}, cfg.INFER.batch_size)
@@ -286,18 +300,21 @@ def inference(cfg: DictConfig):
 
     save_example_vis_results(
         save_dir=cfg.INFER.sevir_vis_save,
-        save_prefix=f'data_{idx}',
+        save_prefix=f"data_{idx}",
         in_seq=input_data,
         target_seq=target_data,
-        pred_seq=output_dict['output'],
+        pred_seq=output_dict["output"],
         layout=cfg.INFER.layout,
         plot_stride=cfg.INFER.plot_stride,
         label=cfg.INFER.logging_prefix,
-        interval_real_time=cfg.INFER.interval_real_time)
+        interval_real_time=cfg.INFER.interval_real_time,
+    )
 
 
 @hydra.main(
-    version_base=None, config_path="./conf", config_name="earthformer_sevir_pretrain.yaml"
+    version_base=None,
+    config_path="./conf",
+    config_name="earthformer_sevir_pretrain.yaml",
 )
 def main(cfg: DictConfig):
     if cfg.mode == "train":

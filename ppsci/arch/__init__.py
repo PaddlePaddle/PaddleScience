@@ -72,7 +72,6 @@ __all__ = [
     "AutoEncoder",
     "build_model",
     "CFDGCN",
-    
 ]
 
 

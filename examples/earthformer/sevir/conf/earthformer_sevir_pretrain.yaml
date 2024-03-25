@@ -32,7 +32,7 @@ log_freq: 20
 FILE_PATH: ./datasets/sevir/sevir_data
 
 # SEVIR dataset:raw_seq_len: 49,interval_real_time:5, img_height = 384,img_width = 384
-# SEVIR_lr dataset:raw_seq_len: 25,interval_real_time:10, img_height = 128,img_width = 128  
+# SEVIR_lr dataset:raw_seq_len: 25,interval_real_time:10, img_height = 128,img_width = 128
 
 # dataset setting
 DATASET:
@@ -135,7 +135,7 @@ TRAIN:
   checkpoint_path: null
   start_date: null
   end_date: [2019, 8, 1]
-  
+
 
 # evaluation settings
 EVAL:

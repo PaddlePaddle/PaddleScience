@@ -66,7 +66,7 @@ __all__ = [
     "MeshCylinderDataset",
     "build_dataset",
     "ENSODataset",
-    "SEVIRDataset"
+    "SEVIRDataset",
 ]
 
 
