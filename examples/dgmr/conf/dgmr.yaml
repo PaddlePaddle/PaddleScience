@@ -14,9 +14,9 @@ hydra:
           - mode
           - output_dir
           - log_freq
-  # callbacks:
-  #   init_callback:
-  #     _target_: ppsci.utils.callbacks.InitCallback
+  callbacks:
+    init_callback:
+      _target_: ppsci.utils.callbacks.InitCallback
   sweep:
     # output directory for multirun
     dir: ${hydra.run.dir}
@@ -34,7 +34,7 @@ DATASET:
   split: validation # train or validation
   num_input_frames: 4
   num_target_frames: 18
-  dataset_path: /workspace/workspace/skillful_nowcasting/openclimatefix/nimrod-uk-1km
+  dataset_path: openclimatefix/nimrod-uk-1km
   number: 1000
 
 # model settings
@@ -57,4 +57,4 @@ MODEL:
 
 # evaluation settings
 EVAL:
-  pretrained_model_path: /workspace/workspace/skillful_nowcasting/openclimatefix/paddle/paddle_model.pdparams
+  pretrained_model_path: https://paddle-org.bj.bcebos.com/paddlescience/models/dgmr/dgmr_pretrained.pdparams
