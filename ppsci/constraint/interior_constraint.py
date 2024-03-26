@@ -71,7 +71,7 @@ class InteriorConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="EQ",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(

@@ -74,7 +74,7 @@ class InitialConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IC",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(

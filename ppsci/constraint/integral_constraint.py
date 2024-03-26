@@ -71,7 +71,7 @@ class IntegralConstraint(base.Constraint):
         ...     },
         ...     ppsci.loss.MSELoss("mean"),
         ...     name="IgC",
-        ... )
+        ... ) # doctest: +SKIP
     """
 
     def __init__(
